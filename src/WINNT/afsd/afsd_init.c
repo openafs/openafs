@@ -995,48 +995,6 @@ int afsd_InitCM(char **reasonP)
         afsi_log("RX Process Statistics gathering is enabled");
 
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckDownInterval = dwValue;
-    afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckUpInterval = dwValue;
-    afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckVolInterval = dwValue;
-    afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckCBInterval = dwValue;
-    afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckLockInterval = dwValue;
-    afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonTokenCheckInterval = dwValue;
-    afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
-
-    dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "CallBackPort", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {

@@ -32,7 +32,7 @@ long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
-long cm_daemonCheckBusyVolInterval = 600;
+long cm_daemonCheckOfflineVolInterval = 600;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -240,46 +240,53 @@ cm_DaemonCheckInit(void)
 	return;
 
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "DownServerCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckDownInterval = dummy;
-    
+    afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "UpServerCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckUpInterval = dummy;
-    
+    afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "VolumeCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckVolInterval = dummy;
-    
+    afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "CallbackCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckCBInterval = dummy;
-    
+    afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "LockCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckLockInterval = dummy;
-    
+    afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "TokenCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonTokenCheckInterval = dummy;
-    
+    afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "BusyVolumeCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckOfflineVolInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
-	cm_daemonCheckBusyVolInterval = dummy;
+	cm_daemonCheckOfflineVolInterval = dummy;
+    afsi_log("daemonCheckOfflineVolInterval is %d", cm_daemonCheckOfflineVolInterval);
     
     RegCloseKey(parmKey);
 }
@@ -334,7 +341,7 @@ void cm_Daemon(long parm)
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
-    lastBusyVolCheck = now - cm_daemonCheckBusyVolInterval/2 * (rand() % cm_daemonCheckBusyVolInterval);
+    lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
 
     while (daemon_ShutdownFlag == 0) {
 	/* check to see if the listener threads halted due to network 
@@ -388,7 +395,7 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
         }
 
-        if (now > lastBusyVolCheck + cm_daemonCheckBusyVolInterval) {
+        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) {
             lastVolCheck = now;
             cm_CheckOfflineVolumes();
 	    now = osi_Time();
