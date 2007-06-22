@@ -3713,7 +3713,17 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
                     *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
                     break;
                 default:
-                    *((u_long *)dptr) = SMB_ATTR_NORMAL;
+                    /* if we get here we either have a normal file
+                     * or we have a file for which we have never 
+                     * received status info.  In this case, we can
+                     * check the even/odd value of the entry's vnode.
+                     * even means it is to be treated as a directory
+                     * and odd means it is to be treated as a file.
+                     */
+                    if (mustFake && (scp->fid.vnode % 2 == 0))
+                        *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
+                    else
+                        *((u_long *)dptr) = SMB_ATTR_NORMAL;
                         
                 }
                 /* merge in hidden attribute */
