@@ -147,6 +147,70 @@ Since 1.5.20
   mountpoint that refers to the root.afs volume of the workstation
   cellname at the time the mountpoint is created.
 
+* re-write cm_Analyze to make better use of the known volume
+  status.  VL_Server queries cannot result in CM_ERROR_ALLOFFLINE
+  messages.
+
+* renamed cm_CheckBusyVolumes to cm_CheckOfflineVolumes.  
+  busy volumes will be reset to srv_non_busy by the function
+  but there is no mechanism for querying the busy state other
+  than by attempting to access the resource.
+
+* cm_Analyze will query the state of an offline volume before
+  deciding whether or not to retry when all volume instances
+  are offline.
+
+* the algorithm used after an IP address list change detection
+  has been modified.  we now check the state of the VLDB servers,
+  then reset the rx connections, and finally check the state of 
+  the file servers.  Previously we flushed the rx connections 
+  and then checked the servers in whatever random order they 
+  were first discovered.
+
+* fix the volume status reported by "fs examine"
+
+* various improvements to the AFS Network Identity Manager Provider.
+  - Don't access freed objects after the window has been destroyed.
+  - Write back the AFS cell list in the identity configuration 
+    even when its empty.
+  - Disable all use of the provider when AFS is disabled for a 
+    particular identity.
+
+* Fix cm_cell_t leak.  When evaluating a mountpoint that uses an
+  alias instead of the full cellname, double check the full cell
+  name and see if we have a matching cell before allocating a new
+  one.
+
+* Dump more data with "fs memdump". All volumes and scaches and
+  now cells.
+
+* Reverse the order of the all cells list.  This ensures that
+  the workstation cell is always first in the list.
+
+* If we recognize the server from which a callback revoke was
+  received, then we can ensure that we only invalidate the status
+  information for cm_scache_t objects belonging to that cell.
+
+* When building for amd64, use APPVER 5.02 as we do not support
+  64-bit Windows 2000 and explicitly state the machine type in
+  the link flags.  
+
+* no longer treat VMWare network adapters as equivalent to a 
+  loopback adapter.  For some unknown reason, publishing the "AFS"
+  netbios name on them frequently results in a name collision 
+  error.
+
+* Use read locks whenever possible instead of write locks when
+  walking the allCellsp list.  This permits better use of multiple
+  CPUs.
+
+* In 1.5.20 a bug was introduced by the fake status when PRSFS_READ
+  is not present on the directory optimization.   It would report
+  mount points and directory objects for which there was no
+  status information as a zero length file.  Instead we can use 
+  the vnode number of the object to determine if it should be
+  considered to be a directory or a file.  If it is even it is a
+  directory; odd it is a file.
 
 Since 1.5.19
  * fix install path of IBM Quick Start Guide when installed by
