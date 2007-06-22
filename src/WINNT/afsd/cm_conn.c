@@ -975,9 +975,10 @@ long cm_ConnFromFID(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
     long code;
     cm_serverRef_t **serverspp;
 
+    *connpp = NULL;
+
     code = cm_GetServerList(fidp, userp, reqp, &serverspp);
     if (code) {
-        *connpp = NULL;
         return code;
     }
 
@@ -992,6 +993,8 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
 {
     long code;
     cm_serverRef_t **serverspp;
+
+    *connpp = NULL;
 
     serverspp = cm_GetVolServers(volp, volid);
 
