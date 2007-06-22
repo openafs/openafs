@@ -1664,6 +1664,7 @@ StartRemove:
   Delete "$INSTDIR\Documentation\html\InstallGd\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\logo_files\*"
+  Delete "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
@@ -2881,6 +2882,8 @@ DoEnglish:
    File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
@@ -2940,6 +2943,8 @@ DoGerman:
    ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\logo_files\*"
+   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"                      "$INSTDIR\Client\Program\afscreds_1032.dll" "$INSTDIR"
@@ -2999,6 +3004,8 @@ DoSpanish:
    ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"     "$INSTDIR\Client\Program\afscreds_1034.dll" "$INSTDIR" 
@@ -3058,6 +3065,8 @@ DoJapanese:
    ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"  "$INSTDIR\Client\Program\afscreds_1041.dll" "$INSTDIR"  
@@ -3117,6 +3126,8 @@ DoKorean:
    File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"  "$INSTDIR\Client\Program\afscreds_1042.dll" "$INSTDIR"   
@@ -3177,6 +3188,8 @@ DoPortugueseBR:
    File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL  "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"  "$INSTDIR\Client\Program\afscreds_1046.dll" "$INSTDIR"    
@@ -3236,6 +3249,8 @@ DoSimpChinese:
    File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"   "$INSTDIR\Client\Program\afscreds_2052.dll" "$INSTDIR"     
@@ -3295,6 +3310,8 @@ DoTradChinese:
    File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"  "$INSTDIR\Client\Program\_1028.dll" "$INSTDIR"      
