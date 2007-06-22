@@ -4517,6 +4517,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                          "has filetype %d", osi_LogSaveString(smb_logp, dep->name),
                           fileType);
                 if (fileType == CM_SCACHETYPE_DIRECTORY ||
+                    fileType == CM_SCACHETYPE_MOUNTPOINT ||
                     fileType == CM_SCACHETYPE_DFSLINK ||
                     fileType == CM_SCACHETYPE_INVALID)
                     osi_Log0(smb_logp, "SMB search dir skipping directory or bad link");
