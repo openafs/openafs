@@ -60,6 +60,10 @@ typedef struct cm_config_data {
     cm_scache_t *       scacheLRUFirstp;
     cm_scache_t *       scacheLRULastp;
 
+    cm_cell_t   **      cellNameHashTablep;
+    cm_cell_t   **      cellIDHashTablep;
+    afs_uint32          cellHashTableSize;
+
     cm_volume_t **      volumeNameHashTablep;
     cm_volume_t **      volumeRWIDHashTablep;
     cm_volume_t **      volumeROIDHashTablep;

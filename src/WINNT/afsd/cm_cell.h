@@ -20,7 +20,9 @@
 typedef struct cm_cell {        
     afs_uint32  magic;
     afs_int32 cellID;		        /* cell ID */
-    struct cm_cell *nextp;	        /* locked by cm_cellLock */
+    struct cm_cell *allNextp;	        /* locked by cm_cellLock */
+    struct cm_cell *nameNextp;	        /* locked by cm_cellLock */
+    struct cm_cell *idNextp;	        /* locked by cm_cellLock */
     char name[CELL_MAXNAMELEN];         /* cell name; never changes */
     cm_serverRef_t *vlServersp;         /* locked by cm_serverLock */
     osi_mutex_t mx;			/* mutex locking fields (flags) */
@@ -29,10 +31,16 @@ typedef struct cm_cell {
 } cm_cell_t;
 
 /* These are bit flag values */
-#define CM_CELLFLAG_SUID	     1	/* setuid flag; not yet used */
-#define CM_CELLFLAG_DNS              2  /* cell servers are from DNS */
-#define CM_CELLFLAG_VLSERVER_INVALID 4  /* cell servers are invalid */
-#define CM_CELLFLAG_FREELANCE        8  /* local freelance fake cell */
+#define CM_CELLFLAG_SUID	       1	/* setuid flag; not yet used */
+#define CM_CELLFLAG_DNS                2  /* cell servers are from DNS */
+#define CM_CELLFLAG_VLSERVER_INVALID   4  /* cell servers are invalid */
+#define CM_CELLFLAG_FREELANCE          8  /* local freelance fake cell */
+#define CM_CELLFLAG_IN_NAMEHASH        0x10
+#define CM_CELLFLAG_IN_IDHASH          0x20
+
+#define CM_CELL_NAME_HASH(name)  (SDBMHash(name) % cm_data.cellHashTableSize)
+
+#define CM_CELL_ID_HASH(id)   ((unsigned long) id % cm_data.cellHashTableSize)
 
 extern void cm_InitCell(int newFile, long maxCells);
 
@@ -53,5 +61,9 @@ extern osi_rwlock_t cm_cellLock;
 extern cm_cell_t *cm_allCellsp;
 
 extern int cm_DumpCells(FILE *, char *, int);
+
+extern void cm_AddCellToNameHashTable(cm_cell_t * cellp);
+
+extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
 
 #endif /* __CELL_H_ENV_ */

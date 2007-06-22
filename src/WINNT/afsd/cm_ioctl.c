@@ -1250,7 +1250,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     lock_ObtainRead(&cm_cellLock);
-    for (tcellp = cm_data.allCellsp; tcellp; tcellp = tcellp->nextp) {
+    for (tcellp = cm_data.allCellsp; tcellp; tcellp = tcellp->allNextp) {
         if (whichCell == 0) break;
         whichCell--;
     }
@@ -1307,7 +1307,7 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
   
-    for (cp = cm_data.allCellsp; cp; cp=cp->nextp) 
+    for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) 
     {
         long code;
 	lock_ObtainMutex(&cp->mx);
