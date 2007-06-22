@@ -773,6 +773,21 @@
                                     <File Id="filelfimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1"/>
                                 </Component>
                             </Directory> <!-- logo_files -->
+                            <Directory Id="dirrelnotes_files_$(var.Language)" Name="relnotes" LongName="relnotes_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\relnotes_files">
+                                <Component Id="cmp_relnotes_files_$(var.Language)" Guid="$(var.DocHtmlRelnotesFilesGuid)">
+                                  <File Id="filernfilelist.xml_$(var.Language)" Name="filelist.xml" DiskId="1" /> 
+                                  <File Id="filernimage001.png_$(var.Language)" LongName="image001.png" Name="image001.png" DiskId="1" /> 
+                                  <File Id="filernimage002.jpg_$(var.Language)" LongName="image002.jpg" Name="image002.jpg" DiskId="1" /> 
+                                  <File Id="filernimage003.png_$(var.Language)" LongName="image003.png" Name="image003.png" DiskId="1" /> 
+                                  <File Id="filernimage004.jpg_$(var.Language)" LongName="image004.jpg" Name="image004.jpg" DiskId="1" /> 
+                                  <File Id="filernimage005.png_$(var.Language)" LongName="image005.png" Name="image005.png" DiskId="1" /> 
+                                  <File Id="filernimage006.jpg_$(var.Language)" LongName="image006.jpg" Name="image006.jpg" DiskId="1" /> 
+                                  <File Id="filernimage007.jpg_$(var.Language)" LongName="image007.jpg" Name="image007.jpg" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_afs_cfg.png_$(var.Language)" LongName="netidmgr_afs_cfg.png" Name="nmafscfg.png" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_afs_opt.png_$(var.Language)" LongName="netidmgr_afs_opt.png" Name="nmafsopt.png" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_main.png_$(var.Language)" LongName="netidmgr_main.png" Name="nmmain.png" DiskId="1" /> 
+                                </Component>
+                            </Directory>
                         </Directory> <!-- Release Notes -->
                     </Directory> <!-- Html -->
             </Directory> <!-- Documentation -->

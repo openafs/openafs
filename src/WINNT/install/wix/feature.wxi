@@ -13,6 +13,7 @@
            <ComponentRef Id="cmf_index2_HTM_en_US" />
            <ComponentRef Id="cmp_index_files_en_US" />
            <ComponentRef Id="cmp_logo_files_en_US" />
+           <ComponentRef Id="cmp_relnotes_files_en_US" />
   <?endif?>
 
   <?ifndef BinsOnly ?>
