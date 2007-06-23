@@ -419,7 +419,7 @@ extern void VPutVolume_r(Volume *);
 extern void VOffline(Volume * vp, char *message);
 extern void VOffline_r(Volume * vp, char *message);
 extern int VConnectFS(void);
-extern int VConnectFS_r(void);
+extern int VConnectFS_r(int);
 extern Volume *VAttachVolume(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VAttachVolume_r(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
