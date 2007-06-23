@@ -35,67 +35,128 @@ extern afs_int32 afs_pct2;
 static struct ctl_table_header *afs_sysctl = NULL;
 
 static ctl_table afs_sysctl_table[] = {
-    {1, "hm_retry_RO",
-     &hm_retry_RO, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {2, "hm_retry_RW",
-     &hm_retry_RW, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {3, "hm_retry_int",
-     &hm_retry_int, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {4, "GCPAGs",
-     &afs_gcpags, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {5, "rx_deadtime",
-     &afs_rx_deadtime, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {6, "bkVolPref",
-     &afs_bkvolpref, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {7, "afs_blocksUsed",
-     &afs_blocksUsed, sizeof(afs_int32), 0444, NULL,
-     &proc_dointvec}
-    ,
-    {8, "afs_blocksUsed_0",
-     &afs_blocksUsed_0, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {9, "afs_blocksUsed_1",
-     &afs_blocksUsed_1, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {10, "afs_blocksUsed_2",
-     &afs_blocksUsed_2, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {11, "afs_pct1",
-     &afs_pct1, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {12, "afs_pct2",
-     &afs_pct2, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {13, "afs_cacheBlocks",
-     &afs_cacheBlocks, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {7, "md5inum",
-     &afs_new_inum, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
+    {
+	.ctl_name 	= 1, 
+	.procname 	= "hm_retry_RO",
+	.data 		= &hm_retry_RO, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode     	= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+        .ctl_name 	= 2, 
+        .procname 	= "hm_retry_RW",
+        .data		= &hm_retry_RW,
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+     	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 3, 
+	.procname	= "hm_retry_int",
+	.data		= &hm_retry_int, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 4, 
+	.procname	= "GCPAGs",
+	.data		= &afs_gcpags, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler 	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 5, 
+	.procname	= "rx_deadtime",
+	.data		= &afs_rx_deadtime, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 6, 
+	.procname	= "bkVolPref",
+	.data		= &afs_bkvolpref, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 7, 
+	.procname	= "afs_blocksUsed",
+	.data		= &afs_blocksUsed,
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0444,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 8, 
+	.procname	= "afs_blocksUsed_0",
+	.data		= &afs_blocksUsed_0,
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 9, 
+	.procname	= "afs_blocksUsed_1",
+	.data		= &afs_blocksUsed_1, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 10, 
+	.procname	= "afs_blocksUsed_2",
+	.data		= &afs_blocksUsed_2, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 11, 
+	.procname	= "afs_pct1",
+	.data		= &afs_pct1, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 12, 
+	.procname	= "afs_pct2",
+	.data		= &afs_pct2, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler   = &proc_dointvec
+    },
+    {
+	.ctl_name	= 13,
+	.procname	= "afs_cacheBlocks",
+	.data		= &afs_cacheBlocks,
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+    	.proc_handler	= &proc_dointvec
+    },
+    {
+	.ctl_name	= 14, 
+	.procname	= "md5inum",
+	.data		= &afs_new_inum, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler	= &proc_dointvec
+    },
     {0}
 };
 
 static ctl_table fs_sysctl_table[] = {
-    {1, "afs", NULL, 0, 0555, afs_sysctl_table},
+    {
+	.ctl_name	= 1, 
+	.procname	= "afs", 
+	.mode		= 0555, 
+	.child		= afs_sysctl_table
+    },
     {0}
 };
 
