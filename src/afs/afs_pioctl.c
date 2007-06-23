@@ -200,7 +200,7 @@ static int (*(CpioctlSw[])) () = {
         PBogus,                 /* 6 */
         PBogus,                 /* 7 */
         PBogus,                 /* 8 */
-        PNewUUID,               /* 9 */
+        PNewUuid,               /* 9 */
 };
 
 static int (*(OpioctlSw[])) () = {
