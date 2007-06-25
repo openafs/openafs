@@ -119,7 +119,7 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 
     if (!fidp) {
         *serversppp = NULL;
-        return 0;
+        return CM_ERROR_INVAL;
     }
 
     cellp = cm_FindCellByID(fidp->cell);
@@ -362,7 +362,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* special codes:  VBUSY and VRESTARTING */
     else if (errorCode == VBUSY || errorCode == VRESTARTING) {
-        if (!serversp) {
+        if (!serversp && fidp) {
             code = cm_GetServerList(fidp, userp, reqp, &serverspp);
             if (code == 0) {
                 serversp = *serverspp;
@@ -464,7 +464,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 #endif
 
         /* Mark server offline for this volume */
-        if (!serversp) {
+        if (!serversp && fidp) {
             code = cm_GetServerList(fidp, userp, reqp, &serverspp);
             if (code == 0) {
                 serversp = *serverspp;
