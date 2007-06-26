@@ -1472,7 +1472,9 @@ AfsdbLookupHandler()
 	    acellName[sizeof(acellName) - 1] = '\0';
 	}
     }
+#ifdef AFS_DARWIN_ENV
     kill(event_pid, SIGTERM);
+#endif
     exit(1);
 }
 #endif
