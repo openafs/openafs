@@ -3,8 +3,12 @@ openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
   * Use LSB logging functions for openafs-fileserver and support passing
     arguments to bosserver in /etc/default/openafs-fileserver by setting
     DAEMON_ARGS.
+  * Clean up more completely after a purge of openafs-fileserver.  Remove
+    the files created by the server in /var/lib/openafs/local, remove
+    KeyFile and CellServDB.old from /etc/openafs/server, and remove
+    BosConfig from /etc/openafs.
 
- -- Russ Allbery <rra@debian.org>  Thu, 21 Jun 2007 07:16:37 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 27 Jun 2007 07:32:58 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
