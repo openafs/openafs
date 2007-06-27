@@ -735,6 +735,7 @@ extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 				    afs_int32 acell, u_short aport,
 				    afs_int32 locktype, afsUUID * uuidp,
 				    afs_int32 addr_uniquifier);
+extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
 extern void afs_ServerDown(struct srvAddr *sa);
 extern void afs_CountServers(void);
