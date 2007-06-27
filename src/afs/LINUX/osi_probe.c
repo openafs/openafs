@@ -512,9 +512,12 @@ static probectl main_probe = {
     /* symbol in section to try scanning */
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
     (unsigned long)&sys_close,
-#elif defined(AFS_AMD64_LINUX20_ENV)
+#elif defined(AFS_AMD64_LINUX26_ENV)
     /* On this platform, it's in a different section! */
     (unsigned long)&generic_ro_fops,
+#elif defined(AFS_AMD64_LINUX20_ENV)
+    /* On this platform, it's in a different section! */
+    (unsigned long)&tasklist_lock,
 #else
     (unsigned long)&init_mm,
 #endif
@@ -535,8 +538,12 @@ static probectl main_probe = {
     (unsigned long)(&init_mm),
     0x1fffff,
     0x30000,
-#elif defined(AFS_AMD64_LINUX20_ENV)
+#elif defined(AFS_AMD64_LINUX26_ENV)
     (unsigned long)(&generic_ro_fops) - 0x30000,
+    0,
+    0x6000,
+#elif defined(AFS_AMD64_LINUX20_ENV)
+    (unsigned long)(&tasklist_lock) - 0x30000,
     0,
     0x6000,
 #elif defined(AFS_PPC64_LINUX26_ENV)
