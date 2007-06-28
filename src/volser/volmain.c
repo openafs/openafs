@@ -422,6 +422,10 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
+    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage can
+       log, so we need to do this here */
+    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+
     VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
     /* For nuke() */
     Lock_Init(&localLock);
@@ -471,8 +475,6 @@ main(int argc, char **argv)
     rx_SetRxDeadTime(420);
     memset(busyFlags, 0, sizeof(busyFlags));
 
-    /* Open FileLog and map stdout, stderr into it */
-    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
     SetupLogSignals();
 
     {
