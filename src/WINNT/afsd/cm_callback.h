@@ -68,4 +68,16 @@ extern osi_rwlock_t cm_callbackLock;
 
 extern void cm_CallbackNotifyChange(cm_scache_t *scp);
 
+#ifdef GIVE_UP_CALLBACKS
+extern void cm_GiveUpCallback(struct cm_scache *);
+
+extern void cm_GiveUpCallBacksToServer(cm_server_t * serverp);
+
+#define AFS_MAXCBRSCALL   16      /* max to return in a given call */
+#endif /* GIVE_UP_CALLBACKS */
+
+extern void cm_GiveUpAllCallbacks(cm_server_t *tsp);
+
+extern void cm_GiveUpAllCallbacksAllServers(void);
+
 #endif /*  _CM_CALLBACK_H_ENV__ */

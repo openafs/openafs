@@ -162,17 +162,23 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->bulkStatProgress = hzero;
     scp->waitCount = 0;
 
+#ifdef GIVE_UP_CALLBACKS
+    /* discard callback */
+    if (scp->cbServerp) {
+        cm_GiveUpCallback(scp);
+    }
+#else /* GIVE_UP_CALLBACKS */
+    if (scp->cbServerp) {
+        cm_PutServer(scp->cbServerp);
+        scp->cbServerp = NULL;
+    }
+    scp->cbExpires = 0;
+#endif /* GIVE_UP_CALLBACKS */
+
     scp->fid.vnode = 0;
     scp->fid.volume = 0;
     scp->fid.unique = 0;
     scp->fid.cell = 0;
-
-    /* discard callback */
-    if (scp->cbServerp) {
-	cm_PutServer(scp->cbServerp);
-	scp->cbServerp = NULL;
-    }
-    scp->cbExpires = 0;
 
     /* remove from dnlc */
     cm_dnlcPurgedp(scp);
@@ -449,10 +455,32 @@ cm_ValidateSCache(void)
     return cm_dnlcValidate();
 }
 
+void
+cm_SuspendSCache(void)
+{
+    cm_scache_t * scp;
+
+    cm_GiveUpAllCallbacksAllServers();
+
+    lock_ObtainWrite(&cm_scacheLock);
+    for ( scp = cm_data.allSCachesp; scp;
+          scp = scp->allNextp ) {
+        if (scp->cbServerp) {
+            cm_PutServer(scp->cbServerp);
+            scp->cbServerp = NULL;
+        }
+        scp->cbExpires = 0;
+        scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+}
+
 long
 cm_ShutdownSCache(void)
 {
     cm_scache_t * scp;
+
+    lock_ObtainWrite(&cm_scacheLock);
 
     for ( scp = cm_data.allSCachesp; scp;
           scp = scp->allNextp ) {
@@ -461,9 +489,20 @@ cm_ShutdownSCache(void)
             cm_FreeAllACLEnts(scp);
             lock_ReleaseMutex(&scp->mx);
         }
+
+        if (scp->cbServerp) {
+            cm_PutServer(scp->cbServerp);
+            scp->cbServerp = NULL;
+        }
+        scp->cbExpires = 0;
+        scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
+
         lock_FinalizeMutex(&scp->mx);
         lock_FinalizeRWLock(&scp->bufCreateLock);
     }
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    cm_GiveUpAllCallbacksAllServers();
 
     return cm_dnlcShutdown();
 }
