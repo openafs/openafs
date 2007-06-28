@@ -32,7 +32,6 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
-#include "cm_server.h"
 
 #ifndef DJGPP
 #include <rx/rxkad.h>
