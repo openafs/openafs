@@ -20,6 +20,15 @@ typedef struct cm_server_vols {
     struct cm_server_vols *nextp;
 } cm_server_vols_t;
 
+#ifdef GIVE_UP_CALLBACKS
+#define AFS_MAXCBRSCALL 16
+typedef struct cm_server_gucb {
+    afs_uint32          count;
+    cm_fid_t            fids[AFS_MAXCBRSCALL];
+    struct cm_server_gucb * nextp;
+} cm_server_gucb_t;
+#endif /* GIVE_UP_CALLBACKS */
+
 /* pointed to by volumes and cells without holds; cm_serverLock is obtained
  * at the appropriate times to change the pointers to these servers.
  */
@@ -36,6 +45,9 @@ typedef struct cm_server {
     osi_mutex_t mx;
     unsigned short ipRank;		/* server priority */
     cm_server_vols_t *  vols;           /* by mx */
+#ifdef GIVE_UP_CALLBACKS
+    cm_server_gucb_t *  gucbs;          /* by mx */
+#endif /* GIVE_UP_CALLBACKS */
 } cm_server_t;
 
 enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
@@ -121,6 +133,17 @@ extern void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit);
 
 extern void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no);
 
-extern cm_server_t * cm_FindServerByIP(afs_uint32 addr);
+extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 
+#ifdef GIVE_UP_CALLBACKS
+extern cm_server_gucb_t *cm_NewServerGUCBs(void);
+
+extern void cm_AddFidToGiveUpCallBackList(cm_server_t * serverp, cm_fid_t *fidp);
+
+extern void cm_RemoveFidFromGiveUpCallBackList(cm_server_t *serverp, cm_fid_t *fidp);
+
+extern void cm_FreeGiveUpCallBackList(cm_server_t * serverp);
+
+extern void cm_FreeAllGiveUpCallBackLists(void);
+#endif /* GIVE_UP_CALLBACKS */
 #endif /*  __CM_SERVER_H_ENV__ */

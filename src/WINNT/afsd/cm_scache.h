@@ -375,6 +375,8 @@ extern long cm_ValidateSCache(void);
 
 extern long cm_ShutdownSCache(void);
 
+extern void cm_SuspendSCache(void);
+
 extern long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags);
 
 extern void cm_RemoveSCacheFromHashTable(cm_scache_t *scp);

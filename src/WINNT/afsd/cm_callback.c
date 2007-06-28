@@ -203,10 +203,19 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
             lock_ReleaseWrite(&cm_scacheLock);
             osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+
+#ifdef GIVE_UP_CALLBACKS
+            lock_ObtainMutex(&scp->cbServerp->mx);
+            cm_RemoveFidFromGiveUpCallBackList(scp->cbServerp, &scp->fid);
+            lock_ReleaseMutex(&scp->cbServerp->mx);
+#endif /* GIVE_UP_CALLBACKS */
+
             lock_ObtainMutex(&scp->mx);
             cm_DiscardSCache(scp);
             lock_ReleaseMutex(&scp->mx);
+
             cm_CallbackNotifyChange(scp);
+            
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
@@ -239,7 +248,6 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
     tfid.volume = fidp->Volume;
     cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
 
-
     lock_ObtainWrite(&cm_scacheLock);
     for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
         for(scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
@@ -249,11 +257,19 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                  scp->cbServerp != NULL) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
+
+#ifdef GIVE_UP_CALLBACKS
+                lock_ObtainMutex(&scp->cbServerp->mx);
+                cm_RemoveFidFromGiveUpCallBackList(scp->cbServerp, &scp->fid);
+                lock_ReleaseMutex(&scp->cbServerp->mx);
+#endif /* GIVE_UP_CALLBACKS */
+
                 lock_ObtainMutex(&scp->mx);
                 osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
+
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
@@ -350,7 +366,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
 
-        tsp = cm_FindServerByIP(host);
+        tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
         if (tsp)
             cellp = tsp->cellp;
     }
@@ -484,9 +500,24 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	    cm_SetServerNo64Bit(tsp, 0);
 	    cm_SetServerNoInlineBulk(tsp, 0);
 
+#ifdef GIVE_UP_CALLBACKS
+            /* Clear the callbacks list */
+            lock_ObtainMutex(&tsp->mx);
+            cm_FreeGiveUpCallBackList(tsp);
+            lock_ReleaseMutex(&tsp->mx);
+#endif /* GIVE_UP_CALLBACKS */
+
 	    /* we're done with the server structure */
             cm_PutServer(tsp);
-	}
+	} 
+#ifdef GIVE_UP_CALLBACKS        
+        else {
+            /* if we didn't recognize the server, we cleared all callbacks 
+             * on all stat scache objects.  So we must clear all of the 
+             * Give Up CallBack lists */
+            cm_FreeAllGiveUpCallBackLists();
+        }
+#endif /* GIVE_UP_CALLBACKS */
     }
     MUTEX_EXIT(&callp->lock);
     return 0;
@@ -1526,8 +1557,11 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
     cm_racingRevokes_t *revp;		/* where we are */
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
     int freeFlag;
-    cm_server_t * serverp = 0;
+    cm_server_t * serverp = NULL;
     int discardScp = 0;
+#ifdef GIVE_UP_CALLBACKS
+    int addFidToGUCB = 0;
+#endif /* GIVE_UP_CALLBACKS */
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
@@ -1546,6 +1580,9 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	if (scp) {
             if (scp->cbServerp != cbrp->serverp) {
                 serverp = scp->cbServerp;
+#ifdef GIVE_UP_CALLBACKS
+                addFidToGUCB = 1;
+#endif /* GIVE_UP_CALLBACKS */
                 if (!freeFlag)
                     cm_GetServer(cbrp->serverp);
                 scp->cbServerp = cbrp->serverp;
@@ -1607,9 +1644,23 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         lock_ReleaseMutex(&scp->mx);
         cm_CallbackNotifyChange(scp);
         lock_ObtainMutex(&scp->mx);
+    } 
+#ifdef GIVE_UP_CALLBACKS    
+    else if (scp) {
+        lock_ObtainMutex(&scp->cbServerp->mx);
+        cm_RemoveFidFromGiveUpCallBackList(scp->cbServerp, &scp->fid);
+        lock_ReleaseMutex(&scp->cbServerp->mx);
     }
+#endif /* GIVE_UP_CALLBACKS */
 
     if ( serverp ) {
+#ifdef GIVE_UP_CALLBACKS
+        if (addFidToGUCB) {
+            lock_ObtainMutex(&serverp->mx);
+            cm_AddFidToGiveUpCallBackList(serverp, &scp->fid);
+            lock_ReleaseMutex(&serverp->mx);
+        }
+#endif /* GIVE_UP_CALLBACKS */
         lock_ObtainWrite(&cm_serverLock);
         cm_FreeServer(serverp);
         lock_ReleaseWrite(&cm_serverLock);
@@ -1779,4 +1830,135 @@ void cm_CheckCBExpiration(void)
 
     osi_Log0(afsd_logp, "CheckCBExpiration Complete");
 }
+
+
+#ifdef GIVE_UP_CALLBACKS
+/* server mutex must be held */
+/* do not hold cm_scacheLock */
+void cm_GiveUpCallBacksToServer(cm_server_t * serverp)
+{
+    struct AFSFid *tfids = NULL;
+    struct AFSCallBack callBacks[1];
+    struct AFSCBFids fidArray;
+    struct AFSCBs cbArray;
+    afs_int32 code = 0;
+    cm_server_gucb_t *gucbp, *nextp;
+    cm_conn_t *connp;
+    struct rx_connection * callp;
+    cm_req_t req;
+    int i, j;
+
+    for ( gucbp = serverp->gucbs, serverp->gucbs = NULL, lock_ReleaseMutex(&serverp->mx); 
+          gucbp; 
+          gucbp = nextp ) 
+    {
+        nextp = gucbp->nextp;
+
+        if (!tfids) {   /* only need to do these once */
+            tfids = (struct AFSFid *)malloc(AFS_MAXCBRSCALL * sizeof(*tfids));
+            osi_Assert(tfids);
+
+            fidArray.AFSCBFids_val = (struct AFSFid *)tfids;
+
+            cbArray.AFSCBs_len = 1;
+            cbArray.AFSCBs_val = callBacks;
+            memset(&callBacks[0], 0, sizeof(callBacks[0]));
+            callBacks[0].CallBackType = CB_EXCLUSIVE;
+        }
+        memset(tfids, 0, AFS_MAXCBRSCALL * sizeof(*tfids));
+
+        for ( i=0, j=0; i<gucbp->count; i++ ) {
+            if (gucbp->fids[i].cell != 0) {
+                cm_AFSFidFromFid(&tfids[j++], &gucbp->fids[i]);
+            }
+        }
+        fidArray.AFSCBFids_len = j;
+
+        cm_InitReq(&req);
+        req.flags |= CM_REQ_NORETRY;
+
+        osi_Log1(afsd_logp, "CALL GiveUpCallbacks serverp %xp", serverp);
+        do {
+            code = cm_ConnByServer(serverp, cm_rootUserp, &connp);
+            if (code) 
+                continue;
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_GiveUpCallBacks(callp, &fidArray, &cbArray);
+            rx_PutConnection(callp);
+        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
+
+        if (code)
+            osi_Log1(afsd_logp, "CALL GiveUpCallback FAILURE, code 0x%x", code);
+        else
+            osi_Log0(afsd_logp, "CALL GiveUpCallback SUCCESS");
+
+        free(gucbp);
+    }
+    lock_ObtainMutex(&serverp->mx);
+}
+
+
+void
+cm_GiveUpCallback(cm_scache_t * scp)
+{
+    time_t now;
+
+    cm_HoldSCacheNoLock(scp);
+    now = osi_Time();
+
+    if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now < scp->cbExpires)) {
+        lock_ObtainMutex(&scp->cbServerp->mx);
+        cm_AddFidToGiveUpCallBackList(scp->cbServerp, &scp->fid);
+        lock_ReleaseMutex(&scp->cbServerp->mx);
+
+        /* assume the callbacks were given up even if we fail */
+        cm_PutServer(scp->cbServerp);
+        scp->cbServerp = NULL;
+        scp->cbExpires = 0;
+    }
+    cm_ReleaseSCacheNoLock(scp);
+}
+#endif /* GIVE_UP_CALLBACKS */
+
+void 
+cm_GiveUpAllCallbacks(cm_server_t *tsp)
+{
+    long code;
+    cm_conn_t *connp;
+    struct rx_connection * rxconnp;
+
+    if (tsp->type == CM_SERVER_FILE) {
+        code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
+        if (code == 0) {
+            rxconnp = cm_GetRxConn(connp);
+	    code = RXAFS_GiveUpAllCallBacks(rxconnp);
+	    rx_PutConnection(rxconnp);
+
+            lock_ObtainMutex(&tsp->mx);
+#ifdef GIVE_UP_CALLBACKS
+            cm_FreeGiveUpCallBackList(tsp);
+#endif /* GIVE_UP_CALLBACKS */
+            lock_ReleaseMutex(&tsp->mx);
+        }
+    }
+}
+
+void
+cm_GiveUpAllCallbacksAllServers(void)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainWrite(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        cm_GetServerNoLock(tsp);
+        lock_ReleaseWrite(&cm_serverLock);
+        cm_GiveUpAllCallbacks(tsp);
+        lock_ObtainWrite(&cm_serverLock);
+        cm_PutServerNoLock(tsp);
+    }
+    lock_ReleaseWrite(&cm_serverLock);
+}
+
 

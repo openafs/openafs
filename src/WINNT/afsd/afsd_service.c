@@ -311,16 +311,20 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMQUERYSUSPEND:       
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND"); 
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() )
+		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
+                        cm_SuspendSCache();
+                    }
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMQUERYSTANDBY:                                                         
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY"); 
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() ) 
+		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
+                        cm_SuspendSCache();
+                    }
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                                                             
                     break;                                                                        
@@ -329,15 +333,19 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMSUSPEND:                         
                     afsi_log("SERVICE_CONTROL_APMSUSPEND");
 		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
+		    if (osVersion.dwMajorVersion >= 6) {
+                        cm_SuspendSCache();
 			smb_StopListeners();
+                    }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMSTANDBY:                  
                     afsi_log("SERVICE_CONTROL_APMSTANDBY"); 
 		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
+		    if (osVersion.dwMajorVersion >= 6) {
+                        cm_SuspendSCache();
 			smb_StopListeners();
+                    }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMECRITICAL:             
