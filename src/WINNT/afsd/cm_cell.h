@@ -10,8 +10,6 @@
 #ifndef __CELL_H_ENV_
 #define __CELL_H_ENV_ 1
 
-#include "cm_server.h"
-
 #define CELL_MAXNAMELEN                 256
 
 #define CM_CELL_MAGIC    ('C' | 'E' <<8 | 'L'<<16 | 'L'<<24)

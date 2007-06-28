@@ -28,7 +28,6 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
-#include "cm_server.h"
 
 #include <rx/rxkad.h>
 #include "afsrpc.h"

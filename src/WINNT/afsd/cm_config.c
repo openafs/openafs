@@ -7,10 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
-#include <afs/stds.h>
-#include <afs/cellconfig.h>
-
 #include <windows.h>
 #include <winsock2.h>
 #include <stdlib.h>
@@ -20,10 +16,17 @@
 #include "afsd.h"
 #include <WINNT\afssw.h>
 #include <WINNT\afsreg.h>
+
+#include <afs/param.h>
+#include <afs/stds.h>
+#include <afs/cellconfig.h>
+
 #ifdef AFS_AFSDB_ENV
 #include "cm_dns.h"
 #include <afs/afsint.h>
 #endif
+
+
 
 /* TODO: these should be pulled in from dirpath.h */
 #define AFS_THISCELL "ThisCell"
