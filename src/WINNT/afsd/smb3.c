@@ -3726,7 +3726,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
                      * even means it is to be treated as a directory
                      * and odd means it is to be treated as a file.
                      */
-                    if (mustFake && (scp->fid.vnode % 2 == 0))
+                    if (mustFake && (scp->fid.vnode & 0x1))
                         *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
                     else
                         *((u_long *)dptr) = SMB_ATTR_NORMAL;
