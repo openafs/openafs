@@ -6183,6 +6183,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_key_t key;
         LARGE_INTEGER LOffset;
         LARGE_INTEGER LLength;
+        cm_scache_t * scp;
 
         pid = ((smb_t *) inp)->pid;
         key = cm_GenerateKey(vcp->vcID, pid, fd);
@@ -6192,9 +6193,10 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.HighPart = 0;
         LLength.LowPart = count;
 
-        lock_ObtainMutex(&fidp->scp->mx);
-        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
-        lock_ReleaseMutex(&fidp->scp->mx);
+        scp = fidp->scp;
+        lock_ObtainMutex(&scp->mx);
+        code = cm_LockCheckWrite(scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&scp->mx);
 
         if (code)
             goto done;
@@ -6299,15 +6301,17 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     key = cm_GenerateKey(vcp->vcID, pid, fd);
     {
         LARGE_INTEGER LOffset, LLength;
+        cm_scache_t *scp;
 
         LOffset.HighPart = offset.HighPart;
         LOffset.LowPart = offset.LowPart;
         LLength.HighPart = 0;
         LLength.LowPart = count;
 
-        lock_ObtainMutex(&fidp->scp->mx);
-        code = cm_LockCheckRead(fidp->scp, LOffset, LLength, key);
-        lock_ReleaseMutex(&fidp->scp->mx);
+        scp = fidp->scp;
+        lock_ObtainMutex(&scp->mx);
+        code = cm_LockCheckRead(scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&scp->mx);
     }
 
     if (code) {
