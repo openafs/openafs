@@ -232,17 +232,6 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
         if (doPing) 
 	    cm_PingServer(tsp);
 
-#ifdef GIVE_UP_CALLBACKS
-        /* if this is a file server and it is not currently down
-         * give up any callbacks we have queued 
-         */
-        if (isFS && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
-            lock_ObtainMutex(&tsp->mx);
-            cm_GiveUpCallBacksToServer(tsp);
-            lock_ReleaseMutex(&tsp->mx);
-        }
-#endif /* GIVE_UP_CALLBACKS */
-
         /* also, run the GC function for connections on all of the
          * server's connections.
          */
@@ -737,78 +726,3 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
   
     lock_ReleaseWrite(&cm_serverLock);
 }
-
-#ifdef GIVE_UP_CALLBACKS
-cm_server_gucb_t *cm_NewServerGUCBs(void) {
-    cm_server_gucb_t *gucbp;
-
-    gucbp = malloc(sizeof(*gucbp));
-    if (gucbp)
-        memset(gucbp, 0, sizeof(*gucbp));
-
-    return gucbp;
-}
-
-
-/* server mutex must be held */
-void cm_AddFidToGiveUpCallBackList(cm_server_t * serverp, cm_fid_t *fidp) {
-    cm_server_gucb_t ** gucbpp;
-
-    for ( gucbpp = &serverp->gucbs; *gucbpp; gucbpp = &(*gucbpp)->nextp ) {
-        if ((*gucbpp)->count < AFS_MAXCBRSCALL) {
-            (*gucbpp)->fids[(*gucbpp)->count] = *fidp;
-            (*gucbpp)->count++;
-            return;
-        }
-    }
-
-    /* if we get here all of the allocated pages are full */
-    (*gucbpp) = cm_NewServerGUCBs();
-    if (*gucbpp) {
-        (*gucbpp)->fids[0] = *fidp;
-        (*gucbpp)->count = 1;
-    }
-}
-
-/* server mutex must be held */
-void cm_RemoveFidFromGiveUpCallBackList(cm_server_t *serverp, cm_fid_t *fidp) {
-    cm_server_gucb_t *gucbp;
-    int i;
-
-    for ( gucbp = serverp->gucbs; gucbp; gucbp = gucbp->nextp ) {
-        for ( i=0; i < gucbp->count; i++ ) {
-            if (cm_FidCmp(&gucbp->fids[i], fidp) == 0) {
-                /* invalidate this entry.  we will skip over it later */
-                gucbp->fids[i].cell = 0;
-                break;
-            }
-        }
-    }
-}
-
-/* server mutex must be held */
-void cm_FreeGiveUpCallBackList(cm_server_t * serverp)
-{
-    cm_server_gucb_t *gucbp, *nextp;
-
-    for ( gucbp = serverp->gucbs, serverp->gucbs = NULL; gucbp; gucbp = nextp ) {
-        nextp = gucbp->nextp;
-        free(gucbp);
-    }
-}
-
-void cm_FreeAllGiveUpCallBackLists(void)
-{
-    cm_server_t *tsp;
-
-    lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
-        if (tsp->type == CM_SERVER_FILE && tsp->gucbs != NULL) {
-            lock_ObtainMutex(&tsp->mx);
-            cm_FreeGiveUpCallBackList(tsp);
-            lock_ReleaseMutex(&tsp->mx);
-        }
-    }
-    lock_ReleaseRead(&cm_serverLock);
-}
-#endif /* GIVE_UP_CALLBACKS */

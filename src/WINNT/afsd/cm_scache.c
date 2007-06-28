@@ -160,18 +160,11 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->bulkStatProgress = hzero;
     scp->waitCount = 0;
 
-#ifdef GIVE_UP_CALLBACKS
-    /* discard callback */
-    if (scp->cbServerp) {
-        cm_GiveUpCallback(scp);
-    }
-#else /* GIVE_UP_CALLBACKS */
     if (scp->cbServerp) {
         cm_PutServer(scp->cbServerp);
         scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
-#endif /* GIVE_UP_CALLBACKS */
 
     scp->fid.vnode = 0;
     scp->fid.volume = 0;
