@@ -54,6 +54,7 @@ RCSID
 
 #include <cm.h>
 #include <cm_dir.h>
+#include <cm_server.h>
 #include <cm_cell.h>
 #include <cm_user.h>
 #include <cm_conn.h>
