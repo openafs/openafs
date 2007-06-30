@@ -144,7 +144,7 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
         if(!(i%16)) {
             if(i) {
                 osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buf));
-                strcat(buf,"\n");
+                strcat(buf,"\r\n");
                 OutputDebugString(buf);
             }
             sprintf(buf,"%5x",i);
@@ -169,7 +169,7 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
     }    
     if(i) {
         osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buf));
-        strcat(buf,"\n");
+        strcat(buf,"\r\n");
         OutputDebugString(buf);
     }   
 }
