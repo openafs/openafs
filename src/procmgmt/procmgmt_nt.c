@@ -251,6 +251,7 @@ static DWORD WINAPI
 RemoteSignalListenerThread(LPVOID param)
 {
     HANDLE sigPipeHandle = (HANDLE) param;
+    HMODULE hLib = LoadLibrary("AFSPROCMGMT.DLL");
 
     while (1) {
 	/* wait for pipe client to connect */
@@ -296,6 +297,7 @@ RemoteSignalListenerThread(LPVOID param)
     }
 
     /* never reached */
+    FreeLibrary(hLib);
     return (0);
 }
 
