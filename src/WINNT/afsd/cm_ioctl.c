@@ -237,7 +237,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        and it returns the correct (full) path.  therefore, there is
        no drive letter, and the path is absolute. */
     code = cm_NameI(cm_data.rootSCachep, relativePath,
-                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                     CM_FLAG_CASEFOLD,
                      userp, "", reqp, scpp);
 
     if (code) {
@@ -331,7 +331,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             return code;
 	}
         
-        code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+        code = cm_NameI(substRootp, relativePath, 
+                         CM_FLAG_CASEFOLD,
                          userp, NULL, reqp, scpp);
         if (code) {
 	    cm_ReleaseSCache(substRootp);
