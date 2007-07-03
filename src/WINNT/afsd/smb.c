@@ -1813,7 +1813,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         snprintf(pathstr, sizeof(pathstr)/sizeof(char),
                  "/" CM_PREFIX_VOL "%s", shareName);
         pathstr[sizeof(pathstr)/sizeof(char) - 1] = '\0';
-        len = strlen(pathstr);
+        len = strlen(pathstr) + 1;
 
         *pathNamep = malloc(len);
         if (*pathNamep) {
