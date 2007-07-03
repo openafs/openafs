@@ -532,7 +532,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     char tbuffer[256], tbuf1[256];
     struct stat tstat;
 
-    /* figure out the cell name */
+    /* figure out the local cell name */
 #ifdef AFS_NT40_ENV
     i = GetCellNT(adir);
 #else

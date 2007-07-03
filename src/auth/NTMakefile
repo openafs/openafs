@@ -8,6 +8,7 @@
 RELDIR=auth
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = -DAFS_AFSDB_ENV
 
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
