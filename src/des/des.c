@@ -90,7 +90,7 @@ des_ecb_encrypt(void * clear, void * cipher,
 #error dunno how to do this machine type, you lose;
 #endif
 #endif
-    afs_uint32 P_temp;
+    volatile afs_uint32 P_temp;
     volatile unsigned char *P_temp_p = (unsigned char *)&P_temp;
 #ifdef BITS16
     sbox_out S_out;
