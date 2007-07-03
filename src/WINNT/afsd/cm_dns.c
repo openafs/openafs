@@ -707,6 +707,11 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     struct sockaddr_in vlSockAddr;
     char query[1024];
 
+#ifdef AFS_FREELANCE_CLIENT
+    if ( stricmp(cellName, "Freelance.Local.Root") == 0 )
+        return -1;
+#endif /* AFS_FREELANCE_CLIENT */
+
     *numServers = 0; 
     *ttl = 0;
 
