@@ -6442,7 +6442,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         offset = LargeIntegerAdd(offset,
                                  ConvertLongToLargeInteger(written));
-        count -= written;
+        count -= (unsigned short)written;
         total_written += written;
         written = 0;
     }
@@ -7969,6 +7969,11 @@ void smb_Listener(void *parmp)
 	    }
 
 	    if (lanaRemaining == 0) {
+                cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                             ,cm_NetbiosName
+#endif
+                                              );
 		smb_ListenerState = SMB_LISTENER_STOPPED;
 		smb_LANadapter = -1;
 		lana_list.length = 0;
@@ -8333,6 +8338,11 @@ int smb_NetbiosInit(void)
 	lana_list.length = 0;
 	smb_LANadapter = -1;
 	smb_ListenerState = SMB_LISTENER_STOPPED;
+        cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                      ,cm_NetbiosName
+#endif
+                                      );
     }
         
     /* we're done with the NCB now */
@@ -8351,6 +8361,11 @@ void smb_StartListeners()
 	return;
     
     smb_ListenerState = SMB_LISTENER_STARTED;
+    cm_VolStatus_Network_Started(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
 
     for (i = 0; i < lana_list.length; i++) {
         if (lana_list.lana[i] == 255) 
@@ -8407,6 +8422,11 @@ void smb_StopListeners(void)
 	return;
 
     smb_ListenerState = SMB_LISTENER_STOPPED;
+    cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
 
     ncbp = GetNCB();
 
@@ -9063,4 +9083,9 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ReleaseRead(&smb_rctLock);
     return 0;
+}
+
+long smb_IsNetworkStarted(void)
+{
+    return (smb_ListenerState == SMB_LISTENER_STARTED && smbShutdownFlag == 0);
 }

@@ -51,6 +51,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_callback.h \
 	$(INCFILEDIR)\cm_aclent.h \
 	$(INCFILEDIR)\cm_volume.h \
+        $(INCFILEDIR)\cm_volstat.h \
 	$(INCFILEDIR)\cm_dcache.h \
 	$(INCFILEDIR)\cm_access.h \
 	$(INCFILEDIR)\cm_vnodeops.h \
@@ -100,6 +101,7 @@ AFSDOBJS=\
 	$(OUT)\cm_cell.obj \
 	$(OUT)\cm_server.obj \
 	$(OUT)\cm_volume.obj \
+        $(OUT)\cm_volstat.obj \
 	$(OUT)\cm_config.obj \
 	$(OUT)\cm_conn.obj \
 	$(OUT)\cm_user.obj \

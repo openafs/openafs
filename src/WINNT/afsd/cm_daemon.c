@@ -60,6 +60,7 @@ void cm_IpAddrDaemon(long parm)
 	    cm_ForceNewConnectionsAllServers();
             cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    smb_CheckVCs();
+            cm_VolStatus_Network_Addr_Change();
 	}	
     }
 }

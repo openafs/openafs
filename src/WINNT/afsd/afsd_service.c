@@ -1241,6 +1241,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 
+    /* Perform Volume Status Notification Initialization */
+    cm_VolStatus_Initialization();
+
 #ifdef JUMP
     MainThreadId = GetCurrentThreadId();
     jmpret = setjmp(notifier_jmp);
@@ -1360,6 +1363,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
     }
 
+    /* Notify any volume status handlers that we have started */
+    cm_VolStatus_Service_Started();
+
     /* allow an exit to be called when started */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
@@ -1401,6 +1407,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP);
     else
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_STOPPING);
+
+    /* Notify any Volume Status Handlers that we are stopping */
+    cm_VolStatus_Service_Stopped();
 
     /* allow an exit to be called prior to stopping the service */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -1468,6 +1477,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     if (powerEventsRegistered)
         PowerNotificationThreadExit();
 #endif
+
+    /* Cleanup any Volume Status Notification Handler */
+    cm_VolStatus_Finalize();
 
     /* allow an exit to be called after stopping the service */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);

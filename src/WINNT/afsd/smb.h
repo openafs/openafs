@@ -730,6 +730,7 @@ extern void smb_ResetServerPriority(void);
 extern void smb_RestartListeners(void);
 extern void smb_StopListeners(void);
 extern void smb_StopListener(NCB *ncbp, int lana);
+extern long smb_IsNetworkStarted(void);
 
 #define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0
