@@ -36,14 +36,14 @@ LPTSTR EscapeSpecialCharacters (LPTSTR pachIn, size_t cchIn)
    size_t cchReq = cchIn * 2 + 1;
    if (pszOut && (cchOut < cchReq))
       {
-      GlobalFree ((HGLOBAL)pszOut);
+      free(pszOut);
       pszOut = NULL;
       cchOut = 0;
       }
 
    if (!pszOut)
       {
-      pszOut = (LPTSTR)GlobalAlloc (GMEM_FIXED, cchReq);
+      pszOut = (LPTSTR)malloc(cchReq);
       cchOut = cchReq;
       }
 
@@ -216,30 +216,30 @@ BOOL TranslateFile (LPTSTR psz)
    DWORD cbSource;
    if ((cbSource = GetFileSize (hFile, NULL)) != 0)
       {
-      LPTSTR abSource = (LPTSTR)GlobalAlloc (GMEM_FIXED, cbSource + 5);
+      LPTSTR abSource = (LPTSTR)malloc(cbSource + 1);
+	  memset(abSource, 0x00, cbSource + 1);
 
       DWORD dwRead;
-      if (!ReadFile (hFile, abSource, cbSource, &dwRead, NULL))
+      if (!ReadFile (hFile, abSource, cbSource, &dwRead, NULL) || cbSource != dwRead)
          {
          printf ("failed to read %s; error %lu\n", psz, GetLastError());
          rc = FALSE;
          }
       else
          {
-         abSource[ dwRead ] = 0;
-         DWORD cbTarget = dwRead * 4;
-         LPSTR abTarget = (LPSTR)GlobalAlloc (GMEM_FIXED, cbTarget);
+         DWORD cbTarget = cbSource * 4;
+         LPSTR abTarget = (LPSTR)malloc(cbTarget);
          memset (abTarget, 0x00, cbTarget);
 
          BOOL fDefault = FALSE;
-         WideCharToMultiByte (g::CodePage, 0, (LPCWSTR)abSource, dwRead, abTarget, cbTarget, TEXT(" "), &fDefault);
+         WideCharToMultiByte (g::CodePage, 0, (LPCWSTR)abSource, cbSource, abTarget, cbTarget, TEXT(" "), &fDefault);
 
          rc = FormatFile (psz, abTarget);
 
-         GlobalFree ((HGLOBAL)abTarget);
+         free(abTarget);
          }
 
-      GlobalFree ((HGLOBAL)abSource);
+      free(abSource);
       }
 
    CloseHandle (hFile);
