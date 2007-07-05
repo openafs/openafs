@@ -44,6 +44,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_cell.h"
 #include "cm_scache.h"
 #include "cm_volume.h"
+#include "cm_volstat.h"
 #include "cm_dcache.h"
 #include "cm_access.h"
 #include "cm_utils.h"
