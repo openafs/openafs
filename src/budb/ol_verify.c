@@ -303,9 +303,10 @@ TypeName(index)
     return (typeName[index]);
 }
 
-getDumpID(ut, tapePtr, dumpID)
-     struct tape *tapePtr;
-     afs_int32 *dumpID;
+int
+getDumpID(struct ubik_trans *ut,
+    struct tape *tapePtr,
+    afs_int32 *dumpID)
 {
     struct dump d;
     afs_int32 code;
@@ -314,6 +315,7 @@ getDumpID(ut, tapePtr, dumpID)
     code = dbread(ut, ntohl(tapePtr->dump), &d, sizeof(d));
     if (!code)
 	*dumpID = ntohl(d.id);
+    return code;
 }
 
 /* ------------------------------------
