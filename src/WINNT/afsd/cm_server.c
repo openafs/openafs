@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "afsd.h"
+#include <WINNT\syscfg.h>
 #include <osi.h>
 #include <rx/rx.h>
 
@@ -87,21 +88,21 @@ cm_PingServer(cm_server_t *tsp)
 		  wasDown ? "down" : "up",
 		  tsp->capabilities);
 
+        rxconnp = cm_GetRxConn(connp);
 	if (wasDown)
-	    rx_SetConnDeadTime(connp->callp, 10);
+	    rx_SetConnDeadTime(rxconnp, 10);
 	if (tsp->type == CM_SERVER_VLDB) {
-	    code = VL_ProbeServer(connp->callp);
+	    code = VL_ProbeServer(rxconnp);
 	}
 	else {
 	    /* file server */
-	    rxconnp = cm_GetRxConn(connp);
 	    code = RXAFS_GetCapabilities(rxconnp, &caps);
 	    if (code == RXGEN_OPCODE)
 		code = RXAFS_GetTime(rxconnp, &secs, &usecs);
-	    rx_PutConnection(rxconnp);
 	}
 	if (wasDown)
-	    rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
+	    rx_SetConnDeadTime(rxconnp, ConnDeadtimeout);
+        rx_PutConnection(rxconnp);
 	cm_PutConn(connp);
     }	/* got an unauthenticated connection to this server */
 
