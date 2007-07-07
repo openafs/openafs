@@ -15,7 +15,7 @@ extern long cm_VolStatus_Finalize(void);
 
 extern long cm_VolStatus_Service_Started(void);
 
-extern long cm_VolStatus_Service_Stopping(void);
+extern long cm_VolStatus_Service_Stopped(void);
 
 #ifdef _WIN64
 extern long cm_VolStatus_Network_Started(const char * netbios32, const char * netbios64);

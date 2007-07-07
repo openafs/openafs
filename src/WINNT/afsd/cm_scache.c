@@ -1617,38 +1617,40 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
 {
     int zilch;
     cm_scache_t *scp;
-    char output[1024];
+    char output[2048];
     int i;
   
     if (lock)
         lock_ObtainRead(&cm_scacheLock);
   
-    sprintf(output, "%s - dumping scache - cm_data.currentSCaches=%d, cm_data.maxSCaches=%d\r\n", cookie, cm_data.currentSCaches, cm_data.maxSCaches);
+    sprintf(output, "%s - dumping all scache - cm_data.currentSCaches=%d, cm_data.maxSCaches=%d\r\n", cookie, cm_data.currentSCaches, cm_data.maxSCaches);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p flags=0x%x refCount=%u\r\n", 
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p type=%d dv=%d len=0x%I64x mp='%s' flags=0x%x cb=0x%x refCount=%u\r\n", 
                 cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                scp->volp, scp->flags, scp->refCount);
+                scp->volp, scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, scp->flags,
+                (unsigned long)scp->cbExpires, scp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
   
-    sprintf(output, "%s - dumping cm_data.hashTable - cm_data.scacheHashTableSize=%d\r\n", cookie, cm_data.scacheHashTableSize);
+    sprintf(output, "%s - Done dumping all scache.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s - dumping cm_data.scacheHashTable - cm_data.scacheHashTableSize=%d\r\n", cookie, cm_data.scacheHashTableSize);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (i = 0; i < cm_data.scacheHashTableSize; i++)
     {
         for(scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) 
         {
-            sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p flags=0x%x refCount=%u\r\n", 
-                    cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                    scp->fid.unique, scp->volp, scp->flags, scp->refCount);
+            sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d)\r\n", 
+                    cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
 
-    sprintf(output, "%s - Done dumping scache.\r\n", cookie);
+    sprintf(output, "%s - Done dumping cm_data.scacheHashTable\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)

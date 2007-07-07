@@ -1408,9 +1408,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     else
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_STOPPING);
 
-    /* Notify any Volume Status Handlers that we are stopping */
-    cm_VolStatus_Service_Stopped();
-
     /* allow an exit to be called prior to stopping the service */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
@@ -1477,6 +1474,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     if (powerEventsRegistered)
         PowerNotificationThreadExit();
 #endif
+
+    /* Notify any Volume Status Handlers that we are stopped */
+    cm_VolStatus_Service_Stopped();
 
     /* Cleanup any Volume Status Notification Handler */
     cm_VolStatus_Finalize();
