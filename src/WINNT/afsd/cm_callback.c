@@ -1792,7 +1792,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp)
     cm_conn_t *connp;
     struct rx_connection * rxconnp;
 
-    if (tsp->type == CM_SERVER_FILE) {
+    if (tsp->type == CM_SERVER_FILE && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
         code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
         if (code == 0) {
             rxconnp = cm_GetRxConn(connp);
