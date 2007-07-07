@@ -1796,7 +1796,9 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp)
         code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
         if (code == 0) {
             rxconnp = cm_GetRxConn(connp);
+            rx_SetConnDeadTime(rxconnp, 10);
 	    code = RXAFS_GiveUpAllCallBacks(rxconnp);
+            rx_SetConnDeadTime(rxconnp, ConnDeadtimeout);
 	    rx_PutConnection(rxconnp);
         }
     }
