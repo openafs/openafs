@@ -1,5 +1,8 @@
 openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
 
+  * Fix a typo in debian/kern-sysname that caused openafs-modules-source
+    to still assume all ia64 systems used Linux 2.4.  Thanks, Jakob
+    Haufe.  (Closes: #432344)
   * Use LSB logging functions for openafs-fileserver and support passing
     arguments to bosserver in /etc/default/openafs-fileserver by setting
     DAEMON_ARGS.
@@ -8,7 +11,7 @@ openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
     KeyFile and CellServDB.old from /etc/openafs/server, and remove
     BosConfig from /etc/openafs.
 
- -- Russ Allbery <rra@debian.org>  Wed, 27 Jun 2007 07:32:58 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Jul 2007 08:28:01 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 

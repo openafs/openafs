@@ -37,7 +37,7 @@ ia64)
         echo ia64_linux24
         ;;
     2.6*)
-        echo ia64_linux24
+        echo ia64_linux26
         ;;
     esac
     ;;
