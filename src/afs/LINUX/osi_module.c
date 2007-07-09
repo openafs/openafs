@@ -372,7 +372,10 @@ init_module(void)
     err = afs_init_inodecache();
     if (err)
 	return err;
-    register_filesystem(&afs_fs_type);
+    err = register_filesystem(&afs_fs_type);
+    if (err)
+      return err;
+
     osi_sysctl_init();
 #ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_init();
