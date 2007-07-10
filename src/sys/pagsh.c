@@ -130,18 +130,22 @@ ktc_newpag(void)
     afs_uint32 pag;
     struct stat sbuf;
     char fname[256], *prefix = "/ticket/";
+    char fname5[256], *prefix5 = "FILE:/ticket/krb5cc_";
     int numenv;
     char **newenv, **senv, **denv;
 
     if (stat("/ticket", &sbuf) == -1) {
 	prefix = "/tmp/tkt";
+	prefix5 = "FILE:/tmp/krb5cc_";
     }
 
     pag = curpag() & 0xffffffff;
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
+	sprintf(fname5, "%s%d", prefix5, getuid());
     } else {
 	sprintf(fname, "%sp%ld", prefix, pag);
+	sprintf(fname5, "%sp%ld", prefix5, pag);
     }
 /*    ktc_set_tkt_string(fname); */
 
@@ -150,13 +154,18 @@ ktc_newpag(void)
     newenv = (char **)malloc((numenv + 2) * sizeof(char *));
 
     for (senv = environ, denv = newenv; *senv; *senv++) {
-	if (strncmp(*senv, "KRBTKFILE=", 10) != 0)
+	if (strncmp(*senv, "KRBTKFILE=", 10) != 0 &&
+		strncmp(*senv, "KRB5CCNAME=", 11) != 0)
 	    *denv++ = *senv;
     }
 
-    *denv = malloc(10 + strlen(fname) + 1);
+    *denv = malloc(10+11 + strlen(fname) + strlen(fname5) + 2);
     strcpy(*denv, "KRBTKFILE=");
     strcat(*denv, fname);
+    *(denv+1) = *denv + strlen(*denv) + 1;
+    denv++;
+    strcpy(*denv, "KRB5CCNAME=");
+    strcat(*denv, fname5);
     *++denv = 0;
     environ = newenv;
 }
