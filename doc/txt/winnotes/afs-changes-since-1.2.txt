@@ -1,216 +1,248 @@
 Since 1.5.20
 
-* changed the enum values for cm_serverRef_t state info to use a 
-  private name space to avoid collisions (srv_)
+ * changed the enum values for cm_serverRef_t state info to use a 
+   private name space to avoid collisions (srv_)
+ 
+ * added a srv_deleted state for cm_serverRef_t objects.  This 
+   state is set when cm_FreeServerList() is called with the 
+   CM_FREESERVERLIST_DELETE flag set.  cm_FreeServerList() may
+   not always delete the cm_serverRef_t from the list if it is
+   still in use by another thread.  the srv_deleted state means
+   the object's contents are no longer valid and it must be 
+   skipped.  It will be deleted the next time the object is 
+   freed and the refcount hits zero.
+ 
+ * the srv_deleted state is also used when a file server reports
+   either VNOVOL or VMOVED instead of marking the cm_serverRef_t
+   as offline.  This is done to prevent additional usage of the 
+   stale vldb data while waiting for the update volume request
+   to complete.
+ 
+ * added a state field to the cm_volume_t object (enum volstate 
+   vl_ name space) that maintains the state of the volume based
+   upon the states of all of the cm_serverRef_t and cm_server_t
+   objects.
+ 
+ * modified cm_UpdateVolume() to set the state of the cm_volume_t
+   RW, RO, and BK to either vl_alldown or vl_online.  There can't
+   be any other states because cm_UpdateVolume() destroys any  
+   previous knowledge we might have had regarding busy or offline
+   volume status
+ 
+ * modified cm_UpdateVolume() to update the volume name in the 
+   cm_volume_t to the volume base name if the previous value was 
+   a volume ID.
+ 
+ * modified cm_FollowMountPoint() to check to see if the volume
+   name is a volume ID and if so call cm_GetVolumeByID instead 
+   of cm_GetVolumeByName.  This ensures that volume IDs are always
+   looked up as numeric values.  There is no longer a need to 
+   maintain a separate cm_volume_t containing the string representation
+   of the ID value.
+ 
+ * Added a flags parameter to cm_GetVolumeByName() and cm_GetVolumeByID().
+   The first flag is a "CREATE" flag which is set by all existing
+   calls.  The flag is not set by calls to cm_GetVolumeByID() from
+   the server probe code when volume status is being updated.  We 
+   do not want the server probe operation to result in additional 
+   turnover in the cached volume data.  The second flag is NO_LRU_UPDATE 
+   which is set when the server probe code updates the volume status.
+   This flag will be used to prevent the server probe operation from
+   changing the order of the least recently used queue.
+ 
+ * Modified cm_GetVolumeByName to ensure that only one cm_volume_t is 
+   allocated for a given set of normal, readonly, and backup volumes
+   regardless of whether or not the volume is accessed via name or 
+   ID number.  The cm_volume_t namep field is always the base name
+   of the volume. 
+ 
+ * Added a new volume state, vl_unknown.  This state is used as
+   the initial state for all cm_volume_t when the cache manager starts, 
+   for each cm_volume_t at creation, and for each cm_volume_t when
+   recycling.  The cache manager does not know the state of all 
+   volumes in the world, only those that are in the cache and for
+   which it has queried the VLDB and hosting file servers.
+ 
+ * modified cm_GetVolumeByName() to initialize the state of a 
+   volume to vl_unknown.  The actual state will be set when a 
+   cm_VolumeUpdate() call completes successfully.
+ 
+ * changed name of scache hash table variables to avoid ambiguity
+   when adding hash tables for volumes
+ 
+ * fix a buffer overrun in sys\pioctl_nt.c  pioctl().
+ 
+ * modified cm_UpdateVolume() to handle the case in which there is
+   no RW volume but there is are RO volumes for a given base name. 
+   This is done by querying for the ".readonly" volume name if the 
+   base name does not exist in the VLDB.  We never query for the
+   .backup name because under the current usage model a .backup 
+   volume may only exist on the server that the read-write volume
+   is located.  If there is no RW volume, there can be no .backup.
+ 
+ * Added four hash tables for cm_volume_t objects to improve the 
+   search time of cm_GetVolumeByID(), cm_GetVolumeByName() and
+   cm_ForceUpdateVolume(). One each for Name, RWID, ROID, and 
+   BKID.  Three ID hash tables are necessary as long as it is
+   desireable to maintain a single cm_volume_t containing all
+   of the related RW, RO, and BK volume data.  Having the RW and
+   RO volume data in the same object is necessary for the 
+   implementation of cm_GetROVolumeID() which returns either the
+   RO or RW ID depending upon the existence of RO volume instances.  
+ 
+ * Added a volume LRU queue so that volume reuse becomes fairer.
+   This does not replace the all Volumes list which is used when
+   it is desireable to walk a list of all the volumes whose order
+   is not going to change out from underneath you which makes it
+   safe to drop the cm_volumeLock.
+ 
+ * handles volume hash table updates where volume name to 
+   volume ID number changes.  The volume name remains 
+   constant in the cm_volume_t.  if a vos rename is performed, 
+   the name of the volume will change and the volume IDs will be 
+   updated.  Subsequent access to the old volume ID will create a 
+   new cm_volume_t with the new name.
+ 
+ * Added a daemon thread operation to query the state of volumes
+   listed as busy or offline.  cm_CheckBusyVolumes() calls 
+   RXAFS_GetVolumeStatus() for each volume ID that is marked vl_busy 
+   or vl_offline.   If the volume is now online, the status on the
+   volume is updated.  The default period is 600 seconds.  This can 
+   be configured with the BusyVolumeCheckInterval registry value.  
+ 
+ * Added prototype for smb_IoctlPrepareRead() which was missing a
+   return type in the function definition.
+ 
+ * Added volume id lists to the cm_server_t.  These lists are
+   allocated in blocks of ~32 IDs.  When a cm_PingServer() 
+   detects a change in server state, the state of the cm_volume_t
+   is updated.  
+ 
+ * Added volID to the cm_serverRef_t object.  volID is used
+   to identify the volume for which the object is a referral.
+   cm_FreeServerList() uses the volID to remove the volume 
+   from the cm_server_t.
+ 
+ * In cm_Analyze, when VNOVOL or VMOVED are received, 
+   call cm_ForceVolumeUpdate() to force a refresh of the volume 
+   location data.
+ 
+ * Added cm_VolumeStatusNotification() which is used at the moment
+   to log volume status changes to the trace log.  It will also
+   be used as the access point to the File System Filter driver
+   notification engine.
+ 
+ * Added an all cm_scache_t list to cm_data.  This replaces the use
+   of the stat cache LRU queue when we need to enumerate all 
+   entries.  The LRU list order is not static and when using it to 
+   enumerate all entries it can result in items being missed or
+   items being processed more than once.
+ 
+ * Modified cm_Analyze(). Instead of reseting the busy or offline
+   state of a volume and forcing a retry of the operation
+   cm_Analyze will defer to the background daemon thread that will
+   update the state once every 600 seconds.
+ 
+ * Added the automatic generation of a Freelance ".root" read-write
+   mountpoint that refers to the root.afs volume of the workstation
+   cellname at the time the mountpoint is created.
+ 
+ * re-write cm_Analyze to make better use of the known volume
+   status.  VL_Server queries cannot result in CM_ERROR_ALLOFFLINE
+   messages.
+ 
+ * renamed cm_CheckBusyVolumes to cm_CheckOfflineVolumes.  
+   busy volumes will be reset to srv_non_busy by the function
+   but there is no mechanism for querying the busy state other
+   than by attempting to access the resource.
+ 
+ * cm_Analyze will query the state of an offline volume before
+   deciding whether or not to retry when all volume instances
+   are offline.
+ 
+ * the algorithm used after an IP address list change detection
+   has been modified.  we now check the state of the VLDB servers,
+   then reset the rx connections, and finally check the state of 
+   the file servers.  Previously we flushed the rx connections 
+   and then checked the servers in whatever random order they 
+   were first discovered.
+ 
+ * fix the volume status reported by "fs examine"
+ 
+ * various improvements to the AFS Network Identity Manager Provider.
+   - Don't access freed objects after the window has been destroyed.
+   - Write back the AFS cell list in the identity configuration 
+     even when its empty.
+   - Disable all use of the provider when AFS is disabled for a 
+     particular identity.
+ 
+ * Fix cm_cell_t leak.  When evaluating a mountpoint that uses an
+   alias instead of the full cellname, double check the full cell
+   name and see if we have a matching cell before allocating a new
+   one.
+ 
+ * Dump more data with "fs memdump". All volumes and scaches and
+   now cells.
+ 
+ * Reverse the order of the all cells list.  This ensures that
+   the workstation cell is always first in the list.
+ 
+ * If we recognize the server from which a callback revoke was
+   received, then we can ensure that we only invalidate the status
+   information for cm_scache_t objects belonging to that cell.
+ 
+ * When building for amd64, use APPVER 5.02 as we do not support
+   64-bit Windows 2000 and explicitly state the machine type in
+   the link flags.  
+ 
+ * no longer treat VMWare network adapters as equivalent to a 
+   loopback adapter.  For some unknown reason, publishing the "AFS"
+   netbios name on them frequently results in a name collision 
+   error.
+ 
+ * Use read locks whenever possible instead of write locks when
+   walking the allCellsp list.  This permits better use of multiple
+   CPUs.
+ 
+ * In 1.5.20 a bug was introduced by the fake status when PRSFS_READ
+   is not present on the directory optimization.   It would report
+   mount points and directory objects for which there was no
+   status information as a zero length file.  Instead we can use 
+   the vnode number of the object to determine if it should be
+   considered to be a directory or a file.  If it is odd it is a
+   directory; even it is a file.
+ 
+ * Give Back Callbacks to the file servers in response to suspend
+   and shutdown power management events.  Only give up callbacks
+   to UP servers and do so with a very short RX dead timeout.
+   (10 seconds)
+ 
+ * Fix a race condition in the SMB FID cleanup code that could 
+   result in a stat cache mutex never being released.
+ 
+ * Fix the graphics files that are installed as part of the 
+   IBM Administrators Guide.
+ 
+ * Change the behavior of pioctl path parsing to not follow 
+   symlinks or mount points during evaluation.  This results in
+   the FID being the symlink or mount point and not the object
+   they point to.  This is consistent with the behavior of the 
+   UNIX client.
 
-* added a srv_deleted state for cm_serverRef_t objects.  This 
-  state is set when cm_FreeServerList() is called with the 
-  CM_FREESERVERLIST_DELETE flag set.  cm_FreeServerList() may
-  not always delete the cm_serverRef_t from the list if it is
-  still in use by another thread.  the srv_deleted state means
-  the object's contents are no longer valid and it must be 
-  skipped.  It will be deleted the next time the object is 
-  freed and the refcount hits zero.
+ * Enable AFSDB record lookup for command line tools such as
+   "fs" and "vos".
 
-* the srv_deleted state is also used when a file server reports
-  either VNOVOL or VMOVED instead of marking the cm_serverRef_t
-  as offline.  This is done to prevent additional usage of the 
-  stale vldb data while waiting for the update volume request
-  to complete.
+ * CellServDB update 2007-07-05
 
-* added a state field to the cm_volume_t object (enum volstate 
-  vl_ name space) that maintains the state of the volume based
-  upon the states of all of the cm_serverRef_t and cm_server_t
-  objects.
+ * Added a Volume Status Plug-in Interface that permits third parties
+   to receive notifications when the volume state changes occur.
 
-* modified cm_UpdateVolume() to set the state of the cm_volume_t
-  RW, RO, and BK to either vl_alldown or vl_online.  There can't
-  be any other states because cm_UpdateVolume() destroys any  
-  previous knowledge we might have had regarding busy or offline
-  volume status
+ * Ensure that all writes to the afsd_alloc.log file use CR-LF.
 
-* modified cm_UpdateVolume() to update the volume name in the 
-  cm_volume_t to the volume base name if the previous value was 
-  a volume ID.
+ * Prevent the afsprocmgmt.dll from being unloaded while the 
+   background thread it starts is running.
 
-* modified cm_FollowMountPoint() to check to see if the volume
-  name is a volume ID and if so call cm_GetVolumeByID instead 
-  of cm_GetVolumeByName.  This ensures that volume IDs are always
-  looked up as numeric values.  There is no longer a need to 
-  maintain a separate cm_volume_t containing the string representation
-  of the ID value.
-
-* Added a flags parameter to cm_GetVolumeByName() and cm_GetVolumeByID().
-  The first flag is a "CREATE" flag which is set by all existing
-  calls.  The flag is not set by calls to cm_GetVolumeByID() from
-  the server probe code when volume status is being updated.  We 
-  do not want the server probe operation to result in additional 
-  turnover in the cached volume data.  The second flag is NO_LRU_UPDATE 
-  which is set when the server probe code updates the volume status.
-  This flag will be used to prevent the server probe operation from
-  changing the order of the least recently used queue.
-
-* Modified cm_GetVolumeByName to ensure that only one cm_volume_t is 
-  allocated for a given set of normal, readonly, and backup volumes
-  regardless of whether or not the volume is accessed via name or 
-  ID number.  The cm_volume_t namep field is always the base name
-  of the volume. 
-
-* Added a new volume state, vl_unknown.  This state is used as
-  the initial state for all cm_volume_t when the cache manager starts, 
-  for each cm_volume_t at creation, and for each cm_volume_t when
-  recycling.  The cache manager does not know the state of all 
-  volumes in the world, only those that are in the cache and for
-  which it has queried the VLDB and hosting file servers.
-
-* modified cm_GetVolumeByName() to initialize the state of a 
-  volume to vl_unknown.  The actual state will be set when a 
-  cm_VolumeUpdate() call completes successfully.
-
-* changed name of scache hash table variables to avoid ambiguity
-  when adding hash tables for volumes
-
-* fix a buffer overrun in sys\pioctl_nt.c  pioctl().
-
-* modified cm_UpdateVolume() to handle the case in which there is
-  no RW volume but there is are RO volumes for a given base name. 
-  This is done by querying for the ".readonly" volume name if the 
-  base name does not exist in the VLDB.  We never query for the
-  .backup name because under the current usage model a .backup 
-  volume may only exist on the server that the read-write volume
-  is located.  If there is no RW volume, there can be no .backup.
-
-* Added four hash tables for cm_volume_t objects to improve the 
-  search time of cm_GetVolumeByID(), cm_GetVolumeByName() and
-  cm_ForceUpdateVolume(). One each for Name, RWID, ROID, and 
-  BKID.  Three ID hash tables are necessary as long as it is
-  desireable to maintain a single cm_volume_t containing all
-  of the related RW, RO, and BK volume data.  Having the RW and
-  RO volume data in the same object is necessary for the 
-  implementation of cm_GetROVolumeID() which returns either the
-  RO or RW ID depending upon the existence of RO volume instances.  
-
-* Added a volume LRU queue so that volume reuse becomes fairer.
-  This does not replace the all Volumes list which is used when
-  it is desireable to walk a list of all the volumes whose order
-  is not going to change out from underneath you which makes it
-  safe to drop the cm_volumeLock.
-
-* handles volume hash table updates where volume name to 
-  volume ID number changes.  The volume name remains 
-  constant in the cm_volume_t.  if a vos rename is performed, 
-  the name of the volume will change and the volume IDs will be 
-  updated.  Subsequent access to the old volume ID will create a 
-  new cm_volume_t with the new name.
-
-* Added a daemon thread operation to query the state of volumes
-  listed as busy or offline.  cm_CheckBusyVolumes() calls 
-  RXAFS_GetVolumeStatus() for each volume ID that is marked vl_busy 
-  or vl_offline.   If the volume is now online, the status on the
-  volume is updated.  The default period is 600 seconds.  This can 
-  be configured with the BusyVolumeCheckInterval registry value.  
-
-* Added prototype for smb_IoctlPrepareRead() which was missing a
-  return type in the function definition.
-
-* Added volume id lists to the cm_server_t.  These lists are
-  allocated in blocks of ~32 IDs.  When a cm_PingServer() 
-  detects a change in server state, the state of the cm_volume_t
-  is updated.  
-
-* Added volID to the cm_serverRef_t object.  volID is used
-  to identify the volume for which the object is a referral.
-  cm_FreeServerList() uses the volID to remove the volume 
-  from the cm_server_t.
-
-* In cm_Analyze, when VNOVOL or VMOVED are received, 
-  call cm_ForceVolumeUpdate() to force a refresh of the volume 
-  location data.
-
-* Added cm_VolumeStatusNotification() which is used at the moment
-  to log volume status changes to the trace log.  It will also
-  be used as the access point to the File System Filter driver
-  notification engine.
-
-* Added an all cm_scache_t list to cm_data.  This replaces the use
-  of the stat cache LRU queue when we need to enumerate all 
-  entries.  The LRU list order is not static and when using it to 
-  enumerate all entries it can result in items being missed or
-  items being processed more than once.
-
-* Modified cm_Analyze(). Instead of reseting the busy or offline
-  state of a volume and forcing a retry of the operation
-  cm_Analyze will defer to the background daemon thread that will
-  update the state once every 600 seconds.
-
-* Added the automatic generation of a Freelance ".root" read-write
-  mountpoint that refers to the root.afs volume of the workstation
-  cellname at the time the mountpoint is created.
-
-* re-write cm_Analyze to make better use of the known volume
-  status.  VL_Server queries cannot result in CM_ERROR_ALLOFFLINE
-  messages.
-
-* renamed cm_CheckBusyVolumes to cm_CheckOfflineVolumes.  
-  busy volumes will be reset to srv_non_busy by the function
-  but there is no mechanism for querying the busy state other
-  than by attempting to access the resource.
-
-* cm_Analyze will query the state of an offline volume before
-  deciding whether or not to retry when all volume instances
-  are offline.
-
-* the algorithm used after an IP address list change detection
-  has been modified.  we now check the state of the VLDB servers,
-  then reset the rx connections, and finally check the state of 
-  the file servers.  Previously we flushed the rx connections 
-  and then checked the servers in whatever random order they 
-  were first discovered.
-
-* fix the volume status reported by "fs examine"
-
-* various improvements to the AFS Network Identity Manager Provider.
-  - Don't access freed objects after the window has been destroyed.
-  - Write back the AFS cell list in the identity configuration 
-    even when its empty.
-  - Disable all use of the provider when AFS is disabled for a 
-    particular identity.
-
-* Fix cm_cell_t leak.  When evaluating a mountpoint that uses an
-  alias instead of the full cellname, double check the full cell
-  name and see if we have a matching cell before allocating a new
-  one.
-
-* Dump more data with "fs memdump". All volumes and scaches and
-  now cells.
-
-* Reverse the order of the all cells list.  This ensures that
-  the workstation cell is always first in the list.
-
-* If we recognize the server from which a callback revoke was
-  received, then we can ensure that we only invalidate the status
-  information for cm_scache_t objects belonging to that cell.
-
-* When building for amd64, use APPVER 5.02 as we do not support
-  64-bit Windows 2000 and explicitly state the machine type in
-  the link flags.  
-
-* no longer treat VMWare network adapters as equivalent to a 
-  loopback adapter.  For some unknown reason, publishing the "AFS"
-  netbios name on them frequently results in a name collision 
-  error.
-
-* Use read locks whenever possible instead of write locks when
-  walking the allCellsp list.  This permits better use of multiple
-  CPUs.
-
-* In 1.5.20 a bug was introduced by the fake status when PRSFS_READ
-  is not present on the directory optimization.   It would report
-  mount points and directory objects for which there was no
-  status information as a zero length file.  Instead we can use 
-  the vnode number of the object to determine if it should be
-  considered to be a directory or a file.  If it is even it is a
-  directory; odd it is a file.
+ * Avoid a race condition when closing smb_fid_t objects.
 
 Since 1.5.19
  * fix install path of IBM Quick Start Guide when installed by
