@@ -203,7 +203,7 @@ static int get_user_realm(krb5_context, char *);
 #if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define krb5_524_convert_creds krb524_convert_creds_kdc
 #elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
-#error "You must have one of krb5_524_convert_creds or krb524_convert_creds_kdc available"
+#define HAVE_NO_KRB5_524
 #endif
 
 #endif /* WINDOWS */
@@ -669,6 +669,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		   get_cred_keylen(v5cred));
 	    atoken.ticketLen = v5cred->ticket.length;
 	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+#ifndef HAVE_NO_KRB5_524
 	} else {
     	    CREDENTIALS cred;
 
@@ -703,6 +704,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    memcpy(&atoken.sessionKey, cred.session, 8);
 	    atoken.ticketLen = cred.ticket_st.length;
 	    memcpy(atoken.ticket, cred.ticket_st.dat, atoken.ticketLen);
+#endif /* HAVE_NO_KRB5_524 */
 	}
 	
 	if (!force &&
@@ -1225,7 +1227,11 @@ static void usage(void)
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
 	    "[[-p | -path] pathname]\n",
 	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
-	    "    [-linked] [-524]\n");
+		"    [-linked]"
+#ifndef HAVE_NO_KRB5_524
+		" [-524]"
+#endif
+		"\n");
     fprintf(stderr, "    -d gives debugging information.\n");
     fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
     fprintf(stderr, "    pathname is the name of a directory to which ");
@@ -1237,7 +1243,9 @@ static void usage(void)
     fprintf(stderr, "    -force means replace identical tickets. \n");
     fprintf(stderr, "    -linked means if AFS node is linked, try both. \n");
     fprintf(stderr, "    -setpag set the AFS process authentication group.\n");
+#ifndef HAVE_NO_KRB5_524
     fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
+#endif
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
@@ -1310,8 +1318,10 @@ void aklog(int argc, char *argv[])
 		linked++;
 	else if (strcmp(argv[i], "-force") == 0)
 	    force++;
+#ifndef HAVE_NO_KRB5_524
 	else if (strcmp(argv[i], "-524") == 0)
 	    do524++;
+#endif
     else if (strcmp(argv[i], "-setpag") == 0)
 	    afssetpag++;
 	else if (((strcmp(argv[i], "-cell") == 0) ||
