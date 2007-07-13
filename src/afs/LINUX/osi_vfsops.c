@@ -108,7 +108,6 @@ struct file_system_type afs_fs_type = {
 struct backing_dev_info afs_backing_dev_info = {
     .ra_pages		= 0, /* disable readahead, afs does prefetch */
 };
-#endif
 
 int
 afs_fill_super(struct super_block *sb, void *data, int silent)
@@ -457,7 +456,7 @@ struct super_operations afs_sops = {
   .notify_change =	afs_notify_change,
 #endif
 };
-#endif
+
 
 /************** Support routines ************************/
 
