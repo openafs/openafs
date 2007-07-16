@@ -13,8 +13,8 @@
 #include <afs/param.h>
 #include <afs/afs_Admin.h>
 
-#define PTS_MAX_NAME_LEN 64
-#define PTS_MAX_GROUPS 5000
+#define PTS_MAX_NAME_LEN 64     /* must equal PR_MAXNAMELEN */
+#define PTS_MAX_GROUPS 5000     /* must equal PR_MAXGROUPS */
 
 typedef enum {
     PTS_USER_OWNER_ACCESS,
