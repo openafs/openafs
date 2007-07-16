@@ -132,7 +132,8 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 		       RTLD_NOW | RTLD_LOCAL | RTLD_MEMBER);
 	}
 #elif defined(AFS_SUN5_ENV)
-	dynlib = dlopen("/usr/lib/libXApi.so", RTLD_NOW | RTLD_LOCAL);
+	dlopen ("/usr/lib/libCstd.so.1", RTLD_NOW | RTLD_GLOBAL);
+	dynlib = dlopen("/usr/lib/libXApi.so", RTLD_NOW | RTLD_GLOBAL);
 #else
 	dynlib = NULL;
 #endif
