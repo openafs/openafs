@@ -1,4 +1,4 @@
-openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
+openafs (1.4.4.dfsg1-5) unstable; urgency=low
 
   * Add a union to des_ks_struct and reorder includes to get the correct
     alignment for DES code on SPARC.  Thanks, Chaskiel Grundman.  Partly
@@ -14,7 +14,7 @@ openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
     KeyFile and CellServDB.old from /etc/openafs/server, and remove
     BosConfig from /etc/openafs.
 
- -- Russ Allbery <rra@debian.org>  Mon, 16 Jul 2007 11:48:32 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 16 Jul 2007 11:55:16 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
