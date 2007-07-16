@@ -193,7 +193,8 @@ afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
 	 * The token has been retrieved successfully, initialize
 	 * the rest of the token handle structure
 	 */
-	strcpy(t_handle->cell, cellName);
+	strncpy(t_handle->cell, cellName, MAXCELLCHARS);
+        t_handle->cell[MAXCELLCHARS - 1] = '\0';
 	t_handle->afs_token_set = 1;
 	t_handle->from_kernel = 1;
 	t_handle->kas_token_set = 0;
@@ -568,7 +569,8 @@ afsclient_TokenGetNew(const char *cellName, const char *principal,
 
 	if ((GetAFSToken(cellName, principal, password, t_handle, &tst))
 	    && (GetKASToken(cellName, principal, password, t_handle, &tst))) {
-	    strcpy(t_handle->cell, cellName);
+	    strncpy(t_handle->cell, cellName, MAXCELLCHARS);
+            t_handle->cell[MAXCELLCHARS - 1] = '\0';
 	    t_handle->from_kernel = 0;
 	    t_handle->afs_token_set = 1;
 	    t_handle->kas_token_set = 1;
@@ -868,7 +870,8 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
      * information for each server in the cell
      */
 
-    strcpy(c_handle->working_cell, cellName);
+    strncpy(c_handle->working_cell, cellName, MAXCELLCHARS);
+    c_handle->working_cell[MAXCELLCHARS - 1] = '\0';
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	tst = ADMCLIENTBADCLIENTCONFIG;
 	goto fail_afsclient_CellOpen;
@@ -878,7 +881,8 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
      * We must copy the cellName here because afsconf_GetCellInfo
      * actually writes over the cell name it is passed.
      */
-    strncpy(copyCell, cellName, MAXCELLCHARS - 1);
+    strncpy(copyCell, cellName, MAXCELLCHARS);
+    copyCell[MAXCELLCHARS - 1] ='\0';
     for (i = 0; (i < NUM_SERVER_TYPES); i++) {
 	if (i == KAS) {
 	    tst =
@@ -1963,6 +1967,7 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
 	if (host != NULL) {
 	    strncpy(serv->server[iserv].serverName, host->h_name,
 		    AFS_MAX_SERVER_NAME_LEN);
+            serv->server[iserv].serverName[AFS_MAX_SERVER_NAME_LEN - 1] = '\0';
 	}
     }
     UNLOCK_GLOBAL_MUTEX;
