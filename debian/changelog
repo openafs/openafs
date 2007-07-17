@@ -1,5 +1,7 @@
 openafs (1.4.4.dfsg1-5) unstable; urgency=low
 
+  * Apply upstream patch from Jeffrey Hutzelman to fix syscall probing on
+    AMD64 with Linux 2.6.22 kernels.  (Closes: #430179)
   * Add a union to des_ks_struct and reorder includes to get the correct
     alignment for DES code on SPARC.  Thanks, Chaskiel Grundman.  Partly
     addresses #415952.
@@ -14,7 +16,7 @@ openafs (1.4.4.dfsg1-5) unstable; urgency=low
     KeyFile and CellServDB.old from /etc/openafs/server, and remove
     BosConfig from /etc/openafs.
 
- -- Russ Allbery <rra@debian.org>  Mon, 16 Jul 2007 11:55:16 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 17 Jul 2007 09:25:03 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
