@@ -50,4 +50,8 @@
 #define AFS_SYSCALL		227
 #define AFSBIG_ENDIAN		1
 
+/* glibc doesn't implement getcontext/savecontext for 32-bit sparc, so 
+   never use UCONTEXT here. */
+#undef USE_UCONTEXT
+
 #endif /* AFS_PARAM_H */
