@@ -2185,7 +2185,9 @@ main(int argc, char *argv[])
 
 #ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
+#ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_INIT;
+#endif
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
