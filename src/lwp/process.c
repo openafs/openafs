@@ -151,7 +151,11 @@ static jmp_buf_type *jmpBuffer;
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 
-#ifdef AFS_SPARC64_LINUX24_ENV
+#if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_SPARC_LINUX24_ENV)
+/* technically we should use POINTER_GUARD 
+ * ( == offsetof (tcbhead_t, pointer_guard) )
+ * instead of 0x18
+ */
 #undef ptr_mangle
 static int ptr_mangle(int p)
 {   
