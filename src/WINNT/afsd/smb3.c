@@ -4331,7 +4331,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         
     userp = smb_GetTran2User(vcp, p);
     if (!userp) {
-    	osi_Log1(smb_logp, "T2 search dir unable to resolve user [%d]", p->uid);
+    	osi_Log1(smb_logp, "T2SDSingle search dir unable to resolve user [%d]", p->uid);
     	smb_FreeTran2Packet(outp);
     	return CM_ERROR_BADSMB;
     }
@@ -4372,13 +4372,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 	return 0;
     }
 #endif /* DFS_SUPPORT */
-    osi_Log1(smb_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
-    lock_ObtainMutex(&scp->mx);
-    if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
-	 LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
-	scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
-    }
-    lock_ReleaseMutex(&scp->mx);
+    osi_Log1(smb_logp,"T2SDSingle scp 0x%p", scp);
 
     /* now do a single case sensitive lookup for the file in question */
     code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE, userp, &req, &targetscp);
