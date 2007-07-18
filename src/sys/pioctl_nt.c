@@ -53,13 +53,13 @@ RCSID
 #include <osi.h>
 
 #include <cm.h>
-#include <cm_dir.h>
 #include <cm_server.h>
 #include <cm_cell.h>
 #include <cm_user.h>
 #include <cm_conn.h>
 #include <cm_scache.h>
 #include <cm_buf.h>
+#include <cm_dir.h>
 #include <cm_utils.h>
 #include <cm_ioctl.h>
 
