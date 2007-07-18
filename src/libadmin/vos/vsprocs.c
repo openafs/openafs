@@ -3614,9 +3614,8 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     if (islocked) {
 	vcode =
 	    ubik_VL_ReleaseLock(cellHandle->vos, 0,
-		      entry->volumeId[RWVOL], RWVOL,
-		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP),
-		      &tst);
+				entry->volumeId[RWVOL], RWVOL,
+				(LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (vcode) {
 	    if (!tst)
 		tst = vcode;
