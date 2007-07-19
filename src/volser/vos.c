@@ -2804,7 +2804,7 @@ DumpVolume(as)
      register struct cmd_syndesc *as;
 
 {
-    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i;
+    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
     struct nvldbentry entry;
 
@@ -2864,14 +2864,20 @@ DumpVolume(as)
 	strcpy(filename, "");
     }
 
+    flags = as->parms[6].items ? VOLDUMPV2_OMITDIRS : 0;
+retry_dump:
     if (as->parms[5].items) {
 	code =
 	    UV_DumpClonedVolume(avolid, aserver, apart, fromdate,
-				DumpFunction, filename);
+				DumpFunction, filename, flags);
     } else {
 	code =
 	    UV_DumpVolume(avolid, aserver, apart, fromdate, DumpFunction,
-			  filename);
+			  filename, flags);
+    }
+    if ((code == RXGEN_OPCODE) && (as->parms[6].items)) {
+	flags &= ~VOLDUMPV2_OMITDIRS;
+	goto retry_dump;
     }
     if (code) {
 	PrintDiagnostics("dump", code);
@@ -5820,6 +5826,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition");
     cmd_AddParm(ts, "-clone", CMD_FLAG, CMD_OPTIONAL,
 		"dump a clone of the volume");
+    cmd_AddParm(ts, "-omitdirs", CMD_FLAG, CMD_OPTIONAL,
+		"omit unchanged directories from an incremental dump");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("restore", RestoreVolume, 0, "restore a volume");
