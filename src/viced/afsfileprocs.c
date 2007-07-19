@@ -1098,7 +1098,13 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
     }
 
     ino = VN_GET_INO(targetptr);
-    assert(VALID_INO(ino));
+    if (!VALID_INO(ino)) {
+	free(buff);
+	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
+	return EIO;
+    }    
     targFdP = IH_OPEN(targetptr->handle);
     if (targFdP == NULL) {
 	rc = errno;
@@ -1265,6 +1271,9 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
       */
     if ((*targetptr)->disk.uniquifier != fileFid->Unique) {
 	VTakeOffline(volptr);
+	ViceLog(0,
+		("Volume %u now offline, must be salvaged.\n",
+		 volptr->hashid));
 	errorCode = VSALVAGE;
 	return errorCode;
     }
@@ -1292,10 +1301,10 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 			 errno));
 		if (errno != ENOENT)
 		{
+		    VTakeOffline(volptr);
 		    ViceLog(0,
 			    ("Volume %u now offline, must be salvaged.\n",
 			     volptr->hashid));
-		    VTakeOffline(volptr);
 		    return (EIO);
 		}
 		DT1++;
@@ -1318,10 +1327,10 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 		("Error %d deleting %s\n", code,
 		 (((*targetptr)->disk.type ==
 		   Directory) ? "directory" : "file")));
+	VTakeOffline(volptr);
 	ViceLog(0,
 		("Volume %u now offline, must be salvaged.\n",
 		 volptr->hashid));
-	VTakeOffline(volptr);
 	if (!errorCode)
 	    errorCode = code;
     }
@@ -3981,6 +3990,9 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    VPutVnode(&errorCode, testvptr);
 	    if ((top == 1) && (testnode != 0)) {
 		VTakeOffline(volptr);
+		ViceLog(0,
+			("Volume %u now offline, must be salvaged.\n",
+			 volptr->hashid));
 		errorCode = EIO;
 		goto Bad_Rename;
 	    }
@@ -4310,10 +4322,18 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Write the contents of the symbolic link name into the target inode */
     fdP = IH_OPEN(targetptr->handle);
-    assert(fdP != NULL);
+    if (fdP == NULL) {
+	(void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			       volptr, &client);
+	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
+	return EIO;
+    }    
     len = strlen((char *) LinkContents);
-     code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
-     if (code) ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
+    code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
+    if (code) 
+	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -6805,6 +6825,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
 	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
 	return EIO;
     }
     optSize = sendBufSize;
@@ -6814,6 +6836,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
 	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
 	return EIO;
     }
     if (Pos > tlen) {
@@ -6852,6 +6876,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 	errorCode = rx_Write(Call, tbuffer, wlen);
@@ -6866,6 +6892,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 	errorCode = rx_Writev(Call, tiov, tnio, wlen);
@@ -7038,6 +7066,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	if (GetLinkCountAndSize(volptr, fdP, &linkCount, &DataLength) < 0) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 
@@ -7081,7 +7111,12 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	}
 	tinode = VN_GET_INO(targetptr);
     }
-    assert(VALID_INO(tinode));
+    if (!VALID_INO(tinode)) {
+	VTakeOffline(volptr);
+	ViceLog(0,("Volume %u now offline, must be salvaged.\n",
+		   volptr->hashid));
+	return EIO;
+    }
 
     /* compute new file length */
     NewLength = DataLength;
