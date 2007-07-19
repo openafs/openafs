@@ -57,7 +57,12 @@ RCSID
 #include <rx/rxkad.h>
 #include "volser.h"
 #include "volint.h"
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include "dump.h"
 #include "lockdata.h"
+
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -315,6 +320,9 @@ WriteData(struct rx_call *call, char *rock)
     long blksize;
     afs_int32 error, code;
     int ufdIsOpen = 0;
+    afs_hyper_t filesize, currOffset; 
+    afs_uint32 buffer;		
+    afs_uint32 got; 		
 
     error = 0;
 
@@ -335,6 +343,20 @@ WriteData(struct rx_call *call, char *rock)
 	    goto wfail;
 	}
     }
+    /* test if we have a valid dump */
+    hset64(filesize, 0, 0);
+    USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
+    hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
+    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+    USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
+    if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
+	fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
+        error = VOLSERBADOP;
+        goto wfail;
+    }
+    hset64(filesize, 0, 0);
+    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+    /* rewind, we are done */
     code = SendFile(ufd, call, blksize);
     if (code) {
 	error = code;
