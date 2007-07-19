@@ -3835,12 +3835,13 @@ dump_sig_handler(int x)
  */
 int
 UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
-	      afs_int32 fromdate, afs_int32(*DumpFunction) (), char *rock)
+	      afs_int32 fromdate, afs_int32(*DumpFunction) (), char *rock,
+	      afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
     struct rx_call *fromcall = (struct rx_call *)0;
     afs_int32 fromtid = 0, rxError = 0, rcode = 0;
-    afs_int32 code, error = 0;
+    afs_int32 code, error = 0, retry = 0;
     time_t tmv = fromdate;
 
     if (setjmp(env))
@@ -3870,23 +3871,28 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     fromcall = rx_NewCall(fromconn);
 
     VPRINT1("Starting volume dump on volume %u...", afromvol);
-    code = StartAFSVolDump(fromcall, fromtid, fromdate);
+    if (flags & VOLDUMPV2_OMITDIRS) 
+	code = StartAFSVolDumpV2(fromcall, fromtid, fromdate, flags);
+    else
+      retryold:
+	code = StartAFSVolDump(fromcall, fromtid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
     VDONE;
 
     VPRINT1("Dumping volume %u...", afromvol);
     code = DumpFunction(fromcall, rock);
+    if (code == RXGEN_OPCODE) 
+	goto error_exit;
     EGOTO(error_exit, code, "Error while dumping volume \n");
     VDONE;
 
   error_exit:
     if (fromcall) {
 	code = rx_EndCall(fromcall, rxError);
-	if (code) {
+	if (code && code != RXGEN_OPCODE) 
 	    fprintf(STDERR, "Error in rx_EndCall\n");
-	    if (!error)
-		error = code;
-	}
+	if (code && !error)
+	    error = code;
     }
     if (fromtid) {
 	VPRINT1("Ending transaction on volume %u...", afromvol);
@@ -3902,7 +3908,10 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (fromconn)
 	rx_DestroyConnection(fromconn);
 
-    PrintError("", error);
+    if (retry)
+	goto retryold;
+    if (error != RXGEN_OPCODE)
+	PrintError("", error);
     return (error);
 }
 
@@ -3915,7 +3924,7 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 int
 UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 		    afs_int32 afrompart, afs_int32 fromdate,
-		    afs_int32(*DumpFunction) (), char *rock)
+		    afs_int32(*DumpFunction) (), char *rock, afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
     struct rx_call *fromcall = (struct rx_call *)0;
@@ -3998,7 +4007,10 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
     fromcall = rx_NewCall(fromconn);
 
     VPRINT1("Starting volume dump from cloned volume %u...", clonevol);
-    code = StartAFSVolDump(fromcall, clonetid, fromdate);
+    if (flags & VOLDUMPV2_OMITDIRS) 
+	code = StartAFSVolDumpV2(fromcall, clonetid, fromdate, flags);
+    else
+	code = StartAFSVolDump(fromcall, clonetid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
     VDONE;
 

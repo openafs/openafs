@@ -47,7 +47,7 @@ extern int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 extern void dump_sig_handler(int x);
 extern int UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver,
 			 afs_int32 afrompart, afs_int32 fromdate,
-			 afs_int32(*DumpFunction) (), char *rock);
+			 afs_int32(*DumpFunction) (), char *rock, afs_int32 flags);
 extern int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart,
 			    afs_int32 tovolid, char tovolname[], int flags,
 			    afs_int32(*WriteData) (), char *rock);
