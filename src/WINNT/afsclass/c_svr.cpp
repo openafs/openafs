@@ -786,8 +786,8 @@ DWORD WINAPI SERVER::CanTalkToServer_ThreadProc (PVOID lp)
    // the lpServer pointer won't have been freed.)
    // 
    PVOID hCell;
-   PVOID hBOS;
-   PVOID hVOS;
+   PVOID hBOS = NULL;
+   PVOID hVOS = NULL;
 
    TCHAR szServer[ cchNAME ];
 
