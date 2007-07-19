@@ -4188,7 +4188,7 @@ DeleteEntry(as)
 		fflush(STDOUT);
 		continue;
 	    }
-	    vcode = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, RWVOL);
+	    vcode = ubik_VL_DeleteEntry(cstruct, 0, avolid, RWVOL);
 	    if (vcode) {
 		fprintf(STDERR, "Could not delete entry for volume %s\n",
 			itp->data);
@@ -4301,7 +4301,7 @@ DeleteEntry(as)
 
 	/* Only matches the RW volume name */
 	avolid = vllist->volumeId[RWVOL];
-	vcode = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, RWVOL);
+	vcode = ubik_VL_DeleteEntry(cstruct, 0, avolid, RWVOL);
 	if (vcode) {
 	    fprintf(STDOUT, "Could not delete VDLB entry for  %s\n",
 		    vllist->name);
@@ -4936,8 +4936,9 @@ UnlockVLDB(as)
 	vllist = &arrayEntries.nbulkentries_val[j];
 	volid = vllist->volumeId[RWVOL];
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, -1,
-		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, -1,
+				LOCKREL_OPCODE | LOCKREL_AFSID | 
+				LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR, "Could not unlock entry for volume %s\n",
 		    vllist->name);
@@ -5191,8 +5192,8 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_val = 0;
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
-		    ubik_Call(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			      &vlcb, &m_nentries, &m_addrs);
+		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
+				      &vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5362,7 +5363,7 @@ LockEntry(as)
 		    as->parms[0].items->data);
 	exit(1);
     }
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, avolid, -1, VLOP_DELETE);
+    vcode = ubik_VL_SetLock(cstruct, 0, avolid, -1, VLOP_DELETE);
     if (vcode) {
 	fprintf(STDERR, "Could not lock VLDB entry for volume %s\n",
 		as->parms[0].items->data);
@@ -5490,7 +5491,7 @@ ConvertRO(as)
     }
 
     vcode =
-	ubik_Call(VL_SetLock, cstruct, 0, entry.volumeId[RWVOL], RWVOL,
+	ubik_VL_SetLock(cstruct, 0, entry.volumeId[RWVOL], RWVOL,
 		  VLOP_MOVE);
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
