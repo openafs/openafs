@@ -1995,7 +1995,7 @@ long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     if (r && !stricmp(r+1,ucellp->cellp->name))
 	*r = '\0';
 
-    code = ubik_Call(PR_NameToID, pruclient, 0, &lnames, &lids);
+    code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);
     if (lids.idlist_val) {
 	*uid = *lids.idlist_val;
 	free(lids.idlist_val);
