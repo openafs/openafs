@@ -111,6 +111,14 @@ but makes this value available for administrator use. Define the time for
 command execution as part of the B<-cmd> argument to the B<bos create>
 command.
 
+=item dafs
+
+Use this value only for the dafs process, which combines the
+File Server, Volume Server, Salvageserver, and Salvager processes in
+order to operate as a Demand Attach File Server.  If one of the
+component processes terminates, the BOS Server shuts down
+and restarts the process in the appropriate order.
+
 =item fs
 
 Use this value only for the fs process, which combines the File Server,
