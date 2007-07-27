@@ -49,8 +49,12 @@ token per cell per connection to the client machine. If the user's
 credential structure already contains a token for the requested cell, the
 token resulting from this command replaces it.
 
-Sites that employ standard Kerberos authentication instead of the AFS
-Authentication Server must use the Kerberos version of this command,
+Sites that employ Kerberos authentication instead of the AFS
+Authentication Server should normally use the combination of B<kinit> and
+B<aklog> instead of B<klog>.
+
+Sites using Kerberos v4 authentication (perhaps with the AFS
+Authentication Server) must use the Kerberos version of this command,
 B<klog.krb>, on all client machines. It automatically places the issuer's
 Kerberos tickets in the file named by the KRBTKFILE environment variable,
 which the B<pagsh.krb> command defines automatically as F</tmp/tktpI<X>>
