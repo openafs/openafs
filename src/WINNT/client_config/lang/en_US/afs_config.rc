@@ -700,7 +700,7 @@ BEGIN
     IDS_SERVICE_FAIL_START  "The AFS Client Service could not be started successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
     IDS_SERVICE_FAIL_STOP   "The AFS Client Service could not be stopped successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
     IDS_WARN_STOPPED        "The disabled controls cannot be changed because the AFS Client service is not running."
-    IDS_WARN_ADMIN          "The disabled controls cannot be changed because you are not logged in to Windows as an administrator."
+    IDS_WARN_ADMIN          "The disabled controls cannot be changed because you are not a member of the AFS Administrators Group."
     IDS_CELL_UNKNOWN        "(unknown)"
     IDS_GATEWAY_UNKNOWN     "(unknown)"
 END
