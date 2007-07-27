@@ -23,7 +23,7 @@ B<afsd> S<<< [B<-blocks> <I<1024 byte blocks in cache>>] >>>
      S<<< [B<-confdir> <I<configuration directory>>] >>>
      S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
      [B<-waitclose>] [B<-shutdown>] [B<-enable_peer_stats>]
-     [B<-enable_process_stats>] [B<-help>]
+     [B<-enable_process_stats>] [B<-dynroot>] [B<-help>]
 
 =for html
 </div>
@@ -529,6 +529,36 @@ storage. A separate record is kept for each type of RPC (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
+
+=item B<-dynroot>
+
+The standard behaviour of the AFS client without the B<-dynroot> option is
+to mount the root.afs volume from the default cell on the F</afs> path. The 
+F</afs> folder and root.afs volume traditionally shows the folders for 
+F<ThisCell> and other cells as configured by the AFS cell administrator.
+
+The B<-dynroot> option changes this. Using this option, the AFS client does
+NOT mount the root.afs volume on F</afs>. Instead it uses the contents of
+the F<CellServDB> file to populate the listing of cells in F</afs>. This
+is known as a DYNamic ROOT. A cell is not contacted until the path
+F</afs/I<cellname>> if accessed. This functions similarly to an automounter.
+The main advantage of using B<-dynroot> is that the AFS client will
+start properly even without network access, whereas the client not using
+B<-dynroot> will freeze upon startup if cannot contact the default cell
+specified in F<ThisCell> and mount the root.afs volume. Dynamic root mode
+is also sometimes called travelling mode because it works well for laptops
+which don't always have network connectivity.
+
+Two advantages of not using dynroot are that listing F</afs> will usually
+be faster because the contents of F</afs> are limited to what the AFS
+administrator decides and that symbolic links are traditionally created
+by the AFS administrator to provide a short name for the cell (i.e.
+cellname.domain.com is aliased to cellname).  However, with dynroot, the
+local system administrator can limit the default contents of F</afs> by
+installing a stripped-down F<CellServDB> file, and if dynroot is in effect,
+the F<CellAlias> file can be used to provide shortname for common AFS cells
+which provides equivalent functionality to the most commonly used symbolic
+links.
 
 =item B<-help>
 
