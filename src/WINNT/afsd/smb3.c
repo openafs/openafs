@@ -4978,7 +4978,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
                     DWORD now = GetTickCount();
-                    if (now - req.startTime > RDRtimeout) {
+                    if (now - req.startTime > RDRtimeout * 1000) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
                         dsp->flags &= ~SMB_DIRSEARCH_BULKST;
