@@ -2096,11 +2096,13 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
-     vnode_addfsref(nvp);
-     avc->v = nvp;
-     avc->states &=~ CDeadVnode;
-     vnode_clearfsnode(ovp);
-     vnode_removefsref(ovp);
+       vnode_addfsref(nvp);
+       avc->v = nvp;
+       avc->states &=~ CDeadVnode;
+       if (!(avc->states & CVInit)) {
+	   vnode_clearfsnode(ovp);
+	   vnode_removefsref(ovp);
+       }
    }
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);
