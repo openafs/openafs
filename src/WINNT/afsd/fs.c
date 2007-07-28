@@ -1099,7 +1099,7 @@ GetCell(char *fname, char *cellname)
     blob.out = cellname;
 
     code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-    return code ? errno : 0;
+    return code;
 }
 
 /* Check if a username is valid: If it contains only digits (or a
@@ -1930,8 +1930,11 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 		cellName = localCellName;
 	}
     } else {
-	if (!cellName)
-	    GetCell(parent,space);
+	if (!cellName) {
+	    code = GetCell(parent,space);
+            if (code)
+                return 1;
+        }
     }
 
     code = GetCellName(cellName?cellName:space, &info);
