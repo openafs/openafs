@@ -321,6 +321,11 @@ CallPreamble(register struct rx_call *acall, int activecall,
     H_LOCK;
   retry:
     tclient = h_FindClient_r(*tconn);
+    if (!tclient) {
+	ViceLog(0, ("CallPreamble: Couldn't get CPS. Too many lockers\n"));
+	H_UNLOCK;
+	return VBUSY;
+    }
     thost = tclient->host;
     if (tclient->prfail == 1) {	/* couldn't get the CPS */
 	if (!retry_flag) {
@@ -424,6 +429,8 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 
     H_LOCK;
     tclient = h_FindClient_r(aconn);
+    if (!tclient) 
+	goto busyout;
     thost = tclient->host;
     if (thost->hostFlags & HERRORTRANS)
 	translate = 1;
@@ -445,6 +452,7 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
 		thost));
     }
+ busyout:
     H_UNLOCK;
     return (translate ? sys_error_to_et(ret) : ret);
 }				/*CallPostamble */
@@ -7440,6 +7448,10 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 #else
     H_LOCK;
     tclient = h_FindClient_r(tcon);
+    if (!tclient) {
+	errorCode = VBUSY;
+	goto Bad_CallBackRxConnAddr;
+    }
     thost = tclient->host;
     
     /* nothing more can be done */
