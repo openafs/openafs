@@ -551,7 +551,7 @@ fc_keysched(void *key_, fc_KeySchedule sched)
 
     /* Do we have 56 bit longs or even longer longs? */
 #ifdef AFS_64BIT_ENV
-    unsigned long k;		/* k holds all 56 non parity bits */
+    afs_uint64 k;		/* k holds all 56 non parity bits */
 
     /* Compress out parity bits */
     k = (*key++) >> 1;
