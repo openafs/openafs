@@ -5182,6 +5182,7 @@ typedef struct smb_unlinkRock {
     char *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
+    cm_dirEntryList_t * matches;
 } smb_unlinkRock_t;
 
 int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
@@ -5210,20 +5211,18 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         match = smb_V3MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
     }
     if (match) {
-        osi_Log1(smb_logp, "Unlinking %s",
+        osi_Log1(smb_logp, "Found match %s",
                  osi_LogSaveString(smb_logp, matchName));
-        code = cm_Unlink(dscp, dep->name, rockp->userp, rockp->reqp);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_REMOVED,
-			     FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                             dscp, dep->name, NULL, TRUE);
-        if (code == 0) {
+
+        cm_DirEntryListAdd(dep->name, &rockp->matches);
+
             rockp->any = 1;
 
             /* If we made a case sensitive exact match, we might as well quit now. */
             if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
                 code = CM_ERROR_STOPNOW;
-        }
+        else
+            code = 0;
     }
     else code = 0;
 
@@ -5304,6 +5303,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     rock.reqp = &req;
     rock.dscp = dscp;
     rock.vcp = vcp;
+    rock.matches = NULL;
 
     /* Now, if we aren't dealing with a wildcard match, we first try an exact 
      * match.  If that fails, we do a case insensitve match. 
@@ -5324,6 +5324,24 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == CM_ERROR_STOPNOW) 
         code = 0;
 
+    if (code == 0 && rock.matches) {
+        cm_dirEntryList_t * entry;
+
+        for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+
+            osi_Log1(smb_logp, "Unlinking %s",
+                     osi_LogSaveString(smb_logp, entry->name));
+            code = cm_Unlink(dscp, entry->name, userp, &req);
+
+            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                smb_NotifyChange(FILE_ACTION_REMOVED,
+                                 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                                 dscp, entry->name, NULL, TRUE);
+        }
+    }
+
+    cm_DirEntryListFree(&rock.matches);
+
     cm_ReleaseUser(userp);
         
     cm_ReleaseSCache(dscp);
@@ -5342,6 +5360,7 @@ typedef struct smb_renameRock {
     char *maskp;		/* pointer to star pattern of old file name */
     int flags;		    /* tilde, casefold, etc */
     char *newNamep;		/* ptr to the new file's name */
+    char oldName[MAX_PATH];
     int any;
 } smb_renameRock_t;
 
@@ -5366,21 +5385,15 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         cm_Gen8Dot3Name(dep, shortName, NULL);
         match = smb_V3MatchMask(shortName, rockp->maskp, caseFold);
     }
+
     if (match) {
 	rockp->any = 1;
-
-	code = cm_Rename(rockp->odscp, dep->name,
-                         rockp->ndscp, rockp->newNamep, rockp->userp,
-                         rockp->reqp);	
-        /* if the call worked, stop doing the search now, since we
-         * really only want to rename one file.
-         */
-	osi_Log1(smb_logp, "cm_Rename returns %ld", code);
-        if (code == 0) 
+        strncpy(rockp->oldName, dep->name, sizeof(rockp->oldName)/sizeof(char) - 1);
+        rockp->oldName[sizeof(rockp->oldName)/sizeof(char) - 1] = '\0';
             code = CM_ERROR_STOPNOW;
-    }       
-    else 
+    } else {
 	code = 0;
+    }
 
     return code;
 }
@@ -5485,6 +5498,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     rock.maskp = oldLastNamep;
     rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
     rock.newNamep = newLastNamep;
+    rock.oldName[0] = '\0';
     rock.any = 0;
 
     /* Check if the file already exists; if so return error */
@@ -5537,16 +5551,24 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     }
     osi_Log1(smb_logp, "smb_RenameProc returns %ld", code);
 
-    if (code == CM_ERROR_STOPNOW)
-        code = 0;
-    else if (code == 0)
+    if (code == CM_ERROR_STOPNOW && rock.oldName[0] != '\0') {
+	code = cm_Rename(rock.odscp, rock.oldName,
+                         rock.ndscp, rock.newNamep, rock.userp,
+                         rock.reqp);	
+        /* if the call worked, stop doing the search now, since we
+         * really only want to rename one file.
+         */
+	osi_Log1(smb_logp, "cm_Rename returns %ld", code);
+    } else if (code == 0) {
         code = CM_ERROR_NOSUCHFILE;
+    }
 
     /* Handle Change Notification */
     /*
     * Being lazy, not distinguishing between files and dirs in this
     * filter, since we'd have to do a lookup.
     */
+    if (code == 0) {
     filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
     if (oldDscp == newDscp) {
         if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
@@ -5562,6 +5584,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
             smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
                              filter, newDscp, newLastNamep,
                              NULL, TRUE);
+    }
     }
 
     if (tmpscp != NULL) 
@@ -5759,6 +5782,7 @@ typedef struct smb_rmdirRock {
     char *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
+    cm_dirEntryList_t * matches;
 } smb_rmdirRock_t;
 
 int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
@@ -5783,20 +5807,13 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
         matchName = shortName;
         match = (cm_stricmp(matchName, rockp->maskp) == 0);
     }       
-    if (match) {
-        osi_Log1(smb_logp, "Removing directory %s",
-                 osi_LogSaveString(smb_logp, matchName));
-        code = cm_RemoveDir(dscp, dep->name, rockp->userp, rockp->reqp);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_REMOVED,
-                             FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                             dscp, dep->name, NULL, TRUE);
-        if (code == 0)
-            rockp->any = 1;
-    }
-    else code = 0;
 
-    return code;
+    if (match) {
+            rockp->any = 1;
+        cm_DirEntryListAdd(dep->name, &rockp->matches);
+    }
+
+    return 0;
 }
 
 long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -5867,6 +5884,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     rock.userp = userp;
     rock.reqp = &req;
     rock.dscp = dscp;
+    rock.matches = NULL;
 
     /* First do a case sensitive match, and if that fails, do a case insensitive match */
     code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
@@ -5876,6 +5894,24 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         rock.flags |= SMB_MASKFLAG_CASEFOLD;
         code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
     }
+
+    if (code == 0 && rock.matches) {
+        cm_dirEntryList_t * entry;
+
+        for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+            osi_Log1(smb_logp, "Removing directory %s",
+                     osi_LogSaveString(smb_logp, entry->name));
+
+            code = cm_RemoveDir(dscp, entry->name, userp, &req);
+
+            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                smb_NotifyChange(FILE_ACTION_REMOVED,
+                                 FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                                 dscp, entry->name, NULL, TRUE);
+        }
+    }
+
+    cm_DirEntryListFree(&rock.matches);
 
     cm_ReleaseUser(userp);
         
