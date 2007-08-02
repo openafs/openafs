@@ -100,7 +100,9 @@ typedef struct cm_buf {
 #define CM_BUF_CMFETCHING	1	/* fetching this buffer */
 #define CM_BUF_CMSTORING	2	/* storing this buffer */
 #define CM_BUF_CMFULLYFETCHED	4	/* read-while-fetching optimization */
-/* waiting is done based on scp->flags */
+#define CM_BUF_CMWRITING        8       /* writing to this buffer */
+/* waiting is done based on scp->flags.  Removing bits from cmFlags
+   should be followed by waking the scp. */
 
 /* represents soft reference which is OK to lose on a recycle */
 typedef struct cm_softRef {
@@ -195,6 +197,8 @@ extern void buf_ForceTrace(BOOL flush);
 extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
 
 extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
+
+extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 toVersion);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */

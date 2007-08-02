@@ -604,15 +604,18 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
     {
         cm_lookupSearch_t*	sp = parmp;
 
+        if (
 #ifdef AFS_FREELANCE_CLIENT
 	/* Freelance entries never end up in the DNLC because they
 	 * do not have an associated cm_server_t
 	 */
-    if ( !(cm_freelanceEnabled &&
+            !(cm_freelanceEnabled &&
             sp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-            sp->fid.volume==AFS_FAKE_ROOT_VOL_ID ) )
-#endif /* AFS_FREELANCE_CLIENT */
-    {
+              sp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+#else /* !AFS_FREELANCE_CLIENT */
+            TRUE
+#endif
+            ) {
         int casefold = sp->caseFold;
         sp->caseFold = 0; /* we have a strong preference for exact matches */
         if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
@@ -622,6 +625,32 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
             return 0;
         }
         sp->caseFold = casefold;
+
+            /* see if we can find it using the directory hash tables.
+               we can only do exact matches, since the hash is case
+               sensitive. */
+            {
+                cm_dirOp_t dirop;
+
+                code = ENOENT;
+
+                code = cm_BeginDirOp(scp, userp, reqp, &dirop);
+                if (code == 0) {
+                    code = cm_DirLookup(&dirop, sp->searchNamep, &sp->fid);
+                    cm_EndDirOp(&dirop);
+                }
+
+                if (code == 0) {
+                    /* found it */
+                    sp->found = TRUE;
+                    sp->ExactFound = TRUE;
+                    lock_ReleaseMutex(&scp->mx);
+
+                    *retscp = NULL; /* force caller to call cm_GetSCache() */
+
+                    return 0;
+                }
+            }
     }
     }	
 
@@ -1128,6 +1157,8 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     cm_lookupSearch_t rock;
     int getroot;
 
+    memset(&rock, 0, sizeof(rock));
+
     if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
          && strcmp(namep, "..") == 0) {
         if (dscp->dotdotFid.volume == 0)
@@ -1139,7 +1170,30 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
 	goto haveFid;
     }
 
-    memset(&rock, 0, sizeof(rock));
+    if (flags & CM_FLAG_NOMOUNTCHASE) {
+        /* In this case, we should go and call cm_Dir* functions
+           directly since the following cm_ApplyDir() function will
+           not. */
+
+        cm_dirOp_t dirop;
+
+        lock_ObtainMutex(&dscp->mx);
+
+        code = cm_BeginDirOp(dscp, userp, reqp, &dirop);
+        if (code == 0) {
+            code = cm_DirLookup(&dirop, namep, &rock.fid);
+            cm_EndDirOp(&dirop);
+        }
+
+        lock_ReleaseMutex(&dscp->mx);
+
+        if (code == 0) {
+            /* found it */
+            rock.found = TRUE;
+            goto haveFid;
+        }
+    }
+
     rock.fid.cell = dscp->fid.cell;
     rock.fid.volume = dscp->fid.volume;
     rock.searchNamep = namep;
@@ -1486,6 +1540,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     AFSFetchStatus newDirStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
@@ -1497,11 +1552,16 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 
     /* make sure we don't screw up the dir status during the merge */
     lock_ObtainMutex(&dscp->mx);
+
+    code = cm_BeginDirOp(dscp, userp, reqp, &dirop);
+
     sflags = CM_SCACHESYNC_STOREDATA;
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, sflags);
     lock_ReleaseMutex(&dscp->mx);
-    if (code) 
+    if (code) {
+        cm_EndDirOp(&dirop);
         return code;
+    }
 
     /* make the RPC */
     afsFid.Volume = dscp->fid.volume;
@@ -1530,15 +1590,19 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainMutex(&dscp->mx);
     cm_dnlcRemove(dscp, namep);
     cm_SyncOpDone(dscp, NULL, sflags);
-    if (code == 0) 
+    if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, 0);
-    else if (code == CM_ERROR_NOSUCHFILE) {
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            cm_DirDeleteEntry(&dirop, namep);
+        }
+    } else if (code == CM_ERROR_NOSUCHFILE) {
 	/* windows would not have allowed the request to delete the file 
 	 * if it did not believe the file existed.  therefore, we must 
 	 * have an inconsistent view of the world.
 	 */
 	dscp->cbServerp = NULL;
     }
+    cm_EndDirOp(&dirop);
     lock_ReleaseMutex(&dscp->mx);
 
     return code;
@@ -2461,7 +2525,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_callbackRequest_t cbReq;
     AFSFid newAFSFid;
     cm_fid_t newFid;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     int didEnd;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
@@ -2469,6 +2533,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSCallBack newFileCallback;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2482,9 +2547,12 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * completes.
      */
     lock_ObtainMutex(&dscp->mx);
+    cm_BeginDirOp(dscp, userp, reqp, &dirop);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
+    } else {
+        cm_EndDirOp(&dirop);
     }
     lock_ReleaseMutex(&dscp->mx);
     if (code) {
@@ -2558,6 +2626,13 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 
+    lock_ObtainMutex(&dscp->mx);
+    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
+        cm_DirCreateEntry(&dirop, namep, &newFid);
+    }
+    cm_EndDirOp(&dirop);
+    lock_ReleaseMutex(&dscp->mx);
+
     return code;
 }       
 
@@ -2603,6 +2678,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSCallBack newDirCallback;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2616,9 +2692,12 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * our call completes.
      */
     lock_ObtainMutex(&dscp->mx);
+    cm_BeginDirOp(dscp, userp, reqp, &dirop);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
+    } else {
+        cm_EndDirOp(&dirop);
     }
     lock_ReleaseMutex(&dscp->mx);
     if (code) {
@@ -2691,6 +2770,13 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 
+    lock_ObtainMutex(&dscp->mx);
+    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
+        cm_DirCreateEntry(&dirop, namep, &newFid);
+    }
+    cm_EndDirOp(&dirop);
+    lock_ReleaseMutex(&dscp->mx);
+
     /* and return error code */
     return code;
 }       
@@ -2706,6 +2792,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     if (dscp->fid.cell != sscp->fid.cell ||
         dscp->fid.volume != sscp->fid.volume) {
@@ -2713,7 +2800,10 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     }
 
     lock_ObtainMutex(&dscp->mx);
+    cm_BeginDirOp(dscp, userp, reqp, &dirop);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
+    if (code != 0)
+        cm_EndDirOp(&dirop);
     lock_ReleaseMutex(&dscp->mx);
 
     if (code)
@@ -2753,7 +2843,11 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            cm_DirCreateEntry(&dirop, namep, &sscp->fid);
+        }
     }
+    cm_EndDirOp(&dirop);
     lock_ReleaseMutex(&dscp->mx);
 
     return code;
@@ -2773,13 +2867,17 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
     lock_ObtainMutex(&dscp->mx);
+    cm_BeginDirOp(dscp, userp, reqp, &dirop);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
+    if (code != 0)
+        cm_EndDirOp(&dirop);
     lock_ReleaseMutex(&dscp->mx);
     if (code) {
         return code;
@@ -2817,7 +2915,16 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            newFid.cell = dscp->fid.cell;
+            newFid.volume = dscp->fid.volume;
+            newFid.vnode = newAFSFid.Vnode;
+            newFid.unique = newAFSFid.Unique;
+
+            cm_DirCreateEntry(&dirop, namep, &newFid);
+        }
     }
+    cm_EndDirOp(&dirop);
     lock_ReleaseMutex(&dscp->mx);
 
     /* now try to create the new dir's entry, too, but be careful to 
@@ -2856,17 +2963,21 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     AFSFetchStatus updatedDirStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirOp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
     lock_ObtainMutex(&dscp->mx);
+    cm_BeginDirOp(dscp, userp, reqp, &dirOp);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
     if (code) {
+        cm_EndDirOp(&dirOp);
+        lock_ReleaseMutex(&dscp->mx);
         return code;
     }
+    lock_ReleaseMutex(&dscp->mx);
     didEnd = 0;
 
     /* try the RPC now */
@@ -2899,7 +3010,11 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     if (code == 0) {
         cm_dnlcRemove(dscp, namep); 
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        if (cm_CheckDirOpForSingleChange(&dirOp)) {
+            cm_DirDeleteEntry(&dirOp, namep);
     }
+    }
+    cm_EndDirOp(&dirOp);
     lock_ReleaseMutex(&dscp->mx);
 
     /* and return error code */
@@ -2937,6 +3052,10 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     AFSVolSync volSync;
     int oneDir;
     struct rx_connection * callp;
+    cm_dirOp_t oldDirOp;
+    cm_fid_t   fileFid;
+    int        diropCode = -1;
+    cm_dirOp_t newDirOp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our call
@@ -2952,8 +3071,12 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         lock_ObtainMutex(&oldDscp->mx);
         cm_dnlcRemove(oldDscp, oldNamep);
         cm_dnlcRemove(oldDscp, newNamep);
+        cm_BeginDirOp(oldDscp, userp, reqp, &oldDirOp);
         code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                           CM_SCACHESYNC_STOREDATA);
+        if (code != 0) {
+            cm_EndDirOp(&oldDirOp);
+        }
         lock_ReleaseMutex(&oldDscp->mx);
     }
     else {
@@ -2972,21 +3095,28 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
         if (oldDscp->fid.vnode < newDscp->fid.vnode) {
             lock_ObtainMutex(&oldDscp->mx);
+            cm_BeginDirOp(oldDscp, userp, reqp, &oldDirOp);
             cm_dnlcRemove(oldDscp, oldNamep);
             code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
+            if (code != 0)
+                cm_EndDirOp(&oldDirOp);
             lock_ReleaseMutex(&oldDscp->mx);
             if (code == 0) {
                 lock_ObtainMutex(&newDscp->mx);
+                cm_BeginDirOp(newDscp, userp, reqp, &newDirOp);
                 cm_dnlcRemove(newDscp, newNamep);
                 code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
+                if (code != 0)
+                    cm_EndDirOp(&newDirOp);
                 lock_ReleaseMutex(&newDscp->mx);
                 if (code) {
                     /* cleanup first one */
                     lock_ObtainMutex(&oldDscp->mx);
                     cm_SyncOpDone(oldDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
+                    cm_EndDirOp(&oldDirOp);
                     lock_ReleaseMutex(&oldDscp->mx);
                 }       
             }
@@ -2994,21 +3124,28 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         else {
             /* lock the new vnode entry first */
             lock_ObtainMutex(&newDscp->mx);
+            cm_BeginDirOp(newDscp, userp, reqp, &newDirOp);
             cm_dnlcRemove(newDscp, newNamep);
             code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
+            if (code != 0)
+                cm_EndDirOp(&newDirOp);
             lock_ReleaseMutex(&newDscp->mx);
             if (code == 0) {
                 lock_ObtainMutex(&oldDscp->mx);
+                cm_BeginDirOp(oldDscp, userp, reqp, &oldDirOp);
                 cm_dnlcRemove(oldDscp, oldNamep);
                 code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
+                if (code != 0)
+                    cm_EndDirOp(&oldDirOp);
                 lock_ReleaseMutex(&oldDscp->mx);
                 if (code) {
                     /* cleanup first one */
                     lock_ObtainMutex(&newDscp->mx);
                     cm_SyncOpDone(newDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
+                    cm_EndDirOp(&newDirOp);
                     lock_ReleaseMutex(&newDscp->mx);
                 }       
             }
@@ -3054,10 +3191,27 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     /* update the individual stat cache entries for the directories */
     lock_ObtainMutex(&oldDscp->mx);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
+
     if (code == 0) {
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                         userp, 0);
+
+        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
+
+            diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+
+            if (diropCode == 0) {
+                if (oneDir) {
+                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+                }
+
+                if (diropCode == 0) {
+                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
     }
+            }
+        }
+    }
+    cm_EndDirOp(&oldDirOp);
     lock_ReleaseMutex(&oldDscp->mx);
 
     /* and update it for the new one, too, if necessary */
@@ -3067,7 +3221,15 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         if (code == 0) {
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, 0);
+
+            /* we only make the local change if we successfully made
+               the change in the old directory AND there was only one
+               change in the new directory */
+            if (diropCode == 0 && cm_CheckDirOpForSingleChange(&newDirOp)) {
+                cm_DirCreateEntry(&newDirOp, newNamep, &fileFid);
+            }
         }
+        cm_EndDirOp(&newDirOp);
         lock_ReleaseMutex(&newDscp->mx);
     }
 
