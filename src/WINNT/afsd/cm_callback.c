@@ -1756,12 +1756,52 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     return code;
 }
 
+
+/* called with cm_scacheLock held */
+long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
+{
+    cm_vol_state_t *statep;
+    cm_volume_t * volp = scp->volp;
+    afs_uint32 volID = scp->fid.volume;
+    cm_serverRef_t *tsrp;
+    int found;
+
+    *downTime = 0;
+
+    if (scp->cbServerp == NULL)
+        return 1;
+
+    if (volp->rw.ID == volID) {
+        statep = &volp->rw;
+    } else if (volp->ro.ID == volID) {
+        statep = &volp->ro;
+    } else if (volp->bk.ID == volID) {
+        statep = &volp->bk;
+    }
+
+    if (statep->state == vl_online)
+        return 1;
+
+    for (found = 0,tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->server == scp->cbServerp)
+            found = 1;
+        if (tsrp->server->downTime > *downTime)
+            *downTime = tsrp->server->downTime;
+    }
+
+    /* if the cbServerp does not match the current volume server list
+     * we report the callback server as up so the callback can be 
+     * expired.
+     */
+    return(found ? 0 : 1);
+}
+
 /* called periodically by cm_daemon to shut down use of expired callbacks */
 void cm_CheckCBExpiration(void)
 {
     int i;
     cm_scache_t *scp;
-    time_t now;
+    time_t now, downTime = 0;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
@@ -1769,18 +1809,23 @@ void cm_CheckCBExpiration(void)
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
-            cm_HoldSCacheNoLock(scp);
-            if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
+
+            if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
+                 (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
+            {
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
-                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
+                
+                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
                 cm_CallbackNotifyChange(scp);
+
+                cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainWrite(&cm_scacheLock);
             }
-            cm_ReleaseSCacheNoLock(scp);
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
