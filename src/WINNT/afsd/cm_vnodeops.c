@@ -1788,6 +1788,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     int symlinkCount;		/* count of # of symlinks traversed */
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
+#define MAX_FID_COUNT 512
+    cm_fid_t fids[MAX_FID_COUNT]; /* array of fids processed in this path walk */
+    int fid_count = 0;          /* number of fids processed in this path walk */
+    int i;
 
 #ifdef DEBUG_REFCOUNT
     afsi_log("%s:%d cm_NameI rootscp 0x%p ref %d", file, line, rootSCachep, rootSCachep->refCount);
@@ -1851,7 +1855,22 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 		code = cm_Lookup(tscp, component,
 				  flags | extraFlag,
 				  userp, reqp, &nscp);
-		if (code) {
+
+                if (code == 0) {
+                    for ( i=0; i<fid_count; i++) {
+                        if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
+                            code = CM_ERROR_TOO_MANY_SYMLINKS;
+                            cm_ReleaseSCache(nscp);
+                            nscp = NULL;
+                            break;
+                        }
+                    }
+                    if (i == fid_count && fid_count < MAX_FID_COUNT) {
+                        fids[fid_count++] = nscp->fid;
+                    }
+                }
+                
+                if (code) {
 		    cm_ReleaseSCache(tscp);
 		    if (dirScp)
 			cm_ReleaseSCache(dirScp);
@@ -1919,6 +1938,21 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     else 
                         restp = tp;
                     code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
+
+                    if (code == 0 && linkScp != NULL) {
+                        for ( i=0; i<fid_count; i++) {
+                            if ( !cm_FidCmp(&linkScp->fid, &fids[i]) ) {
+                                code = CM_ERROR_TOO_MANY_SYMLINKS;
+                                cm_ReleaseSCache(linkScp);
+                                nscp = NULL;
+                                break;
+                            }
+                        }
+                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
+                            fids[fid_count++] = linkScp->fid;
+                        }
+                    }
+
                     if (code) {
                         /* something went wrong */
                         cm_ReleaseSCache(tscp);
@@ -2050,6 +2084,12 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
      * so free it */
     cm_FreeSpace(spacep);
     cm_ReleaseSCache(newRootScp);
+
+    if (linkScp == *outScpp) {
+        cm_ReleaseSCache(*outScpp);
+        *outScpp = NULL;
+        code = CM_ERROR_NOSUCHPATH;
+    }
 
     return code;
 }
