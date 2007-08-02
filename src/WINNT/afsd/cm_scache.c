@@ -964,8 +964,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHDATA", scp);
                 goto sleep;
             }
-            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want FETCHDATA", scp, bufp);
+            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING | CM_BUF_CMWRITING))) {
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING|BUF_CMWRITING want FETCHDATA", scp, bufp);
                 goto sleep;
             }
         }
@@ -976,8 +976,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want STOREDATA", scp);
                 goto sleep;
             }
-            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want STOREDATA", scp, bufp);
+            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING | CM_BUF_CMWRITING))) {
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING|BUF_CMWRITING want STOREDATA", scp, bufp);
                 goto sleep;
             }
         }
@@ -1043,6 +1043,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING want READ", scp, bufp);
                 goto sleep;
             }
+            if (bufp && (bufp->cmFlags & CM_BUF_CMWRITING)) {
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMWRITING want READ", scp, bufp);
+                goto sleep;
+            }
         }
         if (flags & CM_SCACHESYNC_WRITE) {
             /* don't write unless the status is stable and the chunk
@@ -1053,8 +1057,15 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING want WRITE", scp);
                 goto sleep;
             }
-            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want WRITE", scp, bufp);
+            if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING |
+                                          CM_BUF_CMSTORING |
+                                          CM_BUF_CMWRITING))) {
+                osi_Log3(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is %s want WRITE",
+                         scp, bufp,
+                         ((bufp->cmFlags & CM_BUF_CMFETCHING) ? "CM_BUF_CMFETCHING":
+                          ((bufp->cmFlags & CM_BUF_CMSTORING) ? "CM_BUF_CMSTORING" :
+                           ((bufp->cmFlags & CM_BUF_CMWRITING) ? "CM_BUF_CMWRITING" :
+                            "UNKNOWN!!!"))));
                 goto sleep;
             }
         }
@@ -1215,6 +1226,13 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         osi_QAdd((osi_queue_t **) &scp->bufWritesp, &qdp->q);
     }
 
+    if (flags & CM_SCACHESYNC_WRITE) {
+        /* mark the buffer as being written to. */
+        if (bufp) {
+            bufp->cmFlags |= CM_BUF_CMWRITING;
+        }
+    }
+
     return 0;
 }
 
@@ -1292,6 +1310,14 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
             }
 	    if (release)
 		buf_Release(bufp);
+        }
+    }
+
+    if (flags & CM_SCACHESYNC_WRITE) {
+        if (bufp) {
+            osi_assert(bufp->cmFlags & CM_BUF_CMWRITING);
+
+            bufp->cmFlags &= ~CM_BUF_CMWRITING;
         }
     }
 

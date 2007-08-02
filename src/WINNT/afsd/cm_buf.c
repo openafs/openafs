@@ -1459,6 +1459,34 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }       
 
+/* Must be called with scp->mx held */
+long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 toVersion)
+{
+    cm_buf_t * bp;
+    cm_buf_t * nbp;
+    unsigned int i;
+    int found = 0;
+
+    i = BUF_FILEHASH(&scp->fid);
+
+    lock_ObtainWrite(&buf_globalLock);
+
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp = bp->fileHashp) {
+        if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
+            if (bp->dataVersion == fromVersion) {
+                bp->dataVersion = toVersion;
+                found = 1;
+            }
+        }
+    }
+    lock_ReleaseWrite(&buf_globalLock);
+
+    if (found)
+        return 0;
+    else
+        return ENOENT;
+}
+
 long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
