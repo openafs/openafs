@@ -106,6 +106,7 @@ cm_PingServer(cm_server_t *tsp)
     if (code >= 0) {
 	/* mark server as up */
 	tsp->flags &= ~CM_SERVERFLAG_DOWN;
+        tsp->downTime = 0;
 
 	/* we currently handle 32-bits of capabilities */
 	if (caps.Capabilities_len > 0) {
@@ -148,6 +149,7 @@ cm_PingServer(cm_server_t *tsp)
     } else {
 	/* mark server as down */
 	tsp->flags |= CM_SERVERFLAG_DOWN;
+        tsp->downTime = osi_Time();
 	if (code != VRESTARTING)
 	    cm_ForceNewConnections(tsp);
 

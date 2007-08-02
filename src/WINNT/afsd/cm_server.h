@@ -36,6 +36,7 @@ typedef struct cm_server {
     osi_mutex_t mx;
     unsigned short ipRank;		/* server priority */
     cm_server_vols_t *  vols;           /* by mx */
+    time_t downTime;                    /* by mx */
 } cm_server_t;
 
 enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
