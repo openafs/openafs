@@ -1,5 +1,9 @@
 openafs (1.4.4.dfsg1-6) unstable; urgency=low
 
+  * Apply upstream patch for the OpenAFS file server to treat clients that
+    have an all-zero UUID as if they don't have UUID support, working
+    around bugs in various client versions that can cause multiple hosts
+    to use all-zero UUIDs and conflict with each other.
   * Use dpkg --print-architecture to determine the AFS sysname for both
     regular builds (avoiding --print-installation-architecture, which is
     deprecated) and kernel builds (avoiding arch, which is temporarily not
@@ -9,7 +13,7 @@ openafs (1.4.4.dfsg1-6) unstable; urgency=low
     although OpenAFS currently only supports 2.4 kernels on HPPA so this
     isn't that useful.
 
- -- Russ Allbery <rra@debian.org>  Thu, 02 Aug 2007 19:52:55 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 02 Aug 2007 19:54:00 -0700
 
 openafs (1.4.4.dfsg1-5) unstable; urgency=low
 
