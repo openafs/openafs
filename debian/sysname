@@ -5,7 +5,7 @@
 #
 # Not all architectures are listed, only those that OpenAFS supports.
 
-case `dpkg --print-installation-architecture` in
+case `dpkg --print-architecture` in
 alpha)
     echo alpha_linux_26
     ;;
