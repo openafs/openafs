@@ -4,11 +4,12 @@ openafs (1.4.4.dfsg1-6) unstable; urgency=low
     regular builds (avoiding --print-installation-architecture, which is
     deprecated) and kernel builds (avoiding arch, which is temporarily not
     in unstable and which wouldn't do the right thing for cross-compiles).
+    Thanks, Chris Hanson.  (Closes: #435765)
   * Add hppa as a recognized architecture for kernel module builds,
     although OpenAFS currently only supports 2.4 kernels on HPPA so this
     isn't that useful.
 
- -- Russ Allbery <rra@debian.org>  Thu, 02 Aug 2007 19:50:16 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 02 Aug 2007 19:52:55 -0700
 
 openafs (1.4.4.dfsg1-5) unstable; urgency=low
 
