@@ -31,15 +31,15 @@ of the cell, and the second column is the alias that should be created.
 
 The following F<CellAlias> file:
 
-    openafs.org openafs
-    uncc.edu uncc
+   openafs.org openafs
+   uncc.edu uncc
 
 results in the following symbolic links:
 
-    /afs/.openafs  ->  /afs/.openafs.org
-    /afs/openafs   ->  /afs/openafs.org
-    /afs/.uncc     ->  /afs/.uncc.edu
-    /afs/uncc      ->  /afs/uncc.edu
+   /afs/.openafs  ->  /afs/.openafs.org
+   /afs/openafs   ->  /afs/openafs.org
+   /afs/.uncc     ->  /afs/.uncc.edu
+   /afs/uncc      ->  /afs/uncc.edu
 
 =head1 SEE ALSO
 

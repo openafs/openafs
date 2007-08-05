@@ -678,17 +678,17 @@ The B<afsd> command is normally included in the machine's AFS
 initialization file, rather than typed at the command shell prompt. For
 most disk caches, the appropriate form is
 
-   /usr/vice/etc/afsd
+   % /usr/vice/etc/afsd
 
 The following command is appropriate when enabling a machine to act as an
 NFS/AFS Translator machine serving more than five users.
 
-   /usr/vice/etc/afsd -daemons 4 -rmtsys
+   % /usr/vice/etc/afsd -daemons 4 -rmtsys
 
 The following command initializes a memory cache and sets chunk size to 16
 KB (2^14).
 
-   /usr/vice/etc/afsd -memcache -chunksize 14
+   % /usr/vice/etc/afsd -memcache -chunksize 14
 
 =head1 PRIVILEGE REQUIRED
 
