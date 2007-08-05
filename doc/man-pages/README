@@ -192,13 +192,11 @@ Known Problems
        bos_util
        copyauth
        fs getcalleraccess
-       fs getcrypt
        fs listaliases
        fs newalias
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
-       fs setcrypt
        kseal
        pts interactive
        pts quit
@@ -230,12 +228,6 @@ Known Problems
 
    * fs sysname documentation needs to include the possibility of setting
      multiple sysnames and the resulting behavior.
-
-   * The afsd man page is horribly out of date.  It doesn't explain
-     dynroot, many options are missing, and some of the options described
-     are no longer valid.  It also still assumes that -settime is the
-     default and says that the system must be rebooted after shutdown,
-     which isn't the case at least on Linux.
 
    * bos listkeys and the KeyFile man page assume that you're using the
      kaserver.

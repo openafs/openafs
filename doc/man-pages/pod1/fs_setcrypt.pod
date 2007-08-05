@@ -1,0 +1,93 @@
+=head1 NAME
+
+fs setcrypt - Enables of disables the encryption of AFS file transfers
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs setcrypt> S<<< [B<-crypt>] <I<on/off>> >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs setcrypt> command sets the status of network traffic encryption
+for file traffic in the AFS client. This encryption applies to file
+traffic going to and coming from the AFS File Server for users with valid
+tokens.  This command does not control the encryption used for
+authentication, which uses Kerberos 5 or klog/kaserver. The complement of
+this command is B<fs getcrypt>, which shows the status of encryption on
+the client.
+
+The default encryption status is enabled.
+
+This is a global setting and applies to all subsequent connections to an
+AFS File Server from this Cache Manager. There is no way to enable or
+disable encryption for specific connections.
+
+=head1 CAUTIONS
+
+AFS uses an encryption scheme called fcrypt, based on but slightly weaker
+than DES, and there is currently no way to specify a different encryption
+mechanism. Because fcrypt and DES are obsolete, the user must decide how
+much to trust the encryption. Consider using a Virtual Private Network at
+the IP level if better encryption is needed.
+
+Encrypting file traffic requires a token. Unauthenticated connections or
+connections authorized via IP-based ACLs will not be encrypted even when
+encryption is turned on.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-crypt> <I<on/off>>
+
+This is the only option to B<fs setcrypt>. The B<-crypt> option takes
+either C<on> or C<off>. C<on> enables encryption. C<off> disables
+encryption. Since this is the only option, the C<-crypt> flag may be
+omitted.
+
+C<0> and C<1> or C<true> and C<false> are not supported as replacements
+for C<on> and C<off>.
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output other than error messages.
+
+=head1 EXAMPLES
+
+There are only four ways to invoke B<fs setcrypt>.  Either of:
+
+    % fs setcrypt -crypt on
+    % fs setcrypt on
+
+will enable encryption for authenticated connections and:
+
+    % fs setcrypt -crypt off
+    % fs setcrypt off
+
+will disable encryption.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fs_getcrypt(1)>
+
+The description of the fcrypt encryption mechanism at
+L<http://surfvi.com/~ota/fcrypt-paper.txt>.
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
