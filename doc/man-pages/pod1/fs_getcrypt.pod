@@ -1,0 +1,72 @@
+=head1 NAME
+
+fs getcrypt - Displays the state of encryption for AFS file transfers
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs getcrypt>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs getcrypt> command shows the status of network traffic encryption
+for file traffic in the AFS client. This encryption applies to file
+traffic going to and coming from the AFS server for users with valid
+tokens. The complement of this command is B<fs setcrypt> which sets the
+status of encryption on the client.
+
+=head1 CAUTIONS
+
+AFS uses an encryption scheme called fcrypt, based on but slightly weaker
+than DES. Because fcrypt and DES are obsolete, the user must decide how
+much to trust the encryption. Consider using a Virtual Private Network at
+the IP level if better encryption is needed.
+
+Encrypting file traffic requires a token. Unauthenticated connections or
+connections authorized via IP-based ACLs will not be encrypted even when
+encryption is turned on.
+
+=head1 OPTIONS
+
+This commands takes no options.
+
+=head1 OUTPUT
+
+If encryption is enabled, the output is:
+
+    Security level is currently crypt (data security).
+
+If encryption if disabled, the output is:
+
+    Security level is currently clear.
+
+=head1 EXAMPLES
+
+There is only one way to invoke B<fs getcrypt>:
+
+    % fs getcrypt
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+No special priviledges are required for this command.
+
+=head1 SEE ALSO
+
+L<fs_setcrypt(1)>
+
+The description of the fcrypt encryption mechanism at
+L<http://surfvi.com/~ota/fcrypt-paper.txt>.
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
