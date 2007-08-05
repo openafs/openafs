@@ -197,7 +197,6 @@ Known Problems
        copyauth
        flushall (Windows only)
        fs getcalleraccess
-       fs newalias
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr

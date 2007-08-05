@@ -7,7 +7,7 @@ fs getcrypt - Displays the state of encryption for AFS file transfers
 =for html
 <div class="synopsis">
 
-B<fs getcrypt>
+B<fs getcrypt> [B<-help>]
 
 =for html
 </div>
@@ -33,7 +33,14 @@ encryption is turned on.
 
 =head1 OPTIONS
 
-This commands takes no options.
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
 
 =head1 OUTPUT
 

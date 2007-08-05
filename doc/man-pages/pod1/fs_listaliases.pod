@@ -7,7 +7,7 @@ fs listaliases - Displays the current list of aliases for AFS cells
 =for html
 <div class="synopsis">
 
-B<fs listaliases>
+B<fs listaliases> [B<-help>]
 
 =for html
 </div>
@@ -21,7 +21,14 @@ option to B<afsd>).
 
 =head1 OPTIONS
 
-This command takes no options.
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
 
 =head1 OUTPUT
 

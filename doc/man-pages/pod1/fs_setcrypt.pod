@@ -7,7 +7,7 @@ fs setcrypt - Enables of disables the encryption of AFS file transfers
 =for html
 <div class="synopsis">
 
-B<fs setcrypt> S<<< [B<-crypt>] <I<on/off>> >>>
+B<fs setcrypt> S<<< [B<-crypt>] <I<on/off>> >>> [B<-help>]
 
 =for html
 </div>
@@ -53,6 +53,11 @@ omitted.
 
 C<0> and C<1> or C<true> and C<false> are not supported as replacements
 for C<on> and C<off>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
