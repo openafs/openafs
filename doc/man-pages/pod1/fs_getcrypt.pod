@@ -39,17 +39,17 @@ This commands takes no options.
 
 If encryption is enabled, the output is:
 
-    Security level is currently crypt (data security).
+   Security level is currently crypt (data security).
 
 If encryption if disabled, the output is:
 
-    Security level is currently clear.
+   Security level is currently clear.
 
 =head1 EXAMPLES
 
 There is only one way to invoke B<fs getcrypt>:
 
-    % fs getcrypt
+   % fs getcrypt
 
 =back
 

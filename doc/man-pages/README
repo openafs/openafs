@@ -123,7 +123,11 @@ Formatting Standards
   References to functions should be noted like function() with the
   trailing parens.  The POD converters know how to format these sorts of
   references appropriately.  References to other sections in the same page
-  should be given as L<SECTION>.
+  should be given as L<SECTION>.  Man pages for all other AFS commands or
+  file formats referenced in the page should be listed in the SYNOPSIS.
+  List each reference on its own line for easier addition of other
+  references later, but don't put blank lines between them.  Don't forget
+  the commas at the end of each line but the last.
 
   Command and output examples should be indented three spaces.  Commands
   entered by the user should be given on a line beginning with %.  If the

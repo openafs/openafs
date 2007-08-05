@@ -64,13 +64,13 @@ This command produces no output other than error messages.
 
 There are only four ways to invoke B<fs setcrypt>.  Either of:
 
-    % fs setcrypt -crypt on
-    % fs setcrypt on
+   % fs setcrypt -crypt on
+   % fs setcrypt on
 
 will enable encryption for authenticated connections and:
 
-    % fs setcrypt -crypt off
-    % fs setcrypt off
+   % fs setcrypt -crypt off
+   % fs setcrypt off
 
 will disable encryption.
 
