@@ -14,12 +14,12 @@ frequently used cell names. Traditionally, such short names would be
 created by the local AFS administrator by creating symbolic links in the
 C<root.afs> volume. Such symlinks do not appear when Dynamic Root is
 enabled because, with Dynamic Root, the Cache Manager does not mount or
-look at the C<root.afs> volume. F<CellAlias> is a replacement which allows
+look at the C<root.afs> volume. F<CellAlias> is a replacement that allows
 such short names to be created under the client control.
 
 If you configure a short name mapping such as C<ir> for
 C<ir.stanford.edu>, the mapping of C<.ir> to C<.ir.stanford.edu> for the
-read-write version of the C<root.cell> volume for that cell will be
+read/write version of the C<root.cell> volume for that cell will be
 created automatically. There is no need to list that alias separately (and
 it is listed separately, B<afsd> will report an error on startup).
 
