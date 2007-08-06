@@ -19,10 +19,12 @@ Commands to set and report how the Cache Manager interacts with server
 machines:
 L<B<fs checkservers>|fs_checkservers(1)>,
 L<B<fs getcellstatus>|fs_getcellstatus(1)>,
+L<B<fs getcrypt>|fs_getcrypt(1)>,
 L<B<fs getserverprefs>|fs_getserverprefs(1)>,
 L<B<fs listcells>|fs_listcells(1)>,
 L<B<fs newcell>|fs_newcell(1)>,
 L<B<fs setcell>|fs_setcell(1)>,
+L<B<fs setcrypt>|fs_setcrypt(1)>,
 L<B<fs setserverprefs>|fs_setserverprefs(1)>,
 L<B<fs sysname>|fs_sysname(1)>,
 and L<B<fs wscell>|fs_wscell(1)>.
@@ -55,6 +57,7 @@ L<B<fs checkvolumes>|fs_checkvolumes(1)>,
 L<B<fs flush>|fs_flush(1)>,
 L<B<fs flushvolume>|fs_flushvolume(1)>,
 L<B<fs getcacheparms>|fs_getcacheparms(1)>,
+L<B<fs listaliases>|fs_listaliases(1)>,
 and L<B<fs setcachesize>|fs_setcachesize(1)>.
 
 =item *
