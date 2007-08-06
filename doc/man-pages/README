@@ -214,7 +214,6 @@ Known Problems
        vos convertROtoRW
        vos copy
        vos shadow
-       vos size
        vsys
 
    * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative
