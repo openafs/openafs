@@ -55,7 +55,8 @@ B<vos listaddrs>.
 
 =item *
 
-Commands to create and restore dump files: B<vos dump> and B<vos restore>.
+Commands to create, size, and restore dump files: B<vos dump>, B<vos
+restore>, and B<vos size>.
 
 =item *
 
@@ -252,6 +253,7 @@ L<vos_remove(1)>,
 L<vos_remsite(1)>,
 L<vos_rename(1)>,
 L<vos_restore(1)>,
+L<vos_size(1)>,
 L<vos_status(1)>,
 L<vos_syncserv(1)>,
 L<vos_syncvldb(1)>,
