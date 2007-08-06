@@ -195,8 +195,8 @@ Known Problems
 
        bos_util
        copyauth
+       flushall (Windows only)
        fs getcalleraccess
-       fs listaliases
        fs newalias
        fs rxstatpeer
        fs rxstatproc
@@ -217,10 +217,6 @@ Known Problems
        vos shadow
        vos size
        vsys
-
-   * The following configuration files have no man pages:
-
-       CellAlias
 
    * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative
      names in the NAME line of the non-.krb man pages, links should be
