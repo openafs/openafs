@@ -709,12 +709,12 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     struct timeval now;
 #endif /* DJGPP */        
 
+    *connpp = NULL;
+
     if (serversp == NULL) {
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_ALLDOWN);
 	return CM_ERROR_ALLDOWN;
     }
-
-    *connpp = NULL;
 
 #ifndef DJGPP
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
@@ -867,6 +867,8 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
 {
     cm_conn_t *tcp;
     cm_ucell_t *ucellp;
+
+    *connpp = NULL;
 
     lock_ObtainMutex(&userp->mx);
     lock_ObtainWrite(&cm_connLock);
