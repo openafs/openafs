@@ -720,10 +720,11 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
 			if (ShowProblems) {
 			    ViceLog(7,
-				    ("BCB: Failed on file %u.%u.%u, Host %s:%d is down\n",
+				    ("BCB: Failed on file %u.%u.%u, Host %x (%s:%d) is down\n",
 				     afidp->AFSCBFids_val->Volume,
 				     afidp->AFSCBFids_val->Vnode,
 				     afidp->AFSCBFids_val->Unique,
+                                     hp,
 				     afs_inet_ntoa_r(hp->host, hoststr),
 				     ntohs(hp->port)));
 			}
@@ -790,8 +791,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     char hoststr[16];
 
     ViceLog(7,
-	    ("BCB: BreakCallBack(all but %s:%d, (%u,%u,%u))\n",
-	     afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
+	    ("BCB: BreakCallBack(Host %x all but %s:%d, (%u,%u,%u))\n",
+	     xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
 	     fid->Volume, fid->Vnode, fid->Unique));
 
     H_LOCK;
@@ -820,8 +821,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 		    ViceLog(0, ("BCB: BOGUS! cb->hhead is NULL!\n"));
 		} else if (thishost->hostFlags & VENUSDOWN) {
 		    ViceLog(7,
-			    ("BCB: %s:%d is down; delaying break call back\n",
-			     afs_inet_ntoa_r(thishost->host, hoststr),
+			    ("BCB: %x (%s:%d) is down; delaying break call back\n",
+			     thishost, afs_inet_ntoa_r(thishost->host, hoststr),
 			     ntohs(thishost->port)));
 		    cb->status = CB_DELAYED;
 		} else {
@@ -882,8 +883,8 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
 	ViceLog(8,
-		("DCB: No call back for host %s:%d, (%u, %u, %u)\n",
-		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+		("DCB: No call back for host %x (%s:%d), (%u, %u, %u)\n",
+		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
 		 fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
 	H_UNLOCK;
@@ -1003,15 +1004,15 @@ BreakDelayedCallBacks_r(struct host *host)
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
-			("CB: Call back connect back failed (in break delayed) for Host %s:%d\n",
-			 afs_inet_ntoa_r(host->host, hoststr),
+			("CB: Call back connect back failed (in break delayed) for Host %x (%s:%d)\n",
+			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 	    }
 	    host->hostFlags |= VENUSDOWN;
 	} else {
 	    ViceLog(25,
-		    ("InitCallBackState success on %s\n",
-		     afs_inet_ntoa_r(host->host, hoststr)));
+		    ("InitCallBackState success on %x (%s:%d)\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	    /* reset was done successfully */
 	    host->hostFlags |= RESETDONE;
 	    host->hostFlags &= ~VENUSDOWN;
@@ -1050,15 +1051,15 @@ BreakDelayedCallBacks_r(struct host *host)
 		int i;
 		if (ShowProblems) {
 		    ViceLog(0,
-			    ("CB: XCallBackBulk failed, Host %s:%d; callback list follows:\n",
-			     afs_inet_ntoa_r(host->host, hoststr),
+			    ("CB: XCallBackBulk failed, Host %x (%s:%d); callback list follows:\n",
+                             host, afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port)));
 		}
 		for (i = 0; i < nfids; i++) {
 		    if (ShowProblems) {
 			ViceLog(0,
-				("CB: Host %s:%d, file %u.%u.%u (part of bulk callback)\n",
-				 afs_inet_ntoa_r(host->host, hoststr),
+				("CB: Host %x (%s:%d), file %u.%u.%u (part of bulk callback)\n",
+				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port), fids[i].Volume,
 				 fids[i].Vnode, fids[i].Unique));
 		    }
@@ -1105,12 +1106,12 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	    return 0;		/* Release hold */
 	}
 	ViceLog(8,
-		("BVCB: volume call back for Host %s:%d failed\n",
-		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+		("BVCB: volume call back for Host %x (%s:%d) failed\n",
+                 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for Host %s:%d failed\n",
-		     afs_inet_ntoa_r(host->host, hoststr),
+		    ("CB: volume callback for Host %x (%s:%d) failed\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
 	DeleteAllCallBacks_r(host, deletefe);	/* Delete all callback state 
@@ -1367,8 +1368,8 @@ BreakLaterCallBacks(void)
 		/* leave hold for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
-			("Found host %s:%d non-DELAYED cb for %u:%u:%u\n", 
-			 afs_inet_ntoa_r(host->host, hoststr),
+			("Found host %x (%s:%d) non-DELAYED cb for %u:%u:%u\n", 
+			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), fe->vnode, fe->unique, fe->volid));
 	    }
 	}
@@ -1430,8 +1431,9 @@ CleanupTimedOutCallBacks_r(void)
 		cb = itocb(cbi);
 		cbi = cb->tnext;
 		ViceLog(8,
-			("CCB: deleting timed out call back %s:%d, (%u,%u,%u)\n",
-			 afs_inet_ntoa_r(h_itoh(cb->hhead)->host, hoststr),
+			("CCB: deleting timed out call back %x (%s:%d), (%u,%u,%u)\n",
+                         h_itoh(cb->hhead)->host,
+                         afs_inet_ntoa_r(h_itoh(cb->hhead)->host, hoststr),
 			 h_itoh(cb->hhead)->port, itofe(cb->fhead)->volid,
 			 itofe(cb->fhead)->vnode, itofe(cb->fhead)->unique));
 		HDel(cb);
@@ -1588,8 +1590,8 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     struct rx_connection *cb_conn = NULL;
 
     ViceLog(5,
-	    ("GSS: Delete longest inactive host %s\n",
-	     afs_inet_ntoa_r(hp->host, hoststr)));
+	    ("GSS: Delete longest inactive host %x (%s:%d)\n",
+             hp, afs_inet_ntoa_r(hp->host, hoststr), ntohs(hp->port)));
     if (!(held = h_Held_r(hp)))
 	h_Hold_r(hp);
 
@@ -2893,10 +2895,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     if (!host->interface)
 	return 1;		/* failure */
 
-    assert(host->interface->numberOfInterfaces > 0);
-
     /* the only address is the primary interface */
-    if (host->interface->numberOfInterfaces == 1)
+    if (host->interface->numberOfInterfaces <= 1)
 	return 1;		/* failure */
 
     /* initialise a security object only once */
@@ -2930,8 +2930,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multibreakcall back on all addr for host %s\n",
-	     afs_inet_ntoa_r(host->host, hoststr)));
+	    ("Starting multibreakcall back on all addr for host %x (%s:%d)\n",
+             host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_CallBack(afidp, &tc);
@@ -2941,14 +2941,17 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
-		    ("multibreakcall success with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multibreakcall success with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
 	    H_UNLOCK;
 	    multi_Abort;
 	}
@@ -3024,8 +3027,9 @@ MultiProbeAlternateAddress_r(struct host *host)
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multiprobe on all addr for host %s\n",
-	     afs_inet_ntoa_r(host->host, hoststr)));
+	    ("Starting multiprobe on all addr for host %x (%s:%d)\n",
+             host, afs_inet_ntoa_r(host->host, hoststr),
+             ntohs(host->port)));
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_ProbeUuid(&host->interface->uuid);
@@ -3035,20 +3039,24 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
-		    ("multiprobe success with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multiprobe success with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
 	    H_UNLOCK;
 	    multi_Abort;
 	} else {
 	    ViceLog(125,
-		    ("multiprobe failure with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multiprobe failure with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
             
             /* This is less than desirable but its the best we can do.
              * The AFS Cache Manager will return either 0 for a Uuid  
@@ -3060,14 +3068,7 @@ MultiProbeAlternateAddress_r(struct host *host)
             if (multi_error == 1) {
                 /* remove the current alternate address from this host */
                 H_LOCK;
-                for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
-                    if (interfaces[multi_i].addr != host->interface->interface[i].addr &&
-			interfaces[multi_i].port != host->interface->interface[i].port) {
-                        host->interface->interface[j] = host->interface->interface[i];
-                        j++;
-                    }
-                }
-                host->interface->numberOfInterfaces--;
+                removeInterfaceAddr_r(host, interfaces[multi_i].addr, interfaces[multi_i].port);
                 H_UNLOCK;
             }
         }

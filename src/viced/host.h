@@ -57,6 +57,7 @@ struct Identity {
 struct AddrPort  {
     afs_uint32 addr;		/* in network byte order */
     afs_uint16 port;		/* in network byte order */
+    afs_int16  valid;
 };
 
 struct Interface {
@@ -109,11 +110,16 @@ struct host {
 /* * Don't zero the index, lock or condition varialbles */
 #define HOST_TO_ZERO(H) (int)(((char *)(&((H)->index))-(char *)(H)))
 
-struct h_hashChain {
+struct h_AddrHashChain {
     struct host *hostPtr;
-    struct h_hashChain *next;
+    struct h_AddrHashChain *next;
     afs_uint32 addr;
     afs_uint16 port;
+};
+
+struct h_UuidHashChain {
+    struct host *hostPtr;
+    struct h_UuidHashChain *next;
 };
 
 struct client {
@@ -249,6 +255,13 @@ extern void h_InitHostPackage();
 extern void h_CheckHosts();
 struct Interface *MultiVerifyInterface_r();
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
+extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
+extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
+extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
+extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
+extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
+
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
