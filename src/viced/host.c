@@ -1272,6 +1272,24 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     return 0;
 }
 
+int 
+h_threadquota(int waiting) 
+{
+    if (lwps > 64) {
+	if (waiting > 5)
+	    return 1;
+    } else if (lwps > 32) {
+	if (waiting > 4)
+	    return 1;
+    } else if (lwps > 16) {
+	if (waiting > 3)
+	    return 1;
+    } else {
+	if (waiting > 2)
+	    return 1;
+    }
+    return 0;
+}
 
 /* Host is returned held */
 struct host *
@@ -1308,8 +1326,12 @@ h_GetHost_r(struct rx_connection *tcon)
 	 * structure for this address. Verify that the identity
 	 * of the caller matches the identity in the host structure.
 	 */
+	if ((host->hostFlags & HWHO_INPROGRESS) && 
+	    h_threadquota(host->lock.num_waiting))
+	    return 0;
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR)) {
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    /* Another thread is doing initialization */
 	    h_Unlock_r(host);
 	    if (!held)
@@ -1350,6 +1372,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			 afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 		host->hostFlags |= HOSTDELETED;
+		host->hostFlags &= ~HWHO_INPROGRESS;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1375,6 +1398,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			("Host %s:%d has changed its identity, deleting.\n",
 			 afs_inet_ntoa_r(host->host, hoststr), host->port));
 		host->hostFlags |= HOSTDELETED;
+		host->hostFlags &= ~HWHO_INPROGRESS;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1394,6 +1418,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     } else if (host) {
 	if (!(host->hostFlags & ALTADDR)) {
@@ -1403,6 +1428,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	    h_Lock_r(host);
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1435,6 +1461,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
 	    /* The host in the cache is not the host for this connection */
 	    host->hostFlags |= HOSTDELETED;
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1512,6 +1539,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    if (!(oheld = h_Held_r(oldHost)))
 			h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
+		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
 			int code2;
@@ -1602,6 +1630,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			}
 		    }
 		    host->hostFlags |= HOSTDELETED;
+		    host->hostFlags &= ~HWHO_INPROGRESS;
 		    h_Unlock_r(host);
 		    /* release host because it was allocated by h_Alloc_r */
 		    h_Release_r(host);
@@ -1648,6 +1677,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;	/* host structure initialization complete */
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     if (caps.Capabilities_val)
@@ -1884,6 +1914,9 @@ h_FindClient_r(struct rx_connection *tcon)
 
     if (!client) { /* loop */
 	host = h_GetHost_r(tcon);	/* Returns it h_Held */
+
+	if (!host) 
+	    return 0;
 
     retryfirstclient:
 	/* First try to find the client structure */
@@ -2534,6 +2567,7 @@ CheckHost(register struct host *host, int held)
     }
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
+	host->hostFlags |= HWHO_INPROGRESS;
 	if (!(host->hostFlags & HOSTDELETED)) {
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
@@ -2603,6 +2637,7 @@ CheckHost(register struct host *host, int held)
 	    cb_conn=NULL;
 	    H_LOCK;
 	}
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     H_UNLOCK;
