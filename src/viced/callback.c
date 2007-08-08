@@ -2161,8 +2161,8 @@ MultiProbeAlternateAddress_r(struct host *host)
 
 	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(interfaces[i].addr, 
-			     interfaces[i].port, 1, sc, 0);
+	    rx_NewConnection(interfaces[j].addr, 
+			     interfaces[j].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
 	j++;
