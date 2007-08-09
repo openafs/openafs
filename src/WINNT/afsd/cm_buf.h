@@ -72,28 +72,31 @@ typedef struct cm_buf {
     long dirtyCounter;	        /* bumped at each dirty->clean transition */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
-#ifdef DEBUG
-    cm_scache_t *scp;		/* for debugging, the scache object belonging to */
-                                /* the fid at the time of fid assignment. */
-#endif
     long flags;		        /* flags we're using */
     char *datap;		/* data in this buffer */
     unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
-#ifndef DJGPP
-    OVERLAPPED over;	        /* overlapped structure for I/O */
-#endif
         
     /* fields added for the CM; locked by scp->mx */
     long dataVersion;	        /* data version of this page */
     long cmFlags;		/* flags for cm */
+
+    /* syncop state */
+    afs_uint32 waitCount;       /* number of threads waiting */
+    afs_uint32 waitRequests;    /* num of thread wait requests */
+
+    afs_uint32 dirty_offset;    /* offset from beginning of buffer containing dirty bytes */
+    afs_uint32 dirty_length;    /* number of dirty bytes within the buffer */
+
 #ifdef DISKCACHE95
     cm_diskcache_t *dcp;        /* diskcache structure */
 #endif /* DISKCACHE95 */
-
-    /* syncop state */
-    afs_uint32 waitCount;           /* number of threads waiting */
-    afs_uint32 waitRequests;        /* num of thread wait requests */
+#ifdef DEBUG
+    cm_scache_t *scp;		/* for debugging, the scache object belonging to */
+                                /* the fid at the time of fid assignment. */
+#else
+    void * dummy;
+#endif
 } cm_buf_t;
 
 /* values for cmFlags */
@@ -163,7 +166,7 @@ extern long buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
 extern void buf_CleanWait(cm_scache_t *, cm_buf_t *);
 
-extern void buf_SetDirty(cm_buf_t *);
+extern void buf_SetDirty(cm_buf_t *, afs_uint32 offset, afs_uint32 length);
 
 extern long buf_CleanAndReset(void);
 

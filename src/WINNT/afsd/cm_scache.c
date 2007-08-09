@@ -107,6 +107,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMSTORING;
 		bufp->flags &= ~CM_BUF_DIRTY;
+                bufp->dirty_offset = 0;
+                bufp->dirty_length = 0;
 		bufp->flags |= CM_BUF_ERROR;
 		bufp->error = VNOVNODE;
 		bufp->dataVersion = -1; /* bad */
@@ -127,6 +129,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMFETCHING;
 		bufp->flags &= ~CM_BUF_DIRTY;
+                bufp->dirty_offset = 0;
+                bufp->dirty_length = 0;
 		bufp->flags |= CM_BUF_ERROR;
 		bufp->error = VNOVNODE;
 		bufp->dataVersion = -1; /* bad */
