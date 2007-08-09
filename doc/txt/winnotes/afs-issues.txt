@@ -1,6 +1,11 @@
-This file is a rough list of known issues with the 1.5.20 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.22 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
+
+For all of these issues please review 
+
+  http://www.openafs.org/roadmap.html
+  http://www.secure-endpoints.com/openafs-windows-roadmap.html
 
 
 (1) File/Directory access is not integrated with windows security 
@@ -8,9 +13,11 @@ can be found in the RT database or on the mailing list.
 (3c) Loopback adapter hack:
   (i)   prevents use of AFS Gateway 
   (ii)  requires installation of loopback adapter
-  (iii) the list of hack adapters is incomplete (VMWare, MS TV/Video, ...)
 
-(9) Convert to IFS!!!!!!
+(9) Convert to a native file system implementation built upon:
+     - a file system redirector
+     - a file system filter
+     - a network provider
 
 (12) AFS Integrated Logon:
 (12c) If network is not available must store the username and password 

@@ -1,3 +1,69 @@
+Since 1.5.21
+
+ * In the AFS Admin Library, replaced all of the 
+   Ubik_Call(XXX_RPC,...) calls with Ubik_XXX_RPC(...).  This 
+   allows parameter checking and proper type conversions to be
+   performed.  This is crucial when passing parameters that are
+   64-bit wide on systems in which 'long' is a 32-bit value.
+   Otherwise, the parameter list on the stack is interpretted
+   incorrectly and the function not only doesn't succeed but it
+   might corrupt memory and if lucky crash the application.
+  
+   The only program that we care about that uses this library 
+   is the AFS Server Manager.  Now it doesn't crash.
+
+ * Fixed smb directory searches for non-wildcard names.  The 
+   optimized function should not have set the bulk in progress
+   flag.  This would adversely affect later directory searches
+   that required a bulk search.
+
+ * Detect infinite recursions (up to 512 stat cache objects
+   in a chain.)  If an infinite recursion is detected, return
+   an error to stop the CIFS client from querying us forever.
+
+ * Executables executed out of AFS name space can have their
+   pages swapped out by Windows.  Those pages will be reloaded
+   when they are required.  However, if the cache manager no
+   longer has a callback and all of the file servers with 
+   the volume data are down, then the application will crash
+   due to the inability to read the required page.  
+
+   We now track the down time of each server.  If the callback
+   expires after the server that issued it went down and all
+   servers are down, we delay the expiration to permit the data
+   in the cache to be continue to be used by Windows or an 
+   application.
+
+ * The Windows AFS client has always had very poor performance
+   with regards to directory management.   In the case of 
+   directory updates caused by create, rename,and delete operations,
+   the AFS cache manager will now perform local directory updates
+   when possible in order to avoid re-reading the directory from
+   the file server.  This will be done in whenever both of the 
+   following conditions are true:
+
+   - the data version on the directory increased by one as a 
+     result of the operation
+
+   - all of the directory buffers necessary to make the change
+     are present in the cache
+
+ * The error message in the AFS Control Panel describing the 
+   need to be a Windows Administrator has been replaced with
+   a message describing the need to be in the AFS Admins Group.
+
+ * If the vldb server list is empty when attempting to evaluate
+   a cell mountpoint it was possible for a crash to occur.  This
+   can only happen if there is an existing mount point and the
+   is a failure attempting to load the server list from the 
+   CellServDB file or via AFSDB queries.
+
+ * dirty buffers only have their dirty bytes stored to the file
+   server instead of the entire chunksize
+
+ * the default chunksize has been increased from 128KB to 1MB
+   
+
 Since 1.5.20
 
  * changed the enum values for cm_serverRef_t state info to use a 
