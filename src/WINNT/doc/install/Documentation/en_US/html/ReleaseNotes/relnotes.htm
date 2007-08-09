@@ -19,7 +19,7 @@ w\:* {behavior:url(#default#VML);}
 .shape {behavior:url(#default#VML);}
 </style>
 <![endif]-->
-<title>OpenAFS for Windows 1.5.21 Release Notes</title>
+<title>OpenAFS for Windows 1.5.22 Release Notes</title>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
  name="PostalCode"/>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
@@ -586,7 +586,7 @@ strict'>
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.5.21<br>
+<p class=MsoTitle>OpenAFS for Windows 1.5.22<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
@@ -646,7 +646,7 @@ none;text-underline:none'>. 2</span></a></span></p>
 Operational Notes<span style='color:windowtext;display:none;mso-hide:all;
 text-decoration:none;text-underline:none'>. 2</span></a></span></p>
 
-<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc115417112">4. How to
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc170268869">4. How to
 Debug Problems with OpenAFS for Windows:<span style='color:windowtext;
 display:none;mso-hide:all;text-decoration:none;text-underline:none'> 11</span></a></span></p>
 
@@ -1160,7 +1160,7 @@ Kerberos KDC is inaccessible at logon time.</p>
 
 <p class=MsoNormal>Integrated Login supports the ability to obtain tokens for
 multiple cells.&nbsp; For further information on how to configure this feature
-read about the <a href="../relnotes.htm#_Value:_TheseCells"><span class=SpellE>TheseCells</span></a>
+read about the <a href="#_Value:_TheseCells"><span class=SpellE>TheseCells</span></a>
 value.</p>
 
 <h2><a name="_Toc170268828"></a><a name="_Toc152605047"></a><a
@@ -1398,6 +1398,9 @@ install package might work but should be considered highly experimental.&nbsp;
 It has not been thoroughly tested.&nbsp; Any data which would cause pain if
 lost should not be stored in an OpenAFS Server on Windows.</p>
 
+<p class=MsoNormal>Known issues include lack of support for power management
+and dynamic network configuration.</p>
+
 <h3><a name="_Toc170268833">3.10.1. OpenAFS Server Installation</a></h3>
 
 <p class=MsoNormal>When the OpenAFS Server is installed, the <span
@@ -1490,7 +1493,7 @@ no, debug: yes)</p>
 name="_Toc115416118"></a><a name="_Toc139993102"></a><a name="_Toc126872183"></a><a
 name="_Toc115417054"></a><span style='mso-bookmark:_Toc170268836'><span
 style='mso-bookmark:_Toc152605053'><span style='mso-bookmark:_Toc115416118'>3.12.
-</span>Large Files (64-bit) Supported</span></span></h2>
+</span>Large File (64-bit) Support</span></span></h2>
 
 <p class=MsoNormal>As of release 1.5.3, OpenAFS for Windows supports files
 larger than 2GB.&nbsp; The maximum file size is now 16777216 terabytes when the
@@ -2100,17 +2103,31 @@ debugging the AFS Client Service when it is unresponsive to SMB/CIFS requests.</
 name="_Toc115416144"></a><a name="_Toc139993128"></a><a name="_Toc126872209"></a><a
 name="_Toc115417080"></a><span style='mso-bookmark:_Toc170268862'><span
 style='mso-bookmark:_Toc152605079'><span style='mso-bookmark:_Toc115416144'>3.38.
-AFS Client Universally Unique Identifiers</span></span></span></h2>
+AFS Client Universally Unique Identifiers (UUIDs) vs. System Cloning</span></span></span></h2>
 
 <p class=MsoNormal>The OpenAFS Client implements Universally Unique Identifiers
-(<span class=SpellE>UUIDs</span>).&nbsp; They are used to provide the server
+(<span class=SpellE>UUIDs</span>).&nbsp; They are used to provide the AFS file server
 with a method of identifying the client that is independent of IP
-address.&nbsp; The UUID is generated when the <span class=SpellE>AFSCache</span>
-file is created and is maintained as long as the contents of the <span
-class=SpellE>AFSCache</span> file are kept intact.&nbsp; The UUID is stored in
-the <span class=SpellE>AFSCache</span> file.&nbsp;&nbsp; When cloning machines
-that have Windows AFS client installed, the <span class=SpellE>AFSCache</span>
-files should be deleted as part of the cloning process.</p>
+address.&nbsp; This permits the AFS file server to track mobile clients or those 
+behind Network Address Translators when they move from address to address or port
+to port.  Tracking the client improves client performance by permitting callback 
+state to be maintained across location changes.  The UUID is generated when the 
+<span class=SpellE>AFSCache</span> file is created and is maintained as long as
+the contents of the <span class=SpellE>AFSCache</span> file are valid.&nbsp; 
+The UUID is stored in the <span class=SpellE>AFSCache</span> file.&nbsp;</p> 
+<p class=MsoNormal>
+When cloning machines that have Windows AFS client installed it is necessary
+to generate a new UUID for each client.  This will be done automatically if 
+the Windows Machine SID is re-generated using Microsoft SysPrep.  If the SID is
+not being re-generated either the <span class=SpellE>AFSCache</span> file should 
+be deleted or the command <i>fs uuid -generate</i> must be executed after the 
+the clone is created.  <b>Multiple AFS clients reporting the same UUID will not
+only result in horrible AFS client performance and cache inconsistencies, but 
+they will also put a tremendous strain on the AFS file servers.</b></p>
+<p class=MsoNormal>For lab environments that wish to erase all cached data
+on each restart, the <a href="#_Toc170268938">NonPersistentCaching</a> option 
+will disable the use of the persistent cache file.  As a side effect, a new
+UUID will be generated for the AFS client service on each restart.</p>
 
 <h2><a name="_Toc170268863"></a><a name="_Toc152605080"></a><a
 name="_Toc139993129"><span style='mso-bookmark:_Toc152605080'><span
@@ -2132,7 +2149,7 @@ first to a local disk and subsequently copy the file to AFS as copying a file
 with the explorer shell does not use asynchronous i/o. </p>
 
 <p class=MsoBodyText>The CIFS session timeout defaults to 45 seconds and can be
-increased by modifying the <a href="../relnotes.htm#_Value:_ConnDeadTimeout">registry</a>.</p>
+increased by modifying the <a href="#_Value:_ConnDeadTimeout">registry</a>.</p>
 
 <h2><a name="_Toc170268864"></a><a name="_Toc152605081"></a><a
 name="_Toc139993130"><span style='mso-bookmark:_Toc152605081'><span
@@ -2438,7 +2455,7 @@ include both the UNC path as well as any drive letters mapped to AFS. </p>
 options in both tools to make it easier to synchronize the application requests
 and the resulting OpenAFS Client Service operations.&nbsp;&nbsp; The captured
 data can be stored to files for inclusion in <a
-href="../relnotes.htm#_5._Reporting_Bugs:">bug reports</a>.</p>
+href="#_5._Reporting_Bugs:">bug reports</a>.</p>
 
 <h2><a name="_Toc170268874">4.5. Microsoft </a><span class=SpellE><span
 style='mso-bookmark:_Toc170268874'>MiniDumps</span></span><span
@@ -4361,11 +4378,11 @@ style='mso-bookmark:_Toc115416200'>:<br>
   style='mso-bookmark:_Toc170268930'><span style='mso-bookmark:_Toc152605145'><span
   style='mso-bookmark:_Toc115416203'>Value: <span class=SpellE>ChunkSize</span></span></span></span></h5>
   <p class=MsoBodyText>Type: DWORD<br>
-  Default: 17 (CM_CONFIGDEFAULT_CHUNKSIZE)<br>
+  Default: 20 (CM_CONFIGDEFAULT_CHUNKSIZE)<br>
   Variable: <span class=SpellE>cm_logChunkSize</span> (<span class=SpellE>cm_chunkSize</span>
   = 1 &lt;&lt; <span class=SpellE>cm_logChunkSize</span>)</p>
   <p class=MsoBodyText>Size of chunk for reading and writing. Actual chunk size
-  is 2^cm_logChunkSize.</p>
+  is 2^cm_logChunkSize.  The default chunk size is therefore 1 MB.</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:3;height:92.0pt'>
@@ -4491,10 +4508,9 @@ style='mso-bookmark:_Toc115416200'>:<br>
   Variable: <span class=SpellE>buf_CacheType</span></p>
   <p class=MsoBodyText>When this registry value is set to a non-zero value, the
   <span class=SpellE>CachePath</span> value is ignored and the cache data is
-  stored in the windows paging file.&nbsp; This prevents the use of persistent
-  caching (when available) as well as the ability to alter the size of the
-  cache at runtime using the &quot;<span class=SpellE>fs</span> <span
-  class=SpellE>setcachesize</span>&quot; command.</p>
+  stored in the windows paging file.&nbsp; This disables the use of persistent
+  caching and the ability to maintain a single UUID for the AFS client service 
+  across restarts.</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:11;height:125.5pt'>
