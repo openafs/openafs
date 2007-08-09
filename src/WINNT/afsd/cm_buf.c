@@ -547,6 +547,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
     long code = 0;
     long isdirty = 0;
     cm_scache_t * scp = NULL;
+    osi_hyper_t offset;
 
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
@@ -557,9 +558,10 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	scp = cm_FindSCache(&bp->fid);
 	if (scp) {
 	    osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
-	    code = (*cm_buf_opsp->Writep)(scp, &bp->offset,
-					   cm_data.buf_blockSize, 0, bp->userp,
-					   reqp);
+
+            offset = bp->offset;
+            LargeIntegerAdd(offset, ConvertLongToLargeInteger(bp->dirty_offset));
+	    code = (*cm_buf_opsp->Writep)(scp, &offset, bp->dirty_length, 0, bp->userp, reqp);
 	    osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
 
 	    cm_ReleaseSCache(scp);
@@ -577,6 +579,8 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	if (code == CM_ERROR_NOSUCHFILE){
 	    bp->flags &= ~CM_BUF_DIRTY;
 	    bp->flags |= CM_BUF_ERROR;
+            bp->dirty_offset = 0;
+            bp->dirty_length = 0;
 	    bp->error = CM_ERROR_NOSUCHFILE;
 	    bp->dataVersion = -1; /* bad */
 	    bp->dirtyCounter++;
@@ -988,10 +992,6 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         /* load the page; freshly created pages should be idle */
         osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)));
 
-        /* setup offset, event */
-        bp->over.Offset = bp->offset.LowPart;
-        bp->over.OffsetHigh = bp->offset.HighPart;
-
         /* start the I/O; may drop lock */
         bp->flags |= CM_BUF_READING;
         code = (*cm_buf_opsp->Readp)(bp, cm_data.buf_blockSize, &tcount, NULL);
@@ -1122,42 +1122,62 @@ void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp)
  *
  * The buffer must be locked before calling this routine.
  */
-void buf_SetDirty(cm_buf_t *bp)
+void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
 {
     osi_assert(bp->magic == CM_BUF_MAGIC);
     osi_assert(bp->refCount > 0);
-	
+
+    lock_ObtainWrite(&buf_globalLock);
     if (bp->flags & CM_BUF_DIRTY) {
+
 	osi_Log1(buf_logp, "buf_SetDirty 0x%p already dirty", bp);
+
+        if (bp->dirty_offset <= offset) {
+            if (bp->dirty_offset + bp->dirty_length >= offset + length) {
+                /* dirty_length remains the same */
+            } else {
+                bp->dirty_length = offset + length - bp->dirty_offset;
+            }
+        } else /* bp->dirty_offset > offset */ {
+            if (bp->dirty_offset + bp->dirty_length >= offset + length) {
+                bp->dirty_length = bp->dirty_offset + bp->dirty_length - offset;
+            } else {
+                bp->dirty_length = length;
+            }
+            bp->dirty_offset = offset;
+        }
     } else {
 	osi_Log1(buf_logp, "buf_SetDirty 0x%p", bp);
-    }
-    /* set dirty bit */
-    bp->flags |= CM_BUF_DIRTY;
 
-    /* and turn off EOF flag, since it has associated data now */
-    bp->flags &= ~CM_BUF_EOF;
+        /* set dirty bit */
+        bp->flags |= CM_BUF_DIRTY;
 
-    /* and add to the dirty list.  
-     * we obtain a hold on the buffer for as long as it remains 
-     * in the list.  buffers are only removed from the list by 
-     * the buf_IncrSyncer function regardless of when else the
-     * dirty flag might be cleared.
-     *
-     * This should never happen but just in case there is a bug
-     * elsewhere, never add to the dirty list if the buffer is 
-     * already there.
-     */
-    lock_ObtainWrite(&buf_globalLock);
-    if (bp->dirtyp == NULL && cm_data.buf_dirtyListEndp != bp) {
-	buf_HoldLocked(bp);
-	if (!cm_data.buf_dirtyListp) {
-	    cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
-	} else {
-	    cm_data.buf_dirtyListEndp->dirtyp = bp;
-	    cm_data.buf_dirtyListEndp = bp;
-	}
-	bp->dirtyp = NULL;
+        /* and turn off EOF flag, since it has associated data now */
+        bp->flags &= ~CM_BUF_EOF;
+
+        bp->dirty_offset = offset;
+        bp->dirty_length = length;
+
+        /* and add to the dirty list.  
+         * we obtain a hold on the buffer for as long as it remains 
+         * in the list.  buffers are only removed from the list by 
+         * the buf_IncrSyncer function regardless of when else the
+         * dirty flag might be cleared.
+         *
+         * This should never happen but just in case there is a bug
+         * elsewhere, never add to the dirty list if the buffer is 
+         * already there.
+         */
+        if (bp->dirtyp == NULL && cm_data.buf_dirtyListEndp != bp) {
+            buf_HoldLocked(bp);
+            if (!cm_data.buf_dirtyListp) {
+                cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
+            } else {
+                cm_data.buf_dirtyListEndp->dirtyp = bp;
+                cm_data.buf_dirtyListEndp = bp;
+            }
+            bp->dirtyp = NULL;
+        }
     }
     lock_ReleaseWrite(&buf_globalLock);
 }
@@ -1340,6 +1360,8 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
                 bufp->flags &= ~CM_BUF_DIRTY;
+                bufp->dirty_offset = 0;
+                bufp->dirty_length = 0;
                 bufp->dataVersion = -1;	/* known bad */
                 bufp->dirtyCounter++;
             }
@@ -1678,8 +1700,11 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
 {
     cm_buf_t *bp;
     afs_uint32 bcount = 0;
+    afs_uint32 i;
 
-    for (bp = cm_data.buf_allp; bp; bp=bp->allp, bcount++) {
+    i = BUF_FILEHASH(fidp);
+
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->allp, bcount++) {
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY))
 	    return 1;
     }
@@ -1699,6 +1724,8 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
 	    lock_ObtainMutex(&bp->mx);
 	    bp->cmFlags &= ~CM_BUF_CMSTORING;
 	    bp->flags &= ~CM_BUF_DIRTY;
+            bp->dirty_offset = 0;
+            bp->dirty_length = 0;
 	    bp->flags |= CM_BUF_ERROR;
 	    bp->error = VNOVNODE;
 	    bp->dataVersion = -1; /* bad */

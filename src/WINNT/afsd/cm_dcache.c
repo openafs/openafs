@@ -1252,8 +1252,10 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
 		}
 		if (failed)
 		    bufp->flags &= ~CM_BUF_WRITING;
-		else
+		else {
 		    bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+                    bufp->dirty_offset = bufp->dirty_length = 0;
+                }
 	    }
 
 	    lock_ReleaseMutex(&scp->mx);
