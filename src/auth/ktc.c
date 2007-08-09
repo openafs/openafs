@@ -1166,6 +1166,7 @@ afs_tf_get_cred(principal, token)
 {
     int k_errno;
     int kvno, lifetime;
+    long mit_compat;		/* MIT Kerberos 5 with Krb4 uses a "long" for issue_date */
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1202,10 +1203,10 @@ afs_tf_get_cred(principal, token)
 	/* don't try to read a silly amount into ticket->dat */
 	token->ticketLen > MAXKTCTICKETLEN
 	|| tf_read((char *)(token->ticket), token->ticketLen) < 1
-	|| tf_read((char *)&(token->startTime),
-		   sizeof(token->startTime)) < 1) {
+	|| tf_read((char *)&mit_compat, sizeof(mit_compat)) < 1) {
 	return TKT_FIL_FMT;
     }
+    token->startTime = mit_compat;
     token->endTime = life_to_time(token->startTime, lifetime);
     token->kvno = kvno;
     return 0;
@@ -1333,6 +1334,7 @@ afs_tf_save_cred(aserver, atoken, aclient)
     off_t start;
     int lifetime, kvno;
     int count;			/* count for write */
+    long mit_compat;		/* MIT Kerberos 5 with Krb4 uses a "long" for issue_date */
 
     if (fd < 0) {		/* fd is ticket file as set by afs_tf_init */
 	return TKT_FIL_INI;
@@ -1402,8 +1404,9 @@ afs_tf_save_cred(aserver, atoken, aclient)
     if (write(fd, atoken->ticket, count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *)&atoken->startTime, sizeof(afs_int32))
-	!= sizeof(afs_int32))
+    mit_compat = atoken->startTime;
+    if (write(fd, (char *)&mit_compat, sizeof(mit_compat))
+	!= sizeof(mit_compat))
 	goto bad;
 
     /* Actually, we should check each write for success */

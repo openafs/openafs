@@ -84,6 +84,7 @@ krb_write_ticket_file(realm)
     char *tf_name;
     struct ktc_principal client, server;
     struct ktc_token token;
+    long mit_compat;	/* MIT Kerberos 5 with Krb4 uses a "long" for issue_date */
 
     if ((strlen(realm) >= sizeof(client.cell)))
 	return KABADNAME;
@@ -149,8 +150,9 @@ krb_write_ticket_file(realm)
     if (write(fd, (char *)(token.ticket), count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *)&token.startTime, sizeof(afs_int32))
-	!= sizeof(afs_int32))
+    mit_compat = token.startTime;
+    if (write(fd, (char *)&mit_compat, sizeof(mit_compat))
+	!= sizeof(mit_compat))
 	goto bad;
     close(fd);
     return 0;
