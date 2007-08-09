@@ -220,16 +220,6 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     }       
 
     /*
-     * This is a crock, but it is Transarc's crock, so
-     * we have to play along in order to get the
-     * functionality.  The way the afs id is stored is
-     * as a string in the username field of the token.
-     * Contrary to what you may think by looking at
-     * the code for tokens, this hack (AFS ID %d) will
-     * not work if you change %d to something else.
-     */
-
-    /*
      * This code is taken from cklog -- it lets people
      * automatically register with the ptserver in foreign cells
      */
@@ -266,7 +256,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             }
 
             if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
-                printf("%s: unable to obtain tokens for cell %s "
+                printf("%s: unable to set tokens for cell %s "
                         "(status: %d).\n", progname, cell_to_use, status);
                 *status = AKLOG_TOKEN;
                 return ;
