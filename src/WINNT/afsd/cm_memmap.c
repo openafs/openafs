@@ -622,7 +622,8 @@ GetMachineSid(PBYTE SidBuffer, DWORD SidSize)
 }
 
 int
-cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, afs_uint64 cacheBlocks)
+cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, 
+                    afs_uint64 cacheBlocks, afs_uint32 blockSize)
 {
     HANDLE hf = INVALID_HANDLE_VALUE, hm;
     PSECURITY_ATTRIBUTES psa;
@@ -641,7 +642,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     volumeSerialNumber = GetVolSerialNumber(cachePath);
     GetMachineSid(machineSid, sizeof(machineSid));
 
-    mappingSize = ComputeSizeOfMappingFile(stats, maxVols, maxCells, chunkSize, cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
+    mappingSize = ComputeSizeOfMappingFile(stats, maxVols, maxCells, chunkSize, cacheBlocks, blockSize);
 
     if ( !virtualCache ) {
         psa = CreateCacheFileSA();
@@ -756,7 +757,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
                  config_data_p->maxCells == maxCells &&
                  config_data_p->chunkSize == chunkSize &&
                  config_data_p->buf_nbuffers == cacheBlocks &&
-                 config_data_p->blockSize == CM_CONFIGDEFAULT_BLOCKSIZE &&
+                 config_data_p->blockSize == blockSize &&
                  config_data_p->bufferSize == mappingSize)
             {
                 if ( config_data_p->dirty ) {
@@ -849,7 +850,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.baseAddress = baseAddress;
         cm_data.stats = stats;
         cm_data.chunkSize = chunkSize;
-        cm_data.blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+        cm_data.blockSize = blockSize;
         cm_data.bufferSize = mappingSize;
         cm_data.scacheHashTableSize = osi_PrimeLessThan(stats / 2 + 1);
         cm_data.volumeHashTableSize = osi_PrimeLessThan((afs_uint32)(maxVols/7 + 1));
@@ -862,7 +863,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
 
         cm_data.buf_nbuffers = cacheBlocks;
         cm_data.buf_nOrigBuffers = 0;
-        cm_data.buf_blockSize = CM_BUF_BLOCKSIZE;
+        cm_data.buf_blockSize = blockSize;
         cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1));
 
         cm_data.mountRootGen = time(NULL);
@@ -899,7 +900,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.bufHeaderBaseAddress = (cm_buf_t *) baseAddress;
         baseAddress += ComputeSizeOfDataHeaders(cacheBlocks);
         cm_data.bufDataBaseAddress = (char *) baseAddress;
-        baseAddress += ComputeSizeOfDataBuffers(cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
+        baseAddress += ComputeSizeOfDataBuffers(cacheBlocks, blockSize);
         cm_data.bufEndOfData = (char *) baseAddress;
 	cm_data.buf_dirtyListp = NULL;
 	cm_data.buf_dirtyListEndp = NULL;
