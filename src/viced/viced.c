@@ -229,6 +229,11 @@ static void FlagMsg();
  * certain background threads before we are allowed to dump state to
  * disk
  */
+
+#if !defined(PTHREAD_RWLOCK_INITIALIZER) && defined(AFS_DARWIN80_ENV)
+#define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
+#endif
+
 struct fs_state fs_state = 
     { FS_MODE_NORMAL, 
       0, 
