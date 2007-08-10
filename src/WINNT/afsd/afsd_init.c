@@ -541,6 +541,7 @@ int afsd_InitCM(char **reasonP)
     osi_uid_t debugID;
     afs_uint64 cacheBlocks;
     DWORD cacheSize;
+    DWORD blockSize;
     long logChunkSize;
     DWORD stats;
     DWORD dwValue;
@@ -696,13 +697,38 @@ int afsd_InitCM(char **reasonP)
                       logChunkSize);
             logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
         }
-        afsi_log("Chunk size %d", logChunkSize);
     } else {
         logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
-        afsi_log("Default chunk size %d", logChunkSize);
     }
     cm_logChunkSize = logChunkSize;
     cm_chunkSize = 1 << logChunkSize;
+    afsi_log("Chunk size %u (%d)", cm_chunkSize, cm_logChunkSize);
+
+    dummyLen = sizeof(blockSize);
+    code = RegQueryValueEx(parmKey, "blockSize", NULL, NULL,
+                            (BYTE *) &blockSize, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        if (blockSize < 1 || 
+            (blockSize > 1024 && (blockSize % CM_CONFIGDEFAULT_BLOCKSIZE != 0))) 
+        {
+            afsi_log("Invalid block size %u specified, using default", blockSize);
+            blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+        } else {
+            /* 
+             * if the blockSize is less than 1024 we permit the blockSize to be
+             * specified in multiples of the default blocksize
+             */
+            if (blockSize <= 1024)
+                blockSize *= CM_CONFIGDEFAULT_BLOCKSIZE;
+        }
+    } else {
+        blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+    }
+    if (blockSize > cm_chunkSize) {
+        afsi_log("Block size cannot be larger than Chunk size.");
+        blockSize = cm_chunkSize;
+    }
+    afsi_log("Block size %u", blockSize);
 
     dummyLen = sizeof(numBkgD);
     code = RegQueryValueEx(parmKey, "Daemons", NULL, NULL,
@@ -1033,7 +1059,7 @@ int afsd_InitCM(char **reasonP)
     
     RegCloseKey (parmKey);
 
-    cacheBlocks = ((afs_uint64)cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
+    cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
         
     /* get network related info */
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -1076,7 +1102,7 @@ int afsd_InitCM(char **reasonP)
         
     cm_InitCallback();
         
-    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks);
+    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
         *reasonP = "error initializing cache file";

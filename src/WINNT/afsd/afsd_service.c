@@ -1150,7 +1150,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
     ServiceStatus.dwWin32ExitCode = NO_ERROR;
     ServiceStatus.dwCheckPoint = 1;
-    ServiceStatus.dwWaitHint = 30000;
+    ServiceStatus.dwWaitHint = 120000;
     /* accept Power Events */
     ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
     SetServiceStatus(StatusHandle, &ServiceStatus);
@@ -1228,13 +1228,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
         else
         {
-            /* allow another 15 seconds to start */
+            /* allow another 120 seconds to start */
             ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
             ServiceStatus.dwServiceSpecificExitCode = 0;
             ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
             ServiceStatus.dwWin32ExitCode = NO_ERROR;
             ServiceStatus.dwCheckPoint = 2;
-            ServiceStatus.dwWaitHint = 20000;
+            ServiceStatus.dwWaitHint = 120000;
             /* accept Power Events */
             ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
             SetServiceStatus(StatusHandle, &ServiceStatus);
@@ -1258,8 +1258,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint++;
-        ServiceStatus.dwWaitHint -= 5000;
+        ServiceStatus.dwCheckPoint = 3;
+        ServiceStatus.dwWaitHint = 30000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
         code = afsd_InitDaemons(&reason);
@@ -1296,8 +1296,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint++;
-        ServiceStatus.dwWaitHint -= 5000;
+        ServiceStatus.dwCheckPoint = 4;
+        ServiceStatus.dwWaitHint = 15000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
