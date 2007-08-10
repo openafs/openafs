@@ -33,6 +33,7 @@
     <String Id="StrNIDMDebugLongDesc">Debugging symbols for the OpenAFS NetIDMgr plug-in.</String>
 
     <String Id="StrShlExtDesc">AFS Context Menu Shell Extension</String>
+    <String Id="StrShlExt32Desc">AFS Context Menu Shell Extension  (32-bit)</String>
     <String Id="StrAfsCredsDesc">Authentication for AFS</String>
     <String Id="StrHlpFileDesc">AFS Client Help</String>
     <String Id="StrSvrMgrDesc">Server Manager</String>
