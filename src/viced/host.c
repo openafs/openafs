@@ -2631,7 +2631,7 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 
 {
     int ret = 0, found = 0;
     struct host *host = NULL;
-    struct h_hashChain *chain;
+    struct h_AddrHashChain *chain;
     int index = h_HashIndex(addr);
     char tmp[16];
     int chain_len = 0;
@@ -2683,7 +2683,7 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 {
     int ret = 0, found = 0;
     struct host *host = NULL;
-    struct h_hashChain *chain;
+    struct h_UuidHashChain *chain;
     afsUUID * uuidp = &h->interface->uuid;
     int index = h_UuidHashIndex(uuidp);
     char tmp[40];
