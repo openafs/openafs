@@ -848,7 +848,7 @@ RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, regist
 	}			/* for all coentry slots */
 	hloc = nptr;
 	nptr = centry.next;
-	bcopy((char *)&centry, (char *)&hentry, sizeof(centry));
+	memcpy((char *)&centry, (char *)&hentry, sizeof(centry));
     }				/* while there are coentries */
     return PRNOENT;
 }
