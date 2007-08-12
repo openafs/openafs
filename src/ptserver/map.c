@@ -37,7 +37,7 @@ RCSID
 #ifdef SUPERGROUPS
 #include <errno.h>
 #include "map.h"
-char *malloc();
+#include "malloc.h"
 
 #undef PRINT_MAP_ERROR
 /* #define MAP_DEBUG /**/

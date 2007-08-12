@@ -648,7 +648,7 @@ main(argc, argv)
 	else if (!strcmp(op, "fih")) {
 	    char tname[128];
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%s",name); */
 	    if (GetString(name, sizeof(name))) {
 		code = PRBADARG;
@@ -675,7 +675,7 @@ main(argc, argv)
 	} else if (!strcmp(op, "fnh")) {
 	    int tid;
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%d", &id); */
 	    if (GetInt32(&id)) {
 		code = PRBADARG;

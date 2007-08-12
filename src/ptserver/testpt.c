@@ -308,14 +308,14 @@ CreateGroup(int g)
     }
 
     sprintf(name, "%s:%s%d", ownerName, createPrefix, g);
-    code = ubik_Call(PR_NewEntry, pruclient, 0, name, PRGRP, owner, &id);
+    code = ubik_PR_NewEntry(pruclient, 0, name, PRGRP, owner, &id);
     if (code) {
 	if (code == PREXIST) {
 	    code = pr_Delete(name);
 	    if (code == 0) {
 		nGDels++;
 		code =
-		    ubik_Call(PR_NewEntry, pruclient, 0, name, PRGRP, owner,
+		    ubik_PR_NewEntry(pruclient, 0, name, PRGRP, owner,
 			      &id);
 		if (code == 0) {
 		    if (verbose)
@@ -351,7 +351,7 @@ DeleteRandomId(afs_int32 *list)
     for (j = 0; j < number; j++) {	/* find an undeleted id */
 	m = (k + j) % number;
 	if (id = list[m]) {
-	    code = ubik_Call(PR_Delete, pruclient, 0, id);
+	    code = ubik_PR_Delete(pruclient, 0, id);
 	    if (code) {
 		afs_com_err(whoami, code, "Couldn't delete %di", id);
 		exit(22);
@@ -379,7 +379,7 @@ AddUser(int u, int g)
 	CreateGroup(g);
     ui = users[u];
     gi = groups[g];
-    code = ubik_Call(PR_AddToGroup, pruclient, 0, ui, gi);
+    code = ubik_PR_AddToGroup(pruclient, 0, ui, gi);
     if (code) {
 	afs_com_err(whoami, code, "couldn't add %d to %d", ui, gi);
 	exit(14);
@@ -398,7 +398,7 @@ RemUser(int u, int g)
 
     ui = users[u];
     gi = groups[g];
-    code = ubik_Call(PR_RemoveFromGroup, pruclient, 0, ui, gi);
+    code = ubik_PR_RemoveFromGroup(pruclient, 0, ui, gi);
     if (code) {
 	afs_com_err(whoami, code, "couldn't remove %d from %d", ui, gi);
 	exit(14);
@@ -656,7 +656,7 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 		}
 #define GETOWNED(xlist,xid) \
   (xlist).prlist_val = 0; (xlist).prlist_len = 0; \
-  code = ubik_Call (PR_ListOwned, pruclient, 0, (xid), &(xlist), &over); \
+  code = ubik_PR_ListOwned(pruclient, 0, (xid), &(xlist), &over); \
   if (code) { \
       afs_com_err (whoami, code, "getting owner list of (%di)", (xid)); \
       exit (23); } \

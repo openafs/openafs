@@ -7,18 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- *                      (3) add new pts commands:
- *
- *                          Interactive - allow the pts command
- *                                        to be run interactively.
- *                          Quit        - quit interactive mode.
- *                          Source      - allow input to come from a file(s).
- *                          Sleep       - pause for a specified number
- *                                        of seconds.
- *
- */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -53,17 +41,6 @@ RCSID
 char *whoami;
 int force = 0;
 
-#if defined(SUPERGROUPS)
-
-/*
- *  Add new pts commands:
- *
- *      Interactive - allow the pts command to be run interactively.
- *      Quit        - quit interactive mode.
- *      Source      - allow input to come from a file(s).
- *      Sleep       - pause for a specified number of seconds.
- */
-
 static int finished;
 static FILE *source;
 extern struct ubik_client *pruclient;
@@ -74,21 +51,21 @@ struct sourcestack {
 } *shead;
 
 int
-Interactive(struct cmd_syndesc *as, char *arock)
+pts_Interactive(struct cmd_syndesc *as, char *arock)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(struct cmd_syndesc *as, char *arock)
+pts_Quit(struct cmd_syndesc *as, char *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-Source(struct cmd_syndesc *as, char *arock)
+pts_Source(struct cmd_syndesc *as, char *arock)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -116,7 +93,7 @@ Source(struct cmd_syndesc *as, char *arock)
 }
 
 int
-Sleep(struct cmd_syndesc *as, char *arock)
+pts_Sleep(struct cmd_syndesc *as, char *arock)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -125,6 +102,7 @@ Sleep(struct cmd_syndesc *as, char *arock)
     }
     delay = atoi(as->parms[0].items->data);
     IOMGR_Sleep(delay);
+    return 0;
 }
 
 int
@@ -140,8 +118,6 @@ popsource()
     free((char *)sp);
     return 1;
 }
-
-#endif /* SUPERGROUPS */
 
 int
 osi_audit()
@@ -188,7 +164,6 @@ GetGlobals(struct cmd_syndesc *as, char *arock)
 int
 CleanUp(struct cmd_syndesc *as, char *arock)
 {
-#if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
 	return 0;
     if (pruclient) {
@@ -196,14 +171,6 @@ CleanUp(struct cmd_syndesc *as, char *arock)
 	pr_End();
 	rx_Finalize();
     }
-#else
-    if (!strcmp(as->name, "help"))
-	return 0;
-    /* Need to shutdown the ubik_client & other connections */
-    pr_End();
-    rx_Finalize();
-#endif /* SUPERGROUPS */
-
     return 0;
 }
 
@@ -237,12 +204,12 @@ CreateGroup(struct cmd_syndesc *as, char *arock)
 			id);
 		return code;
 	    }
-#if defined(SUPERGROUPS)
-	    if (id == 0) {
+	    
+            if (id == 0) {
 		printf("0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
-#endif
+
 	    idi = idi->next;
 	} else
 	    id = 0;
@@ -1023,13 +990,13 @@ main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-#if defined(SUPERGROUPS)
+
     char line[2048];
     char *cp, *lastp;
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
-#endif
+
 #ifdef WIN32
     WSADATA WSAjunk;
 #endif
@@ -1138,35 +1105,30 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-#if defined(SUPERGROUPS)
-
-    ts = cmd_CreateSyntax("interactive", Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, 0,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, 0, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", Source, 0, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, 0, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", Sleep, 0, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, 0, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-#endif /* SUPERGROUPS */
-
     cmd_SetBeforeProc(GetGlobals, 0);
 
-#if defined(SUPERGROUPS)
     finished = 1;
+    source = stdin;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
-    source = stdin;
     while (!finished) {
 	if (isatty(fileno(source)))
 	    fprintf(stderr, "pts> ");
@@ -1200,11 +1162,4 @@ main(int argc, char **argv)
     }
     CleanUp(NULL, NULL);
     exit(0);
-
-#else /* SUPERGROUPS */
-
-    cmd_SetAfterProc(CleanUp, 0);
-    code = cmd_Dispatch(argc, argv);
-    exit(code != 0);
-#endif /* SUPERGROUPS */
 }
