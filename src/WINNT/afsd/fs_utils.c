@@ -122,9 +122,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 }
 
 /* is this a digit or a digit-like thing? */
-static int ismeta(ac, abase)
-register int abase;
-register int ac; {
+static int ismeta(int abase, int ac) {
 /*    if (ac == '-' || ac == 'x' || ac == 'X') return 1; */
     if (ac >= '0' && ac <= '7') return 1;
     if (abase <= 8) return 0;
@@ -136,17 +134,14 @@ register int ac; {
 }
 
 /* given that this is a digit or a digit-like thing, compute its value */
-static int getmeta(ac)
-register int ac; {
+static int getmeta(int ac) {
     if (ac >= '0' && ac <= '9') return ac - '0';
     if (ac >= 'a' && ac <= 'f') return ac - 'a' + 10;
     if (ac >= 'A' && ac <= 'F') return ac - 'A' + 10;
     return 0;
 }
 
-long util_GetInt32 (as, aval)
-register char *as;
-long *aval;
+long util_GetInt32 (char *as, long *aval)
 {
     register long total;
     register int tc;
