@@ -1352,7 +1352,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #ifndef NOTSERVICE
         ServiceStatus.dwCurrentState = SERVICE_RUNNING;
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 0;
+        ServiceStatus.dwCheckPoint = 5;
         ServiceStatus.dwWaitHint = 0;
 
         /* accept Power events */
@@ -1401,6 +1401,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         CloseHandle(hAFSDWorkerThread[cnt]);
 #endif
 
+    ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwCheckPoint = 6;
+    ServiceStatus.dwWaitHint = 120000;
+    ServiceStatus.dwControlsAccepted = 0;
+    SetServiceStatus(StatusHandle, &ServiceStatus);
+
     afsi_log("Received Termination Signal, Stopping Service");
 
     if ( GlobalStatus )
@@ -1420,19 +1427,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
         FreeLibrary(hHookDll);
         hHookDll = NULL;
-
-        if (hookRc == FALSE)
-        {
-            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = NO_ERROR;
-            ServiceStatus.dwCheckPoint = 0;
-            ServiceStatus.dwWaitHint = 0;
-            ServiceStatus.dwControlsAccepted = 0;
-            SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
-            /* exit if initialization failed */
-            return;
-        }
     }
 
 
@@ -1500,7 +1494,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     ServiceStatus.dwCurrentState = SERVICE_STOPPED;
     ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
-    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwCheckPoint = 7;
     ServiceStatus.dwWaitHint = 0;
     ServiceStatus.dwControlsAccepted = 0;
     SetServiceStatus(StatusHandle, &ServiceStatus);
