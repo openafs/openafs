@@ -605,8 +605,6 @@ finale: extra
 
 install: finale
 
-# InstallShield dependencies
-
 # Clean target for obj tree
 clean:
 	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
@@ -653,23 +651,11 @@ wix: loopback
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-InstallShield5:
-	echo ***** afs_setup_utils
-	$(DOCD) $(SRC)\WINNT\afs_setup_utils
-	$(CD) $(SRC)\WINNT\afs_setup_utils
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-	$(DOCD) $(SRC)\WINNT\install\$@
-	$(CD) $(SRC)\WINNT\install\$@
-	$(NTMAKE)
-	$(CD) ..\..\..\..
-
-media: install InstallShield5 NSIS wix
+media: install NSIS wix
 
 install-nsis: install NSIS
 
 install-wix: install wix
 
-install-is5: install InstallShield5
+
 
