@@ -88,6 +88,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <afs/netutils.h>
 #endif
+#include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
