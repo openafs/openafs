@@ -262,7 +262,6 @@ SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4),)
     struct inode *ip, *newip, *pip;
     register int err, rval1, rc = 0;
     struct vnode *vp = NULL;
-    extern struct vfs *rootvfs;
     register struct vfs *vfsp;
     struct vfs *nvfsp = NULL;
     char error;
