@@ -30,7 +30,6 @@ osi_UFSOpen(afs_int32 ainode)
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
-    extern struct vfs *rootvfs;
     struct vnode *vp = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
@@ -48,7 +47,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     setuerror(0);
     AFS_GUNLOCK();
-    ip = (struct inode *)igetinode((dev_t) cacheDev.dev, rootvfs,
+    ip = (struct inode *)igetinode((dev_t) cacheDev.dev, afs_cacheVfsp,
 				   (ino_t) ainode, &vp, &dummy);
     AFS_GLOCK();
     if (getuerror()) {
