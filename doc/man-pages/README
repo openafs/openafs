@@ -185,6 +185,10 @@ How You Can Help
   the bug number so that I'm aware of it, as I don't always notice new
   bugs.
 
+  You can test your new POD documentation by running the check-pod script
+  in this directory.  (And check other people's documentation and find any
+  problems that have crept in.)
+
 Known Problems
 
   The current man pages have the following known deficiencies.  Please
