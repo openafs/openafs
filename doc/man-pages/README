@@ -206,7 +206,6 @@ Known Problems
        restorevol
        rmtsysd
        vldb_convert
-       vos changeloc
        vos clone
        vos convertROtoRW
        vos copy
