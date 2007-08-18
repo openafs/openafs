@@ -197,7 +197,6 @@ Known Problems
 
    * The following installed commands have no man pages:
 
-       bos_util
        copyauth
        flushall (Windows only)
        fs getcalleraccess
@@ -229,6 +228,9 @@ Known Problems
 
    * bos listkeys and the KeyFile man page assume that you're using the
      kaserver.
+
+   * bos addkey should be marked deprecated in favor of using asetkey with
+     a keytab.
 
    * I'm fairly sure that the fileserver man page no longer documents all
      of the fileserver options.
