@@ -125,8 +125,6 @@ Sizing an incremental dump for the same volume:
    Volume: user.thoron
    dump_size: 21095
 
-=back
-
 =head1 PRIVILEGE REQUIRED
 
 The issuer must be listed in the F</usr/afs/etc/UserList> file on the

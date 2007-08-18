@@ -1,0 +1,86 @@
+=head1 NAME
+
+pts source - Read pts commands from a file
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts source> S<<< [B<-file>] <I<file name>> >>> S<<< [B<-cell>] <I<cell name>> >>>
+   [B<-noauth>] [B<-force>]
+
+B<pts so> S<<< [B<-f>] <I<file name>> >>> S<<< [B<-c>] <I<cell name>> >>>
+   [B<-n>] [B<-f>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts source> runs commands from a file as if they were typed in B<pts
+interactive> mode. The command can be run from the command line or
+interactively.
+
+=head1 CAUTIONS
+
+Prior to OpenAFS 1.4.5 and OpenAFS 1.5.23, the B<pts source> command was
+only available on Unix or Linux and when OpenAFS was compiled with the
+supergroups option (disabled by default).  As of OpenAFS 1.4.5 and 1.5.23,
+it is always available.
+
+=head1 OPTIONS
+
+B<pts source> takes the following options:
+
+=over 4
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+This is useful for bulk operations where you would like to continue even
+if one of many operations fails.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
+
+=back
+
+=head1 OUTPUT
+
+This command shows the output of each comand in the file as if it were
+run normally.
+
+=head1 EXAMPLES
+
+Here is an example of using B<pts source> in a B<pts interactive> session:
+
+   % echo examine admin > /tmp/commands.txt 
+   % pts interactive
+   pts> source /tmp/commands.txt
+   Name: admin, id: 1, owner: system:administrators, creator: anonymous,
+     membership: 2, flags: S----, group quota: 20.
+   pts> quit
+   %
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_interactive(1)>,
+L<pts_quit(1)>,
+L<pts_sleep(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

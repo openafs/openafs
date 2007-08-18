@@ -205,10 +205,6 @@ Known Problems
        fs rxstatproc
        fs setcbaddr
        kseal
-       pts interactive
-       pts quit
-       pts sleep
-       pts source
        read_tape
        restorevol
        rmtsysd
