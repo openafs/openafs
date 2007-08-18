@@ -40,6 +40,10 @@ B<pts source> takes the following options:
 Names the cell in which to run the command. For more details, see
 L<pts(1)>.
 
+=item B<-file> <I<file name>>
+
+Specifies the filename from which to read commands.
+
 =item B<-force>
 
 Enables the command to continue executing as far as possible when errors
