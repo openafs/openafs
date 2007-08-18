@@ -58,8 +58,6 @@ There is only one way to invoke B<fs getcrypt>:
 
    % fs getcrypt
 
-=back
-
 =head1 PRIVILEGE REQUIRED
 
 No special priviledges are required for this command.
