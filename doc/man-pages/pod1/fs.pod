@@ -34,6 +34,7 @@ and L<B<fs wscell>|fs_wscell(1)>.
 Commands to administer access control lists (ACLs):
 L<B<fs cleanacl>|fs_cleanacl(1)>,
 L<B<fs copyacl>|fs_copyacl(1)>,
+L<B<fs getcalleraccess>|fs_getcalleraccess(1)>,
 L<B<fs listacl>|fs_listacl(1)>,
 and L<B<fs setacl>|fs_setacl(1)>.
 
@@ -55,6 +56,7 @@ and L<B<fs whichcell>|fs_whichcell(1)>.
 Commands to administer the local client cache and related information:
 L<B<fs checkvolumes>|fs_checkvolumes(1)>,
 L<B<fs flush>|fs_flush(1)>,
+L<B<fs flushall>|fs_flushall(1)>,
 L<B<fs flushvolume>|fs_flushvolume(1)>,
 L<B<fs getcacheparms>|fs_getcacheparms(1)>,
 L<B<fs listaliases>|fs_listaliases(1)>,
@@ -185,9 +187,11 @@ L<fs_diskfree(1)>,
 L<fs_examine(1)>,
 L<fs_exportafs(1)>,
 L<fs_flush(1)>,
+L<fs_flushall(1)>,
 L<fs_flushmount(1)>,
 L<fs_flushvolume(1)>,
 L<fs_getcacheparms(1)>,
+L<fs_getcalleraccess(1)>,
 L<fs_getcellstatus(1)>,
 L<fs_getclientaddrs(1)>,
 L<fs_getcrypt(1)>,

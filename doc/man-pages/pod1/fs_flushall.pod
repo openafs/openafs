@@ -1,0 +1,62 @@
+=head1 NAME
+
+fs flushall - Force the AFS Cache Manager to discard all data
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs flushall> [B<-help>]
+
+B<fs flusha> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs flushall> command flushes all data from the AFS cache.
+
+=head1 CAUTIONS
+
+This command is only available on Windows.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command.
+
+=back
+
+=head1 OUTPUT
+
+This command has no output.
+
+=head1 EXAMPLES
+
+Aside from the help, there is only one way to run B<fs flushall>, which is
+as follows:
+
+   % fs flushall
+   %
+
+=head1 PRIVILEGE REQUIRED
+
+No special privileges are required for this command.
+
+=head1 SEE ALSO
+
+L<fs_flush(1)>,
+L<fs_flushmount(1)>,
+L<fs_flushvolume(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
