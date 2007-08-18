@@ -198,8 +198,6 @@ Known Problems
    * The following installed commands have no man pages:
 
        copyauth
-       flushall (Windows only)
-       fs getcalleraccess
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
