@@ -186,8 +186,9 @@ How You Can Help
   bugs.
 
   You can test your new POD documentation by running the check-pod script
-  in this directory.  (And check other people's documentation and find any
-  problems that have crept in.)
+  in this directory with "prove check-pod".  (And check other people's
+  documentation and find any problems that have crept in.)  You will need
+  to have Test::Pod installed.
 
 Known Problems
 
