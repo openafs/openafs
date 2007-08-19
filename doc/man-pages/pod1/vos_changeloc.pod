@@ -7,15 +7,15 @@ vos changeloc - Change a volume's entry in the VLDB
 =for html
 <div class="synopsis">
 
-B<vos changeloc> S<<< B<-server> <I<new server name>> >>>
-   S<<< B<-partition> <I<new partition location>> >>>
-   S<<< B<-id> <I<volume name or ID>> >>>
+B<vos changeloc> S<<< [B<-server>] <I<new server name>> >>>
+   S<<< [B<-partition>] <I<new partition location>> >>>
+   S<<< [B<-id>] <I<volume name or ID>> >>>
    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
    [B<-verbose>] [B<-encrypt>] [B<-help>]
 
-B<vos changel> S<<< B<-s> <I<new server name>> >>>
-   S<<< B<-p> <I<new partition location>> >>>
-   S<<< B<-i> <I<volume name or ID>> >>>
+B<vos changel> S<<< [B<-s>] <I<new server name>> >>>
+   S<<< [B<-p>] <I<new partition location>> >>>
+   S<<< [B<-i>] <I<volume name or ID>> >>>
    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-e>] [B<-h>]
 
 =for html

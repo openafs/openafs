@@ -1,7 +1,12 @@
 #!/usr/bin/perl
 #
-# Written by Jason Edgecombe based on the Test::Pod documentation.  Run
-# it to syntax-check all of the POD files.
+# Written by Jason Edgecombe based on the Test::Pod documentation.  The
+# best way to run it is to run:
+#
+#     prove check-pod
+#
+# from the doc/man-pages directory, which will show any errors found in
+# any of the POD files.
 
 use strict;
 use Test::More;
