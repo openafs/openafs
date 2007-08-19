@@ -12,7 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-PROGRAMS=	unlog tokens tokens.krb kseal
+PROGRAMS=	unlog tokens tokens.krb
 
 INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \
 ${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/des.h ${TOP_INCDIR}/rx/rxkad.h \
@@ -36,7 +36,7 @@ KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
 #
 # Main targets
 #
-all: unlog tokens tokens.krb kseal
+all: unlog tokens tokens.krb
 
 #
 # Build targets
@@ -60,7 +60,7 @@ tokens.o: tokens.c ${TOP_INCDIR}/rx/xdr.h AFS_component_version_number.c
 #
 # Install targets
 #
-install: unlog tokens tokens.krb kseal
+install: unlog tokens tokens.krb
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL} -d ${DESTDIR}${sbindir}
@@ -69,9 +69,8 @@ install: unlog tokens tokens.krb kseal
 	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${bindir}/tokens.krb
 	${INSTALL_PROGRAM} tokens ${DESTDIR}${afssrvbindir}/tokens
 	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${afssrvbindir}/tokens.krb
-	${INSTALL_PROGRAM} kseal ${DESTDIR}${sbindir}/kseal
 
-dest: unlog tokens tokens.krb kseal
+dest: unlog tokens tokens.krb
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/etc
@@ -80,7 +79,6 @@ dest: unlog tokens tokens.krb kseal
 	${INSTALL_PROGRAM} tokens.krb ${DEST}/bin/tokens.krb
 	${INSTALL_PROGRAM} tokens ${DEST}/root.server/usr/afs/bin/tokens
 	${INSTALL_PROGRAM} tokens.krb ${DEST}/root.server/usr/afs/bin/tokens.krb
-	${INSTALL_PROGRAM} kseal ${DEST}/etc/kseal
 
 #
 # Misc. targets

@@ -202,7 +202,6 @@ Known Problems
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
-       kseal
        read_tape
        restorevol
        rmtsysd
