@@ -100,13 +100,13 @@ build-stamp:
 clean: unpatch
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
-	rm -f build-modules-stamp configure-modules-stamp
+	rm -f build-stamp configure-stamp install-stamp
 	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean
 
-install: DH_OPTIONS=
-install: build
+install: install-stamp
+install-stamp: DH_OPTIONS=
+install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_installdirs
@@ -143,6 +143,8 @@ install: build
 	    afs-newcell ) \
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
 
+	touch install-stamp
+
 # Rules for building the openafs-modules-source package.
 binary-source:
 	dh_testdir
@@ -151,14 +153,15 @@ binary-source:
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	find . \( -name \*.o -o -path ./debian -o -path \*/.svn \
 	    -o -path ./src/WINNT -o -path ./doc -o -path ./obj \
-	    -o -path ./$(SYS_NAME) \) -prune -o -print | \
+	    -o -path ./$(SYS_NAME) -o -path /.pc \) -prune -o -print | \
 	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
 	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
+	rm -f debian/$(srcpkg)/usr/src/modules/$(package)/*-stamp
 	cd debian/$(srcpkg)/usr/src/modules/$(package) && \
-	    $(MAKE) -f debian/rules clean
+	    $(MAKE) distclean
 	-cd debian/$(srcpkg)/usr/src/modules/$(package) && \
 	    rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint
 	chown -R root.src debian/$(srcpkg)
@@ -178,7 +181,7 @@ binary-source:
 # Also install debian/openafs-client.NEWS in the openafs-modules-source
 # package.
 binary-indep: DH_OPTIONS=-i
-binary-indep: build install binary-source
+binary-indep: install-stamp binary-source
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
@@ -203,7 +206,7 @@ binary-indep: build install binary-source
 # branch.  Until that's released, only retain debugging information for the
 # fileserver and the volserver.
 binary-arch: DH_OPTIONS=-a
-binary-arch: build install
+binary-arch: install-stamp
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
@@ -217,7 +220,7 @@ binary-arch: build install
 	rm -r debian/openafs-dbg/usr/lib/debug/usr/bin
 	rm -r debian/openafs-dbg/usr/lib/debug/usr/sbin
 	cd debian/openafs-dbg/usr/lib/debug/usr/lib/openafs \
-	    && rm buserver ptserver salvager vlserver
+	    && rm buserver ptserver salvager upserver upclient vlserver
 	dh_compress
 	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs
