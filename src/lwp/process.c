@@ -92,9 +92,7 @@ returnto(savearea)
 #elif	defined(AFS_HPUX_ENV) || defined(AFS_PARISC_LINUX24_ENV)
 #define	LWP_SP	1
 #elif	defined(AFS_LINUX20_ENV)
-#if defined(AFS_PARISC_LINUX24_ENV )
-#define	LWP_SP	1
-#elif defined(AFS_PPC_LINUX20_ENV)|| defined(AFS_PPC64_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
 #define LWP_SP 0
 #elif   defined(AFS_I386_LINUX20_ENV)
 #define LWP_SP 4

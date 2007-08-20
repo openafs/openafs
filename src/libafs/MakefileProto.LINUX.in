@@ -222,8 +222,8 @@ linux_destdirs_libafs.bm: dest_libafs.bm
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = openafs.${LINUX_MODULE_EXT}
-LIBAFS_MP = openafs.${LINUX_MODULE_EXT}
+LIBAFS = libafs-${CLIENT}.${LINUX_MODULE_EXT}
+LIBAFS_MP = libafs-${CLIENT}.mp.${LINUX_MODULE_EXT}
 LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
 LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
 
@@ -232,8 +232,10 @@ INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
 INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
 INST_LIBAFS_BM = ${DESTDIR}${afskerneldir}/${LIBAFS_BM}
 
-DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/openafs.o
-DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/openafs.mp.o
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
+DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
+DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
 
 libafs:	$(LIBAFS) 
@@ -249,11 +251,11 @@ libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
 <linux26 linux_26 umlinux26>
-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: openafs.ko
-	cp openafs.ko $@
+${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
+	cp libafs.ko $@
 
 .FORCE:
-openafs.ko: .FORCE
+libafs.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         

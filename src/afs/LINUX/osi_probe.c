@@ -59,7 +59,6 @@
 #include "afsincludes.h"
 #endif
 #include <linux/version.h>
-#include <linux/sched.h>
 #ifdef CONFIG_H_EXISTS
 #include <linux/config.h>
 #endif
@@ -154,7 +153,6 @@ MODULE_PARM_DESC(probe_ignore_syscalls, "Syscalls to ignore in table checks");
  * 0x0010 - detail - check_harder
  * 0x0020 - detail - check_harder/zapped
  * 0x0040 - automatically ignore setgroups and afs_syscall
- * 0x0080 - detail - check_table_readable
  */
 static int probe_debug = 0x41;
 #ifdef module_param
@@ -300,10 +298,6 @@ typedef struct {
     int debug_ignore_NR[4];         /* syscalls to ignore for debugging */
 } probectl;
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
-static int check_access(unsigned long, int);
-static int check_table_readable(probectl *, PROBETYPE *);
-#endif
 
 
 /********** Probing Configuration: sys_call_table **********/
@@ -946,11 +940,6 @@ static int check_table(probectl *P, PROBETYPE *ptr)
     PROBETYPE *x;
     int i, j;
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
-    i = check_table_readable(P, ptr);
-    if (i >= 0) return i;
-#endif
-
     for (x = ptr, i = 0; i < _SS(NR_syscalls); i++, x++) {
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0040) {
@@ -1072,11 +1061,6 @@ static int check_harder(probectl *P, PROBETYPE *p)
 {
     unsigned long ip1;
     int i, s;
-
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
-    i = check_table_readable(P, p);
-    if (i >= 0) return 0;
-#endif
 
     /* Check zapped syscalls */
     for (i = 1; i < P->n_zapped_syscalls; i++) {
@@ -1365,7 +1349,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
 }
 
 #if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
-static int check_access(unsigned long address, int mode) 
+static int check_writable(unsigned long address) 
 { 
     pgd_t *pgd = pgd_offset_k(address);
 #ifdef PUD_SIZE
@@ -1390,33 +1374,9 @@ static int check_access(unsigned long address, int mode)
 	pte = (pte_t *)pmd;
     else
 	pte = pte_offset_kernel(pmd, address);
-    if (pte_none(*pte) || !pte_present(*pte))
-	return 0;
-    if (mode && !pte_write(*pte))
+    if (pte_none(*pte) || !pte_present(*pte) || !pte_write(*pte))
 	return 0;
     return 1;
-}
-
-static int check_table_readable(probectl *P, PROBETYPE *ptr)
-{
-    PROBETYPE *next_page;
-    int i = 0, delta;
-
-    while (i < _SS(NR_syscalls)) {
-	next_page = (PROBETYPE *)PAGE_ALIGN((unsigned long)(ptr+1));
-	delta = next_page - ptr;
-	if (!check_access((unsigned long)ptr, 0)) {
-#ifdef OSI_PROBE_DEBUG
-	    if (probe_debug & 0x0080)
-		printk("<7>osi_probe: %s                      0x%016lx not readable; delta=0x%lx\n",
-		       P->symbol, (unsigned long)ptr, delta);
-#endif
-	    return delta - 1;
-	}
-	ptr += delta;
-	i += delta;
-    }
-    return -1;
 }
 #endif
 
@@ -1445,7 +1405,7 @@ void *osi_find_syscall_table(int which)
     }
     printk("Found %s at 0x%lx (%s)\n", P->desc, (unsigned long)answer, method);
 #if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
-    if (!check_access((unsigned long)answer, 1)) {
+    if (!check_writable((unsigned long)answer)) {
 	printk("Address 0x%lx is not writable.\n", (unsigned long)answer);
 	printk("System call hooks will not be installed; proceeding anyway\n");
 	return 0;

@@ -87,7 +87,6 @@
 #endif
 #endif /* KERNEL */
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* _PARAM_IA64_LINUX20_H_ */
 
@@ -158,7 +157,6 @@
 #define CMSERVERPREF
 #endif
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */
 

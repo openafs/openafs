@@ -1,7 +1,7 @@
 /*
  * osi_sysctl.c: Linux sysctl interface to OpenAFS
  *
- * $Id: osi_sysctl.c,v 1.7.2.5 2007/06/12 18:28:49 shadow Exp $
+ * $Id: osi_sysctl.c,v 1.7.2.4 2007/02/22 21:49:01 shadow Exp $
  *
  * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
  */
@@ -27,64 +27,35 @@ extern afs_int32 hm_retry_int;
 static struct ctl_table_header *afs_sysctl = NULL;
 
 static ctl_table afs_sysctl_table[] = {
-    {
-	.ctl_name 	= 1, 
-	.procname 	= "hm_retry_RO",
-	.data 		= &hm_retry_RO, 
-	.maxlen		= sizeof(afs_int32), 
-	.mode     	= 0644,
-	.proc_handler	= &proc_dointvec
-    },
-    {
-        .ctl_name 	= 2, 
-        .procname 	= "hm_retry_RW",
-        .data		= &hm_retry_RW,
-	.maxlen		= sizeof(afs_int32), 
-	.mode		= 0644,
-     	.proc_handler	= &proc_dointvec
-    },
-    {
-	.ctl_name	= 3, 
-	.procname	= "hm_retry_int",
-	.data		= &hm_retry_int, 
-	.maxlen		= sizeof(afs_int32), 
-	.mode		= 0644,
-	.proc_handler	= &proc_dointvec
-    },
-    {
-	.ctl_name	= 4, 
-	.procname	= "GCPAGs",
-	.data		= &afs_gcpags, 
-	.maxlen		= sizeof(afs_int32), 
-	.mode		= 0644,
-	.proc_handler 	= &proc_dointvec
-    },
-    {
-	.ctl_name	= 5, 
-	.procname	= "rx_deadtime",
-	.data		= &afs_rx_deadtime, 
-	.maxlen		= sizeof(afs_int32), 
-	.mode		= 0644,
-	.proc_handler	= &proc_dointvec
-    },
-    {
-	.ctl_name	= 6, 
-	.procname	= "bkVolPref",
-	.data		= &afs_bkvolpref, 
-	.maxlen		= sizeof(afs_int32), 
-	.mode		= 0644,
-	.proc_handler	= &proc_dointvec
-    },
+    {1, "hm_retry_RO",
+     &hm_retry_RO, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
+    {2, "hm_retry_RW",
+     &hm_retry_RW, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
+    {3, "hm_retry_int",
+     &hm_retry_int, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
+    {4, "GCPAGs",
+     &afs_gcpags, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
+    {5, "rx_deadtime",
+     &afs_rx_deadtime, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
+    {6, "bkVolPref",
+     &afs_bkvolpref, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
     {0}
 };
 
 static ctl_table fs_sysctl_table[] = {
-    {
-	.ctl_name	= 1, 
-	.procname	= "afs", 
-	.mode		= 0555, 
-	.child		= afs_sysctl_table
-    },
+    {1, "afs", NULL, 0, 0555, afs_sysctl_table},
     {0}
 };
 

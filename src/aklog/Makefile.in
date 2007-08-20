@@ -16,7 +16,7 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
 SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
 OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
 
-all: aklog asetkey ka-forwarder
+all: aklog asetkey
 
 aklog:	${OBJS} ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
@@ -24,16 +24,11 @@ aklog:	${OBJS} ${AFSLIBS}
 asetkey: asetkey.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
 
-ka-forwarder: ka-forwarder.o
-	${CC} -o $@ ${CFLAGS} ka-forwarder.o ${LIBS} ${XLIBS}
-
 #
 # Installation targets
 #
 install: \
-	${DESTDIR}${bindir}/aklog \
-	${DESTDIR}${afssrvbindir}/asetkey \
-	${DESTDIR}${afssrvbindir}/ka-forwarder
+	${DESTDIR}${bindir}/aklog ${DESTDIR}${afssrvbindir}/asetkey
 
 ${DESTDIR}${bindir}/aklog: aklog
 	${INSTALL} $? $@
@@ -41,13 +36,8 @@ ${DESTDIR}${bindir}/aklog: aklog
 ${DESTDIR}${afssrvbindir}/asetkey: asetkey
 	${INSTALL} $? $@
 
-${DESTDIR}${afssrvbindir}/ka-forwarder: ka-forwarder
-	${INSTALL} $? $@
-
 dest: \
-	${DEST}/bin/aklog \
-	${DEST}/root.server/usr/afs/bin/asetkey \
-	${DEST}/root.server/usr/afs/bin/ka-forwarder
+	${DEST}/bin/aklog ${DEST}/root.server/usr/afs/bin/asetkey
 
 ${DEST}/bin/aklog: aklog
 	${INSTALL} $? $@
@@ -55,14 +45,11 @@ ${DEST}/bin/aklog: aklog
 ${DEST}/root.server/usr/afs/bin/asetkey: asetkey
 	${INSTALL} $? $@
 
-${DEST}/root.server/usr/afs/bin/ka-forwarder: ka-forwarder
-	${INSTALL} $? $@
-
 #
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o ${OBJS} aklog asetkey ka-forwarder
+	$(RM) -f *.o ${OBJS} aklog asetkey
 
 include ../config/Makefile.version
 

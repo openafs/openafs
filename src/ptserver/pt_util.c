@@ -136,7 +136,7 @@ CommandProc(register struct cmd_syndesc *a_as)
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
-    char *pfile = "/var/lib/openafs/db/prdb.DB0";
+    char *pfile = "/usr/afs/db/prdb.DB0";
     struct cmd_parmdesc *tparm;
 
     tparm = a_as->parms;

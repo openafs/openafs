@@ -515,6 +515,8 @@ libafsauthent: ubik auth kauth libafsrpc
 # pthread based user space RX library
 shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
+	amd64_linux24) \
+		echo Skipping shlibafsrpc for amd64_linux24 ;; \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
@@ -523,6 +525,8 @@ shlibafsrpc: rx rxkad des
 
 shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
+	amd64_linux24) \
+		echo Skipping shlibafsauthent for amd64_linux24 ;; \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \

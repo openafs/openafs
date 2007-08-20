@@ -38,7 +38,7 @@ found_one="false"
 CAN_BUILD=""
 
 for VERS in $LINUX_VERS ; do
-	dir=$LINUX_SRCDIR
+	dir=$LINUX_SRCDIR$VERS
 	if [ ! -d $dir ] ; then
 	    dir=$LINUX_SRCDIR
 	    if [ ! -d $dir ] ; then
@@ -47,7 +47,7 @@ for VERS in $LINUX_VERS ; do
 		continue
       	    fi
 	fi
-	header=$LINUX_SRCDIR/include/linux/version.h
+	header=$LINUX_SRCDIR$VERS/include/linux/version.h
 	if [ ! -f $header ] ; then
 	    header=$LINUX_SRCDIR/include/linux/version.h
 	    if [ ! -f $header ] ; then

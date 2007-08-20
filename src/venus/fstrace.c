@@ -1471,7 +1471,7 @@ catgets1(nl_catd catd, int setno, int msgno, char *def)
  */
 
 #ifndef RPC_NLS_FORMAT
-#define RPC_NLS_FORMAT "/usr/share/openafs/%s.cat"
+#define RPC_NLS_FORMAT "%s.cat"
 #endif
 
 dce1_error_inq_text(status_to_convert, error_text, status)
@@ -1488,8 +1488,7 @@ dce1_error_inq_text(status_to_convert, error_text, status)
     char component_name[4];
     char *facility_name;
     char filename_prefix[7];
-    /* strlen("/usr/share/openafs/") + 6 + strlen(".cat") + 1 */
-    char nls_filename[19 + 6 + 4 + 1];
+    char nls_filename[11];
     char alt_filename[80];
     char *message;
 #if defined(AFS_64BITPOINTER_ENV)

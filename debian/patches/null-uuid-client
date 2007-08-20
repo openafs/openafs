@@ -1,0 +1,15 @@
+Tell the client to never generate an all-zero UUID, even if the client
+apparently doesn't have any network interfaces.  Fixed upstream a
+different way, so this patch can be dropped after 1.4.5 is released.
+
+--- openafs.orig/src/afs/afs_call.c
++++ openafs/src/afs/afs_call.c
+@@ -858,6 +858,8 @@
+ #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
+ 	afs_nfsclient_init();
+ #endif
++	if (afs_cb_interface.numberOfInterfaces < 1)
++	    afs_uuid_create(&afs_cb_interface.uuid);
+ 	printf("found %d non-empty cache files (%d%%).\n",
+ 	       afs_stats_cmperf.cacheFilesReused,
+ 	       (100 * afs_stats_cmperf.cacheFilesReused) /

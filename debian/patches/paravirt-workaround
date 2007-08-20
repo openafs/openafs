@@ -1,10 +1,34 @@
-Index: src/afs/LINUX/osi_machdep.h
-===================================================================
-RCS file: /cvs/openafs/src/afs/LINUX/osi_machdep.h,v
-retrieving revision 1.22.2.17
-diff -u -d -r1.22.2.17 osi_machdep.h
---- src/afs/LINUX/osi_machdep.h	8 Feb 2007 22:41:20 -0000	1.22.2.17
-+++ src/afs/LINUX/osi_machdep.h	18 Apr 2007 23:23:28 -0000
+Work around versions of Linux that don't export the paravirt_ops table
+for non-GPL modules, but which redirect core functions through it.  This
+has been fixed in Linux 2.6.22, so this patch can be dropped when 2.6.22
+makes it into testing.
+
+--- openafs.orig/src/afs/LINUX/osi_groups.c
++++ openafs/src/afs/LINUX/osi_groups.c
+@@ -230,6 +230,7 @@
+     struct key *old;
+     char desc[20];
+     unsigned long not_in_quota;
++    unsigned long f;
+     int code = -EINVAL;
+ 
+     if (!__key_type_keyring)
+@@ -265,11 +266,11 @@
+     }
+ 
+     /* install the keyring */
+-    spin_lock_irq(&task->sighand->siglock);
++    SIG_LOCK(task, f);
+     old = task->signal->session_keyring;
+     smp_wmb();
+     task->signal->session_keyring = keyring;
+-    spin_unlock_irq(&task->sighand->siglock);
++    SIG_UNLOCK(task, f);
+ 
+     if (old)
+ 	    key_put(old);
+--- openafs.orig/src/afs/LINUX/osi_machdep.h
++++ openafs/src/afs/LINUX/osi_machdep.h
 @@ -55,14 +55,14 @@
  #endif
  
@@ -26,13 +50,8 @@ diff -u -d -r1.22.2.17 osi_machdep.h
  #endif
  
  #if defined (STRUCT_TASK_STRUCT_HAS_RLIM)
-Index: src/afs/LINUX/osi_misc.c
-===================================================================
-RCS file: /cvs/openafs/src/afs/LINUX/osi_misc.c,v
-retrieving revision 1.34.2.10
-diff -u -d -r1.34.2.10 osi_misc.c
---- src/afs/LINUX/osi_misc.c	11 Jul 2005 19:29:56 -0000	1.34.2.10
-+++ src/afs/LINUX/osi_misc.c	18 Apr 2007 23:23:28 -0000
+--- openafs.orig/src/afs/LINUX/osi_misc.c
++++ openafs/src/afs/LINUX/osi_misc.c
 @@ -353,10 +353,11 @@
  void
  osi_linux_mask(void)
@@ -47,14 +66,9 @@ diff -u -d -r1.34.2.10 osi_misc.c
  }
  
  void
-Index: src/afs/LINUX/osi_sleep.c
-===================================================================
-RCS file: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v
-retrieving revision 1.22.2.10
-diff -u -d -r1.22.2.10 osi_sleep.c
---- src/afs/LINUX/osi_sleep.c	4 Jan 2007 21:26:34 -0000	1.22.2.10
-+++ src/afs/LINUX/osi_sleep.c	18 Apr 2007 23:23:29 -0000
-@@ -240,19 +240,20 @@
+--- openafs.orig/src/afs/LINUX/osi_sleep.c
++++ openafs/src/afs/LINUX/osi_sleep.c
+@@ -244,19 +244,20 @@
  afs_osi_Sleep(void *event)
  {
      sigset_t saved_set;
@@ -79,42 +93,8 @@ diff -u -d -r1.22.2.10 osi_sleep.c
  }
  
  /* osi_TimedSleep
-Index: src/afs/LINUX/osi_groups.c
-===================================================================
-RCS file: /cvs/openafs/src/afs/LINUX/osi_groups.c,v
-retrieving revision 1.25.2.8
-diff -u -d -r1.25.2.8 osi_groups.c
---- src/afs/LINUX/osi_groups.c	15 Jan 2007 15:52:46 -0000	1.25.2.8
-+++ src/afs/LINUX/osi_groups.c	18 Apr 2007 23:23:29 -0000
-@@ -230,6 +230,7 @@
-     struct key *old;
-     char desc[20];
-     unsigned long not_in_quota;
-+    unsigned long f;
-     int code = -EINVAL;
- 
-     if (!__key_type_keyring)
-@@ -265,11 +266,11 @@
-     }
- 
-     /* install the keyring */
--    spin_lock_irq(&task->sighand->siglock);
-+    SIG_LOCK(task, f);
-     old = task->signal->session_keyring;
-     smp_wmb();
-     task->signal->session_keyring = keyring;
--    spin_unlock_irq(&task->sighand->siglock);
-+    SIG_UNLOCK(task);
- 
-     if (old)
- 	    key_put(old);
-Index: src/rx/LINUX/rx_kmutex.c
-===================================================================
-RCS file: /cvs/openafs/src/rx/LINUX/rx_kmutex.c,v
-retrieving revision 1.7.2.7
-diff -u -d -r1.7.2.7 rx_kmutex.c
---- src/rx/LINUX/rx_kmutex.c	28 Dec 2006 21:32:09 -0000	1.7.2.7
-+++ src/rx/LINUX/rx_kmutex.c	18 Apr 2007 23:23:29 -0000
+--- openafs.orig/src/rx/LINUX/rx_kmutex.c
++++ openafs/src/rx/LINUX/rx_kmutex.c
 @@ -104,11 +104,12 @@
      MUTEX_EXIT(l);
  
@@ -130,7 +110,7 @@ diff -u -d -r1.7.2.7 rx_kmutex.c
      }
  
      while(seq == cv->seq) {
-@@ -140,10 +141,11 @@
+@@ -144,10 +145,11 @@
      set_current_state(TASK_RUNNING);
  
      if (!sigok) {

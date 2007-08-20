@@ -1,1 +1,1 @@
-#error kernel code not supported on SunOS 4
+#error kernel code not supported on SunOS 4 

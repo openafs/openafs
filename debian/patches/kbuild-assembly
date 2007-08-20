@@ -1,0 +1,15 @@
+Change the expected source file name for assembly code in the kernel.
+Only used by the PowerPC build, but fixes build problems on that
+platform.  Pulled from the upstream stable branch, will be in 1.4.5.
+
+--- openafs.orig/src/libafs/make_kbuild_makefile.pl
++++ openafs/src/libafs/make_kbuild_makefile.pl
+@@ -79,7 +79,7 @@
+ foreach (@objects) {
+   die "No source known for $_\n" unless exists $deps{$_};
+   if($deps{$_} =~ /\.s$/) {
+-     ($src = $_) =~ s/\.o$/.s/;
++     ($src = $_) =~ s/\.o$/.S/;
+   } else {
+      ($src = $_) =~ s/\.o$/.c/;
+   }

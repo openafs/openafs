@@ -230,7 +230,6 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     struct key *old;
     char desc[20];
     unsigned long not_in_quota;
-    unsigned long f;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
@@ -266,11 +265,11 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     }
 
     /* install the keyring */
-    SIG_LOCK(task, f);
+    spin_lock_irq(&task->sighand->siglock);
     old = task->signal->session_keyring;
     smp_wmb();
     task->signal->session_keyring = keyring;
-    SIG_UNLOCK(task, f);
+    spin_unlock_irq(&task->sighand->siglock);
 
     if (old)
 	    key_put(old);
@@ -595,18 +594,13 @@ static void afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag = key->payload.value;
     struct unixuser *pu;
-    int locked = ISAFS_GLOCK();
 
-    if (!locked)
-	AFS_GLOCK();
     pu = afs_FindUser(pag, -1, READ_LOCK);
     if (pu) {
 	pu->ct.EndTimestamp = 0;
 	pu->tokenTime = 0;
 	afs_PutUser(pu, READ_LOCK);
     }
-    if (!locked)
-	AFS_GUNLOCK();
 }
 
 struct key_type key_type_afs_pag =

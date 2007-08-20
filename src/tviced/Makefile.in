@@ -38,7 +38,8 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
-	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
+	 fstab.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 

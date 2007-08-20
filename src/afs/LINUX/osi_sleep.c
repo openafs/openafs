@@ -205,11 +205,7 @@ afs_osi_SleepSig(void *event)
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
 #endif
 #endif
 	    )
@@ -244,20 +240,19 @@ void
 afs_osi_Sleep(void *event)
 {
     sigset_t saved_set;
-    unsigned long f;
 
-    SIG_LOCK(current,f);
+    SIG_LOCK(current);
     saved_set = current->blocked;
     sigfillset(&current->blocked);
     RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current,f);
+    SIG_UNLOCK(current);
 
     afs_osi_SleepSig(event);
 
-    SIG_LOCK(current,f);
+    SIG_LOCK(current);
     current->blocked = saved_set;
     RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current,f);
+    SIG_UNLOCK(current);
 }
 
 /* osi_TimedSleep
@@ -308,11 +303,7 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
 #endif
 #endif
 	    )

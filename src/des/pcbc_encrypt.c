@@ -24,9 +24,9 @@
 #ifndef KERNEL
 #include <stdio.h>
 #endif
+#include <des.h>
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <des.h>
 #include "des_prototypes.h"
 
 RCSID

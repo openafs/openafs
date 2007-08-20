@@ -353,11 +353,10 @@ struct task_struct *rxk_ListenerTask;
 void
 osi_linux_mask(void)
 {
-    unsigned long f;
-    SIG_LOCK(current, f);
+    SIG_LOCK(current);
     sigfillset(&current->blocked);
     RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current, f);
+    SIG_UNLOCK(current);
 }
 
 void
