@@ -5,6 +5,7 @@ openafs (1.4.4.dfsg1-7) UNRELEASED; urgency=low
     information in here has been converted to man pages.
   * Use the upstream man page for pt_util, which lets us remove the
     docbook-to-man build dependency.
+  * Update to the latest CellServDB from grand.central.org.
   * Restructure the source for the module package.  The build files for
     the module build are now in debian/module in the source package and
     there is a completely separate rules file.  This way, the module build
@@ -12,7 +13,7 @@ openafs (1.4.4.dfsg1-7) UNRELEASED; urgency=low
   * Fix debhelper dependencies for the module build.
   * Update module standards version to 3.7.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sun, 19 Aug 2007 22:48:02 -0700
+ -- Russ Allbery <rra@debian.org>  Sun, 19 Aug 2007 22:52:26 -0700
 
 openafs (1.4.4.dfsg1-6) unstable; urgency=low
 
