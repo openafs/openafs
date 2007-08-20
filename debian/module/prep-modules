@@ -86,7 +86,7 @@ fi
 # Generate the control file from the template.
 
 sed -e "s/=KVERS/${afs_kvers}/g" -e "s/=IMG/${afs_image}/g" \
-    debian/control.module > debian/control
+    debian/control.in > debian/control
 
 # Now, calcuate the binary package version.  Extract the epoch from the kernel
 # package revision and add it to the beginning of the binary package version
