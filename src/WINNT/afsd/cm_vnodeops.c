@@ -1855,8 +1855,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 				  userp, reqp, &nscp);
 
                 if (code == 0) {
+                    if (!strcmp(component,".."))
+                        fid_count -=2;
                     for ( i=0; i<fid_count; i++) {
-                        if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
+                        if ( strcmp(component,".") && !cm_FidCmp(&nscp->fid, &fids[i]) ) {
                             code = CM_ERROR_TOO_MANY_SYMLINKS;
                             cm_ReleaseSCache(nscp);
                             nscp = NULL;

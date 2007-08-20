@@ -1453,7 +1453,7 @@ static char * volstatus_str(enum volstatus vs)
 
 void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum volstatus old, enum volstatus new)
 {
-    char volstr[CELL_MAXNAMELEN + VL_MAXNAMELEN];
+    char volstr[CELL_MAXNAMELEN + VL_MAXNAMELEN]="";
     char *ext = "";
 
     if (volID == volp->rw.ID)
