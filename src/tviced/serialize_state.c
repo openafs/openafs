@@ -107,8 +107,9 @@ extern off_t afs_lseek(int FD, off_t O, int F);
  * have been written so that it will be very simple to go
  * back to standard I/O for just those poorly written platforms
  */
+#ifndef _WIN32
 #define FS_STATE_USE_MMAP
-
+#endif
 
 #ifdef FS_STATE_USE_MMAP
 #define FS_STATE_INIT_FILESIZE (8 * 1024 * 1024)  /* truncate to 8MB initially */
