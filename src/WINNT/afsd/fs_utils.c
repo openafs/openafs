@@ -141,7 +141,7 @@ static int getmeta(int ac) {
     return 0;
 }
 
-long util_GetInt32 (char *as, long *aval)
+afs_int32 util_GetInt32 (char *as, afs_int32 *aval)
 {
     register long total;
     register int tc;
