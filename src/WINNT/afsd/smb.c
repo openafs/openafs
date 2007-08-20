@@ -5289,21 +5289,22 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     * filter, since we'd have to do a lookup.
     */
     if (code == 0) {
-    filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
-    if (oldDscp == newDscp) {
-        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, oldLastNamep,
-                             newLastNamep, TRUE);
-    } else {
-        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, oldLastNamep,
-                             NULL, TRUE);
-        if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
-                             filter, newDscp, newLastNamep,
-                             NULL, TRUE);
+        filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
+        if (oldDscp == newDscp) {
+            if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                                  filter, oldDscp, oldLastNamep,
+                                  newLastNamep, TRUE);
+        } else {
+            if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                                  filter, oldDscp, oldLastNamep,
+                                  NULL, TRUE);
+            if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
+                                  filter, newDscp, newLastNamep,
+                                  NULL, TRUE);
+        }
     }
 
     if (tmpscp != NULL) 
@@ -5455,7 +5456,6 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
             smb_NotifyChange(FILE_ACTION_ADDED,
                              filter, newDscp, newLastNamep,
                              NULL, TRUE);
-    }
     }
 
     if (tmpscp != NULL) 
