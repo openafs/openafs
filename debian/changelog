@@ -1,6 +1,8 @@
 openafs (1.4.4.dfsg1-7) unstable; urgency=low
 
   * Switch to quilt for managing patches to the upstream source.
+  * Use the upstream man page for pt_util, which lets us remove the
+    docbook-to-man build dependency.
   * Restructure the source for the module package.  The build files for
     the module build are now in debian/module in the source package and
     there is a completely separate rules file.  This way, the module build

@@ -15,4 +15,5 @@ null-uuid-client
 null-uuid-server
 pag-cleanup-lock
 ucontext-everywhere
+pt_util-man-page
 paravirt-workaround

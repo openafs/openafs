@@ -136,8 +136,6 @@ install: build
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
 
 	install -d debian/openafs-dbserver/usr/share/man/man8
-	/usr/bin/docbook-to-man debian/pt_util.sgml \
-	    >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
 	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
 	    afs-rootvol ) \
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8

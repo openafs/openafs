@@ -19,6 +19,7 @@ debian/tmp/usr/share/man/man5/vldb.DB0.5              usr/share/man/man5
 
 debian/tmp/usr/share/man/man8/buserver.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/prdb_check.8            usr/share/man/man8
+debian/tmp/usr/share/man/man8/pt_util.8               usr/share/man/man8
 debian/tmp/usr/share/man/man8/ptserver.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/vldb_check.8            usr/share/man/man8
 debian/tmp/usr/share/man/man8/vlserver.8              usr/share/man/man8
