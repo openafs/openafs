@@ -5,6 +5,7 @@ module-name
 pam-build
 bos-permissions
 compiler-flags
+no-admin-reference
 amd64-syscall-probe
 des-alignment
 ka-forwarder

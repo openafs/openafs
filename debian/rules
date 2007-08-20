@@ -184,7 +184,7 @@ binary-indep: build install binary-source
 	dh_installchangelogs NEWS
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
-	dh_installdocs -XQuickStartWindows -Xwinnotes
+	dh_installdocs -XAdminReference -XQuickStartWindows -Xwinnotes
 	dh_installexamples
 	dh_link
 	dh_compress
