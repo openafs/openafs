@@ -33,7 +33,7 @@ extern char *hostutil_GetNameByINet(afs_uint32 addr);
 extern struct hostent *hostutil_GetHostByName(char *namep);
 #endif
 
-extern long util_GetInt32(char *stringp, long *valuep);
+extern afs_int32 util_GetInt32(char *stringp, afs_int32 *valuep);
 
 extern long fs_StripDriveLetter(char *inPathp, char *outPathp, long outSize);
 
