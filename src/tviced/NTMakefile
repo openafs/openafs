@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_SERVER
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_SERVER #-DAFS_DEMAND_ATTACH_FS
 
 RELDIR=tviced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
@@ -19,6 +19,7 @@ SRC_DIR = ..\viced
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
 VICED = ..\viced
+TVICED = .
 VLSERVER = ..\vlserver
 LWP = ..\lwp
 LIBACL = ..\libacl
@@ -31,8 +32,10 @@ RX = ..\rx
 RXOBJS = $(OUT)\xdr_int64.obj \
          $(OUT)\xdr_int32.obj
 
-VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj
+VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
 VICEDRES =	$(OUT)\$(VICED)\fileserver.res
+
+TVICEDOBJS = $(OUT)\serialize_state.obj
 
 VLSERVEROBJS = $(OUT)\vldbint.cs.obj $(OUT)\vldbint.xdr.obj
 
@@ -51,9 +54,7 @@ VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.o
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(VICEDOBJS) $(VICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
-	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS)
-
-
+	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS) #$(TVICEDOBJS) 
 
 noversion: install
 
@@ -64,6 +65,9 @@ $(RXOBJS): $(RX)\$$(@B).c
 
 $(VICEDOBJS): $(VICED)\$$(@B).c
 	$(C2OBJ) -I$(VICED) -I$(UTIL) $**
+
+$(TVICEDOBJS): $(TVICED)\$$(@B).c
+	$(C2OBJ) -I$(TVICED) -I$(UTIL) $**
 
 $(UTILOBJS): $(UTIL)\$$(@B).c
 	$(C2OBJ) -I$(UTIL) $**
