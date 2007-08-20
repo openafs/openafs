@@ -1,3 +1,14 @@
+openafs (1.4.4.dfsg1-7) unstable; urgency=low
+
+  * Restructure the source for the module package.  The build files for
+    the module build are now in debian/module in the source package and
+    there is a completely separate rules file.  This way, the module build
+    rules don't have to depend on quilt and the structure is clearer.
+  * Fix debhelper dependencies for the module build.
+  * Update module standards version to 3.7.2 (no changes required).
+
+ --
+
 openafs (1.4.4.dfsg1-6) unstable; urgency=low
 
   * Apply upstream patch for the OpenAFS file server to treat clients that

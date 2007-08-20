@@ -3,8 +3,8 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 4.1.16), flex, bison
-Standards-Version: 3.6.2
+Build-Depends: debhelper (>= 5), flex, bison
+Standards-Version: 3.7.2
 
 Package: openafs-modules-=KVERS
 Conflicts: openafs-client (<< 1.2.9)
