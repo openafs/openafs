@@ -153,7 +153,7 @@ binary-source:
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	find . \( -name \*.o -o -path ./debian -o -path \*/.svn \
 	    -o -path ./src/WINNT -o -path ./doc -o -path ./obj \
-	    -o -path ./$(SYS_NAME) -o -path /.pc \) -prune -o -print | \
+	    -o -path ./$(SYS_NAME) -o -path ./.pc \) -prune -o -print | \
 	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/copyright debian/module/* \
