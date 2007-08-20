@@ -1201,14 +1201,14 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
 	}
 	index = afs_dcnextTbl[index];
     }
-    MReleaseWriteLock(&afs_xdcache);
     if (index != NULLIDX) {
 	hset(afs_indexTimes[tdc->index], afs_indexCounter);
 	hadd32(afs_indexCounter, 1);
+	MReleaseWriteLock(&afs_xdcache);
 	return tdc;
-    } else
-	return NULL;
-
+    } 
+    MReleaseWriteLock(&afs_xdcache);
+    return NULL;
 }				/*afs_FindDCache */
 
 
