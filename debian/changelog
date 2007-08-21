@@ -1,4 +1,4 @@
-openafs (1.4.4.dfsg1-7) UNRELEASED; urgency=low
+openafs (1.4.4.dfsg1-7) unstable; urgency=low
 
   * Switch to quilt for managing patches to the upstream source.
   * Stop installing the Administrator's Reference.  All of the useful
@@ -14,7 +14,7 @@ openafs (1.4.4.dfsg1-7) UNRELEASED; urgency=low
   * Fix debhelper dependencies for the module build.
   * Update module standards version to 3.7.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 20 Aug 2007 16:11:37 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 20 Aug 2007 17:54:00 -0700
 
 openafs (1.4.4.dfsg1-6) unstable; urgency=low
 
