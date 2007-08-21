@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2005, 2006 Secure Endpoints Inc.
+ * Copyright (c) 2004, 2005, 2006, 2007 Secure Endpoints Inc.
  * Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
  * 
@@ -3609,7 +3609,7 @@ KFW_AFS_obtain_user_temp_directory(HANDLE hUserToken, char *newfilename, int siz
     DWORD dwLen  = 0;
  
     if (!hUserToken || !newfilename || size <= 0)
- 	return;
+ 	return 1;
  
      *newfilename = '\0';
  
