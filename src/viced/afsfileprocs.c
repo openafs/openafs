@@ -7458,11 +7458,9 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
     if ( !thost->interface ) 
 	goto Bad_CallBackRxConnAddr;
     
-    assert(thost->interface->numberOfInterfaces > 0 );
-    
     /* the only address is the primary interface */
     /* can't change when there's only 1 address, anyway */
-    if ( thost->interface->numberOfInterfaces == 1 ) 
+    if ( thost->interface->numberOfInterfaces <= 1 ) 
 	goto Bad_CallBackRxConnAddr;
     
     /* initialise a security object only once */
