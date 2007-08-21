@@ -156,7 +156,7 @@ binary-source:
 	    -o -path ./$(SYS_NAME) -o -path ./.pc \) -prune -o -print | \
 	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
-	cp debian/copyright debian/module/* \
+	cp debian/changelog debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
 	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
 	rm -f debian/$(srcpkg)/usr/src/modules/$(package)/*-stamp
