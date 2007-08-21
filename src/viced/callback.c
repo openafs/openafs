@@ -2991,11 +2991,9 @@ MultiProbeAlternateAddress_r(struct host *host)
     if (!host->interface)
 	return 1;		/* failure */
 
-    assert(host->interface->numberOfInterfaces > 0);
-
     /* the only address is the primary interface */
-    if (host->interface->numberOfInterfaces == 1)
-	return 1;		/* failure */
+    if (host->interface->numberOfInterfaces <= 1)
+        return 1;               /* failure */
 
     /* initialise a security object only once */
     if (!sc)
