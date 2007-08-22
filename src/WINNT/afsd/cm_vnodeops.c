@@ -1857,8 +1857,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                 if (code == 0) {
                     if (!strcmp(component,".."))
                         fid_count -=2;
+                    else if (!strcmp(component,"."))
+                        fid_count -=1;
                     for ( i=0; i<fid_count; i++) {
-                        if ( strcmp(component,".") && !cm_FidCmp(&nscp->fid, &fids[i]) ) {
+                        if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
                             code = CM_ERROR_TOO_MANY_SYMLINKS;
                             cm_ReleaseSCache(nscp);
                             nscp = NULL;
@@ -1940,12 +1942,16 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
 
                     if (code == 0 && linkScp != NULL) {
-                        for ( i=0; i<fid_count; i++) {
-                            if ( !cm_FidCmp(&linkScp->fid, &fids[i]) ) {
-                                code = CM_ERROR_TOO_MANY_SYMLINKS;
-                                cm_ReleaseSCache(linkScp);
-                                nscp = NULL;
-                                break;
+                        if (linkScp == cm_data.rootSCachep) 
+                            fid_count = 0;
+                        else {
+                            for ( i=0; i<fid_count; i++) {
+                                if ( !cm_FidCmp(&linkScp->fid, &fids[i]) ) {
+                                    code = CM_ERROR_TOO_MANY_SYMLINKS;
+                                    cm_ReleaseSCache(linkScp);
+                                    nscp = NULL;
+                                    break;
+                                }
                             }
                         }
                         if (i == fid_count && fid_count < MAX_FID_COUNT) {
