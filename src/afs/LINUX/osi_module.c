@@ -94,11 +94,20 @@ init_module(void)
 	return err;
 #endif
     err = afs_init_inodecache();
-    if (err)
+    if (err) {
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
 	return err;
+    }
     err = register_filesystem(&afs_fs_type);
-    if (err)
-      return err;
+    if (err) {
+	afs_destroy_inodecache();
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
+	return err;
+    }
 
     osi_sysctl_init();
 #ifdef LINUX_KEYRING_SUPPORT
@@ -120,9 +129,13 @@ void
 cleanup_module(void)
 #endif
 {
+#ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_shutdown();
+#endif
     osi_sysctl_clean();
+#ifndef LINUX_KEYRING_SUPPORT
     osi_syscall_clean();
+#endif
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
