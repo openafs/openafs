@@ -25,6 +25,7 @@ RCSID
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
+#include "afs/nfsclient.h"
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
@@ -330,8 +331,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     code = __setpag(cr, pagvalue, newpag, change_parent);
 
 #ifdef LINUX_KEYRING_SUPPORT
-    if (code == 0) {
-
+    if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
 	(void) install_session_keyring(current, NULL);
 
 	if (current->signal->session_keyring) {

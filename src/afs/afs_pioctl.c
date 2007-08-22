@@ -3339,6 +3339,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     struct AFS_UCRED *newcred;
     struct unixuser *au;
     afs_uint32 comp = *com & 0xff00;
+    afs_uint32 h, l;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -3380,7 +3381,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	u.u_error = 0;
 #endif
 	/* check for acceptable opcodes for normal folks, which are, so far,
-	 * set tokens and unlog.
+	 * get/set tokens, sysname, and unlog.
 	 */
 	if (i != 9 && i != 3 && i != 38 && i != 8) {
 	    osi_FreeLargeSpace(inData);
@@ -3409,9 +3410,17 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    newcred->cr_group_info = groups_alloc(1); /* not that anything sets this */
+    l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
+    h = ((g0-0x3f00) >> 14);
+    h = ((g1-0x3f00) >> 14) + h + h + h;
+    GROUP_AT(newcred->cr_group_info, 0) = ((h << 28) | l);
+#else
     newcred->cr_group_info = groups_alloc(2);
     GROUP_AT(newcred->cr_group_info, 0) = g0;
     GROUP_AT(newcred->cr_group_info, 1) = g1;
+#endif
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
@@ -3467,7 +3476,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	EXP_RELE(outexporter);
     }
     if (!code) 
-      *com = (*com) | comp;
+	*com = (*com) | comp;
     return code;
 }
 #endif /* AFS_NEED_CLIENTCONTEXT */
