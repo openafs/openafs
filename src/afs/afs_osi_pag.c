@@ -599,7 +599,7 @@ PagInCred(const struct AFS_UCRED *cred)
 #endif
 out:
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG) {
+    if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
 	struct key *key;
 	afs_uint32 upag, newpag;
 
