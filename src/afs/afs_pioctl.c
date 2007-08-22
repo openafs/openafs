@@ -3338,6 +3338,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     struct afs_exporter *exporter, *outexporter;
     struct AFS_UCRED *newcred;
     struct unixuser *au;
+    afs_uint32 comp = *com & 0xff00;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -3465,6 +3466,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     } else if (!code) {
 	EXP_RELE(outexporter);
     }
+    if (!code) 
+      *com = (*com) | comp;
     return code;
 }
 #endif /* AFS_NEED_CLIENTCONTEXT */
