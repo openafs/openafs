@@ -1857,24 +1857,32 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 				  userp, reqp, &nscp);
 
                 if (code == 0) {
-                    if (!strcmp(component,".."))
-                        fid_count -=2;
-                    else if (!strcmp(component,"."))
-                        fid_count -=1;
-                    for ( i=0; i<fid_count; i++) {
-                        if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
-                            code = CM_ERROR_TOO_MANY_SYMLINKS;
-                            cm_ReleaseSCache(nscp);
-                            nscp = NULL;
-                            break;
+                    if (!strcmp(component,"..") || !strcmp(component,".")) {
+                        /* 
+                         * roll back the fid list until we find the fid 
+                         * that matches where we are now.  Its not necessarily
+                         * one or two fids because they might have been 
+                         * symlinks or mount points or both that were crossed.  
+                         */
+                        for ( i=fid_count-1; i>=0; i--) {
+                            if (!cm_FidCmp(&nscp->fid, &fids[i]))
+                                break;
+                        }
+                    } else {
+                        /* add the new fid to the list */
+                        for ( i=0; i<fid_count; i++) {
+                            if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
+                                code = CM_ERROR_TOO_MANY_SYMLINKS;
+                                cm_ReleaseSCache(nscp);
+                                nscp = NULL;
+                                break;
+                            }
+                        }
+                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
+                            fids[fid_count++] = nscp->fid;
                         }
                     }
-                    if (i == fid_count && fid_count < MAX_FID_COUNT) {
-                        fids[fid_count++] = nscp->fid;
-                    }
-                }
-                
-                if (code) {
+                } else {
 		    cm_ReleaseSCache(tscp);
 		    if (dirScp)
 			cm_ReleaseSCache(dirScp);
