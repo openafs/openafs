@@ -1471,7 +1471,7 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
     snprintf(volstr, sizeof(volstr), "%s:%s%s", volp->cellp->name, volp->namep, ext);
 
     osi_Log4(afsd_logp, "VolumeStatusNotification: %-48s [%10u] (%s -> %s)",
-             volstr, volID, volstatus_str(old), volstatus_str(new));
+             osi_LogSaveString(afsd_logp, volstr), volID, volstatus_str(old), volstatus_str(new));
 
     cm_VolStatus_Change_Notification(volp->cellp->cellID, volID, new);
 }       
