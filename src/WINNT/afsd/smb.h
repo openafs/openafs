@@ -523,7 +523,7 @@ typedef struct smb_dispatch {
 						 * the response was already
 						 * sent.
                                                  */
-#define SMB_MAX_PATH                    256     /* max path length */
+#define SMB_MAX_PATH                    260     /* max path length */
 
 /* prototypes */
 
