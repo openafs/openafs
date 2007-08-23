@@ -16,9 +16,9 @@ Introduction
   particular, XFS, ReiserFS, and tmpfs will NOT work.  If you are using
   one of those file systems and don't have a spare partition for a
   separate file system for the cache, you need to use the -memcache option
-  to afsd (although this is not always stable) or create a large file with
-  dd, create an ext2 file system in it with mkfs, and then mount it with
-  mount -o loop for use as a cache partition.
+  to afsd or create a large file with dd, create an ext2 file system in it
+  with mkfs, and then mount it with mount -o loop for use as a cache
+  partition.
 
   FAM does not work correctly with AFS except for directories that are
   world-readable since it does not run in the user's security context and
@@ -138,4 +138,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Tue, 26 Sep 2006 16:32:58 z
+ -- Russ Allbery <rra@debian.org>, Thu, 23 Aug 2007 09:38:32 -0700
