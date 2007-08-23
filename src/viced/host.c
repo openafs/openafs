@@ -3326,6 +3326,97 @@ CheckHost(register struct host *host, int held)
 
 }				/*CheckHost */
 
+int
+CheckHost_r(register struct host *host, int held, char *dummy)
+{
+    register struct client *client;
+    struct rx_connection *cb_conn = NULL;
+    int code;
+
+    /* Host is held by h_Enumerate_r */
+    for (client = host->FirstClient; client; client = client->next) {
+	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
+	    client->deleted = 1;
+	    host->hostFlags |= CLIENTDELETED;
+	}
+    }
+    if (host->LastCall < checktime) {
+	h_Lock_r(host);
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    cb_conn = host->callback_rxcon;
+	    rx_GetConnection(cb_conn);
+	    if (host->LastCall < clientdeletetime) {
+		host->hostFlags |= HOSTDELETED;
+		if (!(host->hostFlags & VENUSDOWN)) {
+		    host->hostFlags &= ~ALTADDR;	/* alternate address invalid */
+		    if (host->interface) {
+			H_UNLOCK;
+			code =
+			    RXAFSCB_InitCallBackState3(cb_conn,
+						       &FS_HostUUID);
+			H_LOCK;
+		    } else {
+			H_UNLOCK;
+			code =
+			    RXAFSCB_InitCallBackState(cb_conn);
+			H_LOCK;
+		    }
+		    host->hostFlags |= ALTADDR;	/* alternate addresses valid */
+		    if (code) {
+			char hoststr[16];
+			(void)afs_inet_ntoa_r(host->host, hoststr);
+			ViceLog(0,
+				("CB: RCallBackConnectBack (host.c) failed for host %s:%d\n",
+				 hoststr, ntohs(host->port)));
+			host->hostFlags |= VENUSDOWN;
+		    }
+		    /* Note:  it's safe to delete hosts even if they have call
+		     * back state, because break delayed callbacks (called when a
+		     * message is received from the workstation) will always send a 
+		     * break all call backs to the workstation if there is no
+		     *callback.
+		     */
+		}
+	    } else {
+		if (!(host->hostFlags & VENUSDOWN) && host->cblist) {
+		    char hoststr[16];
+		    (void)afs_inet_ntoa_r(host->host, hoststr);
+		    if (host->interface) {
+			afsUUID uuid = host->interface->uuid;
+			H_UNLOCK;
+			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
+			H_LOCK;
+			if (code) {
+			    if (MultiProbeAlternateAddress_r(host)) {
+				ViceLog(0,("CheckHost_r: Probing all interfaces of host %s:%d failed, code %d\n",
+					    hoststr, ntohs(host->port), code));
+				host->hostFlags |= VENUSDOWN;
+			    }
+			}
+		    } else {
+			H_UNLOCK;
+			code = RXAFSCB_Probe(cb_conn);
+			H_LOCK;
+			if (code) {
+			    ViceLog(0,
+				    ("CheckHost_r: Probe failed for host %s:%d, code %d\n", 
+				     hoststr, ntohs(host->port), code));
+			    host->hostFlags |= VENUSDOWN;
+			}
+		    }
+		}
+	    }
+	    H_UNLOCK;
+	    rx_PutConnection(cb_conn);
+	    cb_conn=NULL;
+	    H_LOCK;
+	}
+	h_Unlock_r(host);
+    }
+    return held;
+
+}				/*CheckHost_r */
+
 
 /*
  * Set VenusDown for any hosts that have not had a call in 15 minutes and
@@ -3348,8 +3439,10 @@ h_CheckHosts(void)
      */
     checktime = now - 15 * 60;
     clientdeletetime = now - 120 * 60;	/* 2 hours ago */
-    h_Enumerate(CheckHost, NULL);
-
+    
+    H_LOCK;
+    h_Enumerate_r(CheckHost_r, hostList, NULL);
+    H_UNLOCK;
 }				/*h_CheckHosts */
 
 /*
