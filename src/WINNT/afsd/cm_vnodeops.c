@@ -2718,7 +2718,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_callbackRequest_t cbReq;
     AFSFid newAFSFid;
     cm_fid_t newFid;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     int didEnd;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
