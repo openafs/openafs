@@ -1,3 +1,40 @@
+Since 1.5.22
+
+ *  A new registry value, "BlockSize", can now be used to adjust 
+    the size of the internal buffers used to store file data.  
+    The default is 4KB.  When set, the values 1..1024 specify
+    multiples of 4KB. Values > 1024 specify actual block sizes
+    and must be multiples of 4KB.  The actual block size in KB 
+    can not be larger than the chunk size which defaults to 1MB.
+
+    HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+      (DWORD) BlockSize
+
+ * pts.exe and ptserver.exe built with -DSUPERGROUPS
+
+ * Service Manager shutdown hints have been added.  The hint 
+   specifies that it may take the AFS client service up to two
+   minutes to shutdown. 
+
+ * Fix the recursion detection feature introduced in 1.5.22.
+   The previous implementation broke the evaluation of paths
+   using ../path or ./path.   It also broke the evaluation of
+   symlinks to absolute paths.  For example, /afs/cell/path.
+
+ * Fix an uninitialized variable in cm_MakeDir that could result
+   in crash if the requested directory could not be created.
+
+ * Fix a the VolumeStatusNotification log messages to save
+   the input string in the circular log buffer so garbarge 
+   won't be output to afsd.log when the log is dumped.
+   
+
+ * Increase the SMB Maximum Path length to 260 characters
+   from 256 as that is what CIFS supports.
+
+ * On 64-bit Windows, use a unique description string for 
+   the 32-bit AFS Shell Extension.
+
 Since 1.5.21
 
  * In the AFS Admin Library, replaced all of the 
