@@ -21,6 +21,7 @@
 #include <osi.h>
 
 #include "afsd.h"
+#include "cm_btree.h"
 
 /*extern void afsi_log(char *pattern, ...);*/
 
@@ -207,6 +208,20 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      * while we hold the global refcount lock.
      */
     cm_FreeAllACLEnts(scp);
+
+#ifdef USE_BPLUS
+    /* destroy directory Bplus Tree */
+    if (scp->dirBplus) {
+        LARGE_INTEGER start, end;
+        QueryPerformanceCounter(&start);
+        bplus_free_tree++;
+        freeBtree(scp->dirBplus);
+        scp->dirBplus = NULL;
+        QueryPerformanceCounter(&end);
+
+        bplus_free_time += (end.QuadPart - start.QuadPart);
+    }
+#endif
     return 0;
 }
 
@@ -299,6 +314,9 @@ cm_scache_t *cm_GetNewSCache(void)
     scp->magic = CM_SCACHE_MAGIC;
     lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
     lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
+#ifdef USE_BPLUS
+    lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
+#endif
     scp->serverLock = -1;
 
     /* and put it in the LRU queue */
@@ -494,6 +512,13 @@ cm_ShutdownSCache(void)
         scp->cbExpires = 0;
         scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
 
+#ifdef USE_BPLUS
+        if (scp->dirBplus)
+            freeBtree(scp->dirBplus);
+        scp->dirBplus = NULL;
+        scp->dirDataVersion = -1;
+        lock_FinalizeRWLock(&scp->dirlock);
+#endif
         lock_FinalizeMutex(&scp->mx);
         lock_FinalizeRWLock(&scp->bufCreateLock);
     }
@@ -523,7 +548,9 @@ void cm_InitSCache(int newFile, long maxSCaches)
                   scp = scp->allNextp ) {
                 lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
                 lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
-
+#ifdef USE_BPLUS
+                lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
+#endif
                 scp->cbServerp = NULL;
                 scp->cbExpires = 0;
                 scp->fileLocksH = NULL;
@@ -537,6 +564,10 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->openShares = 0;
                 scp->openExcls = 0;
                 scp->waitCount = 0;
+#ifdef USE_BPLUS
+                scp->dirBplus = NULL;
+                scp->dirDataVersion = -1;
+#endif
                 scp->flags &= ~CM_SCACHEFLAG_WAITING;
             }
         }

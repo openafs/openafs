@@ -17,10 +17,37 @@
 #include <malloc.h>
 #include <osi.h>
 #include "afsd.h"
+#ifdef USE_BPLUS
+#include "cm_btree.h"
+#endif
 #include <rx/rx.h>
 
 
 afs_int32 DErrno;
+
+afs_uint32 dir_lookup_hits = 0;
+afs_uint32 dir_lookup_misses = 0;
+afs_uint32 dir_create_entry = 0;
+afs_uint32 dir_remove_entry = 0;
+
+afs_uint64 dir_lookup_time = 0;
+afs_uint64 dir_create_time = 0;
+afs_uint64 dir_remove_time = 0;
+
+afs_int32  cm_BPlusTrees = 1;
+
+void cm_DirDumpStats(void)
+{
+    afsi_log("Dir Lookup   Hits: %-8d", dir_lookup_hits);
+    afsi_log("           Misses: %-8d", dir_lookup_misses);
+    afsi_log("           Create: %-8d", dir_create_entry);
+    afsi_log("           Remove: %-8d", dir_remove_entry);
+
+    afsi_log("Dir Times  Lookup: %-16I64d", dir_lookup_time);
+    afsi_log("           Create: %-16I64d", dir_create_time);
+    afsi_log("           Remove: %-16I64d", dir_remove_time);
+}
+
 
 /* Local static prototypes */
 static long
@@ -80,10 +107,10 @@ cm_NameEntries(char *namep, long *lenp)
    entry is a string name.
 
    On entry:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    On exit:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    None of the directory buffers for op->scp should be locked by the
    calling thread.
@@ -93,6 +120,7 @@ cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 {
     int blobs, firstelt;
     int i;
+    LARGE_INTEGER start, end;
 
     cm_dirEntry_t *ep = NULL;
     cm_buf_t *entrybuf = NULL;
@@ -109,6 +137,10 @@ cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     if (*entry == 0)
 	return EINVAL;
 
+    QueryPerformanceCounter(&start);
+
+    dir_create_entry++;
+
     osi_Log4(afsd_logp, "cm_DirCreateEntry for op 0x%p, name [%s] and fid[%d,%d]",
              op, osi_LogSaveString(afsd_logp, entry), cfid->vnode, cfid->unique);
 
@@ -120,20 +152,24 @@ cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     if (code == 0) {
         cm_DirReleasePage(op, &entrybuf, FALSE);
         cm_DirReleasePage(op, &prevptrbuf, FALSE);
-	return EEXIST;
+	code = EEXIST;
+        goto done;
     }
 
     blobs = cm_NameEntries(entry, NULL);	/* number of entries required */
     firstelt = cm_DirFindBlobs(op, blobs);
     if (firstelt < 0) {
         osi_Log0(afsd_logp, "cm_DirCreateEntry returning EFBIG");
-	return EFBIG;		/* directory is full */
+	code = EFBIG;		/* directory is full */
+        goto done;
     }
 
     /* First, we fill in the directory entry. */
     code = cm_DirGetBlob(op, firstelt, &entrybuf, &ep);
-    if (code != 0)
-	return EIO;
+    if (code != 0) {
+	code = EIO;
+        goto done;
+    }
 
     ep->flag = CM_DIR_FFIRST;
     ep->fid.vnode = htonl(cfid->vnode);
@@ -144,7 +180,8 @@ cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     code = cm_DirGetPage(op, 0, &dhpbuf, &dhp);
     if (code != 0) {
 	cm_DirReleasePage(op, &entrybuf, TRUE);
-	return EIO;
+	code = EIO;
+        goto done;
     }
 
     i = cm_DirHash(entry);
@@ -157,7 +194,12 @@ cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 
     osi_Log0(afsd_logp, "cm_DirCreateEntry returning success");
 
-    return 0;
+    code = 0;
+  done:
+    QueryPerformanceCounter(&end);
+
+    dir_create_time += (end.QuadPart - start.QuadPart);
+    return code;
 }
 
 /* Return the length of a directory in pages
@@ -200,10 +242,10 @@ cm_DirLength(cm_dirOp_t * op)
 /* Delete a directory entry.
 
    On entry:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    On exit:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    None of the directory buffers for op->scp should be locked by the
    calling thread.
@@ -221,8 +263,10 @@ cm_DirDeleteEntry(cm_dirOp_t * op, char *entry)
     cm_buf_t      *pibuf = NULL;
     osi_hyper_t    thyper;
     unsigned long  junk;
-
     long code;
+    LARGE_INTEGER start, end;
+
+    QueryPerformanceCounter(&start);
 
     osi_Log2(afsd_logp, "cm_DirDeleteEntry for op 0x%p, entry [%s]",
              op, osi_LogSaveString(afsd_logp, entry));
@@ -232,8 +276,11 @@ cm_DirDeleteEntry(cm_dirOp_t * op, char *entry)
                           &pibuf, &previtem);
     if (code != 0) {
         osi_Log0(afsd_logp, "cm_DirDeleteEntry returning ENOENT");
-	return ENOENT;
+	code = ENOENT;
+        goto done;
     }
+
+    dir_remove_entry++;
 
     *previtem = firstitem->next;
     cm_DirReleasePage(op, &pibuf, TRUE);
@@ -252,8 +299,14 @@ cm_DirDeleteEntry(cm_dirOp_t * op, char *entry)
     cm_DirFreeBlobs(op, index, nitems);
 
     osi_Log0(afsd_logp, "cm_DirDeleteEntry returning success");
+    code = 0;
 
-    return 0;
+  done:
+    QueryPerformanceCounter(&end);
+
+    dir_remove_time += (end.QuadPart - start.QuadPart);
+
+    return code;
 }
 
 /* Find a bunch of contiguous entries; at least nblobs in a row.
@@ -446,7 +499,7 @@ cm_DirFreeBlobs(cm_dirOp_t * op, int firstblob, int nblobs)
  * directory header page are allocated, 1 to the page header, 4 to the
  * allocation map and 8 to the hash table.
  *
- * Called with op->scp->mx
+ * Called with op->scp->mx unlocked
  */
 int
 cm_DirMakeDir(cm_dirOp_t * op, cm_fid_t * me, cm_fid_t * parent)
@@ -454,7 +507,7 @@ cm_DirMakeDir(cm_dirOp_t * op, cm_fid_t * me, cm_fid_t * parent)
     int i;
     cm_dirHeader_t *dhp = NULL;
     cm_buf_t *dhpbuf = NULL;
-
+    int rc = 0;
     long code;
 
     osi_Log3(afsd_logp, "cm_DirMakeDir for op 0x%p, directory fid[%d, %d]",
@@ -463,8 +516,10 @@ cm_DirMakeDir(cm_dirOp_t * op, cm_fid_t * me, cm_fid_t * parent)
              parent->vnode, parent->unique);
 
     code = cm_DirGetPage(op, 0, &dhpbuf, &dhp);
-    if (code)
-        return 1;
+    if (code) {
+        rc = 1;
+        goto done;
+    }
 
     dhp->header.pgcount = htons(1);
     dhp->header.tag = htons(1234);
@@ -486,16 +541,17 @@ cm_DirMakeDir(cm_dirOp_t * op, cm_fid_t * me, cm_fid_t * parent)
 
     osi_Log0(afsd_logp, "cm_DirMakeDir returning success");
 
-    return 0;
+  done:
+    return rc;
 }
 
 /* Look up a file name in directory.
 
    On entry:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    On exit:
-       op->scp->mx is locked
+       op->scp->mx is unlocked
 
    None of the directory buffers for op->scp should be locked by the
    calling thread.
@@ -507,8 +563,11 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     cm_buf_t      *itembuf = NULL;
     unsigned short *previtem = NULL;
     cm_buf_t      *pibuf = NULL;
-
     long code;
+    LARGE_INTEGER       start;
+    LARGE_INTEGER       end;
+
+    QueryPerformanceCounter(&start);
 
     osi_Log2(afsd_logp, "cm_DirLookup for op 0x%p, entry[%s]",
              op, osi_LogSaveString(afsd_logp, entry));
@@ -517,7 +576,9 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
                           &itembuf, &firstitem,
                           &pibuf, &previtem);
     if (code != 0) {
-        return ENOENT;
+        dir_lookup_misses++;
+        code = ENOENT;
+        goto done;
     }
 
     cm_DirReleasePage(op, &pibuf, FALSE);
@@ -532,7 +593,15 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     osi_Log2(afsd_logp, "cm_DirLookup returning fid[%d,%d]",
              cfid->vnode, cfid->unique);
 
-    return 0;
+    dir_lookup_hits++;
+    code = 0;
+
+  done:
+    QueryPerformanceCounter(&end);
+
+    dir_lookup_time += (end.QuadPart - start.QuadPart);
+
+    return code;
 }
 
 /* Look up a file name in directory.
@@ -865,10 +934,10 @@ cm_DirFindItem(cm_dirOp_t * op,
 */
 long
 cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
-              cm_dirOp_t * op)
+              afs_uint32 lockType, cm_dirOp_t * op)
 {
     long code;
-    int i;
+    int i, mxheld = 0;
 
     osi_Log3(afsd_logp, "Beginning dirOp[0x%p] for scp[0x%p], userp[0x%p]",
              op, scp, userp);
@@ -895,7 +964,73 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         op->newLength = op->length;
         op->dataVersion = scp->dataVersion;
         op->newDataVersion = op->dataVersion;
+
+#ifdef USE_BPLUS
+        lock_ObtainRead(&scp->dirlock);
+        if (!cm_BPlusTrees ||
+            (scp->dirBplus &&
+             scp->dirDataVersion == scp->dataVersion)) 
+        {
+            int mxheld = 0;
+
+            switch (lockType) {
+            case CM_DIRLOCK_NONE:
+                lock_ReleaseRead(&scp->dirlock);
+                break;
+            case CM_DIRLOCK_READ:
+                /* got it already */
+                break;
+            case CM_DIRLOCK_WRITE:
+            default:
+                lock_ReleaseRead(&scp->dirlock);
+                lock_ObtainWrite(&scp->dirlock);
+            }
+        } else {
+            lock_ReleaseRead(&scp->dirlock);
+            lock_ObtainWrite(&scp->dirlock);
+            if (scp->dirBplus && 
+                scp->dirDataVersion != scp->dataVersion)
+            {
+                bplus_dv_error++;
+                bplus_free_tree++;
+                freeBtree(scp->dirBplus);
+                scp->dirBplus = NULL;
+                scp->dirDataVersion = -1;
+            }
+
+            if (!scp->dirBplus) {
+                cm_BPlusDirBuildTree(scp, userp, reqp);
+                if (scp->dirBplus)
+                    scp->dirDataVersion = scp->dataVersion;
+            }
+
+            switch (lockType) {
+            case CM_DIRLOCK_NONE:
+                lock_ReleaseWrite(&scp->dirlock);
+                break;
+            case CM_DIRLOCK_READ:
+                lock_ConvertWToR(&scp->dirlock);
+                break;
+            case CM_DIRLOCK_WRITE:
+            default:
+                /* got it already */;
+            }
+        }
+#else
+        switch (lockType) {
+        case CM_DIRLOCK_NONE:
+            break;
+        case CM_DIRLOCK_READ:
+            lock_ObtainRead(&scp->dirlock);
+            break;
+        case CM_DIRLOCK_WRITE:
+        default:
+            lock_ObtainWrite(&scp->dirlock);
+        }
+#endif
+        op->lockType = lockType;
     } else {
+    
         cm_EndDirOp(op);
     }
 
@@ -903,7 +1038,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
 }
 
 /* Check if it is safe for us to perform local directory updates.
-   Called with scp->mx held. */
+   Called with scp->mx unlocked. */
 int
 cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 {
@@ -934,7 +1069,7 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 }
 
 /* End a sequence of directory operations.  Called with op->scp->mx
-   locked.*/
+   unlocked.*/
 long
 cm_EndDirOp(cm_dirOp_t * op)
 {
@@ -949,10 +1084,39 @@ cm_EndDirOp(cm_dirOp_t * op)
     if (op->dirtyBufCount > 0) {
         /* we made changes.  We should go through the list of buffers
            and update the dataVersion for each. */
-
-        lock_ReleaseMutex(&op->scp->mx);
         code = buf_ForceDataVersion(op->scp, op->dataVersion, op->newDataVersion);
-        lock_ObtainMutex(&op->scp->mx);
+
+#ifdef USE_BPLUS
+        /* and update the data version on the B+ tree */
+        if (op->scp->dirBplus && 
+            op->scp->dirDataVersion == op->dataVersion) {
+
+            switch (op->lockType) {
+            case CM_DIRLOCK_READ:
+                lock_ReleaseRead(&op->scp->dirlock);
+                /* fall through ... */
+            case CM_DIRLOCK_NONE:
+                lock_ObtainWrite(&op->scp->dirlock);
+                op->lockType = CM_DIRLOCK_WRITE;
+                break;
+            case CM_DIRLOCK_WRITE:
+            default:
+                /* already got it */;
+            }
+            op->scp->dirDataVersion = op->newDataVersion;
+        }
+#endif
+    }
+
+    switch (op->lockType) {
+    case CM_DIRLOCK_NONE:
+        break;
+    case CM_DIRLOCK_READ:
+        lock_ReleaseRead(&op->scp->dirlock);
+        break;
+    case CM_DIRLOCK_WRITE:
+    default:
+        lock_ReleaseWrite(&op->scp->dirlock);
     }
 
     if (op->scp)
@@ -1079,7 +1243,7 @@ cm_DirOpFindBuffer(cm_dirOp_t * op, osi_hyper_t offset, cm_buf_t ** bufferpp)
 }
 
 
-/* NOTE: called with scp->mx NOT held */
+/* NOTE: called with scp->mx held or not depending on the flags */
 static int
 cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
 {
@@ -1178,10 +1342,10 @@ cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
    This should be called before cm_DirGetPage() is called per scp.
 
    On entry:
-     scp->mx locked
+     scp->mx unlocked
 
    On exit:
-     scp->mx locked
+     scp->mx unlocked
 
    During:
      scp->mx may be released
@@ -1191,8 +1355,10 @@ cm_DirCheckStatus(cm_dirOp_t * op)
 {
     long code;
 
+    lock_ObtainMutex(&op->scp->mx);
     code = cm_SyncOp(op->scp, NULL, op->userp, &op->req, PRSFS_LOOKUP,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseMutex(&op->scp->mx);
 
     osi_Log2(afsd_logp, "cm_DirCheckStatus for op 0x%p returning code 0x%x",
              op, code);
@@ -1204,7 +1370,7 @@ cm_DirCheckStatus(cm_dirOp_t * op)
    cm_DirGetPage() or any other function that returns a locked, held,
    directory page buffer.
 
-   Called with scp->mx held
+   Called with scp->mx unlocked
  */
 static long
 cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified)
@@ -1215,7 +1381,7 @@ cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified)
         return EINVAL;
 
     cm_DirOpDelBuffer(op, *bufferpp,
-                      ((modified ? DIROP_MODIFIED : 0) | DIROP_SCPLOCKED));
+                      ((modified ? DIROP_MODIFIED : 0)));
     buf_Release(*bufferpp);
     *bufferpp = NULL;
 
@@ -1244,15 +1410,15 @@ cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified)
    should be released via cm_DirReleasePage().
 
    On entry:
-     scp->mx locked.
+     scp->mx unlocked.
      If *bufferpp is non-NULL, then *bufferpp->mx is locked.
 
    On exit:
-     scp->mxlocked
+     scp->mx unlocked
      If *bufferpp is non-NULL, then *bufferpp->mx is locked.
 
    During:
-     scp->mx will be released
+     scp->mx will be obtained and released
 
  */
 static long
@@ -1283,8 +1449,6 @@ cm_DirGetPage(cm_dirOp_t * op,
 
         thyper = bufferp->offset;
     }
-
-    lock_ReleaseMutex(&op->scp->mx);
 
     if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
         /* wrong buffer */
@@ -1395,8 +1559,6 @@ cm_DirGetPage(cm_dirOp_t * op,
  _exit:
 
     *bufferpp = bufferp;
-    if (op->scp)
-        lock_ObtainMutex(&op->scp->mx);
 
     osi_Log1(afsd_logp, "cm_DirGetPage returning code 0x%x", code);
 

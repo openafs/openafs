@@ -14,6 +14,7 @@
 #ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#include <afs/unified_afs.h>
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
@@ -42,6 +43,9 @@
 #define ETOOMANYREFS            WSAETOOMANYREFS
 #define ETIMEDOUT               WSAETIMEDOUT
 #define ECONNREFUSED            WSAECONNREFUSED
+#ifdef ELOOP
+#undef ELOOP
+#endif
 #define ELOOP                   WSAELOOP
 #ifdef ENAMETOOLONG
 #undef ENAMETOOLONG
@@ -60,7 +64,6 @@
 #define EREMOTE                 WSAEREMOTE
 #endif /* EWOULDBLOCK */
 #endif /* !DJGPP */
-#include <afs/unified_afs.h>
 
 #include <string.h>
 #include <malloc.h>

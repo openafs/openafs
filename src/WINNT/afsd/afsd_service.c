@@ -1469,6 +1469,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         PowerNotificationThreadExit();
 #endif
 
+    cm_DirDumpStats();
+#ifdef USE_BPLUS
+    cm_BPlusDumpStats();
+#endif
+
     /* Notify any Volume Status Handlers that we are stopped */
     cm_VolStatus_Service_Stopped();
 

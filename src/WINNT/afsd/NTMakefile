@@ -99,6 +99,7 @@ AFSDOBJS=\
         $(OUT)\rawops.obj \
         $(OUT)\afsdifs.obj \
 	$(OUT)\afsd_init.obj \
+        $(OUT)\cm_btree.obj \
 	$(OUT)\cm_cell.obj \
 	$(OUT)\cm_server.obj \
 	$(OUT)\cm_volume.obj \

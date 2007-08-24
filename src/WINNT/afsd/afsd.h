@@ -10,6 +10,8 @@
 #ifndef __AFSD_H_ENV__
 #define __AFSD_H_ENV__ 1
 
+#define USE_BPLUS 1
+
 #include <afs/param.h>
 
 #ifndef DJGPP
@@ -32,8 +34,13 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm.h"
 
 #include <osi.h>
+#include <afs/vldbint.h>
+#include <afs/afsint.h>
+#include <afs/prs_fs.h>
+
 #include "cm_config.h"
 #include "cm_user.h"
+#include "cm_scache.h"
 #include "cm_callback.h"
 #ifdef DISKCACHE95
 #include "cm_diskcache95.h"
@@ -42,7 +49,6 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_aclent.h"
 #include "cm_server.h"
 #include "cm_cell.h"
-#include "cm_scache.h"
 #include "cm_volume.h"
 #include "cm_volstat.h"
 #include "cm_dcache.h"
@@ -64,9 +70,6 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "afsd_eventlog.h"
 #endif
 
-#include <afs/vldbint.h>
-#include <afs/afsint.h>
-#include <afs/prs_fs.h>
 
 #define AFS_DAEMON_SERVICE_NAME AFSREG_CLT_SVC_NAME
 #define AFS_DAEMON_EVENT_NAME   AFSREG_CLT_SW_NAME

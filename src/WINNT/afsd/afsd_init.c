@@ -40,6 +40,7 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_deleteReadOnly;
+extern afs_int32 cm_BPlusTrees;
 
 osi_log_t *afsd_logp;
 
@@ -1056,6 +1057,14 @@ int afsd_InitCM(char **reasonP)
         cm_deleteReadOnly = (unsigned short) dwValue;
     } 
     afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "BPlusTrees", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_BPlusTrees = (unsigned short) dwValue;
+    } 
+    afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
     
     RegCloseKey (parmKey);
 

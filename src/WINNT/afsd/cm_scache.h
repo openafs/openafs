@@ -193,6 +193,13 @@ typedef struct cm_scache {
     /* bulk stat progress */
     osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
+#ifdef USE_BPLUS
+    /* directory B+ tree */             /* only allocated if is directory */
+    osi_rwlock_t dirlock;               /* controls access to dirBplus */
+    afs_uint32   dirDataVersion;        /* data version represented by dirBplus */
+    struct tree *dirBplus;              /* dirBplus */
+#endif
+
     /* open state */
     afs_uint16 openReads;		/* open for reading */
     afs_uint16 openWrites;		/* open for writing */
