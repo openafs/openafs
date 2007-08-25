@@ -3318,7 +3318,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
                         userp, 0);
     lock_ReleaseMutex(&oldDscp->mx);
 
-    if (code = 0) {
+    if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
 
 #ifdef USE_BPLUS
