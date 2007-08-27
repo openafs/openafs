@@ -69,7 +69,7 @@ static void _setentry(Nptr node, int entry, keyT key, Nptr downNode);
 #ifdef DEBUG_BTREE
 static int _isRoot(Tree *B, Nptr n)
 {
-    int flagset = (n->flags & isROOT) == isROOT);
+    int flagset = ((n->flags & isROOT) == isROOT);
 
     if (!isnode(n))
         return 0;
@@ -82,7 +82,7 @@ static int _isRoot(Tree *B, Nptr n)
 
 static int _isFew(Tree *B, Nptr n)
 {
-    int flagset = (n->flags & FEWEST) == FEWEST);
+    int flagset = ((n->flags & FEWEST) == FEWEST);
     int fanout = getminfanout(B, n);
     int entries = numentries(n);
     int mincnt  = entries <= fanout;
@@ -98,7 +98,7 @@ static int _isFew(Tree *B, Nptr n)
 
 static int _isFull(Tree *B, Nptr n)
 {
-    int flagset = (n->flags & isFULL) == isFULL);
+    int flagset = ((n->flags & isFULL) == isFULL);
     int maxcnt  = numentries(n) == getfanout(B);
 
     if (!isnode(n))
@@ -442,6 +442,11 @@ insertEntry(Tree *B, Nptr currNode, int slot, Nptr sibling, Nptr downPtr)
             clrentry(currNode, x);
             decentries(currNode);
             incentries(sibling);
+
+#ifdef DEBUG_BTREE
+            if (getkey(sibling, numentries(sibling)).name == NULL)
+                DebugBreak();
+#endif
         }
         clrflag(currNode, isFULL);
         if (numentries(currNode) == getminfanout(B, currNode))
@@ -503,11 +508,20 @@ placeEntry(Tree *B, Nptr node, int slot, Nptr downPtr)
         DebugBreak();
 #endif
 
-    for (x = numentries(node); x >= slot; x--)	/* make room for new entry */
+#ifdef DEBUG_BTREE
+    if (numentries(node) != 0 && getkey(node, numentries(node)).name == NULL)
+        DebugBreak();
+#endif
+    for (x = numentries(node); x >= slot && x != 0; x--)	/* make room for new entry */
         pushentry(node, x, 1);
     setentry(node, slot, getfunkey(B), downPtr);/* place it in correct slot */
 
     incentries(node);				/* adjust entry counter */
+#ifdef DEBUG_BTREE
+	if (getkey(node, numentries(node)).name == NULL)
+		DebugBreak();
+#endif
+
     if (numentries(node) == getfanout(B))
         setflag(node, isFULL);
     if (numentries(node) > getminfanout(B, node))
@@ -1027,6 +1041,10 @@ _pushentry(Nptr node, int entry, int offset)
 {
     if (getkey(node,entry + offset).name != NULL)
         free(getkey(node,entry + offset).name);
+#ifdef DEBUG_BTREE
+    if (entry == 0)
+        DebugBreak();
+#endif
     getkey(node,entry + offset).name = strdup(getkey(node,entry).name);
 #ifdef DEBUG_BTREE
     if ( getnode(node, entry) == NONODE )
@@ -1369,13 +1387,20 @@ findAllBtreeValues(Tree *B)
     }   
 }
 
+/* 
+ * the return must be -1, 0, or 1.  stricmp() in MSVC 8.0
+ * does not return only those values.
+ */
 static int
 compareKeys(keyT key1, keyT key2, int flags)
 {
+    int comp;
+
     if (flags & EXACT_MATCH)
-        return strcmp(key1.name, key2.name);
+        comp = strcmp(key1.name, key2.name);
     else
-        return stricmp(key1.name, key2.name);
+        comp = stricmp(key1.name, key2.name);
+    return (comp < 0 ? -1 : (comp > 0 ? 1 : 0));
 }
 
 /* Look up a file name in directory.
@@ -1532,6 +1557,9 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     /* the Write lock is held in cm_BPlusDirBuildTree() */
     insert(scp->dirBplus, key, data);
 
+#ifdef BTREE_DEBUG
+    findAllBtreeValues(scp->dirBplus);
+#endif
     return 0;
 }
 
