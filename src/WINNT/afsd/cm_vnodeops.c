@@ -1920,7 +1920,9 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                             fids[fid_count++] = nscp->fid;
                         }
                     }
-                } else {
+                }
+
+                if (code) {
 		    cm_ReleaseSCache(tscp);
 		    if (dirScp)
 			cm_ReleaseSCache(dirScp);
@@ -1933,7 +1935,8 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 			osi_Log1(afsd_logp,"cm_NameI code 0x%x", code);
 			return code;
 		    }
-		}	
+		}
+
 		haveComponent = 0;	/* component done */
 		if (dirScp)
 		    cm_ReleaseSCache(dirScp);
