@@ -593,11 +593,11 @@ _no_krb5:
                            &aserver, sizeof(aserver));
 
         if(cell) {
-            kcdb_cred_set_attr(cred, afs_attr_cell, cell, KCDB_CBSIZE_AUTO);
+            kcdb_cred_set_attr(cred, afs_attr_cell, cell, (khm_size)KCDB_CBSIZE_AUTO);
         }
 
         kcdb_cred_set_attr(cred, KCDB_ATTR_LOCATION, 
-                           location, KCDB_CBSIZE_AUTO);
+                           location, (khm_size)KCDB_CBSIZE_AUTO);
 
         kcdb_credset_add_cred(afs_credset, cred, -1);
 
@@ -1112,7 +1112,7 @@ afs_klog(khm_handle identity,
         StringCchCopyA(aserver.cell, MAXKTCREALMLEN, CellName);
 
         memset(&atoken, '\0', sizeof(atoken));
-        atoken.kvno = creds.kvno;
+        atoken.kvno = (short)creds.kvno;
         atoken.startTime = creds.issue_date;
         atoken.endTime = (*pkrb_life_to_time)(creds.issue_date,creds.lifetime);
         memcpy(&atoken.sessionKey, creds.session, 8);
@@ -1199,7 +1199,7 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
     static char krbrlm[REALM_SZ+1]="";
     krb5_context  ctx = 0;
     char ** realmlist=NULL;
-    krb5_error_code r;
+    krb5_error_code r = 0;
 
     if (!cellconfig)
         return 0;
@@ -1211,7 +1211,11 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 	    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
 	else
 	    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
-	strupr(krbrlm);
+#if _MSC_VER >= 1400
+        _strupr_s(krbrlm, sizeof(krbrlm));
+#else
+        _strupr(krbrlm);
+#endif
     } else {
 	if ( pkrb5_init_context ) {
 	    r = pkrb5_init_context(&ctx); 
@@ -1240,7 +1244,11 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 		    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
 		else
 		    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
-		strupr(krbrlm);
+#if _MSC_VER >= 1400
+		_strupr_s(krbrlm, sizeof(krbrlm));
+#else
+                _strupr(krbrlm);
+#endif
 	    }
 	}
     }
@@ -1493,7 +1501,7 @@ afs_check_for_cell_realm_match(khm_handle identity, char * cell) {
     kcdb_identity_get_name(identity, idname, &cb);
 
     atsign = wcschr(idname, L'@');
-    if (atsign && atsign[1] && !wcsicmp(atsign + 1, wrealm)) {
+    if (atsign && atsign[1] && !_wcsicmp(atsign + 1, wrealm)) {
         return TRUE;
     } else {
         return FALSE;

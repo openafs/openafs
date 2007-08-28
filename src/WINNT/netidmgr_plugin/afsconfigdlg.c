@@ -234,7 +234,7 @@ set_service_status(HWND hwnd) {
     static DWORD wait_start = 0;
     DWORD status = 0;
     DWORD wait_hint = 0;
-    int i;
+    unsigned int i;
     wchar_t status_strings_csv[1024];
     wchar_t status_strings_ms[1024];
     khm_size cb;
@@ -457,7 +457,7 @@ afs_cfg_main_proc(HWND hwnd,
                                 L"ImagePath",
                                 NULL, NULL,
                                 (LPBYTE) imagepath,
-                                &cb);
+                                (DWORD *)&cb);
             if (l != ERROR_SUCCESS)
                 goto _close_key;
 
@@ -483,7 +483,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info, 
                                L"\\VarFileInfo\\Translation",
                                (LPVOID*) &translations,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 
@@ -495,7 +495,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info,
                                blockname,
                                (LPVOID*) &value,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 
@@ -509,7 +509,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info,
                                blockname,
                                (LPVOID*) &value,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 

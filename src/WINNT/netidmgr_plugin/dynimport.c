@@ -453,6 +453,7 @@ int (*Lcom_err)(LPSTR,long,LPSTR,...);
 LPSTR (*Lerror_message)(long);
 LPSTR (*Lerror_table_name)(long);
 
+#pragma warning (disable: 4213)
 void Leash_load_com_err_callback(FARPROC ce,
                                  FARPROC em,
                                  FARPROC etn)
