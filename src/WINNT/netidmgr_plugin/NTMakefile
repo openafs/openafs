@@ -93,8 +93,13 @@ OBJFILES= 				\
 	$(OUT)\dynimport.obj 		\
 	$(OUT)\krb5common.obj
 
+!if "$(CPU)" == "AMD64"
+LIBFILES= 				\
+	$(KFWLIBDIR)\nidmgr64.lib
+!else
 LIBFILES= 				\
 	$(KFWLIBDIR)\nidmgr32.lib
+!endif
 
 SDKLIBFILES= 				\
 	$(DESTDIR)\lib\afsauthent.lib 	\

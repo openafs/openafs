@@ -1691,7 +1691,7 @@ afs_dlg_proc(HWND hwnd,
                             }
                             SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, 
                                                CB_SELECTSTRING, 
-                                               -1, (LPARAM) wbuf);
+                                               (WPARAM)-1, (LPARAM) wbuf);
                         }
                     }
 
@@ -1715,7 +1715,7 @@ afs_dlg_proc(HWND hwnd,
                                            CB_SETITEMDATA, idx, TRUE);
                         SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
                                            CB_SELECTSTRING, 
-                                           -1, (LPARAM) wbuf);
+                                           (WPARAM)-1, (LPARAM) wbuf);
                     }
 
                     /* load the LRU realms */
@@ -1734,7 +1734,8 @@ afs_dlg_proc(HWND hwnd,
                             s = buf;
                             while(*s) {
                                 if(SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                      CB_FINDSTRINGEXACT, -1, 
+                                                      CB_FINDSTRINGEXACT, 
+                                                      (WPARAM)-1,
                                                       (LPARAM) s) == CB_ERR) {
                                     idx = 
                                         (int)
@@ -1952,7 +1953,8 @@ afs_dlg_proc(HWND hwnd,
                     LoadString(hResModule, IDS_NC_REALM_AUTO, wbuf, 
                                ARRAYLENGTH(wbuf));
                     idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                   CB_FINDSTRINGEXACT, -1, 
+                                                   CB_FINDSTRINGEXACT, 
+                                                   (WPARAM) -1,
                                                    (LPARAM) wbuf);
                     SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, CB_SETCURSEL,
                                        idx, 0);
@@ -2109,13 +2111,13 @@ afs_adjust_token_ident_proc(khm_handle cred, void * vd)
             kcdb_cred_set_identity(cred, b->ident);
             if(l->rows[i].realm)
                 kcdb_cred_set_attr(cred, afs_attr_realm, l->rows[i].realm, 
-                                   KCDB_CBSIZE_AUTO);
+                                   (khm_size)KCDB_CBSIZE_AUTO);
             else
                 kcdb_cred_set_attr(cred, afs_attr_realm, NULL, 0);
 
             method = l->rows[i].method;
             kcdb_cred_set_attr(cred, afs_attr_method, &method, 
-                               KCDB_CBSIZE_AUTO);
+                               (khm_size)KCDB_CBSIZE_AUTO);
 
             break;
         }

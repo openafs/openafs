@@ -844,7 +844,7 @@ afs_msg_act(khm_int32 msg_subtype,
     khm_int32 rv = KHM_ERROR_SUCCESS;
 
     if (msg_subtype == KMSG_ACT_ACTIVATE &&
-        uparam == action_id_afs_help) {
+        uparam == (khm_ui_4)action_id_afs_help) {
 
         khui_request_UI_callback(help_launcher, NULL);
 
