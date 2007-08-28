@@ -1,11 +1,38 @@
+Since 1.5.23
+ * Windows uses case-insensitive file name pattern matching
+   but AFS is a case sensitive file system.  The AFS3 directory
+   format is block based, uses network byte order and 
+   includes a hash table for fast case sensitive lookups.  
+   This causes several problems for the Windows AFS client.
+   (1) Traversing the directory blocks is cpu expensive
+   (2) A hash table miss does not indicate that the desired
+       entry does not exist.
+   (3) Determining whether a non-ambiguous inexact match or
+       the entry does not exist requires a linear traversal
+       of the entire directory.  
+   These issues often result in 100% CPU utilization.
+
+   These issues are addressed by building a modified B+ tree for 
+   each directory and then using the B+ tree for searches.
+
+   This feature is disabled by default.  To enable it set
+   the "BPlusTrees" registry value to 0x01 in the AFS Client
+   Service Parameters key.
+
+ * Correct a null pointer dereference in the symlink recursion
+   detection code.  (Introduced in 1.5.22)
+
+ * Add the Network Identity Manager AFS Provider to AMD64 
+   builds.
+
 Since 1.5.22
 
- *  A new registry value, "BlockSize", can now be used to adjust 
-    the size of the internal buffers used to store file data.  
-    The default is 4KB.  When set, the values 1..1024 specify
-    multiples of 4KB. Values > 1024 specify actual block sizes
-    and must be multiples of 4KB.  The actual block size in KB 
-    can not be larger than the chunk size which defaults to 1MB.
+ * A new registry value, "BlockSize", can now be used to adjust 
+   the size of the internal buffers used to store file data.  
+   The default is 4KB.  When set, the values 1..1024 specify
+   multiples of 4KB. Values > 1024 specify actual block sizes
+   and must be multiples of 4KB.  The actual block size in KB 
+   can not be larger than the chunk size which defaults to 1MB.
 
     HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
       (DWORD) BlockSize
