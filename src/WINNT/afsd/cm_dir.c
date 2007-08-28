@@ -34,7 +34,7 @@ afs_uint64 dir_lookup_time = 0;
 afs_uint64 dir_create_time = 0;
 afs_uint64 dir_remove_time = 0;
 
-afs_int32  cm_BPlusTrees = 1;
+afs_int32  cm_BPlusTrees = 0;
 
 void cm_DirDumpStats(void)
 {
