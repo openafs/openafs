@@ -25,7 +25,6 @@
                     <ComponentRef Id="rcm_Loopback"/>
                 </Feature>
 
-  <?if $(env.CPU) = "i386"?>
             <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
                     Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrNIDMPluginDesc)">
                     <ComponentRef Id="_afscreds_plugin" />
@@ -38,7 +37,6 @@
                     </Feature>
 	    <?endif?>
             </Feature>
-  <?endif?>
 
 		<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
 			<ComponentRef Id="rcm_KB301673" />

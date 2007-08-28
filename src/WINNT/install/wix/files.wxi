@@ -868,7 +868,6 @@
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
 
-  <?if $(env.CPU)="i386"?>
                     <Component Win64="$(var.Win64)" Id="_afscreds_en_us"
                         Guid="$(var._afscreds_en_us_guid)" DiskId="1">
                         <File Id="file_afscred_en_us_dll" Name="afscenu.dll" LongName="afscred_en_us.dll" KeyPath="yes"/>
@@ -902,7 +901,6 @@
                         Guid="$(var._afscreds_chm_guid)" DiskId="1">
                         <File Id="file_afsplhlp_chm" Name="afsplhlp.chm" LongName="afsplhlp.chm" KeyPath="yes" />
                     </Component>
-  <?endif?>
 
   <?ifndef BinsOnly ?>
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
