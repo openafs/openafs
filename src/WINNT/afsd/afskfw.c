@@ -56,8 +56,13 @@
  */
 
 
-#define USE_MS2MIT
 #undef  USE_KRB4
+#ifndef _WIN64
+#define USE_MS2MIT 1
+#define USE_LEASH 1
+#define USE_KRB524 1
+#endif
+
 #include "afskfw-int.h"
 #include "afskfw.h"
 #include <userenv.h>
@@ -94,6 +99,7 @@ DECL_FUNC_PTR(cc_shutdown);
 DECL_FUNC_PTR(cc_get_NC_info);
 DECL_FUNC_PTR(cc_free_NC_info);
 
+#ifdef USE_LEASH
 // leash functions
 DECL_FUNC_PTR(Leash_get_default_lifetime);
 DECL_FUNC_PTR(Leash_get_default_forwardable);
@@ -108,6 +114,7 @@ DECL_FUNC_PTR(Leash_get_default_renew_min);
 DECL_FUNC_PTR(Leash_get_default_renew_max);
 DECL_FUNC_PTR(Leash_get_default_renewable);
 DECL_FUNC_PTR(Leash_get_default_mslsa_import);
+#endif 
 
 // krb5 functions
 DECL_FUNC_PTR(krb5_change_password);
@@ -170,15 +177,19 @@ DECL_FUNC_PTR(krb5_free_host_realm);
 DECL_FUNC_PTR(krb5_free_addresses);
 DECL_FUNC_PTR(krb5_c_random_make_octets);
 
+#ifdef USE_KRB524
 // Krb524 functions
 DECL_FUNC_PTR(krb524_init_ets);
 DECL_FUNC_PTR(krb524_convert_creds_kdc);
+#endif
 
+#ifdef USE_KRB4
 // krb4 functions
 DECL_FUNC_PTR(krb_get_cred);
 DECL_FUNC_PTR(tkt_string);
 DECL_FUNC_PTR(krb_get_tf_realm);
 DECL_FUNC_PTR(krb_mk_req);
+#endif
 
 // ComErr functions
 DECL_FUNC_PTR(com_err);
@@ -219,6 +230,7 @@ FUNC_INFO ccapi_fi[] = {
     END_FUNC_INFO
 };
 
+#ifdef USE_LEASH
 FUNC_INFO leash_fi[] = {
     MAKE_FUNC_INFO(Leash_get_default_lifetime),
     MAKE_FUNC_INFO(Leash_get_default_renew_till),
@@ -239,6 +251,7 @@ FUNC_INFO leash_opt_fi[] = {
     MAKE_FUNC_INFO(Leash_get_default_mslsa_import),
     END_FUNC_INFO
 };
+#endif
 
 FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_change_password),
@@ -314,11 +327,13 @@ FUNC_INFO k4_fi[] = {
 };
 #endif
 
+#ifdef USE_KRB524
 FUNC_INFO k524_fi[] = {
     MAKE_FUNC_INFO(krb524_init_ets),
     MAKE_FUNC_INFO(krb524_convert_creds_kdc),
     END_FUNC_INFO
 };
+#endif
 
 FUNC_INFO profile_fi[] = {
         MAKE_FUNC_INFO(profile_init),
@@ -375,7 +390,9 @@ static HINSTANCE hKrb5 = 0;
 #ifdef USE_KRB4
 static HINSTANCE hKrb4 = 0;
 #endif /* USE_KRB4 */
+#ifdef USE_KRB524
 static HINSTANCE hKrb524 = 0;
+#endif
 #ifdef USE_MS2MIT
 static HINSTANCE hSecur32 = 0;
 #endif /* USE_MS2MIT */
@@ -383,8 +400,10 @@ static HINSTANCE hAdvApi32 = 0;
 static HINSTANCE hComErr = 0;
 static HINSTANCE hService = 0;
 static HINSTANCE hProfile = 0;
+#ifdef USE_LEASH
 static HINSTANCE hLeash = 0;
 static HINSTANCE hLeashOpt = 0;
+#endif
 static HINSTANCE hCCAPI = 0;
 static struct principal_ccache_data * princ_cc_data = NULL;
 static struct cell_principal_map    * cell_princ_map = NULL;
@@ -409,19 +428,23 @@ KFW_initialize(void)
         if ( !inited ) {
             inited = 1;
             LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
+            LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
+            LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
 #ifdef USE_KRB4
             LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 0, 0);
 #endif /* USE_KRB4 */
-            LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
             LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
 #ifdef USE_MS2MIT
             LoadFuncs(SECUR32_DLL, lsa_fi, &hSecur32, 0, 1, 1, 1);
 #endif /* USE_MS2MIT */
+#ifdef USE_KRB524
             LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
-            LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
+#endif
+#ifdef USE_LEASH
             LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
-            LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
             LoadFuncs(LEASH_DLL, leash_opt_fi, &hLeashOpt, 0, 1, 0, 0);
+#endif
+            LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
 
             if ( KFW_is_available() ) {
                 char rootcell[MAXCELLCHARS+1];
@@ -444,14 +467,18 @@ KFW_initialize(void)
 void
 KFW_cleanup(void)
 {
+#ifdef USE_LEASH
     if (hLeashOpt)
         FreeLibrary(hLeashOpt);
-    if (hCCAPI)
-        FreeLibrary(hCCAPI);
     if (hLeash)
         FreeLibrary(hLeash);
+#endif
+#ifdef USE_KRB524
     if (hKrb524)
         FreeLibrary(hKrb524);
+#endif
+    if (hCCAPI)
+        FreeLibrary(hCCAPI);
 #ifdef USE_MS2MIT
     if (hSecur32)
         FreeLibrary(hSecur32);
@@ -533,8 +560,13 @@ KFW_is_available(void)
 #ifdef USE_MS2MIT
          hSecur32 && 
 #endif /* USE_MS2MIT */
+#ifdef USE_KRB524
          hKrb524 &&
-         hProfile && hLeash && hCCAPI )
+#endif
+#ifdef USE_LEASH
+         hLeash &&
+#endif
+         hProfile && hCCAPI )
         return TRUE;
     return FALSE;
 }
@@ -929,11 +961,6 @@ KFW_import_windows_lsa(void)
     if (!pkrb5_init_context)
         return;
 
-#ifdef COMMENT
-    if ( !MSLSA_IsKerberosLogon() )
-        return;
-#endif
-
     code = pkrb5_init_context(&ctx);
     if (code) goto cleanup;
 
@@ -1157,7 +1184,13 @@ KFW_import_ccache_data(void)
                         OutputDebugString("Calling KFW_AFS_klog() to obtain token\n");
                     }
 
-                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, pLeash_get_default_lifetime(),NULL);
+                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, 
+#ifndef USE_LEASH
+                                        600,
+#else
+                                        pLeash_get_default_lifetime(),
+#endif /* USE_LEASH */
+                                        NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1283,18 +1316,32 @@ KFW_AFS_get_cred( char * username,
     if ( code ) goto cleanup;
 
     if ( lifetime == 0 )
+#ifndef USE_LEASH
+        lifetime = 600;
+#else
         lifetime = pLeash_get_default_lifetime();
+#endif
 
     if ( password && password[0] ) {
         code = KFW_kinit( ctx, cc, HWND_DESKTOP, 
                           pname, 
                           password,
                           lifetime,
+#ifndef USE_LEASH
+                          1, /* forwardable */
+                          0, /* not proxiable */
+                          1, /* renewable */
+                          1, /* noaddresses */
+                          0  /* no public ip */
+#else
                           pLeash_get_default_forwardable(),
                           pLeash_get_default_proxiable(),
                           pLeash_get_default_renewable() ? pLeash_get_default_renew_till() : 0,
                           pLeash_get_default_noaddresses(),
-                          pLeash_get_default_publicip());
+                          pLeash_get_default_publicip()
+#endif /* USE_LEASH */
+                          );
+
         if ( IsDebuggerPresent() ) {
             char message[256];
             sprintf(message,"KFW_kinit() returns: %d\n",code);
@@ -1889,7 +1936,11 @@ KFW_kinit( krb5_context alt_ctx,
 	goto cleanup;
 
     if (lifetime == 0)
+#ifndef USE_LEASH
+        lifetime = 600;
+#else
         lifetime = pLeash_get_default_lifetime();
+#endif /* USE_LEASH */
     lifetime *= 60;
 
     if (renew_life > 0)
@@ -2990,6 +3041,9 @@ KFW_AFS_klog(
             goto cleanup;   /* We have successfully inserted the token */
 
       try_krb524d:
+#ifndef USE_KRB524
+        goto cleanup;
+#else
         /* Otherwise, the ticket could have been too large so try to
          * convert using the krb524d running with the KDC 
          */
@@ -3004,6 +3058,7 @@ KFW_AFS_klog(
             try_krb5 = 0;
             goto use_krb4;
         }
+#endif /* USE_KRB524 */
     } else {
       use_krb4:
 #ifdef USE_KRB4
