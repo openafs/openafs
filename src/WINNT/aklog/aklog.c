@@ -13,6 +13,10 @@
  * or implied warranty.
  */
 
+#ifndef _WIN64
+#define HAVE_KRB4
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +25,16 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <afs/stds.h>
+#ifdef HAVE_KRB4
 #include <krb.h>
+#else
+#define REALM_SZ 64
+#define ANAME_SZ 64
+#define INST_SZ  64
+#define KSUCCESS 0
+
+#define CREDENTIALS void
+#endif
 #include <krb5.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
@@ -43,10 +56,12 @@
 #define DONT_HAVE_GET_AD_TKT
 #define MAXSYMLINKS 255
 
+#ifdef HAVE_KRB4
 /* Win32 uses get_krb_err_txt_entry(status) instead of krb_err_txt[status],
 * so we use a bit of indirection like the GNU CVS sources.
 */
 #define krb_err_text(status) get_krb_err_txt_entry(status)
+#endif
 
 #define DRIVECOLON ':'		/* Drive letter separator */
 #define BDIR '\\'		/* Other character that divides directories */
@@ -257,7 +272,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 
             if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
                 printf("%s: unable to set tokens for cell %s "
-                        "(status: %d).\n", progname, cell_to_use, status);
+                        "(status: %d).\n", progname, cell_to_use, *status);
                 *status = AKLOG_TOKEN;
                 return ;
             }
@@ -270,7 +285,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
              */
 
             if ((*status = pr_Initialize(1L, confname, aserver->cell))) {
-                printf("Error %d\n", status);
+                printf("Error %d\n", *status);
                 return;
             }
 
@@ -356,6 +371,7 @@ int des_pcbc_init()
     abort();
 }
 
+#ifdef HAVE_KRB4
 static int get_cred(char *name, char *inst, char *realm, CREDENTIALS *c)
 {
     int status;
@@ -375,6 +391,7 @@ static int get_cred(char *name, char *inst, char *realm, CREDENTIALS *c)
 
     return (status);
 }
+#endif
 
 static int get_v5cred(krb5_context context, 
                       char *name, char *inst, char *realm, CREDENTIALS *c,
@@ -387,7 +404,7 @@ static int get_v5cred(krb5_context context,
     memset((char *)&increds, 0, sizeof(increds));
 
     if ((r = krb5_build_principal(context, &increds.server,
-                                  strlen(realm), realm,
+                                  (int)strlen(realm), realm,
                                   name,
                                   (inst && strlen(inst)) ? inst : 0,
                                   0))) {
@@ -414,6 +431,7 @@ static int get_v5cred(krb5_context context,
     return((int)r);
 }
 
+#ifdef HAVE_KRB4
 /* There is no header for this function.  It is supposed to be private */
 int krb_get_admhst(char *h,char *r, int n);
 
@@ -443,7 +461,7 @@ static char *afs_realm_of_cell(struct afsconf_cell *cellconfig)
     }
     return krbrlm;
 }
-
+#endif
 
 /* As of MIT Kerberos 1.6, krb5_get_host_realm() will return the NUL-string 
  * if there is no domain_realm mapping for the hostname's domain.  This is 
@@ -510,32 +528,32 @@ static char *copy_string(char *string)
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
 						  char *local_cell)
 {
-	int status = AKLOG_SUCCESS;
-	struct afsconf_dir *configdir = 0;
+    int status = AKLOG_SUCCESS;
+    struct afsconf_dir *configdir = 0;
 
-	memset(local_cell, 0, sizeof(local_cell));
-	memset(cellconfig, 0, sizeof(*cellconfig));
+    memset(local_cell, 0, sizeof(local_cell));
+    memset(cellconfig, 0, sizeof(*cellconfig));
 
-	if (GetLocalCell(&configdir, local_cell))
-	{
-		fprintf(stderr, "%s: can't determine local cell.\n", progname);
-		exit(AKLOG_AFS);
-	}
+    if (GetLocalCell(&configdir, local_cell))
+    {
+        fprintf(stderr, "%s: can't determine local cell.\n", progname);
+        exit(AKLOG_AFS);
+    }
 
-	if ((cell == NULL) || (cell[0] == 0))
-		cell = local_cell;
+    if ((cell == NULL) || (cell[0] == 0))
+        cell = local_cell;
 
-	if (GetCellInfo(&configdir, cell, &cellconfig))
-	{
-		fprintf(stderr, "%s: Can't get information about cell %s.\n",
-			progname, cell);
-		status = AKLOG_AFS;
-	}
+    if (GetCellInfo(&configdir, cell, &cellconfig))
+    {
+        fprintf(stderr, "%s: Can't get information about cell %s.\n",
+                progname, cell);
+        status = AKLOG_AFS;
+    }
 
 
-	CloseConf(&configdir);
+    CloseConf(&configdir);
 
-	return(status);
+    return(status);
 }
 
 static int get_v5_user_realm(krb5_context context,char *realm)
@@ -572,7 +590,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
 
     krb5_creds *v5cred = NULL;
+#ifdef HAVE_KRB4
     CREDENTIALS c;
+#endif
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
@@ -646,7 +666,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	if (dflag)
             printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
         status = get_v5cred(context, name, instance, realm_of_cell, 
-                            use524 ? &c : NULL, &v5cred);
+#ifdef HAVE_KRB4
+                            use524 ? &c : NULL, 
+#else
+                            NULL,
+#endif
+                            &v5cred);
 	if (status == KRB5_ERR_HOST_REALM_UNKNOWN) {
 	    realm_fallback = 1;
 	    goto try_v5;
@@ -658,7 +683,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             if (dflag)
                 printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
             status = get_v5cred(context, name, "", realm_of_cell, 
-                                use524 ? &c : NULL, &v5cred);
+#ifdef HAVE_KRB4
+                                use524 ? &c : NULL, 
+#else
+                                NULL,
+#endif
+                                &v5cred);
 	}
         if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
             retry = 0;
@@ -668,6 +698,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     }       
     else 
     {
+#ifdef HAVE_KRB4
 	if (realm && realm[0])
 	    strcpy(realm_of_cell, realm);
 	else
@@ -689,6 +720,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                 printf("Getting tickets: %s@%s\n", name, realm_of_cell);
             status = get_cred(name, "", realm_of_cell, &c);
         }
+#else
+        return(AKLOG_MISC);
+#endif
     } 
 
     /* TODO: get k5 error text */
@@ -698,8 +732,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             printf("Kerberos error code returned by get_cred: %d\n", status);
         fprintf(stderr, "%s: Couldn't get %s AFS tickets: %s\n",
                  progname, cell_to_use, 
-                 (usev5)?"":
-                 krb_err_text(status));
+#ifdef HAVE_KRB4
+                 (usev5)?"":krb_err_text(status)
+#else
+                 ""
+#endif
+                 );
         return(AKLOG_KERBEROS);
     }
 
@@ -735,6 +773,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         atoken.ticketLen = v5cred->ticket.length;
         memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
     } else {
+#ifdef HAVE_KRB4
         strcpy (username, c.pname);
         if (c.pinst[0])
         {
@@ -750,6 +789,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         memcpy(&atoken.sessionKey, c.session, 8);
         atoken.ticketLen = c.ticket_st.length;
         memcpy(atoken.ticket, c.ticket_st.dat, atoken.ticketLen);
+#else
+        return(AKLOG_MISC);
+#endif
     }
 
     if (!force &&
@@ -778,12 +820,16 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                 return(AKLOG_KERBEROS);
             }
         } else {
+#ifdef HAVE_KRB4
             if ((status = krb_get_tf_realm(TKT_FILE, realm_of_user)) != KSUCCESS)
             {
                 fprintf(stderr, "%s: Couldn't determine realm of user: %s)",
                          progname, krb_err_text(status));
                 return(AKLOG_KERBEROS);
             }
+#else
+            return(AKLOG_MISC);
+#endif
         }
 
         /* For Khimaira we want to always append the realm to the name */
@@ -793,7 +839,13 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             strcat(username, realm_of_user);
         }
 
-        ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, &c, &status, &aclient, &aserver, &atoken);
+        ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, 
+#ifdef HAVE_KRB4
+                          &c, 
+#else
+                          NULL,
+#endif
+                          &status, &aclient, &aserver, &atoken);
     }
 
     if (dflag)
@@ -810,8 +862,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         int len = min(v5cred->client->realm.length,MAXKTCNAMELEN - 1);
         strncpy(aclient.cell, v5cred->client->realm.data, len);
         aclient.cell[len] = '\0';
-    } else
+    } 
+#ifdef HAVE_KRB4
+    else
 	strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
+#endif
 
     for ( i=0; aclient.cell[i]; i++ ) {
         if ( islower(aclient.cell[i]) )
@@ -1086,16 +1141,25 @@ static void usage(void)
              "[-d] [[-cell | -c] cell [-k krb_realm]] ",
              "[[-p | -path] pathname]\n",
              "    [-noprdb] [-force]\n",
+#ifdef HAVE_KRB4
              "    [-5 [-m]| -4]\n"
+#else
+             "    [-5]\n"
+#endif
              );
     fprintf(stderr, "    -d gives debugging information.\n");
     fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
     fprintf(stderr, "    pathname is the name of a directory to which ");
     fprintf(stderr, "you wish to authenticate.\n");
     fprintf(stderr, "    -noprdb means don't try to determine AFS ID.\n");
-    fprintf(stderr, "    -5 or -4 selects whether to use Kerberos V or Kerberos IV.\n"
-                    "       (default is Kerberos V)\n");
-    fprintf(stderr, "       -m means use krb524d to convert Kerberos V tickets.\n");
+#ifdef HAVE_KRB4
+    fprintf(stderr, "    -5 or -4 selects whether to use Kerberos v5 or Kerberos v4.\n"
+                    "       (default is Kerberos v5)\n");
+    fprintf(stderr, "       -m means use krb524d to convert Kerberos v5 tickets.\n");
+#else
+    fprintf(stderr, "    -5 use Kerberos v5.\n"
+                    "       (only Kerberos v5 is available)\n");
+#endif
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
@@ -1152,10 +1216,12 @@ int main(int argc, char *argv[])
             dflag++;
         else if (strcmp(argv[i], "-5") == 0)
             usev5++;
+#ifdef HAVE_KRB4
         else if (strcmp(argv[i], "-m") == 0)
             use524++;
         else if (strcmp(argv[i], "-4") == 0)
             usev5 = 0;
+#endif
         else if (strcmp(argv[i], "-noprdb") == 0)
             noprdb++;
         else if (strcmp(argv[i], "-force") == 0)
