@@ -840,7 +840,7 @@ afs_klog(khm_handle identity,
         increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
 #ifdef KRB5_TC_NOTICKET
-        flags = 0;
+        flags = KRB5_TC_OPENCLOSE;
         r = pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
       retry_retcred:
@@ -891,7 +891,7 @@ afs_klog(khm_handle identity,
         pkrb5_free_principal(context, client_principal);
         client_principal = 0;
 #ifdef KRB5_TC_NOTICKET
-        flags = KRB5_TC_NOTICKET;
+        flags = KRB5_TC_OPENCLOSE | KRB5_TC_NOTICKET;
         pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
 
