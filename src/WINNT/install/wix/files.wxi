@@ -949,11 +949,9 @@
                      <Component Win64="$(var.Win64)" Id="cmf_backup_EXE" Guid="$(var.cmf_backup_EXE_guid)">
                         <File Id="filebackup_EXE" Name="backup.exe" LongName="backup.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\backup.exe"/>
                     </Component>
-	            <?if $(env.CPU) = "i386"?>
-	                    <Component Win64="$(var.Win64)" Id="cmf_aklog_EXE" Guid="$(var.cmf_aklog_EXE_guid)">
-                        	<File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
-	                    </Component>
-		    <?endif?>
+	            <Component Win64="$(var.Win64)" Id="cmf_aklog_EXE" Guid="$(var.cmf_aklog_EXE_guid)">
+                        <File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
+	            </Component>
                      <Component Win64="$(var.Win64)" Id="cmf_cmdebug_EXE" Guid="$(var.cmf_cmdebug_EXE_guid)">
                         <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
                         <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
@@ -983,9 +981,7 @@
                         <File Id="filetranslate_et_PDB" Name="translet.pdb" LongName="translate_et.pdb" DiskId="1" src="$(var.BinDir)\translate_et.pdb"/>
                         <File Id="filerxdebug_PDB" Name="rxdebug.pdb" LongName="rxdebug.pdb" DiskId="1" src="$(var.EtcDir)\rxdebug.pdb"/>
                         <File Id="filebackup_PDB" Name="backup.pdb" LongName="backup.pdb" DiskId="1" src="$(var.EtcDir)\backup.pdb"/>
-			<?if $(env.CPU) = "i386"?>
-                        	<File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
-			<?endif?>
+                        <File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
                         <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
                         <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
   <?ifndef BinsOnly ?>
@@ -1021,11 +1017,9 @@
 -->
                                 </File>
                             </Component>
-			    <?if $(env.CPU) = "i386"?>
-                                    <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
-                                	<File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
-	                            </Component>
-			    <?endif?>
+                            <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
+                                <File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
+	                    </Component>
                              <Component Win64="$(var.Win64)" Id="cmf_bosctlsvc_EXE" Guid="$(var.cmf_bosctlsvc_EXE_guid)">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
                                 <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
@@ -1086,9 +1080,7 @@
                                 <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
                                 <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
                                 <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
-				<?if $(env.CPU) = "i386"?>
-                                	<File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
-				<?endif?>
+                                <File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
                                 <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
                                 <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
                                 <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />
