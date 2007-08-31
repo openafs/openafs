@@ -62,8 +62,11 @@
 #include <time.h>
 #include <winsock2.h>
 
+#ifndef _WIN64
 #define USE_MS2MIT
 #define USE_KRB4
+#endif
+
 #include <afs/stds.h>
 #include <krb5.h>
 #include <rxkad.h>
