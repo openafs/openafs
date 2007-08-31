@@ -21,7 +21,6 @@ ln -s \
   $SRC/volser/vos \
   $SRC/bozo/bos \
   usr/vice/bin
-ln -s $SRC/pinstall/pinstall usr/vice/bin/install
 
 ln -s \
   $SRC/afsd/afsd \
