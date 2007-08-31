@@ -85,6 +85,7 @@
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
+                <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
@@ -303,6 +304,7 @@
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
 
+                <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
