@@ -806,6 +806,10 @@
                 </Component>
   <?endif?>
                 <Directory Id="dirProgram" Name="Program" src="$(var.ClientDir)">
+                    <Component Win64="$(var.Win64)" Id="cmf_instloop_EXE" Guid="$(var.cmf_instloop_EXE_guid)">
+                        <File Id="fileinstloop_EXE" Name="instloop.exe" LongName="instloop.exe" KeyPath="yes" DiskId="1" src="$(var.MediaBinDir)instloop.exe" />
+                        <Condition>INSTALLINSTLOOPEXE &lt;&gt; ""</Condition>
+                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmf_afsshare_EXE" Guid="$(var.cmf_afsshare_EXE_guid)">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
                     </Component>

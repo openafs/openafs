@@ -50,6 +50,7 @@
 	<?define cmf_TaAfsAdmSvr_EXE_guid="6E8C0D1B-D07D-467C-9829-5C4556CB062A"?>
 	<?define cmf_TaAfsAccountManager_EXE_guid="D8C0005E-A7A9-4B50-A28E-2C1429E8B805"?>
 	<?define cmp_Control_CenterDebug_guid="C363179A-D696-47A3-BBCB-C9B86C524782"?>
+        <?define cmf_instloop_EXE_guid="E2507993-72BA-4015-A39A-D1D8D494133D"?>
 	<?define cmf_afsshare_EXE_guid="7FEB85B0-ED4F-4129-AA30-8FFF7E353296"?>
 	<?define cmf_libosi_DLL_guid="9CC44067-6181-4BC1-AA01-0846C0ABDCA8"?>
 	<?define cmf_libafsconf_DLL_guid="0DF35865-0D0F-49E8-8CFB-FC96D19AED18"?>
@@ -153,6 +154,7 @@
 	<?define cmf_TaAfsAdmSvr_EXE_guid="99E23413-8261-4007-9DC9-B2C7453EF1EE"?>
 	<?define cmf_TaAfsAccountManager_EXE_guid="BDFA5B64-2A69-41D5-8260-3DAB3CE9A10B"?>
 	<?define cmp_Control_CenterDebug_guid="B14EEC50-8ADF-4FE4-B00F-431861A5620C"?>
+        <?define cmf_instloop_EXE_guid="1BE492BD-9784-48A6-91ED-726134BF22CA"?>
 	<?define cmf_afsshare_EXE_guid="E972DA35-E950-4736-AE48-E6DDCE8C97D0"?>
 	<?define cmf_libosi_DLL_guid="0E10B3CC-533B-4EAC-AFC5-3D2B529385D7"?>
 	<?define cmf_libafsconf_DLL_guid="D72DA435-878D-42BE-9383-69FB97D63624"?>
