@@ -4450,7 +4450,7 @@ VAddToVolumeUpdateList_r(Error * ec, Volume * vp)
 	UpdateList = (VolumeId *) malloc(sizeof(VolumeId) * updateSize);
     } else {
 	if (nUpdatedVolumes == updateSize) {
-	    updateSize << 1;
+	    updateSize <<= 1;
 	    if (updateSize > 524288) {
 		Log("warning: there is likely a bug in the volume update scanner\n");
 		return;
