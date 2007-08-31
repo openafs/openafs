@@ -2213,7 +2213,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             lastNamep++;
         code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
                          &req, &scp);
-        if (code && code != CM_ERROR_NOSUCHFILE) {
+        if (code && code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             smb_FreeTran2Packet(outp);
@@ -4379,7 +4379,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     /* if a case sensitive match failed, we try a case insensitive one
        next. */
-    if (code == CM_ERROR_NOSUCHFILE) {
+    if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
         code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD, userp, &req, &targetscp);
     }
 
@@ -4394,7 +4394,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
            smb_ReceiveTran2SearchDir(). */
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-	if (code != CM_ERROR_NOSUCHFILE) {
+	if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
 	    smb_SendTran2Error(vcp, p, opx, code);
 	    code = 0;
 	}
@@ -4587,7 +4587,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     osi_Log0(smb_logp, "T2SDSingle done.");
 
-    if (code != CM_ERROR_NOSUCHFILE) {
+    if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
 	if (code)
 	    smb_SendTran2Error(vcp, p, opx, code);
 	else
@@ -4689,10 +4689,15 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
             /* we only failover if we see a CM_ERROR_NOSUCHFILE */
             if (code != CM_ERROR_NOSUCHFILE) {
+#ifdef USE_BPLUS
+                if (code == CM_ERROR_BPLUS_NOMATCH)
+                    code = CM_ERROR_NOSUCHFILE;
+#endif
                 return code;
             }
         }
 #endif
+        dir_enums++;
 
         dsp = smb_NewDirSearch(1);
         dsp->attribute = attribute;
@@ -5520,7 +5525,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             lastNamep++;
         code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
                           &req, &scp);
-        if (code && code != CM_ERROR_NOSUCHFILE) {
+        if (code && code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             return code;
@@ -6632,7 +6637,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
                              userp, &req, &scp);
-            if (code == CM_ERROR_NOSUCHFILE) {
+            if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
                 code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
                 if (code == 0 && realDirFlag == 1) {
@@ -6778,7 +6783,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                                  userp, &req, &scp);
             }
-            if (code && code != CM_ERROR_NOSUCHFILE) {
+            if (code && (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH)) {
                 if (dscp)
                     cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
@@ -6939,7 +6944,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	 * it will appear as a directory name of the nul-string
 	 * and a code of CM_ERROR_NOSUCHFILE
 	 */
-	if ( !*treeStartp && code == CM_ERROR_NOSUCHFILE)
+	if ( !*treeStartp && (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH))
 	    code = CM_ERROR_EXISTS;
 
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
@@ -7412,7 +7417,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 #endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
                              userp, &req, &scp);
-            if (code == CM_ERROR_NOSUCHFILE) {
+            if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
                 code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
                 if (code == 0 && realDirFlag == 1) {
@@ -7498,7 +7503,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                                  userp, &req, &scp);
             }
-            if (code && code != CM_ERROR_NOSUCHFILE) {
+            if (code && code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);

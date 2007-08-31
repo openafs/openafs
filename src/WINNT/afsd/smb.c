@@ -2498,7 +2498,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_READONLY) {
         NTStatus = 0xC00000A2L;	/* Write protected */
     }
-    else if (code == CM_ERROR_NOSUCHFILE) {
+    else if (code == CM_ERROR_NOSUCHFILE ||
+             code == CM_ERROR_BPLUS_NOMATCH) {
         NTStatus = 0xC000000FL;	/* No such file */
     }
     else if (code == CM_ERROR_NOSUCHPATH) {
@@ -2672,7 +2673,8 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
         class = 3;
         error = 19;	/* read only */
     }
-    else if (code == CM_ERROR_NOSUCHFILE) {
+    else if (code == CM_ERROR_NOSUCHFILE ||
+             code == CM_ERROR_BPLUS_NOMATCH) {
         class = 1;
         error = 2;	/* ENOENT! */
     }
@@ -5223,7 +5225,9 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
 
     /* Check if the file already exists; if so return error */
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) &&
+        (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
+    {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(smb_logp, newLastNamep));
 
@@ -5421,7 +5425,9 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
 
     /* Check if the file already exists; if so return error */
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) && 
+        (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
+    {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(smb_logp, newLastNamep));
 
@@ -6890,7 +6896,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         lastNamep++;
     code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
     if (scp) cm_ReleaseSCache(scp);
-    if (code != CM_ERROR_NOSUCHFILE) {
+    if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
         if (code == 0) code = CM_ERROR_EXISTS;
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
@@ -7027,7 +7033,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif    
 
     code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
-    if (code && code != CM_ERROR_NOSUCHFILE) {
+    if (code && code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         return code;

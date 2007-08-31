@@ -182,4 +182,6 @@ cm_DirEntryListFree(cm_dirEntryList_t ** list);
 
 extern void
 cm_DirDumpStats(void);
+
+extern afs_int64 dir_enums;
 #endif /*  __CM_DIR_ENV__ */

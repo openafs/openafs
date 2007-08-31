@@ -32,12 +32,15 @@ afs_uint64 dir_lookup_time = 0;
 afs_uint64 dir_create_time = 0;
 afs_uint64 dir_remove_time = 0;
 
-afs_int32  cm_BPlusTrees = 0;
+afs_uint64 dir_enums = 0;
+
+afs_int32  cm_BPlusTrees = 1;
 
 void cm_DirDumpStats(void)
 {
     afsi_log("Dir Lookup   Hits: %-8d", dir_lookup_hits);
     afsi_log("           Misses: %-8d", dir_lookup_misses);
+    afsi_log("            Enums: %-8d", dir_enums);
     afsi_log("           Create: %-8d", dir_create_entry);
     afsi_log("           Remove: %-8d", dir_remove_entry);
 
