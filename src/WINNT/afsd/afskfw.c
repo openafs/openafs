@@ -58,10 +58,10 @@
 
 #undef  USE_KRB4
 #ifndef _WIN64
-#define USE_MS2MIT 1
-#define USE_LEASH 1
 #define USE_KRB524 1
 #endif
+#define USE_MS2MIT 1
+#define USE_LEASH 1
 
 #include "afskfw-int.h"
 #include "afskfw.h"
