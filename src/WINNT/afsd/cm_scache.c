@@ -480,7 +480,8 @@ cm_SuspendSCache(void)
     lock_ObtainWrite(&cm_scacheLock);
     for ( scp = cm_data.allSCachesp; scp;
           scp = scp->allNextp ) {
-        if (scp->cbServerp) {
+        if (scp->cbServerp && 
+            !(scp->cbServerp->flags & CM_SERVERFLAG_DOWN)) {
             cm_PutServer(scp->cbServerp);
             scp->cbServerp = NULL;
         }
