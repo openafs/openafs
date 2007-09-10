@@ -51,7 +51,7 @@ The following steps describe how to configure Windows 2000/XP:
    D. Configure NTBUILD.BAT
    E. Set program version Level
    F. Build the binaries
-   G. Install NSIS 2.18
+   G. Install NSIS 2.30
    H. Build NSIS Install Package
    I. Install Wix 2.0.4310
    J. Build Wix MSI Install Package
@@ -91,7 +91,7 @@ The Microsoft HTML Help Workshop is required:
 The NSIS installer requires about 14 MB of storage. The following 
 version is supported:
 
-    Nullsoft Scriptable Installation System 2.18
+    Nullsoft Scriptable Installation System 2.30
       http://nsis.sourceforge.net/home/
 
 The WiX installer requires about 18 MB of storage.  The following 
@@ -328,26 +328,20 @@ and it displays 'Build Finished Successfully'.
     to the src\WINNT\afsrdr directory, and execute the "build" command.
 
 
-STEP G. Install NSIS 2.07 (optional).
+STEP G. Install NSIS 2.30 (optional).
 
-Download the Nullsoft Scriptable Installation System (NSIS) 2.07 from
+Download the Nullsoft Scriptable Installation System (NSIS) 2.30 from
 
     http://nsis.sourceforge.net/home/
 
-Run the nsis20.exe installer.
+Run the nsis-2.30.exe installer and install to "C:\Program Files\NSIS".
+Then download the large strings build zip file and replace the installed 
+files with the versions from the zip file.  These versions increase 
+the maximum string length from 1024 characters to 8192 characters.  
+This is necessary for installation on systems with long PATH environment 
+strings.
 
-NOTE: The NSIS installer may be rebuilt from source files 
-   
-    C:\Program Files\NSIS\Source
-
-to enable options not built into the default configuration.  The 
-OpenAFS installers are built using a modified version of the NSIS
-sources.  The following changes were made to exehead\config.h.
-
-    NSIS_MAX_STRLEN set to 4096
-    NSIS_CONFIG_LOG defined
-    NSIS_CONFIG_LOG_ODS defined
-    
+Note: The NSIS installer can only be used to produce 32-bit installers.
 
 STEP H.  Build OpenAFS NSIS install package
 
