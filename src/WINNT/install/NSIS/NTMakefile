@@ -14,21 +14,21 @@ $(OUT)\Service.obj: Service.cpp
 	   $(C2OBJ) Service.cpp
 
 $(EXEDIR)\Service.exe: $(OUT)\Service.obj
-      $(EXECONLINK) $(OUT)\Service.obj
+      $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\Killer.obj: Killer.cpp
       $(C2OBJ) Killer.cpp
 
 $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj
-      $(EXECONLINK) $(OUT)\Killer.obj
+      $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\AdminGroup.obj: AdminGroup.cpp
       $(C2OBJ) AdminGroup.cpp
 
 $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj
-      $(EXECONLINK) $(OUT)\AdminGroup.obj
+      $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
 
 prebuild:
@@ -100,7 +100,7 @@ prebuild:
 !endif
 
 build: prebuild
-   "C:\Program Files\NSIS\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
+   "$(NSISDIR)\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
 
 install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe build
 
