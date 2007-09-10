@@ -49,6 +49,9 @@ LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a);
 #define LargeIntegerEqualTo(a, b) \
   ((a).HighPart == (b).HighPart && (a).LowPart == (b).LowPart)
   
+#define LargeIntegerGreaterThanZero(a) \
+ ((a).HighPart > 0 || ((a).HighPart == 0 && (a).LowPart != 0))
+
 #define LargeIntegerGreaterOrEqualToZero(a) ((a).HighPart >= 0)
   
 #define LargeIntegerLessThanZero(a) ((a).HighPart < 0)

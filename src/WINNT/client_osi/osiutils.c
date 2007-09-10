@@ -76,7 +76,7 @@ void __RPC_API MIDL_user_free(void *p)
 }
 
 #if (_MSC_VER >= 1300)
-LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
+LARGE_INTEGER /* WINAPI */ LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
 { 
 	LARGE_INTEGER result;
 	int carry;
@@ -85,7 +85,7 @@ LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
 	result.HighPart=a.HighPart+b.HighPart+ carry;
 	return result;
 }
-LARGE_INTEGER LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b)
+LARGE_INTEGER /* WINAPI */ LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b)
 { 
 	LARGE_INTEGER result;
 	int borrow;
@@ -94,7 +94,7 @@ LARGE_INTEGER LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b)
 	result.HighPart=a.HighPart-b.HighPart- borrow;
 	return result;
 }
-LARGE_INTEGER ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsigned long *remainder)
+LARGE_INTEGER /* WINAPI */ ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsigned long *remainder)
 {
     LARGE_INTEGER result;
     ULONGLONG a1,q1,r1;
@@ -115,7 +115,7 @@ LARGE_INTEGER ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsig
     *remainder=(unsigned long)(r1 & 0xffffffff);
     return result;
 }
-LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER *remainder)
+LARGE_INTEGER /* WINAPI */ LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER *remainder)
 {
     LARGE_INTEGER result;
     ULONGLONG a1,b1,q1,r1;
@@ -144,7 +144,7 @@ LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER
     return result;
 }
 
-LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a) 
+LARGE_INTEGER /* WINAPI */ ConvertLongToLargeInteger(unsigned long a) 
 {
     LARGE_INTEGER result;
     result.HighPart=0;
