@@ -41,6 +41,7 @@ extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_deleteReadOnly;
 extern afs_int32 cm_BPlusTrees;
+extern const char **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
 
@@ -278,14 +279,17 @@ configureBackConnectionHostNames(void)
                        KEY_READ|KEY_WRITE,
                        &hkMSV10) == ERROR_SUCCESS )
     {
-        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
-			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) {
+        if ((RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
+            (dwType == REG_MULTI_SZ)) 
+        {
 	    dwAllocSize += 1 /* in case the source string is not nul terminated */
 		+ strlen(cm_NetbiosName) + 2;
 	    pHostNames = malloc(dwAllocSize);
 	    dwSize = dwAllocSize;
             if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
-				 pHostNames, &dwSize) == ERROR_SUCCESS) {
+				 pHostNames, &dwSize) == ERROR_SUCCESS) 
+            {
 		for (pName = pHostNames; 
 		     (pName - pHostNames < dwSize) && *pName ; 
 		     pName += strlen(pName) + 1)
@@ -726,8 +730,14 @@ int afsd_InitCM(char **reasonP)
         blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
     }
     if (blockSize > cm_chunkSize) {
-        afsi_log("Block size cannot be larger than Chunk size.");
+        afsi_log("Block size (%d) cannot be larger than Chunk size (%d).", 
+                  blockSize, cm_chunkSize);
         blockSize = cm_chunkSize;
+    }
+    if (cm_chunkSize % blockSize != 0) {
+        afsi_log("Block size (%d) must be a factor of Chunk size (%d).",
+                  blockSize, cm_chunkSize);
+        blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
     }
     afsi_log("Block size %u", blockSize);
 
@@ -1065,7 +1075,39 @@ int afsd_InitCM(char **reasonP)
         cm_BPlusTrees = (unsigned short) dwValue;
     } 
     afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
-    
+
+    if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, 
+                          &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
+         (regType == REG_MULTI_SZ)) 
+    {
+        char * pSz;
+        dummyLen += 3; /* in case the source string is not nul terminated */
+        pSz = malloc(dummyLen);
+        if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, &regType, 
+                             pSz, &dummyLen) == ERROR_SUCCESS) &&
+             (regType == REG_MULTI_SZ))
+        {
+            int cnt;
+            char * p;
+
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1);
+
+            smb_ExecutableExtensions = malloc(sizeof(char *) * (cnt+1));
+
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1)
+            {
+                smb_ExecutableExtensions[cnt] = p;
+                afsi_log("PrefetchExecutableExtension: \"%s\"", p);
+            }
+            smb_ExecutableExtensions[cnt] = NULL;
+        }
+        
+        if (!smb_ExecutableExtensions)
+            free(pSz);
+    }
+    if (!smb_ExecutableExtensions)
+        afsi_log("No PrefetchExecutableExtensions");
+
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;

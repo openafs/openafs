@@ -14,7 +14,7 @@
 #include "largeint95.h"
 #endif /* DJGPP */
 
-#define MOUNTPOINTLEN   1024
+#define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
 typedef struct cm_fid {
 	unsigned long cell;

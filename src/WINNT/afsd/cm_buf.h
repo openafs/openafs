@@ -78,8 +78,8 @@ typedef struct cm_buf {
     cm_user_t *userp;	        /* user who wrote to the buffer last */
         
     /* fields added for the CM; locked by scp->mx */
-    long dataVersion;	        /* data version of this page */
-    long cmFlags;		/* flags for cm */
+    afs_uint32 dataVersion;	/* data version of this page */
+    afs_uint32 cmFlags;		/* flags for cm */
 
     /* syncop state */
     afs_uint32 waitCount;       /* number of threads waiting */
