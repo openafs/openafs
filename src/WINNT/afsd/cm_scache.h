@@ -10,7 +10,7 @@
 #ifndef __CM_SCACHE_H_ENV__
 #define __CM_SCACHE_H_ENV__ 1
 
-#define MOUNTPOINTLEN   1024
+#define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
 typedef struct cm_fid {
 	unsigned long cell;

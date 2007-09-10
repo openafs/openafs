@@ -391,6 +391,7 @@ typedef struct smb_fid {
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 #define SMB_FID_SEQUENTIAL		0x200
 #define SMB_FID_RANDOM			0x400
+#define SMB_FID_EXECUTABLE              0x800
 
 #define SMB_FID_SHARE_READ              0x1000
 #define SMB_FID_SHARE_WRITE             0x2000

@@ -39,6 +39,8 @@ smb_tran2Dispatch_t smb_rapDispatchTable[SMB_RAP_NOPCODES];
 /* protected by the smb_globalLock */
 smb_tran2Packet_t *smb_tran2AssemblyQueuep;
 
+const char **smb_ExecutableExtensions = NULL;
+
 /* retrieve a held reference to a user structure corresponding to an incoming
  * request */
 cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
@@ -55,6 +57,28 @@ cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
     smb_ReleaseUID(uidp);
 
     return up;
+}
+
+/* 
+ * Return boolean specifying if the path name is thought to be an 
+ * executable file.  For now .exe or .dll.
+ */
+afs_uint32 smb_IsExecutableFileName(const char *name)
+{
+    int i, j, len;
+        
+    if ( smb_ExecutableExtensions == NULL || name == NULL)
+        return 0;
+
+    len = strlen(name);
+
+    for ( i=0; smb_ExecutableExtensions[i]; i++) {
+        j = len - strlen(smb_ExecutableExtensions[i]);
+        if (_stricmp(smb_ExecutableExtensions[i], &name[j]) == 0)
+            return 1;
+    }
+
+    return 0;
 }
 
 /*
@@ -6605,6 +6629,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
 	fidflags |= SMB_FID_RANDOM;
+    if (smb_IsExecutableFileName(lastNamep))
+        fidflags |= SMB_FID_EXECUTABLE;
 
     /* and the share mode */
     if (shareAccess & FILE_SHARE_READ)
@@ -7186,6 +7212,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ReleaseMutex(&scp->mx);
     smb_SetSMBDataLength(outp, 0);
 
+    if ((fidp->flags & SMB_FID_EXECUTABLE) && 
+        LargeIntegerGreaterThanZero(fidp->scp->length)) {
+        cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
+                           fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
+                           userp);
+    }
+
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
               osi_LogSaveString(smb_logp, realPathp));
 
@@ -7387,6 +7420,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
 	fidflags |= SMB_FID_RANDOM;
+    if (smb_IsExecutableFileName(lastNamep))
+        fidflags |= SMB_FID_EXECUTABLE;
 
     /* And the share mode */
     if (shareAccess & FILE_SHARE_READ)
@@ -7908,6 +7943,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((ULONG *)outData) = 0x001f01ffL; outData += 4; /* Maxmimal access rights */
         *((ULONG *)outData) = 0; outData += 4; /* Guest Access rights */
         lock_ReleaseMutex(&scp->mx);
+    }
+
+    if ((fidp->flags & SMB_FID_EXECUTABLE) && 
+        LargeIntegerGreaterThanZero(fidp->scp->length)) {
+        cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
+                           fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
+                           userp);
     }
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);

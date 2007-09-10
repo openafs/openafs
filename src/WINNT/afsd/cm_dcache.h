@@ -32,7 +32,8 @@ extern long cm_GetBuffer(struct cm_scache *, struct cm_buf *, int *,
 	struct cm_user *, struct cm_req *);
 
 extern long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep,
-	long length, cm_user_t *up, cm_req_t *reqp, osi_hyper_t *realBasep);
+                               osi_hyper_t *length, cm_user_t *up, 
+                               cm_req_t *reqp, osi_hyper_t *realBasep);
 
 extern long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 	cm_bulkIO_t *biop, cm_user_t *up, cm_req_t *reqp);
