@@ -1447,6 +1447,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
     char fpath[512];
     struct afs_stat status;
     int parm, tag;
+    lb64_string_t check;
 
     (void)strcpy(fpath, dpath);
     (void)strcat(fpath, "/");
@@ -1459,6 +1460,10 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
     info->byteCount = status.st_size;
     info->inodeNumber = (Inode) flipbase64_to_int64(name);
 
+    int64_to_flipbase64(check, info->inodeNumber);
+    if (strcmp(name, check))
+	return -1;
+    
     GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
 	/* p1 - vid, p2 - -1, p3 - type, p4 - rwvid */
