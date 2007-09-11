@@ -702,8 +702,10 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
 
         if (code || (bp->cmFlags & CM_BUF_CMFETCHING)) {
             code = 0;
-            if (bp)
+            if (bp) {
                 buf_Release(bp);
+                bp = NULL;
+            }
             break;
         }
 
@@ -719,8 +721,10 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
     cm_ClearPrefetchFlag(LargeIntegerGreaterThanZero(fetched) ? 0 : code, 
                          scp, &base, &fetched);
     lock_ReleaseMutex(&scp->mx);
-    if (bp)
+    if (bp) {
         buf_Release(bp);
+        bp = NULL;
+    }
 
     osi_Log4(afsd_logp, "Ending BKG prefetch scp 0x%p, code %d bytes 0x%x:%x", 
               scp, code, fetched.HighPart, fetched.LowPart);
@@ -830,6 +834,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             if (code) {
                 lock_ReleaseMutex(&bufp->mx);
                 buf_Release(bufp);
+                bufp = NULL;
                 buf_UnreserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
                 return code;
             }   
@@ -1093,6 +1098,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         }
                 
         buf_Release(tbp);
+        tbp = NULL;
 
         pageBase = LargeIntegerAdd(tblocksize, pageBase);
         collected += cm_data.buf_blockSize;
@@ -1214,6 +1220,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 		      &qdp->q);
         osi_QDFree(qdp);
         buf_Release(tbp);
+        tbp = NULL;
     }
 
     /* Caller expects this */

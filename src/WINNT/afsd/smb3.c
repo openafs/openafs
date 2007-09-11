@@ -2775,8 +2775,10 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                         code = CM_ERROR_NOSUCHFILE;
                     else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
                         cm_buf_t *bp = buf_Find(dscp, &hzero);
-                        if (bp)
+                        if (bp) {
                             buf_Release(bp);
+                            bp = NULL;
+                        }
                         else
                             code = CM_ERROR_NOSUCHFILE;
                     }
@@ -3043,8 +3045,10 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                         code = CM_ERROR_NOSUCHFILE;
                     else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
                         cm_buf_t *bp = buf_Find(dscp, &hzero);
-                        if (bp)
+                        if (bp) {
                             buf_Release(bp);
+                            bp = NULL;
+                        }
                         else
                             code = CM_ERROR_NOSUCHFILE;
                     }
@@ -7209,15 +7213,16 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                         (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 			 scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 			 scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
-    lock_ReleaseMutex(&scp->mx);
     smb_SetSMBDataLength(outp, 0);
 
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
-        LargeIntegerGreaterThanZero(fidp->scp->length)) {
+        LargeIntegerGreaterThanZero(fidp->scp->length) && 
+        !(scp->flags & CM_SCACHEFLAG_PREFETCHING)) {
         cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
     }
+    lock_ReleaseMutex(&scp->mx);
 
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
               osi_LogSaveString(smb_logp, realPathp));
@@ -7945,12 +7950,15 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
     }
 
+    lock_ObtainMutex(&scp->mx);
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
-        LargeIntegerGreaterThanZero(fidp->scp->length)) {
+         LargeIntegerGreaterThanZero(fidp->scp->length) && 
+         !(scp->flags & CM_SCACHEFLAG_PREFETCHING)) {
         cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
     }
+    lock_ReleaseMutex(&scp->mx);
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
