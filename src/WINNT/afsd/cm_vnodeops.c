@@ -1074,7 +1074,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         strncpy(cellNamep, mpNamep+1, cp - mpNamep - 1);
         strcpy(volNamep, cp+1);
         /* now look up the cell */
+        lock_ReleaseMutex(&scp->mx);
         cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE);
+        lock_ObtainMutex(&scp->mx);
     }
     else {
         /* normal mt pt */
