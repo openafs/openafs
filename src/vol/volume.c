@@ -6194,7 +6194,7 @@ VPrintExtendedCacheStats_r(int flags)
 	VOL_LOCK;
 
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
-	    id = diskP->device;
+	    id = diskP->index;
 	    vol_count[id] = diskP->vol_list.len;
 	    part_exists[id] = 1;
 	}
