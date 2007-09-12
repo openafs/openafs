@@ -51,7 +51,11 @@ typedef struct key {
     char *name;
 } keyT;
 
-typedef cm_fid_t dataT;
+
+typedef struct dirdata {
+    cm_fid_t    fid;
+    char * longname;
+} dataT;
 
 typedef struct entry {
     keyT	key;
