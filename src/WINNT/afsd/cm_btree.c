@@ -198,9 +198,9 @@ Nptr bplus_Lookup(Tree *B, keyT key)
         sprintf(B->message, "LOOKUP: %s found on page %d value (%d.%d.%d).\n",
                  key.name,
                  getnodenumber(B, findNode), 
-                 data.volume, 
-                 data.vnode,
-                 data.unique);
+                 data.fid.volume, 
+                 data.fid.vnode,
+                 data.fid.unique);
     } else 
         sprintf(B->message, "LOOKUP: not found!\n");
     OutputDebugString(B->message);
@@ -1138,8 +1138,14 @@ cleanupNodePool(Tree *B)
 
     for ( i=0, node = getfirstallnode(B); node != NONODE && i<getpoolsize(B); node = next, i++ ) {
         if (isdata(node)) {
-            if ( getdatakey(node).name )
+            if ( getdatakey(node).name ) {
                 free(getdatakey(node).name);
+                getdatakey(node).name = NULL;
+            }
+            if ( getdatavalue(node).longname ) {
+                free(getdatavalue(node).longname);
+                getdatavalue(node).longname = NULL;
+            }
         } else { /* data node */
             for ( j=1; j<=getfanout(B); j++ ) {
                 if (getkey(node, j).name)
@@ -1303,7 +1309,7 @@ listBtreeNodes(Tree *B, const char * parent_desc, Nptr node)
         data = getdatavalue(node);
         sprintf(B->message, "%s - data node %d (%d.%d.%d)\n", 
                  parent_desc, getnodenumber(B, node),
-                 data.volume, data.vnode, data.unique);
+                 data.fid.volume, data.fid.vnode, data.fid.unique);
         OutputDebugString(B->message);
         return;
     } else 
@@ -1336,7 +1342,7 @@ listBtreeValues(Tree *B, Nptr n, int num)
         prev = getkey(n, slot);
         data = getdatavalue(getnode(n, slot));
         sprintf(B->message, "%8s (%d.%d.%d)\n", 
-                prev.name, data.volume, data.vnode, data.unique);
+                prev.name, data.fid.volume, data.fid.vnode, data.fid.unique);
         OutputDebugString(B->message);
         if (++slot > numentries(n))
             n = getnextnode(n), slot = 1;
@@ -1453,15 +1459,15 @@ cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
         }
 
         if (exact) {
-            *cfid = getdatavalue(dataNode);
+            *cfid = getdatavalue(dataNode).fid;
             rc = 0;
             bplus_lookup_hits++;
         } else if (count == 1) {
-            *cfid = getdatavalue(firstDataNode);
+            *cfid = getdatavalue(firstDataNode).fid;
             rc = CM_ERROR_INEXACT_MATCH;
             bplus_lookup_hits_inexact++;
         } else {
-                rc = CM_ERROR_AMBIGUOUS_FILENAME;
+            rc = CM_ERROR_AMBIGUOUS_FILENAME;
             bplus_lookup_ambiguous++;
         } 
     } else {
@@ -1489,7 +1495,9 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 {
     long rc = 0;
     keyT key = {entry};
+    dataT  data;
     LARGE_INTEGER start, end;
+    char shortName[13];
 
     if (op->scp->dirBplus == NULL || 
         op->dataVersion != op->scp->dirDataVersion) {
@@ -1497,10 +1505,27 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
         goto done;
     }
 
+    data.fid.cell = cfid->cell;
+    data.fid.volume = cfid->volume;
+    data.fid.vnode = cfid->vnode;
+    data.fid.unique = cfid->unique;
+    data.longname = NULL;
+
     QueryPerformanceCounter(&start);
     bplus_create_entry++;
 
-    insert(op->scp->dirBplus, key, *cfid);
+    insert(op->scp->dirBplus, key, data);
+    if (!cm_Is8Dot3(entry)) {
+        cm_dirFid_t dfid;
+        dfid.vnode = htonl(data.fid.vnode);
+        dfid.unique = htonl(data.fid.unique);
+
+        cm_Gen8Dot3NameInt(entry, &dfid, shortName, NULL);
+
+        key.name = shortName;
+        data.longname = strdup(entry);
+        insert(op->scp->dirBplus, key, data);
+    }
 
     QueryPerformanceCounter(&end);
 
@@ -1522,6 +1547,7 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
 {
     long rc = 0;
     keyT key = {entry};
+    Nptr leafNode = NONODE;
     LARGE_INTEGER start, end;
 
     if (op->scp->dirBplus == NULL || 
@@ -1535,7 +1561,108 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
     bplus_remove_entry++;
 
     if (op->scp->dirBplus) {
-        delete(op->scp->dirBplus, key);
+        if (!cm_Is8Dot3(entry)) {
+            cm_dirFid_t dfid;
+            cm_fid_t fid;
+            char shortName[13];
+
+            leafNode = bplus_Lookup(op->scp->dirBplus, key);
+            if (leafNode != NONODE) {
+                int         slot;
+                Nptr        firstDataNode, dataNode, nextDataNode;
+                int         exact = 0;
+                int         count = 0;
+
+                /* Found a leaf that matches the key via a case-insensitive
+                 * match.  There may be one or more data nodes that match.
+                 * If we have an exact match, return that.
+                 * If we have an ambiguous match, return an error.
+                 * If we have only one inexact match, return that.
+                 */
+                slot = findKey(op->scp->dirBplus, leafNode, 1, numentries(leafNode));
+                firstDataNode = getnode(leafNode, slot);
+
+                for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+                    count++;
+                    if (!comparekeys(op->scp->dirBplus)(key, getdatakey(dataNode), EXACT_MATCH) ) {
+                        exact = 1;
+                        break;
+                    }
+                    nextDataNode = getdatanext(dataNode);
+                }
+
+                if (exact) {
+                    fid = getdatavalue(dataNode).fid;
+                    rc = 0;
+                } else if (count == 1) {
+                    fid = getdatavalue(firstDataNode).fid;
+                    rc = CM_ERROR_INEXACT_MATCH;
+                } else {
+                    rc = CM_ERROR_AMBIGUOUS_FILENAME;
+                } 
+            }
+
+
+            if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
+                dfid.vnode = htonl(fid.vnode);
+                dfid.unique = htonl(fid.unique);
+                cm_Gen8Dot3NameInt(entry, &dfid, shortName, NULL);
+
+                /* delete first the long name and then the short name */
+                delete(op->scp->dirBplus, key);
+                key.name = shortName;
+                delete(op->scp->dirBplus, key);
+            }
+        } else {
+            char * longname = NULL;
+            /* We need to lookup the 8dot3 name to determine what the 
+             * matching long name is
+             */
+            leafNode = bplus_Lookup(op->scp->dirBplus, key);
+            if (leafNode != NONODE) {
+                int         slot;
+                Nptr        firstDataNode, dataNode, nextDataNode;
+                int         exact = 0;
+                int         count = 0;
+
+                /* Found a leaf that matches the key via a case-insensitive
+                 * match.  There may be one or more data nodes that match.
+                 * If we have an exact match, return that.
+                 * If we have an ambiguous match, return an error.
+                 * If we have only one inexact match, return that.
+                 */
+                slot = findKey(op->scp->dirBplus, leafNode, 1, numentries(leafNode));
+                firstDataNode = getnode(leafNode, slot);
+
+                for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+                    count++;
+                    if (!comparekeys(op->scp->dirBplus)(key, getdatakey(dataNode), EXACT_MATCH) ) {
+                        exact = 1;
+                        break;
+                    }
+                    nextDataNode = getdatanext(dataNode);
+                }
+
+                if (exact) {
+                    longname = getdatavalue(dataNode).longname;
+                    rc = 0;
+                } else if (count == 1) {
+                    longname = getdatavalue(firstDataNode).longname;
+                    rc = CM_ERROR_INEXACT_MATCH;
+                } else {
+                    rc = CM_ERROR_AMBIGUOUS_FILENAME;
+                } 
+            }
+
+            if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
+				if (longname) {
+					key.name = longname;
+					delete(op->scp->dirBplus, key);
+	                key.name = entry;
+				}
+                delete(op->scp->dirBplus, key);
+            }
+        }
     }
     
     QueryPerformanceCounter(&end);
@@ -1552,10 +1679,28 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
                    void *dummy, osi_hyper_t *entryOffsetp)
 {
     keyT   key = {dep->name};
-    dataT  data = {scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique)};
+    dataT  data;
+    char   shortName[13];
+
+    data.fid.cell = scp->fid.cell;
+    data.fid.volume = scp->fid.volume;
+    data.fid.vnode = ntohl(dep->fid.vnode);
+    data.fid.unique = ntohl(dep->fid.unique);
+    data.longname = NULL;
 
     /* the Write lock is held in cm_BPlusDirBuildTree() */
     insert(scp->dirBplus, key, data);
+    if (!cm_Is8Dot3(dep->name)) {
+        cm_dirFid_t dfid;
+        dfid.vnode = dep->fid.vnode;
+        dfid.unique = dep->fid.unique;
+
+        cm_Gen8Dot3NameInt(dep->name, &dfid, shortName, NULL);
+
+        key.name = shortName;
+        data.longname = strdup(dep->name);
+        insert(scp->dirBplus, key, data);
+    }
 
 #ifdef BTREE_DEBUG
     findAllBtreeValues(scp->dirBplus);
