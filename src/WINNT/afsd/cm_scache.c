@@ -474,19 +474,26 @@ void
 cm_SuspendSCache(void)
 {
     cm_scache_t * scp;
+    time_t now;
 
-    cm_GiveUpAllCallbacksAllServers();
+    cm_GiveUpAllCallbacksAllServers(TRUE);
+
+    /* 
+     * After this call all servers are marked down.
+     * Do not clear the callbacks, instead change the
+     * expiration time so that the callbacks will be expired
+     * when the servers are marked back up.  However, we
+     * want the callbacks to be preserved as long as the 
+     * servers are down.  That way if the machine resumes
+     * without network, the stat cache item will still be
+     * considered valid.
+     */
+    now = osi_Time();
 
     lock_ObtainWrite(&cm_scacheLock);
-    for ( scp = cm_data.allSCachesp; scp;
-          scp = scp->allNextp ) {
-        if (scp->cbServerp && 
-            !(scp->cbServerp->flags & CM_SERVERFLAG_DOWN)) {
-            cm_PutServer(scp->cbServerp);
-            scp->cbServerp = NULL;
-        }
-        scp->cbExpires = 0;
-        scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
+    for ( scp = cm_data.allSCachesp; scp; scp = scp->allNextp ) {
+        if (scp->cbServerp)
+            scp->cbExpires = now+1;
     }
     lock_ReleaseWrite(&cm_scacheLock);
 }
@@ -525,7 +532,7 @@ cm_ShutdownSCache(void)
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
-    cm_GiveUpAllCallbacksAllServers();
+    cm_GiveUpAllCallbacksAllServers(FALSE);
 
     return cm_dnlcShutdown();
 }
