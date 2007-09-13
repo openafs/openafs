@@ -3502,7 +3502,7 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_tid_t *tidp;
     smb_user_t *uidp;
     unsigned short newTid;
-    char shareName[256];
+    char shareName[AFSPATHMAX];
     char *sharePath;
     int shareFound;
     char *tp;
@@ -8023,7 +8023,7 @@ void smb_Listener(void *parmp)
 	    FreeNCB(ncbp);
 	    return;
 	} else if (code != 0) {
-            char tbuffer[256];
+            char tbuffer[AFSPATHMAX];
 
             /* terminate silently if shutdown flag is set */
             if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
@@ -8752,7 +8752,7 @@ void smb_Init(osi_log_t *logp, int useV3,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                    char message[256];
+                    char message[AFSPATHMAX];
                     sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                                        nts, ntsEx);
                     OutputDebugString(message);

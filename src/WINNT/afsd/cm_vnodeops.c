@@ -1500,7 +1500,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 #endif
 {
     long code;
-    char tname[256];
+    char tname[AFSPATHMAX];
     int sysNameIndex = 0;
     cm_scache_t *scp = NULL;
 
@@ -1816,7 +1816,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     char *tp;			/* ptr moving through input buffer */
     char tc;			/* temp char */
     int haveComponent;		/* has new component started? */
-    char component[256];	/* this is the new component */
+    char component[AFSPATHMAX];	/* this is the new component */
     char *cp;			/* component name being assembled */
     cm_scache_t *tscp;		/* current location in the hierarchy */
     cm_scache_t *nscp;		/* next dude down */

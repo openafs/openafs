@@ -1006,7 +1006,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     smb_tid_t *tidp;
     smb_user_t *uidp = NULL;
     unsigned short newTid;
-    char shareName[256];
+    char shareName[AFSPATHMAX];
     char *sharePath;
     int shareFound;
     char *tp;
@@ -1520,7 +1520,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     smb_rap_share_info_1_t * shares;
     USHORT cshare = 0;
     char * cstrp;
-    char thisShare[256];
+    char thisShare[AFSPATHMAX];
     int i,j;
     DWORD dw;
     int nonrootShares;
