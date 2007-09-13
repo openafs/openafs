@@ -1770,7 +1770,7 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
 
     for (bp = cm_data.buf_allp; bp; bp=bp->allp, bcount++) {
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY)) {
-		buf_Hold(bp);
+            buf_Hold(bp);
 	    lock_ObtainMutex(&bp->mx);
 	    bp->cmFlags &= ~CM_BUF_CMSTORING;
 	    bp->flags &= ~CM_BUF_DIRTY;

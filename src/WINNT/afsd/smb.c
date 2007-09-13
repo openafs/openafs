@@ -1651,8 +1651,8 @@ char VNLCComputerName[] = "%LCCOMPUTERNAME%";
 /* List available shares */
 int smb_ListShares()
 {
-    char sbmtpath[256];
-    char pathName[256];
+    char sbmtpath[AFSPATHMAX];
+    char pathName[AFSPATHMAX];
     char shareBuf[4096];
     int num_shares=0;
     char *this_share;
@@ -1689,7 +1689,7 @@ int smb_ListShares()
         /*strcpy(shareNameList[num_shares], this_share);*/
         len = GetPrivateProfileString("AFS Submounts", this_share,
                                        NULL,
-                                       pathName, 256,
+                                       pathName, AFSPATHMAX,
                                        sbmtpath);
         if (!len) 
             return num_shares;
@@ -3782,7 +3782,7 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_tid_t *tidp;
     smb_user_t *uidp;
     unsigned short newTid;
-    char shareName[256];
+    char shareName[AFSPATHMAX];
     char *sharePath;
     int shareFound;
     char *tp;
@@ -8428,7 +8428,7 @@ void smb_Listener(void *parmp)
 	    return;
 	} else if (code != 0) {
 #ifndef DJGPP
-            char tbuffer[256];
+            char tbuffer[AFSPATHMAX];
 #endif
 
             /* terminate silently if shutdown flag is set */
@@ -9263,7 +9263,7 @@ void smb_Init(osi_log_t *logp, int useV3,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                    char message[256];
+                    char message[AFSPATHMAX];
                     sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                                        nts, ntsEx);
                     OutputDebugString(message);
