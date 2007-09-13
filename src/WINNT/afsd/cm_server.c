@@ -148,8 +148,10 @@ cm_PingServer(cm_server_t *tsp)
         }
     } else {
 	/* mark server as down */
-	tsp->flags |= CM_SERVERFLAG_DOWN;
-        tsp->downTime = osi_Time();
+        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            tsp->flags |= CM_SERVERFLAG_DOWN;
+            tsp->downTime = osi_Time();
+        }
 	if (code != VRESTARTING)
 	    cm_ForceNewConnections(tsp);
 

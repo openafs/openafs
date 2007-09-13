@@ -227,7 +227,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
  */
 void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fidp)
 {
-    long hash;
+    unsigned long hash;
     cm_scache_t *scp;
     cm_fid_t tfid;
 
@@ -407,7 +407,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
     struct sockaddr_in taddr;
     cm_server_t *tsp;
     cm_scache_t *scp;
-    int hash;
+    afs_uint32 hash;
     int discarded;
     struct rx_connection *connp;
     struct rx_peer *peerp;
@@ -682,7 +682,7 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
 int
 SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t * scp;
     int code;
     struct rx_connection *connp;
@@ -788,7 +788,7 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 int
 SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t * scp;
     int code;
     struct rx_connection *connp;
@@ -1795,9 +1795,9 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
 /* called periodically by cm_daemon to shut down use of expired callbacks */
 void cm_CheckCBExpiration(void)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t *scp;
-    time_t now, downTime = 0;
+    time_t now, downTime;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
@@ -1805,7 +1805,7 @@ void cm_CheckCBExpiration(void)
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
-
+            downTime = 0;
             if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
                  (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
             {
@@ -1831,26 +1831,59 @@ void cm_CheckCBExpiration(void)
 
 
 void 
-cm_GiveUpAllCallbacks(cm_server_t *tsp)
+cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
 {
     long code;
     cm_conn_t *connp;
     struct rx_connection * rxconnp;
 
-    if (tsp->type == CM_SERVER_FILE && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
+    if ((tsp->type == CM_SERVER_FILE) && !(tsp->flags & CM_SERVERFLAG_DOWN)) 
+    {
         code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
         if (code == 0) {
             rxconnp = cm_GetRxConn(connp);
             rx_SetConnDeadTime(rxconnp, 10);
-	    code = RXAFS_GiveUpAllCallBacks(rxconnp);
+            code = RXAFS_GiveUpAllCallBacks(rxconnp);
             rx_SetConnDeadTime(rxconnp, ConnDeadtimeout);
-	    rx_PutConnection(rxconnp);
+            rx_PutConnection(rxconnp);
+        }
+
+        if (markDown) {
+            cm_server_vols_t * tsrvp;
+            cm_volume_t * volp;
+            int i;
+
+            lock_ObtainMutex(&tsp->mx);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                tsp->flags |= CM_SERVERFLAG_DOWN;
+                tsp->downTime = osi_Time();
+            }
+            cm_ForceNewConnections(tsp);
+            lock_ReleaseMutex(&tsp->mx);
+
+            /* Now update the volume status */
+            for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+                for (i=0; i<NUM_SERVER_VOLS; i++) {
+                    if (tsrvp->ids[i] != 0) {
+                        cm_req_t req;
+
+                        cm_InitReq(&req);
+
+                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                        if (code == 0) {    
+                            cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
+                            cm_PutVolume(volp);
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 void
-cm_GiveUpAllCallbacksAllServers(void)
+cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
 {
     cm_server_t *tsp;
 
@@ -1858,7 +1891,7 @@ cm_GiveUpAllCallbacksAllServers(void)
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
         lock_ReleaseWrite(&cm_serverLock);
-        cm_GiveUpAllCallbacks(tsp);
+        cm_GiveUpAllCallbacks(tsp, markDown);
         lock_ObtainWrite(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }

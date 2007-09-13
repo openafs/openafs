@@ -523,8 +523,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         /* mark server as down */
         lock_ObtainMutex(&serverp->mx);
 	if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
-	    serverp->flags |= CM_SERVERFLAG_DOWN;
-            serverp->downTime = osi_Time();
+            if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
+                serverp->flags |= CM_SERVERFLAG_DOWN;
+                serverp->downTime = osi_Time();
+            }
         } else {
 	    reqp->flags |= CM_REQ_NEW_CONN_FORCED;
 	    forcing_new = 1;
