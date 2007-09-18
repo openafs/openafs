@@ -50,7 +50,7 @@ EXERES = \
 
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
-	
+
 AFSD= ..\afsd
 
 VCLIBS =\
@@ -109,7 +109,7 @@ $(EXEOBJSc): $$(@B).c
 
 $(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSDOBJS) $(EXELIBS)
 	$(EXEGUILINK) $(VCLIBS)
-!IF ("$(AFS_CL)" == "1400")
+!IF ("$(AFSVER_CL)" == "1400")
         if exist $@.manifest mt.exe -manifest afs_config.exe.manifest $(MANIFEST) -out:$(MANIFEST)
 !ELSE
         $(COPY) afs_config.exe.manifest $(MANIFEST)
