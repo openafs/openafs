@@ -2407,7 +2407,10 @@ void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op
         outp->res[1] = inSmbp->res[1];
         op->inCom = inSmbp->com;
     }
-    outp->reb = SMB_FLAGS_SERVER_TO_CLIENT | SMB_FLAGS_CANONICAL_PATHNAMES;
+    outp->reb = SMB_FLAGS_SERVER_TO_CLIENT;
+#ifdef SEND_CANONICAL_PATHNAMES
+    outp->reb |= SMB_FLAGS_CANONICAL_PATHNAMES;
+#endif
     outp->flg2 = SMB_FLAGS2_KNOWS_LONG_NAMES;
 
     /* copy fields in generic packet area */
@@ -2888,6 +2891,13 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
         goto send1;
+
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        code = CM_ERROR_NOSUCHFILE;
+        goto send1a;
+    }
+
 
     pid = ((smb_t *) inp)->pid;
     {
@@ -5667,6 +5677,12 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp)
 	return CM_ERROR_BADFD;
     
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -6405,6 +6421,12 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -6520,6 +6542,12 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     fd = smb_GetSMBParm(inp, 0);
     fidp = smb_FindFID(vcp, fd, 0);
 
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return;
+    }
+
     osi_Log3(smb_logp, "Completing Raw Write offset 0x%x:%08x count %x",
              rwcp->offset.HighPart, rwcp->offset.LowPart, rwcp->count);
 
@@ -6620,6 +6648,12 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp) {
         return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
     }
 
     {
@@ -6757,6 +6791,12 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp)
         return CM_ERROR_BADFD;
         
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -7160,10 +7200,15 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* try to find the file descriptor */
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-
     if (!fidp)
 	return CM_ERROR_BADFD;
     
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);

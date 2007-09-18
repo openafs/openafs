@@ -82,12 +82,12 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
      */
 
     lock_ObtainMutex(&scp->mx);
-    cm_AFSFidFromFid(&tfid, &scp->fid);
-
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	lock_ReleaseMutex(&scp->mx);
 	return CM_ERROR_NOSUCHFILE;
     }
+
+    cm_AFSFidFromFid(&tfid, &scp->fid);
 
     code = cm_SetupStoreBIOD(scp, offsetp, length, &biod, userp, reqp);
     if (code) {
