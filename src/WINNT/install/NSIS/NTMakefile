@@ -86,7 +86,7 @@ prebuild:
    "$(NSISDIR)\makensis.exe" /VERSION >>$(OUT)\nsi-includes.nsi          
    echo. >>$(OUT)\nsi-includes.nsi                                       
 !if ("$(AFSVER_CL)" == "1400")
-   echo !define CL_1310 1 >> $(OUT)\nsi-includes.nsi
+   echo !define CL_1400 1 >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1310")
    echo !define CL_1310 1 >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1300")
