@@ -327,6 +327,9 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ReserveFile "AFSCell.ini"
   !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS ;InstallOptions plug-in
   !insertmacro MUI_RESERVEFILE_LANGDLL ;Language selection dialog
+
+  RequestExecutionLevel admin
+
 ;--------------------------------
 ; Macros
 ; Macro - Upgrade DLL File
