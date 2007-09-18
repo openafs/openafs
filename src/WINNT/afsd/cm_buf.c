@@ -622,12 +622,12 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	 * because we aren't going to be able to write this data to the file
 	 * server.
 	 */
-	if (code == CM_ERROR_NOSUCHFILE){
+	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD){
 	    bp->flags &= ~CM_BUF_DIRTY;
 	    bp->flags |= CM_BUF_ERROR;
             bp->dirty_offset = 0;
             bp->dirty_length = 0;
-	    bp->error = CM_ERROR_NOSUCHFILE;
+	    bp->error = code;
 	    bp->dataVersion = -1; /* bad */
 	    bp->dirtyCounter++;
 	}
@@ -1490,8 +1490,22 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             lock_ReleaseMutex(&bp->mx);
 
             code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
-            if (code) 
+            if (code && code != CM_ERROR_BADFD) 
                 goto skip;
+
+	    /* if the scp's FID is bad its because we received VNOVNODE 
+	     * when attempting to FetchStatus before the write.  This
+	     * page therefore contains data that can no longer be stored.
+	     */
+	    lock_ObtainMutex(&bp->mx);
+	    bp->flags &= ~CM_BUF_DIRTY;
+	    bp->flags |= CM_BUF_ERROR;
+	    bp->error = code;
+            bp->dirty_offset = 0;
+            bp->dirty_length = 0;
+            bp->dataVersion = -1;	/* known bad */
+            bp->dirtyCounter++;
+	    lock_ReleaseMutex(&bp->mx);
 
             lock_ObtainWrite(&buf_globalLock);
             /* actually, we only know that buffer is clean if ref
@@ -1509,7 +1523,8 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             }
             lock_ReleaseWrite(&buf_globalLock);
 
-            (*cm_buf_opsp->Unstabilizep)(scp, userp);
+	    if (code != CM_ERROR_BADFD)
+		(*cm_buf_opsp->Unstabilizep)(scp, userp);
         }
 
       skip:
