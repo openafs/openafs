@@ -37,6 +37,8 @@ $(LIBFILE): $(LIBOBJS)
 
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
+EXERES = $(OUT)/backup.res
+
 EXEOBJS =\
 	$(OUT)\main.obj \
 	$(OUT)\config.obj \
@@ -58,8 +60,7 @@ EXEOBJS =\
 	$(OUT)\dlq.obj \
 
 
-$(OUT)/backup.res:AFS_component_version_number.h
-	$(RC) backup.rc
+$(EXERES): backup.rc AFS_component_version_number.h
 
 $(EXEOBJS):$$(@B).c
 	$(C2OBJ) $**
@@ -90,7 +91,7 @@ EXELIBS =\
      $(DESTDIR)\lib\cm_dns.obj
 	
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -119,6 +120,8 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
 clean::
 	$(DEL) bc.h bucoord_errs.c
+	$(DEL) $(EXERES)
+	$(DEL) AFS_component_version_number.h
 
 
 mkdir:

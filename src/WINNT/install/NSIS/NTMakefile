@@ -13,21 +13,27 @@ LOOPBACK_LIBS = wbemuuid.lib setupapi.lib msi.lib ole32.lib shell32.lib oleaut32
 $(OUT)\Service.obj: Service.cpp
 	   $(C2OBJ) Service.cpp
 
-$(EXEDIR)\Service.exe: $(OUT)\Service.obj
+$(OUT)\Service.res: Service.rc AFS_component_version_number.h
+
+$(EXEDIR)\Service.exe: $(OUT)\Service.obj $(OUT)\Service.res
       $(EXECONLINK) 
-        $(_VC_MANIFEST_EMBED_EXE)
+      $(_VC_MANIFEST_EMBED_EXE)
+
+$(OUT)\Killer.res: Killer.rc AFS_component_version_number.h
 
 $(OUT)\Killer.obj: Killer.cpp
       $(C2OBJ) Killer.cpp
 
-$(EXEDIR)\Killer.exe: $(OUT)\Killer.obj
+$(EXEDIR)\Killer.exe: $(OUT)\Killer.obj $(OUT)\Killer.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
+
+$(OUT)\AdminGroup.res: AdminGroup.rc AFS_component_version_number.h
 
 $(OUT)\AdminGroup.obj: AdminGroup.cpp
       $(C2OBJ) AdminGroup.cpp
 
-$(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj
+$(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
 
@@ -104,11 +110,19 @@ build: prebuild
 
 install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe build
 
-#clean:
-#   $(DEL) $(OUT)\Service.obj
-#   $(DEL) $(EXEDIR)\Service.exe
+clean::
+   $(DEL) $(OUT)\Service.obj
+   $(DEL) $(OUT)\Service.res
+   $(DEL) $(EXEDIR)\Service.exe
+   $(DEL) $(OUT)\Killer.obj
+   $(DEL) $(OUT)\Killer.res
+   $(DEL) $(EXEDIR)\Killer.exe
+   $(DEL) $(OUT)\AdminGroup.obj
+   $(DEL) $(OUT)\AdminGroup.res
+   $(DEL) $(EXEDIR)\AdminGroup.exe
+   $(DEL) nsi-include.nsi
+   $(DEL) AFS_component_version_number.h
 #   $(DEL) $(EXEDIR)\Msvcr71.dll
 #   $(DEL) $(EXEDIR)\MFC42.DLL
 #   $(DEL) OpenAFSforWindows.exe
-#   $(DEL) nsi-include.nsi
 

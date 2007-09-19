@@ -57,8 +57,7 @@ LIBOBJS = \
 EXERES = $(OUT)\AfsAdmSvr.res
 
 
-$(EXERES):$$(@B).rc
-	$(RC) $**
+$(EXERES): AfsAdmSvr.rc AFS_component_version_number.h
 
 EXEOBJS = \
 	$(OUT)\TaAfsAdmSvr.obj \
@@ -143,7 +142,7 @@ afsclass_clean :
 	nmake /nologo /f ntmakefile clean
 	$(CD) ..\afsadmsvr
 
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)  $(VCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -161,13 +160,13 @@ clean:: afsclass_clean afsapplib_clean
 	if exist ITaAfsAdmSvr*.cpp del ITaAfsAdmSvr*.cpp
 	if exist ITaAfsAdmSvr*.c del ITaAfsAdmSvr*.c
 	if exist ITaAfsAdmSvr*.h del ITaAfsAdmSvr*.h
+	$(DEL) AFS_component_version_number.h
+	$(DEL) $(EXERES)
 
 ############################################################################
 #
 # Dependencies
 #
-
-$(OUT)\AfsAdmSvr.res : AFS_component_version_number.h
 
 mkdir:
 	-mkdir $(OUT)\..\afsapplib

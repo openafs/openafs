@@ -17,6 +17,8 @@ INCFILES =\
 # build rxgen
 EXEFILE = $(DESTDIR)\bin\rxgen.exe
 
+EXERES = $(OUT)\rxgen.res
+
 EXEOBJS =\
 	$(OUT)\rpc_main.obj \
 	$(OUT)\rpc_hout.obj \
@@ -30,7 +32,9 @@ EXEOBJS =\
 $(EXEOBJS): $$(@B).c
     $(C2OBJ) $**
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXERES): rxgen.rc AFS_component_version_number.h
+
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -42,7 +46,8 @@ install: AFS_component_version_number.c $(EXEFILE) $(INCFILES)
 install9x: install
 
 clean::
-	$(DEL) $(EXEFILE)	
+	$(DEL) $(EXEFILE)
+	$(DEL) $(EXERES)
 
 mkdir:
 	

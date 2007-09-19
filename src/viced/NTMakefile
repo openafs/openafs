@@ -27,14 +27,15 @@ INCFILES =\
 
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
+EXERES = $(OUT)\fileserver.res
+
 EXEOBJS =\
 	$(OUT)\afsfileprocs.obj \
 	$(OUT)\callback.obj \
 	$(OUT)\host.obj \
 	$(OUT)\physio.obj \
 	$(OUT)\viced.obj \
-	$(OUT)\AFS_component_version_number.obj \
-	$(OUT)\fileserver.res
+	$(OUT)\AFS_component_version_number.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -59,7 +60,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -68,18 +69,22 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 # Build cbd - not generally distributed debugging program
 CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
+CBDRES = $(OUT)\cbd.res
+
 $(OUT)\cbd.obj: callback.c AFS_component_version_number.h
 	$(C2OBJ) callback.c -DINTERPRET_DUMP
 
-$(CBD): $(OUT)\cbd.obj 
+$(CBD): $(OUT)\cbd.obj $(CBDRES)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 
 ############################################################################
 # generate versioninfo resources
-$(OUT)\fileserver.res: AFS_component_version_number.h
+$(EXERES): AFS_component_version_number.h
 
-install:  $(INCFILES) $(OUT)\fileserver.res $(CBD)
+$(CBDRES): AFS_component_version_number.h
+
+install:  $(INCFILES) $(EXERES) $(CBD) $(CBDRES)
 
 mkdir:
 	

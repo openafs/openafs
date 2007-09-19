@@ -8,7 +8,11 @@ MEDIABINDIR = $(DESTDIR)\WinInstall\Config
 
 EXEFILE = $(MEDIABINDIR)\instloop.exe
 
+EXERES = $(OUT)\instloop.res
+
 DLLFILE = $(MEDIABINDIR)\afsloopback.dll
+
+DLLRES = $(OUT)\afsloopback.res
 
 DLLEXPORTS=\
 	-EXPORT:UnInstallLoopBack \
@@ -29,6 +33,10 @@ LINK=link
 DLLSOURCEFILES = loopbackutils.cpp renameconnection.cpp wmi.cpp
 DLLOBJFILES =  $(OUT)\loopbackutils.obj $(OUT)\renameconnection.obj $(OUT)\wmi.obj
 
+$(EXERES) : instloop.rc AFS_component_version_number.h
+
+$(DLLRES) : afsloopback.rc AFS_component_version_number.h
+
 STATICC2OBJ=$(CC) $(cflags) $(afscflags) $(afscdefs) -ML
 
 $(OUT)\loopbackutils.obj: loopbackutils.cpp
@@ -40,8 +48,8 @@ $(OUT)\renameconnection.obj: renameconnection.cpp
 $(OUT)\wmi.obj: wmi.cpp
 	$(STATICC2OBJ)  -I$(NTDDKDIR) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
-$(DLLFILE): $(DLLOBJFILES)
-	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $(DLLOBJFILES) $(DLLLIBFILES)
+$(DLLFILE): $(DLLOBJFILES) $(DLLRES)
+	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_DLL)
 
 # instloop.exe
@@ -52,11 +60,15 @@ EXEOBJFILES = $(OUT)\instloop.obj $(DLLOBJFILES)
 $(OUT)\instloop.obj: instloop.c
       $(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
-$(EXEFILE): $(EXEOBJFILES)
-      $(LINK) /OUT:$@ $(EXEOBJFILES) $(DLLLIBFILES)
-        $(_VC_MANIFEST_EMBED_EXE)
+$(EXEFILE): $(EXEOBJFILES) $(EXERES)
+      $(LINK) /OUT:$@ $** $(DLLLIBFILES)
+      $(_VC_MANIFEST_EMBED_EXE)
 
 install:  $(DLLFILE) $(EXEFILE)
 
 clean	::
 	$(DEL) *.pdb
+	$(DEL) $(EXERES)
+	$(DEL) $(DLLRES)
+	$(DEL) AFS_component_version_number.h
+

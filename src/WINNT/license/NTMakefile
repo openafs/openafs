@@ -17,6 +17,8 @@ RELDIR=WINNT\license
 
 EXEFILE = $(DESTDIR)\bin\sgml2rtf.exe
 
+EXERES = $(OUT)\sgml2rtf.res
+
 EXEOBJS = \
 	$(OUT)\main.obj \
 	$(OUT)\multistring.obj
@@ -24,7 +26,9 @@ EXEOBJS = \
 EXELIBS = \
 	user32.lib
 
-$(EXEFILE) : $(EXEOBJS)
+$(EXERES): sgml2rtf.rc AFS_component_version_number.h
+
+$(EXEFILE) : $(EXEOBJS) $(EXERES)
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -44,6 +48,7 @@ mkdir:
 	cd ..
 
 clean ::
+	$(DEL) $(EXERES)
 	$(CD) lang
 	@$(MAKECMD) /nologo /f NTMakefile clean
 	$(CD) ..
