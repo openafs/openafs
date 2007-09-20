@@ -2706,6 +2706,8 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
 #endif
   
     /* dump all interesting data */
+    cm_MemDumpDirStats(hLogFile, cookie, 1);
+    cm_MemDumpBPlusStats(hLogFile, cookie, 1);
     cm_DumpCells(hLogFile, cookie, 1);
     cm_DumpVolumes(hLogFile, cookie, 1);
     cm_DumpSCache(hLogFile, cookie, 1);
