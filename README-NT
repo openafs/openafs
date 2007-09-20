@@ -53,7 +53,7 @@ The following steps describe how to configure Windows 2000/XP:
    F. Build the binaries
    G. Install NSIS 2.30
    H. Build NSIS Install Package
-   I. Install Wix 2.0.4310
+   I. Install Wix 2.0.5325
    J. Build Wix MSI Install Package
    K. Final Results
    L. Optional Items
@@ -97,8 +97,8 @@ version is supported:
 The WiX installer requires about 18 MB of storage.  The following 
 version is supported:
 
-    Wix 2.0.4310.0
-      http://prdownloads.sourceforge.net/wix/sources-2.0.4310.0.zip
+    Wix 2.0.5325.0
+      http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
 
 The InstallShield scripts (although not supported) require version 5.5
 of InstallShiled. Version 6.0 or higher of InstallShield are not 
@@ -352,119 +352,9 @@ From the %AFSROOT% directory execute:
 
 STEP I.  Install Wix MSI Installer
 
-Download the Wix 2.0.2217.0 installer from 
+Download the Wix 2.0.5325.0 installer from 
 
-    http://prdownloads.sourceforge.net/wix/sources-2.0.2217.0.zip
-
-Apply the following patches to the source tree and execute 
-
-    make ship
-
-from the \src\wix directory.  
-
-Index: src/wix/Common.cs
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/Common.cs,v
-retrieving revision 1.7
-diff -w -r1.7 Common.cs
-140a141,146
-> 		public static long GetFileTimeFromDateTime(string dateTime) 
-> 		{
-> 			System.DateTime sdt = System.Xml.XmlConvert.ToDateTime(dateTime);
-> 			return sdt.ToFileTime();
-> 		}
-> 
-Index: src/wix/Compiler.cs
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/Compiler.cs,v
-retrieving revision 1.14
-diff -w -r1.14 Compiler.cs
-847c847
-<                     this.AddRegistryKey(sourceLineNumbers, null, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[!", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
----
->                     this.AddRegistryKey(sourceLineNumbers, null, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[#", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
-2352a2353,2358
-> 			// if a Value attribute was given by itself, make this a type 19 custom action
-> 			if( sourceBits == 0 && targetBits == MsiInterop.MsidbCustomActionTypeTextData ) 
-> 			{
-> 				sourceBits = MsiInterop.MsidbCustomActionTypeSourceFile;
-> 			}
-> 
-3881c3887
-<                         minDate = attrib.Value;
----
->                         minDate = Common.GetFileTimeFromDateTime( attrib.Value ).ToString();
-3884c3890
-<                         maxDate = attrib.Value;
----
->                         maxDate = Common.GetFileTimeFromDateTime( attrib.Value ).ToString();
-8187a8194,8207
-> 					case "Delete":
-> 						switch (attrib.Value)
-> 						{
-> 							case "install":
-> 								events |= MsiInterop.MsidbServiceControlEventDelete;
-> 								break;
-> 							case "uninstall":
-> 								events |= MsiInterop.MsidbServiceControlEventUninstallDelete;
-> 								break;
-> 							case "both":
-> 								events |= MsiInterop.MsidbServiceControlEventDelete | MsiInterop.MsidbServiceControlEventUninstallDelete;
-> 								break;
-> 						}
-> 						break;
-9685a9706
-> 
-Index: src/wix/Preprocessor.cs
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/Preprocessor.cs,v
-retrieving revision 1.6
-diff -w -r1.6 Preprocessor.cs
-274c274
-<                             context = new IfContext(context.IsTrue & context.Active, this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
----
->                             context = new IfContext(context.IsTrue & context.Active, this.IsDefined(reader.Value.Trim()), IfState.If);
-279c279
-<                             context = new IfContext(context.IsTrue & context.Active, !this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
----
->                             context = new IfContext(context.IsTrue & context.Active, !this.IsDefined(reader.Value.Trim()), IfState.If);
-360a361,362
-> 						case "error":
-> 							throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), this.PreprocessVariables(reader.Value));
-419a422,437
-> 		/// Returns true if the symbol exists.
-> 		/// </summary>
-> 		/// <param name="symbol">symbol name to check</param>
-> 		/// <returns>true if symbol is defined</returns>
-> 		private bool IsDefined(string symbol)
-> 		{
-> 			if( symbol.StartsWith("env.") )
-> 				return Environment.GetEnvironmentVariable(symbol.Substring(4)) != null;
-> 			if( symbol.StartsWith("var.") )
-> 				return this.variables.ContainsKey(symbol.Substring(4));
-> 			if( symbol.StartsWith("sys.") )
-> 				return this.systemVariables.ContainsKey(symbol.Substring(4));
-> 			return this.variables.ContainsKey(symbol);
-> 		}
-> 
->         /// <summary>
-Index: src/wix/wix.csproj
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/wix.csproj,v
-retrieving revision 1.4
-diff -w -r1.4 wix.csproj
-661a662,666
->                     RelPath = "Xsd\wix.xsx"
->                     DependentUpon = "wix.xsd"
->                     BuildAction = "None"
->                 />
->                 <File
-664a670,674
->                 <File
->                     RelPath = "Xsd\wixloc.xsx"
->                     DependentUpon = "wixloc.xsd"
->                     BuildAction = "None"
->                 />
+    http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
 
 
 STEP J.  Build Wix MSI install package
