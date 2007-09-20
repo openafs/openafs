@@ -1,3 +1,83 @@
+Since 1.5.24
+ * Update NSIS installer to version 2.30
+
+ * Update Wix installer to version 2.0.5325
+ 
+ * 64-bit KFW support:
+   - Network Identity Manager plug-in
+   - 64-bit aklog
+   - 64-bit krb5 enable afscreds.exe, afs server manager,
+     etc.
+
+ * Enable B+ tree Directory Search by default.
+
+ * NIM plug-in is now compatible with FILE: ccaches
+
+ * Install instloop.exe into Client/Programs/ even though
+   it isn't required.   Permit it to be used by organizations
+   that clone Windows systems.
+
+ * On a suspend, only drop callbacks for servers that 
+   are online.  If the server is offline, maintain the callback
+   until the server is once again available.
+
+ * Prevent against acquisition of a directory write lock when
+   there are no updates to be performed.  This was resulting 
+   in a write-lock leak which later on would lead to a deadlock.
+
+ * Add configurable file pre-fetch mode.  For files that match
+   the specified file extensions, pre-fetch the entire file into
+   the cache.
+
+   HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+      (MULTI_SZ) PrefetchExecutableExtensions
+
+ * Fix the client_osi large integer support so that return values
+   can be properly assigned to large integer variables.
+ 
+ * Do not hold cm_scache_t mutex across cm_GetCell() calls 
+   since cm_GetCell() can block in a RPC.
+
+ * Add short file name support to B+ tree searches.
+
+ * Resolve a conflict between the desire to notify file servers
+   that the client workstation is suspending and the desire to
+   permit objects with valid callbacks when the client suspends
+   to continue to use those objects from the cache if the client
+   resumes without network connectivity.
+
+ * Fix stack variables to ensure that all buffers storing paths
+   can handle AFSPATHMAX (1024) characters.  Paths of 256 characters
+   would cause a stack overflow condition.
+
+ * On Vista, force afs_config.exe to run with the highest privileges
+   available to the end user.  For a user in the Administrators
+   group running under UAC, this will cause afs_config.exe to be 
+   be run with full Administrators privileges after the user 
+   approves the privilege escalation.
+
+ * More VNOVNODE handling issues.  If a dirty buffer cannot be 
+   written due to VNOVNODE, clear the buffer and ignore the error.
+   If a cm_scache_t object has been marked deleted due to a VNOVNODE
+   error, the next time the smb_fid_t object that references it is 
+   used return either NOSUCHFILE or NOSUCHPATH and close the
+   smb_fid_t object.  Subsequent attempts to use the smb_fid_t will
+   result in an invalid handle error.
+
+ * For Vista, set the RequestExecutionLevel of the NSIS installer
+   to "admin".
+
+ * For the build environment, support the generation of manifests
+   when using the CL1310 (VS .NET 2003) compiler/linker.
+
+ * There was a bug in OutputDebugHexString() which could overflow
+   a stack buffer resulting in unexpected process termination
+   of afsd_service.exe if the input Security Token contained
+   many bytes equivalent to the '%' char.
+
+ * Add directory lookup statistics to "fs memdump" output.
+ 
+
 Since 1.5.23
  * Windows uses case-insensitive file name pattern matching
    but AFS is a case sensitive file system.  The AFS3 directory
