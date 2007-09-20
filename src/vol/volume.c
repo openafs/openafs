@@ -2717,30 +2717,8 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	    vp = NULL;
 	    break;
 	}
+#endif
 
-	if (vp->pending_vol_op && !VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
-	    if (client_ec) {
-		/* see CheckVnode() in afsfileprocs.c for an explanation
-		 * of this error code logic */
-		afs_uint32 now = FT_ApproxTime();
-		if ((vp->stats.last_vol_op + (10 * 60)) >= now) {
-		    *client_ec = VBUSY;
-		} else {
-		    *client_ec = VRESTARTING;
-		}
-	    }
-	    *ec = VOFFLINE;
-	    vp = NULL;
-	    break;
-	}
-
-	if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
-	    *ec = VOFFLINE;
-	    vp = NULL;
-	    break;
-	}
-#endif /* AFS_DEMAND_ATTACH_FS */
-	
 	LoadVolumeHeader(ec, vp);
 	if (*ec) {
 	    VGET_CTR_INC(V6);
@@ -2764,6 +2742,30 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	    break;
 	}
 
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (vp->pending_vol_op && !VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
+	    if (client_ec) {
+		/* see CheckVnode() in afsfileprocs.c for an explanation
+		 * of this error code logic */
+		afs_uint32 now = FT_ApproxTime();
+		if ((vp->stats.last_vol_op + (10 * 60)) >= now) {
+		    *client_ec = VBUSY;
+		} else {
+		    *client_ec = VRESTARTING;
+		}
+	    }
+	    *ec = VOFFLINE;
+	    vp = NULL;
+	    break;
+	}
+
+	if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
+	    *ec = VOFFLINE;
+	    vp = NULL;
+	    break;
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+	
 	VGET_CTR_INC(V7);
 	if (vp->shuttingDown) {
 	    VGET_CTR_INC(V8);
