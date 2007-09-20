@@ -66,6 +66,9 @@ BUTCOBJS   = $(OUT)\dbentries.obj \
          $(OUT)\butc_xbsa.obj \
          $(LWPOBJS) \
          $(BUCOORDOBJS)
+
+BUTCRES = $(OUT)\butc.res
+
 BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)
 BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
@@ -110,7 +113,9 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 # nmake /nologo /f ntmakefile install
 #----------------------------------------------- BUTC
 
-$(BUTCEXE): $(BUTCOBJS) $(BUTCLIBS)
+$(BUTCRES): butc.rc AFS_component_version_number.h
+
+$(BUTCEXE): $(BUTCOBJS) $(BUTCRES) $(BUTCLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -186,3 +191,5 @@ noversion: install
 
 mkdir:
 	
+clean::
+	$(DEL) $(BUTCRES)
