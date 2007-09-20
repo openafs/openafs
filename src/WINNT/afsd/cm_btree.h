@@ -143,6 +143,7 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);
 int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry);
 long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);
 void cm_BPlusDumpStats(void);
+int cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
 
 extern afs_uint32 bplus_free_tree;
 extern afs_uint32 bplus_dv_error;

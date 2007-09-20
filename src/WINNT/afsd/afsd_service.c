@@ -76,6 +76,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     buf_ForceTrace(TRUE);
 
     afsi_log("--- begin dump ---");
+    cm_MemDumpDirStats(afsi_file, "a", 0);
+    cm_MemDumpBPlusStats(afsi_file, "a", 0);
     cm_DumpCells(afsi_file, "a", 0);
     cm_DumpVolumes(afsi_file, "a", 0);
     cm_DumpSCache(afsi_file, "a", 0);

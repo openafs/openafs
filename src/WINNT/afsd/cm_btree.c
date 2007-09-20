@@ -1743,6 +1743,44 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp)
     return rc;
 }
 
+int cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock)
+{
+    int zilch;
+    char output[128];
+
+    sprintf(output, "%s - B+ Lookup    Hits: %-8d\r\n", cookie, bplus_lookup_hits);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -      Inexact Hits: %-8d\r\n", cookie, bplus_lookup_hits_inexact);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -    Ambiguous Hits: %-8d\r\n", cookie, bplus_lookup_ambiguous);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Misses: %-8d\r\n", cookie, bplus_lookup_misses);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Create: %-8d\r\n", cookie, bplus_create_entry);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Remove: %-8d\r\n", cookie, bplus_remove_entry);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -        Build Tree: %-8d\r\n", cookie, bplus_build_tree);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -         Free Tree: %-8d\r\n", cookie, bplus_free_tree);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -          DV Error: %-8d\r\n", cookie, bplus_dv_error);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    sprintf(output, "%s - B+ Time    Lookup: %-16I64d\r\n", cookie, bplus_lookup_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Create: %-16I64d\r\n", cookie, bplus_create_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Remove: %-16I64d\r\n", cookie, bplus_remove_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -             Build: %-16I64d\r\n", cookie, bplus_build_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -              Free: %-16I64d\r\n", cookie, bplus_free_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    return(0);
+}
+
 void cm_BPlusDumpStats(void)
 {
     afsi_log("B+ Lookup    Hits: %-8d", bplus_lookup_hits);

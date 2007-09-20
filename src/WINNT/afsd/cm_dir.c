@@ -38,6 +38,32 @@ afs_uint64 dir_enums = 0;
 
 afs_int32  cm_BPlusTrees = 1;
 
+int cm_MemDumpDirStats(FILE *outputFile, char *cookie, int lock)
+{
+    int zilch;
+    char output[128];
+
+    sprintf(output, "%s - Dir Lookup   Hits: %-8d\r\n", cookie, dir_lookup_hits);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Misses: %-8d\r\n", cookie, dir_lookup_misses);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -             Enums: %-8d\r\n", cookie, dir_enums);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Create: %-8d\r\n", cookie, dir_create_entry);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Remove: %-8d\r\n", cookie, dir_remove_entry);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    sprintf(output, "%s - Dir Times  Lookup: %-16I64d\r\n", cookie, dir_lookup_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Create: %-16I64d\r\n", cookie, dir_create_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    sprintf(output, "%s -            Remove: %-16I64d\r\n", cookie, dir_remove_time);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    return(0);
+}
+
 void cm_DirDumpStats(void)
 {
     afsi_log("Dir Lookup   Hits: %-8d", dir_lookup_hits);
