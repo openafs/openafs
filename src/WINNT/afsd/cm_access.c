@@ -42,7 +42,13 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     cm_fid_t tfid;
     int didLock;
     long trights;
-	
+
+#if 0
+    if (scp->flags & CM_SCACHEFLAG_EACCESS) {
+    	*outRightsp = 0;
+	return 1;
+    }
+#endif
     didLock = 0;
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
         aclScp = scp;
@@ -63,7 +69,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
                 return 0;
             }
 
-            /* check that we have a callback, too */
+	    /* check that we have a callback, too */
             if (!cm_HaveCallback(aclScp)) {
                 /* can't use it */
                 lock_ReleaseMutex(&aclScp->mx);
@@ -80,6 +86,12 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
      * Otherwise, if we an explicit acl entry, we're also in good shape,
      * and can definitively answer.
      */
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && aclScp == cm_data.rootSCachep)
+    {
+    	*outRightsp = aclScp->anyAccess;
+    } else
+#endif
     if ((~aclScp->anyAccess & rights) == 0) {
         *outRightsp = rights;
     } else {
@@ -92,13 +104,33 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         *outRightsp = trights;
     }
 
-    /* check mode bits */
-    if (!(scp->unixModeBits & 0400))
-        *outRightsp &= ~PRSFS_READ;
-    if (!(scp->unixModeBits & 0200) && !(rights == (PRSFS_WRITE | PRSFS_LOCK)))
-        *outRightsp &= ~PRSFS_WRITE;
-    if (!(scp->unixModeBits & 0200) && !cm_deleteReadOnly)
-        *outRightsp &= ~PRSFS_DELETE;
+    if (scp->fileType > 0 && scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+	/* check mode bits */
+	if ((scp->unixModeBits & 0400) == 0) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing READ scp 0x%p unix 0x%x", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_READ;
+	}
+	if ((scp->unixModeBits & 0200) == 0 && (rights != (PRSFS_WRITE | PRSFS_LOCK))) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing WRITE scp 0x%p unix 0%o", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_WRITE;
+	}
+	if ((scp->unixModeBits & 0200) == 0 && !cm_deleteReadOnly) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing DELETE scp 0x%p unix 0%o", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_DELETE;
+	}
+    }
+
+    /* if the user can insert, we must assume they can read/write as well
+     * because we do not have the ability to determine if the current user
+     * is the owner of the file. We will have to make the call to the
+     * file server and let the file server tell us if the request should
+     * be denied.
+     */
+    if ((*outRightsp & PRSFS_INSERT) && (scp->creator == userp))
+        *outRightsp |= PRSFS_READ | PRSFS_WRITE;
 
     /* if the user can obtain a write-lock, read-locks are implied */
     if (*outRightsp & PRSFS_WRITE)

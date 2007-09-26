@@ -31,11 +31,12 @@
 
 /* in seconds */
 long cm_daemonCheckDownInterval  = 180;
-long cm_daemonCheckUpInterval    = 600;
+long cm_daemonCheckUpInterval    = 240;
 long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
+long cm_daemonCheckOfflineVolInterval = 600;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -58,11 +59,13 @@ void cm_IpAddrDaemon(long parm)
     while (daemon_ShutdownFlag == 0) {
 	DWORD Result = NotifyAddrChange(NULL,NULL);
 	if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
-	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
 	    Sleep(2500);
+	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
+            cm_CheckServers(CM_FLAG_CHECKVLDBSERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    cm_ForceNewConnectionsAllServers();
-            cm_CheckServers(CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
+            cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    smb_CheckVCs();
+            cm_VolStatus_Network_Addr_Change();
 	}	
     }
 }
@@ -71,6 +74,7 @@ void cm_IpAddrDaemon(long parm)
 void cm_BkgDaemon(long parm)
 {
     cm_bkgRequest_t *rp;
+    afs_int32 code;
 
     rx_StartClientThread();
 
@@ -83,24 +87,60 @@ void cm_BkgDaemon(long parm)
         }
                 
         /* we found a request */
-        rp = cm_bkgListEndp;
-        cm_bkgListEndp = (cm_bkgRequest_t *) osi_QPrev(&rp->q);
-        osi_QRemove((osi_queue_t **) &cm_bkgListp, &rp->q);
+        for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
+	{
+	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
+		break;
+	}
+	if (rp == NULL) {
+	    /* we couldn't find a request that we could process at the current time */
+	    lock_ReleaseWrite(&cm_daemonLock);
+	    Sleep(1000);
+	    lock_ObtainWrite(&cm_daemonLock);
+	    continue;
+	}
+
+        osi_QRemoveHT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **) &cm_bkgListEndp, &rp->q);
         osi_assert(cm_bkgQueueCount-- > 0);
         lock_ReleaseWrite(&cm_daemonLock);
+
+	osi_Log1(afsd_logp,"cm_BkgDaemon processing request 0x%p", rp);
 
 #ifdef DEBUG_REFCOUNT
 	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-        (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
+        code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
 #ifdef DEBUG_REFCOUNT                
 	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-	cm_ReleaseUser(rp->userp);
-        cm_ReleaseSCache(rp->scp);
-        free(rp);
+	if (code == 0) {
+	    cm_ReleaseUser(rp->userp);
+	    cm_ReleaseSCache(rp->scp);
+	    free(rp);
+	}
 
         lock_ObtainWrite(&cm_daemonLock);
+
+	switch ( code ) {
+	case 0: /* success */
+	    osi_Log1(afsd_logp,"cm_BkgDaemon SUCCESS: request 0x%p", rp);
+	    break;
+	case CM_ERROR_TIMEDOUT:	/* or server restarting */
+	case CM_ERROR_RETRY:
+	case CM_ERROR_WOULDBLOCK:
+	case CM_ERROR_ALLBUSY:
+	case CM_ERROR_ALLDOWN:
+	case CM_ERROR_ALLOFFLINE:
+	case CM_ERROR_PARTIALWRITE:
+	    osi_Log2(afsd_logp,"cm_BkgDaemon re-queueing failed request 0x%p code 0x%x",
+		     rp, code);
+	    cm_bkgQueueCount++;
+	    osi_QAddT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **)&cm_bkgListEndp, &rp->q);
+	    break;
+	default:
+	    osi_Log2(afsd_logp,"cm_BkgDaemon FAILED: request dropped 0x%p code 0x%x",
+		     rp, code);
+	}
     }
     lock_ReleaseWrite(&cm_daemonLock);
 }
@@ -207,40 +247,53 @@ cm_DaemonCheckInit(void)
 	return;
 
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "DownServerCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckDownInterval = dummy;
-    
+    afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "UpServerCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckUpInterval = dummy;
-    
+    afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "VolumeCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckVolInterval = dummy;
-    
+    afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "CallbackCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckCBInterval = dummy;
-    
+    afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "LockCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonCheckLockInterval = dummy;
-    
+    afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
+
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "TokenCheckInterval", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
 	cm_daemonTokenCheckInterval = dummy;
+    afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckOfflineVolInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckOfflineVolInterval = dummy;
+    afsi_log("daemonCheckOfflineVolInterval is %d", cm_daemonCheckOfflineVolInterval);
     
     RegCloseKey(parmKey);
 }
@@ -255,6 +308,7 @@ void cm_Daemon(long parm)
     time_t lastDownServerCheck;
     time_t lastUpServerCheck;
     time_t lastTokenCacheCheck;
+    time_t lastBusyVolCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -294,6 +348,7 @@ void cm_Daemon(long parm)
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
+    lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
 
     while (daemon_ShutdownFlag == 0) {
 	/* check to see if the listener threads halted due to network 
@@ -343,7 +398,13 @@ void cm_Daemon(long parm)
 
         if (now > lastVolCheck + cm_daemonCheckVolInterval) {
             lastVolCheck = now;
-            cm_CheckVolumes();
+            cm_RefreshVolumes();
+	    now = osi_Time();
+        }
+
+        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) {
+            lastVolCheck = now;
+            cm_CheckOfflineVolumes();
 	    now = osi_Time();
         }
 

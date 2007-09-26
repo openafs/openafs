@@ -34,222 +34,200 @@
 # include "afs/sysincludes.h"
 # include "afsincludes.h"
 # include "afs_stats.h"
-# if !defined(UKERNEL) || defined(USING_SSL)
+#if defined(USING_K5SSL)
 #  include "k5ssl.h"
-# else	/* UKERNEL && !USING_SSL && KERNEL */
+# else	/* USING_K5SSL */
 #  undef u
 #  include <krb5.h>
-# endif	/* UKERNEL && !USING_SSL && KERNEL */
+# endif	/* USING_K5SSL */
 #else	/* !KERNEL */
 #define afs_osi_Alloc(n)	malloc(n)
 #define afs_osi_Free(p,n)	free(p)
 #define afs_strdup(p) strdup(p)
 # include <afs/afsutil.h>
-# include <auth/cellconfig.h>
+# ifdef AFS_NT40_ENV
+#  include <afs/cellconfig.h>
+# else
+#  include <auth/cellconfig.h>
+# endif
 # include <stdlib.h>
-# include <syslog.h>
 # include <stdarg.h>
 # include <string.h>
 # include <stdio.h>
 # include <sys/types.h>
 # include <sys/stat.h>
-# include <unistd.h>
+# ifndef AFS_NT40_ENV
+#  include <unistd.h>
+#  include <syslog.h>
+# endif
 # include <errno.h>
-# if defined(USING_SSL)
-#  include "k5ssl.h"
-# else	/* !USING_SSL && !KERNEL */
-#  include <krb5.h>
-# endif	/* !USING_SSL && !KERNEL */
+#include "rxk5_utilafs.h"
 #endif	/* !KERNEL */
 #include "rx/rx.h"
-#include "rx/rxk5.h"
 #include "rxk5_tkt.h"
+#include "afs_token_protos.h"
+#include "rx/rxk5.h"
 #include "afs/afs_token.h"
-
-static
-char* expand_principal_name(
-	krb5_context context, 
-	krb5_principal princ, 
-	int *bufsize /* out */) 
-{
-	char* buf;
-#if !defined(USING_SHISHI)
-	int code;
-
-	code = krb5_unparse_name(context, princ, &buf);
-	if(code == 0) {
-		*bufsize = strlen(buf) + 1;
-	} else {
-		*bufsize = 0;
-	}
-#endif
-	return buf;
-}
 
 /*
  * Free rxk5_creds structure
  */
-void rxk5_free_creds(
-	krb5_context k5context, 
+void
+rxk5_free_creds(krb5_context k5context, 
 	rxk5_creds *creds)
 {
-	krb5_free_creds(k5context, creds->k5creds);
-	rxk5_free_str(creds->cell);
+	krb5_free_cred_contents(k5context, creds->k5creds);
 	afs_osi_Free(creds, sizeof(rxk5_creds));
 }
 
-#define MAX_RXK5_TOKEN_LEN	32000
-#define MAX_RXKAD_TOKEN_LEN	12000
-
-/*
- * Free a structure using clever xdr logic.   Most of xdrs is never initialized.  If x_op is
- * XDR_FREE, the rest of it is just ignored.
- */
-
-#if 0
-static
-int free_rxk5_princ(
-	rxk5_principal *princ)
+void
+rxk5_principal_to_krb5_principal(krb5_principal *k5_princ, 
+    k5_principal *rxk5_princ)
 {
-        XDR xdrs[1];
-        xdrs->x_op = XDR_FREE;
-        if (!xdr_rxk5_principal(xdrs, princ)) {
-	  return 1;
-        }
-	return 0;
-}
+    int code;
+    krb5_principal princ;
+    krb5_context context = 0;
+    int i, l;
+    char *cp;
+#if defined(USING_HEIMDAL)
+    heim_general_string *comp;
+    heim_general_string realm = NULL;
 #endif
 
-static 
-void parse_rxk5_princ(
-	char *str, 
-	rxk5_principal *x)
-{
-	int i;
-	char *cp, *ep, *cep, *np;
-	
-	memset(x, 0, sizeof *x);
-
-	if ((cp = strchr(str, '@'))) {
-                x->realm = afs_strdup(cp+1);
-                ep = cp;
-        } else {
-                x->realm = afs_strdup("");
-                ep = str + strlen(str);
-        }
-
-	if(ep > str)
-	  x->name.name_len = 1;
-
-	/* count instances --saves one alloc */
-	cep = ep;
-	for(cp =  str; cp < cep; ) {
-                np = memchr(cp, '/', cep-cp);
-                if (!np)
-                        break;
-                x->name.name_len++;		
-                cp = np + 1;		
-	}
-
-	x->name.name_val = afs_osi_Alloc(
-		x->name.name_len * sizeof *x->name.name_val);
-	
-        for (i = 0, cp = str; cp < ep; ++i) {
-                np = memchr(cp, '/', ep-cp);
-                if (!np)
-                        np = ep;
-                memcpy(x->name.name_val[i] = afs_osi_Alloc(1 + np - cp), cp, np - cp);
-                x->name.name_val[i][np-cp] = 0;
-                cp = np + 1;
-	}
+    *k5_princ = 0;
+    princ = afs_osi_Alloc(sizeof *princ);
+    if (!princ) goto Failed;
+    memset(princ, 0, sizeof *princ);
+    l = rxk5_princ->name.name_len;
+#if defined(USING_HEIMDAL)
+    comp = afs_osi_Alloc(l * sizeof(*comp));
+    if (!(realm = afs_strdup(rxk5_princ->k5realm))) goto Failed;
+    for (i = 0; i < l; ++i) {
+      comp[i] = afs_strdup(rxk5_princ->name.name_val[i]);
+    }
+    (princ)->name.name_type = KRB5_NT_PRINCIPAL;
+    (princ)->name.name_string.val = comp;
+    (princ)->name.name_string.len = l;
+    (princ)->realm = realm;
+#else
+    krb5_princ_type(context, princ) = KRB5_NT_PRINCIPAL;
+    if (!(cp = afs_strdup(rxk5_princ->k5realm))) goto Failed;
+    krb5_princ_realm(context, princ)->data = cp;
+    krb5_princ_realm(context, princ)->length = strlen(cp);
+    krb5_princ_name(context, princ) = afs_osi_Alloc(l * sizeof(krb5_data));
+    if (!krb5_princ_name(context, princ)) goto Failed;
+    memset(krb5_princ_name(context, princ), 0, l * sizeof(krb5_data));
+    krb5_princ_size(context, princ) = l;
+    for (i = 0; i < l; ++i) {
+	cp = afs_strdup(rxk5_princ->name.name_val[i]);
+	if (!cp) goto Failed;
+	krb5_princ_component(context, princ, i)->data = cp;
+	krb5_princ_component(context, princ, i)->length = strlen(cp);
+    }
+#endif
+    *k5_princ = princ;
+    princ = 0;
+Failed:
+    krb5_free_principal(context, princ);
 }
 
-/*
- * Format an rxk5_principal structure as a krb5 name.  The equivalent 
- * of krb_unparse_name.  Caller must free.
- */
-static
-int rxk5_unparse_name(
-	rxk5_principal *x, 
-	char** s, 
-	int *sz)
+int
+krb5_principal_to_rxk5_principal(krb5_principal princ,
+    k5_principal *k5_princ)
 {
-	char *p;
-	int ix, len, nlen;
-	
-	len = 1 /* @, nul */ + strlen(x->realm);
-	for(ix = 0; ix < x->name.name_len; ++ix) {
-		len += strlen(x->name.name_val[ix]) + 1 /* / */;
-	}
-	*sz = len + 1;
-	p = *s = afs_osi_Alloc(*sz);
-	for(ix = 0; ix < x->name.name_len; ++ix) {
-		char* pv = x->name.name_val[ix];
-		nlen = strlen(pv);
-		memcpy(p, pv, nlen);
-		p += nlen;
-		if(ix != (x->name.name_len - 1))
-			*p++ = '/';
-	}
-	*p++ = '@'; 
-	nlen = strlen(x->realm);
-	memcpy(p, x->realm, nlen);
-	p += nlen;
-	*p++ = 0;
-	
-	return 0;
-}
+    krb5_context context = rxk5_get_context(0);
+    int code;
+    char *cp;
+    int i, sl, nl;
+    XDR xdrs[1];
 
-void rxk5_principal_to_krb5_principal( 
-	krb5_principal *k5_princ, 
-	rxk5_principal *rxk5_princ)
-{
-	char *name;
-	int code, sz;
-
-	code = rxk5_unparse_name(rxk5_princ, &name, &sz);
-	code = krb5_parse_name(rxk5_get_context(0), name, k5_princ);
-	afs_osi_Free(name, sz);
+    code = ENOMEM;
+    memset(k5_princ, 0, sizeof *k5_princ);
+#if defined(USING_HEIMDAL)
+    k5_princ->k5realm = afs_strdup((princ)->realm);
+    if(!k5_princ->k5realm) goto Done;
+    nl = (princ)->name.name_string.len;
+    k5_princ->name.name_len = nl;
+    k5_princ->name.name_val = afs_osi_Alloc(nl * sizeof(k5component));
+    if (!k5_princ->name.name_val) goto Done;
+    for (i = 0; i < nl; ++i) {
+	k5_princ->name.name_val[i] = 
+	  afs_strdup((princ)->name.name_string.val[i]);
+	if (!k5_princ->name.name_val[i])
+	    goto Done;      
+    }   
+#else
+    cp = krb5_princ_realm(context, princ)->data;
+    sl = krb5_princ_realm(context, princ)->length;
+    k5_princ->k5realm = afs_osi_Alloc(sl + 1);
+    if (!k5_princ->k5realm) goto Done;
+    memcpy(k5_princ->k5realm, cp, sl);
+    sl[k5_princ->k5realm] = 0;
+    nl = krb5_princ_size(context, princ);
+    k5_princ->name.name_len = nl;
+    k5_princ->name.name_val = afs_osi_Alloc(nl * sizeof(k5component));
+    if (!k5_princ->name.name_val) goto Done;
+    memset(k5_princ->name.name_val, 0, nl * sizeof (k5component));
+    for (i = 0; i < nl; ++i) {
+	cp = krb5_princ_component(context, princ, i)->data;
+	sl = krb5_princ_component(context, princ, i)->length;
+	k5_princ->name.name_val[i] = afs_osi_Alloc(sl + 1);
+	if (!k5_princ->name.name_val[i])
+	    goto Done;
+	memcpy(k5_princ->name.name_val[i], cp, sl);
+	sl[k5_princ->name.name_val[i]] = 0;
+    }
+#endif
+    code = 0;
+Done:
+    if (code) {
+	xdrs->x_op = XDR_FREE;
+	xdr_k5_principal(xdrs, k5_princ);
+	memset(k5_princ, 0, sizeof *k5_princ);
+    }
+    return code;
 }
 
 #if 1 && !defined(KERNEL)
 
 print_rxk5_princ(
-	struct rxk5_principal *princ)
+	struct k5_principal *princ)
 {
         int i;
 
         for (i = 0; i < princ->name.name_len; ++i)
                 printf ("/%s"+!i, princ->name.name_val[i]);
-        printf ("@%s", princ->realm);
+        printf ("@%s", princ->k5realm);
 }
 
-print_rxk5_key(struct rxk5_key *key)
+print_rxk5_key(struct token_tagged_data *key)
 {
         int i;
 
-        printf ("type=%d length=%d data=", key->keytype, key->m_key.m_key_len);
-        for (i = 0; i < key->m_key.m_key_len; ++i)
-                printf ("%02x", i[(unsigned char*)key->m_key.m_key_val]);
+        printf ("type=%d length=%d data=", key->tag, key->tag_data.tag_data_len);
+        for (i = 0; i < key->tag_data.tag_data_len; ++i)
+                printf ("%02x", i[(unsigned char*)key->tag_data.tag_data_val]);
 }
 
 print_rxk5_token(
-	struct rxk5_token *token)
+	token_rxk5 *token)
 {
         int i;
 
         printf (" client=");
-        print_rxk5_princ(&token->client);
+        print_rxk5_princ(&token->k5_client);
         printf ("\n server=");
-        print_rxk5_princ(&token->server);
+        print_rxk5_princ(&token->k5_server);
         printf ("\n session=");
-        print_rxk5_key(&token->session);
+        print_rxk5_key(&token->k5_session);
         printf ("\n authtime=%#x starttime=%#x endtime=%#x\n",
-                token->authtime, token->starttime, token->endtime);
-        printf (" flags=%#x\n", token->flags);
+                Int64ToInt32(token->k5_authtime),
+		Int64ToInt32(token->k5_starttime),
+		Int64ToInt32(token->k5_endtime));
+        printf (" flags=%#x\n", token->k5_flags);
         printf (" ticket=");
-        for (i = 0; i < token->k5ticket.k5ticket_len; ++i)
-                printf ("%02x", i[(unsigned char*)token->k5ticket.k5ticket_val]);
+        for (i = 0; i < token->k5_ticket.k5_ticket_len; ++i)
+                printf ("%02x", i[(unsigned char*)token->k5_ticket.k5_ticket_val]);
         printf ("\n");
 }
 
@@ -260,158 +238,139 @@ print_rxk5_token(
  * caller frees returned memory (of size bufsize).
  */
 int
-make_afs_token_rxk5(
-	krb5_context context,
-	char *cell,
-	int viceid,
-	krb5_creds *creds,
-	afs_token **a_token /* out */)
+add_afs_token_rxk5(krb5_context context,
+    krb5_creds *creds,
+    pioctl_set_token *a_token)
 {
-	rxk5_token *k5_token;
-	char *cp_name, *sp_name;
-	int cpname_size, spname_size;
+    afstoken_soliton at[1];
+    token_rxk5 *k5_token = &at->afstoken_soliton_u.at_rxk5;
+    XDR xdrs[1];
+    int code;
 
-	(*a_token) = (afs_token*) afs_osi_Alloc(sizeof(afs_token));
-	memset((*a_token), 0, sizeof(afs_token)); /* skip? */
+    memset(at, 0, sizeof *at);
+    at->at_type = AFSTOKEN_UNION_K5;
 
-	(*a_token)->nextcellnumber = 0;
-	(*a_token)->cell = afs_strdup(cell);
-	(*a_token)->cu->cu_type = CU_K5;
-
-	k5_token = &((*a_token)->cu->cu_u.cu_rxk5);
-	k5_token->viceid = viceid;
-	cp_name = expand_principal_name(context,
-					creds->client, &cpname_size);
-	parse_rxk5_princ(cp_name, &k5_token->client);
-	sp_name = expand_principal_name(context,
-					creds->server, &spname_size);
-	parse_rxk5_princ(sp_name, &k5_token->server);
-	k5_token->authtime = (creds->times).authtime;
-	k5_token->starttime = (creds->times).starttime;
-	k5_token->endtime = (creds->times).endtime;
-	k5_token->k5ticket.k5ticket_len = (creds->ticket).length;
-	k5_token->k5ticket.k5ticket_val = afs_osi_Alloc(k5_token->k5ticket.k5ticket_len);
-	memcpy(k5_token->k5ticket.k5ticket_val, (creds->ticket).data, 
-	       k5_token->k5ticket.k5ticket_len);
+    code = krb5_principal_to_rxk5_principal(creds->client, &k5_token->k5_client);
+    if (code) goto Done;
+    code = krb5_principal_to_rxk5_principal(creds->server, &k5_token->k5_server);
+    if (code) goto Done;
+    code = ENOMEM;
+    FillInt64(k5_token->k5_authtime, 0, creds->times.authtime)
+    FillInt64(k5_token->k5_starttime, 0, creds->times.starttime)
+    FillInt64(k5_token->k5_endtime, 0, creds->times.endtime)
+    FillInt64(k5_token->k5_renew_till, 0, creds->times.renew_till)
+    k5_token->k5_ticket.k5_ticket_len = creds->ticket.length;
+    k5_token->k5_ticket.k5_ticket_val = creds->ticket.data;
 
 #if USING_HEIMDAL
-	k5_token->session.keytype = (creds->session).keytype;
-	k5_token->session.m_key.m_key_len = (creds->session).keyvalue.length;
-	k5_token->session.m_key.m_key_val = 
-		afs_osi_Alloc(k5_token->session.m_key.m_key_len);
-	memcpy(k5_token->session.m_key.m_key_val, (creds->session).keyvalue.data, 
-	       k5_token->session.m_key.m_key_len);
-	k5_token->flags = (creds->flags.i);
+    k5_token->k5_session.tag = creds->session.keytype;
+    k5_token->k5_session.tag_data.tag_data_len = creds->session.keyvalue.length;
+    k5_token->k5_session.tag_data.tag_data_val = creds->session.keyvalue.data;
+    k5_token->k5_flags = creds->flags.i;
 #else
-	k5_token->session.keytype = (creds->keyblock).enctype;
-	k5_token->session.m_key.m_key_len = (creds->keyblock).length;
-	k5_token->session.m_key.m_key_val = 
-		afs_osi_Alloc(k5_token->session.m_key.m_key_len);
-	memcpy(k5_token->session.m_key.m_key_val, (creds->keyblock).contents, 
-	       k5_token->session.m_key.m_key_len);
-	k5_token->flags = (creds->ticket_flags);
+    k5_token->k5_session.tag = creds->keyblock.enctype;
+    k5_token->k5_session.tag_data.tag_data_len = creds->keyblock.length;
+    k5_token->k5_session.tag_data.tag_data_val = creds->keyblock.contents;
+    k5_token->k5_flags = creds->ticket_flags;
 #endif
-
-	afs_osi_Free(cp_name, cpname_size);
-	afs_osi_Free(sp_name, spname_size);
-
-	return 0;
+    code = add_afs_token_soliton(a_token, at);
+Done:
+    k5_token->k5_ticket.k5_ticket_val = 0;
+    k5_token->k5_session.tag_data.tag_data_val = 0;
+    xdrs->x_op = XDR_FREE;
+    xdr_afstoken_soliton(xdrs, at);
+    return code;
 }
 
 /* 
  * Converts afs_token structure to an rxk5_creds structure, which is returned
  * in creds.  Caller must free.
  */
-int afs_token_to_rxk5_creds(
-	afs_token *a_token, 
-	rxk5_creds **creds)
+int afs_token_to_rxk5_creds(pioctl_set_token *a_token, 
+    rxk5_creds **creds)
 {
-	int code;
-	rxk5_token *k5_token;
+    int code;
+    rxk5_creds *temp;
+    krb5_context context = rxk5_get_context(0);
 
-	switch(a_token->cu->cu_type) {
-	case CU_K5:
-		break;
-	default:
-		/* bad credential type */
-		return -1;
-	}
+    temp = afs_osi_Alloc(sizeof(rxk5_creds));
+    if (!temp)
+	return ENOMEM;
+    memset(temp, 0, sizeof *temp);
+    code = afstoken_to_v5cred(a_token, temp->k5creds);
+    if(!code)
+	*creds = temp;
+    else
+	rxk5_free_creds(context, temp);
 
-	*creds =  afs_osi_Alloc(sizeof(rxk5_creds));
-	if(!*creds)
-		return ENOMEM;
-	code = afs_token_to_k5_creds(a_token, &((*creds)->k5creds));
-	if(code)
-		return code;
-	k5_token = &(a_token->cu->cu_u.cu_rxk5);
-	(*creds)->ViceId = k5_token->viceid;
-	(*creds)->cell = afs_strdup(a_token->cell);
-
-	return 0;
+    return 0;
 }
 
-
-/* 
- * Converts afs_token structure to a native krb5_creds structure, which is returned
- * in creds.  Caller must free.
- */
-int afs_token_to_k5_creds(
-	afs_token *a_token, 
-	krb5_creds **creds)
+/* copy bits of an rxkad token into a k5 credential */
+int
+afstoken_to_v5cred(pioctl_set_token *a_token, krb5_creds *v5cred)
 {
-	rxk5_token *k5_token;
-	krb5_creds *k5_creds;
+    afstoken_soliton at[1];
+    XDR xdrs[1];
+    int code;
 
-	switch(a_token->cu->cu_type) {
-	case CU_K5:
-		break;
-	default:
-		/* bad credential type */
-		return -1;
-	}
+    memset(v5cred, 0, sizeof *v5cred);
+    code = afstoken_to_soliton(a_token, AFSTOKEN_UNION_K5, at);
+    if (code) goto Failed;
 
-	/* already asserted */
-	k5_token = &(a_token->cu->cu_u.cu_rxk5);
-
-	k5_creds = afs_osi_Alloc(sizeof(krb5_creds));
-	memset(k5_creds, 0, sizeof(krb5_creds));
-
-	rxk5_principal_to_krb5_principal(&(k5_creds->client), &k5_token->client);
-	rxk5_principal_to_krb5_principal(&(k5_creds->server), &k5_token->server);
-	(k5_creds->times).authtime = k5_token->authtime;
-	(k5_creds->times).starttime = k5_token->starttime;
-	(k5_creds->times).endtime = k5_token->endtime;
-	(k5_creds->ticket).length = k5_token->k5ticket.k5ticket_len;
-	(k5_creds->ticket).data = afs_osi_Alloc((k5_creds->ticket).length);
-	memcpy((k5_creds->ticket).data, k5_token->k5ticket.k5ticket_val,
-	       (k5_creds->ticket).length);
-
-#if USING_HEIMDAL
-	(k5_creds->session).keytype = k5_token->session.keytype;
-	(k5_creds->session).keyvalue.length = k5_token->session.m_key.m_key_len;
-	(k5_creds->session).keyvalue.data = 
-		afs_osi_Alloc((k5_creds->session).keyvalue.length);
-	memcpy((k5_creds->session).keyvalue.data, 
-	       k5_token->session.m_key.m_key_val, (k5_creds->session).keyvalue.length);
-	(k5_creds->flags.i) = k5_token->flags;
-
-	/* omit addresses */
-	(k5_creds->addresses).len = 0;
-	(k5_creds->addresses).val = (krb5_address*) afs_osi_Alloc(sizeof(krb5_address*));
-	memset((k5_creds->addresses).val, 0, sizeof(krb5_address*));
+    rxk5_principal_to_krb5_principal(&(v5cred->client), &at->afstoken_soliton_u.at_rxk5.k5_client);
+    rxk5_principal_to_krb5_principal(&(v5cred->server), &at->afstoken_soliton_u.at_rxk5.k5_server);
+    v5cred->times.authtime = Int64ToInt32(at->afstoken_soliton_u.at_rxk5.k5_authtime);
+    v5cred->times.starttime = Int64ToInt32(at->afstoken_soliton_u.at_rxk5.k5_starttime);
+    v5cred->times.endtime = Int64ToInt32(at->afstoken_soliton_u.at_rxk5.k5_endtime);
+    v5cred->times.renew_till = Int64ToInt32(at->afstoken_soliton_u.at_rxk5.k5_renew_till);
+#if defined(USING_HEIMDAL)
 #else
-	(k5_creds->keyblock).enctype = k5_token->session.keytype;
-	(k5_creds->keyblock).length = k5_token->session.m_key.m_key_len;
-	(k5_creds->keyblock).contents = afs_osi_Alloc((k5_creds->keyblock).length);
-	memcpy((k5_creds->keyblock).contents, k5_token->session.m_key.m_key_val,
-	       (k5_creds->keyblock).length);
-	(k5_creds->ticket_flags) = k5_token->flags;
-	
-	/* omit addresses */
-	(k5_creds->addresses) = afs_osi_Alloc(sizeof(krb5_address*));
-	*(k5_creds->addresses) = 0;
+    v5cred->is_skey = at->afstoken_soliton_u.at_rxk5.k5_is_skey;
 #endif
+    if (!(v5cred->ticket.length = at->afstoken_soliton_u.at_rxk5.k5_ticket.k5_ticket_len))
+	;
+    else if (!(v5cred->ticket.data = afs_osi_Alloc((v5cred->ticket).length))) {
+	code = ENOMEM;
+	goto Failed;
+    } else
+    memcpy(v5cred->ticket.data, at->afstoken_soliton_u.at_rxk5.k5_ticket.k5_ticket_val,
+       v5cred->ticket.length);
 
-	*creds = k5_creds;
-	return 0;
+    if (!(v5cred->second_ticket.length = at->afstoken_soliton_u.at_rxk5.k5_ticket2.k5_ticket_len))
+	;
+    else if (!(v5cred->second_ticket.data = afs_osi_Alloc((v5cred->second_ticket).length))) {
+	code = ENOMEM;
+	goto Failed;
+    } else
+    memcpy(v5cred->second_ticket.data, at->afstoken_soliton_u.at_rxk5.k5_ticket2.k5_ticket_val,
+	v5cred->second_ticket.length);
+#if USING_HEIMDAL
+    v5cred->session.keytype = at->afstoken_soliton_u.at_rxk5.k5_session.tag;
+    v5cred->session.keyvalue.length = at->afstoken_soliton_u.at_rxk5.k5_session.tag_data.tag_data_len;
+    v5cred->session.keyvalue.data   = at->afstoken_soliton_u.at_rxk5.k5_session.tag_data.tag_data_val;
+    v5cred->flags.i = at->afstoken_soliton_u.at_rxk5.k5_flags;
+
+    /* omit addresses */
+    v5cred->addresses.len = 0;
+    v5cred->addresses.val = (krb5_address*) afs_osi_Alloc(sizeof(krb5_address*));
+    memset(v5cred->addresses.val, 0, sizeof(krb5_address*));
+#else
+    v5cred->keyblock.enctype = at->afstoken_soliton_u.at_rxk5.k5_session.tag;
+    v5cred->keyblock.length   = at->afstoken_soliton_u.at_rxk5.k5_session.tag_data.tag_data_len;
+    v5cred->keyblock.contents = (void *) at->afstoken_soliton_u.at_rxk5.k5_session.tag_data.tag_data_val;
+    v5cred->ticket_flags = at->afstoken_soliton_u.at_rxk5.k5_flags;
+    
+    /* omit addresses */
+    v5cred->addresses = afs_osi_Alloc(sizeof(krb5_address*));
+    *(v5cred->addresses) = 0;
+#endif
+    v5cred->ticket.length = at->afstoken_soliton_u.at_rxk5.k5_ticket.k5_ticket_len;
+    v5cred->ticket.data = at->afstoken_soliton_u.at_rxk5.k5_ticket.k5_ticket_val;
+    at->afstoken_soliton_u.at_rxk5.k5_ticket.k5_ticket_val = 0;
+    at->afstoken_soliton_u.at_rxk5.k5_session.tag_data.tag_data_val = 0;
+Failed:
+    xdrs->x_op = XDR_FREE;
+    xdr_afstoken_soliton(xdrs, at);
+    return code;
 }

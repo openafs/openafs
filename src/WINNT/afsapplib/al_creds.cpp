@@ -36,21 +36,21 @@ extern "C" {
 
 void OnExpiredCredentials (WPARAM wp, LPARAM lp);
 
-BOOL CALLBACK OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void OpenCell_OnInitDialog (HWND hDlg, LPOPENCELLDLG_PARAMS lpp);
 BOOL OpenCell_OnOK (HWND hDlg, LPOPENCELLDLG_PARAMS lpp);
 void OpenCell_OnCell (HWND hDlg);
 void OpenCell_Enable (HWND hDlg, BOOL fEnable);
 void OpenCell_OnGotCreds (HWND hDlg, LPARAM lp);
 
-BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void NewCreds_OnInitDialog (HWND hDlg, LPCREDENTIALSDLG_PARAMS lpp);
 BOOL NewCreds_OnOK (HWND hDlg, LPCREDENTIALSDLG_PARAMS lpp);
 void NewCreds_OnLogin (HWND hDlg);
 void NewCreds_Enable (HWND hDlg, BOOL fEnable);
 void NewCreds_GetOutParams (HWND hDlg, LPCREDENTIALSDLG_PARAMS lpp);
 
-BOOL CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 
 /*
@@ -183,7 +183,7 @@ BOOL AfsAppLib_ShowOpenCellDialog (LPOPENCELLDLG_PARAMS lpp)
 }
 
 
-BOOL CALLBACK OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPOPENCELLDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
@@ -486,7 +486,7 @@ BOOL AfsAppLib_ShowCredentialsDialog (LPCREDENTIALSDLG_PARAMS lpp)
 }
 
 
-BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPCREDENTIALSDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
@@ -848,7 +848,7 @@ BOOL AfsAppLib_CheckCredentials (LPCHECKCREDS_PARAMS lpp)
 }
 
 
-BOOL CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPREALBADCREDSDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)

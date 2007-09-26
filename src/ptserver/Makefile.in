@@ -41,13 +41,12 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${RXK5} \
 	${TOP_LIBDIR}/librxstat.a \
+	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/util.a
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
 	depinstall readgroup readpwd testpt

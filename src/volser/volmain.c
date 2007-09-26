@@ -54,14 +54,13 @@ RCSID
 #include <afs/partition.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <afs/auth.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
-#include "rxk5.h"
 #include "rxk5errors.h"
 #include "afs/rxk5_utilafs.h"
+#include "rxk5.h"
 #endif
+#include <afs/auth.h>
 #include <afs/keys.h>
 #include <ubik.h>
 #include <fcntl.h>
@@ -442,6 +441,10 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
+    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage can
+       log, so we need to do this here */
+    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+
     VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
     /* For nuke() */
     Lock_Init(&localLock);
@@ -491,8 +494,6 @@ main(int argc, char **argv)
     rx_SetRxDeadTime(420);
     memset(busyFlags, 0, sizeof(busyFlags));
 
-    /* Open FileLog and map stdout, stderr into it */
-    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
     SetupLogSignals();
 
     {

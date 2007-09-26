@@ -1,0 +1,73 @@
+=head1 NAME
+
+fs getcalleraccess - Show the current user's access to a file or directory
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs getcalleraccess> S<<< [B<-path> <I<path>>+] >>> [B<-help>]
+
+B<fs gca> S<<< [B<-p> <I<path>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs getcalleraccess> command displays the access that the current
+user has to the specified path using the same representation as B<fs
+listacl>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=item B<-path> <I<path>>+
+
+The B<-path> option specifies the path on which to operate. B<-path> may
+be omitted. If this option isn't given, the default is to act on the
+current directory.
+
+=back
+
+=head1 OUTPUT
+
+For each path, B<fs getcalleraccess> outputs a line like:
+
+    Callers access to <directory> is <rights>
+
+where <directory> is the path on which it is operating and <rights> is an
+ACL string in the same format as is returned by B<fs listacl>. See
+L<fs_listacl(1)> for more information about AFS ACL strings.
+
+=head1 EXAMPLES
+
+The following command shows the current user's access to the path
+F</afs/openafs.org>, which is read and lookup access.
+
+   % fs getcalleraccess /afs/openafs.org
+   Callers access to /afs/openafs.org is rl
+   %
+
+=head1 PRIVILEGE REQUIRED
+
+No special privileges are required for this command.
+
+=head1 SEE ALSO
+
+L<fs_listacl(1)>,
+L<fs_setacl(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

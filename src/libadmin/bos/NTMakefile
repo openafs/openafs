@@ -37,6 +37,7 @@ ILIBDIR = $(DESTDIR)\lib\afs
 DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsadminutil.lib \
 	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afspthread.lib
@@ -62,4 +63,4 @@ $(BOZOOBJS): $(BOZO)\$$(@B).c
 $(OUT)\afsbosadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

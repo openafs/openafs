@@ -155,11 +155,11 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     long written = 0;
     osi_hyper_t fileLength;	/* file's length at start of write */
     osi_hyper_t minLength;	/* don't read past this */
-    long nbytes;		/* # of bytes to transfer this iteration */
+    afs_uint32 nbytes;		/* # of bytes to transfer this iteration */
     cm_buf_t *bufferp;
     osi_hyper_t thyper;		/* hyper tmp variable */
     osi_hyper_t bufferOffset;
-    long bufIndex;			/* index in buffer where our data is */
+    afs_uint32 bufIndex;	/* index in buffer where our data is */
     int doWriteBack;
     osi_hyper_t writeBackOffset;	/* offset of region to write back when
     * I/O is done */
@@ -333,7 +333,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         else
 #endif /* DJGPP */
             memcpy(bufferp->datap + bufIndex, op, nbytes);
-        buf_SetDirty(bufferp);
+        buf_SetDirty(bufferp, bufIndex, nbytes);
 
         /* and record the last writer */
         if (bufferp->userp != userp) {

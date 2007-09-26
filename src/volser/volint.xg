@@ -49,6 +49,10 @@ statindex 16
 #define	    VOLFORWARDMULTIPLE  128
 #define     VOLCONVERTRO        65536
 #define     VOLGETSIZE          65537
+#define     VOLDUMPV2           65538
+
+/* Bits for flags for DumpV2 */
+%#define     VOLDUMPV2_OMITDIRS 1
 
 const SIZE = 1024;
 
@@ -408,3 +412,10 @@ proc GetSize(
   IN afs_int32 fromDate,
   OUT struct volintSize *size
 ) = VOLGETSIZE;
+
+proc DumpV2(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate,
+  IN afs_int32 flags
+) split = VOLDUMPV2;
+

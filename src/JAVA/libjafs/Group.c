@@ -23,6 +23,7 @@
 #include "org_openafs_jafs_Group.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <afs_ptsAdmin.h>
 #include <afs_AdminPtsErrors.h>
 #include <afs_AdminClientErrors.h>
@@ -518,9 +519,10 @@ Java_org_openafs_jafs_Group_getGroupMembersNext
 
   if( !userName ) {
     throwAFSException( env, JAFSADMNOMEM );
-    return;    
+    return 0;
   }
 
+ast = 666;
   if( !pts_GroupMemberListNext( (void *) iterationId, userName, &ast ) ) {
     free( userName );
     if( ast == ADMITERATORDONE ) {

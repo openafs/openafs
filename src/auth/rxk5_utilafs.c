@@ -30,18 +30,35 @@
 
 #include <afsconfig.h>
 #include <afs/afsutil.h>
+
+#ifdef AFS_NT40_ENV
+#include <afs/cellconfig.h>
+#else
 #include <auth/cellconfig.h>
+#endif
 #include <stdlib.h>
-#include <syslog.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef AFS_NT40_ENV
 #include <unistd.h>
+#include <syslog.h>
+#endif
 #include <errno.h>
 #include "rxk5_utilafs.h"
+#include <rx/rx.h>
 #include <rx/rxk5.h>
+
+#ifdef AFS_NT40_ENV
+#define S_ISREG(mode) \
+ (mode & _S_IFREG & mode)
+#endif
+
+/* dcl belongs in afsutil_prototypes.h -- but what about krb5_context ? */
+/* krb_util.c */
+extern char *afs_realm_of_cell(krb5_context k5context, struct afsconf_cell *info);
 
 #define START_OF_TIME	300	/* must be nz */
 #define END_OF_TIME	((~0U)>>1)
@@ -99,13 +116,13 @@ char* get_afs_krb5_localauth_svc_princ(struct afsconf_dir *confdir)
 
   code = krb5_init_context(&k5context);
   if(code) {
-    com_err("rxk5_utilafs", code, "error krb5_init_context");
+    afs_com_err("rxk5_utilafs", code, "error krb5_init_context");
     goto cleanup;
   }
   code = afsconf_GetCellInfo(confdir, NULL, NULL, &info);
 
   if (code) {
-    com_err("rxk5_utilafs", code, " --unable to resolve local cell");
+    afs_com_err("rxk5_utilafs", code, " --unable to resolve local cell");
     goto cleanup;
   }
 
@@ -139,26 +156,35 @@ char*
 get_afs_krb5_svc_princ(struct afsconf_cell *info)
 {
     int code, plen;
-    char *princ = 0, **hrealms = 0;
+    char *princ = 0, **hrealms = 0, *realm = 0;
     krb5_context k5context;
 
     k5context = rxk5_get_context(0);
     if (!k5context)
 	goto cleanup;
 
-    if ((code = krb5_get_host_realm(k5context, info->hostName[0], &hrealms))
-	    || !hrealms || !*hrealms) {
-	com_err("rxk5_utilafs", code,
-	    "no realms for afsdb host <%s>", info->hostName[0]);
-	goto cleanup;
+    if ((code = krb5_get_host_realm(k5context, info->hostName[0], &hrealms)))
+	hrealms = 0;
+    if (hrealms && *hrealms && **hrealms)
+	realm = *hrealms;
+    else {
+	char *cp;
+	int len;
+	if ((cp = strchr(info->hostName[0], '.')))
+	    ++cp;
+	else cp = info->name;
+	realm = malloc(len = strlen(cp)+1);
+	if (!realm) goto cleanup;
+	ucstring(realm, cp, len);
     }
-    plen = 9 + strlen(info->name) + strlen(*hrealms); /* afs-k5/cell@REALM */
+    plen = 9 + strlen(info->name) + strlen(realm); /* afs-k5/cell@REALM */
     princ = malloc(plen);
     if (!princ)
 	goto cleanup;
-    snprintf(princ, plen, "afs-k5/%s@%s", info->name, *hrealms);
+    snprintf(princ, plen, "afs-k5/%s@%s", info->name, realm);
 
 cleanup:
+    if (realm && (!hrealms || realm != *hrealms)) free(realm);
     if (hrealms) krb5_free_host_realm(k5context, hrealms);
     return princ;
 }
@@ -166,11 +192,13 @@ cleanup:
 int env_afs_rxk5_default(void)
 {
     char* ev = (char*) getenv("AFS_RXK5_DEFAULT");
-    if (!ev) return FORCE_RXKAD|FORCE_RXK5;
+    if (!ev) return (FORCE_KTC|FORCE_RXKAD|FORCE_RXK5);
     if ((strcasecmp(ev, "YES") == 0) || (strcasecmp(ev, "1") == 0)) {
-	return FORCE_RXK5;
-    } else {
-	return FORCE_RXKAD;
+	return FORCE_RXK5 | FORCE_KTC;
+    } else if ((strcasecmp(ev, "K5CC") == 0) || (strcasecmp(ev, "2") == 0)) {
+	return FORCE_RXK5 | FORCE_K5CC;
+    } else {	/* "NO" "0" or anything else */
+	return FORCE_RXKAD | FORCE_KTC;
     }
 }
 
@@ -338,7 +366,7 @@ int Dflag;
 #define k5forge_progname "afs_rxk5_k5forge"
 int exitcode;
 
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 #define deref_keyblock_enctype(kb) \
 	((kb)->keytype)
 
@@ -405,7 +433,7 @@ int afs_rxk5_k5forge(krb5_context context,
     krb5_enctype enctype;
     krb5_kvno kvno;
     krb5_keyblock session_key[1];
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     Ticket ticket_reply[1];
     EncTicketPart enc_tkt_reply[1];
     krb5_address address[30];
@@ -440,20 +468,20 @@ int afs_rxk5_k5forge(krb5_context context,
     memset((char*)enc_tkt_reply, 0, sizeof *enc_tkt_reply);
     if (service && (code = krb5_parse_name(context, service,
 	    &service_principal))) {
-	com_err(k5forge_progname, code, "when parsing name <%s>", service);
+	afs_com_err(k5forge_progname, code, "when parsing name <%s>", service);
 	goto cleanup;
     }
     if (client && (code = krb5_parse_name(context, client,
 	    &client_principal))) {
-	com_err(k5forge_progname, code, "when parsing name <%s>", client);
+	afs_com_err(k5forge_progname, code, "when parsing name <%s>", client);
 	goto cleanup;
     }
     code = krb5_kt_resolve(context, keytab, &kt);
     if (code) {
 	if (keytab)
-	    com_err(k5forge_progname, code, "while resolving keytab %s", keytab);
+	    afs_com_err(k5forge_progname, code, "while resolving keytab %s", keytab);
 	else
-	    com_err(k5forge_progname, code, "while resolving default keytab");
+	    afs_com_err(k5forge_progname, code, "while resolving default keytab");
 	goto cleanup;
     }
 
@@ -472,7 +500,7 @@ int afs_rxk5_k5forge(krb5_context context,
 	  }
 	}
 	if (code) {
-	  com_err(k5forge_progname, code,"while scanning keytab entries for %s", service);
+	  afs_com_err(k5forge_progname, code,"while scanning keytab entries for %s", service);
 	  goto cleanup;
 	}
     } else {
@@ -480,7 +508,7 @@ int afs_rxk5_k5forge(krb5_context context,
 	int best = -1;
 	memset(new, 0, sizeof *new);
 	if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
-	    com_err(k5forge_progname, code, "while starting keytab scan");
+	    afs_com_err(k5forge_progname, code, "while starting keytab scan");
 	    goto cleanup;
 	}
 	while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
@@ -496,12 +524,12 @@ int afs_rxk5_k5forge(krb5_context context,
 	    } else krb5_free_keytab_entry_contents(context, new);
 	}
 	if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
-	    com_err(k5forge_progname, i, "while ending keytab scan");
+	    afs_com_err(k5forge_progname, i, "while ending keytab scan");
 	    code = i;
 	    goto cleanup;
 	}
 	if (best < 0) {
-	    com_err(k5forge_progname, code, "while scanning keytab");
+	    afs_com_err(k5forge_progname, code, "while scanning keytab");
 	    goto cleanup;
 	}
 	deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
@@ -509,10 +537,10 @@ int afs_rxk5_k5forge(krb5_context context,
 
     /* Make Ticket */
 
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     if ((code = krb5_generate_random_keyblock(context,
 	    deref_keyblock_enctype(session_key), session_key))) {
-	com_err(k5forge_progname, code, "while making session key");
+	afs_com_err(k5forge_progname, code, "while making session key");
 	goto cleanup;
     }
     enc_tkt_reply->flags.initial = 1;
@@ -535,10 +563,10 @@ int afs_rxk5_k5forge(krb5_context context,
 #else
     if ((code = krb5_c_make_random_key(context,
 	    deref_keyblock_enctype(session_key), session_key))) {
-	com_err(k5forge_progname, code, "while making session key");
+	afs_com_err(k5forge_progname, code, "while making session key");
 	goto cleanup;
     }
-#if !USING_SSL
+#if !defined(USING_K5SSL)
     enc_tkt_reply->magic = KV5M_ENC_TKT_PART;
 #define DATACAST	(unsigned char *)
 #else
@@ -562,17 +590,17 @@ int afs_rxk5_k5forge(krb5_context context,
 
     if (paddress && *paddress) {
 	deref_enc_tkt_addrs(enc_tkt_reply) = faddr;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	faddr->len = 0;
 	faddr->val = address;
 #endif
 	for (i = 0; paddress[i]; ++i) {
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    address[i].addr_type = KRB5_ADDRESS_INET;
 	    address[i].address.data = (void*)(paddress+i);
 	    address[i].address.length = sizeof(paddress[i]);
 #else
-#if !USING_SSL
+#if !defined(USING_K5SSL)
 	    address[i].magic = KV5M_ADDRESS;
 	    address[i].addrtype = ADDRTYPE_INET;
 #else
@@ -583,14 +611,14 @@ int afs_rxk5_k5forge(krb5_context context,
 	    faddr[i] = address+i;
 #endif
 	}
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	faddr->len = i;
 #else
 	faddr[i] = 0;
 #endif
     }
 
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     ticket_reply->sname = service_principal->name;
     ticket_reply->realm = service_principal->realm;
 
@@ -603,12 +631,12 @@ int afs_rxk5_k5forge(krb5_context context,
 	ASN1_MALLOC_ENCODE(EncTicketPart, buf, buf_size,
 	    enc_tkt_reply, &buf_len, code);
 	if(code) {
-	    com_err(k5forge_progname, code, "while encoding ticket");
+	    afs_com_err(k5forge_progname, code, "while encoding ticket");
 	    goto cleanup;
 	}
 
 	if(buf_len != buf_size) {
-	    com_err(k5forge_progname, code,
+	    afs_com_err(k5forge_progname, code,
 "%d != %d while encoding ticket (internal ASN.1 encoder error",
 		buf_len, buf_size);
 	    goto cleanup;
@@ -626,7 +654,7 @@ int afs_rxk5_k5forge(krb5_context context,
 	if (buf) free(buf);
 	if (crypto) krb5_crypto_destroy(context, crypto);
 	if(code) {
-	    com_err(k5forge_progname, code, "while %s", what);
+	    afs_com_err(k5forge_progname, code, "while %s", what);
 	    goto cleanup;
 	}
     } /* crypto block */
@@ -638,7 +666,7 @@ int afs_rxk5_k5forge(krb5_context context,
     ticket_reply->server = service_principal;
     ticket_reply->enc_part2 = enc_tkt_reply;
     if ((code = krb5_encrypt_tkt_part(context, &deref_entry_keyblock(entry), ticket_reply))) {
-        com_err(k5forge_progname, code, "while making ticket");
+        afs_com_err(k5forge_progname, code, "while making ticket");
 	goto cleanup;
     }
     ticket_reply->enc_part.kvno = entry->vno;
@@ -648,21 +676,21 @@ int afs_rxk5_k5forge(krb5_context context,
 
     if ((code = krb5_copy_principal(context, service_principal,
 	    &creds->server))) {
-	com_err(k5forge_progname, code, "while copying service principal");
+	afs_com_err(k5forge_progname, code, "while copying service principal");
 	goto cleanup;
     }
     if ((code = krb5_copy_principal(context, client_principal,
 	    &creds->client))) {
-	com_err(k5forge_progname, code, "while copying client principal");
+	afs_com_err(k5forge_progname, code, "while copying client principal");
 	goto cleanup;
     }
     if ((code = krb5_copy_keyblock_contents(context, session_key,
 	    &deref_session_key(creds)))) {
-	com_err(k5forge_progname, code, "while copying session key");
+	afs_com_err(k5forge_progname, code, "while copying session key");
 	goto cleanup;
     }
 
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     creds->times.authtime = enc_tkt_reply->authtime;
     creds->times.starttime = *(enc_tkt_reply->starttime);
     creds->times.endtime = enc_tkt_reply->endtime;
@@ -678,23 +706,23 @@ int afs_rxk5_k5forge(krb5_context context,
 	;
     else if ((code = krb5_copy_addresses(context,
 	    deref_enc_tkt_addrs(enc_tkt_reply), &creds->addresses))) {
-	com_err(k5forge_progname, code, "while copying addresses");
+	afs_com_err(k5forge_progname, code, "while copying addresses");
 	goto cleanup;
     }
 
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     {
       size_t creds_tkt_len;
       ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length,
 			 ticket_reply, &creds_tkt_len, code);
       if(code) {
-	com_err(k5forge_progname, code, "while encoding ticket");
+	afs_com_err(k5forge_progname, code, "while encoding ticket");
 	goto cleanup;
       }
     }
 #else
     if ((code = encode_krb5_ticket(ticket_reply, &temp))) {
-      com_err(k5forge_progname, code, "while encoding ticket");
+      afs_com_err(k5forge_progname, code, "while encoding ticket");
       goto cleanup;
     }
     creds->ticket = *temp;
@@ -738,7 +766,7 @@ default_afs_rxk5_forge(krb5_context context,
 	ENCTYPE_AES256_CTS_HMAC_SHA1_96,
 	ENCTYPE_AES128_CTS_HMAC_SHA1_96,
 	ENCTYPE_DES3_CBC_SHA1,
-#ifndef USING_HEIMDAL
+#ifdef USING_MIT
 #define ENCTYPE_ARCFOUR_HMAC_MD5 ENCTYPE_ARCFOUR_HMAC
 #endif
 	ENCTYPE_ARCFOUR_HMAC_MD5,
@@ -772,3 +800,4 @@ out:
     if (to_free) free(to_free);
     return code;
 }
+

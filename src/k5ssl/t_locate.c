@@ -37,16 +37,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 
-#if defined(USE_FAKESSL) || defined(USE_SSL)
+#ifdef USING_K5SSL
 #include "k5ssl.h"
 #include "k5s_im.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include <krb5.h>
 #define krb5i_timegm	timegm
 #endif
@@ -144,8 +143,8 @@ printf ("Looking up <%s>%s%s\n", realm, mflag ? " master" : "",
     if (tflag&2) flags |= KRB5_KRBHST_FLAGS_LARGE_MSG;
     code = krb5_krbhst_init_flags(k5context, realm, type, flags, &handle);
     if (code) {
-	fprintf(stderr,"krb5_krbhst_init_flags <%s> failed - %d\n",
-	    realm, code);
+	fprintf(stderr,"krb5_krbhst_init_flags <%s> failed - %d (%s)\n",
+	    realm, code, afs_error_message(code));
 	exitrc = 1;
     }
     if (!code) {
@@ -212,7 +211,8 @@ printf ("Looking up <%s>%s%s\n", realm, mflag ? " master" : "",
     }
 #endif
     if (code) {
-	fprintf (stderr, "%s <%s> failed - %d\n", what, realm, code);
+	fprintf (stderr, "%s <%s> failed - %d (%s)\n", what, realm,
+	    code, afs_error_message(code));
 	exitrc = 1;
     } else {
 	for (i = 0; i < addrs->naddrs; ++i) {
@@ -273,7 +273,8 @@ main(int argc, char **argv)
 	exit(1);
     } else {
 	if (!k5context && (code = krb5_init_context(&k5context))) {
-	    fprintf(stderr,"krb5_init_context failed - %d\n", code);
+	    fprintf(stderr,"krb5_init_context failed - %d (%s)\n",
+		code, afs_error_message(code));
 	    exit(2);
 	}
 	++f;

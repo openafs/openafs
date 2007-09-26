@@ -59,8 +59,6 @@
 
 /* FSYNC flag codes */
 
-
-
 struct offlineInfo {
     afs_uint32 volumeID;
     char partName[16];

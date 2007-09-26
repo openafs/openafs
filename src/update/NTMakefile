@@ -9,6 +9,20 @@ RELDIR=update
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+RXK5LIBS = $(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 LIBS = \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -50,8 +64,8 @@ USVR_OBJS = \
 	$(OUT)\update.ss.obj \
 	$(OUT)\upserver.res
 
-$(UPSERVER):  $(USVR_OBJS) $(LIBS)
-	$(EXECONLINK) dnsapi.lib iphlpapi.lib
+$(UPSERVER):  $(USVR_OBJS) $(LIBS) $(RXK5LIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
@@ -66,8 +80,8 @@ UCLNT_OBJS = \
 	$(OUT)\update.cs.obj \
 	$(OUT)\upclient.res
 
-$(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
-	$(EXECONLINK) dnsapi.lib iphlpapi.lib
+$(UPCLIENT):  $(UCLNT_OBJS) $(LIBS) $(RXK5LIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
@@ -92,4 +106,4 @@ clean::
 
 mkdir:
 	 copy home $(OUT)\.
-	
+

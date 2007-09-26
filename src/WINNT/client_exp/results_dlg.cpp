@@ -29,29 +29,29 @@ static char THIS_FILE[] = __FILE__;
 CResultsDlg::CResultsDlg(DWORD nHelpID, CWnd* pParent /*=NULL*/)
 	: CDialog()
 {
-	InitModalIndirect (TaLocale_GetDialogResource (CResultsDlg::IDD), pParent);
+    InitModalIndirect (TaLocale_GetDialogResource (CResultsDlg::IDD), pParent);
 
-	//{{AFX_DATA_INIT(CResultsDlg)
-		// NOTE: the ClassWizard will add member initialization here
-	//}}AFX_DATA_INIT
+    //{{AFX_DATA_INIT(CResultsDlg)
+    // NOTE: the ClassWizard will add member initialization here
+    //}}AFX_DATA_INIT
 
-	m_nHelpID = nHelpID;
+    m_nHelpID = nHelpID;
 }
 
 
 void CResultsDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CResultsDlg)
-	DDX_Control(pDX, IDC_RESULTS_LABEL, m_ResultsLabel);
-	DDX_Control(pDX, IDC_LIST, m_List);
-	//}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CResultsDlg)
+    DDX_Control(pDX, IDC_RESULTS_LABEL, m_ResultsLabel);
+    DDX_Control(pDX, IDC_LIST, m_List);
+    //}}AFX_DATA_MAP
 }
 
 BEGIN_MESSAGE_MAP(CResultsDlg, CDialog)
-	//{{AFX_MSG_MAP(CResultsDlg)
-	ON_BN_CLICKED(IDHELP, OnHelp)
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CResultsDlg)
+    ON_BN_CLICKED(IDHELP, OnHelp)
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -59,38 +59,38 @@ END_MESSAGE_MAP()
 
 BOOL CResultsDlg::OnInitDialog() 
 {
-	CDialog::OnInitDialog();
+    CDialog::OnInitDialog();
 	
-	SetWindowText(m_strDlgTitle);
-	m_ResultsLabel.SetWindowText(m_strResultsTitle);
+    SetWindowText(m_strDlgTitle);
+    m_ResultsLabel.SetWindowText(m_strResultsTitle);
 
-	ASSERT(m_Files.GetSize() == m_Results.GetSize());
+    ASSERT(m_Files.GetSize() == m_Results.GetSize());
 
-	m_List.SetTabStops(118);
+    m_List.SetTabStops(118);
 
-	for (int i = 0; i < m_Files.GetSize(); i++) {
-		CString strItem = m_Files[i] + "\t" + m_Results[i];
-		m_List.AddString(strItem);
-	}
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+    for (int i = 0; i < m_Files.GetSize(); i++) {
+	CString strItem = m_Files[i] + "\t" + m_Results[i];
+	m_List.AddString(strItem);
+    }
+
+    return TRUE;  // return TRUE unless you set the focus to a control
+    // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CResultsDlg::SetContents(const CString& strDlgTitle, const CString& strResultsTitle, const CStringArray& files, const CStringArray& results)
 {
-	m_strDlgTitle = strDlgTitle;
-	m_strResultsTitle = strResultsTitle;
+    m_strDlgTitle = strDlgTitle;
+    m_strResultsTitle = strResultsTitle;
 
-	m_Files.RemoveAll();
-	m_Files.Copy(files);
+    m_Files.RemoveAll();
+    m_Files.Copy(files);
 
-	m_Results.RemoveAll();
-	m_Results.Copy(results);
+    m_Results.RemoveAll();
+    m_Results.Copy(results);
 }
 
 void CResultsDlg::OnHelp() 
 {
-	ShowHelp(m_hWnd, m_nHelpID);
+    ShowHelp(m_hWnd, m_nHelpID);
 }
 

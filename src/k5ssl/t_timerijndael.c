@@ -45,8 +45,8 @@ typedef struct _my_aes_key {
 #define rijndael_encrypt(ks, p, c)	AES_encrypt(p, c, ks->enckey)
 #define rijndael_decrypt(ks, c, p)	AES_decrypt(c, p, ks->deckey)
 #else
-#include "sslaes.h"
-typedef struct sslaes_rijndael_ks_struct my_aes_key;
+#include "k5s_rijndael.h"
+typedef struct rijndael_ks my_aes_key;
 #endif
 
 /* char **cipher_name(); */

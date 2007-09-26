@@ -27,7 +27,12 @@ SOFTWARE.
 #pragma once
 
 #include <windows.h>
+#include <objbase.h>
 #include <npapi.h>
+#if (_WIN32_WINNT < 0x0501)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <ntsecapi.h>
 #include <tchar.h>
 #include <strsafe.h>
@@ -40,6 +45,7 @@ SOFTWARE.
 #define REG_CLIENT_TRACE_OPTION_PARM	"TraceOption"
 #define REG_CLIENT_LOGON_OPTION_PARM	"LogonOptions"
 #define REG_CLIENT_LOGON_SCRIPT_PARMW	L"LogonScript"
+#define REG_CLIENT_REALM_PARM           "Realm"
 #define REG_CLIENT_THESE_CELLS_PARM     "TheseCells"
 #define REG_CLIENT_LOGOFF_TOKENS_PARM	"LogoffPreserveTokens"
 #define DEFAULT_RETRY_INTERVAL          60                        /* seconds*/
@@ -71,6 +77,7 @@ typedef struct LogonOptions_type {
 	LPWSTR	logonScript;
 	DWORD	flags; /* LOGON_FLAG_* */
         char *  theseCells;
+        char *  realm;
 } LogonOptions_t;
 
 /* */

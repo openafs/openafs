@@ -28,18 +28,17 @@
  * such damages.
  */
 
+#include "k5s_config.h"
 #include <sys/types.h>
-#ifdef USE_SSL
+#ifdef USING_SSL
 #include <openssl/evp.h>
 #endif
-#ifdef USE_FAKESSL
+#ifdef USING_FAKESSL
 #include "k5s_evp.h"
 #endif
 
 #include "k5s_des.h"
 #include "k5s_desint.h"
-
-#define DES_BLOCK_SIZE 8
 
 #ifndef NID_des_cbc
 #define NID_des_cbc	NID_undef

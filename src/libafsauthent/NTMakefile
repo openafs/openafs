@@ -14,12 +14,32 @@ RELDIR=libafsauthent
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+AFS_TOKEN_RXK5_DEFINE = -DAFS_RXK5
+
+afscflags = $(afscflags) $(kfwincflags)
+
+RXK5OBJS=\
+	$(OUT)\rxk5_utilafs.obj \
+	$(OUT)\rxk5_tkt.obj \
+	$(OUT)\krb_util.obj \
+	$(OUT)\rxk5errors.obj
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib
+
+!ENDIF
+
+AKLOG = ..\aklog
 AUDIT = ..\audit
 AUTH = ..\auth
 KAUTH = ..\kauth
 UBIK = ..\ubik
 UTIL = ..\util
 RXKAD = ..\rxkad
+RXK5 = ..\rxk5
 PTSERVER = ..\ptserver
 SYS = ..\sys
 WINNTAFSD = ..\WINNT\afsd
@@ -70,6 +90,10 @@ UTILOBJS = \
 RXKADOBJS = \
 	$(OUT)\rxkad_errs.obj
 
+NEWTOK_OBJS = \
+	$(OUT)\rxkad_tkt.obj \
+	$(OUT)\afs_token.xdr.obj
+
 PTSERVEROBJS = \
 	$(OUT)\ptclient.obj \
 	$(OUT)\ptint.cs.obj \
@@ -91,6 +115,9 @@ DLLOBJS =\
 	$(UBIKOBJS) \
 	$(UTILOBJS) \
 	$(RXKADOBJS) \
+	$(RXK5OBJS) \
+	$(NEWTOK_OBJS) \
+	$(AKLOG_OBJS) \
 	$(PTSERVEROBJS) \
 	$(SYSOBJS) \
 	$(WINNTAFSDOBJS) \
@@ -116,6 +143,9 @@ $(UTILOBJS): $(UTIL)\$$(@B).c
 $(RXKADOBJS): $(RXKAD)\$$(@B).c
 	$(C2OBJ) -I$(RXKAD) $**
 
+#$(NEWTOK_OBJS): $(AUTH)\$$(@B).c
+#	$(C2OBJ) -I$(AUTH) $**
+
 $(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
 	$(C2OBJ) -I$(PTSERVER) $**
 
@@ -128,6 +158,24 @@ $(AUDITBJS): $(AUDIT)\$$(@B).c
 $(SYSOBJS): $(SYS)\$$(@B).c
 	$(C2OBJ) -I$(SYS) $**
 
+$(OUT)\krb_util.obj: $(AKLOG)\krb_util.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_utilafs.obj: $(AUTH)\rxk5_utilafs.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_tkt.obj: $(AUTH)\rxk5_tkt.c
+        $(C2OBJ) $**
+        
+$(OUT)\rxkad_tkt.obj: $(AUTH)\rxkad_tkt.c
+        $(C2OBJ) $** 
+        
+$(OUT)\afs_token.xdr.obj: $(AUTH)\afs_token.xdr.c
+        $(C2OBJ) $**        
+
+$(OUT)\rxk5errors.obj: $(RXK5)\rxk5errors.c
+        $(C2OBJ) $**
+
 DLLLIBS =\
 !IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
 	$(DESTDIR)\lib\win95\afspthread.lib \
@@ -139,12 +187,13 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-        $(DESTDIR)\lib\afs\afsprocmgmt.lib \
-        $(DESTDIR)\lib\afslwp.lib \
-        $(DESTDIR)\lib\lanahelper.lib
+    $(DESTDIR)\lib\afs\afsprocmgmt.lib \
+    $(DESTDIR)\lib\afslwp.lib \
+    $(DESTDIR)\lib\lanahelper.lib \
+	$(RXK5LIBS)
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
-	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib
+	$(DLLGUILINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
@@ -159,4 +208,4 @@ clean ::
 	$(DEL) $(LIBFILE)
 
 mkdir:
-	
+

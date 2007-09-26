@@ -34,7 +34,7 @@ LIBS=\
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/util.a
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
 

@@ -43,7 +43,7 @@
 #define afs_osi_Free(p,n)	free(p)
 #define afs_strcasecmp(p,q)	strcasecmp(p,q)
 #endif
-#if defined(USE_SSL) || defined(USE_FAKESSL)
+#ifdef USING_K5SSL
 #include "k5ssl.h"
 #else
 #include "krb5.h"
@@ -160,7 +160,7 @@ process(char *fn)
 #endif /* not Heimdal */
     krb5_checksum cksum[1];
     krb5_keyblock *key, kb[1];
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     krb5_crypto crypto = 0;
     char *err;
 #else /* not Heimdal */
@@ -176,7 +176,7 @@ process(char *fn)
 	exitrc = 1;
 	return;
     }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 /* need this to make heimdal work right. */
 /* otherwise errors cause core dumps. */
 /*
@@ -186,10 +186,12 @@ assertion "inited" failed: file "../../../krb5/src/lib/crypto/prng.c", line 100
  */
 
     if (!k5context && (code = krb5_init_context(&k5context))) {
-	fprintf(stderr,"krb5_init_context failed - %d\n", code);
+	fprintf(stderr,"krb5_init_context failed - %d (%s)\n",
+	    code, afs_error_message(code));
 	exit(1);
     }
 #else /* not Heimdal */
+    initialize_krb5_error_table();
     if ((code = krb5_c_random_os_entropy(k5context,0,NULL))) {
 	fprintf(stderr,"krb5_c_random_os_entropy failed - %d\n",code);
 	exit(1);
@@ -206,6 +208,7 @@ assertion "inited" failed: file "../../../krb5/src/lib/crypto/prng.c", line 100
     key = 0;
     memset(ts, 0, sizeof ts);
     memset(kb, 0, sizeof *kb);
+    *label = 0;
     while (fgets(line, sizeof line, fd)) {
 	stripnl(line);
 	if (*line == '#') continue;
@@ -229,23 +232,24 @@ assertion "inited" failed: file "../../../krb5/src/lib/crypto/prng.c", line 100
 	}
 	if (!strncmp(line, "T=", 2)) {
 	    cktype = atoi(line+2);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    code = krb5_checksumsize(k5context, cktype, &cksumsize);
 #else /* not Heimdal */
 	    code = krb5_c_checksum_length(k5context, cktype, &cksumsize);
 #endif /* not Heimdal */
 	    if (code) {
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 		fprintf (stderr,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 "%s: *** checksumtype %d not recognized - error %d %s\n",
-		    label, cktype, code, err);
+		    label, cktype, code, err
 #else /* not Heimdal */
-"%s: *** checksumtype %d not recognized - error %d\n",
-		    label, cktype, code);
+"%s: *** checksumtype %d not recognized - error %d (%s)\n",
+		    label, cktype, code, afs_error_message(code)
 #endif /* not Heimdal */
+		    );
 		exitrc = 1;
 		++errors;
 		continue;
@@ -259,21 +263,22 @@ fprinthex(stdout,"SUM",digest,digestlen);
 	    }
 	    flag &= ~(F_GOT_SUM|F_GOT_DATA);
 	    flag |= F_NEWIDENT;
-	    strcpy(label, line+2);
+	    snprintf(label, sizeof label, "%s", line+2);
 	}
 	else if (!strncmp(line, "DATA=", 5)) {
 	    if (key && !KEYDATA(key)) {
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 code = krb5_generate_random_keyblock(k5context,key->keytype,kb);
 #else /* not Heimdal */
 code = krb5_c_make_random_key(k5context,key->enctype,kb);
 #endif /* not Heimdal */
     if (code) {
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
     fprintf(stderr,"krb5_generate_random_keyblock failed - code %d %s\n", code, err);
 #else /* not Heimdal */
-    fprintf(stderr,"krb5_c_make_random_key failed - code %d\n", code);
+    fprintf(stderr,"krb5_c_make_random_key failed - code %d %s\n",
+	code, afs_error_message(code));
 #endif /* not Heimdal */
     exit(1);
 }
@@ -292,7 +297,7 @@ if (vflag) fprinthex(stdout,"DATA",ts->data,ts->datalen);
 #if 0
 printf ("MAKE checksum\n");
 #endif
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    if (key)
 	    code = krb5_crypto_init(k5context,
 #else /* not Heimdal */
@@ -300,7 +305,7 @@ printf ("MAKE checksum\n");
 		cktype,
 #endif /* not Heimdal */
 		key,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		key->keytype,
 		&crypto);
 	    else crypto = 0, code = 0;
@@ -314,7 +319,7 @@ err = krb5_get_error_string(k5context); if (!err) err = "-";
 		crypto,
 #endif /* Heimdal */
 		0,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		cktype,
 		ts->data,
 		ts->datalen,
@@ -322,21 +327,21 @@ err = krb5_get_error_string(k5context); if (!err) err = "-";
 		input,
 #endif /* not Heimdal */
 		cksum);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    if (crypto) krb5_crypto_destroy(k5context, crypto);
 #endif /* Heimdal */
 	    if (code) {
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 		fprintf(stderr,"Error making checksum: %d %s\n",
 		    code, err);
 #else /* not Heimdal */
-		fprintf(stderr,"Error making checksum: %d\n",
-		    code);
+		fprintf(stderr,"Error making checksum: %d %s\n",
+		    code, afs_error_message(code));
 #endif /* not Heimdal */
 		exit(1);
 	    }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    if (cksum->checksum.length != cksumsize)
 #else /* not Heimdal */
 	    if (cksum->length != cksumsize)
@@ -344,7 +349,7 @@ err = krb5_get_error_string(k5context); if (!err) err = "-";
 	    {
 		fprintf(stderr,
 "Actual checksum length %d did not match expected %d\n",
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		    cksum->checksum.length, cksumsize);
 #else /* not Heimdal */
 		    cksum->length, cksumsize);
@@ -353,7 +358,7 @@ exitrc = 1;
 ++errors;
 continue;
 	    }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    memcpy(digest, cksum->checksum.data,
 		digestlen = cksum->checksum.length);
 	    afs_osi_Free(cksum->checksum.data, cksum->checksum.length);
@@ -379,13 +384,13 @@ fprintf(stderr,"checksumlength was %d not %d\n", n, cksumsize);
 	}
 if ((flag & (F_GOT_SUM|F_GOT_DATA)) != (F_GOT_SUM|F_GOT_DATA)) continue;
 	++did_any_matches;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	cksum->cksumtype = cktype;
 #else /* not Heimdal */
 	cksum->checksum_type = cktype;
 #endif /* not Heimdal */
 	
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	memcpy((cksum->checksum.data = afs_osi_Alloc(cksum->checksum.length = ts->sumlen)),
 #else /* not Heimdal */
 	memcpy((cksum->contents = afs_osi_Alloc(cksum->length = ts->sumlen)),
@@ -394,14 +399,14 @@ if ((flag & (F_GOT_SUM|F_GOT_DATA)) != (F_GOT_SUM|F_GOT_DATA)) continue;
 #if 0
 printf ("VERIFY checksum\n");
 #endif
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	if (key)
 	code = krb5_crypto_init(k5context,
 #else /* not Heimdal */
 	code = krb5_c_verify_checksum(k5context,
 #endif /* not Heimdal */
 	    key,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    key->keytype,
 	    &crypto);
 	else code = 0, crypto = 0;
@@ -409,7 +414,7 @@ printf ("VERIFY checksum\n");
 	    crypto,
 #endif /* Heimdal */
 	    0,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    ts->data,
 	    ts->datalen,
 	    cksum);
@@ -424,22 +429,22 @@ printf ("VERIFY checksum\n");
 	{
 	    ++errors;
 	    exitrc = 1;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 fflush(stdout);
 fprintf(stderr,"%s: can't verify input checksum", label);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 fprintf(stderr," code=%d %s\n", code, err);
 #else /* not Heimdal */
 if (code) 
-fprintf(stderr," code=%d\n", code);
+fprintf(stderr," code=%d %s\n", code, afs_error_message(code));
 else fprintf(stderr," not valid\n");
 #endif /* not Heimdal */
 fprinthex(stdout,"DATA",ts->data,ts->datalen);
 fprinthex(stdout,"SUM",ts->sum,ts->sumlen);
 	}
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	afs_osi_Free(cksum->checksum.data, cksum->checksum.length);
 #else /* not Heimdal */
 	afs_osi_Free(cksum->contents, cksum->length);
@@ -450,7 +455,7 @@ fprinthex(stdout,"SUM",ts->sum,ts->sumlen);
 #if 0
 printf ("COMPARE failed, so verify checksum\n");
 #endif
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		cksum->cksumtype = cktype;
 		cksum->checksum.data = digest;
 		cksum->checksum.length = digestlen;
@@ -463,7 +468,7 @@ printf ("COMPARE failed, so verify checksum\n");
 		code = krb5_c_verify_checksum(k5context,
 #endif /* not Heimdal */
 		    key,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		    key->keytype,
 		    &crypto);
 		else crypto = 0, code = 0;
@@ -471,7 +476,7 @@ printf ("COMPARE failed, so verify checksum\n");
 		    crypto,
 #endif /* Heimdal */
 		    0,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 		    ts->data,
 		    ts->datalen,
 		    cksum);
@@ -485,20 +490,20 @@ printf ("COMPARE failed, so verify checksum\n");
 		{
 		    ++errors;
 		    exitrc = 1;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 fflush(stdout);
 fprintf(stderr,"%s: can't verify computed checksum", label);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 fprintf(stderr," code=%d %s\n", code, err);
 #else /* not Heimdal */
 if (code) 
-fprintf(stderr," code=%d\n", code);
+fprintf(stderr," code=%d %s\n", code, afs_error_message(code));
 else fprintf(stderr," not valid\n");
 #endif /* not Heimdal */
 fprinthex(stdout,"DATA",ts->data,ts->datalen);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 fprinthex(stdout,"SUM",cksum->checksum.data,cksum->checksum.length);
 #else /* not Heimdal */
 fprinthex(stdout,"SUM",cksum->contents,cksum->length);
@@ -548,7 +553,7 @@ main(int argc, char **argv)
     if (did_any_matches)
 	printf ("; %d errors detected", errors);
     printf (".\n");
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     if (k5context) krb5_free_context(k5context);
 #endif
     exit(exitrc);

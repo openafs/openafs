@@ -30,7 +30,6 @@ RCSID
 #include <afs/venus.h>
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <strings.h>
@@ -149,6 +148,6 @@ PioctlError(code, filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
 	else
 	    fprintf(stderr, "%s", pn);
-	fprintf(stderr, ": %s\n", error_message(errno));
+	fprintf(stderr, ": %s\n", afs_error_message(errno));
     }
 }				/*Die */

@@ -47,8 +47,7 @@ struct et_list {
 };
 
 long
-add_error_table(et)
-	const struct error_table * et;
+add_error_table(const struct error_table *et)
 {
     struct et_list *list;
 
@@ -61,8 +60,7 @@ add_error_table(et)
 }
 
 long
-remove_error_table(et)
-    const struct error_table * et;
+remove_error_table(const struct error_table *et)
 {
     return EDOM;
 }

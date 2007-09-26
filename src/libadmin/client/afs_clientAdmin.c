@@ -38,6 +38,13 @@ RCSID
 #include <afs/kautils.h>
 #include <rx/rx.h>
 #include <rx/rx_null.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#ifdef USING_HEIMDAL
+#define EncryptionKey Heimdal_EncryptionKey_NotNeededHere
+#endif
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <rx/rxkad.h>
 #include <afs/dirpath.h>
 #include <afs/afs_AdminErrors.h>
@@ -157,9 +164,19 @@ afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    struct ktc_principal afs_server;
+    struct pioctl_set_token atoken[1];
+    struct ktc_token ttoken;
+#if defined(AFS_RXK5)
+    krb5_context k5context = rxk5_get_context(0);
+    krb5_creds in_creds[1];
+#endif
     afs_token_handle_p t_handle =
 	(afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
+
+    memset(atoken, 0, sizeof *atoken);
+#if defined(AFS_RXK5)
+    memset(in_creds, 0, sizeof *in_creds);
+#endif
 
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
@@ -181,55 +198,69 @@ afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
 	goto fail_afsclient_TokenGetExisting;
     }
 
-    strcpy(afs_server.name, "afs");
-    afs_server.instance[0] = 0;
-    strcpy(afs_server.cell, cellName);
+    t_handle->begin_magic = BEGIN_MAGIC;
+    t_handle->is_valid = 1;
+    t_handle->end_magic = END_MAGIC;
 
-    if (!
-	(tst =
-	 ktc_GetToken(&afs_server, &t_handle->afs_token,
-		      sizeof(t_handle->afs_token), &t_handle->client))) {
+    if ( (tst =
+	    ktc_GetTokenEx(0, cellName, atoken))) {
+	goto fail_afsclient_TokenGetExisting;
+    }
+#if defined(AFS_RXK5)
+    else if (!(tst = afstoken_to_v5cred(atoken, in_creds))) {
+	t_handle->sc_index = 5;
+	t_handle->afs_sc =
+	    rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+	t_handle->afs_encrypt_sc =
+	    rxk5_NewClientSecurityObject(rxk5_crypt, in_creds, 0);
+    }
+#endif
+    else if (!(tst = afstoken_to_token(atoken, &ttoken,
+	      sizeof(ttoken), 0, &t_handle->client))) {
 	/*
 	 * The token has been retrieved successfully, initialize
 	 * the rest of the token handle structure
 	 */
-	strcpy(t_handle->cell, cellName);
-	t_handle->afs_token_set = 1;
-	t_handle->from_kernel = 1;
-	t_handle->kas_token_set = 0;
 	t_handle->sc_index = 2;
-	t_handle->afs_sc[t_handle->sc_index] =
+	t_handle->afs_sc =
 	    rxkad_NewClientSecurityObject(rxkad_clear,
-					  &t_handle->afs_token.sessionKey,
-					  t_handle->afs_token.kvno,
-					  t_handle->afs_token.ticketLen,
-					  t_handle->afs_token.ticket);
-	t_handle->afs_encrypt_sc[t_handle->sc_index] =
+					  &ttoken.sessionKey,
+					  ttoken.kvno,
+					  ttoken.ticketLen,
+					  ttoken.ticket);
+	t_handle->afs_encrypt_sc =
 	    rxkad_NewClientSecurityObject(rxkad_crypt,
-					  &t_handle->afs_token.sessionKey,
-					  t_handle->afs_token.kvno,
-					  t_handle->afs_token.ticketLen,
-					  t_handle->afs_token.ticket);
-	if ((t_handle->afs_sc[t_handle->sc_index] == NULL)
-	    || (t_handle->afs_sc[t_handle->sc_index] == NULL)) {
-	    tst = ADMCLIENTTOKENHANDLENOSECURITY;
-	    goto fail_afsclient_TokenGetExisting;
-	} else {
-	    t_handle->begin_magic = BEGIN_MAGIC;
-	    t_handle->is_valid = 1;
-	    t_handle->end_magic = END_MAGIC;
-	    *tokenHandle = (void *)t_handle;
-	}
-    } else {
+					  &ttoken.sessionKey,
+					  ttoken.kvno,
+					  ttoken.ticketLen,
+					  ttoken.ticket);
+    }
+    if ((t_handle->afs_sc == NULL)
+	|| (t_handle->afs_sc == NULL)) {
+	tst = ADMCLIENTTOKENHANDLENOSECURITY;
 	goto fail_afsclient_TokenGetExisting;
     }
+    strncpy(t_handle->cell, cellName, MAXCELLCHARS);
+    t_handle->cell[MAXCELLCHARS - 1] = '\0';
+    t_handle->afs_token_set = 1;
+    t_handle->from_kernel = 1;
+    t_handle->kas_token_set = 0;
+    memcpy(&t_handle->afs_token, &ttoken, sizeof ttoken);	/* useful? */
+    *tokenHandle = (void *)t_handle;
+    t_handle = 0;
     rc = 1;
 
   fail_afsclient_TokenGetExisting:
-
-    if ((rc == 0) && (t_handle != NULL)) {
-	free(t_handle);
+#if defined(AFS_RXK5)
+    if (k5context) {
+	krb5_free_cred_contents(k5context, in_creds);
     }
+#endif
+
+    if (t_handle) {
+	afsclient_TokenClose(t_handle, 0);
+    }
+    free_afs_token(atoken);
     if (st != NULL) {
 	*st = tst;
     }
@@ -316,14 +347,13 @@ afsclient_TokenSet(const void *tokenHandle, afs_status_p st)
  *
  * RETURN CODES
  *
- * Returns != 0 upon successful completion.
+ * Returns 0 upon successful completion.
  */
 
-static int
+static afs_status_t
 GetKASToken(const char *cellName, const char *principal, const char *password,
-	    afs_token_handle_p tokenHandle, afs_status_p st)
+	    afs_token_handle_p tokenHandle)
 {
-    int rc = 0;
     afs_status_t tst = 0;
     struct ubik_client *unauth_conn;
     afs_int32 expire;
@@ -346,13 +376,13 @@ GetKASToken(const char *cellName, const char *principal, const char *password,
     tst =
 	ka_AuthServerConn((char *)cellName, KA_AUTHENTICATION_SERVICE, 0,
 			  &unauth_conn);
-    if (tst != 0) {
+    if (tst) {
 	goto fail_GetKASToken;
     }
     have_server_conn = 1;
 
     tst = ka_ParseLoginName((char *)principal, name, inst, NULL);
-    if (tst != 0) {
+    if (tst) {
 	goto fail_GetKASToken;
     }
 
@@ -360,21 +390,17 @@ GetKASToken(const char *cellName, const char *principal, const char *password,
 	ka_Authenticate(name, inst, (char *)cellName, unauth_conn,
 			KA_MAINTENANCE_SERVICE, &key, now,
 			now + ADMIN_TICKET_LIFETIME, token, &expire);
-    if (tst != 0) {
+    if (tst) {
 	goto fail_GetKASToken;
     }
-    rc = 1;
+    tst = 0;
 
   fail_GetKASToken:
 
     if (have_server_conn) {
 	ubik_ClientDestroy(unauth_conn);
     }
-
-    if (st != NULL) {
-	*st = tst;
-    }
-    return rc;
+    return tst;
 }
 
 /*
@@ -401,14 +427,13 @@ GetKASToken(const char *cellName, const char *principal, const char *password,
  *
  * RETURN CODES
  *
- * Returns != 0 upon successful completion.
+ * Returns 0 upon successful completion.
  */
 
-static int
+static afs_status_t
 GetAFSToken(const char *cellName, const char *principal, const char *password,
-	    afs_token_handle_p tokenHandle, afs_status_p st)
+	    afs_token_handle_p tokenHandle)
 {
-    int rc = 0;
     afs_status_t tst = 0;
     struct ubik_client *unauth_conn = NULL, *auth_conn = NULL;
     afs_int32 expire;
@@ -470,7 +495,7 @@ GetAFSToken(const char *cellName, const char *principal, const char *password,
     if (tst) {
 	goto fail_GetAFSToken;
     }
-    rc = 1;
+    tst = 0;
 
   fail_GetAFSToken:
 
@@ -481,11 +506,7 @@ GetAFSToken(const char *cellName, const char *principal, const char *password,
     if (unauth_conn) {
 	ubik_ClientDestroy(unauth_conn);
     }
-
-    if (st != NULL) {
-	*st = tst;
-    }
-    return rc;
+    return tst;
 }
 
 
@@ -522,11 +543,11 @@ afsclient_TokenGetNew(const char *cellName, const char *principal,
 		      const char *password, void **tokenHandle,
 		      afs_status_p st)
 {
-    int rc = 0;
     afs_status_t tst = 0;
     afs_token_handle_p t_handle =
 	(afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
 
+    *tokenHandle = 0;
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_TokenGetNew;
@@ -536,6 +557,12 @@ afsclient_TokenGetNew(const char *cellName, const char *principal,
 	tst = ADMNOMEM;
 	goto fail_afsclient_TokenGetNew;
     }
+    t_handle->begin_magic = BEGIN_MAGIC;
+    t_handle->end_magic = END_MAGIC;
+    strncpy(t_handle->cell, cellName, MAXCELLCHARS);
+    t_handle->cell[MAXCELLCHARS - 1] = '\0';
+    t_handle->is_valid = 1;
+    t_handle->from_kernel = 0;
 
     /*
      * Check to see if the principal or password is missing.  If it is,
@@ -544,21 +571,20 @@ afsclient_TokenGetNew(const char *cellName, const char *principal,
 
     if ((principal == NULL) || (*principal == 0) || (password == NULL)
 	|| (*password == 0)) {
-	t_handle->from_kernel = 0;
+	t_handle->afs_sc =
+	    rxnull_NewClientSecurityObject();
+	t_handle->afs_encrypt_sc =
+	    rxnull_NewClientSecurityObject();
+	t_handle->kas_sc =
+	    rxnull_NewClientSecurityObject();
 	t_handle->afs_token_set = 1;
 	t_handle->kas_token_set = 1;
 	t_handle->sc_index = 0;
-	t_handle->afs_sc[t_handle->sc_index] =
-	    rxnull_NewClientSecurityObject();
-	t_handle->afs_encrypt_sc[t_handle->sc_index] =
-	    rxnull_NewClientSecurityObject();
-	t_handle->kas_sc[t_handle->sc_index] =
-	    rxnull_NewClientSecurityObject();
-	t_handle->begin_magic = BEGIN_MAGIC;
-	t_handle->is_valid = 1;
 	t_handle->afs_token.endTime = 0;
-	t_handle->end_magic = END_MAGIC;
-	*tokenHandle = (void *)t_handle;
+	if (!t_handle->afs_sc || !t_handle->afs_encrypt_sc || !t_handle->kas_sc) {
+	    tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	    goto fail_afsclient_TokenGetNew;
+	}
 
     } else {
 
@@ -566,58 +592,56 @@ afsclient_TokenGetNew(const char *cellName, const char *principal,
 	 * create an authenticated token
 	 */
 
-	if ((GetAFSToken(cellName, principal, password, t_handle, &tst))
-	    && (GetKASToken(cellName, principal, password, t_handle, &tst))) {
-	    strcpy(t_handle->cell, cellName);
-	    t_handle->from_kernel = 0;
-	    t_handle->afs_token_set = 1;
+	if ((tst = GetAFSToken(cellName, principal, password, t_handle))) {
+	    goto fail_afsclient_TokenGetNew;
+	}
+	t_handle->afs_token_set = 1;
+	t_handle->sc_index = 2;
+	t_handle->afs_sc =
+	    rxkad_NewClientSecurityObject(rxkad_clear,
+					  &t_handle->afs_token.sessionKey,
+					  t_handle->afs_token.kvno,
+					  t_handle->afs_token.ticketLen,
+					  t_handle->afs_token.ticket);
+	t_handle->afs_encrypt_sc =
+	    rxkad_NewClientSecurityObject(rxkad_crypt,
+					  &t_handle->afs_token.sessionKey,
+					  t_handle->afs_token.kvno,
+					  t_handle->afs_token.ticketLen,
+					  t_handle->afs_token.ticket);
+
+	if (!t_handle->afs_sc || !t_handle->afs_encrypt_sc) {
+	    tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	    goto fail_afsclient_TokenGetNew;
+	}
+	if (!(tst = GetKASToken(cellName, principal, password, t_handle))) {
 	    t_handle->kas_token_set = 1;
-	    t_handle->sc_index = 2;
-	    t_handle->afs_sc[t_handle->sc_index] =
-		rxkad_NewClientSecurityObject(rxkad_clear,
-					      &t_handle->afs_token.sessionKey,
-					      t_handle->afs_token.kvno,
-					      t_handle->afs_token.ticketLen,
-					      t_handle->afs_token.ticket);
-	    t_handle->afs_encrypt_sc[t_handle->sc_index] =
-		rxkad_NewClientSecurityObject(rxkad_crypt,
-					      &t_handle->afs_token.sessionKey,
-					      t_handle->afs_token.kvno,
-					      t_handle->afs_token.ticketLen,
-					      t_handle->afs_token.ticket);
-	    t_handle->kas_sc[t_handle->sc_index] =
+	    t_handle->kas_sc =
 		rxkad_NewClientSecurityObject(rxkad_crypt,
 					      &t_handle->kas_token.sessionKey,
 					      t_handle->kas_token.kvno,
 					      t_handle->kas_token.ticketLen,
 					      t_handle->kas_token.ticket);
-	    if ((t_handle->afs_sc[t_handle->sc_index] != NULL)
-		&& (t_handle->afs_encrypt_sc[t_handle->sc_index] != NULL)
-		&& (t_handle->kas_sc[t_handle->sc_index] != NULL)) {
-		t_handle->begin_magic = BEGIN_MAGIC;
-		t_handle->is_valid = 1;
-		t_handle->end_magic = END_MAGIC;
-		*tokenHandle = (void *)t_handle;
-	    } else {
+	    if (!t_handle->kas_sc) {
 		tst = ADMCLIENTTOKENHANDLENOSECURITY;
 		goto fail_afsclient_TokenGetNew;
 	    }
-	} else {
-	    goto fail_afsclient_TokenGetNew;
-	}
+	} else tst = 0;	/* no kaserver = ok */
     }
-    rc = 1;
-
+    if (!tst) {
+	*tokenHandle = (void *)t_handle;
+	t_handle = 0;
+    }
   fail_afsclient_TokenGetNew:
 
-    if ((rc == 0) && (t_handle != NULL)) {
-	free(t_handle);
+    if (t_handle) {
+	afsclient_TokenClose(t_handle, 0);
     }
 
     if (st != NULL) {
 	*st = tst;
     }
-    return rc;
+    return tst == 0;
 }
 
 /*
@@ -729,6 +753,9 @@ afsclient_TokenClose(const void *tokenHandle, afs_status_p st)
 
     if (IsTokenValid(t_handle, &tst)) {
 	t_handle->is_valid = 0;
+	if (t_handle->afs_sc) rxs_Release(t_handle->afs_sc);
+	if (t_handle->afs_encrypt_sc) rxs_Release(t_handle->afs_encrypt_sc);
+	if (t_handle->kas_sc) rxs_Release(t_handle->kas_sc);
 	free(t_handle);
 	rc = 1;
     }
@@ -793,7 +820,7 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
     int i, j;
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     int scIndex;
     char copyCell[MAXCELLCHARS];
 
@@ -847,8 +874,8 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
      * the tokens around.
      * Also, initialize the ubik client pointers in the table
      */
-    servers[KAS].sc = t_handle->kas_sc[t_handle->sc_index];
-    servers[PTS].sc = t_handle->afs_sc[t_handle->sc_index];
+    servers[KAS].sc = t_handle->kas_sc;
+    servers[PTS].sc = t_handle->afs_sc;
     servers[VOS].sc = servers[PTS].sc;
     servers[KAS].ubik = &c_handle->kas;
     servers[PTS].ubik = &c_handle->pts;
@@ -868,7 +895,8 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
      * information for each server in the cell
      */
 
-    strcpy(c_handle->working_cell, cellName);
+    strncpy(c_handle->working_cell, cellName, MAXCELLCHARS);
+    c_handle->working_cell[MAXCELLCHARS - 1] = '\0';
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	tst = ADMCLIENTBADCLIENTCONFIG;
 	goto fail_afsclient_CellOpen;
@@ -878,9 +906,11 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
      * We must copy the cellName here because afsconf_GetCellInfo
      * actually writes over the cell name it is passed.
      */
-    strncpy(copyCell, cellName, MAXCELLCHARS - 1);
+    strncpy(copyCell, cellName, MAXCELLCHARS);
+    copyCell[MAXCELLCHARS - 1] ='\0';
     for (i = 0; (i < NUM_SERVER_TYPES); i++) {
 	if (i == KAS) {
+if (!t_handle->kas_token_set) continue;
 	    tst =
 		ka_AuthServerConn((char *)cellName, servers[i].serviceId,
 				  ((t_handle->sc_index == 0)
@@ -895,14 +925,14 @@ afsclient_CellOpen(const char *cellName, const void *tokenHandle,
 	    if (!tst) {
 		/* create ubik client handles for each server */
 		scIndex = t_handle->sc_index;
-		sc[scIndex] = servers[i].sc;
+		sc = servers[i].sc;
 		for (j = 0; (j < info.numServers); j++) {
 		    serverconns[j] =
 			rx_GetCachedConnection(info.hostAddr[j].sin_addr.
 					       s_addr,
 					       info.hostAddr[j].sin_port,
 					       servers[i].serviceId,
-					       sc[scIndex], scIndex);
+					       sc, scIndex);
 		}
 		serverconns[j] = 0;
 		tst = ubik_ClientInit(serverconns, servers[i].ubik);
@@ -1963,6 +1993,7 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
 	if (host != NULL) {
 	    strncpy(serv->server[iserv].serverName, host->h_name,
 		    AFS_MAX_SERVER_NAME_LEN);
+            serv->server[iserv].serverName[AFS_MAX_SERVER_NAME_LEN - 1] = '\0';
 	}
     }
     UNLOCK_GLOBAL_MUTEX;
@@ -2180,9 +2211,9 @@ afsclient_RPCStatOpen(const void *cellHandle, const char *serverName,
 	    tst = ADMCLIENTNOKASTOKENS;
 	    goto fail_afsclient_RPCStatOpen;
 	}
-	sc = c_handle->tokens->kas_sc[c_handle->tokens->sc_index];
+	sc = c_handle->tokens->kas_sc;
     } else {
-	sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
+	sc = c_handle->tokens->afs_sc;
     }
 
     *rpcStatHandleP =
@@ -2265,9 +2296,9 @@ afsclient_RPCStatOpenPort(const void *cellHandle, const char *serverName,
 	    tst = ADMCLIENTNOKASTOKENS;
 	    goto fail_afsclient_RPCStatOpenPort;
 	}
-	sc = c_handle->tokens->kas_sc[c_handle->tokens->sc_index];
+	sc = c_handle->tokens->kas_sc;
     } else {
-	sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
+	sc = c_handle->tokens->afs_sc;
     }
 
     *rpcStatHandleP =
@@ -2378,7 +2409,7 @@ afsclient_CMStatOpen(const void *cellHandle, const char *serverName,
 	goto fail_afsclient_CMStatOpen;
     }
 
-    sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
+    sc = c_handle->tokens->afs_sc;
 
     *cmStatHandleP =
 	rx_GetCachedConnection(htonl(servAddr), htons(AFSCONF_CALLBACKPORT),
@@ -2450,7 +2481,7 @@ afsclient_CMStatOpenPort(const void *cellHandle, const char *serverName,
 	goto fail_afsclient_CMStatOpenPort;
     }
 
-    sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
+    sc = c_handle->tokens->afs_sc;
 
     *cmStatHandleP =
 	rx_GetCachedConnection(htonl(servAddr), htons(serverPort), 1, sc,

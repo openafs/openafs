@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2004, 2005, 2006 Secure Endpoints Inc.
+* Copyright (c) 2004, 2005, 2006, 2007 Secure Endpoints Inc.
 * Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
  * 
@@ -62,6 +62,10 @@
 #ifdef USE_MS2MIT
 #define SECURITY_WIN32
 #include <security.h>
+#if _WIN32_WINNT < 0x0501
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <ntsecapi.h>
 #endif /* USE_MS2MIT */
 #include <stdio.h>
@@ -231,7 +235,12 @@ cc_free_NC_info,
                             //    cc_get_cache_names().  set to NULL on return
     )
 );
+
+#ifdef _WIN64
+#define CCAPI_DLL   "krbcc64.dll"
+#else
 #define CCAPI_DLL   "krbcc32.dll"
+#endif
 
 /* Function Prototypes */
 DWORD GetServiceStatus(LPSTR, LPSTR, DWORD *);

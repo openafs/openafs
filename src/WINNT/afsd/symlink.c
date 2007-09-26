@@ -88,7 +88,7 @@ IsFreelanceRoot(char *apath)
 
     code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
-        return !strcmp("Freelance.Local.Root",space);
+        return !stricmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
@@ -652,7 +652,7 @@ void Die(code, filename)
 #ifdef WIN32
 	fprintf(stderr, ": code 0x%x\n", code);
 #else /* not WIN32 */
-	fprintf(stderr,": %s\n", error_message(code));
+	fprintf(stderr,": %s\n", afs_error_message(code));
 #endif /* not WIN32 */
     }
 } /*Die*/

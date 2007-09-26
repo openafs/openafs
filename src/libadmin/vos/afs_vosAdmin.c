@@ -567,8 +567,10 @@ vos_PartitionGet(const void *cellHandle, const void *serverHandle,
     if (tst) {
 	goto fail_vos_PartitionGet;
     }
-    strcpy(partitionP->name, part_info.name);
-    strcpy(partitionP->deviceName, part_info.devName);
+    strncpy(partitionP->name, part_info.name, VOS_MAX_PARTITION_NAME_LEN);
+    partitionP->name[VOS_MAX_PARTITION_NAME_LEN-1] = '\0';
+    strncpy(partitionP->deviceName, part_info.devName, VOS_MAX_PARTITION_NAME_LEN);
+    partitionP->deviceName[VOS_MAX_PARTITION_NAME_LEN-1] = '\0';
     partitionP->lockFileDescriptor = part_info.lock_fd;
     partitionP->totalSpace = part_info.minFree;
     partitionP->totalFreeSpace = part_info.free;
@@ -882,7 +884,7 @@ vos_ServerOpen(const void *cellHandle, const char *serverName,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) malloc(sizeof(file_server_t));
     int server_address;
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     int scIndex;
 
     if (f_server == NULL) {
@@ -909,11 +911,11 @@ vos_ServerOpen(const void *cellHandle, const char *serverName,
     }
 
     scIndex = c_handle->tokens->sc_index;
-    sc[scIndex] = c_handle->tokens->afs_sc[scIndex];
+    sc = c_handle->tokens->afs_sc;
     f_server->serv =
 	rx_GetCachedConnection(htonl(server_address),
 			       htons(AFSCONF_VOLUMEPORT), VOLSERVICE_ID,
-			       sc[scIndex], scIndex);
+			       sc, scIndex);
     if (f_server->serv != NULL) {
 	f_server->begin_magic = BEGIN_MAGIC;
 	f_server->end_magic = END_MAGIC;
@@ -1215,7 +1217,7 @@ GetServerRPC(void *rpc_specific, int slot, int *last_item,
 	    addr_multi.bulkaddrs_val = 0;
 	    addr_multi.bulkaddrs_len = 0;
 	    tst =
-		ubik_Call(VL_GetAddrsU, serv->vldb, 0, &m_attrs, &m_uuid,
+		ubik_VL_GetAddrsU(serv->vldb, 0, &m_attrs, &m_uuid,
 			  &m_unique, &total_multi, &addr_multi);
 	    if (tst) {
 		goto fail_GetServerRPC;
@@ -1880,7 +1882,8 @@ copyVLDBEntry(struct nvldbentry *source, vos_vldbEntry_p dest,
 	dest->status |= VOS_VLDB_ENTRY_BACKEXISTS;
     }
 
-    strcpy(dest->name, source->name);
+    strncpy(dest->name, source->name, VOS_MAX_VOLUME_NAME_LEN);
+    dest->name[VOS_MAX_VOLUME_NAME_LEN - 1] = '\0';
     for (i = 0; i < VOS_MAX_REPLICA_SITES; i++) {
 	dest->volumeSites[i].serverAddress = source->serverNumber[i];
 	dest->volumeSites[i].serverPartition = source->serverPartition[i];
@@ -2354,7 +2357,7 @@ vos_VLDBEntryRemove(const void *cellHandle, const void *serverHandle,
      */
 
     if (volumeId != NULL) {
-	tst = ubik_Call(VL_DeleteEntry, c_handle->vos, 0, *volumeId, -1);
+	tst = ubik_VL_DeleteEntry(c_handle->vos, 0, *volumeId, -1);
 	if (tst != 0) {
 	    goto fail_vos_VLDBEntryRemove;
 	}
@@ -2392,8 +2395,8 @@ vos_VLDBEntryRemove(const void *cellHandle, const void *serverHandle,
     }
 
     for (i = 0; i < nentries; i++) {
-	ubik_Call(VL_DeleteEntry, c_handle->vos, 0,
-		  entries.nbulkentries_val[i].volumeId[RWVOL]);
+	ubik_VL_DeleteEntry(c_handle->vos, 0,
+		  entries.nbulkentries_val[i].volumeId[RWVOL], -1);
     }
     rc = 1;
 
@@ -2546,7 +2549,7 @@ vos_VLDBEntryLock(const void *cellHandle, vos_MessageCallBack_t callBack,
 	goto fail_vos_VLDBEntryLock;
     }
 
-    tst = ubik_Call(VL_SetLock, c_handle->vos, 0, volumeId, -1, VLOP_DELETE);
+    tst = ubik_VL_SetLock(c_handle->vos, 0, volumeId, -1, VLOP_DELETE);
     if (tst != 0) {
 	goto fail_vos_VLDBEntryLock;
     }
@@ -2600,7 +2603,7 @@ vos_VLDBEntryUnlock(const void *cellHandle, vos_MessageCallBack_t callBack,
 
 
     tst =
-	ubik_Call(VL_ReleaseLock, c_handle->vos, 0, volumeId, -1,
+	ubik_VL_ReleaseLock(c_handle->vos, 0, volumeId, -1,
 		  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     if (tst != 0) {
 	goto fail_vos_VLDBEntryUnlock;
@@ -3545,7 +3548,8 @@ copyvolintXInfo(struct volintXInfo *source, vos_volumeEntry_p dest,
      */
 
     if (dest->status == VOS_OK) {
-	strcpy(dest->name, source->name);
+	strncpy(dest->name, source->name, VOS_MAX_VOLUME_NAME_LEN);
+        dest->name[VOS_MAX_VOLUME_NAME_LEN - 1] = '\0';
 	dest->id = source->volid;
 	if (source->type == 0) {
 	    dest->type = VOS_READ_WRITE_VOLUME;

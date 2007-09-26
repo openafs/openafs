@@ -24,7 +24,7 @@ void cm_DaemonShutdown(void);
 
 void cm_InitDaemon(int nDaemons);
 
-typedef void (cm_bkgProc_t)(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
+typedef afs_int32 (cm_bkgProc_t)(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
 	afs_uint32 p4, struct cm_user *up);
 
 typedef struct cm_bkgRequest {

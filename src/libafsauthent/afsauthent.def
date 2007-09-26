@@ -49,7 +49,7 @@ EXPORTS
 	ubik_ClientInit					@48
 	ubik_ParseClientList				@49
 	getDirPath					@50
-	ka_AuthSpecificServersConn			@51
+;	ka_AuthSpecificServersConn			@51
 	pthread_recursive_mutex_lock			@52
 	pthread_recursive_mutex_unlock			@53
 	grmutex						@54 DATA
@@ -59,14 +59,14 @@ EXPORTS
 	readdir						@58
 	closedir					@59
 	nterr_nt2unix					@60
-        ka_KeyCheckSum                                  @61
+;       ka_KeyCheckSum                                  @61
 	pr_GetCPS					@62
 	pr_Initialize					@63
 	pr_GetHostCPS					@64
 ;	afs_krb_get_lrealm				@65
 	pr_NameToId					@66
 	pr_IdToName					@67
-	afs_gettimeofday				@68
+;	afs_gettimeofday				@68
 	int_to_base32					@69
 	base32_to_int					@70
 	ktc_ForgetAllTokens				@71
@@ -116,4 +116,34 @@ EXPORTS
 	ubik_RefreshConn				@114
 
 ; ugh -- how to coordinate number space?
-	afsconf_ClientAuthEx			@115
+	afsconf_ClientAuthEx				@115
+; matt
+	afs_realm_of_cell				@116
+	have_afs_keyfile				@117
+	initialize_RXK5_error_table			@118
+	initialize_RXK_error_table			@119
+	initialize_rx_error_table			@120
+	rxk5_free_creds					@121
+	afstoken_to_v5cred				@122
+	get_afs_rxk5_keytab				@123
+	get_afs_krb5_svc_princ				@124
+	env_afs_rxk5_default				@125
+	have_afs_rxk5_keytab				@126
+	afs_rxk5_parse_name_k5				@127
+	afs_rxk5_split_name_instance			@128
+	encode_afs_token				@129
+	parse_afs_token					@130
+	free_afs_token					@131
+	afs_token_to_rxk5_creds				@132
+	ktc_SetK5Token					@133
+	ktc_GetTokenEx					@134
+	ktc_SetTokenEx					@135
+	ktc_GetK5Enctypes				@136
+	add_afs_token_soliton				@137
+	add_afs_token_rxkad_k				@138
+	add_afs_token_rxk5				@139
+	afstoken_to_soliton				@140	
+	afstoken_to_token				@141
+	xdr_k5_principal				@142
+	xdr_afstoken_soliton					@143
+	xdr_pioctl_set_token					@144

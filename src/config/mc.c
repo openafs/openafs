@@ -135,6 +135,27 @@ GetLine(FILE * afile, register char *abuffer, int amax)
 }
 
 int
+mc_match(const char *key, const char *pattern)
+{
+    for (;;) {
+	if (*pattern == *key) {
+	    if (!*pattern) return 1;
+	    ++pattern;
+	    ++key;
+	    continue;
+	}
+	/* this isn't as smart as it looks */
+	if (*pattern == '*') {
+	    ++pattern;
+	    while (*key && *key != *pattern) ++key;
+	    continue;
+	}
+	break;
+    }
+    return 0;
+}
+
+int
 mc_copy(register FILE * ain, register FILE * aout, char *alist[])
 {
     char tbuffer[MAXLINELEN];
@@ -162,7 +183,7 @@ mc_copy(register FILE * ain, register FILE * aout, char *alist[])
 	    done = 0;
 	    for (tp = alist; (!done) && (*tp != NULL); tp++) {
 		for (tt = tokens; tt; tt = tt->next) {
-		    if (!strcmp(*tp, tt->key)) {
+		    if (mc_match(*tp, tt->key)) {
 			/* Need to search all tokens in case a dont use
 			 * flag is set. But we can stop on the first
 			 * don't use.

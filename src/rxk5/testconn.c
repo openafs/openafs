@@ -60,60 +60,59 @@
 char def_krbname[] = "rxk5/test";
 
 struct servparm test_parm[1] = {{
-	"localhost",
-	def_krbname,
-	TESTSERVICEID,
-	TESTPORT,
-	5,
-	rxk5_crypt,
+    "localhost",
+    def_krbname,
+    TESTSERVICEID,
+    TESTPORT,
+    5,
+    rxk5_crypt,
 }};
 struct servstash teststash[1];
 
-int settesthost(cp, word)
-	char *cp, *word;
+int
+settesthost(char *cp, char *word)
 {
-	return setservhost(test_parm, cp, word);
-}
-
-int settestport(cp, word)
-	char *cp, *word;
-{
-	while (*cp && isspace(*cp))
-		++cp;
-	test_parm->port = atoi(cp);
-	++test_parm->changed;
-	return 0;
-}
-
-int settestlevel(cp, word)
-	char *cp, *word;
-{
-	while (*cp && isspace(*cp))
-		++cp;
-	test_parm->level = atoi(cp);
-	++test_parm->changed;
-	return 0;
-}
-
-int settestsecurityindex(cp, word)
-	char *cp, *word;
-{
-	while (*cp && isspace(*cp))
-		++cp;
-	test_parm->securityindex = atoi(cp);
-	++test_parm->changed;
-	return 0;
+    return setservhost(test_parm, cp, word);
 }
 
 int
-settestkrbname(cp, word)
-	char *cp, *word;
+settestport(char *cp, char *word)
 {
-	return setservkrbname(test_parm, cp, word, def_krbname);
+    while (*cp && isspace(*cp))
+	++cp;
+    test_parm->port = atoi(cp);
+    ++test_parm->changed;
+    return 0;
 }
 
-int gettestconn(connp)
-	struct rx_connection **connp;
+int
+settestlevel(char *cp, char *word)
 {
-	return getservconn(test_parm, teststash, connp);
+    while (*cp && isspace(*cp))
+	++cp;
+    test_parm->level = atoi(cp);
+    ++test_parm->changed;
+    return 0;
+}
+
+int
+settestsecurityindex(char *cp, char *word)
+{
+    while (*cp && isspace(*cp))
+	++cp;
+    test_parm->securityindex = atoi(cp);
+    ++test_parm->changed;
+    return 0;
+}
+
+int
+settestkrbname(char *cp, char *word)
+{
+    return setservkrbname(test_parm, cp, word, def_krbname);
+}
+
+int
+gettestconn(struct rx_connection **connp)
+{
+    return getservconn(test_parm, teststash, connp);
 }

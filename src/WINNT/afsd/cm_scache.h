@@ -14,7 +14,7 @@
 #include "largeint95.h"
 #endif /* DJGPP */
 
-#define MOUNTPOINTLEN   1024
+#define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
 typedef struct cm_fid {
 	unsigned long cell;
@@ -89,6 +89,7 @@ typedef struct cm_scache {
     osi_queue_t q;              	/* lru queue; cm_scacheLock */
     afs_uint32      magic;
     struct cm_scache *nextp;		/* next in hash; cm_scacheLock */
+    struct cm_scache *allNextp;         /* next in all scache list; cm_scacheLock */
     cm_fid_t fid;
     afs_uint32 flags;			/* flags; locked by mx */
 
@@ -192,6 +193,13 @@ typedef struct cm_scache {
     /* bulk stat progress */
     osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
+#ifdef USE_BPLUS
+    /* directory B+ tree */             /* only allocated if is directory */
+    osi_rwlock_t dirlock;               /* controls access to dirBplus */
+    afs_uint32   dirDataVersion;        /* data version represented by dirBplus */
+    struct tree *dirBplus;              /* dirBplus */
+#endif
+
     /* open state */
     afs_uint16 openReads;		/* open for reading */
     afs_uint16 openWrites;		/* open for writing */
@@ -292,6 +300,7 @@ typedef struct cm_scache {
 						 * used to see if we're merging
 						 * in old info.
                                                  */
+#define CM_MERGEFLAG_STOREDATA		2	/* Merge due to storedata op */
 
 /* hash define.  Must not include the cell, since the callback revocation code
  * doesn't necessarily know the cell in the case of a multihomed server
@@ -301,7 +310,7 @@ typedef struct cm_scache {
 				   ((fidp)->volume +	\
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
-					% cm_data.hashTableSize)
+					% cm_data.scacheHashTableSize)
 
 #include "cm_conn.h"
 #include "cm_buf.h"
@@ -327,8 +336,11 @@ extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
 
 extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, afs_uint32);
 
-extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVolSync *,
-	struct cm_user *, afs_uint32 flags);
+extern void cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp, 
+			   struct AFSFetchStatus * statusp, 
+			   struct AFSVolSync * volsyncp,
+			   struct cm_user *userp, 
+			   afs_uint32 flags);
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 
@@ -373,6 +385,8 @@ extern int cm_FindFileType(cm_fid_t *fidp);
 extern long cm_ValidateSCache(void);
 
 extern long cm_ShutdownSCache(void);
+
+extern void cm_SuspendSCache(void);
 
 extern long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags);
 

@@ -35,9 +35,6 @@
 #include <string.h>
 #include <errno.h>
 #if defined(USING_MIT) || defined(USING_HEIMDAL)
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #else
 #include "k5ssl.h"
@@ -146,7 +143,7 @@ show_cc_entry(krb5_creds *ccentry)
 Failed:
     if (code)
 	fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	    what, code, error_message(code));
+	    what, code, afs_error_message(code));
     if (sname) free(sname);
     if (cname) free(cname);
 #if USING_HEIMDAL
@@ -214,7 +211,7 @@ code = r;
     if (!code) goto Success;
 Failed:
     fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	what, code, error_message(code));
+	what, code, afs_error_message(code));
 Success:
     if (princ)
 	krb5_free_principal(k5context, princ);
@@ -271,7 +268,7 @@ free(p);
     }
 Failed:
     fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	what, code, error_message(code));
+	what, code, afs_error_message(code));
 Done:
     if (ccache) krb5_cc_close(k5context, ccache);
     return !!code;
@@ -309,7 +306,7 @@ show_kt_entry(krb5_keytab_entry *ktentry)
 Failed:
     if (code)
 	fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	    what, code, error_message(code));
+	    what, code, afs_error_message(code));
     return code;
 }
 
@@ -362,7 +359,7 @@ code = r;
     if (!code) goto Success;
 Failed:
     fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	what, code, error_message(code));
+	what, code, afs_error_message(code));
 Success:
     if (keytab) krb5_kt_close(k5context, keytab);
     return !!code;
@@ -414,7 +411,7 @@ free(p);
     }
 Failed:
     fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	what, code, error_message(code));
+	what, code, afs_error_message(code));
 Success:
     if (keytab) krb5_kt_close(k5context, keytab);
     return !!code;

@@ -327,6 +327,9 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ReserveFile "AFSCell.ini"
   !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS ;InstallOptions plug-in
   !insertmacro MUI_RESERVEFILE_LANGDLL ;Language selection dialog
+
+  RequestExecutionLevel admin
+
 ;--------------------------------
 ; Macros
 ; Macro - Upgrade DLL File
@@ -542,7 +545,7 @@ Section "!AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\aklog.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds.exe"	   "$INSTDIR\Client\Program\afscreds.exe"    "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
-  File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afsd_service.exe" "$INSTDIR\Client\Program\afsd_service.exe" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -780,10 +783,11 @@ skipremove:
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
 
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Asynchronous" 0
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Impersonate"  0
-  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "DLLName" "afslogon.dll"
-  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Logon" "KFW_Logon_Event"
+; No longer install KFW Logon Handler - KFW 3.1 and above supports this functionality
+;  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Asynchronous" 0
+;  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Impersonate"  0
+;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "DLLName" "afslogon.dll"
+;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Logon" "KFW_Logon_Event"
 
   SetRebootFlag true
   
@@ -1245,6 +1249,7 @@ DoCommon:
    File "${AFS_DESTDIR}\lib\afsauthent.pdb"
    File "${AFS_DESTDIR}\lib\afspthread.pdb"
    File "${AFS_DESTDIR}\lib\afsrpc.pdb"
+   File "${AFS_DESTDIR}\lib\afskfw_funcs.pdb"
    File "${AFS_SERVER_BUILDDIR}\afsclientadmin.pdb"
    File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.pdb"
    File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
@@ -1663,6 +1668,7 @@ StartRemove:
   Delete "$INSTDIR\Documentation\html\InstallGd\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\logo_files\*"
+  Delete "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
@@ -1671,6 +1677,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\lib\afsauthent.dll"
    Delete /REBOOTOK "$INSTDIR\Common\lib\afspthread.dll"
    Delete /REBOOTOK "$INSTDIR\Common\lib\afsrpc.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afskfw_funcs.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsclientadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsprocmgmt.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.dll"
@@ -1687,6 +1694,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\lib\afsauthent.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\lib\afspthread.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\lib\afsrpc.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afskfw_funcs.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsclientadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsprocmgmt.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.pdb"
@@ -2744,6 +2752,7 @@ Function AFSLangFiles
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsauthent.dll" "$INSTDIR\Common\afsauthent.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afspthread.dll" "$INSTDIR\Common\afspthread.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsrpc.dll" "$INSTDIR\Common\afsrpc.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afskfw_funcs.dll" "$INSTDIR\Common\afskfw_funcs.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"    "$INSTDIR\Common\afsadminutil.dll"    "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"  "$INSTDIR\Common\afsclientadmin.dll"  "$INSTDIR" 
   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"     "$INSTDIR\Common\afsprocmgmt.dll"     "$INSTDIR" 
@@ -2880,6 +2889,8 @@ DoEnglish:
    File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
@@ -2939,6 +2950,8 @@ DoGerman:
    ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\logo_files\*"
+   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"                      "$INSTDIR\Client\Program\afscreds_1032.dll" "$INSTDIR"
@@ -2998,6 +3011,8 @@ DoSpanish:
    ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"     "$INSTDIR\Client\Program\afscreds_1034.dll" "$INSTDIR" 
@@ -3057,6 +3072,8 @@ DoJapanese:
    ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"  "$INSTDIR\Client\Program\afscreds_1041.dll" "$INSTDIR"  
@@ -3116,6 +3133,8 @@ DoKorean:
    File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"  "$INSTDIR\Client\Program\afscreds_1042.dll" "$INSTDIR"   
@@ -3176,6 +3195,8 @@ DoPortugueseBR:
    File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL  "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"  "$INSTDIR\Client\Program\afscreds_1046.dll" "$INSTDIR"    
@@ -3235,6 +3256,8 @@ DoSimpChinese:
    File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"   "$INSTDIR\Client\Program\afscreds_2052.dll" "$INSTDIR"     
@@ -3294,6 +3317,8 @@ DoTradChinese:
    File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
    ;File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\logo_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
+   ;File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\relnotes_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"  "$INSTDIR\Client\Program\_1028.dll" "$INSTDIR"      

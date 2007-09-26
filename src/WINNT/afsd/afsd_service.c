@@ -76,6 +76,10 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     buf_ForceTrace(TRUE);
 
     afsi_log("--- begin dump ---");
+    cm_MemDumpDirStats(afsi_file, "a", 0);
+    cm_MemDumpBPlusStats(afsi_file, "a", 0);
+    cm_DumpCells(afsi_file, "a", 0);
+    cm_DumpVolumes(afsi_file, "a", 0);
     cm_DumpSCache(afsi_file, "a", 0);
 #ifdef keisa
     cm_dnlcDump(afsi_file, "a");
@@ -85,8 +89,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     afsi_log("--- end   dump ---");
     
 #ifdef DEBUG
-	if (IsDebuggerPresent())
-		DebugBreak();	
+    if (IsDebuggerPresent())
+        DebugBreak();	
 #endif
 
     SetEvent(WaitToTerminate);
@@ -309,16 +313,20 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMQUERYSUSPEND:       
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND"); 
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() )
+		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
+                        cm_SuspendSCache();
+                    }
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMQUERYSTANDBY:                                                         
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY"); 
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() ) 
+		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
+                        cm_SuspendSCache();
+                    }
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                                                             
                     break;                                                                        
@@ -327,15 +335,19 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMSUSPEND:                         
                     afsi_log("SERVICE_CONTROL_APMSUSPEND");
 		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
+		    if (osVersion.dwMajorVersion >= 6) {
+                        cm_SuspendSCache();
 			smb_StopListeners();
+                    }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMSTANDBY:                  
                     afsi_log("SERVICE_CONTROL_APMSTANDBY"); 
 		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
+		    if (osVersion.dwMajorVersion >= 6) {
+                        cm_SuspendSCache();
 			smb_StopListeners();
+                    }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMECRITICAL:             
@@ -1140,7 +1152,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
     ServiceStatus.dwWin32ExitCode = NO_ERROR;
     ServiceStatus.dwCheckPoint = 1;
-    ServiceStatus.dwWaitHint = 30000;
+    ServiceStatus.dwWaitHint = 120000;
     /* accept Power Events */
     ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
     SetServiceStatus(StatusHandle, &ServiceStatus);
@@ -1218,18 +1230,21 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
         else
         {
-            /* allow another 15 seconds to start */
+            /* allow another 120 seconds to start */
             ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
             ServiceStatus.dwServiceSpecificExitCode = 0;
             ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
             ServiceStatus.dwWin32ExitCode = NO_ERROR;
             ServiceStatus.dwCheckPoint = 2;
-            ServiceStatus.dwWaitHint = 20000;
+            ServiceStatus.dwWaitHint = 120000;
             /* accept Power Events */
             ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
             SetServiceStatus(StatusHandle, &ServiceStatus);
         }
     }
+
+    /* Perform Volume Status Notification Initialization */
+    cm_VolStatus_Initialization();
 
 #ifdef JUMP
     MainThreadId = GetCurrentThreadId();
@@ -1245,8 +1260,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint++;
-        ServiceStatus.dwWaitHint -= 5000;
+        ServiceStatus.dwCheckPoint = 3;
+        ServiceStatus.dwWaitHint = 30000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
         code = afsd_InitDaemons(&reason);
@@ -1283,8 +1298,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint++;
-        ServiceStatus.dwWaitHint -= 5000;
+        ServiceStatus.dwCheckPoint = 4;
+        ServiceStatus.dwWaitHint = 15000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
@@ -1339,7 +1354,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #ifndef NOTSERVICE
         ServiceStatus.dwCurrentState = SERVICE_RUNNING;
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 0;
+        ServiceStatus.dwCheckPoint = 5;
         ServiceStatus.dwWaitHint = 0;
 
         /* accept Power events */
@@ -1349,6 +1364,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
     }
+
+    /* Notify any volume status handlers that we have started */
+    cm_VolStatus_Service_Started();
 
     /* allow an exit to be called when started */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -1385,6 +1403,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         CloseHandle(hAFSDWorkerThread[cnt]);
 #endif
 
+    ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwCheckPoint = 6;
+    ServiceStatus.dwWaitHint = 120000;
+    ServiceStatus.dwControlsAccepted = 0;
+    SetServiceStatus(StatusHandle, &ServiceStatus);
+
     afsi_log("Received Termination Signal, Stopping Service");
 
     if ( GlobalStatus )
@@ -1404,19 +1429,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
         FreeLibrary(hHookDll);
         hHookDll = NULL;
-
-        if (hookRc == FALSE)
-        {
-            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = NO_ERROR;
-            ServiceStatus.dwCheckPoint = 0;
-            ServiceStatus.dwWaitHint = 0;
-            ServiceStatus.dwControlsAccepted = 0;
-            SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
-            /* exit if initialization failed */
-            return;
-        }
     }
 
 
@@ -1459,6 +1471,17 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         PowerNotificationThreadExit();
 #endif
 
+    cm_DirDumpStats();
+#ifdef USE_BPLUS
+    cm_BPlusDumpStats();
+#endif
+
+    /* Notify any Volume Status Handlers that we are stopped */
+    cm_VolStatus_Service_Stopped();
+
+    /* Cleanup any Volume Status Notification Handler */
+    cm_VolStatus_Finalize();
+
     /* allow an exit to be called after stopping the service */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
@@ -1478,7 +1501,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     ServiceStatus.dwCurrentState = SERVICE_STOPPED;
     ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
-    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwCheckPoint = 7;
     ServiceStatus.dwWaitHint = 0;
     ServiceStatus.dwControlsAccepted = 0;
     SetServiceStatus(StatusHandle, &ServiceStatus);

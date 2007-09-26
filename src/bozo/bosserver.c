@@ -36,12 +36,13 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx_globals.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include "rxk5.h"
 #include "rxk5errors.h"
 #endif
 #include "bosint.h"
 #include "bnode.h"
-#include <afs/auth.h>
+#include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
@@ -60,7 +61,7 @@ extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 void bozo_Log();
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
-static char *bozo_pid;
+static PROCESS bozo_pid;
 #ifdef AFS_RXK5
 #define RXSC_LEN 6
 #else
@@ -173,7 +174,7 @@ bozo_ReBozo()
 
 /* make sure a dir exists */
 static int
-MakeDir(register char *adir)
+MakeDir(const char *adir)
 {
     struct stat tstat;
     register afs_int32 code;

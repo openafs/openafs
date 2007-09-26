@@ -299,8 +299,10 @@ public class Group implements PTSEntry, Serializable, Comparable
     groupsOwnedNames = null;
     try {
       finalize();
+    } catch( AFSException t ) {
+      throw new AFSException( "delete failed", t.getErrorCode(), t );
     } catch( Throwable t ) {
-      throw new AFSException( t.getMessage() );
+      throw new AFSException( "delete failed", 0, t );
     }
   }
 
@@ -632,7 +634,11 @@ public class Group implements PTSEntry, Serializable, Comparable
   public User[] getMembers() throws AFSException
   {
     if( members == null ) {
-      refreshMembers();
+      try {
+        refreshMembers();
+      } catch (AFSException t) {
+	throw new AFSException( "Group.getMembers failed", t.getErrorCode(), t );
+      }
     }
     return (User[]) members.toArray( new User[members.size()] );
   }

@@ -26,15 +26,37 @@ dnl out of or in connection with the use of the software, even
 dnl if it has been or is hereafter advised of the possibility of
 dnl such damages.
 dnl
+AC_DEFUN([AC_APPLE_CCACHE], [#
+# Current MacOS kerberos libaries do not export all the
+# functionality required by rxk5.  Worse yet, it implements
+# its own unique internal credentials cache, which requires
+# special tricks to access.
+# sigh...
+#
+# This hack enables use of code that hooks up to one internal
+# mechanism used by one version of kerberos (65-10).  Success with
+# any other version is unlikely.  Use with any version is unwise.
+# EXPERIMENTAL USE ONLY.  You were warned.
+#
+AC_ARG_ENABLE([macosx-credentials-cache],
+[  --enable-macosx-credentials-cache   enable code to access native credentials cache],,enable_macosx_credentials_cache=no)
+m4_divert_text([DEFAULTS], [ENABLE_AC='#'])dnl
+if test X"$enable_macosx_credentials_cache" == Xyes; then
+	ENABLE_AC=''
+fi
+AC_SUBST(ENABLE_AC)])
+dnl
 AC_DEFUN([AC_DARWIN_EXP_DC], [#
 # Current MacOS kerberos libaries do not export all the
 # functionality required by rxk5.  Worse yet, it implements
 # its own unique internal credentials cache and does not
-# provide a standalone external api to access that cache.
-# Shame, shame, shame.
+# provide a a real standalone external api to access that
+# cache.  Shame, shame, shame.
 #
 # The simple solution is to use file based credentials caches.
-# You should go use that, and not read any further.
+# A better answer is to use --enable-macosx-credentials-cache;
+# that uses the official supported api.
+# You should go use one of those choices.
 #
 # This hack enables use of code that hooks up to one internal
 # mechanism used by one version of kerberos (65-10).  Success with

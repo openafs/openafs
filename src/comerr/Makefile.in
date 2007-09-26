@@ -14,12 +14,7 @@ et_lex.lex.c: et_lex.lex.l
 	$(LEX) -t $(srcdir)/et_lex.lex.l > et_lex.lex.c
 
 compile_et:	compile_et.o error_table.o
-	case $(SYS_NAME) in \
-	*_linux* | *_umlinux* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
-	* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
-	esac
+	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o ${TOP_LIBDIR}/util.a @LEXLIB@
 afserror.c afserror.h: afserror.et compile_et
 	./compile_et -p ${srcdir} afserror
 
@@ -81,6 +76,12 @@ ${DESTDIR}${includedir}/afs/mit-sipb-cr.h: mit-sipb-cr.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afserror.h: afserror.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/com_err.h: com_err.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/afs/libcom_err.a: libcom_err.a

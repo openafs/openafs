@@ -26,6 +26,10 @@ RCSID
 #include "afs/afs_osidnlc.h"
 #include "afs/unified_afs.h"
 
+
+
+
+
 /* Static prototypes */
 static int HandleGetLock(register struct vcache *avc,
 			 register struct AFS_FLOCK *af,
@@ -547,6 +551,10 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	af->l_len = 0;		/* since some systems indicate it as EOF */
 #endif
 #endif
+    /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU; bottom 32 bits
+     * sometimes get masked off by OS */
+    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffe))
+	af->l_len = 0;
     /* next line makes byte range locks always succeed,
      * even when they should block */
     if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {

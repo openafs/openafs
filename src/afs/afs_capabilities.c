@@ -31,111 +31,121 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#if defined(USING_K5SSL)
+#include "k5ssl.h"
+#else
+#include <krb5.h>
+#endif
+#endif
+
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
 #include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/afs_args.h"
 
-struct CapEntry
+struct PropEntry
 {
     struct afs_q ceq;
     int klen,  vlen;
     char *key, *value;
 };
 
-struct afs_q cap_Queue;
-afs_rwlock_t cap_queue_lock;
-static afs_int32 cap_Initialized;
+struct afs_q prop_Queue;
+afs_rwlock_t prop_queue_lock;
+static afs_int32 prop_Initialized;
 
-afs_int32 rxk5_InitCapabilities();
+afs_int32 rxk5_InitProperties();
 
 /* Internal Linkage */
   
-static afs_int32 LenCapQueue(struct afs_q *ceq, int *cnt, int *len)
+static afs_int32 LenPropQueue(struct afs_q *ceq, afs_int32 *cnt, afs_int32 *len)
 {
-    struct CapEntry *ce;
+    struct PropEntry *ce;
     struct afs_q *cpq, *tq;
     *cnt = *len = 0;
 
-    for (cpq = ceq->next; cpq != (struct afs_q*) &ceq; cpq = tq) {
-	ce = (struct CapEntry *) cpq; /* todo: review */
+    for (cpq = ceq->next; cpq != (struct afs_q*) ceq; cpq = tq) {
+	ce = (struct PropEntry *) cpq; /* todo: review */
 	*len += ce->klen + ce->vlen;
-	*cnt++;
+	++ (*cnt);
 	tq = QNext(cpq);
     }
     return *len;
 }
 
-static char* FormatCapBuf(struct afs_q *ceq, /* out */ afs_int32 *len) {
-    struct CapEntry *ce;
+static char *
+FormatPropBuf(struct afs_q *ceq, /* out */ afs_int32 *len)
+{
+    struct PropEntry *ce;
     struct afs_q *cpq, *tq;
     char *str, *ptr;
     afs_int32 cnt;
     
-    LenCapQueue(ceq, &cnt, len);
-    *len += 3 * cnt + 1; /* formatting */
+    LenPropQueue(ceq, &cnt, len);
+    *len += 2 * cnt + 1; /* formatting */
     str = (char*) afs_osi_Alloc(*len * sizeof(char));
-    memset(str, 0, *len);
     ptr = str;
-    for (cpq = ceq->next; cpq != (struct afs_q*) &ceq; cpq = tq) {
-	ce = (struct CapEntry *) cpq;
-	memcpy(ptr, ce->key, ce->klen * sizeof(char));
+    for (cpq = ceq->next; cpq != (struct afs_q*) ceq; cpq = tq) {
+	ce = (struct PropEntry *) cpq;
+	memcpy(ptr, ce->key, ce->klen);
 	ptr += ce->klen;
-	ptr[0] = ':';
-	ptr[1] = ':';
-	ptr+=2;
-	memcpy(ptr, ce->value, ce->vlen * sizeof(char));
-	ptr+=ce->vlen;
-	ptr[0] = '\n';
-	ptr++;
+	*ptr++ = 0;
+	memcpy(ptr, ce->value, ce->vlen);
+	ptr += ce->vlen;
+	*ptr++ = 0;
 	tq = QNext(cpq);
     }
+    *ptr++ = 0;
     return str;
 }
 
 /* External Linkage */
 
-int afs_AddCapability(const char* key, const char* value)
+int afs_AddProperty(const char* key, const char* value)
 {
     afs_int32 r;
-    struct CapEntry *ce;
+    struct PropEntry *ce;
     
     r = 0;
-    ce = (struct CapEntry*) afs_osi_Alloc(sizeof(struct CapEntry));
+    ce = (struct PropEntry*) afs_osi_Alloc(sizeof(struct PropEntry));
     ce->key = afs_strdup((char*) key);
     ce->value = afs_strdup((char*) value);
     ce->klen = strlen(ce->key);
     ce->vlen = strlen(ce->value);
 
     /* todo: lock generally */
-    ObtainWriteLock(&cap_queue_lock, 740);
-    QAdd(&cap_Queue, &ce->ceq);
-    ReleaseWriteLock(&cap_queue_lock);
+    ObtainWriteLock(&prop_queue_lock, 740);
+    QAdd(&prop_Queue, &ce->ceq);
+    ReleaseWriteLock(&prop_queue_lock);
 
     return r;
 }
 
-int afs_InitCapabilities()
+int afs_InitProperties()
 {
     /* locks?  indices? */
-    RWLOCK_INIT(&cap_queue_lock, "cap queue lock");
-    QInit(&cap_Queue);
+    RWLOCK_INIT(&prop_queue_lock, "prop queue lock");
+    QInit(&prop_Queue);
 
 #ifdef AFS_RXK5
-    rxk5_InitCapabilities();
+    rxk5_InitProperties();
 #endif
-    cap_Initialized = 1;
+    prop_Initialized = 1;
 
     return 0;
 }
 
-const char* afs_GetCapability(const char* key)
+const char* afs_GetProperty(const char* key)
 {
-    struct CapEntry *ce;
+    struct PropEntry *ce;
     struct afs_q *cpq, *tq;
     char *v = 0;
-    for (cpq = cap_Queue.next; cpq != &cap_Queue; cpq = tq) {
-	ce = (struct CapEntry *) cpq;
+    for (cpq = prop_Queue.next; cpq != &prop_Queue; cpq = tq) {
+	ce = (struct PropEntry *) cpq;
 	if(!strcmp(key, ce->key)) {
 	    v = ce->value;
 	    break;
@@ -145,100 +155,159 @@ const char* afs_GetCapability(const char* key)
     return v;
 }
 
-char* afs_GetCapabilities(const char* qStr, /* out */ afs_int32 *qLen)
+int
+afs_Property_Match(const char *pattern, const char *key)
 {
+    for (;;) {
+	if (*pattern == *key) {
+	    if (!*pattern) return 1;
+	    ++pattern; ++key;
+	    continue;
+	}
+	/* *. matches "the rest of this field" */
+	/* *\0 matches "the rest of the key" */
+	/* *X means match up to X */
+	if (*pattern == '*') {
+	    ++pattern;
+	    while (*key && *key != *pattern) ++key;
+	    continue;
+	}
+	break;
+    }
+    return 0;
+}
 
-    afs_int32 all_wc, d_wc;
-    char *sp, *dp, *k1, *k2, *nkey, *rslt;
-    struct CapEntry *ce;
-    struct afs_q rsltq, *cpq, *tq;
+/*
+ * return a special string with embedded nulls.
+ * BEWARE.
+ *  Returns key value key value ... 0
+ *  each key & value is null terminated.  an "empty" key (length=0)
+ *  terminates the list.
+ * input is also a list of strings, but delimited by qStrlen.
+ */
+char*
+afs_GetProperties(const char* qStr, int qStrlen, /* out */ afs_int32 *qLen)
+{
+    char *rslt = 0;
+    struct PropEntry *ce, *tq;
+    struct afs_q rsltq, *cpq;
+    char **keys = 0, *cp;
+    int keylen, numkeys, i;
 
-    if(!cap_Initialized) {
+    if(!prop_Initialized) {
 	/* log */
-      afs_warn("afs_GetCapabilities: afs_GetCapabilities called but module no initialized");
+      afs_warn("afs_GetProperties: afs_GetProperties called but module no initialized");
       return NULL;
     }
-    
-    all_wc = 0;
-    d_wc = 0;
-    k1 = NULL;
-    nkey = afs_strdup((char*) qStr);
-    sp = strchr(nkey, '*');
-    if((sp == nkey) && (*(sp+1) == 0)) {
-	all_wc = 1;
+    keylen = numkeys = 0;
+    for (i = 0; i < qStrlen; ++i) {
+	if (!qStr[i]) ++numkeys;
     }
-    dp = strchr(nkey, '.'); /* all platforms have strchr? */
-    if(dp) {
-	int pos = dp - nkey;
-	d_wc = 1;
-	k1 = (char*) nkey;
-	k2 = dp + 1;
-	if(dp) {
-	    k1[pos] = 0;
-	}
+    keylen = qStrlen + numkeys*sizeof *keys;
+    keys = afs_osi_Alloc(keylen);
+    if (!keys) return NULL;	/* XXX */
+    cp = (char *)(keys + numkeys);
+    memcpy(cp, qStr, qStrlen);
+    for (i = 0; i < numkeys; ++i) {
+	keys[i] = cp;
+	cp += strlen(cp)+1;
     }
+
     QInit(&rsltq);
-    for (cpq = cap_Queue.next; cpq != &cap_Queue; cpq = tq) {
-	int match_p = 0;
-	ce = (struct CapEntry *) cpq;
-	if(all_wc) {
-	    match_p = 1;
-	    goto loop_end;
+    tq = (void *) &prop_Queue;
+    while (&(tq = (void*)QNext(&tq->ceq))->ceq != &prop_Queue) {
+	for (i = 0; i < numkeys; ++i) {
+	    if (afs_Property_Match(keys[i], tq->key)) {
+		ce = (struct PropEntry*) afs_osi_Alloc(sizeof(struct PropEntry));
+		if (!ce) goto Done;
+		*ce = *tq;
+		QAdd(&rsltq, &ce->ceq);
+		break;
+	    }
 	}
-	if(d_wc && (strstr(ce->key, k1) == ce->key)) {
-	    match_p = 1;
-	    goto loop_end;
-	}
-	if(strcmp(nkey, ce->key) == 0) {
-	    match_p = 1;
-	}
-    loop_end:
-	if(match_p) {
-	    QAdd(&rsltq, &ce->ceq);
-	}
-	tq = QNext(cpq);
-    }    
-    rslt = FormatCapBuf(&rsltq, qLen);
-    afs_osi_FreeStr(nkey); /* osi_Frees strlen(nkey), ok here */
+    }
+    rslt = FormatPropBuf(&rsltq, qLen);
+Done:
+    while ((cpq = QNext(&rsltq)) && cpq != &rsltq) {
+	QRemove(cpq);
+	afs_osi_Free(cpq, sizeof(struct PropEntry));
+    }
+    if (keys)
+	afs_osi_Free(keys, keylen);
     return rslt;
 }
 
 #ifdef AFS_RXK5
 
-static afs_int32 appendCapEnctype(char* dst, char* src, int *comma) {
-    if(*comma == 0) {
-	afs_strcat(dst, ",");
-	*comma = 1;
+#if !defined(USING_K5SSL)
+static int
+krb5i_iterate_enctypes(int (*f)(void *, krb5_enctype,
+	char *const *,
+	void (*)(unsigned int *, unsigned int *),
+	void (*)(unsigned int *, unsigned int *)),
+    void *a)
+{
+    krb5_enctype ke;
+    int i, r;
+
+    for (i = -30; i < 60; ++i) {
+	ke = ((46-i)^36)-8;	/* 18 17 16 23 8 3 2 1 24, +- */
+	if (!krb5_c_valid_enctype(ke)) continue;
+	r = f(a,ke,0,0,0);
+	if (r != -1) return r;
     }
-    afs_strcat(dst, src);
-    return 0;
-}
-
-afs_int32 rxk5_InitCapabilities() {
-
-    char * capStr;
-    afs_int32 comma, capSize;
-    
-    afs_warn("rxk5_InitCapabilities called\n"); 
-
-    comma = 0;
-    capSize = 128;
-    capStr = afs_osi_Alloc(capSize);
-    memset(capStr, 0, capSize);
-
-    appendCapEnctype(capStr, "1" /* DES_CBC_CRC  */, &comma);
-    appendCapEnctype(capStr, "2" /* DES_CBC_MD4 */, &comma);
-    appendCapEnctype(capStr, "3" /* DES_CBC_MD5 */, &comma);
-    appendCapEnctype(capStr, "8" /* DES_HMAC_SHA1 */, &comma);
-    appendCapEnctype(capStr, "16" /* DES3_CBC_SHA1 */, &comma);
-    appendCapEnctype(capStr, "17" /* AES128_CTS_HMAC_SHA1_96  */, &comma);
-    appendCapEnctype(capStr, "18" /* AES256_CTS_HMAC_SHA1_96 */, &comma);
-    appendCapEnctype(capStr, "23" /* ARCFOUR_HMAC_MD5 */, &comma);
-    appendCapEnctype(capStr, "24" /* ARCFOUR_HMAC_MD5_56 */, &comma);
-    afs_AddCapability("rxk5.enctypes", capStr);
-
-    osi_Free(capStr, capSize);
     return 0;
 }
 #endif
 
+struct rxk5_prop_arg {
+    struct afs_q q;
+    char number[20];
+};
+
+int
+afs_prop_rxk5_helper(void *a, krb5_enctype enctype,
+        char *const *names,
+        void (*block_size)(unsigned int *, unsigned int *),
+        void (*key_size)(unsigned int *, unsigned int *))
+{
+    struct rxk5_prop_arg *q = (struct rxk5_prop_arg *) a;
+    struct rxk5_prop_arg *t;
+    if ((t = afs_osi_Alloc(sizeof *t))) {
+	sprintf(t->number, "%d", enctype);
+	QAdd(&q->q, &t->q);
+    }
+    return -1;
+}
+
+afs_int32
+rxk5_InitProperties()
+{
+    char *propStr, *p;
+    afs_int32 propSize;
+    struct rxk5_prop_arg arg[1], *ap;
+    
+afs_warn("rxk5_InitProperties called\n"); 	/* XXX */
+    QInit(&arg->q);
+
+    krb5i_iterate_enctypes(afs_prop_rxk5_helper, arg);
+
+    propSize = 0;
+    for (ap = (void*)QNext(&arg->q); ap != arg; ap = (void*)QNext(&ap->q)) {
+	propSize += 1 + strlen(ap->number);
+    }
+    propStr = afs_osi_Alloc(propSize);
+    p = propStr;
+    while ((ap = (void*)QNext(&arg->q)) != arg) {
+	QRemove(&ap->q);
+	if (propStr != p) *p++ = ' ';
+	strcpy(p, ap->number);
+	p += strlen(p);
+	afs_osi_Free(ap, sizeof *ap);
+    }
+    afs_AddProperty("rxk5.enctypes", propStr);
+
+    osi_Free(propStr, propSize);
+    return 0;
+}
+#endif

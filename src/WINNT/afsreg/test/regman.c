@@ -60,12 +60,12 @@ static int DoVptAdd(struct cmd_syndesc *as, char *arock)
     vpDev = as->parms[1].items->data;
 
     if (!vpt_PartitionNameValid(vpName)) {
-	com_err(whoami, 0, "Partition name invalid");
+	afs_com_err(whoami, 0, "Partition name invalid");
 	return 1;
     }
 
     if (!vpt_DeviceNameValid(vpDev)) {
-	com_err(whoami, 0, "Device name invalid");
+	afs_com_err(whoami, 0, "Device name invalid");
 	return 1;
     }
 
@@ -73,7 +73,7 @@ static int DoVptAdd(struct cmd_syndesc *as, char *arock)
     strcpy(vpentry.vp_dev, vpDev);
 
     if (vpt_AddEntry(&vpentry)) {
-	com_err(whoami, 0, "Unable to create vice partition table entry");
+	afs_com_err(whoami, 0, "Unable to create vice partition table entry");
 	return 1;
     }
     return 0;
@@ -86,12 +86,12 @@ static int DoVptDel(struct cmd_syndesc *as, char *arock)
     vpName = as->parms[0].items->data;
 
     if (!vpt_PartitionNameValid(vpName)) {
-	com_err(whoami, 0, "Partition name invalid");
+	afs_com_err(whoami, 0, "Partition name invalid");
 	return 1;
     }
 
     if (vpt_RemoveEntry(vpName) && errno != ENOENT) {
-	com_err(whoami, 0, "Unable to remove vice partition table entry");
+	afs_com_err(whoami, 0, "Unable to remove vice partition table entry");
 	return 1;
     }
     return 0;
@@ -103,7 +103,7 @@ static int DoDirGet(struct cmd_syndesc *as, char *arock)
     char *buf;
 
     if (afssw_GetServerInstallDir(&buf)) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Failed reading AFS install dir entry (or does not exist)");
 	return 1;
     }
@@ -136,7 +136,7 @@ static int DoDirSet(struct cmd_syndesc *as, char *arock)
     }
 
     if (status) {
-	com_err(whoami, 0, "Unable to set AFS installation directory entry");
+	afs_com_err(whoami, 0, "Unable to set AFS installation directory entry");
     }
 
     return (status ? 1 : 0);
@@ -157,7 +157,7 @@ static int DoBosCfg(struct cmd_syndesc *as, char *arock)
 	char *dirBuf;
 
 	if (afssw_GetServerInstallDir(&dirBuf)) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "binary path not specified and AFS server installation directory not set");
 	    return 1;
 	}
@@ -177,7 +177,7 @@ static int DoBosCfg(struct cmd_syndesc *as, char *arock)
 	if (status == ERROR_ACCESS_DENIED) {
 	    reason = "(insufficient privilege)";
 	}
-	com_err(whoami, 0, "unable to connect to the SCM %s", reason);
+	afs_com_err(whoami, 0, "unable to connect to the SCM %s", reason);
 	return 1;
     }
 
@@ -202,7 +202,7 @@ static int DoBosCfg(struct cmd_syndesc *as, char *arock)
 	if (status == ERROR_SERVICE_EXISTS || status == ERROR_DUP_NAME) {
 	    reason = "(service or display name already exists)";
 	}
-	com_err(whoami, 0, "unable to create service %s", reason);
+	afs_com_err(whoami, 0, "unable to create service %s", reason);
 	CloseServiceHandle(scmHandle);
 	return 1;
     }
@@ -227,7 +227,7 @@ static int DoBosDel(struct cmd_syndesc *as, char *arock)
 	if (status == ERROR_ACCESS_DENIED) {
 	    reason = "(insufficient privilege)";
 	}
-	com_err(whoami, 0, "unable to connect to the SCM %s", reason);
+	afs_com_err(whoami, 0, "unable to connect to the SCM %s", reason);
 	return 1;
     }
 
@@ -238,7 +238,7 @@ static int DoBosDel(struct cmd_syndesc *as, char *arock)
 	DWORD status = GetLastError();
 
 	if (status != ERROR_SERVICE_DOES_NOT_EXIST) {
-	    com_err(whoami, 0, "unable to open service");
+	    afs_com_err(whoami, 0, "unable to open service");
 	    rc = 1;
 	}
 	CloseServiceHandle(scmHandle);
@@ -249,7 +249,7 @@ static int DoBosDel(struct cmd_syndesc *as, char *arock)
 	DWORD status = GetLastError();
 
 	if (status != ERROR_SERVICE_MARKED_FOR_DELETE) {
-	    com_err(whoami, 0, "service delete failed");
+	    afs_com_err(whoami, 0, "service delete failed");
 	    rc = 1;
 	}
     }

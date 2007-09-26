@@ -30,6 +30,7 @@
 #include<kherror.h>
 #include<khuidefs.h>
 #include<commctrl.h>
+#include<htmlhelp.h>
 #include<assert.h>
 
 static BOOL initialized = FALSE;
@@ -47,6 +48,8 @@ khm_int32 afs_attr_realm = -1;
 khm_handle afs_credset = NULL;
 khm_handle afs_sub = NULL;      /* AFS message subscription */
 
+khm_int32 action_id_afs_help = 0;
+
 /* forward dcls */
 khm_int32 KHMAPI 
 afs_msg_system(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
@@ -57,8 +60,47 @@ afs_msg_kcdb(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 khm_int32 KHMAPI 
 afs_msg_cred(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
+khm_int32 KHMAPI
+afs_msg_act(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
+
 khm_int32 KHMAPI 
 afs_msg_ext(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
+
+/* AFS help menu extensions */
+
+/* some of the functions we will be calling are only available on API
+   version 7 and above of Network Identity Manager.  Since these
+   aren't critical, we allow building using API version 5 or above,
+   but conditionally use the newer functionality if the plug-in is
+   loaded by a newer version of Network Identity Manager. */
+
+#if KH_VERSION_API < 7
+
+HMODULE hm_netidmgr;
+
+/* declarations from version 7 of the API */
+KHMEXP void
+(KHMAPI * pkhui_action_lock)(void);
+
+KHMEXP void
+(KHMAPI * pkhui_action_unlock)(void);
+
+KHMEXP void
+(KHMAPI * pkhui_refresh_actions)(void);
+
+typedef khm_int32
+(KHMAPI * khm_ui_callback)(HWND hwnd_main_wnd, void * rock);
+
+KHMEXP khm_int32
+(KHMAPI * pkhui_request_UI_callback)(khm_ui_callback cb,
+                                     void * rock);
+
+#define khui_action_lock         (*pkhui_action_lock)
+#define khui_action_unlock       (*pkhui_action_unlock)
+#define khui_refresh_actions     (*pkhui_refresh_actions)
+#define khui_request_UI_callback (*pkhui_request_UI_callback)
+
+#endif
 
 /* AFS plugin callback */
 khm_int32 KHMAPI 
@@ -73,6 +115,8 @@ afs_plugin_cb(khm_int32 msg_type,
         return afs_msg_kcdb(msg_subtype, uparam, vparam);
     if (msg_type == KMSG_CRED)
         return afs_msg_cred(msg_subtype, uparam, vparam);
+    if (msg_type == KMSG_ACT)
+        return afs_msg_act(msg_subtype, uparam, vparam);
     if (msg_type == afs_msg_type_id)
         return afs_msg_ext(msg_subtype, uparam, vparam);
 
@@ -494,6 +538,101 @@ afs_msg_system(khm_int32 msg_subtype,
                 khc_close_space(csp_afscred);
             }
 
+            /* try to register the "AFS Help" menu item, if
+               possible */
+            {
+                khm_handle h_sub = NULL;
+                wchar_t short_desc[KHUI_MAXCCH_SHORT_DESC];
+                wchar_t long_desc[KHUI_MAXCCH_LONG_DESC];
+
+#if KH_VERSION_API < 7
+
+                khm_version libver;
+                khm_ui_4 apiver;
+
+                khm_get_lib_version(&libver, &apiver);
+
+                if (apiver < 7)
+                    goto no_custom_help;
+
+                hm_netidmgr = LoadLibrary(L"nidmgr32.dll");
+
+                if (hm_netidmgr == NULL)
+                    goto no_custom_help;
+
+                pkhui_action_lock = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, "_khui_action_lock@0");
+                pkhui_action_unlock = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, "_khui_action_unlock@0");
+                pkhui_refresh_actions = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, "_khui_refresh_actions@0");
+                pkhui_request_UI_callback = (khm_int32 (KHMAPI *)(khm_ui_callback, void *))
+                    GetProcAddress(hm_netidmgr, "_khui_request_UI_callback@8");
+
+                if (pkhui_action_lock == NULL ||
+                    pkhui_action_unlock == NULL ||
+                    pkhui_refresh_actions == NULL ||
+                    pkhui_request_UI_callback == NULL)
+
+                    goto no_custom_help;
+
+#endif
+                kmq_create_subscription(afs_plugin_cb, &h_sub);
+
+                LoadString(hResModule, IDS_ACTION_AFS_HELP,
+                           short_desc, ARRAYLENGTH(short_desc));
+                LoadString(hResModule, IDS_ACTION_AFS_HELP_TT,
+                           long_desc, ARRAYLENGTH(long_desc));
+
+                action_id_afs_help = khui_action_create(NULL,
+                                                        short_desc,
+                                                        long_desc,
+                                                        NULL,
+                                                        KHUI_ACTIONTYPE_TRIGGER,
+                                                        h_sub);
+
+                if (action_id_afs_help != 0) {
+                    khm_size s;
+                    khm_size i;
+                    khui_menu_def * help_menu;
+                    khm_boolean refresh = FALSE;
+
+                    khui_action_lock();
+
+                    help_menu = khui_find_menu(KHUI_MENU_HELP);
+                    if (help_menu) {
+                        s = khui_menu_get_size(help_menu);
+
+                        for (i=0; i < s; i++) {
+                            khui_action_ref * aref;
+
+                            aref = khui_menu_get_action(help_menu, i);
+
+                            if (aref && !(aref->flags & KHUI_ACTIONREF_PACTION) &&
+                                aref->action == KHUI_ACTION_HELP_INDEX) {
+
+                                khui_menu_insert_action(help_menu,
+                                                        i + 1,
+                                                        action_id_afs_help,
+                                                        0);
+                                refresh = TRUE;
+                                break;
+                            }
+                        }
+                    }
+
+                    khui_action_unlock();
+
+                    if (refresh)
+                        khui_refresh_actions();
+                }
+
+#if KH_VERSION_API < 7
+            no_custom_help:
+                ;
+#endif
+            }
+
         _exit_init:
             if(ct.short_desc)
                 PFREE(ct.short_desc);
@@ -518,6 +657,45 @@ afs_msg_system(khm_int32 msg_subtype,
         /* end of KMSG_SYSTEM_INIT */
 
     case KMSG_SYSTEM_EXIT:
+
+        /* Try to remove the AFS plug-in action from Help menu if it
+           was successfully registered.  Also, delete the action. */
+        if (action_id_afs_help != 0) {
+
+            khui_menu_def * help_menu;
+            khm_boolean menu_changed = FALSE;
+
+            khui_action_lock();
+
+            help_menu = khui_find_menu(KHUI_MENU_HELP);
+            if (help_menu) {
+                khm_size s;
+                khm_size i;
+
+                s = khui_menu_get_size(help_menu);
+                for (i=0; i < s; i++) {
+                    khui_action_ref * aref = khui_menu_get_action(help_menu, i);
+
+                    if (aref && !(aref->flags & KHUI_ACTIONREF_PACTION) &&
+                        aref->action == action_id_afs_help) {
+
+                        khui_menu_remove_action(help_menu, i);
+                        menu_changed = TRUE;
+                        break;
+                    }
+                }
+            }
+
+            khui_action_delete(action_id_afs_help);
+
+            khui_action_unlock();
+
+            if (menu_changed)
+                khui_refresh_actions();
+
+            action_id_afs_help = 0;
+        }
+
         if (afs_msg_type_id != -1) {
             kmq_unsubscribe(afs_msg_type_id, afs_plugin_cb);
             kmq_unregister_type(afs_msg_type_id);
@@ -558,6 +736,16 @@ afs_msg_system(khm_int32 msg_subtype,
         /* afs_sub doesn't need to be deleted.  That is taken care
            of when unregistering the afs cred type */
         afs_sub = NULL;
+
+#if KH_VERSION_API < 7
+        if (hm_netidmgr)
+            FreeLibrary(hm_netidmgr);
+
+        pkhui_action_lock = NULL;
+        pkhui_action_unlock = NULL;
+        pkhui_refresh_actions = NULL;
+        pkhui_request_UI_callback = NULL;
+#endif
 
         rv = KHM_ERROR_SUCCESS;
         break;
@@ -640,3 +828,27 @@ afs_msg_cred(khm_int32 msg_subtype,
     return rv;
 }
 
+
+khm_int32 KHMAPI
+help_launcher(HWND hwnd_main, void * rock) {
+    afs_html_help(hwnd_main, NULL, HH_DISPLAY_TOC, 0);
+
+    return KHM_ERROR_SUCCESS;
+}
+
+khm_int32 KHMAPI 
+afs_msg_act(khm_int32 msg_subtype, 
+            khm_ui_4 uparam, 
+            void * vparam)
+{
+    khm_int32 rv = KHM_ERROR_SUCCESS;
+
+    if (msg_subtype == KMSG_ACT_ACTIVATE &&
+        uparam == (khm_ui_4)action_id_afs_help) {
+
+        khui_request_UI_callback(help_launcher, NULL);
+
+    }
+
+    return rv;
+}

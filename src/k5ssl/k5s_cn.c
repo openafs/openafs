@@ -88,6 +88,16 @@ krb5_get_init_creds_opt_set_renew_life(krb5_get_init_creds_opt *opt,
 }
 
 void
+krb5_get_init_creds_opt_set_etype_list(krb5_get_init_creds_opt *opt,
+    krb5_enctype *list,
+    int length)
+{
+    opt->flags |= KRB5_GET_INIT_CREDS_OPT_ETYPE_LIST;
+    opt->etype_list = list;
+    opt->etype_list_length = length;
+}
+
+void
 krb5_free_salt_contents(krb5_context context, krb5_salt *salt)
 {
     if (salt->s2kdata.data) {
@@ -937,7 +947,7 @@ krb5_get_init_creds_keytab(krb5_context context,
 
     if (!(keytab = akeytab) && (code = krb5_kt_default(context, &keytab)))
 	goto Done;
-    for (use_master = 0; use_master < 2; ++use_master) {
+    for (use_master = 0; use_master <= USE_MASTER; use_master += USE_MASTER) {
 	i = krb5i_get_init_creds(context, creds, client, NULL,
 	    NULL, stime, service, options,
 	    krb5i_get_as_kt, (void *) keytab, &use_master, NULL);

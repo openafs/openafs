@@ -9,6 +9,7 @@ include ../../config/Makefile.config
 #${SYS_NAME}
 
 DEST=@DEST@
+@ENABLE_JAVA@JAVA_HOME=@JAVA_LIVES_HERE@
 TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
@@ -28,6 +29,7 @@ afssrvlibexecdir=@afssrvlibexecdir@
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 SYS_NAME=@AFS_SYSNAME@
+KRB5LIBS=@KRB5LIBS@
 
 
 CC = ${MT_CC}
@@ -35,21 +37,22 @@ SHARED_FLAGS = -shared -Xlinker -Bsymbolic
 OBJECT_FLAGS = -fPIC -c
 
 ifeq "$(BUILD_TYPE)" "admin"
-	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ -I${JAVA_HOME}/include -I ${JNI_INC}
+	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ -I${JAVA_HOME}/include -I ${JNI_INC} -I ${JNI_INC}/linux
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 else
-	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${JAVA_HOME}/include -I ${JNI_INC}
+	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${JAVA_HOME}/include -I ${JNI_INC} -I ${JNI_INC}/linux
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${MT_CFLAGS}
 endif
 
 
-LIBJAFSADMDIR = ./
+LIBJAFSADMDIR = a/
+LIBJAFSDIR=j/
 ROOTPACKAGEDIR = ../classes
 RELPACKAGEDIR = org/openafs/jafs/
 PACKAGEDIR = ${ROOTPACKAGEDIR}/${RELPACKAGEDIR}
 JAVADOCSDIR = javadocs/
 
-JAVAH = ${JAVA_HOME}/bin/javah -classpath ${ROOTPACKAGEDIR} -jni -d ${LIBJAFSADMDIR}
+JAVAH = ${JAVA_HOME}/bin/javah -classpath ${ROOTPACKAGEDIR} -jni -d .
 JAVAC = ${JAVA_HOME}/bin/javac -classpath ${ROOTPACKAGEDIR}
 
 J_NATIVE_PREFIX = org.openafs.jafs.
@@ -81,20 +84,19 @@ ifeq (${SYS_NAME}, s390x_linux26)
 LIBJAFS_OBJS =
 else
 LIBJAFS_OBJS =\
-        ${LIBJAFSADMDIR}GetNativeString.o \
-        ${LIBJAFSADMDIR}ACL.o
+        ${LIBJAFSDIR}GetNativeString.o \
+        ${LIBJAFSDIR}ACL.o
 endif
 endif
 
 LIBJAFS_OBJS +=\
-	${LIBJAFSADMDIR}File.o \
-	${LIBJAFSADMDIR}FileInputStream.o \
-	${LIBJAFSADMDIR}FileOutputStream.o \
-	${LIBJAFSADMDIR}Internal.o \
-	${LIBJAFSADMDIR}UserToken.o \
-	${LIBJAFSADMDIR}VersionInfo.o \
-	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
-	${TOP_SRCDIR}/libuafs/UAFS/xdr_int32.o \
+	${LIBJAFSDIR}File.o \
+	${LIBJAFSDIR}FileInputStream.o \
+	${LIBJAFSDIR}FileOutputStream.o \
+	${LIBJAFSDIR}Internal.o \
+	${LIBJAFSDIR}UserToken.o \
+	${LIBJAFSDIR}VersionInfo.o \
+	${LIBJAFSDIR}AFS_component_version_number.o \
         ${TOP_SRCDIR}/util/rxkstats.o
 
 ifeq (${SYS_NAME}, ppc64_linux26)
@@ -122,7 +124,7 @@ LIBJAFSADM_OBJS +=\
 	${LIBJAFSADMDIR}Server.o \
 	${LIBJAFSADMDIR}User.o \
 	${LIBJAFSADMDIR}Version2.o \
-	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
+	${LIBJAFSADMDIR}AFS_component_version_number.o \
 	${LIBJAFSADMDIR}Volume.o
 
 CORRELATING_SOURCE_FILES =\
@@ -154,8 +156,11 @@ CLIENTADMINLIB = ${TOP_LIBDIR}/libclientadmin.a
 LIBJAFS_LIBS =\
 	${TOP_LIBDIR}/libjuafs.a \
 	${TOP_LIBDIR}/libdes.a \
+	${KRB5LIBS} \
 	-lresolv \
 	-lpthread
+
+@ENABLE_PIC_LIBS@PIC_SUFFIX=_pic
 
 LIBJAFSADM_LIBS =\
 	${CLIENTADMINLIB} \
@@ -165,10 +170,11 @@ LIBJAFSADM_LIBS =\
 	${KASADMINLIB} \
 	${CFGADMINLIB} \
 	${UTILADMINLIB} \
-	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libafsauthent$(PIC_SUFFIX).a \
+	${TOP_LIBDIR}/libafsrpc$(PIC_SUFFIX).a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/util.a \
+	${KRB5LIBS} \
 	-lresolv \
 	-lpthread
 
@@ -199,9 +205,10 @@ install:  all ${DESTDIR}${libdir}/libjafs.so ${DESTDIR}${libdir}/libjafsadm.so $
 	fi
 
 clean:
-	${RM} -f ${PACKAGEDIR}*.class ${LIBJAFSADMDIR}*.o ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}*.h
+	${RM} -f ${PACKAGEDIR}*.class ${LIBJAFSADMDIR}*.o ${LIBJAFSDIR}*.o ${C_NATIVE_PREFIX}*.h
 
 setup:	FORCE
+	test -e a -a -e j || mkdir a j
 	if [ ! -e ./h ]; then \
 	  ln -s /usr/include/sys h; \
 	fi; \
@@ -214,19 +221,17 @@ FORCE: ;
 ############# Shared library ###############################
 
 libjafs: setup
-	${RM} -f ${LIBJAFSADMDIR}Internal.o; \
 	export BUILD_TYPE=user; \
 	${MAKE} ${TOP_LIBDIR}/libjafs.so
 
 libjafsadm:
-	${RM} -f ${LIBJAFSADMDIR}Internal.o; \
 	export BUILD_TYPE=admin; \
 	${MAKE} ${TOP_LIBDIR}/libjafsadm.so
 
 ${TOP_LIBDIR}/libjafs.so: ${LIBJAFS_OBJS}
 	${CC} ${CFLAGS} ${SHARED_FLAGS} -o $@ $^ ${LIBJAFS_LIBS}
 
-${DESTDIR}${libdir}/libjafs.so: ${LIBJAFS_OBJS}192.168.13.10
+${DESTDIR}${libdir}/libjafs.so: ${LIBJAFS_OBJS}
 	${CC} ${CFLAGS} ${SHARED_FLAGS} -o $@ $^ ${LIBJAFS_LIBS}
 
 ${TOP_LIBDIR}/libjafsadm.so: ${LIBJAFSADM_OBJS}
@@ -237,20 +242,59 @@ ${DESTDIR}${libdir}/libjafsadm.so: ${LIBJAFSADM_OBJS}
 
 ############## Object files ################################
 
-${LIBJAFSADM_OBJS}: %.o: %.c
-	${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+#${LIBJAFSADM_OBJS}: %.o: %.c
+#	${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+
+${LIBJAFSDIR}ACL.o: ACL.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}File.o: File.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}FileInputStream.o: FileInputStream.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}FileOutputStream.o: FileOutputStream.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}GetNativeString.o: GetNativeString.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}Internal.o: Internal.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}UserToken.o: UserToken.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}VersionInfo.o: VersionInfo.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSDIR}AFS_component_version_number.o: AFS_component_version_number.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+
+${LIBJAFSADMDIR}ACL.o: ACL.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}AdminToken.o: AdminToken.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Cell.o: Cell.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}GetNativeString.o: GetNativeString.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Group.o: Group.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Internal.o: Internal.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Key.o: Key.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Partition.o: Partition.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Process.o: Process.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Server.o: Server.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}User.o: User.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Version2.o: Version2.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}Volume.o: Volume.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
+${LIBJAFSADMDIR}AFS_component_version_number.o: AFS_component_version_number.c; ${CC} ${CFLAGS} ${OBJECT_FLAGS} -o $@ $<
 
 ############## C files #####################################
 
-${CORRELATING_SOURCE_FILES}: ${LIBJAFSADMDIR}%.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}%.h ${LIBJAFSADMDIR}Internal.h
+${CORRELATING_SOURCE_FILES}: %.c: ${C_NATIVE_PREFIX}%.h Internal.h
+${LIBJAFSDIR}ACL.o: ${C_NATIVE_PREFIX}ACL.h
+${LIBJAFSDIR}File.o: ${C_NATIVE_PREFIX}File.h
+${LIBJAFSDIR}FileInputStream.o: ${C_NATIVE_PREFIX}FileInputStream.h
+${LIBJAFSDIR}FileOutputStream.o: ${C_NATIVE_PREFIX}FileOutputStream.h
+${LIBJAFSDIR}VersionInfo.o: ${C_NATIVE_PREFIX}VersionInfo.h
+${LIBJAFSADMDIR}ACL.o: ${C_NATIVE_PREFIX}ACL.h
+${LIBJAFSADMDIR}Cell.o: ${C_NATIVE_PREFIX}Cell.h
+${LIBJAFSADMDIR}Group.o: ${C_NATIVE_PREFIX}Group.h
+${LIBJAFSADMDIR}Key.o: ${C_NATIVE_PREFIX}Key.h
+${LIBJAFSADMDIR}Partition.o: ${C_NATIVE_PREFIX}Partition.h
+${LIBJAFSADMDIR}Process.o: ${C_NATIVE_PREFIX}Process.h
+${LIBJAFSADMDIR}Server.o: ${C_NATIVE_PREFIX}Server.h
+${LIBJAFSADMDIR}User.o: ${C_NATIVE_PREFIX}User.h
+${LIBJAFSADMDIR}Volume.o: ${C_NATIVE_PREFIX}Volume.h
 
-${LIBJAFSADMDIR}AdminToken.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Token.h ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Cell.h
+AdminToken.c: ${C_NATIVE_PREFIX}Token.h ${C_NATIVE_PREFIX}Cell.h
 
-${LIBJAFSADMDIR}Internal.c: ${LIBJAFSADMDIR}Internal.h
+Internal.c: Internal.h
 
-${LIBJAFSADMDIR}Version2.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}VersionInfo.h ${LIBJAFSADMDIR}JAFS_Version.h
+Version2.c: ${C_NATIVE_PREFIX}VersionInfo.h JAFS_Version.h
 
-${LIBJAFSADMDIR}UserToken.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Token.h
+UserToken.c: ${C_NATIVE_PREFIX}Token.h
 
 ############## Package javac section #########################
 
@@ -273,5 +317,4 @@ install_jar: clean_jar
 clean_jar:
 	${RM} -f ${TOP_JLIBDIR}/${JARFILE}
 
-
-
+include ../../config/Makefile.version

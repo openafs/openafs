@@ -23,11 +23,7 @@
 #include <osi.h>
 
 #include "afsd.h"
-
-/* Used by cm_FollowMountPoint */
-#define RWVOL	0
-#define ROVOL	1
-#define BACKVOL	2
+#include "cm_btree.h"
 
 #ifdef DEBUG
 extern void afsi_log(char *pattern, ...);
@@ -209,7 +205,7 @@ void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
                 break;
         if (tc)
             validExtension = 1;
-    }       
+    }
 
     /* Copy name characters */
     for (i = 0, name = longname;
@@ -353,8 +349,11 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (desiredAccess & AFS_ACCESS_READ)
         rights |= (scp->fileType == CM_SCACHETYPE_DIRECTORY ? PRSFS_LOOKUP : PRSFS_READ);
 
-    if ((desiredAccess & AFS_ACCESS_WRITE)
-         || createDisp == 4)
+    /* We used to require PRSFS_WRITE if createDisp was 4
+       (OPEN_ALWAYS) even if AFS_ACCESS_WRITE was not requested.
+       However, we don't need to do that since the existence of the
+       scp implies that we don't need to create it. */
+    if (desiredAccess & AFS_ACCESS_WRITE)
         rights |= PRSFS_WRITE;
 
     lock_ObtainMutex(&scp->mx);
@@ -481,11 +480,11 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
     int BeyondPage = 0, HaveDot = 0, HaveDotDot = 0;
 
     /* First check permissions */
-    lock_ObtainMutex(&dscp->mx);
-    code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_DELETE,
+    lock_ObtainMutex(&scp->mx);
+    code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_DELETE,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&dscp->mx);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseMutex(&scp->mx);
     if (code)
         return code;
 
@@ -592,39 +591,86 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {
-        lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseMutex(&scp->mx);
+    if (code)
         return code;
-    }
         
-    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
-        lock_ReleaseMutex(&scp->mx);
+    if (scp->fileType != CM_SCACHETYPE_DIRECTORY)
         return CM_ERROR_NOTDIR;
-    }   
 
     if (retscp) 			/* if this is a lookup call */
     {
         cm_lookupSearch_t*	sp = parmp;
 
+        if (
 #ifdef AFS_FREELANCE_CLIENT
 	/* Freelance entries never end up in the DNLC because they
 	 * do not have an associated cm_server_t
 	 */
-    if ( !(cm_freelanceEnabled &&
+            !(cm_freelanceEnabled &&
             sp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-            sp->fid.volume==AFS_FAKE_ROOT_VOL_ID ) )
-#endif /* AFS_FREELANCE_CLIENT */
-    {
-        int casefold = sp->caseFold;
-        sp->caseFold = 0; /* we have a strong preference for exact matches */
-        if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
+              sp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+#else /* !AFS_FREELANCE_CLIENT */
+            TRUE
+#endif
+            ) 
         {
+            int casefold = sp->caseFold;
+            sp->caseFold = 0; /* we have a strong preference for exact matches */
+            if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
+            {
+                sp->caseFold = casefold;
+                return 0;
+            }
             sp->caseFold = casefold;
-            lock_ReleaseMutex(&scp->mx);
-            return 0;
+
+            /* see if we can find it using the directory hash tables.
+               we can only do exact matches, since the hash is case
+               sensitive. */
+            {
+                cm_dirOp_t dirop;
+#ifdef USE_BPLUS
+                int usedBplus = 0;
+#endif
+
+                code = ENOENT;
+
+                code = cm_BeginDirOp(scp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+                if (code == 0) {
+
+#ifdef USE_BPLUS
+                    code = cm_BPlusDirLookup(&dirop, sp->searchNamep, &sp->fid);
+                    if (code != EINVAL)
+                        usedBplus = 1;
+                    else 
+#endif
+                        code = cm_DirLookup(&dirop, sp->searchNamep, &sp->fid);
+
+                    cm_EndDirOp(&dirop);
+                }
+
+                if (code == 0) {
+                    /* found it */
+                    sp->found = TRUE;
+                    sp->ExactFound = TRUE;
+                    *retscp = NULL; /* force caller to call cm_GetSCache() */
+                    return 0;
+                }
+#ifdef USE_BPLUS
+                if (usedBplus) {
+                    if (sp->caseFold && code == CM_ERROR_INEXACT_MATCH) {
+                        /* found it */
+                        sp->found = TRUE;
+                        sp->ExactFound = FALSE;
+                        *retscp = NULL; /* force caller to call cm_GetSCache() */
+                        return 0;
+                    }
+                    
+                    return CM_ERROR_BPLUS_NOMATCH;
+                }
+#endif 
+            }
         }
-        sp->caseFold = casefold;
-    }
     }	
 
     /*
@@ -632,8 +678,6 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
      * lock.
      */
     dirLength = scp->length;
-
-    lock_ReleaseMutex(&scp->mx);
 
     bufferp = NULL;
     bufferOffset.LowPart = bufferOffset.HighPart = 0;
@@ -937,29 +981,27 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseRead(&scp->bufCreateLock);
 
     lock_ObtainMutex(&scp->mx);
-    if (code) {
+    if (code)
         return code;
-    }
+
     while (1) {
         code = cm_SyncOp(scp, bufp, userp, reqp, 0,
                           CM_SCACHESYNC_READ | CM_SCACHESYNC_NEEDCALLBACK);
-        if (code) {
+        if (code)
             goto done;
-        }
-	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
+	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
         if (cm_HaveBuffer(scp, bufp, 0)) 
             break;
 
         /* otherwise load buffer */
         code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
-        if (code) {
+        if (code)
             goto done;
-        }
     }
     /* locked, has callback, has valid data in buffer */
-    if ((tlen = scp->length.LowPart) > 1000) 
+    if ((tlen = scp->length.LowPart) > MOUNTPOINTLEN - 1) 
         return CM_ERROR_TOOBIG;
     if (tlen <= 0) {
         code = CM_ERROR_INVAL;
@@ -989,6 +1031,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         buf_Release(bufp);
     return code;
 }
+
 
 /* called with a locked scp and chases the mount point, yielding outScpp.
  * scp remains locked, just for simplicity of describing the interface.
@@ -1033,7 +1076,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         strncpy(cellNamep, mpNamep+1, cp - mpNamep - 1);
         strcpy(volNamep, cp+1);
         /* now look up the cell */
+        lock_ReleaseMutex(&scp->mx);
         cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE);
+        lock_ObtainMutex(&scp->mx);
     }
     else {
         /* normal mt pt */
@@ -1066,7 +1111,13 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     /* now we need to get the volume */
     lock_ReleaseMutex(&scp->mx);
-    code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 0, &volp);
+    if (cm_VolNameIsID(volNamep)) {
+        code = cm_GetVolumeByID(cellp, atoi(volNamep), userp, reqp, 
+                                CM_GETVOL_FLAG_CREATE, &volp);
+    } else {
+        code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 
+                                  CM_GETVOL_FLAG_CREATE, &volp);
+    }
     lock_ObtainMutex(&scp->mx);
         
     if (code == 0) {
@@ -1087,14 +1138,14 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
          * the read-only, otherwise use the one specified.
          */
         if (mtType == '#' && (scp->flags & CM_SCACHEFLAG_PURERO)
-             && volp->roID != 0 && type == RWVOL)
+             && volp->ro.ID != 0 && type == RWVOL)
             type = ROVOL;
         if (type == ROVOL)
-            scp->mountRootFid.volume = volp->roID;
+            scp->mountRootFid.volume = volp->ro.ID;
         else if (type == BACKVOL)
-            scp->mountRootFid.volume = volp->bkID;
+            scp->mountRootFid.volume = volp->bk.ID;
         else
-            scp->mountRootFid.volume = volp->rwID;
+            scp->mountRootFid.volume = volp->rw.ID;
 
         /* the rest of the fid is a magic number */
         scp->mountRootFid.vnode = 1;
@@ -1125,6 +1176,8 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     cm_lookupSearch_t rock;
     int getroot;
 
+    memset(&rock, 0, sizeof(rock));
+
     if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
          && strcmp(namep, "..") == 0) {
         if (dscp->dotdotFid.volume == 0)
@@ -1136,7 +1189,48 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
 	goto haveFid;
     }
 
-    memset(&rock, 0, sizeof(rock));
+    if (flags & CM_FLAG_NOMOUNTCHASE) {
+        /* In this case, we should go and call cm_Dir* functions
+           directly since the following cm_ApplyDir() function will
+           not. */
+
+        cm_dirOp_t dirop;
+#ifdef USE_BPLUS
+        int usedBplus = 0;
+#endif
+
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        if (code == 0) {
+#ifdef USE_BPLUS
+            code = cm_BPlusDirLookup(&dirop, namep, &rock.fid);
+            if (code != EINVAL)
+                usedBplus = 1;
+            else
+#endif
+                code = cm_DirLookup(&dirop, namep, &rock.fid);
+
+            cm_EndDirOp(&dirop);
+        }
+
+        if (code == 0) {
+            /* found it */
+            rock.found = TRUE;
+            goto haveFid;
+        }
+#ifdef USE_BPLUS
+        if (usedBplus) {
+            if (code == CM_ERROR_INEXACT_MATCH && (flags & CM_FLAG_CASEFOLD)) {
+                /* found it */
+                code = 0;
+                rock.found = TRUE;
+                goto haveFid;
+            }
+            
+            return CM_ERROR_BPLUS_NOMATCH;
+        }
+#endif
+    }
+
     rock.fid.cell = dscp->fid.cell;
     rock.fid.volume = dscp->fid.volume;
     rock.searchNamep = namep;
@@ -1291,6 +1385,114 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
     return 1;
 }   
 
+long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
+                                cm_req_t *reqp, cm_scache_t ** outpScpp)
+{
+    long          code = 0;
+    char          cellName[CELL_MAXNAMELEN];
+    char          volumeName[VL_MAXNAMELEN];
+    size_t        len;
+    char *        cp;
+    char *        tp;
+
+    cm_cell_t *   cellp = NULL;
+    cm_volume_t * volp = NULL;
+    cm_fid_t      fid;
+    int           volType;
+    int           mountType = RWVOL;
+
+    osi_Log1(afsd_logp, "cm_EvaluateVolumeReference for string [%s]",
+             osi_LogSaveString(afsd_logp, namep));
+
+    if (strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) != 0) {
+        goto _exit_invalid_path;
+    }
+
+    /* namep is assumed to look like the following:
+
+       @vol:<cellname>%<volume>\0
+       or
+       @vol:<cellname>#<volume>\0
+
+     */
+
+    cp = namep + CM_PREFIX_VOL_CCH; /* cp points to cell name, hopefully */
+    tp = strchr(cp, '%');
+    if (tp == NULL)
+        tp = strchr(cp, '#');
+    if (tp == NULL ||
+        (len = tp - cp) == 0 ||
+        len > CELL_MAXNAMELEN)
+        goto _exit_invalid_path;
+    strncpy(cellName, cp, len);
+    cellName[len] = '\0';
+
+    if (*tp == '#')
+        mountType = ROVOL;
+
+    cp = tp+1;                  /* cp now points to volume, supposedly */
+    strncpy(volumeName, cp, VL_MAXNAMELEN-1);
+    volumeName[VL_MAXNAMELEN - 1] = 0;
+
+    /* OK, now we have the cell and the volume */
+    osi_Log2(afsd_logp, "   Found cell [%s] and volume [%s]",
+             osi_LogSaveString(afsd_logp, cellName),
+             osi_LogSaveString(afsd_logp, volumeName));
+
+    cellp = cm_GetCell(cellName, CM_FLAG_CREATE);
+    if (cellp == NULL) {
+        goto _exit_invalid_path;
+    }
+
+    len = strlen(volumeName);
+    if (len >= 8 && strcmp(volumeName + len - 7, ".backup") == 0)
+        volType = BACKVOL;
+    else if (len >= 10 &&
+             strcmp(volumeName + len - 9, ".readonly") == 0)
+        volType = ROVOL;
+    else
+        volType = RWVOL;
+
+    if (cm_VolNameIsID(volumeName)) {
+        code = cm_GetVolumeByID(cellp, atoi(volumeName), userp, reqp,
+                                CM_GETVOL_FLAG_CREATE, &volp);
+    } else {
+        code = cm_GetVolumeByName(cellp, volumeName, userp, reqp,
+                                  CM_GETVOL_FLAG_CREATE, &volp);
+    }
+
+    if (code != 0)
+        goto _exit_cleanup;
+
+    fid.cell = cellp->cellID;
+
+    if (volType == BACKVOL)
+        fid.volume = volp->bk.ID;
+    else if (volType == ROVOL ||
+             (volType == RWVOL && mountType == ROVOL && volp->ro.ID != 0))
+        fid.volume = volp->ro.ID;
+    else
+        fid.volume = volp->rw.ID;
+
+    fid.vnode = 1;
+    fid.unique = 1;
+
+    code = cm_GetSCache(&fid, outpScpp, userp, reqp);
+
+ _exit_cleanup:
+    if (volp)
+        cm_PutVolume(volp);
+
+    if (code == 0)
+        return code;
+
+ _exit_invalid_path:
+    if (flags & CM_FLAG_CHECKPATH)
+        return CM_ERROR_NOSUCHPATH;
+    else
+        return CM_ERROR_NOSUCHFILE;
+}
+
 #ifdef DEBUG_REFCOUNT
 long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                cm_req_t *reqp, cm_scache_t **outpScpp, char * file, long line)
@@ -1300,7 +1502,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 #endif
 {
     long code;
-    char tname[256];
+    char tname[AFSPATHMAX];
     int sysNameIndex = 0;
     cm_scache_t *scp = NULL;
 
@@ -1316,32 +1518,47 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
             return CM_ERROR_NOSUCHFILE;
     }
 
-    for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
-        code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
-        if (code > 0) {
-            code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
+    if (dscp == cm_data.rootSCachep &&
+        strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) == 0) {
+        return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outpScpp);
+    }
+
+    if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
+        for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
+            code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
+            if (code > 0) {
+                code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_LookupInternal (1) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
-	    osi_Log3(afsd_logp, "cm_LookupInternal (1) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+                afsi_log("%s:%d cm_LookupInternal (1) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+                osi_Log3(afsd_logp, "cm_LookupInternal (1) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
 
-            if (code == 0) {
-                *outpScpp = scp;
-                return 0;
-            }
-            if (scp) {
-                cm_ReleaseSCache(scp);
-                scp = NULL;
-            }
-        } else {
-            code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
+                if (code == 0) {
+                    *outpScpp = scp;
+                    return 0;
+                }
+                if (scp) {
+                    cm_ReleaseSCache(scp);
+                    scp = NULL;
+                }
+            } else {
+                code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
-	    osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+                afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+                osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
-	    *outpScpp = scp;
-	    return code;
+                *outpScpp = scp;
+                return code;
+            }
         }
+    } else {
+        code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
+#ifdef DEBUG_REFCOUNT
+        afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+        osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+#endif
+        *outpScpp = scp;
+        return code;
     }
 
     /* None of the possible sysName expansions could be found */
@@ -1360,6 +1577,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     AFSFetchStatus newDirStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
@@ -1370,12 +1588,16 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 #endif  
 
     /* make sure we don't screw up the dir status during the merge */
+    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+
     lock_ObtainMutex(&dscp->mx);
     sflags = CM_SCACHESYNC_STOREDATA;
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, sflags);
     lock_ReleaseMutex(&dscp->mx);
-    if (code) 
+    if (code) {
+        cm_EndDirOp(&dirop);
         return code;
+    }
 
     /* make the RPC */
     afsFid.Volume = dscp->fid.volume;
@@ -1384,7 +1606,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 
     osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -1401,19 +1623,31 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     else
         osi_Log0(afsd_logp, "CALL RemoveFile SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_dnlcRemove(dscp, namep);
     cm_SyncOpDone(dscp, NULL, sflags);
-    if (code == 0) 
-        cm_MergeStatus(dscp, &newDirStatus, &volSync, userp, 0);
-	else if (code == CM_ERROR_NOSUCHFILE) {
-		/* windows would not have allowed the request to delete the file 
-		 * if it did not believe the file existed.  therefore, we must 
-		 * have an inconsistent view of the world.
-		 */
-		dscp->cbServerp = NULL;
-	}
+    if (code == 0) {
+        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, 0);
+    } else if (code == CM_ERROR_NOSUCHFILE) {
+	/* windows would not have allowed the request to delete the file 
+	 * if it did not believe the file existed.  therefore, we must 
+	 * have an inconsistent view of the world.
+	 */
+	dscp->cbServerp = NULL;
+    }
     lock_ReleaseMutex(&dscp->mx);
+
+    if (code == 0 && cm_CheckDirOpForSingleChange(&dirop)) {
+        cm_DirDeleteEntry(&dirop, namep);
+#ifdef USE_BPLUS
+        cm_BPlusDirDeleteEntry(&dirop, namep);
+#endif
+    }
+    cm_EndDirOp(&dirop);
 
     return code;
 }
@@ -1584,7 +1818,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     char *tp;			/* ptr moving through input buffer */
     char tc;			/* temp char */
     int haveComponent;		/* has new component started? */
-    char component[256];	/* this is the new component */
+    char component[AFSPATHMAX];	/* this is the new component */
     char *cp;			/* component name being assembled */
     cm_scache_t *tscp;		/* current location in the hierarchy */
     cm_scache_t *nscp;		/* next dude down */
@@ -1598,6 +1832,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     int symlinkCount;		/* count of # of symlinks traversed */
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
+#define MAX_FID_COUNT 512
+    cm_fid_t fids[MAX_FID_COUNT]; /* array of fids processed in this path walk */
+    int fid_count = 0;          /* number of fids processed in this path walk */
+    int i;
 
 #ifdef DEBUG_REFCOUNT
     afsi_log("%s:%d cm_NameI rootscp 0x%p ref %d", file, line, rootSCachep, rootSCachep->refCount);
@@ -1655,34 +1893,58 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                  * is a symlink, we have more to do.
                  */
                 *cp++ = 0;	/* add null termination */
-		if (!strcmp(".",component)) {
-                    code = 0;
-                    if (dirScp) {
-                        cm_ReleaseSCache(dirScp);
-                        dirScp = NULL;
-                    }
-                    break;
-		}
 		extraFlag = 0;
 		if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
 		    extraFlag = CM_FLAG_NOMOUNTCHASE;
 		code = cm_Lookup(tscp, component,
 				  flags | extraFlag,
 				  userp, reqp, &nscp);
-		if (code) {
+
+                if (code == 0) {
+                    if (!strcmp(component,"..") || !strcmp(component,".")) {
+                        /* 
+                         * roll back the fid list until we find the fid 
+                         * that matches where we are now.  Its not necessarily
+                         * one or two fids because they might have been 
+                         * symlinks or mount points or both that were crossed.  
+                         */
+                        for ( i=fid_count-1; i>=0; i--) {
+                            if (!cm_FidCmp(&nscp->fid, &fids[i]))
+                                break;
+                        }
+                    } else {
+                        /* add the new fid to the list */
+                        for ( i=0; i<fid_count; i++) {
+                            if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
+                                code = CM_ERROR_TOO_MANY_SYMLINKS;
+                                cm_ReleaseSCache(nscp);
+                                nscp = NULL;
+                                break;
+                            }
+                        }
+                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
+                            fids[fid_count++] = nscp->fid;
+                        }
+                    }
+                }
+
+                if (code) {
 		    cm_ReleaseSCache(tscp);
 		    if (dirScp)
 			cm_ReleaseSCache(dirScp);
 		    if (psp) 
 			cm_FreeSpace(psp);
-		    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK) {
+		    if ((code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) && 
+                         tscp->fileType == CM_SCACHETYPE_SYMLINK) 
+                    {
 			osi_Log0(afsd_logp,"cm_NameI code CM_ERROR_NOSUCHPATH");
 			return CM_ERROR_NOSUCHPATH;
 		    } else {
 			osi_Log1(afsd_logp,"cm_NameI code 0x%x", code);
 			return code;
 		    }
-		}	
+		}
+
 		haveComponent = 0;	/* component done */
 		if (dirScp)
 		    cm_ReleaseSCache(dirScp);
@@ -1737,6 +1999,25 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     else 
                         restp = tp;
                     code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
+
+                    if (code == 0 && linkScp != NULL) {
+                        if (linkScp == cm_data.rootSCachep) 
+                            fid_count = 0;
+                        else {
+                            for ( i=0; i<fid_count; i++) {
+                                if ( !cm_FidCmp(&linkScp->fid, &fids[i]) ) {
+                                    code = CM_ERROR_TOO_MANY_SYMLINKS;
+                                    cm_ReleaseSCache(linkScp);
+                                    nscp = NULL;
+                                    break;
+                                }
+                            }
+                        }
+                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
+                            fids[fid_count++] = linkScp->fid;
+                        }
+                    }
+
                     if (code) {
                         /* something went wrong */
                         cm_ReleaseSCache(tscp);
@@ -1861,13 +2142,19 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
                      CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW | CM_FLAG_DIRSEARCH,
                      userp, NULL, reqp, outScpp);
 
-    if (code == CM_ERROR_NOSUCHFILE)
+    if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH)
         code = CM_ERROR_NOSUCHPATH;
 
     /* this stuff is allocated no matter what happened on the namei call,
      * so free it */
     cm_FreeSpace(spacep);
     cm_ReleaseSCache(newRootScp);
+
+    if (linkScp == *outScpp) {
+        cm_ReleaseSCache(*outScpp);
+        *outScpp = NULL;
+        code = CM_ERROR_NOSUCHPATH;
+    }
 
     return code;
 }
@@ -2033,7 +2320,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
         cm_StartCallbackGrantingCall(NULL, &cbReq);
         osi_Log1(afsd_logp, "CALL BulkStatus, %d entries", filesThisCall);
         do {
-            code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+            code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
             if (code) 
                 continue;
 
@@ -2103,7 +2390,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bb.callbacks[j],
                                             CM_CALLBACK_MAINTAINCOUNT);
-                cm_MergeStatus(scp, &bb.stats[j], &volSync, userp, 0);
+                cm_MergeStatus(dscp, scp, &bb.stats[j], &volSync, userp, 0);
             }       
             lock_ReleaseMutex(&scp->mx);
             cm_ReleaseSCache(scp);
@@ -2217,6 +2504,15 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_WRITE,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
                       | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
+
+    /* If we only have 'i' bits, then we should still be able to set
+       the size of a file we created. */
+    if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
+                         | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
+    }
+
     if (code) 
         goto done;
 
@@ -2292,7 +2588,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2313,13 +2609,14 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
     if (code == 0)
-        cm_MergeStatus(scp, &afsOutStatus, &volSync, userp,
-                        CM_MERGEFLAG_FORCE);
+        cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp,
+                        CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
 	
     /* if we're changing the mode bits, discard the ACL cache, 
      * since we changed the mode bits.
      */
-    if (afsInStatus.Mask & AFS_SETMODE) cm_FreeAllACLEnts(scp);
+    if (afsInStatus.Mask & AFS_SETMODE) 
+	cm_FreeAllACLEnts(scp);
     lock_ReleaseMutex(&scp->mx);
     return code;
 }       
@@ -2333,7 +2630,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_callbackRequest_t cbReq;
     AFSFid newAFSFid;
     cm_fid_t newFid;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     int didEnd;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
@@ -2341,6 +2638,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSCallBack newFileCallback;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2353,12 +2651,15 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * that someone who does a chmod will know to wait until our call
      * completes.
      */
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
+    lock_ReleaseMutex(&dscp->mx);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
+    } else {
+        cm_EndDirOp(&dirop);
     }
-    lock_ReleaseMutex(&dscp->mx);
     if (code) {
         return code;
     }
@@ -2369,7 +2670,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL CreateFile scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2393,10 +2694,14 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     else
         osi_Log0(afsd_logp, "CALL CreateFile SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2415,7 +2720,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
             lock_ObtainMutex(&scp->mx);
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newFileStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
                                 userp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newFileCallback, 0);
@@ -2429,6 +2734,14 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* make sure we end things properly */
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+
+    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
+        cm_DirCreateEntry(&dirop, namep, &newFid);
+#ifdef USE_BPLUS
+        cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+#endif
+    }
+    cm_EndDirOp(&dirop);
 
     return code;
 }       
@@ -2467,7 +2780,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_callbackRequest_t cbReq;
     AFSFid newAFSFid;
     cm_fid_t newFid;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     int didEnd;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
@@ -2475,6 +2788,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSCallBack newDirCallback;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2487,12 +2801,15 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * data, so that someone who does a chmod on the dir will wait until
      * our call completes.
      */
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
+    lock_ReleaseMutex(&dscp->mx);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
+    } else {
+        cm_EndDirOp(&dirop);
     }
-    lock_ReleaseMutex(&dscp->mx);
     if (code) {
         return code;
     }
@@ -2503,7 +2820,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL MakeDir scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2527,10 +2844,14 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     else
         osi_Log0(afsd_logp, "CALL MakeDir SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2548,7 +2869,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newDirStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
                                 userp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newDirCallback, 0);
@@ -2562,6 +2883,14 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* make sure we end things properly */
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+
+    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
+        cm_DirCreateEntry(&dirop, namep, &newFid);
+#ifdef USE_BPLUS
+        cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+#endif
+    }
+    cm_EndDirOp(&dirop);
 
     /* and return error code */
     return code;
@@ -2578,15 +2907,19 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     if (dscp->fid.cell != sscp->fid.cell ||
         dscp->fid.volume != sscp->fid.volume) {
         return CM_ERROR_CROSSDEVLINK;
     }
 
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseMutex(&dscp->mx);
+    if (code != 0)
+        cm_EndDirOp(&dirop);
 
     if (code)
         return code;
@@ -2594,7 +2927,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL Link scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) continue;
 
         dirAFSFid.Volume = dscp->fid.volume;
@@ -2621,12 +2954,26 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     else
         osi_Log0(afsd_logp, "CALL Link SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
+
+    if (code == 0) {
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            cm_DirCreateEntry(&dirop, namep, &sscp->fid);
+#ifdef USE_BPLUS
+            cm_BPlusDirCreateEntry(&dirop, namep, &sscp->fid);
+#endif
+        }
+    }
+    cm_EndDirOp(&dirop);
 
     return code;
 }
@@ -2645,14 +2992,18 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseMutex(&dscp->mx);
+    if (code != 0)
+        cm_EndDirOp(&dirop);
     if (code) {
         return code;
     }
@@ -2662,7 +3013,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL Symlink scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2685,12 +3036,31 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     else
         osi_Log0(afsd_logp, "CALL Symlink SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
+
+    if (code == 0) {
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            newFid.cell = dscp->fid.cell;
+            newFid.volume = dscp->fid.volume;
+            newFid.vnode = newAFSFid.Vnode;
+            newFid.unique = newAFSFid.Unique;
+
+            cm_DirCreateEntry(&dirop, namep, &newFid);
+#ifdef USE_BPLUS
+            cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+#endif
+        }
+    }
+    cm_EndDirOp(&dirop);
 
     /* now try to create the new dir's entry, too, but be careful to 
      * make sure that we don't merge in old info.  Since we weren't locking
@@ -2706,7 +3076,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newLinkStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
                                 userp, 0);
             }       
             lock_ReleaseMutex(&scp->mx);
@@ -2728,15 +3098,18 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     AFSFetchStatus updatedDirStatus;
     AFSVolSync volSync;
     struct rx_connection * callp;
+    cm_dirOp_t dirop;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseMutex(&dscp->mx);
     if (code) {
+        cm_EndDirOp(&dirop);
         return code;
     }
     didEnd = 0;
@@ -2744,7 +3117,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2766,13 +3139,27 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     else
         osi_Log0(afsd_logp, "CALL RemoveDir SUCCESS");
 
+    if (dirop.scp) {
+        lock_ObtainWrite(&dirop.scp->dirlock);
+        dirop.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, namep); 
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
+
+    if (code == 0) {
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            cm_DirDeleteEntry(&dirop, namep);
+#ifdef USE_BPLUS
+            cm_BPlusDirDeleteEntry(&dirop, namep);
+#endif
+        }
+    }
+    cm_EndDirOp(&dirop);
 
     /* and return error code */
     return code;
@@ -2809,6 +3196,10 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     AFSVolSync volSync;
     int oneDir;
     struct rx_connection * callp;
+    cm_dirOp_t oldDirOp;
+    cm_fid_t   fileFid;
+    int        diropCode = -1;
+    cm_dirOp_t newDirOp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our call
@@ -2821,12 +3212,16 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
             return CM_ERROR_RENAME_IDENTICAL;
 
         oneDir = 1;
+        cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
         lock_ObtainMutex(&oldDscp->mx);
         cm_dnlcRemove(oldDscp, oldNamep);
         cm_dnlcRemove(oldDscp, newNamep);
         code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                           CM_SCACHESYNC_STOREDATA);
         lock_ReleaseMutex(&oldDscp->mx);
+        if (code != 0) {
+            cm_EndDirOp(&oldDirOp);
+        }
     }
     else {
         /* two distinct dir vnodes */
@@ -2843,45 +3238,59 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
             return CM_ERROR_CROSSDEVLINK;
 
         if (oldDscp->fid.vnode < newDscp->fid.vnode) {
+            cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
             lock_ObtainMutex(&oldDscp->mx);
             cm_dnlcRemove(oldDscp, oldNamep);
             code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
             lock_ReleaseMutex(&oldDscp->mx);
+            if (code != 0)
+                cm_EndDirOp(&oldDirOp);
             if (code == 0) {
+                cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
                 lock_ObtainMutex(&newDscp->mx);
                 cm_dnlcRemove(newDscp, newNamep);
                 code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
                 lock_ReleaseMutex(&newDscp->mx);
                 if (code) {
+                    cm_EndDirOp(&newDirOp);
+
                     /* cleanup first one */
                     lock_ObtainMutex(&oldDscp->mx);
                     cm_SyncOpDone(oldDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
                     lock_ReleaseMutex(&oldDscp->mx);
+                    cm_EndDirOp(&oldDirOp);
                 }       
             }
         }
         else {
             /* lock the new vnode entry first */
+            cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
             lock_ObtainMutex(&newDscp->mx);
             cm_dnlcRemove(newDscp, newNamep);
             code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
             lock_ReleaseMutex(&newDscp->mx);
+            if (code != 0)
+                cm_EndDirOp(&newDirOp);
             if (code == 0) {
+                cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
                 lock_ObtainMutex(&oldDscp->mx);
                 cm_dnlcRemove(oldDscp, oldNamep);
                 code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
                 lock_ReleaseMutex(&oldDscp->mx);
+                if (code != 0)
+                    cm_EndDirOp(&oldDirOp);
                 if (code) {
                     /* cleanup first one */
                     lock_ObtainMutex(&newDscp->mx);
                     cm_SyncOpDone(newDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
                     lock_ReleaseMutex(&newDscp->mx);
+                    cm_EndDirOp(&newDirOp);
                 }       
             }
         }
@@ -2896,7 +3305,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     osi_Log2(afsd_logp, "CALL Rename old scp 0x%p new scp 0x%p", 
               oldDscp, newDscp);
     do {
-        code = cm_Conn(&oldDscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&oldDscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2924,23 +3333,73 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         osi_Log0(afsd_logp, "CALL Rename SUCCESS");
 
     /* update the individual stat cache entries for the directories */
+    if (oldDirOp.scp) {
+        lock_ObtainWrite(&oldDirOp.scp->dirlock);
+        oldDirOp.lockType = CM_DIRLOCK_WRITE;
+    }
     lock_ObtainMutex(&oldDscp->mx);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
-    if (code == 0) {
-        cm_MergeStatus(oldDscp, &updatedOldDirStatus, &volSync,
+
+    if (code == 0)
+        cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                         userp, 0);
-    }
     lock_ReleaseMutex(&oldDscp->mx);
+
+    if (code == 0) {
+        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
+
+#ifdef USE_BPLUS
+            diropCode = cm_BPlusDirLookup(&oldDirOp, oldNamep, &fileFid);
+            if (diropCode == CM_ERROR_INEXACT_MATCH)
+                diropCode = 0;
+            else if (diropCode == EINVAL)
+#endif
+                diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+
+            if (diropCode == 0) {
+                if (oneDir) {
+                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS
+                    cm_BPlusDirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#endif
+                }
+
+                if (diropCode == 0) { 
+                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
+#ifdef USE_BPLUS
+                    cm_BPlusDirDeleteEntry(&oldDirOp, oldNamep);
+#endif
+                }
+            }
+        }
+    }
+    cm_EndDirOp(&oldDirOp);
 
     /* and update it for the new one, too, if necessary */
     if (!oneDir) {
+        if (newDirOp.scp) {
+            lock_ObtainWrite(&newDirOp.scp->dirlock);
+            newDirOp.lockType = CM_DIRLOCK_WRITE;
+        }
         lock_ObtainMutex(&newDscp->mx);
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
-        if (code == 0) {
-            cm_MergeStatus(newDscp, &updatedNewDirStatus, &volSync,
+        if (code == 0)
+            cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, 0);
-        }
         lock_ReleaseMutex(&newDscp->mx);
+
+        if (code == 0) {
+            /* we only make the local change if we successfully made
+               the change in the old directory AND there was only one
+               change in the new directory */
+            if (diropCode == 0 && cm_CheckDirOpForSingleChange(&newDirOp)) {
+                cm_DirCreateEntry(&newDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS
+                cm_BPlusDirCreateEntry(&newDirOp, newNamep, &fileFid);
+#endif
+            }
+        }
+        cm_EndDirOp(&newDirOp);
     }
 
     /* and return error code */
@@ -3245,6 +3704,16 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
 #define SERVERLOCKS_ENABLED(scp) (!((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks && SCP_SUPPORTS_BRLOCKS(scp))
 
+#if defined(VICED_CAPABILITY_WRITELOCKACL)
+#define SCP_SUPPORTS_WRITELOCKACL(scp) ((scp)->cbServerp && ((scp->cbServerp->capabilities & VICED_CAPABILITY_WRITELOCKACL)))
+#else
+#define SCP_SUPPORTS_WRITELOCKACL(scp) (0)
+
+/* This should really be defined in any build that this code is being
+   compiled. */
+#error  VICED_CAPABILITY_WRITELOCKACL not defined.
+#endif
+
 static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
 {
     afs_int64 int_begin;
@@ -3470,7 +3939,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     lock_ReleaseMutex(&scp->mx);
 
     do {
-        code = cm_Conn(&cfid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&cfid, userp, reqp, &connp);
         if (code) 
             break;
 
@@ -3514,7 +3983,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
     do {
-        code = cm_Conn(&cfid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&cfid, userp, reqp, &connp);
         if (code) 
             break;
 
@@ -3547,14 +4016,19 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
    - CM_ERROR_NOACCESS if not
 
    Any other error from cm_SyncOp will be sent down untranslated.
+
+   If CM_ERROR_NOACCESS is returned and lock_type is LockRead, then
+   phas_insert (if non-NULL) will receive a boolean value indicating
+   whether the user has INSERT permission or not.
 */
 long cm_LockCheckPerms(cm_scache_t * scp,
                        int lock_type,
                        cm_user_t * userp,
-                       cm_req_t * reqp)
+                       cm_req_t * reqp,
+                       int * phas_insert)
 {
     long rights = 0;
-    long code = 0;
+    long code = 0, code2 = 0;
 
     /* lock permissions are slightly tricky because of the 'i' bit.
        If the user has PRSFS_LOCK, she can read-lock the file.  If the
@@ -3578,21 +4052,37 @@ long cm_LockCheckPerms(cm_scache_t * scp,
         return 0;
     }
 
+    if (phas_insert)
+        *phas_insert = FALSE;
+
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                      CM_SCACHESYNC_GETSTATUS |
                      CM_SCACHESYNC_NEEDCALLBACK);
 
-    if (code == CM_ERROR_NOACCESS &&
-        lock_type == LockWrite &&
-	scp->creator == userp) {
-        /* check for PRSFS_INSERT. */
+    if (phas_insert && scp->creator == userp) {
 
-        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
+        /* If this file was created by the user, then we check for
+           PRSFS_INSERT.  If the file server is recent enough, then
+           this should be sufficient for her to get a write-lock (but
+           not necessarily a read-lock). VICED_CAPABILITY_WRITELOCKACL
+           indicates whether a file server supports getting write
+           locks when the user only has PRSFS_INSERT. 
+           
+           If the file was not created by the user we skip the check
+           because the INSERT bit will not apply to this user even
+           if it is set.
+         */
+
+        code2 = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
                          CM_SCACHESYNC_GETSTATUS |
                          CM_SCACHESYNC_NEEDCALLBACK);
 
-	if (code == CM_ERROR_NOACCESS)
-	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
+	if (code2 == CM_ERROR_NOACCESS) {
+	    osi_Log0(afsd_logp, "cm_LockCheckPerms user has no INSERT bits");
+        } else {
+            *phas_insert = TRUE;
+            osi_Log0(afsd_logp, "cm_LockCheckPerms user has INSERT bits");
+        }
     }
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -3684,11 +4174,13 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         if (Which == scp->serverLock ||
            (Which == LockRead && scp->serverLock == LockWrite)) {
 
+            int has_insert = 0;
+
             /* we already have the lock we need */
             osi_Log3(afsd_logp, "   we already have the correct lock. exclusives[%d], shared[%d], serverLock[%d]", 
                      scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
 
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
 
             /* special case: if we don't have permission to read-lock
                the file, then we force a clientside lock.  This is to
@@ -3696,12 +4188,19 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                reading files off of directories that don't grant
                read-locks to the user. */
             if (code == CM_ERROR_NOACCESS && Which == LockRead) {
-                osi_Log0(afsd_logp, "   User has no read-lock perms. Forcing client-side lock");
-                force_client_lock = TRUE;
+
+                if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    osi_Log0(afsd_logp, "   User has no read-lock perms, but has INSERT perms.");
+                    code = 0;
+                } else {
+                    osi_Log0(afsd_logp, "   User has no read-lock perms. Forcing client-side lock");
+                    force_client_lock = TRUE;
+                }
             }
 
         } else if ((scp->exclusiveLocks > 0) ||
                    (scp->sharedLocks > 0 && scp->serverLock != LockRead)) {
+            int has_insert = 0;
 
             /* We are already waiting for some other lock.  We should
                wait for the daemon to catch up instead of generating a
@@ -3711,12 +4210,20 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
             /* see if we have permission to create the lock in the
                first place. */
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
             if (code == 0)
 		code = CM_ERROR_WOULDBLOCK;
             else if (code == CM_ERROR_NOACCESS && Which == LockRead) {
-                osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
-                force_client_lock = TRUE;
+
+                if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    osi_Log0(afsd_logp,
+                             "   User has no read-lock perms, but has INSERT perms.");
+                    code = CM_ERROR_WOULDBLOCK;
+                } else {
+                    osi_Log0(afsd_logp,
+                             "   User has no read-lock perms. Forcing client-side lock");
+                    force_client_lock = TRUE;
+                }
             }
 
             /* leave any other codes as-is */
@@ -3724,24 +4231,28 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         } else {
             int newLock;
             int check_data_version = FALSE;
+            int has_insert = 0;
 
             /* first check if we have permission to elevate or obtain
                the lock. */
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
             if (code) {
-                if (code == CM_ERROR_NOACCESS && Which == LockRead) {
+                if (code == CM_ERROR_NOACCESS && Which == LockRead &&
+                    (!has_insert || !SCP_SUPPORTS_WRITELOCKACL(scp))) {
                     osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
                     force_client_lock = TRUE;
                 }
                 goto check_code;
             }
 
+            /* has_insert => (Which == LockRead, code == CM_ERROR_NOACCESS) */
+
             if (scp->serverLock == LockRead && Which == LockWrite) {
 
                 /* We want to escalate the lock to a LockWrite.
-                   Unfortunately that's not really possible without
-                   letting go of the current lock.  But for now we do
-                   it anyway. */
+                 * Unfortunately that's not really possible without
+                 * letting go of the current lock.  But for now we do
+                 * it anyway. */
 
                 osi_Log0(afsd_logp,
                          "   attempting to UPGRADE from LockRead to LockWrite.");
@@ -3764,17 +4275,20 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             }
 
             /* We need to obtain a server lock of type Which in order
-               to assert this file lock */
+             * to assert this file lock */
 #ifndef AGGRESSIVE_LOCKS
             newLock = Which;
 #else
             newLock = LockWrite;
 #endif
+
             code = cm_IntSetLock(scp, userp, newLock, reqp);
 
-            if (code == CM_ERROR_WOULDBLOCK && newLock != Which) {
+#ifdef AGGRESSIVE_LOCKS
+            if ((code == CM_ERROR_WOULDBLOCK ||
+                 code == CM_ERROR_NOACCESS) && newLock != Which) {
                 /* we wanted LockRead.  We tried LockWrite. Now try
-                   LockRead again */
+                 * LockRead again */
                 newLock = Which;
 
                 /* am I sane? */
@@ -3782,12 +4296,54 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
                 code = cm_IntSetLock(scp, userp, newLock, reqp);
             }
+#endif
+
+            if (code == CM_ERROR_NOACCESS) {
+                if (Which == LockRead) {
+                    if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                        long tcode;
+                        /* We requested a read-lock, but we have permission to
+                         * get a write-lock. Try that */
+
+                        tcode = cm_LockCheckPerms(scp, LockWrite, userp, reqp, NULL);
+
+                        if (tcode == 0) {
+                            newLock = LockWrite;
+
+                            osi_Log0(afsd_logp, "   User has 'i' perms and the request was for a LockRead.  Trying to get a LockWrite instead");
+
+                            code = cm_IntSetLock(scp, userp, newLock, reqp);
+                        }
+                    } else {
+                        osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
+                        force_client_lock = TRUE;
+                    }
+                } else if (Which == LockWrite &&
+                           scp->creator == userp && !SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    long tcode;
+
+                    /* Special case: if the lock request was for a
+                     * LockWrite and the user owns the file and we weren't
+                     * allowed to obtain the serverlock, we either lost a
+                     * race (the permissions changed from under us), or we
+                     * have 'i' bits, but we aren't allowed to lock the
+                     * file. */
+
+                    /* check if we lost a race... */
+                    tcode = cm_LockCheckPerms(scp, Which, userp, reqp, NULL);
+
+                    if (tcode == 0) {
+                        osi_Log0(afsd_logp, "   User has 'i' perms but can't obtain write locks. Using client-side locks.");
+                        force_client_lock = TRUE;
+                    }
+                }
+            }
 
             if (code == 0 && check_data_version &&
                scp->dataVersion != scp->lockDataVersion) {
                 /* We lost a race.  Although we successfully obtained
-                   a lock, someone modified the file in between.  The
-                   locks have all been technically lost. */
+                 * a lock, someone modified the file in between.  The
+                 * locks have all been technically lost. */
 
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
@@ -3810,11 +4366,11 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
             if (code != 0 &&
                 (scp->sharedLocks > 0 || scp->exclusiveLocks > 0) &&
-                    scp->serverLock == -1) {
-                    /* Oops. We lost the lock. */
-                    cm_LockMarkSCacheLost(scp);
-                }
+                scp->serverLock == -1) {
+                /* Oops. We lost the lock. */
+                cm_LockMarkSCacheLost(scp);
             }
+        }
     } else if (code == 0) {     /* server locks not enabled */
         osi_Log0(afsd_logp,
                  "  Skipping server lock for scp");
@@ -4205,6 +4761,17 @@ long cm_Unlock(cm_scache_t *scp,
         scp->lockDataVersion = scp->dataVersion;
         osi_Log1(afsd_logp, "   dataVersion on scp is %d", scp->dataVersion);
 
+        /* before we downgrade, make sure that we have enough
+           permissions to get the read lock. */
+        code = cm_LockCheckPerms(scp, LockRead, userp, reqp, NULL);
+        if (code != 0) {
+
+            osi_Log0(afsd_logp, "  SKIPPING downgrade because user doesn't have perms to get downgraded lock");
+
+            code = 0;
+            goto done;
+        }
+
         code = cm_IntReleaseLock(scp, userp, reqp);
 
         if (code) {
@@ -4416,7 +4983,7 @@ void cm_CheckLocks()
                     lock_ReleaseMutex(&scp->mx);
 
                     do {
-                        code = cm_Conn(&cfid, userp,
+                        code = cm_ConnFromFID(&cfid, userp,
                                        &req, &connp);
                         if (code) 
                             break;
@@ -4530,6 +5097,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     cm_req_t req;
     int newLock = -1;
     int force_client_lock = FALSE;
+    int has_insert = FALSE;
+    int check_data_version = FALSE;
 
     cm_InitReq(&req);
 
@@ -4575,10 +5144,12 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     code = cm_LockCheckPerms(scp, oldFileLock->lockType,
                              oldFileLock->userp,
-                             &req);
+                             &req, &has_insert);
 
     if (code == CM_ERROR_NOACCESS && oldFileLock->lockType == LockRead) {
+        if (!has_insert || !SCP_SUPPORTS_WRITELOCKACL(scp)) {
         force_client_lock = TRUE;
+        }
         code = 0;
     } else if (code) {
         lock_ReleaseMutex(&scp->mx);
@@ -4672,6 +5243,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
+    osi_assert(IS_LOCK_WAITLOCK(oldFileLock));
+
     if (force_client_lock ||
         !SERVERLOCKS_ENABLED(scp) ||
         scp->serverLock == oldFileLock->lockType ||
@@ -4723,9 +5296,66 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         newLock = LockWrite;
 #endif
 
+        if (has_insert) {
+            /* if has_insert is non-zero, then:
+               - the lock a LockRead
+               - we don't have permission to get a LockRead
+               - we do have permission to get a LockWrite
+               - the server supports VICED_CAPABILITY_WRITELOCKACL
+            */
+
+            newLock = LockWrite;
+        }
+
         lock_ReleaseWrite(&cm_scacheLock);
 
+        /* when we get here, either we have a read-lock and want a
+           write-lock or we don't have any locks and we want some
+           lock. */
+
+        if (scp->serverLock == LockRead) {
+
+            osi_assert(newLock == LockWrite);
+
+            osi_Log0(afsd_logp, "  Attempting to UPGRADE from LockRead to LockWrite");
+
+            scp->lockDataVersion = scp->dataVersion;
+            check_data_version = TRUE;
+
+            code = cm_IntReleaseLock(scp, userp, &req);
+
+            if (code)
+                goto pre_syncopdone;
+            else
+                scp->serverLock = -1;
+        }
+
         code = cm_IntSetLock(scp, userp, newLock, &req);
+
+        if (code == 0) {
+            if (scp->dataVersion != scp->lockDataVersion) {
+                /* we lost a race.  too bad */
+
+                osi_Log0(afsd_logp,
+                         "  Data version mismatch while upgrading lock.");
+                osi_Log2(afsd_logp,
+                         "  Data versions before=%d, after=%d",
+                         scp->lockDataVersion,
+                         scp->dataVersion);
+                osi_Log1(afsd_logp,
+                         "  Releasing stale lock for scp 0x%x", scp);
+
+                code = cm_IntReleaseLock(scp, userp, &req);
+
+                scp->serverLock = -1;
+
+                code = CM_ERROR_INVAL;
+
+                cm_LockMarkSCacheLost(scp);
+            } else {
+                scp->serverLock = newLock;
+            }
+        }
 
     pre_syncopdone:
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
@@ -4740,8 +5370,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
             scp->fileLocksT = osi_QPrev(&oldFileLock->fileq);
         osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, &oldFileLock->fileq);
 	lock_ReleaseWrite(&cm_scacheLock);
-    } else if (code == 0 && IS_LOCK_WAITLOCK(oldFileLock)) {
-        scp->serverLock = newLock;
     }
     lock_ReleaseMutex(&scp->mx);
 
@@ -4795,9 +5423,9 @@ void cm_ReleaseAllLocks(void)
     cm_file_lock_t *fileLock;
     unsigned int i;
 
-    for (i = 0; i < cm_data.hashTableSize; i++)
+    for (i = 0; i < cm_data.scacheHashTableSize; i++)
     {
-	for ( scp = cm_data.hashTablep[i]; scp; scp = scp->nextp ) {
+	for ( scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp ) {
 	    while (scp->fileLocksH != NULL) {
 		lock_ObtainMutex(&scp->mx);
 		lock_ObtainWrite(&cm_scacheLock);

@@ -43,9 +43,6 @@
 #include <arpa/nameser_compat.h>
 #endif
 #if defined(USING_MIT) || defined(USING_HEIMDAL)
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #else
 #include "k5ssl.h"

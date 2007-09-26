@@ -40,6 +40,8 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_deleteReadOnly;
+extern afs_int32 cm_BPlusTrees;
+extern const char **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
 
@@ -75,8 +77,6 @@ char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 char cm_CachePath[MAX_PATH];
 DWORD cm_CachePathLen;
 DWORD cm_ValidateCache = 1;
-
-BOOL isGateway = FALSE;
 
 BOOL reportSessionStartups = FALSE;
 
@@ -138,7 +138,7 @@ void afsd_initUpperCaseTable()
 void
 afsi_start()
 {
-    char wd[256];
+    char wd[MAX_PATH+1];
     char t[100], u[100], *p, *path;
     int zilch;
     DWORD code;
@@ -148,13 +148,10 @@ afsi_start()
     DWORD maxLogSize = 100 * 1024;
 
     afsi_file = INVALID_HANDLE_VALUE;
-    code = GetEnvironmentVariable("TEMP", wd, sizeof(wd));
-    if ( code == 0 || code > sizeof(wd) )
-    {
-        code = GetWindowsDirectory(wd, sizeof(wd));
-        if (code == 0) 
-            return;
-    }
+    code = GetTempPath(sizeof(wd)-15, wd);
+    if ( code == 0 || code > (sizeof(wd)-15) )
+        return;         /* unable to create a log */
+
     StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
     GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
     afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -180,8 +177,8 @@ afsi_start()
 
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
     GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
-    StringCbCatA(t, sizeof(t), ": Create log file\n");
-    StringCbCatA(u, sizeof(u), ": Created log file\n");
+    StringCbCatA(t, sizeof(t), ": Create log file\r\n");
+    StringCbCatA(u, sizeof(u), ": Created log file\r\n");
     WriteFile(afsi_file, t, (DWORD)strlen(t), &zilch, NULL);
     WriteFile(afsi_file, u, (DWORD)strlen(u), &zilch, NULL);
     p = "PATH=";
@@ -190,7 +187,7 @@ afsi_start()
     code = GetEnvironmentVariable("PATH", path, code);
     WriteFile(afsi_file, p, (DWORD)strlen(p), &zilch, NULL);
     WriteFile(afsi_file, path, (DWORD)strlen(path), &zilch, NULL);
-    WriteFile(afsi_file, "\n", (DWORD)1, &zilch, NULL);
+    WriteFile(afsi_file, "\r\n", (DWORD)1, &zilch, NULL);
     free(path);
 
     /* Initialize C RTL Code Page conversion functions */
@@ -282,14 +279,17 @@ configureBackConnectionHostNames(void)
                        KEY_READ|KEY_WRITE,
                        &hkMSV10) == ERROR_SUCCESS )
     {
-        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
-			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) {
+        if ((RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
+            (dwType == REG_MULTI_SZ)) 
+        {
 	    dwAllocSize += 1 /* in case the source string is not nul terminated */
 		+ strlen(cm_NetbiosName) + 2;
 	    pHostNames = malloc(dwAllocSize);
 	    dwSize = dwAllocSize;
             if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
-				 pHostNames, &dwSize) == ERROR_SUCCESS) {
+				 pHostNames, &dwSize) == ERROR_SUCCESS) 
+            {
 		for (pName = pHostNames; 
 		     (pName - pHostNames < dwSize) && *pName ; 
 		     pName += strlen(pName) + 1)
@@ -546,6 +546,7 @@ int afsd_InitCM(char **reasonP)
     osi_uid_t debugID;
     afs_uint64 cacheBlocks;
     DWORD cacheSize;
+    DWORD blockSize;
     long logChunkSize;
     DWORD stats;
     DWORD dwValue;
@@ -568,7 +569,6 @@ int afsd_InitCM(char **reasonP)
     long code;
     /*int freelanceEnabled;*/
     WSADATA WSAjunk;
-    lana_number_t lanaNum;
     int i;
     char *p, *q; 
     int cm_noIPAddr;         /* number of client network interfaces */
@@ -702,13 +702,44 @@ int afsd_InitCM(char **reasonP)
                       logChunkSize);
             logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
         }
-        afsi_log("Chunk size %d", logChunkSize);
     } else {
         logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
-        afsi_log("Default chunk size %d", logChunkSize);
     }
     cm_logChunkSize = logChunkSize;
     cm_chunkSize = 1 << logChunkSize;
+    afsi_log("Chunk size %u (%d)", cm_chunkSize, cm_logChunkSize);
+
+    dummyLen = sizeof(blockSize);
+    code = RegQueryValueEx(parmKey, "blockSize", NULL, NULL,
+                            (BYTE *) &blockSize, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        if (blockSize < 1 || 
+            (blockSize > 1024 && (blockSize % CM_CONFIGDEFAULT_BLOCKSIZE != 0))) 
+        {
+            afsi_log("Invalid block size %u specified, using default", blockSize);
+            blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+        } else {
+            /* 
+             * if the blockSize is less than 1024 we permit the blockSize to be
+             * specified in multiples of the default blocksize
+             */
+            if (blockSize <= 1024)
+                blockSize *= CM_CONFIGDEFAULT_BLOCKSIZE;
+        }
+    } else {
+        blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+    }
+    if (blockSize > cm_chunkSize) {
+        afsi_log("Block size (%d) cannot be larger than Chunk size (%d).", 
+                  blockSize, cm_chunkSize);
+        blockSize = cm_chunkSize;
+    }
+    if (cm_chunkSize % blockSize != 0) {
+        afsi_log("Block size (%d) must be a factor of Chunk size (%d).",
+                  blockSize, cm_chunkSize);
+        blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+    }
+    afsi_log("Block size %u", blockSize);
 
     dummyLen = sizeof(numBkgD);
     code = RegQueryValueEx(parmKey, "Daemons", NULL, NULL,
@@ -1003,48 +1034,6 @@ int afsd_InitCM(char **reasonP)
         afsi_log("RX Process Statistics gathering is enabled");
 
     dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckDownInterval = dwValue;
-    afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckUpInterval = dwValue;
-    afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckVolInterval = dwValue;
-    afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckCBInterval = dwValue;
-    afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonCheckLockInterval = dwValue;
-    afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
-			    (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS)
-	cm_daemonTokenCheckInterval = dwValue;
-    afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
-
-    dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "CallBackPort", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
@@ -1079,28 +1068,49 @@ int afsd_InitCM(char **reasonP)
     } 
     afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
     
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "BPlusTrees", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_BPlusTrees = (unsigned short) dwValue;
+    } 
+    afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
+
+    if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, 
+                          &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
+         (regType == REG_MULTI_SZ)) 
+    {
+        char * pSz;
+        dummyLen += 3; /* in case the source string is not nul terminated */
+        pSz = malloc(dummyLen);
+        if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, &regType, 
+                             pSz, &dummyLen) == ERROR_SUCCESS) &&
+             (regType == REG_MULTI_SZ))
+        {
+            int cnt;
+            char * p;
+
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1);
+
+            smb_ExecutableExtensions = malloc(sizeof(char *) * (cnt+1));
+
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1)
+            {
+                smb_ExecutableExtensions[cnt] = p;
+                afsi_log("PrefetchExecutableExtension: \"%s\"", p);
+            }
+            smb_ExecutableExtensions[cnt] = NULL;
+        }
+        
+        if (!smb_ExecutableExtensions)
+            free(pSz);
+    }
+    if (!smb_ExecutableExtensions)
+        afsi_log("No PrefetchExecutableExtensions");
+
     RegCloseKey (parmKey);
 
-    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
-    if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
-        LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
-
-        if (LANadapter != -1)
-            afsi_log("LAN adapter number %d", LANadapter);
-        else
-            afsi_log("LAN adapter number not determined");
-
-        if (isGateway)
-            afsi_log("Set for gateway service");
-
-        afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
-    } else {
-        /* something went horribly wrong.  We can't proceed without a netbios name */
-        StringCbPrintfA(buf,sizeof(buf),"Netbios name could not be determined: %li", code);
-        osi_panic(buf, __FILE__, __LINE__);
-    }
-
-    cacheBlocks = ((afs_uint64)cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
+    cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
         
     /* get network related info */
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -1129,6 +1139,9 @@ int afsd_InitCM(char **reasonP)
 
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
+    
+    /* Initialize Properties Table */
+    afs_InitProperties();
 
     /* init user daemon, and other packages */
     cm_InitUser();
@@ -1143,7 +1156,7 @@ int afsd_InitCM(char **reasonP)
         
     cm_InitCallback();
         
-    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks);
+    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
         *reasonP = "error initializing cache file";
@@ -1270,7 +1283,7 @@ int afsd_InitDaemons(char **reasonP)
         osi_Log0(afsd_logp, "Loading Root Volume from cell");
 	do {
 	    code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
-				       &req, CM_FLAG_CREATE, &cm_data.rootVolumep);
+				       &req, CM_GETVOL_FLAG_CREATE, &cm_data.rootVolumep);
 	    afsi_log("cm_GetVolumeByName code %x root vol %x", code,
 		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
 	} while (code && --attempts);
@@ -1325,7 +1338,7 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
     /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
-    smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
+    smb_Init(afsd_logp, smb_UseV3, numSvThreads, aMBfunc);
     afsi_log("smb_Init complete");
 
     return 0;

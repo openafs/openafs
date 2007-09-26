@@ -98,6 +98,9 @@
 #endif
 #endif
 
+/* Don't define USE_UCONTEXT on this platform.  It requires getcontext and
+   setcontext from glibc, which aren't implemented for 32-bit SPARC. */
+
 #endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */

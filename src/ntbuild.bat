@@ -25,12 +25,12 @@ SET SYS_NAME=i386_w2k
 
 REM Specify the targeted version of Windows and IE: 0x400 for Win9x/NT4 
 REM and above; 0x500 for Windows 2000 and above
-SET _WIN32_IE=0x400
+SET _WIN32_IE=0x500
 
 REM ########################################################################
 REM Location of base folder where source lies, build directory
 REM e.g. AFSROOT\SRC is source directory of the build tree (8.3 short name)
-set AFSROOT=C:\SRC\OpenAFS
+set AFSROOT=R:\dev\afs-rxk5-1518-exp
 
 REM ########################################################################
 REM NTMakefile required definitions:
@@ -41,17 +41,26 @@ REM                  "1310" for .NET 2003
 REM                  "1400" for VC8
 set AFSVER_CL=1310
 
+REM Checked builds had trouble with Monmouth Bison/Flex and RTCu
+set NO_RTCU=TRUE
+
+REM Support rxk5
+set BUILD_RXK5=TRUE
+
 REM Location of Microsoft Visual C++ development folder (8.3 short name)
-set MSVCDIR=c:\progra~1\micros~2\vc98
+set MSVCDIR=c:\progra~1\micros~2.net\vc7
 
 REM Location of Microsoft Platform SDK (8.3 short name)
-set MSSDKDIR=c:\progra~1\micros~4
+set MSSDKDIR=c:\psdk
 
 REM Location of npapi.h (from DDK or Platform SDK samples - 8.3 short name)
-set NTDDKDIR=c:\progra~1\micros~5
+set NTDDKDIR=r:\WINDDK\3790.1830
 
 REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
-SET W9XDDKDIR=c:\progra~1\micros~6
+SET W9XDDKDIR=r:\WINDDK\3790.1830
+
+REM Matt Benjamin -- not sure why I needed this
+SET AFSDEV_AUXCDEFINES=-I$(NTDDKDIR)\inc\wxp
 
 REM ########################################################################
 REM NTMakefile optional definitions:

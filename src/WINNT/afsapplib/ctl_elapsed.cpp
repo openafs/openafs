@@ -97,9 +97,9 @@ static size_t           cElapsed = 0;
 
 #define cszELAPSEDCLASS TEXT("Elapsed")
 
-BOOL CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void Elapsed_SendCallback (ElapsedInfo *pei, WORD eln, LPARAM lp);
 
@@ -159,7 +159,7 @@ void Elapsed_SendCallback (ElapsedInfo *pei, WORD eln, LPARAM lp)
 }
 
 
-BOOL CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp)
 {
    ElapsedInfo *pei = NULL;
 
@@ -274,7 +274,7 @@ BOOL CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return (BOOL)DefWindowProc (hElapsed, msg, wp, lp);
+   return DefWindowProc (hElapsed, msg, wp, lp);
 }
 
 
@@ -490,7 +490,7 @@ BOOL Elapsed_OnSetTime (ElapsedInfo *pei, WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, ElapsedDlgProc);
    size_t iElapsed;
@@ -515,7 +515,7 @@ BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                else
                   clr = GetSysColor (COLOR_BTNFACE);
                SetBkColor ((HDC)wp, clr);
-               return (BOOL)(INT_PTR)CreateSolidBrush (clr);
+               return (HRESULT)(INT_PTR)CreateSolidBrush (clr);
                }
             }
          break;
@@ -540,13 +540,13 @@ BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
-BOOL CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 {
    ElapsedInfo *pei = NULL;
 
@@ -576,9 +576,9 @@ BOOL CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, ElapsedEditProc);
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
+      return DefWindowProc (hEdit, msg, wp, lp);
 }
 
 

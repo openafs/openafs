@@ -53,108 +53,101 @@
 extern char *malloc();
 #endif
 
-char *getword(cp, word)
-	register char *cp;
-	char *word;
+char *
+getword(char *cp, char *word)
 {
-	char *wp;
+    char *wp;
 
-	wp = word;
-	while (*cp && isspace(*cp))
-		++cp;
-	while (*cp && !isspace(*cp))
-		*wp++ = *cp++;
-	*wp = 0;
-	while (*cp && isspace(*cp))
-		++cp;
-	return cp;
+    wp = word;
+    while (*cp && isspace(*cp))
+	++cp;
+    while (*cp && !isspace(*cp))
+	*wp++ = *cp++;
+    *wp = 0;
+    while (*cp && isspace(*cp))
+	++cp;
+    return cp;
 }
 
 int
-kwscan(wp, wtbl)
-	char *wp;
-	char **wtbl;
+kwscan(char *wp, char **wtbl)
 {
-	int i;
-	register char *tp, *cp;
-	int f;
-	static int lctable[256];
+    int i;
+    register char *tp, *cp;
+    int f;
+    static int lctable[256];
 
-	if (!lctable[1]) {
-		for (i = 0; i < 256; ++i)
-			if (isupper(i))
-				lctable[i] = tolower(i);
-			else
-				lctable[i] = i;
+    if (!lctable[1]) {
+	for (i = 0; i < 256; ++i)
+	    if (isupper(i))
+		lctable[i] = tolower(i);
+	    else
+		lctable[i] = i;
+    }
+    i = 0;
+    while (++i, tp = *wtbl++) {
+	f = 0;
+	cp = wp;
+	for (;;) {
+	    if (*tp == '_') {
+		++f;
+		++tp;
+		continue;
+	    }
+	    if (!*cp && (f || !*tp)) return i;
+	    if (lctable[(unsigned char)(*cp++)] != lctable[(unsigned char) (*tp++)])
+		break;
 	}
-	i = 0;
-	while (++i, tp = *wtbl++)
-	{
-		f = 0;
-		cp = wp;
-		for (;;)
-		{
-			if (*tp == '_')
-			{
-				++f;
-				++tp;
-				continue;
-			}
-			if (!*cp && (f || !*tp)) return i;
-			if (lctable[(unsigned char)(*cp++)] != lctable[(unsigned char) (*tp++)])
-				break;
-		}
-	}
-	return 0;
-}
-
-int stripnl(cp)
-	char *cp;
-{
-	if ((cp = index(cp, '\n')))
-		*cp = 0;
-	return 0;
-}
-
-char *skipspace(cp)
-	char *cp;
-{
-	while (*cp && isspace(*cp)) ++cp;
-	return cp;
-}
-
-int trimtrailing(cp)
-	register char *cp;
-{
-	register int c;
-	char *p;
-	for (p = 0; (c = *cp); ++cp)
-		if (!isspace(c))
-			p = 0;
-		else if (!p)
-			p = cp;
-	if (p) *p = 0;
-	return 0;
+    }
+    return 0;
 }
 
 int
-alldigits(cp)
-	char *cp;
+stripnl(char *cp)
 {
-	while (*cp)
-		if (!isdigit(*cp))
-			return 0;
-		else ++cp;
-	return 1;
+    if ((cp = index(cp, '\n')))
+	*cp = 0;
+    return 0;
+}
+
+char *
+skipspace(char *cp)
+{
+    while (*cp && isspace(*cp)) ++cp;
+    return cp;
+}
+
+int
+trimtrailing(char *cp)
+{
+    register int c;
+    char *p;
+    for (p = 0; (c = *cp); ++cp)
+	if (!isspace(c))
+	    p = 0;
+	else if (!p)
+	    p = cp;
+    if (p) *p = 0;
+    return 0;
+}
+
+int
+alldigits(char *cp)
+{
+    while (*cp)
+	if (!isdigit(*cp))
+	    return 0;
+	else ++cp;
+    return 1;
 }
 
 #ifdef ultrix
-char *strdup(s)
-	char *s;
+char *
+strdup(char *s)
 {
-	char *r;
-	if (r = malloc(strlen(s)+1))
-		strcpy(r, s);
-	return r;
+    char *r;
+    if (r = malloc(strlen(s)+1))
+	strcpy(r, s);
+    return r;
 }
 #endif

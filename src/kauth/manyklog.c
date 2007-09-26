@@ -26,7 +26,6 @@ RCSID
 #include <stdio.h>
 #include <pwd.h>
 #include <afs/com_err.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include "kauth.h"
@@ -160,6 +159,7 @@ CommandProc(as, arock)
     int code;
     int i, dosetpag;
     Date lifetime;		/* requested ticket lifetime */
+    struct cmd_item *itp;
 
     struct passwd pwent;
     struct passwd *pw = &pwent;
@@ -205,10 +205,10 @@ CommandProc(as, arock)
     }
 
     code = ka_Init(0);
-    p if (code || !(lcell = ka_LocalCell())) {
+    if (code || !(lcell = ka_LocalCell())) {
       nocell:
 	if (!Silent)
-	    com_err(rn, code, "Can't get local cell name!");
+	    afs_com_err(rn, code, "Can't get local cell name!");
 	KLOGEXIT(code);
     }
     if (code = ka_CellToRealm(lcell, lrealm, 0))
@@ -245,7 +245,7 @@ CommandProc(as, arock)
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
 	    if (!Silent) {
-		com_err(rn, code, "could not parse server list");
+		afs_com_err(rn, code, "could not parse server list");
 	    }
 	    return code;
 	}
@@ -344,7 +344,7 @@ CommandProc(as, arock)
 	strcpy(realm, lcell);
     if (code = ka_CellToRealm(realm, realm, &local)) {
 	if (!Silent)
-	    com_err(rn, code, "Can't convert cell to realm");
+	    afs_com_err(rn, code, "Can't convert cell to realm");
 	KLOGEXIT(code);
     }
 

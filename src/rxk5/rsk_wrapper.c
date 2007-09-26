@@ -43,7 +43,7 @@
 #include <afs/param.h>
 #include <afs/kautils.h>
 /* #include <krb.h> */
-extern char *error_message();
+extern char *afs_error_message();
 
 /*
  * The problem is that rxkad wants to call a function
@@ -86,8 +86,7 @@ extern int	ka_CellToRealm();
 #endif
 
 static long
-rsk_ParseLoginName(aPrincipal)
-	char *aPrincipal;
+rsk_ParseLoginName(char *aPrincipal)
 {
     int		code;
     char	cell[MAXKTCNAMELEN];
@@ -95,7 +94,7 @@ rsk_ParseLoginName(aPrincipal)
     code = ka_ParseLoginName((char *) aPrincipal, rsk_name, rsk_instance, cell);
     if (code) {
 fprintf(stderr,"rsk_ParseLoginName: ka_ParseLoginName failed on %s - %d %s\n",
-aPrincipal, code, error_message(code));
+aPrincipal, code, afs_error_message(code));
 	return code;
     }
 
@@ -111,7 +110,7 @@ aPrincipal, code, error_message(code));
     code = ka_CellToRealm(cell, rsk_realm, 0);
 if (code)
 fprintf(stderr,"rsk_ParseLoginName: ka_CellToRealm failed on %s - %d %s\n",
-cell, code, error_message(code));
+cell, code, afs_error_message(code));
     return code;
 }
 
@@ -120,8 +119,7 @@ cell, code, error_message(code));
  * rsk_SetSrvtab--set the static variabl rsk_srvtab
  */
 static void
-rsk_SetSrvtab(aSrvtab)
-	char *aSrvtab;
+rsk_SetSrvtab(char *aSrvtab)
 {
     (void) strncpy(rsk_srvtab, aSrvtab, MAXKTCNAMELEN);
     return;
@@ -132,9 +130,8 @@ rsk_SetSrvtab(aSrvtab)
  *  rsk_init--fill in principal variables and srvtab file name
  */
 long
-rsk_Init(aPrincipal, aSrvtab)
-	char *aPrincipal;
-	char *aSrvtab;
+rsk_Init(char *aPrincipal,
+    char *aSrvtab)
 {
     long	code;
 
@@ -157,10 +154,7 @@ extern int	read_service_key(char *, char *, char *,
 #endif
 
 int
-rsk_Wrap(dummy, aKvno, aKey)
-	int	*dummy;
-	int	aKvno;
-	char	*aKey;
+rsk_Wrap(int *dummy, int aKvno, char *aKey)
 {
     long	code;
 #if 0

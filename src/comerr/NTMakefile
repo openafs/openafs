@@ -15,6 +15,7 @@ INCFILEDIR = $(DESTDIR)\include\afs
 INCFILES =\
 	$(INCFILEDIR)\com_err.h \
 	$(INCFILEDIR)\error_table.h \
+	$(INCFILEDIR)\afserror.h \
 	$(INCFILEDIR)\mit-sipb-cr.h 
 
 ####################################################################
@@ -25,10 +26,10 @@ COMERR_LIBOBJS =\
 		$(OUT)\error_msg.obj  \
 		$(OUT)\et_name.obj  \
 		$(OUT)\com_err.obj \
+		$(OUT)\afserror.obj \
 		$(OUT)\AFS_component_version_number.obj
-		
-$(COMERR_LIBOBJS): $$(@B).c
-    $(C2OBJ) $**
+
+$(COMERR_LIBOBJS):
 
 $(COMERR_LIBFILE): $(COMERR_LIBOBJS)
 	$(LIBARCH)  
@@ -37,16 +38,28 @@ $(COMERR_LIBFILE): $(COMERR_LIBOBJS)
 # build and install the compile_et executable
 COMPILE_ET_EXEFILE = $(DESTDIR)\bin\compile_et.exe
 
+COMPILE_ET_EXERES  = $(OUT)\compile_et.res
+
 prep:
 	$(DESTDIR)\bin\touch et_lex.lex_nt.c
 	$(DESTDIR)\bin\touch error_table_nt.c
-	@echo If you update et_lex.lex.l, to build correctly, you should delete error_table_nt.c 
+	@echo If you update et_lex.lex.l, to build correctly, you should delete et_lex.lex_nt.c AND error_table_nt.c 
 
 et_lex.lex_nt.c:   et_lex.lex.l
     $(LEX) -t et_lex.lex.l > $@	
 
 error_table_nt.c:  et_lex.lex_nt.c error_table.y
     $(YACC) -d -o $@ error_table.y
+
+afserror.c afserror.h: afserror.et $(COMPILE_ET_EXEFILE)
+    $(COMPILE_ET) -p . afserror
+
+$(INCFILEDIR)\afserror.h: afserror.h
+        $(COPY) afserror.h $(INCFILEDIR)
+
+$(OUT)\compile_et.obj: AFS_component_version_number.c
+
+$(COMPILE_ET_EXERES): compile_et.rc AFS_component_version_number.h
 
 COMPILE_ET_EXEOBJS =\
 		$(OUT)\compile_et.obj \
@@ -58,7 +71,7 @@ $(COMPILE_ET_EXEOBJS): $$(@B).c
 COMPILE_ET_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib
 
-$(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXELIBS)  
+$(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_EXELIBS)  
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -71,6 +84,7 @@ install9x: install
 clean::
 	$(DEL) $(COMERR_LIBFILE) $(OUT)\AFS_component_version_number.obj
 	$(DEL) $(COMPILE_ET_EXEFILE)
+	$(DEL) $(COMPILE_ET_EXERES);
 	$(DEL) *~ *.bak \
                  *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
                  *.cp *.fn *.ky *.log *.pg *.tp *.vr \

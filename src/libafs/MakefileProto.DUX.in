@@ -9,19 +9,19 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 <rxk5>
-K5SSL_DEF=@K5SSL_DEF@
 K5SSL_INC=@K5SSL_INC@
 
-AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
-#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
-AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
-AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
-AFS_K5SSL_RC4 = e_rc4.o rc4.o
-#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+@ENABLE_AES@AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+@ENABLE_CAST@AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+@ENABLE_DES3@AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o
+@ENABLE_DES@AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+@ENABLE_DES_DES3@AFS_K5SSL_DES_O = des.o
+@ENABLE_RC4@AFS_K5SSL_RC4 = e_rc4.o rc4.o
+@ENABLE_RC6@AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
 
 AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
 	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
-	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) $(AFS_K5SSL_DES_O) \
 	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
 	m_crc32.o \
 	m_md4.o \
@@ -68,7 +68,7 @@ KDEFS=-DLANGUAGE_C -G 4 -I/usr/sys/include -I../include \
 	 -I/usr/sys/${HEADER_RT} -I/usr/sys/BINARY \
 	-DDEC3000_500 -DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DMACH -DUFS \
 	-DRT -DKERNEL -D_KERNEL  -signed  -no_excpt -Wb,-static -Wco,-nofloat \
-	-Olimit 1000 -D__alpha -Umips -UMIPS ${K5SSL_DEF} ${K5SSL_INC} \
+	-Olimit 1000 -D__alpha -Umips -UMIPS ${K5SSL_INC} \
 	-I${TOP_SRCDIR}/rxk5
 DBUG = -O2 -g3
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT

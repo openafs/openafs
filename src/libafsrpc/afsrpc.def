@@ -68,11 +68,12 @@ EXPORTS
 	xdrrx_create				@72
 	hton_syserr_conv			@73
 	rxkad_global_stats			@74 DATA
-	com_err					@75
-	error_message				@76
+	afs_com_err					@75
+	afs_error_message				@76
 	rx_socket				@77 DATA
 ;	AssertionFailed				@79
-	afs_winsockInit				@80
+; matt -- fix in afsutil
+;	afs_winsockInit				@80
 	rxevent_debugFile			@81 DATA
 	rx_debugFile				@82 DATA
 	rx_connDeadTime				@83 DATA
@@ -92,7 +93,7 @@ EXPORTS
 	multi_Select				@97
 	multi_Init				@98
 	multi_Finalize_Ignore			@99
-	add_to_error_table			@100
+	afs_add_to_error_table			@100
 	xdr_afsUUID				@101
 	rx_GetSpecific				@102
 	rx_SetSpecific				@103
@@ -219,4 +220,29 @@ EXPORTS
 	rx_InitHost				@224
 	rx_NewServiceHost			@225
         osi_AssertFailU				@226
-	DllMain					@227
+; matt
+	rxi_ConnectionError			@228
+	osi_free				@229
+	rxi_SetCallNumberVector			@230
+	rxi_CallError				@231
+	rxi_Alloc				@232
+	rx_SlowWritePacket			@233
+	rxi_RoundUpPacket			@234
+	rx_SlowReadPacket			@235
+	rxk5_NewClientSecurityObject		@236
+	rxk5_NewServerSecurityObject		@237
+	rxk5_GetServerInfo			@238
+	rxk5_GetServerInfo2			@239
+	rxk5_get_context			@240
+	rxk5_default_get_key			@241
+	lcstring				@242
+	stolower				@243
+	strcompose				@244
+	ucstring				@245
+	add_error_table				@246
+	remove_error_table			@247
+	afs_error_table_name			@248
+	afs_error_table_name_r			@249
+	rx_justReceived				@250
+	rx_almostSent				@251
+	rxi_Free				@252

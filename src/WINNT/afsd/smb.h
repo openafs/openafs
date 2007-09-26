@@ -14,6 +14,10 @@
 #include "netbios95.h"
 #endif /* DJGPP */
 
+#if _WIN32_WINNT < 0x0501
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <ntsecapi.h>
 
 /* Support largefiles by default */
@@ -400,6 +404,7 @@ typedef struct smb_fid {
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 #define SMB_FID_SEQUENTIAL		0x200
 #define SMB_FID_RANDOM			0x400
+#define SMB_FID_EXECUTABLE              0x800
 
 #define SMB_FID_SHARE_READ              0x1000
 #define SMB_FID_SHARE_WRITE             0x2000
@@ -519,11 +524,11 @@ typedef struct smb_dispatch {
 						 * the response was already
 						 * sent.
                                                  */
-#define SMB_MAX_PATH                    256     /* max path length */
+#define SMB_MAX_PATH                    260     /* max path length */
 
 /* prototypes */
 
-extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
+extern void smb_Init(osi_log_t *logp, int useV3,
 	int nThreads
 #ifndef DJGPP
         , void *aMBfunc
@@ -751,6 +756,7 @@ extern void smb_ResetServerPriority(void);
 extern void smb_RestartListeners(void);
 extern void smb_StopListeners(void);
 extern void smb_StopListener(NCB *ncbp, int lana);
+extern long smb_IsNetworkStarted(void);
 
 #define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0

@@ -374,7 +374,7 @@ all: run-tests OpenAFS/OS.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
 
 clean:
 	-rm -f xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h *.o \
-	$(TARGETS) run-tests $(TEST_PROGRAMS) OS.pm
+	$(TARGETS) run-tests $(TEST_PROGRAMS) OpenAFS/OS.pm
 
 include ../config/Makefile.version
 

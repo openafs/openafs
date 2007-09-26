@@ -29,16 +29,8 @@
  */
 
 #include "afsconfig.h"
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include "afs/stds.h"
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
 #include <krb5.h>
-#define krb5i_check_transited_list(a,b,c,d) krb5_check_transited_list(a,&b->tr_contents,c,d)
-#endif
 
 /*
  * compare with:
@@ -62,8 +54,7 @@
  *	& KRB5_AUTH_CONTEXT_PERMIT_ALL, could then check auth_context->keyblock
  *	or ticket->enc_part2->session later)
  * /6/ does not free ticket->enc_part2 on error.
- * /7/ only does "_SINGLE_HOP_ONLY" case.
- *	(this looks like a mess anyways.)
+ * /7/ does not check trans->tr_type (neither does MIT).
  *
  * ignored here (but should pass out):
  * ticket->enc_part2->caddrs
@@ -81,7 +72,7 @@
  */
 
 krb5_error_code
-krb5_danish_surprise(krb5_context context,
+krb5_server_decrypt_ticket_keyblock(krb5_context context,
     krb5_keyblock *key,
     krb5_ticket *ticket)
 {
@@ -100,7 +91,7 @@ krb5_danish_surprise(krb5_context context,
 	code = KRB5KRB_AP_ERR_ILL_CR_TKT;
 #else
 	/* the general case */
-	code = krb5i_check_transited_list(context, trans,
+	code = krb5_check_transited_list(context, &trans->tr_contents,
 	    realm, &ticket->server->realm);
 #endif
 	goto Done;

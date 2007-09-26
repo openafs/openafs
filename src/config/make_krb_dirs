@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+#
+# Build src/WINNT/kfw tree from just-built kfw-3.1.0 tree
+# Matt Benjamin, 2006
+#
+
+$src = "/cygdrive/c/dev/kfw-3-1-0-beta-2/src";
+$trg = "src/WINNT/kfw";
+
+print "Making AFS kfw\n";
+
+mkdir($trg);
+mkdir("$trg/lib");
+$libdir = "$trg/lib/i386";
+mkdir($libdir);
+
+# Copy linklibs
+$libsrc = "$src/target/lib/i386/dbg";
+system("cp $libsrc/\*.lib $libdir");
+
+# Copy header files -- manifest based on kfw-3.1.0 sdk
+mkdir("$trg/inc");
+
+mkdir("$trg/inc/kclient");
+$hsrc = "$src/athena/auth/krb4/kclient/include";
+system("cp $hsrc/\* $trg/inc/kclient");
+
+mkdir("$trg/inc/krb4");
+$hsrc = "$src/athena/auth/krb4/include";
+system("cp $hsrc/\* $trg/inc/krb4");
+
+mkdir("$trg/inc/krb5");
+$hsrc = "$src/athena/auth/krb5/src/include";
+system("cp $hsrc/com_err.h $trg/inc/krb5");
+system("cp $hsrc/profile.h $trg/inc/krb5");
+system("cp $hsrc/win-mac.h $trg/inc/krb5");
+
+mkdir("$trg/inc/krb5/gssapi");
+$hsrc = "$src/athena/auth/krb5/src/include/gssapi";
+system("cp $hsrc/\* $trg/inc/krb5/gssapi");
+
+mkdir("$trg/inc/krb5/KerberosIV");
+$hsrc = "$src/athena/auth/krb5/src/include/kerberosIV";
+system("cp $hsrc/\* $trg/inc/krb5/KerberosIV");
+
+mkdir("$trg/inc/krb5/krb5");
+$hsrc = "$src/athena/auth/krb5/src/include";
+system("cp $hsrc/krb5.h $trg/inc/krb5/krb5");
+$k5text = <<K5TEXT;
+/* The MIT Kerberos header file krb5.h used to live here.
+
+   As of the 1.5 release, we're installing multiple Kerberos headers,
+   so they're all moving to a krb5/ subdirectory.  This file is
+   present just to keep old software still compiling.  Please update
+   your code to use the new path for the header.  */
+#include <krb5/krb5.h>
+K5TEXT
+open K5, ">$trg/inc/krb5/krb5.h";
+print K5 $k5text;
+close K5;
+
+mkdir("$trg/inc/krbcc");
+$hsrc = "$src/athena/auth/krbcc/include";
+system("cp $hsrc/\* $trg/inc/krbcc");
+
+mkdir("$trg/inc/leash");
+$hsrc = "$src/athena/auth/leash/include";
+system("cp $hsrc/\* $trg/inc/leash");
+
+mkdir("$trg/inc/loadfuncs");
+$hsrc = "$src/athena/util/loadfuncs";
+system("cp $hsrc/\* $trg/inc/loadfuncs");
+
+mkdir("$trg/inc/wshelper");
+$hsrc = "$src/athena/wshelper/include";
+system("cp $hsrc/\* $trg/inc/wshelper");
+mkdir("$trg/inc/wshelper/arpa");
+system("cp $hsrc/arpa/\* $trg/inc/wshelper/arpa");
+
+mkdir("$trg/inc/netidmgr");
+$hsrc = "$src/athena/auth/krb5/src/windows/identity/obj/i386/dbg/inc/";
+system("cp $hsrc/\* $trg/inc/netidmgr");

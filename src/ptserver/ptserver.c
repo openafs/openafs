@@ -139,19 +139,21 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#include <afs/cellconfig.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 #endif
 #include <lock.h>
 #include <ubik.h>
-#include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/keys.h>
 #include "ptserver.h"
 #include "error_macros.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 
 
 /* make	all of these into a structure if you want */
@@ -465,7 +467,7 @@ main(int argc, char **argv)
     code =
 	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, clones);
     if (code) {
-	com_err(whoami, code, "Couldn't get server list");
+	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
@@ -523,7 +525,7 @@ main(int argc, char **argv)
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
 			      pr_dbaseName, &dbase);
     if (code) {
-	com_err(whoami, code, "Ubik init failed");
+	afs_com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
 #if defined(SUPERGROUPS)

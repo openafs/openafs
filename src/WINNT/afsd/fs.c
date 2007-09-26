@@ -271,7 +271,7 @@ IsFreelanceRoot(char *apath)
 
     code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
-        return !strcmp("Freelance.Local.Root",space);
+        return !stricmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
@@ -600,7 +600,7 @@ ParseAcl (char *astr)
 static int
 PrintStatus(VolumeStatus *status, char *name, char *motd, char *offmsg)
 {
-    printf("Volume status for vid = %u named %s\n",status->Vid, name);
+    printf("Volume status for vid = %u named %s is\n",status->Vid, name);
     if (*offmsg != 0)
 	printf("Current offline message is %s\n",offmsg);
     if (*motd != 0)
@@ -611,7 +611,7 @@ PrintStatus(VolumeStatus *status, char *name, char *motd, char *offmsg)
     else 
         printf("unlimited\n");
     printf("Current blocks used are %d\n",status->BlocksInUse);
-    printf("The partition has %d blocks available out of %d\n\n",
+    printf("The partition has %d blocks available out of %d\n",
             status->PartBlocksAvail, status->PartMaxBlocks);
     return 0;
 }
@@ -1099,7 +1099,7 @@ GetCell(char *fname, char *cellname)
     blob.out = cellname;
 
     code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-    return code ? errno : 0;
+    return code;
 }
 
 /* Check if a username is valid: If it contains only digits (or a
@@ -1489,6 +1489,7 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
     struct cmd_item *ti;
     struct VolumeStatus *status;
     char *name, *offmsg, *motd;
+    long   online_state;
     int error = 0;
     
     SetDotDefault(&as->parms[0].items);
@@ -1525,21 +1526,38 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
 	    pr_SIdToName(owner[0], oname);
 	    printf("Owner %s (%u) Group %u\n", oname, owner[0], owner[1]);
         }
-	
+
 	blob.out = space;
 	blob.out_size = MAXSIZE;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
-	if (code) {
-	    Die(errno, ti->data);
-	    error = 1;
-	    continue;
-	}
-	status = (VolumeStatus *)space;
-	name = (char *)status + sizeof(*status);
-	offmsg = name + strlen(name) + 1;
-	motd = offmsg + strlen(offmsg) + 1;
+	if (code == 0) {
+            status = (VolumeStatus *)space;
+            name = (char *)status + sizeof(*status);
+            offmsg = name + strlen(name) + 1;
+            motd = offmsg + strlen(offmsg) + 1;
 
-	PrintStatus(status, name, motd, offmsg);
+            PrintStatus(status, name, motd, offmsg);
+        } else {
+            Die(errno, ti->data);
+        }
+        online_state = pioctl(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
+        switch (online_state) {
+        case 0:
+            printf("Volume is online\n");
+            break;
+        case CM_ERROR_ALLOFFLINE:
+            printf("Volume offline\n");
+            break;
+        case CM_ERROR_ALLDOWN:
+            printf("All Volume servers are down\n");
+            break;
+        case CM_ERROR_ALLBUSY:
+            printf("All volume servers are busy\n");
+            break;
+        default:
+            Die(online_state, ti->data);
+        }
+        printf("\n");
     }
     return error;
 }
@@ -1912,8 +1930,11 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 		cellName = localCellName;
 	}
     } else {
-	if (!cellName)
-	    GetCell(parent,space);
+	if (!cellName) {
+	    code = GetCell(parent,space);
+            if (code)
+                return 1;
+        }
     }
 
     code = GetCellName(cellName?cellName:space, &info);
@@ -2096,7 +2117,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
         /* sanity check */
         if(checkserv.tinterval<0) {
             printf("Warning: The negative -interval is ignored; treated as an inquiry\n");
-            checkserv.tinterval=0;
+            checkserv.tinterval=-1;
         } else if(checkserv.tinterval> 600) {
             printf("Warning: The maximum -interval value is 10 mins (600 secs)\n");
             checkserv.tinterval=600;	/* 10 min max interval */
@@ -2105,7 +2126,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
         checkserv.tinterval = -1;	/* don't change current interval */
     }
 
-    if ( checkserv.tinterval != 0 ) {
+    if ( checkserv.tinterval >= 0 ) {
 #ifdef WIN32
         if ( !IsAdmin() ) {
             fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -2259,28 +2280,27 @@ SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
-#define MAXGCSIZE	16
 static int
 GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    afs_uint64 parms[MAXGCSIZE];
+    cm_cacheParms_t parms;
 
-    memset(parms, 0, sizeof(parms));
+    memset(&parms, 0, sizeof(parms));
     blob.in = NULL;
     blob.in_size = 0;
     blob.out_size = sizeof(parms);
-    blob.out = (char *) parms;
+    blob.out = (char *) &parms;
     code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
     if (code) {
 	Die(errno, NULL);
         return 1;
     }
      
-    printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
-           parms[1], parms[0]);
-    if (parms[1] > parms[0])
+    printf("AFS using %I64u of the cache's available %I64u 1K byte blocks.\n",
+           parms.parms[1], parms.parms[0]);
+    if (parms.parms[1] > parms.parms[0])
         printf("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
     return 0;
 }
@@ -4622,10 +4642,10 @@ Die(int code, char *filename)
     else if (code == ENODEV) {
 	fprintf(stderr,"%s: AFS service may not have started.\n", pn);
     }
-    else if (code == ESRCH) {
+    else if (code == ESRCH) {   /* hack */
 	fprintf(stderr,"%s: Cell name not recognized.\n", pn);
     }
-    else if (code == EPIPE) {
+    else if (code == EPIPE) {   /* hack */
 	fprintf(stderr,"%s: Volume name or ID not recognized.\n", pn);
     }
     else if (code == EFBIG) {
@@ -4637,6 +4657,24 @@ Die(int code, char *filename)
 	else
 	    fprintf(stderr,"%s: Connection timed out", pn);
     }
+    else if (code == EBUSY) {
+	if (filename) 
+            fprintf(stderr,"%s: All servers are busy on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All servers are busy\n", pn);
+    } 
+    else if (code == ENXIO) {
+	if (filename) 
+            fprintf(stderr,"%s: All volume instances are offline on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All volume instances are offline\n", pn);
+    } 
+    else if (code == ENOSYS) {
+	if (filename) 
+            fprintf(stderr,"%s: All servers are down on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All servers are down\n", pn);
+    } 
     else {
 	if (filename) 
             fprintf(stderr,"%s:'%s'", pn, filename);
@@ -4645,7 +4683,7 @@ Die(int code, char *filename)
 #ifdef WIN32
 	fprintf(stderr, ": code 0x%x\n", code);
 #else /* not WIN32 */
-	fprintf(stderr,": %s\n", error_message(code));
+	fprintf(stderr,": %s\n", afs_error_message(code));
 #endif /* not WIN32 */
     }
 } /*Die*/

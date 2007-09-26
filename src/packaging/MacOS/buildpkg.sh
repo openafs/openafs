@@ -122,7 +122,11 @@ if [ $firstpass = yes ]; then
     else
 	echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
     fi
+    if [ $majorvers -ge 9 ]; then
     echo '-memcache -afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
+    else
+    echo '-afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
+    fi
 
     strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 

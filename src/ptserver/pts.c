@@ -7,18 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- *                      (3) add new pts commands:
- *
- *                          Interactive - allow the pts command
- *                                        to be run interactively.
- *                          Quit        - quit interactive mode.
- *                          Source      - allow input to come from a file(s).
- *                          Sleep       - pause for a specified number
- *                                        of seconds.
- *
- */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -44,11 +32,13 @@ RCSID
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
 #include <afs/afsutil.h>
 #ifdef AFS_RXK5	
 #include <afs/rxk5_utilafs.h>
 #endif
+#include <afs/com_err.h>
 
 #undef FOREIGN
 
@@ -72,21 +62,21 @@ struct myrock {
 };
 
 int
-Interactive(struct cmd_syndesc *as, char *arock)
+pts_Interactive(struct cmd_syndesc *as, char *arock)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(struct cmd_syndesc *as, char *arock)
+pts_Quit(struct cmd_syndesc *as, char *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-Source(struct cmd_syndesc *as, char *arock)
+pts_Source(struct cmd_syndesc *as, char *arock)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -114,7 +104,7 @@ Source(struct cmd_syndesc *as, char *arock)
 }
 
 int
-Sleep(struct cmd_syndesc *as, char *arock)
+pts_Sleep(struct cmd_syndesc *as, char *arock)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -123,6 +113,7 @@ Sleep(struct cmd_syndesc *as, char *arock)
     }
     delay = atoi(as->parms[0].items->data);
     IOMGR_Sleep(delay);
+    return 0;
 }
 
 int
@@ -172,9 +163,11 @@ GetGlobals(struct cmd_syndesc *as, char *arock)
 	
 #ifdef AFS_RXK5	
     if (as->parms[22].items)	changed = 1,	/* -k5 */
-	authtype = FORCE_RXK5;
+	authtype = (FORCE_RXK5 | FORCE_K5CC);
     if (as->parms[23].items)	changed = 1,	/* -k4 */
 	authtype = FORCE_RXKAD;
+    if (as->parms[24].items)	changed = 1,	/* -ktc */
+	authtype = FORCE_KTC;
 #endif	
 
     if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
@@ -190,7 +183,7 @@ GetGlobals(struct cmd_syndesc *as, char *arock)
 	code = pr_Initialize(sec | authtype, confdir, cell);
     }
     if (code) {
-	com_err(whoami, code, "while initializing");
+	afs_com_err(whoami, code, "while initializing");
 	return code;
     }
     rock->sec = sec;
@@ -216,7 +209,6 @@ CleanUp(struct cmd_syndesc *as, char *arock)
 	pr_End();
 	rx_Finalize();
     }
-
     return 0;
 }
 
@@ -240,20 +232,22 @@ CreateGroup(struct cmd_syndesc *as, char *arock)
 	if (idi) {
 	    code = util_GetInt32(idi->data, &id);
 	    if (code) {
-		com_err(whoami, code, "because group id was: '%s'",
+		afs_com_err(whoami, code, "because group id was: '%s'",
 			idi->data);
 		return code;
 	    }
 	    if (id >= 0) {
 		code = PRBADARG;
-		com_err(whoami, code, "because group id %d was not negative",
+		afs_com_err(whoami, code, "because group id %d was not negative",
 			id);
 		return code;
 	    }
-	    if (id == 0) {
+	    
+            if (id == 0) {
 		printf("0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
+
 	    idi = idi->next;
 	} else
 	    id = 0;
@@ -261,13 +255,13 @@ CreateGroup(struct cmd_syndesc *as, char *arock)
 	code = pr_CreateGroup(namei->data, owner, &id);
 	if (code) {
 	    if (owner || id)
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to create group %s with id %d%s%s%s%s",
 			namei->data, id, owner ? " owned by '" : "",
 			owner ? owner : "", owner ? "'" : "",
 			(force ? " (ignored)" : ""));
 	    else
-		com_err(whoami, code, "; unable to create group %s %s",
+		afs_com_err(whoami, code, "; unable to create group %s %s",
 			namei->data, (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -293,7 +287,7 @@ CreateUser(struct cmd_syndesc *as, char *arock)
 	if (idi) {
 	    code = util_GetInt32(idi->data, &id);
 	    if (code) {
-		com_err(whoami, code, "because id was: '%s'", idi->data);
+		afs_com_err(whoami, code, "because id was: '%s'", idi->data);
 		return code;
 	    }
 	    if (id == 0) {
@@ -307,11 +301,11 @@ CreateUser(struct cmd_syndesc *as, char *arock)
 	code = pr_CreateUser(namei->data, &id);
 	if (code) {
 	    if (id)
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to create user %s with id %d %s",
 			namei->data, id, (force ? "(ignored)" : ""));
 	    else
-		com_err(whoami, code, "; unable to create user %s %s",
+		afs_com_err(whoami, code, "; unable to create user %s %s",
 			namei->data, (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -333,11 +327,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
     int goodCount;
 
     if (!(as->parms[0].items || as->parms[1].items)) {
-	com_err(whoami, 0, "must specify either a name or an id.");
+	afs_com_err(whoami, 0, "must specify either a name or an id.");
 	return -1;
     }
     if (as->parms[0].items && as->parms[1].items) {
-	com_err(whoami, 0, "can't specify both a name and id.");
+	afs_com_err(whoami, 0, "can't specify both a name and id.");
 	return -1;
     }
 
@@ -366,11 +360,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 
 	code = pr_NameToId(nl, lids);
 	if (code)
-	    com_err(whoami, code, "so couldn't look up names");
+	    afs_com_err(whoami, code, "so couldn't look up names");
 	else {
 	    for (n = 0; n < lids->idlist_len; n++) {
 		if ((lids->idlist_val[n] == ANONYMOUSID)) {
-		    com_err(whoami, PRNOENT, "so couldn't look up id for %s",
+		    afs_com_err(whoami, PRNOENT, "so couldn't look up id for %s",
 			    nl->namelist_val[n]);
 		} else
 		    goodCount++;
@@ -392,7 +386,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	for (i = as->parms[1].items; i; i = i->next) {
 	    code = util_GetInt32(i->data, &lids->idlist_val[n]);
 	    if (code)
-		com_err(whoami, code =
+		afs_com_err(whoami, code =
 			PRNOENT, "because a bogus id '%s' was specified",
 			i->data);
 	    n++;
@@ -402,7 +396,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	    lnames->namelist_len = 0;
 	    code = pr_IdToName(lids, lnames);
 	    if (code)
-		com_err(whoami, code, "translating ids");
+		afs_com_err(whoami, code, "translating ids");
 	}
     }
     if (code) {
@@ -459,11 +453,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
     tids.idlist_val = 0;
     code = pr_NameToId(&names, &tids);
     if (code)
-	com_err(whoami, code, "so couldn't look up names");
+	afs_com_err(whoami, code, "so couldn't look up names");
     else {
 	for (n = 0; n < tids.idlist_len; n++) {
 	    if ((tids.idlist_val[n] == ANONYMOUSID)) {
-		com_err(whoami, PRNOENT, "so couldn't look up id for %s",
+		afs_com_err(whoami, PRNOENT, "so couldn't look up id for %s",
 			names.namelist_val[n]);
 	    } else
 		goodCount++;
@@ -482,7 +476,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	tnames.namelist_len = 0;
 	code = pr_IdToName(&ids, &tnames);
 	if (code)
-	    com_err(whoami, code, "translating ids");
+	    afs_com_err(whoami, code, "translating ids");
 	else
 	    goodCount++;
 	if (lnames) {
@@ -513,7 +507,7 @@ AddToGroup(struct cmd_syndesc *as, char *arock)
 	for (g = as->parms[1].items; g; g = g->next) {
 	    code = pr_AddToGroup(u->data, g->data);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to add user %s to group %s %s", u->data,
 			g->data, (force ? "(ignored)" : ""));
 		if (!force)
@@ -534,7 +528,7 @@ RemoveFromGroup(struct cmd_syndesc *as, char *arock)
 	for (g = as->parms[1].items; g; g = g->next) {
 	    code = pr_RemoveUserFromGroup(u->data, g->data);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to remove user %s from group %s %s",
 			u->data, g->data, (force ? "(ignored)" : ""));
 		if (!force)
@@ -569,7 +563,7 @@ ListMembership(struct cmd_syndesc *as, char *arock)
 	list.namelist_len = 0;
 	code = pr_IDListMembers(ids.idlist_val[i], &list);
 	if (code) {
-	    com_err(whoami, code, "; unable to get membership of %s (id: %d)",
+	    afs_com_err(whoami, code, "; unable to get membership of %s (id: %d)",
 		    name, id);
 	    continue;
 	}
@@ -610,7 +604,7 @@ Delete(struct cmd_syndesc *as, char *arock)
 
 	code = pr_DeleteByID(id);
 	if (code) {
-	    com_err(whoami, code, "deleting %s (id: %d) %s", name, id,
+	    afs_com_err(whoami, code, "deleting %s (id: %d) %s", name, id,
 		    (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -658,7 +652,7 @@ CheckEntry(struct cmd_syndesc *as, char *arock)
 	code = pr_ListEntry(id, &aentry);
 	if (code) {
 	    rcode = code;
-	    com_err(whoami, code, "; unable to find entry for (id: %d)", id);
+	    afs_com_err(whoami, code, "; unable to find entry for (id: %d)", id);
 	    continue;
 	}
 
@@ -667,7 +661,7 @@ CheckEntry(struct cmd_syndesc *as, char *arock)
 	code = pr_IdToName(&lids, &lnames);
 	if (code) {
 	    rcode = code;
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "translating owner (%d) and creator (%d) ids",
 		    aentry.owner, aentry.creator);
 	    continue;
@@ -748,7 +742,7 @@ ListEntries(struct cmd_syndesc *as, char *arock)
 	    pr_ListEntries(flag, startindex, &nentries, &entriesp,
 			   &nextstartindex);
 	if (code) {
-	    com_err(whoami, code, "; unable to list entries");
+	    afs_com_err(whoami, code, "; unable to list entries");
 	    if (entriesp)
 		free(entriesp);
 	    break;
@@ -776,7 +770,7 @@ ChownGroup(struct cmd_syndesc *as, char *arock)
     owner = as->parms[1].items->data;
     code = pr_ChangeEntry(name, "", 0, owner);
     if (code)
-	com_err(whoami, code, "; unable to change owner of %s to %s", name,
+	afs_com_err(whoami, code, "; unable to change owner of %s to %s", name,
 		owner);
     return code;
 }
@@ -792,7 +786,7 @@ ChangeName(struct cmd_syndesc *as, char *arock)
     newname = as->parms[1].items->data;
     code = pr_ChangeEntry(oldname, newname, 0, "");
     if (code)
-	com_err(whoami, code, "; unable to change name of %s to %s", oldname,
+	afs_com_err(whoami, code, "; unable to change name of %s to %s", oldname,
 		newname);
     return code;
 }
@@ -805,11 +799,11 @@ ListMax(struct cmd_syndesc *as, char *arock)
 
     code = pr_ListMaxUserId(&maxUser);
     if (code)
-	com_err(whoami, code, "getting maximum user id");
+	afs_com_err(whoami, code, "getting maximum user id");
     else {
 	code = pr_ListMaxGroupId(&maxGroup);
 	if (code)
-	    com_err(whoami, code, "getting maximum group id");
+	    afs_com_err(whoami, code, "getting maximum group id");
 	else {
 	    printf("Max user id is %d and max group id is %d.\n", maxUser,
 		   maxGroup);
@@ -829,12 +823,12 @@ SetMax(struct cmd_syndesc *as, char *arock)
 	/* set user max */
 	code = util_GetInt32(as->parms[1].items->data, &maxid);
 	if (code) {
-	    com_err(whoami, code, "because id was: '%s'",
+	    afs_com_err(whoami, code, "because id was: '%s'",
 		    as->parms[1].items->data);
 	} else {
 	    code = pr_SetMaxUserId(maxid);
 	    if (code)
-		com_err(whoami, code, "so couldn't set Max User Id to %d",
+		afs_com_err(whoami, code, "so couldn't set Max User Id to %d",
 			maxid);
 	}
     }
@@ -842,12 +836,12 @@ SetMax(struct cmd_syndesc *as, char *arock)
 	/* set group max */
 	code = util_GetInt32(as->parms[0].items->data, &maxid);
 	if (code) {
-	    com_err(whoami, code, "because id was: '%s'",
+	    afs_com_err(whoami, code, "because id was: '%s'",
 		    as->parms[0].items->data);
 	} else {
 	    code = pr_SetMaxGroupId(maxid);
 	    if (code)
-		com_err(whoami, code, "so couldn't set Max Group Id to %d",
+		afs_com_err(whoami, code, "so couldn't set Max Group Id to %d",
 			maxid);
 	}
     }
@@ -916,7 +910,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
     if (as->parms[2].items) {	/* limitgroups */
 	code = util_GetInt32(as->parms[2].items->data, &ngroups);
 	if (code) {
-	    com_err(whoami, code, "because ngroups was: '%s'",
+	    afs_com_err(whoami, code, "because ngroups was: '%s'",
 		    as->parms[2].items->data);
 	    return code;
 	}
@@ -926,7 +920,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
     if (as->parms[3].items) {	/* limitgroups */
 	code = util_GetInt32(as->parms[3].items->data, &nusers);
 	if (code) {
-	    com_err(whoami, code, "because nusers was: '%s'",
+	    afs_com_err(whoami, code, "because nusers was: '%s'",
 		    as->parms[3].items->data);
 	    return code;
 	}
@@ -941,7 +935,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
 	    continue;
 	code = pr_SetFieldsEntry(id, mask, flags, ngroups, nusers);
 	if (code) {
-	    com_err(whoami, code, "; unable to set fields for %s (id: %d)",
+	    afs_com_err(whoami, code, "; unable to set fields for %s (id: %d)",
 		    name, id);
 	    return code;
 	}
@@ -983,7 +977,7 @@ ListOwned(struct cmd_syndesc *as, char *arock)
 	    list.namelist_len = 0;
 	    code = pr_ListOwned(oid, &list, &more);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to get owner list for %s (id: %d)", name,
 			oid);
 		break;
@@ -1025,6 +1019,8 @@ add_std_args(register struct cmd_syndesc *ts)
     		"use rxk5 security");
     cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, 
     		"use rxkad security");
+    cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL, 
+    		"use kernel token for security");
 #endif	
 }
 
@@ -1044,11 +1040,13 @@ main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
+
     char line[2048];
     char *cp, *lastp;
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
+
 #ifdef WIN32
     WSADATA WSAjunk;
 #endif
@@ -1161,30 +1159,30 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, 0,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, 0, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", Source, 0, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, 0, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", Sleep, 0, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, 0, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
     cmd_SetBeforeProc(GetGlobals, (char *) myrock);
 
     finished = 1;
+    source = stdin;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
-    source = stdin;
     while (!finished) {
 	if (isatty(fileno(source)))
 	    fprintf(stderr, "pts> ");
@@ -1207,7 +1205,7 @@ main(int argc, char **argv)
 	    cmd_ParseLine(line, parsev, &parsec,
 			  sizeof(parsev) / sizeof(*parsev));
 	if (code) {
-	    com_err(whoami, code, "parsing line: <%s>", line);
+	    afs_com_err(whoami, code, "parsing line: <%s>", line);
 	    exit(2);
 	}
 	savec = parsev[0];

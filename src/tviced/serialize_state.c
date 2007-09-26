@@ -53,7 +53,6 @@ RCSID
 #include <afs/acl.h>
 #include <afs/ptclient.h>
 #include <afs/prs_fs.h>
-#include <afs/auth.h>
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
@@ -108,8 +107,9 @@ extern off_t afs_lseek(int FD, off_t O, int F);
  * have been written so that it will be very simple to go
  * back to standard I/O for just those poorly written platforms
  */
+#ifndef _WIN32
 #define FS_STATE_USE_MMAP
-
+#endif
 
 #ifdef FS_STATE_USE_MMAP
 #define FS_STATE_INIT_FILESIZE (8 * 1024 * 1024)  /* truncate to 8MB initially */

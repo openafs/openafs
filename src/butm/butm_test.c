@@ -34,7 +34,7 @@ static char *whoami = "TEST FAIL";
                        if (code != err) \
                        { \
                           printf("FAILURE: expected %u; got %u\n", err, code); \
-                          if (code) com_err(whoami, code, ""); \
+                          if (code) afs_com_err(whoami, code, ""); \
 		       } \
                        else printf("PASSED; got %u\n", err); \
                        printf("\n");
@@ -43,7 +43,7 @@ static char *whoami = "TEST FAIL";
                         { \
 			   printf("TEST: %s\n", str); \
                            printf("FAILURE: expected %u; got %u\n", err, code); \
-                           if (code) com_err(whoami, code, ""); \
+                           if (code) afs_com_err(whoami, code, ""); \
 			   printf("\n"); \
 		        }
 #define NOREWIND 0

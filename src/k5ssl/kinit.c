@@ -36,9 +36,6 @@
 #include <string.h>
 #include <pwd.h>
 #if defined(USING_MIT) || defined(USING_HEIMDAL)
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #else
 #include "k5ssl.h"
@@ -179,7 +176,7 @@ process(char *name)
 	if (code) goto Failed;
 	what = "krb5_get_init_creds_keytab";
 	code = krb5_get_init_creds_keytab(k5context, outcreds,
-	    client, keytab, deltat, Sflag, gic_opts);
+	    client, keytab, stime, Sflag, gic_opts);
 	break;
     case 'r':
 	what = "krb5_get_renewed_creds";
@@ -201,7 +198,7 @@ process(char *name)
     goto Done;
 Failed:
     fprintf(stderr,"Failed in %s - error %d (%s)\n",
-	what, code, error_message(code));
+	what, code, afs_error_message(code));
 Done:
     if (outcreds->client == client)
 	outcreds->client = 0;

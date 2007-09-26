@@ -246,7 +246,7 @@ void initialize_${table_name}_error_table${heimdal_nospace}(void) {
 EOF
 if ($compat == AFS) {
 print COUT <<AFS;
-    add_to_error_table(&etlink);
+    afs_add_to_error_table(&etlink);
 AFS
 }
 if ($compat == HEIMDAL) {

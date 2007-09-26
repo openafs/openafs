@@ -109,7 +109,7 @@ webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${RXK5} ${RXK5UTIL} ${TOP_LIBDIR}/libafsutil.a ${KRB5LIBS} $(TEST_LIBS) $(XLIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${RXK5} ${RXK5UTIL} ${TOP_LIBDIR}/util.a ${KRB5LIBS} $(TEST_LIBS) $(XLIBS)
 
 install: \
 	${DESTDIR}${libdir}/$(LIBUAFS) \
@@ -631,6 +631,7 @@ JUAFSOBJ = \
 	$(JUAFS)/Krxstat.ss.o \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
+	$(JUAFS)/xdr_int32.o \
 	$(JUAFS)/xdr_int64.o \
 	$(JUAFS)/rxkad_tkt.o \
 	$(JUAFS)/afs_token.xdr.o \
@@ -1349,6 +1350,8 @@ $(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
 $(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
+	$(CRULE1)
+$(JUAFS)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
 	$(CRULE1)
 $(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)

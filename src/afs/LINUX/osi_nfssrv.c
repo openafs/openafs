@@ -27,7 +27,7 @@ RCSID
 #include <linux/sunrpc/svcauth.h>
 
 static unsigned long authtab_addr = 0;
-#if defined(module_param)
+#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(authtab_addr, long, 0);
 #else
 MODULE_PARM(authtab_addr, "l");

@@ -49,12 +49,11 @@ THREADFLAGS=-UAFS_PTHREAD_ENV
 
 AFSLIBS= ${TOP_LIBDIR}/librxkad.a \
         ${TOP_LIBDIR}/librxstat.a \
+        ${TOP_LIBDIR}/libsys.a \
         ${TOP_LIBDIR}/librx.a \
         ${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libdes.a \
-        ${TOP_LIBDIR}/util.a \
-        ${TOP_LIBDIR}/libsys.a \
-        ${TOP_LIBDIR}/libafsutil.a
+        ${TOP_LIBDIR}/util.a
 
 LIBS=$(AFSLIBS) $(KRB5LIBS) $(DESLIB) $(LIBCOM_ERR) $(AFSUTIL) $(XLIBS)
 
@@ -66,7 +65,7 @@ S=$X               rxk5_server.o rxk5_info.o rxk5_getkey.o
 #H=
 @IF_RXKAD@W=rsk_wrapper.o readkey.so
 
-K5FLAGS=-DCONFIG_RXK5 -DKRB5_AES_SUPPORT  -DKRB5_DES3_SUPPORT  -DKRB5_DES_SUPPORT  -DKRB5_RC4_SUPPORT -DCONFIG_K5
+K5FLAGS=-DCONFIG_RXK5 -DCONFIG_K5
 
 CFLAGS=$(DEFS) $(INCPATH) $(K5FLAGS) $(AFSINCLUDEFLAG) \
 	$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS) $(THREADFLAGS)

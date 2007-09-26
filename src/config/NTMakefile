@@ -173,11 +173,20 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\rx\test))
 		$(MKDIR) $(OJT)\rx\test
 !	ENDIF
+!	IF (!EXIST($(OJT)\rxdebug))
+		$(MKDIR) $(OJT)\rxdebug
+!	ENDIF
 !	IF (!EXIST($(OJT)\rxgen))
 		$(MKDIR) $(OJT)\rxgen
 !	ENDIF
 !	IF (!EXIST($(OJT)\rxkad))
 		$(MKDIR) $(OJT)\rxkad
+!	ENDIF
+!	IF (!EXIST($(OJT)\rxk5))
+		$(MKDIR) $(OJT)\rxk5
+!	ENDIF
+!	IF (!EXIST($(OJT)\trxk5))
+		$(MKDIR) $(OJT)\trxk5
 !	ENDIF
 !	IF (!EXIST($(OJT)\rxstat))
 		$(MKDIR) $(OJT)\rxstat

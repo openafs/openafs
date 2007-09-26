@@ -25,7 +25,9 @@
 #include "dmalloc.h"
 #endif
 
-extern int errno;
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #ifndef LIBJUAFS
 // user class and fields //
@@ -384,7 +386,7 @@ int readCacheParms(char *afsMountPoint, char *afsConfDir, char *afsCacheDir,
   int len1, len2, n;
   char cacheConfigFile[100];
   
-  p = (char *)getenv("LIBJAFS_CACHE_CONFIG");
+  p = getenv("LIBJAFS_CACHE_CONFIG");
   if (p) {
     strcpy(cacheConfigFile, p);
   } else {

@@ -46,7 +46,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
-    tsrp = cm_NewServerRef(tsp);
+    tsrp = cm_NewServerRef(tsp, 0);
     cm_InsertServerList(&cellp->vlServersp, tsrp);
     /* drop the allocation reference */
     lock_ObtainWrite(&cm_serverLock);
@@ -79,7 +79,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
             ) {
         /* must empty cp->vlServersp */
         if (cp->vlServersp) {
-            cm_FreeServerList(&cp->vlServersp);
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
             cp->vlServersp = NULL;
         }
 
@@ -115,31 +115,52 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 }
 
 /* load up a cell structure from the cell database, afsdcell.ini */
-cm_cell_t *cm_GetCell(char *namep, long flags)
+cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
 {
     return cm_GetCell_Gen(namep, NULL, flags);
 }
 
-cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
+cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 {
-    cm_cell_t *cp;
+    cm_cell_t *cp, *cp2;
     long code;
     char fullname[200]="";
+    int  hasWriteLock = 0;
+    afs_uint32 hash;
 
     if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
         return NULL;
 
-    lock_ObtainWrite(&cm_cellLock);
-    for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
+    hash = CM_CELL_NAME_HASH(namep);
+
+    lock_ObtainRead(&cm_cellLock);
+    for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
         if (stricmp(namep, cp->name) == 0) {
             strcpy(fullname, cp->name);
             break;
         }
     }   
+    lock_ReleaseRead(&cm_cellLock);	
 
     if (cp) {
-        cp = cm_UpdateCell(cp);
+        cm_UpdateCell(cp);
     } else if (flags & CM_FLAG_CREATE) {
+        lock_ObtainWrite(&cm_cellLock);
+        hasWriteLock = 1;
+
+        /* when we dropped the lock the cell could have been added
+         * to the list so check again while holding the write lock 
+         */
+        for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
+            if (stricmp(namep, cp->name) == 0) {
+                strcpy(fullname, cp->name);
+                break;
+            }
+        }   
+
+        if (cp)
+            goto done;
+
         if ( cm_data.currentCells >= cm_data.maxCells )
             osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
 
@@ -181,6 +202,25 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	    cp->timeout = time(0) + 7200;	/* two hour timeout */
 	}
 
+        /* we have now been given the fullname of the cell.  It may
+         * be that we already have a cell with that name.  If so,
+         * we should use it instead of completing the allocation
+         * of a new cm_cell_t 
+         */
+        hash = CM_CELL_NAME_HASH(fullname);
+        for (cp2 = cm_data.cellNameHashTablep[hash]; cp2; cp2=cp2->nameNextp) {
+            if (stricmp(fullname, cp2->name) == 0) {
+                break;
+            }
+        }   
+
+        if (cp2) {
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
+            cp = cp2;
+            goto done;
+        }
+
+
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
@@ -191,37 +231,52 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
 
-        /* thread on global list */
-        cp->nextp = cm_data.allCellsp;
-        cm_data.allCellsp = cp;
-           
         /* the cellID cannot be 0 */
         cp->cellID = ++cm_data.currentCells;
+
+		/* append cell to global list */
+        if (cm_data.allCellsp == NULL) {
+            cm_data.allCellsp = cp;
+        } else {
+            for (cp2 = cm_data.allCellsp; cp2->allNextp; cp2=cp2->allNextp)
+                ;
+            cp2->allNextp = cp;
+        }
+        cp->allNextp = NULL;
+
+        cm_AddCellToNameHashTable(cp);
+        cm_AddCellToIDHashTable(cp);           
     }
 
   done:
+    if (hasWriteLock)
+        lock_ReleaseWrite(&cm_cellLock);
+    
     /* fullname is not valid if cp == NULL */
     if (cp && newnamep)
         strcpy(newnamep, fullname);
     
-    lock_ReleaseWrite(&cm_cellLock);
     return cp;
 }
 
 cm_cell_t *cm_FindCellByID(afs_int32 cellID)
 {
     cm_cell_t *cp;
+    afs_uint32 hash;
 
-    lock_ObtainWrite(&cm_cellLock);
-    for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
+    lock_ObtainRead(&cm_cellLock);
+
+    hash = CM_CELL_ID_HASH(cellID);
+
+    for (cp = cm_data.cellIDHashTablep[hash]; cp; cp=cp->idNextp) {
         if (cellID == cp->cellID) 
             break;
     }
+    lock_ReleaseRead(&cm_cellLock);	
 
     if (cp)
-        cp = cm_UpdateCell(cp);
+        cm_UpdateCell(cp);
 
-    lock_ReleaseWrite(&cm_cellLock);	
     return cp;
 }
 
@@ -231,7 +286,7 @@ cm_ValidateCell(void)
     cm_cell_t * cellp;
     afs_uint32 count;
 
-    for (cellp = cm_data.allCellsp, count = 0; cellp; cellp=cellp->nextp, count++) {
+    for (cellp = cm_data.allCellsp, count = 0; cellp; cellp=cellp->allNextp, count++) {
         if ( cellp->magic != CM_CELL_MAGIC ) {
             afsi_log("cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC");
             fprintf(stderr, "cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC\n");
@@ -260,7 +315,7 @@ cm_ShutdownCell(void)
 {
     cm_cell_t * cellp;
 
-    for (cellp = cm_data.allCellsp; cellp; cellp=cellp->nextp)
+    for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp)
         lock_FinalizeMutex(&cellp->mx);
 
     return 0;
@@ -280,6 +335,8 @@ void cm_InitCell(int newFile, long maxCells)
             cm_data.allCellsp = NULL;
             cm_data.currentCells = 0;
             cm_data.maxCells = maxCells;
+            memset(cm_data.cellNameHashTablep, 0, sizeof(cm_cell_t *) * cm_data.cellHashTableSize);
+            memset(cm_data.cellIDHashTablep, 0, sizeof(cm_cell_t *) * cm_data.cellHashTableSize);
         
 #ifdef AFS_FREELANCE_CLIENT
             /* Generate a dummy entry for the Freelance cell whether or not 
@@ -296,7 +353,7 @@ void cm_InitCell(int newFile, long maxCells)
             strncpy(cellp->name, "Freelance.Local.Cell", CELL_MAXNAMELEN); /*safe*/
 
             /* thread on global list */
-            cellp->nextp = cm_data.allCellsp;
+            cellp->allNextp = cm_data.allCellsp;
             cm_data.allCellsp = cellp;
                 
             cellp->cellID = AFS_FAKE_ROOT_CELL_ID;
@@ -304,7 +361,7 @@ void cm_InitCell(int newFile, long maxCells)
             cellp->flags = CM_CELLFLAG_FREELANCE;
 #endif  
         } else {
-            for (cellp = cm_data.allCellsp; cellp; cellp=cellp->nextp) {
+            for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
                 lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex");
                 cellp->vlServersp = NULL;
             }
@@ -330,4 +387,108 @@ void cm_ChangeRankCellVLServer(cm_server_t *tsp)
 	lock_ReleaseMutex(&cp->mx);
     }
 }       
+
+int cm_DumpCells(FILE *outputFile, char *cookie, int lock)
+{
+    cm_cell_t *cellp;
+    int zilch;
+    char output[1024];
+
+    if (lock)
+        lock_ObtainRead(&cm_cellLock);
+
+    sprintf(output, "%s - dumping cells - cm_data.currentCells=%d, cm_data.maxCells=%d\r\n", 
+            cookie, cm_data.currentCells, cm_data.maxCells);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
+        sprintf(output, "%s cellp=0x%p,name=%s ID=%d flags=0x%x\r\n", 
+                cookie, cellp, cellp->name, cellp->cellID, cellp->flags);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+
+    sprintf(output, "%s - Done dumping cells.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    if (lock)
+        lock_ReleaseRead(&cm_cellLock);
+
+    return(0);
+}
+
+/* call with volume write-locked and mutex held */
+void cm_AddCellToNameHashTable(cm_cell_t *cellp)
+{
+    int i;
+    
+    if (cellp->flags & CM_CELLFLAG_IN_NAMEHASH)
+        return;
+
+    i = CM_CELL_NAME_HASH(cellp->name);
+
+    cellp->nameNextp = cm_data.cellNameHashTablep[i];
+    cm_data.cellNameHashTablep[i] = cellp;
+    cellp->flags |= CM_CELLFLAG_IN_NAMEHASH;
+}
+
+/* call with cell write-locked and mutex held */
+void cm_RemoveCellFromNameHashTable(cm_cell_t *cellp)
+{
+    cm_cell_t **lcellpp;
+    cm_cell_t *tcellp;
+    int i;
+	
+    if (cellp->flags & CM_CELLFLAG_IN_NAMEHASH) {
+	/* hash it out first */
+	i = CM_CELL_NAME_HASH(cellp->name);
+	for (lcellpp = &cm_data.cellNameHashTablep[i], tcellp = cm_data.cellNameHashTablep[i];
+	     tcellp;
+	     lcellpp = &tcellp->nameNextp, tcellp = tcellp->nameNextp) {
+	    if (tcellp == cellp) {
+		*lcellpp = cellp->nameNextp;
+		cellp->flags &= ~CM_CELLFLAG_IN_NAMEHASH;
+                cellp->nameNextp = NULL;
+		break;
+	    }
+	}
+    }
+}
+
+/* call with cell write-locked and mutex held */
+void cm_AddCellToIDHashTable(cm_cell_t *cellp)
+{
+    int i;
+    
+    if (cellp->flags & CM_CELLFLAG_IN_IDHASH)
+        return;
+
+    i = CM_CELL_ID_HASH(cellp->cellID);
+
+    cellp->idNextp = cm_data.cellIDHashTablep[i];
+    cm_data.cellIDHashTablep[i] = cellp;
+    cellp->flags |= CM_CELLFLAG_IN_IDHASH;
+}
+
+/* call with cell write-locked and mutex held */
+void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp)
+{
+    cm_cell_t **lcellpp;
+    cm_cell_t *tcellp;
+    int i;
+	
+    if (cellp->flags & CM_CELLFLAG_IN_IDHASH) {
+	/* hash it out first */
+	i = CM_CELL_ID_HASH(cellp->cellID);
+	for (lcellpp = &cm_data.cellIDHashTablep[i], tcellp = cm_data.cellIDHashTablep[i];
+	     tcellp;
+	     lcellpp = &tcellp->idNextp, tcellp = tcellp->idNextp) {
+	    if (tcellp == cellp) {
+		*lcellpp = cellp->idNextp;
+		cellp->flags &= ~CM_CELLFLAG_IN_IDHASH;
+                cellp->idNextp = NULL;
+		break;
+	    }
+	}
+    }
+}
 

@@ -11,6 +11,13 @@ RELDIR=volser
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS) $(kfwincflags)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+!ENDIF
+
 ############################################################################
 # Definitions for installing header files
 
@@ -88,11 +95,12 @@ VOLSERVER_EXEOBJS = \
 	$(OUT)\volprocs.obj \
 	$(OUT)\voltrans.obj \
 	$(OUT)\volserver.res
-	
 
 VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsdir.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(RXK5LIBS) \
+        $(DESTDIR)\lib\afs\afscom_err.lib	
 
 $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
@@ -115,6 +123,7 @@ VOS_EXEOBJS = \
 	$(OUT)\vos.res
 
 VOS_EXELIBS = \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afsvolser.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
@@ -177,4 +186,4 @@ clean::
 	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
 
 mkdir:
-	
+

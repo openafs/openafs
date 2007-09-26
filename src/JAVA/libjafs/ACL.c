@@ -25,7 +25,9 @@
 #include "Internal.h"
 #include "org_openafs_jafs_ACL.h"
 
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>
 #include <netinet/in.h>
@@ -53,8 +55,6 @@ static char space[MAXSIZE];
 #endif
 
 #define ACL_LEN      1024
-
-extern int errno;
 
 /**
  * Returns a formatted string representing the ACL for the specified path.

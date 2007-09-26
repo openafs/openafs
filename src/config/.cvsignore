@@ -16,3 +16,4 @@ Makefile.sun4x_57
 param.h.new
 Makefile.config
 stamp-h1
+Makefile.version.in

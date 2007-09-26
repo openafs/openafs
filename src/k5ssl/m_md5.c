@@ -31,7 +31,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <sys/types.h>
-#if USE_FAKESSL
+#if USING_FAKESSL
 #include "k5s_evp.h"
 #else
 #include <openssl/evp.h>

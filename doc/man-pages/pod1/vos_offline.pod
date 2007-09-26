@@ -1,0 +1,124 @@
+=head1 NAME
+
+vos offline - Takes a volume offline
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos offline> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>> 
+    S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-unbless>] >>> S<<< [B<-cell> <I<cell name>>] >>> 
+    S<<< [B<-noauth>] | B<-localauth>] >>> S<<< [B<-verbose>] >>> S<<< [B<-encrypt>] >>> S<<< [B<-help>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos offline> command takes a volume offline on the 
+B<fileserver>.  
+
+=head1 CAUTIONS
+
+Taking a volume offline that has existing 
+callbacks will result in those callbacks being broken
+and clients not being able to access the volume.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Identifies the file server machine where the volume resides. 
+Provide the machine's IP address or its host name (either fully
+qualified or using an unambiguous abbreviation). For details, see
+L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition where the volume resides, on the
+file server machine named by the B<-server> argument. Provide the
+partition's complete name with preceding slash (for example, C</vicepa>)
+or use one of the three acceptable abbreviated forms. For details, see
+L<vos(1)>.
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of the volume.
+
+=item B<-unbless>
+
+If the volume resides on a fileserver running as a I<dafs> (Demand
+Attach File Server), then the volume may be marked as I<blessed> or
+I<unblessed>.  A I<dafs> server will not bring I<unblessed> volumes
+online unless the B<-bless> option to L<vos_online> is specified.
+See L<vos_online(1)> for setting a volume to be I<blessed>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. Do not combine
+this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are
+not transmitted across the network in clear text.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example takes an online volume offline:
+
+   % vos offline -server sv7.stateu.edu -partition /vicepb -id root.afs
+
+The following example takes an online volume offline and marks it
+so that a B<vos online> without B<-bless> will not bring it online:
+
+   % vos offline -server sv7.stateu.edu -partition /vicepb -id root.afs \
+	-unbless
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_online(1)>,
+L<bos_salvage(8)>,
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This man page was created by Steven Jenkins.

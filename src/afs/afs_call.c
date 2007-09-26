@@ -238,7 +238,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
 struct afsd_thread_info {
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
 #endif
     unsigned long parm;
@@ -373,13 +373,13 @@ afsd_thread(void *rock)
 }
 
 void
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
 #else
 afsd_launcher(void *rock)
 #endif
 {
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
 #endif
 
@@ -457,26 +457,27 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_SGI61_ENV */
 
     AFS_STATCNT(afs_syscall_call);
+    if (
 #ifdef	AFS_SUN5_ENV
-    if (!afs_suser(CRED()) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
-	/* only root can run this code */
-	return (EACCES);
+	!afs_suser(CRED())
 #else
-    if (!afs_suser(NULL) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
+	!afs_suser(NULL)
+#endif
+		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
+#if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
-	return (EACCES);
+#endif
+	code = EACCES;
 #else
-#if defined(AFS_OSF_ENV)
-	return EACCES;
-#else /* AFS_OSF_ENV */
-	return EPERM;
-#endif /* AFS_OSF_ENV */
+	code = EPERM;
 #endif
+	AFS_GLOCK();
+#ifdef AFS_DARWIN80_ENV
+	put_vfs_context();
 #endif
+	goto out;
     }
     AFS_GLOCK();
 #ifdef AFS_DARWIN80_ENV
@@ -763,7 +764,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	get_vfs_context();
 #endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
@@ -771,7 +772,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	put_vfs_context();
 #endif
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
@@ -811,7 +812,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	    put_vfs_context();
 #endif
 	}
 	osi_FreeSmallSpace(tbuffer);
@@ -836,6 +837,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
 	afs_nfsclient_init();
 #endif
+	afs_uuid_create(&afs_cb_interface.uuid);
 	printf("found %d non-empty cache files (%d%%).\n",
 	       afs_stats_cmperf.cacheFilesReused,
 	       (100 * afs_stats_cmperf.cacheFilesReused) /
@@ -844,6 +846,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
 	int rxbind = 0;
+	int refresh = 0;
+
 	afs_int32 count = parm2;
 	afs_int32 *buffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -852,6 +856,14 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
+
+	/* This is a refresh */
+	if (count & 0x40000000) {
+	    count &= ~0x40000000;
+	    /* Can't bind after we start. Fix? */
+	    count &= ~0x80000000;
+	    refresh = 1;
+	}
 
 	/* Bind, but only if there's only one address configured */ 
 	if ( count & 0x80000000) {
@@ -892,16 +904,22 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_cb_interface.mtu[i] = (parm5 ? mtubuffer[i] : htonl(1500));
 #endif
 	}
-	afs_uuid_create(&afs_cb_interface.uuid);
 	rxi_setaddr(buffer[0]);
-	if (rxbind)
-	    rx_bindhost = buffer[0];
-	else
-	    rx_bindhost = htonl(INADDR_ANY);
+	if (!refresh) {
+	    if (rxbind)
+		rx_bindhost = buffer[0];
+	    else
+		rx_bindhost = htonl(INADDR_ANY);
+	}
 
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+
+	if (refresh) {
+	    afs_CheckServers(1, NULL);     /* check down servers */
+	    afs_CheckServers(0, NULL);     /* check down servers */
+	}
     }
 #ifdef	AFS_SGI53_ENV
     else if (parm == AFSOP_NFSSTATICADDR) {
@@ -1050,9 +1068,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	code = EINVAL;
 
   out:
-#ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
-    get_vfs_context();
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;

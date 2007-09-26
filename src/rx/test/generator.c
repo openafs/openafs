@@ -75,14 +75,14 @@ static char *unix_symbols[] = {
 /* all one string */
     "LIBS = $(DESTDIR)lib/libafsrpc.so \\\n"
 	"\t$(DESTDIR)lib/afs/libcmd.a \\\n"
-	"\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
+	"\t$(DESTDIR)lib/afs/libafs_com_err.a \\\n"
 	"\t$(DESTDIR)lib/afs/util.a \n",
 
 /* all one string */
     "LIBS = $(DESTDIR)lib/librxkad.a \\\n" "\t$(DESTDIR)lib/libdes.a \\\n"
 	"\t$(DESTDIR)lib/librx.a \\\n" "\t$(DESTDIR)lib/liblwp.a \\\n"
 	"\t$(DESTDIR)lib/afs/libcmd.a \\\n"
-	"\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
+	"\t$(DESTDIR)lib/afs/libafs_com_err.a \\\n"
 	"\t$(DESTDIR)lib/afs/util.a \\\n" "\t/usr/ucblib/libucb.a \n",
 
 /* all one string */
@@ -102,7 +102,7 @@ static char *nt_symbols[] = {
 /* all one string */
     "LIBS = $(DESTDIR)/lib/afsrpc.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
-	"\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afsafs_com_err.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
 	"\t$(DESTDIR)/lib/pthread.lib \\\n" "\t$(DESTDIR)/lib/afsreg.lib \\\n"
 	"\t$(XLIBS)\n",
@@ -112,7 +112,7 @@ static char *nt_symbols[] = {
 	"\t$(DESTDIR)/lib/afsdes.lib \\\n" "\t$(DESTDIR)/lib/afsrx.lib \\\n"
 	"\t$(DESTDIR)/lib/afslwp.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
-	"\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afsafs_com_err.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
 	"\t$(DESTDIR)/lib/afsreg.lib \n",
 

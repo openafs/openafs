@@ -28,25 +28,10 @@
  * such damages.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <afs/stds.h>
 #include <afsconfig.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#include <krb5.h>
-#endif
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <com_err.h>
@@ -56,14 +41,13 @@
 #include "rxk5c.h"
 #include "rxk5errors.h"
 
-#if defined(USING_MIT) || defined(USING_SSL)
-krb5_error_code krb5_danish_surprise(krb5_context,
+#if defined(USING_MIT) && !defined(AFS_NT40_ENV) /* XXX will be defined, and krb5_keyblock ptr is const */
+krb5_error_code krb5_server_decrypt_ticket_keyblock(krb5_context,
 krb5_keyblock *, krb5_ticket *);
 #endif
 
 int
-rxk5_s_Close (so)
-    struct  rx_securityClass *so;
+rxk5_s_Close (struct rx_securityClass *so)
 {
     struct rxk5_sprivate *tsp = (struct rxk5_sprivate*) so->privateData;
 
@@ -76,9 +60,8 @@ rxk5_s_Close (so)
 }
 
 int
-rxk5_s_NewConnection(so, conn)
-    struct  rx_securityClass *so;
-    struct  rx_connection *conn;
+rxk5_s_NewConnection(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     int code;
     if (conn->securityData) code = RXK5INCONSISTENCY;
@@ -88,9 +71,8 @@ rxk5_s_NewConnection(so, conn)
 }
 
 int
-rxk5_s_DestroyConnection(so, conn)
-    struct  rx_securityClass *so;
-    struct  rx_connection *conn;
+rxk5_s_DestroyConnection(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     struct rxk5_sconn *sconn;
     struct rxk5_sprivate *tsp = (struct rxk5_sprivate*)so->privateData;
@@ -112,9 +94,8 @@ rxk5_s_DestroyConnection(so, conn)
 }
 
 int
-rxk5_s_CheckAuthentication(so, conn)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
+rxk5_s_CheckAuthentication(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     struct rxk5_sconn *sconn;
     if (!(sconn = (struct rxk5_sconn*)conn->securityData))
@@ -123,9 +104,8 @@ rxk5_s_CheckAuthentication(so, conn)
 }
 
 int
-rxk5_s_CreateChallenge(so, conn)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
+rxk5_s_CreateChallenge(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     struct rxk5_sconn *sconn = (struct rxk5_sconn*)conn->securityData;
     struct rxk5_sprivate *tsp = (struct rxk5_sprivate*)so->privateData;
@@ -138,10 +118,9 @@ rxk5_s_CreateChallenge(so, conn)
 }
 
 int
-rxk5_s_GetChallenge(so, conn, p)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_packet *p;
+rxk5_s_GetChallenge(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_packet *p)
 {
     struct rxk5_sconn *sconn = (struct rxk5_sconn*)conn->securityData;
     struct rxk5c_challenge hc[1];
@@ -195,10 +174,9 @@ Done:
 #endif
 
 int
-rxk5_s_CheckResponse(so, conn, p)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_packet *p;
+rxk5_s_CheckResponse(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_packet *p)
 {
 #define WSIZE (RXK5_MAXKTCTICKETLEN * 3)
     struct rxk5_sconn *sconn = (struct rxk5_sconn*)conn->securityData;
@@ -382,7 +360,7 @@ code = RXK5INCONSISTENCY; goto Done; }
 	(int) ticket->enc_part.kvno,
 	key);
     if (code) goto Done;
-    code = krb5_danish_surprise(tsp->k5_context,
+    code = krb5_server_decrypt_ticket_keyblock(tsp->k5_context,
 	key, ticket);
     if (code) goto Done;
 #endif
@@ -424,7 +402,7 @@ shishi_tkt_pretty_print(tkt, stdout);
  */
     session = &ticket->ticket.key;
 #else
-    /* krb5_danish_surprise checked:
+    /* krb5_server_decrypt_ticket_keyblock checked:
      *	ticket->enc_part2->transited
      *	ticket-enc_part2->flags & TKT_FLG_INVALID
      */
@@ -594,6 +572,21 @@ printf ("rxk5_s_CheckResponse: osi_Alloc(%d) failed\n", session->length);
 	code = RXK5ILLEGALLEVEL;
 	goto Done;
     }
+    if (tsp->user_ok) {
+	code = tsp->user_ok(sconn->server, sconn->client, sconn->kvno,
+#ifdef USING_SHISHI
+	    shishi_key_type(session),
+#else
+#ifdef USING_HEIMDAL
+	    session->keytype,
+#else
+	    session->enctype,
+#endif
+#endif
+	    sconn->cktype);
+
+	if (code) goto Done;
+    }
     sconn->level = he->level;
     sconn->flags |= AUTHENTICATED;
     sconn->cktype = he->cktype;
@@ -649,10 +642,9 @@ Done:
 }
 
 int
-rxk5_s_PreparePacket(so, call, p)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
+rxk5_s_PreparePacket(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int level;
@@ -699,10 +691,9 @@ Out:
 }
 
 int
-rxk5_s_CheckPacket(so, call, p)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
+rxk5_s_CheckPacket(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int level;
@@ -740,10 +731,9 @@ rxk5_s_CheckPacket(so, call, p)
 }
 
 int
-rxk5_s_GetStats(so, conn, stats)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_securityObjectStats *stats;
+rxk5_s_GetStats(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_securityObjectStats *stats)
 {
     struct rxk5_sconn *sconn = (struct rxk5_sconn*)conn->securityData;
 
@@ -775,11 +765,12 @@ static struct rx_securityOps rxk5_server_ops[] = {{
 }};
 
 struct rx_securityClass *
-rxk5_NewServerSecurityObject(level, get_key_arg, get_key, user_ok, k5_context)
-    int level;
-    char *get_key_arg;
-    int (*get_key)(), (*user_ok)();
-    krb5_context k5_context;
+rxk5_NewServerSecurityObject(int level,
+    void *get_key_arg,
+    int (*get_key)(void *, krb5_context, krb5_principal, int, int,
+	krb5_keyblock *),
+    int (*user_ok)(char *, char *, int, int, int),
+    krb5_context k5_context)
 {
     struct rx_securityClass *result;
     struct rxk5_sprivate *tsp;

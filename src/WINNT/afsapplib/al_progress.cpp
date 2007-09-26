@@ -176,13 +176,13 @@ LPPROGRESSDISPLAY PROGRESSDISPLAY::GetProgressDisplay (HWND hWnd)
 }
 
 
-BOOL CALLBACK PROGRESSDISPLAY::ProgressDisplay_StubProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK PROGRESSDISPLAY::ProgressDisplay_StubProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    return FALSE;
 }
 
 
-BOOL CALLBACK PROGRESSDISPLAY::ProgressDisplay_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK PROGRESSDISPLAY::ProgressDisplay_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldproc = Subclass_FindNextHook (hWnd, PROGRESSDISPLAY::ProgressDisplay_HookProc);
 
@@ -204,9 +204,9 @@ BOOL CALLBACK PROGRESSDISPLAY::ProgressDisplay_HookProc (HWND hWnd, UINT msg, WP
       }
 
    if (oldproc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldproc, hWnd, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldproc, hWnd, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hWnd, msg, wp, lp);
+      return DefWindowProc (hWnd, msg, wp, lp);
 }
 
 

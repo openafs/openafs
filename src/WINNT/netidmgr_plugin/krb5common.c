@@ -93,7 +93,7 @@ khm_krb5_initialize(khm_handle ident,
     LPCSTR          functionName;
     int             freeContextFlag;
     krb5_error_code	rc = 0;
-    krb5_flags          flags = 0;
+    krb5_flags          flags = KRB5_TC_OPENCLOSE;
 
     if (pkrb5_init_context == NULL)
         return 1;

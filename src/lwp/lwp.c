@@ -33,6 +33,7 @@ RCSID("$Header$");
 #include <sys/pseg.h>
 #include <sys/core.h>
 #pragma alloca
+int setlim(int limcon, uchar_t hard, int limit);
 #endif
 #ifdef AFS_SGI64_ENV
 extern char *getenv();
@@ -115,7 +116,7 @@ static void Overflow_Complain();
 static void Initialize_PCB();
 static void Dispose_of_Dead_PCB();
 static void Free_PCB();
-static int Internal_Signal();
+static int Internal_Signal(void *);
 static purge_dead_pcbs();
 
 #define MAX_PRIORITIES	(LWP_MAX_PRIORITY+1)
@@ -649,7 +650,7 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 }
 
 int
-LWP_INTERNALSIGNAL(char *event, int yield)
+LWP_INTERNALSIGNAL(void *event, int yield)
 {				/* signal the occurence of an event */
     Debug(2, ("Entered LWP_SignalProcess"));
     if (lwp_init) {
@@ -688,9 +689,9 @@ LWP_TerminateProcessSupport(void)
 }
 
 int
-LWP_WaitProcess(char *event)
+LWP_WaitProcess(void *event)
 {				/* wait on a single event */
-    char *tempev[2];
+    void *tempev[2];
 
     Debug(2, ("Entered Wait_Process"));
     if (event == NULL)
@@ -729,7 +730,7 @@ LWP_MwaitProcess(int wcount, char *evlist[])
 	if (ecount > lwp_cpptr->eventlistsize) {
 
 	    lwp_cpptr->eventlist =
-		(char **)realloc(lwp_cpptr->eventlist,
+		realloc(lwp_cpptr->eventlist,
 				 ecount * sizeof(char *));
 	    lwp_cpptr->eventlistsize = ecount;
 	}
@@ -855,7 +856,7 @@ Dump_One_Process(PROCESS pid)
 	printf("***LWP: Number of events outstanding: %d\n", pid->waitcnt);
 	printf("***LWP: Event id list:");
 	for (i = 0; i < pid->eventcnt; i++)
-	    printf(" 0x%x", pid->eventlist[i]);
+	    printf(" 0x%x", (int) pid->eventlist[i]);
 	putchar('\n');
     }
     if (pid->wakevent > 0)
@@ -1033,7 +1034,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	    i++;
     temp->name[31] = '\0';
     temp->status = READY;
-    temp->eventlist = (char **)malloc(EVINITSIZE * sizeof(char *));
+    temp->eventlist = malloc(EVINITSIZE * sizeof(char *));
     temp->eventlistsize = EVINITSIZE;
     temp->eventcnt = 0;
     temp->wakevent = 0;
@@ -1061,12 +1062,12 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 }
 
 static int
-Internal_Signal(register char *event)
+Internal_Signal(void *event)
 {
     int rc = LWP_ENOWAIT;
     register int i;
 
-    Debug(0, ("Entered Internal_Signal [event id 0x%x]", event));
+    Debug(0, ("Entered Internal_Signal [event id 0x%x]", (int) event));
     if (!lwp_init)
 	return LWP_EINIT;
     if (event == NULL)
@@ -1251,13 +1252,13 @@ plim(char *name, afs_int32 lc, uchar_t hard)
 
 #ifdef	AFS_SUN5_ENV
 int
-LWP_NoYieldSignal(char *event)
+LWP_NoYieldSignal(void *event)
 {
     return (LWP_INTERNALSIGNAL(event, 0));
 }
 
 int
-LWP_SignalProcess(char *event)
+LWP_SignalProcess(void *event)
 {
     return (LWP_INTERNALSIGNAL(event, 1));
 }
@@ -1507,7 +1508,7 @@ LWP_TerminateProcessSupport(void)
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address) */
 static event_t *
-getevent(char *event)
+getevent(void *event)
 {
     event_t *evp, *newp;
     int hashcode;
@@ -1541,11 +1542,11 @@ getevent(char *event)
 #define relevent(evp) ((evp)->refcount--)
 
 int
-LWP_WaitProcess(char *event)
+LWP_WaitProcess(void *event)
 {				/* wait on a single event */
     struct event *ev;
     int seq;
-    debugf(("%s: wait process (%x)\n", lwp_process_string(), event));
+    debugf(("%s: wait process (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);
@@ -1553,22 +1554,22 @@ LWP_WaitProcess(char *event)
     while (seq == ev->seq) {
 	assert(pthread_cond_wait(&ev->cond, &lwp_mutex) == 0);
     }
-    debugf(("%s: Woken up (%x)\n", lwp_process_string(), event));
+    debugf(("%s: Woken up (%x)\n", lwp_process_string(), (int) event));
     relevent(ev);
     return LWP_SUCCESS;
 }
 
 int
-LWP_MwaitProcess(int wcount, char *evlist[])
+LWP_MwaitProcess(int wcount, void *evlist[])
 {				/* wait on m of n events */
     lwp_unimplemented("LWP_MWaitProcess");
 }
 
 int
-LWP_NoYieldSignal(char *event)
+LWP_NoYieldSignal(void *event)
 {
     struct event *ev;
-    debugf(("%s: no yield signal (%x)\n", lwp_process_string(), event));
+    debugf(("%s: no yield signal (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);
@@ -1581,10 +1582,10 @@ LWP_NoYieldSignal(char *event)
 }
 
 int
-LWP_SignalProcess(char *event)
+LWP_SignalProcess(void *event)
 {
     struct event *ev;
-    debugf(("%s: signal process (%x)\n", lwp_process_string(), event));
+    debugf(("%s: signal process (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);

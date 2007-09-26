@@ -705,7 +705,8 @@ Afs_syscall()
     }
 
 #if defined(AFS_DARWIN80_ENV)
-    put_vfs_context();
+    if (uap->syscall != AFSCALL_CALL)
+	put_vfs_context();
 #endif
 #ifdef AFS_LINUX20_ENV
     code = -code;

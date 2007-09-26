@@ -24,15 +24,14 @@ RCSID
 #include "afs/stds.h"
 #include "rx/rx.h"
 #include "rx/xdr.h"
-#include "rx/rxkad.h"
-#include "afs/auth.h"
 #include "afs/cellconfig.h"
 #ifdef AFS_RXK5
 #undef u	/* ukernel defines u */
-#include "rx/rxk5.h"
 #include "rxk5_utilafs.h"
+#include "rx/rxk5.h"
+#include "rx/rxk5errors.h"
 #endif
-#include "afs/afs_token.h"
+#include "afs/auth.h"
 #include "afs/afsutil.h"
 #include "afs/ptclient.h"
 #include "afs/ptuser.h"
@@ -56,21 +55,24 @@ RCSID
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#include <rx/rxkad.h>
-#include <afs/auth.h>
+#include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
-#include "rx/rxk5.h"
-#include "rxk5_utilafs.h"
+#include <rx/rxk5.h>
+#include <rxk5_utilafs.h>
+#include <rx/rxk5errors.h>
 #endif
 #include "afs_token.h"
+#include <afs/auth.h> /* XXX auth.h now has order dependency on rxk5_utilafs.h (Marcus?) */
 #include <errno.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
 #endif /* defined(UKERNEL) */
 
+extern void initialize_rx_error_table(void); /* XXX where to decl */
 
 struct ubik_client *pruclient = 0;
 static afs_int32 lastLevel;	/* security level pruclient, if any */
@@ -101,8 +103,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 refresh = 0;
     int say_noauth = 0;
 
-    force_flags = secLevel & (FORCE_RXK5|FORCE_RXKAD);
-    secLevel &= ~(FORCE_RXK5|FORCE_RXKAD);
+    force_flags = secLevel & ~FORCE_MODE;
+    secLevel &= FORCE_MODE;
 #if defined(AFS_RXK5)
     memset(in_creds, 0, sizeof *in_creds);
     if (!force_flags) {
@@ -224,14 +226,14 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	if (code) {
 	    fprintf(stderr,
 		    "libprot: clientauthsecure returns %d %s"
-		    " (so trying noauth)\n", code, error_message(code));
+		    " (so trying noauth)\n", code, afs_error_message(code));
 	    scIndex = 0;	/* use noauth */
 	} else if (!scIndex) {
 	    code = EDOM;	/* XXX */
 	    say_noauth = 1;
 	}
 #if defined(AFS_RXK5)
-    } else if (secLevel && (force_flags & FORCE_RXK5)) {
+    } else if (secLevel && (force_flags & FORCE_K5CC)) {
 	/* Because rxgk has claimed indexes 3 and 4, the next available index
 	   for rxk5 is 5 */
 	char *what;
@@ -268,31 +270,28 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     Failed:
 	if (code) {
 	    if (afs_k5_princ)
-		com_err(whoami, code, "in %s for %s", what, afs_k5_princ);
+		afs_com_err(whoami, code, "in %s for %s", what, afs_k5_princ);
 	    else
-		com_err(whoami, code, "in %s", what);
+		afs_com_err(whoami, code, "in %s", what);
 	    code = 0;
 	}
 #endif
     } else if (secLevel > 0) {
-	struct afs_token *atoken = 0;
+	struct pioctl_set_token atoken[1];
 	struct ktc_token ttoken;
 
-	code = ktc_GetTokenEx(0, info.name, &atoken);
+	memset(atoken, 0, sizeof *atoken);
+	code = ktc_GetTokenEx(0, info.name, atoken);
 	if (code)
 	    ;
 #if defined(AFS_RXK5)
-	else if (atoken->cu->cu_type == CU_K5) {
+	else if (!(code = afstoken_to_v5cred(atoken, in_creds))) {
 	    scIndex = 5;
-	    code = afstoken_to_v5cred(atoken, in_creds);
-	    if (!code)
-		sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+	    sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
 	}
 #endif
-	else if (atoken->cu->cu_type == CU_KAD) {
+	else if (!(code = afstoken_to_token(atoken, &ttoken, sizeof ttoken, 0, 0))) {
 	    scIndex = 2;
-	    code = afstoken_to_token(atoken, &ttoken, sizeof ttoken);
-	    if (code) goto SkipSc;
 	    if (ttoken.kvno < 0 || ttoken.kvno > 256) {
 /* in AFS 3.0, this meant:
 		scIndex = 1;
@@ -308,10 +307,12 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 					      ttoken.kvno, ttoken.ticketLen,
 					      ttoken.ticket);
 	} else {
-	    com_err(whoami, 0, "unknown token type %d", atoken->cu->cu_type);
+	    char msg[48];
+	    afs_get_tokens_type_msg(atoken, msg, sizeof msg);
+	    afs_com_err(whoami, 0, "no recognized tokens in %s", msg);
 	}
 SkipSc:
-	if (atoken) free_afs_token(atoken);
+	free_afs_token(atoken);
     }
     if (!sc) {
 	say_noauth |= !!scIndex;
@@ -319,7 +320,7 @@ SkipSc:
 	sc = rxnull_NewClientSecurityObject();
     }
     if (say_noauth)
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Could not get afs tokens, running unauthenticated.");
 
     memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
@@ -331,7 +332,7 @@ SkipSc:
 
     code = ubik_ClientInit(serverconns, &pruclient);
     if (code) {
-	com_err(whoami, code, "ubik client init failed.");
+	afs_com_err(whoami, code, "ubik client init failed.");
 	rxs_Release(sc);
     } else {
 	lastLevel = secLevel|force_flags;

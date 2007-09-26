@@ -25,7 +25,7 @@ ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 # Build rxk5 if selected
 ### old: @ENABLE_RXK5@RXK5=@RXK5@
 @ENABLE_RXK5@RXK5=rxk5
-@ENABLE_RXK5@MAYBE_RXK5_DEPINSTALL=rxk5_depinstall
+@ENABLE_RXK5@MAYBE_RXK5_DEPINSTALL=rxk5_depinstall k5ssl_depinstall
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -400,6 +400,9 @@ rxkad_depinstall: pinstall comerr
 rxk5_depinstall: pinstall comerr rxgen
 	${COMPILE_PART1} rxk5 ${COMPILE_DEPINSTALL}
 
+k5ssl_depinstall: pinstall comerr rxgen
+	${COMPILE_PART1} k5ssl ${COMPILE_DEPINSTALL}
+
 ubik_depinstall: pinstall comerr rxgen
 	${COMPILE_PART1} ubik ${COMPILE_DEPINSTALL}
 
@@ -600,7 +603,7 @@ libadmin: libafsauthent bozo_depinstall vlserver_depinstall volser_depinstall
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
-libjafs: libadmin
+libjafs: libadmin libuafs shlibafsauthent
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} JAVA/libjafs  ${COMPILE_PART2} ;; \
@@ -786,6 +789,7 @@ distclean: clean
 	src/kauth/test/Makefile \
 	src/kauth/Makefile \
 	src/k5ssl/Makefile \
+	src/k5ssl/k5s_config.h \
 	src/libacl/test/Makefile \
 	src/libacl/Makefile \
 	src/libadmin/adminutil/Makefile \
@@ -820,8 +824,6 @@ distclean: clean
 	src/pam/Makefile \
 	src/pinstall/test/Makefile \
 	src/pinstall/Makefile \
-	src/platform/Makefile \
-	src/platform/${MKAFS_OSTYPE}/Makefile \
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \
 	src/ptserver/Makefile \

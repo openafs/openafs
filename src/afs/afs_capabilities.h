@@ -28,23 +28,25 @@
  * such damages.
  */
 
+/* cache manager property list */
+
 #ifndef AFS_CM_CAPABILITIES_H
 #define AFS_CM_CAPABILITIES_H
 
 #include "afs/param.h"
 
-/* Initialize capabilities string table */
-int afs_InitCapabilities();
+/* Initialize properties string table */
+int afs_InitProperties();
 
-/* Add a capability--called by subsystems during initialization */
-int afs_AddCapability(const char* key, const char* value);
+/* Add a property--called by subsystems during initialization */
+int afs_AddProperty(const char* key, const char* value);
 
-/* Lookup capability value by key */
-const char* afs_GetCapability(const char* key);
+/* Lookup property value by key */
+const char* afs_GetProperty(const char* key);
 
-/* Format a buffer with output of matching capabilities.  
+/* Format a buffer with output of matching properties.  
  *  On return, qLen is the length of this buffer, which must be freed 
  * by the caller */
-char* afs_GetCapabilities(const char* qStr, /* out */ afs_int32 *qLen);
+char* afs_GetProperties(const char* qStr, int qStrlen, /* out */ afs_int32 *qLen);
 
 #endif /* AFS_CM_CAPABILITIES_H */

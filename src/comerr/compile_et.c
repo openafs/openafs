@@ -444,7 +444,7 @@ put_final_postlog()
     fprintf(cfile, "void initialize_%s_error_table(void) {\n",
 	    file_table_name);
     for (i = 0; i < count_of_tables; ++i) {
-	fprintf(cfile, "    add_to_error_table(&etlink%s);\n", cot_suffix(i));
+	fprintf(cfile, "    afs_add_to_error_table(&etlink%s);\n", cot_suffix(i));
     }
     fputs("}\n", cfile);
     fclose(cfile);

@@ -78,6 +78,10 @@
 #include "xdr.h"
 #endif	/* KERNEL */
 
+#ifdef AFS_NT40_ENV
+#include <limits.h>
+#endif
+
 /*
  * this section should be shared with xdr_rx.c
  */

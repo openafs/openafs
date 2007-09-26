@@ -17,6 +17,13 @@
 #endif /* !DJGPP */
 #include <osi.h>
 
+/* this value is set to 1022 in order to  */
+#define NUM_SERVER_VOLS         (32 - sizeof(void *) / 4)
+typedef struct cm_server_vols {
+    afs_uint32             ids[NUM_SERVER_VOLS];
+    struct cm_server_vols *nextp;
+} cm_server_vols_t;
+
 /* pointed to by volumes and cells without holds; cm_serverLock is obtained
  * at the appropriate times to change the pointers to these servers.
  */
@@ -32,15 +39,18 @@ typedef struct cm_server {
     unsigned long refCount;		/* locked by cm_serverLock */
     osi_mutex_t mx;
     unsigned short ipRank;		/* server priority */
+    cm_server_vols_t *  vols;           /* by mx */
+    time_t downTime;                    /* by mx */
 } cm_server_t;
 
-enum repstate {not_busy, busy, offline};
+enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
 
 typedef struct cm_serverRef {
     struct cm_serverRef *next;      /* locked by cm_serverLock */
     struct cm_server *server;       /* locked by cm_serverLock */
     enum repstate status;           /* locked by cm_serverLock */
     unsigned long refCount;         /* locked by cm_serverLock */
+    afs_uint32 volID;               /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
@@ -58,6 +68,8 @@ typedef struct cm_serverRef {
 /* flags for procedures */
 #define CM_FLAG_CHECKUPSERVERS		1	/* check working servers */
 #define CM_FLAG_CHECKDOWNSERVERS	2	/* check down servers */
+#define CM_FLAG_CHECKVLDBSERVERS        4       /* check only vldb servers */
+#define CM_FLAG_CHECKFILESERVERS        8       /* check only file servers */
 
 /* values for ipRank */
 #define CM_IPRANK_TOP	5000	/* on same machine */
@@ -72,7 +84,7 @@ typedef struct cm_serverRef {
 extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
 	struct cm_cell *cellp);
 
-extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
+extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp, afs_uint32 volID);
 
 extern LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp);
 
@@ -104,12 +116,16 @@ extern void cm_RandomizeServer(cm_serverRef_t** list);
 
 extern void cm_FreeServer(cm_server_t* server);
 
-extern void cm_FreeServerList(cm_serverRef_t** list);
+#define CM_FREESERVERLIST_DELETE 1
+
+extern void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags);
 
 extern void cm_ForceNewConnectionsAllServers(void);
 
 extern void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit);
 
 extern void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no);
+
+extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 
 #endif /*  __CM_SERVER_H_ENV__ */

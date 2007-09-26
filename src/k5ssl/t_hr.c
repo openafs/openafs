@@ -35,13 +35,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#if defined(USE_SSL) || defined(USE_FAKESSL)
+#ifdef USING_K5SSL
 #include <sys/time.h>
 #include "k5ssl.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #endif
 

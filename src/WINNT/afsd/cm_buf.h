@@ -47,11 +47,6 @@ extern int buf_cacheType;
 /* backup over pointer to the buffer */
 #define BUF_OVERTOBUF(op) ((cm_buf_t *)(((char *)op) - ((long)(&((cm_buf_t *)0)->over))))
 
-#ifdef notdef
-/* pretend we have logs, too */
-typedef char cm_log_t;
-#endif
-
 #define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 
 /* represents a single buffer */
@@ -75,42 +70,42 @@ typedef struct cm_buf {
     unsigned long refCount;	/* reference count (buf_globalLock) */
     long idCounter;		/* counter for softrefs; bumped at each recycle */
     long dirtyCounter;	        /* bumped at each dirty->clean transition */
-#ifdef notdef
-    cm_log_t *logp;	        /* log for this buffer, if any */
-    osi_hyper_t lsn;	        /* lsn to force to (last LSN changing this buffer) */
-#endif /* notdef */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
-#ifdef DEBUG
-    cm_scache_t *scp;		/* for debugging, the scache object belonging to */
-                                /* the fid at the time of fid assignment. */
-#endif
     long flags;		        /* flags we're using */
-    long size;		        /* size in bytes of this buffer */
     char *datap;		/* data in this buffer */
     unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
-#ifndef DJGPP
-    OVERLAPPED over;	        /* overlapped structure for I/O */
-#endif
         
     /* fields added for the CM; locked by scp->mx */
-    long dataVersion;	        /* data version of this page */
-    long cmFlags;		/* flags for cm */
+    afs_uint32 dataVersion;	/* data version of this page */
+    afs_uint32 cmFlags;		/* flags for cm */
+
+    /* syncop state */
+    afs_uint32 waitCount;       /* number of threads waiting */
+    afs_uint32 waitRequests;    /* num of thread wait requests */
+
+    afs_uint32 dirty_offset;    /* offset from beginning of buffer containing dirty bytes */
+    afs_uint32 dirty_length;    /* number of dirty bytes within the buffer */
+
 #ifdef DISKCACHE95
     cm_diskcache_t *dcp;        /* diskcache structure */
 #endif /* DISKCACHE95 */
-
-    /* syncop state */
-    afs_uint32 waitCount;           /* number of threads waiting */
-    afs_uint32 waitRequests;        /* num of thread wait requests */
+#ifdef DEBUG
+    cm_scache_t *scp;		/* for debugging, the scache object belonging to */
+                                /* the fid at the time of fid assignment. */
+#else
+    void * dummy;
+#endif
 } cm_buf_t;
 
 /* values for cmFlags */
 #define CM_BUF_CMFETCHING	1	/* fetching this buffer */
 #define CM_BUF_CMSTORING	2	/* storing this buffer */
 #define CM_BUF_CMFULLYFETCHED	4	/* read-while-fetching optimization */
-/* waiting is done based on scp->flags */
+#define CM_BUF_CMWRITING        8       /* writing to this buffer */
+/* waiting is done based on scp->flags.  Removing bits from cmFlags
+   should be followed by waking the scp. */
 
 /* represents soft reference which is OK to lose on a recycle */
 typedef struct cm_softRef {
@@ -159,10 +154,6 @@ extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
-#ifndef DJGPP
-extern HANDLE buf_GetFileHandle(long);
-#endif /* !DJGPP */
-
 extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
 extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
@@ -175,7 +166,7 @@ extern long buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
 extern void buf_CleanWait(cm_scache_t *, cm_buf_t *);
 
-extern void buf_SetDirty(cm_buf_t *);
+extern void buf_SetDirty(cm_buf_t *, afs_uint32 offset, afs_uint32 length);
 
 extern long buf_CleanAndReset(void);
 
@@ -209,6 +200,8 @@ extern void buf_ForceTrace(BOOL flush);
 extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
 
 extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
+
+extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 toVersion);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */

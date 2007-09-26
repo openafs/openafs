@@ -35,40 +35,38 @@
 #include <netinet/in.h>
 
 int
-bin_dump(cp, s)
-	char *cp;
+bin_dump(char *cp, int s)
 {
-	char *buffer;
-	char c;
-	int w;
-	int i;
-	long o;
+    char *buffer;
+    char c;
+    int w;
+    int i;
+    long o;
 
-	o = 0;
-	buffer = cp;
-	while (s > 0)
-	{
-		c = 16;
-		if (c > s) c = s;
-		printf ("%06lx:", o);
-		w = 0;
-		for (i = 0; i < c/2; ++i)
-			w += 5, printf (" %4x", htons(((unsigned short *)buffer)[i]));
-		if (c & 1)
-			w += 3, printf (" %2x", (unsigned char)buffer[c-1]);
-		while (w < 41)
-			++w, putchar(' ');
-		for (i = 0; i < c; ++i)
-			if (buffer[i] >= ' ' && buffer[i] < 0x7f)
+    o = 0;
+    buffer = cp;
+    while (s > 0) {
+	c = 16;
+	if (c > s) c = s;
+	printf ("%06lx:", o);
+	w = 0;
+	for (i = 0; i < c/2; ++i)
+	    w += 5, printf (" %4x", htons(((unsigned short *)buffer)[i]));
+	if (c & 1)
+	    w += 3, printf (" %2x", (unsigned char)buffer[c-1]);
+	while (w < 41)
+	    ++w, putchar(' ');
+	for (i = 0; i < c; ++i)
+	    if (buffer[i] >= ' ' && buffer[i] < 0x7f)
 /* isprint(buffer[i]) */
-				putchar(buffer[i]);
-			else
-				putchar('.');
-		putchar('\n');
-		o += c;
-		buffer += c;
-		s -= c;
-	}
-	printf ("%06lx:\n", o);
-	return 1;
+		putchar(buffer[i]);
+	    else
+		putchar('.');
+	putchar('\n');
+	o += c;
+	buffer += c;
+	s -= c;
+    }
+    printf ("%06lx:\n", o);
+    return 1;
 }

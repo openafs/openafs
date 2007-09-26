@@ -23,7 +23,7 @@ static const char copyright[] =
 static char buf[6];
 
 const char *
-error_table_name(afs_int32 num)
+afs_error_table_name(afs_int32 num)
 {
-    return error_table_name_r(num, buf);
+    return afs_error_table_name_r(num, buf);
 }

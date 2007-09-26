@@ -172,7 +172,7 @@ main(int argc, char **argv)
 	    } else if (!strcmp(oper, "fsstats")) {
 		struct afsStatistics stats;
 
-		code = ubik_Call(AFS_GetStatistics, cstruct, 0, &stats);
+		code = ubik_AFS_GetStatistics(cstruct, 0, &stats);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "fd")) {
 		code = FetchData(argp);
@@ -368,7 +368,7 @@ FetchStatus(char **argp)
     fid.Vnode = vnode;
     fid.Unique = unique;
     code =
-	ubik_Call(AFS_FetchStatus, cstruct, 0, &fid, &hyp0, 0, &OutStatus,
+	ubik_AFS_FetchStatus(cstruct, 0, &fid, &hyp0, 0, &OutStatus,
 		  &Token, &tsync);
     return (code);
 }
@@ -394,7 +394,7 @@ FetchACL(char **argp)
     fid.Vnode = vnode;
     fid.Unique = unique;
     code =
-	ubik_Call(AFS_FetchACL, cstruct, 0, &fid, &hyp0, 0, &AccessList,
+	ubik_AFS_FetchACL(cstruct, 0, &fid, &hyp0, 0, &AccessList,
 		  &OutStatus, &tsync);
     return (code);
 }
@@ -519,7 +519,7 @@ StoreStatus(char **argp)
 	InStatus.mask |= AFS_SETLENGTH;
     }
     code =
-	ubik_Call(AFS_StoreStatus, cstruct, 0, &fid, &InStatus, &hyp0, 0,
+	ubik_AFS_StoreStatus(cstruct, 0, &fid, &InStatus, &hyp0, 0,
 		  &OutStatus, &tsync);
     return (code);
 }
@@ -550,7 +550,7 @@ StoreACL(char **argp)
     AccessList.afsACL_len = strlen(string) + 1;
     AccessList.afsACL_val = string;
     code =
-	ubik_Call(AFS_StoreACL, cstruct, 0, &fid, &AccessList, &hyp0, 0,
+	ubik_AFS_StoreACL(cstruct, 0, &fid, &AccessList, &hyp0, 0,
 		  &OutStatus, &tsync);
     return (code);
 }
@@ -580,7 +580,7 @@ RemoveFile(char **argp)
     memset(&nameFid, 0, sizeof(struct afsFidName));
     strcpy(nameFid.name, name);
     code =
-	ubik_Call(AFS_RemoveFile, cstruct, 0, &fid, &nameFid, &hyp0, 0,
+	ubik_AFS_RemoveFile(cstruct, 0, &fid, &nameFid, &hyp0, 0,
 		  &OutDirStatus, &OutFidStatus, &outFid, &tsync);
     return (code);
 }
@@ -628,7 +628,7 @@ CreateFile(char **argp)
 	InStatus.mask |= AFS_SETLENGTH;
     }
     code =
-	ubik_Call(AFS_CreateFile, cstruct, 0, &fid, name, &InStatus, &hyp0, 0,
+	ubik_AFS_CreateFile(cstruct, 0, &fid, name, &InStatus, &hyp0, 0,
 		  &outFid, &OutFidStatus, &OutDirStatus, &Token, &tsync);
     return (code);
 }
@@ -671,7 +671,7 @@ Rename(char **argp)
     memset(&NewName, 0, sizeof(struct afsFidName));
     strcpy(NewName.name, nname);
     code =
-	ubik_Call(AFS_Rename, cstruct, 0, &OldDirFid, &OldName, &NewDirFid,
+	ubik_AFS_Rename(cstruct, 0, &OldDirFid, &OldName, &NewDirFid,
 		  &NewName, &hyp0, 0, &OutOldDirStatus, &OutNewDirStatus,
 		  &OutOldFileFid, &OutOldFileStatus, &OutNewFileFid,
 		  &OutNewFileStatus, &tsync);
@@ -723,7 +723,7 @@ Symlink(char **argp)
 	InStatus.mask |= AFS_SETLENGTH;
     }
     code =
-	ubik_Call(AFS_Symlink, cstruct, 0, &fid, name, linkcontents,
+	ubik_AFS_Symlink(cstruct, 0, &fid, name, linkcontents,
 		  &InStatus, &hyp0, 0, &outFid, &OutFidStatus, &OutDirStatus,
 		  &Token, &tsync);
     return (code);
@@ -759,7 +759,7 @@ HardLink(char **argp)
     existingFid.Vnode = vnode;
     existingFid.Unique = unique;
     code =
-	ubik_Call(AFS_HardLink, cstruct, 0, &fid, name, &existingFid, &hyp0,
+	ubik_AFS_HardLink(cstruct, 0, &fid, name, &existingFid, &hyp0,
 		  0, &OutFidStatus, &OutDirStatus, &tsync);
     return (code);
 }
@@ -807,7 +807,7 @@ MakeDir(char **argp)
 	InStatus.mask |= AFS_SETLENGTH;
     }
     code =
-	ubik_Call(AFS_MakeDir, cstruct, 0, &fid, name, &InStatus, &hyp0, 0,
+	ubik_AFS_MakeDir(cstruct, 0, &fid, name, &InStatus, &hyp0, 0,
 		  &outFid, &OutFidStatus, &OutDirStatus, &Token, &tsync);
     return (code);
 }
@@ -837,7 +837,7 @@ RemoveDir(char **argp)
     memset(&nameFid, 0, sizeof(struct afsFidName));
     strcpy(nameFid.name, name);
     code =
-	ubik_Call(AFS_RemoveDir, cstruct, 0, &fid, &nameFid, &hyp0, 0,
+	ubik_AFS_RemoveDir(cstruct, 0, &fid, &nameFid, &hyp0, 0,
 		  &OutDirStatus, &outFid, &tsync);
     return (code);
 }
@@ -934,7 +934,7 @@ Lookup(char **argp)
     name = &argp[0][0];
     ++argp;
     code =
-	ubik_Call(AFS_Lookup, cstruct, 0, &fid, name, &hyp0, 0, &outFid,
+	ubik_AFS_Lookup(cstruct, 0, &fid, name, &hyp0, 0, &outFid,
 		  &OutFidStatus, &OutDirStatus, &tsync);
     return (code);
 }
@@ -963,7 +963,7 @@ GetToken(char **argp)
     memset(&MinToken, 0, sizeof(struct afsToken));
     MinToken.tokenID.low = tokenId;	/* XXX */
     code =
-	ubik_Call(AFS_GetToken, cstruct, 0, &fid, &MinToken, &hyp0, 0,
+	ubik_AFS_GetToken(cstruct, 0, &fid, &MinToken, &hyp0, 0,
 		  &RealToken, &OutStatus, &tsync);
     return (code);
 }
@@ -1009,7 +1009,7 @@ KeepAlive(char **argp)
     fex.afsBulkFEX_val = &fx;
     fex.afsBulkFEX_len = 1;
     code =
-	ubik_Call(AFS_BulkKeepAlive, cstruct, 0, &fex, numExec, 0, 0, 0,
+	ubik_AFS_BulkKeepAlive(cstruct, 0, &fex, numExec, 0, 0, 0,
 		  &spare4);
     return (code);
 }

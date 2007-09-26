@@ -109,6 +109,12 @@ extern afs_int32 afs_termState;
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
+#ifdef AFS_RXK5
+#ifdef AFS_NT40_ENV
+void rxk5_OnetimeInit();
+#endif
+#endif
+
 int (*registerProgram) () = 0;
 int (*swapNameProgram) () = 0;
 
@@ -209,6 +215,15 @@ rxi_InitPthread(void)
 	   (&rxkad_random_mutex, (const pthread_mutexattr_t *)0) == 0);
     assert(pthread_mutex_init(&rx_debug_mutex, (const pthread_mutexattr_t *)0)
 	   == 0);
+
+#ifdef AFS_RXK5
+#ifdef AFS_NT40_ENV
+    /* Marcus would like to see an implementation of pthread mutex 
+       static initializers on Win32 to replace this.  We are using
+       such initializers on non-Win32. */
+    rxk5_OnetimeInit();
+#endif
+#endif
 
     assert(pthread_cond_init
 	   (&rx_event_handler_cond, (const pthread_condattr_t *)0) == 0);
@@ -1043,10 +1058,28 @@ rx_GetConnection(register struct rx_connection *conn)
     USERPRI;
 }
 
+/* Wait for the transmit queue to no longer be busy. 
+ * requires the call->lock to be held */
+static void rxi_WaitforTQBusy(struct rx_call *call) {
+    while (call->flags & RX_CALL_TQ_BUSY) {
+	call->flags |= RX_CALL_TQ_WAIT;
+	call->tqWaiters++;
+#ifdef RX_ENABLE_LOCKS
+	osirx_AssertMine(&call->lock, "rxi_WaitforTQ lock");
+	CV_WAIT(&call->cv_tq, &call->lock);
+#else /* RX_ENABLE_LOCKS */
+	osi_rxSleep(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
+	call->tqWaiters--;
+	if (call->tqWaiters == 0) {
+	    call->flags &= ~RX_CALL_TQ_WAIT;
+	}
+    }
+}
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,
- * after rx_MakeCall returns.  After this time interval, a call to any
+ * after rx_NewCall returns.  After this time interval, a call to any
  * of rx_SendData, rx_ReadData, etc. will fail with RX_CALL_TIMEOUT.
  * For fine grain locking, we hold the conn_call_lock in order to 
  * to ensure that we don't get signalle after we found a call in an active
@@ -1061,7 +1094,7 @@ rx_NewCall(register struct rx_connection *conn)
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_MakeCall(conn %x)\n", conn));
+    dpf(("rx_NewCall(conn %x)\n", conn));
 
     NETPRI;
     clock_GetTime(&queueTime);
@@ -1168,20 +1201,7 @@ rx_NewCall(register struct rx_connection *conn)
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     /* Now, if TQ wasn't cleared earlier, do it now. */
     MUTEX_ENTER(&call->lock);
-    while (call->flags & RX_CALL_TQ_BUSY) {
-	call->flags |= RX_CALL_TQ_WAIT;
-	call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	osirx_AssertMine(&call->lock, "rxi_Start lock4");
-	CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	call->tqWaiters--;
-	if (call->tqWaiters == 0) {
-	    call->flags &= ~RX_CALL_TQ_WAIT;
-	}
-    }
+    rxi_WaitforTQBusy(call);
     if (call->flags & RX_CALL_TQ_CLEARME) {
 	rxi_ClearTransmitQueue(call, 0);
 	queue_Init(&call->tq);
@@ -1189,6 +1209,7 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
+    dpf(("rx_NewCall(call %x)\n", call));
     return call;
 }
 
@@ -2083,6 +2104,8 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     register struct rx_call *cp;	/* Call pointer temp */
     register struct rx_call *nxp;	/* Next call pointer, for queue_Scan */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+
+    dpf(("rxi_NewCall(conn %x, channel %d)\n", conn, channel));
 
     /* Grab an existing call structure, or allocate a new one.
      * Existing call structures are assumed to have been left reset by
@@ -3356,9 +3379,11 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 
 	    /* We need to send an ack of the packet is out of sequence, 
 	     * or if an ack was requested by the peer. */
-	    if (seq != prev + 1 || missing || (flags & RX_REQUEST_ACK)) {
+	    if (seq != prev + 1 || missing) {
 		ackNeeded = RX_ACK_OUT_OF_SEQUENCE;
-	    }
+	    } else if (flags & RX_REQUEST_ACK) {
+		ackNeeded = RX_ACK_REQUESTED;
+            }
 
 	    /* Acknowledge the last packet for each call */
 	    if (flags & RX_LAST_PACKET) {
@@ -3894,19 +3919,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    return np;
 	}
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-	    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    osirx_AssertMine(&call->lock, "rxi_Start lock2");
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    call->tqWaiters--;
-	    if (call->tqWaiters == 0)
-		call->flags &= ~RX_CALL_TQ_WAIT;
-	}
+	rxi_WaitforTQBusy(call);
 	MUTEX_ENTER(&peer->peer_lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
@@ -4470,6 +4483,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     register int flags;
     register struct rx_peer *peer;
     struct rx_packet *packet;
+
+    dpf(("rxi_ResetCall(call %x, newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
@@ -5112,19 +5127,7 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	    return;
 	}
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-	    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    osirx_AssertMine(&call->lock, "rxi_Start lock1");
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    call->tqWaiters--;
-	    if (call->tqWaiters == 0)
-		call->flags &= ~RX_CALL_TQ_WAIT;
-	}
+	rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
 	call->flags |= RX_CALL_FAST_RECOVER;
@@ -5639,6 +5642,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
 			    (char *)&error, sizeof(error), 0);
 	rxi_FreePacket(packet);
     }
+    CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
     MUTEX_EXIT(&call->lock);
 }
 
@@ -6339,17 +6343,19 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      void *outputData, size_t outputLength)
 {
     static afs_int32 counter = 100;
-    time_t endTime;
+    time_t waitTime, waitCount, startTime, endTime;
     struct rx_header theader;
     char tbuffer[1500];
     register afs_int32 code;
-    struct timeval tv;
+    struct timeval tv_now, tv_wake, tv_delta;
     struct sockaddr_in taddr, faddr;
     int faddrLen;
     fd_set imask;
     register char *tp;
 
-    endTime = time(0) + 20;	/* try for 20 seconds */
+    startTime = time(0);
+    waitTime = 1;
+    waitCount = 5;
     LOCK_RX_DEBUG;
     counter++;
     UNLOCK_RX_DEBUG;
@@ -6378,29 +6384,54 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 		   (struct sockaddr *)&taddr, sizeof(struct sockaddr_in));
 
 	/* see if there's a packet available */
-	FD_ZERO(&imask);
-	FD_SET(socket, &imask);
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	code = select((int)(socket + 1), &imask, 0, 0, &tv);
-	if (code == 1 && FD_ISSET(socket, &imask)) {
-	    /* now receive a packet */
-	    faddrLen = sizeof(struct sockaddr_in);
-	    code =
-		recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
-			 (struct sockaddr *)&faddr, &faddrLen);
-
-	    if (code > 0) {
-		memcpy(&theader, tbuffer, sizeof(struct rx_header));
-		if (counter == ntohl(theader.callNumber))
-		    break;
+	gettimeofday(&tv_wake,0);
+	tv_wake.tv_sec += waitTime;
+	for (;;) {
+	    FD_ZERO(&imask);
+	    FD_SET(socket, &imask);
+	    tv_delta.tv_sec = tv_wake.tv_sec;
+	    tv_delta.tv_usec = tv_wake.tv_usec;
+	    gettimeofday(&tv_now, 0);
+	    
+	    if (tv_delta.tv_usec < tv_now.tv_usec) {
+		/* borrow */
+		tv_delta.tv_usec += 1000000;
+		tv_delta.tv_sec--;
 	    }
+	    tv_delta.tv_usec -= tv_now.tv_usec;
+	    
+	    if (tv_delta.tv_sec < tv_now.tv_sec) {
+		/* time expired */
+		break;
+	    }
+	    tv_delta.tv_sec -= tv_now.tv_sec;
+	    
+	    code = select(socket + 1, &imask, 0, 0, &tv_delta);
+	    if (code == 1 && FD_ISSET(socket, &imask)) {
+		/* now receive a packet */
+		faddrLen = sizeof(struct sockaddr_in);
+		code =
+		    recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
+			     (struct sockaddr *)&faddr, &faddrLen);
+		
+		if (code > 0) {
+		    memcpy(&theader, tbuffer, sizeof(struct rx_header));
+		    if (counter == ntohl(theader.callNumber))
+			goto success;
+		    continue;
+		}
+	    }
+	    break;
 	}
 
 	/* see if we've timed out */
-	if (endTime < time(0))
-	    return -1;
+	if (!--waitCount) {
+            return -1;
+	}
+	waitTime <<= 1;
     }
+    
+ success:
     code -= sizeof(struct rx_header);
     if (code > outputLength)
 	code = outputLength;

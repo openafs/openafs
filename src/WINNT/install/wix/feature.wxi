@@ -13,6 +13,7 @@
            <ComponentRef Id="cmf_index2_HTM_en_US" />
            <ComponentRef Id="cmp_index_files_en_US" />
            <ComponentRef Id="cmp_logo_files_en_US" />
+           <ComponentRef Id="cmp_relnotes_files_en_US" />
   <?endif?>
 
   <?ifndef BinsOnly ?>
@@ -24,7 +25,6 @@
                     <ComponentRef Id="rcm_Loopback"/>
                 </Feature>
 
-  <?if $(env.CPU) = "i386"?>
             <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
                     Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrNIDMPluginDesc)">
                     <ComponentRef Id="_afscreds_plugin" />
@@ -37,7 +37,6 @@
                     </Feature>
 	    <?endif?>
             </Feature>
-  <?endif?>
 
 		<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
 			<ComponentRef Id="rcm_KB301673" />
@@ -86,6 +85,7 @@
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
+                <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
@@ -109,9 +109,7 @@
                 <ComponentRef Id="cmf_translate_et_EXE" />
                 <ComponentRef Id="cmf_rxdebug_EXE" />
                 <ComponentRef Id="cmf_backup_EXE" />
-                <?if $(env.CPU) = "i386"?>
-            	    <ComponentRef Id="cmf_aklog_EXE" />
-	 	<?endif?>
+          	<ComponentRef Id="cmf_aklog_EXE" />
                 <ComponentRef Id="cmf_cmdebug_EXE" />
                 
                 <!-- Runtime -->
@@ -153,9 +151,7 @@
                 <ComponentRef Id="cmf_volserver_EXE" />
                 <ComponentRef Id="cmf_afskill_EXE" />
                 <ComponentRef Id="cmf_afssvrcfg_EXE" />
-		<?if $(env.CPU) = "i386"?>
-                	<ComponentRef Id="cmf_asetkey_EXE" />
-		<?endif?>
+                <ComponentRef Id="cmf_asetkey_EXE" />
                 <ComponentRef Id="cmf_bosctlsvc_EXE" />
                 <ComponentRef Id="cmf_bosserver_EXE" />
                 <ComponentRef Id="cmf_buserver_EXE" />
@@ -287,7 +283,6 @@
 				</Feature>
 			<?endif?>
 
-  <?if $(env.CPU) = "i386"?>
             <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
                     Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrNIDMPluginDesc)">
                     <ComponentRef Id="_afscreds_plugin" />
@@ -300,7 +295,6 @@
                     </Feature>
 	    <?endif?>
             </Feature>
-  <?endif?>
 
 		<ComponentRef Id="cmp_CommonDir" />
 
@@ -310,6 +304,7 @@
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
 
+                <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
@@ -332,9 +327,7 @@
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
                 <ComponentRef Id="rcm_BinsOnly_Parm" />
-                <?if $(env.CPU) = "i386"?>
-            	    <ComponentRef Id="cmf_aklog_EXE" />
-	 	<?endif?>
+            	<ComponentRef Id="cmf_aklog_EXE" />
                 <ComponentRef Id="cmf_cmdebug_EXE" />
                 
                 <!-- Runtime -->

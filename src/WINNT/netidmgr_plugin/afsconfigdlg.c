@@ -85,7 +85,10 @@ afs_cfg_ids_proc(HWND hwnd,
             d = (afs_ids_dlg_data *) (LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
 
-            PFREE(d);
+            if (d != NULL) {
+                PFREE(d);
+                SetWindowLongPtr(hwnd, DWLP_USER, 0);
+            }
         }
         return TRUE;
 
@@ -93,6 +96,9 @@ afs_cfg_ids_proc(HWND hwnd,
         {
             d = (afs_ids_dlg_data *) (LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
+
+            if (d == NULL)
+                return FALSE;
 
             if (wParam == MAKEWPARAM(IDC_CFG_OBTAIN, BN_CLICKED)) {
                 d->afs_enabled =
@@ -109,6 +115,9 @@ afs_cfg_ids_proc(HWND hwnd,
         {
             d = (afs_ids_dlg_data *) (LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
+
+            if (d == NULL)
+                return FALSE;
 
             if (HIWORD(wParam) == WMCFG_APPLY) {
                 khm_int32 t;
@@ -154,6 +163,11 @@ afs_cfg_id_proc(HWND hwnd,
             rv = afs_dlg_proc(hwnd, uMsg, wParam, 0);
 
             d = (afs_dlg_data *) (LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
+#ifdef DEBUG
+            assert(d != NULL);
+#endif
+            if (d == NULL)
+                return rv;
 
             d->cfg = *((khui_config_init_data *) lParam);
 
@@ -187,7 +201,9 @@ afs_cfg_id_proc(HWND hwnd,
 #ifdef DEBUG
             assert(d && d->ident);
 #endif
-            kcdb_identity_release(d->ident);
+            if (d && d->ident) {
+                kcdb_identity_release(d->ident);
+            }
 
             return afs_dlg_proc(hwnd, uMsg, wParam, lParam);
         }
@@ -198,6 +214,9 @@ afs_cfg_id_proc(HWND hwnd,
             afs_dlg_data * d;
 
             d = (afs_dlg_data *) (LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
+
+            if (d == NULL)
+                return TRUE;
 
             if (HIWORD(wParam) == WMCFG_APPLY) {
                 afs_cred_write_ident_data(d);
@@ -215,7 +234,7 @@ set_service_status(HWND hwnd) {
     static DWORD wait_start = 0;
     DWORD status = 0;
     DWORD wait_hint = 0;
-    int i;
+    unsigned int i;
     wchar_t status_strings_csv[1024];
     wchar_t status_strings_ms[1024];
     khm_size cb;
@@ -438,7 +457,7 @@ afs_cfg_main_proc(HWND hwnd,
                                 L"ImagePath",
                                 NULL, NULL,
                                 (LPBYTE) imagepath,
-                                &cb);
+                                (DWORD *)&cb);
             if (l != ERROR_SUCCESS)
                 goto _close_key;
 
@@ -464,7 +483,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info, 
                                L"\\VarFileInfo\\Translation",
                                (LPVOID*) &translations,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 
@@ -476,7 +495,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info,
                                blockname,
                                (LPVOID*) &value,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 
@@ -490,7 +509,7 @@ afs_cfg_main_proc(HWND hwnd,
             if (!VerQueryValue(ver_info,
                                blockname,
                                (LPVOID*) &value,
-                               &cb) ||
+                               (PUINT)&cb) ||
                 cb == 0)
                 goto _free_buffer;
 
@@ -553,9 +572,11 @@ afs_cfg_main_proc(HWND hwnd,
                 node = (khui_config_node) (DWORD_PTR)
                     GetWindowLongPtr(hwnd, DWLP_USER);
 
-                khui_cfg_set_flags(node,
-                                   KHUI_CNFLAG_MODIFIED,
-                                   KHUI_CNFLAG_MODIFIED);
+                if (node != NULL) {
+                    khui_cfg_set_flags(node,
+                                       KHUI_CNFLAG_MODIFIED,
+                                       KHUI_CNFLAG_MODIFIED);
+                }
             }
             break;
         }
@@ -572,6 +593,12 @@ afs_cfg_main_proc(HWND hwnd,
 
                 node = (khui_config_node) (DWORD_PTR)
                     GetWindowLongPtr(hwnd, DWLP_USER);
+
+#ifdef DEBUG
+                assert(node != NULL);
+#endif
+                if (node == NULL)
+                    break;
 
                 kmm_get_plugin_config(AFS_PLUGIN_NAME, KHM_PERM_WRITE,
                                       &csp_afscred);

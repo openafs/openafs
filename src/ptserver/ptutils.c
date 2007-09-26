@@ -112,71 +112,52 @@ pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, char *bp, afs_int32 pos, afs_i
 	    c = ENTRYSIZE - o;
 	    if (c > l)
 		c = l;
+#define xPT(p,x) ((((struct prentry *)(p))->flags & htonl(PRTYPE)) == htonl(x))
 #if DEBUG_SG_MAP
 	    if (o)
 		fprintf(stderr, "Writing %d bytes of entry @ %#lx(+%d)\n", c,
 			p - o, o);
 	    else if (c == ENTRYSIZE)
 		fprintf(stderr,
-			"Writing %d bytes of entry @ %#lx (%d<%s>,%d)\n", c,
-			p, ((struct prentry *)cp)->flags,
-			(((struct prentry *)cp)->flags & PRTYPE) ==
-			PRUSER ? "user" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRFREE ? "free" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRGRP ? "group" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRCONT ? "cont" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRCELL ? "cell" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRFOREIGN ? "foreign" : (((struct prentry *)cp)->
-						 flags & PRTYPE) ==
-			PRINST ? "sub/super instance" : "?",
-			((struct prentry *)cp)->id);
+			"Writing %d bytes of entry @ %#lx (%d<%s>,%d)\n",
+			c, p, ntohl(((struct prentry *)cp)->flags),
+			xPT(cp,PRUSER) ? "user" : xPT(cp,PRFREE) ? "free" :
+			xPT(cp,PRGRP) ? "group" : xPT(cp,PRCONT) ? "cont" :
+			xPT(cp,PRCELL) ? "cell" : xPT(cp,PRFOREIGN) ? "foreign" :
+			xPT(cp,PRINST) ? "sub/super instance" : "?",
+			ntohl(((struct prentry *)cp)->id));
 	    else if (c >= 8)
 		fprintf(stderr,
 			"Writing first %d bytes of entry @ %#lx (%d<%s>,%d)\n",
-			c, p, ((struct prentry *)cp)->flags,
-			(((struct prentry *)cp)->flags & PRTYPE) ==
-			PRUSER ? "user" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRFREE ? "free" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRGRP ? "group" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRCONT ? "cont" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRCELL ? "cell" : (((struct prentry *)cp)->
-					   flags & PRTYPE) ==
-			PRFOREIGN ? "foreign" : (((struct prentry *)cp)->
-						 flags & PRTYPE) ==
-			PRINST ? "sub/super instance" : "?",
-			((struct prentry *)cp)->id);
+			c, p, ntohl(((struct prentry *)cp)->flags),
+			xPT(cp,PRUSER) ? "user" : xPT(cp,PRFREE) ? "free" :
+			xPT(cp,PRGRP) ? "group" : xPT(cp,PRCONT) ? "cont" :
+			xPT(cp,PRCELL) ? "cell" : xPT(cp,PRFOREIGN) ? "foreign" :
+			xPT(cp,PRINST) ? "sub/super instance" : "?",
+			ntohl(((struct prentry *)cp)->id));
 	    else
 		fprintf(stderr, "Writing %d bytes of entry @ %#lx\n", c, p);
 #endif
-	    if (!o && c >= 8
-		&& (((struct prentry *)cp)->flags & PRTYPE) == PRGRP) {
+	    if (!o && c >= 8 && xPT(cp,PRGRP)) {
 #if DEBUG_SG_MAP
-		if (in_map(sg_found, -((struct prentry *)cp)->id))
+		if (in_map(sg_found, -ntohl(((struct prentry *)cp)->id)))
 		    fprintf(stderr, "Unfound: Removing group %d\n",
-			    ((struct prentry *)cp)->id);
-		if (in_map(sg_flagged, -((struct prentry *)cp)->id))
+			    ntohl(((struct prentry *)cp)->id));
+		if (in_map(sg_flagged, -ntohl(((struct prentry *)cp)->id)))
 		    fprintf(stderr, "Unflag: Removing group %d\n",
-			    ((struct prentry *)cp)->id);
+			    ntohl(((struct prentry *)cp)->id));
 #endif
 		sg_found =
 		    bic_map(sg_found,
-			    add_map(NIL_MAP, -((struct prentry *)cp)->id));
+			add_map(NIL_MAP, -ntohl(((struct prentry *)cp)->id)));
 		sg_flagged =
 		    bic_map(sg_flagged,
-			    add_map(NIL_MAP, -((struct prentry *)cp)->id));
+			add_map(NIL_MAP, -ntohl(((struct prentry *)cp)->id)));
 	    }
 	    cp += c;
 	    p += c;
 	    l -= c;
+#undef xPT
 	}
     }
     return (*pt_save_dbase_write) (tdb, fno, bp, pos, count);
@@ -743,7 +724,7 @@ ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 
     }
 
     nptr = tentry.next;
-    while (nptr != NULL) {
+    while (nptr) {
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
@@ -802,7 +783,7 @@ RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, regist
     if (code != 0)
 	return code;
 #ifdef PR_REMEMBER_TIMES
-    tentry.removeTime = time((afs_int32 *) 0);
+    tentry.removeTime = time(NULL);
 #endif
     tentryg = (struct prentryg *)&tentry;
     for (i = 0; i < SGSIZE; i++) {
@@ -820,7 +801,7 @@ RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, regist
     }
     hloc = 0;
     nptr = tentryg->nextsg;
-    while (nptr != NULL) {
+    while (nptr) {
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
@@ -866,7 +847,7 @@ RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, regist
 	}			/* for all coentry slots */
 	hloc = nptr;
 	nptr = centry.next;
-	bcopy((char *)&centry, (char *)&hentry, sizeof(centry));
+	memcpy((char *)&centry, (char *)&hentry, sizeof(centry));
     }				/* while there are coentries */
     return PRNOENT;
 }
@@ -1157,7 +1138,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     if (entry->id == aid)
 	return PRINCONSISTENT;
 #ifdef PR_REMEMBER_TIMES
-    entry->addTime = time((afs_int32 *) 0);
+    entry->addTime = time(NULL);
 #endif
     entryg = (struct prentryg *)entry;
     for (i = 0; i < SGSIZE; i++) {
@@ -1176,7 +1157,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     }
     last = 0;
     nptr = entryg->nextsg;
-    while (nptr != NULL) {
+    while (nptr) {
 	code = pr_ReadCoEntry(tt, 0, nptr, &nentry);
 	if (code != 0)
 	    return code;
@@ -1236,7 +1217,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     memset(&aentry, 0, sizeof(aentry));
     aentry.flags |= PRCONT;
     aentry.id = entry->id;
-    aentry.next = NULL;
+    aentry.next = 0;
     aentry.entries[0] = aid;
     code = pr_WriteCoEntry(tt, 0, nptr, &aentry);
     if (code != 0)
@@ -1530,7 +1511,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
     }
 
     nptr = tentryg->nextsg;
-    while (nptr != NULL) {
+    while (nptr) {
 	didsomething = 1;
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
@@ -1598,7 +1579,7 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
     }
 
     nptr = tentryg->nextsg;
-    while (nptr != NULL) {
+    while (nptr) {
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
@@ -1696,7 +1677,7 @@ read_DbHeader(struct ubik_trans *tt)
 
     code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
     if (code != 0) {
-	com_err(whoami, code, "Couldn't read header");
+	afs_com_err(whoami, code, "Couldn't read header");
     }
     return code;
 }
@@ -1734,7 +1715,7 @@ Initdb()
     len = sizeof(cheader);
     code = pr_Read(tt, 0, 0, (char *)&cheader, len);
     if (code != 0) {
-	com_err(whoami, code, "couldn't read header");
+	afs_com_err(whoami, code, "couldn't read header");
 	ubik_AbortTrans(tt);
 	return code;
     }
@@ -1761,14 +1742,14 @@ Initdb()
 	for (i = 0; i < sizeof(cheader); i++)
 	    if (bp[i]) {
 		code = PRDBBAD;
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
 		return code;
 	    }
     }
     if (!pr_noAuth) {
 	code = PRDBBAD;
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Can't rebuild database because not running NoAuth");
 	return code;
     }
@@ -1803,7 +1784,7 @@ Initdb()
     if ((code = set_header_word(tt, version, htonl(PRDBVERSION)))
 	|| (code = set_header_word(tt, headerSize, htonl(sizeof(cheader))))
 	|| (code = set_header_word(tt, eofPtr, cheader.headerSize))) {
-	com_err(whoami, code, "couldn't write header words");
+	afs_com_err(whoami, code, "couldn't write header words");
 	ubik_AbortTrans(tt);
 	return code;
     }
@@ -1813,7 +1794,7 @@ Initdb()
     code = CreateEntry		      \
 	(tt, (name), &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
     if (code) {			      \
-	com_err (whoami, code, "couldn't create %s with id %di.", 	\
+	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
 		 (name), (id));	      \
 	ubik_AbortTrans(tt);	      \
 	return code;		      \
@@ -1831,7 +1812,7 @@ Initdb()
      * it back to 0 */
     code = set_header_word(tt, maxID, 0);	/* correct in any byte order */
     if (code) {
-	com_err(whoami, code, "couldn't reset max id");
+	afs_com_err(whoami, code, "couldn't reset max id");
 	ubik_AbortTrans(tt);
 	return code;
     }
@@ -1941,7 +1922,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		break;
 	}
 	pos = tentry.next;
-	while (pos != NULL) {
+	while (pos) {
 #define centry  (*(struct contentry*)&tent)
 	    code = pr_ReadCoEntry(at, 0, pos, &centry);
 	    if ((centry.id != aid)

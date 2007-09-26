@@ -36,10 +36,9 @@ LIBS=${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/libafsint.a	\
 	${TOP_LIBDIR}/librxstat.a	\
 	${TOP_LIBDIR}/librx.a		\
-	${TOP_LIBDIR}/libsys.a	\
 	${TOP_LIBDIR}/libdes.a		\
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/util.a
 
 headers=${TOP_INCDIR}/lwp.h		\
 	${TOP_INCDIR}/afs/acl.h	\

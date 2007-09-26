@@ -10,6 +10,17 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#endif
+
 #include "afs_capabilities.h"
 
 RCSID
@@ -26,19 +37,13 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/vice.h"
 #include "rx/rx_globals.h"
-
 #ifdef AFS_RXK5
-#ifdef USING_SSL
-#include <k5ssl.h>
-#else
-#include <krb5.h>
-#endif
 #include <rx/rxk5.h>
 #include <afs/rxk5_tkt.h>
 #else
 #include <afs/afs_token.h>
-#include <afs/afs_token_protos.h>
 #endif
+#include <afs/afs_token_protos.h>
 
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
@@ -106,9 +111,10 @@ DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PNFSNukeCreds);
-DECL_PIOCTL(PGetCapabilities);
-DECL_PIOCTL(PGetTokensNew);
-DECL_PIOCTL(PSetTokensNew);
+DECL_PIOCTL(PNewUuid);
+DECL_PIOCTL(PGetTokens2);
+DECL_PIOCTL(PSetTokens2);
+DECL_PIOCTL(PGetProperties);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -213,9 +219,12 @@ static int (*(CpioctlSw[])) () = {
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
 	PBogus,			/* 4 */
 	PBogus,			/* 5 -- get/set disconnected */
-	PGetCapabilities,	/* 6 - query cache manager capabilities string table */
-	PGetTokensNew,		/* 7 -- get tokens */
-	PSetTokensNew,		/* 8 -- set tokens */
+	PBogus,			/* 6  (reserved for PCreateMtPt) */
+	PGetTokens2,		/* 7 -- get tokens */
+	PSetTokens2,		/* 8 -- set tokens */
+	PNewUuid,		/* 9 */
+	PGetProperties,		/* 10 - query cache manager prop.list */
+	PBogus,			/* 11 (reserved for PSetProperties) */
 };
 
 static int (*(OpioctlSw[])) () = {
@@ -3370,6 +3379,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     struct afs_exporter *exporter, *outexporter;
     struct AFS_UCRED *newcred;
     struct unixuser *au;
+    afs_uint32 comp = *com & 0xff00;
+    afs_uint32 h, l;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -3411,7 +3422,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	u.u_error = 0;
 #endif
 	/* check for acceptable opcodes for normal folks, which are, so far,
-	 * set tokens and unlog.
+	 * get/set tokens, sysname, and unlog.
 	 */
 	if (i != 9 && i != 3 && i != 38 && i != 8) {
 	    osi_FreeLargeSpace(inData);
@@ -3440,9 +3451,17 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    newcred->cr_group_info = groups_alloc(1); /* not that anything sets this */
+    l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
+    h = ((g0-0x3f00) >> 14);
+    h = ((g1-0x3f00) >> 14) + h + h + h;
+    GROUP_AT(newcred->cr_group_info, 0) = ((h << 28) | l);
+#else
     newcred->cr_group_info = groups_alloc(2);
     GROUP_AT(newcred->cr_group_info, 0) = g0;
     GROUP_AT(newcred->cr_group_info, 1) = g1;
+#endif
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
@@ -3497,6 +3516,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     } else if (!code) {
 	EXP_RELE(outexporter);
     }
+    if (!code) 
+	*com = (*com) | comp;
     return code;
 }
 #endif /* AFS_NEED_CLIENTCONTEXT */
@@ -3848,6 +3869,21 @@ DECL_PIOCTL(PResidencyCmd)
     return code;
 }
 
+DECL_PIOCTL(PNewUuid)
+{
+    /*AFS_STATCNT(PNewUuid); */
+    if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(acred))
+	return EACCES;
+
+    ObtainWriteLock(&afs_xinterface, 555);
+    afs_uuid_create(&afs_cb_interface.uuid);
+    ReleaseWriteLock(&afs_xinterface);
+    ForceAllNewConnections();
+}
+
 DECL_PIOCTL(PCallBackAddr)
 {
 #ifndef UKERNEL
@@ -3998,42 +4034,44 @@ DECL_PIOCTL(PNFSNukeCreds)
     return 0;
 }
 
-DECL_PIOCTL(PGetCapabilities)
+DECL_PIOCTL(PGetProperties)
 {
-	char *rsltStr;
-	afs_int32 rsltLen;
+    char *rsltStr;
+    afs_int32 rsltLen;
+    int code;
 
-	AFS_STATCNT(PGetCapabilities);
+    AFS_STATCNT(PGetProperties);
 
-	rsltStr  = afs_GetCapabilities(ain,  &rsltLen);
+    rsltStr = afs_GetProperties(ain, ainSize, &rsltLen);
+    if ((afs_uint32) rsltLen > AFS_LRALLOCSIZ) {
+	code = E2BIG;
+    }else {
 	memcpy(aout,  rsltStr, rsltLen); /* todo: max aout is AFS_LRALLOCSIZ */
 	*aoutSize = rsltLen; 
-	osi_Free(rsltStr, rsltLen);
+	code = 0;
+    }
+    osi_Free(rsltStr, rsltLen);
 
-	return 0;
+    return code;
 }
 
-DECL_PIOCTL(PGetTokensNew)
+DECL_PIOCTL(PGetTokens2)
 {
     afs_int32 code;
     register struct unixuser *tu;
-    register struct cell *tcell;
+    register struct cell *tcell = 0;
     register afs_int32 i;
-    afs_token *a_token;
+    pioctl_set_token a_tokens[1];
 #ifdef AFS_RXK5
     krb5_context k5_context;
 #endif
-    int bufsize;
     afs_int32 iterator, style;
-    void *buf;
+    XDR xdrs[1];
 
-    AFS_STATCNT(PGetTokensNew);
+    AFS_STATCNT(PGetTokens2);
 
     if (!afs_resourceinit_flag) /* afs daemons haven't started yet */
 	return EIO;	/* Inappropriate ioctl for device */
-
-    /* presumably, redundant */
-    *aoutSize = 0;
 
     /* If no input parameter, return tokens for cell 1.
      * If input parameter is just an integer, return the parm'th tokens
@@ -4046,7 +4084,7 @@ DECL_PIOCTL(PGetTokensNew)
      * and cell name are always sent in the afs_token structure.
      */
 
-    a_token = 0;    
+    memset(a_tokens, 0, sizeof *a_tokens);
     if (!ainSize)
 	style = 0;
     else if (ainSize == sizeof(afs_int32))
@@ -4085,7 +4123,6 @@ DECL_PIOCTL(PGetTokensNew)
 	tcell = afs_GetCellByName(ain+sizeof(afs_int32), READ_LOCK);
 	if (tcell) {
 	    i = tcell->cellNum;
-	    afs_PutCell(tcell, READ_LOCK);
 	    tu = afs_GetUser(areq->uid, i, READ_LOCK);
 	    if (tu && !(tu->states & UHasTokens)) {
 		code = ENOTCONN;
@@ -4094,166 +4131,187 @@ DECL_PIOCTL(PGetTokensNew)
 	} else tu = 0;
     }
     if (!tu) {
-	return EDOM;
+	code = EDOM;
+	goto Failed;
     }
+
+    if (!tcell && !(tcell = afs_GetCell(tu->cell, READ_LOCK))) {
+	code = ESRCH;
+	goto Failed;
+    }
+    a_tokens->cell = afs_strdup(tcell->cellName);
+    afs_PutCell(tcell, READ_LOCK);
+    tcell = 0;
     /* if we get here, we have creds */
 #ifdef AFS_RXK5
     if(tu->rxk5creds) {
 	/* expired? */
 	if(((rxk5_creds*) tu->rxk5creds)->k5creds->times.endtime < osi_Time()) {
-	    code = ENOTCONN;
-	    goto Failed;
+	    goto SkipK5;
 	}
 	k5_context = rxk5_get_context(0);
-	code = make_afs_token_rxk5(
+	code = add_afs_token_rxk5(
 	    k5_context, 
-	    ((rxk5_creds*) tu->rxk5creds)->cell,
-	    ((rxk5_creds*) tu->rxk5creds)->ViceId,
 	    ((rxk5_creds*) tu->rxk5creds)->k5creds,
-	    &a_token);
+	    a_tokens);
 	if(code) {
-	    afs_warn("PGetTokensNew: trouble serializing rxk5creds (oops)\n");
-	    code = EINVAL;
+	    afs_warn("PGetTokens2: trouble serializing rxk5creds (oops)\n");
+	    code = E2BIG;	/* can't serialize? */
 	    goto Failed;
 	}
-    } else {
-#endif /* AFS_RXK5 */
+    } else
+SkipK5:
+#endif
+    {
 	/* no creds or, perhaps, expired? */
 	if (((tu->states & UHasTokens) == 0)
 		    || (tu->ct.EndTimestamp < osi_Time())) {
 	    tu->states |= (UTokensBad | UNeedsReset);
 	    code = ENOTCONN;
-	    goto Failed;
+	    goto SkipKad;
 	}
-	/* make an rxkad_token */
-	tcell = afs_GetCell(tu->cell, READ_LOCK);
-	if (!tcell) {
-	    code = ESRCH;
-	    goto Failed;
-	}
-	code = make_afs_token_rxkad_k(		  
-	    tcell->cellName,
-	    (n_clear_token *) &tu->ct,	/* XXX ugh */
+	code = add_afs_token_rxkad_k(
+	    &tu->ct,
 	    tu->stp,
 	    tu->stLen,
 	    ((tu->states & UPrimary) == 1) ? 1 : 0,
-	    &a_token);
-	afs_PutCell(tcell, READ_LOCK);
+	    a_tokens);
 	if(code) {
-	    afs_warn("PGetTokensNew: trouble serializing rxkad creds (oops)\n");
-	    code = EINVAL;
+	    afs_warn("PGetTokens2: trouble serializing rxkad creds (oops)\n");
+	    code = E2BIG;	/* can't serialize? */
 	    goto Failed;
 	}
-#ifdef AFS_RXK5
     }
-#endif
-    /* send token if we have one */
-    if(a_token) {
-	buf = aout;
-	bufsize = AFS_LRALLOCSIZ;
-	code = encode_afs_token(a_token, buf, &bufsize);
-	*aoutSize = bufsize;
-	free_afs_token(a_token);
-    }
+SkipKad:
+    /* send tokens if we have one */
+    if(a_tokens->tokens.tokens_len) {
+	int l = 0;
+	xdrmem_create(xdrs, aout, AFS_LRALLOCSIZ, XDR_ENCODE);
+	l = 0;
+	code = E2BIG;	/* can't serialize? */
+	if (!xdr_setpos(xdrs, 4))
+	    goto Failed;
+	if (!xdr_pioctl_set_token(xdrs, a_tokens))
+	    goto Failed;
+	l = xdr_getpos(xdrs);
+	if (!xdr_setpos(xdrs, 0))
+	    goto Failed;
+	if (!xdr_int(xdrs, &l))
+	    goto Failed;
+	*aoutSize = l;
+	code = 0;
+    } else code = ENOTCONN;
     /* we have tu */
 Failed:
-    afs_PutUser(tu, READ_LOCK);
+    if (tu) afs_PutUser(tu, READ_LOCK);
+    if (tcell) afs_PutCell(tcell, READ_LOCK);
+    xdrs->x_op = XDR_FREE;
+    xdr_pioctl_set_token(xdrs, a_tokens);
     return code;
 }
 
-DECL_PIOCTL(PSetTokensNew)
+DECL_PIOCTL(PSetTokens2)
 {
     afs_int32 i;
-    register struct unixuser *tu;
-    register struct cell *tcell;
+    register struct unixuser *tu = 0;
+    register struct cell *tcell = 0;
     afs_int32 primflag;
     struct vrequest treq;
     int code, rslt;
-    afs_token *a_token;
+    pioctl_set_token a_tokens[1];
+    afstoken_soliton cu[1];
 #ifdef AFS_RXK5
     rxk5_creds *rxk5creds;
     krb5_context k5context = 0;
-    rxk5_token *k5_token;
 #endif
+    int authtype;
     afs_int32 set_parent_pag;
-    rxkad_token *kad_token;
+    token_rxkad *kad_token;
+    XDR xdrs[1];
 
-    AFS_STATCNT(PSetTokensNew);
+    AFS_STATCNT(PSetTokens2);
 
     primflag = 0;
     rslt = 666;
     if (!afs_resourceinit_flag) /* afs daemons haven't started yet */
 	return EIO;	/* Inappropriate ioctl for device */
 
-    a_token = 0;
+    memset(a_tokens, 0, sizeof *a_tokens);
+    memset(cu, 0, sizeof *cu);
 #ifdef AFS_RXK5
     rxk5creds = 0;
-    k5_token = 0;
 #endif
     kad_token = 0;
     set_parent_pag = 0;
 
-    code = parse_afs_token(ain, ainSize, &a_token);
-    if(code)
-	return EINVAL;
+    rslt = EINVAL;
+    xdrmem_create(xdrs, ain, ainSize, XDR_DECODE);
+    if (!xdr_pioctl_set_token(xdrs, a_tokens))
+	goto out;
+    authtype = 0;
+    for (i = 0; i < a_tokens->tokens.tokens_len; ++i) {
+	if (authtype) goto out;
+	xdrmem_create(xdrs,
+	    a_tokens->tokens.tokens_val[i].token_opaque_val,
+	    a_tokens->tokens.tokens_val[i].token_opaque_len,
+	    XDR_DECODE);
+	if (!xdr_afstoken_soliton(xdrs, cu))
+	    goto out;
+	authtype = cu->at_type;
+    }
 
-    switch(a_token->cu->cu_type) {
-    case CU_NOAUTH:
-	tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
-	break;
-    case CU_KAD:
+    if (*a_tokens->cell)
+	tcell = afs_GetCellByName(a_tokens->cell, READ_LOCK);
+    else {
+	tcell = afs_GetPrimaryCell(READ_LOCK);
+	primflag = 1;
+    }
+
+    if (!tcell) {
+	rslt = afs_initState < 101 ? EIO : ESRCH;
+	goto out;
+    }
+    rslt = EINVAL;
+    switch(cu->at_type) {
+    case AFSTOKEN_UNION_NOAUTH:
+    case AFSTOKEN_UNION_KAD:
 	/* rxkad */
-	kad_token = &(a_token->cu->cu_u.cu_kad);
-	if (kad_token->token.viceid == UNDEFVID)
-	    return EINVAL;
-	if (kad_token->ticket.ticket_len > (unsigned) MAXKTCTICKETLEN)
-	    return EINVAL;
+	kad_token = &(cu->afstoken_soliton_u.at_kad);
+	rslt = EINVAL;
+	if (kad_token->rk_viceid == UNDEFVID)
+	    goto out;
+	if (kad_token->rk_ticket.rk_ticket_len
+		> (unsigned) MAXKTCTICKETLEN)
+	    goto out;
 	/* for rxkad, do what we always did */
-	primflag = kad_token->primary_flag;
+	primflag = kad_token->rk_primary_flag;
 	if ((primflag & 0x8000) != 0) {	/* XXX Use Constant XXX */
 	    primflag &= ~0x8000;
 	    set_parent_pag = 1;
 	}
-	tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
-	/* except apparently the only way to trigger primary cell
-	   behavior was to not send a flag and cell name --
-	   check if this should be emulated as a flag */
 	break;
 #ifdef AFS_RXK5
-    case CU_K5:
+    case AFSTOKEN_UNION_K5:
 	/* rxk5 */
-	k5context  = rxk5_get_context(0);
-	k5_token = &(a_token->cu->cu_u.cu_rxk5);
-	if((a_token->flags & KTC_EX_SETPAG) != 0) {
+	k5context = rxk5_get_context(0);
+	if((a_tokens->flags & AFSTOKEN_EX_SETPAG) != 0) {
 	    set_parent_pag = 1;
 	}
-	if((a_token->cell) && strlen(a_token->cell) > 0) {
-	    /* normally, we'll be here */
-	    tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
-	    primflag = 0;
-	}
-	else {
-	    tcell = afs_GetPrimaryCell(READ_LOCK);
-	    primflag = 1;
-	}
-	code = afs_token_to_rxk5_creds(a_token, &rxk5creds);
+	code = afs_token_to_rxk5_creds(a_tokens, &rxk5creds);
 	if(code) {
-	    afs_warn("PSetTokensNew: failed converting afs_token to rxk5creds");
-	    return EINVAL;
+afs_warn("PSetTokens2: failed converting afs_token to rxk5creds");/* XXX */
+	    goto out;
 	}
 	break;
 #endif /* AFS_RXK5 */
     default:
-	afs_warn("Unknown credential type %d passed to PSetTokensNew\n",
-	    a_token->cu->cu_type);
-	return EINVAL;
+afs_warn("Unknown credential type %d passed to PSetTokens2\n", cu->at_type);/* XXX */
+	goto out;
     }
-
-    if (!tcell)
-	goto nocell;
 
     i = tcell->cellNum;
     afs_PutCell(tcell, READ_LOCK);
+    tcell = 0;
 
     if (set_parent_pag) {
 	afs_int32 pag;
@@ -4295,32 +4353,32 @@ DECL_PIOCTL(PSetTokensNew)
 #endif
     memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
 
-    switch(a_token->cu->cu_type) {
-    case CU_KAD:
+    switch(cu->at_type) {
+    case AFSTOKEN_UNION_KAD:
 	/* rxkad token */ 
-	if(kad_token->token.kvno  == -1)
+	if(kad_token->rk_kvno  == -1)
 	    tu->ct.AuthHandle = 999;
 	else
-	    tu->ct.AuthHandle = kad_token->token.kvno;
-	memcpy(tu->ct.HandShakeKey, kad_token->token.m_key, 8);
-	tu->ct.ViceId = kad_token->token.viceid;
-	tu->ct.BeginTimestamp = kad_token->token.begintime;
-	tu->ct.EndTimestamp = kad_token->token.endtime;
+	    tu->ct.AuthHandle = kad_token->rk_kvno;
+	memcpy(tu->ct.HandShakeKey, kad_token->rk_key, 8);
+	tu->ct.ViceId = kad_token->rk_viceid;
+	tu->ct.BeginTimestamp = kad_token->rk_begintime;
+	tu->ct.EndTimestamp = kad_token->rk_endtime;
 	tu->vid = tu->ct.ViceId;
 	/* and the ticket */
-	tu->stLen = kad_token->ticket.ticket_len;
+	tu->stLen = kad_token->rk_ticket.rk_ticket_len;
 	tu->stp = (char *) afs_osi_Alloc(tu->stLen);
-	memcpy(tu->stp, kad_token->ticket.ticket_val, tu->stLen);
+	memcpy(tu->stp, kad_token->rk_ticket.rk_ticket_val, tu->stLen);
 	break;
 #ifdef AFS_RXK5
-    case CU_K5:
+    case AFSTOKEN_UNION_K5:
 	/* rxk5 */
 	tu->vid = 555;	/* ignore: rxk5creds->ViceId */
 	tu->rxk5creds = (rxk5_creds_opaque) rxk5creds;    
 	rxk5creds = 0;
 	break;
 #endif /* AFS_RXK5 */
-    case CU_NOAUTH:
+    case AFSTOKEN_UNION_NOAUTH:
 	tu->vid = UNDEFVID;
 	tu->states &= ~UHasTokens;
 	tu->tokenTime = 0;
@@ -4338,27 +4396,18 @@ DECL_PIOCTL(PSetTokensNew)
     tu->tokenTime = osi_Time();
 Release:
     afs_ResetUserConns(tu);
-    afs_PutUser(tu, WRITE_LOCK);
-
-    goto out;
-
-nocell:
-    {
-	int t1;    
-	t1 = afs_initState;
-	if (t1 < 101)
-	    rslt = EIO;
-	else
-	    rslt = ESRCH;
-    }
 
 out:
-    if(a_token)
-	    free_afs_token(a_token);
+    if (tu)
+	afs_PutUser(tu, WRITE_LOCK);
+    xdrs->x_op = XDR_FREE;
+    xdr_pioctl_set_token(xdrs, a_tokens);
+    xdr_afstoken_soliton(xdrs, cu);
 #ifdef AFS_RXK5
     if(rxk5creds)
 	rxk5_free_creds(k5context, rxk5creds);
 #endif
+    if (tcell) afs_PutCell(tcell, READ_LOCK);
 
     return rslt;
 }

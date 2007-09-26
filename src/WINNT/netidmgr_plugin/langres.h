@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\work\pismere\athena\auth\krb5\src\windows\identity\plugins\afs\lang\en_us\langres.rc
+// Used by C:\work\openafs.1.5\src\Winnt\netidmgr_plugin\lang\en_us\langres.rc
 //
 #define IDS_AFS_SHORT_DESC              101
 #define IDS_AFS_LONG_DESC               102
@@ -66,6 +66,8 @@
 #define IDS_ERR_NOSERVICE               152
 #define IDS_ERR_CELLCONFIG_S            153
 #define IDS_ERR_GENERAL                 154
+#define IDS_ACTION_AFS_HELP             155
+#define IDS_ACTION_AFS_HELP_TT          156
 #define IDC_NCAFS_OBTAIN                1001
 #define IDC_NCAFS_TOKENLIST             1002
 #define IDC_NCAFS_CELL                  1004

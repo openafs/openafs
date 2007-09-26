@@ -21,20 +21,20 @@ BUILD_KRB5=no
 if test "X$with_krb5_conf" != X && test "X$with_krb5_conf" != Xno; then
 	KRB5CONFIG_SCRIPT=$with_krb5_conf
 	BUILD_KRB5=yes
-AC_MSG_RESULT([case 1 $KRB5CONFIG_SCRIPT for krb5_config XXX])
+dnl AC_MSG_RESULT([case 1 $KRB5CONFIG_SCRIPT for krb5_config XXX])
 else
 	if test -x "$with_krb5/bin/krb5-config";  then
 		KRB5CONFIG_SCRIPT="$with_krb5/bin/krb5-config"
 		BUILD_KRB5=yes
-AC_MSG_RESULT([case 2 $KRB5CONFIG_SCRIPT for krb5_config XXX])
+dnl AC_MSG_RESULT([case 2 $KRB5CONFIG_SCRIPT for krb5_config XXX])
 	else
 		if test "X$with_krb5" != X && test "X$with_krb5" != Xno; then
 			BUILD_KRB5=yes
-AC_MSG_RESULT([case 3 do k5, manual config, or ssl XXX])
+dnl AC_MSG_RESULT([case 3 do k5, manual config, or ssl XXX])
 		else
 		if test "X$conf_ssl" = XYES; then
 			BUILD_KRB5=yes
-AC_MSG_RESULT([case 4 k4, ssl XXX])
+dnl AC_MSG_RESULT([case 4 k4, ssl XXX])
 else AC_MSG_RESULT([no case, without krb5 and not k5ssl XXX])
 		fi
 		fi
@@ -78,7 +78,7 @@ if test "X$KRB5CONFIG_SCRIPT" != X; then
 fi
 if test "X$BUILD_KRB5" = Xyes; then
 if test "X$conf_ssl" = XYES; then
-AC_MSG_RESULT([set vendor K5SSL XXX])
+dnl AC_MSG_RESULT([set vendor K5SSL XXX])
 	KRB5VENDOR="K5SSL";
 else
 dnl if krb5-config is missing, this is worth a try.
@@ -93,7 +93,7 @@ if test "X$KRB5CONFIG_SCRIPT" = X &&
 		AC_MSG_RESULT([Adding $KRB5PREFIX to KRB5PREFIX (heuristic)])
 	fi
 fi
-AC_MSG_RESULT([not ssl, find out who is vendor XXX])
+dnl AC_MSG_RESULT([not ssl, find out who is vendor XXX])
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 if test "X$BUILD_KRB5" = Xyes; then
@@ -190,7 +190,7 @@ if test "X$KRB5VENDOR" = XMIT; then
 fi
 if test "X$KRB5VENDOR" = XK5SSL; then
 	AC_DEFINE([COMPILED_WITH_SSL], 1, [define if using k5ssl + openssl (please do not use this symbol for conditional compilation)])
-	K5SUPPORT=' danish.o nfold.o'
+	K5SUPPORT=''
 	if test "X$KRB5CFLAGS" != X; then
 		AC_MSG_WARN([-with-ssl, but KRB5CFLAGS is set])
 	fi
@@ -210,7 +210,7 @@ if test "X$KRB5VENDOR" != X && test "X$KRB5VENDOR" != XK5SSL; then
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket])
 	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
 	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],

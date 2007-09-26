@@ -45,6 +45,17 @@ typedef struct cm_lookupSearch {
 typedef int (*cm_DirFuncp_t)(struct cm_scache *, struct cm_dirEntry *, void *,
 	osi_hyper_t *entryOffsetp);
 
+/* Special path syntax for direct references to volumes
+
+   The syntax: @vol:<cellname>{%,#}<volume> can be used to refer to a
+   specific volume in a specific cell, where:
+
+   <cellname> : name of the cell
+   <volume>   : volume name or ID
+ */
+#define CM_PREFIX_VOL "@vol:"
+#define CM_PREFIX_VOL_CCH 5
+
 /* arrays */
 
 extern unsigned char cm_foldUpper[];
@@ -69,7 +80,10 @@ extern void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
                                char *shortName, char **shortNameEndp);
 
 extern long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp,
-	cm_req_t *reqp);
+                              cm_req_t *reqp);
+
+extern long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
+                                       cm_req_t *reqp, cm_scache_t ** outpScpp);
 
 #ifdef DEBUG_REFCOUNT
 extern long cm_NameIDbg(cm_scache_t *rootSCachep, char *pathp, long flags,

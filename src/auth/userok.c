@@ -41,12 +41,8 @@ RCSID
 #include <krb.h>
 #endif
 
-#include "auth.h"
 #include "cellconfig.h"
-#ifdef AFS_RXK5
-#include <rx/rxk5.h>
-#include "rxk5_utilafs.h"
-#endif
+#include "auth.h"
 #include "keys.h"
 #include "afs/audit.h"
 

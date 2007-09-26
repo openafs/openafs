@@ -30,7 +30,6 @@ RCSID
 #include <stdio.h>
 #include <pwd.h>
 #include <afs/com_err.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include "kauth.h"
@@ -169,7 +168,7 @@ CommandProc(as, arock)
     if (code || !(lcell = ka_LocalCell())) {
       nocell:
 	if (!Silent)
-	    com_err(rn, code, "Can't get local cell name!");
+	    afs_com_err(rn, code, "Can't get local cell name!");
 	exit(code);
     }
     if (code = ka_CellToRealm(lcell, lrealm, 0))
@@ -206,7 +205,7 @@ CommandProc(as, arock)
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
 	    if (!Silent) {
-		com_err(rn, code, "could not parse server list");
+		afs_com_err(rn, code, "could not parse server list");
 	    }
 	    return code;
 	}
@@ -309,7 +308,7 @@ CommandProc(as, arock)
 	strcpy(realm, lcell);
     if (code = ka_CellToRealm(realm, realm, &local)) {
 	if (!Silent)
-	    com_err(rn, code, "Can't convert cell to realm");
+	    afs_com_err(rn, code, "Can't convert cell to realm");
 	exit(code);
     }
 
@@ -355,7 +354,7 @@ CommandProc(as, arock)
 	code = krb_write_ticket_file(realm);
 	if (!Silent) {
 	    if (code)
-		com_err(rn, code, "writing Kerberos ticket file");
+		afs_com_err(rn, code, "writing Kerberos ticket file");
 	    else
 		fprintf(stderr, "Wrote ticket file to /tmp\n");
 	}

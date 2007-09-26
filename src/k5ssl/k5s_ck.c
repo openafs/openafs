@@ -43,10 +43,10 @@
 #include <errno.h>
 #endif
 #include <sys/types.h>
-#ifdef USE_SSL
+#ifdef USING_SSL
 #include <openssl/evp.h>
-#else
-/* must be FAKE_SSL */
+#endif
+#ifdef USING_FAKESSL
 #include "k5s_evp.h"
 #endif
 #include "k5ssl.h"
@@ -2559,6 +2559,7 @@ krb5i_arcfour_encrypt(const struct krb5_enc_provider * enc,
     tempkey->enctype = key->enctype;
     usage = krb5i_ms_usage(usage);
     datain->data = salt;
+#if KRB5_RC4_SUPPORT > 1
     if (key->enctype == ENCTYPE_ARCFOUR_HMAC_EXP) {
 /* if (export){*((DWORD *)(L40+10)) = T;HMAC(K,L40,10+4,K1);}*/
 	memcpy(salt, krb5i_arcfour_l40, sizeof(krb5i_arcfour_l40));
@@ -2566,11 +2567,14 @@ krb5i_arcfour_encrypt(const struct krb5_enc_provider * enc,
 	salt[11] = usage>>8;  salt[10] = usage;
 	datain->length = 14;
     } else {
+#endif
 /* else HMAC(K,&T,4,K1); */
 	salt[3] = usage>>24; salt[2] = usage>>16;
 	salt[1] = usage>>8;  salt[0] = usage;
 	datain->length = 4;
+#if KRB5_RC4_SUPPORT > 1
     }
+#endif
     dataout->length = tempkey->length;
     dataout->data = tempkey->contents;
     if ((code = krb5i_hmac(hash, key, 1, datain, dataout))) goto Out;
@@ -2586,9 +2590,11 @@ krb5i_arcfour_encrypt(const struct krb5_enc_provider * enc,
     dataout->data = output->data;
     dataout->length = hs;
     if ((code = krb5i_hmac(hash, tempkey, 1, datain, dataout))) goto Out;
+#if KRB5_RC4_SUPPORT > 1
 /* if (export) memset (K1+7, 0xAB, 9); */
     if (key->enctype == ENCTYPE_ARCFOUR_HMAC_EXP)
 	memset(tempkey->contents+7, 0xab, 9);
+#endif
 /* K3 = HMAC (K1, edata.Checksum); */
     datain->data = output->data;
     datain->length = hs;
@@ -2654,6 +2660,7 @@ krb5i_arcfour_decrypt(const struct krb5_enc_provider * enc,
 
     usage = krb5i_ms_usage(usage);
     datain->data = salt;
+#if KRB5_RC4_SUPPORT > 1
     if (key->enctype == ENCTYPE_ARCFOUR_HMAC_EXP) {
 /* if (export){*((DWORD *)(L40+10)) = T;HMAC(K,L40,10+4,K1);}*/
 	memcpy(salt, krb5i_arcfour_l40, sizeof(krb5i_arcfour_l40));
@@ -2661,20 +2668,25 @@ krb5i_arcfour_decrypt(const struct krb5_enc_provider * enc,
 	salt[11] = usage>>8;  salt[10] = usage;
 	datain->length = 14;
     } else {
+#endif
 /* else HMAC(K,&T,4,K1); */
 	salt[3] = usage>>24; salt[2] = usage>>16;
 	salt[1] = usage>>8;  salt[0] = usage;
 	datain->length = 4;
+#if KRB5_RC4_SUPPORT > 1
     }
+#endif
     dataout->length = k1->length;
     dataout->data = k1->contents;
     if ((code = krb5i_hmac(hash, key, 1, datain, dataout))) goto Out;
 
 /* memcpy(K2,K1,16); */
     memcpy(k2->contents, k1->contents, k1->length);
+#if KRB5_RC4_SUPPORT > 1
 /* if (export) memset(K1+7,0xAB,9); */
     if (key->enctype == ENCTYPE_ARCFOUR_HMAC_EXP)
 	memset(k1->contents+7, 0xab, 9);
+#endif
 /* K3 = HMAC(K1, edata.Checksum); */
     datain->data = input->data;
     datain->length = hs;
@@ -2736,6 +2748,8 @@ const struct krb5_enctypes krb5i_enctypes_list[] = {
     {ENCTYPE_ARCFOUR_HMAC,krb5i_arcfour,krb5i_hash_md5,0,
 	krb5i_arcfour_encrypt_len,krb5i_arcfour_encrypt,krb5i_arcfour_decrypt,
     {"rc4-hmac","arcfour-hmac","arcfour-hmac-md5",NULL}},
+#endif
+#if KRB5_RC4_SUPPORT > 1
     {ENCTYPE_ARCFOUR_HMAC_EXP,krb5i_arcfour,krb5i_hash_md5,0,
 	krb5i_arcfour_encrypt_len,krb5i_arcfour_encrypt,krb5i_arcfour_decrypt,
     {"rc4-hmac-exp","arcfour-hmac-exp","arcfour-hmac-md5-exp",NULL}},

@@ -39,15 +39,14 @@ RCSID
 #endif
 
 #include <afs/vlserver.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
-#include <rx/rxkad.h>
-#include <rx/rx_globals.h>
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #endif
+#include <afs/auth.h>
+#include <rx/rx_globals.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/keys.h>
@@ -234,9 +233,9 @@ InitThisModule(int a_AuthFlags,
     Failed:
 	if (code) {
 	    if (afs_k5_princ)
-		com_err(uss_whoami, code, "in %s for %s", what, afs_k5_princ);
+		afs_com_err(uss_whoami, code, "in %s for %s", what, afs_k5_princ);
 	    else
-		com_err(uss_whoami, code, "in %s", what);
+		afs_com_err(uss_whoami, code, "in %s", what);
 	}
 #endif
     } else {
@@ -821,7 +820,7 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
     if (!initDone) {
 	code = InitThisModule(AuthFlags, uss_ConfDir, uss_Cell);
 	if (code) {
-	    com_err(uss_whoami, code,
+	    afs_com_err(uss_whoami, code,
 		    "while inititializing VLDB connection(s)\n");
 	    return (code);
 	}

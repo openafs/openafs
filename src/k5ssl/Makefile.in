@@ -32,28 +32,34 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 @ENABLE_DC@DC_FLAGS=-DDC_SUPPORT
+@ENABLE_AC@AC_FLAGS=-DAC_SUPPORT
 LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
-CFLAGS=@SSLINCL@ ${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DUSE_SSL -Wmissing-prototypes $(DC_FLAGS)
+CFLAGS=@SSLINCL@ ${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DUSING_K5SSL $(DC_FLAGS) $(AC_FLAGS)
 LIBS=@SSLLIBS@ $(LIBCOM_ERR) ${XLIBS}
 
 #FAKEAFS=fakeafs.o
-EXTENDED=crypt.o
+@ENABLE_K5SSL_CRYPT@EXTENDED=crypt.o
+@ENABLE_K5SSL_PKCS5@PKCS5=k5s_pb.o
 #FAKESSL=evp.o e_rc4.o rc4.o m_sha1.o shs.o m_md4.o md4c.o m_md5.o md5c.o \
 #e_cast.o cast_cbc.o cast_ofb.o cast_cfb.o cast_ecb.o cast.o \
 #e_des.o des_cbc.o des_ofb.o des_cfb.o des_ecb.o des.o \
 #e_des3.o des3_cbc.o des3_ofb.o des3_cfb.o des3_ecb.o \
 #e_aes.o aes_cbc.o aes_ofb.o aes_cfb.o aes_ecb.o rijndael.o $(FAKEAFS)
-#SSL_EXTRA_RC6=e_rc6.o rc6_cbc.o rc6_ofb.o rc6_cfb.o rc6_ecb.o rc6.o
+@ENABLE_RC6@SSL_EXTRA_RC6=e_rc6.o rc6_cbc.o rc6_ofb.o rc6_cfb.o rc6_ecb.o rc6.o
 SSL_EXTRAS=m_crc32.o $(SSL_EXTRA_RC6) $(FAKESSL)
 @ENABLE_DC@DC_EXTRA=k5s_dc.o cci_er.o CCacheIPCUser.o
-KVNO=k5s_sv.o k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_rn.o k5s_ck.o k5s_cg.o k5s_tr.o k5s_a2.o k5s_cs.o k5s_er.o $(DC_EXTRA)
+@ENABLE_AC@AC_EXTRA=k5s_ac.o
+USER=k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_rn.o k5s_ck.o k5s_er.o $(DC_EXTRA) $(AC_EXTRA)
+KVNO=$(USER) k5s_cg.o k5s_tr.o k5s_a2.o k5s_cs.o
 PARS=k5s_cm.o k5s_in.o k5s_cf.o k5s_rn.o k5s_er.o
 ENC=k5s_ck.o k5s_rn.o
-KLIST=k5s_sv.o k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_si.o k5s_rn.o k5s_ck.o k5s_er.o $(DC_EXTRA)
-KINIT=$(KVNO) k5s_si.o k5s_cn.o k5s_io.o k5s_bl.o k5s_pw.o k5s_pb.o k5s_a4.o $(EXTENDED)
-LIBOBJS=$(KVNO) k5s_a3.o k5s_sc.o k5s_sw.o k5s_kd.o k5s_si.o k5s_hr.o k5s_bl.o k5s_sk.o k5s_mc.o k5s_er.o k5s_io.o k5s_cn.o k5s_pw.o k5s_pb.o k5s_a4.o $(EXTENDED) $(SSL_EXTRAS) $(DC_EXTRA)
+KLIST=k5s_sv.o k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_si.o k5s_rn.o k5s_ck.o k5s_er.o $(DC_EXTRA) $(AC_EXTRA)
+KINIT=$(KVNO) k5s_sv.o k5s_si.o k5s_cn.o k5s_io.o k5s_bl.o k5s_pw.o $(PKCS5) k5s_a4.o $(EXTENDED)
+WRKT=k5s_sv.o k5s_cm.o k5s_cf.o k5s_in.o k5s_rn.o k5s_ck.o k5s_er.o k5s_sw.o
+S2K=k5s_pw.o $(PKCS5) k5s_in.o k5s_cf.o k5s_ck.o k5s_rn.o k5s_cm.o k5s_er.o $(EXTENDED)
+LIBOBJS=$(KVNO) k5s_sv.o k5s_a3.o k5s_sc.o k5s_sw.o k5s_kd.o k5s_si.o k5s_hr.o k5s_bl.o k5s_sk.o k5s_mc.o k5s_er.o k5s_io.o k5s_cn.o k5s_pw.o $(PKCS5) k5s_a4.o k5s_da.o $(EXTENDED) $(SSL_EXTRAS) $(DC_EXTRA) $(AC_EXTRA)
 ALL=libk5ssl.a t_enc t_sum t_pars klist kvno
-TESTS=test_sum test_enc
+TESTS=test_sum test_enc test_s2k
 
 all: $(ALL) ${TOP_LIBDIR}/libk5ssl.a ${TOP_INCDIR}/k5ssl.h
 
@@ -83,6 +89,7 @@ clean:
 	$(RM) -f libk5ssl.a
 	$(RM) -f CCacheIPC.h CCacheIPCServer.c CCacheIPCUser.c
 	$(RM) -f cci_er.c cci_er.h
+	$(RM) -f t_wrkt t_w t_pem t_locate t_hr
 t_testrijndael: $(CRYPTO) t_testrijndael.o
 	$(CC) -o t_testrijndael $(CRYPTO) t_testrijndael.o $(LIBS)
 t_timerijndael: $(CRYPTO) t_timerijndael.o cputime.o
@@ -101,28 +108,39 @@ test_rijndael: t_testrijndael t_ctsrijndael
 test_crc32: t_crc32
 	./t_crc32 $(VALS)crc32.txt
 test_sum: t_sum
-	./t_sum sum-aes.txt
+	@ENABLE_AES@./t_sum sum-aes.txt
 	./t_sum sum-base.txt
-	./t_sum sum-des.txt
-	./t_sum sum-des3.txt
-	./t_sum sum-rc4.txt
-	# ./t_sum sum-old.txt
+	@ENABLE_DES@./t_sum sum-des.txt
+	@ENABLE_DES3@./t_sum sum-des3.txt
+	@ENABLE_RC4@./t_sum sum-rc4.txt
+	@ENABLE_CAST@./t_sum sum-cast.txt
+	@ENABLE_RC6@./t_sum sum-rc6.txt
+	#./t_sum sum-old.txt
 test_enc: t_enc
-	./t_enc enc-aes.txt
-	./t_enc enc-des.txt
-	./t_enc enc-des3.txt
-	./t_enc enc-rc4.txt
-	# ./t_enc enc-old.txt
+	@ENABLE_AES@./t_enc enc-aes.txt
+	@ENABLE_DES@./t_enc enc-des.txt
+	@ENABLE_DES3@./t_enc enc-des3.txt
+	@ENABLE_RC4@./t_enc enc-rc4.txt
+	@ENABLE_CAST@./t_enc enc-cast.txt
+	@ENABLE_RC6@./t_enc enc-rc6.txt
 test_enc_F: t_enc
-	./t_enc -F enc-aes.txt
-	./t_enc -F enc-des.txt
-	./t_enc -F enc-des3.txt
-	./t_enc -F enc-rc4.txt
-	# ./t_enc -F enc-old.txt
+	@ENABLE_AES@./t_enc -F enc-aes.txt
+	@ENABLE_DES@./t_enc -F enc-des.txt
+	@ENABLE_DES3@./t_enc -F enc-des3.txt
+	@ENABLE_RC4@./t_enc -F enc-rc4.txt
+	@ENABLE_CAST@# ./t_enc -F enc-cast.txt
+	@ENABLE_RC6@# ./t_enc -F enc-rc6.txt
+test_s2k: t_s2k
+	@ENABLE_AES@./t_s2k s2k-aes.txt
+	@ENABLE_DES@./t_s2k s2k-des.txt
+	@ENABLE_DES3@./t_s2k s2k-des3.txt
+	@ENABLE_RC4@./t_s2k s2k-rc4.txt
+	@ENABLE_CAST@./t_s2k s2k-cast.txt
+	@ENABLE_RC6@./t_s2k s2k-rc6.txt
 t_crc32: t_crc32.o $(SSL_EXTRAS)
 	$(CC) -o t_crc32 t_crc32.o $(SSL_EXTRAS) $(LIBS)
-t_sum: t_sum.o $(ENC) $(SSL_EXTRAS)
-	$(CC) -o t_sum t_sum.o $(ENC) $(SSL_EXTRAS) $(LIBS)
+t_sum: t_sum.o $(ENC) k5s_er.o $(SSL_EXTRAS)
+	$(CC) -o t_sum t_sum.o $(ENC) k5s_er.o $(SSL_EXTRAS) $(LIBS)
 t_sum.o: k5ssl.h
 t_enc: t_enc.o $(ENC) $(SSL_EXTRAS)
 	$(CC) -o t_enc t_enc.o $(ENC) $(SSL_EXTRAS) $(LIBS)
@@ -150,10 +168,10 @@ kvno: kvno.o $(KVNO) $(SSL_EXTRAS)
 	$(CC) -o kvno kvno.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
 kinit: kinit.o $(KINIT) $(SSL_EXTRAS)
 	$(CC) -o kinit kinit.o $(KINIT) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
-t_s2k: t_s2k.o libk5ssl.a
-	$(CC) -o t_s2k t_s2k.o libk5ssl.a $(LIBS) $(K5LIBS)
-t_w: t_w.o tr.o in.o cf.o k5s_rn.o cm.o
-	$(CC) -o t_w t_w.o tr.o in.o cf.o k5s_rn.o cm.o $(LIBS) $(K5LIBS)
+t_s2k: t_s2k.o $(S2K) $(SSL_EXTRAS)
+	$(CC) -o t_s2k t_s2k.o $(S2K) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_w: t_w.o k5s_tr.o k5s_in.o k5s_cf.o k5s_rn.o k5s_cm.o k5s_er.o
+	$(CC) -o t_w t_w.o k5s_tr.o k5s_in.o k5s_cf.o k5s_rn.o k5s_cm.o k5s_er.o $(CRYPTO) $(LIBS)
 t_e: t_e.o tr.o in.o cf.o k5s_rn.o cm.o
 	$(CC) -o t_e t_e.o tr.o in.o cf.o k5s_rn.o cm.o $(LIBS)
 t_a4: t_a4.o sc.o a1.o bindump.o cm.o k5s_rn.o in.o cf.o k5s_ck.o a2.o $(SSL_EXTRAS)
@@ -166,6 +184,10 @@ t_locate: t_locate.o $(KVNO) $(SSL_EXTRAS)
 	$(CC) $(LOADFLAGS) -o t_locate t_locate.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
 t_hr: t_hr.o $(KVNO) k5s_hr.o $(SSL_EXTRAS)
 	$(CC) $(LOADFLAGS) -o t_hr t_hr.o k5s_hr.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_wrkt: t_wrkt.o $(WRKT) $(SSL_EXTRAS)
+	$(CC) $(LOADFLAGS) -o t_wrkt t_wrkt.o $(WRKT) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_pem: t_pem.o pem.o
+	$(CC) $(LOADFLAGS) -o t_pem t_pem.o pem.o
 
 libk5ssl.a: $(LIBOBJS)
 	rm -f libk5ssl.a
@@ -177,11 +199,17 @@ depinstall: ${TOP_INCDIR}/k5ssl.h
 install: ${DESTDIR}${libdir}/libk5ssl.a ${DESTDIR}${includedir}/k5ssl.h
 ${DESTDIR}${libdir}/libk5ssl.a: libk5ssl.a
 	${INSTALL} $? $@
-${DESTDIR}${includedir}/k5ssl.h: ${srcdir}/k5ssl.h
+${DESTDIR}${includedir}/k5ssl.h: k5ssl.h
 	${INSTALL} $? $@
 ${TOP_LIBDIR}/libk5ssl.a: libk5ssl.a
 	${INSTALL} $? $@
-${TOP_INCDIR}/k5ssl.h: ${srcdir}/k5ssl.h
+${TOP_INCDIR}/k5ssl.h: k5ssl.h
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/libk5ssl.a ${DEST}/include/k5ssl.h
+${DEST}/lib/libk5ssl.a: libk5ssl.a
+	${INSTALL} $? $@
+${DEST}/include/k5ssl.h: k5ssl.h
 	${INSTALL} $? $@
 
 #

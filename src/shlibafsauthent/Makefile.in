@@ -85,6 +85,7 @@ RXKADOBJS = \
 @ENABLE_RXK5@RXK5OBJS = \
 @ENABLE_RXK5@	krb_util.o rxk5_utilafs.o rxk5_tkt.o \
 @ENABLE_RXK5@	rxk5errors.o
+@ENABLE_RXK5@M_RXK5=rxk5
 
 COMERROBJS = afserror.o
 
@@ -119,9 +120,13 @@ LIBOBJS = \
 
 LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
+@ENABLE_PIC_LIBS@TOP_PIC_LIBAFSAUTHENT=${TOP_LIBDIR}/libafsauthent_pic.a
+@ENABLE_PIC_LIBS@DESTDIR_PIC_LIBAFSAUTHENT=${DESTDIR}${libdir}/libafsauthent_pic.a
+@ENABLE_PIC_LIBS@DEST_PIC_LIBAFSAUTHENT=${DEST}/lib/libafsauthent_pic.a
 
-install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
+all: ${TOP_LIBDIR}/${LIBAFSAUTHENT} $(TOP_PIC_LIBAFSAUTHENT)
+
+install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT} $(DESTDIR_PIC_LIBAFSAUTHENT)
 
 TEST_CFLAGS=@MT_CFLAGS@ $(COMMON_CFLAGS) $(INCLUDES)
 TEST_LDFLAGS=@LDFLAGS@
@@ -135,17 +140,32 @@ ${DEST}/lib/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-${LIBAFSAUTHENT}: ${LIBOBJS}
+${DEST}/lib/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} libafsauthent_pic.a $@
+
+${LIBAFSAUTHENT}: ${LIBOBJS} mapfile
 	case ${SYS_NAME} in \
 	rs_aix4*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	sun*_5*) \
 		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
+		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	esac
+
+mapfile: afsauthent.exp
+	sed -f ../config/exp2map afsauthent.exp > mapfile
+afsauthent.exp: afsauthent.proto
+	${TOP_OBJDIR}/src/config/config afsauthent.proto afsauthent.exp ${SYS_NAME} ${M_RXK5}
+
+
+
+libafsauthent_pic.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
 	${K5CCRULE}
@@ -320,16 +340,23 @@ setpag.o: ${SYS}/setpag.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent* linktest
+	$(RM) -f *.o *.a libafsauthent* linktest afsauthent.exp mapfile
 
 ${DESTDIR}${libdir}/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
+${DESTDIR}${libdir}/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} libafsauthent_pic.a $@
+
 ${TOP_LIBDIR}/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-dest: ${DEST}/lib/${LIBAFSAUTHENT}
+${TOP_LIBDIR}/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} libafsauthent_pic.a $@
+
+
+dest: ${DEST}/lib/${LIBAFSAUTHENT} ${DEST_PIC_LIBAFSAUTHENT}

@@ -28,7 +28,7 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libafsrpc.a \
 	${RXK5T} \
 	$(TOP_LIBDIR)/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/util.a
 
 AFSCPOBJS =\
 	bos.o \

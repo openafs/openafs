@@ -1,0 +1,30 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+HOW TO SET THE AFS FOR WINDOWS VERSION INFORMATION
+
+Set AFSPRODUCT_VERSION in the following files:
+src\config\NTMakefile.i386_win95 
+src\config\NTMakefile.i386_nt40
+
+The format of this variable should be
+x.y.z.p or x.y.z p
+
+x= major verson (1-9)
+y= minor verson (1-9)
+z.p= patch level z=(1-9) p=(1-99 or a-z)
+
+For example:
+AFSPRODUCT_VERSION=1.1.1 a
+AFSPRODUCT_VERSION=1.1.1.1
+AFSPRODUCT_VERSION=1.1.101
+AFSPRODUCT_VERSION=1.1.1a
+
+These examples represent different forms of the same version.
+However the version will be displayed to the user as they are shown!
+
+
+
+

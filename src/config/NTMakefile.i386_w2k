@@ -84,7 +84,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
-AFSPRODUCT_VER_PATCH=1400
+AFSPRODUCT_VER_PATCH=2500
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -176,7 +176,42 @@ OUT=$(OJT)\$(RELDIR)
 APPVER=5.0
 !ENDIF
 
+# RXK5 build adjustments.  Jeff's afskfw interface is extended
+# to provide all krb5 functions require by rxk5 and friends, and
+# to be linked as needed by any part of OpenAFS.
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+RXK5 = rxk5
+RXK5_CDEF = -DAFS_RXK5 -DUSING_MIT
+KRB5CFLAGS = -I$(AFSROOT)\src\WINNT\kfw\inc\krb5
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+# What we actually link with.
+RXK5LIBS = \
+	$(DESTDIR)\lib\rxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+TRXK5LIBS = \
+	$(DESTDIR)\lib\trxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+!ELSE
+!ENDIF
+
+LIBCOM_ERR = $(DESTDIR)\lib\afs\afscom_err.lib
+!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
+PTHREADSLIB = $(DESTDIR)\lib\win95\afspthread.lib
+!ELSE
+PTHREADSLIB = $(DESTDIR)\lib\afspthread.lib
+!ENDIF
 
 !INCLUDE <WIN32.MAK>
 
@@ -204,7 +239,6 @@ clean::
 # Common lang target.
 lang::
 
-
 #################### Compile optional build flags set ###########
 
 afscdefs =\
@@ -223,7 +257,8 @@ afscdefs =\
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
 	-DAFS_LARGEFILE_ENV \
-	 $(AFSDEV_AUXCDEFINES)
+	$(RXK5_CDEF) \
+	$(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
 #
@@ -269,6 +304,7 @@ afscflags = $(afscflags) /Ox /Zi
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
+_VC_MANIFEST_BASENAME = __OAFW
 
 !ELSE		# CHECKED BUILD
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
@@ -276,7 +312,11 @@ cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 !IF ("$(AFSVER_CL)"=="1200")
 afscdefs = $(afscdefs) -DDEBUG /GZ
 !ELSE 
+!IF  ("$(NO_RTCU)" == "TRUE")
+afscdefs = $(afscdefs) -DDEBUG /RTCs
+!ELSE
 afscdefs = $(afscdefs) -DDEBUG /RTCs /RTCu
+!ENDIF
 !ENDIF
 
 !IFDEF _CRTDBG_MAP_ALLOC
@@ -284,6 +324,18 @@ afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 !ENDIF
 
 !UNDEF NODEBUG
+_VC_MANIFEST_BASENAME = __OAFW.Debug
+!ENDIF
+
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)" == "1310")
+_VC_MANIFEST_EMBED_EXE= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;1
+
+_VC_MANIFEST_EMBED_DLL= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;2
+!ELSE
+_VC_MANIFEST_EMBED_EXE=
+_VC_MANIFEST_EMBED_DLL=
 !ENDIF
 
 # Set compiler warning level
@@ -358,7 +410,11 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 #################### Link optional build flags set ###########
 
 afslflags =\
-	/FIXED:NO /VERBOSE:LIB
+	/FIXED:NO /VERBOSE:LIB /MACHINE:I386
+
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1310")
+afslflags = $(afslflags) /MANIFEST
+!ENDIF
 
 mfclflags = $(guilflags)
 mfclflags = $(mfclflags:/NODEFAULTLIB=)
@@ -420,7 +476,8 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 
 
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
 
 # EXE link macro for GUI applications
 EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
@@ -433,7 +490,6 @@ DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $
 
 # DLL link macro for GUI applications
 DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
 DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for resource-only DLLs

@@ -15,6 +15,8 @@ The locking/waiting hierarchy here is this:
 
  - smb_fid_t mutex
 
+ - scache dirlock
+
  - scache flags (storing, fetching, etc); if set for more than one
 	vnode in a volume, must be set in vnode order (see cm_Rename).
 

@@ -380,10 +380,10 @@ khm_int32 init_imports(void) {
 
     imp_rv = LoadFuncs(SECUR32_DLL, lsa_fi, &hSecur32, 0, 1, 1, 1);
     CKRV;
-
+#ifndef _WIN64
     imp_rv = LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
     CKRV;
-
+#endif
     imp_rv = LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
     CKRV;
 
@@ -453,6 +453,7 @@ int (*Lcom_err)(LPSTR,long,LPSTR,...);
 LPSTR (*Lerror_message)(long);
 LPSTR (*Lerror_table_name)(long);
 
+#pragma warning (disable: 4213)
 void Leash_load_com_err_callback(FARPROC ce,
                                  FARPROC em,
                                  FARPROC etn)

@@ -30,11 +30,15 @@ RCSID
 #include "afs/afsint.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#ifdef AFS_NT40_ENV
+#include <afs/cellconfig.h>
+#else
+#include <auth/cellconfig.p.h>
+#endif
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
-#include <auth/cellconfig.p.h>
-#include <afs/rxk5_utilafs.h>
 #endif
 #include "audit.h"
 #include "lock.h"

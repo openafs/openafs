@@ -29,6 +29,7 @@ RCSID
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include "ptclient.h"
 #include "pterror.h"
 

@@ -48,13 +48,12 @@ struct et_list {
 #endif
 
 extern struct et_list *_et_list;
-add_to_error_table(ep)
-	struct et_list *ep;
+add_to_error_table(struct et_list *ep)
 {
-	struct et_list *x;
-	for (x = _et_list; x; x=x->next)
-		if (x->table->base == ep->table->base)
-			return;
-	ep->next = _et_list;
-	_et_list = ep;
+    struct et_list *x;
+    for (x = _et_list; x; x=x->next)
+	if (x->table->base == ep->table->base)
+	    return;
+    ep->next = _et_list;
+    _et_list = ep;
 }

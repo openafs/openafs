@@ -28,25 +28,10 @@
  * such damages.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <afs/stds.h>
 #include <afsconfig.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#include <krb5.h>
-#endif
-#endif
 #include <assert.h>
 #include <assert.h>
 #include <com_err.h>
@@ -55,7 +40,7 @@
 #include "rxk5c.h"
 #include "rxk5errors.h"
 
-extern int rxk5_s_Close();
+extern int rxk5_s_Close(struct rx_securityClass *);
 
 int
 rxk5_GetServerInfo2(struct rx_connection *conn,

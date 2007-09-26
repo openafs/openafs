@@ -29,7 +29,7 @@
 #endif /* HAVE_STRING_H */
 
 #include <afs/stds.h>
-#ifdef USING_SSL
+#ifdef USING_K5SSL
 #include "k5ssl.h"
 #else
 #include <krb5.h>
@@ -65,6 +65,7 @@ main(int argc, char *argv[])
 
     confdir = AFSDIR_SERVER_ETC_DIRPATH;
 
+    initialize_ACFG_error_table();
     tdir = afsconf_Open(confdir);
     if (!tdir) {
 	fprintf(stderr, "%s: can't initialize conf dir '%s'\n", argv[0],
@@ -89,13 +90,13 @@ main(int argc, char *argv[])
 	kvno = atoi(argv[2]);
 	retval = krb5_parse_name(context, argv[4], &principal);
 	if (retval != 0) {
-		com_err(argv[0], retval, "while parsing AFS principal");
+		afs_com_err(argv[0], retval, "while parsing AFS principal");
 		exit(1);
 	}
 	retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
 					  ENCTYPE_DES_CBC_CRC, &key);
 	if (retval != 0) {
-		com_err(argv[0], retval, "while extracting AFS service key");
+		afs_com_err(argv[0], retval, "while extracting AFS service key");
 		exit(1);
 	}
 
@@ -120,7 +121,7 @@ main(int argc, char *argv[])
 
 	code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
 	if (code) {
-	    fprintf(stderr, "%s: failed to set key, code %d.\n", argv[0], code);
+	    afs_com_err(argv[0], code, "so failed to set key");
 	    exit(1);
 	}
 	krb5_free_principal(context, principal);
@@ -136,8 +137,7 @@ main(int argc, char *argv[])
 	kvno = atoi(argv[2]);
 	code = afsconf_DeleteKey(tdir, kvno);
 	if (code) {
-	    fprintf(stderr, "%s: failed to delete key %d, (code %d)\n",
-		    argv[0], kvno, code);
+	    afs_com_err(argv[0], code, "so failed to delete key %d", kvno);
 	    exit(1);
 	}
     }
@@ -147,7 +147,7 @@ main(int argc, char *argv[])
 	
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {
-	    fprintf(stderr, "%s: failed to get keys, code %d\n", argv[0], code);
+	    afs_com_err(argv[0], code, "so failed to get keys");
 	    exit(1);
 	}
 	for(i=0;i<tkeys.nkeys;i++) {

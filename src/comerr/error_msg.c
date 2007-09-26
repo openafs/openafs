@@ -46,7 +46,7 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
  * Function to initialize the et_list_mutex
  */
 
-void
+static void
 et_mutex_once(void)
 {
     assert(!pthread_mutex_init
@@ -71,7 +71,7 @@ static const char char_set[] =
 
 
 const char *
-error_table_name_r(afs_int32 num, char *buf)
+afs_error_table_name_r(afs_int32 num, char *buf)
 {
     int ch;
     int i;
@@ -93,7 +93,7 @@ error_table_name_r(afs_int32 num, char *buf)
 }
 
 const char *
-com_right(struct et_list *et, afs_int32 code)
+afs_com_right(struct et_list *et, afs_int32 code)
 {
     long unsigned offset;
     for ( ; et; et = et->next) {
@@ -106,7 +106,7 @@ com_right(struct et_list *et, afs_int32 code)
 }
 
 const char *
-error_message(afs_int32 code)
+afs_error_message(afs_int32 code)
 {
     int offset;
     struct et_list *et;
@@ -116,9 +116,9 @@ error_message(afs_int32 code)
     static const char unknown_code[] = "Unknown code ";
 
     LOCK_ET_LIST;
-    cp = (char *) com_right(_et_list, code);
+    cp = (char *) afs_com_right(_et_list, code);
     if (!cp)
-	cp = (char *) com_right(_et_dynamic_list, code);
+	cp = (char *) afs_com_right(_et_dynamic_list, code);
     UNLOCK_ET_LIST;
     if (cp)
 	return cp;
@@ -131,7 +131,7 @@ error_message(afs_int32 code)
     memcpy(buffer, unknown_code, sizeof unknown_code);
     cp = buffer + strlen(buffer);
     if (table_num) {
-	error_table_name_r(table_num, cp);
+	afs_error_table_name_r(table_num, cp);
 	cp += strlen(cp);
     }
     if (offset >= 100) {
@@ -149,7 +149,7 @@ error_message(afs_int32 code)
 }
 
 void
-add_to_error_table(struct et_list *new_table)
+afs_add_to_error_table(struct et_list *new_table)
 {
     struct et_list *et;
 
@@ -169,6 +169,7 @@ add_to_error_table(struct et_list *new_table)
     UNLOCK_ET_LIST;
 }
 
+#if 0
 /*
  * New interfaces provided by mit krb5's com_err library
  */
@@ -298,3 +299,4 @@ free_error_table(struct et_list *et)
 	free(et);
     }
 }
+#endif

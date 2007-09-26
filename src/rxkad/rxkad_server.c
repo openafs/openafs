@@ -361,8 +361,6 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	return RXKADEXPIRED;
     else if (code < -1)
 	return RXKADBADTICKET;
-    else if (code <= 0)
-	return RXKADBADTICKET;
 
     code = fc_keysched(&sessionkey, sconn->keysched);
     if (code)

@@ -1,5 +1,5 @@
 AC_INIT(src/libafs/Makefile.common.in)
-AM_INIT_AUTOMAKE(openafs-libafs,1.5.14)
+AM_INIT_AUTOMAKE(openafs-libafs,1.5.25)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 define(OPENAFS_CONFIGURE_LIBAFS)
 
@@ -9,7 +9,7 @@ OPENAFS_CONFIGURE_COMMON
 AC_OUTPUT(             \
 Makefile               \
 src/config/Makefile.config \
-src/config/Makefile.version \
+src/config/Makefile.version:src/config/Makefile.version-NOCML.in \
 src/libafs/Makefile.common \
 src/libafs/Makefile \
 )

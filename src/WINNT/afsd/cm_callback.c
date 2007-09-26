@@ -165,7 +165,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
  *
  * The callp parameter is currently unused.
  */
-void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
+void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
 {
     cm_fid_t tfid;
     cm_scache_t *scp;
@@ -195,10 +195,11 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
     /* do all in the hash bucket, since we don't know how many we'll find with
      * varying cells.
      */
-    for (scp = cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+    for (scp = cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
         if (scp->fid.volume == tfid.volume &&
              scp->fid.vnode == tfid.vnode &&
              scp->fid.unique == tfid.unique &&
+             (cellp == NULL || scp->fid.cell == cellp->cellID) &&
              scp->cbExpires > 0 && 
              scp->cbServerp != NULL)
         {
@@ -206,10 +207,13 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
             lock_ReleaseWrite(&cm_scacheLock);
             osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+
             lock_ObtainMutex(&scp->mx);
             cm_DiscardSCache(scp);
             lock_ReleaseMutex(&scp->mx);
+
             cm_CallbackNotifyChange(scp);
+            
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
@@ -225,9 +229,9 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
  *
  * Called with no locks held.
  */
-void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
+void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fidp)
 {
-    long hash;
+    unsigned long hash;
     cm_scache_t *scp;
     cm_fid_t tfid;
 
@@ -242,20 +246,22 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
     tfid.volume = fidp->Volume;
     cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
 
-
     lock_ObtainWrite(&cm_scacheLock);
-    for (hash = 0; hash < cm_data.hashTableSize; hash++) {
-        for(scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+    for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
+        for(scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == fidp->Volume &&
+                (cellp == NULL || scp->fid.cell == cellp->cellID) &&
                  scp->cbExpires > 0 &&
                  scp->cbServerp != NULL) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
+
                 lock_ObtainMutex(&scp->mx);
                 osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
+
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
@@ -343,12 +349,18 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+    cm_server_t *tsp = NULL;
+    cm_cell_t * cellp = NULL;
 
     MUTEX_ENTER(&callp->lock);
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
+
+        tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
+        if (tsp)
+            cellp = tsp->cellp;
     }
 
     osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
@@ -361,9 +373,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         if (tfidp->Volume == 0)
             continue;   /* means don't do anything */
         else if (tfidp->Vnode == 0)
-            cm_RevokeVolumeCallback(callp, tfidp);
+            cm_RevokeVolumeCallback(callp, cellp, tfidp);
         else
-            cm_RevokeCallback(callp, tfidp);
+            cm_RevokeCallback(callp, cellp, tfidp);
     }
 
     MUTEX_EXIT(&callp->lock);
@@ -399,7 +411,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
     struct sockaddr_in taddr;
     cm_server_t *tsp;
     cm_scache_t *scp;
-    int hash;
+    afs_uint32 hash;
     int discarded;
     struct rx_connection *connp;
     struct rx_peer *peerp;
@@ -450,8 +462,8 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	 * are "rare," hopefully this won't be a problem.
 	 */
 	lock_ObtainWrite(&cm_scacheLock);
-	for (hash = 0; hash < cm_data.hashTableSize; hash++) {
-            for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+	for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
+            for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
@@ -482,7 +494,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 
 	    /* we're done with the server structure */
             cm_PutServer(tsp);
-	}
+	} 
     }
     MUTEX_EXIT(&callp->lock);
     return 0;
@@ -674,7 +686,7 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
 int
 SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t * scp;
     int code;
     struct rx_connection *connp;
@@ -693,8 +705,8 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
              ntohl(host), ntohs(port));
 
     lock_ObtainRead(&cm_scacheLock);
-    for (i = 0; i < cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i = 0; i < cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
             if (index == 0)
                 goto searchDone;
             index--;
@@ -780,7 +792,7 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 int
 SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t * scp;
     int code;
     struct rx_connection *connp;
@@ -799,8 +811,8 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
              ntohl(host), ntohs(port));
 
     lock_ObtainRead(&cm_scacheLock);
-    for (i = 0; i < cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i = 0; i < cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
             if (index == 0)
                 goto searchDone;
             index--;
@@ -1522,7 +1534,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
     cm_racingRevokes_t *revp;		/* where we are */
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
     int freeFlag;
-    cm_server_t * serverp = 0;
+    cm_server_t * serverp = NULL;
     int discardScp = 0;
 
     lock_ObtainWrite(&cm_callbackLock);
@@ -1603,7 +1615,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         lock_ReleaseMutex(&scp->mx);
         cm_CallbackNotifyChange(scp);
         lock_ObtainMutex(&scp->mx);
-    }
+    } 
 
     if ( serverp ) {
         lock_ObtainWrite(&cm_serverLock);
@@ -1651,7 +1663,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
             // Fetch the status info 
-            cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
+            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
 
             // Indicate that the callback is not done
             lock_ObtainMutex(&cm_Freelance_Lock);
@@ -1697,7 +1709,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u", 
                  scp, sfid.volume, sfid.vnode, sfid.unique);
         do {
-            code = cm_Conn(&sfid, userp, reqp, &connp);
+            code = cm_ConnFromFID(&sfid, userp, reqp, &connp);
             if (code) 
                 continue;
 
@@ -1719,7 +1731,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ObtainMutex(&scp->mx);
         if (code == 0) {
             cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
-            cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
+            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
         }
@@ -1744,35 +1756,150 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     return code;
 }
 
+
+/* called with cm_scacheLock held */
+long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
+{
+    cm_vol_state_t *statep;
+    cm_volume_t * volp = scp->volp;
+    afs_uint32 volID = scp->fid.volume;
+    cm_serverRef_t *tsrp;
+    int found;
+
+    *downTime = 0;
+
+    if (scp->cbServerp == NULL)
+        return 1;
+
+    if (volp->rw.ID == volID) {
+        statep = &volp->rw;
+    } else if (volp->ro.ID == volID) {
+        statep = &volp->ro;
+    } else if (volp->bk.ID == volID) {
+        statep = &volp->bk;
+    }
+
+    if (statep->state == vl_online)
+        return 1;
+
+    for (found = 0,tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->server == scp->cbServerp)
+            found = 1;
+        if (tsrp->server->downTime > *downTime)
+            *downTime = tsrp->server->downTime;
+    }
+
+    /* if the cbServerp does not match the current volume server list
+     * we report the callback server as up so the callback can be 
+     * expired.
+     */
+    return(found ? 0 : 1);
+}
+
 /* called periodically by cm_daemon to shut down use of expired callbacks */
 void cm_CheckCBExpiration(void)
 {
-    int i;
+    afs_uint32 i;
     cm_scache_t *scp;
-    time_t now;
+    time_t now, downTime;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
     now = osi_Time();
     lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp=scp->nextp) {
-            cm_HoldSCacheNoLock(scp);
-            if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
+    for (i=0; i<cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
+            downTime = 0;
+            if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
+                 (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
+            {
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
-                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
+                
+                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
                 cm_CallbackNotifyChange(scp);
+
+                cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainWrite(&cm_scacheLock);
             }
-            cm_ReleaseSCacheNoLock(scp);
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
     osi_Log0(afsd_logp, "CheckCBExpiration Complete");
 }
+
+
+void 
+cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
+{
+    long code;
+    cm_conn_t *connp;
+    struct rx_connection * rxconnp;
+
+    if ((tsp->type == CM_SERVER_FILE) && !(tsp->flags & CM_SERVERFLAG_DOWN)) 
+    {
+        code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
+        if (code == 0) {
+            rxconnp = cm_GetRxConn(connp);
+            rx_SetConnDeadTime(rxconnp, 10);
+            code = RXAFS_GiveUpAllCallBacks(rxconnp);
+            rx_SetConnDeadTime(rxconnp, ConnDeadtimeout);
+            rx_PutConnection(rxconnp);
+        }
+
+        if (markDown) {
+            cm_server_vols_t * tsrvp;
+            cm_volume_t * volp;
+            int i;
+
+            lock_ObtainMutex(&tsp->mx);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                tsp->flags |= CM_SERVERFLAG_DOWN;
+                tsp->downTime = osi_Time();
+            }
+            cm_ForceNewConnections(tsp);
+            lock_ReleaseMutex(&tsp->mx);
+
+            /* Now update the volume status */
+            for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+                for (i=0; i<NUM_SERVER_VOLS; i++) {
+                    if (tsrvp->ids[i] != 0) {
+                        cm_req_t req;
+
+                        cm_InitReq(&req);
+
+                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                        if (code == 0) {    
+                            cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
+                            cm_PutVolume(volp);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
+cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainWrite(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        cm_GetServerNoLock(tsp);
+        lock_ReleaseWrite(&cm_serverLock);
+        cm_GiveUpAllCallbacks(tsp, markDown);
+        lock_ObtainWrite(&cm_serverLock);
+        cm_PutServerNoLock(tsp);
+    }
+    lock_ReleaseWrite(&cm_serverLock);
+}
+
 

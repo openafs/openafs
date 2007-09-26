@@ -42,31 +42,39 @@ EXERES = \
 
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
-	
+
+AFSAPPLIBOBJS= \
+	$(OUT)\checklist.obj \
+	$(OUT)\al_wizard.obj \
+	$(OUT)\subclass.obj 
+
 CLIENTOBJS = \
 	$(OUT)\drivemap.obj \
-    	$(OUT)\RegistrySupport.obj 
+	$(OUT)\RegistrySupport.obj 
 
 VCLIBS =\
-    	iphlpapi.lib \
+	iphlpapi.lib \
 	comctl32.lib \
 	shell32.lib \
 	uuid.lib \
 	ole32.lib \
 	mpr.lib \
 	userenv.lib \
-    	netapi32.lib 
+	netapi32.lib 
 
-EXELIBS = \
+EXELIBS=\
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libosi.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
-    	$(DESTDIR)\lib\lanahelper.lib \
-    	$(DESTDIR)\lib\afsrxkad.lib \
-    	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\lanahelper.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-    	$(DESTDIR)\lib\afskfw.lib
+	$(DESTDIR)\lib\afskfw.lib \
+    $(DESTDIR)\lib\afskfw_funcs.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 ############################################################################
 #
@@ -94,6 +102,9 @@ $(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$(*D) $**
 
+$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
+    $(C2OBJ) -I$(*D) $**
+
 $(EXEOBJS): $$(@B).cpp
 	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**
 
@@ -102,7 +113,7 @@ $(EXECOBJS): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
 	$(EXEGUILINK) $(VCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 

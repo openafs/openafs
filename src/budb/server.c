@@ -45,15 +45,14 @@ RCSID
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
+#include <afs/com_err.h>
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #endif
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
-#include <afs/com_err.h>
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -379,9 +378,6 @@ main(argc, argv)
 #endif
     struct rx_securityClass *sca[MAX_SC_LEN];
 
-    extern int afsconf_ServerAuth();
-    extern int afsconf_CheckAuth();
-
     extern int rx_stackSize;
     extern int BUDB_ExecuteRequest();
 
@@ -424,7 +420,7 @@ main(argc, argv)
 #ifdef AFS_NT40_ENV
 	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
 #endif
-	com_err(whoami, errno, "; Unable to obtain AFS server directory.");
+	afs_com_err(whoami, errno, "; Unable to obtain AFS server directory.");
 	exit(2);
     }
 
@@ -482,7 +478,7 @@ main(argc, argv)
     BU_conf = afsconf_Open(globalConfPtr->cellConfigdir);
     if (BU_conf == 0) {
 	LogError(code, "Failed getting cell info\n");
-	com_err(whoami, code, "Failed getting cell info");
+	afs_com_err(whoami, code, "Failed getting cell info");
 	ERROR(BUDB_NOCELLS);
     }
 
@@ -500,7 +496,7 @@ main(argc, argv)
 	LogDebug(1, "Using server list from %s cell database.\n", lcell);
 
 	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo, 
-					    &clones); 
+					    clones); 
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
@@ -559,13 +555,13 @@ main(argc, argv)
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT), 
 				  &cellinfo,
-				  &clones,              
+				  clones,              
 				  dbNamePtr,           /* name prefix */
 				  &BU_dbase);
 
     if (code) {
 	LogError(code, "Ubik init failed\n");
-	com_err(whoami, code, "Ubik init failed");
+	afs_com_err(whoami, code, "Ubik init failed");
 	ERROR(code);
     }
 
@@ -661,14 +657,14 @@ LogDebug(level, a, b, c, d, e, f, g, h, i)
 }
 
 static char *
-TimeStamp(time_t t)
+TimeStamp_bu(time_t t)
 {
     struct tm *lt;
-    static char timestamp[20];
+    static char TimeStamp_bu[20];
 
     lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %T", lt);
-    return timestamp;
+    strftime(TimeStamp_bu, 20, "%m/%d/%Y %T", lt);
+    return TimeStamp_bu;
 }
 
  /*VARARGS*/
@@ -680,7 +676,7 @@ Log(a, b, c, d, e, f, g, h, i)
     globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
     if (globalConfPtr->log != NULL) {
 	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
+	fprintf(globalConfPtr->log, "%s ", TimeStamp_bu(now));
 
 	fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
 	fflush(globalConfPtr->log);
@@ -700,11 +696,11 @@ LogError(code, a, b, c, d, e, f, g, h, i)
 
     if (globalConfPtr->log != NULL) {
 	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
+	fprintf(globalConfPtr->log, "%s ", TimeStamp_bu(now));
 
 	if (code)
-	    fprintf(globalConfPtr->log, "%s: %s\n", error_table_name(code),
-		    error_message(code));
+	    fprintf(globalConfPtr->log, "%s: %s\n", afs_error_table_name(code),
+		    afs_error_message(code));
 	fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
 	fflush(globalConfPtr->log);
 	fclose(globalConfPtr->log);

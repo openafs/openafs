@@ -87,7 +87,7 @@ struct mem_buf {
 int
 krb5i_cci_getint32(struct mem_buf *mb, int *out)
 {
-    if (sizeof *out > mb->length - mb->pos) return E2BIG;
+    if (sizeof *out > mb->length - mb->pos) return KRB5_CC_FORMAT;
     memcpy(out, mb->buf + mb->pos, sizeof *out);
     mb->pos += sizeof *out;
     return 0;
@@ -99,7 +99,7 @@ krb5i_cci_getdata(struct mem_buf *mb, krb5_data *data)
     int code;
     int s;
     if ((code = krb5i_cci_getint32(mb, &s))) return code;
-    if (s > mb->length - mb->pos) return E2BIG;
+    if (s > mb->length - mb->pos) return KRB5_CC_FORMAT;
     if (!(data->data = malloc(s))) return ENOMEM;
     data->length = s;
     memcpy(data->data, mb->buf + mb->pos, s);
@@ -117,7 +117,7 @@ krb5i_cci_getstring(struct mem_buf *mb, krb5_data *data)
     if ((code = krb5i_cci_getdata(mb, d)))
 	goto Failed;
     if (d->length < 1 || (d->length-1)[(char *)d->data]) {
-	code = E2BIG;
+	code = KRB5_CC_FORMAT;
 	goto Failed;
     }
     *data = *d;
@@ -233,7 +233,7 @@ krb5i_cci_2_cred(krb5_context context,
 	goto Done;
     switch(temp) {
     default:
-	code = E2BIG;
+	code = KRB5_CC_FORMAT;
 	goto Done;
     case cc_credentials_v5:
 	if ((code = krb5i_cci_getstring(mb, d)))
@@ -278,7 +278,7 @@ krb5i_cci_2_cred(krb5_context context,
 	if ((code = krb5i_cci_getarray(mb, krb5i_cci_getauth, sizeof **c->authdata, (void ***) &c->authdata)))
 	    goto Done;
 	if (mb->pos != mb->length)	/* left-over stuff? */
-	    code = E2BIG;
+	    code = KRB5_CC_FORMAT;
     }
     *creds = *c;
     memset(c, 0, sizeof *c);
@@ -291,7 +291,7 @@ Done:
 int
 krb5i_cci_putopaque(struct mem_buf *mb, void *s, int l)
 {
-    if (mb->pos + l > mb->length) return E2BIG;
+    if (mb->pos + l > mb->length) return KRB5_CC_FORMAT;
     memcpy(mb->buf + mb->pos, s, l);
     mb->pos += l;
     return 0;

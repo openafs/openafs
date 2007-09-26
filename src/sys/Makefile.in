@@ -60,7 +60,7 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	@set -x; case ${SYS_NAME} in \
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} -Wl,--version-script=${srcdir}/mapfile \
+	        -o ${LIBAFSSETPAG} \
 	        ${SHLIBOBJS};; \
 	rs_aix4*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} \

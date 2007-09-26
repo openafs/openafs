@@ -12,10 +12,12 @@
             <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
             <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logon" Type="string" Value="AFS_Logon_Event" />
             <Registry Id="reg_afslogon08" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
+	    <!-- KFW includes this functionality - OpenAFS does not need to provide it
             <Registry Id="reg_afslogon09" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Asynchronous" Type="integer" Value="0" />
             <Registry Id="reg_afslogon10" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Impersonate" Type="integer" Value="0" />
             <Registry Id="reg_afslogon11" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
             <Registry Id="reg_afslogon13" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Logon" Type="string" Value="KFW_Logon_Event" />
+	    -->
         </Component>
         <Component Win64="$(var.Win64)" Id="cmf_afscpcc_EXE" Guid="$(var.cmf_afscpcc_EXE_guid)">
             <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" KeyPath="yes"/>
@@ -705,7 +707,7 @@
                                 <File Id="fileauarf284_HTM_$(var.Language)" Name="auarf284.htm" LongName="auarf284.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- CmdRef -->
-                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
+                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
                             <Component Id="cmp_Install_Guide_$(var.Language)" Guid="$(var.DocHtmlInstallGuid)">
                                 <File Id="fileawqbg000_HTM_$(var.Language)" Name="awqbg000.htm" LongName="awqbg000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileawqbg002_HTM_$(var.Language)" Name="awqbg002.htm" LongName="awqbg002.htm" DiskId="1" />
@@ -771,6 +773,21 @@
                                     <File Id="filelfimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1"/>
                                 </Component>
                             </Directory> <!-- logo_files -->
+                            <Directory Id="dirrelnotes_files_$(var.Language)" Name="relnotes" LongName="relnotes_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\relnotes_files">
+                                <Component Id="cmp_relnotes_files_$(var.Language)" Guid="$(var.DocHtmlRelnotesFilesGuid)">
+                                  <File Id="filernfilelist.xml_$(var.Language)" Name="filelist.xml" DiskId="1" /> 
+                                  <File Id="filernimage001.png_$(var.Language)" LongName="image001.png" Name="image001.png" DiskId="1" /> 
+                                  <File Id="filernimage002.jpg_$(var.Language)" LongName="image002.jpg" Name="image002.jpg" DiskId="1" /> 
+                                  <File Id="filernimage003.png_$(var.Language)" LongName="image003.png" Name="image003.png" DiskId="1" /> 
+                                  <File Id="filernimage004.jpg_$(var.Language)" LongName="image004.jpg" Name="image004.jpg" DiskId="1" /> 
+                                  <File Id="filernimage005.png_$(var.Language)" LongName="image005.png" Name="image005.png" DiskId="1" /> 
+                                  <File Id="filernimage006.jpg_$(var.Language)" LongName="image006.jpg" Name="image006.jpg" DiskId="1" /> 
+                                  <File Id="filernimage007.jpg_$(var.Language)" LongName="image007.jpg" Name="image007.jpg" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_afs_cfg.png_$(var.Language)" LongName="netidmgr_afs_cfg.png" Name="nmafscfg.png" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_afs_opt.png_$(var.Language)" LongName="netidmgr_afs_opt.png" Name="nmafsopt.png" DiskId="1" /> 
+                                  <File Id="filernnetidmgr_main.png_$(var.Language)" LongName="netidmgr_main.png" Name="nmmain.png" DiskId="1" /> 
+                                </Component>
+                            </Directory>
                         </Directory> <!-- Release Notes -->
                     </Directory> <!-- Html -->
             </Directory> <!-- Documentation -->
@@ -789,6 +806,10 @@
                 </Component>
   <?endif?>
                 <Directory Id="dirProgram" Name="Program" src="$(var.ClientDir)">
+                    <Component Win64="$(var.Win64)" Id="cmf_instloop_EXE" Guid="$(var.cmf_instloop_EXE_guid)">
+                        <File Id="fileinstloop_EXE" Name="instloop.exe" LongName="instloop.exe" KeyPath="yes" DiskId="1" src="$(var.MediaBinDir)instloop.exe" />
+                        <Condition>INSTALLINSTLOOPEXE &lt;&gt; ""</Condition>
+                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmf_afsshare_EXE" Guid="$(var.cmf_afsshare_EXE_guid)">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
                     </Component>
@@ -851,7 +872,6 @@
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
 
-  <?if $(env.CPU)="i386"?>
                     <Component Win64="$(var.Win64)" Id="_afscreds_en_us"
                         Guid="$(var._afscreds_en_us_guid)" DiskId="1">
                         <File Id="file_afscred_en_us_dll" Name="afscenu.dll" LongName="afscred_en_us.dll" KeyPath="yes"/>
@@ -885,13 +905,12 @@
                         Guid="$(var._afscreds_chm_guid)" DiskId="1">
                         <File Id="file_afsplhlp_chm" Name="afsplhlp.chm" LongName="afsplhlp.chm" KeyPath="yes" />
                     </Component>
-  <?endif?>
 
   <?ifndef BinsOnly ?>
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
-                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
+                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client Service" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
 							<!-- ServiceConfig doesn't currently do what you think it does.
 							     We instead use a custom action to set the service failure actions.
                             <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
@@ -934,11 +953,9 @@
                      <Component Win64="$(var.Win64)" Id="cmf_backup_EXE" Guid="$(var.cmf_backup_EXE_guid)">
                         <File Id="filebackup_EXE" Name="backup.exe" LongName="backup.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\backup.exe"/>
                     </Component>
-	            <?if $(env.CPU) = "i386"?>
-	                    <Component Win64="$(var.Win64)" Id="cmf_aklog_EXE" Guid="$(var.cmf_aklog_EXE_guid)">
-                        	<File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
-	                    </Component>
-		    <?endif?>
+	            <Component Win64="$(var.Win64)" Id="cmf_aklog_EXE" Guid="$(var.cmf_aklog_EXE_guid)">
+                        <File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
+	            </Component>
                      <Component Win64="$(var.Win64)" Id="cmf_cmdebug_EXE" Guid="$(var.cmf_cmdebug_EXE_guid)">
                         <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
                         <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
@@ -968,9 +985,7 @@
                         <File Id="filetranslate_et_PDB" Name="translet.pdb" LongName="translate_et.pdb" DiskId="1" src="$(var.BinDir)\translate_et.pdb"/>
                         <File Id="filerxdebug_PDB" Name="rxdebug.pdb" LongName="rxdebug.pdb" DiskId="1" src="$(var.EtcDir)\rxdebug.pdb"/>
                         <File Id="filebackup_PDB" Name="backup.pdb" LongName="backup.pdb" DiskId="1" src="$(var.EtcDir)\backup.pdb"/>
-			<?if $(env.CPU) = "i386"?>
-                        	<File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
-			<?endif?>
+                        <File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
                         <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
                         <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
   <?ifndef BinsOnly ?>
@@ -1006,11 +1021,9 @@
 -->
                                 </File>
                             </Component>
-			    <?if $(env.CPU) = "i386"?>
-                                    <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
-                                	<File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
-	                            </Component>
-			    <?endif?>
+                            <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
+                                <File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
+	                    </Component>
                              <Component Win64="$(var.Win64)" Id="cmf_bosctlsvc_EXE" Guid="$(var.cmf_bosctlsvc_EXE_guid)">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
                                 <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
@@ -1071,9 +1084,7 @@
                                 <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
                                 <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
                                 <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
-				<?if $(env.CPU) = "i386"?>
-                                	<File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
-				<?endif?>
+                                <File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
                                 <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
                                 <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
                                 <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />

@@ -130,7 +130,7 @@ static struct
 static size_t cPropSheets = 0;
 
 
-BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (PropSheet_HandleNotify (hDlg, msg, wp, lp))
       return TRUE;
@@ -194,7 +194,7 @@ BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+   return DefWindowProc (hDlg, msg, wp, lp);
 
 }
 
@@ -300,15 +300,15 @@ void PropSheet_NotifyAllTabs (LPPROPSHEET psh, HWND hDlg, UINT msg)
 }
 
 
-BOOL CALLBACK PropSheet_HookProc (HWND hSheet, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK PropSheet_HookProc (HWND hSheet, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldproc = Subclass_FindNextHook (hSheet, PropSheet_HookProc);
+   HRESULT rc;
 
-   BOOL rc;
    if (oldproc)
-      rc = (BOOL)CallWindowProc ((WNDPROC)oldproc, hSheet, msg, wp, lp);
+      rc = CallWindowProc ((WNDPROC)oldproc, hSheet, msg, wp, lp);
    else
-      rc = (BOOL)DefWindowProc (hSheet, msg, wp, lp);
+      rc = DefWindowProc (hSheet, msg, wp, lp);
 
    switch (msg)
       {
@@ -1127,7 +1127,7 @@ typedef struct // VIEWSORTINFO
    BOOL fAscending;
    } VIEWSORTINFO, *LPVIEWSORTINFO;
 
-BOOL CALLBACK LV_SortView_Numeric (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
+HRESULT CALLBACK LV_SortView_Numeric (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
 {
    LPVIEWSORTINFO lpvsi = (LPVIEWSORTINFO)lpSort;
    TCHAR szText[ cchRESOURCE ];
@@ -1144,13 +1144,13 @@ BOOL CALLBACK LV_SortView_Numeric (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
    d2 = atof (szText);
 
    if (lpvsi->fAscending)
-      return (d2 <  d1) ? ((BOOL)-1) : (d2 == d1) ? ((BOOL)0) : (BOOL)1;
+      return (HRESULT)((d2 <  d1) ? -1 : (d2 == d1) ? 0 : 1);
    else
-      return (d1 <  d2) ? ((BOOL)-1) : (d1 == d2) ? ((BOOL)0) : (BOOL)1;
+      return (HRESULT)((d1 <  d2) ? -1 : (d1 == d2) ? 0 : 1);
 }
 
 
-BOOL CALLBACK LV_SortView_Alphabetic (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
+HRESULT CALLBACK LV_SortView_Alphabetic (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
 {
    LPVIEWSORTINFO lpvsi = (LPVIEWSORTINFO)lpSort;
    TCHAR szText1[ cchRESOURCE ];
@@ -1532,7 +1532,7 @@ WORD LB_GetStringExtent (HWND hList, LPTSTR pszString)
 }
 
 
-BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hList, ListBox_HScrollHook);
 
@@ -1587,9 +1587,9 @@ BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hList, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hList, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hList, msg, wp, lp);
+      return DefWindowProc (hList, msg, wp, lp);
 }
 
 

@@ -47,7 +47,9 @@ static int skip_get_number(char **pp, size_t *lp, int *np)
 
     l = *lp;
     if (l < 1) {
-printf ("skip_bad_number: missing number\n");
+#ifdef DEBUG
+	fprintf(stderr, "skip_bad_number: missing number\n");
+#endif
 	return -1;
     }
     p = *pp;
@@ -56,7 +58,9 @@ printf ("skip_bad_number: missing number\n");
     if (r & 0x80) {
 	n = (r&0x7f);
 	if (l < n) {
-printf ("skip_bad_number: truncated number\n");
+#ifdef DEBUG
+	    fprintf(stderr, "skip_bad_number: truncated number\n");
+#endif
 	    return -1;
 	}
 	r = 0;

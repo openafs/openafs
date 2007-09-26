@@ -42,19 +42,17 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
+#include <afs/auth.h>
 #include <afs/keys.h>
 #include <ubik.h>
 #include <afs/afsint.h>
 #include <afs/cmd.h>
-#include <rx/rxkad.h>
-#ifdef AFS_RXK5
-#include <rx/rxk5.h>
-#include <rx/rxk5errors.h>
-#include <afs/rxk5_utilafs.h>
-#endif
-#include "afs_token.h"
 
 /*
   Get the appropriate type of ubik client structure out from the system.
@@ -84,9 +82,9 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
     memset(in_creds, 0, sizeof *in_creds);
 #define NOAUTH_DEFAULT	env_afs_rxk5_default()
 #else
-#define NOAUTH_DEFAULT	FORCE_RXKAD
+#define NOAUTH_DEFAULT	FORCE_KTC
 #endif
-    switch(noAuthFlag & (FORCE_NOAUTH|FORCE_RXK5|FORCE_RXKAD)) {
+    switch(noAuthFlag & (FORCE_NOAUTH|FORCE_K5CC|FORCE_KTC)) {
     case 0:
 	noAuthFlag = NOAUTH_DEFAULT;
 	break;
@@ -95,7 +93,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
     }
     code = rx_Init(0);
     if (code) {
-	com_err(funcName, code, "so could not initialize rx.");
+	afs_com_err(funcName, code, "so could not initialize rx.");
 	return code;
     }
     rx_SetRxDeadTime(deadtime);
@@ -104,7 +102,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	if (!confDir
 		|| !strcmp(confDir, "")
 		|| !strcmp(confDir, AFSDIR_CLIENT_ETC_DIRPATH))
-	    confDir = AFSDIR_SERVER_ETC_DIRPATH;
+	    confDir = (char *) AFSDIR_SERVER_ETC_DIRPATH;
     }
 
     tdir = afsconf_Open(confDir);
@@ -125,7 +123,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 			    &info);
     if (code) {
 	afsconf_Close(tdir);
-	com_err(funcName, code, "so can't find cell %s's hosts in %s/%s",
+	afs_com_err(funcName, code, "so can't find cell %s's hosts in %s/%s",
 		cellName, confDir, AFSDIR_CELLSERVDB_FILE);
 	return -1;
     }
@@ -140,12 +138,12 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 		noAuthFlag & (FORCE_RXK5|FORCE_RXKAD));	/* sets sc,scIndex */
 	if (code) {
 	    afsconf_Close(tdir);
-	    com_err(funcName, code,
+	    afs_com_err(funcName, code,
 		"so can't get security object for -localauth");
 	    return -1;
 	}
 #ifdef AFS_RXK5
-    } else if (noAuthFlag & FORCE_RXK5) { /* -k5 */
+    } else if (noAuthFlag & FORCE_K5CC) { /* -k5 */
 	char *what;
 
 	scIndex = 5;
@@ -180,32 +178,29 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
     Failed:
 	if (code) {
 	    if (afs_k5_princ)
-		com_err(funcName, code, "in %s for %s", what, afs_k5_princ);
+		afs_com_err(funcName, code, "in %s for %s", what, afs_k5_princ);
 	    else
-		com_err(funcName, code, "in %s", what);
+		afs_com_err(funcName, code, "in %s", what);
 	}
 #endif /* rxk5 */
-    } else if (noAuthFlag & FORCE_RXKAD) { /* -k4 */
+    } else if (noAuthFlag & FORCE_KTC) { /* -k4 */
 	struct ktc_token ttoken;
-	struct afs_token *afstoken = 0;
+	struct pioctl_set_token afstoken[1];
 
-	code = ktc_GetTokenEx(0, info.name, &afstoken);
+	memset(afstoken, 0, sizeof *afstoken);
+	code = ktc_GetTokenEx(0, info.name, afstoken);
 	if (code) {		/* did not get ticket */
-	    com_err(funcName, code,
+	    afs_com_err(funcName, code,
 		"so could not get afs tokens, running unauthenticated.");
 	    scIndex = 0;
 #ifdef AFS_RXK5
-	} else if (afstoken->cu->cu_type == CU_K5) {	/* got a k5 ticket */
+	} else if (!(code = afstoken_to_v5cred(afstoken, in_creds))) {	/* got a k5 ticket */
 	    scIndex = 5;
-	    code = afstoken_to_v5cred(afstoken, in_creds);
 	    if (!gen_rxkad_level) ++gen_rxkad_level;
-	    if (!code)
-		sc=rxk5_NewClientSecurityObject(gen_rxkad_level, in_creds, 0);
+	    sc=rxk5_NewClientSecurityObject(gen_rxkad_level, in_creds, 0);
 #endif
-	} else if (afstoken->cu->cu_type == CU_KAD) {	/* got a k5 ticket */
+	} else if (!(code = afstoken_to_token(afstoken, &ttoken, sizeof ttoken, 0, 0))) {	/* got a k5 ticket */
 	    scIndex = 2;
-	    code = afstoken_to_token(afstoken, &ttoken, sizeof ttoken);
-	    if (code) goto SkipSc;
 	    if ((ttoken.kvno < 0) || (ttoken.kvno > 256)) {
 /* formerly vab */
 		fprintf(stderr,
@@ -218,13 +213,12 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 					   ttoken.ticketLen,
 					   ttoken.ticket);
 	} else {		/* got a whatzits */
-	    fprintf(stderr,
-		"%s: unknown token type\n",
-		funcName,
-		afstoken->cu->cu_type);
+	    char msg[48];
+	    afs_get_tokens_type_msg(afstoken, msg, sizeof msg);
+	    fprintf(stderr, "%s: no recognized tokens in %s\n", funcName, msg);
 	}
 SkipSc:
-	if (afstoken) free_afs_token(afstoken);
+	free_afs_token(afstoken);
     }
 
     if (!sc) {
@@ -261,7 +255,7 @@ SkipSc:
 	*uclientp = 0;
 	code = ubik_ClientInit(serverconns, uclientp);
 	if (code)
-	    com_err(funcName, code, "ubik client init failed.");
+	    afs_com_err(funcName, code, "ubik client init failed.");
     }
 Done:
     if (secproc)

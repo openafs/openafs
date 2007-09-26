@@ -11,18 +11,23 @@ import org.openafs.jafs.*;
  */
 public class testAFS
 {
+	private static boolean dflag = false;
+	private static boolean something_failed = false;
+
 	public class TesterThread implements Runnable
 	{
 		private String user = null;
 		private String pass = null;
 		private String cell = null;
+		private String rwpath = null;
 		private boolean letItRun = true;
 
-		public TesterThread(String user, String pass, String cell)
+		public TesterThread(String user, String pass, String cell, String rwpath)
 		{
 			this.user = user;
 			this.pass = pass;
 			this.cell = cell;
+			this.rwpath = rwpath;
 		}
 		public void finish()
 		{
@@ -40,12 +45,14 @@ public class testAFS
 	
 					for(int j=0; j<100; j++)
 					{
-						ACL acl = new ACL("/afs/." + cell, true);
+						ACL acl = new ACL(rwpath, true);
 					}
 
 					c.close();
 				} catch(Exception e) {
+					something_failed = true;
 					e.printStackTrace();
+					letItRun = false;
 				}
 				Thread.yield();
 			}
@@ -94,17 +101,21 @@ public class testAFS
 	}
 
 	public static void DumpToken(Token t)
+	throws AFSException
 	{
 		try
 		{
 			DumpLn("Token: user=" + t.getUsername() +
 					" cell=" + t.getCellName() + " expiration=" + t.getExpiration());
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void DumpFile(org.openafs.jafs.File f)
+	throws AFSException
 	{
 		try
 		{
@@ -136,11 +147,14 @@ public class testAFS
 			DumpLn(acl.toString());
 			ident--;
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void DumpCell(Cell cell)
+	throws AFSException
 	{
 		try
 		{
@@ -151,16 +165,23 @@ public class testAFS
 			ident--;
 	
 			//test some queries, don't write to output
+			if (dflag) System.out.println("DumpCell/getInfo");
 			cell.getInfo();
+			if (dflag) System.out.println("DumpCell/getInfoGroups");
 			cell.getInfoGroups();
+			if (dflag) System.out.println("DumpCell/getInfoServers");
 			cell.getInfoServers();
+			if (dflag) System.out.println("DumpCell/getInfoUsers");
 			cell.getInfoUsers();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void DumpServer(Server s)
+	throws AFSException, Exception
 	{
 		DumpLn("Server: " + s.getName());
 		ident++;
@@ -170,7 +191,9 @@ public class testAFS
 			{
 				DumpLn("BinaryRestartTime: " + s.getBinaryRestartTime());
 			} catch(AFSException e) {
-				e.printStackTrace();
+				something_failed = true;
+//				e.printStackTrace();
+				throw(e);
 			}
 			DumpLn("TotalFreeSpace:" + s.getTotalFreeSpace());
 			DumpLn("TotalSpace:" + s.getTotalSpace());
@@ -190,33 +213,45 @@ public class testAFS
 			Dump(" isDatabase: " + s.isDatabase());
 			Dump(" isBadDatabase: " + s.isBadDatabase());
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}			
 		ident--;
 
 		try
 		{
 			//test some queries, don't write to output
+			if (dflag) System.out.println("DumpServer/getInfoKeys");
 			s.getInfo();
 			try
 			{
 				s.getInfoKeys();
 			} catch(AFSException e) {
-				e.printStackTrace();
+				something_failed = true;
+//				e.printStackTrace();
+				throw(e);
 			}
+			if (dflag) System.out.println("DumpServer/getInfoPartitions");
 			try	//is there any partitions? why parts can be null...
 			{	//wrong programming concept: null instead of an empty array !!!
 				s.getInfoPartitions();
 			} catch(Exception e) {
-				e.printStackTrace();
+				something_failed = true;
+//				e.printStackTrace();
+				throw(e);
 			}
+			if (dflag) System.out.println("DumpServer/getInfoProcesses");
 			s.getInfoProcesses();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void DumpVolume(Volume v)
+	throws AFSException
 	{
 		try
 		{
@@ -225,7 +260,9 @@ public class testAFS
 			Dump(" ID: " + v.getID());
 			DumpEnd();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 
 		ident++;
@@ -254,12 +291,15 @@ public class testAFS
 			//test some queries, don't write to output
 			v.getInfo();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 	}
 
 	public static void DumpPartition(Partition p)
+	throws AFSException
 	{
 		try
 		{
@@ -269,7 +309,9 @@ public class testAFS
 			Dump(" DeviceName: " + p.getDeviceName());
 			DumpEnd();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident++;
 		try
@@ -284,12 +326,15 @@ public class testAFS
 			p.getInfo();
 			p.getInfoVolumes();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 	}
 
 	public static void DumpGroup(Group g)
+	throws AFSException
 	{
 		try
 		{
@@ -302,11 +347,14 @@ public class testAFS
 			//test some queries, don't write to output
 			g.getInfo();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void DumpUser(User u)
+	throws AFSException
 	{
 		DumpLn("User name: " + u.getName());
 		ident++;
@@ -331,12 +379,15 @@ public class testAFS
 			u.getInfoGroups();
 			u.getInfoGroupsOwned();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 	}
 
 	static void DumpProcess(org.openafs.jafs.Process p)
+	throws AFSException
 	{
 		DumpLn("Process name: " + p.getName());
 		ident++;
@@ -351,26 +402,34 @@ public class testAFS
 			//test some queries, don't write to output
 			p.getInfo();
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 	}
 
 	public static Token testToken(String user, String pass, String cell)
+	throws AFSException, Exception
 	{
 		Token token = null;
+
+		if (dflag) System.out.println("testToken");
 		try
 		{
 			token = new Token(user, pass, cell);
 			DumpToken(token);
 			testCell(token);
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		return token;
 	}
 
 	public static void testFilesRecursive(File dir)
+	throws AFSException, AFSFileException
 	{
 		try
 		{
@@ -388,28 +447,35 @@ public class testAFS
 				}
 			}
 		} catch(AFSFileException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 
 	public static void testFiles()
 	throws AFSException, AFSFileException
 	{
+		if (dflag) System.out.println("testFiles");
 		org.openafs.jafs.File f = new org.openafs.jafs.File(firstCellPathRW);
 		DumpFile(f);
 		testFilesRecursive(f);
 	}
 	
 	public static void testCell(Token token)
+	throws AFSException, Exception
 	{
 		Cell cell = null;
+		if (dflag) System.out.println("testCell");
 		try
 		{
 			cell = new Cell(token, false);
 
 			DumpCell(cell);
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		if (cell==null)
 			return;
@@ -417,19 +483,23 @@ public class testAFS
 		ident++;
 		try
 		{
+			if (dflag) System.out.println("testCell/testGroup");
 			Group[]	groups = cell.getGroups();
 			for(int i=0; i<groups.length; i++)
 			{
 				testGroup(groups[i]);
 			}
 	
+			if (dflag) System.out.println("testCell/testServer");
 			Server[] servers = cell.getServers();
 			for(int j=0; j<servers.length; j++)
 			{
 				testServer(servers[j]);
 			}
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 
@@ -438,12 +508,14 @@ public class testAFS
 			if (cell!=null)
 				cell.close();
                 } catch(AFSException e) {
-                        e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
                 }
 	}
 	
 	public static void testServer(Server server)
-	throws AFSException
+	throws AFSException, Exception
 	{
 		DumpServer(server);
 		ident++;
@@ -467,26 +539,30 @@ public class testAFS
 				}
 			}
 
-			DumpLn("salvage...");
+			DumpLn("salvage "+server.getName()+"...");
 			server.salvage();
-			DumpLn("getLog...");
+			DumpLn("getLog "+server.getName()+"...");
 			try
 			{
-				server.getLog("/var/log/openafs/BosLog");
+				server.getLog("BosLog");
 			} catch(AFSException e) {
-				e.printStackTrace();
+				something_failed = true;
+//				e.printStackTrace();
+				throw(e);
 			}
 			//DumpLn("stopAllProcesses...");
 			//server.stopAllProcesses();
 			//DumpLn("startAllProcesses...");
 			//server.startAllProcesses();
-			DumpLn("syncServer...");
+			DumpLn("syncServer "+server.getName()+"...");
 			server.syncServer();
-			DumpLn("syncVLDB...");
+			DumpLn("syncVLDB "+server.getName()+"...");
 			server.syncVLDB();
 			DumpLn("ok.");
 		} catch(AFSException e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 		ident--;
 	}
@@ -500,6 +576,7 @@ public class testAFS
 	public static void testPartition(Partition part)
 	throws AFSException
 	{
+		if (dflag) System.out.println("testPartition");
 		DumpPartition(part);
 		ident++;
 
@@ -540,7 +617,9 @@ public class testAFS
 	}
 
 	public static void testNewVolume(String cellName, String userName, String passString)
+	throws AFSException, Exception
 	{
+		if (dflag) System.out.println("testNewVolume");
 		if (firstCellPathRW==null)
 		{
 			System.err.println("testNewVolume cannot be executed (null args).");
@@ -618,21 +697,73 @@ public class testAFS
 
 			DumpLn("OK.");
 		} catch(Exception e) {
-			e.printStackTrace();
+			something_failed = true;
+//			e.printStackTrace();
+			throw(e);
 		}
 	}
 	
 	public static void main(String[] args)
 	{
+		String user = null, pass = null, cell_name = null;
+		int numOfCycles = 1;
+		String Usage = "Usage: testAFS <user> <pass> <cell_name> <# of cycles>";
+		int argc, k = 0;
 
-		try
+		for (argc = 0; argc < args.length; ++argc)
 		{
-			if (args.length<4)
-			{
-				System.err.println("testAFS <user> <pass> <cell_name> <# of cycles>");
+			if (!args[argc].startsWith("-"))
+				break;
+			char cw[] = args[argc].toCharArray();
+			for (int i = 0; i < cw.length; ++i) switch(cw[i]) {
+			case '-':
+				break;
+			case 'f':
+				if (argc >= args.length) break;
+				firstCellPathRW = args[++argc];
+				break;
+			case 'd':
+				dflag = true;
+				break;
+			default:
+				System.err.println("Bad switch " + cw[i]);
+				System.err.println(Usage);
 				return;
 			}
+		}
+		for (; argc < args.length; ++argc)
+		{
+			switch(k++) {
+			case 0:
+				user = args[argc];
+				break;
+			case 1:
+				pass = args[argc];
+				break;
+			case 2:
+				cell_name = args[argc];
+				break;
+			case 3:
+				numOfCycles = Integer.parseInt(args[argc]);
+				break;
+			default:
+				System.err.println("Too many bare arguments");
+				System.err.println(Usage);
+				return;
+			}
+		}
+		if (k < 3)
+		{
+			System.err.println("Too few bare arguments");
+			System.err.println(Usage);
+			return;
+		}
+		if (firstCellPathRW == null)
+			firstCellPathRW = "/afs/." + args[2];
 
+		TesterThread tt = null;
+		try
+		{
 			Class.forName("org.openafs.jafs.Token");	//initialization...
 			System.out.println("Java interface version: " + VersionInfo.getVersionOfJavaInterface());
 			System.out.println("Library version: " + VersionInfo.getVersionOfLibrary());
@@ -640,25 +771,23 @@ public class testAFS
 
 			//first test whether token is valid
 			//and load libraries with it
-			Token t0 = new Token(args[0], args[1], args[2]);
+			Token t0 = new Token(user, pass, cell_name);
 			t0.close();
 
 			System.out.print("Starting another tester thread...");
 			testAFS	ta = new testAFS();
-			TesterThread tt = ta.new TesterThread(args[0], args[1], args[2]);
+			tt = ta.new TesterThread(user, pass, cell_name, firstCellPathRW);
 			Thread tTest = new Thread(tt);
 			tTest.start();
 			System.out.println("started.");
 
-			firstCellPathRW = "/afs/." + args[2];
-			int numOfCycles = Integer.parseInt(args[3]);
 			for(int i=0; i<numOfCycles || numOfCycles==0; i++)
 			{
-				testToken(args[0], args[1], args[2]);
+				testToken(user, pass, cell_name);
 
 				testFiles();
 
-				testNewVolume(args[0], args[1], args[2]);
+				testNewVolume(user, pass, cell_name);
 
 				System.out.print("ACL excercising...");
 				allowDump = false;
@@ -674,11 +803,14 @@ public class testAFS
 
 				System.out.println("cycle #" + (i+1) + "/" + numOfCycles + " done.");
 			}
-
-			tt.finish();
-			System.out.println("All done.");
 		} catch (Exception e) {
+			something_failed = true;
 			e.printStackTrace();
+			System.out.println("Bailing - fatal error.");
+		} finally {
+			if (tt != null) tt.finish();
+			if (!something_failed)
+				System.out.println("All done.");
 		}
 	}
 }

@@ -63,6 +63,11 @@ RCSID
 #include "partition.h"
 #include <rx/rx_queue.h>
 
+#ifdef USE_UNIX_SOCKETS
+#include <afs/afsutil.h>
+#include <sys/un.h>
+#endif
+
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 #ifdef osi_Assert
@@ -77,7 +82,12 @@ int (*V_BreakVolumeCallbacks) ();
 
 #define MAX_BIND_TRIES	5	/* Number of times to retry socket bind */
 
-static int getport(SYNC_client_state * state, struct sockaddr_in *addr);
+#ifdef USE_UNIX_SOCKETS
+static getport(SYNC_client_state * state, struct sockaddr_un *addr);
+#else  /* USE_UNIX_SOCKETS */
+static getport(SYNC_client_state * state, struct sockaddr_in *addr);
+#endif /* USE_UNIX_SOCKETS */
+
 static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response * res);
 
 /* daemon com SYNC client interface */
@@ -85,7 +95,11 @@ static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC
 int
 SYNC_connect(SYNC_client_state * state)
 {
+#ifdef USE_UNIX_SOCKETS
+    struct sockaddr_un addr;
+#else /* USE_UNIX_SOCKETS */
     struct sockaddr_in addr;
+#endif /* USE_UNIX_SOCKETS */
     /* I can't believe the following is needed for localhost connections!! */
     static time_t backoff[] =
 	{ 3, 3, 3, 5, 5, 5, 7, 15, 16, 24, 32, 40, 48, 0 };
@@ -171,11 +185,26 @@ SYNC_reconnect(SYNC_client_state * state)
 }
 
 /* private function to fill in the sockaddr struct for us */
+#ifdef USE_UNIX_SOCKETS
+static int
+getport(SYNC_client_state * state, struct sockaddr_un *addr)
+{
+    int sd;
+    char tbuffer[AFSDIR_PATH_MAX]; 
+
+    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
+               "fssync.sock", NULL);
+    memset(addr, 0, sizeof(*addr));
+    addr->sun_family = AF_UNIX;
+    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
+    assert((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0);
+    return sd;
+}
+#else  /* USE_UNIX_SOCKETS */
 static int
 getport(SYNC_client_state * state, struct sockaddr_in *addr)
 {
     int sd;
-
     memset(addr, 0, sizeof(*addr));
     assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
@@ -184,9 +213,9 @@ getport(SYNC_client_state * state, struct sockaddr_in *addr)
     addr->sin_addr.s_addr = htonl(0x7f000001);
     addr->sin_family = AF_INET;	/* was localhost->h_addrtype */
     addr->sin_port = htons(state->port);	/* XXXX htons not _really_ neccessary */
-
     return sd;
 }
+#endif /* USE_UNIX_SOCKETS */
 
 afs_int32
 SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)

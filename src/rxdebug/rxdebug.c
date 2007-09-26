@@ -90,7 +90,7 @@ MainCommand(as, arock)
      struct cmd_syndesc *as;
 {
     register int i;
-    int s;
+    osi_socket s;
     int j;
     struct sockaddr_in taddr;
     afs_int32 host;
@@ -112,9 +112,11 @@ MainCommand(as, arock)
     int withRxStats;
     int withWaiters;
     int withIdleThreads;
+    int withWaited;
     int withPeers;
     struct rx_debugStats tstats;
     char *portName, *hostName;
+    char hoststr[20];
     struct rx_debugConn tconn;
     short noConns;
     short showPeers;
@@ -217,7 +219,8 @@ MainCommand(as, arock)
     dallyCounter = 0;
 
     hostAddr.s_addr = host;
-    printf("Trying %s (port %d):\n", inet_ntoa(hostAddr), ntohs(port));
+    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+    printf("Trying %s (port %d):\n", hoststr, ntohs(port));
     s = socket(AF_INET, SOCK_DGRAM, 0);
     taddr.sin_family = AF_INET;
     taddr.sin_port = 0;
@@ -258,6 +261,7 @@ MainCommand(as, arock)
     withRxStats = (supportedDebugValues & RX_SERVER_DEBUG_RX_STATS);
     withWaiters = (supportedDebugValues & RX_SERVER_DEBUG_WAITER_CNT);
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
+    withWaited = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
 
     printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
@@ -270,6 +274,8 @@ MainCommand(as, arock)
 	printf("%d calls waiting for a thread\n", tstats.nWaiting);
     if (withIdleThreads)
 	printf("%d threads are idle\n", tstats.idleThreads);
+    if (withWaited)
+	printf("%d calls have waited for a thread\n", tstats.nWaited);
 
     if (rxstats) {
 	if (!withRxStats) {
@@ -323,8 +329,9 @@ MainCommand(as, arock)
 	}
 	if (onlyHost != -1) {
 	    hostAddr.s_addr = onlyHost;
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
 	    printf("Showing only connections from host %s\n",
-		   inet_ntoa(hostAddr));
+		   hoststr);
 	}
 	if (onlyPort != -1)
 	    printf("Showing only connections on port %u\n", ntohs(onlyPort));
@@ -338,7 +345,7 @@ MainCommand(as, arock)
 		printf("getconn call failed with code %d\n", code);
 		break;
 	    }
-	    if (tconn.cid == 0xffffffff) {
+	    if (tconn.cid == (afs_int32) 0xffffffff) {
 		printf("Done.\n");
 		break;
 	    }
@@ -383,7 +390,8 @@ MainCommand(as, arock)
 
 	    /* now display the connection */
 	    hostAddr.s_addr = tconn.host;
-	    printf("Connection from host %s, port %hu, ", inet_ntoa(hostAddr),
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+	    printf("Connection from host %s, port %hu, ", hoststr,
 		   ntohs(tconn.port));
 	    if (tconn.epoch)
 		printf("Cuid %x/%x", tconn.epoch, tconn.cid);
@@ -456,10 +464,10 @@ MainCommand(as, arock)
 				   ((afs_uint32) tconn.secStats.expires -
 				    time(0)) / 3600.0);
 			if (!(flags & 1)) {
-			    printf("\n  Received %d bytes in %d packets\n",
+			    printf("\n  Received %u bytes in %u packets\n",
 				   tconn.secStats.bytesReceived,
 				   tconn.secStats.packetsReceived);
-			    printf("  Sent %d bytes in %d packets\n",
+			    printf("  Sent %u bytes in %u packets\n",
 				   tconn.secStats.bytesSent,
 				   tconn.secStats.packetsSent);
 			} else
@@ -545,25 +553,26 @@ MainCommand(as, arock)
 
 	    /* now display the peer */
 	    hostAddr.s_addr = tpeer.host;
-	    printf("Peer at host %s, port %hu\n", inet_ntoa(hostAddr),
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+	    printf("Peer at host %s, port %hu\n", hoststr, 
 		   ntohs(tpeer.port));
 	    printf("\tifMTU %hu\tnatMTU %hu\tmaxMTU %hu\n", tpeer.ifMTU,
 		   tpeer.natMTU, tpeer.maxMTU);
-	    printf("\tpackets sent %d\tpacket resends %d\n", tpeer.nSent,
+	    printf("\tpackets sent %u\tpacket resends %u\n", tpeer.nSent,
 		   tpeer.reSends);
-	    printf("\tbytes sent high %d low %d\n", tpeer.bytesSent.high,
+	    printf("\tbytes sent high %u low %u\n", tpeer.bytesSent.high,
 		   tpeer.bytesSent.low);
-	    printf("\tbytes received high %d low %d\n",
+	    printf("\tbytes received high %u low %u\n",
 		   tpeer.bytesReceived.high, tpeer.bytesReceived.low);
-	    printf("\trtt %d msec, rtt_dev %d msec\n", tpeer.rtt >> 3,
+	    printf("\trtt %u msec, rtt_dev %u msec\n", tpeer.rtt >> 3,
 		   tpeer.rtt_dev >> 2);
-	    printf("\ttimeout %d.%03d sec\n", tpeer.timeout.sec,
+	    printf("\ttimeout %u.%03u sec\n", tpeer.timeout.sec,
 		   tpeer.timeout.usec / 1000);
 	    if (!showLong)
 		continue;
 
 	    printf("\tin/out packet skew: %d/%d\n", tpeer.inPacketSkew,
-		   tpeer.outPacketSkew);
+		    tpeer.outPacketSkew);
 	    printf("\tcongestion window %d, MTU %d\n", tpeer.cwind,
 		   tpeer.MTU);
 	    printf("\tcurrent/if/max jumbogram size: %d/%d/%d\n",
@@ -585,6 +594,9 @@ main(argc, argv)
 {
     struct cmd_syndesc *ts;
 
+#ifdef RXDEBUG
+    rxi_DebugInit();
+#endif
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
 	printf("%s: Couldn't initialize winsock. Exiting...\n", argv[0]);

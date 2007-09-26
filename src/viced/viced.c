@@ -72,17 +72,16 @@ RCSID
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include "rx/rxk5errors.h"
+#include "afs/rxk5_utilafs.h"
+#include "rx/rxk5.h"
+#endif
+#include <afs/auth.h>
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
 #include <rx/rx.h>
-#include <rx/rxkad.h>
-#ifdef AFS_RXK5
-#include "rx/rxk5.h"
-#include "rx/rxk5errors.h"
-#include "afs/rxk5_utilafs.h"
-#endif
 #include <afs/keys.h>
 #include <afs/afs_args.h>
 #include <afs/vlserver.h>
@@ -94,6 +93,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <afs/netutils.h>
 #endif
+#include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
@@ -235,6 +235,11 @@ static void FlagMsg();
  * certain background threads before we are allowed to dump state to
  * disk
  */
+
+#if !defined(PTHREAD_RWLOCK_INITIALIZER) && defined(AFS_DARWIN80_ENV)
+#define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
+#endif
+
 struct fs_state fs_state = 
     { FS_MODE_NORMAL, 
       0, 
@@ -2235,6 +2240,9 @@ main(int argc, char *argv[])
 
 #ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_INIT;
+#endif
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 

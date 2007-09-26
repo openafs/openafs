@@ -51,13 +51,26 @@ typedef struct cm_config_data {
     cm_aclent_t *       aclLRUp;
     cm_aclent_t	*       aclLRUEndp;
 
-    cm_scache_t	**      hashTablep;
-    afs_uint32		hashTableSize;
+    cm_scache_t	**      scacheHashTablep;
+    afs_uint32		scacheHashTableSize;
 
+    cm_scache_t *       allSCachesp;
     afs_uint32		currentSCaches;
     afs_uint32          maxSCaches;
     cm_scache_t *       scacheLRUFirstp;
     cm_scache_t *       scacheLRULastp;
+
+    cm_cell_t   **      cellNameHashTablep;
+    cm_cell_t   **      cellIDHashTablep;
+    afs_uint32          cellHashTableSize;
+
+    cm_volume_t **      volumeNameHashTablep;
+    cm_volume_t **      volumeRWIDHashTablep;
+    cm_volume_t **      volumeROIDHashTablep;
+    cm_volume_t **      volumeBKIDHashTablep;
+    afs_uint32          volumeHashTableSize;
+    cm_volume_t *       volumeLRUFirstp;
+    cm_volume_t *       volumeLRULastp;
 
     cm_nc_t 	*       ncfreelist;
     cm_nc_t 	*       nameCache;
@@ -67,7 +80,7 @@ typedef struct cm_config_data {
     cm_buf_t    *       buf_freeListEndp;
     cm_buf_t	*       buf_dirtyListp;
     cm_buf_t    *       buf_dirtyListEndp;
-    cm_buf_t	**      buf_hashTablepp;
+    cm_buf_t	**      buf_scacheHashTablepp;
     cm_buf_t	**      buf_fileHashTablepp;
     cm_buf_t	*       buf_allp;
     afs_uint64		buf_nbuffers;
@@ -95,12 +108,12 @@ afs_uint64 ComputeSizeOfSCache(DWORD stats);
 afs_uint64 ComputeSizeOfSCacheHT(DWORD stats);
 afs_uint64 ComputeSizeOfDNLCache(void);
 afs_uint64 ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize);
-afs_uint64 ComputeSizeOfDataHT(void);
+afs_uint64 ComputeSizeOfDataHT(afs_uint64 cacheBlocks);
 afs_uint64 ComputeSizeOfDataHeaders(afs_uint64 cacheBlocks);
 afs_uint64 ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, afs_uint64 cacheBlocks, DWORD blockSize);
 PSECURITY_ATTRIBUTES CreateCacheFileSA();
 VOID  FreeCacheFileSA(PSECURITY_ATTRIBUTES psa);
 int   cm_ShutdownMappedMemory(void);
 int   cm_ValidateMappedMemory(char * cachePath);
-int   cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, afs_uint64 cacheBlocks );
+int   cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, afs_uint64 cacheBlocks, afs_uint32 blockSize);
 #endif /* CM_MEMMAP_H */

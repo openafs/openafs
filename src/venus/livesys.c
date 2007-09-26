@@ -32,6 +32,7 @@ RCSID
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
+#include <afs/com_err.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -73,7 +74,7 @@ main(argc, argv)
     memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
-	fprintf(stderr, "livesys: %s\n", error_message(code));
+	fprintf(stderr, "livesys: %s\n", afs_error_message(code));
 	return 1;
     }
     input = space;

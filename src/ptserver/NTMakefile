@@ -10,7 +10,22 @@
 RELDIR=ptserver
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
-AFSDEV_AUXCDEFINES = -DAFS_USE_GETTIMEOFDAY
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+RXK5LIBS = $(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+!ENDIF
+
+
+AFSDEV_AUXCDEFINES = -DAFS_USE_GETTIMEOFDAY -DSUPERGROUPS
 
 ############################################################################
 # Definitions for installing header files
@@ -52,6 +67,7 @@ PTSERVER_EXEOBJS =\
 	$(OUT)\ptutils.obj \
 	$(OUT)\ptprocs.obj \
 	$(OUT)\utils.obj \
+        $(OUT)\map.obj \
 	$(OUT)\ptserver.res
 
 
@@ -60,15 +76,18 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrxstat.lib \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afsdes.lib \
-	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\cm_dns.obj
+	$(DESTDIR)\lib\cm_dns.obj \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 !IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
 PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
@@ -100,17 +119,17 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afsdes.lib \
-	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\cm_dns.obj
+	$(DESTDIR)\lib\cm_dns.obj \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
@@ -161,6 +180,8 @@ pterror.h pterror.c: pterror.et
 
 ############################################################################
 # install pts, ptserver and afsprot.lib
+
+install_headers: $(INCFILES)
 
 install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(OUT)\readgroup.exe \
 	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
@@ -226,4 +247,5 @@ $(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj
         $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
-	
+
+

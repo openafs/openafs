@@ -65,6 +65,8 @@ osi_mutex_t  smb_ListenerLock;
 char smb_LANadapter;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 
+BOOL isGateway = FALSE;
+
 /* for debugging */
 long smb_maxObsConcurrentCalls=0;
 long smb_concurrentCalls=0;
@@ -1649,8 +1651,8 @@ char VNLCComputerName[] = "%LCCOMPUTERNAME%";
 /* List available shares */
 int smb_ListShares()
 {
-    char sbmtpath[256];
-    char pathName[256];
+    char sbmtpath[AFSPATHMAX];
+    char pathName[AFSPATHMAX];
     char shareBuf[4096];
     int num_shares=0;
     char *this_share;
@@ -1687,7 +1689,7 @@ int smb_ListShares()
         /*strcpy(shareNameList[num_shares], this_share);*/
         len = GetPrivateProfileString("AFS Submounts", this_share,
                                        NULL,
-                                       pathName, 256,
+                                       pathName, AFSPATHMAX,
                                        sbmtpath);
         if (!len) 
             return num_shares;
@@ -1794,6 +1796,36 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
          ) {
         *pathNamep = NULL;
         return 0;
+    }
+
+    /* Check for volume references
+
+       They look like <cell>{%,#}<volume>
+    */
+    if (strchr(shareName, '%') != NULL ||
+        strchr(shareName, '#') != NULL) {
+        char pathstr[CELL_MAXNAMELEN + VL_MAXNAMELEN + 1 + CM_PREFIX_VOL_CCH];
+                                /* make room for '/@vol:' + mountchar + NULL terminator*/
+
+        osi_Log1(smb_logp, "smb_FindShare found volume reference [%s]",
+                 osi_LogSaveString(smb_logp, shareName));
+
+        snprintf(pathstr, sizeof(pathstr)/sizeof(char),
+                 "/" CM_PREFIX_VOL "%s", shareName);
+        pathstr[sizeof(pathstr)/sizeof(char) - 1] = '\0';
+        len = strlen(pathstr) + 1;
+
+        *pathNamep = malloc(len);
+        if (*pathNamep) {
+            strcpy(*pathNamep, pathstr);
+            strlwr(*pathNamep);
+            osi_Log1(smb_logp, "   returning pathname [%s]",
+                     osi_LogSaveString(smb_logp, *pathNamep));
+
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 #ifndef DJGPP
@@ -2604,7 +2636,10 @@ void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op
         outp->res[1] = inSmbp->res[1];
         op->inCom = inSmbp->com;
     }
-    outp->reb = SMB_FLAGS_SERVER_TO_CLIENT | SMB_FLAGS_CANONICAL_PATHNAMES;
+    outp->reb = SMB_FLAGS_SERVER_TO_CLIENT;
+#ifdef SEND_CANONICAL_PATHNAMES
+    outp->reb |= SMB_FLAGS_CANONICAL_PATHNAMES;
+#endif
     outp->flg2 = SMB_FLAGS2_KNOWS_LONG_NAMES;
 
     /* copy fields in generic packet area */
@@ -2712,7 +2747,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_READONLY) {
         NTStatus = 0xC00000A2L;	/* Write protected */
     }
-    else if (code == CM_ERROR_NOSUCHFILE) {
+    else if (code == CM_ERROR_NOSUCHFILE ||
+             code == CM_ERROR_BPLUS_NOMATCH) {
         NTStatus = 0xC000000FL;	/* No such file */
     }
     else if (code == CM_ERROR_NOSUCHPATH) {
@@ -2886,7 +2922,8 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
         class = 3;
         error = 19;	/* read only */
     }
-    else if (code == CM_ERROR_NOSUCHFILE) {
+    else if (code == CM_ERROR_NOSUCHFILE ||
+             code == CM_ERROR_BPLUS_NOMATCH) {
         class = 1;
         error = 2;	/* ENOENT! */
     }
@@ -3105,6 +3142,13 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
         goto send1;
+
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        code = CM_ERROR_NOSUCHFILE;
+        goto send1a;
+    }
+
 
     pid = ((smb_t *) inp)->pid;
     {
@@ -3748,7 +3792,7 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_tid_t *tidp;
     smb_user_t *uidp;
     unsigned short newTid;
-    char shareName[256];
+    char shareName[AFSPATHMAX];
     char *sharePath;
     int shareFound;
     char *tp;
@@ -4357,7 +4401,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                                                       scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
                     int now = GetTickCount();
-                    if (now - req.startTime > RDRtimeout) {
+                    if (now - req.startTime > RDRtimeout * 1000) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
                         dsp->flags &= ~SMB_DIRSEARCH_BULKST;
@@ -4485,6 +4529,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                          "has filetype %d", osi_LogSaveString(smb_logp, dep->name),
                           fileType);
                 if (fileType == CM_SCACHETYPE_DIRECTORY ||
+                    fileType == CM_SCACHETYPE_MOUNTPOINT ||
                     fileType == CM_SCACHETYPE_DFSLINK ||
                     fileType == CM_SCACHETYPE_INVALID)
                     osi_Log0(smb_logp, "SMB search dir skipping directory or bad link");
@@ -5149,6 +5194,7 @@ typedef struct smb_unlinkRock {
     char *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
+    cm_dirEntryList_t * matches;
 } smb_unlinkRock_t;
 
 int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
@@ -5177,20 +5223,18 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         match = smb_V3MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
     }
     if (match) {
-        osi_Log1(smb_logp, "Unlinking %s",
+        osi_Log1(smb_logp, "Found match %s",
                  osi_LogSaveString(smb_logp, matchName));
-        code = cm_Unlink(dscp, dep->name, rockp->userp, rockp->reqp);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_REMOVED,
-			     FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                             dscp, dep->name, NULL, TRUE);
-        if (code == 0) {
+
+        cm_DirEntryListAdd(dep->name, &rockp->matches);
+
             rockp->any = 1;
 
             /* If we made a case sensitive exact match, we might as well quit now. */
             if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
                 code = CM_ERROR_STOPNOW;
-        }
+        else
+            code = 0;
     }
     else code = 0;
 
@@ -5271,6 +5315,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     rock.reqp = &req;
     rock.dscp = dscp;
     rock.vcp = vcp;
+    rock.matches = NULL;
 
     /* Now, if we aren't dealing with a wildcard match, we first try an exact 
      * match.  If that fails, we do a case insensitve match. 
@@ -5291,6 +5336,24 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == CM_ERROR_STOPNOW) 
         code = 0;
 
+    if (code == 0 && rock.matches) {
+        cm_dirEntryList_t * entry;
+
+        for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+
+            osi_Log1(smb_logp, "Unlinking %s",
+                     osi_LogSaveString(smb_logp, entry->name));
+            code = cm_Unlink(dscp, entry->name, userp, &req);
+
+            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                smb_NotifyChange(FILE_ACTION_REMOVED,
+                                 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                                 dscp, entry->name, NULL, TRUE);
+        }
+    }
+
+    cm_DirEntryListFree(&rock.matches);
+
     cm_ReleaseUser(userp);
         
     cm_ReleaseSCache(dscp);
@@ -5309,6 +5372,7 @@ typedef struct smb_renameRock {
     char *maskp;		/* pointer to star pattern of old file name */
     int flags;		    /* tilde, casefold, etc */
     char *newNamep;		/* ptr to the new file's name */
+    char oldName[MAX_PATH];
     int any;
 } smb_renameRock_t;
 
@@ -5333,21 +5397,15 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         cm_Gen8Dot3Name(dep, shortName, NULL);
         match = smb_V3MatchMask(shortName, rockp->maskp, caseFold);
     }
+
     if (match) {
 	rockp->any = 1;
-
-	code = cm_Rename(rockp->odscp, dep->name,
-                         rockp->ndscp, rockp->newNamep, rockp->userp,
-                         rockp->reqp);	
-        /* if the call worked, stop doing the search now, since we
-         * really only want to rename one file.
-         */
-	osi_Log1(smb_logp, "cm_Rename returns %ld", code);
-        if (code == 0) 
+        strncpy(rockp->oldName, dep->name, sizeof(rockp->oldName)/sizeof(char) - 1);
+        rockp->oldName[sizeof(rockp->oldName)/sizeof(char) - 1] = '\0';
             code = CM_ERROR_STOPNOW;
-    }       
-    else 
+    } else {
 	code = 0;
+    }
 
     return code;
 }
@@ -5452,11 +5510,14 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     rock.maskp = oldLastNamep;
     rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
     rock.newNamep = newLastNamep;
+    rock.oldName[0] = '\0';
     rock.any = 0;
 
     /* Check if the file already exists; if so return error */
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) && 
+        (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
+    {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(smb_logp, newLastNamep));
 
@@ -5504,16 +5565,24 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     }
     osi_Log1(smb_logp, "smb_RenameProc returns %ld", code);
 
-    if (code == CM_ERROR_STOPNOW)
-        code = 0;
-    else if (code == 0)
+    if (code == CM_ERROR_STOPNOW && rock.oldName[0] != '\0') {
+	code = cm_Rename(rock.odscp, rock.oldName,
+                         rock.ndscp, rock.newNamep, rock.userp,
+                         rock.reqp);	
+        /* if the call worked, stop doing the search now, since we
+         * really only want to rename one file.
+         */
+	osi_Log1(smb_logp, "cm_Rename returns %ld", code);
+    } else if (code == 0) {
         code = CM_ERROR_NOSUCHFILE;
+    }
 
     /* Handle Change Notification */
     /*
     * Being lazy, not distinguishing between files and dirs in this
     * filter, since we'd have to do a lookup.
     */
+    if (code == 0) {
     filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
     if (oldDscp == newDscp) {
         if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
@@ -5529,6 +5598,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
             smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
                              filter, newDscp, newLastNamep,
                              NULL, TRUE);
+    }
     }
 
     if (tmpscp != NULL) 
@@ -5645,7 +5715,9 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
 
     /* Check if the file already exists; if so return error */
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) &&
+        (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
+    {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(smb_logp, newLastNamep));
 
@@ -5726,6 +5798,7 @@ typedef struct smb_rmdirRock {
     char *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
+    cm_dirEntryList_t * matches;
 } smb_rmdirRock_t;
 
 int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
@@ -5750,20 +5823,13 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
         matchName = shortName;
         match = (cm_stricmp(matchName, rockp->maskp) == 0);
     }       
-    if (match) {
-        osi_Log1(smb_logp, "Removing directory %s",
-                 osi_LogSaveString(smb_logp, matchName));
-        code = cm_RemoveDir(dscp, dep->name, rockp->userp, rockp->reqp);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_REMOVED,
-                             FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                             dscp, dep->name, NULL, TRUE);
-        if (code == 0)
-            rockp->any = 1;
-    }
-    else code = 0;
 
-    return code;
+    if (match) {
+            rockp->any = 1;
+        cm_DirEntryListAdd(dep->name, &rockp->matches);
+    }
+
+    return 0;
 }
 
 long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -5834,6 +5900,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     rock.userp = userp;
     rock.reqp = &req;
     rock.dscp = dscp;
+    rock.matches = NULL;
 
     /* First do a case sensitive match, and if that fails, do a case insensitive match */
     code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
@@ -5843,6 +5910,24 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         rock.flags |= SMB_MASKFLAG_CASEFOLD;
         code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
     }
+
+    if (code == 0 && rock.matches) {
+        cm_dirEntryList_t * entry;
+
+        for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+            osi_Log1(smb_logp, "Removing directory %s",
+                     osi_LogSaveString(smb_logp, entry->name));
+
+            code = cm_RemoveDir(dscp, entry->name, userp, &req);
+
+            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                smb_NotifyChange(FILE_ACTION_REMOVED,
+                                 FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                                 dscp, entry->name, NULL, TRUE);
+        }
+    }
+
+    cm_DirEntryListFree(&rock.matches);
 
     cm_ReleaseUser(userp);
         
@@ -5872,6 +5957,12 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp)
 	return CM_ERROR_BADFD;
     
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -6348,11 +6439,11 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     cm_scache_t *scp;
     osi_hyper_t fileLength;	/* file's length at start of write */
     osi_hyper_t minLength;	/* don't read past this */
-    long nbytes;		/* # of bytes to transfer this iteration */
+    afs_uint32 nbytes;		/* # of bytes to transfer this iteration */
     cm_buf_t *bufferp;
     osi_hyper_t thyper;		/* hyper tmp variable */
     osi_hyper_t bufferOffset;
-    long bufIndex;		/* index in buffer where our data is */
+    afs_uint32 bufIndex;		/* index in buffer where our data is */
     int doWriteBack;
     osi_hyper_t writeBackOffset;/* offset of region to write back when
                                  * I/O is done */
@@ -6539,7 +6630,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         else
 #endif /* DJGPP */
             memcpy(bufferp->datap + bufIndex, op, nbytes);
-        buf_SetDirty(bufferp);
+        buf_SetDirty(bufferp, bufIndex, nbytes);
 
         /* and record the last writer */
         if (bufferp->userp != userp) {
@@ -6630,6 +6721,12 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -6713,7 +6810,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         offset = LargeIntegerAdd(offset,
                                  ConvertLongToLargeInteger(written));
-        count -= written;
+        count -= (unsigned short)written;
         total_written += written;
         written = 0;
     }
@@ -6752,6 +6849,12 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
     fd = smb_GetSMBParm(inp, 0);
     fidp = smb_FindFID(vcp, fd, 0);
+
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return;
+    }
 
     osi_Log3(smb_logp, "Completing Raw Write offset 0x%x:%08x count %x",
              rwcp->offset.HighPart, rwcp->offset.LowPart, rwcp->count);
@@ -6870,6 +6973,12 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp) {
         return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
     }
 
     {
@@ -7015,6 +7124,12 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp)
         return CM_ERROR_BADFD;
         
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -7158,7 +7273,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         lastNamep++;
     code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
     if (scp) cm_ReleaseSCache(scp);
-    if (code != CM_ERROR_NOSUCHFILE) {
+    if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
         if (code == 0) code = CM_ERROR_EXISTS;
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
@@ -7295,7 +7410,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif    
 
     code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
-    if (code && code != CM_ERROR_NOSUCHFILE) {
+    if (code && code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         return code;
@@ -7422,10 +7537,15 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* try to find the file descriptor */
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-
     if (!fidp)
 	return CM_ERROR_BADFD;
     
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -8340,6 +8460,11 @@ void smb_Listener(void *parmp)
 	    }
 
 	    if (lanaRemaining == 0) {
+                cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                             ,cm_NetbiosName
+#endif
+                                              );
 		smb_ListenerState = SMB_LISTENER_STOPPED;
 		smb_LANadapter = -1;
 		lana_list.length = 0;
@@ -8348,7 +8473,7 @@ void smb_Listener(void *parmp)
 	    return;
 	} else if (code != 0) {
 #ifndef DJGPP
-            char tbuffer[256];
+            char tbuffer[AFSPATHMAX];
 #endif
 
             /* terminate silently if shutdown flag is set */
@@ -8592,12 +8717,42 @@ int smb_NetbiosInit(void)
     int delname_tried=0;
     int len;
     int lana_found = 0;
+    lana_number_t lanaNum;
 
     /* setup the NCB system */
     ncbp = GetNCB();
 #ifdef DJGPP
     dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
 #endif /* DJGPP */
+
+    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
+    if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
+        smb_LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
+
+        if (smb_LANadapter != -1)
+            afsi_log("LAN adapter number %d", smb_LANadapter);
+        else
+            afsi_log("LAN adapter number not determined");
+
+        if (isGateway)
+            afsi_log("Set for gateway service");
+
+        afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
+    } else {
+        /* something went horribly wrong.  We can't proceed without a netbios name */
+	char buf[128];
+        StringCbPrintfA(buf,sizeof(buf),"Netbios name could not be determined: %li", code);
+        osi_panic(buf, __FILE__, __LINE__);
+    }
+
+    /* remember the name */
+    len = (int)strlen(cm_NetbiosName);
+    if (smb_localNamep)
+	free(smb_localNamep);
+    smb_localNamep = malloc(len+1);
+    strcpy(smb_localNamep, cm_NetbiosName);
+    afsi_log("smb_localNamep is >%s<", smb_localNamep);
+
 
 #ifndef DJGPP
     if (smb_LANadapter == -1) {
@@ -8739,6 +8894,11 @@ int smb_NetbiosInit(void)
 	lana_list.length = 0;
 	smb_LANadapter = -1;
 	smb_ListenerState = SMB_LISTENER_STOPPED;
+        cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                      ,cm_NetbiosName
+#endif
+                                      );
     }
         
     /* we're done with the NCB now */
@@ -8757,6 +8917,11 @@ void smb_StartListeners()
 	return;
     
     smb_ListenerState = SMB_LISTENER_STARTED;
+    cm_VolStatus_Network_Started(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
 
     for (i = 0; i < lana_list.length; i++) {
         if (lana_list.lana[i] == 255) 
@@ -8813,6 +8978,11 @@ void smb_StopListeners(void)
 	return;
 
     smb_ListenerState = SMB_LISTENER_STOPPED;
+    cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
 
     ncbp = GetNCB();
 
@@ -8835,7 +9005,7 @@ void smb_StopListeners(void)
     Sleep(1000);	/* give the listener threads a chance to exit */
 }
 
-void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
+void smb_Init(osi_log_t *logp, int useV3,
               int nThreads
 #ifndef DJGPP
               , void *aMBfunc
@@ -8846,7 +9016,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     thread_t phandle;
     int lpid;
     INT_PTR i;
-    int len;
     struct tm myTime;
 #ifdef DJGPP
     int npar, seg, sel;
@@ -8862,7 +9031,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 #endif /* DJGPP */
 
     smb_useV3 = useV3;
-    smb_LANadapter = LANadapt;
 
     /* Initialize smb_localZero */
     myTime.tm_isdst = -1;		/* compute whether on DST or not */
@@ -8886,12 +9054,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     /* initialize the remote debugging log */
     smb_logp = logp;
         
-    /* remember the name */
-    len = (int)strlen(snamep);
-    smb_localNamep = malloc(len+1);
-    strcpy(smb_localNamep, snamep);
-    afsi_log("smb_localNamep is >%s<", smb_localNamep);
-
     /* and the global lock */
     lock_InitializeRWLock(&smb_globalLock, "smb global lock");
     lock_InitializeRWLock(&smb_rctLock, "smb refct and tree struct lock");
@@ -9146,7 +9308,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                    char message[256];
+                    char message[AFSPATHMAX];
                     sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                                        nts, ntsEx);
                     OutputDebugString(message);
@@ -9476,97 +9638,72 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&smb_rctLock);
   
-    sprintf(output, "begin dumping smb_vc_t\n");
+    sprintf(output, "begin dumping smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\n");
+        sprintf(output, "begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\n");
+        sprintf(output, "done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
-    sprintf(output, "done dumping smb_vc_t\n");
+    sprintf(output, "done dumping smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
-    sprintf(output, "begin dumping DEAD smb_vc_t\n");
+    sprintf(output, "begin dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_deadVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\n");
+        sprintf(output, "begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\n");
+        sprintf(output, "done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
-    sprintf(output, "done dumping DEAD smb_vc_t\n");
-    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
-    sprintf(output, "begin dumping DEAD smb_vc_t\n");
-    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-
-    for (vcp = smb_deadVCsp; vcp; vcp=vcp->nextp) 
-    {
-        smb_fid_t *fidp;
-      
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
-                 cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
-        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-      
-        sprintf(output, "begin dumping smb_fid_t\n");
-        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-
-        for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
-        {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
-                     cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
-                     fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
-                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
-            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-        }
-      
-        sprintf(output, "done dumping smb_fid_t\n");
-        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-    }
-
-    sprintf(output, "done dumping DEAD smb_vc_t\n");
+    sprintf(output, "done dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)
         lock_ReleaseRead(&smb_rctLock);
     return 0;
+}
+
+long smb_IsNetworkStarted(void)
+{
+    return (smb_ListenerState == SMB_LISTENER_STARTED && smbShutdownFlag == 0);
 }

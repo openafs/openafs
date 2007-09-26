@@ -10,6 +10,13 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+!ENDIF
+
 #########################################################################
 # install local include file
 INCFILES = bc.h
@@ -37,6 +44,8 @@ $(LIBFILE): $(LIBOBJS)
 
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
+EXERES = $(OUT)/backup.res
+
 EXEOBJS =\
 	$(OUT)\main.obj \
 	$(OUT)\config.obj \
@@ -58,8 +67,7 @@ EXEOBJS =\
 	$(OUT)\dlq.obj \
 
 
-$(OUT)/backup.res:AFS_component_version_number.h
-	$(RC) backup.rc
+$(EXERES): backup.rc AFS_component_version_number.h
 
 $(EXEOBJS):$$(@B).c
 	$(C2OBJ) $**
@@ -87,10 +95,11 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-     $(DESTDIR)\lib\cm_dns.obj
-	
+	$(RXK5LIBS) \
+        $(DESTDIR)\lib\cm_dns.obj \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -119,6 +128,8 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
 clean::
 	$(DEL) bc.h bucoord_errs.c
+	$(DEL) $(EXERES)
+	$(DEL) AFS_component_version_number.h
 
 
 mkdir:

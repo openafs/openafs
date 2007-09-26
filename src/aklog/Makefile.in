@@ -16,7 +16,7 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
 	  ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a \
 	  ${RXK5} ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
-	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a
+	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/util.a
 
 SRCS=	aklog.c aklog_main.c linked_list.c skipwrap.c krb_util.c
 OBJS=   aklog.o aklog_main.o linked_list.o afserror.o skipwrap.o krb_util.o
@@ -33,6 +33,11 @@ asetkey: asetkey.o ${AFSLIBS}
 
 klog:	klog.o skipwrap.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${LIBS} ${AFSLIBS} \
+	${TOP_LIBDIR}/libcmd.a \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
+verifykt:	verifykt.o skipwrap.o ${AFSLIBS}
+	${CC} -o $@ ${CFLAGS} verifykt.o skipwrap.o ${LIBS} ${AFSLIBS} \
 	${TOP_LIBDIR}/libcmd.a \
 	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
 

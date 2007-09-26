@@ -25,6 +25,7 @@ RCSID
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
+#include <afs/com_err.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -41,7 +42,6 @@ RCSID
 #undef VICE
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <rx/rxkad.h>
@@ -69,7 +69,7 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd();
+static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), NewUuidCmd();
 
 extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
@@ -1242,6 +1242,24 @@ FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
 	}
     }
     return error;
+}
+
+static int
+NewUuidCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+
+    blob.in_size = 0;
+    blob.out_size = 0;
+    code = pioctl(0, VIOC_NEWUUID, &blob, 1);
+    if (code) {
+	Die(errno, 0);
+	return 1;
+    }
+
+    printf("New uuid generated.\n");
+    return 0;
 }
 
 static int
@@ -3620,6 +3638,9 @@ defect 3069
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, 0, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
 
+    ts = cmd_CreateSyntax("newuuid", NewUuidCmd, 0,
+			  "force a new uuid");
+
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
 	rx_Finalize();
@@ -3665,7 +3686,7 @@ Die(int errnum, char *filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
 	else
 	    fprintf(stderr, "%s", pn);
-	fprintf(stderr, ": %s\n", error_message(errnum));
+	fprintf(stderr, ": %s\n", afs_error_message(errnum));
 	break;
     }
 }

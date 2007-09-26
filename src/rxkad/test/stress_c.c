@@ -318,7 +318,7 @@ CallSimultaneously(threads, rock, proc)
 
 	    code = pthread_attr_init(&tattr);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"can't pthread_attr_init worker process");
 		return code;
 	    }
@@ -326,7 +326,7 @@ CallSimultaneously(threads, rock, proc)
 	    code =
 		pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"can't pthread_attr_setdetachstate worker process");
 		return code;
 	    }
@@ -339,7 +339,7 @@ CallSimultaneously(threads, rock, proc)
 			      (opaque) w, "Worker Process", &pid);
 #endif
 	if (code) {
-	    com_err(whoami, code, "can't create worker process");
+	    afs_com_err(whoami, code, "can't create worker process");
 	    return code;
 	}
     }
@@ -428,7 +428,7 @@ RunLoadTest(parms, conn)
     start = ftime();
     code = CallSimultaneously(parms->threads, &c, DoClient);
     if (code) {
-	com_err(whoami, code, "in DoClient");
+	afs_com_err(whoami, code, "in DoClient");
 	return code;
     }
     interval = ftime() - start;
@@ -611,10 +611,10 @@ MakeMultiChannelCall(conn, each, expectedCode, codes)
     code = CallSimultaneously(RX_MAXCALLS, &mc, UniChannelCall);
     if (((expectedCode == RXKST_INCFAILED) || (expectedCode == -1)) && ((code == expectedCode) || (code == -3)));	/* strange cases */
     else if (code != expectedCode) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"problem making multichannel call, expected '%s'",
 		((expectedCode == 0)
-		 ? "no error" : (char *)error_message(expectedCode)));
+		 ? "no error" : (char *)afs_error_message(expectedCode)));
     }
     return code;
 }
@@ -646,14 +646,14 @@ CheckCallFailure(conn, codes, code, msg)
 		    someZero++;
 		    fprintf(stderr, "  %d no error\n", i);
 		} else
-		    fprintf(stderr, "  %d %s\n", i, error_message(codes[i]));
+		    fprintf(stderr, "  %d %s\n", i, afs_error_message(codes[i]));
 	    }
 	    if (someZero) {
 		char buf[100];
 		sprintf(buf, "connection dead following %s", msg);
 		code = FastCall(conn);
 		if (code)
-		    com_err(whoami, code, buf);
+		    afs_com_err(whoami, code, buf);
 	    }
 	}
     }
@@ -674,7 +674,7 @@ RunCallTest(parms, host, sc, si)
 #ifndef rx_GetPacketCksum
 
     code = RXKST_BADARGS;
-    com_err(whoami, code,
+    afs_com_err(whoami, code,
 	    "Older versions of Rx don't support Get/Set callNumber Vector procedures: can't run this CallTest");
     return code;
 
@@ -1049,7 +1049,7 @@ RunHijackTest(parms, host, sc, si)
 #ifndef rx_GetPacketCksum
 
     code = RXKST_BADARGS;
-    com_err(whoami, code,
+    afs_com_err(whoami, code,
 	    "Older versions of Rx don't export packet tracing routines: can't run this HijackTest");
     return code;
 
@@ -1095,7 +1095,7 @@ RunHijackTest(parms, host, sc, si)
     outgoingOps.op = OO_ZEROCKSUM;
     code = FastCall(conn);
     if (code) {
-	com_err(whoami, code, "doing FastCall with ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
     }
     /* The server thinks we're an old style client.  Now start sending cksums.
@@ -1103,7 +1103,7 @@ RunHijackTest(parms, host, sc, si)
     outgoingOps.op = OO_NOOP;
     code = FastCall(conn);
     if (code) {
-	com_err(whoami, code, "doing FastCall with non-ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with non-ZEROCKSUM");
 	return code;
     }
     /* The server now thinks we're a new style client, we can't go back now. */
@@ -1112,11 +1112,11 @@ RunHijackTest(parms, host, sc, si)
     if (code == 0)
 	code = RXKST_NOBADCKSUM;
     if (code != RXKADSEALEDINCON) {
-	com_err(whoami, code, "doing FastCall with ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
     } else if (!conn->error) {
 	code = RXKST_NOCONNERROR;
-	com_err(whoami, code, "doing FastCall with ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
     } else
 	code = 0;
@@ -1130,11 +1130,11 @@ RunHijackTest(parms, host, sc, si)
     if (code == 0)
 	code = RXKST_NOBADCKSUM;
     if (code != RXKADSEALEDINCON) {
-	com_err(whoami, code, "doing FastCall with ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
     } else if (!conn->error) {
 	code = RXKST_NOCONNERROR;
-	com_err(whoami, code, "doing FastCall with ZEROCKSUM");
+	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
     } else
 	code = 0;
@@ -1172,7 +1172,7 @@ RunHijackTest(parms, host, sc, si)
     if (outgoingOps.counts[RX_PACKET_TYPE_RESPONSE] > 0) {
       oracle:
 	code = RXKST_CHALLENGEORACLE;
-	com_err(whoami, code, "misdirecting challenge");
+	afs_com_err(whoami, code, "misdirecting challenge");
 	return code;
     }
     code = FastCall(otherConn);	/* generate some activity here */
@@ -1206,14 +1206,14 @@ RunHijackTest(parms, host, sc, si)
 
 	code = pthread_attr_init(&tattr);
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "can't pthread_attr_init slow call process");
 	    return code;
 	}
 
 	code = pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "can't pthread_attr_setdetachstate slow call process");
 	    return code;
 	}
@@ -1226,7 +1226,7 @@ RunHijackTest(parms, host, sc, si)
 			  (opaque) otherConn, "Slow Call Process", &pid);
 #endif
     if (code) {
-	com_err(whoami, code, "can't create slow call process");
+	afs_com_err(whoami, code, "can't create slow call process");
 	return code;
     }
 #ifdef AFS_PTHREAD_ENV
@@ -1339,7 +1339,7 @@ rxkst_StartClient(parms)
 	if (conn) {
 	    code = RXKST_Kill(conn);
 	    if (code) {
-		com_err(whoami, code, "trying to stop server");
+		afs_com_err(whoami, code, "trying to stop server");
 	    }
 	    rx_DestroyConnection(conn);
 	} else
@@ -1357,7 +1357,7 @@ rxkst_StartClient(parms)
     rxs_Release(sc);
     rx_Finalize();
     if (code) {
-	com_err(parms->whoami, code, "test fails");
+	afs_com_err(parms->whoami, code, "test fails");
 	exit(13);
     } else {
 	printf("Test Okay\n");

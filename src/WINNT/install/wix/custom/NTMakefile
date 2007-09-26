@@ -8,6 +8,8 @@ MEDIABINDIR = $(DESTDIR)\WinInstall\Dll
 
 DLLFILE = $(MEDIABINDIR)\afscustom.dll
 
+DLLRES = $(OUT)\afscustom.res
+
 DLLEXPORTS=\
 	-EXPORT:InstallNetProvider \
 	-EXPORT:UninstallNetProvider \
@@ -28,7 +30,9 @@ LINK=link
 $(OUT)\afscustom.obj: afscustom.cpp
 	$(CC) -ML -c /Fo$@ $**
 
-$(DLLFILE): $(OUT)\afscustom.obj
+$(DLLRES): afscustom.rc AFS_component_version_number.h
+
+$(DLLFILE): $(OUT)\afscustom.obj $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) \
 	  -OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_DLL)
@@ -36,3 +40,7 @@ $(DLLFILE): $(OUT)\afscustom.obj
 install: $(DLLFILE)
 
 clean	::
+	$(DEL) $(DLLRES)
+	$(DEL) $(OUT)\afscustom.obj
+	$(DEL) $(DLLFILE)
+	$(DEL) AFS_component_version_number.h

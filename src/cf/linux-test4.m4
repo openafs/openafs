@@ -1,3 +1,18 @@
+AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
+  AC_MSG_CHECKING([for exported tasklist_lock])
+  AC_CACHE_VAL([ac_cv_linux_exports_tasklist_lock], [
+    AC_TRY_KBUILD(
+[
+#include <linux/sched.h>],
+[
+extern rwlock_t tasklist_lock __attribute__((weak)); 
+read_lock(&tasklist_lock);
+],
+      ac_cv_linux_exports_tasklist_lock=yes,
+      ac_cv_linux_exports_tasklist_lock=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)])
+
+
 AC_DEFUN([LINUX_CONFIG_H_EXISTS], [
   AC_MSG_CHECKING([for linux/config.h existance])
   AC_CACHE_VAL([ac_cv_linux_config_h_exists], [
@@ -333,6 +348,18 @@ printk("%d\n", _tsk.parent);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID], [
+  AC_MSG_CHECKING([for tgid in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_tgid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.tgid);],
+      ac_cv_linux_sched_struct_task_struct_has_tgid=yes,
+      ac_cv_linux_sched_struct_task_struct_has_tgid=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_tgid)])
+
+
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
   AC_MSG_CHECKING([for real_parent in struct task_struct])
   AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_real_parent], [
@@ -417,6 +444,18 @@ printk("%d\n", _tsk.exit_state);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO], [
+  AC_MSG_CHECKING([for thread_info in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_thread_info], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.thread_info);],
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=yes,
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_thread_info)])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
   AC_MSG_CHECKING([for alloc_inode in struct super_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_alloc_inode], [
@@ -427,6 +466,17 @@ printk("%p\n", _super.alloc_inode);],
       ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
       ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
+
+
+AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
+  AC_MSG_CHECKING([for 3rd argument in posix_lock_file found in new kernels])
+  AC_CACHE_VAL([ac_cv_linux_kernel_posix_lock_file_wait_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[posix_lock_file(0,0,0);],
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=yes,
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
 
 
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
@@ -562,7 +612,10 @@ AC_DEFUN([LINUX_REFRIGERATOR], [
   AC_MSG_CHECKING([whether refrigerator takes PF_FREEZE])
   AC_CACHE_VAL([ac_cv_linux_func_refrigerator_takes_pf_freeze], [
     AC_TRY_KBUILD(
-[#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef FREEZER_H_EXISTS
+#include <linux/freezer.h>
+#endif],
 [refrigerator(PF_FREEZE);],
       ac_cv_linux_func_refrigerator_takes_pf_freeze=yes,
       ac_cv_linux_func_refrigerator_takes_pf_freeze=no)])
@@ -612,6 +665,22 @@ struct nameidata _nameidata;
       ac_cv_linux_func_i_permission_takes_nameidata=yes,
       ac_cv_linux_func_i_permission_takes_nameidata=no)])
   AC_MSG_RESULT($ac_cv_linux_func_i_permission_takes_nameidata)])
+
+
+AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
+  AC_MSG_CHECKING([whether inode_operations.put_link takes an opaque cookie])
+  AC_CACHE_VAL([ac_cv_linux_func_i_put_link_takes_cookie], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>
+#include <linux/namei.h>],
+[struct inode _inode;
+struct dentry _dentry;
+struct nameidata _nameidata;
+void *cookie;
+(void)_inode.i_op->put_link(&_dentry, &_nameidata, cookie);],
+      ac_cv_linux_func_i_put_link_takes_cookie=yes,
+      ac_cv_linux_func_i_put_link_takes_cookie=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_i_put_link_takes_cookie)])
 
 
 AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA], [
@@ -765,4 +834,40 @@ INIT_WORK(w,f,i);],
       ac_cv_linux_init_work_has_data=yes,
       ac_cv_linux_init_work_has_data=no)])
   AC_MSG_RESULT($ac_cv_linux_init_work_has_data)])
+
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_FLOCK], [
+  AC_MSG_CHECKING([for flock in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_flock], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.flock(NULL, 0, NULL);],
+      ac_cv_linux_fs_struct_fop_has_flock=yes,
+      ac_cv_linux_fs_struct_fop_has_flock=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_flock)])
+
+AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
+  AC_MSG_CHECKING([whether register_sysctl_table has an insert_at_head flag argument])
+  AC_CACHE_VAL([ac_cv_linux_register_sysctl_table_noflag], [
+    AC_TRY_KBUILD(
+[#include <linux/sysctl.h>],
+[ctl_table *t;
+register_sysctl_table (t);],
+      ac_cv_linux_register_sysctl_table_noflag=yes,
+      ac_cv_linux_register_sysctl_table_noflag=no)])
+  AC_MSG_RESULT($ac_cv_linux_register_sysctl_table_noflag)])
+
+AC_DEFUN([LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T], [
+  AC_MSG_CHECKING([whether file_operations.flush takes a fl_owner_t])
+  AC_CACHE_VAL([ac_cv_linux_func_f_flush_takes_fl_owner_t], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+fl_owner_t id;
+(void)_inode.i_fop->flush(&_file, &id);],
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=yes,
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_f_flush_takes_fl_owner_t)])
 

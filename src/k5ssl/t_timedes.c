@@ -55,11 +55,11 @@ typedef DES_key_schedule my_des_key;
 #define des_decrypt(ks, c, p)	DES_ecb_encrypt((DES_cblock *)c, (DES_cblock *)p, ks, 0)
 #define DES_BLOCK_SIZE sizeof(DES_cblock)
 #else
-#ifdef USE_FAKESSL
+#ifdef USING_FAKESSL
 #include "des.h"
 typedef des_key my_des_key;
 #else
-#include "sslaes.h"
+#include "k5ssl.h"
 typedef struct _my_des_key {
     des_key_schedule s;
 } my_des_key;

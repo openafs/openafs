@@ -35,9 +35,6 @@
 #include <errno.h>
 #include <string.h>
 #if defined(USING_MIT) || defined(USING_HEIMDAL)
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #else
 #include "k5ssl.h"
@@ -137,7 +134,7 @@ show_cc_entry(krb5_creds *ccentry)
     }
 Failed:
     if (code)
-	fprintf(stderr,"Failed in %s - error %d (%s)\n", what, code, error_message(code));
+	fprintf(stderr,"Failed in %s - error %d (%s)\n", what, code, afs_error_message(code));
     if (sname) free(sname);
     if (cname) free(cname);
 #if USING_HEIMDAL
@@ -200,7 +197,7 @@ process(char **names)
     }
     if (!code) goto Failed2;
 Failed:
-    fprintf(stderr,"Failed in %s - error %d (%s)\n", what, code, error_message(code));
+    fprintf(stderr,"Failed in %s - error %d (%s)\n", what, code, afs_error_message(code));
 Failed2:
     if (ccache) krb5_cc_close(k5context, ccache);
     if (client) krb5_free_principal(k5context, client);

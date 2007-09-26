@@ -38,7 +38,7 @@
 /* the n-fold algorithm is described in RFC 3961 */
 
 static int
-compute_lcm(a, b)
+compute_lcm(int a, int b)
 {
     int p = a*b;
 
@@ -51,9 +51,7 @@ compute_lcm(a, b)
 }
 
 char *
-rxk5i_nfold(in, inlen, out, outlen)
-	char *in;
-	char *out;
+rxk5i_nfold(char *in, int inlen, char *out, int outlen)
 {
 	int lcm;
 	int i;

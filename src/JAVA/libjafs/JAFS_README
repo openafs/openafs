@@ -1,5 +1,5 @@
 Java API for OpenAFS (Jafs) README
-Current as of 6/5/02
+Updated 3/6/07
 
  ##########################################################################
  # Copyright (c) 2001-2002 International Business Machines Corp.          #
@@ -32,14 +32,6 @@ called org.openafs.jafs, and a shared libraries libjafsadm.so and libjafs.so.
 
 *** USE ***
 
-There is a version of Jafs that has been compiled on Red Hat Linux 7.1, 
-and can be directly used without compilation.  It was compiled using
-OpenAFS 1.2.4 libraries (with a modified version of libjuafs.a).  It 
-consists of a JAR file (jafs.jar) and two shared libraries 
-(libjafsadm.so and libjafs.so).  It was compiled using the 
---enable-transarc-paths on compilation (for use with the OpenAFS RPMs), 
-gcc 2.96, and Java Classic VM version 1.4.0.
-
 When you write Java code to use this API, import the
 org.openafs.jafs package. During compilation of your Java code, 
 ensure one of the following conditions are met:
@@ -54,70 +46,74 @@ or create symbolic links from that directory to the files.  Alternatively,
 the directory containing the libraries can also be added to the
 LD_LIBRARY_PATH environment variable, instead.
 
-You also need to have an OpenAFS client set up on your machine
-(preferably version 1.2.4, but it should work for some past versions as well).
+You also need to have an OpenAFS client set up on your machine.
 You can obtain the OpenAFS client and view installation documentation at 
 http://www.openafs.org (the RPMs are easiest to use for Linux).  Also any 
 cells you plan to access through the API must have entries in your
 client's CellServDB file (located in the /usr/vice/etc/ directory in most
-setups).
+setups).  If you obtain a binary distribution of OpenAFS but
+plan on building jafs yourself, make sure you understand how your
+binary distribution was configured.
 
 This API is most effective when used with a cell that uses the kaserver
 for authentication.  It does not currently support alternative methods of
 authentication such as Kerberos V.
 
-If you have successfully set up your Linux 7.1 environment as described
+If you have successfully set up your Linux environment as described
 above, you will be able to develop and execute applications that use
 the Jafs API.
 
 *** BUILD ***
 
-The first step in compiling your own versions of the library and jar file
-is to download the OpenAFS source code.  If the code doesn't contain the
-libjuafs version of the libuafs library -- noted by the README file located
-in the src/libuafs directory (if a README file doesn't exist in this directory
-then the libjuafs patch (libuafs.diff) has not been applied) -- you must 
-first apply the libjuafs patch. You can apply the libjuafs patch with the 
-following command, executed from the root directory of the download code 
-(i.e. openafs-1.2.4/):
-
-  patch -p1 < libuafs.diff
-
-Next, if the code doesn't contain the src/JAVA/libjafs directory, you can 
-apply the jafs patch to it with the following command, executed from the 
-root directory of the download code (i.e. openafs-1.2.4/):
-
-  patch -p1 < jafs.diff
-
-Note that the source code you download needs to be newer than 4/22/02,
-in order for the full functionality of the API to be effective.  Otherwise,
-you may experience link errors.
+The first step in compiling your own versions of the library and jar
+file is to download the OpenAFS source code.  You may experience
+build errors if you use outdated versions of openafs or mix versions
+of openafs that are not compatible due to version skew.
 
 From that same directory, run the configure script as you normally would 
-to compile OpenAFS, but run it with a java_home argument so the script can
-find your java distribution.  For example:
+to compile OpenAFS.  If doing a build from scratch for jafs, supply
+a with-java_home argument so the script can find your java distribution.
+For example:
 
-  ./configure [other options] --java_home=/usr/local/jdk
+  ./configure [other options] --with-java_home=/usr/local/jdk
 
 The configure script will ensure that this directory contains bin/ and lib/ 
 subdirectories, and that there are /bin/javac and/bin/javah executables and 
-an include/jni.h file.  If you don't supply a command line argument for the 
-java home, the script will look for it in environment variables: first in
-$JAVA_HOME and then in $JDK_HOME.  Also, note that if you have installed
-(or are planning to install) OpenAFS by using the RPMs for Linux, you
-should provide the --enable-transarc-paths configuration option.  If you
-get a "** Can't determine local cell name" error message, the most likely
-reason is that you didn't supply this option.
+an include/jni.h file.If you don't supply a command line argument for the 
+java home, the script will look for it in the environment variable $JAVA_HOME.
+If OpenAFS is already installed, make sure the other options match those used
+to build the installed OpenAFS, especially the ones that determine path prefix
+and style.  In particular, be sure to get --enable-transarc-paths right.
+If you get a "** Can't determine local cell name" error message, the most
+likely reason is that you didn't supply the right options here.
 
-Next, do a full build of OpenAFS by executing a make in the current
-directory.  After it finishes, you are ready to compile Jafs.  Execute
-'make jafs' from that same directory.  Afterward, there will be 
-libjafsadm.so and libjafs.so in the lib/ directory, and a jafs.jar in the 
-jlib/ directory. These can be used according to the instructions in the 
-'USE' section of this document. 
+You are now read to compile Jafs.  Execute 'make jafs' from where
+you just ran configure.  Upon completion, there will be libjafsadm.so and
+libjafs.so in the lib/ directory, and a jafs.jar in the src/JAVA/libjafs/
+directory. These can be used according to the instructions in the 'USE'
+section of this document.
+
+You can also build from a configured OpenAFS build tree that was not originally
+configured to build jafs.  In this case, set the environment variable JAVA_HOME
+before executing 'make jafs'.
 
 If you'd like to edit the source code, you'll find the native C code in
-the src/libjafs directory, and the Java code in the 
-src/JAVA/org/openafs/jafs/ directory.  Please reference the 
+the src/JAVA/libjafs directory, and the Java code in the 
+src/JAVA/classes/org/openafs/jafs/ directory.  Please reference the 
 src/TechNotes-JavaAPI document for more information.
 
+*** TEST ***
+
+There is a jafs test suite.  To build this,
+	$JAVA_HOME/bin/javac -cp src/JAVA/classes src/JAVA/classes/testAFS.java
+to run this,
+	java testAFS your-admin 'your-admin-password' your-cell 1
+(replace your- with appropriate instances for your OpenAFS environment.)
+
+Beware: the test *will* run the equivalent of "bos salvage", "vos syncvldb"
+etc.  You almost certainly do not want to run this on a production cell.
+
+If /afs/.<your-cell> does not point to a read-write volume in
+your cell, or a recursive descent from this point will run
+into trouble, use the switch -f to specify an alternate writeable
+directory in your cell.  Specify this before the required arguments.

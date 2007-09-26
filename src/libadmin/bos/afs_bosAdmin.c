@@ -211,23 +211,19 @@ bos_ServerOpen(const void *cellHandle, const char *serverName,
     bos_server->server =
 	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
 			       1,
-			       c_handle->tokens->afs_sc[c_handle->tokens->
-							sc_index],
+			       c_handle->tokens->afs_sc,
 			       c_handle->tokens->sc_index);
 
     bos_server->server_encrypt =
 	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
 			       1,
-			       c_handle->tokens->afs_encrypt_sc[c_handle->
-								tokens->
-								sc_index],
+			       c_handle->tokens->afs_encrypt_sc,
 			       c_handle->tokens->sc_index);
 
     bos_server->server_stats =
 	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
 			       RX_STATS_SERVICE_ID,
-			       c_handle->tokens->afs_sc[c_handle->tokens->
-							sc_index],
+			       c_handle->tokens->afs_sc,
 			       c_handle->tokens->sc_index);
 
     if ((bos_server->server == NULL) || (bos_server->server_encrypt == NULL)) {

@@ -10,6 +10,17 @@ RELDIR=WINNT\aklog
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+AFS_TOKEN_RXK5_DEFINE = -DAFS_RXK5
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afskfw_funcs.lib
+
+!ENDIF
+
 ############################################################################
 #
 # BUILD TARGETS
@@ -27,9 +38,12 @@ ASETKEYOBJS = \
 	$(OUT)\asetkey.obj
 
 EXELIBS = \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-    $(DESTDIR)\lib\afsauthent.lib \
-    $(DESTDIR)\lib\afs\afskauth.lib
+        $(DESTDIR)\lib\afsauthent.lib \
+        $(DESTDIR)\lib\afs\afskauth.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib
 
 !IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
 OTHERLIBS = \

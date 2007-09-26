@@ -24,6 +24,7 @@
 #include "Internal.h"
 #include "org_openafs_jafs_Token.h"
 
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>

@@ -49,12 +49,12 @@ main(int ac, char **av)
     rx_Init(0);
     sc = rxnull_NewClientSecurityObject();
     if (!sc) {
-	com_err("linktest", errno, "Can't make null security object.");
+	afs_com_err("linktest", errno, "Can't make null security object.");
 	exit(1);
     }
     conn = rx_NewConnection(htonl(0x7f000001), htons(7003), 52, sc, 0);
     if (!conn) {
-	com_err("linktest", errno, "Can't make rx connection.");
+	afs_com_err("linktest", errno, "Can't make rx connection.");
 	exit(1);
     }
     rx_Finalize();

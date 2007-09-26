@@ -489,17 +489,15 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     AFS_GUNLOCK();
 
 #ifdef AFS_LINUX24_ENV
-    if (code == 0 && (cmd == F_SETLK || cmd == F_SETLKW)) {
-#ifdef AFS_LINUX26_ENV
-       struct file_lock flp2;
-       flp2 = *flp;
-       flp2.fl_flags &=~ FL_SLEEP;
-       code = posix_lock_file(fp, &flp2);
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+	(cmd == F_SETLK || cmd == F_SETLKW)) {
+#ifdef POSIX_LOCK_FILE_WAIT_ARG
+        code = posix_lock_file(fp, flp, 0);
 #else
-       code = posix_lock_file(fp, flp, 0);
-#endif 
-       osi_Assert(code != -EAGAIN); /* there should be no conflicts */
-       if (code) {
+        flp->fl_flags &=~ FL_SLEEP;
+        code = posix_lock_file(fp, flp);
+#endif
+       if (code && flp->fl_type != F_UNLCK) {
            struct AFS_FLOCK flock2;
            flock2 = flock;
            flock2.l_type = F_UNLCK;
@@ -520,13 +518,68 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
 }
 
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+static int
+afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
+    int code = 0;
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
+    cred_t *credp = crref();
+    struct AFS_FLOCK flock;
+    /* Convert to a lock format afs_lockctl understands. */
+    memset((char *)&flock, 0, sizeof(flock));
+    flock.l_type = flp->fl_type;
+    flock.l_pid = flp->fl_pid;
+    flock.l_whence = 0;
+    flock.l_start = 0;
+    flock.l_len = OFFSET_MAX;
+
+    /* Safe because there are no large files, yet */
+#if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
+    if (cmd == F_GETLK64)
+	cmd = F_GETLK;
+    else if (cmd == F_SETLK64)
+	cmd = F_SETLK;
+    else if (cmd == F_SETLKW64)
+	cmd = F_SETLKW;
+#endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
+
+    AFS_GLOCK();
+    code = afs_lockctl(vcp, &flock, cmd, credp);
+    AFS_GUNLOCK();
+
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+        (cmd == F_SETLK || cmd == F_SETLKW)) {
+	flp->fl_flags &=~ FL_SLEEP;
+	code = flock_lock_file_wait(fp, flp);
+	if (code && flp->fl_type != F_UNLCK) {
+	    struct AFS_FLOCK flock2;
+	    flock2 = flock;
+	    flock2.l_type = F_UNLCK;
+	    AFS_GLOCK();
+	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
+	    AFS_GUNLOCK();
+	}
+    }
+    /* Convert flock back to Linux's file_lock */
+    flp->fl_type = flock.l_type;
+    flp->fl_pid = flock.l_pid;
+
+    crfree(credp);
+    return -code;
+}
+#endif
+
 /* afs_linux_flush
  * essentially the same as afs_fsync() but we need to get the return
  * code for the sys_close() here, not afs_linux_release(), so call
  * afs_StoreAllSegments() with AFS_LASTSTORE
  */
 static int
+#if defined(FOP_FLUSH_TAKES_FL_OWNER_T)
+afs_linux_flush(struct file *fp, fl_owner_t id)
+#else
 afs_linux_flush(struct file *fp)
+#endif
 {
     struct vrequest treq;
     struct vcache *vcp = VTOAFS(FILE_INODE(fp));
@@ -611,6 +664,9 @@ struct file_operations afs_file_fops = {
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
   .lock =	afs_linux_lock,
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+  .flock =	afs_linux_flock,
+#endif
 };
 
 
@@ -973,6 +1029,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
 		unlock_kernel();
 #endif
+		crfree(credp);
 		return alias;
 	    }
 	}
@@ -1074,6 +1131,8 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
             }
             tvc->uncred = credp;
 	    tvc->states |= CUnlinked;
+	} else {
+	    osi_FreeSmallSpace(__name);	
 	}
 	AFS_GUNLOCK();
 
@@ -1262,7 +1321,7 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
 	return -code;
 }
 
-#if !defined(AFS_LINUX24_ENV)
+#if !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
 /* afs_linux_readlink 
  * Fill target (which is in user space) with contents of symlink.
  */
@@ -1282,6 +1341,36 @@ afs_linux_readlink(struct dentry *dp, char *target, int maxlen)
 /* afs_linux_follow_link
  * a file system dependent link following routine.
  */
+#if defined(AFS_LINUX24_ENV)
+static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
+{
+    int code;
+    char *name;
+
+    name = osi_Alloc(PATH_MAX);
+    if (!name) {
+	return -EIO;
+    }
+
+    AFS_GLOCK();
+    code = afs_linux_ireadlink(dentry->d_inode, name, PATH_MAX - 1, AFS_UIOSYS);
+    AFS_GUNLOCK();
+
+    if (code < 0) {
+	goto out;
+    }
+
+    name[code] = '\0';
+    code = vfs_follow_link(nd, name);
+
+out:
+    osi_Free(name, PATH_MAX);
+
+    return code;
+}
+
+#else /* !defined(AFS_LINUX24_ENV) */
+
 static struct dentry *
 afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
 		      unsigned int follow)
@@ -1315,7 +1404,8 @@ afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
     AFS_GUNLOCK();
     return res;
 }
-#endif
+#endif /* AFS_LINUX24_ENV */
+#endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
 /* afs_linux_readpage
  * all reads come through here. A strategy-like read call.
@@ -1680,7 +1770,7 @@ static struct inode_operations afs_dir_iops = {
 /* We really need a separate symlink set of ops, since do_follow_link()
  * determines if it _is_ a link by checking if the follow_link op is set.
  */
-#if defined(AFS_LINUX24_ENV)
+#if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
 static int
 afs_symlink_filler(struct file *file, struct page *page)
 {
@@ -1715,10 +1805,10 @@ afs_symlink_filler(struct file *file, struct page *page)
 static struct address_space_operations afs_symlink_aops = {
   .readpage =	afs_symlink_filler
 };
-#endif
+#endif	/* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
 static struct inode_operations afs_symlink_iops = {
-#if defined(AFS_LINUX24_ENV)
+#if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
   .readlink = 		page_readlink,
 #if defined(HAVE_KERNEL_PAGE_FOLLOW_LINK)
   .follow_link =	page_follow_link,
@@ -1726,12 +1816,16 @@ static struct inode_operations afs_symlink_iops = {
   .follow_link =	page_follow_link_light,
   .put_link =           page_put_link,
 #endif
-  .setattr =		afs_notify_change,
-#else
+#else /* !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE) */
   .readlink = 		afs_linux_readlink,
   .follow_link =	afs_linux_follow_link,
+#if !defined(AFS_LINUX24_ENV)
   .permission =		afs_linux_permission,
   .revalidate =		afs_linux_revalidate,
+#endif
+#endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
+#if defined(AFS_LINUX24_ENV)
+  .setattr =		afs_notify_change,
 #endif
 };
 
@@ -1758,7 +1852,7 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 
     } else if (S_ISLNK(ip->i_mode)) {
 	ip->i_op = &afs_symlink_iops;
-#if defined(AFS_LINUX24_ENV)
+#if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
 	ip->i_data.a_ops = &afs_symlink_aops;
 	ip->i_mapping = &ip->i_data;
 #endif

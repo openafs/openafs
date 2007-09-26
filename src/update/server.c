@@ -49,12 +49,13 @@ RCSID
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #endif
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <afs/com_err.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
@@ -382,7 +383,7 @@ UPDATE_FetchFile(struct rx_call *call, char *name)
 
     /* construct a local path from a canonical (wire-format) path */
     if ((error = ConstructLocalPath(name, "/", &reqObject))) {
-	com_err(whoami, error, "Unable to construct local path");
+	afs_com_err(whoami, error, "Unable to construct local path");
 	return UPDATE_ERROR;
     }
 
@@ -414,7 +415,7 @@ UPDATE_FetchInfo(struct rx_call *call, char *name)
 
     /* construct a local path from a canonical (wire-format) path */
     if ((error = ConstructLocalPath(name, "/", &reqObject))) {
-	com_err(whoami, error, "Unable to construct local path");
+	afs_com_err(whoami, error, "Unable to construct local path");
 	return UPDATE_ERROR;
     }
 
@@ -589,14 +590,14 @@ AddObject(char **expPath, char *dir)
 
     /* construct a local path from a canonical (wire-format) path */
     if ((error = ConstructLocalPath(dir, "/", expPath))) {
-	com_err(whoami, error, "Unable to construct local path");
+	afs_com_err(whoami, error, "Unable to construct local path");
 	return error;
     }
 
     /* stat the object */
     error = stat(*expPath, &statbuf);
     if (error) {
-	com_err(whoami, error, ";Can't stat object.");
+	afs_com_err(whoami, error, ";Can't stat object.");
 	return error;
     }
     /* now check if the object has an exportable (file/dir)  type */

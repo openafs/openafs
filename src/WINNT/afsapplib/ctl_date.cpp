@@ -96,9 +96,9 @@ static size_t           cDate = 0;
 
 #define cszDATECLASS TEXT("Date")
 
-BOOL CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK DateEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK DateDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK DateEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK DateDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void Date_SendCallback (DateInfo *pdi, WORD eln, LPARAM lp);
 
@@ -154,7 +154,7 @@ void Date_SendCallback (DateInfo *pdi, WORD eln, LPARAM lp)
 }
 
 
-BOOL CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp)
 {
    DateInfo *pdi = NULL;
 
@@ -262,7 +262,7 @@ BOOL CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return (BOOL)DefWindowProc (hDate, msg, wp, lp);
+   return DefWindowProc (hDate, msg, wp, lp);
 }
 
 
@@ -532,7 +532,7 @@ BOOL Date_OnSetDate (DateInfo *pdi, WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK DateDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK DateDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, DateDlgProc);
    size_t iDate;
@@ -582,13 +582,13 @@ BOOL CALLBACK DateDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
-BOOL CALLBACK DateEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK DateEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 {
    DateInfo *pdi = NULL;
 
@@ -618,9 +618,9 @@ BOOL CALLBACK DateEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, DateEditProc);
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
+      return DefWindowProc (hEdit, msg, wp, lp);
 }
 
 

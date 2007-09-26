@@ -20,6 +20,14 @@
 #include <osi.h>
 #include <rx/rx.h>
 
+#ifdef AFS_RXK5
+#if defined(AFS_NT40_ENV) && defined(USING_MIT)
+#include <krb5.h>
+#include <rx/rxk5_ntfixprotos.h>
+#endif /* AFS_NT40_ENV && MIT */
+#include <rx/rxk5.h>
+#include <afs/rxk5_tkt.h>
+#endif /* AFS_RXK5 */
 
 osi_rwlock_t cm_userLock;
 
@@ -172,6 +180,7 @@ void cm_CheckTokenCache(time_t now)
                 continue;
             lock_ObtainMutex(&userp->mx);
             for (ucellp=userp->cellInfop; ucellp; ucellp=ucellp->nextp) {
+				/* rxkad */
                 if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
                     if (ucellp->expirationTime < now) {
                         /* this guy's tokens have expired */
@@ -185,7 +194,24 @@ void cm_CheckTokenCache(time_t now)
                         ucellp->gen++;
                         bExpired=TRUE;
                     }
-                } 
+                }
+#ifdef AFS_RXK5				
+				/* rxk5 */
+                if (ucellp->flags & CM_UCELLFLAG_RXK5) {
+                    if (ucellp->expirationTime < now) {
+                        osi_Log3(afsd_logp, "cm_CheckTokens: K5 tokens for user:%s have expired expiration time:0x%x ucellp:%x", 
+                                 ucellp->userName, ucellp->expirationTime, ucellp);
+						if(ucellp->rxk5creds != NULL) {
+							krb5_context k5context = rxk5_get_context(0);
+							rxk5_free_creds(k5context, (rxk5_creds*) ucellp->rxk5creds);
+												ucellp->rxk5creds = NULL;
+    					}
+                        ucellp->flags &= ~CM_UCELLFLAG_RXK5;
+                        ucellp->gen++;
+                        bExpired=TRUE;
+                    }
+                }
+#endif			
             }
             lock_ReleaseMutex(&userp->mx);
             if (bExpired) {

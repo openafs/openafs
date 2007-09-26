@@ -21,6 +21,8 @@ RELDIR=WINNT\client_config
 
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_config.exe
 
+MANIFEST = $(EXEFILE).manifest
+
 EXEOBJS = \
 	$(OUT)\config.obj \
 	$(OUT)\drivemap.obj \
@@ -48,7 +50,7 @@ EXERES = \
 
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
-	
+
 AFSD= ..\afsd
 
 VCLIBS =\
@@ -107,6 +109,11 @@ $(EXEOBJSc): $$(@B).c
 
 $(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSDOBJS) $(EXELIBS)
 	$(EXEGUILINK) $(VCLIBS)
+!IF ("$(AFSVER_CL)" == "1400")
+        if exist $@.manifest mt.exe -manifest afs_config.exe.manifest $(MANIFEST) -out:$(MANIFEST)
+!ELSE
+        $(COPY) afs_config.exe.manifest $(MANIFEST)
+!ENDIF
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
@@ -166,6 +173,7 @@ $(OUT)\afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
 
 clean::
 	$(DEL) $(COPYHEADERS)
+        $(DEL) $(MANIFEST)
 	$(CD) lang
 	$(DEL) AFS_component_version_number.h
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /e /f NTMakefile clean

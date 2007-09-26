@@ -49,7 +49,6 @@ RCSID
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -1280,13 +1279,23 @@ SAFSVolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
 {
     afs_int32 code;
 
-    code = VolDump(acid, fromTrans, fromDate);
+    code = VolDump(acid, fromTrans, fromDate, 0);
     osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);
     return code;
 }
 
 afs_int32
-VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
+SAFSVolDumpV2(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
+{
+    afs_int32 code;
+
+    code = VolDump(acid, fromTrans, fromDate, flags);
+    osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);
+    return code;
+}
+
+afs_int32
+VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
 {
     int code = 0;
     register struct volser_trans *tt;
@@ -1304,7 +1313,8 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
     }
     strcpy(tt->lastProcName, "Dump");
     tt->rxCallPtr = acid;
-    code = DumpVolume(acid, tt->volume, fromDate, 1);	/* squirt out the volume's data, too */
+    code = DumpVolume(acid, tt->volume, fromDate, (flags & VOLDUMPV2_OMITDIRS)
+		      ? 0 : 1);	/* squirt out the volume's data, too */
     if (code) {
 	tt->rxCallPtr = (struct rx_call *)0;
 	TRELE(tt);

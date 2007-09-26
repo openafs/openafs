@@ -36,6 +36,12 @@ NTMAKELANG = nmake /nologo  /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo  /f ntmakefile install_headers
 NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 
+# Build rxk5 support if selected
+!IF ("$(BUILD_RXK5)" == "TRUE")
+RXK5 = rxk5
+TRXK5 = trxk5
+!ENDIF
+
 #debug statement support jumping to last know error
 DOCD=$(SRC)\DOLASTCMP.BAT
 
@@ -137,7 +143,14 @@ rx: des
 	$(NTMAKE)
 	$(CD) ..\..
 
-ubik_headers: rx
+rxdebug: rx
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+ubik_headers: rxdebug
      echo ***** $@
 	$(DOCD) $(SRC)\ubik
 	$(CD) $(SRC)\ubik
@@ -165,42 +178,7 @@ pthread: rxkad
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-procmgmt: pthread
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-fsint: procmgmt
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-audit: fsint
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-osi_headers: audit
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\client_osi
-	$(CD) $(SRC)\WINNT\client_osi
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..\..
-
-libacl_headers: osi_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\libacl
-	$(CD) $(SRC)\libacl
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..
-
-cm_headers: libacl_headers
+cm_headers: pthread
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -214,14 +192,70 @@ auth_headers: cm_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-vlserver_headers: auth_headers
+rxk5: auth_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+trxk5: rxk5
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+procmgmt: pthread $(TRXK5)
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+osi_headers: procmgmt
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\client_osi
+	$(CD) $(SRC)\WINNT\client_osi
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+libacl_headers: osi_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\libacl
+	$(CD) $(SRC)\libacl
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+vlserver_headers: libacl_headers
      echo ***** $@
 	$(DOCD) $(SRC)\vlserver
 	$(CD) $(SRC)\vlserver
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-afsdobjs: vlserver_headers
+ptserver_headers: vlserver_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\ptserver
+	$(CD) $(SRC)\ptserver
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+fsint: ptserver_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+audit: fsint
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+afsdobjs: audit
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -598,8 +632,6 @@ finale: extra
 
 install: finale
 
-# InstallShield dependencies
-
 # Clean target for obj tree
 clean:
 	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
@@ -617,8 +649,8 @@ mkdir:
     -mkdir $(DESTDIR)
     -mkdir $(AFS_OBJDIR)\checked
     -mkdir $(AFS_OBJDIR)\free
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin
@@ -646,23 +678,11 @@ wix: loopback
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-InstallShield5:
-	echo ***** afs_setup_utils
-	$(DOCD) $(SRC)\WINNT\afs_setup_utils
-	$(CD) $(SRC)\WINNT\afs_setup_utils
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-	$(DOCD) $(SRC)\WINNT\install\$@
-	$(CD) $(SRC)\WINNT\install\$@
-	$(NTMAKE)
-	$(CD) ..\..\..\..
-
-media: install InstallShield5 NSIS wix
+media: install NSIS wix
 
 install-nsis: install NSIS
 
 install-wix: install wix
 
-install-is5: install InstallShield5
+
 

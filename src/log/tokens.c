@@ -13,28 +13,36 @@
 RCSID
     ("$Header$");
 
+#ifdef AFS_NT40_ENV
+#include <afs/param.h>
+#include <afs/stds.h>
+#include <windows.h>
+#include <winsock2.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+#else /* !AFS_NT40_ENV */
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
 #include <sys/file.h>
 #include <rx/xdr.h>
+#include <rx/rx.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <afs/auth.h>
 #include <time.h>		/*time(), ctime() */
 #include <pwd.h>
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#include <krb5.h>
-#endif
+#endif /* AFS_NT40_ENV */
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #include <afs/rxk5_tkt.h>
-#endif
-#include <afs/afs_token.h>
+#endif /* AFS_RXK5 */
+#include <afs/auth.h>
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -44,7 +52,7 @@ RCSID
 #endif
 #endif
 
-
+#ifndef AFS_NT40_ENV
 #define VIRTUE
 #define VICE
 
@@ -56,25 +64,17 @@ RCSID
 #undef VICE
 
 #include "AFS_component_version_number.c"
-
-/*
- *  Get AFS token at index ix, using new kernel token interface. 
- */
-int
-ktc_GetTokenEx(
-    afs_int32 index,
-    char *cell,
-    afs_token **a_token);
+#endif /* AFS_NT40_ENV */
 
 int
-print_afs_token(afs_int32 index, afs_token *a_token)
+print_afs_token(afs_int32 index, pioctl_set_token *a_token)
 {
-    rxkad_token *kad_token;
+    token_rxkad *kad_token;
 #ifdef AFS_RXK5
-    rxk5_token *k5_token;
-    krb5_creds *k5creds;
+    token_rxk5 *k5_token;
     char *rxk5_princ;
     krb5_context k5context;
+    krb5_principal princ;
 #endif
     time_t current_time;	/*Current time of day */
     time_t tokenExpireTime;	/*When token expires */
@@ -82,81 +82,102 @@ print_afs_token(afs_int32 index, afs_token *a_token)
     char *expireString;		/*Char string of expiration time */
     afs_int32 code;
     char *idtype;
+    int r, i;
+    afstoken_soliton at[1];
+    XDR xdrs[1];
 	    
     if(!a_token)
 	return EINVAL;
 
+    r = 0;
     current_time = time(0);
-    switch(a_token->cu->cu_type) {
-    case CU_KAD:
-	kad_token = &(a_token->cu->cu_u.cu_kad);
-	tokenExpireTime = kad_token->token.endtime;
-	if(tokenExpireTime <= current_time) {
-	    sprintf(expireMsg, "[ >> Expired << ]");
-	} else {
-	    expireString = ctime(&tokenExpireTime);
-	    expireString += 4;	/*Move past the day of week */
-	    expireString[12] = '\0';
-	    sprintf(expireMsg, "[Expires %s]", expireString);
+    for (i = 0; i < a_token->tokens.tokens_len; ++i) {
+	memset(at, 0, sizeof *at);
+	xdrmem_create(xdrs,
+	    a_token->tokens.tokens_val[i].token_opaque_val,
+	    a_token->tokens.tokens_val[i].token_opaque_len,
+	    XDR_DECODE);
+	memset(at, 0, sizeof *at);
+	if (!xdr_afstoken_soliton(xdrs, at)) {
+	    xdrs->x_op = XDR_FREE;
+	    xdr_afstoken_soliton(xdrs, at);
+	    continue;
 	}
-	if ((kad_token->token.endtime - kad_token->token.begintime) & 1)
-	    idtype = "AFS ID";
-	else
-	    idtype = "Unix UID";
-	printf("User's (%s %d) tokens for afs@%s", 
-	    idtype,
-	    kad_token->token.viceid,
-	    kad_token->cell_name);
-	if (!a_token->cell)
-	    printf (" index %s", index);
-	else if (strcmp(a_token->cell, kad_token->cell_name))
-	    printf (" cell %s", a_token->cell);
-	printf (" %s\n", expireMsg);
-	break;
-#ifdef AFS_RXK5
-    case CU_K5:
-	k5creds = 0;
-	rxk5_princ = 0;
-	k5context  = rxk5_get_context(0);
-	k5_token  = &(a_token->cu->cu_u.cu_rxk5);
-	tokenExpireTime = k5_token->endtime;
-	if(tokenExpireTime <= current_time) {
-	    sprintf(expireMsg, "[ >> Expired << ]");
-	} else {
-	    expireString = ctime(&tokenExpireTime);
-	    expireString += 4;	/*Move past the day of week */
-	    expireString[12] = '\0';
-	    sprintf(expireMsg, "[Expires %s]", expireString);
+	switch(at->at_type) {
+	case AFSTOKEN_UNION_KAD:
+	    kad_token = &(at->afstoken_soliton_u.at_kad);
+	    tokenExpireTime = kad_token->rk_endtime;
+	    if(tokenExpireTime <= current_time) {
+		sprintf(expireMsg, "[ >> Expired << ]");
+	    } else {
+		expireString = ctime(&tokenExpireTime);
+		expireString += 4;	/*Move past the day of week */
+		expireString[12] = '\0';
+		sprintf(expireMsg, "[Expires %s]", expireString);
+	    }
+	    if ((kad_token->rk_endtime - kad_token->rk_begintime) & 1)
+		idtype = "AFS ID";
+	    else
+		idtype = "Unix UID";
+	    printf("User's (%s %d) tokens for afs@", 
+		idtype,
+		kad_token->rk_viceid);
+	    if (a_token->cell)
+		printf ("%s", a_token->cell);
+	    else
+		printf ("??? index %d", index);
+	    printf (" %s\n", expireMsg);
+	    break;
+    #ifdef AFS_RXK5
+	case AFSTOKEN_UNION_K5:
+	    rxk5_princ = 0;
+	    k5context  = rxk5_get_context(0);
+	    k5_token = &(at->afstoken_soliton_u.at_rxk5);
+	    tokenExpireTime = Int64ToInt32(k5_token->k5_endtime);
+	    if(tokenExpireTime <= current_time) {
+		sprintf(expireMsg, "[ >> Expired << ]");
+	    } else {
+		expireString = ctime(&tokenExpireTime);
+		expireString += 4;	/*Move past the day of week */
+		expireString[12] = '\0';
+		sprintf(expireMsg, "[Expires %s]", expireString);
+	    }
+	    rxk5_principal_to_krb5_principal(&princ, &k5_token->k5_client);
+	    if (!princ)
+		rxk5_princ = 0;
+	    else krb5_unparse_name(k5context, 
+			     princ, 
+			     &rxk5_princ);
+	    if (rxk5_princ)
+		printf("K5 credential for %s", rxk5_princ);
+	    else
+		printf("K5 strange credential", rxk5_princ);
+	    if (a_token->cell)
+		printf (" in cell %s",
+		    a_token->cell);
+	    else
+		printf (" index %d", index);
+	    printf (" %s\n", expireMsg);
+	    if(rxk5_princ)
+		free(rxk5_princ);
+	    krb5_free_principal(k5context, princ);
+	    break;
+    #endif
+	default:
+	    if (a_token->cell) {
+		printf ("unknown token type %d for cell %s\n",
+		    at->at_type,
+		    a_token->cell);
+	    } else {
+		printf ("unknown token type %d index %d\n",
+		    at->at_type,
+		    index);
+	    }
+	    /* bad credential type */
+	    r = -1;
 	}
-	code = afs_token_to_k5_creds(a_token, &k5creds);
-	code = krb5_unparse_name(k5context, 
-				     k5creds->client, 
-				     &rxk5_princ);
-	printf("K5 credential for %s", rxk5_princ);
-	if (a_token->cell)
-	    printf (" in cell %s",
-		a_token->cell);
-	else
-	    printf (" index %d", index);
-	printf (" %s\n", expireMsg);
-	if(rxk5_princ)
-	    free(rxk5_princ);
-	if(k5creds)
-	    krb5_free_creds(k5context, k5creds);
-	break;
-#endif
-    default:
-	if (a_token->cell) {
-	    printf ("unknown token type %d for cell %s\n",
-		a_token->cu->cu_type,
-		a_token->cell);
-	} else {
-	    printf ("unknown token type %d index %d\n",
-		a_token->cu->cu_type,
-		index);
-	}
-	/* bad credential type */
-	return -1;
+	xdrs->x_op = XDR_FREE;
+	xdr_afstoken_soliton(xdrs, at);
     }
 
     return 0;
@@ -174,7 +195,11 @@ main(int argc, char **argv)
     struct ktc_principal serviceName, clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
     afs_int32 index;
-    afs_token *a_token;
+    pioctl_set_token a_token[1];
+	
+#ifdef AFS_NT40_ENV
+	WSADATA WSAjunk;
+#endif
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -191,6 +216,10 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+#ifdef AFS_NT40_ENV
+	WSAStartup(0x0101, &WSAjunk);
+#endif
+
     /* has no args ... support for help flag */
 
     if (argc > 1) {
@@ -200,14 +229,15 @@ main(int argc, char **argv)
 	fflush(stdout);
 	exit(0);
     }
-
+	
     printf("\nTokens held by the Cache Manager:\n\n");
     cellNum = 0;
     current_time = time(0);
 
     for(index = 0; index < 200; ++index) {
-	rc = ktc_GetTokenEx(index, 0, &a_token);
-	if(!rc && a_token) {
+	memset(a_token, 0, sizeof *a_token);
+	rc = ktc_GetTokenEx(index, 0, a_token);
+	if(!rc) {
 	    print_afs_token(index, a_token);
 	    free_afs_token(a_token);
 	}
@@ -215,7 +245,7 @@ main(int argc, char **argv)
     }
     if (rc == -1 && errno) rc = errno;
     if (rc != KTC_NOENT)
-	com_err("tokens", rc, "while fetching tokens");
+	afs_com_err("tokens", rc, "while fetching tokens");
     else
 	printf("   --End of list--\n");
 

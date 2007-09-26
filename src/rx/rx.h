@@ -635,7 +635,7 @@ struct rx_ackPacket {
 #define	RX_ACK_PING_RESPONSE	7	/* Ack'ing because we were pinged */
 #define	RX_ACK_DELAY		8	/* Ack generated since nothing has happened since receiving packet */
 #define RX_ACK_IDLE             9	/* Similar to RX_ACK_DELAY, but can 
-					 * be */
+					 * be used to compute RTT */
 
 /* Packet acknowledgement type */
 #define	RX_ACK_TYPE_NACK	0	/* I Don't have this packet */

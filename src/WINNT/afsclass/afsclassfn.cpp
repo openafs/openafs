@@ -51,9 +51,9 @@ BOOL AfsClass_GetServerLogFile (LPIDENT lpiServer, LPTSTR pszLocal, LPTSTR pszRe
    AfsClass_Enter();
    NOTIFYCALLBACK::SendNotificationToAll (evtGetServerLogFileBegin, lpiServer, pszRemote, 0);
 
-   PVOID hCell;
-   PVOID hBOS;
-   LPSERVER lpServer;
+   PVOID hCell = NULL;
+   PVOID hBOS = NULL;
+   LPSERVER lpServer = NULL;
    if ((lpServer = lpiServer->OpenServer (&status)) == NULL)
       rc = FALSE;
    else
@@ -387,8 +387,8 @@ BOOL AfsClass_RestartService (LPIDENT lpiRestart, ULONG *pStatus)
    AfsClass_Enter();
    NOTIFYCALLBACK::SendNotificationToAll (evtRestartServiceBegin, lpiRestart);
 
-   PVOID hCell;
-   PVOID hBOS;
+   PVOID hCell = NULL;
+   PVOID hBOS = NULL;
    LPSERVER lpServer;
    if ((lpServer = lpiRestart->OpenServer (&status)) == NULL)
       rc = FALSE;
@@ -489,9 +489,9 @@ LPIDENT AfsClass_CreateFileset (LPIDENT lpiAggregate, LPTSTR pszFileset, ULONG c
 
    // Obtain hCell and hVOS
    //
-   PVOID hCell;
+   PVOID hCell = NULL;
    PVOID hVOS = NULL;
-   LPSERVER lpServer;
+   LPSERVER lpServer = NULL;
    if ((lpServer = lpiAggregate->OpenServer (&status)) == NULL)
       rc = FALSE;
    else
@@ -603,9 +603,9 @@ BOOL AfsClass_DeleteFileset (LPIDENT lpiFileset, BOOL fVLDB, BOOL fServer, ULONG
 
    // Obtain hCell and hVOS
    //
-   PVOID hCell;
+   PVOID hCell = NULL;
    PVOID hVOS = NULL;
-   LPSERVER lpServer;
+   LPSERVER lpServer = NULL;
    if ((lpServer = lpiFileset->OpenServer (&status)) == NULL)
       rc = FALSE;
    else
@@ -1151,7 +1151,6 @@ BOOL AfsClass_ChangeAddress (LPIDENT lpiServer, LPSOCKADDR_IN pAddrOld, LPSOCKAD
          lpServer->Close();
          }
 
-      LPCELL lpCell;
       if ((lpCell = lpiServer->OpenCell (&status)) == NULL)
          rc = FALSE;
       else

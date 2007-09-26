@@ -256,7 +256,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		    Log("IH_INC failed: %x, %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
-		    VForceOffline_r(rwvp, 0);
+		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
 		inodeinced = 1;
@@ -309,7 +309,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		    Log("IH_DEC failed: %x, %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
-		    VForceOffline_r(rwvp, 0);
+		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
 	    }
@@ -403,15 +403,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 }
 
 void
-CloneVolume(Error * error, Volume * original, Volume * new, Volume * old)
-{
-    VOL_LOCK;
-    CloneVolume_r(error, original, new, old);
-    VOL_UNLOCK;
-}
-
-void
-CloneVolume_r(Error * rerror, Volume * original, Volume * new, Volume * old)
+CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
 {
     afs_int32 code, error = 0;
     afs_int32 reclone;
@@ -426,7 +418,7 @@ CloneVolume_r(Error * rerror, Volume * original, Volume * new, Volume * old)
     if (code)
 	ERROR_EXIT(code);
 
-    code = CopyVolumeHeader_r(&V_disk(original), &V_disk(new));
+    code = CopyVolumeHeader(&V_disk(original), &V_disk(new));
     if (code)
 	ERROR_EXIT(code);
 

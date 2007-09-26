@@ -10,6 +10,15 @@ RELDIR=audit
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
 INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\

@@ -1,0 +1,61 @@
+=head1 NAME
+
+fs listaliases - Displays the current list of aliases for AFS cells
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs listaliases> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs listaliases> command shows the list of cell aliases currently in
+effect, both from F<CellAlias> and created using B<fs newalias>.  Cell
+aliases can only be used when the using a Dynamic Root (the B<-dynroot>
+option to B<afsd>).
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If an alias C<openafs> exists for the cell C<openafs.org>, the output
+include the following line:
+
+   Alias openafs for cell openafs.org
+
+=head1 EXAMPLES
+
+There is only one way to invoke B<fs listaliases>:
+
+   % fs listaliases
+
+=head1 PRIVILEGE REQUIRED
+
+No special priviledges are required for this command.
+
+=head1 SEE ALSO
+
+L<afsd(8)>,
+L<CellAlias(5)>,
+L<fs_newalias(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

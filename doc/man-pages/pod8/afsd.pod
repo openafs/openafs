@@ -7,23 +7,30 @@ afsd - Initializes the Cache Manager and starts related daemons
 =for html
 <div class="synopsis">
 
-B<afsd> S<<< [B<-blocks> <I<1024 byte blocks in cache>>] >>>
-     S<<< [B<-files> <I<files in cache>>] >>>
-     S<<< [B<-rootvol> <I<name of AFS root volume>>] >>>
-     S<<< [B<-stat> <I<number of stat entries>>] >>>
-     [B<-memcache>] S<<< [B<-cachedir> <I<cache directory>>] >>>
-     S<<< [B<-mountdir> <I<mount location>>] >>>
-     S<<< [B<-daemons> <I<number of daemons to use>>] >>>
-     [B<-nosettime>] [B<-verbose>] [B<-rmtsys>] [B<-debug>]
-     S<<< [B<-chunksize> <I<log(2) of chunk size>>] >>>
-     S<<< [B<-dcache> <I<number of dcache entries>>] >>>
-     S<<< [B<-volumes> <I<number of volume entries>>] >>>
+B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-biods> <I<number of bkg I/O daemons (aix vm)>>] >>>
-     S<<< [B<-prealloc> <I<number of 'small' preallocated blocks>>] >>>
+     S<<< [B<-blocks> <I<1024 byte blocks in cache>>] >>>
+     S<<< [B<-cachedir> <I<cache directory>>] >>>
+     S<<< [B<-chunksize> <I<log(2) of chunk size>>] >>>
      S<<< [B<-confdir> <I<configuration directory>>] >>>
-     S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
-     [B<-waitclose>] [B<-shutdown>] [B<-enable_peer_stats>]
-     [B<-enable_process_stats>] [B<-help>]
+     S<<< [B<-daemons> <I<number of daemons to use>>] >>>
+     S<<< [B<-dcache> <I<number of dcache entries>>] >>> [B<-debug>]
+     [B<-dynroot>] [B<-enable_peer_stats>] [B<-enable_process_stats>]
+     [B<-fakestat>] [B<-fakestat-all>]
+     S<<< [B<-files> <I<files in cache>>] >>>
+     S<<< [B<-files_per_subdir> <I<log(2) of files per dir>> ] >>>
+     [B<-help>] S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
+     [B<-mem_alloc_sleep>] [B<-memcache>]
+     S<<< [B<-mountdir> <I<mount location>>] >>> [B<-nomount>]
+     [B<-nosettime>]
+     S<<< [B<-prealloc> <I<number of 'small' preallocated blocks>>] >>>
+     [B<-rmtsys>] S<<< [B<-rootvol> <I<name of AFS root volume>>] >>>
+     [B<-rxbind>] S<<< [B<-rxpck> value for rx_extraPackets ] >>>
+     [B<-settime>] [B<-shutdown>]
+     S<<< [B<-splitcache> <I<RW/RO ratio>>] >>>
+     S<<< [B<-stat> <I<number of stat entries>>] >>> [B<-verbose>]
+     S<<< [B<-volumes> <I<number of volume entries>>] >>>
+     [B<-waitclose>]
 
 =for html
 </div>
@@ -56,9 +63,11 @@ Cache Manager to contact them and to access files in the cell. Omission of
 a cell from this list, or incorrect information about its database server
 machines, prevents the Cache Manager from accessing files in it.
 
-The list of database server machines is transferred into the kernel from
-the F</usr/vice/etc/CellServDB> file. After initialization, use the B<fs
-newcell> command to change the kernel-resident list without having to
+By default, the list of database server machines is transferred into the
+kernel from the F</usr/vice/etc/CellServDB> file. Alternatively, when the
+B<-afsdb> option is used, the list of database server machines is taken
+from the AFSDB DNS records for each cell. After initialization, use the
+B<fs newcell> command to change the kernel-resident list without having to
 reboot.
 
 =item *
@@ -93,8 +102,8 @@ not remove the directory that formerly served this function, if one
 exists.
 
 The second field in the F</usr/vice/etc/cacheinfo> file is the source for
-this name, and the standard value is the F</usr/vice/cache> directory. Use
-the B<-cachedir> argument to override the value in the B<cacheinfo> file.
+this name. The standard value is F</usr/vice/cache>. Use the B<-cachedir>
+argument to override the value in the B<cacheinfo> file.
 
 =item *
 
@@ -229,14 +238,12 @@ B<-stat> argument to override the default.
 
 =item *
 
-Randomly selects a file server machine in the local cell as the source for
-the correct time. Every five minutes thereafter, the local clock is
-adjusted (if necessary) to match the file server machine's clock.
-
-Use the B<-nosettime> flag to prevent the afsd command from selecting a
-time standard. This is recommended only on file server machines that are
-also acting as clients. File server machines maintain the correct time
-using the Network Time Protocol Daemon instead.
+If the B<-settime> option is specified, then it randomly selects a file
+server machine in the local cell as the source for the correct time. Every
+five minutes thereafter, the local clock is adjusted (if necessary) to
+match the file server machine's clock. This is not enabled by default.  It
+is recommended, instead, that the Network Time Protocol Daemon be used to
+synchronize the time.
 
 =back
 
@@ -286,11 +293,11 @@ Server.
 
 =item *
 
-One I<server connection> daemon, which sends a probe to the File Server
-every few minutes to check that it is still accessible. It also
-synchronizes the machine's clock with the clock on a randomly-chosen file
-server machine, unless the B<-nosettime> flag is used. There is always one
-server connection daemon.
+One I<server connection> daemon, which sends a probe to the File
+Server every few minutes to check that it is still accessible. If the
+B<-settime> option is set, it also synchronizes the machine's clock
+with the clock on a randomly-chosen file server machine. There is
+always one server connection daemon.
 
 =item *
 
@@ -353,11 +360,62 @@ AFS has for years had difficulties with being stopped and restarted
 without an intervening reboot.  While most of these issues have been
 ironed out, stopping and restarting AFS is not recommended unless
 necessary and rebooting before restarting AFS is still the safest course
-of action.
+of action. This does not apply to Linux; it should be safe to restart the
+AFS client on Linux without rebooting.
+
+In contrast to many client-server applications, not all communication is
+initiated by the client. When the AFS client opens a file, it registers a
+callback with the AFS server. If the file changes, the server notifies the
+client that the file has changed and that all cached copies should be
+discarded. In order to enable full functionality on the AFS client,
+including all command-line utilities, the following UDP ports must be open
+on an firewalls between the client and the server:
+
+   fileserver      7000/udp 
+   cachemanager    7001/udp (OpenAFS client. Arla uses 4711/udp)
+   ptserver        7002/udp
+   vlserver        7003/udp
+   kaserver        7004/udp (not needed with Kerberos v5)
+   volserver       7005/udp
+   reserved        7006/udp (for future use)
+   bosserver       7007/udp
+
+Additionally, for B<klog> to work through the firewall you need to allow
+inbound and outbound UDP on ports >1024 (probably 1024<port<2048 would
+suffice depending on the number of simultaneous B<klog>s).
+
+Be sure to set the UDP timeouts on the firewall to be at least twenty
+minutes for the best callback performance.
 
 =head1 OPTIONS
 
 =over 4
+
+=item B<-afsdb>
+
+Enable afsdb support. This will use DNS to lookup the AFSDB record and use
+that for the database servers for each cell instead of the values in the
+F<CellServDB> file. This has the advantage of only needing to update one
+DNS record to reconfigure the AFS clients for a new database server as
+opposed to touching all of the clients, and also allows one to access a
+cell without preconfiguring its database servers in F<CellServDB>.
+
+=item B<-backuptree>
+
+Prefer backup volumes for mountpoints in backup volumes. This option means
+that the AFS client will prefer to resolve mount points to backup volumes
+when a parent of the current volume is a backup volume. This is similar to
+the standard behaviour of preferring read-only volumes over read-write
+volumes when the parent volume is a read-only volume.
+
+=item B<-biods> <I<number of I/O daemons>>
+
+Sets the number of VM daemons dedicated to performing I/O operations on a
+machine running a version of AIX with virtual memory (VM) integration.  If
+both this argument and the B<-daemons> argument are omitted, the default
+is five. If this argument is omitted but the B<-daemons> argument is
+provided, the number of VM daemons is set to twice the value of the
+B<-daemons> argument.
 
 =item B<-blocks> <I<blocks in cache>>
 
@@ -369,44 +427,32 @@ F</usr/vice/etc/cacheinfo> file. For a disk cache, the value cannot exceed
 cache, do not combine this argument with the B<-dcache> argument, since
 doing so can possibly result in a chunk size that is not an exponent of 2.
 
-=item B<-files> <I<files in cache>>
-
-Specifies the number of F<VI<n>> files to create in the cache
-directory for a disk cache, overriding the default that is calculated as
-described in L<DESCRIPTION>. Each F<VI<n>> file accommodates a
-chunk of data, and can grow to a maximum size of 64 KB by default. Do not
-combine this argument with the B<-memcache> argument.
-
-=item B<-rootvol> <I<name of AFS root volume>>
-
-Names the read/write volume corresponding to the root directory for the
-AFS file tree (which is usually the F</afs> directory). This value
-overrides the default of the C<root.afs> volume.
-
-=item B<-stat> <I<number of stat entries>>
-
-Specifies the number of entries to allocate in the machine's memory for
-recording status information about the AFS files in the cache. This value
-overrides the default of C<300>.
-
-=item B<-memcache>
-
-Initializes a memory cache rather than a disk cache. Do not combine this
-flag with the B<-files> argument.
-
 =item B<-cachedir> <I<cache directory>>
 
 Names the local disk directory to be used as the cache. This value
 overrides the default defined in the second field of the
 F</usr/vice/etc/cacheinfo> file.
 
-=item B<-mountdir> <I<mount location>>
+=item B<-chunksize> <I<chunk size>>
 
-Names the local disk directory on which to mount the root of the AFS
-filespace. This value overrides the default defined in the first field of
-the F</usr/vice/etc/cacheinfo> file. If a value other than the F</afs>
-directory is used, the machine cannot access the filespace of cells that
-do use that value.
+Sets the size of each cache chunk. The integer provided, which must be
+from the range C<0> to C<30>, is used as an exponent on the number 2. It
+overrides the default of 16 for a disk cache (2^16 is 64 KB) and 13 for a
+memory cache (2^13 is 8 KB). A value of C<0> or less, or greater than
+C<30>, sets chunk size to the appropriate default. Values less than C<10>
+(which sets chunk size to a 1 KB) are not recommended.  Combining this
+argument with the B<-dcache> argument is not recommended because it
+requires that the issuer calculate the cache size that results.
+
+B<-chunksize> is an important option when tuning for performance. Setting
+this option to larger values can increase performance when dealing with
+large files.
+
+=item B<-confdir> <I<configuration directory>>
+
+Names a directory other than the F</usr/vice/etc> directory from which to
+fetch the F<cacheinfo>, F<ThisCell>, and F<CellServDB> configuration
+files.
 
 =item B<-daemons> <I<number of daemons to use>>
 
@@ -421,25 +467,17 @@ VM daemons is set to twice the value of this argument, if it is provided
 and the B<-biods> argument is not. If both arguments are omitted, there
 are five VM daemons.
 
-=item B<-nosettime>
+=item B<-dcache> <I<number of dcache entries>>
 
-Prevents the Cache Manager from synchronizing its clock with the clock on
-a server machine selected at random, by checking the time on the server
-machine every five minutes. Use this flag only on a machine that is
-already using another time synchronization protocol (for example, a server
-machine that is running the B<runntp> process).
-
-=item B<-verbose>
-
-Generates a detailed trace of the B<afsd> program's actions on the
-standard output stream.
-
-=item B<-rmtsys>
-
-Initializes an additional daemon to execute AFS-specific system calls on
-behalf of NFS client machines. Use this flag only if the machine is an
-NFS/AFS translator machine serving users of NFS client machines who
-execute AFS commands.
+Sets the number of dcache entries in memory, which are used to store
+information about cache chunks. For a disk cache, this overrides the
+default, which is 50% of the number of F<VI<n>> files (cache chunks). For
+a memory cache, this argument effectively sets the number of cache chunks,
+but its use is not recommended, because it requires the issuer to
+calculate the resulting total cache size (derived by multiplying this
+value by the chunk size). Do not combine this argument with the B<-blocks>
+argument, since doing so can possibly result in a chunk size that is not
+an exponent of 2.
 
 =item B<-debug>
 
@@ -447,72 +485,35 @@ Generates a highly detailed trace of the B<afsd> program's actions on the
 standard output stream. The information is useful mostly for debugging
 purposes.
 
-=item B<-chunksize> <I<chunk size>>
+=item B<-dynroot>
 
-Sets the size of each cache chunk. The integer provided, which must be
-from the range C<0> to C<30>, is used as an exponent on the number 2. It
-overrides the default of 16 for a disk cache (2^16 is 64 KB) and 13 for a
-memory cache (2^13 is 8 KB). A value of C<0> or less, or greater than
-C<30>, sets chunk size to the appropriate default. Values less than C<10>
-(which sets chunk size to a 1 KB) are not recommended.  Combining this
-argument with the B<-dcache> argument is not recommended because it
-requires that the issuer calculate the cache size that results.
+The standard behaviour of the AFS client without the B<-dynroot> option is
+to mount the root.afs volume from the default cell on the F</afs> path. The 
+F</afs> folder and root.afs volume traditionally shows the folders for 
+F<ThisCell> and other cells as configured by the AFS cell administrator.
 
-=item B<-dcache> <I<number of dcache entries>>
+The B<-dynroot> option changes this. Using this option, the AFS client
+does not mount the root.afs volume on F</afs>. Instead it uses the
+contents of the F<CellServDB> file to populate the listing of cells in
+F</afs>. This is known as a DYNamic ROOT. A cell is not contacted until
+the path F</afs/I<cellname>> if accessed. This functions similarly to an
+automounter.  The main advantage of using B<-dynroot> is that the AFS
+client will start properly even without network access, whereas the client
+not using B<-dynroot> will freeze upon startup if cannot contact the
+default cell specified in F<ThisCell> and mount the root.afs
+volume. Dynamic root mode is also sometimes called travelling mode because
+it works well for laptops which don't always have network connectivity.
 
-Sets the number of dcache entries in memory, which are used to store
-information about cache chunks. For a disk cache, this overrides the
-default, which is 50% of the number of F<VI<n>> files (cache
-chunks). For a memory cache, this argument effectively sets the number of
-cache chunks, but its use is not recommended, because it requires the
-issuer to calculate the resulting total cache size (derived by multiplying
-this value by the chunk size). Do not combine this argument with the
-B<-blocks> argument, since doing so can possibly result in a chunk size
-that is not an exponent of 2.
-
-=item B<-volumes> <I<number of volume entries>>
-
-Specifies the number of memory structures to allocate for storing volume
-location information. The default value is C<50>.
-
-=item B<-biods> <I<number of I/O daemons>>
-
-Sets the number of VM daemons dedicated to performing I/O operations on a
-machine running a version of AIX with virtual memory (VM) integration.  If
-both this argument and the B<-daemons> argument are omitted, the default
-is five. If this argument is omitted but the B<-daemons> argument is
-provided, the number of VM daemons is set to twice the value of the
-B<-daemons> argument.
-
-=item B<-prealloc> <I<number of preallocated blocks>>
-
-Specifies the number of pieces of memory to preallocate for the Cache
-Manager's internal use. The default initial value is C<400>, but the Cache
-Manager dynamically allocates more memory as it needs it.
-
-=item B<-confdir> <I<configuration directory>>
-
-Names a directory other than the F</usr/vice/etc> directory from which to
-fetch the F<cacheinfo>, F<ThisCell>, and F<CellServDB> configuration
-files.
-
-=item B<-logfile> <I<log file location>>
-
-Is obsolete and has no real effect. It specifies an alternate file in
-which to record a type of trace that the Cache Manager no longer
-generates; the default value is F</usr/vice/etc/AFSLog>.
-
-=item B<-waitclose>
-
-Has no effect on the operation of the Cache Manager. The behavior it
-affected in previous versions of the Cache Manager, to perform synchronous
-writes to the File Server, is now the default behavior. To perform
-asynchronous writes in certain cases, use the B<fs storebehind> command.
-
-=item B<-shutdown>
-
-Shuts down the Cache Manager, but not in the most effective possible
-way. Do not use this flag.
+Two advantages of not using dynroot are that listing F</afs> will usually
+be faster because the contents of F</afs> are limited to what the AFS
+administrator decides and that symbolic links are traditionally created
+by the AFS administrator to provide a short name for the cell (i.e.
+cellname.domain.com is aliased to cellname).  However, with dynroot, the
+local system administrator can limit the default contents of F</afs> by
+installing a stripped-down F<CellServDB> file, and if dynroot is in effect,
+the F<CellAlias> file can be used to provide shortname for common AFS cells
+which provides equivalent functionality to the most commonly used symbolic
+links.
 
 =item B<-enable_peer_stats>
 
@@ -530,10 +531,144 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
+=item B<-fakestat>
+
+Return fake values for stat calls on cross-cell mounts. This option makes
+an C<ls -l> of F</afs> much faster since each cell isn't contacted, and
+this and the B<-fakestat-all> options are useful on Mac OS X so that the
+Finder program doesn't try to contact every AFS cell the system knows
+about.
+
+=item B<-fakestat-all>
+
+Return fake values for stat calls on all mounts, not just cross-cell
+mounts. This and the B<-fakestat> options are useful on Mac OS X so that
+the Finder program doesn't hang when browsing AFS directories.
+
+=item B<-files> <I<files in cache>>
+
+Specifies the number of F<VI<n>> files to create in the cache directory
+for a disk cache, overriding the default that is calculated as described
+in L<DESCRIPTION>. Each F<VI<n>> file accommodates a chunk of data, and
+can grow to a maximum size of 64 KB by default. Do not combine this
+argument with the B<-memcache> argument.
+
+=item B<-files_per_subdir> <I<files per cache subdirectory>>
+
+Limits the number of cache files in each subdirectory of the cache
+directory. The value of the option should be the base-two log of the
+number of cache files per cache subdirectory (so 10 for 1024 files, 14 for
+16384 files, and so forth).
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
 ignored.
+
+=item B<-logfile> <I<log file location>>
+
+This option is obsolete and no longer has any effect.
+
+=item B<-mem_alloc_sleep>
+
+Allows sleeps when allocating a memory cache.
+
+=item B<-memcache>
+
+Initializes a memory cache rather than a disk cache. Do not combine this
+flag with the B<-files> argument.
+
+=item B<-mountdir> <I<mount location>>
+
+Names the local disk directory on which to mount the root of the AFS
+filespace. This value overrides the default defined in the first field of
+the F</usr/vice/etc/cacheinfo> file. If a value other than the F</afs>
+directory is used, the machine cannot access the filespace of cells that
+do use that value.
+
+=item B<-nomount>
+
+Do not mount AFS on startup. The afs global mount must be mounted via
+some other means. This is useful on Mac OS X where /afs is sometimes
+mounted in /Network/afs like other network file systems.
+
+=item B<-nosettime>
+
+This is enabled by default. It prevents the Cache Manager from
+synchronizing its clock with the clock on a server machine selected at
+random by checking the time on the server machine every five minutes.
+This is the recommended behavior; instead of the AFS Cache Manager, the
+Network Time Protocol Daemon should be used to synchronize the system
+time.
+
+=item B<-prealloc> <I<number of preallocated blocks>>
+
+Specifies the number of pieces of memory to preallocate for the Cache
+Manager's internal use. The default initial value is C<400>, but the Cache
+Manager dynamically allocates more memory as it needs it.
+
+=item B<-rmtsys>
+
+Initializes an additional daemon to execute AFS-specific system calls on
+behalf of NFS client machines. Use this flag only if the machine is an
+NFS/AFS translator machine serving users of NFS client machines who
+execute AFS commands.
+
+=item B<-rootvol> <I<name of AFS root volume>>
+
+Names the read/write volume corresponding to the root directory for the
+AFS file tree (which is usually the F</afs> directory). This value
+overrides the default of the C<root.afs> volume. This option is ignored if
+B<-dynroot> is given.
+
+=item B<-rxbind>
+
+Bind the Rx socket (one interface only).
+
+=item B<-rxpck> <I<value for rx_extraPackets>>
+
+Set rx_extraPackets to this value.
+
+=item B<-settime>
+
+Enable native AFS time synchronization. This option is the opposite of
+B<-nosettime> and cannot be used with the B<-nosettime> option.
+
+=item B<-shutdown>
+
+Shuts down the Cache Manager. Before calling B<afsd> with this option,
+unmount the AFS file system with B<umount>.
+
+=item B<-splitcache> <I<RW/RO Ratio>>
+
+This allows the user to set a certain percentage of the AFS cache be
+reserved for read/write content and the rest to be reserved for read-only
+content. The ratio should be written as a fraction.  For example,
+C<-splitcache 75/25> devotes 75% of your cache space to read/write content
+and 25% to read-only.
+
+=item B<-stat> <I<number of stat entries>>
+
+Specifies the number of entries to allocate in the machine's memory for
+recording status information about the AFS files in the cache. This value
+overrides the default of C<300>.
+
+=item B<-verbose>
+
+Generates a detailed trace of the B<afsd> program's actions on the
+standard output stream.
+
+=item B<-volumes> <I<number of volume entries>>
+
+Specifies the number of memory structures to allocate for storing volume
+location information. The default value is C<50>.
+
+=item B<-waitclose>
+
+Has no effect on the operation of the Cache Manager. The behavior it
+affected in previous versions of the Cache Manager, to perform synchronous
+writes to the File Server, is now the default behavior. To perform
+asynchronous writes in certain cases, use the B<fs storebehind> command.
 
 =back
 
@@ -543,17 +678,17 @@ The B<afsd> command is normally included in the machine's AFS
 initialization file, rather than typed at the command shell prompt. For
 most disk caches, the appropriate form is
 
-   /usr/vice/etc/afsd
+   % /usr/vice/etc/afsd
 
 The following command is appropriate when enabling a machine to act as an
 NFS/AFS Translator machine serving more than five users.
 
-   /usr/vice/etc/afsd -daemons 4 -rmtsys
+   % /usr/vice/etc/afsd -daemons 4 -rmtsys
 
 The following command initializes a memory cache and sets chunk size to 16
 KB (2^14).
 
-   /usr/vice/etc/afsd -memcache -chunksize 14
+   % /usr/vice/etc/afsd -memcache -chunksize 14
 
 =head1 PRIVILEGE REQUIRED
 
@@ -561,6 +696,7 @@ The issuer must be logged in as the local superuser root.
 
 =head1 SEE ALSO
 
+L<fs_newcell(1)>,
 L<afs_cache(5)>,
 L<CellServDB(5)>,
 L<cacheinfo(5)>
@@ -569,6 +705,6 @@ L<cacheinfo(5)>
 
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 
-This documentation is covered by the IBM Public License Version 1.0.  It was
-converted from HTML to POD by software written by Chas Williams and Russ
-Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+This documentation is covered by the IBM Public License Version 1.0.  It
+was converted from HTML to POD by software written by Chas Williams and
+Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

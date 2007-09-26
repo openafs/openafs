@@ -8,14 +8,34 @@
 RELDIR=auth
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = -DAFS_AFSDB_ENV
 
-INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+RXK5_INCFILES=\
+	$(INCFILEDIR)\rxk5_tkt.h \
+	$(INCFILEDIR)\rxk5_utilafs.h \
+
+AFS_TOKEN_RXK5_DEFINE = -DAFS_RXK5
+
+K5OBJS=\
+	$(OUT)\rxk5_utilafs.obj \
+	$(OUT)\rxk5_tkt.obj \
+	$(OUT)\krb_util.obj
+
+!ENDIF
+
+INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
 	$(INCFILEDIR)\auth.h \
 	$(INCFILEDIR)\cellconfig.h \
-	$(INCFILEDIR)\keys.h
-
+	$(INCFILEDIR)\keys.h \
+	$(RXK5_INCFILES) \
+	$(INCFILEDIR)\afs_token.h \
+	$(INCFILEDIR)\afs_token_protos.h 
 
 ############################################################################
 # afsauth.lib
@@ -23,6 +43,8 @@ INCFILES =\
 AFSAUTH_LIBFILE = $(DESTDIR)\lib\afs\afsauth.lib
 
 AFSD = ..\WINNT\afsd
+
+KADOBJS = $(OUT)\rxkad_tkt.obj
 
 AFSAUTH_LIBOBJS =\
 	$(OUT)\cellconfig.obj \
@@ -32,6 +54,11 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
+	$(OUT)\rxkad_tkt.obj \
+	$(OUT)\afs_token.xdr.obj \
+	$(K5OBJS) \
+	$(KADOBJS) \
+    $(DESTDIR)\lib\afskfw_funcs.lib \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSDOBJS =\
@@ -56,8 +83,9 @@ AFSAUTH_KRB_LIBOBJS =\
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
+	$(K5OBJS) \
 	$(OUT)\AFS_component_version_number.obj
-	
+
 $(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)  
 	$(LIBARCH) rpcrt4.lib
 
@@ -110,6 +138,15 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 	$(DEL) auth.h ktc_errors.c
 	$(COMPILE_ET) ktc_errors.et -h auth
 
+afs_token.xdr.c: afs_token.xg
+	$(RXGEN) -c -o afs_token.xdr.c afs_token.xg -DAFS_NT40_ENV $(AFS_TOKEN_RXK5_DEFINE)
+
+afs_token.h: afs_token.xg
+	$(RXGEN) -h -o afs_token.h afs_token.xg -DAFS_NT40_ENV $(AFS_TOKEN_RXK5_DEFINE)
+
+$(OUT)\krb_util.obj: ..\aklog\krb_util.c
+        $(C2OBJ) $**
+
 install_headers: $(INCFILES)
 
 install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe # $(COPYAUTH_EXEFILE)
@@ -117,11 +154,11 @@ install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe # $(COPYAUT
 install9x: install
 
 clean::
-	$(DEL) acfg_errors.c ktc_errors.c
+	$(DEL) acfg_errors.c ktc_errors.c afs_token.h afs_token.xdr.c 
 	$(DEL) $(INCFILES) $(AFSAUTH_LIBFILE)
 	$(DEL) auth.h  cellconfig.h
 
 setkey: $(SETKEY_EXEFILE)
 
 mkdir:
-	
+

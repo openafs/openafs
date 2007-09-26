@@ -6,5 +6,6 @@ cellconfig.h
 copyauth
 ktc_errors.c
 setkey
+t_cap
 afs_token.h
 afs_token.xdr.c

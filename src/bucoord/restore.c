@@ -40,7 +40,6 @@ RCSID
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern char *whoami;
 
-#define	BC_MAXLEVELS	    20
 #define	MAXTAPESATONCE	    10
 
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
@@ -182,9 +181,10 @@ bc_Restorer(aindex)
     statusP statusPtr, newStatusPtr;
 
     struct dumpinfo *dumpinfolist = NULL;
-    struct dumpinfo *pdi, *ndi, *di, dlevels[BC_MAXLEVELS];
+    struct dumpinfo *pdi, *ndi, *di, *dlevels;
     struct volinfo *pvi, *nvi, *vi;
     afs_int32 lvl, lv;
+    int num_dlevels = 20;
 
     afs_int32 serverAll;	/* The server to which all volumes are to be restore to */
     afs_int32 partitionAll;	/* Likewise for partition */
@@ -196,6 +196,8 @@ bc_Restorer(aindex)
     extern statusP createStatusNode();
     extern statusP findStatus();
 
+    dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+
     dumpTaskPtr = &bc_dumpTasks[aindex];
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
     partitionAll = dumpTaskPtr->destPartition;
@@ -203,7 +205,7 @@ bc_Restorer(aindex)
     volumeEntries = (struct budb_volumeEntry *)
 	malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
     if (!volumeEntries) {
-	com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, "");
 	ERROR(BC_NOMEM);
     }
 
@@ -214,29 +216,55 @@ bc_Restorer(aindex)
     for (tvol = dumpTaskPtr->volumes; tvol; tvol = tvol->next) {	/*tvol */
 	strcpy(vname, tvol->name);
 	dumpDescr = &dumpDescr1;
-	code = bcdb_FindDump(vname, dumpTaskPtr->fromDate, dumpDescr);
-
-	if (!BackupName(vname)) {	/* See if backup volume is there */
-	    strcat(vname, ".backup");
-	    dumpDescr = &dumpDescr2;
-	    tcode = code;
+	if (dumpTaskPtr->parentDumpID > 0) /* Told which dump to try */
+	  {
+	    /* Right now, this assumes that all volumes listed will be
+	     * from the given dumpID.  FIXME
+	     */
+	    code = bcdb_FindDumpByID(dumpTaskPtr->parentDumpID, dumpDescr);
+	    if (code)
+	      {
+		afs_com_err(whoami, "Couldn't look up info for dump %d\n",
+			dumpTaskPtr->parentDumpID);
+		continue;
+	      }
+	    code = bcdb_FindVolumes(dumpTaskPtr->parentDumpID, vname, volumeEntries,
+				    last, &next, MAXTAPESATONCE, &vecount);
+	    if (code)
+	      {
+		if (!BackupName(vname))
+		  {
+		    strcat(vname, ".backup");
+		    code = bcdb_FindVolumes(dumpTaskPtr->parentDumpID, vname, volumeEntries,
+					    last, &next, MAXTAPESATONCE, &vecount);
+		  }
+	      }
+	  }
+	else
+	  {
 	    code = bcdb_FindDump(vname, dumpTaskPtr->fromDate, dumpDescr);
+	    if (!BackupName(vname)) {	/* See if backup volume is there */
+	      strcat(vname, ".backup");
+	      dumpDescr = &dumpDescr2;
+	      tcode = code;
+	      code = bcdb_FindDump(vname, dumpTaskPtr->fromDate, dumpDescr);
 
-	    if (code) {		/* Can't find backup, go with first results */
+	      if (code) {	/* Can't find backup, go with first results */
 		strcpy(vname, tvol->name);
 		dumpDescr = &dumpDescr1;
 		code = tcode;
-	    } else if (!tcode) {	/* Both found an entry, go with latest result */
+	      } else if (!tcode) {	/* Both found an entry, go with latest result */
 		if (dumpDescr1.created > dumpDescr2.created) {
-		    strcpy(vname, tvol->name);
-		    dumpDescr = &dumpDescr1;
-		    code = tcode;
+		  strcpy(vname, tvol->name);
+		  dumpDescr = &dumpDescr1;
+		  code = tcode;
 		}
+	      }
 	    }
-	}
+	  }
 
 	if (code) {		/* If FindDump took an error */
-	    com_err(whoami, code, "; Can't find any dump for volume %s",
+	    afs_com_err(whoami, code, "; Can't find any dump for volume %s",
 		    tvol->name);
 	    continue;
 	}
@@ -255,7 +283,7 @@ bc_Restorer(aindex)
 	if (!di) {
 	    di = (struct dumpinfo *)malloc(sizeof(struct dumpinfo));
 	    if (!di) {
-		com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, "");
 		ERROR(BC_NOMEM);
 	    }
 	    memset(di, 0, sizeof(struct dumpinfo));
@@ -277,7 +305,7 @@ bc_Restorer(aindex)
 	/* Create one and thread into list */
 	vi = (struct volinfo *)malloc(sizeof(struct volinfo));
 	if (!vi) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    ERROR(BC_NOMEM);
 	}
 	memset(vi, 0, sizeof(struct volinfo));
@@ -285,7 +313,7 @@ bc_Restorer(aindex)
 	vi->volname = (char *)malloc(strlen(vname) + 1);
 	if (!vi->volname) {
 	    free(vi);
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    ERROR(BC_NOMEM);
 	}
 
@@ -314,10 +342,18 @@ bc_Restorer(aindex)
 	memcpy(&dlevels[0], di, sizeof(struct dumpinfo));
 	for (lvl = 1, parent = dlevels[0].parentDumpId; parent;
 	     parent = dlevels[lvl].parentDumpId, lvl++) {
+	    if (lvl >= num_dlevels) {		/* running out of dump levels */
+		struct dumpinfo *tdl = dlevels;
+
+		num_dlevels += num_dlevels;	/* double */
+		dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+		memcpy(dlevels, tdl, (num_dlevels/2) * sizeof(*dlevels));
+		free(tdl);
+	    }
 	    code = bcdb_FindDumpByID(parent, &dumpDescr1);
 	    if (code) {
 		for (vi = di->volinfolist; vi; vi = vi->next) {
-		    com_err(whoami, code,
+		    afs_com_err(whoami, code,
 			    "; Can't find parent DumpID %u for volume %s",
 			    parent, vi->volname);
 		}
@@ -369,7 +405,7 @@ bc_Restorer(aindex)
 			    break;
 			}
 
-			com_err(whoami, code,
+			afs_com_err(whoami, code,
 				"; Can't find volume %s in DumpID %u",
 				vi->volname, dlevels[lv].DumpId);
 			ERROR(code);
@@ -450,7 +486,7 @@ bc_Restorer(aindex)
 			    tle = (struct bc_tapeList *)
 				malloc(sizeof(struct bc_tapeList));
 			    if (!tle) {
-				com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, "");
 				return (BC_NOMEM);
 			    }
 			    memset(tle, 0, sizeof(struct bc_tapeList));
@@ -460,7 +496,7 @@ bc_Restorer(aindex)
 					       + 1);
 			    if (!tle->tapeName) {
 				free(tle);
-				com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, "");
 				return (BC_NOMEM);
 			    }
 
@@ -505,7 +541,7 @@ bc_Restorer(aindex)
 			    ti = (struct bc_tapeItem *)
 				malloc(sizeof(struct bc_tapeItem));
 			    if (!ti) {
-				com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, "");
 				return (BC_NOMEM);
 			    }
 			    memset(ti, 0, sizeof(struct bc_tapeItem));
@@ -515,7 +551,7 @@ bc_Restorer(aindex)
 					       + 1);
 			    if (!ti->volumeName) {
 				free(ti);
-				com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, "");
 				return (BC_NOMEM);
 			    }
 
@@ -548,7 +584,7 @@ bc_Restorer(aindex)
     }				/* di: For each dump */
 
     if (!nentries) {
-	com_err(whoami, 0, "No volumes to restore");
+	afs_com_err(whoami, 0, "No volumes to restore");
 	ERROR(0);
     }
 
@@ -605,7 +641,7 @@ bc_Restorer(aindex)
 	(struct tc_restoreDesc *)malloc(nentries *
 					sizeof(struct tc_restoreDesc));
     if (!tcarray) {
-	com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, "");
 	ERROR(BC_NOMEM);
     }
     memset(tcarray, 0, nentries * sizeof(struct tc_restoreDesc));
@@ -687,7 +723,7 @@ bc_Restorer(aindex)
 	    TC_PerformRestore(aconn, "DumpSetName", &rpcArray,
 			      &dumpTaskPtr->dumpID);
 	if (code) {
-	    com_err(whoami, code, "; Failed to start restore");
+	    afs_com_err(whoami, code, "; Failed to start restore");
 	    break;
 	}
 
@@ -767,6 +803,8 @@ bc_Restorer(aindex)
     /* free local-like things we alloacted to save stack space */
     if (volumeEntries)
 	free(volumeEntries);
+
+    free(dlevels);
 
     return code;
 }

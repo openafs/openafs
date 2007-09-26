@@ -220,8 +220,8 @@ void CloseGlobalBitmap (void);
 BOOL OpenGlobalArray (size_t cObjects);
 void CloseGlobalArray (void);
 
-BOOL CALLBACK FastList_ControlProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK FastList_ParentProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK FastList_ControlProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK FastList_ParentProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void FastList_OnCreate (HWND hList);
 void FastList_OnDestroy (HWND hList);
@@ -447,7 +447,7 @@ void CloseGlobalArray (void)
 }
 
 
-BOOL CALLBACK FastList_ControlProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK FastList_ControlProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
    switch (msg)
       {
@@ -681,7 +681,7 @@ BOOL CALLBACK FastList_ControlProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK FastList_ParentProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK FastList_ParentProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, FastList_ParentProc);
 

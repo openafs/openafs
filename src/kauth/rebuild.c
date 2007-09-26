@@ -394,12 +394,12 @@ readDB(offset, buffer, size)
     offset += UBIK_HEADERSIZE;
     code = lseek(fd, offset, SEEK_SET);
     if (code != offset) {
-	com_err(whoami, errno, "skipping Ubik header");
+	afs_com_err(whoami, errno, "skipping Ubik header");
 	exit(2);
     }
     code = read(fd, buffer, size);
     if (code != size) {
-	com_err(whoami, errno, "reading db got %d bytes", code);
+	afs_com_err(whoami, errno, "reading db got %d bytes", code);
 	exit(3);
     }
 }
@@ -430,7 +430,7 @@ WorkerBee(as, arock)
     if (outFile) {
 	out = fopen(outFile, "w");
 	if (!out) {
-	    com_err(whoami, errno, "opening output file %s", outFile);
+	    afs_com_err(whoami, errno, "opening output file %s", outFile);
 	    exit(7);
 	}
     } else
@@ -438,12 +438,12 @@ WorkerBee(as, arock)
 
     fd = open(dbFile, O_RDONLY, 0);
     if (fd < 0) {
-	com_err(whoami, errno, "opening database file %s", dbFile);
+	afs_com_err(whoami, errno, "opening database file %s", dbFile);
 	exit(6);
     }
     code = fstat(fd, &info);
     if (code) {
-	com_err(whoami, errno, "stat'ing file %s", dbFile);
+	afs_com_err(whoami, errno, "stat'ing file %s", dbFile);
 	exit(6);
     }
     if ((info.st_size - UBIK_HEADERSIZE) % UBIK_BUFFERSIZE)

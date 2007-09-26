@@ -57,7 +57,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
      */
     long code;
     cm_scache_t *scp = vscp;
-    long nbytes;
+    afs_int32 nbytes;
     long temp;
     AFSFetchStatus outStatus;
     AFSStoreStatus inStatus;
@@ -68,7 +68,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     struct rx_connection *rxconnp;
     osi_queueData_t *qdp;
     cm_buf_t *bufp;
-    long wbytes;
+    afs_uint32 wbytes;
     char *bufferp;
     cm_conn_t *connp;
     osi_hyper_t truncPos;
@@ -84,12 +84,12 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
      */
 
     lock_ObtainMutex(&scp->mx);
-    cm_AFSFidFromFid(&tfid, &scp->fid);
-
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	lock_ReleaseMutex(&scp->mx);
 	return CM_ERROR_NOSUCHFILE;
     }
+
+    cm_AFSFidFromFid(&tfid, &scp->fid);
 
     code = cm_SetupStoreBIOD(scp, offsetp, length, &biod, userp, reqp);
     if (code) {
@@ -101,7 +101,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     if (biod.length == 0) {
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
         lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseBIOD(&biod, 1);	/* should be a NOOP */
+        cm_ReleaseBIOD(&biod, 1, 0);	/* should be a NOOP */
         return 0;
     }
 
@@ -149,7 +149,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     /* now we're ready to do the store operation */
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -160,32 +160,43 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
 #ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
-            osi_Log4(afsd_logp, "CALL StoreData64 scp 0x%p, offset 0x%x:%08x, length 0x%x",
+            osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData64 scp 0x%p, offset 0x%x:%08x, length 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
             code = StartRXAFS_StoreData64(callp, &tfid, &inStatus,
                                           biod.offset.QuadPart,
                                           nbytes,
                                           truncPos.QuadPart);
+	    if (code)
+		osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData64 FAILURE, code 0x%x", code);
+	    else
+		osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData64 SUCCESS");
         } else {
-
             if (require_64bit_ops) {
-                osi_Log0(afsd_logp, "Skipping StoreData.  The operation requires StoreData64");
+                osi_Log0(afsd_logp, "Skipping StartRXAFS_StoreData.  The operation requires large file support in the server.");
                 code = CM_ERROR_TOOBIG;
             } else {
-                osi_Log4(afsd_logp, "CALL StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
+                osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
                          scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
                 code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                             biod.offset.LowPart, nbytes, truncPos.LowPart);
+		if (code)
+		    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
+		else
+		    osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData SUCCESS");
             }
         }
 #else
-        osi_Log4(afsd_logp, "CALL StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
+        osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
                  scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     biod.offset.LowPart, nbytes, truncPos.LowPart);
+	if (code)
+	    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
+	else
+	    osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData SUCCESS");
 #endif
 
         if (code == 0) {
@@ -214,20 +225,21 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 }       
                 nbytes -= wbytes;
             }	/* while more bytes to write */
-        }		/* if RPC started successfully */
-        else {
-            osi_Log2(afsd_logp, "StartRXAFS_StoreData?? scp 0x%p failed (%lX)",scp,code);
-        }
+        }	/* if RPC started successfully */
 
         if (code == 0) {
             if (SERVERHAS64BIT(connp)) {
                 code = EndRXAFS_StoreData64(callp, &outStatus, &volSync);
                 if (code)
-                    osi_Log2(afsd_logp, "EndRXAFS_StoreData64 scp 0x%p failed (%lX)", scp, code);
+                    osi_Log2(afsd_logp, "EndRXAFS_StoreData64 FAILURE scp 0x%p code %lX", scp, code);
+		else
+		    osi_Log0(afsd_logp, "EndRXAFS_StoreData64 SUCCESS");
             } else {
                 code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
                 if (code)
-                    osi_Log2(afsd_logp, "EndRXAFS_StoreData scp 0x%p failed (%lX)",scp,code);
+                    osi_Log2(afsd_logp, "EndRXAFS_StoreData FAILURE scp 0x%p code %lX",scp,code);
+		else
+		    osi_Log0(afsd_logp, "EndRXAFS_StoreData SUCCESS");
             }
         }
 
@@ -285,7 +297,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
 
-        cm_MergeStatus(scp, &outStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
     } else {
         if (code == CM_ERROR_SPACE)
             scp->flags |= CM_SCACHEFLAG_OUTOFSPACE;
@@ -293,7 +305,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             scp->flags |= CM_SCACHEFLAG_OVERQUOTA;
     }
     lock_ReleaseMutex(&scp->mx);
-    cm_ReleaseBIOD(&biod, 1);
+    cm_ReleaseBIOD(&biod, 1, code);
 
     return code;
 }
@@ -344,7 +356,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     /* now we're ready to do the store operation */
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -408,7 +420,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
-        cm_MergeStatus(scp, &outStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
     }
 
     return code;
@@ -520,11 +532,12 @@ int cm_HaveBuffer(cm_scache_t *scp, cm_buf_t *bufp, int isBufLocked)
 }
 
 /* used when deciding whether to do a prefetch or not */
-long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
-                        cm_user_t *up, cm_req_t *reqp, osi_hyper_t *realBasep)
+long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, osi_hyper_t *length,
+                        cm_user_t *userp, cm_req_t *reqp, osi_hyper_t *realBasep)
 {
-    osi_hyper_t toffset;
     osi_hyper_t tbase;
+    osi_hyper_t tlength;
+    osi_hyper_t tblocksize;
     long code;
     cm_buf_t *bp;
     int stop;
@@ -533,11 +546,13 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
      * they need work.
      */
     tbase = *startBasep;
+    tlength = *length;
+    tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
     stop = 0;
     lock_ObtainMutex(&scp->mx);
-    while(length > 0) {
+    while (LargeIntegerGreaterThanZero(tlength)) {
         /* get callback so we can do a meaningful dataVersion comparison */
-        code = cm_SyncOp(scp, NULL, up, reqp, 0,
+        code = cm_SyncOp(scp, NULL, userp, reqp, 0,
                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (code) {
             scp->flags &= ~CM_SCACHEFLAG_PREFETCHING;
@@ -568,13 +583,11 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
         if (stop) 
             break;
                 
-        toffset.LowPart = cm_data.buf_blockSize;
-        toffset.HighPart = 0;
-        tbase = LargeIntegerAdd(toffset, tbase);
-        length -= cm_data.buf_blockSize;
+        tbase = LargeIntegerAdd(tbase, tblocksize);
+        tlength = LargeIntegerSubtract(tlength,  tblocksize);
     }
         
-    /* if we get here, either everything is fine or stop stopped us at a
+    /* if we get here, either everything is fine or 'stop' stopped us at a
      * particular buffer in the range that definitely needs to be fetched.
      */
     if (stop == 0) {
@@ -591,21 +604,22 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
     return code;
 }
 
-void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-                 cm_user_t *userp)
+afs_int32
+cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+	    cm_user_t *userp)
 {
     osi_hyper_t toffset;
     long length;
     cm_req_t req;
-    long code;
+    long code = 0;
 
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	osi_Log4(afsd_logp, "Skipping BKG store - Deleted scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
     } else {
 	cm_InitReq(&req);
-#ifdef NO_BKG_RETRIES
+
+	/* Retries will be performed by the BkgDaemon thread if appropriate */
 	req.flags |= CM_REQ_NORETRY;
-#endif
 
 	toffset.LowPart = p1;
 	toffset.HighPart = p2;
@@ -614,71 +628,113 @@ void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, 
 	osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
 	code = cm_BufWrite(scp, &toffset, length, /* flags */ 0, userp, &req);
+
+	osi_Log4(afsd_logp, "Finished BKG store scp 0x%p, offset 0x%x:%08x, code 0x%x", scp, p2, p1, code);
     }
 
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
     lock_ReleaseMutex(&scp->mx);
+
+    return code;
 }
 
 /* Called with scp locked */
-void cm_ClearPrefetchFlag(long code, cm_scache_t *scp, osi_hyper_t *base)
+void cm_ClearPrefetchFlag(long code, cm_scache_t *scp, osi_hyper_t *base, osi_hyper_t *length)
 {
-    osi_hyper_t thyper;
+    osi_hyper_t end;
 
     if (code == 0) {
-        thyper.LowPart = cm_chunkSize;
-        thyper.HighPart = 0;
-        thyper =  LargeIntegerAdd(*base, thyper);
-        thyper.LowPart &= (-cm_chunkSize);
+        end =  LargeIntegerAdd(*base, *length);
         if (LargeIntegerGreaterThan(*base, scp->prefetch.base))
             scp->prefetch.base = *base;
-        if (LargeIntegerGreaterThan(thyper, scp->prefetch.end))
-            scp->prefetch.end = thyper;
+        if (LargeIntegerGreaterThan(end, scp->prefetch.end))
+            scp->prefetch.end = end;
     }
     scp->flags &= ~CM_SCACHEFLAG_PREFETCHING;
 }
 
-/* do the prefetch */
-void cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-                    cm_user_t *userp)
+/* do the prefetch.  if the prefetch fails, return 0 (success)
+ * because there is no harm done.  */
+afs_int32
+cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+	       cm_user_t *userp)
 {
-    long length;
+    osi_hyper_t length;
     osi_hyper_t base;
+    osi_hyper_t offset;
+    osi_hyper_t end;
+    osi_hyper_t fetched;
+    osi_hyper_t tblocksize;
     long code;
-    cm_buf_t *bp;
-    int cpff = 0;			/* cleared prefetch flag */
+    int mxheld = 0;
+    cm_buf_t *bp = NULL;
     cm_req_t req;
 
     cm_InitReq(&req);
+
+    /* Retries will be performed by the BkgDaemon thread if appropriate */
     req.flags |= CM_REQ_NORETRY;
         
+    fetched.LowPart = 0;
+    fetched.HighPart = 0;
+    tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
     base.LowPart = p1;
     base.HighPart = p2;
-    length = p3;
+    length.LowPart = p3;
+    length.HighPart = p4;
+
+    end = LargeIntegerAdd(base, length);
         
-    osi_Log2(afsd_logp, "Starting BKG prefetch scp 0x%p, base 0x%x", scp, p1);
+    osi_Log3(afsd_logp, "Starting BKG prefetch scp 0x%p, base 0x%x:%x", scp, p2, p1);
 
-    code = buf_Get(scp, &base, &bp);
+    for (code = 0, offset = base;
+          code == 0 && LargeIntegerLessThan(offset, end); 
+          offset = LargeIntegerAdd(offset, tblocksize))
+    {
+        if (mxheld) {
+            lock_ReleaseMutex(&scp->mx);
+            mxheld = 0;
+        }
+        code = buf_Get(scp, &base, &bp);
+        if (!mxheld) {
+            lock_ObtainMutex(&scp->mx);
+            mxheld = 1;
+        }
 
-    lock_ObtainMutex(&scp->mx);
+        if (code || (bp->cmFlags & CM_BUF_CMFETCHING)) {
+            code = 0;
+            if (bp) {
+                buf_Release(bp);
+                bp = NULL;
+            }
+            break;
+        }
 
-    if (code || (bp->cmFlags & CM_BUF_CMFETCHING)) {
-        scp->flags &= ~CM_SCACHEFLAG_PREFETCHING;
-        lock_ReleaseMutex(&scp->mx);
-        return;
+        code = cm_GetBuffer(scp, bp, NULL, userp, &req);
+        if (code == 0)
+            fetched = LargeIntegerAdd(fetched, tblocksize); 
+    }
+    
+    if (!mxheld) {
+        lock_ObtainMutex(&scp->mx);
+        mxheld = 1;
+    }
+    cm_ClearPrefetchFlag(LargeIntegerGreaterThanZero(fetched) ? 0 : code, 
+                         scp, &base, &fetched);
+    lock_ReleaseMutex(&scp->mx);
+    if (bp) {
+        buf_Release(bp);
+        bp = NULL;
     }
 
-    code = cm_GetBuffer(scp, bp, &cpff, userp, &req);
-    if (!cpff) 
-        cm_ClearPrefetchFlag(code, scp, &base);
-    lock_ReleaseMutex(&scp->mx);
-    buf_Release(bp);
-    return;
+    osi_Log4(afsd_logp, "Ending BKG prefetch scp 0x%p, code %d bytes 0x%x:%x", 
+              scp, code, fetched.HighPart, fetched.LowPart);
+    return code;
 }
 
 /* a read was issued to offsetp, and we have to determine whether we should
- * do a prefetch.
+ * do a prefetch of the next chunk.
  */
 void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
                          cm_user_t *userp, cm_req_t *reqp)
@@ -686,11 +742,14 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
     long code;
     osi_hyper_t realBase;
     osi_hyper_t readBase;
+    osi_hyper_t readLength;
         
     readBase = *offsetp;
     /* round up to chunk boundary */
     readBase.LowPart += (cm_chunkSize-1);
     readBase.LowPart &= (-cm_chunkSize);
+
+    readLength = ConvertLongToLargeInteger(cm_chunkSize);
 
     lock_ObtainMutex(&scp->mx);
     if ((scp->flags & CM_SCACHEFLAG_PREFETCHING)
@@ -708,7 +767,7 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
 
     lock_ReleaseMutex(&scp->mx);
 
-    code = cm_CheckFetchRange(scp, &readBase, cm_chunkSize, userp, reqp,
+    code = cm_CheckFetchRange(scp, &readBase, &readLength, userp, reqp,
                               &realBase);
     if (code) 
         return;	/* can't find something to prefetch */
@@ -716,8 +775,10 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
     osi_Log2(afsd_logp, "BKG Prefetch request scp 0x%p, base 0x%x",
              scp, realBase.LowPart);
 
-    cm_QueueBKGRequest(scp, cm_BkgPrefetch, realBase.LowPart,
-                       realBase.HighPart, cm_chunkSize, 0, userp);
+    cm_QueueBKGRequest(scp, cm_BkgPrefetch, 
+                       realBase.LowPart, realBase.HighPart, 
+                       readLength.LowPart, readLength.HighPart, 
+                       userp);
 }
 
 /* scp must be locked; temporarily unlocked during processing.
@@ -760,8 +821,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 
     bufp = NULL;
     for (temp = 0; temp < inSize; temp += cm_data.buf_blockSize) {
-        thyper.HighPart = 0;
-        thyper.LowPart = temp;
+        thyper = ConvertLongToLargeInteger(temp);
         tbase = LargeIntegerAdd(*inOffsetp, thyper);
 
         bufp = buf_Find(scp, &tbase);
@@ -776,6 +836,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             if (code) {
                 lock_ReleaseMutex(&bufp->mx);
                 buf_Release(bufp);
+                bufp = NULL;
                 buf_UnreserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
                 return code;
             }   
@@ -823,8 +884,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     /* compute the window surrounding *inOffsetp of size cm_chunkSize */
     scanStart = *inOffsetp;
     scanStart.LowPart &= (-cm_chunkSize);
-    thyper.LowPart = cm_chunkSize;
-    thyper.HighPart = 0;
+    thyper = ConvertLongToLargeInteger(cm_chunkSize);
     scanEnd = LargeIntegerAdd(scanStart, thyper);
 
     flags = CM_SCACHESYNC_GETSTATUS
@@ -833,8 +893,8 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         | CM_SCACHESYNC_NOWAIT;
 
     /* start by looking backwards until scanStart */
-    thyper.HighPart = 0;		/* hyper version of cm_data.buf_blockSize */
-    thyper.LowPart = cm_data.buf_blockSize;
+    /* hyper version of cm_data.buf_blockSize */
+    thyper = ConvertLongToLargeInteger(cm_data.buf_blockSize);
     tbase = LargeIntegerSubtract(firstModOffset, thyper);
     while(LargeIntegerGreaterThanOrEqualTo(tbase, scanStart)) {
         /* see if we can find the buffer */
@@ -893,8 +953,8 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     }	/* while loop looking for pages preceding the one we found */
 
     /* now, find later dirty, contiguous pages, and add them to the list */
-    thyper.HighPart = 0;		/* hyper version of cm_data.buf_blockSize */
-    thyper.LowPart = cm_data.buf_blockSize;
+    /* hyper version of cm_data.buf_blockSize */
+    thyper = ConvertLongToLargeInteger(cm_data.buf_blockSize);
     tbase = LargeIntegerAdd(firstModOffset, thyper);
     while(LargeIntegerLessThan(tbase, scanEnd)) {
         /* see if we can find the buffer */
@@ -961,11 +1021,11 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
  * If an error is returned, we don't return any buffers.
  */
 long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
-			cm_bulkIO_t *biop, cm_user_t *up, cm_req_t *reqp)
+			cm_bulkIO_t *biop, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
     cm_buf_t *tbp;
-    osi_hyper_t toffset;		/* a long long temp variable */
+    osi_hyper_t tblocksize;		/* a long long temp variable */
     osi_hyper_t pageBase;		/* base offset we're looking at */
     osi_queueData_t *qdp;		/* one temp queue structure */
     osi_queueData_t *tqdp;		/* another temp queue structure */
@@ -977,6 +1037,8 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     osi_queueData_t *heldBufListEndp;	/* first one */
     int reserving;
 
+    tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
+
     biop->scp = scp;			/* do not hold; held by caller */
     biop->offset = *offsetp;
     /* null out the list of buffers */
@@ -984,7 +1046,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     biop->reserved = 0;
 
     /* first lookup the file's length, so we know when to stop */
-    code = cm_SyncOp(scp, NULL, up, reqp, 0, 
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0, 
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         return code;
@@ -1038,10 +1100,9 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         }
                 
         buf_Release(tbp);
+        tbp = NULL;
 
-        toffset.HighPart = 0;
-        toffset.LowPart = cm_data.buf_blockSize;
-        pageBase = LargeIntegerAdd(toffset, pageBase);
+        pageBase = LargeIntegerAdd(tblocksize, pageBase);
         collected += cm_data.buf_blockSize;
     }
 
@@ -1079,9 +1140,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
             break;
 
         collected += cm_data.buf_blockSize;
-        toffset.HighPart = 0;
-        toffset.LowPart = cm_data.buf_blockSize;
-        pageBase = LargeIntegerAdd(toffset, pageBase);
+        pageBase = LargeIntegerAdd(tblocksize, pageBase);
     }
 
     /* look at each buffer, adding it into the list if it looks idle and
@@ -1117,7 +1176,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         /* wait for the buffer to serialize, if required.  Doesn't
          * release the scp or buffer lock(s) if NOWAIT is specified.
          */
-        code = cm_SyncOp(scp, tbp, up, reqp, 0, flags);
+        code = cm_SyncOp(scp, tbp, userp, reqp, 0, flags);
         if (code) {
             lock_ReleaseMutex(&scp->mx);
             lock_ReleaseMutex(&tbp->mx);
@@ -1163,6 +1222,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 		      &qdp->q);
         osi_QDFree(qdp);
         buf_Release(tbp);
+        tbp = NULL;
     }
 
     /* Caller expects this */
@@ -1188,7 +1248,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 /* release a bulk I/O structure that was setup by cm_SetupFetchBIOD or by
  * cm_SetupStoreBIOD
  */
-void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
+void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
 {
     cm_scache_t *scp;		/* do not release; not held in biop */
     cm_buf_t *bufp;
@@ -1229,7 +1289,12 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
 		    osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%p] bp 0x%p", scp, bufp);
 		    osi_Wakeup((LONG_PTR) bufp);
 		}
-		bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+		if (failed)
+		    bufp->flags &= ~CM_BUF_WRITING;
+		else {
+		    bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+                    bufp->dirty_offset = bufp->dirty_length = 0;
+                }
 	    }
 
 	    lock_ReleaseMutex(&scp->mx);
@@ -1251,7 +1316,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
 /* Fetch a buffer.  Called with scp locked.
  * The scp is locked on return.
  */
-long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
+long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp,
                   cm_req_t *reqp)
 {
     long code;
@@ -1272,7 +1337,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     cm_conn_t *connp;
     int getroot;
-    long t1, t2;
+    afs_int32 t1,t2;
     int require_64bit_ops = 0;
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
@@ -1293,10 +1358,10 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
     cm_AFSFidFromFid(&tfid, &scp->fid);
 
-    code = cm_SetupFetchBIOD(scp, &bufp->offset, &biod, up, reqp);
+    code = cm_SetupFetchBIOD(scp, &bufp->offset, &biod, userp, reqp);
     if (code) {
         /* couldn't even get the first page setup properly */
-        osi_Log1(afsd_logp, "SetupFetchBIOD failure code %d", code);
+        osi_Log1(afsd_logp, "GetBuffer: SetupFetchBIOD failure code %d", code);
         return code;
     }
 
@@ -1308,18 +1373,18 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
      * which case we just retry.
      */
     if (bufp->dataVersion == scp->dataVersion || biod.length == 0) {
-        osi_Log3(afsd_logp, "Bad DVs %d, %d or length 0x%x",
-                 bufp->dataVersion, scp->dataVersion, biod.length);
-        if ((bufp->dataVersion == -1
-             || bufp->dataVersion < scp->dataVersion)
-             && LargeIntegerGreaterThanOrEqualTo(bufp->offset,
-                                                 scp->serverLength)) {
+        if ((bufp->dataVersion == -1 || bufp->dataVersion < scp->dataVersion) && 
+             LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength)) 
+        {
+            osi_Log3(afsd_logp, "Bad DVs %d, %d or length 0x%x",
+                      bufp->dataVersion, scp->dataVersion, biod.length);
+
             if (bufp->dataVersion == -1)
                 memset(bufp->datap, 0, cm_data.buf_blockSize);
             bufp->dataVersion = scp->dataVersion;
         }
         lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseBIOD(&biod, 0);
+        cm_ReleaseBIOD(&biod, 0, 0);
         lock_ObtainMutex(&scp->mx);
         return 0;
     }
@@ -1380,7 +1445,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
             bufferp=tbufp->datap;
             memset(bufferp, 0, cm_data.buf_blockSize);
             t2 = cm_fakeDirSize - t1;
-            if (t2>cm_data.buf_blockSize) t2=cm_data.buf_blockSize;
+            if (t2> (afs_int32)cm_data.buf_blockSize) 
+                t2=cm_data.buf_blockSize;
             if (t2 > 0) {
                 memcpy(bufferp, cm_FakeRootDir+t1, t2);
             } else {
@@ -1403,7 +1469,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
 	/* now make the call */
     do {
-        code = cm_Conn(&scp->fid, up, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -1529,8 +1595,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
                     osi_Wakeup((LONG_PTR) &scp->flags);
                 }
                 if (cpffp && !*cpffp && !osi_QPrev(&qdp->q)) {
+                    osi_hyper_t tlength = ConvertLongToLargeInteger(biod.length);
                     *cpffp = 1;
-                    cm_ClearPrefetchFlag(0, scp, &biod.offset);
+                    cm_ClearPrefetchFlag(0, scp, &biod.offset, &tlength);
                 }
                 lock_ReleaseMutex(&scp->mx);
 
@@ -1595,7 +1662,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-    } while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);
@@ -1626,11 +1693,11 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
     /* release scatter/gather I/O structure (buffers, locks) */
     lock_ReleaseMutex(&scp->mx);
-    cm_ReleaseBIOD(&biod, 0);
+    cm_ReleaseBIOD(&biod, 0, code);
     lock_ObtainMutex(&scp->mx);
 
     if (code == 0) 
-        cm_MergeStatus(scp, &afsStatus, &volSync, up, 0);
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
     
     return code;
 }

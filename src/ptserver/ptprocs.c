@@ -62,9 +62,11 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <afs/cellconfig.h>
 #ifdef AFS_RXK5
-#include "rxk5.h"
-#include "rxk5errors.h"
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
 #include <errno.h>
 #endif
 #include <afs/auth.h>
@@ -501,7 +503,7 @@ dumpEntry(call, apos, aentry, cid)
     code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
-    code = pr_ReadEntry(tt, 0, apos, aentry);
+    code = pr_ReadEntry(tt, 0, apos, (struct prentry *)aentry);
     if (code)
 	ABORT_WITH(tt, code);
 
@@ -672,7 +674,24 @@ nameToID(call, aname, aid)
 	ABORT_WITH(tt, code);
 
     for (i = 0; i < aname->namelist_len; i++) {
-	code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
+	char vname[256];
+	char *nameinst, *cell;
+
+	strncpy(vname, aname->namelist_val[i], sizeof(vname));
+	vname[sizeof(vname)-1] ='\0';
+
+	nameinst = vname;
+	cell = strchr(vname, '@');
+	if (cell) {
+	    *cell = '\0';
+	    cell++;
+	}
+
+	if (cell && afs_is_foreign_ticket_name(nameinst,NULL,cell,pr_realmName))
+	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
+	else 
+	    code = NameToID(tt, nameinst, &aid->idlist_val[i]);
+
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
         osi_audit(PTS_NmToIdEvent, code, AUD_STR,
@@ -894,7 +913,7 @@ Delete(call, aid, cid)
     {
 	struct prentryg *tentryg = (struct prentryg *)&tentry;
 	nptr = tentryg->nextsg;
-	while (nptr != NULL) {
+	while (nptr) {
 	    struct contentry centry;
 	    int i;
 

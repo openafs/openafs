@@ -21,7 +21,6 @@ RCSID
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <ubik.h>
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"
@@ -75,11 +74,7 @@ InitDB()
  */
 
 afs_int32
-dbwrite(ut, pos, buff, len)
-     struct ubik_trans *ut;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 
@@ -111,11 +106,7 @@ dbwrite(ut, pos, buff, len)
 /* same thing for read */
 
 afs_int32
-dbread(ut, pos, buff, len)
-     struct ubik_trans *ut;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 
@@ -146,12 +137,7 @@ dbread(ut, pos, buff, len)
 
 /* Same as dbread excepts it does checking */
 afs_int32
-cdbread(ut, type, pos, buff, len)
-     struct ubik_trans *ut;
-     int type;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 

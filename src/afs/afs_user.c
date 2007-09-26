@@ -16,6 +16,17 @@
 RCSID
     ("$Header$");
 
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#endif
+
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
@@ -44,13 +55,7 @@ RCSID
 #endif
 #include <inet/ip.h>
 #endif
-
 #ifdef AFS_RXK5
-#ifdef USING_SSL
-#include <k5ssl.h>
-#else
-#include <krb5.h>
-#endif
 #include <rx/rxk5.h>
 #include <afs/rxk5_tkt.h>
 #endif

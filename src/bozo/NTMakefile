@@ -9,6 +9,17 @@ RELDIR=bozo
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+RXK5LIBS = $(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afsprot.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 ############################################################################
 # Header files to install
 
@@ -56,6 +67,7 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsvldb.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsrxstat.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
@@ -94,17 +106,17 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsvldb.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsubik.lib \
-	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsbos.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\cm_dns.obj
-
+	$(DESTDIR)\lib\cm_dns.obj \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
@@ -157,4 +169,4 @@ clean::
 	$(DEL) bnode.h boserr.c bosint.cs.c bosint.h bosint.ss.c bosint.xdr.c
 
 mkdir:
-	
+

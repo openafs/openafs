@@ -32,18 +32,18 @@ extern ULONG nXPRefCount;	// IPersistFile ref count
 
 class CShellExt : public CCmdTarget
 {
-	DECLARE_DYNCREATE(CShellExt)
+    DECLARE_DYNCREATE(CShellExt)
 
-	BOOL m_bDirSelected;
-	BOOL m_bIsSymlink;	// is symbolic link!
-	TCHAR m_szFile[MAX_PATH];
-	BOOL m_bIsOverlayEnabled;
-	BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
+    BOOL m_bDirSelected;
+    BOOL m_bIsSymlink;	// is symbolic link!
+    TCHAR m_szFile[MAX_PATH];
+    BOOL m_bIsOverlayEnabled;
+    BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
 
     CStringArray m_astrFileNames;
 
-	CShellExt();           // protected constructor used by dynamic creation
-	LPMALLOC m_pAlloc;
+    CShellExt();           // protected constructor used by dynamic creation
+    LPMALLOC m_pAlloc;
 
 // Attributes
 public:
@@ -52,37 +52,37 @@ public:
 public:
 
 // Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CShellExt)
-	public:
-	virtual void OnFinalRelease();
-	//}}AFX_VIRTUAL
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CShellExt)
+  public:
+    virtual void OnFinalRelease();
+    //}}AFX_VIRTUAL
 
 // Implementation
 protected:
-	virtual ~CShellExt();
+    virtual ~CShellExt();
 
-	// Generated message map functions
-	//{{AFX_MSG(CShellExt)
-		// NOTE - the ClassWizard will add and remove member functions here.
-	//}}AFX_MSG
+    // Generated message map functions
+    //{{AFX_MSG(CShellExt)
+    // NOTE - the ClassWizard will add and remove member functions here.
+    //}}AFX_MSG
 
-	DECLARE_MESSAGE_MAP()
-	// Generated OLE dispatch map functions
-	//{{AFX_DISPATCH(CShellExt)
-		// NOTE - the ClassWizard will add and remove member functions here.
-	//}}AFX_DISPATCH
-	DECLARE_DISPATCH_MAP()
+    DECLARE_MESSAGE_MAP()
+    // Generated OLE dispatch map functions
+    //{{AFX_DISPATCH(CShellExt)
+    // NOTE - the ClassWizard will add and remove member functions here.
+    //}}AFX_DISPATCH
+    DECLARE_DISPATCH_MAP()
 	
-	DECLARE_OLECREATE(CShellExt)
+    DECLARE_OLECREATE(CShellExt)
     
 	// IFileViewer interface
     BEGIN_INTERFACE_PART(MenuExt, IContextMenu)
-        STDMETHOD(QueryContextMenu)( HMENU hmenu,UINT indexMenu,UINT idCmdFirst,
-            UINT idCmdLast,UINT uFlags);
+	STDMETHOD(QueryContextMenu)( HMENU hmenu,UINT indexMenu,UINT idCmdFirst,
+				     UINT idCmdLast,UINT uFlags);
         STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici);
         STDMETHOD(GetCommandString)(UINT_PTR idCmd,UINT uType,UINT* pwReserved,LPSTR pszName,
-            UINT cchMax);
+				     UINT cchMax);
     END_INTERFACE_PART(MenuExt)
 
     // IShellExtInit interface
@@ -96,21 +96,21 @@ protected:
         STDMETHOD(IsMemberOf)(LPCWSTR pwszPath,DWORD dwAttrib);
     END_INTERFACE_PART(IconExt)
 
-	BEGIN_INTERFACE_PART(ToolTipExt, IQueryInfo)
-		STDMETHOD(GetInfoTip)(DWORD dwFlags, LPWSTR *ppwszTip);
-		STDMETHOD(GetInfoFlags)(LPDWORD pdwFlags);
+    BEGIN_INTERFACE_PART(ToolTipExt, IQueryInfo)
+	STDMETHOD(GetInfoTip)(DWORD dwFlags, LPWSTR *ppwszTip);
+        STDMETHOD(GetInfoFlags)(LPDWORD pdwFlags);
     END_INTERFACE_PART(ToolTipExt)
 
-	BEGIN_INTERFACE_PART(PersistFileExt, IPersistFile)
-		STDMETHOD(Load)(LPCOLESTR wszFile, DWORD dwMode);
-		STDMETHOD(GetClassID)(LPCLSID);
-		STDMETHOD(IsDirty)(VOID);
-		STDMETHOD(Save)(LPCOLESTR, BOOL);
-		STDMETHOD(SaveCompleted)(LPCOLESTR);
-		STDMETHOD(GetCurFile)(LPOLESTR FAR*);
+    BEGIN_INTERFACE_PART(PersistFileExt, IPersistFile)
+	STDMETHOD(Load)(LPCOLESTR wszFile, DWORD dwMode);
+        STDMETHOD(GetClassID)(LPCLSID);
+        STDMETHOD(IsDirty)(VOID);
+        STDMETHOD(Save)(LPCOLESTR, BOOL);
+        STDMETHOD(SaveCompleted)(LPCOLESTR);
+        STDMETHOD(GetCurFile)(LPOLESTR FAR*);
     END_INTERFACE_PART(PersistFileExt)
 
-	DECLARE_INTERFACE_MAP()
+    DECLARE_INTERFACE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -94,6 +94,12 @@
 #endif
 #endif
 
+#ifdef __GLIBC__
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
+#define USE_UCONTEXT
+#endif
+#endif
+
 #endif /* _PARAM_SPARC64_LINUX26_H_ */
 
 #else /* !defined(UKERNEL) */

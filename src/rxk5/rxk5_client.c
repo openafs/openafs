@@ -35,27 +35,12 @@
 #include "afs/sysincludes.h"    /*Standard vendor system headers */
 #include "afsincludes.h"        /*AFS-based standard headers */
 #include "afs_stats.h"
-#include <rx/rxk5.h>
-#include <rx/rxk5errors.h>
-#include <rx/rxk5c.h>
-#include <k5ssl.h>
 #include <rx/rxk5imp.h>
+#include <rx/rxk5c.h>
+#include <rx/rxk5errors.h>
 #else
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#undef u
-#include <krb5.h>
-#endif
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <com_err.h>
@@ -83,8 +68,7 @@ extern afs_rwlock_t rxk5_cuid_mutex;
 #endif
 
 int
-rxk5_c_Close (so)
-    struct  rx_securityClass *so;
+rxk5_c_Close (struct rx_securityClass *so)
 {
     struct rxk5_cprivate *tcp = (struct rxk5_cprivate*) so->privateData;
 
@@ -98,10 +82,9 @@ rxk5_c_Close (so)
 }
 
 int
-rxk5_c_GetResponse(so, conn, p)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_packet *p;
+rxk5_c_GetResponse(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_packet *p)
 {
     struct rxk5_cprivate *tcp = (struct rxk5_cprivate *) so->privateData;
     struct rxk5_cconn * cconn = (struct rxk5_cconn*)conn->securityData;
@@ -189,7 +172,7 @@ rxk5_c_GetResponse(so, conn, p)
     he->rxk5c_key.rxk5c_key_val = cconn->thekey->keyvalue.data;
     he->rxk5c_key.rxk5c_key_len = cconn->thekey->keyvalue.length;
 #else
-    he->rxk5c_key.rxk5c_key_val = cconn->thekey->contents;
+    he->rxk5c_key.rxk5c_key_val = (void *) cconn->thekey->contents;
     he->rxk5c_key.rxk5c_key_len = cconn->thekey->length;
 #endif
 #endif
@@ -295,9 +278,8 @@ static int rxk5_cuid[2];
 int rxk5_EpochWasSet;
 
 int
-rxk5_AllocCID(conn, context)
-    struct rx_connection *conn;
-    krb5_context context;
+rxk5_AllocCID(struct rx_connection *conn,
+    krb5_context context)
 {
     int code;
 #if !defined(USING_HEIMDAL) && !defined(USING_SHISHI)
@@ -341,9 +323,9 @@ rxk5_AllocCID(conn, context)
 
 /* decision: client tells server which cktype to use */
 int
-rxk5i_select_ctype(context, enctype, cktypep)
-	krb5_context context;
-	int *cktypep;
+rxk5i_select_ctype(krb5_context context,
+    int enctype,
+    int *cktypep)
 {
 #if 1 || defined(USING_HEIMDAL) || defined(USING_SHISHI)
     switch(enctype) {
@@ -408,9 +390,8 @@ printf ("rxk5i_select_ctype: No match for enctype=%d\n", enctype);
 }
 
 int
-rxk5i_generate_keys(tcp, cconn)
-    struct rxk5_cconn * cconn;
-    struct rxk5_cprivate *tcp;
+rxk5i_generate_keys(struct rxk5_cprivate *tcp,
+    struct rxk5_cconn *cconn)
 {
     int code;
     krb5_data plain[1];
@@ -465,9 +446,8 @@ else printf ("server has NOT seen new key\n");
 }
 
 int
-rxk5_c_NewConnection(so, conn)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
+rxk5_c_NewConnection(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     struct rxk5_cprivate *tcp;
     struct rxk5_cconn *cconn;
@@ -520,9 +500,8 @@ Out:
 }
 
 int
-rxk5_c_DestroyConnection(so, conn)
-    struct  rx_securityClass *so;
-    struct  rx_connection *conn;
+rxk5_c_DestroyConnection(struct rx_securityClass *so,
+    struct rx_connection *conn)
 {
     struct rxk5_cconn *cconn;
     struct rxk5_cprivate *tcp = (struct rxk5_cprivate *) so->privateData;
@@ -539,10 +518,9 @@ rxk5_c_DestroyConnection(so, conn)
 }
 
 int
-rxk5_c_PreparePacket(so, call, p)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
+rxk5_c_PreparePacket(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int level;
@@ -585,10 +563,9 @@ Out:
 }
 
 int
-rxk5_c_CheckPacket(so, call, p)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
+rxk5_c_CheckPacket(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int level;
@@ -617,10 +594,9 @@ rxk5_c_CheckPacket(so, call, p)
 }
 
 int
-rxk5_c_GetStats(so, conn, stats)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_securityObjectStats *stats;
+rxk5_c_GetStats(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_securityObjectStats *stats)
 {
     struct rxk5_cconn *cconn = (struct rxk5_cconn*)conn->securityData;
 
@@ -649,14 +625,13 @@ static struct rx_securityOps rxk5_client_ops[] = {{
 }};
 
 struct rx_securityClass *
-rxk5_NewClientSecurityObject(level, creds, context)
-    int level;
+rxk5_NewClientSecurityObject(int level,
 #ifdef USING_SHISHI
-    Shishi_tkt *creds;
+    Shishi_tkt *creds,
 #else
-    krb5_creds *creds;
+    krb5_creds *creds,
 #endif
-    krb5_context context;
+    krb5_context context)
 {
     struct rx_securityClass *result;
     struct rxk5_cprivate *tcp;

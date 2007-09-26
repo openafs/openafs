@@ -34,7 +34,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/util.a \
 	$(DBM)
 
 UKSRCS=authclient.c user.c kautils.h kaserver.h kaaux.c token.c \
@@ -50,12 +50,12 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/util.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
-@ENABLE_KA_SERVER@KA_SERVER=kaserver rebuild kdb
+@ENABLE_KA_SERVER@KA_SERVER=kaserver rebuild kdb ka-forwarder
 @ENABLE_KA_CLIENTS@KA_CLIENTS=kas kpwvalid klog klog.krb knfs kpasswd
 all: $(KA_SERVER) $(KA_CLIENTS) \
 	${TOP_LIBDIR}/libkauth.a \
@@ -209,6 +209,9 @@ krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS) $(LIBCOM_ERR) ${XLIBS}
 
+ka-forwarder: ka-forwarder.o
+	${CC} -o $@ ${CFLAGS} ka-forwarder.o ${LIBS} ${XLIBS}
+
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
@@ -234,6 +237,7 @@ ${TOP_INCDIR}/afs/kaport.h: kaport.h
 
 @ENABLE_KA_SERVER@INSTALL_KA_SERVER=${DESTDIR}${afssrvlibexecdir}/kaserver \
 @ENABLE_KA_SERVER@	${DESTDIR}${afssrvsbindir}/kdb \
+@ENABLE_KA_SERVER@	${DESTDIR}${afssrvsbindir}/ka-forwarder \
 @ENABLE_KA_SERVER@	${DESTDIR}${afssrvsbindir}/kadb_check
 
 @ENABLE_KA_CLIENTS@INSTALL_KA_CLIENTS=${DESTDIR}${sbindir}/kas \
@@ -305,6 +309,9 @@ ${DESTDIR}${afssrvsbindir}/kadb_check: rebuild
 ${DESTDIR}${afssrvsbindir}/kdb: kdb
 	${INSTALL} -s $? $@
 
+${DESTDIR}${afssrvsbindir}/ka-forwarder: ka-forwarder
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/kautils.h: kautils.h
 	${INSTALL} $? $@
 
@@ -315,6 +322,7 @@ ${DESTDIR}${includedir}/afs/kaport.h: kaport.h
 	${INSTALL} $? $@
 
 @ENABLE_KA_SERVER@DEST_KA_SERVER=${DEST}/root.server/usr/afs/bin/kaserver \
+@ENABLE_KA_SERVER@	${DEST}/root.server/usr/afs/bin/ka-forwarder \
 @ENABLE_KA_SERVER@	${DEST}/etc/kdb \
 @ENABLE_KA_SERVER@	${DEST}/etc/kadb_check
 
@@ -371,6 +379,9 @@ ${DEST}/etc/kadb_check: rebuild
 
 ${DEST}/etc/kdb: kdb 
 	${INSTALL} -s $? $@
+
+${DEST}/root.server/usr/afs/bin/ka-forwarder: ka-forwarder
+	${INSTALL} $? $@
 
 ${DEST}/include/afs/kautils.h: kautils.h
 	${INSTALL} $? $@

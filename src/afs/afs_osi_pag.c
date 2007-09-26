@@ -601,17 +601,18 @@ PagInCred(const struct AFS_UCRED *cred)
 #endif
 out:
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG) {
+    if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
 	struct key *key;
-	afs_uint32 pag, newpag;
+	afs_uint32 upag, newpag;
 
 	key = request_key(&key_type_afs_pag, "_pag", NULL);
 	if (!IS_ERR(key)) {
 	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
-
-		pag = (afs_uint32) key->payload.value;
-		if (((pag >> 24) & 0xff) == 'A')
-		    __setpag(&cred, pag, &newpag, 0);
+		upag = (afs_uint32) key->payload.value;
+		if (((upag >> 24) & 0xff) == 'A') {
+		    __setpag(&cred, upag, &newpag, 0);
+		    pag = (afs_int32) upag;
+		}
 	    }
 	    key_put(key);
 	} 

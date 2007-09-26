@@ -29,10 +29,10 @@
  */
 
 #include <sys/types.h>
-#ifdef USE_SSL
+#ifdef USING_SSL
 #include <openssl/evp.h>
 #endif
-#ifdef USE_FAKESSL
+#ifdef USING_FAKESSL
 #include "k5s_evp.h"
 #endif
 

@@ -56,9 +56,9 @@
 #define cszENDING_CLONE    TEXT(".clone")
 
 #define REGSTR_SETTINGS_BASE  HKCU
-#define REGSTR_SETTINGS_PATH  TEXT("Software\\TransarcCorporation\\AFS Server Manager")
+#define REGSTR_SETTINGS_PATH  TEXT("Software\\OpenAFS\\AFS Server Manager")
 #define REGVAL_SETTINGS       TEXT("Settings")
-#define REGSTR_SETTINGS_PREFS TEXT("Software\\TransarcCorporation\\AFS Server Manager\\Preferences")
+#define REGSTR_SETTINGS_PREFS TEXT("Software\\OpenAFS\\AFS Server Manager\\Preferences")
 #define REGSTR_SETTINGS_CELLS REGSTR_SETTINGS_PREFS
 
 

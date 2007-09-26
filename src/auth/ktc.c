@@ -22,7 +22,6 @@
 #include "rxk5_utilafs.h"
 #include "rxk5_tkt.h"
 #endif
-#include "afs_token.h"
 
 RCSID
     ("$Header$");
@@ -424,7 +423,7 @@ OldSetToken(aserver, atoken, aclient, flags)
 }
 
 int
-ktc_SetTokenEx(afs_token *a_token)
+ktc_SetTokenEx(pioctl_set_token *a_token)
 {
 #ifndef MAX_RXK5_TOKEN_LEN
 #define MAX_RXK5_TOKEN_LEN 4096
@@ -433,14 +432,12 @@ ktc_SetTokenEx(afs_token *a_token)
     register afs_int32 code;
     char creds[MAX_RXK5_TOKEN_LEN];
     afs_int32 creds_len;
+    XDR xdrs[1];
 
-    creds_len = MAX_RXK5_TOKEN_LEN;
-    code = encode_afs_token(
-	    a_token,
-	    creds,
-	    &creds_len);
-
-    if (code) return code;
+    xdrmem_create(xdrs, creds, MAX_RXK5_TOKEN_LEN, XDR_ENCODE);
+    if (!xdr_pioctl_set_token(xdrs, a_token))
+	return KTC_INVAL;
+    creds_len = xdr_getpos(xdrs);
        	
     /* now setup for the pioctl */
     iob.in = creds;
@@ -448,27 +445,19 @@ ktc_SetTokenEx(afs_token *a_token)
     iob.out = creds;
     iob.out_size = creds_len;
 
-    code = PIOCTL(0, VIOC_SETTOKNEW , &iob, 0);
-    if (code == -1 && errno == EINVAL && a_token->cu->cu_type == CU_KAD) {
+    code = PIOCTL(0, VIOCSETTOK2 , &iob, 0);
+    if (code == -1 && errno == EINVAL) {
 	struct ktc_principal aserver[1], aclient[1];
 	struct ktc_token atoken[1];
 	afs_int32 flags;
 
+	memset(atoken, 0, sizeof *atoken);
 	memset(aserver, 0, sizeof *aserver);
 	memset(aclient, 0, sizeof *aclient);
-	memset(atoken, 0, sizeof *atoken);
-	code = afstoken_to_token(a_token, atoken, sizeof *atoken);
-	flags = a_token->cu->cu_u.cu_kad.primary_flag & ~0x8000;
+	code = afstoken_to_token(a_token, atoken, sizeof *atoken, &flags, aclient);
+	if (code) return KTC_INVAL;
 	strcpy(aserver->name, "afs");
 	strcpy(aserver->cell, a_token->cell);
-	strcpy(aclient->cell, a_token->cu->cu_u.cu_kad.cell_name);
-	if ((atoken->kvno == 999) ||	/* old style bcrypt ticket */
-	    (atoken->startTime &&	/* new w/ prserver lookup */
-	     (((atoken->endTime - atoken->startTime) & 1) == 1))) {
-	    sprintf(aclient->name, "AFS ID %d", a_token->cu->cu_u.cu_kad.token.viceid);
-	} else {
-	    sprintf(aclient->name, "Unix UID %d", a_token->cu->cu_u.cu_kad.token.viceid);
-	}
 	return ktc_SetToken(aserver, atoken, aclient, flags);
     }
 
@@ -480,72 +469,113 @@ ktc_SetTokenEx(afs_token *a_token)
 
 #ifdef AFS_RXK5
 
+/*
+ *	return rxk5 enctypes from kernel.
+ *	return -1 on error (not supported, etc.)
+ *	otherwise, return count of enctypes found.
+ */
+
+int
+ktc_GetK5Enctypes(krb5_enctype *buf, int buflen)
+{
+    afs_int32 code;
+    int i;
+    char tbuffer[256], *tp, *ep;
+    struct ViceIoctl blob[1];
+    static char key[] = "rxk5.enctypes";
+
+    memset(blob, 0, sizeof blob);
+    blob->in = key;
+    blob->in_size = sizeof key;
+    blob->out = tbuffer;
+    blob->out_size = sizeof tbuffer - 1;
+    memset(tbuffer, 0, sizeof tbuffer);	/* XXX please valgrind */
+
+    code = PIOCTL(0, VIOCGETPROP, blob, 0);
+    if (code) return code;	/* "too old" */
+
+    tbuffer[sizeof tbuffer-1] = 0;
+    if (memcmp(tbuffer, key, sizeof key)) {
+	errno = EDOM;		/* "rxk5 not configured" */
+	return -1;
+    }
+    tp = tbuffer + sizeof key;
+    for (i = 0; i < buflen; ++i) {
+	while (*tp == ' ') ++tp;
+	if (!*tp) break;
+	buf[i] = strtol(tp, &ep, 0);
+	if (tp == ep) {
+	    errno = EDOM;	/* bad data return */
+	    return -1;
+	}
+	tp = ep;
+    }
+    return i;			/* success */
+}
+
 /* Set a K5 token (internal) */
-/* static */ int
-OldSetK5Token(krb5_context context, struct ktc_principal *aserver,
-	      krb5_creds *v5cred, afs_int32 viceId, afs_int32 flags)
+static int
+SetK5Token(krb5_context context, char *cell,
+	      krb5_creds *v5cred, afs_int32 flags)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
-    register char *tp;
-    afs_token *a_token;
-    
-    code = make_afs_token_rxk5(
+    pioctl_set_token a_token[1];
+    XDR xdrs[1];
+   
+    memset(a_token, 0, sizeof *a_token); 
+    a_token->flags = flags;
+    a_token->cell = cell;
+    code = add_afs_token_rxk5(
 	    context,
-	    aserver->cell,
-	    viceId, /* deprecated */
 	    v5cred,
-	    &a_token);
+	    a_token);
 
-    if(code) return code;
-
-    code = ktc_SetTokenEx(a_token);
-    free_afs_token(a_token);
+    if(!code)
+	code = ktc_SetTokenEx(a_token);
+#if 0
+    a_token->cell = 0;
+    xdrs->x_op = XDR_FREE;
+    xdr_pioctl_set_token(xdrs, a_token);
+#endif
 
     return code;
 }
 
 /* Set a K5 token */
 
-afs_int32 ktc_SetK5Token(context, aserver, v5cred, viceId, flags)
-     krb5_context context;
-     struct ktc_principal *aserver;
-     krb5_creds* v5cred;
-     afs_int32 viceId;
-     afs_int32 flags;       
+afs_int32
+ktc_SetK5Token(krb5_context context,
+    char *cell,
+    krb5_creds *v5cred,
+    afs_int32 flags)
 {
-    int ncode, ocode;
-    /* ncode = NewSetToken(aserver, atoken, aclient, flags); */
-    if ( 1 || ncode ||		/* new style failed */
-	(strcmp(aserver->name, "afs") == 0)) {	/* for afs tokens do both */
-      ocode = OldSetK5Token(context, aserver, v5cred, viceId, flags);
-    } else
-	ocode = 0;
-    if (ncode && ocode) {
-	UNLOCK_GLOBAL_MUTEX;
-	if (ocode == -1)
-	    ocode = errno;
-	else if (ocode == KTC_PIOCTLFAIL)
-	    ocode = errno;
-	if (ocode == ESRCH)
-	    return KTC_NOCELL;
-	if (ocode == EINVAL)
-	    return KTC_NOPIOCTL;
-	if (ocode == EIO)
-	    return KTC_NOCM;
-	return KTC_PIOCTLFAIL;
-    }
+    int code;
+    LOCK_GLOBAL_MUTEX;
+    code = SetK5Token(context, cell, v5cred, flags);
     UNLOCK_GLOBAL_MUTEX;
-    return 0;
+    if (!code)
+	return 0;
+    if (code == -1)
+	code = errno;
+    else if (code == KTC_PIOCTLFAIL)
+	code = errno;
+    if (code == ESRCH)
+	return KTC_NOCELL;
+    if (code == EINVAL)
+	return KTC_NOPIOCTL;
+    if (code == EIO)
+	return KTC_NOCM;
+    return KTC_PIOCTLFAIL;
 }
 
 #endif /* AFS_RXK5 */
 
-ktc_SetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+int
+ktc_SetToken(struct ktc_principal *aserver,
+    struct ktc_token *atoken,
+    struct ktc_principal *aclient,
+    afs_int32 flags)
 {
     int ncode, ocode;
 
@@ -614,17 +644,20 @@ ktc_SetToken(aserver, atoken, aclient, flags)
  *  Get AFS token at index ix, using new kernel token interface. 
  */
 int
-ktc_GetTokenEx(afs_int32 index, char *cell,
-    afs_token **a_token)
+ktc_GetTokenEx(afs_int32 index, const char *cell,
+    pioctl_set_token *a_token)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
     afs_int32 code;
     register char *tp;
-    afs_token *r = 0;
+    afstoken_soliton at[1];
+    XDR xdrs[1];
 
     LOCK_GLOBAL_MUTEX;
-   
+  
+    memset(a_token, 0, sizeof *a_token); 
+    memset(at, 0, sizeof *at); 
     if (cell) {
 	int len;
 
@@ -643,7 +676,7 @@ ktc_GetTokenEx(afs_int32 index, char *cell,
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
-    code = PIOCTL(0, VIOC_GETTOKNEW , &iob, 0);
+    code = PIOCTL(0, VIOCGETTOK2 , &iob, 0);
 
     if (code == -1 && errno == EINVAL) {
 	char *stp, *cellp;		/* secret token ptr */
@@ -702,27 +735,21 @@ ktc_GetTokenEx(afs_int32 index, char *cell,
 	    goto Done;
 	}
 	code = ENOMEM;
-	if (!(r = malloc(sizeof *r)))
+	memset(a_token, 0, sizeof *a_token);
+	if (!(a_token->cell = strdup(cellp)))
 	    goto Done;
-	memset(r, 0, sizeof *r);
-	if (!(r->cell = strdup(cellp)))
+	at->at_type = AFSTOKEN_UNION_KAD;
+	at->afstoken_soliton_u.at_kad.rk_primary_flag = primflag;
+	if (!(at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_val = malloc(tktLen)))
 	    goto Done;
-	r->cu->cu_type = CU_KAD;
-	r->cu->cu_u.cu_kad.primary_flag = primflag;
-	if (!(r->cu->cu_u.cu_kad.cell_name = strdup(cellp)))
-	    goto Done;
-	if (!(r->cu->cu_u.cu_kad.ticket.ticket_val = malloc(tktLen)))
-	    goto Done;
-	r->cu->cu_u.cu_kad.ticket.ticket_len = tktLen;
-	memcpy(r->cu->cu_u.cu_kad.ticket.ticket_val, stp, tktLen);
-	r->cu->cu_u.cu_kad.token.kvno = ct.AuthHandle;
-	r->cu->cu_u.cu_kad.token.viceid = ct.ViceId;
-	memcpy(r->cu->cu_u.cu_kad.token.m_key, ct.HandShakeKey, 8);
-	r->cu->cu_u.cu_kad.token.begintime = ct.BeginTimestamp;
-	r->cu->cu_u.cu_kad.token.endtime = ct.EndTimestamp;
-	*a_token = r;
-	r = 0;
-	code = 0;
+	at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_len = tktLen;
+	memcpy(at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_val, stp, tktLen);
+	at->afstoken_soliton_u.at_kad.rk_kvno = ct.AuthHandle;
+	at->afstoken_soliton_u.at_kad.rk_viceid = ct.ViceId;
+	memcpy(at->afstoken_soliton_u.at_kad.rk_key, ct.HandShakeKey, 8);
+	at->afstoken_soliton_u.at_kad.rk_begintime = ct.BeginTimestamp;
+	at->afstoken_soliton_u.at_kad.rk_endtime = ct.EndTimestamp;
+	code = add_afs_token_soliton(a_token, at);
 	goto Done;
     }
 
@@ -744,60 +771,10 @@ Failed:
     }
 Done:
     UNLOCK_GLOBAL_MUTEX;
-    if (r) {
-	if (r->cell)
-	    free(r->cell);
-	if (r->cu->cu_u.cu_kad.ticket.ticket_val)
-	    free (r->cu->cu_u.cu_kad.ticket.ticket_val);
-	if (r->cu->cu_u.cu_kad.cell_name)
-	    free (r->cu->cu_u.cu_kad.cell_name);
-	free(r);
-    }
+    xdrs->x_op = XDR_FREE;
+    xdr_afstoken_soliton(xdrs, at);
     return code;
 }
-
-/* copy bits of an rxkad token into a ktc_token */
-int
-afstoken_to_token(afs_token *afstoken, struct ktc_token *ttoken, int ttoksize)
-{
-    if (afstoken->cu->cu_type != CU_KAD) return KTC_INVAL;
-    ttoken->kvno = afstoken->cu->cu_u.cu_kad.token.kvno;
-    memcpy(ttoken->sessionKey.data,
-	afstoken->cu->cu_u.cu_kad.token.m_key,
-	8);
-    ttoken->startTime=afstoken->cu->cu_u.cu_kad.token.begintime;
-    ttoken->endTime=afstoken->cu->cu_u.cu_kad.token.endtime;
-    ttoken->ticketLen=afstoken->cu->cu_u.cu_kad.ticket.ticket_len;
-    if (ttoken->ticketLen >
-	    (unsigned) (ttoksize - (sizeof *ttoken - MAXKTCTICKETLEN))) {
-	return KTC_TOOBIG;
-    }
-    memcpy(ttoken->ticket,
-	afstoken->cu->cu_u.cu_kad.ticket.ticket_val,
-	ttoken->ticketLen);
-    return 0;
-}
-
-#ifdef AFS_RXK5
-/* copy bits of an rxkad token into a k5 credential */
-int
-afstoken_to_v5cred(afs_token *afstoken, krb5_creds *v5cred)
-{
-    if (afstoken->cu->cu_type != CU_K5) return KTC_INVAL;
-#if USING_HEIMDAL
-    v5cred->session.keytype = afstoken->cu->cu_u.cu_rxk5.session.keytype;
-    v5cred->session.keyvalue.length = afstoken->cu->cu_u.cu_rxk5.session.m_key.m_key_len;
-    v5cred->session.keyvalue.data   = afstoken->cu->cu_u.cu_rxk5.session.m_key.m_key_val;
-#else
-    v5cred->keyblock.enctype = afstoken->cu->cu_u.cu_rxk5.session.keytype;
-    v5cred->keyblock.length   = afstoken->cu->cu_u.cu_rxk5.session.m_key.m_key_len;
-    v5cred->keyblock.contents = afstoken->cu->cu_u.cu_rxk5.session.m_key.m_key_val;
-#endif
-    v5cred->ticket.length = afstoken->cu->cu_u.cu_rxk5.k5ticket.k5ticket_len;
-    v5cred->ticket.data = afstoken->cu->cu_u.cu_rxk5.k5ticket.k5ticket_val;
-    return 0;
-}
-#endif
 
 /* get token, given server we need and token buffer.  aclient will eventually
  * be set to our identity to the server.
@@ -1004,9 +981,10 @@ ktc_ForgetToken(aserver)
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
  * success.  */
 
-ktc_ListTokens(aprevIndex, aindex, aserver)
-     int aprevIndex, *aindex;
-     struct ktc_principal *aserver;
+int
+ktc_ListTokens(int aprevIndex,
+    int *aindex,
+    struct ktc_principal *aserver)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -1156,7 +1134,7 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 /* discard all tokens from this user's cache */
 
 static int
-NewForgetAll()
+NewForgetAll(void)
 {
 #ifndef NO_AFS_CLIENT
     TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
@@ -1165,7 +1143,7 @@ NewForgetAll()
 }
 
 static int
-OldForgetAll()
+OldForgetAll(void)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
@@ -1187,7 +1165,7 @@ OldForgetAll()
 }
 
 int
-ktc_ForgetAllTokens()
+ktc_ForgetAllTokens(void)
 {
     int ncode, ocode;
 
@@ -1478,6 +1456,7 @@ afs_tf_get_cred(principal, token)
 {
     int k_errno;
     int kvno, lifetime;
+    long mit_compat;		/* MIT Kerberos 5 with Krb4 uses a "long" for issue_date */
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1514,10 +1493,10 @@ afs_tf_get_cred(principal, token)
 	/* don't try to read a silly amount into ticket->dat */
 	token->ticketLen > MAXKTCTICKETLEN
 	|| tf_read((char *)(token->ticket), token->ticketLen) < 1
-	|| tf_read((char *)&(token->startTime),
-		   sizeof(token->startTime)) < 1) {
+	|| tf_read((char *)&mit_compat, sizeof(mit_compat)) < 1) {
 	return TKT_FIL_FMT;
     }
+    token->startTime = mit_compat;
     token->endTime = life_to_time(token->startTime, lifetime);
     token->kvno = kvno;
     return 0;
@@ -1645,6 +1624,7 @@ afs_tf_save_cred(aserver, atoken, aclient)
     off_t start;
     int lifetime, kvno;
     int count;			/* count for write */
+    long mit_compat;		/* MIT Kerberos 5 with Krb4 uses a "long" for issue_date */
 
     if (fd < 0) {		/* fd is ticket file as set by afs_tf_init */
 	return TKT_FIL_INI;
@@ -1714,8 +1694,9 @@ afs_tf_save_cred(aserver, atoken, aclient)
     if (write(fd, atoken->ticket, count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *)&atoken->startTime, sizeof(afs_int32))
-	!= sizeof(afs_int32))
+    mit_compat = atoken->startTime;
+    if (write(fd, (char *)&mit_compat, sizeof(mit_compat))
+	!= sizeof(mit_compat))
 	goto bad;
 
     /* Actually, we should check each write for success */

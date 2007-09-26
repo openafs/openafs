@@ -31,36 +31,36 @@ smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
 void smb_InitIoctl(void)
 {
-        int i;
-        for (i=0; i<SMB_IOCTL_MAXPROCS; i++)
-	    smb_ioctlProcsp[i] = NULL;
+    int i;
+    for (i=0; i<SMB_IOCTL_MAXPROCS; i++)
+	smb_ioctlProcsp[i] = NULL;
 
 	smb_ioctlProcsp[VIOCGETAL] = cm_IoctlGetACL;
-        smb_ioctlProcsp[VIOC_FILE_CELL_NAME] = cm_IoctlGetFileCellName;
-        smb_ioctlProcsp[VIOCSETAL] = cm_IoctlSetACL;
-        smb_ioctlProcsp[VIOC_FLUSHVOLUME] = cm_IoctlFlushVolume;
-        smb_ioctlProcsp[VIOCFLUSH] = cm_IoctlFlushFile;
-        smb_ioctlProcsp[VIOCSETVOLSTAT] = cm_IoctlSetVolumeStatus;
-        smb_ioctlProcsp[VIOCGETVOLSTAT] = cm_IoctlGetVolumeStatus;
-        smb_ioctlProcsp[VIOCWHEREIS] = cm_IoctlWhereIs;
-        smb_ioctlProcsp[VIOC_AFS_STAT_MT_PT] = cm_IoctlStatMountPoint;
-        smb_ioctlProcsp[VIOC_AFS_DELETE_MT_PT] = cm_IoctlDeleteMountPoint;
-        smb_ioctlProcsp[VIOCCKSERV] = cm_IoctlCheckServers;
-        smb_ioctlProcsp[VIOC_GAG] = cm_IoctlGag;
-        smb_ioctlProcsp[VIOCCKBACK] = cm_IoctlCheckVolumes;
-        smb_ioctlProcsp[VIOCSETCACHESIZE] = cm_IoctlSetCacheSize;
-        smb_ioctlProcsp[VIOCGETCACHEPARMS] = cm_IoctlGetCacheParms;
-        smb_ioctlProcsp[VIOCGETCELL] = cm_IoctlGetCell;
-        smb_ioctlProcsp[VIOCNEWCELL] = cm_IoctlNewCell;
-        smb_ioctlProcsp[VIOC_GET_WS_CELL] = cm_IoctlGetWsCell;
-        smb_ioctlProcsp[VIOC_AFS_SYSNAME] = cm_IoctlSysName;
-        smb_ioctlProcsp[VIOC_GETCELLSTATUS] = cm_IoctlGetCellStatus;
-        smb_ioctlProcsp[VIOC_SETCELLSTATUS] = cm_IoctlSetCellStatus;
-        smb_ioctlProcsp[VIOC_SETSPREFS] = cm_IoctlSetSPrefs;
-        smb_ioctlProcsp[VIOC_GETSPREFS] = cm_IoctlGetSPrefs;
-        smb_ioctlProcsp[VIOC_STOREBEHIND] = cm_IoctlStoreBehind;
-        smb_ioctlProcsp[VIOC_AFS_CREATE_MT_PT] = cm_IoctlCreateMountPoint;
-        smb_ioctlProcsp[VIOC_TRACECTL] = cm_IoctlTraceControl;
+    smb_ioctlProcsp[VIOC_FILE_CELL_NAME] = cm_IoctlGetFileCellName;
+    smb_ioctlProcsp[VIOCSETAL] = cm_IoctlSetACL;
+    smb_ioctlProcsp[VIOC_FLUSHVOLUME] = cm_IoctlFlushVolume;
+    smb_ioctlProcsp[VIOCFLUSH] = cm_IoctlFlushFile;
+    smb_ioctlProcsp[VIOCSETVOLSTAT] = cm_IoctlSetVolumeStatus;
+    smb_ioctlProcsp[VIOCGETVOLSTAT] = cm_IoctlGetVolumeStatus;
+    smb_ioctlProcsp[VIOCWHEREIS] = cm_IoctlWhereIs;
+    smb_ioctlProcsp[VIOC_AFS_STAT_MT_PT] = cm_IoctlStatMountPoint;
+    smb_ioctlProcsp[VIOC_AFS_DELETE_MT_PT] = cm_IoctlDeleteMountPoint;
+    smb_ioctlProcsp[VIOCCKSERV] = cm_IoctlCheckServers;
+    smb_ioctlProcsp[VIOC_GAG] = cm_IoctlGag;
+    smb_ioctlProcsp[VIOCCKBACK] = cm_IoctlCheckVolumes;
+    smb_ioctlProcsp[VIOCSETCACHESIZE] = cm_IoctlSetCacheSize;
+    smb_ioctlProcsp[VIOCGETCACHEPARMS] = cm_IoctlGetCacheParms;
+    smb_ioctlProcsp[VIOCGETCELL] = cm_IoctlGetCell;
+    smb_ioctlProcsp[VIOCNEWCELL] = cm_IoctlNewCell;
+    smb_ioctlProcsp[VIOC_GET_WS_CELL] = cm_IoctlGetWsCell;
+    smb_ioctlProcsp[VIOC_AFS_SYSNAME] = cm_IoctlSysName;
+    smb_ioctlProcsp[VIOC_GETCELLSTATUS] = cm_IoctlGetCellStatus;
+    smb_ioctlProcsp[VIOC_SETCELLSTATUS] = cm_IoctlSetCellStatus;
+    smb_ioctlProcsp[VIOC_SETSPREFS] = cm_IoctlSetSPrefs;
+    smb_ioctlProcsp[VIOC_GETSPREFS] = cm_IoctlGetSPrefs;
+    smb_ioctlProcsp[VIOC_STOREBEHIND] = cm_IoctlStoreBehind;
+    smb_ioctlProcsp[VIOC_AFS_CREATE_MT_PT] = cm_IoctlCreateMountPoint;
+    smb_ioctlProcsp[VIOC_TRACECTL] = cm_IoctlTraceControl;
 	smb_ioctlProcsp[VIOCSETTOK] = cm_IoctlSetToken;
 	smb_ioctlProcsp[VIOCGETTOK] = cm_IoctlGetTokenIter;
 	smb_ioctlProcsp[VIOCNEWGETTOK] = cm_IoctlGetToken;
@@ -84,6 +84,11 @@ void smb_InitIoctl(void)
         smb_ioctlProcsp[VIOC_RXSTAT_PROC] = cm_IoctlRxStatProcess;
         smb_ioctlProcsp[VIOC_RXSTAT_PEER] = cm_IoctlRxStatPeer;
         smb_ioctlProcsp[VIOC_UUIDCTL] = cm_IoctlUUIDControl;
+        smb_ioctlProcsp[VIOC_PATH_AVAILABILITY] = cm_IoctlPathAvailability;
+        smb_ioctlProcsp[VIOCSETTOK2] = cm_IoctlSetTokens2;
+        smb_ioctlProcsp[VIOCGETTOK2] = cm_IoctlGetTokens2;
+        smb_ioctlProcsp[VIOCSETPROP] = cm_IoctlSetProperties;
+        smb_ioctlProcsp[VIOCGETPROP] = cm_IoctlGetProperties;    
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -114,7 +119,7 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
  * this is the first read call.  This is the function that actually makes the
  * call to the ioctl code.
  */
-smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
+long smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
     long opcode;
     smb_ioctlProc_t *procp = NULL;

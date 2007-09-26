@@ -226,17 +226,22 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_LINUX22_ENV)
+#ifdef EXPORTED_TASKLIST_LOCK
+extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
 void
 afs_osi_TraverseProcTable()
 {
 #if !defined(LINUX_KEYRING_SUPPORT)
-    extern rwlock_t tasklist_lock __attribute__((weak));
     struct task_struct *p;
- 
+#ifdef EXPORTED_TASKLIST_LOCK
     if (&tasklist_lock)
        read_lock(&tasklist_lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
     else
+#endif
 	rcu_read_lock();
 #endif
 
@@ -263,10 +268,14 @@ afs_osi_TraverseProcTable()
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
+#ifdef EXPORTED_TASKLIST_LOCK
     if (&tasklist_lock)
        read_unlock(&tasklist_lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
     else
+#endif
 	rcu_read_unlock();
 #endif
 #endif

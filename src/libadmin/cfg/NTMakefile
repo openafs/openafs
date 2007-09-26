@@ -53,6 +53,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsclientadmin.lib \
 	$(DESTDIR)\lib\afs\afsptsadmin.lib \
 	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
@@ -99,4 +100,4 @@ install: $(DLLFILE) $(INCFILES)
 clean::
 
 mkdir:
-	
+

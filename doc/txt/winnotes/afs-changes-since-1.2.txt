@@ -1,3 +1,709 @@
+Since 1.5.24
+ * Update NSIS installer to version 2.30
+
+ * Update Wix installer to version 2.0.5325
+ 
+ * 64-bit KFW support:
+   - Network Identity Manager plug-in
+   - 64-bit aklog
+   - 64-bit krb5 enable afscreds.exe, afs server manager,
+     etc.
+
+ * Enable B+ tree Directory Search by default.
+
+ * NIM plug-in is now compatible with FILE: ccaches
+
+ * Install instloop.exe into Client/Programs/ even though
+   it isn't required.   Permit it to be used by organizations
+   that clone Windows systems.
+
+ * On a suspend, only drop callbacks for servers that 
+   are online.  If the server is offline, maintain the callback
+   until the server is once again available.
+
+ * Prevent against acquisition of a directory write lock when
+   there are no updates to be performed.  This was resulting 
+   in a write-lock leak which later on would lead to a deadlock.
+
+ * Add configurable file pre-fetch mode.  For files that match
+   the specified file extensions, pre-fetch the entire file into
+   the cache.
+
+   HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+      (MULTI_SZ) PrefetchExecutableExtensions
+
+ * Fix the client_osi large integer support so that return values
+   can be properly assigned to large integer variables.
+ 
+ * Do not hold cm_scache_t mutex across cm_GetCell() calls 
+   since cm_GetCell() can block in a RPC.
+
+ * Add short file name support to B+ tree searches.
+
+ * Resolve a conflict between the desire to notify file servers
+   that the client workstation is suspending and the desire to
+   permit objects with valid callbacks when the client suspends
+   to continue to use those objects from the cache if the client
+   resumes without network connectivity.
+
+ * Fix stack variables to ensure that all buffers storing paths
+   can handle AFSPATHMAX (1024) characters.  Paths of 256 characters
+   would cause a stack overflow condition.
+
+ * On Vista, force afs_config.exe to run with the highest privileges
+   available to the end user.  For a user in the Administrators
+   group running under UAC, this will cause afs_config.exe to be 
+   be run with full Administrators privileges after the user 
+   approves the privilege escalation.
+
+ * More VNOVNODE handling issues.  If a dirty buffer cannot be 
+   written due to VNOVNODE, clear the buffer and ignore the error.
+   If a cm_scache_t object has been marked deleted due to a VNOVNODE
+   error, the next time the smb_fid_t object that references it is 
+   used return either NOSUCHFILE or NOSUCHPATH and close the
+   smb_fid_t object.  Subsequent attempts to use the smb_fid_t will
+   result in an invalid handle error.
+
+ * For Vista, set the RequestExecutionLevel of the NSIS installer
+   to "admin".
+
+ * For the build environment, support the generation of manifests
+   when using the CL1310 (VS .NET 2003) compiler/linker.
+
+ * There was a bug in OutputDebugHexString() which could overflow
+   a stack buffer resulting in unexpected process termination
+   of afsd_service.exe if the input Security Token contained
+   many bytes equivalent to the '%' char.
+
+ * Add directory lookup statistics to "fs memdump" output.
+ 
+
+Since 1.5.23
+ * Windows uses case-insensitive file name pattern matching
+   but AFS is a case sensitive file system.  The AFS3 directory
+   format is block based, uses network byte order and 
+   includes a hash table for fast case sensitive lookups.  
+   This causes several problems for the Windows AFS client.
+   (1) Traversing the directory blocks is cpu expensive
+   (2) A hash table miss does not indicate that the desired
+       entry does not exist.
+   (3) Determining whether a non-ambiguous inexact match or
+       the entry does not exist requires a linear traversal
+       of the entire directory.  
+   These issues often result in 100% CPU utilization.
+
+   These issues are addressed by building a modified B+ tree for 
+   each directory and then using the B+ tree for searches.
+
+   This feature is disabled by default.  To enable it set
+   the "BPlusTrees" registry value to 0x01 in the AFS Client
+   Service Parameters key.
+
+ * Correct a null pointer dereference in the symlink recursion
+   detection code.  (Introduced in 1.5.22)
+
+ * Add the Network Identity Manager AFS Provider to AMD64 
+   builds.
+
+Since 1.5.22
+
+ * A new registry value, "BlockSize", can now be used to adjust 
+   the size of the internal buffers used to store file data.  
+   The default is 4KB.  When set, the values 1..1024 specify
+   multiples of 4KB. Values > 1024 specify actual block sizes
+   and must be multiples of 4KB.  The actual block size in KB 
+   can not be larger than the chunk size which defaults to 1MB.
+
+    HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+      (DWORD) BlockSize
+
+ * pts.exe and ptserver.exe built with -DSUPERGROUPS
+
+ * Service Manager shutdown hints have been added.  The hint 
+   specifies that it may take the AFS client service up to two
+   minutes to shutdown. 
+
+ * Fix the recursion detection feature introduced in 1.5.22.
+   The previous implementation broke the evaluation of paths
+   using ../path or ./path.   It also broke the evaluation of
+   symlinks to absolute paths.  For example, /afs/cell/path.
+
+ * Fix an uninitialized variable in cm_MakeDir that could result
+   in crash if the requested directory could not be created.
+
+ * Fix a the VolumeStatusNotification log messages to save
+   the input string in the circular log buffer so garbarge 
+   won't be output to afsd.log when the log is dumped.
+   
+
+ * Increase the SMB Maximum Path length to 260 characters
+   from 256 as that is what CIFS supports.
+
+ * On 64-bit Windows, use a unique description string for 
+   the 32-bit AFS Shell Extension.
+
+Since 1.5.21
+
+ * In the AFS Admin Library, replaced all of the 
+   Ubik_Call(XXX_RPC,...) calls with Ubik_XXX_RPC(...).  This 
+   allows parameter checking and proper type conversions to be
+   performed.  This is crucial when passing parameters that are
+   64-bit wide on systems in which 'long' is a 32-bit value.
+   Otherwise, the parameter list on the stack is interpretted
+   incorrectly and the function not only doesn't succeed but it
+   might corrupt memory and if lucky crash the application.
+  
+   The only program that we care about that uses this library 
+   is the AFS Server Manager.  Now it doesn't crash.
+
+ * Fixed smb directory searches for non-wildcard names.  The 
+   optimized function should not have set the bulk in progress
+   flag.  This would adversely affect later directory searches
+   that required a bulk search.
+
+ * Detect infinite recursions (up to 512 stat cache objects
+   in a chain.)  If an infinite recursion is detected, return
+   an error to stop the CIFS client from querying us forever.
+
+ * Executables executed out of AFS name space can have their
+   pages swapped out by Windows.  Those pages will be reloaded
+   when they are required.  However, if the cache manager no
+   longer has a callback and all of the file servers with 
+   the volume data are down, then the application will crash
+   due to the inability to read the required page.  
+
+   We now track the down time of each server.  If the callback
+   expires after the server that issued it went down and all
+   servers are down, we delay the expiration to permit the data
+   in the cache to be continue to be used by Windows or an 
+   application.
+
+ * The Windows AFS client has always had very poor performance
+   with regards to directory management.   In the case of 
+   directory updates caused by create, rename,and delete operations,
+   the AFS cache manager will now perform local directory updates
+   when possible in order to avoid re-reading the directory from
+   the file server.  This will be done in whenever both of the 
+   following conditions are true:
+
+   - the data version on the directory increased by one as a 
+     result of the operation
+
+   - all of the directory buffers necessary to make the change
+     are present in the cache
+
+ * The error message in the AFS Control Panel describing the 
+   need to be a Windows Administrator has been replaced with
+   a message describing the need to be in the AFS Admins Group.
+
+ * If the vldb server list is empty when attempting to evaluate
+   a cell mountpoint it was possible for a crash to occur.  This
+   can only happen if there is an existing mount point and the
+   is a failure attempting to load the server list from the 
+   CellServDB file or via AFSDB queries.
+
+ * dirty buffers only have their dirty bytes stored to the file
+   server instead of the entire chunksize
+
+ * the default chunksize has been increased from 128KB to 1MB
+   
+
+Since 1.5.20
+
+ * changed the enum values for cm_serverRef_t state info to use a 
+   private name space to avoid collisions (srv_)
+ 
+ * added a srv_deleted state for cm_serverRef_t objects.  This 
+   state is set when cm_FreeServerList() is called with the 
+   CM_FREESERVERLIST_DELETE flag set.  cm_FreeServerList() may
+   not always delete the cm_serverRef_t from the list if it is
+   still in use by another thread.  the srv_deleted state means
+   the object's contents are no longer valid and it must be 
+   skipped.  It will be deleted the next time the object is 
+   freed and the refcount hits zero.
+ 
+ * the srv_deleted state is also used when a file server reports
+   either VNOVOL or VMOVED instead of marking the cm_serverRef_t
+   as offline.  This is done to prevent additional usage of the 
+   stale vldb data while waiting for the update volume request
+   to complete.
+ 
+ * added a state field to the cm_volume_t object (enum volstate 
+   vl_ name space) that maintains the state of the volume based
+   upon the states of all of the cm_serverRef_t and cm_server_t
+   objects.
+ 
+ * modified cm_UpdateVolume() to set the state of the cm_volume_t
+   RW, RO, and BK to either vl_alldown or vl_online.  There can't
+   be any other states because cm_UpdateVolume() destroys any  
+   previous knowledge we might have had regarding busy or offline
+   volume status
+ 
+ * modified cm_UpdateVolume() to update the volume name in the 
+   cm_volume_t to the volume base name if the previous value was 
+   a volume ID.
+ 
+ * modified cm_FollowMountPoint() to check to see if the volume
+   name is a volume ID and if so call cm_GetVolumeByID instead 
+   of cm_GetVolumeByName.  This ensures that volume IDs are always
+   looked up as numeric values.  There is no longer a need to 
+   maintain a separate cm_volume_t containing the string representation
+   of the ID value.
+ 
+ * Added a flags parameter to cm_GetVolumeByName() and cm_GetVolumeByID().
+   The first flag is a "CREATE" flag which is set by all existing
+   calls.  The flag is not set by calls to cm_GetVolumeByID() from
+   the server probe code when volume status is being updated.  We 
+   do not want the server probe operation to result in additional 
+   turnover in the cached volume data.  The second flag is NO_LRU_UPDATE 
+   which is set when the server probe code updates the volume status.
+   This flag will be used to prevent the server probe operation from
+   changing the order of the least recently used queue.
+ 
+ * Modified cm_GetVolumeByName to ensure that only one cm_volume_t is 
+   allocated for a given set of normal, readonly, and backup volumes
+   regardless of whether or not the volume is accessed via name or 
+   ID number.  The cm_volume_t namep field is always the base name
+   of the volume. 
+ 
+ * Added a new volume state, vl_unknown.  This state is used as
+   the initial state for all cm_volume_t when the cache manager starts, 
+   for each cm_volume_t at creation, and for each cm_volume_t when
+   recycling.  The cache manager does not know the state of all 
+   volumes in the world, only those that are in the cache and for
+   which it has queried the VLDB and hosting file servers.
+ 
+ * modified cm_GetVolumeByName() to initialize the state of a 
+   volume to vl_unknown.  The actual state will be set when a 
+   cm_VolumeUpdate() call completes successfully.
+ 
+ * changed name of scache hash table variables to avoid ambiguity
+   when adding hash tables for volumes
+ 
+ * fix a buffer overrun in sys\pioctl_nt.c  pioctl().
+ 
+ * modified cm_UpdateVolume() to handle the case in which there is
+   no RW volume but there is are RO volumes for a given base name. 
+   This is done by querying for the ".readonly" volume name if the 
+   base name does not exist in the VLDB.  We never query for the
+   .backup name because under the current usage model a .backup 
+   volume may only exist on the server that the read-write volume
+   is located.  If there is no RW volume, there can be no .backup.
+ 
+ * Added four hash tables for cm_volume_t objects to improve the 
+   search time of cm_GetVolumeByID(), cm_GetVolumeByName() and
+   cm_ForceUpdateVolume(). One each for Name, RWID, ROID, and 
+   BKID.  Three ID hash tables are necessary as long as it is
+   desireable to maintain a single cm_volume_t containing all
+   of the related RW, RO, and BK volume data.  Having the RW and
+   RO volume data in the same object is necessary for the 
+   implementation of cm_GetROVolumeID() which returns either the
+   RO or RW ID depending upon the existence of RO volume instances.  
+ 
+ * Added a volume LRU queue so that volume reuse becomes fairer.
+   This does not replace the all Volumes list which is used when
+   it is desireable to walk a list of all the volumes whose order
+   is not going to change out from underneath you which makes it
+   safe to drop the cm_volumeLock.
+ 
+ * handles volume hash table updates where volume name to 
+   volume ID number changes.  The volume name remains 
+   constant in the cm_volume_t.  if a vos rename is performed, 
+   the name of the volume will change and the volume IDs will be 
+   updated.  Subsequent access to the old volume ID will create a 
+   new cm_volume_t with the new name.
+ 
+ * Added a daemon thread operation to query the state of volumes
+   listed as busy or offline.  cm_CheckBusyVolumes() calls 
+   RXAFS_GetVolumeStatus() for each volume ID that is marked vl_busy 
+   or vl_offline.   If the volume is now online, the status on the
+   volume is updated.  The default period is 600 seconds.  This can 
+   be configured with the BusyVolumeCheckInterval registry value.  
+ 
+ * Added prototype for smb_IoctlPrepareRead() which was missing a
+   return type in the function definition.
+ 
+ * Added volume id lists to the cm_server_t.  These lists are
+   allocated in blocks of ~32 IDs.  When a cm_PingServer() 
+   detects a change in server state, the state of the cm_volume_t
+   is updated.  
+ 
+ * Added volID to the cm_serverRef_t object.  volID is used
+   to identify the volume for which the object is a referral.
+   cm_FreeServerList() uses the volID to remove the volume 
+   from the cm_server_t.
+ 
+ * In cm_Analyze, when VNOVOL or VMOVED are received, 
+   call cm_ForceVolumeUpdate() to force a refresh of the volume 
+   location data.
+ 
+ * Added cm_VolumeStatusNotification() which is used at the moment
+   to log volume status changes to the trace log.  It will also
+   be used as the access point to the File System Filter driver
+   notification engine.
+ 
+ * Added an all cm_scache_t list to cm_data.  This replaces the use
+   of the stat cache LRU queue when we need to enumerate all 
+   entries.  The LRU list order is not static and when using it to 
+   enumerate all entries it can result in items being missed or
+   items being processed more than once.
+ 
+ * Modified cm_Analyze(). Instead of reseting the busy or offline
+   state of a volume and forcing a retry of the operation
+   cm_Analyze will defer to the background daemon thread that will
+   update the state once every 600 seconds.
+ 
+ * Added the automatic generation of a Freelance ".root" read-write
+   mountpoint that refers to the root.afs volume of the workstation
+   cellname at the time the mountpoint is created.
+ 
+ * re-write cm_Analyze to make better use of the known volume
+   status.  VL_Server queries cannot result in CM_ERROR_ALLOFFLINE
+   messages.
+ 
+ * renamed cm_CheckBusyVolumes to cm_CheckOfflineVolumes.  
+   busy volumes will be reset to srv_non_busy by the function
+   but there is no mechanism for querying the busy state other
+   than by attempting to access the resource.
+ 
+ * cm_Analyze will query the state of an offline volume before
+   deciding whether or not to retry when all volume instances
+   are offline.
+ 
+ * the algorithm used after an IP address list change detection
+   has been modified.  we now check the state of the VLDB servers,
+   then reset the rx connections, and finally check the state of 
+   the file servers.  Previously we flushed the rx connections 
+   and then checked the servers in whatever random order they 
+   were first discovered.
+ 
+ * fix the volume status reported by "fs examine"
+ 
+ * various improvements to the AFS Network Identity Manager Provider.
+   - Don't access freed objects after the window has been destroyed.
+   - Write back the AFS cell list in the identity configuration 
+     even when its empty.
+   - Disable all use of the provider when AFS is disabled for a 
+     particular identity.
+ 
+ * Fix cm_cell_t leak.  When evaluating a mountpoint that uses an
+   alias instead of the full cellname, double check the full cell
+   name and see if we have a matching cell before allocating a new
+   one.
+ 
+ * Dump more data with "fs memdump". All volumes and scaches and
+   now cells.
+ 
+ * Reverse the order of the all cells list.  This ensures that
+   the workstation cell is always first in the list.
+ 
+ * If we recognize the server from which a callback revoke was
+   received, then we can ensure that we only invalidate the status
+   information for cm_scache_t objects belonging to that cell.
+ 
+ * When building for amd64, use APPVER 5.02 as we do not support
+   64-bit Windows 2000 and explicitly state the machine type in
+   the link flags.  
+ 
+ * no longer treat VMWare network adapters as equivalent to a 
+   loopback adapter.  For some unknown reason, publishing the "AFS"
+   netbios name on them frequently results in a name collision 
+   error.
+ 
+ * Use read locks whenever possible instead of write locks when
+   walking the allCellsp list.  This permits better use of multiple
+   CPUs.
+ 
+ * In 1.5.20 a bug was introduced by the fake status when PRSFS_READ
+   is not present on the directory optimization.   It would report
+   mount points and directory objects for which there was no
+   status information as a zero length file.  Instead we can use 
+   the vnode number of the object to determine if it should be
+   considered to be a directory or a file.  If it is odd it is a
+   directory; even it is a file.
+ 
+ * Give Back Callbacks to the file servers in response to suspend
+   and shutdown power management events.  Only give up callbacks
+   to UP servers and do so with a very short RX dead timeout.
+   (10 seconds)
+ 
+ * Fix a race condition in the SMB FID cleanup code that could 
+   result in a stat cache mutex never being released.
+ 
+ * Fix the graphics files that are installed as part of the 
+   IBM Administrators Guide.
+ 
+ * Change the behavior of pioctl path parsing to not follow 
+   symlinks or mount points during evaluation.  This results in
+   the FID being the symlink or mount point and not the object
+   they point to.  This is consistent with the behavior of the 
+   UNIX client.
+
+ * Enable AFSDB record lookup for command line tools such as
+   "fs" and "vos".
+
+ * CellServDB update 2007-07-05
+
+ * Added a Volume Status Plug-in Interface that permits third parties
+   to receive notifications when the volume state changes occur.
+
+ * Ensure that all writes to the afsd_alloc.log file use CR-LF.
+
+ * Prevent the afsprocmgmt.dll from being unloaded while the 
+   background thread it starts is running.
+
+ * Avoid a race condition when closing smb_fid_t objects.
+
+Since 1.5.19
+ * fix install path of IBM Quick Start Guide when installed by
+   the Wix installer
+
+ * fix the client so that it can write into directories with
+   only 'li' permissions.
+
+ * fix installation of 32-bit Shell Extension for 64-bit systems.
+   Install it under its own HKCR keys.
+
+ * modify the wix installer to remove and upgrade install packages
+   with the same version number.  
+
+ * when flushing volume location data every two hours or in 
+   response to "fs checkvolumes", also flush the mount point 
+   links in order to force their re-evaluation.
+
+ * aklog was copying an uninitialized buffer as part of the 
+   foreign cell automatic pts registration
+
+ * when obtaining directory listings, check for read permission
+   on the directory.  If read permission does not exist, fake the
+   status information for the directory entries.  This improves
+   performance, prevents the client from pounding the file server,
+   and prevents leakage of cached status information.
+
+ * "fs getcacheparms" output was incorrect.
+
+ * NetIdMgr AFS Provider should only automatically add token 
+   acquisition for cell foo.com if the realm of the cell matches
+   the realm of the identity.
+
+ * Fix a null pointer dereference in cm_MergeStatus()
+
+Since 1.5.18
+
+ * network identity manager provider:
+
+   - Correct for the fact that pr_CreateUser tampers with the 
+     contents of the username input buffer.
+
+   - Take into account that the krb4 credential data structure
+     does not have separate realm fields for the user and service.
+     When krb524 is used with a cross-realm ticket, the realm
+     describes the service not the user.  
+
+ * Many integrated logon changes:
+
+   - Fix eventlog reporting.  Do not attempt to log an event 
+     if the event source registration fails.  Use DebugEvent0 
+     instead of DebugEvent when there are no parameters.
+
+   - Modify the LOOKUPKEYCHAIN macro to recognize ERROR_MORE_DATA 
+     errors.
+
+   - Fix the reading of Domain specific configuration for 
+     LogonScript and TheseCells.  Previously the dwSize value was 
+     being overwritten so that subsequent RegQueryValueEx call 
+     would fail.
+
+   - Fix a memory leak in the TheseCells reading code.
+
+   - Add support for Domain specific "Realm" specification.  The 
+     realm is the realm to be appended to the username.  When 
+     logging in as a domain or to the local machine, the specified 
+     "Domain" name is not going to be a valid realm name.
+
+   - Construct a proper principal name based upon the domain 
+     specified realm for use in obtaining tokens with KFW.
+
+   - If the domain specified "TheseCells" list includes the 
+     default cell, do not obtain tokens twice.
+
+ * An unprotected call to the Kerberos v5 function, 
+   krb5_free_context(), can result in an invalid memory access
+   exception if the contents of the krb5 profile, krb5.ini, cannot
+   be parsed correctly.  The error is located within the afskfw
+   library which is used by afscreds.exe, afssvrmgr.exe, and 
+   afslogon.dll.  When the error is triggered within afslogon.dll
+   a blue screen condition can occur when the winlogon.exe system
+   process terminates unexpectedly.
+
+Since 1.5.17
+
+ * Do not stop the afs client service with an assert
+   if the cell name cannot be determined when responding
+   to a "fs whereis" command.
+
+ * Integrated Logon (afslogon.dll).  No longer attempt 
+   to preserve Kerberos 5 tickets for the logon session
+   as that job is now supported by KFW 3.1 and above.
+
+ * The Network Identity Manager plug-in will attempt to
+   remove expired service tickets from the cache.
+
+Since 1.5.16
+
+ * CellServDB update - GCO Public CellServDB 09 Mar 2007
+
+ * AFS Server Manager and AFS Account Manager data cache
+   moved from HKCU\Software\TransarcCorporation to 
+   HKCU\Software\OpenAFS to prevent crashes due to data
+   format changes.
+
+ * Reduce the default UP server probe time from 10 minutes
+   to 5 minutes to match UNIX.  This will not solve the NAT
+   port mapping timeout issue because most NATs default to
+   a value less that 5 minutes and this value ensures that
+   the afs client server will start probes 5 minutes after
+   the last probe set ended.  The probe period for any one
+   server is therefore longer than 5 minutes.  The more
+   servers in the list the longer the time between probes.
+
+ * Before marking a server as down in cm_Analyze, retry the
+   request using a new rx connection to the server.  If the
+   cache manager is behind a NAT, it is possible that the 
+   response from the server is being sent to the original   
+   address:port from which the rx connection was established.
+   This will appear to the cache manager as the server being
+   down when in fact it is not.  Forcing the use of a new rx  
+   connection will result in the server responding to the    
+   most recent address:port assigned to the client by the NAT.
+
+   If the server is in fact down, it will simply take a little
+   longer to notice it.   
+
+Since 1.5.15
+
+ * Removing a directory that contained entries was failing with
+   the wrong error code being returned to the CIFS client.
+
+ * rxdebug -long 
+
+ * rxdebug exponential back-off.  don't take down a server that
+   is already struggling to respond.
+
+ * Network Identity Manager plug-in registers help on the Help
+   menu if it is supported by NIM.  (KFW 3.2 and above)
+
+ * Plug-n-play networking did not always work after coming back
+   from a Windows Suspend.  The AFS client service failed to 
+   re-compute the LAN adapter to bind to and instead attempted
+   to bind to all LAN adapters.  This would polute the public
+   network with the name "AFS" which could lead to conflicts 
+   between machines.
+
+ * Build installers using Microsoft Hotfixes provided at
+   http://tinyurl.com/243svk for Visual Studio C RunTime Library
+   Daylight Savings Time issues.  
+
+ * "fs checkserver" does not require admin privileges unless 
+   the probe interval is being changed.
+
+Since 1.5.14
+
+ * A reference leak was discovered in the mountpoint traversal 
+   functionality which resulted in cm_volume_t objects not becoming
+   eligible for re-use.  This will trigger a panic condition when
+   more than the maximum number of volumes is accessed.
+
+ * Fixed the success test for the "fs memdump" operation.  Success
+   is now reported as such.  Added cm_volume_t object information 
+   to the dump file.
+
+ * A data corruption error has been fixed.  Write requests
+   queued for background processing were not retried upon failure.
+   This leads to inconsistencies between the contents of the file
+   in the local cache and the contents of the file on the file 
+   server.  
+
+   The implemented fix is to re-queue any request that has failed
+   due to timeout, volume busy, volume offline, server busy, or
+   server offline.  Requests are not processed while all servers
+   for a volume are inaccessible.  When servers become accessible
+   the background request will be retried.
+
+   In addition, if a background write fails, do not mark the buffers
+   as clean.  Failure to preserve the dirty flag prevents the buffers
+   from being written to the file server in the future.
+
+   This fix does not address the possibility that the credentials
+   necessary to perform a write request might expire between the
+   time the request is queued and when the request can be processed
+   due to server accessibility.
+
+ * The Freelance volume does not support per user ACLs.  The
+   cm_HaveAccessRights function did not handle this special case.
+   Requests for privileges greater than read|lookup would result
+   in afsd_service.exe entering an infinite loop.  ISOBuster is
+   known to cause this behavior.
+
+ * When deleting files, the SMB Server would attempt to obtain
+   the access permissions for the parent directory instead of 
+   for the file itself.  This would result in an incorrect 
+   assessment of whether or not the file can be deleted.
+
+ * The Network Identity Manager AFS plug-in has had its string
+   tables updated for consistency with the language used by NIM.
+   All credentials are referred to as credentials instead of tokens.
+   Drop-down combo boxes now in fact drop down.
+
+ * The AFS Salvager was not properly being built on Windows.
+   This is relevant only if the AFS servers are in use.
+
+ * The default signal handlers for the AFS servers incorrectly
+   processed SIGQUIT.  Instead of stopping the server, an
+   exception was raised.
+
+ * Fix another volume refcount leak.  This one was triggered by
+   an inability to contact the vlservers in order to update the 
+   file server list.
+
+ * Fix checklist control used by the drive mappings tabs in 
+   afscreds.exe and afs_control.exe.
+
+ * Improve output of "fs memdump" related to buffer management.
+
+ * Fix refcount leak of cm_buf_t objects when prefetching buffers
+   already in the process of being fetched.
+
+ * Improve cache performance by computing the buffer hash table
+   size based upon the number of buffers so that the average 
+   number of entries in a bucket is seven.
+
+ * Improve cache performance of read/write data by locally 
+   updating the dataVersion of all buffers associated with the
+   file on each StoreData or StoreStatus operation provided that
+   the dataVersion was incremented by one and the dataVersion of
+   the buffer matched the original dataVersion of the cached 
+   status information for the file.
+
+ * When recycling cm_scache_t objects, make sure that we 
+   clear all of the previous fields.  It is no longer the
+   case that we can assume that the stat cache object is being
+   obtained only after a successful FetchStatus call.  
+   InlineBulkStatus will allocate stat cache objects for which
+   the no status information is available.
+
+ * When a file is being opened with the OPEN_ALWAYS disposition,
+   do not require write permissions when the file already exists
+   unless of course the file is being opened requesting write 
+   access.
+
+ * When a file has been opened for read-only access, if the 
+   application requests an exclusive lock, obtain a read-lock
+   instead of a write-lock.  The purpose of the exclusive lock
+   in this situation is to prevent changes to the file and the
+   full file read lock will provide this guarrantee.
+
+
 Since 1.5.13
 
  * Enforce Unix Mode Write bit to prevent file deletion of read only
@@ -69,8 +775,8 @@ Since 1.5.11
    are not reliably delivered so it is possible the afs service will
    not be accessible.  However, this is the best we can do.
 
- * don't allow environment variables we set to be inherited by child
-   processes
+ * don't allow environment variables we set in afslogon.dll to be 
+   inherited by child processes
 
  * force an rx connection reset if VICECONNBAD or VICETOKENDEAD are
    received
@@ -87,7 +793,7 @@ Since 1.5.11
    The new algorithm maintains a dirty buffer list.  Items are added
    when the buffer is originally marked dirty.  A buffer is only
    removed from the list by the buf_IncrSyncer when the buffer is no
-   longer dirty.  If the list is empty the thread goes back to thread
+   longer dirty.  If the list is empty the thread goes back to sleep
    immediately without additional processing requirements.
 
 Since 1.5.10:
@@ -557,7 +1263,21 @@ Since 1.4.1 rc5: 1.4.1 rc6 released (2 Feb 2006)
    which must have been added for debugging because its used 
    was never thread safe and it truly served no purpose.
 
-Since 1.4.1 rc4: 1.4.1 rc5 released (18 Jan 2006)
+Since 1.4.1 rc4: 1.4.1 rc5 released (25 Jan 2006)
+
+ * Re-enabled LogoffTokenTransfer and LogoffTokenTransferTimeout
+   registry settings.  Default is ON and 120 seconds.  If set to 
+   OFF, tokens will not be destroyed.
+
+ * Fixed a number of race conditions and reference count problems
+   associated with global queues.
+
+ * Added a method to detect abandoned smb virtual circuits so their
+   associated file handles, locks, user tokens, and smb session
+   resources can be released.
+
+ * Added a mechanism to allow user tokens to be preserved 
+   during integrated login and be freed after logoff.
 
  * Check access permissions to the file before the file is 
    truncated.

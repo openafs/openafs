@@ -223,7 +223,7 @@ struct lwp_pcb {		/* process control block */
     char blockflag;		/* if (blockflag), process blocked */
     char eventlistsize;		/* size of eventlist array */
     char padding;		/* force 32-bit alignment */
-    char **eventlist;		/* ptr to array of eventids */
+    void **eventlist;		/* ptr to array of eventids */
     int eventcnt;		/* no. of events currently in eventlist array */
     int wakevent;		/* index of eventid causing wakeup */
     int waitcnt;		/* min number of events awaited */
@@ -363,25 +363,19 @@ extern int LWP_GetResponseKey(int seconds, char *key);
 extern int LWP_GetLine(char *linebuf, int len);
 #ifdef AFS_NT40_ENV
 /* lwp.c */
-extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
-extern int LWP_CreateProcess(int (*funP) (), int stacksize, int priority,
-			     void *argP, char *name, PROCESS * pid);
-extern int LWP_DestroyProcess(PROCESS pid);
 extern int LWP_DispatchProcess(void);
-extern int LWP_WaitProcess(void *event);
-extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
 #else
 extern int LWP_CurrentProcess(PROCESS * pid);
-extern int LWP_INTERNALSIGNAL(char *event, int yield);
+extern PROCESS LWP_ThreadId(void);
+#endif
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
 extern int LWP_CreateProcess(int (*ep) (), int stacksize, int priority,
 			     void *parm, char *name, PROCESS * pid);
 extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_WaitProcess(char *event);
-extern PROCESS LWP_ThreadId(void);
-#endif
+extern int LWP_WaitProcess(void *event);
+extern int LWP_INTERNALSIGNAL(void *event, int yield);
 
 #ifdef AFS_LINUX24_ENV
 /* max time we are allowed to spend in a select call on Linux to avoid 

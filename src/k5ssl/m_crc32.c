@@ -28,9 +28,10 @@
  * such damages.
  */
 
+#include "k5s_config.h"
 #include <sys/types.h>
 #include <netinet/in.h>
-#if USE_FAKESSL
+#if USING_FAKESSL
 #include "k5s_evp.h"
 #else
 #include <openssl/evp.h>

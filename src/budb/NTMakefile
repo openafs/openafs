@@ -10,6 +10,15 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+!ENDIF
+
 ############################################################################
 # install headers
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
@@ -18,8 +27,6 @@ INCFILES =\
 	$(INCFILEDIR)\budb.h \
 	$(INCFILEDIR)\budb_errs.h \
 	$(INCFILEDIR)\budb_client.h
-	
-
 
 ############################################################################
 # Definitions for building a static library
@@ -65,10 +72,10 @@ EXELIBS =\
         $(DESTDIR)\lib\afs\afsprot.lib \
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
-        $(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afs\afskauth.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -77,11 +84,11 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\cm_dns.obj
-
+	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\afs\afscom_err.lib
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
@@ -133,4 +140,4 @@ clean::
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
 
 mkdir:
-	
+

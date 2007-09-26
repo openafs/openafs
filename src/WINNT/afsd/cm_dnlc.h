@@ -11,7 +11,7 @@
 
 #define 	CM_AFSNCNAMESIZE 	40  /* multiple of 8 (for 64-bit) */
 #define         NCSIZE 			512
-#define         NHSIZE 			256 /* must be power of 2 == CM_DIR_NHASHENT */
+#define         NHSIZE 			256 /* must be power of 2 */
 
 #define         CM_DNLC_MAGIC           ('D' | 'N' <<8 | 'L'<<16 | 'C'<<24)
 

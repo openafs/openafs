@@ -42,13 +42,10 @@
 #define afs_osi_Free(p,n)	free(p)
 #define afs_strcasecmp(p,q)	strcasecmp(p,q)
 #endif
-#if defined(USE_SSL) || defined(USE_FAKESSL)
+#ifdef USING_K5SSL
 #include <sys/time.h>
 #include "k5ssl.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include "krb5.h"
 #endif
 
@@ -181,7 +178,7 @@ process(char *fn)
     int comment;
     krb5_data ivecdata[1], *ivec, plaindata[1];
     unsigned char ivectemp[512];
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     krb5_data encdata[1];
 #else /* not Heimdal */
     size_t enclen;
@@ -189,7 +186,7 @@ process(char *fn)
 #endif /* not Heimdal */
     int i, j;
     krb5_keyblock key[1];
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     krb5_crypto crypto;
     char *err, *why;
 #endif /* Heimdal */
@@ -204,7 +201,7 @@ process(char *fn)
 	exitrc = 1;
 	return;
     }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 /* need this to make heimdal work right.
  * otherwise errors cause core dumps.
  */
@@ -239,7 +236,7 @@ assertion "inited" failed: file "../../../krb5/src/lib/crypto/prng.c", line 100
     while (kf != F_EOF) {
 	if (fgets(line, sizeof line, fd)) {
 	    if (*newlabel) {
-		strcpy(label, newlabel);
+		snprintf(label, sizeof label, "%s", newlabel);
 		*newlabel = 0;
 	    }
 	    stripnl(line);
@@ -276,7 +273,7 @@ fprintf(stdout,"# %#x <%s>\n", flags, line);
 		    |F_DID_ENCRYPT|F_DID_ENCRYPT_LAST
 		    |F_DID_DECRYPT|F_DID_DECRYPT_LAST);
 		flags |= F_NEWIDENT;
-		strcpy(newlabel, line+2);
+		snprintf(newlabel, sizeof newlabel, "%s", line+2);
 		kf = F_NOTHING;
 	    }
 	    else if (!*line)
@@ -324,18 +321,18 @@ if ((flags & F_GOT_KEY)) printf ("# have key\n");
 		&& !(flags & F_GOT_KEY)) {
 	    krb5_keyblock kb[1];
 	    memset(kb, 0, sizeof *kb);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    code = krb5_generate_random_keyblock(k5context,enctype,kb);
 #else /* not Heimdal */
 	    code = krb5_c_make_random_key(k5context,enctype,kb);
 #endif /* not Heimdal */
 	    if (code) {
 		fflush(stdout);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 		fprintf(stderr,
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 "krb5_generate_random_keyblock failed - code %d %s\n",
 		    code, err);
 #else /* not Heimdal */
@@ -344,14 +341,14 @@ err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* not Heimdal */
 		exit(1);
 	    }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    memcpy(ts->key, kb->keyvalue.data, ts->keylen = kb->keyvalue.length);
 #else /* not Heimdal */
 	    memcpy(ts->key, kb->contents, ts->keylen = kb->length);
 #endif /* not Heimdal */
 	    ts->usage = usage;
 	    ts->enctype = enctype;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    key->keytype = ts->enctype;
 	    key->keyvalue.data = ts->key;
 	    key->keyvalue.length = ts->keylen;
@@ -393,7 +390,7 @@ fprinthex(stdout,"IV",ts->ivec,ts->iveclen);
 	    }
 	    flags &= ~(F_GOT_CIPHERTEXT|F_GOT_PLAINTEXT);
 	    flags &= ~(F_DID_ENCRYPT|F_DID_DECRYPT);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    key->keytype = ts->enctype;
 	    key->keyvalue.data = ts->key;
 	    key->keyvalue.length = ts->keylen;
@@ -456,7 +453,7 @@ if (vflag) fprinthex(stdout,"CT",ts->ct,ts->ctlen);
 	    plaindata->length = ts->ptlen;
 #endif /* not Heimdal */
 	    memset(encdata, 0, sizeof *encdata);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    crypto = 0;
 	    why = "krb5_crypto_init";
 	    code = krb5_crypto_init(k5context, key, key->keytype, &crypto);
@@ -482,15 +479,18 @@ fprintf(stderr,"<%s> krb5_c_encrypt_length failed - %d\n", label, code);
 if (code) {{
 char label[40];
 fflush(stdout);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 fprintf (stderr,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stderr,label,ts->key,ts->keylen);
-sprintf (label,"    ivec%d",i); fprinthex(stderr,label,ts->ivec,ts->iveclen);
-sprintf (label,"   plain%d",i); fprinthex(stderr,label,ts->pt,ts->ptlen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stderr,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "    ivec%d",i);
+fprinthex(stderr,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "   plain%d",i);
+fprinthex(stderr,label,ts->pt,ts->ptlen);
 }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 fprintf(stderr,"<%s> krb5_encrypt_ivec failed - %d %s; %s\n", label, code, err, why);
 #else /* not Heimdal */
 fprintf(stderr,"<%s> krb5_c_encrypt failed - %d\n", label, code);
@@ -499,7 +499,7 @@ fprintf(stderr,"<%s> krb5_c_encrypt failed - %d\n", label, code);
 exitrc = 1;
 continue;
 }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    memcpy(ct, encdata->data, ctlen = encdata->length);
 	    afs_osi_Free(encdata->data, encdata->length);
 	    encdata->data = 0;
@@ -522,10 +522,14 @@ if (Dflag)
 {
 char label[40];
 fprintf (stdout,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stdout,label,ts->key,ts->keylen);
-sprintf (label,"    ivec%d",i); fprinthex(stdout,label,ts->ivec,ts->iveclen);
-sprintf (label,"   plain%d",i); fprinthex(stdout,label,ts->pt,ts->ptlen);
-sprintf (label,"      to%d",i); fprinthex(stdout,label,ct,ctlen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stdout,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "    ivec%d",i);
+fprinthex(stdout,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "   plain%d",i);
+fprinthex(stdout,label,ts->pt,ts->ptlen);
+snprintf (label, sizeof label, "      to%d",i);
+fprinthex(stdout,label,ct,ctlen);
 }
 if (vflag) fprinthex(stdout,"computedCT",ct,ctlen);
 	    memset(pt_from_ct, 0, sizeof pt_from_ct);
@@ -544,7 +548,8 @@ if (vflag) fprinthex(stdout,"computedCT",ct,ctlen);
 		plaindata->length = ctlen;
 	    }
 #if 0
-{char label[40]; sprintf (label,"B)cipher%d",i); fprinthex(stderr,label,ct,ctlen); }
+{char label[40]; snprintf (label, sizeof label, "B)cipher%d",i);
+fprinthex(stderr,label,ct,ctlen); }
 #endif
 #endif /* not Heimdal */
 	    if (ts->iveclen) {
@@ -553,7 +558,7 @@ if (vflag) fprinthex(stdout,"computedCT",ct,ctlen);
 		    ivecdata->length = ts->iveclen);
 		ivec = ivecdata;
 	    } else ivec = 0;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    crypto = 0;
 	    why = "krb5_crypto_init";
 	    code = krb5_crypto_init(k5context, key, key->keytype, &crypto);
@@ -570,25 +575,29 @@ if (vflag) fprinthex(stdout,"computedCT",ct,ctlen);
 if (code) {{
 char label[40];
 fflush(stdout);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 fprintf (stderr,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stderr,label,ts->key,ts->keylen);
-sprintf (label,"    ivec%d",i); fprinthex(stderr,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stderr,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "    ivec%d",i);
+fprinthex(stderr,label,ts->ivec,ts->iveclen);
 }
-#if USING_HEIMDAL
-sprintf (label,"  cipher%d",i); fprinthex(stderr,label,ct,ts->ctlen);
+#ifdef USING_HEIMDAL
+snprintf (label, sizeof label, "  cipher%d",i);
+fprinthex(stderr,label,ct,ts->ctlen);
 fprintf(stderr,"%s: krb5_decrypt_ivec (after encrypt) failed - %d %s; %s\n", label, code, err, why);
 #else /* not Heimdal */
-sprintf (label,"  cipher%d",i); fprinthex(stderr,label,ct,ctlen);
+snprintf (label, sizeof label, "  cipher%d",i);
+fprinthex(stderr,label,ct,ctlen);
 fprintf(stderr,"%s: krb5_c_decrypt (after encrypt) failed - %d\n", label, code);
 #endif /* not Heimdal */
 ++errors;
 exitrc = 1;
 continue;
 }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    memcpy(pt_from_ct, plaindata->data, pt_from_ctlen = plaindata->length);
 	    afs_osi_Free(plaindata->data, plaindata->length);
 	    plaindata->data = 0;
@@ -606,10 +615,14 @@ if (Dflag)
 {
 char label[40];
 fprintf (stdout,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stdout,label,ts->key,ts->keylen);
-sprintf (label,"    ivec%d",i); fprinthex(stdout,label,ts->ivec,ts->iveclen);
-sprintf (label,"  cipher%d",i); fprinthex(stdout,label,ct,ctlen);
-sprintf (label,"   plain%d",i); fprinthex(stdout,label,pt_from_ct,pt_from_ctlen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stdout,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "    ivec%d",i);
+fprinthex(stdout,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "  cipher%d",i);
+fprinthex(stdout,label,ct,ctlen);
+snprintf (label, sizeof label, "   plain%d",i);
+fprinthex(stdout,label,pt_from_ct,pt_from_ctlen);
 }
 if (vflag) fprinthex(stdout,"computedPTfromcomputedCT",pt_from_ct,pt_from_ctlen);
 	    did_any_matches = 1;
@@ -658,7 +671,7 @@ exitrc = 1;
 		    ivecdata->length = ts->iveclen);
 		ivec = ivecdata;
 	    } else ivec = 0;
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    crypto = 0;
 	    why = "krb5_crypto_init";
 	    code = krb5_crypto_init(k5context, key, key->keytype, &crypto);
@@ -675,15 +688,18 @@ exitrc = 1;
 if (code) {{
 char label[40];
 fflush(stdout);
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 err = krb5_get_error_string(k5context); if (!err) err = "-";
 #endif /* Heimdal */
 fprintf (stderr,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stderr,label,ts->key,ts->keylen);
-sprintf (label,"    ivec%d",i); fprinthex(stderr,label,ts->ivec,ts->iveclen);
-sprintf (label,"  cipher%d",i); fprinthex(stderr,label,ts->ct,ts->ctlen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stderr,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "    ivec%d",i);
+fprinthex(stderr,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "  cipher%d",i);
+fprinthex(stderr,label,ts->ct,ts->ctlen);
 }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 fprintf(stderr,"%s: krb5_decrypt_ivec failed - %d %s; %s\n", label, code, err, why);
 #else /* not Heimdal */
 fprintf(stderr,"%s: krb5_c_decrypt failed - %d\n", label, code);
@@ -692,7 +708,7 @@ fprintf(stderr,"%s: krb5_c_decrypt failed - %d\n", label, code);
 exitrc = 1;
 continue;
 }
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
 	    memcpy(pt, plaindata->data, ptlen = plaindata->length);
 	    afs_osi_Free(plaindata->data, plaindata->length);
 	    plaindata->data = 0;
@@ -709,10 +725,14 @@ if (Dflag)
 {
 char label[40];
 fprintf (stdout,"	 %d usage=%d enctype=%d\n", i, usage, enctype);
-sprintf (label,"     key%d",i); fprinthex(stdout,label,ts->key,ts->keylen);
-sprintf (label,"ivec%d",i); fprinthex(stdout,label,ts->ivec,ts->iveclen);
-sprintf (label,"from%d",i); fprinthex(stdout,label,ts->ct,ts->ctlen);
-sprintf (label,"  to%d",i); fprinthex(stdout,label,pt,ptlen);
+snprintf (label, sizeof label, "     key%d",i);
+fprinthex(stdout,label,ts->key,ts->keylen);
+snprintf (label, sizeof label, "ivec%d",i);
+fprinthex(stdout,label,ts->ivec,ts->iveclen);
+snprintf (label, sizeof label, "from%d",i);
+fprinthex(stdout,label,ts->ct,ts->ctlen);
+snprintf (label, sizeof label, "  to%d",i);
+fprinthex(stdout,label,pt,ptlen);
 }
 if (vflag) fprinthex(stdout,"computedPT",pt,ptlen);
 	    flags |= F_DID_DECRYPT;
@@ -828,7 +848,7 @@ main(int argc, char **argv)
 	fprintf (out, "; (decrypt-only because not invertible)");
     }
     fprintf (out, ".\n");
-#if USING_HEIMDAL
+#ifdef USING_HEIMDAL
     if (k5context) krb5_free_context(k5context);
 #endif
     exit(exitrc);

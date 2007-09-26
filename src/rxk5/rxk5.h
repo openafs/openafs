@@ -28,29 +28,18 @@
  * such damages.
  */
 
-#if 0
-#if !defined(KERNEL) || defined(UKERNEL)
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef private
-#undef private
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#endif
-#include <krb5.h>
-#endif
-#endif
-#else
-#include <k5ssl.h>
-#endif
-#endif
+#ifndef RXK5_H
+#define RXK5_H
+
+/* don't include krb5.h here.  rxk5c.{cs,ss,xdr}.c
+ * doesn't include afsconfig.h so this header file must
+ * not assume it knows how to include krb5.h, therefore
+ * it must do something "safe" if krb5.h wasn't included
+ * before this.  See below for "failsafe" types.
+ */
 
 #define RXK5_MAXKTCTICKETLEN 12000
+/* Note: rxk5_clear isn't available unless rxk5 is compiled specially. */
 #define rxk5_clear 0	/* identity only (insecure) */
 #define rxk5_auth 1	/* integrity checked */
 #define rxk5_crypt 2	/* integrity & privacy */
@@ -81,18 +70,52 @@ struct rxk5_stats {
 };
 #endif
 
-int rxk5_GetServerInfo();
-struct rx_securityClass * rxk5_NewClientSecurityObject();
-struct rx_securityClass * rxk5_NewServerSecurityObject();
-int rxk5_default_get_key();
-
+/* if krb5.h wasn't included before this file,
+ * the proper types might not be available.
+ * Here are "fail-safe" types for when this happens.
+ */
 #ifdef USING_SHISHI
 #ifdef SHISHI_VERSION
-Shishi * rxk5_get_context();
+#define RXK5_K5_CONTEXT	Shishi *
+#define RXK5_K5_PRINCIPAL char *
+#define RXK5_K5_CREDS Shishi_tkt *
 #endif
 #endif
-#if defined(USING_MIT) || defined(USING_HEIMDAL) || defined(USING_SSL)
+#if defined(USING_MIT) || defined(USING_HEIMDAL) || defined(USING_K5SSL)
 #ifdef KRB5_TC_MATCH_KTYPE
-krb5_context rxk5_get_context();
+#define RXK5_K5_CONTEXT krb5_context
+#define RXK5_K5_PRINCIPAL krb5_principal
+#define RXK5_K5_CREDS krb5_creds *
+#define RXK5_K5_KEYBLOCK krb5_keyblock *
 #endif
 #endif
+#ifndef RXK5_K5_CONTEXT
+#define RXK5_K5_CONTEXT void *
+#endif
+#ifndef RXK5_K5_PRINCIPAL
+#define RXK5_K5_PRINCIPAL void *
+#endif
+#ifndef RXK5_K5_CREDS
+#define RXK5_K5_CREDS void *
+#endif
+#ifndef RXK5_K5_KEYBLOCK
+#define RXK5_K5_KEYBLOCK void *
+#endif
+
+RXK5_K5_CONTEXT rxk5_get_context(RXK5_K5_CONTEXT);
+int rxk5_GetServerInfo2(struct rx_connection *, int *, int *, char **, char **,
+    int *, int *);
+struct rx_securityClass * rxk5_NewClientSecurityObject(int, RXK5_K5_CREDS,
+    RXK5_K5_CONTEXT);
+struct rx_securityClass * rxk5_NewServerSecurityObject(int, void *, int (*)(void *,
+	RXK5_K5_CONTEXT, RXK5_K5_PRINCIPAL, int, int, RXK5_K5_KEYBLOCK),
+    int (*)(char *, char *, int, int, int), RXK5_K5_CONTEXT);
+int rxk5_default_get_key(void *, RXK5_K5_CONTEXT, RXK5_K5_PRINCIPAL, int, int,
+    RXK5_K5_KEYBLOCK);
+
+#undef RXK5_K5_KEYBLOCK
+#undef RXK5_K5_CONTEXT
+#undef RXK5_K5_PRINCIPAL
+#undef RXK5_K5_CREDS
+
+#endif /* RXK5_H */

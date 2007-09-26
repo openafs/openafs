@@ -39,10 +39,12 @@
 #include <fcntl.h>
 
 int
-read_service_key(service, instance, realm, kvno, file, key)
-    char *service, *instance, *realm;
-    int kvno;
-    char *file, *key;
+read_service_key(char *service,
+    char *instance,
+    char *realm,
+    int kvno,
+    char *file,
+    char *key)
 {
     int inst, rlm, ky;
     unsigned char vno;

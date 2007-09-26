@@ -84,7 +84,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
-AFSPRODUCT_VER_PATCH=1400
+AFSPRODUCT_VER_PATCH=2500
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -208,9 +208,9 @@ afscdefs =\
 	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
 	-DSTRICT \
-	-D_WIN32_IE=0x0500 \
-	-D_WIN32_WINNT=0x0500 \
-    	-DWINVER=0x0500 \
+	-D_WIN32_IE=0x0502 \
+	-D_WIN32_WINNT=0x0502 \
+    	-DWINVER=0x0502 \
     	-DREGISTER_POWER_NOTIFICATIONS \
     	-DAFS_AFSDB_ENV \
     	-DAFS_FREELANCE_CLIENT \
@@ -357,7 +357,7 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 #################### Link optional build flags set ###########
 
 afslflags = $(afslflags) \
-	/FIXED:NO /VERBOSE:LIB
+	/FIXED:NO /VERBOSE:LIB /MACHINE:X64
 
 !IF ("$(AFSVER_CL)"=="1400")
 afslflags = $(afslflags) /MANIFEST

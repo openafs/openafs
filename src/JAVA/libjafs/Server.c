@@ -22,6 +22,7 @@
 #include "Internal.h"
 #include "org_openafs_jafs_Server.h"
 
+#include <string.h>
 #include <afs_clientAdmin.h>
 #include <afs_vosAdmin.h>
 #include <afs_bosAdmin.h>
@@ -239,7 +240,7 @@ Java_org_openafs_jafs_Server_getServerInfo (JNIEnv *env, jclass cls,
     return;
   }
 
-  fillServerInfo( env, cellHandle, server, servEntry );
+  fillServerInfo( env, (void *) cellHandle, server, servEntry );
 
   if( name != NULL ) {
     (*env)->ReleaseStringUTFChars(env, jname, name);

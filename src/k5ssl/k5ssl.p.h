@@ -28,8 +28,8 @@
  * such damages.
  */
 
-#ifndef K5S_CK_H
-#define K5S_CK_H
+#ifndef K5SSL_P_H
+#define K5SSL_P_H
 
 #define ENCTYPE_DES_CBC_CRC	1
 #define ENCTYPE_DES_CBC_MD4	2
@@ -527,6 +527,8 @@ krb5_error_code krb5_build_principal(krb5_context, krb5_principal *, int,
     char const *, ...);
 krb5_error_code krb5_kt_read_service_key(krb5_context, krb5_pointer,
     krb5_principal, krb5_kvno, krb5_enctype, krb5_keyblock **);
+krb5_error_code krb5_server_decrypt_ticket_keyblock(krb5_context,
+    krb5_keyblock *, krb5_ticket *);
 
 #ifdef ERR_LIB_NONE
 void * krb5i_skip_tag(void **, const unsigned char **, long);
@@ -602,6 +604,8 @@ void krb5_get_init_creds_opt_set_renew_life(
     krb5_get_init_creds_opt *, krb5_deltat);
 void krb5_get_init_creds_opt_set_tkt_life(
     krb5_get_init_creds_opt *, krb5_deltat);
+void krb5_get_init_creds_opt_set_etype_list(
+    krb5_get_init_creds_opt *, krb5_enctype *, int);
 krb5_error_code krb5_get_init_creds_password(krb5_context, krb5_creds *,
     krb5_principal, char *, krb5_prompter_fct, void *, krb5_deltat, char *,
     krb5_get_init_creds_opt *);
@@ -641,4 +645,4 @@ typedef struct _krb5_pa_enc_ts {
 krb5_error_code encode_krb5_pa_enc_ts(const krb5_pa_enc_ts *, krb5_data **);
 krb5_error_code encode_krb5_enc_data(const krb5_enc_data *, krb5_data **);
 
-#endif /* K5S_CK_H */
+#endif /* K5SSL_P_H */

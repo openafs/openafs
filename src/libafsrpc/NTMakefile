@@ -6,20 +6,49 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=libafsrpc
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV
+
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
+
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+RXK5OBJS=\
+	$(OUT)\rxk5_client.obj \
+	$(OUT)\rxk5_server.obj \
+	$(OUT)\rxk5_common.obj \
+	$(OUT)\rxk5_info.obj \
+	$(OUT)\rxk5c.xdr.obj \
+	$(OUT)\rxk5_getkey.obj \
+	$(OUT)\nfold.obj \
+	$(OUT)\rxk5errors.obj
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afskfw_funcs.lib
+
+!ENDIF
+
+# Additional debugging flag for RX.
+AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 
 RX = ..\rx
 RXSTAT = ..\rxstat
 RXKAD = ..\rxkad
+RXK5 = ..\rxk5
+AUTH = ..\auth
 DES = ..\des
 UTIL = ..\util
 FSINT = ..\fsint
 COMERR = ..\comerr
-
-# Additional debugging flag for RX.
-AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
@@ -36,7 +65,7 @@ RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj $(OUT)\rx.
 
 RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
+LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj rxkad_errs.obj \
 	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\md4.obj $(OUT)\md5.obj $(OUT)\AFS_component_version_number.obj
 
 #LIBRXKAD_REGOBJS = $(OUT)\fcrypt.obj $(OUT)\crypt_conn.obj
@@ -48,15 +77,25 @@ DESOBJS_INT = $(OUT)\des.obj $(OUT)\cbc_encrypt.obj $(OUT)\pcbc_encrypt.obj $(OU
 
 DESOBJS = $(DESOBJS_INT) $(OUT)\misc.obj 
 
-UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
+UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj 
+#$(OUT)\pthread_glock.obj
 
-COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
+COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj \
+	$(OUT)\afserror.obj
 
 FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(OUT)\afscbint.xdr.obj \
 	$(OUT)\afsaux.obj
 
-DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
-	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
+DLLOBJS = $(MULTIOBJS) \
+	$(RXOBJS) \
+	$(RXK5OBJS) \
+	$(XDROBJS) \
+	$(RXSTATBJS) \
+	$(LIBRXKAD_OBJS) \
+	$(DESOBJS) \
+	$(LIBRXKAD_REGOBJS) \
+	$(UTILOBJS) \
+	$(COMERRBJS) \
 	$(FSINTBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
@@ -83,6 +122,9 @@ $(FSINTBJS):$(FSINT)\$$(@B).c
 $(UTILOBJS):$(UTIL)\$$(@B).c
 	$(C2OBJ) $** -I$(UTIL)
 
+$(RXK5OBJS):$(RXK5)\$$(@B).c
+	$(C2OBJ) $** -I$(RXK5)
+
 NTMAKE = nmake /nologo /f ntmakefile
 
 
@@ -92,11 +134,12 @@ DLLLIBS =\
 !ELSE
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
-$(LIBFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib
+$(LIBFILE): $(DLLOBJS) $(DLLLIBS) 
+	$(DLLGUILINK) /DEF:afsrpc.def rpcrt4.lib dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 

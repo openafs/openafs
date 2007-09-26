@@ -32,20 +32,21 @@ extern long cm_GetBuffer(struct cm_scache *, struct cm_buf *, int *,
 	struct cm_user *, struct cm_req *);
 
 extern long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep,
-	long length, cm_user_t *up, cm_req_t *reqp, osi_hyper_t *realBasep);
+                               osi_hyper_t *length, cm_user_t *up, 
+                               cm_req_t *reqp, osi_hyper_t *realBasep);
 
 extern long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 	cm_bulkIO_t *biop, cm_user_t *up, cm_req_t *reqp);
 
-extern void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore);
+extern void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed);
 
 extern long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp,
 	long inSize, cm_bulkIO_t *biop, cm_user_t *userp, cm_req_t *reqp);
 
-extern void cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+extern afs_int32 cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
 	struct cm_user *userp);
 
-extern void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+extern afs_int32 cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
 	struct cm_user *userp);
 
 extern void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,

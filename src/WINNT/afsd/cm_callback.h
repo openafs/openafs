@@ -68,4 +68,8 @@ extern osi_rwlock_t cm_callbackLock;
 
 extern void cm_CallbackNotifyChange(cm_scache_t *scp);
 
+extern void cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown);
+
+extern void cm_GiveUpAllCallbacksAllServers(afs_int32 markDown);
+
 #endif /*  _CM_CALLBACK_H_ENV__ */

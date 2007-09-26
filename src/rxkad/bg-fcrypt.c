@@ -567,7 +567,7 @@ fc_keysched(const struct ktc_encryptionKey *key_, fc_KeySchedule * sched_)
     afs_uint32 *sched = sched_->d;
 
     /* Do we have 56 bit longs or even longer longs? */
-#if 0 || defined(AFS_64BIT_ENV)
+#ifdef AFS_64BIT_ENV
     afs_uint64 k;		/* k holds all 56 non parity bits */
 
     /* Compress out parity bits */

@@ -124,6 +124,7 @@ RCSID
 #include "vol-salvage.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
+pthread_t main_thread;
 #endif
 
 
@@ -349,12 +350,6 @@ handleit(struct cmd_syndesc *as)
 
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
-#endif
-#define MAX_ARGS 128
-#ifdef AFS_NT40_ENV
-char *save_args[MAX_ARGS];
-int n_save_args = 0;
-pthread_t main_thread;
 #endif
 
 int

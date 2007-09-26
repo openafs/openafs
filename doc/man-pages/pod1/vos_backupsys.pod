@@ -109,7 +109,7 @@ volumes that have the string C<aix> anywhere in their names:
 
    -prefix  '^.*aix'
 
-=back 4
+=back
 
 To display a list of the volumes to be cloned, without actually cloning
 them, include the B<-dryrun> flag. To display a statement that summarizes

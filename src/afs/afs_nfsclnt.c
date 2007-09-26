@@ -203,6 +203,12 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 #else
     uid = (*cred)->cr_uid;
 #endif
+    /* Do this early, so pag management knows */
+#ifdef	AFS_OSF_ENV
+    (*cred)->cr_ruid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
+#else
+    (*cred)->cr_rgid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
+#endif
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
 	uid = pag;
     } else if (pag != NOPAG) {
@@ -300,11 +306,6 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     *pagparam = pag;
     *outexporter = (struct afs_exporter *)np;
     afs_PutUser(au, WRITE_LOCK);
-#ifdef	AFS_OSF_ENV
-    (*cred)->cr_ruid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#else
-    (*cred)->cr_rgid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#endif
 /*    ReleaseWriteLock(&afs_xnfsreq);	*/
     return 0;
 }
@@ -483,11 +484,10 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
 	MReleaseWriteLock(&afs_xnfspag);
     }
     if (inname) {
-	if (np->sysname) {
 	    for(count=0; count < np->sysnamecount;++count) {
 		afs_osi_Free(np->sysname[count], MAXSYSNAME);
+		np->sysname[count] = NULL;
 	    }
-	}
 	for(count=0; count < *num;++count) {
 	    np->sysname[count]= afs_osi_Alloc(MAXSYSNAME);
 	}
@@ -498,8 +498,6 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
 	    cp += t+1;
 	}
 	np->sysnamecount = *num;
-    } else if (!np->sysnamecount) {
-	return ENODEV;      /* XXX */
     }
     if (allpags >= 0) {
 	/* Don't touch our arguments when called recursively */
@@ -518,6 +516,7 @@ afs_nfsclient_GC(exporter, pag)
 {
     register struct nfsclientpag *np, **tnp, *nnp;
     register afs_int32 i, delflag;
+	int count;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -533,8 +532,9 @@ afs_nfsclient_GC(exporter, pag)
 	    if ((pag == -1) || (!pag && delflag)
 		|| (pag && (np->refCount == 0) && (np->pag == pag))) {
 		*tnp = np->next;
-		if (np->sysname)
-		    afs_osi_Free(np->sysname, MAXSYSNAME);
+		for(count=0; count < np->sysnamecount;++count) {
+			afs_osi_Free(np->sysname[count], MAXSYSNAME);
+		}
 		afs_osi_Free(np, sizeof(struct nfsclientpag));
 	    } else {
 		tnp = &np->next;

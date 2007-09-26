@@ -29,7 +29,6 @@ extern "C" {
 //
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerAdd (
     LARGE_INTEGER Addend1,
     LARGE_INTEGER Addend2
@@ -40,7 +39,6 @@ LargeIntegerAdd (
 //
 
 LARGE_INTEGER
-WINAPI
 EnlargedIntegerMultiply (
     LONG Multiplicand,
     LONG Multiplier
@@ -51,7 +49,6 @@ EnlargedIntegerMultiply (
 //
 
 LARGE_INTEGER
-WINAPI
 EnlargedUnsignedMultiply (
     ULONG Multiplicand,
     ULONG Multiplier
@@ -62,7 +59,6 @@ EnlargedUnsignedMultiply (
 //
 
 ULONG
-WINAPI
 EnlargedUnsignedDivide (
     IN ULARGE_INTEGER Dividend,
     IN ULONG Divisor,
@@ -74,7 +70,6 @@ EnlargedUnsignedDivide (
 //
 
 LARGE_INTEGER
-WINAPI
 ExtendedMagicDivide (
     LARGE_INTEGER Dividend,
     LARGE_INTEGER MagicDivisor,
@@ -86,7 +81,6 @@ ExtendedMagicDivide (
 //
 
 LARGE_INTEGER
-WINAPI
 ExtendedLargeIntegerDivide (
     LARGE_INTEGER Dividend,
     ULONG Divisor,
@@ -98,7 +92,6 @@ ExtendedLargeIntegerDivide (
 //
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerDivide (
     LARGE_INTEGER Dividend,
     LARGE_INTEGER Divisor,
@@ -110,7 +103,6 @@ LargeIntegerDivide (
 //
 
 LARGE_INTEGER
-WINAPI
 ExtendedIntegerMultiply (
     LARGE_INTEGER Multiplicand,
     LONG Multiplier
@@ -121,7 +113,6 @@ ExtendedIntegerMultiply (
 //
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerNegate (
     LARGE_INTEGER Subtrahend
     );
@@ -131,7 +122,6 @@ LargeIntegerNegate (
 //
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerSubtract (
     LARGE_INTEGER Minuend,
     LARGE_INTEGER Subtrahend
@@ -157,7 +147,6 @@ LargeIntegerSubtract (
 //
 
 LARGE_INTEGER
-WINAPI
 ConvertLongToLargeInteger (
     LONG SignedInteger
     );
@@ -167,7 +156,6 @@ ConvertLongToLargeInteger (
 //
 
 LARGE_INTEGER
-WINAPI
 ConvertUlongToLargeInteger (
     ULONG UnsignedInteger
     );
@@ -178,21 +166,18 @@ ConvertUlongToLargeInteger (
 //
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerShiftLeft (
     LARGE_INTEGER LargeInteger,
     CCHAR ShiftCount
     );
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerShiftRight (
     LARGE_INTEGER LargeInteger,
     CCHAR ShiftCount
     );
 
 LARGE_INTEGER
-WINAPI
 LargeIntegerArithmeticShift (
     LARGE_INTEGER LargeInteger,
     CCHAR ShiftCount

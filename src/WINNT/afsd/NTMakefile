@@ -52,6 +52,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_callback.h \
 	$(INCFILEDIR)\cm_aclent.h \
 	$(INCFILEDIR)\cm_volume.h \
+        $(INCFILEDIR)\cm_volstat.h \
 	$(INCFILEDIR)\cm_dcache.h \
 	$(INCFILEDIR)\cm_access.h \
 	$(INCFILEDIR)\cm_vnodeops.h \
@@ -62,11 +63,13 @@ INCFILES =\
 	$(INCFILEDIR)\cm_dnlc.h \
 	$(INCFILEDIR)\cm_buf.h \
 	$(INCFILEDIR)\cm_freelance.h \
-        $(INCFILEDIR)\cm_memmap.h \
-        $(INCFILEDIR)\afsd_eventlog.h \
-        $(INCFILEDIR)\afsd_eventmessages.h \
-        $(INCFILEDIR)\afskfw.h \
-        $(INCFILEDIR)\afsicf.h
+	$(INCFILEDIR)\cm_properties.h \
+    $(INCFILEDIR)\cm_memmap.h \
+    $(INCFILEDIR)\afsd_eventlog.h \
+    $(INCFILEDIR)\afsd_eventmessages.h \
+    $(INCFILEDIR)\afskfw.h \
+    $(INCFILEDIR)\afskfw_funcs.h \
+    $(INCFILEDIR)\afsicf.h
 
 IDLFILES =\
 	afsrpc.h $(OUT)\afsrpc_c.obj
@@ -94,13 +97,15 @@ $(RPCOBJS):..\afsrdr\ifs_rpc.c
 	$(C2OBJ) ..\afsrdr\ifs_rpc.c
 
 AFSDOBJS=\
-        $(OUT)\ifs_rpc.obj \
-        $(OUT)\rawops.obj \
-        $(OUT)\afsdifs.obj \
+    $(OUT)\ifs_rpc.obj \
+    $(OUT)\rawops.obj \
+    $(OUT)\afsdifs.obj \
 	$(OUT)\afsd_init.obj \
+        $(OUT)\cm_btree.obj \
 	$(OUT)\cm_cell.obj \
 	$(OUT)\cm_server.obj \
 	$(OUT)\cm_volume.obj \
+        $(OUT)\cm_volstat.obj \
 	$(OUT)\cm_config.obj \
 	$(OUT)\cm_conn.obj \
 	$(OUT)\cm_user.obj \
@@ -117,19 +122,20 @@ AFSDOBJS=\
 	$(OUT)\smb3.obj \
 	$(OUT)\smb_ioctl.obj \
 	$(OUT)\cm_ioctl.obj \
+    $(OUT)\cm_properties.obj \
 	$(OUT)\cm_daemon.obj \
 	$(OUT)\cm_aclent.obj \
 	$(OUT)\cm_dnlc.obj \
 	$(OUT)\cm_rpc.obj \
-        $(OUT)\cm_memmap.obj \
+    $(OUT)\cm_memmap.obj \
 	$(OUT)\afsrpc_s.obj \
 !IFDEF OSICRASH
 	$(OUT)\afsdcrash.obj \
 !ENDIF
-        $(OUT)\cm_freelance.obj \
-        $(OUT)\afsd_eventlog.obj \
-        $(OUT)\afsd_flushvol.obj \
-        $(OUT)\afsicf.obj
+    $(OUT)\cm_freelance.obj \
+    $(OUT)\afsd_eventlog.obj \
+    $(OUT)\afsd_flushvol.obj \
+    $(OUT)\afsicf.obj
 
 $(AFSDOBJS):
 
@@ -152,7 +158,7 @@ ILIBDIR = $(DESTDIR)\lib
 #                                                    
 $(INCFILEDIR)\afsd_eventmessages.h:  afsd_eventmessages.mc         
 	mc afsd_eventmessages.mc                           
-                                                     
+
 ############################################################################
 #
 # Flags for linking LOGON DLL'S
@@ -170,7 +176,7 @@ MIDL_FLAGS=/app_config \
 	   /Zp4 \
 	   /cpp_cmd $(cc) \
 	   /cpp_opt "-E" \
-           /nologo
+       /nologo
 
 .SUFFIXES: .h .idl
 
@@ -217,7 +223,26 @@ AFSKFWLIB_OBJS =\
 $(AFSKFWLIB_OBJS):
 
 $(AFSKFWLIB): $(AFSKFWLIB_OBJS)
-      $(LIBARCH)
+	$(LIBARCH)
+
+
+############################################################################
+# afskfw_funcs.dll
+
+AFSKFW_FUNCS_LIB = $(DESTDIR)\lib\afskfw_funcs.dll
+AFSKFW_FUNCS_IMPLIB = $(DESTDIR)\lib\afskfw_funcs.lib
+
+AFSKFW_FUNCS_LIB_OBJS =\
+      $(OUT)\afskfw_funcs.obj
+
+AFSKFW_FUNCS_LIBS=\
+	dnsapi.lib \
+	mpr.lib \
+	secur32.lib
+
+$(AFSKFW_FUNCS_LIB): $(AFSKFW_FUNCS_LIB_OBJS)
+	$(DLLGUILINK) /def:afskfw_funcs.def $(AFSKFW_FUNCS_LIBS) 
+	$(_VC_MANIFEST_EMBED_DLL)
 
 ############################################################################
 # afslogon.dll
@@ -233,12 +258,14 @@ LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afsauthent.lib \
     $(DESTDIR)\lib\libafsconf.lib \
     $(LANAHELPERLIB) \
-    $(AFSKFWLIB)
+    $(AFSKFWLIB) \
+    $(AFSKFW_FUNCS_IMPLIB) \
+    $(DESTDIR)\lib\afs\afscom_err.lib
 
 LOGON_DLLSDKLIBS =\
-        dnsapi.lib \
-        netapi32.lib \
-        mpr.lib \
+    dnsapi.lib \
+    netapi32.lib \
+    mpr.lib \
 	advapi32.lib \
 	secur32.lib \
 	strsafe.lib \
@@ -247,7 +274,7 @@ LOGON_DLLSDKLIBS =\
 	adsiid.lib \
 	activeds.lib \
 	user32.lib \
-        userenv.lib
+    userenv.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
@@ -278,7 +305,7 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
+install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj $(AFSKFWLIB) $(AFSKFW_FUNCS_LIB)
      $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
@@ -291,8 +318,8 @@ install: install_headers install_objs $(CONF_DLLFILE) \
 	$(EXEDIR)\unlog.exe \
 	$(EXEDIR)\afsd_service.exe \
 	$(EXEDIR)\fs.exe \
-        $(EXEDIR)\symlink.exe \
-        $(EXEDIR)\afsdacl.exe \
+    $(EXEDIR)\symlink.exe \
+    $(EXEDIR)\afsdacl.exe \
 	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
 	$(DESTDIR)\bin\kpasswd.exe $(EXEDIR)\cmdebug.exe $(EXEDIR)\afscpcc.exe
@@ -337,13 +364,14 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib  \
+	$(RXK5LIBS)
 
 EXELIBS2 = \
-        $(DESTDIR)\lib\afsrpc.lib \
+    $(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsubik.lib \
@@ -351,7 +379,8 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(RXK5LIBS)
 
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
@@ -360,7 +389,13 @@ $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
 	$(EXEPREP)
 
 # tokens.exe
-$(EXEDIR)\tokens.exe: $(OUT)\ctokens.obj $(OUT)\tokens.res $(EXELIBS)
+
+LOG = ..\..\log
+
+$(OUT)\tokens.obj: $(LOG)\tokens.c
+	$(C2OBJ) /Fo$@ $**
+
+$(EXEDIR)\tokens.exe: $(OUT)\tokens.obj $(OUT)\tokens.res $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -383,17 +418,17 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 
 AFSD_SDKLIBS =\
 	netapi32.lib \
-        dnsapi.lib \
-        mpr.lib \
+    dnsapi.lib \
+    mpr.lib \
 	rpcrt4.lib \
 	user32.lib \
-        Dbghelp.lib \
-        strsafe.lib \
-        mpr.lib \
-        secur32.lib \
-        ole32.lib \
-        oleaut32.lib \
-        iphlpapi.lib
+    Dbghelp.lib \
+    strsafe.lib \
+    mpr.lib \
+    secur32.lib \
+    ole32.lib \
+    oleaut32.lib \
+    iphlpapi.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
@@ -405,16 +440,16 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afspthread.lib \
-        $(LANAHELPERLIB)
+    $(LANAHELPERLIB)
 
 $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_EXELIBS)
-	$(EXEGUILINK) $(AFSD_SDKLIBS)
+	$(EXEGUILINK) $(AFSD_SDKLIBS) $(AFSKFW_FUNCS_IMPLIB)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # afsd_service.exe
 $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_service.res  $(RXOBJS) $(AFSD_EXELIBS)
-	$(EXECONLINK) $(AFSD_SDKLIBS) /MAP /LARGEADDRESSAWARE
+	$(EXECONLINK) $(AFSD_SDKLIBS) $(AFSKFW_FUNCS_IMPLIB) /MAP /LARGEADDRESSAWARE
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
@@ -466,7 +501,7 @@ KPASSWD_OBJS =\
 KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afsrx.lib \
+    $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
@@ -522,9 +557,9 @@ clean::
 	$(DEL) $(OUT)\*.res
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
-        $(DEL) afsd_eventmessages.h
-        $(DEL) afsd_eventmessages.rc
-        $(DEL) MSG?????.bin
+    $(DEL) afsd_eventmessages.h
+    $(DEL) afsd_eventmessages.rc
+    $(DEL) MSG?????.bin
 	$(DEL) $(CONF_DLLFILE)
 	$(DEL) $(LOGON_DLLFILE)
 	$(DEL) $(LOG95_DLLFILE)

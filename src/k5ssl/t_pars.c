@@ -33,19 +33,17 @@
  */
 
 #include <sys/types.h>
+#include <stdio.h>
 #include <errno.h>
-#ifdef USE_SSL
+#ifdef USING_SSL
 #include <openssl/evp.h>
 #endif
-#ifdef USE_FAKESL
+#ifdef USING_FAKESSL
 #include "k5s_evp.h"
 #endif
-#if defined(USE_FAKESSL) || defined(USE_SSL)
+#ifdef USING_K5SSL
 #include "k5ssl.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include <krb5.h>
 #ifdef USING_MIT
 #define krb5i_timegm	timegm
@@ -58,7 +56,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#if USE_SSL
+#if USING_SSL
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>

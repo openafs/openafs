@@ -27,7 +27,10 @@
 #ifndef __KHIMAIRA_AFSCRED_H
 #define __KHIMAIRA_AFSCRED_H
 
+#ifndef _WIN64
 #define _USE_32BIT_TIME_T 1
+#endif
+
 #define _WINSOCKAPI_
 #include<windows.h>
 #include<time.h>

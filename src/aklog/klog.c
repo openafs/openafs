@@ -33,16 +33,16 @@
 #if 0
 #include <afs/com_err.h>
 #endif
-#include <afs/auth.h>
-#include <afs/afsutil.h>
 #include <afs/cellconfig.h>
-#include <afs/ptclient.h>
-#include <afs/cmd.h>
 #ifdef AFS_RXK5
 #include "rxk5_utilafs.h"
 #else
 #include <krb5.h>
 #endif
+#include <afs/auth.h>
+#include <afs/afsutil.h>
+#include <afs/ptclient.h>
+#include <afs/cmd.h>
 #ifndef USING_HEIMDAL
 extern krb5_cc_ops krb5_mcc_ops;
 #endif
@@ -347,19 +347,22 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 {
     krb5_principal princ = 0;
     char *cell, *pname, **hrealms, *service;
+    char *service_list[4];
     char service_temp[MAXKTCREALMLEN + 20];
     char realm[MAXKTCREALMLEN];
     char lrealm[MAXKTCREALMLEN];	/* uppercase copy of local cellname */
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
     krb5_get_init_creds_opt gic_opts[1];
-    char *tofree, *outname;
+    char *k5service = 0, *temp = 0, *outname;
     int code;
     char *what;
-    int i, dosetpag, evil, noprdb, id;
+    int i, j, dosetpag, evil, noprdb, id;
 #ifdef AFS_RXK5
     int authtype;
 #endif
+    krb5_enctype enclist[20];
+    int maxenc;
     krb5_data enc_part[1];
     time_t lifetime;		/* requested ticket lifetime */
     krb5_prompter_fct pf = NULL;
@@ -379,8 +382,6 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 
     char *reason;		/* string describing errors */
 
-    tofree = 0;
-    service = 0;
     memset(incred, 0, sizeof *incred);
     /* blow away command line arguments */
     for (i = 1; i < zero_argc; i++)
@@ -396,21 +397,23 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     }
 
     if ((code = krb5_init_context(&k5context))) {
-	com_err(rn, code, "while initializing Kerberos 5 library");
+	afs_com_err(rn, code, "while initializing Kerberos 5 library");
 	KLOGEXIT(code);
     }
     if ((code = rx_Init(0))) {
-	com_err(rn, code, "while initializing rx");
+	afs_com_err(rn, code, "while initializing rx");
 	KLOGEXIT(code);
     }
     initialize_U_error_table();
+#ifndef sun
     initialize_krb5_error_table();
+#endif
     initialize_RXK_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
     initialize_rx_error_table();
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
-	com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
+	afs_com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
 	    rn, AFSDIR_CLIENT_ETC_DIRPATH);
 	KLOGEXIT(1);
     }
@@ -436,9 +439,9 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     cell = as->parms[aCELL].items ? cell = as->parms[aCELL].items->data : 0;
     if ((code = afsconf_GetCellInfo(tdir, cell, "afsprot", cellconfig))) {
 	if (cell)
-	    com_err(rn, code, "Can't get cell information for '%s'", cell);
+	    afs_com_err(rn, code, "Can't get cell information for '%s'", cell);
 	else
-	    com_err(rn, code, "Can't get determine local cell!");
+	    afs_com_err(rn, code, "Can't get determine local cell!");
 	KLOGEXIT(code);
     }
 
@@ -446,25 +449,39 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	code = krb5_set_default_realm(k5context,
 		(const char *) as->parms[aKRBREALM].items);
 	if (code) {
-	    com_err(rn, code, "Can't make <%s> the default realm",
+	    afs_com_err(rn, code, "Can't make <%s> the default realm",
 		as->parms[aKRBREALM].items);
 	    KLOGEXIT(code);
 	}
     }
-    else if ((code = krb5_get_host_realm(k5context, cellconfig->hostName[0], &hrealms))) {
-	com_err(rn, code, "Can't get realm for host <%s> in cell <%s>\n",
-		cellconfig->hostName[0], cellconfig->name);
-	KLOGEXIT(code);
-    } else {
-	if (hrealms && *hrealms) {
+    else {
+	char *realm;
+	if ((code = krb5_get_host_realm(k5context,
+		cellconfig->hostName[0], &hrealms)))
+	    hrealms = 0;
+	if (hrealms && *hrealms && **hrealms)
+	    realm = *hrealms;
+	else {
+	    char *cp;
+	    int len;
+	    if ((cp = strchr(cellconfig->hostName[0], '.')))
+		++cp;
+	    else
+		cp = cellconfig->name;
+	    realm = malloc(len = strlen(cp)+1);
+	    if (realm)
+		ucstring(realm, cp, len);
+	}
+	if (realm) {
 	    code = krb5_set_default_realm(k5context,
 		    *hrealms);
 	    if (code) {
-		com_err(rn, code, "Can't make <%s> the default realm",
+		afs_com_err(rn, code, "Can't make <%s> the default realm",
 		    *hrealms);
 		KLOGEXIT(code);
 	    }
 	}
+	if (realm && (!hrealms || *hrealms != realm)) free(realm);
 	if (hrealms) krb5_free_host_realm(k5context, hrealms);
     }
 
@@ -476,7 +493,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	struct passwd *pw;
 	pw = getpwuid(id);
 	if (pw == 0) {
-	    com_err(rn, 0,
+	    afs_com_err(rn, 0,
 		"Can't figure out your name from your user id (%d).", id);
 	    if (!Silent)
 		fprintf(stderr, "%s: Try providing the user name.\n", rn);
@@ -486,7 +503,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     }
     code = krb5_parse_name(k5context, pname, &princ);
     if (code) {
-	com_err(rn, code, "Can't parse principal <%s>", pname);
+	afs_com_err(rn, code, "Can't parse principal <%s>", pname);
 	KLOGEXIT(code);
     }
 
@@ -543,24 +560,46 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	}
     }
 
-    service = 0;
+    i = 0;
 #ifdef AFS_RXK5
     if (authtype & FORCE_RXK5) {
-	tofree = get_afs_krb5_svc_princ(cellconfig);
-	snprintf(service_temp, sizeof service_temp, "%s", tofree);
-    } else
+	maxenc = ktc_GetK5Enctypes(enclist,
+	    sizeof enclist/sizeof *enclist);
+if (maxenc < 0) {
+maxenc = 2;
+enclist[0] = 16; enclist[1] = 1;
+}
+	if (maxenc > 0) {
+	    k5service = get_afs_krb5_svc_princ(cellconfig);
+	    service_list[i++] = k5service;
+	}
+    }
+    if (authtype & FORCE_RXKAD) {
 #endif
-    snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
-    if (writeTicketFile)
-	service = 0;
-    else 
-	service = service_temp;
+	snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
+	service_list[i++] = service_temp;
+	service_list[i++] = "afs";
+#ifdef AFS_RXK5
+    }
+#endif
+    service_list[i] = 0;
+    if (!i) {
+	afs_com_err(rn, 0, "requested security mechanism is not available.");
+	KLOGEXIT(1);
+    }
 
     klog_arg->pp = &pass;
     klog_arg->pstore = passwd;
     /* XXX should allow k5 to prompt in most cases -- what about expired pw?*/
     krb5_get_init_creds_opt_init(gic_opts);
-    for (;;) {
+    outname = 0;
+    for (i = 0;; ++i) {
+	if (writeTicketFile)
+	    service = 0;
+	else if (!(service = service_list[i])) {
+	    break;
+	}
+	outname = service;
 	code = krb5_get_init_creds_password(k5context,
 	    incred,
 	    princ,
@@ -570,23 +609,20 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    0,	/* start_time */
 	    service,	/* in_tkt_service */
 	    gic_opts);
-	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
-#ifdef AFS_RXK5
-	if (authtype & FORCE_RXK5) break;
-#endif
-	service = "afs";
+	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) break;
+	if (writeTicketFile) break;
     }
     memset(passwd, 0, sizeof(passwd));
     if (code) {
 	char *r = 0;
 	if (krb5_get_default_realm(k5context, &r))
 	    r = 0;
-	if (service)
-	    com_err(rn, code, "Unable to authenticate to use %s", service);
+	if (outname)
+	    afs_com_err(rn, code, "Unable to authenticate to use %s", outname);
 	else if (r)
-	    com_err(rn, code, "Unable to authenticate in realm %s", r);
+	    afs_com_err(rn, code, "Unable to authenticate in realm %s", r);
 	else
-	    com_err(rn, code, "Unable to authenticate to use cell %s",
+	    afs_com_err(rn, code, "Unable to authenticate to use cell %s",
 		cellconfig->name);
 	if (r) free(r);
 	KLOGEXIT(code);
@@ -600,9 +636,11 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 		what = "getting default ccache";
 		code = krb5_cc_default(k5context, &cc);
 	    } else {
+#ifndef sun
 		what = "krb5_cc_register";
 		code = krb5_cc_register(k5context, &krb5_mcc_ops, FALSE);
 		if (code && code != KRB5_CC_TYPE_EXISTS) goto Failed;
+#endif
 		what = "krb5_cc_resolve";
 		code = krb5_cc_resolve(k5context, "MEMORY:core", &cc);
 		if (code) goto Failed;
@@ -620,7 +658,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    break;
 	Failed:
 	    if (code)
-		com_err(rn, code, what);
+		afs_com_err(rn, code, what);
 	    if (writeTicketFile) {
 		if (cc) {
 		    krb5_cc_close(k5context, cc);
@@ -631,42 +669,53 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    KLOGEXIT(code);
 	}
 
-	for (service = service_temp;;service = "afs") {
+	for (i = 0;; ++i) {
+	    if (!(service = service_list[i])) {
+		break;
+	    }
 	    memset(mcred, 0, sizeof *mcred);
 	    mcred->client = princ;
 	    code = krb5_parse_name(k5context, service, &mcred->server);
 	    if (code) {
-		com_err(rn, code, "Unable to parse service <%s>\n", service);
+		afs_com_err(rn, code, "Unable to parse service <%s>", service);
 		KLOGEXIT(code);
 	    }
-	    if (tofree) { free(tofree); tofree = 0; }
-	    if (!(code = krb5_unparse_name(k5context, mcred->server, &outname)))
-		tofree = outname;
+	    if (temp) { free(temp); temp = 0; }
+	    if (!(code = krb5_unparse_name(k5context, mcred->server, &temp)))
+		outname = temp;
 	    else outname = service;
-	    code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
-	    krb5_free_principal(k5context, mcred->server);
-	    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
+	    code = KTC_ERROR;
 #ifdef AFS_RXK5
-	    if (authtype & FORCE_RXK5) break;
+	    if (service != k5service) {
 #endif
+		get_creds_enctype(mcred) = ENCTYPE_DES_CBC_CRC;
+		code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
+#ifdef AFS_RXK5
+	    } else for (j = 0; j < maxenc; ++j) {
+		get_creds_enctype(mcred) = enclist[j];
+		code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
+		if (!code) break;
+	    }
+#endif
+	    krb5_free_principal(k5context, mcred->server);
+	    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) break;
 	}
 	afscred = outcred;
     }
     if (code) {
-	com_err(rn, code, "Unable to get credentials to use %s", outname);
+	if (outname)
+	    afs_com_err(rn, code, "Unable to get credentials to use %s", outname);
+	else
+	    afs_com_err(rn, code, "Unable to get credentials");
 	KLOGEXIT(code);
     }
 
 #ifdef AFS_RXK5
-    if (authtype & FORCE_RXK5) {
-	struct ktc_principal aserver[1];
-	int viceid = 555;
-
-	memset(aserver, 0, sizeof *aserver);
-	strncpy(aserver->cell, cellconfig->name, MAXKTCREALMLEN-1);
-	code = ktc_SetK5Token(k5context, aserver, afscred, viceid, dosetpag);
+    if (service == k5service) {
+	code = ktc_SetK5Token(k5context, cellconfig->name,
+	    afscred, dosetpag);
 	if (code) {
-	    com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
@@ -682,7 +731,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    if (afs_krb5_skip_ticket_wrapper(afscred->ticket.data,
 			afscred->ticket.length, &enc_part->data,
 			&enc_part->length)) {
-		com_err(rn, 0, "Can't unwrap %s AFS credential",
+		afs_com_err(rn, 0, "Can't unwrap %s AFS credential",
 		    cellconfig->name);
 		KLOGEXIT(1);
 	    }
@@ -708,7 +757,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {
-		com_err(rn, code, "Can't get your viceid", cellconfig->name);
+		afs_com_err(rn, code, "Can't get your viceid", cellconfig->name);
 		*aclient->name = 0;
 	    } else
 		snprintf(aclient->name, MAXKTCNAMELEN-1, "AFS ID %d", viceid);
@@ -717,7 +766,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	code = ktc_SetToken(aserver, atoken, aclient, dosetpag);
 	if (code) {
-	    com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
@@ -728,7 +777,8 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     if (outcred) krb5_free_creds(k5context, outcred);
     if (cc)
 	krb5_cc_close(k5context, cc);
-    if (tofree) free(tofree);
+    if (k5service) free(k5service);
+    if (temp) free(temp);
 
     return 0;
 }

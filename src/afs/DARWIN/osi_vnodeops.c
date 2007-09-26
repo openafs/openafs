@@ -354,6 +354,7 @@ afs_vop_lookup(ap)
     }
 #ifdef AFS_DARWIN80_ENV
     if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+	DROPNAME();
 	*ap->a_vpp = 0;
 	return error;
     }
@@ -438,8 +439,9 @@ afs_vop_create(ap)
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
         if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
-             *ap->a_vpp=0;
-             return error;
+	    DROPNAME();
+	    *ap->a_vpp=0;
+	    return error;
         }
 #endif
 	*ap->a_vpp = AFSTOV(vcp);
@@ -1192,8 +1194,12 @@ afs_vop_remove(ap)
     cache_purge(vp);
     if (!error) {
 #ifdef AFS_DARWIN80_ENV
-        ubc_setsize(vp, (off_t)0);
-        vnode_recycle(vp);
+	struct vcache *tvc = VTOAFS(vp);
+	
+	if (!(tvc->states & CUnlinked)) {
+            ubc_setsize(vp, (off_t)0);
+            vnode_recycle(vp);
+	}
 #else
         /* necessary so we don't deadlock ourselves in vclean */
         VOP_UNLOCK(vp, 0, cnp->cn_proc);
@@ -1624,9 +1630,18 @@ afs_vop_inactive(ap)
 	vprint("afs_vop_inactive(): pushing active", vp);
 #endif
     if (tvc) {
-       AFS_GLOCK();
-       afs_InactiveVCache(tvc, 0);	/* decrs ref counts */
-       AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+        int unlinked = tvc->states & CUnlinked;
+#endif
+	AFS_GLOCK();
+	afs_InactiveVCache(tvc, 0);     /* decrs ref counts */
+	AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+	if (unlinked) {
+	    vnode_recycle(vp);
+	    cache_purge(vp);
+	}
+#endif
     }
 #ifndef AFS_DARWIN80_ENV
     VOP_UNLOCK(vp, 0, ap->a_p);
@@ -2081,11 +2096,13 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
-     vnode_addfsref(nvp);
-     avc->v = nvp;
-     avc->states &=~ CDeadVnode;
-     vnode_clearfsnode(ovp);
-     vnode_removefsref(ovp);
+       vnode_addfsref(nvp);
+       avc->v = nvp;
+       avc->states &=~ CDeadVnode;
+       if (!(avc->states & CVInit)) {
+	   vnode_clearfsnode(ovp);
+	   vnode_removefsref(ovp);
+       }
    }
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);

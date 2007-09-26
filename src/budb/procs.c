@@ -49,12 +49,12 @@ RCSID
 #include <rx/rxkad.h>
 #include <des.h>
 #include <afs/cellconfig.h>
-#include <afs/auth.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
-#include <afs/rxk5_utilafs.h>
 #endif
+#include <afs/auth.h>
 #include <errno.h>
 #include "budb.h"
 #include "budb_errs.h"

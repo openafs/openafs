@@ -298,8 +298,10 @@ init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
 {
     struct vcache *vcp = (struct vcache *) foo;
 
+#if defined(SLAB_CTOR_VERIFY)
     if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
 	SLAB_CTOR_CONSTRUCTOR)
+#endif
 	inode_init_once(AFSTOV(vcp));
 }
 
@@ -322,7 +324,8 @@ afs_init_inodecache(void)
 void
 afs_destroy_inodecache(void)
 {
-    (void) kmem_cache_destroy(afs_inode_cachep);
+    if (afs_inode_cachep)
+	(void) kmem_cache_destroy(afs_inode_cachep);
 }
 #else
 int
@@ -422,7 +425,8 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 
     AFS_STATCNT(afs_statfs);
 
-    statp->f_type = 0;		/* Can we get a real type sometime? */
+    /* hardcode in case that which is giveth is taken away */
+    statp->f_type = 0x5346414F;
 #if defined(STATFS_TAKES_DENTRY)
     statp->f_bsize = dentry->d_sb->s_blocksize;
 #else
@@ -452,6 +456,7 @@ struct super_operations afs_sops = {
   .notify_change =	afs_notify_change,
 #endif
 };
+
 
 /************** Support routines ************************/
 

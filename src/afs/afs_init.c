@@ -18,7 +18,7 @@
 
 #ifdef AFS_RXK5
 #include <rx/rxk5.h>
-#ifdef USING_SSL
+#ifdef USING_K5SSL
 #include <k5ssl.h>
 #endif
 #include <afs_capabilities.h>
@@ -493,8 +493,8 @@ afs_ResourceInit(int preallocs)
 #ifdef AFS_RXK5
     /* initialize Rxk5 rwlocks */
     rxk5_OnetimeInit();
-    /* capabilities string table */
-    afs_InitCapabilities();
+    /* properties string table */
+    afs_InitProperties();
 #endif
 
     afs_CellInit();

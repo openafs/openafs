@@ -41,9 +41,9 @@
 #include <afs/afsutil.h>
 #include <afs/ptclient.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>  
-#include <afs/rxk5_utilafs.h>
 #include <afs/rxk5_tkt.h>
 #endif
 
@@ -59,12 +59,12 @@ main(int ac, char **av)
 
     code = ka_Init(0);
     if (code) {
-	com_err("linktest", code, "can't talk to ka service.");
+	afs_com_err("linktest", code, "can't talk to ka service.");
 	exit(1);
     }
     code = pr_Initialize(1, AFSDIR_CLIENT_ETC_DIRPATH, 0);
     if (code) {
-	com_err("linktest", code, "can't talk to prot service.");
+	afs_com_err("linktest", code, "can't talk to prot service.");
 	exit(1);
     }
     code = ka_GetServers(NULL, cellinfo);
@@ -82,7 +82,7 @@ main(int ac, char **av)
 	rxk5_creds c[1];
 	rxk5_free_creds(0, c);
 #endif
-	com_err("linktest", code, "can't get local cell servers.");
+	afs_com_err("linktest", code, "can't get local cell servers.");
 	exit(1);
     }
     exit(0);

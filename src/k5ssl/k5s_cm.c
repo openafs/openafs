@@ -43,7 +43,7 @@
 #include <errno.h>
 #endif
 #include <sys/types.h>
-#ifdef USE_SSL
+#ifdef USING_SSL
 #include <openssl/evp.h>
 #else
 #include "k5s_evp.h"

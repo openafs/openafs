@@ -40,7 +40,6 @@ RCSID
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <afs/auth.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
@@ -1029,8 +1028,9 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
 
     authflags = (as->parms[5].items ? 2 : 1);
 #ifdef AFS_RXK5
-    if (as->parms[9].items) authflags |= FORCE_RXKAD;	/* -k4 */
-    if (as->parms[10].items) authflags |= FORCE_RXK5;	/* -k5 */
+    if (as->parms[9].items) authflags |= FORCE_KTC;	/* -ktc */
+    if (as->parms[10].items) authflags |= (FORCE_RXK5|FORCE_K5CC); /* -k5 */
+    if (as->parms[11].items) authflags |= FORCE_RXKAD;	/* -k4 */
     if (!(authflags & (FORCE_RXK5|FORCE_RXKAD)))
 	authflags |= env_afs_rxk5_default();
 #endif
@@ -1200,8 +1200,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind Rx socket");
 #ifdef AFS_RXK5
-    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security");
-    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use rxk5 security");
+    cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL, "use ktc token");
+    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use krb5 credential");
+    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security object");
 #endif
 
     /* Initialize dirpaths */

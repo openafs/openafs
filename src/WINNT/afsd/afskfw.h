@@ -46,6 +46,8 @@ extern "C" {
 
 void KFW_initialize(void);
 void KFW_cleanup(void);
+void KFW_initialize_funcs(void);
+void KFW_cleanup_funcs(void);
 int  KFW_is_available(void);
 int  KFW_AFS_destroy_tickets_for_cell(char *);
 int  KFW_AFS_destroy_tickets_for_principal(char *);

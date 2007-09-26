@@ -23,6 +23,7 @@
 #include "org_openafs_jafs_Cell.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <afs_kasAdmin.h>
 #include <afs_ptsAdmin.h>
 #include <afs_clientAdmin.h>

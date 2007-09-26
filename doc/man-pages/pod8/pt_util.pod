@@ -1,0 +1,212 @@
+=head1 NAME
+
+pt_util - Load or dump a pt database
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pt_util>
+   S<<< [B<-w>] >>> S<<< [B<-user>] >>> S<<< [B<-group>] >>>
+   S<<< [B<-members>] >>> S<<< [B<-name>] >>> S<<< [B<-system>] >>>
+   S<<< [B<-xtra>] >>> S<<< [B<-prdb> <I<prdb file>>] >>>
+   S<<< [B<-datafile> <I<data file>>] >>> S<<< [B<-help>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pt_util> command can be used to load or dump the pt database.
+It is used when ptserver is not running, for some reason.
+
+The most likely reason to use it is to initialize the protection
+database, when bringing up a new cell.
+The current syntax for this, presented below, needs improvement.
+pt_util can also be used when problems are suspected with prdb.
+It can be used to dump the database or portions thereof, in several
+different ways, and to reload it.
+
+The textual representation of the database has the following form:
+
+for users,
+
+    name flags/quota viceid ownerid creatorid
+
+for groups,
+
+    name flags/quota viceid ownerid creatorid
+     a-username a-user-viceid
+
+the second line is repeated for each member of the group, and
+always starts with a space.
+When reading the database, membership is not reported unless
+B<-members> is specified.
+
+=head1 OPTIONS
+
+If you don't specify any options, the only thing you'll learn
+is the ubik database epoch and version.
+
+=over 4
+
+=item B<-w>
+
+Write to the prdb instead of reading.
+Only the file arguments make sense in combination with this argument.
+
+If prdb is not empty when this is run, input will be merged into
+the existing database.
+Entries that do not exist will be created.
+Entries that already exist will not be altered.
+
+=item B<-user>
+
+When reading, display users.
+
+=item B<-group>
+
+When reading, display groups (but not necessarily members).
+
+=item B<-members>
+
+When reading, display groups and also group members.
+
+=item B<-name>
+
+When reading,
+follow name hashes, instead of id hashes.
+This may print different information if the database was corrupted.
+Otherwise, it should print exactly the same information, except
+in a different order.
+
+=item B<-system>
+
+When reading,
+display system data, or more precisely,
+do not display entries with a viced <= -32768 or >= +97537.
+
+=item B<-xtra>
+
+When reading,
+display extra users and groups, or more precisely,
+do not display entries that are in the range -32767...+97536 inclusive.
+
+=item B<-prdb> <I<prdb file>>
+
+Specifies the complete pathname of the file in which the Protection
+Database resides.  Provide the complete name, including the ending
+B<.DB0> .
+
+=item B<-datafile> <I<data file>>
+
+Specify the file to which to dump (or B<-w> from which to read)
+textual database records.
+
+=back
+
+All of these options can be abreviated down to one letter, ie
+B<-d> for B<-datafile>.
+
+=head1 CAUTIONS
+
+The file dump format does not include supergroup information,
+so should not be used if you have and are using groups within groups.
+XXX fixme...
+
+In all cases, entry timestamps and other information is also not preserved.
+
+The epoch and version are reported on standard error.
+On little-endian machines, they'll be byte swapped, so may be very random.
+XXX
+
+Be very careful using B<pt_util> to create a dump that you intend
+to use with B<pt_util -w>.
+It is very easy to create an incomplete dump.
+
+You should probably save your pre-existing prdb files before
+proceeding, if you are attempting to repair something.
+
+=head1 EXAMPLES
+
+The following example shows how to initialize the database from scratch.
+
+Before you do this, make sure ptserver is not running.
+If you have multiple database servers, make sure prdb.* does not exist
+on any server machine.
+
+Now, type this in EXACTLY, (including the leading space on the line
+indicated.)
+But do use control-D at the end, not up arrow D.
+
+    pt_util -w
+    admin 128/20 1 -204 -204
+    system:administrators 130/20 -204 -204 -204
+     admin 1
+    ^D
+
+You will see this:
+
+    # pt_util -w
+    pt_util: /usr/afs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
+    Ubik Version is: 2.0
+    admin 128/20 1 -204 -204
+    system:administrators 130/20 -204 -204 -204
+    Error while creating system:administrators: Entry for id already exists
+     admin 1
+    pt_util: Ubik Version number changed during execution.
+    Old Version = 2.0, new version = 33554432.0
+    #
+
+To make a complete copy of the database,
+
+    # pt_util -user -members -datafile /tmp/out
+
+To load from the complete copy,
+
+    # pt_util -w -datafile /tmp/out
+
+Don't use B<-w> until you read cautions, above.
+
+=head1 PRIVILEGE REQUIRED
+
+You need to be root or have equivalent administrative access to
+the server in question when you run this.
+
+=head1 SEE ALSO
+
+L<ptserver(8)>.
+
+=head1 COPYRIGHT
+
+See L<umich.copyright(8)>.
+
+=cut
+Copyright (c) 2005
+The Regents of the University of Michigan
+ALL RIGHTS RESERVED
+
+Permission is granted to use, copy, create derivative works
+and redistribute this software and such derivative works
+for any purpose, so long as the name of the University of
+Michigan is not used in any advertising or publicity
+pertaining to the use or distribution of this software
+without specific, written prior authorization.  If the
+above copyright notice or any other identification of the
+University of Michigan is included in any copy of any
+portion of this software, then the disclaimer below must
+also be included.
+
+This software is provided as is, without representation
+from the University of Michigan as to its fitness for any
+purpose, and without warranty by the University of
+Michigan of any kind, either express or implied, including
+without limitation the implied warranties of
+merchantability and fitness for a particular purpose.  The
+regents of the University of Michigan shall not be liable
+for any damages, including special, indirect, incidental, or
+consequential damages, with respect to any claim arising
+out of or in connection with the use of the software, even
+if it has been or is hereafter advised of the possibility of
+such damages.

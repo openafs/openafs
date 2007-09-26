@@ -44,7 +44,7 @@
 #define afs_osi_Free(p,n)   free(p)
 #define afs_strcasecmp(p,q) strcasecmp(p,q)
 #endif
-#if defined(USE_SSL) || defined(USE_FAKESSL)
+#ifdef USING_K5SSL
 #include "k5ssl.h"
 #else
 #include "krb5.h"
@@ -158,7 +158,7 @@ process(char *fn)
     int code;
     int cktype;
     krb5_data input[1], params[1];
-#if defined(USING_HEIMDAL) || defined(USE_SSL)
+#if defined(USING_HEIMDAL) || defined(USING_K5SSL)
     krb5_salt salt[1];
 #else
     krb5_data salt[1];
@@ -189,12 +189,15 @@ assertion "inited" failed: file "../../../krb5/src/lib/crypto/prng.c", line 100
  */
 
     if (!k5context && (code = krb5_init_context(&k5context))) {
-	fprintf(stderr,"krb5_init_context failed - %d\n", code);
+	fprintf(stderr,"krb5_init_context failed - %d %s\n",
+	    code, afs_error_message(code));
 	exit(1);
     }
 #else /* not Heimdal */
+    initialize_krb5_error_table();
     if ((code = krb5_c_random_os_entropy(k5context,0,NULL))) {
-	fprintf(stderr,"krb5_c_random_os_entropy failed - %d\n",code);
+	fprintf(stderr,"krb5_c_random_os_entropy failed - %d %s\n",
+	    code,afs_error_message(code));
 	exit(1);
     }
     /* code = krb5_c_random_add_entropy(k5context,
@@ -247,7 +250,7 @@ if (vflag) fprinthex(stdout,"STRING",ts->string,ts->stringlen);
 		params->data = ts->param;
 	    }
 	    memset(salt, 0, sizeof *salt);
-#ifdef USE_SSL
+#ifdef USING_K5SSL
 	    salt->s2kdata.data = ts->salt;
 	    salt->s2kdata.length = ts->saltlen;
 	    if (flag & F_GOT_PARAM) {
@@ -286,7 +289,7 @@ printf ("MAKE computed key\n");
 		    *salt,
 		    computed_key);
 #else /* not Heimdal */
-#ifdef USE_SSL
+#ifdef USING_K5SSL
 	    code = krb5_c_string_to_key(k5context,
 		ts->keytype,
 		input,
@@ -330,8 +333,8 @@ err = krb5_get_error_string(k5context); if (!err) err = "-";
 		fprintf(stderr,"%s: Error doing string2key: %d %s\n",
 		    label, code, err);
 #else /* not Heimdal */
-		fprintf(stderr,"%s: Error doing string2key: %d\n",
-		    label, code);
+		fprintf(stderr,"%s: Error doing string2key: %d %s\n",
+		    label, code, afs_error_message(code));
 #endif /* not Heimdal */
 		++errors;
 		exitrc = 1;

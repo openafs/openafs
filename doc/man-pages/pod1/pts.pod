@@ -52,6 +52,15 @@ and groups: B<pts listmax> and B<pts setmax>.
 
 =item *
 
+Commands to run commands interactively: B<pts interactive>, B<pts
+sleep>, and B<pts quit>.
+
+=item *
+
+A command to run commands from a file: B<pts source>.
+
+=item *
+
 Commands to obtain help: B<pts apropos> and B<pts help>.
 
 =back
@@ -141,6 +150,7 @@ L<pts_listentries(1)>,
 L<pts_listmax(1)>,
 L<pts_listowned(1)>,
 L<pts_membership(1)>,
+L<pts_quit(1)>,
 L<pts_removeuser(1)>,
 L<pts_rename(1)>,
 L<pts_setfields(1)>,

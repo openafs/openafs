@@ -1,136 +1,127 @@
 /*
- * Copyright (c) 2006
- * The Regents of the University of Michigan
- * ALL RIGHTS RESERVED
+ * afstoken - pioctl interface for new common token data structures.
  *
- * Permission is granted to use, copy, create derivative works 
- * and redistribute this software and such derivative works 
- * for any purpose, so long as the name of the University of 
- * Michigan is not used in any advertising or publicity 
- * pertaining to the use or distribution of this software 
- * without specific, written prior authorization.  If the 
- * above copyright notice or any other identification of the 
- * University of Michigan is included in any copy of any 
- * portion of this software, then the disclaimer below must 
- * also be included.
- *
- * This software is provided as is, without representation 
- * from the University of Michigan as to its fitness for any 
- * purpose, and without warranty by the University of 
- * Michigan of any kind, either express or implied, including 
- * without limitation the implied warranties of 
- * merchantability and fitness for a particular purpose.  The 
- * regents of the University of Michigan shall not be liable 
- * for any damages, including special, indirect, incidental, or 
- * consequential damages, with respect to any claim arising 
- * out of or in connection with the use of the software, even 
- * if it has been or is hereafter advised of the possibility of 
- * such damages.
+ * revised following suggestions from lha@kth.se 20070511, 20070513
  */
+/* this file is in the public domain.  Do what thou wilt. */
 
-#if 1	/* AFS_RXKAD */
-/*
- *	this is an rx grammar that looks something
- *	like the thing afs uses to store clear tokens
- *	into the kernel.
- */
+#if 0
+package AFSTOKEN_ /* not necessary for xdr */
+#endif
+#if 1
+#define int32_t afs_int32
+#define uint64_t afs_uint64
+#endif
 
-/* since this is a const, it will show up in rxkad_token.h */
-const MAX_TICKET = 12000;	/* not 344 */
-
-/* since this is a define, it won't get copied into rxkad_token.h */
-#define MAX_CELL 64
-
-/* this structure was probably used with rxvab */
-struct n_clear_token {
-	int kvno;
-	opaque m_key[8];
-	int viceid;
-	int begintime;
-	int endtime;
+/* this is for *small* variable sized tagged data */
+const AFSTOKEN_STRING_MAX = 256;
+const AFSTOKEN_DATA_MAX = 64;
+struct token_tagged_data {
+	int32_t tag;
+	opaque tag_data<AFSTOKEN_DATA_MAX>;
 };
 
-/* and here is all but the cellnumber machinery of what
- * rxkad gettoken/settoken handle
- * note that ticket & cell_name are variable sized so will
- *  contain pointers to allocated storage.  (look at old.hy to
- *  see what happens.)
- * clear_token is not a primitive type but uses the immediately
- *  preceeding logic to handle it; maybe that's what you
- *  really meant by 'stackable'.
- */
-struct rxkad_token {
-	opaque ticket<MAX_TICKET>;
-	n_clear_token token;
-	int primary_flag;
-	string cell_name<MAX_CELL>;
+#if 1	/* AFS_RXKAD */
+const AFSTOKEN_RK_TIX_MAX = 12000;	/* not 344 FIXME should be <1500 */
+
+struct token_rxkad {
+	int32_t rk_viceid;
+	int32_t rk_kvno;
+	opaque rk_key[8];
+	int32_t rk_begintime;
+	int32_t rk_endtime;
+	int32_t rk_primary_flag;
+	opaque rk_ticket<AFSTOKEN_RK_TIX_MAX>;
 };
 #endif	/* AFS_RXKAD */
 
+#ifdef AFS_RXGK
+const AFSTOKEN_GK_TOKEN_MAX = 16384;
+const AFSTOKEN_GK_KEY_MAX = 64;
+struct token_rxgk {
+	int32_t gk_viceid;
+	uint64_t gk_begintime;
+	uint64_t gk_endtime;
+	int32_t gk_level;
+	int32_t gk_lifetime;
+	int32_t gk_bytelife;
+	int32_t gk_enctype;
+	opaque gk_key<AFSTOKEN_GK_KEY_MAX>;
+	opaque gk_token<AFSTOKEN_GK_TOKEN_MAX>;
+};
+#endif	/* AFS_RXGK */
+
 #ifdef AFS_RXK5
-/* these turn into #defines */
-const MAX_COMPONENTS = 16;
-const MAX_NAME = 128;
-const MAX_REALM = 64;
-const MAX_STRING = 256;
-const MAX_K5_TICKET = 16384;
-const MAX_KEY_LENGTH = 64;
+const AFSTOKEN_K5_COMPONENTS_MAX = 16;
+const AFSTOKEN_K5_NAME_MAX = 128;
+const AFSTOKEN_K5_REALM_MAX = 64;
+const AFSTOKEN_K5_TIX_MAX = 16384;
+const AFSTOKEN_K5_ADDRESSES_MAX = 16;
+const AFSTOKEN_K5_AUTHDATA_MAX = 16;
 
-/* new token flags */
-const  KTC_EX_SETPAG = 0x00000001; /* set tokens in new pag */
-
-/* some things that look like heimdal/mit/... */
-/* we could use the real heimdal/mit types in core yet use the same
- * wire format when serialized -- if we wanted to write xdr by hand.
- * look at fun.xdr.c xdr_k5_principal to see what xdr calls we have to make
- * to get the same wire format; the rest is just munging field names & stuff.
- * but careful if you do this!  krb5_principal is a pointer and that has
- * a number of subtle but important implications.  "k5_principal" here is
- * really much more like MIT's "krb5_principal_data" type.
- */
-typedef string component<MAX_STRING>;
-struct rxk5_principal {
-	component name<MAX_COMPONENTS>;
-	string realm<MAX_REALM>;
+const AFSTOKEN_BDATALN_MAX = 16384;
+struct token_k5auth_data {
+	int32_t tag;
+	opaque big_tag_data<AFSTOKEN_BDATALN_MAX>;
 };
-struct rxk5_key {
-	int keytype;
-	opaque m_key<MAX_KEY_LENGTH>;
+typedef string k5component<AFSTOKEN_STRING_MAX>;
+struct k5_principal {
+	k5component name<AFSTOKEN_K5_COMPONENTS_MAX>;
+	string k5realm<AFSTOKEN_K5_REALM_MAX>;
 };
+typedef opaque k5_ticket<AFSTOKEN_K5_TIX_MAX>;
 
-/* this is the data format_afs_krb5_creds_buf handles */
-struct rxk5_token {
-	int viceid;
-	rxk5_principal server;
-	rxk5_principal client;
-	rxk5_key session;
-	int authtime;
-	int starttime;
-	int endtime;
-	int flags;
-	opaque k5ticket<MAX_K5_TICKET>;
+struct token_rxk5 {
+	k5_principal k5_client;
+	k5_principal k5_server;
+	token_tagged_data k5_session;
+	uint64_t k5_authtime;
+	uint64_t k5_starttime;
+	uint64_t k5_endtime;
+	uint64_t k5_renew_till;
+	int32_t k5_is_skey;
+	int32_t k5_flags;
+	token_tagged_data k5_addresses<AFSTOKEN_K5_ADDRESSES_MAX>;
+	k5_ticket k5_ticket;
+	k5_ticket k5_ticket2;
+	token_k5auth_data k5_authdata<AFSTOKEN_K5_AUTHDATA_MAX>;
 };
 #endif
 
-const CU_NOAUTH = 0;
-const CU_KAD = 2;
-const CU_K5 = 5;
-const MAX_CELL_CHARS = 64;
+const AFSTOKEN_UNION_NOAUTH = 0;
+const AFSTOKEN_UNION_KAD = 2;
+const AFSTOKEN_UNION_GK = 4;
+const AFSTOKEN_UNION_K5 = 5;
 
-union cu switch (int cu_type) {
-case CU_KAD:
-	rxkad_token cu_kad;
-#ifdef AFS_RXK5
-case CU_K5:
-	rxk5_token cu_rxk5;
+union afstoken_soliton switch (int32_t at_type) {
+#if 1	/* AFS_RXKAD */
+case AFSTOKEN_UNION_KAD:
+	token_rxkad at_kad;
 #endif
-default:
-	int cu_dummy;
+#ifdef AFS_RXGK
+case AFSTOKEN_UNION_GK:
+	token_rxgk at_gk;
+#endif
+#ifdef AFS_RXK5
+case AFSTOKEN_UNION_K5:
+	token_rxk5 at_rxk5;
+#endif
 };
 
-struct afs_token {
-        int flags;
-	int nextcellnumber;
-	string cell<MAX_CELL_CHARS>;
-	cu cu[1];
+const AFSTOKEN_LENGTH_MAX = 16384;
+typedef opaque token_opaque<AFSTOKEN_LENGTH_MAX>;
+
+const AFSTOKEN_EX_SETPAG = 0x00000001; /* set tokens in new pag */
+const AFSTOKEN_MAX = 8;
+const AFSTOKEN_CELL_MAX = 64;
+
+struct pioctl_set_token {
+        int32_t flags;
+	string cell<AFSTOKEN_CELL_MAX>;
+#ifdef AFS_NT40_ENV
+/* XXX should go away */
+	string username<AFSTOKEN_STRING_MAX>;
+	string smbname<AFSTOKEN_STRING_MAX>;
+#endif
+	token_opaque tokens<AFSTOKEN_MAX>;
 };

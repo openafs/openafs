@@ -35,22 +35,24 @@ RCSID
 #include <errno.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
+#include <afs/com_err.h>
 #include <rx/rx.h>
 #include <sys/stat.h>
 #include <rx/xdr.h>
-#include <afs/auth.h>
-#include <rx/rxkad.h>
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include "rxk5_utilafs.h"
+#include <rx/rxk5.h>
 #endif
-#include "afs_token.h"
+#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <stdio.h>
 #include <afs/cmd.h>
-#include <afs/com_err.h>
 #include <ubik.h>
 #include <afs/ktime.h>
+#ifndef AFS_NT40_ENV
+#include <sys/ioctl.h>
+#include <termios.h>
+#endif
 
 static IStatServer();
 static DoStat();
@@ -93,7 +95,7 @@ em(acode)
     else if (acode == -3)
 	return "communications timeout (-3)";
     else
-	return (char *)error_message(acode);
+	return (char *)afs_error_message(acode);
 }
 
 /* get partition id from a name */
@@ -199,10 +201,13 @@ GetConn(as, aencrypt)
 #ifdef AFS_RXK5
     memset(in_creds, 0, sizeof *in_creds);
 /* -k5 */
-    force_flags |= (FORCE_RXK5 & -(as->parms[ADDPARMOFFSET + 3].items != 0));
+    force_flags |= ((FORCE_RXK5|FORCE_K5CC)
+	& -(as->parms[ADDPARMOFFSET + 3].items != 0));
 /* -k4 */
     force_flags |= (FORCE_RXKAD & -(as->parms[ADDPARMOFFSET + 4].items != 0));
-    if (!(force_flags & (FORCE_RXKAD|FORCE_RXK5)))
+/* -ktc */
+    force_flags |= (FORCE_KTC & -(as->parms[ADDPARMOFFSET + 4].items != 0));
+    if (!(force_flags & (FORCE_RXKAD|FORCE_KTC|FORCE_K5CC)))
 	force_flags |= env_afs_rxk5_default();
 #endif
     confdir =
@@ -223,7 +228,7 @@ GetConn(as, aencrypt)
 	 * local cell */
 	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
 	if (code) {
-	    com_err("bos", code, "(can't find cell '%s' in cell database '%s')",
+	    afs_com_err("bos", code, "(can't find cell '%s' in cell database '%s')",
 		    (tname ? tname : "<default>"), confdir);
 	    exit(1);
 	}
@@ -235,10 +240,10 @@ GetConn(as, aencrypt)
     } else if (localauth) {	/* -localauth */
 	code = afsconf_ClientAuthEx(tdir, &sc, &scIndex, force_flags);
 	if (code)
-	    com_err("bos", code, "(calling ClientAuth)");
+	    afs_com_err("bos", code, "(calling ClientAuth)");
 	say_noauth = !scIndex;
 #ifdef AFS_RXK5
-    } else if (force_flags & FORCE_RXK5) {
+    } else if (force_flags & FORCE_K5CC) {
 	/* Because rxgk has claimed indexes 3 and 4, the next available index
 	   for rxk5 is 5 */
 	char *what;
@@ -278,30 +283,26 @@ GetConn(as, aencrypt)
     Failed:
 	if(code) {
 	    if (afs_k5_princ)
-		com_err("bos", code, "in %s for %s", what, afs_k5_princ);
+		afs_com_err("bos", code, "in %s for %s", what, afs_k5_princ);
 	    else
-		com_err("bos", code, "in %s", what);
+		afs_com_err("bos", code, "in %s", what);
 	}
 #endif
     } else {		/* not -localauth, check for tickets */
 	struct ktc_token ttoken;
-	struct afs_token *atoken = 0;
+	struct pioctl_set_token atoken[1];
 
-	code = ktc_GetTokenEx(0, info.name, &atoken);
+	code = ktc_GetTokenEx(0, info.name, atoken);
 	if (code) {
-	    com_err("bos", code, "(getting tickets)");
+	    afs_com_err("bos", code, "(getting tickets)");
 #ifdef AFS_RXK5
-	} else if (atoken->cu->cu_type == CU_K5) {
+	} else if (!(code = afstoken_to_v5cred(atoken, in_creds))) {
 	    scIndex = 5;
-	    code = afstoken_to_v5cred(atoken, in_creds);
-	    if (!code)
-		sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+	    sc = rxk5_NewClientSecurityObject(rxk5_auth + !!aencrypt,
+		in_creds, 0);
 #endif
-	} else if (atoken->cu->cu_type == CU_KAD) {
+	} else if (!(code = afstoken_to_token(atoken, &ttoken, sizeof ttoken, 0, 0))) {
 	    scIndex = 2;
-	    code = afstoken_to_token(atoken, &ttoken, sizeof ttoken);
-	    if (code) goto SkipSc;
-
 	    /* have tickets, will travel */
 	    if (ttoken.kvno < 0 && ttoken.kvno > 256) {
 /* formerly vab */
@@ -321,12 +322,12 @@ GetConn(as, aencrypt)
 					      ttoken.ticket);
 	    say_noauth = !scIndex;
 	} else {
-	    fprintf(stderr,
-		"bos: unknown token type %d\n",
-		atoken->cu->cu_type);
+	    char msg[48];
+	    afs_get_tokens_type_msg(atoken, msg, sizeof msg);
+	    fprintf(stderr, "bos: no recognized types in %s\n", msg);
 	}
 SkipSc:
-	if (atoken) free_afs_token(atoken);
+	free_afs_token(atoken);
     }
     if (!sc) {
 	say_noauth = !!scIndex;
@@ -384,7 +385,7 @@ SetAuth(as)
     }
     code = BOZO_SetNoAuthFlag(tconn, flag);
     if (code)
-	com_err("bos", code, "(failed to set authentication flag)");
+	afs_com_err("bos", code, "(failed to set authentication flag)");
     return 0;
 }
 
@@ -452,7 +453,7 @@ Prune(as)
 	flags |= 0xff;
     code = BOZO_Prune(tconn, flags);
     if (code)
-	com_err("bos", code, "(failed to prune server files)");
+	afs_com_err("bos", code, "(failed to prune server files)");
     return code;
 }
 
@@ -1140,34 +1141,63 @@ ListSUsers(as)
     register afs_int32 code;
     char tbuffer[256];
     char *tp;
-    int lastNL, printGreeting;
+    int col;
+    char *sep;
+    afs_int32 width;
+#ifndef AFS_NT40_ENV
+    struct winsize win[1];
+#else
+    HANDLE hCon;
+    CONSOLE_SCREEN_BUFFER_INFO scrn_info;
+#endif
+
+    if (as->parms[ADDPARMOFFSET*2+1].items)
+	width = 1;
+    else if (as->parms[ADDPARMOFFSET*2].items)
+	util_GetInt32(as->parms[ADDPARMOFFSET*2].items->data, &width);
+    else if (!isatty(1))
+	width = 80;
+    else if ((tp = getenv("COLUMNS")) && *tp)
+	width = strtol(tp, 0, 0);
+#ifdef AFS_NT40_ENV
+    else {
+        hCon = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hCon != INVALID_HANDLE_VALUE) {
+            if (GetConsoleScreenBufferInfo (hCon, &scrn_info))
+                width = scrn_info.dwSize.X;
+        }
+    }
+#else
+    else if (ioctl(1, TIOCGWINSZ, win) >= 0 && win->ws_col > 0)
+	width = win->ws_col;
+#endif
 
     tconn = GetConn(as, 0);
-    lastNL = 0;
-    printGreeting = 1;
+    col = 0;
+    sep = "SUsers are: ";
+    if (width < 2) sep = "SUsers are:\n";
     for (i = 0;; i++) {
 	tp = tbuffer;
 	code = BOZO_ListSUsers(tconn, i, &tp);
 	if (code)
 	    break;
-	if (printGreeting) {
-	    printGreeting = 0;	/* delay until after first call succeeds */
-	    printf("SUsers are: ");
+	if (col && (col + strlen(sep) + strlen(tbuffer) > width)) {
+	    sep = "\n ";
+	    if (width < 2) sep = "\n";
+	    col = -1;
 	}
-	printf("%s ", tbuffer);
-	if ((i % NPERLINE) == NPERLINE - 1) {
-	    printf("\n");
-	    lastNL = 1;
-	} else
-	    lastNL = 0;
+	code = printf ("%s%s", sep, tbuffer);
+	if (code < 0) break;
+	col += code;
+	sep = " ";
     }
     if (code != 1) {
 	/* a real error code, instead of scanned past end */
 	printf("bos: failed to retrieve super-user list (%s)\n", em(code));
 	return code;
     }
-    if (lastNL == 0)
-	printf("\n");
+    if (col)
+	putchar('\n');
     return 0;
 }
 
@@ -1576,7 +1606,7 @@ GetLogCmd(as)
 
   done:
     if (code)
-	com_err("bos", code, "(while reading log)");
+	afs_com_err("bos", code, "(while reading log)");
     return code;
 }
 
@@ -2046,6 +2076,8 @@ add_std_args(ts)
 			  "use rxk5 security");
     /* + 4 */ cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL,
 			  "use rxkad security");
+    /* + 5 */ cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL,
+			  "use ktc token to set security");
 #endif
 }
 
@@ -2175,6 +2207,9 @@ main(argc, argv)
     ts = cmd_CreateSyntax("listusers", ListSUsers, 0, "list super-users");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
+    cmd_Seek(ts, ADDPARMOFFSET*2);
+    cmd_AddParm(ts, "-width", CMD_SINGLE, CMD_OPTIONAL, "output width");
+    cmd_AddParm(ts, "-onecol", CMD_FLAG, CMD_OPTIONAL, "one per col");
 
     ts = cmd_CreateSyntax("addkey", AddKey, 0,
 			  "add keys to key dbase (kvno 999 is bcrypt)");

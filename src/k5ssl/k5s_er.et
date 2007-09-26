@@ -34,10 +34,18 @@ ec KRB5KDC_ERR_BAD_PVNO, "Requested protocol version not supported"
 index 6
 ec KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN, "Client not found in Kerberos database"
 ec KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN, "Server not found in Kerberos database"
-index 17
+ec KRB5KDC_ERR_PRINCIPAL_NOT_UNIQUE, "Principal has multiple entries in KDB"
+index 12
+ec KRB5KDC_ERR_POLICY, "request rejected by KDC policy"
+index 14
+ec KRB5KDC_ERR_ETYPE_NOSUPP, "KDC has no support for encryption type"
+ec KRB5KDC_ERR_SUMTYPE_NOSUPP, "KDC has no support for checksum type"
+ec KRB5KDC_ERR_PADATA_TYPE_NOSUPP, "KDC has no support for padata type"
 ec KRB5KDC_ERR_TRTYPE_NOSUPP, "KDC has no support for transited type"
-index 25
+index 24
+ec KRB5KDC_ERR_PREAUTH_FAILED, "Preauthentication failed"
 ec KRB5KDC_ERR_PREAUTH_REQUIRED, "Additional pre-authentication required"
+ec KRB5KDC_ERR_SERVER_NOMATCH, "Requested server and ticket don't match"
 index 31
 ec KRB5KRB_AP_ERR_BAD_INTEGRITY, "Decrypt integrity check failed"
 index 38
@@ -55,7 +63,8 @@ ec KRB5KRB_ERR_GENERIC, "Generic error"
 index 134
 ec KRB5_PARSE_MALFORMED, "Illegal character in component name"
 ec KRB5_CONFIG_CANTOPEN, "Can't open Kerberos configuration file"
-index 140
+index 139
+ec KRB5_CC_BADNAME, "Bad credentials cache name"
 ec KRB5_CC_UNKNOWN_TYPE, "Unknown credential cache type"
 ec KRB5_CC_NOTFOUND, "Matching credential not found"
 ec KRB5_CC_END,	"End of credential cache reached"
@@ -85,7 +94,11 @@ ec KRB5_BAD_KEYSIZE, "Key size is incompatible with encryption type"
 ec KRB5_BAD_MSIZE, "Message size is incompatible with encryption type"
 ec KRB5_CC_TYPE_EXISTS, "Credentials cache type is already registered."
 ec KRB5_KT_TYPE_EXISTS, "Key table type is already registered."
-index 199
+index 195
+ec KRB5_FCC_NOFILE, "Credentials cache not found"
+ec KRB5_FCC_INTERNAL, "Internal credentials cache error"
+index 198
+ec KRB5_CC_NOMEM, "Credentials cache is out of memory"
 ec KRB5_CC_FORMAT, "Bad format in credentials cache"
 ec KRB5_CC_NOT_KTYPE, "No credentials found with supported encryption types"
 index 212
@@ -107,7 +120,8 @@ ec KRB5_CONFIG_ETYPE_NOSUPP, "No supported encryption types (check config file)"
 index 243
 ec KRB5_ERR_NUMERIC_REALM, "Cannot determine realm for numeric host address"
 ec KRB5_ERR_BAD_S2K_PARAMS, "Invalid string2key parameters from KDC"
-index 248
+index 247
+ec KRB5_CC_NOSUPP, "Unsupported credentials cache function"
 ec KRB5_DELTAT_BADFORMAT, "Invalid format of kerberos time difference"
 end
 error_table asn1

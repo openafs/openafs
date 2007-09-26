@@ -36,12 +36,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <netinet/in.h>
-#if defined(USE_SSL) || defined(USE_FAKESSL)
+#if defined(USING_K5SSL)
 #include "k5ssl.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include <krb5.h>
 #endif
 
@@ -118,6 +115,18 @@ krb5i_fkt_resolve(krb5_context context, krb5_keytab kdesc, const char *filename)
 }
 
 int
+krb5i_fkt_end_seq_get(krb5_context context, krb5_keytab kdesc,
+    krb5_kt_cursor *cursor)
+{
+    struct krb5_fkt_cursor *fcursor = (struct krb5_fkt_cursor *) *cursor;
+
+    if (!fcursor) return KRB5_KT_IOERR;
+    if (fcursor->fd) fclose(fcursor->fd);
+    free(fcursor);
+    return 0;
+}
+
+int
 krb5i_fkt_open(krb5_context context, struct krb5_fkt_data *r,
     struct krb5_fkt_cursor *cursor, int mode)
 {
@@ -149,8 +158,8 @@ krb5i_fkt_open(krb5_context context, struct krb5_fkt_data *r,
     }
     code = 0;
 Done:
-    if (code) fclose(fp);
-    else cursor->fd = fp;
+    if (!code) cursor->fd = fp;
+    else if (fp) fclose(fp);
     return code;
 }
 
@@ -169,11 +178,10 @@ int krb5i_fkt_start_seq_get(krb5_context context, krb5_keytab kdesc,
     }
     fcursor->pos = ftell(fcursor->fd);
 Done:
-    if (code) {
-	fclose(fcursor->fd);
-	free(fcursor);
-    } else *cursor = (krb5_kt_cursor) fcursor;
-    return 0;
+    if (code)
+	krb5i_fkt_end_seq_get(context, kdesc, fcursor);
+    else *cursor = (krb5_kt_cursor) fcursor;
+    return code;
 }
 
 int
@@ -228,17 +236,6 @@ krb5i_getdata(struct krb5_fkt_cursor *fcursor, krb5_data *kd)
     kd->data = r;
     kd->length = l;
     return code ? KRB5_KT_IOERR : 0;;
-}
-
-int
-krb5i_fkt_end_seq_get(krb5_context context, krb5_keytab kdesc,
-    krb5_kt_cursor *cursor)
-{
-    struct krb5_fkt_cursor *fcursor = (struct krb5_fkt_cursor *) *cursor;
-
-    fclose(fcursor->fd);
-    free(fcursor);
-    return 0;
 }
 
 int

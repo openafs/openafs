@@ -85,13 +85,13 @@ main(argc, argv)
 	    break;
 	code = cmd_ParseLine(tline, tv, &tc, 100);
 	if (code) {
-	    printf("itest: parsing failure: %s\n", error_message(code));
+	    printf("itest: parsing failure: %s\n", afs_error_message(code));
 	    exit(1);
 	}
 	code = cmd_Dispatch(tc, tv);
 	cmd_FreeArgv(tv);
 	if (code) {
-	    printf("itest: execution failed: %s\n", error_message(code));
+	    printf("itest: execution failed: %s\n", afs_error_message(code));
 	}
     }
     return 0;

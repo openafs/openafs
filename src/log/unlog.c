@@ -83,7 +83,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    ++i;
 	cells = (char **) malloc(i * sizeof *cells);
 	if (!cells) {
-	    com_err("unlog", ENOMEM, "could not allocate %d cells", i);
+	    afs_com_err("unlog", ENOMEM, "could not allocate %d cells", i);
 	    return ENOMEM;
 	}
 	for (i = 0, itp = as->parms[0].items; itp; itp = itp->next) {
@@ -94,7 +94,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     } else
 	code = ktc_ForgetAllTokens();
     if (code) {
-	com_err("unlog", code, "could not discard tickets");
+	afs_com_err("unlog", code, "could not discard tickets");
 	return code;
     }
     return 0;
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 
 struct token_list {
     struct token_list *next;
-    struct afs_token *afst;
+    pioctl_set_token afst[1];
     int deleted;
 };
 
@@ -154,7 +154,7 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 {
     unsigned count;
     afs_int32 code;
-    afs_token *afstoken;
+    pioctl_set_token afstoken[1];
     struct token_list *token_list, **tokenp, *p;
 
     /* normalize all the names in the list */
@@ -164,15 +164,16 @@ unlog_ForgetCertainTokens(char **list, int listSize)
     token_list = 0;
     /* get the tokens out of the kernel */
     for (count = 0; ; ++count) {
-	code = ktc_GetTokenEx(count, 0, &afstoken);
+	memset(afstoken, 0, sizeof *afstoken);
+	code = ktc_GetTokenEx(count, 0, afstoken);
 	if (code) break;
 	p = malloc(sizeof *p);
 	if (!p) {
-	    com_err("unlog", ENOMEM, "can't allocate token link store");
+	    afs_com_err("unlog", ENOMEM, "can't allocate token link store");
 	    exit(1);
 	}
 	p->next = 0;
-	p->afst = afstoken;
+	*p->afst = *afstoken;
 	p->deleted = unlog_CheckUnlogList(list, listSize, afstoken->cell);
 	*tokenp = p;
 	tokenp = &p->next;
@@ -190,7 +191,7 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	if (p->deleted) continue;
 	code = ktc_SetTokenEx(p->afst);
 	if (code) {
-	com_err("unlog", code,
+	afs_com_err("unlog", code,
 	    "so couldn't re-register token in cell %s", p->afst->cell);
 	}
     }

@@ -16,7 +16,6 @@
 RCSID
     ("$Header$");
 
-#include <afs/auth.h>
 #include <afs/budb_client.h>
 #include <afs/budb.h>
 #include <rx/rx_globals.h>

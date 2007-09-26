@@ -317,14 +317,13 @@ BadError(register int aerror)
     return 0;			/* otherwise may be transient, e.g. EMFILE */
 }
 
-
 #define MAX_ARGS 128
 #ifdef AFS_NT40_ENV
 char *save_args[MAX_ARGS];
 int n_save_args = 0;
-pthread_t main_thread;
+extern pthread_t main_thread;
+childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
 #endif
-
 
 /* Get the salvage lock if not already held. Hold until process exits. */
 void
@@ -2359,12 +2358,16 @@ CopyAndSalvage(register struct DirSummary *dir)
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
     assert(lcode == sizeof(vnode));
+#if 0
 #ifdef AFS_NT40_ENV
     nt_sync(fileSysDevice);
 #else
     sync();			/* this is slow, but hopefully rarely called.  We don't have
 				 * an open FD on the file itself to fsync.
 				 */
+#endif
+#else
+    vnodeInfo[vLarge].handle->ih_synced = 1;
 #endif
     code = IH_DEC(dir->ds_linkH, oldinode, dir->rwVid);
     assert(code == 0);
@@ -2829,6 +2832,11 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	SalvageDir(volHeader.name, vid, dirVnodeInfo, alinkH, i, &rootdir,
 		   &rootdirfound);
     }
+#ifdef AFS_NT40_ENV
+    nt_sync(fileSysDevice);
+#else
+    sync();				/* This used to be done lower level, for every dir */
+#endif
     if (Showmode) {
 	IH_RELEASE(h);
 	return 0;

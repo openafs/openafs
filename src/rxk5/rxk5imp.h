@@ -28,6 +28,20 @@
  * such damages.
  */
 
+#ifdef USING_SHISHI
+#include <shishi.h>
+#else
+#ifdef USING_K5SSL
+#include "k5ssl.h"
+#else
+#undef u
+#include <krb5.h>
+#endif
+#endif
+#if defined(AFS_NT40_ENV) && defined(USING_MIT)
+#include "rxk5_ntfixprotos.h"
+#endif
+
 #include "rxk5.h"
 
 #ifdef USING_SHISHI

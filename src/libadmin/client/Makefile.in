@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
+CFLAGS=${COMMON_CFLAGS} ${KRB5CFLAGS} ${MT_CFLAGS}
 
 ADMINOBJS = afs_clientAdmin.o
 

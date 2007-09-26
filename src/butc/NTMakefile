@@ -10,10 +10,21 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+#RXK5LIBS = $(RXK5LIBS) \
+#	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 ############################################################################
 # build butc
 
 EXEFILE = $(DESTDIR)\etc\butc.exe
+
+EXERES = $(OUT)\butc.res
 
 EXEOBJS =\
 	$(OUT)\dbentries.obj \
@@ -24,8 +35,7 @@ EXEOBJS =\
 	$(OUT)\tcudbprocs.obj \
 	$(OUT)\dump.obj \
 	$(OUT)\tcstatus.obj \
-	$(OUT)\tcmain.obj  \
-	$(OUT)\butc.res
+	$(OUT)\tcmain.obj
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbudb.lib \
@@ -40,6 +50,7 @@ EXELIBS =\
         $(DESTDIR)\lib\afsubik.lib \
         $(DESTDIR)\lib\afs\afsauth.lib \
         $(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
         $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
@@ -53,15 +64,12 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\cm_dns.obj
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXERES): butc.rc AFS_component_version_number.h
+
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
-
-############################################################################
-# Definitions for generating versioninfo resources
-
-$(OUT)\butc.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -73,6 +81,8 @@ install: $(EXEFILE)
 # Local clean target; augments predefined clean target
 
 clean::
+	$(DEL) $(EXERES)
+	$(DEL) AFS_component_version_number.h
 
 
 ############################################################################
@@ -82,4 +92,4 @@ $(OUT)\butc_test.exe: $(OUT)\test.obj
         $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
-	
+

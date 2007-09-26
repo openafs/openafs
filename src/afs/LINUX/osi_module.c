@@ -94,9 +94,21 @@ init_module(void)
 	return err;
 #endif
     err = afs_init_inodecache();
-    if (err)
+    if (err) {
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
 	return err;
-    register_filesystem(&afs_fs_type);
+    }
+    err = register_filesystem(&afs_fs_type);
+    if (err) {
+	afs_destroy_inodecache();
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
+	return err;
+    }
+
     osi_sysctl_init();
 #ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_init();
@@ -117,9 +129,13 @@ void
 cleanup_module(void)
 #endif
 {
+#ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_shutdown();
+#endif
     osi_sysctl_clean();
+#ifndef LINUX_KEYRING_SUPPORT
     osi_syscall_clean();
+#endif
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
@@ -154,7 +170,7 @@ get_page_offset(void)
     struct task_struct *p, *q;
 
     /* search backward thru the circular list */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
     read_lock(&tasklist_lock);
 #endif
     /* search backward thru the circular list */
@@ -164,14 +180,14 @@ get_page_offset(void)
     for (p = current; p; p = p->prev_task) {
 #endif
 	if (p->pid == 1) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
 	    read_unlock(&tasklist_lock);
 #endif
 	    return p->addr_limit.seg;
 	}
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
     read_unlock(&tasklist_lock);
 #endif
     return 0;

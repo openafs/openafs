@@ -49,99 +49,93 @@
 extern int errno;
 
 int
-print_who(call, who)
-	register struct rx_call *call;
-	char *who;
+print_who(struct rx_call *call, char *who)
 {
-	int level, kvno, enctype;
-	time_t expires;
-	char *name = 0;
-	int code;
-	struct rx_connection *conn = rx_ConnectionOf(call);
-	struct rx_peer *peer = rx_PeerOf(conn);
-	int host = ntohl(rx_HostOf(peer));
-	int si;
+    int level, kvno, enctype;
+    time_t expires;
+    char *name = 0;
+    int code;
+    struct rx_connection *conn = rx_ConnectionOf(call);
+    struct rx_peer *peer = rx_PeerOf(conn);
+    int host = ntohl(rx_HostOf(peer));
+    int si;
 
-	printf ("%ld: %s from %d.%d.%d.%d(%d) ", time(0), who,
-		(host>>24)&255,
-		(host>>16)&255,
-		(host>>8)&255,
-		host&255,
-		ntohs(rx_PortOf(peer)));
+    printf ("%ld: %s from %d.%d.%d.%d(%d) ", time(0), who,
+	(host>>24)&255,
+	(host>>16)&255,
+	(host>>8)&255,
+	host&255,
+	ntohs(rx_PortOf(peer)));
 
-	si = rx_SecurityClassOf(conn);
+    si = rx_SecurityClassOf(conn);
 #ifdef CONFIG_RXKAD
-	if (si == 2)
-	{
-		char tname[64];
-		char tinst[64];
-		char tcell[64];
-		code = rxkad_GetServerInfo(conn,
-			(rxkad_level *) &level, (unsigned int *) &expires,
-			tname, tinst, tcell, &kvno);
-		if (code) printf ("noauth");
-		else {
-			printf ("%s.%s@%s", tname, tinst, tcell);
-			printf (" l=%d kv=%d", *(rxkad_level *)&level, kvno);
-			printf (" expires=%d", (int) expires);
-		}
+    if (si == 2) {
+	char tname[64];
+	char tinst[64];
+	char tcell[64];
+	code = rxkad_GetServerInfo(conn,
+	    (rxkad_level *) &level, (unsigned int *) &expires,
+	    tname, tinst, tcell, &kvno);
+	if (code) printf ("noauth");
+	else {
+	    printf ("%s.%s@%s", tname, tinst, tcell);
+	    printf (" l=%d kv=%d", *(rxkad_level *)&level, kvno);
+	    printf (" expires=%d", (int) expires);
+	}
+    } else {
+#endif
+	code = rxk5_GetServerInfo(call->conn, &level, &expires,
+	    &name,
+	    &kvno, &enctype);
+	if (code) {
+	    printf ("noauth");
 	} else {
-#endif
-		code = rxk5_GetServerInfo(call->conn, &level, &expires,
-			&name,
-			&kvno, &enctype);
-		if (code)
-		{
-			printf ("noauth");
-		} else {
-			printf ("%s", name);
-			printf (" l=%d e=%d kv=%d", level, enctype, kvno);
-			printf (" expires=%d", (int) expires);
-		}
+	    printf ("%s", name);
+	    printf (" l=%d e=%d kv=%d", level, enctype, kvno);
+	    printf (" expires=%d", (int) expires);
+	}
 #ifdef CONFIG_RXKAD
-	}
+    }
 #endif
-	printf ("\n");
-	return code;
+    printf ("\n");
+    return code;
 }
 
 int
-STEST_test(z_call, n)
-	register struct rx_call *z_call;
+STEST_test(register struct rx_call *z_call, int n)
 {
-	(void) print_who(z_call, "TEST_test");
-	printf (" n = %d\n", n);
-	return 0;
+    (void) print_who(z_call, "TEST_test");
+    printf (" n = %d\n", n);
+    return 0;
 }
 
 int
-STEST_fib(z_call, n, name, output)
-	register struct rx_call *z_call;
-	char **name;
-	fib_results *output;
+STEST_fib(struct rx_call *z_call,
+    int n,
+    char **name,
+    fib_results *output)
 {
-	char foo[80];
-	unsigned int *results;
-	int i;
+    char foo[80];
+    unsigned int *results;
+    int i;
 
-	(void) print_who(z_call, "TEST_fib");
-	sprintf(foo, "Results for %d", n);
+    (void) print_who(z_call, "TEST_fib");
+    sprintf(foo, "Results for %d", n);
 printf (" about to store name <%s>\n", foo);
-	*name = strdup(foo);
-	results = (int *) malloc(sizeof *results * (n+8));
+    *name = strdup(foo);
+    results = (int *) malloc(sizeof *results * (n+8));
 printf (" About to store results in %#x\n", (int) results);
-	if (n > 0)
-		results[0] = 1;
-	if (n > 1)
-		results[1] = 1;
+    if (n > 0)
+	results[0] = 1;
+    if (n > 1)
+	results[1] = 1;
 printf (" About to store rest of results (%d)\n", n);
-	for (i = 2; i < n; ++i)
-	{
-		results[i] = results[i-1] + results[i-2];
-	}
+    for (i = 2; i < n; ++i) {
+	results[i] = results[i-1] + results[i-2];
+    }
 printf (" storing result pointers in %#x\n", (int) output);
-	output->fib_results_val = results;
-	output->fib_results_len = n;
+    output->fib_results_val = results;
+    output->fib_results_len = n;
 printf (" done\n");
-	return 0;
+    return 0;
 }

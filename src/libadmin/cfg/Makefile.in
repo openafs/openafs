@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} ${SHLIB_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 UBIKOBJS=\

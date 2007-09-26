@@ -51,6 +51,10 @@ void aklog ARGS((int, char *[]));
 #define INST_SZ 40
 #endif /* INST_SZ */
 
+#ifndef u_int32_t
+#define u_int32_t uint32_t
+#endif
+
 struct ktext {
     unsigned int length;
     unsigned char dat[MAX_KTXT_LEN];
@@ -65,7 +69,7 @@ struct credentials {
     int     lifetime;
     int     kvno;
     struct ktext ticket_st;
-    int32_t    issue_date;
+    afs_int32    issue_date;
     char    pname[ANAME_SZ];
     char    pinst[INST_SZ];
 };

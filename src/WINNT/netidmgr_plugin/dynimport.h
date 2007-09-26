@@ -30,7 +30,23 @@
 /* Dynamic imports */
 #include<khdefs.h>
 #include<tlhelp32.h>
+
+#if defined(_WIN32_WINNT) 
+#  if (_WIN32_WINNT < 0x0501)
+#    define AFS_WIN32_WINNT _WIN32_WINNT
+#    undef _WIN32_WINNT
+#    define _WIN32_WINNT 0x0501
+#  endif
+#else 
+#  define _WIN32_WINNT 0x0501
+#endif
+
 #include<ntsecapi.h>
+#if defined(AFS_WIN32_WINNT)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT AFS_WIN32_WINNT
+#undef AFS_WIN32_WINNT
+#endif
 
 #ifndef FAR
 #define FAR
@@ -42,11 +58,15 @@ extern HINSTANCE hProfile;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _WIN64
+#define CCAPI_DLL     "krbcc64.dll"
+#define KRBCC32_DLL   "krbcc64.dll"
+#else
 #define CCAPI_DLL     "krbcc32.dll"
 #define KRBCC32_DLL   "krbcc32.dll"
+#endif
 #define SERVICE_DLL   "advapi32.dll"
 #define SECUR32_DLL   "secur32.dll"
-#define PROFILE_DLL   "xpprof32.dll"
 
 //////////////////////////////////////////////////////////////////////////////
 

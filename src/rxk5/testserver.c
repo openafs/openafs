@@ -52,13 +52,10 @@
 #ifdef USING_SHISHI
 #include <shishi.h>
 #else
-#ifdef USING_SSL
+#ifdef USING_K5SSL
 #include <sys/types.h>
 #include "k5ssl.h"
 #else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #include <krb5.h>
 #endif
 #endif
@@ -107,162 +104,10 @@ char	*progname;
  */
 
 /*
- * the server main routine.
- *	process options
- *	initialize
- *	become just another rx thread (& lose our individual identity)
- */
-
-int
-main(argc,argv)
-	char **argv;
-{
-#if CONFIG_RXKAD
-	char *srvtab = 0;
-#endif
-#if CONFIG_RXK5
-	char *keytab = 0;
-#endif
-	char *principal = 0;
-	int udp_port=TESTPORT;			/* port to use */
-	struct rx_securityClass *(sc[6]);	/* Security objects */
-	struct rx_service *rxserv_ptr;
-	int code;				/* Rx return code */
-	char *argp;
-
-	/*
-	 * Argument processing
-	 */
-
-	progname = argv[0];	/* store the program's name */
-
-#define ERROR(e)	do {argp=(e); goto Error; }while (0);
-	while (--argc) if (*(argp = *++argv) == '-')
-	while (*++argp) switch(*argp)
-	{
-#if CONFIG_RXKAD
-	case 'F':	/* specify where our srvtab lives */
-		if (argc < 1) ERROR("Missing srvtab")
-		srvtab = *++argv;
-		--argc;
-		break;
-#endif
-#if CONFIG_RXK5
-	case 'f':	/* specify where our keytab lives */
-		if (argc < 1) ERROR("Missing keytab")
-		keytab = *++argv;
-		--argc;
-		break;
-#endif
-	case 'p':	/* specify an alternate port */
-		if (argc < 1) ERROR("Missing port")
-		udp_port = atol(*++argv);
-		--argc;
-		break;
-	case 's':	/* name the principle (should be what's in keytab) */
-		if (argc < 1) ERROR("Missing principle")
-		principal = *++argv;
-		--argc;
-		break;
-	case 'u':	/* for debugging, turn output buffering off */
-		setbuf(stderr, NULL);
-		setbuf(stdout, NULL);
-		break;
-	case 'i':
-		if (argc < 1) ERROR("Missing idle timeout")
-		rx_idleConnectionTime = atol(*++argv);
-		--argc;
-		break;
-	case '?':
-	default:
-		fprintf(stderr,"Bad switch <%c>\n", *argp);
-		argp = 0;
-	Error:
-		if (argp)
-			fprintf (stderr,"Error: %s\n", argp);
-		usage();
-		exit(!!argp);
-		break;
-	}
-	else ERROR("No anonymous args yet")
-
-#ifdef ultrix
-	openlog("testd", LOG_PID);
-#else
-	openlog("testd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
-#endif
-
-#if CONFIG_RXKAD
-	if (!srvtab)
-		;
-	else if ((code = rsk_Init(principal, srvtab)))
-	{
-		fprintf(stderr, "%s: ERROR rsk_Init() failed with code %d\n",
-			progname, code);
-		exit(1);
-	}
-#endif
-
-    /*
-     * Start priming rx server
-     */
-	code = rx_Init(htons(udp_port));
-	if (code)
-	{
-		fprintf(stderr, "%s: ERROR rx_Init() failed with code %d\n",
-			progname, code);
-		exit(1);
-	}
-
-	memset((void*) sc, 0, sizeof sc);
-	if (!(sc[0] = rxnull_NewServerSecurityObject()))
-	{
-		fprintf(stderr,
-			"%s: ERROR unable to create null server security object\n",
-			progname);
-		exit(1);
-	}
-#if CONFIG_RXKAD
-	if (srvtab)
-	sc[2] = (struct rx_securityClass *)
-		rxkad_NewServerSecurityObject(0, 0, rsk_Wrap, (int *) 0);
-#endif
-#if CONFIG_RXK5
-	if (keytab)
-	sc[5] = (struct rx_securityClass *)
-		rxk5_NewServerSecurityObject(rxk5_clear,
-			keytab, rxk5_default_get_key, 0, 0);
-#endif
-
-	rxserv_ptr = rx_NewService(0,
-		(u_short) TESTSERVICEID, "testd",
-		sc, 6, TEST_ExecuteRequest);
-	if (!rxserv_ptr)
-	{
-		fprintf(stderr, "%s: ERROR unable to create rx service\n",
-			progname);
-		exit(1);
-	}
-
-	rx_SetStackSize(rxserv_ptr, (int) (RX_DEFAULT_STACK_SIZE * 16));
-
-#define MAXREQUESTS 8
-	rx_SetMinProcs(rxserv_ptr, 4);
-	rx_SetMaxProcs(rxserv_ptr, MAXREQUESTS);
-
-	rx_StartServer(1);
-
-	fprintf(stderr, "%s: ERROR returned from rx_StartServer()!!!\n",
-		progname);
-
-	exit(1);
-}
-
-/*
  * usage--basic usage function, prints error message on stderr
  */
 void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: %s [OPTIONS]\n", progname);
 #ifdef CONFIG_RXKAD
@@ -277,4 +122,150 @@ usage()
     fprintf(stderr, "\t-i n -- set server idle connection reap timeout\n");
 
     return;
+}
+
+/*
+ * the server main routine.
+ *	process options
+ *	initialize
+ *	become just another rx thread (& lose our individual identity)
+ */
+
+int
+main(int argc, char **argv)
+{
+#if CONFIG_RXKAD
+    char *srvtab = 0;
+#endif
+#if CONFIG_RXK5
+    char *keytab = 0;
+#endif
+    char *principal = 0;
+    int udp_port=TESTPORT;	    /* port to use */
+    struct rx_securityClass *(sc[6]);	/* Security objects */
+    struct rx_service *rxserv_ptr;
+    int code;		    /* Rx return code */
+    char *argp;
+
+    /*
+     * Argument processing
+     */
+
+    progname = argv[0]; /* store the program's name */
+
+#define ERROR(e)    do {argp=(e); goto Error; }while (0);
+    while (--argc) if (*(argp = *++argv) == '-')
+    while (*++argp) switch(*argp) {
+#if CONFIG_RXKAD
+    case 'F':	/* specify where our srvtab lives */
+	if (argc < 1) ERROR("Missing srvtab")
+	srvtab = *++argv;
+	--argc;
+	break;
+#endif
+#if CONFIG_RXK5
+    case 'f':	/* specify where our keytab lives */
+	if (argc < 1) ERROR("Missing keytab")
+	keytab = *++argv;
+	--argc;
+	break;
+#endif
+    case 'p':	/* specify an alternate port */
+	if (argc < 1) ERROR("Missing port")
+	udp_port = atol(*++argv);
+	--argc;
+	break;
+    case 's':	/* name the principle (should be what's in keytab) */
+	if (argc < 1) ERROR("Missing principle")
+	principal = *++argv;
+	--argc;
+	break;
+    case 'u':	/* for debugging, turn output buffering off */
+	setbuf(stderr, NULL);
+	setbuf(stdout, NULL);
+	break;
+    case 'i':
+	if (argc < 1) ERROR("Missing idle timeout")
+	rx_idleConnectionTime = atol(*++argv);
+	--argc;
+	break;
+    case '?':
+    default:
+	fprintf(stderr,"Bad switch <%c>\n", *argp);
+	argp = 0;
+    Error:
+	if (argp)
+	    fprintf (stderr,"Error: %s\n", argp);
+	usage();
+	exit(!!argp);
+	break;
+    }
+    else ERROR("No anonymous args yet")
+
+#ifdef ultrix
+    openlog("testd", LOG_PID);
+#else
+    openlog("testd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
+#endif
+
+#if CONFIG_RXKAD
+    if (!srvtab)
+	;
+    else if ((code = rsk_Init(principal, srvtab))) {
+	fprintf(stderr, "%s: ERROR rsk_Init() failed with code %d\n",
+	    progname, code);
+	exit(1);
+    }
+#endif
+
+    /*
+     * Start priming rx server
+     */
+    code = rx_Init(htons(udp_port));
+    if (code) {
+	fprintf(stderr, "%s: ERROR rx_Init() failed with code %d\n",
+	    progname, code);
+	exit(1);
+    }
+
+    memset((void*) sc, 0, sizeof sc);
+    if (!(sc[0] = rxnull_NewServerSecurityObject())) {
+	fprintf(stderr,
+	    "%s: ERROR unable to create null server security object\n",
+	    progname);
+	exit(1);
+    }
+#if CONFIG_RXKAD
+    if (srvtab)
+    sc[2] = (struct rx_securityClass *)
+	rxkad_NewServerSecurityObject(0, 0, rsk_Wrap, (int *) 0);
+#endif
+#if CONFIG_RXK5
+    if (keytab)
+    sc[5] = (struct rx_securityClass *)
+	rxk5_NewServerSecurityObject(rxk5_clear,
+	    keytab, rxk5_default_get_key, 0, 0);
+#endif
+
+    rxserv_ptr = rx_NewService(0,
+	(u_short) TESTSERVICEID, "testd",
+	sc, 6, TEST_ExecuteRequest);
+    if (!rxserv_ptr) {
+	fprintf(stderr, "%s: ERROR unable to create rx service\n",
+	    progname);
+	exit(1);
+    }
+
+    rx_SetStackSize(rxserv_ptr, (int) (RX_DEFAULT_STACK_SIZE * 16));
+
+#define MAXREQUESTS 8
+    rx_SetMinProcs(rxserv_ptr, 4);
+    rx_SetMaxProcs(rxserv_ptr, MAXREQUESTS);
+
+    rx_StartServer(1);
+
+    fprintf(stderr, "%s: ERROR returned from rx_StartServer()!!!\n",
+	progname);
+
+    exit(1);
 }

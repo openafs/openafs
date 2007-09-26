@@ -66,7 +66,7 @@ bc_AddHostCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -85,14 +85,14 @@ bc_AddHostCmd(as, arock)
 	    printf("failed\n");
 	    fflush(stdout);
 	    if (code == EEXIST)
-		com_err(whoami, 0, "Port offset already in tape database");
+		afs_com_err(whoami, 0, "Port offset already in tape database");
 	    ERROR(code);
 	}
 
 	code = bc_SaveHosts();
 	if (code) {
-	    com_err(whoami, code, "Cannot save tape hosts");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save tape hosts");
+	    afs_com_err(whoami, 0,
 		    "Changes are temporary - for this session only");
 	    ERROR(code);
 	}
@@ -124,7 +124,7 @@ bc_DeleteHostCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -150,8 +150,8 @@ bc_DeleteHostCmd(as, arock)
 
 	code = bc_SaveHosts();
 	if (code) {
-	    com_err(whoami, code, "Cannot save tape hosts");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save tape hosts");
+	    afs_com_err(whoami, 0,
 		    "Changes are temporary - for this session only");
 	    ERROR(code);
 	}
@@ -184,7 +184,7 @@ bc_ListHostsCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -264,7 +264,7 @@ bc_ParseHosts()
 	sscanf(tbuffer, "%s %u", hostName, &port);
 	th = gethostbyname(hostName);
 	if (th == 0) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "can't get host info for %s from nameserver or /etc/hosts.",
 		    hostName);
 	}
@@ -378,7 +378,7 @@ bc_UpdateHosts()
     }
 
     if (ctPtr->textVersion != -1) {
-	com_err(whoami, 0, "obsolete tapehosts - updating");
+	afs_com_err(whoami, 0, "obsolete tapehosts - updating");
 	bc_ClearHosts();
     }
 

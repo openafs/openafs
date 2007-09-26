@@ -11,6 +11,17 @@ RELDIR=kauth
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+RXK5LIBS = $(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 ############################################################################
 # Definitions for installing header files
 
@@ -99,7 +110,7 @@ AFSLIBS =  \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\cm_dns.obj
-	
+
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 
 ############################################################################
@@ -122,7 +133,9 @@ KASERVER_OBJS =\
 	$(OUT)\kaserver.res
 
 KASERVER_EXELIBS =\
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
@@ -148,8 +161,12 @@ KAS_OBJS =\
 	$(OUT)\admin_tools.obj \
 	$(OUT)\kkids.obj \
 	$(OUT)\kas.res
-	
-$(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
+
+KAS_EXELIBS =\
+	$(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afscom_err.lib
+
+$(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAS_EXELIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -163,7 +180,11 @@ KPASSWD_OBJS =\
 	$(OUT)\kkids.obj \
 	$(OUT)\kpasswd.res
 
-$(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
+KPASSWD_EXELIBS =\
+	$(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afscom_err.lib
+
+$(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(KPASSWD_EXELIBS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -243,4 +264,4 @@ clean::
 	$(DEL) kaerrors.c
 
 mkdir:
-	
+

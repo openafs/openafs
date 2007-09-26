@@ -17,7 +17,16 @@
 RCSID
     ("$Header$");
 
+
 #if defined(UKERNEL)
+#include "afs/cellconfig.h"
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#include <rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/stds.h"
@@ -25,7 +34,6 @@ RCSID
 #include "des/des.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"
-#include "afs/cellconfig.h"
 #include "afs/keys.h"
 #include "afs/auth.h"
 #include "afs/pthread_glock.h"
@@ -41,20 +49,20 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#if defined(AFS_RXK5) && !defined(AFS_NT40_ENV)
 #include <des.h>
+#endif
 #include <rx/rxkad.h>
 #include <rx/rx.h>
 #include "cellconfig.h"
 #include "keys.h"
 #include "auth.h"
-#endif /* defined(UKERNEL) */
-#include <errno.h>
-
 #ifdef AFS_RXK5
 #include <rxk5_utilafs.h>
-#undef u
 #include <rx/rxk5.h>
 #endif
+#endif /* defined(UKERNEL) */
+#include <errno.h>
 
 /* return a null security object if nothing else can be done */
 static afs_int32
@@ -74,11 +82,12 @@ QuickAuth(astr, aindex)
 	/* this is mainly for use by ubik servers */
 
 afs_int32
-afsconf_ServerAuth(struct afsconf_dir *adir,
+afsconf_ServerAuth(void *parm1,
     struct rx_securityClass **sc,
     afs_int32 maxindex)
 {
     int i, r;
+    struct afsconf_dir *adir = parm1;
 
     LOCK_GLOBAL_MUTEX;
     r = 0;
@@ -129,12 +138,12 @@ GenericAuth(adir, astr, aindex, flags)
 
     enclevel = (flags & FORCE_SECURE) ? rxkad_crypt : rxkad_clear;
 
-    if (!(flags & (FORCE_RXK5|FORCE_RXKAD)))
-	flags |= (FORCE_RXK5|FORCE_RXKAD);
+    if (!(flags & (FORCE_K5CC|FORCE_KTC)))
+	flags |= (FORCE_K5CC|FORCE_KTC);
     
 #ifdef AFS_RXK5
     
-    if((flags & FORCE_RXK5) && have_afs_rxk5_keytab(adir->name)) {
+    if((flags & FORCE_K5CC) && have_afs_rxk5_keytab(adir->name)) {
 
 	k5context = rxk5_get_context(0);
 		
@@ -157,7 +166,7 @@ GenericAuth(adir, astr, aindex, flags)
 #endif
 
     /* first, find the right key and kvno to use */
-    if (flags & FORCE_RXKAD)
+    if (flags & FORCE_KTC)
 	code = afsconf_GetLatestKey(adir, &kvno, &key);
     else code = EDOM;
     if (code) {

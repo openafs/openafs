@@ -27,9 +27,9 @@
 #include <afs/com_err.h>
 
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #endif
 
 struct VenusFid {
@@ -189,21 +189,21 @@ krb5_ccache cc;
     
         code = krb5_init_context(&k5context);
     	if(code) {
-	    printf("Error krb5_init_context - %d (%s)\n", code, error_message(code));
+	    printf("Error krb5_init_context - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
     	}
 	
         memset(&cc, 0, sizeof cc);
         code = krb5_cc_default(k5context, &cc);
         if(code) {
-	    printf("Error krb5_cc_default - %d (%s)\n", code, error_message(code));
+	    printf("Error krb5_cc_default - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
     	}
 	
     	memset(in_creds, 0, sizeof *in_creds);
     	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
     	if(code) {
-	    printf("Error krb5_cc_get_principal - %d (%s)\n", code, error_message(code));
+	    printf("Error krb5_cc_get_principal - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
     	}
 	tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
@@ -213,7 +213,7 @@ krb5_ccache cc;
 	}
 	code = afsconf_GetCellInfo(tdir, cellname, 0, info);
 	if (code) {
-	    printf ("Error afsconf_GetCellInfo - %d (%s)\n", code, error_message(code));
+	    printf ("Error afsconf_GetCellInfo - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
 	}
     	afs_k5_princ = get_afs_krb5_svc_princ(info);
@@ -224,7 +224,7 @@ krb5_ccache cc;
 	}
     	code = krb5_parse_name(k5context, afs_k5_princ,	&in_creds->server);
     	if(code) {
-	    printf("Error krb5_parse_name - %d (%s)\n", code, error_message(code));
+	    printf("Error krb5_parse_name - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
     	}
 	free(afs_k5_princ);		
@@ -232,7 +232,7 @@ krb5_ccache cc;
     	// 0 is cc flags
     	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
     	if(code) {
-	    printf("Error krb5_get_credentials - %d (%s)\n", code, error_message(code));
+	    printf("Error krb5_get_credentials - %d (%s)\n", code, afs_error_message(code));
 	    exit(1);
     	}
 	return rxk5_NewClientSecurityObject(rxk5_crypt, k5_creds, 0);
@@ -305,7 +305,7 @@ main(int argc, char **argv)
 
     blksize = 8 * 1024;
 #ifdef AFS_RXK5
-    rxk5 = env_afs_rxk5_default() != FORCE_RXKAD;
+    rxk5 = !!(env_afs_rxk5_default() & FORCE_K5CC);
 #endif
 
 #ifdef AFS_RXK5
@@ -471,12 +471,12 @@ main(int argc, char **argv)
 	    dfd = open(destpath, O_RDWR | O_TRUNC, 0666);
 	    if (dfd < 0) {
 		fprintf(stderr, "Cannot open %s (%s)\n", destpath,
-			error_message(errno));
+			afs_error_message(errno));
 		goto Fail_dconn;
 	    }
 	} else if (dfd < 0) {
 	    fprintf(stderr, "Cannot open %s (%s)\n", destpath,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    goto Fail_dconn;
 	}
     } else {
@@ -492,7 +492,7 @@ main(int argc, char **argv)
 		    code = 0;
 	    } else {
 		printf("Cannot create %s (%s)\n", destpath,
-		       error_message(code));
+		       afs_error_message(code));
 		if (code)
 		    goto Fail_dconn;
 	    }
@@ -503,19 +503,19 @@ main(int argc, char **argv)
 	sfd = open(srcf, O_RDONLY, 0);
 	if (sfd < 0) {
 	    fprintf(stderr, "Cannot open %s (%s)\n", srcf,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    goto Fail_dconn;
 	}
 	if (fstat(sfd, &statbuf) < 0) {
 	    fprintf(stderr, "Cannot stat %s (%s)\n", srcf,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    close(sfd);
 	    goto Fail_dconn;
 	}
     } else {
 	if ((code = RXAFS_FetchStatus(sconn, &sf, &fst, &scb, &vs))) {
 	    printf("Cannot fetchstatus of %d.%d (%s)\n", sf.Volume, sf.Vnode,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_dconn;
 	}
     }
@@ -540,7 +540,7 @@ main(int argc, char **argv)
     if (!slcl) {
 	if ((code = StartRXAFS_FetchData(scall, &sf, 0, filesz))) {
 	    printf("Unable to fetch data from %s (%s)\n", srcf,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_call;
 	}
     }
@@ -561,7 +561,7 @@ main(int argc, char **argv)
 	if ((code =
 	     StartRXAFS_StoreData(dcall, &df, &sst, 0, filesz, filesz))) {
 	    printf("Unable to store data to %s (%s)\n", destpath,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_call;
 	}
     }
@@ -620,7 +620,7 @@ main(int argc, char **argv)
 	fetchcode = rx_EndCall(scall, fetchcode);
     }
     if (fetchcode && printcallerrs)
-	printf("Error returned from fetch: %s\n", error_message(fetchcode));
+	printf("Error returned from fetch: %s\n", afs_error_message(fetchcode));
 
     if (dlcl) {
 	if (close(dfd) && !storecode)
@@ -629,7 +629,7 @@ main(int argc, char **argv)
 	storecode = rx_EndCall(dcall, storecode);
     }
     if (storecode && printcallerrs)
-	printf("Error returned from store: %s\n", error_message(storecode));
+	printf("Error returned from store: %s\n", afs_error_message(storecode));
 
     gettimeofday(&finish, &tz);
 
@@ -641,7 +641,7 @@ main(int argc, char **argv)
 	scb.CallBackType = CB_DROPPED;
 	if ((code = RXAFS_GiveUpCallBacks(sconn, &theFids, &theCBs)))
 	    printf("Could not give up source callback: %s\n",
-		   error_message(code));
+		   afs_error_message(code));
     }
 
     if (!dlcl) {
@@ -652,7 +652,7 @@ main(int argc, char **argv)
 	dcb.CallBackType = CB_DROPPED;
 	if ((code = RXAFS_GiveUpCallBacks(dconn, &theFids, &theCBs)))
 	    printf("Could not give up target callback: %s\n",
-		   error_message(code));
+		   afs_error_message(code));
     }
 
     if (code == 0)

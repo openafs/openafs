@@ -710,9 +710,19 @@ extern krb5_cc_ops krb5_dcc_ops;
 #define DEFAULT_CC krb5_dcc_ops
 #endif
 
+#ifdef AC_SUPPORT
+extern krb5_cc_ops krb5_acc_ops;
+#undef DEFAULT_CC
+#define DEFAULT_CC krb5_acc_ops
+#endif
+
 struct krb5_cc_type const krb5i_cc_element1[] = {
+#ifdef AC_SUPPORT
+{krb5i_cc_element1+1, &krb5_acc_ops},
+#else
 #ifdef DC_SUPPORT
 {krb5i_cc_element1+1, &krb5_dcc_ops},
+#endif
 #endif
 {0, &krb5_cc_file_ops}
 };

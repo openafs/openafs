@@ -50,7 +50,7 @@ main(int ac, char **av)
 
     code = pr_Initialize(1, AFSDIR_CLIENT_ETC_DIRPATH, 0);
     if (code) {
-	com_err("linktest", code, "can't talk to prot service.");
+	afs_com_err("linktest", code, "can't talk to prot service.");
 	exit(1);
     }
     exit(0);

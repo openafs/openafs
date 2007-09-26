@@ -223,27 +223,36 @@ public class Cell implements java.io.Serializable
    */
   protected void refresh(boolean all) throws AFSException
   {
+// System.err.print("<r");
     if( all || (users != null) ) {
+// System.err.print("u");
         refreshUsers();
     }
     if( all || (userNames != null) ) {
+// System.err.print("U");
         refreshUserNames();
     }
     if( all || (groups != null) ) {
+// System.err.print("g");
         refreshGroups();
     }
     if( all || (groupNames != null) ) {
+// System.err.print("G");
         refreshGroupNames();
     }
     if( all || (servers != null) ) {
+// System.err.print("s");
         refreshServers();
     }
     if( all || (serverNames != null) ) {
+// System.err.print("S");
         refreshServerNames();
     }
     if( all || cachedInfo ) {
+// System.err.print("i");
         refreshInfo();
     }
+// System.err.println(">");
   }
 
   /**
@@ -291,30 +300,37 @@ public class Cell implements java.io.Serializable
   {
     User currUser;
     users = new ArrayList();
+    int hammer = 0;
+    long iterationId = 0;
+    int r = 1;
+    boolean authorized = false;
+    currUser = new User( this );
 
     // get kas entries
-    long iterationId = getKasUsersBegin( cellHandle );
+    try {
+      iterationId = getKasUsersBegin( cellHandle );
 
-    currUser = new User( this );
-    boolean authorized = false;
-    int r = 1;
-    while( r != 0 ) {
-      try {
-        if (authorized) {
-          users.add( currUser );
-          currUser = new User( this );
-        }
-        r = getKasUsersNext( cellHandle, iterationId, currUser );
-        authorized = true;
-      } catch (AFSException e) {
-        System.err.println("ERROR Cell::refreshUsers():kas (User: " 
-			   + currUser.getName() + ") -> " + e.getMessage());
-        authorized = false;
-        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
-	//r = 0;
-      }
-    } 
-    getKasUsersDone( iterationId );
+      while( r != 0 ) {
+	try {
+	  if (authorized) {
+	    users.add( currUser );
+	    currUser = new User( this );
+	  }
+	  r = getKasUsersNext( cellHandle, iterationId, currUser );
+	  authorized = true;
+	} catch (AFSException e) {
+	  System.err.println("ERROR Cell::refreshUsers():kas (User: " 
+			     + currUser.getName() + ") -> " + e.getMessage());
+	  authorized = false;
+	  //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
+	  //r = 0;
+	  if (++hammer > 5) r = 0;
+	}
+      } 
+      getKasUsersDone( iterationId );
+    } catch (AFSException e) {
+      r = 0;	/* XXX should only do this on ADMCLIENTCELLKASINVALID ??? */
+    }
 
     //take the union with the pts entries
     iterationId = getPtsUsersBegin( cellHandle );
@@ -336,6 +352,7 @@ public class Cell implements java.io.Serializable
         authorized = false;
         //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
 	// r = 0;
+	if (++hammer > 5) r = 0;
       }
     } 
     getPtsUsersDone( iterationId );
@@ -351,14 +368,21 @@ public class Cell implements java.io.Serializable
   protected void refreshUserNames() throws AFSException
   {
     String currName;
+    long iterationId ;
     userNames = new ArrayList();
 
+// System.err.print("<q");
     // get kas entries
-    long iterationId = getKasUsersBegin( cellHandle );
+	try {
+    iterationId = getKasUsersBegin( cellHandle );
     while( ( currName = getKasUsersNextString( iterationId )) != null ) {
       userNames.add( currName );
     } 
     getKasUsersDone( iterationId );
+	} catch (AFSException e) {
+// System.err.print("getKasUsers(x) failed");
+//	e.printStackTrace();
+	}
     
     //take the union with the pts entries
     iterationId = Cell.getPtsUsersBegin( cellHandle );
@@ -369,6 +393,7 @@ public class Cell implements java.io.Serializable
       }
     } 
     getPtsUsersDone( iterationId );
+// System.err.println(">");
   }
 
 
@@ -380,6 +405,7 @@ public class Cell implements java.io.Serializable
   protected void refreshGroups() throws AFSException
   {
     Group currGroup;
+    int hammer = 0;
 
     long iterationId = getGroupsBegin( cellHandle );
     
@@ -404,6 +430,7 @@ public class Cell implements java.io.Serializable
         authorized = false;
         //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
 	// r = 0;
+	if (++hammer > 5) r = 0;
       }
     } 
     Cell.getGroupsDone( iterationId );
@@ -435,6 +462,7 @@ public class Cell implements java.io.Serializable
   protected void refreshServers() throws AFSException
   {
     Server currServer;
+    int hammer = 0;
 
     long iterationId = getServersBegin( cellHandle );
    
@@ -460,6 +488,7 @@ public class Cell implements java.io.Serializable
         authorized = false;
         //if (e.getErrorCode() == org.openafs.jafs.ErrorCodes.PERMISSION_DENIED) 
         // r = 0;
+	if (++hammer > 5) r = 0;
       }
     } 
     getServersDone( iterationId );
@@ -716,7 +745,9 @@ public class Cell implements java.io.Serializable
    */
   public String[] getUserNames() throws AFSException
   {
+// System.err.print("<u");
     if( userNames == null ) refreshUserNames();
+// System.err.println(">");
     return (String[]) userNames.toArray( new String[userNames.size()] );
   }
 
@@ -793,6 +824,7 @@ public class Cell implements java.io.Serializable
     int indexPTS = 0;
     int indexKAS = 0;
 
+// System.err.print("<U");
     if (startIndex < ptsOnlyCount) {
       int i = 0;
       iterationID = getPtsUsersBegin(cellHandle);
@@ -823,6 +855,7 @@ public class Cell implements java.io.Serializable
     } 
     getKasUsersDone( iterationID );
 
+// System.err.println(">");
     if (indexKAS < length) {
       String[] u = new String[indexKAS + indexPTS];
       System.arraycopy(users, 0, u, 0, u.length);
@@ -1258,6 +1291,7 @@ public class Cell implements java.io.Serializable
   public String getInfo()
   {
     String r = "Cell: " + name + "\n\n";
+String x = null;
     try {
         r += "\tMax group ID: " + getMaxGroupID() + "\n";
         r += "\tMax user ID: " + getMaxUserID() + "\n";
@@ -1270,11 +1304,16 @@ public class Cell implements java.io.Serializable
     String[] usrs;
     String[] grps;
     try {
+x = "getUserNames";
         usrs = getUserNames();
+x = "getGroupNames";
         grps = getGroupNames();
+x = "getServerNames";
         servs = getServerNames();
 
     } catch( Exception e ) {
+System.err.println("getInfo: exception in " + x + ": " + e.toString());
+e.printStackTrace();
         return e.toString();
     }
 

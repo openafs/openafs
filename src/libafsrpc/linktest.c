@@ -45,7 +45,7 @@
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 
-#ifdef USING_SSL   
+#ifdef USING_K5SSL   
 #include "k5ssl.h"   
 #else
 #if USING_SHISHI
@@ -53,9 +53,6 @@
 #else 
 #ifdef private
 #undef private
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
 #endif
 #include <krb5.h>
 #endif
@@ -94,7 +91,7 @@ main(int ac, char **av)
 #endif
     sc = rxnull_NewClientSecurityObject();
     if (!sc) {
-	com_err("linktest", errno, "Can't make null security object.");
+	afs_com_err("linktest", errno, "Can't make null security object.");
 	exit(1);
     }
     conn = rx_NewConnection(htonl(0x7f000001), htons(7003), 52, sc, 0);
@@ -107,7 +104,7 @@ main(int ac, char **av)
 	des_init_random_number_generator();
 	rxkad_GetServerInfo();
 #endif
-	com_err("linktest", errno, "Can't make rx connection.");
+	afs_com_err("linktest", errno, "Can't make rx connection.");
 	exit(1);
     }
     code = RXAFS_GetRootVolume(conn, &name);
@@ -136,7 +133,7 @@ main(int ac, char **av)
     } multi_End;
     if (code == 666) {
 	puts(RXAFSCB_function_names[0]);
-	puts(error_table_name(code));
+	puts(afs_error_table_name(code));
 	des_string_to_key(name, key);
 	des_cblock_print_file(key, stdout);
 	des_quad_cksum(0, 0, 0, 0, 0);

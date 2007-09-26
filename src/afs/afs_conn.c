@@ -16,6 +16,17 @@
 RCSID
     ("$Header$");
 
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#endif
+
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
@@ -47,11 +58,6 @@ RCSID
 
 #ifdef AFS_RXK5
 #include <rx/rxk5.h>
-#ifdef USING_SSL
-#include <k5ssl.h>
-#else
-#include <krb5.h>
-#endif
 #include <afs/rxk5_tkt.h>
 #endif
 
@@ -366,14 +372,6 @@ ForceNewConnections(struct srvAddr *sap)
 
     if (!sap)
 	return;			/* defensive check */
-
-    /* if client is not multihomed, do nothing */
-    ObtainReadLock(&afs_xinterface);
-    if (afs_cb_interface.numberOfInterfaces <= 1) {
-	ReleaseReadLock(&afs_xinterface);
-	return;
-    }
-    ReleaseReadLock(&afs_xinterface);
 
     ObtainWriteLock(&afs_xconn, 413);
     for (tc = sap->conns; tc; tc = tc->next)

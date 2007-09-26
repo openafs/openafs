@@ -15,7 +15,11 @@
 #include <pthread.h>
 #endif
 
+#ifdef AFS_NT40_ENV
+#include "voldefs.h"
+#else
 #include <afs/voldefs.h>
+#endif
 
 /* vflags, representing state of the volume */
 #define	VTDeleteOnSalvage	1	/* delete on next salvage */

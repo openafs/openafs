@@ -649,7 +649,7 @@ AFS_MD5_Final (void *res, struct afs_md5 *m)
 
 afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 { 
-    afs_int32 ino;
+    afs_int32 ino, vno = vnode;
     char digest[16];
     struct afs_md5 ct;
     
@@ -659,11 +659,11 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 	AFS_MD5_Update(&ct, &vnode, 4);
 	AFS_MD5_Final(digest, &ct);
 	memcpy(&ino, digest, sizeof(ino_t));
-	ino ^= (ino ^ vnode) & 1;
+	ino ^= (ino ^ vno) & 1;
     } else {
 	ino = (volume << 16) + vnode;
-	ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     }
+    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
 

@@ -35,31 +35,13 @@
 #include "afs/sysincludes.h"    /*Standard vendor system headers */
 #include "afsincludes.h"        /*AFS-based standard headers */
 #include "afs_stats.h"
-#include <rx/rxk5.h>
-#include <rx/rxk5errors.h>
-#include <rx/rxk5c.h>
-#include <k5ssl.h>
 #include <rx/rxk5imp.h>
+#include <rx/rxk5c.h>
+#include <rx/rxk5errors.h>
 #define assert(p) do {} while(0)
 #else
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#undef u
-#include <krb5.h>
-#endif
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <com_err.h>
@@ -73,8 +55,14 @@
 krb5_context rxk5_context;
 #ifdef AFS_PTHREAD_ENV
 /* this mostly just protects setting rxk5_context. */
+#ifdef AFS_NT40_ENV
+/* on Win32, rxk5_OnetimeInit() is called */
+pthread_mutex_t rxk5i_context_mutex[1];
+pthread_mutex_t rxk5_cuid_mutex[1];
+#else
 pthread_mutex_t rxk5i_context_mutex[1] = {PTHREAD_MUTEX_INITIALIZER};
 pthread_mutex_t rxk5_cuid_mutex[1] = {PTHREAD_MUTEX_INITIALIZER};
+#endif
 #else
 #if defined(KERNEL) && !defined(UKERNEL)
 afs_rwlock_t rxk5i_context_mutex;
@@ -82,7 +70,7 @@ afs_rwlock_t rxk5_cuid_mutex;
 #endif /* kernel */
 #endif
 
-void rxk5_OnetimeInit()
+void rxk5_OnetimeInit(void)
 {
     printf("rxk5_OnetimeInit called\n");
 
@@ -103,11 +91,18 @@ void rxk5_OnetimeInit()
 	afs_warn("rxk5/k5ssl: problem adding entropy");
       }
     }
+#else
+#ifdef AFS_NT40_ENV
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_init(rxk5i_context_mutex, (const pthread_mutexattr_t *)0);
+    pthread_mutex_init(rxk5_cuid_mutex, (const pthread_mutexattr_t *)0);
+#endif
+#endif
 #endif
 }
 
-int rxk5i_random_integer(context)
-    krb5_context context;
+int
+rxk5i_random_integer(krb5_context context)
 {
     int result;
 #ifndef USING_HEIMDAL
@@ -137,8 +132,7 @@ int rxk5i_random_integer(context)
 }
 
 krb5_context
-rxk5_get_context(k5_context)
-    krb5_context k5_context;
+rxk5_get_context(krb5_context k5_context)
 {
     int code;
     if (k5_context || (k5_context = rxk5_context)) {
@@ -160,11 +154,12 @@ rxk5_get_context(k5_context)
 }
 
 int
-rxk5i_SetLevel(conn, level, enctype, cktype, context, padp)
-    struct rx_connection *conn;
-    int cktype;
-    krb5_context context;
-    int *padp;
+rxk5i_SetLevel(struct rx_connection *conn,
+    int level,
+    int enctype,
+    int cktype,
+    krb5_context context,
+    int *padp)
 {
     int code;
     int d, maxd, mind;
@@ -306,9 +301,9 @@ Done:
 }
 
 int
-rxk5i_NewConnection (so, conn, size)
-    struct  rx_securityClass *so;
-    struct  rx_connection *conn;
+rxk5i_NewConnection (struct rx_securityClass *so,
+    struct rx_connection *conn,
+    int size)
 {
     conn->securityData = (char*) rxi_Alloc(size);
     memset(conn->securityData, 0, size);
@@ -317,10 +312,9 @@ rxk5i_NewConnection (so, conn, size)
 }
 
 int
-rxk5i_MakePsdata(call, p, psdata)
-    struct rx_call *call;
-    struct rx_packet *p;
-    krb5_data *psdata;
+rxk5i_MakePsdata(struct rx_call *call,
+    struct rx_packet *p,
+    krb5_data *psdata)
 {
     rxk5c_pshead ps[1];
     XDR xdrs[1];
@@ -344,14 +338,13 @@ printf ("rxk5i_MakePsdata: PSEUDOHEADER serialization failed\n");
 }
 
 int
-rxk5i_PrepareEncrypt(so, call, p, akey, padp, stats, context)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
-    krb5_keyblock *akey;
-    int *padp;
-    struct rxk5_connstats *stats;
-    krb5_context context;
+rxk5i_PrepareEncrypt(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p,
+    krb5_keyblock *akey,
+    int *padp,
+    struct rxk5_connstats *stats,
+    krb5_context context)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int len = rx_GetDataSize(p);
@@ -492,14 +485,13 @@ if (code) printf ("rxk5i_PrepareEncrypt err=%d\n", code);
 }
 
 int
-rxk5i_CheckEncrypt(so, call, p, akey, padp, stats, context)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
-    krb5_keyblock *akey;
-    int *padp;
-    struct rxk5_connstats *stats;
-    krb5_context context;
+rxk5i_CheckEncrypt(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p,
+    krb5_keyblock *akey,
+    int *padp,
+    struct rxk5_connstats *stats,
+    krb5_context context)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int len = rx_GetDataSize(p);
@@ -612,13 +604,13 @@ Done:
 }
 
 int
-rxk5i_PrepareSum(so, call, p, akey, cktype, stats, context)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
-    krb5_keyblock *akey;
-    struct rxk5_connstats *stats;
-    krb5_context context;
+rxk5i_PrepareSum(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p,
+    krb5_keyblock *akey,
+    int cktype,
+    struct rxk5_connstats *stats,
+    krb5_context context)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int len = rx_GetDataSize(p);
@@ -715,13 +707,13 @@ Done:
 }
 
 int
-rxk5i_CheckSum(so, call, p, akey, cktype, stats, context)
-    struct rx_securityClass *so;
-    struct rx_call *call;
-    struct rx_packet *p;
-    krb5_keyblock *akey;
-    struct rxk5_connstats *stats;
-    krb5_context context;
+rxk5i_CheckSum(struct rx_securityClass *so,
+    struct rx_call *call,
+    struct rx_packet *p,
+    krb5_keyblock *akey,
+    int cktype,
+    struct rxk5_connstats *stats,
+    krb5_context context)
 {
     struct rx_connection *conn = rx_ConnectionOf(call);
     int len = rx_GetDataSize(p);
@@ -784,7 +776,7 @@ printf ("rxk5i_CheckSum: short packet %d < %d\n", cs, off);
     cksum->checksum.length = off;
     cksum->cksumtype = cktype;	/* XXX */
 #else
-    cksum->contents = cp;
+    cksum->contents = (void*) cp;
     cksum->length = off;
     cksum->checksum_type = cktype;	/* XXX */
 #endif
@@ -834,11 +826,10 @@ Done:
 }
 
 int
-rxk5i_GetStats(so, conn, stats, cstats)
-    struct rx_securityClass *so;
-    struct rx_connection *conn;
-    struct rx_securityObjectStats *stats;
-    struct rxk5_connstats *cstats;
+rxk5i_GetStats(struct rx_securityClass *so,
+    struct rx_connection *conn,
+    struct rx_securityObjectStats *stats,
+    struct rxk5_connstats *cstats)
 {
     stats->bytesReceived = cstats->bytesReceived;
     stats->packetsReceived = cstats->packetsReceived;
@@ -855,10 +846,10 @@ rxk5i_GetStats(so, conn, stats, cstats)
  * older:
  */
 int
-rxk5i_derive_key(context, from, how, to)
-    krb5_context context;
-    krb5_keyblock *from, *to;
-    krb5_data *how;
+rxk5i_derive_key(krb5_context context,
+    krb5_keyblock *from,
+    krb5_data *how,
+    krb5_keyblock *to)
 {
     int i, code;
     krb5_data plain[1];
@@ -922,7 +913,7 @@ rxk5i_derive_key(context, from, how, to)
     if ((code = krb5_copy_keyblock_contents(context, from, to)))
 	goto Done;
 #endif
-#ifdef K5S_CK_H
+#ifdef USING_K5SSL
 #define rxk5i_nfold(a,b,c,d)	krb5i_nfold(a,b,c,d)
 #endif
 #ifdef USING_SHISHI
@@ -1037,9 +1028,8 @@ Done:
 
 #ifdef USING_SHISHI
 void
-krb5_free_keyblock_contents(context, key)
-    krb5_context context;
-    krb5_keyblock *key;
+krb5_free_keyblock_contents(krb5_context context,
+    krb5_keyblock *key)
 {
     if (key->sk)
 	shishi_key_done(key->sk);

@@ -27,6 +27,7 @@ RCSID
 #include "volser.h"
 #include "bc.h"
 #include <afs/volint.h>
+#include <afs/com_err.h>
 
 extern char *whoami;
 
@@ -76,7 +77,7 @@ volImageTime(serv, part, volid, voltype, clDatePtr)
 
     code = UV_ListOneVolume(htonl(serv), part, volid, &viptr);
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Warning: Can't get clone time of volume %u - using 0",
 		volid);
 	*clDatePtr = 0;
@@ -98,7 +99,7 @@ volImageTime(serv, part, volid, voltype, clDatePtr)
 	break;
 
     default:
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Can't get clone time of volume %u - unknown volume type",
 		volid);
 	return (-1);

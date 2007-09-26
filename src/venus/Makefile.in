@@ -29,7 +29,7 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/libaudit.a \
-	 $(TOP_LIBDIR)/libafsutil.a
+	 $(TOP_LIBDIR)/util.a
 
 CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
@@ -40,7 +40,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
-	 $(TOP_LIBDIR)/libafsutil.a
+	 $(TOP_LIBDIR)/util.a
 
 LIBS = ${FSLIBS} 
 

@@ -28,25 +28,10 @@
  * such damages.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <afs/stds.h>
 #include <afsconfig.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef USING_SHISHI
-#include <shishi.h>
-#else
-#ifdef USING_SSL
-#include "k5ssl.h"
-#else
-#if HAVE_PARSE_UNITS_H
-#include "parse_units.h"
-#endif
-#include <krb5.h>
-#endif
-#endif
 #include <assert.h>
 #include <assert.h>
 #include <com_err.h>
@@ -56,15 +41,16 @@
 #include "rxk5c.h"
 #include "rxk5errors.h"
 
-int rxk5_default_get_key(arg, context, server, enctype, kvno, key)
-    void *arg;
-    krb5_context context;
+int rxk5_default_get_key(void *arg,
+    krb5_context context,
 #ifdef USING_SHISHI
-    char *server;
+    char *server,
 #else
-    krb5_principal server;
+    krb5_principal server,
 #endif
-    krb5_keyblock *key;
+    int enctype,
+    int kvno,
+    krb5_keyblock *key)
 {
     int code;
 #ifdef USING_SHISHI

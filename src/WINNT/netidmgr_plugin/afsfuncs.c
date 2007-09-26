@@ -472,7 +472,7 @@ _no_krb5:
 
            ASSUMPTION:
 
-           If Krb5 was used to obatain the token, then there is a Krb5
+           If Krb5 was used to obtain the token, then there is a Krb5
            ticket of the form afs/<cell>@<REALM> or afs@<CELL> still
            in the cache.  This is also true for Krb524 token
            acquisition.
@@ -521,7 +521,7 @@ _no_krb5:
                                      &krb4_credtype_id);
             }
 
-            if (krb4_credtype_id > 0 &&
+            if (krb4_credtype_id >= 0 &&
                 KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1,
                                                          afs_filter_krb4_tkt,
                                                          (void *) cell,
@@ -593,11 +593,11 @@ _no_krb5:
                            &aserver, sizeof(aserver));
 
         if(cell) {
-            kcdb_cred_set_attr(cred, afs_attr_cell, cell, KCDB_CBSIZE_AUTO);
+            kcdb_cred_set_attr(cred, afs_attr_cell, cell, (khm_size)KCDB_CBSIZE_AUTO);
         }
 
         kcdb_cred_set_attr(cred, KCDB_ATTR_LOCATION, 
-                           location, KCDB_CBSIZE_AUTO);
+                           location, (khm_size)KCDB_CBSIZE_AUTO);
 
         kcdb_credset_add_cred(afs_credset, cred, -1);
 
@@ -630,9 +630,7 @@ ViceIDToUsername(char *username,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
-#ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
-#endif /* AFS_ID_TO_NAME */
     long viceId = ANONYMOUSID;		/* AFS uid of user */
     int  status = 0;
 #ifdef ALLOW_REGISTER
@@ -652,6 +650,7 @@ ViceIDToUsername(char *username,
 	pr_End();
     }
 
+#ifdef AFS_ID_TO_NAME
     /*
      * This is a crock, but it is Transarc's crock, so
      * we have to play along in order to get the
@@ -661,11 +660,14 @@ ViceIDToUsername(char *username,
      * the code for tokens, this hack (AFS ID %d) will
      * not work if you change %d to something else.
      */
-
+#endif /* AFS_ID_TO_NAME */
     /*
      * This code is taken from cklog -- it lets people
      * automatically register with the ptserver in foreign cells
      */
+
+    /* copy the username because pr_CreateUser will lowercase it */
+    StringCbCopyA(username_copy, BUFSIZ, username);
 
 #ifdef ALLOW_REGISTER
     if (status == 0) {
@@ -673,12 +675,11 @@ ViceIDToUsername(char *username,
 #else /* ALLOW_REGISTER */
 	    if ((status == 0) && (viceId != ANONYMOUSID))
 #endif /* ALLOW_REGISTER */
-    {
+            {
 #ifdef AFS_ID_TO_NAME
-	StringCbCopyA(username_copy, BUFSIZ, username);
-	StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+                StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
-    }
+            }
 #ifdef ALLOW_REGISTER
         } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
             id = 0;
@@ -691,10 +692,8 @@ ViceIDToUsername(char *username,
                 return status;
             status = pr_CreateUser(username, &id);
 	    pr_End();
-	    if (status)
-		return status;
+            StringCbCopyA(username, BUFSIZ, username_copy);
 #ifdef AFS_ID_TO_NAME
-            StringCbCopyA(username_copy, BUFSIZ, username);
             StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
         }
@@ -727,8 +726,9 @@ afs_klog(khm_handle identity,
     char	RealmName[128];
     char	CellName[128];
     char	ServiceName[128];
-	khm_handle	confighandle;
-	khm_int32	supports_krb4 = 1;
+    khm_handle	confighandle = NULL;
+    khm_int32	supports_krb4 = 1;
+    khm_int32   got524cred = 0;
 
     /* signalling */
     BOOL        bGotCreds = FALSE; /* got creds? */
@@ -767,7 +767,7 @@ afs_klog(khm_handle identity,
     }
 
     StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
-                  afs_realm_of_cell(&ak_cellconfig));
+                  afs_realm_of_cell(&ak_cellconfig, FALSE));
 
     if (strlen(service) == 0)
         StringCbCopyA(ServiceName, sizeof(ServiceName), "afs");
@@ -811,7 +811,7 @@ afs_klog(khm_handle identity,
 
             memset((char *)&increds, 0, sizeof(increds));
 
-            (*pkrb5_cc_get_principal)(context, k5cc, &client_principal);
+            pkrb5_cc_get_principal(context, k5cc, &client_principal);
             i = krb5_princ_realm(context, client_principal)->length;
             if (i > REALM_SZ-1) 
                 i = REALM_SZ-1;
@@ -824,7 +824,7 @@ afs_klog(khm_handle identity,
         }
 
         /* First try Service/Cell@REALM */
-        if (r = (*pkrb5_build_principal)(context, &increds.server,
+        if (r = pkrb5_build_principal(context, &increds.server,
                                          (int) strlen(RealmName),
                                          RealmName,
                                          ServiceName,
@@ -840,15 +840,33 @@ afs_klog(khm_handle identity,
         increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
 #ifdef KRB5_TC_NOTICKET
-        flags = 0;
+        flags = KRB5_TC_OPENCLOSE;
         r = pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
+      retry_retcred:
         r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
-        if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+	if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+	      r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
+	     !RealmName[0]) {
+	    StringCbCopyA(RealmName, sizeof(RealmName), 
+			  afs_realm_of_cell(&ak_cellconfig, TRUE));
+
+            pkrb5_free_principal(context, increds.server);
+	    r = pkrb5_build_principal(context, &increds.server,
+					 (int) strlen(RealmName),
+					 RealmName,
+					 ServiceName,
+					 CellName,
+					 0);
+            if (r == 0)
+                r = pkrb5_get_credentials(context, 0, k5cc, 
+                                          &increds, &k5creds);
+	}
+	if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
             r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
             /* Next try Service@REALM */
             pkrb5_free_principal(context, increds.server);
-            r = (*pkrb5_build_principal)(context, &increds.server,
+            r = pkrb5_build_principal(context, &increds.server,
                                          (int) strlen(RealmName),
                                          RealmName,
                                          ServiceName,
@@ -858,11 +876,22 @@ afs_klog(khm_handle identity,
                                           &increds, &k5creds);
         }
 
+	/* Check to make sure we received a valid ticket; if not remove it
+	* and try again.  Perhaps there are two service tickets for the
+	* same service in the ccache.
+	*/
+	if (r == 0 && k5creds && k5creds->times.endtime < time(NULL)) {
+	    pkrb5_cc_remove_cred(context, k5cc, 0, k5creds);
+	    pkrb5_free_creds(context, k5creds);
+	    k5creds = NULL;
+	    goto retry_retcred;
+	}
+
         pkrb5_free_principal(context, increds.server);
         pkrb5_free_principal(context, client_principal);
         client_principal = 0;
 #ifdef KRB5_TC_NOTICKET
-        flags = KRB5_TC_NOTICKET;
+        flags = KRB5_TC_OPENCLOSE | KRB5_TC_NOTICKET;
         pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
 
@@ -988,6 +1017,7 @@ afs_klog(khm_handle identity,
                 goto end_krb5;
             }
             rc = KSUCCESS;
+	    got524cred = 1;
             bGotCreds = TRUE;
         }
 
@@ -1082,7 +1112,7 @@ afs_klog(khm_handle identity,
         StringCchCopyA(aserver.cell, MAXKTCREALMLEN, CellName);
 
         memset(&atoken, '\0', sizeof(atoken));
-        atoken.kvno = creds.kvno;
+        atoken.kvno = (short)creds.kvno;
         atoken.startTime = creds.issue_date;
         atoken.endTime = (*pkrb_life_to_time)(creds.issue_date,creds.lifetime);
         memcpy(&atoken.sessionKey, creds.session, 8);
@@ -1117,17 +1147,12 @@ afs_klog(khm_handle identity,
         StringCbCopyA(aclient.instance, sizeof(aclient.instance), "");
 
         StringCchCatA(aclient.name, MAXKTCNAMELEN, "@");
-        StringCchCatA(aclient.name, MAXKTCNAMELEN, creds.realm);
+		StringCchCatA(aclient.name, MAXKTCNAMELEN, got524cred ? realm_of_user : creds.realm);
 
         StringCbCopyA(aclient.cell, sizeof(aclient.cell), CellName);
 
         ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
                          &aclient, &aserver, &atoken);
-
-        // NOTE: On WIN32, the order of SetToken params changed...
-        // to   ktc_SetToken(&aserver, &aclient, &atoken, 0)
-        // from ktc_SetToken(&aserver, &atoken, &aclient, 0) on
-        // Unix...  The afscompat ktc_SetToken provides the Unix order
 
         if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0)) {
             afs_report_error(rc, "ktc_SetToken()");
@@ -1168,47 +1193,64 @@ afs_klog(khm_handle identity,
 /* afs_realm_of_cell():               */
 /**************************************/
 static char *
-afs_realm_of_cell(afs_conf_cell *cellconfig)
+afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 {
     char krbhst[MAX_HSTNM]="";
     static char krbrlm[REALM_SZ+1]="";
     krb5_context  ctx = 0;
     char ** realmlist=NULL;
-    krb5_error_code r;
+    krb5_error_code r = 0;
 
     if (!cellconfig)
         return 0;
 
-    if ( pkrb5_init_context ) {
-        r = pkrb5_init_context(&ctx); 
-        if ( !r )
-            r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
-        if ( !r && realmlist && realmlist[0] ) {
-            StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
-            pkrb5_free_host_realm(ctx, realmlist);
-        }
-        if (ctx)
-            pkrb5_free_context(ctx);
-    }
+    if (referral_fallback) {
+	char * p;
+	p = strchr(cellconfig->hostName[0], '.');
+	if (p++)
+	    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
+	else
+	    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
+#if _MSC_VER >= 1400
+        _strupr_s(krbrlm, sizeof(krbrlm));
+#else
+        _strupr(krbrlm);
+#endif
+    } else {
+	if ( pkrb5_init_context ) {
+	    r = pkrb5_init_context(&ctx); 
+	    if ( !r )
+		r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
+	    if ( !r && realmlist && realmlist[0] ) {
+		StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
+		pkrb5_free_host_realm(ctx, realmlist);
+	    }
+	    if (ctx)
+		pkrb5_free_context(ctx);
+	}
 
-    if ( !krbrlm[0] ) {
-        StringCbCopyA(krbrlm, sizeof(krbrlm), 
-                      (char *)(*pkrb_realmofhost)(cellconfig->hostName[0]));
-        if ((*pkrb_get_krbhst)(krbhst, krbrlm, 1) != KSUCCESS)
-            krbrlm[0] = '\0';
-    }
+	if (r) {
+	    if (pkrb_get_krbhst && pkrb_realmofhost) {
+		StringCbCopyA(krbrlm, sizeof(krbrlm), 
+			       (char *)(*pkrb_realmofhost)(cellconfig->hostName[0]));
+		if ((*pkrb_get_krbhst)(krbhst, krbrlm, 1) != KSUCCESS)
+		    krbrlm[0] = '\0';
+	    }
 
-    if ( !krbrlm[0] ) {
-        char *s = krbrlm;
-        char *t = cellconfig->name;
-        int c;
-
-        while (c = *t++)
-        {
-            if (islower(c)) c=toupper(c);
-            *s++ = c;
-        }
-        *s++ = 0;
+	    if ( !krbrlm[0] ) {
+		char * p;
+		p = strchr(cellconfig->hostName[0], '.');
+		if (p++)
+		    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
+		else
+		    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
+#if _MSC_VER >= 1400
+		_strupr_s(krbrlm, sizeof(krbrlm));
+#else
+                _strupr(krbrlm);
+#endif
+	    }
+	}
     }
     return(krbrlm);
 }
@@ -1429,4 +1471,39 @@ cleanup:
     CloseServiceHandle(schSCManager); 
  
     return(hr); 
+}
+
+khm_boolean
+afs_check_for_cell_realm_match(khm_handle identity, char * cell) {
+    char local_cell[MAXCELLCHARS];
+    wchar_t wrealm[MAXCELLCHARS];
+    wchar_t idname[KCDB_IDENT_MAXCCH_NAME];
+    wchar_t * atsign;
+    khm_size cb;
+    char * realm;
+    afs_conf_cell cellconfig;
+    int rc;
+
+    ZeroMemory(local_cell, sizeof(local_cell));
+
+    rc = afs_get_cellconfig(cell, &cellconfig, local_cell);
+    if (rc)
+        return FALSE;
+
+    realm = afs_realm_of_cell(&cellconfig, FALSE);
+    if (realm == NULL)
+        return FALSE;
+
+    AnsiStrToUnicode(wrealm, sizeof(wrealm), realm);
+
+    cb = sizeof(idname);
+    idname[0] = L'\0';
+    kcdb_identity_get_name(identity, idname, &cb);
+
+    atsign = wcschr(idname, L'@');
+    if (atsign && atsign[1] && !_wcsicmp(atsign + 1, wrealm)) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }

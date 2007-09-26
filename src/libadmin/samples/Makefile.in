@@ -45,7 +45,7 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${RXK5T} \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/util.a
 
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \

@@ -36,7 +36,7 @@ Java package
 ------------
 
 The code for the org.openafs.jafs package resides in the 
-src/JAVA/org/openafs/jafs/ directory.  It is broken into classes
+src/JAVA/classes/org/openafs/jafs/ directory.  It is broken into classes
 in the same way that the OpenAFS file system breaks down into logical 
 components: Cell, User, Group, Server, Partition, Volume, Process, Key,
 Token, ACL, and File.  There are also classes for file input and

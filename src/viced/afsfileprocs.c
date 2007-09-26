@@ -106,7 +106,6 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 
-#include <afs/auth.h>
 #include <signal.h>
 #include <afs/partition.h>
 #include "viced_prototypes.h"
@@ -322,6 +321,11 @@ CallPreamble(register struct rx_call *acall, int activecall,
     H_LOCK;
   retry:
     tclient = h_FindClient_r(*tconn);
+    if (!tclient) {
+	ViceLog(0, ("CallPreamble: Couldn't get CPS. Too many lockers\n"));
+	H_UNLOCK;
+	return VBUSY;
+    }
     thost = tclient->host;
     if (tclient->prfail == 1) {	/* couldn't get the CPS */
 	if (!retry_flag) {
@@ -425,6 +429,8 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 
     H_LOCK;
     tclient = h_FindClient_r(aconn);
+    if (!tclient) 
+	goto busyout;
     thost = tclient->host;
     if (thost->hostFlags & HERRORTRANS)
 	translate = 1;
@@ -446,6 +452,7 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
 		thost));
     }
+ busyout:
     H_UNLOCK;
     return (translate ? sys_error_to_et(ret) : ret);
 }				/*CallPostamble */
@@ -1099,7 +1106,13 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
     }
 
     ino = VN_GET_INO(targetptr);
-    assert(VALID_INO(ino));
+    if (!VALID_INO(ino)) {
+	free(buff);
+	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
+	return EIO;
+    }    
     targFdP = IH_OPEN(targetptr->handle);
     if (targFdP == NULL) {
 	rc = errno;
@@ -1266,6 +1279,9 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
       */
     if ((*targetptr)->disk.uniquifier != fileFid->Unique) {
 	VTakeOffline(volptr);
+	ViceLog(0,
+		("Volume %u now offline, must be salvaged.\n",
+		 volptr->hashid));
 	errorCode = VSALVAGE;
 	return errorCode;
     }
@@ -1293,10 +1309,10 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 			 errno));
 		if (errno != ENOENT)
 		{
+		    VTakeOffline(volptr);
 		    ViceLog(0,
 			    ("Volume %u now offline, must be salvaged.\n",
 			     volptr->hashid));
-		    VTakeOffline(volptr);
 		    return (EIO);
 		}
 		DT1++;
@@ -1319,10 +1335,10 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 		("Error %d deleting %s\n", code,
 		 (((*targetptr)->disk.type ==
 		   Directory) ? "directory" : "file")));
+	VTakeOffline(volptr);
 	ViceLog(0,
 		("Volume %u now offline, must be salvaged.\n",
 		 volptr->hashid));
-	VTakeOffline(volptr);
 	if (!errorCode)
 	    errorCode = code;
     }
@@ -1726,8 +1742,11 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
 		0;
 	Time += AFS_LOCKWAIT;
 	if (LockingType == LockRead) {
-	    if ( !(rights & PRSFS_LOCK) )
-		return(EACCES);
+	    if ( !(rights & PRSFS_LOCK) && 
+                 !(rights & PRSFS_WRITE) &&
+                 !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
+                    return(EACCES);
+            return(EACCES);
 
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
@@ -3979,6 +3998,9 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    VPutVnode(&errorCode, testvptr);
 	    if ((top == 1) && (testnode != 0)) {
 		VTakeOffline(volptr);
+		ViceLog(0,
+			("Volume %u now offline, must be salvaged.\n",
+			 volptr->hashid));
 		errorCode = EIO;
 		goto Bad_Rename;
 	    }
@@ -4308,10 +4330,18 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Write the contents of the symbolic link name into the target inode */
     fdP = IH_OPEN(targetptr->handle);
-    assert(fdP != NULL);
+    if (fdP == NULL) {
+	(void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			       volptr, &client);
+	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
+	return EIO;
+    }    
     len = strlen((char *) LinkContents);
-     code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
-     if (code) ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
+    code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
+    if (code) 
+	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -6803,6 +6833,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
 	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
 	return EIO;
     }
     optSize = sendBufSize;
@@ -6812,6 +6844,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
 	VTakeOffline(volptr);
+	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+		    volptr->hashid));
 	return EIO;
     }
     if (Pos > tlen) {
@@ -6850,6 +6884,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 	errorCode = rx_Write(Call, tbuffer, wlen);
@@ -6864,6 +6900,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 	errorCode = rx_Writev(Call, tiov, tnio, wlen);
@@ -7036,6 +7074,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	if (GetLinkCountAndSize(volptr, fdP, &linkCount, &DataLength) < 0) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
+	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
+			volptr->hashid));
 	    return EIO;
 	}
 
@@ -7079,7 +7119,12 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	}
 	tinode = VN_GET_INO(targetptr);
     }
-    assert(VALID_INO(tinode));
+    if (!VALID_INO(tinode)) {
+	VTakeOffline(volptr);
+	ViceLog(0,("Volume %u now offline, must be salvaged.\n",
+		   volptr->hashid));
+	return EIO;
+    }
 
     /* compute new file length */
     NewLength = DataLength;
@@ -7364,6 +7409,8 @@ init_sys_error_to_et(void)
     sys2et[EDQUOT] = UAEDQUOT;
     sys2et[ENOMEDIUM] = UAENOMEDIUM;
     sys2et[EMEDIUMTYPE] = UAEMEDIUMTYPE;
+
+    sys2et[EIO] = UAEIO;
 }
 
 /* NOTE:  2006-03-01                                                     
@@ -7401,17 +7448,19 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 #else
     H_LOCK;
     tclient = h_FindClient_r(tcon);
+    if (!tclient) {
+	errorCode = VBUSY;
+	goto Bad_CallBackRxConnAddr;
+    }
     thost = tclient->host;
     
     /* nothing more can be done */
     if ( !thost->interface ) 
 	goto Bad_CallBackRxConnAddr;
     
-    assert(thost->interface->numberOfInterfaces > 0 );
-    
     /* the only address is the primary interface */
     /* can't change when there's only 1 address, anyway */
-    if ( thost->interface->numberOfInterfaces == 1 ) 
+    if ( thost->interface->numberOfInterfaces <= 1 ) 
 	goto Bad_CallBackRxConnAddr;
     
     /* initialise a security object only once */

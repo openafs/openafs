@@ -30,7 +30,7 @@ extern "C" {
  *
  */
 
-BOOL CALLBACK BrowseSet_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK BrowseSet_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void BrowseSet_OnInitDialog (HWND hDlg, LPBROWSESETDLG_PARAMS pszFilename);
 void BrowseSet_OnDestroy (HWND hDlg);
 void BrowseSet_OnAddString (HWND hDlg, LPTSTR pszString);
@@ -54,7 +54,7 @@ BOOL AfsAppLib_ShowBrowseFilesetDialog (LPBROWSESETDLG_PARAMS lpp)
 }
 
 
-BOOL CALLBACK BrowseSet_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK BrowseSet_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (AfsAppLib_HandleHelp (IDD_APPLIB_BROWSE_FILESET, hDlg, msg, wp, lp))
       return TRUE;

@@ -25,6 +25,7 @@ RCSID
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
+#include "afs/nfsclient.h"
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
@@ -329,8 +330,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     code = __setpag(cr, pagvalue, newpag, change_parent);
 
 #ifdef LINUX_KEYRING_SUPPORT
-    if (code == 0) {
-
+    if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
 	(void) install_session_keyring(current, NULL);
 
 	if (current->signal->session_keyring) {
@@ -593,13 +593,18 @@ static void afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag = key->payload.value;
     struct unixuser *pu;
+    int locked = ISAFS_GLOCK();
 
+    if (!locked)
+	AFS_GLOCK();
     pu = afs_FindUser(pag, -1, READ_LOCK);
     if (pu) {
 	pu->ct.EndTimestamp = 0;
 	pu->tokenTime = 0;
 	afs_PutUser(pu, READ_LOCK);
     }
+    if (!locked)
+	AFS_GUNLOCK();
 }
 
 struct key_type key_type_afs_pag =
@@ -611,13 +616,36 @@ struct key_type key_type_afs_pag =
     .destroy     = afs_pag_destroy,
 };
 
+#ifdef EXPORTED_TASKLIST_LOCK
+extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
+
 void osi_keyring_init(void)
 {
     struct task_struct *p;
-
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+      read_lock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_lock();
+#endif
     p = find_task_by_pid(1);
     if (p && p->user->session_keyring)
 	__key_type_keyring = p->user->session_keyring->type;
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+       read_unlock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_unlock();
+#endif
 
     register_key_type(&key_type_afs_pag);
 }

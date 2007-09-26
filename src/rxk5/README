@@ -186,6 +186,10 @@ Known problems with rxk5:
 	The name was selected as something unlikely to be confused with
 	any real part of kerberos; it has no other significance.
 
+	Update: we've propsed to call krb5_danish_surprise
+		krb5_server_decrypt_ticket
+	This source has been changed to use that instead.
+
 Testing notes:
 past versions of rxk5 have worked on darwin, solaris8, linux, obsd, aix.
 this code has been tested with openafs on i386 linux 2.4, 2.6, and has

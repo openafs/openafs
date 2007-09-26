@@ -39,6 +39,16 @@
 #include <errno.h>
 #include "k5ssl.h"
 
+/* C99: can test for va_copy via ifdef */
+#ifndef va_copy
+/* gnuc & autoconf: __va_copy might exist */
+# ifdef __va_copy
+#  define va_copy(d,s)	__va_copy((d),(s))
+# else
+#  define va_copy(d,s)	memcpy(&(d),&(s),sizeof(va_list))
+# endif
+#endif
+
 krb5_error_code
 krb5_build_principal_va(krb5_context context,
     krb5_principal *princp,
@@ -52,7 +62,11 @@ krb5_build_principal_va(krb5_context context,
     krb5_principal princ;
 
     code = ENOMEM;
+#if 1
+    va_copy(ap, aap);
+#else
     ap = aap;
+#endif
     for (i = 0; va_arg(ap, char *); ++i)
 	;
     princ = malloc(sizeof *princ);
@@ -66,13 +80,22 @@ krb5_build_principal_va(krb5_context context,
     if (!(princ->data = malloc(i * sizeof *princ->data)))
 	goto Failed;
     memset(princ->data, 0, i * sizeof *princ->data);
+#if 1
+    va_end(ap);
+    va_copy(ap, aap);
+#else
     ap = aap;
+#endif
     for (i = 0; cp = va_arg(ap, char *); ++i) {
 	if (!(princ->data[i].data = malloc(1 + (princ->data[i].length = strlen(cp)))))
 	    goto Failed;
 	memcpy(princ->data[i].data, cp, princ->data[i].length);
 	princ->data[i].length[princ->data[i].data] = 0;
     }
+#if 1
+    va_end(ap);
+    va_end(aap);
+#endif
     princ->length = i;
     *princp = princ;
     princ = 0;

@@ -66,7 +66,7 @@ krb5_init_context(krb5_context *contextp)
 
 #else
 static const char def_config_files[] = "/etc/krb5.conf"
-#ifdef DC_SUPPORT
+#if defined(__APPLE__) && (defined(DC_SUPPORT) || defined(AC_SUPPORT))
 	":" "/Library/Preferences/edu.mit.Kerberos"
 #endif
 	":" "/home/k5/etc/krb5.conf";
@@ -138,7 +138,7 @@ krb5_error_code
 krb5i_config_get_strings(krb5_context context, const char * const *names, char ***out)
 {
     *out = 0;
-    if (!context || !context->profile) return KRB5_CONFIG_CANTOPEN;
+    if (!context) return KRB5_CONFIG_CANTOPEN;
     return krb5i_find_names(context->profile, names, out);
 }
 

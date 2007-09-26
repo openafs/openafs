@@ -69,13 +69,13 @@
         <AdvertiseExecuteSequence />
         <AdminExecuteSequence />
         <InstallExecuteSequence>
-            <RemoveExistingProducts After="InstallValidate">OPENAFSBIN_UPGRADE</RemoveExistingProducts>
+            <RemoveExistingProducts After="InstallValidate">(Not Installed) And (OPENAFSBIN_UPGRADE)</RemoveExistingProducts>
         </InstallExecuteSequence>
 
         <!-- Related producs -->
-        <!-- MIT's OpenAFS MSI installer -->
+        <!-- OpenAFS MSI installer -->
         <Upgrade Id="A94D03E9-EF11-4B87-9B42-409016BD4B7C">
-            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFSBIN_UPGRADE" />
+            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFSBIN_UPGRADE" />
         </Upgrade>
         
         <!-- Media -->

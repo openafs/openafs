@@ -23,6 +23,7 @@ RCSID
 #ifndef HAVE_STRLCAT
 
 #include <sys/types.h>
+#include <string.h>
 
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the

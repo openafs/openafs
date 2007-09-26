@@ -27,8 +27,8 @@ AH_BOTTOM([/* __BIG_ENDIAN__ is a darwinism, for fat binaries */
 # endif
 #endif
 #if defined(KERNEL) && !defined(UKERNEL) /* all builds use K5SSL in the kernel */
-# define USING_SSL 1
-# define FAKESSL 1
+# define USING_K5SSL 1
+# define USING_FAKESSL 1
 #else
 # ifdef COMPILED_WITH_HEIMDAL
 #  define USING_HEIMDAL 1
@@ -40,6 +40,7 @@ AH_BOTTOM([/* __BIG_ENDIAN__ is a darwinism, for fat binaries */
 #  define USING_MIT 1
 # endif
 # ifdef COMPILED_WITH_SSL
+#  define USING_K5SSL 1
 #  define USING_SSL 1
 # endif
 #endif
@@ -82,6 +83,8 @@ AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_ENABLE( demand-attach-fs,
 [  --enable-demand-attach-fs 		enable Demand Attach Fileserver (please see documentation)],, enable_demand_attach_fs="no")
+AC_ARG_ENABLE( unix-sockets,
+[  --enable-unix-sockets 		enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
 AC_ARG_ENABLE( full-vos-listvol-switch,
 [  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
@@ -134,7 +137,7 @@ AC_ARG_ENABLE(optimize-pam,
 )
 AC_ARG_ENABLE( rxk5,
 [  --enable-rxk5		enable support for rxk5 security class],, enable_rxk5="no")
-
+OPENAFS_ENABLE_K5SSL_CRPYTO
 enable_login="no"
 
 dnl weird ass systems
@@ -549,7 +552,7 @@ else
 			AFS_SYSNAME="s390x_linuxXX"
 			;;
 		sparc-*-linux*)
-			AFS_SYSNAME="sparc_linuxXX"
+			AFS_SYSNAME="`/bin/arch`_linuxXX"
 			;;
 		sparc64-*-linux*)
 			AFS_SYSNAME="sparc64_linuxXX"
@@ -595,21 +598,14 @@ else
 			if test "x${AFS_SYSKVERS}" = "x"; then
 			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
 			fi
-			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
-			AFS_SYSNAME="$_AFS_SYSNAME"
-			save_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
-			AC_TRY_COMPILE(
-			 [#include <linux/autoconf.h>],
-			 [#if !defined(CONFIG_USERMODE) && !defined(CONFIG_UML)
-			  #error not UML
-			  #endif],
-			 ac_cv_linux_is_uml=yes,)
-			if test "${ac_cv_linux_is_uml}" = yes; then
-			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
+dnl here be yuck.
+			if grep '^CONFIG_UML=y' $LINUX_KERNEL_PATH/.config >/dev/null; then
+				ARCH=um
+				export ARCH
+				AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/_linux/_umlinux/`
+				LINUX_SETENV_UM="env ARCH=um"
 			fi
-			CPPFLAGS="$save_CPPFLAGS"
-			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
@@ -618,12 +614,6 @@ fi
 case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		# Add (sub-) architecture-specific paths needed by conftests
-		case $AFS_SYSNAME  in
-			*_umlinux*)
-				LINUX_SETENV_UM="ARCH=um"
-			;;
-		esac
-
 		if test "x$enable_kernel_module" = "xyes"; then
 		 LINUX_KERNEL_GET_KCC
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
@@ -635,6 +625,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 
 		 LINUX_KERNEL_COMPILE_WORKS
+dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
@@ -660,10 +651,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
+	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
+		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
+		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
@@ -677,16 +672,23 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO
+		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
+		 LINUX_FREEZER_H_EXISTS
+		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
+		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
+		 fi
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
-		 LINUX_FREEZER_H_EXISTS
 		 LINUX_INIT_WORK_HAS_DATA
+		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -814,6 +816,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE([RECALC_SIGPENDING_TAKES_VOID], 1, [define if your recalc_sigpending takes void])
 		 fi
+		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
+		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
+		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
 		  AC_DEFINE([LINUX_KERNEL_IS_SELINUX], 1, [define if your linux kernel uses SELinux features])
 		 fi
@@ -853,8 +858,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
 		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_EXIT_STATE], 1, [define if your struct task_struct has exit_state])
 		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_tgid" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TGID, 1, [define if your struct task_struct has tgid])
+		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_thread_info" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_THREAD_INFO, 1, [define if your struct task_struct has thread_info])
 		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE([GET_SB_HAS_STRUCT_VFSMOUNT], 1, [define if your get_sb_nodev needs a struct vfsmount argument])
@@ -871,6 +882,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE([IOP_CREATE_TAKES_NAMEIDATA], 1, [define if your iops.create takes a nameidata argument])
 		 fi
+		 if test "x$ac_cv_linux_func_f_flush_takes_fl_owner_t" = "xyes" ; then
+		  AC_DEFINE(FOP_FLUSH_TAKES_FL_OWNER_T, 1, [define if your fops.flush takes an fl_owner_t argument])
+		 fi
 		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE([IOP_LOOKUP_TAKES_NAMEIDATA], 1, [define if your iops.lookup takes a nameidata argument])
 		 fi
@@ -880,11 +894,22 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE([DOP_REVALIDATE_TAKES_NAMEIDATA], 1, [define if your dops.d_revalidate takes a nameidata argument])
 		 fi
-		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
-		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
-		 fi
 		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
+		 fi
+		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
+		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
+		 fi
+		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
+		 fi
+		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
+		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
+		 else
+		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
                 :
 		fi
@@ -892,6 +917,7 @@ esac
 
 case $AFS_SYSNAME in
 	*_darwin*)
+		AC_APPLE_CCACHE
 		AC_DARWIN_EXP_DC
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
@@ -1076,14 +1102,12 @@ if test "$enable_supergroups" = "yes"; then
 fi
 
 if test "$enable_rxk5" = "yes"; then
-	K5SSL_DEF="-DUSE_K5SSL -DUSE_FAKESSL"
 	K5SSL_INC='-I${TOP_SRCDIR}/k5ssl'
 	AC_DEFINE([AFS_RXK5], 1, [define if you want the option to use rxk5 for rx security])
 	DISABLE_RXK5='#'
 else
 	ENABLE_RXK5='#'
 fi
-AC_SUBST(K5SSL_DEF)
 AC_SUBST(K5SSL_INC)
 AC_SUBST(ENABLE_RXK5)
 AC_SUBST(DISABLE_RXK5)
@@ -1104,6 +1128,14 @@ else
 	DEMAND_ATTACH="no"
 fi
 AC_SUBST(DEMAND_ATTACH)
+
+if test "$enable_unix_sockets" = "yes"; then
+	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
+	USE_UNIX_SOCKETS="yes"
+else
+	USE_UNIX_SOCKETS="no"
+fi
+AC_SUBST(USE_UNIX_SOCKETS)
 
 if test "$enable_fast_restart" = "yes" &&
    test "$enable_demand_attach_fs" = "yes" ; then
@@ -1163,10 +1195,10 @@ if test "$enable_afsdb" = "yes"; then
 	AC_DEFINE([AFS_AFSDB_ENV], 1, [define if you want to want search afsdb rr])
 fi
 
-if test "$enable_cm_capabilities" = "yes"; then
-	CM_CAPABILITIES="cm_capabilities"
-	AC_SUBST(CM_CAPABILITIES)
-	AC_DEFINE([AFS_CM_CAPABILITIES], 1, [define to enable support for a GetCapabilities pioctl])
+if test "$enable_cm_properties" = "yes"; then
+	CM_PROPERTIES="cm_properties"
+	AC_SUBST(CM_PROPERTIES)
+	AC_DEFINE([AFS_CM_PROPERTIES], 1, [define to enable support for a GetProperties pioctl])
 fi
 
 dnl check for tivoli
@@ -1314,7 +1346,9 @@ AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 AC_SUBST(LINUX_SETENV_UM)
+AC_CONFIG_COMMANDS([dummy-1],[],[MKAFS_OSTYPE=$MKAFS_OSTYPE])
 
+OPENAFS_JAVA
 OPENAFS_OSCONF
 OPENAFS_SSL
 OPENAFS_KRB5CONF

@@ -31,12 +31,11 @@ RCSID
 #undef VICE
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>>
 #include <errno.h
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <strings.h>
-
+#include <afs/com_err.h>
 
 #define	MAXSIZE	2048
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
@@ -206,6 +205,6 @@ Die(code, filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
 	else
 	    fprintf(stderr, "%s", pn);
-	fprintf(stderr, ": %s\n", error_message(errno));
+	fprintf(stderr, ": %s\n", afs_error_message(errno));
     }
 }				/*Die */

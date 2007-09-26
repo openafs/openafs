@@ -688,14 +688,14 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     } while (afs_Analyze(tconn, code, NULL, &treq, -1,	/* no op code for this */
 			 SHARED_LOCK, tcell));
 
-    /* RT 48959 - unclear if this should really go */
-#if 0
     if (code) {
 	/* If the client has yet to contact this cell and contact failed due
 	 * to network errors, mark the VLDB servers as back up.
 	 * That the client tried and failed can be determined from the
 	 * fact that there was a downtime incident, but CHasVolRef is not set.
 	 */
+    /* RT 48959 - unclear if this should really go */
+#if 0
 	if (areq->networkError && !(tcell->states & CHasVolRef)) {
 	    int i;
 	    struct server *sp;
@@ -707,12 +707,12 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 		    afs_MarkServerUpOrDown(sap, 0);
 	    }
 	}
+#endif
 	afs_CopyError(&treq, areq);
 	osi_FreeLargeSpace(tbuffer);
 	afs_PutCell(tcell, READ_LOCK);
 	return NULL;
     }
-#endif
     /*
      * Check to see if this cell has not yet referenced a volume.  If
      * it hasn't, it's just about to change its status, and we need to mark

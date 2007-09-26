@@ -5,11 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DAFS_PTHREAD_ENV
 
 RELDIR=libadmin\client
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
+
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+
+AFS_TOKEN_RXK5_DEFINE = -DAFS_RXK5
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afskfw_funcs.lib
+
+!ENDIF
 
 DLLOBJS = \
 	$(OUT)\afs_clientAdmin.obj \
@@ -27,7 +38,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afspthread.lib \
-        $(DESTDIR)\lib\afs\afsutil.lib
+        $(DESTDIR)\lib\afs\afsutil.lib \
+	$(RXK5LIBS)
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:clientadmin.def
@@ -43,4 +55,4 @@ install: $(DLLFILE) $(LIBINCLUDES)
 $(OUT)\afsclientadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

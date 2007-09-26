@@ -50,6 +50,7 @@
 	<?define cmf_TaAfsAdmSvr_EXE_guid="6E8C0D1B-D07D-467C-9829-5C4556CB062A"?>
 	<?define cmf_TaAfsAccountManager_EXE_guid="D8C0005E-A7A9-4B50-A28E-2C1429E8B805"?>
 	<?define cmp_Control_CenterDebug_guid="C363179A-D696-47A3-BBCB-C9B86C524782"?>
+        <?define cmf_instloop_EXE_guid="E2507993-72BA-4015-A39A-D1D8D494133D"?>
 	<?define cmf_afsshare_EXE_guid="7FEB85B0-ED4F-4129-AA30-8FFF7E353296"?>
 	<?define cmf_libosi_DLL_guid="9CC44067-6181-4BC1-AA01-0846C0ABDCA8"?>
 	<?define cmf_libafsconf_DLL_guid="0DF35865-0D0F-49E8-8CFB-FC96D19AED18"?>
@@ -98,6 +99,10 @@
 	<?define cmf_afsserver_CPL_guid="7B0D1145-DB1B-47BA-A874-3AB26F86FFB6"?>
 	<?define cmp_Server_Program_Debug_guid="1EDCDA16-216B-434E-A06E-AD1A9D40F5A2"?>
         <?define rcm_binsonly_parm_guid="A4969933-E01B-476C-B923-4F2EFBA2B78C"?>
+        <?define _afscreds_en_us_guid="512F071E-20A0-4349-B2BE-C3754666744A"?>
+        <?define _afscreds_plugin_guid="2F12FF1B-5BD7-4CE3-93B4-86D3FCFC49C6"?>
+        <?define _afscreds_debugsym_guid="38DC7EA0-3130-4C27-8FD5-442660197208"?>
+        <?define _afscreds_chm_guid="24A87704-5F47-43Af-9F2B-568AB103ADAF"?>
         <?define clsid_afs_shl_ext="5F820CA1-3DDE-11DB-B2CE-001558092DB5"?>
 
 <?elseif $(var.Platform) = "Intel"?>
@@ -149,6 +154,7 @@
 	<?define cmf_TaAfsAdmSvr_EXE_guid="99E23413-8261-4007-9DC9-B2C7453EF1EE"?>
 	<?define cmf_TaAfsAccountManager_EXE_guid="BDFA5B64-2A69-41D5-8260-3DAB3CE9A10B"?>
 	<?define cmp_Control_CenterDebug_guid="B14EEC50-8ADF-4FE4-B00F-431861A5620C"?>
+        <?define cmf_instloop_EXE_guid="1BE492BD-9784-48A6-91ED-726134BF22CA"?>
 	<?define cmf_afsshare_EXE_guid="E972DA35-E950-4736-AE48-E6DDCE8C97D0"?>
 	<?define cmf_libosi_DLL_guid="0E10B3CC-533B-4EAC-AFC5-3D2B529385D7"?>
 	<?define cmf_libafsconf_DLL_guid="D72DA435-878D-42BE-9383-69FB97D63624"?>

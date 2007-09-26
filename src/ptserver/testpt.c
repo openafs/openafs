@@ -47,20 +47,29 @@ RCSID
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
+#include <ubik.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #ifdef AFS_RXK5
 #ifdef USING_SHISHI
 #include <shishi.h>
 #endif
-#ifdef USING_SSL
+#ifdef USING_K5SSL
 #include <k5ssl.h>
 #endif
 #if defined(USING_MIT) || defined(USING_HEIMDAL)
 #include <krb5.h>
+#if defined(AFS_NT40_ENV)
+#include <rx/rxk5_ntfixprotos.h>
+#endif
 #endif
 #endif
 #include "afs_token.h"
+#ifdef AFS_RXK5
+#include "rxk5_tkt.h"
+#endif
 
 static char *whoami = "testpr";
 static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */
@@ -68,7 +77,7 @@ static char conf_dir[100];
 static char lcell[MAXCELLCHARS];
 
 #ifdef AFS_RXK5
-#if defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
+#if defined(AFS_NT40_ENV) || defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
 
 #define get_princ_str(c, p, n) krb5_princ_component(c, p, n)->data
 #define get_princ_len(c, p, n) krb5_princ_component(c, p, n)->length
@@ -112,7 +121,7 @@ ListUsedIds(struct cmd_syndesc *as, char *arock)
 
     code = pr_Initialize(1, conf_dir, NULL);
     if (code) {
-	com_err(whoami, code, "initializing pruser");
+	afs_com_err(whoami, code, "initializing pruser");
 	exit(1);
     }
     if (startId < 0) {
@@ -120,7 +129,7 @@ ListUsedIds(struct cmd_syndesc *as, char *arock)
 	code = pr_ListMaxGroupId(&maxId);
 	if (code) {
 	  bad_max:
-	    com_err(whoami, code, "getting maximum id");
+	    afs_com_err(whoami, code, "getting maximum id");
 	    exit(2);
 	}
 	if (startId < maxId) {
@@ -166,7 +175,7 @@ ListUsedIds(struct cmd_syndesc *as, char *arock)
 	lids.idlist_len = i;
 	code = pr_IdToName(&lids, &lnames);
 	if (code) {
-	    com_err(whoami, code, "converting id to name");
+	    afs_com_err(whoami, code, "converting id to name");
 	    exit(2);
 	}
 	for (j = 0; j < lnames.namelist_len; j++) {
@@ -316,7 +325,7 @@ CreateUser(int u)
 		}
 	    }
 	}
-	com_err(whoami, code, "couldn't create %s", name);
+	afs_com_err(whoami, code, "couldn't create %s", name);
 	exit(12);
     }
   done:
@@ -368,14 +377,14 @@ CreateGroup(int g)
     }
 
     sprintf(name, "%s:%s%d", ownerName, createPrefix, g);
-    code = ubik_Call(PR_NewEntry, pruclient, 0, name, PRGRP, owner, &id);
+    code = ubik_PR_NewEntry(pruclient, 0, name, PRGRP, owner, &id);
     if (code) {
 	if (code == PREXIST) {
 	    code = pr_Delete(name);
 	    if (code == 0) {
 		nGDels++;
 		code =
-		    ubik_Call(PR_NewEntry, pruclient, 0, name, PRGRP, owner,
+		    ubik_PR_NewEntry(pruclient, 0, name, PRGRP, owner,
 			      &id);
 		if (code == 0) {
 		    if (verbose)
@@ -384,7 +393,7 @@ CreateGroup(int g)
 		}
 	    }
 	}
-	com_err(whoami, code, "couldn't create %s w/ owner=%d", name, owner);
+	afs_com_err(whoami, code, "couldn't create %s w/ owner=%d", name, owner);
 	exit(13);
     }
   done:
@@ -411,9 +420,9 @@ DeleteRandomId(afs_int32 *list)
     for (j = 0; j < number; j++) {	/* find an undeleted id */
 	m = (k + j) % number;
 	if (id = list[m]) {
-	    code = ubik_Call(PR_Delete, pruclient, 0, id);
+	    code = ubik_PR_Delete(pruclient, 0, id);
 	    if (code) {
-		com_err(whoami, code, "Couldn't delete %di", id);
+		afs_com_err(whoami, code, "Couldn't delete %di", id);
 		exit(22);
 	    }
 	    list[m] = 0;
@@ -439,9 +448,9 @@ AddUser(int u, int g)
 	CreateGroup(g);
     ui = users[u];
     gi = groups[g];
-    code = ubik_Call(PR_AddToGroup, pruclient, 0, ui, gi);
+    code = ubik_PR_AddToGroup(pruclient, 0, ui, gi);
     if (code) {
-	com_err(whoami, code, "couldn't add %d to %d", ui, gi);
+	afs_com_err(whoami, code, "couldn't add %d to %d", ui, gi);
 	exit(14);
     }
     if (verbose)
@@ -458,9 +467,9 @@ RemUser(int u, int g)
 
     ui = users[u];
     gi = groups[g];
-    code = ubik_Call(PR_RemoveFromGroup, pruclient, 0, ui, gi);
+    code = ubik_PR_RemoveFromGroup(pruclient, 0, ui, gi);
     if (code) {
-	com_err(whoami, code, "couldn't remove %d from %d", ui, gi);
+	afs_com_err(whoami, code, "couldn't remove %d from %d", ui, gi);
 	exit(14);
     }
     if (verbose)
@@ -485,49 +494,55 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 
     code = pr_Initialize(1, conf_dir, NULL);
     if (code) {
-	com_err(whoami, code, "initializing pruser");
+	afs_com_err(whoami, code, "initializing pruser");
 	exit(1);
     }
     /* get name of person running command */
     {
 	struct ktc_principal user;
-	struct afs_token *afstoken = 0;
+	struct pioctl_set_token afstoken[1];
 #ifdef AFS_RXK5
-	krb5_principal k5_princ;
+	krb5_creds in_creds[1];
 #endif
+	struct ktc_token ttoken[1];
 	char cellname[MAXCELLCHARS];
 
+	memset(afstoken, 0, sizeof *afstoken);
+#ifdef AFS_RXK5
+	memset(in_creds, 0, sizeof *in_creds);
+#endif
 	code = afsconf_GetLocalCell(conf, cellname, sizeof(cellname));
 	if (code) {
-	    com_err(whoami, code, "getting local cell");
+	    afs_com_err(whoami, code, "getting local cell");
 	    exit(2);
 	}
-	code = ktc_GetTokenEx(0, cellname, &afstoken);
+	code = ktc_GetTokenEx(0, cellname, afstoken);
 	if (code) {
-	    com_err(whoami, code, "getting afs tokens");
+	    afs_com_err(whoami, code, "getting afs tokens");
 	    exit(3);
 	}
 	*user.name = 0;
-	switch(afstoken->cu->cu_type) {
-	case CU_KAD:
-	    callerId = afstoken->cu->cu_u.cu_kad.token.kvno;
-	    break;
+	if (!(code = afstoken_to_token(afstoken, ttoken, sizeof *ttoken, 0, 0))) {
+	    callerId = ttoken->kvno;	/* ??? */
 #ifdef AFS_RXK5
-	case CU_K5:
-	    rxk5_principal_to_krb5_principal(&k5_princ,
-		afstoken->cu->cu_u.cu_rxk5.client);
-	    k5_to_k4_name(0, k5_princ, &user);
-	    break;
+	} else if (!(code = afstoken_to_v5cred(afstoken, in_creds))) {
+	    k5_to_k4_name(0, in_creds->client, &user);
+	} else {
 #endif
-	default:
-	    com_err(whoami, 0, "unknown token type %d", afstoken->cu->cu_type);
+	    char msg[48];
+	    afs_get_tokens_type_msg(afstoken, msg, sizeof msg);
+	    afs_com_err(whoami, 0, "no recognized tokens in %s", msg);
 	    exit(3);
 	}
-	if (afstoken) free_afs_token(afstoken);
+	free_afs_token(afstoken);
+#ifdef AFS_RXK5
+	krb5_free_principal(0, in_creds->client);
+	krb5_free_principal(0, in_creds->server);
+#endif
 	if (!*user.name) {
 	    code = pr_SIdToName(callerId, callerName);
 	    if (code) {
-		com_err(whoami, code, "call get name for id %d", callerId);
+		afs_com_err(whoami, code, "call get name for id %d", callerId);
 		exit(6);
 	    }
 	} else {
@@ -545,7 +560,7 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 	    callerId = 0;
 	    code = pr_CreateUser(callerName, &callerId);
 	    if (code) {
-		com_err(whoami, code, "can't create caller %s", callerName);
+		afs_com_err(whoami, code, "can't create caller %s", callerName);
 		exit(5);
 	    }
 	    printf("Creating caller %s (%di)\n", callerName, callerId);
@@ -553,7 +568,7 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 	/* else */
 #endif
 	if (code) {
-	    com_err(whoami, code, "can't find caller %s", callerName);
+	    afs_com_err(whoami, code, "can't find caller %s", callerName);
 	    exit(6);
 	} else
 	    printf("Assuming caller is %s (%di)\n", callerName, callerId);
@@ -679,7 +694,7 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 		proc = PR_GetCPS;
 	    code = ubik_Call(proc, pruclient, 0, ui, &alist, &over);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"getting membership list of (%di) using %s", ui,
 			((proc == PR_GetCPS) ? "GetCPR" : "ListElements"));
 		exit(24);
@@ -735,9 +750,9 @@ TestManyMembers(struct cmd_syndesc *as, char *arock)
 		}
 #define GETOWNED(xlist,xid) \
   (xlist).prlist_val = 0; (xlist).prlist_len = 0; \
-  code = ubik_Call (PR_ListOwned, pruclient, 0, (xid), &(xlist), &over); \
+  code = ubik_PR_ListOwned(pruclient, 0, (xid), &(xlist), &over); \
   if (code) { \
-      com_err (whoami, code, "getting owner list of (%di)", (xid)); \
+      afs_com_err (whoami, code, "getting owner list of (%di)", (xid)); \
       exit (23); } \
   if (over) \
       { fprintf (stderr, "membership of id %di too long\n", (xid)); }
@@ -858,7 +873,7 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 
     code = pr_Initialize(1, conf_dir, NULL);
     if (code) {
-	com_err(whoami, code, "initializing pruser");
+	afs_com_err(whoami, code, "initializing pruser");
 	exit(1);
     }
 
@@ -869,7 +884,7 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
     id = 0;
     code = pr_CreateUser(name, &id);
     if ((code != RXGEN_CC_MARSHAL) && (code != PRBADNAM)) {
-	com_err(whoami, code, "succeeded creating %s", name);
+	afs_com_err(whoami, code, "succeeded creating %s", name);
 	exit(2);
     }
     name[i] = 0;
@@ -879,17 +894,17 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 	fprintf(stderr, "group already exists, skipping\n");
 	pr_SNameToId(name, &id);
     } else if (code) {
-	com_err(whoami, code, "failed creating %s", name);
+	afs_com_err(whoami, code, "failed creating %s", name);
 	exit(3);
     }
     if ((code = pr_ListEntry(id, &ent))
 	|| (code = pr_SIdToName(ent.creator, creator))) {
-	com_err(whoami, code, "getting creator's name");
+	afs_com_err(whoami, code, "getting creator's name");
 	exit(5);
     }
     code = pr_DeleteByID(id);
     if (code) {
-	com_err(whoami, code, "deleting %s", name);
+	afs_com_err(whoami, code, "deleting %s", name);
 	exit(6);
     }
     /* now make sure the illegal chars are detected */
@@ -900,7 +915,7 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 	    id = 0;
 	    code = pr_CreateUser(name, &id);
 	    if (code != PRBADNAM) {
-		com_err(whoami, code, "succeeded creating %s", name);
+		afs_com_err(whoami, code, "succeeded creating %s", name);
 		exit(8);
 	    }
 	}
@@ -922,12 +937,12 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 	} else if (code) {
 	    char ascii[BUFSIZ];
 	    ka_ConvertBytes(ascii, sizeof(ascii), name, strlen(name));
-	    com_err(whoami, code, "failed creating %s", ascii);
+	    afs_com_err(whoami, code, "failed creating %s", ascii);
 	    exit(4);
 	}
 	code = pr_DeleteByID(id);
 	if (code) {
-	    com_err(whoami, code, "deleting %s", name);
+	    afs_com_err(whoami, code, "deleting %s", name);
 	    exit(7);
 	}
     }
@@ -937,9 +952,9 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
     strcat(name, ":abcdefghijklmnopqrstuvwxyz");
     name[0] = 1;		/* bash the owner name */
     id = 0;
-    code = pr_CreateGroup(name, &id);
+    code = pr_CreateGroup(name, creator, &id);
     if (code != PRNOENT) {	/* owner doesn't exist */
-	com_err(whoami, code, "succeeded creating %s", name);
+	afs_com_err(whoami, code, "succeeded creating %s", name);
 	exit(9);
     }
     name[0] = creator[0];	/* fix owner */
@@ -951,7 +966,7 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 	    id = 0;
 	    code = pr_CreateGroup(name, creator, &id);
 	    if (code != PRBADNAM) {
-		com_err(whoami, code, "succeeded creating %s", name);
+		afs_com_err(whoami, code, "succeeded creating %s", name);
 		exit(10);
 	    }
 	}
@@ -972,12 +987,12 @@ TestPrServ(struct cmd_syndesc *as, char *arock)
 	} else if (code) {
 	    char ascii[BUFSIZ];
 	    ka_ConvertBytes(ascii, sizeof(ascii), name, strlen(name));
-	    com_err(whoami, code, "failed creating %s", ascii);
+	    afs_com_err(whoami, code, "failed creating %s", ascii);
 	    exit(4);
 	}
 	code = pr_DeleteByID(id);
 	if (code) {
-	    com_err(whoami, code, "deleting %s", name);
+	    afs_com_err(whoami, code, "deleting %s", name);
 	    exit(7);
 	}
     }
@@ -1083,7 +1098,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		(unsigned long)getpid());
 	code = mkdir(tmp_conf_dir, 0777);
 	if ((code < 0) && (errno != EEXIST)) {
-	    com_err(whoami, errno, "can't create temporary afsconf dir: %s",
+	    afs_com_err(whoami, errno, "can't create temporary afsconf dir: %s",
 		    cdir);
 	    return errno;
 	}
@@ -1093,7 +1108,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 	f = fopen(tmp_conf_file, "w");
 	if (f == 0) {
 	  cantcreate:
-	    com_err(whoami, errno, "can't create conf file %s",
+	    afs_com_err(whoami, errno, "can't create conf file %s",
 		    tmp_conf_file);
 	    return errno;
 	}
@@ -1106,7 +1121,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 	}
 	if (fclose(f) == EOF) {
 	  cantclose:
-	    com_err(whoami, errno, "can't write to conf file %s",
+	    afs_com_err(whoami, errno, "can't write to conf file %s",
 		    tmp_conf_file);
 	    return errno;
 	}
@@ -1206,6 +1221,6 @@ main(int argc, char *argv[])
 
     code = cmd_Dispatch(argc, argv);
     if (code)
-	com_err(whoami, code, "calling cmd_Dispatch");
+	afs_com_err(whoami, code, "calling cmd_Dispatch");
     exit(code);
 }

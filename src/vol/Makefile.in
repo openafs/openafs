@@ -183,7 +183,7 @@ gi: ${TOP_LIBDIR}/libsys.a
         esac
 
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
-	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/libafsutil.a ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/util.a ${LIBS} ${XLIBS}
 
 volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \

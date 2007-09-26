@@ -52,7 +52,6 @@ RCSID
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/cmd.h>
@@ -60,6 +59,9 @@ RCSID
 #include <ubik.h>
 #include "vlserver.h"
 #include "vlclient.h"
+#ifdef AFS_RXK5
+#include <rx/rxk5errors.h>
+#endif
 
 void fill_listattributes_entry();
 void display_listattributes_entry();

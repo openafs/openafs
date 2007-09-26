@@ -1,4 +1,4 @@
-...(This document is current as of release 1.5.000)
+...(This document is current as of release 1.5.15)
 
 How to determine if OpenAFS is installed?
 

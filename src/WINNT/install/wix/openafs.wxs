@@ -207,7 +207,7 @@
         <AdvertiseExecuteSequence />
         <AdminExecuteSequence />
         <InstallExecuteSequence>
-			<RemoveExistingProducts After="InstallValidate">IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR AFSPLUGIN_UPGRADE</RemoveExistingProducts>
+			<RemoveExistingProducts After="InstallValidate">(Not Installed) And (IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR AFSPLUGIN_UPGRADE)</RemoveExistingProducts>
 			<Custom Action="RemoveNsisInstallation" Before="AbortInstallationA">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
 			<Custom Action="AbortInstallationA" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
 			<!-- Assert that if the server is going to be installed locally after this session, control center and client are also local -->
@@ -233,9 +233,9 @@
         </InstallExecuteSequence>
 
         <!-- Related producs -->
-        <!-- MIT's OpenAFS MSI installer -->
+        <!-- OpenAFS MSI installer -->
         <Upgrade Id="6823EEDD-84FC-4204-ABB3-A80D25779833">
-            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFS_UPGRADE" />
+            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFS_UPGRADE" />
         </Upgrade>
         
         <!-- MIT's Transarc AFS MSI Installer -->

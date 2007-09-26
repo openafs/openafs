@@ -31,21 +31,21 @@
 #ifndef RXK5_TKT_H
 #define RXK5_TKT_H
 
-#include "afs_token.h"
 #ifndef KERNEL
-#include "auth.h" /* ktc_token */
-#include "afs_token_protos.h"
+#ifdef AFS_NT40_ENV
+#include <afs/auth.h>
 #else
-#include <afs/afs_token_protos.h>
+#include "auth.h" /* ktc_token */
+#endif /* !NT */
+#else
+#include "afs_token.h"
 #endif /* !KERNEL */
 
 #ifdef AFS_RXK5
 /* In-kernel creds */ 
 typedef struct _rxk5_creds
 {
-    krb5_creds *k5creds;
-    afs_int32 ViceId;	/* rxkad has always had this in ClearToken */  
-    char *cell;
+    krb5_creds k5creds[1];
 } rxk5_creds;
 
 void rxk5_free_creds(
@@ -53,7 +53,7 @@ void rxk5_free_creds(
 	rxk5_creds *creds);
 
 /*
- * Does what afs_osi_FreeStr(x) does, but a macro and frankly, looks safer
+ * Does what afs_osi_FreeStr(x) does, but a macro
  */
 #define rxk5_free_str(x) \
  do { \
@@ -71,12 +71,10 @@ void rxk5_free_creds(
  * caller frees returned memory (of size bufsize).
  */
 int
-make_afs_token_rxk5(
+add_afs_token_rxk5(
 	krb5_context context,
-	char *cell,
-	int viceid,
 	krb5_creds *creds,
-	afs_token **a_token /* out */);
+	pioctl_set_token *a_token /* out */);
 #endif
 
 #ifdef AFS_RXK5
@@ -85,16 +83,43 @@ make_afs_token_rxk5(
  * in creds.  Caller must free.
  */
 int afs_token_to_rxk5_creds(
-	afs_token *a_token, 
+	pioctl_set_token *a_token, 
 	rxk5_creds **creds);
+	
+/* 
+ * Converts rxk5_principal structure to a native krb5_creds structure, which is returned
+ * in k5_princ.  Caller must free.
+ */	
+void rxk5_principal_to_krb5_principal(krb5_principal *k5_princ, 
+	k5_principal *rxk5_princ);
+
+int
+krb5_principal_to_rxk5_principal(krb5_principal princ,
+                                 k5_principal *k5_princ);
+
+
+/*
+ * Format new-style afs_token using kerberos 5 credentials (rxk5), 
+ * caller frees returned memory (of size bufsize).
+ */
+int
+add_afs_token_rxk5(krb5_context context,
+                   krb5_creds *creds,
+                   pioctl_set_token *a_token);
 
 /* 
- * Converts afs_token structure to a native krb5_creds structure, which is returned
+ * Converts afs_token structure to an rxk5_creds structure, which is returned
  * in creds.  Caller must free.
  */
-int afs_token_to_k5_creds(
-	afs_token *a_token, 
-	krb5_creds **creds);
+int afs_token_to_rxk5_creds(pioctl_set_token *a_token, 
+                            rxk5_creds **creds);
+
+/* copy bits of an rxkad token into a k5 credential */
+int
+afstoken_to_v5cred(pioctl_set_token *a_token, krb5_creds *v5cred);
+
+
+
 #endif
 
 #endif /* RXK5_TKT_H */

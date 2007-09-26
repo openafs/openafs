@@ -1,0 +1,130 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=rxk5
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+THREADFLAGS=-UAFS_PTHREAD_ENV
+
+K5FLAGS=-DCONFIG_RXK5 -DKRB5_AES_SUPPORT -DKRB5_DES3_SUPPORT -DKRB5_DES_SUPPORT -DKRB5_RC4_SUPPORT -DCONFIG_K5
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+afscflags = $(KRB5CFLAGS) $(K5FLAGS) $(THREADFLAGS) $(afscflags) $(kfwincflags)
+afslflags = $(afslflags)
+
+!MESSAGE afslflags is $(afslflags)
+
+####################################################################
+# install rxk5 header files 
+INCFILEDIR = $(DESTDIR)\include\rx
+INCFILES =\
+	$(INCFILEDIR)\rxk5.h \
+	$(INCFILEDIR)\rxk5imp.h \
+	$(INCFILEDIR)\rxk5errors.h \
+	$(INCFILEDIR)\rxk5c.h \
+	$(INCFILEDIR)\rxk5_ntfixprotos.h
+
+####################################################################
+# build and install rxk5.lib static lib
+RXK5_LIBFILE = $(DESTDIR)\lib\rxk5.lib
+
+RXK5_OBJS =\
+		$(OUT)\rxk5c.xdr.obj  \
+		$(OUT)\rxk5_common.obj  \
+		$(OUT)\rxk5_client.obj \
+                $(OUT)\rxk5errors.obj \
+		$(OUT)\rxk5_server.obj \
+		$(OUT)\rxk5_info.obj \
+		$(OUT)\rxk5_getkey.obj \
+		$(OUT)\nfold.obj
+
+RXK5_TESTOBJS =\
+		$(RXK5_OBJS) \
+		$(OUT)\testserver.obj \
+		$(OUT)\testclent.obj \
+		$(OUT)\testconn.obj \
+		$(OUT)\servconn.obj \
+		$(OUT)\str.obj \
+		$(OUT)\test.ss.obj \
+		$(OUT)\test.xdr.obj
+
+RXK5_LIBOBJS =\
+		$(RXK5_OBJS) \
+		$(OUT)\AFS_component_version_number.obj
+
+$(RXK5_LIBFILE): $(RXK5_LIBOBJS)
+	$(LIBARCH)
+
+rxk5errors.c rxk5errors.h: rxk5errors.et
+	$(COMPILE_ET) rxk5errors.et
+
+rxk5c.xdr.c: rxk5c.xg
+	$(RXGEN) -x -c -o rxk5c.xdr.c rxk5c.xg
+
+rxk5c.h: rxk5c.xg
+	$(RXGEN) -x -h -o rxk5c.h rxk5c.xg
+
+test.h: test.xg
+	$(RXGEN) test.xg
+
+$(INCFILEDIR)\rxk5.h: rxk5.h
+        $(COPY) rxk5.h $(INCFILEDIR)
+
+$(INCFILEDIR)\rxk5errors.h: rxk5errors.h
+        $(COPY) rxk5errors.h $(INCFILEDIR)
+
+$(INCFILEDIR)\rxk5c.h: rxk5c.h
+        $(COPY) rxk5c.h $(INCFILEDIR)
+
+$(INCFILEDIR)\rxk5imp.h: rxk5imp.h
+        $(COPY) rxk5imp.h $(INCFILEDIR)
+
+$(INCFILEDIR)\rxk5_ntfixprotos.h: rxk5_ntfixprotos.h
+        $(COPY) rxk5_ntfixprotos.h $(INCFILEDIR)
+
+$(OUT)\rxk5_common.obj: rxk5_common.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_client.obj: rxk5_client.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_server.obj: rxk5_server.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_info.obj: rxk5_info.c
+        $(C2OBJ) $**
+
+$(OUT)\rxk5_getkey.obj: rxk5_getkey.c
+        $(C2OBJ) $**
+
+$(OUT)\servconn.obj: servconn.c
+        $(C2OBJ) $**
+
+$(OUT)\nfold.obj: nfold.c
+        $(C2OBJ) $**
+
+####################################################################
+install: $(INCFILES) $(RXK5_LIBFILE)
+
+clean::
+	$(DEL) $(RXK5_LIBFILE) $(OUT)\AFS_component_version_number.obj
+        $(DEL) rxk5c.h rxk5c.xdr.c rxk5errors.c rxk5errors.h test.h
+	$(DEL) *~ *.bak \
+                 *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
+                 *.cp *.fn *.ky *.log *.pg *.tp *.vr \
+                 et.ar TAGS
+
+test:
+
+mkdir:

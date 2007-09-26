@@ -124,7 +124,7 @@ TranslatePTSNames(const afs_cell_handle_p cellHandle, namelist * names,
 	}
     }
 
-    tst = ubik_Call(PR_NameToID, cellHandle->pts, 0, names, ids);
+    tst = ubik_PR_NameToID(cellHandle->pts, 0, names, ids);
 
     if (tst) {
 	goto fail_TranslatePTSNames;
@@ -200,7 +200,9 @@ TranslateTwoNames(const afs_cell_handle_p c_handle, const char *id1,
     names.namelist_val = (prname *) & tmp_array[0];
 
     strncpy(names.namelist_val[0], id1, PTS_MAX_NAME_LEN);
+    names.namelist_val[0][PTS_MAX_NAME_LEN - 1] = '\0';
     strncpy(names.namelist_val[1], id2, PTS_MAX_NAME_LEN);
+    names.namelist_val[1][PTS_MAX_NAME_LEN - 1] = '\0';
     ids->idlist_val = 0;
     ids->idlist_len = 0;
 
@@ -277,7 +279,8 @@ TranslateOneName(const afs_cell_handle_p c_handle, const char *ptsName,
     names[0].namelist_len = 1;
     names[0].namelist_val = (prname *) & tmp_array[0];
 
-    strncpy(names[0].namelist_val, ptsName, PTS_MAX_NAME_LEN);
+    strncpy((char *)names[0].namelist_val, ptsName, PTS_MAX_NAME_LEN);
+    ((char *)names[0].namelist_val)[PTS_MAX_NAME_LEN - 1] = '\0';
     ids.idlist_val = 0;
     ids.idlist_len = 0;
 
@@ -344,7 +347,7 @@ TranslatePTSIds(const afs_cell_handle_p cellHandle, namelist * names,
     int rc = 0;
     afs_status_t tst = 0;
 
-    tst = ubik_Call(PR_IDToName, cellHandle->pts, 0, ids, names);
+    tst = ubik_PR_IDToName(cellHandle->pts, 0, ids, names);
 
     if (tst) {
 	goto fail_TranslatePTSIds;
@@ -419,7 +422,7 @@ pts_GroupMemberAdd(const void *cellHandle, const char *userName,
      */
 
     tst =
-	ubik_Call(PR_AddToGroup, c_handle->pts, 0, ids.idlist_val[0],
+	ubik_PR_AddToGroup(c_handle->pts, 0, ids.idlist_val[0],
 		  ids.idlist_val[1]);
 
     if (tst != 0) {
@@ -499,7 +502,7 @@ pts_GroupOwnerChange(const void *cellHandle, const char *targetGroup,
      */
 
     tst =
-	ubik_Call(PR_ChangeEntry, c_handle->pts, 0, ids.idlist_val[1], "",
+	ubik_PR_ChangeEntry(c_handle->pts, 0, ids.idlist_val[1], "",
 		  ids.idlist_val[0], 0);
 
     if (tst != 0) {
@@ -596,11 +599,11 @@ pts_GroupCreate(const void *cellHandle, const char *newGroup,
 
     if (*newGroupId != 0) {
 	tst =
-	    ubik_Call(PR_INewEntry, c_handle->pts, 0, newGroup, *newGroupId,
+	    ubik_PR_INewEntry(c_handle->pts, 0, newGroup, *newGroupId,
 		      newOwnerId);
     } else {
 	tst =
-	    ubik_Call(PR_NewEntry, c_handle->pts, 0, newGroup, PRGRP,
+	    ubik_PR_NewEntry(c_handle->pts, 0, newGroup, PRGRP,
 		      newOwnerId, newGroupId);
     }
 
@@ -722,7 +725,7 @@ pts_GroupGet(const void *cellHandle, const char *groupName,
      * Retrieve information about the group
      */
 
-    tst = ubik_Call(PR_ListEntry, c_handle->pts, 0, groupId, &groupEntry);
+    tst = ubik_PR_ListEntry(c_handle->pts, 0, groupId, &groupEntry);
 
     if (tst != 0) {
 	goto fail_pts_GroupGet;
@@ -732,7 +735,8 @@ pts_GroupGet(const void *cellHandle, const char *groupName,
     groupP->nameUid = groupEntry.id;
     groupP->ownerUid = groupEntry.owner;
     groupP->creatorUid = groupEntry.creator;
-    strcpy(groupP->name, groupEntry.name);
+    strncpy(groupP->name, groupEntry.name, PTS_MAX_NAME_LEN);
+    groupP->name[PTS_MAX_NAME_LEN - 1] = '\0';
     /*
      * Set the access rights based upon the value of the flags member
      * of the groupEntry struct.
@@ -821,8 +825,10 @@ pts_GroupGet(const void *cellHandle, const char *groupName,
 	goto fail_pts_GroupGet;
     }
 
-    strcpy(groupP->owner, names.namelist_val[0]);
-    strcpy(groupP->creator, names.namelist_val[1]);
+    strncpy(groupP->owner, names.namelist_val[0], PTS_MAX_NAME_LEN);
+    groupP->owner[PTS_MAX_NAME_LEN - 1] = '\0';
+    strncpy(groupP->creator, names.namelist_val[1], PTS_MAX_NAME_LEN);
+    groupP->creator[PTS_MAX_NAME_LEN - 1] = '\0';
     free(names.namelist_val);
     rc = 1;
 
@@ -894,7 +900,7 @@ EntryDelete(const void *cellHandle, const char *entryName,
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_Delete, c_handle->pts, 0, entryId);
+    tst = ubik_PR_Delete(c_handle->pts, 0, entryId);
 
     if (tst != 0) {
 	goto fail_EntryDelete;
@@ -981,7 +987,7 @@ pts_GroupMaxGet(const void *cellHandle, int *maxGroupId, afs_status_p st)
 	goto fail_pts_GroupMaxGet;
     }
 
-    tst = ubik_Call(PR_ListMax, c_handle->pts, 0, &maxUserId, maxGroupId);
+    tst = ubik_PR_ListMax(c_handle->pts, 0, &maxUserId, maxGroupId);
 
     if (tst != 0) {
 	goto fail_pts_GroupMaxGet;
@@ -1031,7 +1037,7 @@ pts_GroupMaxSet(const void *cellHandle, int maxGroupId, afs_status_p st)
 	goto fail_pts_GroupMaxSet;
     }
 
-    tst = ubik_Call(PR_SetMax, c_handle->pts, 0, maxGroupId, PRGRP);
+    tst = ubik_PR_SetMax(c_handle->pts, 0, maxGroupId, PRGRP);
 
     if (tst != 0) {
 	goto fail_pts_GroupMaxSet;
@@ -1202,7 +1208,7 @@ MemberListBegin(const void *cellHandle, const char *name, afs_status_t error1,
     iter->ids.prlist_val = 0;
 
     tst =
-	ubik_Call(PR_ListElements, c_handle->pts, 0, groupId, &iter->ids,
+	ubik_PR_ListElements(c_handle->pts, 0, groupId, &iter->ids,
 		  &exceeded);
 
     if (tst != 0) {
@@ -1344,6 +1350,7 @@ pts_GroupMemberListNext(const void *iterationId, char *memberName,
     mutex_locked = 1;
 
     if (!IsValidPtsGroupMemberListIterator(iter, &tst)) {
+	tst = 666;
 	goto fail_pts_GroupMemberListNext;
     }
 
@@ -1510,7 +1517,7 @@ pts_GroupMemberRemove(const void *cellHandle, const char *userName,
      */
 
     tst =
-	ubik_Call(PR_RemoveFromGroup, c_handle->pts, 0, ids.idlist_val[0],
+	ubik_PR_RemoveFromGroup(c_handle->pts, 0, ids.idlist_val[0],
 		  ids.idlist_val[1]);
 
     if (tst != 0) {
@@ -1592,7 +1599,7 @@ pts_GroupRename(const void *cellHandle, const char *oldName,
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_ChangeEntry, c_handle->pts, 0, groupId, newName, 0, 0);
+    tst = ubik_PR_ChangeEntry(c_handle->pts, 0, groupId, newName, 0, 0);
 
     if (tst != 0) {
 	goto fail_pts_GroupRename;
@@ -1751,7 +1758,7 @@ pts_GroupModify(const void *cellHandle, const char *groupName,
      */
 
     tst =
-	ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, groupId, PR_SF_ALLBITS,
+	ubik_PR_SetFieldsEntry(c_handle->pts, 0, groupId, PR_SF_ALLBITS,
 		  flags, 0, 0, 0, 0);
 
     if (tst != 0) {
@@ -1823,11 +1830,11 @@ pts_UserCreate(const void *cellHandle, const char *userName, int *newUserId,
 
     if (*newUserId != 0) {
 	tst =
-	    ubik_Call(PR_INewEntry, c_handle->pts, 0, userName, *newUserId,
+	    ubik_PR_INewEntry(c_handle->pts, 0, userName, *newUserId,
 		      0);
     } else {
 	tst =
-	    ubik_Call(PR_NewEntry, c_handle->pts, 0, userName, 0, 0,
+	    ubik_PR_NewEntry(c_handle->pts, 0, userName, 0, 0,
 		      newUserId);
     }
 
@@ -1945,7 +1952,7 @@ IsAdministrator(const afs_cell_handle_p c_handle, afs_int32 userId,
 	    goto fail_IsAdministrator;
 	}
 	tst =
-	    ubik_Call(PR_IsAMemberOf, c_handle->pts, 0, userId, adminId,
+	    ubik_PR_IsAMemberOf(c_handle->pts, 0, userId, adminId,
 		      &isAdmin);
 	if (tst != 0) {
 	    goto fail_IsAdministrator;
@@ -2035,7 +2042,7 @@ pts_UserGet(const void *cellHandle, const char *userName,
      * Retrieve information about the group
      */
 
-    tst = ubik_Call(PR_ListEntry, c_handle->pts, 0, userId, &userEntry);
+    tst = ubik_PR_ListEntry(c_handle->pts, 0, userId, &userEntry);
 
     if (tst != 0) {
 	goto fail_pts_UserGet;
@@ -2060,7 +2067,8 @@ pts_UserGet(const void *cellHandle, const char *userName,
     userP->nameUid = userEntry.id;
     userP->ownerUid = userEntry.owner;
     userP->creatorUid = userEntry.creator;
-    strcpy(userP->name, userEntry.name);
+    strncpy(userP->name, userEntry.name, PTS_MAX_NAME_LEN);
+    userP->name[PTS_MAX_NAME_LEN - 1] = '\0';
 
     /*
      * The permission bits are described in the GroupGet function above.
@@ -2104,8 +2112,10 @@ pts_UserGet(const void *cellHandle, const char *userName,
 	goto fail_pts_UserGet;
     }
 
-    strcpy(userP->owner, names.namelist_val[0]);
-    strcpy(userP->creator, names.namelist_val[1]);
+    strncpy(userP->owner, names.namelist_val[0], PTS_MAX_NAME_LEN);
+    userP->owner[PTS_MAX_NAME_LEN - 1] ='\0';
+    strncpy(userP->creator, names.namelist_val[1], PTS_MAX_NAME_LEN);
+    userP->creator[PTS_MAX_NAME_LEN - 1] = '\0';
     free(names.namelist_val);
     rc = 1;
 
@@ -2179,7 +2189,7 @@ pts_UserRename(const void *cellHandle, const char *oldName,
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_ChangeEntry, c_handle->pts, 0, userId, newName, 0, 0);
+    tst = ubik_PR_ChangeEntry(c_handle->pts, 0, userId, newName, 0, 0);
 
     if (tst != 0) {
 	goto fail_pts_UserRename;
@@ -2323,7 +2333,7 @@ pts_UserModify(const void *cellHandle, const char *userName,
      */
 
     tst =
-	ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, userId, mask, flags,
+	ubik_PR_SetFieldsEntry(c_handle->pts, 0, userId, mask, flags,
 		  newQuota, 0, 0, 0);
 
     if (tst != 0) {
@@ -2380,7 +2390,7 @@ pts_UserMaxGet(const void *cellHandle, int *maxUserId, afs_status_p st)
 	goto fail_pts_UserMaxGet;
     }
 
-    tst = ubik_Call(PR_ListMax, c_handle->pts, 0, maxUserId, &maxGroupId);
+    tst = ubik_PR_ListMax(c_handle->pts, 0, maxUserId, &maxGroupId);
 
     if (tst != 0) {
 	goto fail_pts_UserMaxGet;
@@ -2430,7 +2440,7 @@ pts_UserMaxSet(const void *cellHandle, int maxUserId, afs_status_p st)
 	goto fail_pts_UserMaxSet;
     }
 
-    tst = ubik_Call(PR_SetMax, c_handle->pts, 0, maxUserId, 0);
+    tst = ubik_PR_SetMax(c_handle->pts, 0, maxUserId, 0);
 
     if (tst != 0) {
 	goto fail_pts_UserMaxSet;
@@ -2595,7 +2605,7 @@ GetOwnedGroupRPC(void *rpc_specific, int slot, int *last_item,
 
     if ((!list->finished_retrieving) && (list->owned_names.namelist_len == 0)) {
 	tst =
-	    ubik_Call(PR_ListOwned, list->c_handle->pts, 0, list->owner,
+	    ubik_PR_ListOwned(list->c_handle->pts, 0, list->owner,
 		      &list->owned_ids, &list->more);
 	if (tst != 0) {
 	    goto fail_GetOwnedGroupRPC;
@@ -2940,7 +2950,7 @@ GetPTSRPC(void *rpc_specific, int slot, int *last_item,
 	bulkentries.prentries_len = 0;
 
 	tst =
-	    ubik_Call(PR_ListEntries, list->c_handle->pts, 0, list->flag,
+	    ubik_PR_ListEntries(list->c_handle->pts, 0, list->flag,
 		      start, &bulkentries, &(list->nextstartindex));
 
 	if (tst != 0) {

@@ -10,6 +10,8 @@
 #ifndef __SMB_IOCONS_H_ENV_
 #define __SMB_IOCONS_H_ENV_ 1
 
+#include <afs/afs_token_protos.h>
+
 /* included in both AFSD and fs commands */
 
 typedef struct chservinfo {
@@ -28,23 +30,10 @@ struct gaginfo {
 #define GAGUSER		1
 #define GAGCONSOLE	2
 
-struct ClearToken {
-	int AuthHandle;
-	char HandShakeKey[8];
-	int ViceId;
-	int BeginTimestamp;
-	int EndTimestamp;
-};
-
 struct sbstruct {
 	int sb_thisfile;
         int sb_default;
 };
-
-#define CM_IOCTLCACHEPARMS		16
-typedef struct cm_cacheParms {
-        afs_uint64 parms[CM_IOCTLCACHEPARMS];
-} cm_cacheParms_t;
 
 /* set cell flags */
 #define CM_SETCELLFLAG_SUID		2
@@ -97,4 +86,10 @@ typedef struct cm_cacheParms {
 #define VIOC_RXSTAT_PROC                0x2e
 #define VIOC_RXSTAT_PEER                0x2f
 #define VIOC_UUIDCTL                    0x30
+#define VIOC_PATH_AVAILABILITY          0x31
+#define VIOCGETTOK2			0x32 /* fetch tokens (K5, ...) */
+#define VIOCSETTOK2		        0x33 /* set tokens (K5, ...) */
+#define VIOCGETPROP			0x34 /* properties ifc */
+#define VIOCSETPROP			0x35
+
 #endif /*  __SMB_IOCONS_H_ENV_ */
