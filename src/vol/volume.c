@@ -2761,12 +2761,14 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		}
 	    }
 	    *ec = VOFFLINE;
+	    ReleaseVolumeHeader(vp->header);
 	    vp = NULL;
 	    break;
 	}
 
 	if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
 	    *ec = VOFFLINE;
+	    ReleaseVolumeHeader(vp->header);
 	    vp = NULL;
 	    break;
 	}
