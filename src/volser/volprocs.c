@@ -1650,8 +1650,7 @@ VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
     namehead[7] = '\0';
     for (i = 0; i < 26; i++) {
 	namehead[6] = i + 'a';
-	if (VGetPartition(namehead, 0))
-	    partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
+	partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
     }
 
     return 0;
