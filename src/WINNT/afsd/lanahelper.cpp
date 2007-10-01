@@ -445,6 +445,7 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
 
     rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
     if (rv == ERROR_SUCCESS) {
+	dummyLen = sizeof(regLana);
         rv = RegQueryValueEx(hkConfig, szForceLanaLoopback, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
         RegCloseKey(hkConfig);
 
