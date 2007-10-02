@@ -2315,7 +2315,7 @@ cb_stateRestoreFEs(struct fs_dump_state * state)
 static int
 cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 {
-    int ret = 0, iovcnt, cbi, idx, len, written = 0;
+    int ret = 0, iovcnt, cbi, written = 0;
     afs_uint32 fei;
     struct callback_state_entry_header hdr;
     struct FEDiskEntry fedsk;
@@ -2336,24 +2336,24 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
     }
 
     iov[0].iov_base = (char *)&hdr;
-    len = iov[0].iov_len = sizeof(hdr);
+    iov[0].iov_len = sizeof(hdr);
     iov[1].iov_base = (char *)&fedsk;
-    len += iov[1].iov_len = sizeof(struct FEDiskEntry);
+    iov[1].iov_len = sizeof(struct FEDiskEntry);
     iovcnt = 2;
 
-    for (cbi = fe->firstcb, cb = itocb(cbi), idx = 2; 
+    for (cbi = fe->firstcb, cb = itocb(cbi); 
 	 cb != NULL; 
-	 cbi = cb->cnext, cb = itocb(cbi), idx++, hdr.nCBs++) {
+	 cbi = cb->cnext, cb = itocb(cbi), hdr.nCBs++) {
 	if (cbi > state->cb_hdr->cb_max) {
 	    state->cb_hdr->cb_max = cbi;
 	}
-	if (cb_stateCBToDiskEntry(cb, &cbdsk[idx])) {
+	if (cb_stateCBToDiskEntry(cb, &cbdsk[iovcnt])) {
 	    ret = 1;
 	    goto done;
 	}
-	cbdsk[idx].index = cbi;
-	iov[iovcnt].iov_base = (char *)&cbdsk[idx];
-	len += iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
+	cbdsk[iovcnt].index = cbi;
+	iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
 	iovcnt++;
 	if ((iovcnt == 16) || (!cb->cnext)) {
 	    if (fs_stateWriteV(state, iov, iovcnt)) {
@@ -2362,7 +2362,6 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 	    }
 	    written = 1;
 	    iovcnt = 0;
-	    len = 0;
 	}
     }
 
@@ -2401,7 +2400,7 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 static int
 cb_stateRestoreFE(struct fs_dump_state * state)
 {
-    int ret = 0, iovcnt, len, nCBs, idx;
+    int ret = 0, iovcnt, nCBs;
     struct callback_state_entry_header hdr;
     struct FEDiskEntry fedsk;
     struct CBDiskEntry cbdsk[16];
@@ -2410,9 +2409,9 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     struct CallBack * cb;
 
     iov[0].iov_base = (char *)&hdr;
-    len = iov[0].iov_len = sizeof(hdr);
+    iov[0].iov_len = sizeof(hdr);
     iov[1].iov_base = (char *)&fedsk;
-    len += iov[1].iov_len = sizeof(fedsk);
+    iov[1].iov_len = sizeof(fedsk);
     iovcnt = 2;
 
     if (fs_stateReadV(state, iov, iovcnt)) {
@@ -2438,11 +2437,11 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     }
 
     if (hdr.nCBs) {
-	for (iovcnt = 0, idx = 0, len = 0, nCBs = 0;
+	for (iovcnt = 0, nCBs = 0;
 	     nCBs < hdr.nCBs;
-	     idx++, nCBs++) {
-	    iov[idx].iov_base = (char *)&cbdsk[idx];
-	    len += iov[idx].iov_len = sizeof(struct CBDiskEntry);
+	     nCBs++) {
+	    iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	    iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
 	    iovcnt++;
 	    if ((iovcnt == 16) || (nCBs == hdr.nCBs - 1)) {
 		if (fs_stateReadV(state, iov, iovcnt)) {
@@ -2453,7 +2452,6 @@ cb_stateRestoreFE(struct fs_dump_state * state)
 		    ret = 1;
 		    goto done;
 		}
-		len = 0;
 		iovcnt = 0;
 	    }
 	}
