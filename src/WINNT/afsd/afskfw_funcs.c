@@ -218,7 +218,9 @@ DECL_FUNC_PTR(krb524_convert_creds_kdc);
 
 #ifdef USE_KRB4
 // krb4 functions
+#if 0 /* XXX */
 DECL_FUNC_PTR(krb_get_cred);
+#endif
 DECL_FUNC_PTR(tkt_string);
 DECL_FUNC_PTR(krb_get_tf_realm);
 DECL_FUNC_PTR(krb_mk_req);
@@ -373,7 +375,7 @@ FUNC_INFO k5_fi[] = {
     END_FUNC_INFO
 };
 
-#ifdef USE_KRB4
+#ifdef USE_KRB4 && 0
 FUNC_INFO k4_fi[] = {
     MAKE_FUNC_INFO(krb_get_cred),
     MAKE_FUNC_INFO(krb_get_tf_realm),
@@ -571,7 +573,7 @@ KFW_initialize_funcs(void)
 int
 KFW_available_funcs(void)
 {
-    if ( hKrb5 && hComErr && hService && 
+    if ( hKrb5 && hService && 
 #ifdef USE_MS2MIT
          hSecur32 && 
 #endif /* USE_MS2MIT */
@@ -616,8 +618,6 @@ KFW_cleanup_funcs(void)
 #endif /* USE_MS2MIT */
     if (hService)
         FreeLibrary(hService);
-    if (hComErr)
-        FreeLibrary(hComErr);
     if (hProfile)
         FreeLibrary(hProfile);
 #ifdef USE_KRB4
@@ -1440,6 +1440,7 @@ afskfw_krb524_convert_creds_kdc
 	(context, v5creds, v4creds);
 }
 
+#if 0
 int 
 afskfw_krb_get_cred
 (char *service, char *instance, char *realm, CREDENTIALS *c)
@@ -1467,6 +1468,8 @@ afskfw_krb_mk_req(KTEXT authent, char *service, char *instance,
 	return pkrb_mk_req(authent, service, instance,
 		realm, checksum);
 }
+
+#endif
 
 long  
 afskfw_profile_init

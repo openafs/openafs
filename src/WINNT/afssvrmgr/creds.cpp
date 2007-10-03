@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afskfw.h>
 }
 
 #include "svrmgr.h"
@@ -17,8 +18,6 @@ extern "C" {
 #include "display.h"
 #include "time.h"
 #include "subset.h"
-
-#include <afs\afskfw.h>
 
 /*
  * OPENCELL DIALOG ____________________________________________________________

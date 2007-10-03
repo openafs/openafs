@@ -239,8 +239,8 @@ EXPORTS
 	stolower				@243
 	strcompose				@244
 	ucstring				@245
-	add_error_table				@246
-	remove_error_table			@247
+;	add_error_table				@246
+;	remove_error_table			@247
 	afs_error_table_name			@248
 	afs_error_table_name_r			@249
 	rx_justReceived				@250

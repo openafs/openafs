@@ -34,6 +34,7 @@ RCSID
 #include "afs/afsrpc.h"
 #include <afs/vice.h>
 #include "auth.h"
+#include <afs_token.h>
 #include <afs/afsutil.h>
 
 /* TBUFFERSIZE must be at least 512 larger than KTCMAXTICKETSIZE */
@@ -263,7 +264,7 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 int
 afstoken_to_soliton(pioctl_set_token *a_token,
     int type,
-    afstoken_to_soliton *at);
+    afstoken_soliton *at);
     
 /* copy bits of an rxkad token into a ktc_token */
 int
@@ -600,14 +601,14 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
  */
  
 int
-ktc_GetTokenEx(afs_int32 index, char *cell,
+ktc_GetTokenEx(afs_int32 index, const char *cell,
     pioctl_set_token *a_token)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
     afs_int32 code;
     register char *tp;
-    afstoken_to_soliton at[1];
+    afstoken_soliton at[1];
     XDR xdrs[1];
 
     LOCK_GLOBAL_MUTEX;

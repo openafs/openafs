@@ -82,8 +82,9 @@ struct token_rxk5 {
 	int32_t k5_is_skey;
 	int32_t k5_flags;
 	token_tagged_data k5_addresses<AFSTOKEN_K5_ADDRESSES_MAX>;
-	k5_ticket k5_ticket;
-	k5_ticket k5_ticket2;
+	/* ms compiler seems to need this when compiling c++ */
+	struct k5_ticket k5_ticket;
+	struct k5_ticket k5_ticket2;
 	token_k5auth_data k5_authdata<AFSTOKEN_K5_AUTHDATA_MAX>;
 };
 #endif

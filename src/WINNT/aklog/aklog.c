@@ -724,7 +724,6 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
 	afs_int32 viceId = ANONYMOUSID;
-    int i;
 
     /* try to avoid an expensive call to get_cellconfig */
     if (cell && ll_string_check(&authedcells, cell))
@@ -768,6 +767,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     strncpy(instance, cell_to_use, sizeof(instance));
     instance[sizeof(instance)-1] = '\0';
 
+    /* XXX */
     /*
      * Extract the session key from the ticket file and hand-frob an
      * afs style authenticator.
@@ -801,11 +801,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		printf("Kerberos error code returned by krb5_set_default_realm: %d\n",
 			status);
 	    }
-	    afs_com_err(progname, status, "can't make <%s> the default realm",
+            /* XXX should be afs_com_err, eventually */
+	    com_err(progname, status, "can't make <%s> the default realm",
 		realm_of_cell);
 	    return(AKLOG_KERBEROS);
 	}
-    
+
 	i = 0;
 #ifdef AFS_RXK5
 	if (rxk5 & FORCE_RXK5) {
@@ -833,17 +834,18 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	service_list[i] = 0;
 
 	if (!i) {
-	    afs_com_err(progname, 0, "requested security mechanism is not available.");
+        /* XXX afs_com_err */
+	    com_err(progname, 0, "requested security mechanism is not available.");
 	    return(AKLOG_KERBEROS);
 	}
-    
-    for (i = 0; (service = service_list[i]); ++i) {
+
+        for (i = 0; (service = service_list[i]); ++i) {
 	    status = get_credv5(context, service, &v5cred);
 
 	    if (status != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN
 		&& status != KRB5KRB_ERR_GENERIC)
 	    break;
-	}
+        }
 	if (k5service) free(k5service);
             
 	if (status == KRB5_ERR_HOST_REALM_UNKNOWN) {
@@ -868,8 +870,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             retry = 0;
 	    realm_fallback = 0;
             goto try_v5;
-        }       
-    }       
+        }
+    } /* usev5 */
     else 
     {
 #ifdef HAVE_KRB4
@@ -897,7 +899,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 #else
         return(AKLOG_MISC);
 #endif
-    } 
+    } /* else !usev5 */
 
     /* TODO: get k5 error text */
     if (status != KSUCCESS)
@@ -988,8 +990,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     {
         if (dflag)
             printf("Not resolving name %s to id (-noprdb set)\n", username);
-    }       
-    else    
+    } 
+    else 
     {
         if (usev5) {
             if((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
@@ -1022,7 +1024,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 			&c, 
 #else
 			NULL,
-#endfi
+#endif
 			&status, &aclient, &aserver, &viceId, &atoken);
     }
 

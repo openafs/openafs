@@ -57,7 +57,14 @@ afserror.c afserror.h: afserror.et $(COMPILE_ET_EXEFILE)
 $(INCFILEDIR)\afserror.h: afserror.h
         $(COPY) afserror.h $(INCFILEDIR)
 
-$(OUT)\compile_et.obj: AFS_component_version_number.c
+# cl.exe errors refusing to build compile_et.c and
+# AFS_component_version_number.c in the same invocation--
+# not sure why it does here now, or why it's an error here now,
+# but following locution convinces nmake.exe not to try it
+$(OUT)\compile_et.obj: component_dummy_target
+
+component_dummy_target: AFS_component_version_number.c
+	$(DESTDIR)\bin\touch component_dummy_target
 
 $(COMPILE_ET_EXERES): compile_et.rc AFS_component_version_number.h
 

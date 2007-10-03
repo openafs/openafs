@@ -2432,8 +2432,8 @@ long cm_IoctlSetTokens2(struct smb_ioctl *ioctlp, struct cm_user *userp)
     for (i = 0; i < a_token->tokens.tokens_len; ++i) {
 	if (authtype != -1) goto out;
 	xdrmem_create(xdrs,
-	    a_token->tokens.tokens_val[i].opaque_token_val,
-	    a_token->tokens.tokens_val[i].opaque_token_len,
+	    a_token->tokens.tokens_val[i].token_opaque_val,
+	    a_token->tokens.tokens_val[i].token_opaque_len,
 	    XDR_DECODE);
 	if (!xdr_afstoken_soliton(xdrs, cu))
 	    goto out;
@@ -2441,16 +2441,16 @@ long cm_IoctlSetTokens2(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     switch(authtype) {
- 		case CU_NOAUTH:
+ 		case AFSTOKEN_UNION_NOAUTH:
 			break;
 		case AFSTOKEN_UNION_KAD:
 			/* rxkad */
-			kad_token = &(cu->afstoken_soliton_u.at_kad);
-			if (kad_token->viceid == UNDEFVID)
-			goto out;
-			if (kad_token->rxkad_ticket.rxkad_ticket_len > (unsigned) MAXKTCTICKETLEN)
-			goto out;
-			break;
+		  kad_token = &(cu->afstoken_soliton_u.at_kad);
+		  if (kad_token->rk_viceid == UNDEFVID)
+		      goto out;
+		  if (kad_token->rk_ticket.rk_ticket_len > (unsigned) MAXKTCTICKETLEN)
+		      goto out;
+		  break;
 #ifdef AFS_RXK5
 		case AFSTOKEN_UNION_K5:
 			/* rxk5 */
@@ -2538,27 +2538,27 @@ long cm_IoctlSetTokens2(struct smb_ioctl *ioctlp, struct cm_user *userp)
     switch(cu->at_type) {
     	case AFSTOKEN_UNION_KAD:
 			/* rxkad token */ 
-			if(kad_token->kvno  == -1)
+			if(kad_token->rk_kvno  == -1)
 	    		ucellp->kvno = 999;
 			else
-				ucellp->kvno = kad_token->kvno;
+				ucellp->kvno = kad_token->rk_kvno;
 				
 #ifndef DJGPP
 #if 0
     		/* Get the session key from the RPC, rather than from the pioctl. */
-    		memcpy(&ucellp->sessionKey, kad_token->rxkad_key, sizeof(ct.HandShakeKey));
+    		memcpy(&ucellp->sessionKey, kad_token->rk_key, sizeof(ct.HandShakeKey));
 #else
-			memcpy(ucellp->sessionKey.data, kad_token->rxkad_key, sizeof(kad_token->rxkad_key));
+			memcpy(ucellp->sessionKey.data, kad_token->rk_key, sizeof(kad_token->rk_key));
 #endif /* 0 */
 #else
     		/* for win95, we are getting the session key from the pioctl */
-    		memcpy(&ucellp->sessionKey, kad_token->rxkad_key, sizeof(ct.HandShakeKey));
+    		memcpy(&ucellp->sessionKey, kad_token->rk_key, sizeof(ct.HandShakeKey));
 #endif /* !DJGPP */				
-		 	ucellp->expirationTime = kad_token->endtime;
+		 	ucellp->expirationTime = kad_token->rk_endtime;
 			/* and the ticket */
-			ucellp->ticketLen = kad_token->rxkad_ticket.rxkad_ticket_len;
+			ucellp->ticketLen = kad_token->rk_ticket.rk_ticket_len;
 			ucellp->ticketp = malloc(ucellp->ticketLen);
-			memcpy(ucellp->ticketp, kad_token->rxkad_ticket.rxkad_ticket_val, ucellp->ticketLen);
+			memcpy(ucellp->ticketp, kad_token->rk_ticket.rk_ticket_val, ucellp->ticketLen);
 			ucellp->flags |= CM_UCELLFLAG_RXKAD;
 			break;
 #ifdef AFS_RXK5
@@ -2571,7 +2571,7 @@ long cm_IoctlSetTokens2(struct smb_ioctl *ioctlp, struct cm_user *userp)
 			rxk5creds = 0;
 			break;
 #endif /* AFS_RXK5 */
-		case CU_NOAUTH:
+		case AFSTOKEN_UNION_NOAUTH:
 			/* unlog */
 			goto release;
     }

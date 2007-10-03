@@ -26,7 +26,7 @@ EXPORTS
 	afskfw_krb5_free_checksum_contents
 	afskfw_krb5_kt_get_entry
 	afskfw_krb5_cc_end_seq_get
-	afskfw_krb_get_cred
+;	afskfw_krb_get_cred
 	afskfw_krb5_build_principal
 	afskfw_krb5_kt_end_seq_get
 	afskfw_krb5_c_encrypt_length
@@ -44,7 +44,7 @@ EXPORTS
 	afskfw_krb5_get_renewed_creds
 	afskfw_cc_initialize
 	afskfw_krb5_cc_close
-	afskfw_krb_mk_req
+;	afskfw_krb_mk_req
 	afskfw_krb5_free_principal
 	afskfw_krb5_free_keytab_entry_contents
 	afskfw_krb5_copy_keyblock_contents
@@ -80,7 +80,7 @@ EXPORTS
 	afskfw_Leash_get_default_publicip
 	afskfw_Leash_get_default_lifetime
 	afskfw_profile_release_string
-	afskfw_krb_get_tf_realm
+;	afskfw_krb_get_tf_realm
 	afskfw_krb5_cc_get_type
 	afskfw_krb5_c_verify_checksum
 	afskfw_krb524_convert_creds_kdc
@@ -93,7 +93,7 @@ EXPORTS
 	afskfw_LsaConnectUntrusted
 	afskfw_krb5_cc_set_flags
 	afskfw_OpenServiceA
-	afskfw_tkt_string
+;	afskfw_tkt_string
 	afskfw_Leash_get_default_forwardable
 	afskfw_Leash_get_default_renew_till
 	afskfw_LsaLookupAuthenticationPackage

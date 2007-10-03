@@ -3409,13 +3409,14 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
     krb5_ccache                 ncc = NULL;
     int retval = 1;
 
-    if (!krb5_init_context || !filename)
+    /* XXX why are we makiing this more hackish? */
+    if (/* !krb5_init_context || */!filename)
         return 1;
 
     if ( strlen(filename) + sizeof("FILE:") > sizeof(cachename) )
         return 1;
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&ctx);
     if (code) return 1;
 
     strcat(cachename, filename);
