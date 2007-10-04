@@ -733,14 +733,17 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
              * options.  So we must determine if any of the next nodes
              * are the one we are looking for.
              */
-            Nptr dataNode = newNode;
+            Nptr prev = newNode;
 
             while ( next ) {
                 if (!comparekeys(B)(getfunkey(B), getdatakey(next), EXACT_MATCH)) {
                     /* we found the one to delete */
-                    getdatanext(dataNode) = getdatanext(next);
+                    getdatanext(prev) = getdatanext(next);
                     putFreeNode(B, next);
+                    break;
                 }
+                prev = next;
+                next = getdatanext(next);
             }
             
             /* do not delete the key */
