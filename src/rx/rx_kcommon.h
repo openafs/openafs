@@ -158,6 +158,10 @@ extern rxk_portRocks_t rxk_portRocks;
 extern struct domain inetdomain;
 #endif /* AFS_XBSD_ENV */
 
+#if defined(AFS_SUN510_ENV)
+extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
+#endif
+
 #endif /* _RX_KCOMMON_H_ */
 
 #endif

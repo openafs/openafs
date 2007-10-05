@@ -105,23 +105,22 @@ extern kmutex_t afs_global_lock;
 #endif
 
 #if defined(AFS_SUN510_ENV)
-#include <sys/sunddi.h>
-#include <net/if.h>
+#include "h/sunddi.h"
 extern ddi_taskq_t *afs_taskq;
 extern krwlock_t afsifinfo_lock;
 
+/* this should be in rx/SOLARIS/rx_knet.c accessed via accessor functions,
+   eventually */
+#include "net/if.h"
 /* Global interface info struct */
 struct afs_ifinfo {
-    char        ifname[LIFNAMSIZ];
-    ipaddr_t    ipaddr;
-    ipaddr_t    netmask;
-    uint_t      mtu;
-    uint64_t    flags;
-    int         metric;
-    ipaddr_t    dstaddr;
+  char        ifname[LIFNAMSIZ];
+  ipaddr_t    ipaddr;
+  ipaddr_t    netmask;
+  uint_t      mtu;
+  uint64_t    flags;
+  int         metric;
+  ipaddr_t    dstaddr;
 };
-
-extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
 #endif
-
 #endif /* _OSI_MACHDEP_H_ */
