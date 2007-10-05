@@ -399,6 +399,10 @@ extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 #endif
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 			  struct iovec *dvec, int nvecs, int *lengthp);
+#if defined(AFS_SUN510_ENV)
+extern void osi_StartNetIfPoller(void);
+extern void osi_NetIfPoller(void);
+#endif
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);
 #ifndef RXK_LISTENER_ENV

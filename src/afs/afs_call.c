@@ -29,7 +29,10 @@ RCSID
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
-
+#ifdef AFS_SUN510_ENV
+#include "h/ksynch.h"
+#include "h/sunddi.h"
+#endif
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
 #define	AFS_MINBUFFERS	100
@@ -84,6 +87,11 @@ thread_t afs_global_owner;
 simple_lock_data afs_global_lock;
 #endif
 
+#ifdef AFS_SUN510_ENV
+ddi_taskq_t *afs_taskq;
+krwlock_t afsifinfo_lock;
+#endif
+
 afs_int32 afs_initState = 0;
 afs_int32 afs_termState = 0;
 afs_int32 afs_setTime = 0;
@@ -120,6 +128,16 @@ afs_InitSetup(int preallocs)
 
     if (afs_InitSetup_done)
 	return EAGAIN;
+
+#ifdef AFS_SUN510_ENV
+    /* Initialize a RW lock for the ifinfo global array */
+    rw_init(&afsifinfo_lock, NULL, RW_DRIVER, NULL);
+
+    /* Create a taskq */
+    afs_taskq = ddi_taskq_create(NULL, "afs_taskq", 2, TASKQ_DEFAULTPRI, 0);
+
+    osi_StartNetIfPoller();
+#endif
 
 #ifndef AFS_NOSTATS
     /*
