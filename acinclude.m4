@@ -597,6 +597,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         )
 
 		 LINUX_KERNEL_COMPILE_WORKS
+		 LINUX_HAVE_KMEM_CACHE_T
+		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
@@ -626,6 +628,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
+		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
@@ -870,11 +873,20 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
+		 fi
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
 		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])

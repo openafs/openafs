@@ -269,7 +269,11 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 
 
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(HAVE_KMEM_CACHE_T)
 static kmem_cache_t *afs_inode_cachep;
+#else
+struct kmem_cache *afs_inode_cachep;
+#endif
 
 static struct inode *
 afs_alloc_inode(struct super_block *sb)
@@ -294,7 +298,11 @@ afs_destroy_inode(struct inode *inode)
 }
 
 static void
+#if defined(HAVE_KMEM_CACHE_T)
 init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+#else
+init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+#endif
 {
     struct vcache *vcp = (struct vcache *) foo;
 
@@ -312,10 +320,17 @@ afs_init_inodecache(void)
 #define SLAB_RECLAIM_ACCOUNT 0
 #endif
 
+#if defined(KMEM_CACHE_TAKES_DTOR)
     afs_inode_cachep = kmem_cache_create("afs_inode_cache",
 					 sizeof(struct vcache),
 					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
 					 init_once, NULL);
+#else
+    afs_inode_cachep = kmem_cache_create("afs_inode_cache",
+					 sizeof(struct vcache),
+					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
+					 init_once);
+#endif
     if (afs_inode_cachep == NULL)
 	return -ENOMEM;
     return 0;
