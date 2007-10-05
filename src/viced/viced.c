@@ -2141,7 +2141,18 @@ main(int argc, char *argv[])
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
 
+#if !defined(AFS_DEMAND_ATTACH_FS)
+    /* 
+     * For DAFS, we do not start the Rx server threads until after
+     * the volume package is initialized, and fileserver state is
+     * restored.  This is necessary in order to keep host and callback
+     * package state pristine until we have a chance to restore state.
+     *
+     * Furthermore, startup latency is much lower with dafs, so this
+     * shouldn't pose a serious problem.
+     */
     rx_StartServer(0);		/* now start handling requests */
+#endif
 
     /* we ensure that there is enough space in the vnode buffer to satisfy
      ** requests from all concurrent threads. 
@@ -2181,6 +2192,7 @@ main(int argc, char *argv[])
 	 * restore fileserver state */
 	fs_stateRestore();
     }
+    rx_StartServer(0);  /* now start handling requests */
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /*
