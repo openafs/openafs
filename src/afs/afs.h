@@ -1225,5 +1225,4 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
-
 #endif /* _AFS_H_ */

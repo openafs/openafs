@@ -36,6 +36,16 @@ RCSID
 #include "inet/ip.h"
 #include "inet/ip_if.h"
 #include "netinet/udp.h"
+#ifdef AFS_SUN510_ENV
+#include "h/ddi.h"
+#include "h/ksynch.h"
+#include "h/sunddi.h"
+#include "h/sunldi.h"
+#include "h/sockio.h"
+#include "h/cmn_err.h"
+#include "h/socket.h"
+#include "netinet/in.h"
+#endif
 
 /*
  * Function pointers for kernel socket routines
@@ -68,14 +78,11 @@ rxi_GetIFInfo()
 {
     int i = 0;
     int different = 0;
-
+#ifndef AFS_SUN510_ENV
     ill_t *ill;
     ipif_t *ipif;
-    int rxmtu, maxmtu;
-#ifdef AFS_SUN510_ENV
-    ill_walk_context_t ctx;
 #endif
-
+    int rxmtu, maxmtu;
     int mtus[ADDRSPERSITE];
     afs_uint32 addrs[ADDRSPERSITE];
     afs_uint32 ifinaddr;
@@ -84,10 +91,58 @@ rxi_GetIFInfo()
     memset(addrs, 0, sizeof(addrs));
 
 #ifdef AFS_SUN510_ENV
-    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+    (void) rw_enter(&afsifinfo_lock, RW_READER);
+
+    for (i = 0; (afsifinfo[i].ipaddr != NULL) && (i < ADDRSPERSITE); i++) {
+
+             /* Ignore addresses which are down.. */
+            if (!(afsifinfo[i].flags & IFF_UP))
+                continue;
+
+            /* Compute the Rx interface MTU */
+	    rxmtu = (afsifinfo[i].mtu - RX_IPUDP_SIZE);
+
+	    ifinaddr = afsifinfo[i].ipaddr;
+	    if (myNetAddrs[i] != ifinaddr)
+		different++;
+
+	    /* Copy interface MTU and address; adjust maxmtu */
+	    mtus[i] = rxmtu;
+	    rxmtu = rxi_AdjustIfMTU(rxmtu);
+	    maxmtu = rxmtu * rxi_nRecvFrags +
+	        ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
+	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+	    addrs[i] = ifinaddr;
+
+	    if (ifinaddr != 0x7f000001 && maxmtu > rx_maxReceiveSize) {
+		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize =
+		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+	    }
+            
+    }
+    
+    (void) rw_exit(&afsifinfo_lock);
+
+    rx_maxJumboRecvSize =
+	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
+	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
+    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+
+    if (different) {
+	int j;
+
+	for (j = 0; j < i; j++) {
+	    myNetMTUs[j] = mtus[j];
+	    myNetAddrs[j] = addrs[j];
+	}
+    }
+
+    return different;
+}
+
 #else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
-#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
@@ -144,17 +199,19 @@ rxi_GetIFInfo()
 
     return different;
 }
+#endif
 
 int
 rxi_FindIfMTU(afs_uint32 addr)
 {
-    ill_t *ill;
-    ipif_t *ipif;
     afs_uint32 myAddr, netMask;
     int match_value = 0;
     int mtu = -1;
 #ifdef AFS_SUN510_ENV
-    ill_walk_context_t ctx;
+    int i = 0;
+#else
+    ill_t *ill;
+    ipif_t *ipif;
 #endif
 
     if (numMyNetAddrs == 0)
@@ -171,10 +228,46 @@ rxi_FindIfMTU(afs_uint32 addr)
 	netMask = 0;
 
 #ifdef AFS_SUN510_ENV
-    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+    (void) rw_enter(&afsifinfo_lock, RW_READER);
+
+    for (i = 0; (afsifinfo[i].ipaddr != NULL) && (i < ADDRSPERSITE); i++) {
+        afs_uint32 thisAddr, subnetMask;
+    	int thisMtu;
+
+        /* Ignore addresses which are down.. */
+        if ((afsifinfo[i].flags & IFF_UP) == 0)
+            continue;
+
+        thisAddr = afsifinfo[i].ipaddr;
+        subnetMask = afsifinfo[i].netmask;
+        thisMtu = afsifinfo[i].mtu;
+
+        if ((myAddr & netMask) == (thisAddr & netMask)) {
+	   if ((myAddr & subnetMask) == (thisAddr & subnetMask)) {
+	        if (myAddr == thisAddr) {
+                    match_value = 4;
+                    mtu = thisMtu;
+                }
+
+                if (match_value < 3) {
+                    match_value = 3;
+                    mtu = thisMtu;
+                }
+           }
+
+           if (match_value < 2) {
+                match_value = 2;
+                mtu = thisMtu;
+           }
+        }
+     }
+     
+     (void) rw_exit(&afsifinfo_lock);
+
+     return mtu;
+}
 #else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
-#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
@@ -213,6 +306,7 @@ rxi_FindIfMTU(afs_uint32 addr)
 
     return mtu;
 }
+#endif
 
 /* rxi_NewSocket, rxi_FreeSocket and osi_NetSend are from the now defunct
  * afs_osinet.c. 
@@ -461,6 +555,174 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     return error;
 }
+
+#if defined(AFS_SUN510_ENV)
+/* How often afs collects interface info. Tunable via /etc/system:      */
+/* set afs:afs_if_poll_interval = integer (value is in seconds)         */
+static int afs_if_poll_interval = 30;
+
+/* Global array which holds the interface info for consumers            */
+struct afs_ifinfo afsifinfo[ADDRSPERSITE];
+
+void
+osi_StartNetIfPoller()
+{
+    (void) ddi_taskq_dispatch(afs_taskq, (void(*) (void*)) osi_NetIfPoller,
+            NULL, DDI_SLEEP);
+}
+
+void
+osi_NetIfPoller()
+{
+    cred_t *cr;
+    ldi_ident_t li;
+    ldi_handle_t lh;
+    struct lifnum lifn;
+    struct lifconf lifc;
+    struct lifreq lifr;
+    struct lifreq *lifrp;
+    struct sockaddr_in *sin4_local;
+    struct sockaddr_in *sin4_dst;
+    major_t udpmajor;
+    caddr_t lifcbuf;
+    int i, count, error, rv;
+    int ifcount;
+    int metric;
+    int index;
+    uint_t mtu;
+    uint64_t flags;
+
+    /* Get our permissions */
+    cr = CRED();
+
+    /* Initialize and open /dev/udp for receiving ioctls */
+    udpmajor = ddi_name_to_major(UDP_MOD_NAME);
+
+    error = ldi_ident_from_major(udpmajor, &li);
+    if (error)
+        cmn_err(CE_PANIC, "osi_NetIfPoller: ldi_ident_from_major failed: %d",
+            error);
+
+    error = ldi_open_by_name(UDP_DEV_NAME, FREAD, cr, &lh, li);
+    if (error)
+        cmn_err(CE_PANIC,
+            "osi_NetIfPoller: ldi_open_by_name failed: %d", error);
+
+
+    /* First, how many interfaces do we have? */
+    (void) bzero((void *)&lifn, sizeof(struct lifnum));
+    lifn.lifn_family   = AF_INET;
+
+    error = ldi_ioctl(lh, SIOCGLIFNUM, (intptr_t)&lifn,
+        FKIOCTL, cr, &rv);
+    if (error)
+     cmn_err(CE_PANIC,
+         "osi_NetIfPoller: ldi_ioctl: SIOCGLIFNUM failed: %d", error);
+
+    ifcount = lifn.lifn_count;
+
+    /* Set up some stuff for storing the results of SIOCGLIFCONF */
+    (void) bzero((void *)&lifc, sizeof(struct lifconf));
+
+    lifcbuf = kmem_zalloc(ifcount * sizeof(struct lifreq), KM_SLEEP);
+
+    lifc.lifc_family  = AF_INET;
+    lifc.lifc_flags   = IFF_UP;
+    lifc.lifc_len     = ifcount * sizeof(struct lifreq);
+    lifc.lifc_buf     = lifcbuf;
+
+    /* Get info on each of our available interfaces. */
+    error = ldi_ioctl(lh, SIOCGLIFCONF, (intptr_t)&lifc,
+        FKIOCTL, cr, &rv);
+    if (error)
+        cmn_err(CE_PANIC,
+            "osi_NetIfPoller: ldi_ioctl: SIOCGLIFCONF failed: %d", error);
+
+    lifrp = lifc.lifc_req;
+
+    count = 0;
+
+    /* Loop through our interfaces and pick out the info we want */
+    for (i = lifc.lifc_len / sizeof(struct lifreq);
+        i > 0; i--, lifrp++) {
+                
+        if (count >= ADDRSPERSITE)
+                break;
+
+        (void) bzero((void *)&lifr, sizeof(struct lifreq));
+
+        (void) strncpy(lifr.lifr_name, lifrp->lifr_name,
+            sizeof(lifr.lifr_name));
+
+        /* Get this interface's Flags */
+        error = ldi_ioctl(lh, SIOCGLIFFLAGS, (intptr_t)&lifr,
+            FKIOCTL, cr, &rv);
+        if (error)
+            cmn_err(CE_PANIC,
+                "osi_NetIfPoller: ldi_ioctl: SIOCGLIFFLAGS failed: %d",
+                    error);
+
+        /* Ignore plumbed but down interfaces. */
+        if ((lifr.lifr_flags & IFF_UP) == 0)
+            continue;
+
+        flags = lifr.lifr_flags;
+
+        /* Get this interface's MTU */
+        error = ldi_ioctl(lh, SIOCGLIFMTU, (intptr_t)&lifr,
+            FKIOCTL, cr, &rv);
+
+        if (error) {
+            mtu = 1125;
+        } else {
+            mtu = lifr.lifr_metric;
+        }
+
+        /* Get this interface's Metric */
+        error = ldi_ioctl(lh, SIOCGLIFMETRIC, (intptr_t)&lifr,
+            FKIOCTL, cr, &rv);
+
+        if (error) {
+            metric = 0;
+        } else {
+            metric = lifr.lifr_metric;
+        }
+
+        sin4_local = (struct sockaddr_in *) &lifrp->lifr_addr;
+        sin4_dst = (struct sockaddr_in *) &lifrp->lifr_dstaddr;
+
+        /* Acquire global array write lock */
+        (void) rw_enter(&afsifinfo_lock, RW_WRITER);
+
+        /* Copy our collected data into the global array */
+        (void) strncpy(afsifinfo[count].ifname, lifrp->lifr_name,
+            sizeof(afsifinfo[count].ifname));
+        afsifinfo[count].ipaddr     = ntohl(sin4_local->sin_addr.s_addr);
+        afsifinfo[count].mtu        = mtu;
+        afsifinfo[count].netmask    = lifrp->lifr_addrlen;
+        afsifinfo[count].flags      = flags;
+        afsifinfo[count].metric     = metric;
+        afsifinfo[count].dstaddr    = ntohl(sin4_dst->sin_addr.s_addr);
+
+        /* Release global array write lock */
+        (void) rw_exit(&afsifinfo_lock);
+
+        count++;
+
+    } /* Bottom of loop: for each interface ... */
+
+    kmem_free(lifcbuf, ifcount * sizeof(struct lifreq));
+
+    /* End of thread. Time to clean up */
+    (void) ldi_close(lh, FREAD, cr);
+    (void) ldi_ident_release(li);
+
+    /* Schedule this to run again after afs_if_poll_interval seconds */
+    (void) timeout((void(*) (void *)) osi_StartNetIfPoller, NULL,
+        drv_usectohz((clock_t)afs_if_poll_interval * MICROSEC));
+
+}
+#endif /* AFS_SUN510_ENV */
 
 void
 shutdown_rxkernel(void)
