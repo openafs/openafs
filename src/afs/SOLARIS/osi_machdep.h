@@ -104,4 +104,24 @@ extern kmutex_t afs_global_lock;
 #define AfsLargeFileSize(pos, off) ( ((offset_t)(pos)+(offset_t)(off) > (offset_t)0x7fffffff)?1:0)
 #endif
 
+#if defined(AFS_SUN510_ENV)
+#include <sys/sunddi.h>
+#include <net/if.h>
+extern ddi_taskq_t *afs_taskq;
+extern krwlock_t afsifinfo_lock;
+
+/* Global interface info struct */
+struct afs_ifinfo {
+    char        ifname[LIFNAMSIZ];
+    ipaddr_t    ipaddr;
+    ipaddr_t    netmask;
+    uint_t      mtu;
+    uint64_t    flags;
+    int         metric;
+    ipaddr_t    dstaddr;
+};
+
+extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
+#endif
+
 #endif /* _OSI_MACHDEP_H_ */

@@ -1273,23 +1273,74 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 #else				/* AFS_USERSPACE_IP_ADDR */
 #if	defined(AFS_SUN5_ENV)
 #ifdef AFS_SUN510_ENV
-    ill_walk_context_t ctx;
+    int i = 0;
 #else
     extern struct ill_s *ill_g_headp;
     long *addr = (long *)ill_g_headp;
-#endif
     ill_t *ill;
     ipif_t *ipif;
+#endif
     int subnet, subnetmask, net, netmask;
 
     if (sa)
 	  sa->sa_iprank = 0;
 #ifdef AFS_SUN510_ENV
-    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+    rw_enter(&afsifinfo_lock, RW_READER);
+
+    for (i = 0; (afsifinfo[i].ipaddr != NULL) && (i < ADDRSPERSITE); i++) {
+
+	if (IN_CLASSA(afsifinfo[i].ipaddr)) {
+	    netmask = IN_CLASSA_NET;
+	} else if (IN_CLASSB(afsifinfo[i].ipaddr)) {
+	    netmask = IN_CLASSB_NET;
+	} else if (IN_CLASSC(afsifinfo[i].ipaddr)) {
+	    netmask = IN_CLASSC_NET;
+	} else {
+	    netmask = 0;
+	}
+	net = afsifinfo[i].ipaddr & netmask;
+
+#ifdef notdef
+	if (!s) {
+	    if (afsifinfo[i].ipaddr != 0x7f000001) {	/* ignore loopback */
+		*cnt += 1;
+		if (*cnt > 16)
+		    return;
+		*addrp++ = afsifinfo[i].ipaddr;
+	    }
+	} else
+#endif /* notdef */
+        {
+            /* XXXXXX Do the individual ip ranking below XXXXX */
+            if ((sa->sa_ip & netmask) == net) {
+                if ((sa->sa_ip & subnetmask) == subnet) {
+                    if (afsifinfo[i].ipaddr == sa->sa_ip) {   /* ie, ME!  */
+                        sa->sa_iprank = TOPR;
+                    } else {
+                        sa->sa_iprank = HI + afsifinfo[i].metric; /* case #2 */
+                    }
+                } else {
+                    sa->sa_iprank = MED + afsifinfo[i].metric;    /* case #3 */
+                }
+            } else {
+                    sa->sa_iprank = LO + afsifinfo[i].metric;     /* case #4 */
+            }
+            /* check for case #5 -- point-to-point link */
+            if ((afsifinfo[i].flags & IFF_POINTOPOINT)
+                && (afsifinfo[i].dstaddr == sa->sa_ip)) {
+
+                    if (afsifinfo[i].metric >= (MAXDEFRANK - MED) / PPWEIGHT)
+                        sa->sa_iprank = MAXDEFRANK;
+                    else
+                        sa->sa_iprank = MED + (PPWEIGHT << afsifinfo[i].metric);
+            }
+        }
+    }
+    
+    rw_exit(&afsifinfo_lock);
 #else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
 	 ill = ill->ill_next) {
-#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
@@ -1349,6 +1400,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    }
 	}
     }
+#endif /* AFS_SUN510_ENV */
 #else
 #ifndef USEIFADDR
     struct ifnet *ifn = NULL;
