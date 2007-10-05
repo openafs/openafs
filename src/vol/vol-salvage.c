@@ -3427,11 +3427,11 @@ Log(const char *format, ...)
 	syslog(LOG_INFO, "%s", tmp);
     } else
 #endif
-    {
-	gettimeofday(&now, 0);
-	fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
-	fflush(logFile);
-    }
+	if (logFile) {
+	    gettimeofday(&now, 0);
+	    fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
+	    fflush(logFile);
+	}
 }
 
 void
@@ -3448,12 +3448,12 @@ Abort(const char *format, ...)
 	syslog(LOG_INFO, "%s", tmp);
     } else
 #endif
-    {
-	fprintf(logFile, "%s", tmp);
-	fflush(logFile);
-	if (ShowLog)
-	    showlog();
-    }
+	if (logFile) {
+	    fprintf(logFile, "%s", tmp);
+	    fflush(logFile);
+	    if (ShowLog)
+		showlog();
+	}
 
     if (debug)
 	abort();
