@@ -44,21 +44,21 @@ ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes)
 ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes)
 ifeq ($(ARCH_ppc),yes)
 ifeq ($(ARCH_x86),yes)
-MODLD=$(CC) -static -g -nostdlib -arch ppc -arch i386
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch ppc -arch i386
 CFLAGS_ppc=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
 CFLAGS_x86=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
 else
-MODLD=$(CC) -static -g -nostdlib -arch ppc
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch ppc
 KOPTS=$(KOPTS_ppc)
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
 endif
 else
 ifeq ($(ARCH_x86),yes)
-MODLD=$(CC) -static -g -nostdlib -arch i386
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch i386
 KOPTS=$(KOPTS_x86)
 else
 _ARCH=$(shell arch)
-MODLD=$(CC) -static -g -nostdlib -arch $(_ARCH)
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch $(_ARCH)
 KOPTS=$(KOPTS_$(shell echo $(_ARCH) | sed 's/i386/x86/'))
 endif
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
