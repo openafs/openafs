@@ -461,6 +461,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib -c"
 		;;
 
 	*_darwin_90)
@@ -478,6 +479,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib -c"
 		;;
 
 	ppc_linux*)
