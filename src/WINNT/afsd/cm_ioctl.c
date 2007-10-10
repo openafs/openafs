@@ -217,8 +217,10 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     long code;
 #ifndef AFSIFS
     cm_scache_t *substRootp = NULL;
+    cm_scache_t *iscp = NULL;
 #endif
     char * relativePath = ioctlp->inDatap;
+    char * lastComponent = NULL;
     afs_uint32 follow = 0;
 
     osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
@@ -246,6 +248,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	return code;
     }
 #else /* AFSIFS */
+
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
          !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
@@ -282,8 +285,22 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | follow,
-                             userp, NULL, reqp, scpp);
+	    lastComponent = strrchr(p, '\\');
+	    if (lastComponent && strlen(p) > 1) {
+		*lastComponent = '\0';
+		lastComponent++;
+
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+				 userp, NULL, reqp, &iscp);
+		if (code == 0)
+		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+				    userp, NULL, reqp, scpp);
+		if (iscp)
+		    cm_ReleaseSCache(iscp);
+	    } else {
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+				userp, NULL, reqp, scpp);
+	    }
 	    cm_ReleaseSCache(substRootp);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
@@ -315,9 +332,24 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | follow,
-                            userp, NULL, reqp, scpp);
-            if (code) {
+	    lastComponent = strrchr(p, '\\');
+	    if (lastComponent && strlen(p) > 1) {
+		*lastComponent = '\0';
+		lastComponent++;
+
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+				 userp, NULL, reqp, &iscp);
+		if (code == 0)
+		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+				    userp, NULL, reqp, scpp);
+		if (iscp)
+		    cm_ReleaseSCache(iscp);
+	    } else {
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+				userp, NULL, reqp, scpp);
+	    }
+
+	    if (code) {
 		cm_ReleaseSCache(substRootp);
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath code [4] 0x%x", code);
                 return code;
@@ -332,9 +364,22 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             return code;
 	}
         
-        code = cm_NameI(substRootp, relativePath, 
-                         CM_FLAG_CASEFOLD | follow,
-                         userp, NULL, reqp, scpp);
+	lastComponent = strrchr(relativePath, '\\');
+	if (lastComponent && strlen(relativePath) > 1) {
+	    *lastComponent = '\0';
+	    lastComponent++;
+
+	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+			     userp, NULL, reqp, &iscp);
+	    if (code == 0)
+		code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+				 userp, NULL, reqp, scpp);
+	    if (iscp)
+		cm_ReleaseSCache(iscp);
+	} else {
+	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+			     userp, NULL, reqp, scpp);
+	}
         if (code) {
 	    cm_ReleaseSCache(substRootp);
 	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [7] code 0x%x", code);
