@@ -357,6 +357,9 @@ void cm_InitCell(int newFile, long maxCells)
             cellp->cellID = AFS_FAKE_ROOT_CELL_ID;
             cellp->vlServersp = NULL;
             cellp->flags = CM_CELLFLAG_FREELANCE;
+
+	    cm_AddCellToNameHashTable(cellp);
+	    cm_AddCellToIDHashTable(cellp);           
 #endif  
         } else {
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {

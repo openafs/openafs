@@ -184,6 +184,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     enum volstatus rwNewstate = vl_online;
     enum volstatus roNewstate = vl_online;
     enum volstatus bkNewstate = vl_online;
+#ifdef AFS_FREELANCE_CLIENT
+    int freelance = 0;
+#endif
 
     /* clear out old bindings */
     if (volp->rw.serversp)
@@ -194,8 +197,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         cm_FreeServerList(&volp->bk.serversp, CM_FREESERVERLIST_DELETE);
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && atoi(volp->namep)==AFS_FAKE_ROOT_VOL_ID ) 
+    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->rw.ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
+	freelance = 1;
         memset(&vldbEntry, 0, sizeof(vldbEntry));
         vldbEntry.flags |= VLF_RWEXISTS;
         vldbEntry.volumeId[0] = AFS_FAKE_ROOT_VOL_ID;
@@ -284,6 +288,11 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         afs_int32 roServers_alldown = 1;
         afs_int32 bkServers_alldown = 1;
         char      name[VL_MAXNAMELEN];
+
+#ifdef AFS_FREELANCE_CLIENT
+	if (freelance)
+	    rwServers_alldown = 0;
+#endif
 
         switch ( method ) {
         case 0:
@@ -627,7 +636,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     /* otherwise, we didn't find it so consult the VLDB */
     sprintf(volNameString, "%u", volumeID);
     code = cm_GetVolumeByName(cellp, volNameString, userp, reqp,
-			       flags, outVolpp);
+			      flags, outVolpp);
     return code;
 }
 
