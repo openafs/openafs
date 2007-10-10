@@ -577,7 +577,14 @@ aklog: client_creds
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-netidmgr_plugin: aklog
+xstat: aklog
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+netidmgr_plugin: xstat
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
@@ -600,10 +607,11 @@ finale: extra
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
-	echo Build Finished Successfully
+	$(CD) ..\..
 
 install: finale
+	echo Build Finished Successfully
+        
 
 # Clean target for obj tree
 clean:
@@ -656,6 +664,5 @@ media: install NSIS wix
 install-nsis: install NSIS
 
 install-wix: install wix
-
 
 
