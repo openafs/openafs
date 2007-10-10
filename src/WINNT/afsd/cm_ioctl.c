@@ -219,6 +219,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     cm_scache_t *substRootp = NULL;
 #endif
     char * relativePath = ioctlp->inDatap;
+    afs_uint32 follow = 0;
 
     osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
 
@@ -237,7 +238,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        and it returns the correct (full) path.  therefore, there is
        no drive letter, and the path is absolute. */
     code = cm_NameI(cm_data.rootSCachep, relativePath,
-                     CM_FLAG_CASEFOLD,
+                     CM_FLAG_CASEFOLD | follow,
                      userp, "", reqp, scpp);
 
     if (code) {
@@ -281,7 +282,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | follow,
                              userp, NULL, reqp, scpp);
 	    cm_ReleaseSCache(substRootp);
             if (code) {
@@ -314,7 +315,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | follow,
                             userp, NULL, reqp, scpp);
             if (code) {
 		cm_ReleaseSCache(substRootp);
@@ -332,7 +333,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	}
         
         code = cm_NameI(substRootp, relativePath, 
-                         CM_FLAG_CASEFOLD,
+                         CM_FLAG_CASEFOLD | follow,
                          userp, NULL, reqp, scpp);
         if (code) {
 	    cm_ReleaseSCache(substRootp);
@@ -827,20 +828,35 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
 
-    Name = volName;
-    OfflineMsg = offLineMsg;
-    MOTD = motd;
-    do {
-        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-        if (code) continue;
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = 0;
+	strncpy(volName, "Freelance.Local.Root", sizeof(volName));
+	offLineMsg[0] = '\0';
+	strncpy(motd, "Freelance mode in use.", sizeof(motd));
+	volStat.Vid = scp->fid.volume;
+	volStat.MaxQuota = 0;
+	volStat.BlocksInUse = 100;
+	volStat.PartBlocksAvail = 0;
+	volStat.PartMaxBlocks = 100;
+    } else
+#endif
+    {
+	Name = volName;
+	OfflineMsg = offLineMsg;
+	MOTD = motd;
+	do {
+	    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+	    if (code) continue;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_GetVolumeStatus(callp, scp->fid.volume,
-                                      &volStat, &Name, &OfflineMsg, &MOTD);
-        rx_PutConnection(callp);
+	    callp = cm_GetRxConn(connp);
+	    code = RXAFS_GetVolumeStatus(callp, scp->fid.volume,
+					 &volStat, &Name, &OfflineMsg, &MOTD);
+	    rx_PutConnection(callp);
 
-    } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
-    code = cm_MapRPCError(code, &req);
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+	code = cm_MapRPCError(code, &req);
+    }
 
     cm_ReleaseSCache(scp);
     if (code) return code;
