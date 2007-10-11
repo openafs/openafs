@@ -1,8 +1,11 @@
 AC_INIT(src/libafs/Makefile.common.in)
 AM_INIT_AUTOMAKE(openafs-libafs,devel)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-define(OPENAFS_CONFIGURE_LIBAFS)
+MACOS_VERSION=9.9.99
 
+AC_SUBST(MACOS_VERSION)
+
+define(OPENAFS_CONFIGURE_LIBAFS)
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 

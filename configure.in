@@ -1,6 +1,9 @@
 AC_INIT(src/config/stds.h)
 AM_INIT_AUTOMAKE(openafs,devel)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
+MACOS_VERSION=9.9.99
+
+AC_SUBST(MACOS_VERSION)
 
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
@@ -76,6 +79,8 @@ src/log/Makefile \
 src/log/test/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
+src/packaging/MacOS/OpenAFS.Info.plist \
+src/packaging/MacOS/OpenAFS.info \
 src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/platform/Makefile \
