@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>OpenAFS 1.4.5-pre1</string>
+	<string>OpenAFS @MACOS_VERSION@</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.openafs.OpenAFS.pkg</string>
 	<key>CFBundleName</key>
 	<string>OpenAFS</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.4.5fc1</string>
+	<string>@MACOS_VERSION@</string>
 	<key>IFMajorVersion</key>
 	<integer>1</integer>
 	<key>IFMinorVersion</key>
-	<integer>4</integer>
+	<integer>5</integer>
 	<key>IFPkgFlagAllowBackRev</key>
 	<false/>
 	<key>IFPkgFlagAuthorizationAction</key>
