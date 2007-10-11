@@ -79,6 +79,7 @@ src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
+src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/pinstall/Makefile \
 src/pinstall/test/Makefile \
