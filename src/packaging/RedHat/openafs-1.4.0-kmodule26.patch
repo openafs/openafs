@@ -1,0 +1,17 @@
+--- openafs-1.4.0-rc4/src/libafs/MakefileProto.LINUX.in-orig	2005-07-25 14:32:15.000000000 -0400
++++ openafs-1.4.0-rc4/src/libafs/MakefileProto.LINUX.in	2005-09-23 16:45:44.000000000 -0400
+@@ -245,11 +245,11 @@
+ 	echo BM Build Complete
+ 
+ <linux26 linux_26 umlinux26>
+-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
+-	cp libafs.ko $@
++${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: openafs.ko
++	cp openafs.ko $@
+ 
+ .FORCE:
+-libafs.ko: .FORCE
++openafs.ko: .FORCE
+ 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+ 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
+         
