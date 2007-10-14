@@ -347,7 +347,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	}
         
 	lastComponent = strrchr(relativePath, '\\');
-	if (lastComponent && strlen(relativePath) > 1) {
+	if (lastComponent && (relativePath - lastComponent) > 1 && strlen(relativePath) > 1) {
 	    *lastComponent = '\0';
 	    lastComponent++;
 
