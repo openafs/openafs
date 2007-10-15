@@ -2063,11 +2063,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    xInfoP->accessDate = volDiskDataP->accessDate;
 	    xInfoP->updateDate = volDiskDataP->updateDate;
 	    xInfoP->backupDate = volDiskDataP->backupDate;
-	    now = FT_ApproxTime();
-	    if (now - volDiskDataP->dayUseDate > OneDay)
-		xInfoP->dayUse = 0;
-	    else
-		xInfoP->dayUse = volDiskDataP->dayUse;
 	    xInfoP->filecount = volDiskDataP->filecount;
 	    xInfoP->maxquota = volDiskDataP->maxquota;
 	    xInfoP->size = volDiskDataP->diskused;
@@ -2075,8 +2070,15 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Copy out the stat fields in a single operation.
 	     */
-	    memcpy((char *)&(xInfoP->stat_reads[0]),
+	    now = FT_ApproxTime();
+	    if (now - volDiskDataP->dayUseDate > OneDay) {
+		xInfoP->dayUse = 0;
+		memset((char *)&(xInfoP->stat_reads[0]), 0, numStatBytes);
+	    } else {
+		xInfoP->dayUse = volDiskDataP->dayUse;
+		memcpy((char *)&(xInfoP->stat_reads[0]),
 		   (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
+	    }
 
 	    /*
 	     * We're done copying.  Detach the volume and iterate (at this
