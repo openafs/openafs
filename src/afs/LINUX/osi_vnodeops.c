@@ -640,7 +640,7 @@ struct file_operations afs_file_fops = {
   .mmap =	afs_linux_mmap,
   .open =	afs_linux_open,
   .flush =	afs_linux_flush,
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
   .sendfile =   generic_file_sendfile,
 #endif
   .release =	afs_linux_release,

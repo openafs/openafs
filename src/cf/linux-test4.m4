@@ -863,3 +863,34 @@ fl_owner_t id;
       ac_cv_linux_func_f_flush_takes_fl_owner_t=no)])
   AC_MSG_RESULT($ac_cv_linux_func_f_flush_takes_fl_owner_t)])
 
+AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
+  AC_MSG_CHECKING([whether kmem_cache_t exists])
+  AC_CACHE_VAL([ac_cv_linux_have_kmem_cache_t], [
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[kmem_cache_t *k;],
+      ac_cv_linux_have_kmem_cache_t=yes,
+      ac_cv_linux_have_kmem_cache_t=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_kmem_cache_t)])
+
+AC_DEFUN([LINUX_KMEM_CACHE_CREATE_TAKES_DTOR], [
+  AC_MSG_CHECKING([whether kmem_cache_create takes a destructor argument])
+  AC_CACHE_VAL([ac_cv_linux_kmem_cache_create_takes_dtor], [
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[kmem_cache_create(NULL, 0, 0, 0, NULL, NULL);],
+      ac_cv_linux_kmem_cache_create_takes_dtor=yes,
+      ac_cv_linux_kmem_cache_create_takes_dtor=no)])
+  AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_takes_dtor)])
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SENDFILE], [
+  AC_MSG_CHECKING([for sendfile in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_sendfile], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.sendfile(NULL, NULL, 0, 0, NULL);],
+      ac_cv_linux_fs_struct_fop_has_sendfile=yes,
+      ac_cv_linux_fs_struct_fop_has_sendfile=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
+
