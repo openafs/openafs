@@ -286,7 +286,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
 
 	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && strlen(p) > 1) {
+	    if (lastComponent && (p - lastComponent) > 1 &&strlen(p) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
@@ -333,7 +333,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
 
 	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && strlen(p) > 1) {
+	    if (lastComponent && (p - lastComponent) > 1 &&strlen(p) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
