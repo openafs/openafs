@@ -1132,7 +1132,8 @@ done
 for f in kdb rmtsysd kpwvalid ; do
   rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
 done
-rm -f $RPM_BUILD_ROOT%{_sbindir}/kdump*
+# sometimes install sucks and puts down a directory. kill it all.
+rm -rf $RPM_BUILD_ROOT%{_sbindir}/kdump*
 
 # remove man pages from programs deleted above
 for f in 1/dlog 1/dpass 1/livesys 1/xstat_cm_test 1/xstat_fs_test 8/kdb 8/kpwvalid 8/xfs_size_check 1/package_test 5/package 8/package ; do
