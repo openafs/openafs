@@ -643,7 +643,8 @@ afs_vop_access(ap)
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-        code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
+	/* In 10.4 cp will loop forever on EACCES */
+        code = afs_CheckCode(EPERM, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
