@@ -98,7 +98,7 @@ dest: unified_afs.h
 	${INSTALL_DATA} sysctl.h ${DEST}/include/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DEST}/include/afs/unified_afs.h
 	case ${SYS_NAME} in \
-	    next_mach30 | vax_ul43 | *_darwin* | i386_fbsd*) \
+	    i386_fbsd*) \
 		echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 	    *) \
 		${INSTALL_DATA} afszcm.cat \
