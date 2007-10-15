@@ -72,6 +72,7 @@ de_DE:
 clean::
 	$(DEL) $(LIBFILE)
 	$(CD) lang
+        $(DEL) AFS_component_version_number.h
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /f NTMakefile clean
@@ -85,5 +86,5 @@ clean::
 mkdir:
 	-mkdir $(OUT)\lang
 	cd lang
-	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	$(MAKECMD) /nologo /f NTMakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..
