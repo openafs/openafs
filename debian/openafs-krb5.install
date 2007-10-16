@@ -1,7 +1,7 @@
 debian/tmp/usr/bin/aklog                usr/bin
 
 debian/tmp/usr/bin/asetkey              usr/sbin
-debian/tmp/usr/bin/ka-forwarder         usr/sbin
+debian/tmp/usr/sbin/ka-forwarder        usr/sbin
 
 debian/tmp/usr/share/man/man1/aklog.1           usr/share/man/man1
 
