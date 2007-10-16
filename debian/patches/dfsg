@@ -60,3 +60,14 @@ upstream for obvious reasons.
  	    dirpath.c fileutil.c netutils.c flipbase64.c \
 -	    afs_atomlist.c afs_lhash.c snprintf.c fstab.c
 +	    afs_atomlist.c afs_lhash.c snprintf.c
+--- openafs.orig/configure.in
++++ openafs/configure.in
+@@ -82,8 +82,6 @@
+ src/mpp/Makefile \
+ src/null/Makefile \
+ src/package/Makefile \
+-src/packaging/MacOS/OpenAFS.Info.plist \
+-src/packaging/MacOS/OpenAFS.info \
+ src/packaging/RedHat/openafs.spec \
+ src/pam/Makefile \
+ src/pinstall/Makefile \
