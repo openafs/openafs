@@ -497,7 +497,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
 	    if (au->exporter) {
 		error =
-		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num);
 		if (error) {
 		    return 0;
 		}

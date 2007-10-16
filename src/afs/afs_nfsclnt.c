@@ -331,6 +331,8 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
     }
     *outname = np->sysname;
     *num = np->sysnamecount;
+    if (!np->sysname[0])
+	return ENODEV; /* XXX */
     return 0;
 }
 
