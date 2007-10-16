@@ -3539,19 +3539,18 @@ UuidCmd(struct cmd_syndesc *asp, char *arock)
     struct ViceIoctl blob;
     char * uuidstring = NULL;
 
-#ifdef WIN32
-    if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
-        return EACCES;
-    }
-#else
-    if (geteuid()) {
-        fprintf (stderr, "Permission denied: requires root access.\n");
-        return EACCES;
-    }
-#endif
-
     if (asp->parms[0].items) {
+#ifdef WIN32
+        if ( !IsAdmin() ) {
+            fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+            return EACCES;
+        }
+#else
+        if (geteuid()) {
+            fprintf (stderr, "Permission denied: requires root access.\n");
+            return EACCES;
+        }
+#endif
         inValue = 1;            /* generate new UUID */
     } else {
         inValue = 0;            /* just show the current UUID */
