@@ -115,7 +115,7 @@ kdist_image: build-arch-stamp
 kdist: build-arch-stamp
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-arch
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
-	    sh -v debian/genchanges.sh
+	    sh -v debian/genchanges
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
 kdist_clean:

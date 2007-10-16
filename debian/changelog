@@ -10,8 +10,10 @@ openafs (1.4.5~pre2.dfsg1-1) UNRELEASED; urgency=low
   * Remove the workaround added for 2.6.20 and 2.6.21 kernels with
     CONFIG_PARAVIRT enabled.  The mistaken GPL-labelling of core
     interfaces was fixed in 2.6.22, which has now migrated to testing.
+  * Fix make kdist in openafs-modules-source, inadvertently broken by a
+    missing genchanges script.
 
- -- Russ Allbery <rra@debian.org>  Mon, 15 Oct 2007 23:24:40 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 15 Oct 2007 23:28:11 -0700
 
 openafs (1.4.4.dfsg1-7) unstable; urgency=low
 
