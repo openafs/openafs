@@ -7,3 +7,4 @@ bos-permissions
 compiler-flags
 no-admin-reference
 ucontext-everywhere
+find-core-files
