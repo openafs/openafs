@@ -7,4 +7,3 @@ bos-permissions
 compiler-flags
 no-admin-reference
 ucontext-everywhere
-paravirt-workaround
