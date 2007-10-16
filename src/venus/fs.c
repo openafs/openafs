@@ -69,7 +69,7 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), NewUuidCmd();
+static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), UuidCmd();
 
 extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
@@ -1244,21 +1244,40 @@ FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
     return error;
 }
 
+/* 
+ * The Windows version of UuidCmd displays the UUID.
+ * When the UNIX version is updated to do the same
+ * be sure to replace the CMD_REQUIRED flag with
+ * CMD_OPTIONAL in the cmd_AddParam(-generate) call 
+ */
 static int
-NewUuidCmd(struct cmd_syndesc *as, char *arock)
+UuidCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
 
     blob.in_size = 0;
     blob.out_size = 0;
-    code = pioctl(0, VIOC_NEWUUID, &blob, 1);
-    if (code) {
-	Die(errno, 0);
-	return 1;
-    }
+    
+    if (as->parms[0].items) {
+        if (geteuid()) {
+            fprintf (stderr, "Permission denied: requires root access.\n");
+            return EACCES;
+        }
 
-    printf("New uuid generated.\n");
+        /* generate new UUID */
+        code = pioctl(0, VIOC_NEWUUID, &blob, 1);
+
+        if (code) {
+            Die(errno, 0);
+            return 1;
+        }
+
+        printf("New uuid generated.\n");
+    } else {
+        /* This will never execute */
+        printf("Please add the '-generate' option to generate a new UUID.\n");
+    }
     return 0;
 }
 
@@ -3641,8 +3660,8 @@ defect 3069
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, 0, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
 
-    ts = cmd_CreateSyntax("newuuid", NewUuidCmd, 0,
-			  "force a new uuid");
+    ts = cmd_CreateSyntax("uuid", UuidCmd, 0, "manage the UUID for the cache manager");
+    cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_REQUIRED, "generate a new UUID");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
