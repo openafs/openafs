@@ -1,4 +1,4 @@
-openafs (1.4.5~pre2.dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.5~pre2.dfsg1-1) unstable; urgency=low
 
   * New upstream release candidate.
     - Fix errors when compiled with gcc 4.2.  (Closes: #443937)
@@ -19,7 +19,7 @@ openafs (1.4.5~pre2.dfsg1-1) UNRELEASED; urgency=low
     missing genchanges script.
   * Stop creating /var/lib/openafs/cores.  Nothing actually uses it.
 
- -- Russ Allbery <rra@debian.org>  Tue, 16 Oct 2007 14:55:34 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 16 Oct 2007 17:01:33 -0700
 
 openafs (1.4.4.dfsg1-7) unstable; urgency=low
 
