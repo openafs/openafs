@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butm/butm_test.c,v 1.8 2003/07/15 23:14:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butm/butm_test.c,v 1.8.2.1 2007/04/10 18:43:42 shadow Exp $");
 
 #include <errno.h>
 #include <sys/types.h>
@@ -34,7 +34,7 @@ static char *whoami = "TEST FAIL";
                        if (code != err) \
                        { \
                           printf("FAILURE: expected %u; got %u\n", err, code); \
-                          if (code) com_err(whoami, code, ""); \
+                          if (code) afs_com_err(whoami, code, ""); \
 		       } \
                        else printf("PASSED; got %u\n", err); \
                        printf("\n");
@@ -43,7 +43,7 @@ static char *whoami = "TEST FAIL";
                         { \
 			   printf("TEST: %s\n", str); \
                            printf("FAILURE: expected %u; got %u\n", err, code); \
-                           if (code) com_err(whoami, code, ""); \
+                           if (code) afs_com_err(whoami, code, ""); \
 			   printf("\n"); \
 		        }
 #define NOREWIND 0

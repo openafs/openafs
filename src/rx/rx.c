@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.36 2007/02/15 17:11:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.39 2007/05/16 20:46:47 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -1039,6 +1039,24 @@ rx_GetConnection(register struct rx_connection *conn)
     USERPRI;
 }
 
+/* Wait for the transmit queue to no longer be busy. 
+ * requires the call->lock to be held */
+static void rxi_WaitforTQBusy(struct rx_call *call) {
+    while (call->flags & RX_CALL_TQ_BUSY) {
+	call->flags |= RX_CALL_TQ_WAIT;
+	call->tqWaiters++;
+#ifdef RX_ENABLE_LOCKS
+	osirx_AssertMine(&call->lock, "rxi_WaitforTQ lock");
+	CV_WAIT(&call->cv_tq, &call->lock);
+#else /* RX_ENABLE_LOCKS */
+	osi_rxSleep(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
+	call->tqWaiters--;
+	if (call->tqWaiters == 0) {
+	    call->flags &= ~RX_CALL_TQ_WAIT;
+	}
+    }
+}
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,
@@ -1164,20 +1182,7 @@ rx_NewCall(register struct rx_connection *conn)
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     /* Now, if TQ wasn't cleared earlier, do it now. */
     MUTEX_ENTER(&call->lock);
-    while (call->flags & RX_CALL_TQ_BUSY) {
-	call->flags |= RX_CALL_TQ_WAIT;
-	call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	osirx_AssertMine(&call->lock, "rxi_Start lock4");
-	CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	call->tqWaiters--;
-	if (call->tqWaiters == 0) {
-	    call->flags &= ~RX_CALL_TQ_WAIT;
-	}
-    }
+    rxi_WaitforTQBusy(call);
     if (call->flags & RX_CALL_TQ_CLEARME) {
 	rxi_ClearTransmitQueue(call, 0);
 	queue_Init(&call->tq);
@@ -3346,9 +3351,11 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 
 	    /* We need to send an ack of the packet is out of sequence, 
 	     * or if an ack was requested by the peer. */
-	    if (seq != prev + 1 || missing || (flags & RX_REQUEST_ACK)) {
+	    if (seq != prev + 1 || missing) {
 		ackNeeded = RX_ACK_OUT_OF_SEQUENCE;
-	    }
+	    } else if (flags & RX_REQUEST_ACK) {
+		ackNeeded = RX_ACK_REQUESTED;
+            }
 
 	    /* Acknowledge the last packet for each call */
 	    if (flags & RX_LAST_PACKET) {
@@ -3829,19 +3836,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    return np;
 	}
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-	    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    osirx_AssertMine(&call->lock, "rxi_Start lock2");
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    call->tqWaiters--;
-	    if (call->tqWaiters == 0)
-		call->flags &= ~RX_CALL_TQ_WAIT;
-	}
+	rxi_WaitforTQBusy(call);
 	MUTEX_ENTER(&peer->peer_lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
@@ -5020,19 +5015,7 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	    return;
 	}
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-	    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    osirx_AssertMine(&call->lock, "rxi_Start lock1");
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    call->tqWaiters--;
-	    if (call->tqWaiters == 0)
-		call->flags &= ~RX_CALL_TQ_WAIT;
-	}
+	rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
 	call->flags |= RX_CALL_FAST_RECOVER;
@@ -5547,6 +5530,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
 			    (char *)&error, sizeof(error), 0);
 	rxi_FreePacket(packet);
     }
+    CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
     MUTEX_EXIT(&call->lock);
 }
 

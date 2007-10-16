@@ -46,9 +46,9 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.4.4
-DEBVERS   = 1.4.4.dfsg1
-UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+VERSION   = 1.4.5pre2
+DEBVERS   = 1.4.5~pre2.dfsg1
+UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
 
 # Download the upstream source, merge in the doc tarball, and do the
 # repackaging that we have to do for DFSG reasons.  This assumes AFS is

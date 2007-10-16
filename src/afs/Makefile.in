@@ -137,7 +137,7 @@ dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/includ
 			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
 	esac
 	case ${SYS_NAME} in \
-		next_mach30 | vax_ul43 | *_darwin* | i386_fbsd* ) \
+		i386_fbsd* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
 			${INSTALL} afszcm.cat ${DEST}/root.client/usr/vice/etc/C ;; \

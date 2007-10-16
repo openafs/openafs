@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH afsd 8 "OpenAFS" "9/Nov/2006" "AFS Command Reference"
+.TH afsd 8 "OpenAFS" "5/Aug/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -190,23 +190,30 @@
 .SH "NAME"
 afsd \- Initializes the Cache Manager and starts related daemons
 .SH "SYNOPSIS"
-\fBafsd\fR <<\ [\fB\-blocks\fR\ <\fI1024\ byte\ blocks\ in\ cache\fR] >>>
-     <<\ [\fB\-files\fR\ <\fIfiles\ in\ cache\fR] >>>
-     <<\ [\fB\-rootvol\fR\ <\fIname\ of\ AFS\ root\ volume\fR] >>>
-     <<\ [\fB\-stat\fR\ <\fInumber\ of\ stat\ entries\fR] >>>
-     [\fB\-memcache\fR] <<\ [\fB\-cachedir\fR\ <\fIcache\ directory\fR] >>>
-     <<\ [\fB\-mountdir\fR\ <\fImount\ location\fR] >>>
-     <<\ [\fB\-daemons\fR\ <\fInumber\ of\ daemons\ to\ use\fR] >>>
-     [\fB\-nosettime\fR] [\fB\-verbose\fR] [\fB\-rmtsys\fR] [\fB\-debug\fR]
-     <<\ [\fB\-chunksize\fR\ <\fIlog(2)\ of\ chunk\ size\fR] >>>
-     <<\ [\fB\-dcache\fR\ <\fInumber\ of\ dcache\ entries\fR] >>>
-     <<\ [\fB\-volumes\fR\ <\fInumber\ of\ volume\ entries\fR] >>>
+\fBafsd\fR [\fB\-afsdb\fR] [\fB\-backuptree\fR]
      <<\ [\fB\-biods\fR\ <\fInumber\ of\ bkg\ I/O\ daemons\ (aix\ vm)\fR] >>>
-     <<\ [\fB\-prealloc\fR\ <\fInumber\ of\ \*(L'small\*(R'\ preallocated\ blocks\fR] >>>
+     <<\ [\fB\-blocks\fR\ <\fI1024\ byte\ blocks\ in\ cache\fR] >>>
+     <<\ [\fB\-cachedir\fR\ <\fIcache\ directory\fR] >>>
+     <<\ [\fB\-chunksize\fR\ <\fIlog(2)\ of\ chunk\ size\fR] >>>
      <<\ [\fB\-confdir\fR\ <\fIconfiguration\ directory\fR] >>>
-     <<\ [\fB\-logfile\fR\ <\fIPlace\ to\ keep\ the\ CM\ log\fR] >>>
-     [\fB\-waitclose\fR] [\fB\-shutdown\fR] [\fB\-enable_peer_stats\fR]
-     [\fB\-enable_process_stats\fR] [\fB\-help\fR]
+     <<\ [\fB\-daemons\fR\ <\fInumber\ of\ daemons\ to\ use\fR] >>>
+     <<\ [\fB\-dcache\fR\ <\fInumber\ of\ dcache\ entries\fR] >>> [\fB\-debug\fR]
+     [\fB\-dynroot\fR] [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR]
+     [\fB\-fakestat\fR] [\fB\-fakestat-all\fR]
+     <<\ [\fB\-files\fR\ <\fIfiles\ in\ cache\fR] >>>
+     <<\ [\fB\-files_per_subdir\fR\ <\fIlog(2)\ of\ files\ per\ dir\fR ] >>>
+     [\fB\-help\fR] <<\ [\fB\-logfile\fR\ <\fIPlace\ to\ keep\ the\ CM\ log\fR] >>>
+     [\fB\-mem_alloc_sleep\fR] [\fB\-memcache\fR]
+     <<\ [\fB\-mountdir\fR\ <\fImount\ location\fR] >>> [\fB\-nomount\fR]
+     [\fB\-nosettime\fR]
+     <<\ [\fB\-prealloc\fR\ <\fInumber\ of\ \*(L'small\*(R'\ preallocated\ blocks\fR] >>>
+     [\fB\-rmtsys\fR] <<\ [\fB\-rootvol\fR\ <\fIname\ of\ AFS\ root\ volume\fR] >>>
+     [\fB\-rxbind\fR] <<\ [\fB\-rxpck\fR\ value\ for\ rx_extraPackets\ ]\ >>
+     [\fB\-settime\fR] [\fB\-shutdown\fR]
+     <<\ [\fB\-splitcache\fR\ <\fIRW/RO\ ratio\fR] >>>
+     <<\ [\fB\-stat\fR\ <\fInumber\ of\ stat\ entries\fR] >>> [\fB\-verbose\fR]
+     <<\ [\fB\-volumes\fR\ <\fInumber\ of\ volume\ entries\fR] >>>
+     [\fB\-waitclose\fR]
 .SH "DESCRIPTION"
 The \fBafsd\fR command initializes the Cache Manager on an AFS client machine
 by transferring AFS\-related configuration information into kernel memory
@@ -228,9 +235,11 @@ Cache Manager to contact them and to access files in the cell. Omission of
 a cell from this list, or incorrect information about its database server
 machines, prevents the Cache Manager from accessing files in it.
 .Sp
-The list of database server machines is transferred into the kernel from
-the \fI/usr/vice/etc/CellServDB\fR file. After initialization, use the \fBfs
-newcell\fR command to change the kernel-resident list without having to
+By default, the list of database server machines is transferred into the
+kernel from the \fI/usr/vice/etc/CellServDB\fR file. Alternatively, when the
+\fB\-afsdb\fR option is used, the list of database server machines is taken
+from the \s-1AFSDB\s0 \s-1DNS\s0 records for each cell. After initialization, use the
+\fBfs newcell\fR command to change the kernel-resident list without having to
 reboot.
 .Ip "\(bu" 4
 Mounts the root of the \s-1AFS\s0 filespace on a directory on the machine's local
@@ -257,8 +266,8 @@ not remove the directory that formerly served this function, if one
 exists.
 .Sp
 The second field in the \fI/usr/vice/etc/cacheinfo\fR file is the source for
-this name, and the standard value is the \fI/usr/vice/cache\fR directory. Use
-the \fB\-cachedir\fR argument to override the value in the \fBcacheinfo\fR file.
+this name. The standard value is \fI/usr/vice/cache\fR. Use the \fB\-cachedir\fR
+argument to override the value in the \fBcacheinfo\fR file.
 .Ip "\(bu" 4
 Sets the size of the cache. The default source for the value is the third
 field in the \fI/usr/vice/etc/cacheinfo\fR file, which specifies a number of
@@ -362,14 +371,12 @@ Sets the number of \fIstat\fR entries available in machine memory for caching
 status information about cached \s-1AFS\s0 files. The default is 300; use the
 \fB\-stat\fR argument to override the default.
 .Ip "\(bu" 4
-Randomly selects a file server machine in the local cell as the source for
-the correct time. Every five minutes thereafter, the local clock is
-adjusted (if necessary) to match the file server machine's clock.
-.Sp
-Use the \fB\-nosettime\fR flag to prevent the afsd command from selecting a
-time standard. This is recommended only on file server machines that are
-also acting as clients. File server machines maintain the correct time
-using the Network Time Protocol Daemon instead.
+If the \fB\-settime\fR option is specified, then it randomly selects a file
+server machine in the local cell as the source for the correct time. Every
+five minutes thereafter, the local clock is adjusted (if necessary) to
+match the file server machine's clock. This is not enabled by default.  It
+is recommended, instead, that the Network Time Protocol Daemon be used to
+synchronize the time.
 .PP
 In addition to setting cache configuration parameters, the \fBafsd\fR program
 starts the following daemons. (On most system types, these daemons appear
@@ -395,11 +402,11 @@ One \fIcache-truncation\fR daemon, which flushes the cache when free space is
 required, by writing cached data and status information to the File
 Server.
 .Ip "\(bu" 4
-One \fIserver connection\fR daemon, which sends a probe to the File Server
-every few minutes to check that it is still accessible. It also
-synchronizes the machine's clock with the clock on a randomly-chosen file
-server machine, unless the \fB\-nosettime\fR flag is used. There is always one
-server connection daemon.
+One \fIserver connection\fR daemon, which sends a probe to the File
+Server every few minutes to check that it is still accessible. If the
+\fB\-settime\fR option is set, it also synchronizes the machine's clock
+with the clock on a randomly-chosen file server machine. There is
+always one server connection daemon.
 .Ip "\(bu" 4
 One or more \fIbackground\fR daemons that improve performance by pre-fetching
 files and performing background (delayed) writes of saved data into \s-1AFS\s0.
@@ -440,8 +447,54 @@ AFS has for years had difficulties with being stopped and restarted
 without an intervening reboot.  While most of these issues have been
 ironed out, stopping and restarting AFS is not recommended unless
 necessary and rebooting before restarting AFS is still the safest course
-of action.
+of action. This does not apply to Linux; it should be safe to restart the
+AFS client on Linux without rebooting.
+.PP
+In contrast to many client-server applications, not all communication is
+initiated by the client. When the AFS client opens a file, it registers a
+callback with the AFS server. If the file changes, the server notifies the
+client that the file has changed and that all cached copies should be
+discarded. In order to enable full functionality on the AFS client,
+including all command-line utilities, the following UDP ports must be open
+on an firewalls between the client and the server:
+.PP
+.Vb 8
+\&   fileserver      7000/udp 
+\&   cachemanager    7001/udp (OpenAFS client. Arla uses 4711/udp)
+\&   ptserver        7002/udp
+\&   vlserver        7003/udp
+\&   kaserver        7004/udp (not needed with Kerberos v5)
+\&   volserver       7005/udp
+\&   reserved        7006/udp (for future use)
+\&   bosserver       7007/udp
+.Ve
+Additionally, for \fBklog\fR to work through the firewall you need to allow
+inbound and outbound UDP on ports >1024 (probably 1024<port<2048 would
+suffice depending on the number of simultaneous \fBklog\fRs).
+.PP
+Be sure to set the UDP timeouts on the firewall to be at least twenty
+minutes for the best callback performance.
 .SH "OPTIONS"
+.Ip "\fB\-afsdb\fR" 4
+Enable afsdb support. This will use \s-1DNS\s0 to lookup the \s-1AFSDB\s0 record and use
+that for the database servers for each cell instead of the values in the
+\fICellServDB\fR file. This has the advantage of only needing to update one
+\s-1DNS\s0 record to reconfigure the \s-1AFS\s0 clients for a new database server as
+opposed to touching all of the clients, and also allows one to access a
+cell without preconfiguring its database servers in \fICellServDB\fR.
+.Ip "\fB\-backuptree\fR" 4
+Prefer backup volumes for mountpoints in backup volumes. This option means
+that the \s-1AFS\s0 client will prefer to resolve mount points to backup volumes
+when a parent of the current volume is a backup volume. This is similar to
+the standard behaviour of preferring read-only volumes over read-write
+volumes when the parent volume is a read-only volume.
+.Ip "\fB\-biods\fR <\fInumber of I/O daemons\fR>" 4
+Sets the number of \s-1VM\s0 daemons dedicated to performing I/O operations on a
+machine running a version of \s-1AIX\s0 with virtual memory (\s-1VM\s0) integration.  If
+both this argument and the \fB\-daemons\fR argument are omitted, the default
+is five. If this argument is omitted but the \fB\-daemons\fR argument is
+provided, the number of \s-1VM\s0 daemons is set to twice the value of the
+\fB\-daemons\fR argument.
 .Ip "\fB\-blocks\fR <\fIblocks in cache\fR>" 4
 Specifies the number of kilobyte blocks to be made available for caching
 in the machine's cache directory (for a disk cache) or memory (for a
@@ -450,33 +503,27 @@ memory cache), overriding the default defined in the third field of the
 95% of the space available in the cache partition. If using a memory
 cache, do not combine this argument with the \fB\-dcache\fR argument, since
 doing so can possibly result in a chunk size that is not an exponent of 2.
-.Ip "\fB\-files\fR <\fIfiles in cache\fR>" 4
-Specifies the number of \fIV\fIn\fR\fR files to create in the cache
-directory for a disk cache, overriding the default that is calculated as
-described in the \fI\s-1DESCRIPTION\s0\fR manpage. Each \fIV\fIn\fR\fR file accommodates a
-chunk of data, and can grow to a maximum size of 64 \s-1KB\s0 by default. Do not
-combine this argument with the \fB\-memcache\fR argument.
-.Ip "\fB\-rootvol\fR <\fIname of \s-1AFS\s0 root volume\fR>" 4
-Names the read/write volume corresponding to the root directory for the
-\s-1AFS\s0 file tree (which is usually the \fI/afs\fR directory). This value
-overrides the default of the \f(CWroot.afs\fR volume.
-.Ip "\fB\-stat\fR <\fInumber of stat entries\fR>" 4
-Specifies the number of entries to allocate in the machine's memory for
-recording status information about the \s-1AFS\s0 files in the cache. This value
-overrides the default of \f(CW300\fR.
-.Ip "\fB\-memcache\fR" 4
-Initializes a memory cache rather than a disk cache. Do not combine this
-flag with the \fB\-files\fR argument.
 .Ip "\fB\-cachedir\fR <\fIcache directory\fR>" 4
 Names the local disk directory to be used as the cache. This value
 overrides the default defined in the second field of the
 \fI/usr/vice/etc/cacheinfo\fR file.
-.Ip "\fB\-mountdir\fR <\fImount location\fR>" 4
-Names the local disk directory on which to mount the root of the \s-1AFS\s0
-filespace. This value overrides the default defined in the first field of
-the \fI/usr/vice/etc/cacheinfo\fR file. If a value other than the \fI/afs\fR
-directory is used, the machine cannot access the filespace of cells that
-do use that value.
+.Ip "\fB\-chunksize\fR <\fIchunk size\fR>" 4
+Sets the size of each cache chunk. The integer provided, which must be
+from the range \f(CW0\fR to \f(CW30\fR, is used as an exponent on the number 2. It
+overrides the default of 16 for a disk cache (2^16 is 64 \s-1KB\s0) and 13 for a
+memory cache (2^13 is 8 \s-1KB\s0). A value of \f(CW0\fR or less, or greater than
+\f(CW30\fR, sets chunk size to the appropriate default. Values less than \f(CW10\fR
+(which sets chunk size to a 1 \s-1KB\s0) are not recommended.  Combining this
+argument with the \fB\-dcache\fR argument is not recommended because it
+requires that the issuer calculate the cache size that results.
+.Sp
+\fB\-chunksize\fR is an important option when tuning for performance. Setting
+this option to larger values can increase performance when dealing with
+large files.
+.Ip "\fB\-confdir\fR <\fIconfiguration directory\fR>" 4
+Names a directory other than the \fI/usr/vice/etc\fR directory from which to
+fetch the \fIcacheinfo\fR, \fIThisCell\fR, and \fICellServDB\fR configuration
+files.
 .Ip "\fB\-daemons\fR <\fInumber of daemons to use\fR>" 4
 Specifies the number of background daemons to run on the machine.  These
 daemons improve efficiency by doing prefetching and background writing of
@@ -488,73 +535,48 @@ Note: On \s-1AIX\s0 machines with integrated virtual memory (\s-1VM\s0), the num
 \s-1VM\s0 daemons is set to twice the value of this argument, if it is provided
 and the \fB\-biods\fR argument is not. If both arguments are omitted, there
 are five \s-1VM\s0 daemons.
-.Ip "\fB\-nosettime\fR" 4
-Prevents the Cache Manager from synchronizing its clock with the clock on
-a server machine selected at random, by checking the time on the server
-machine every five minutes. Use this flag only on a machine that is
-already using another time synchronization protocol (for example, a server
-machine that is running the \fBrunntp\fR process).
-.Ip "\fB\-verbose\fR" 4
-Generates a detailed trace of the \fBafsd\fR program's actions on the
-standard output stream.
-.Ip "\fB\-rmtsys\fR" 4
-Initializes an additional daemon to execute \s-1AFS\s0\-specific system calls on
-behalf of \s-1NFS\s0 client machines. Use this flag only if the machine is an
-\s-1NFS/AFS\s0 translator machine serving users of \s-1NFS\s0 client machines who
-execute \s-1AFS\s0 commands.
+.Ip "\fB\-dcache\fR <\fInumber of dcache entries\fR>" 4
+Sets the number of dcache entries in memory, which are used to store
+information about cache chunks. For a disk cache, this overrides the
+default, which is 50% of the number of \fIV\fIn\fR\fR files (cache chunks). For
+a memory cache, this argument effectively sets the number of cache chunks,
+but its use is not recommended, because it requires the issuer to
+calculate the resulting total cache size (derived by multiplying this
+value by the chunk size). Do not combine this argument with the \fB\-blocks\fR
+argument, since doing so can possibly result in a chunk size that is not
+an exponent of 2.
 .Ip "\fB\-debug\fR" 4
 Generates a highly detailed trace of the \fBafsd\fR program's actions on the
 standard output stream. The information is useful mostly for debugging
 purposes.
-.Ip "\fB\-chunksize\fR <\fIchunk size\fR>" 4
-Sets the size of each cache chunk. The integer provided, which must be
-from the range \f(CW0\fR to \f(CW30\fR, is used as an exponent on the number 2. It
-overrides the default of 16 for a disk cache (2^16 is 64 \s-1KB\s0) and 13 for a
-memory cache (2^13 is 8 \s-1KB\s0). A value of \f(CW0\fR or less, or greater than
-\f(CW30\fR, sets chunk size to the appropriate default. Values less than \f(CW10\fR
-(which sets chunk size to a 1 \s-1KB\s0) are not recommended.  Combining this
-argument with the \fB\-dcache\fR argument is not recommended because it
-requires that the issuer calculate the cache size that results.
-.Ip "\fB\-dcache\fR <\fInumber of dcache entries\fR>" 4
-Sets the number of dcache entries in memory, which are used to store
-information about cache chunks. For a disk cache, this overrides the
-default, which is 50% of the number of \fIV\fIn\fR\fR files (cache
-chunks). For a memory cache, this argument effectively sets the number of
-cache chunks, but its use is not recommended, because it requires the
-issuer to calculate the resulting total cache size (derived by multiplying
-this value by the chunk size). Do not combine this argument with the
-\fB\-blocks\fR argument, since doing so can possibly result in a chunk size
-that is not an exponent of 2.
-.Ip "\fB\-volumes\fR <\fInumber of volume entries\fR>" 4
-Specifies the number of memory structures to allocate for storing volume
-location information. The default value is \f(CW50\fR.
-.Ip "\fB\-biods\fR <\fInumber of I/O daemons\fR>" 4
-Sets the number of \s-1VM\s0 daemons dedicated to performing I/O operations on a
-machine running a version of \s-1AIX\s0 with virtual memory (\s-1VM\s0) integration.  If
-both this argument and the \fB\-daemons\fR argument are omitted, the default
-is five. If this argument is omitted but the \fB\-daemons\fR argument is
-provided, the number of \s-1VM\s0 daemons is set to twice the value of the
-\fB\-daemons\fR argument.
-.Ip "\fB\-prealloc\fR <\fInumber of preallocated blocks\fR>" 4
-Specifies the number of pieces of memory to preallocate for the Cache
-Manager's internal use. The default initial value is \f(CW400\fR, but the Cache
-Manager dynamically allocates more memory as it needs it.
-.Ip "\fB\-confdir\fR <\fIconfiguration directory\fR>" 4
-Names a directory other than the \fI/usr/vice/etc\fR directory from which to
-fetch the \fIcacheinfo\fR, \fIThisCell\fR, and \fICellServDB\fR configuration
-files.
-.Ip "\fB\-logfile\fR <\fIlog file location\fR>" 4
-Is obsolete and has no real effect. It specifies an alternate file in
-which to record a type of trace that the Cache Manager no longer
-generates; the default value is \fI/usr/vice/etc/AFSLog\fR.
-.Ip "\fB\-waitclose\fR" 4
-Has no effect on the operation of the Cache Manager. The behavior it
-affected in previous versions of the Cache Manager, to perform synchronous
-writes to the File Server, is now the default behavior. To perform
-asynchronous writes in certain cases, use the \fBfs storebehind\fR command.
-.Ip "\fB\-shutdown\fR" 4
-Shuts down the Cache Manager, but not in the most effective possible
-way. Do not use this flag.
+.Ip "\fB\-dynroot\fR" 4
+The standard behaviour of the \s-1AFS\s0 client without the \fB\-dynroot\fR option is
+to mount the root.afs volume from the default cell on the \fI/afs\fR path. The 
+\fI/afs\fR folder and root.afs volume traditionally shows the folders for 
+\fIThisCell\fR and other cells as configured by the \s-1AFS\s0 cell administrator.
+.Sp
+The \fB\-dynroot\fR option changes this. Using this option, the \s-1AFS\s0 client
+does not mount the root.afs volume on \fI/afs\fR. Instead it uses the
+contents of the \fICellServDB\fR file to populate the listing of cells in
+\fI/afs\fR. This is known as a DYNamic \s-1ROOT\s0. A cell is not contacted until
+the path \fI/afs/\fIcellname\fR\fR if accessed. This functions similarly to an
+automounter.  The main advantage of using \fB\-dynroot\fR is that the \s-1AFS\s0
+client will start properly even without network access, whereas the client
+not using \fB\-dynroot\fR will freeze upon startup if cannot contact the
+default cell specified in \fIThisCell\fR and mount the root.afs
+volume. Dynamic root mode is also sometimes called travelling mode because
+it works well for laptops which don't always have network connectivity.
+.Sp
+Two advantages of not using dynroot are that listing \fI/afs\fR will usually
+be faster because the contents of \fI/afs\fR are limited to what the \s-1AFS\s0
+administrator decides and that symbolic links are traditionally created
+by the \s-1AFS\s0 administrator to provide a short name for the cell (i.e.
+cellname.domain.com is aliased to cellname).  However, with dynroot, the
+local system administrator can limit the default contents of \fI/afs\fR by
+installing a stripped-down \fICellServDB\fR file, and if dynroot is in effect,
+the \fICellAlias\fR file can be used to provide shortname for common \s-1AFS\s0 cells
+which provides equivalent functionality to the most commonly used symbolic
+links.
 .Ip "\fB\-enable_peer_stats\fR" 4
 Activates the collection of Rx statistics and allocates memory for their
 storage. For each connection with a specific \s-1UDP\s0 port on another machine,
@@ -567,41 +589,132 @@ storage. A separate record is kept for each type of \s-1RPC\s0 (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring \s-1API\s0.
+.Ip "\fB\-fakestat\fR" 4
+Return fake values for stat calls on cross-cell mounts. This option makes
+an \f(CWls -l\fR of \fI/afs\fR much faster since each cell isn't contacted, and
+this and the \fB\-fakestat-all\fR options are useful on Mac \s-1OS\s0 X so that the
+Finder program doesn't try to contact every \s-1AFS\s0 cell the system knows
+about.
+.Ip "\fB\-fakestat-all\fR" 4
+Return fake values for stat calls on all mounts, not just cross-cell
+mounts. This and the \fB\-fakestat\fR options are useful on Mac \s-1OS\s0 X so that
+the Finder program doesn't hang when browsing \s-1AFS\s0 directories.
+.Ip "\fB\-files\fR <\fIfiles in cache\fR>" 4
+Specifies the number of \fIV\fIn\fR\fR files to create in the cache directory
+for a disk cache, overriding the default that is calculated as described
+in the \fI\s-1DESCRIPTION\s0\fR manpage. Each \fIV\fIn\fR\fR file accommodates a chunk of data, and
+can grow to a maximum size of 64 \s-1KB\s0 by default. Do not combine this
+argument with the \fB\-memcache\fR argument.
+.Ip "\fB\-files_per_subdir\fR <\fIfiles per cache subdirectory\fR>" 4
+Limits the number of cache files in each subdirectory of the cache
+directory. The value of the option should be the base-two log of the
+number of cache files per cache subdirectory (so 10 for 1024 files, 14 for
+16384 files, and so forth).
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
+.Ip "\fB\-logfile\fR <\fIlog file location\fR>" 4
+This option is obsolete and no longer has any effect.
+.Ip "\fB\-mem_alloc_sleep\fR" 4
+Allows sleeps when allocating a memory cache.
+.Ip "\fB\-memcache\fR" 4
+Initializes a memory cache rather than a disk cache. Do not combine this
+flag with the \fB\-files\fR argument.
+.Ip "\fB\-mountdir\fR <\fImount location\fR>" 4
+Names the local disk directory on which to mount the root of the \s-1AFS\s0
+filespace. This value overrides the default defined in the first field of
+the \fI/usr/vice/etc/cacheinfo\fR file. If a value other than the \fI/afs\fR
+directory is used, the machine cannot access the filespace of cells that
+do use that value.
+.Ip "\fB\-nomount\fR" 4
+Do not mount \s-1AFS\s0 on startup. The afs global mount must be mounted via
+some other means. This is useful on Mac \s-1OS\s0 X where /afs is sometimes
+mounted in /Network/afs like other network file systems.
+.Ip "\fB\-nosettime\fR" 4
+This is enabled by default. It prevents the Cache Manager from
+synchronizing its clock with the clock on a server machine selected at
+random by checking the time on the server machine every five minutes.
+This is the recommended behavior; instead of the \s-1AFS\s0 Cache Manager, the
+Network Time Protocol Daemon should be used to synchronize the system
+time.
+.Ip "\fB\-prealloc\fR <\fInumber of preallocated blocks\fR>" 4
+Specifies the number of pieces of memory to preallocate for the Cache
+Manager's internal use. The default initial value is \f(CW400\fR, but the Cache
+Manager dynamically allocates more memory as it needs it.
+.Ip "\fB\-rmtsys\fR" 4
+Initializes an additional daemon to execute \s-1AFS\s0\-specific system calls on
+behalf of \s-1NFS\s0 client machines. Use this flag only if the machine is an
+\s-1NFS/AFS\s0 translator machine serving users of \s-1NFS\s0 client machines who
+execute \s-1AFS\s0 commands.
+.Ip "\fB\-rootvol\fR <\fIname of \s-1AFS\s0 root volume\fR>" 4
+Names the read/write volume corresponding to the root directory for the
+\s-1AFS\s0 file tree (which is usually the \fI/afs\fR directory). This value
+overrides the default of the \f(CWroot.afs\fR volume. This option is ignored if
+\fB\-dynroot\fR is given.
+.Ip "\fB\-rxbind\fR" 4
+Bind the Rx socket (one interface only).
+.Ip "\fB\-rxpck\fR <\fIvalue for rx_extraPackets\fR>" 4
+Set rx_extraPackets to this value.
+.Ip "\fB\-settime\fR" 4
+Enable native \s-1AFS\s0 time synchronization. This option is the opposite of
+\fB\-nosettime\fR and cannot be used with the \fB\-nosettime\fR option.
+.Ip "\fB\-shutdown\fR" 4
+Shuts down the Cache Manager. Before calling \fBafsd\fR with this option,
+unmount the \s-1AFS\s0 file system with \fBumount\fR.
+.Ip "\fB\-splitcache\fR <\fI\s-1RW/RO\s0 Ratio\fR>" 4
+This allows the user to set a certain percentage of the \s-1AFS\s0 cache be
+reserved for read/write content and the rest to be reserved for read-only
+content. The ratio should be written as a fraction.  For example,
+\f(CW-splitcache 75/25\fR devotes 75% of your cache space to read/write content
+and 25% to read-only.
+.Ip "\fB\-stat\fR <\fInumber of stat entries\fR>" 4
+Specifies the number of entries to allocate in the machine's memory for
+recording status information about the \s-1AFS\s0 files in the cache. This value
+overrides the default of \f(CW300\fR.
+.Ip "\fB\-verbose\fR" 4
+Generates a detailed trace of the \fBafsd\fR program's actions on the
+standard output stream.
+.Ip "\fB\-volumes\fR <\fInumber of volume entries\fR>" 4
+Specifies the number of memory structures to allocate for storing volume
+location information. The default value is \f(CW50\fR.
+.Ip "\fB\-waitclose\fR" 4
+Has no effect on the operation of the Cache Manager. The behavior it
+affected in previous versions of the Cache Manager, to perform synchronous
+writes to the File Server, is now the default behavior. To perform
+asynchronous writes in certain cases, use the \fBfs storebehind\fR command.
 .SH "EXAMPLES"
 The \fBafsd\fR command is normally included in the machine's AFS
 initialization file, rather than typed at the command shell prompt. For
 most disk caches, the appropriate form is
 .PP
 .Vb 1
-\&   /usr/vice/etc/afsd
+\&   % /usr/vice/etc/afsd
 .Ve
 The following command is appropriate when enabling a machine to act as an
 NFS/AFS Translator machine serving more than five users.
 .PP
 .Vb 1
-\&   /usr/vice/etc/afsd -daemons 4 -rmtsys
+\&   % /usr/vice/etc/afsd -daemons 4 -rmtsys
 .Ve
 The following command initializes a memory cache and sets chunk size to 16
 KB (2^14).
 .PP
 .Vb 1
-\&   /usr/vice/etc/afsd -memcache -chunksize 14
+\&   % /usr/vice/etc/afsd -memcache -chunksize 14
 .Ve
 .SH "PRIVILEGE REQUIRED"
 The issuer must be logged in as the local superuser root.
 .SH "SEE ALSO"
+the \fIfs_newcell(1)\fR manpage,
 the \fIafs_cache(5)\fR manpage,
 the \fICellServDB(5)\fR manpage,
 the \fIcacheinfo(5)\fR manpage
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP
-This documentation is covered by the IBM Public License Version 1.0.  It was
-converted from HTML to POD by software written by Chas Williams and Russ
-Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+This documentation is covered by the IBM Public License Version 1.0.  It
+was converted from HTML to POD by software written by Chas Williams and
+Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "afsd 8"
@@ -683,53 +796,77 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Header "OPTIONS"
 
-.IX Item "\fB\-blocks\fR <\fIblocks in cache\fR>"
+.IX Item "\fB\-afsdb\fR"
 
-.IX Item "\fB\-files\fR <\fIfiles in cache\fR>"
-
-.IX Item "\fB\-rootvol\fR <\fIname of \s-1AFS\s0 root volume\fR>"
-
-.IX Item "\fB\-stat\fR <\fInumber of stat entries\fR>"
-
-.IX Item "\fB\-memcache\fR"
-
-.IX Item "\fB\-cachedir\fR <\fIcache directory\fR>"
-
-.IX Item "\fB\-mountdir\fR <\fImount location\fR>"
-
-.IX Item "\fB\-daemons\fR <\fInumber of daemons to use\fR>"
-
-.IX Item "\fB\-nosettime\fR"
-
-.IX Item "\fB\-verbose\fR"
-
-.IX Item "\fB\-rmtsys\fR"
-
-.IX Item "\fB\-debug\fR"
-
-.IX Item "\fB\-chunksize\fR <\fIchunk size\fR>"
-
-.IX Item "\fB\-dcache\fR <\fInumber of dcache entries\fR>"
-
-.IX Item "\fB\-volumes\fR <\fInumber of volume entries\fR>"
+.IX Item "\fB\-backuptree\fR"
 
 .IX Item "\fB\-biods\fR <\fInumber of I/O daemons\fR>"
 
-.IX Item "\fB\-prealloc\fR <\fInumber of preallocated blocks\fR>"
+.IX Item "\fB\-blocks\fR <\fIblocks in cache\fR>"
+
+.IX Item "\fB\-cachedir\fR <\fIcache directory\fR>"
+
+.IX Item "\fB\-chunksize\fR <\fIchunk size\fR>"
 
 .IX Item "\fB\-confdir\fR <\fIconfiguration directory\fR>"
 
-.IX Item "\fB\-logfile\fR <\fIlog file location\fR>"
+.IX Item "\fB\-daemons\fR <\fInumber of daemons to use\fR>"
 
-.IX Item "\fB\-waitclose\fR"
+.IX Item "\fB\-dcache\fR <\fInumber of dcache entries\fR>"
 
-.IX Item "\fB\-shutdown\fR"
+.IX Item "\fB\-debug\fR"
+
+.IX Item "\fB\-dynroot\fR"
 
 .IX Item "\fB\-enable_peer_stats\fR"
 
 .IX Item "\fB\-enable_process_stats\fR"
 
+.IX Item "\fB\-fakestat\fR"
+
+.IX Item "\fB\-fakestat-all\fR"
+
+.IX Item "\fB\-files\fR <\fIfiles in cache\fR>"
+
+.IX Item "\fB\-files_per_subdir\fR <\fIfiles per cache subdirectory\fR>"
+
 .IX Item "\fB\-help\fR"
+
+.IX Item "\fB\-logfile\fR <\fIlog file location\fR>"
+
+.IX Item "\fB\-mem_alloc_sleep\fR"
+
+.IX Item "\fB\-memcache\fR"
+
+.IX Item "\fB\-mountdir\fR <\fImount location\fR>"
+
+.IX Item "\fB\-nomount\fR"
+
+.IX Item "\fB\-nosettime\fR"
+
+.IX Item "\fB\-prealloc\fR <\fInumber of preallocated blocks\fR>"
+
+.IX Item "\fB\-rmtsys\fR"
+
+.IX Item "\fB\-rootvol\fR <\fIname of \s-1AFS\s0 root volume\fR>"
+
+.IX Item "\fB\-rxbind\fR"
+
+.IX Item "\fB\-rxpck\fR <\fIvalue for rx_extraPackets\fR>"
+
+.IX Item "\fB\-settime\fR"
+
+.IX Item "\fB\-shutdown\fR"
+
+.IX Item "\fB\-splitcache\fR <\fI\s-1RW/RO\s0 Ratio\fR>"
+
+.IX Item "\fB\-stat\fR <\fInumber of stat entries\fR>"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Item "\fB\-volumes\fR <\fInumber of volume entries\fR>"
+
+.IX Item "\fB\-waitclose\fR"
 
 .IX Header "EXAMPLES"
 

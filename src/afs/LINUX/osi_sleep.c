@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22.2.10 2007/01/04 21:26:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22.2.11 2007/06/12 05:47:47 rra Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -205,7 +205,11 @@ afs_osi_SleepSig(void *event)
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#else
+            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
+#endif
 #endif
 #endif
 	    )
@@ -303,7 +307,11 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#else
+            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
+#endif
 #endif
 #endif
 	    )

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.44 2006/09/05 22:09:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.49 2007/09/07 03:55:40 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -52,6 +52,7 @@ RCSID
 #include <afs/prs_fs.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
 #include <stdlib.h>
@@ -74,6 +75,7 @@ extern struct afsconf_dir *confDir;	/* config dir object */
 extern int lwps;		/* the max number of server threads */
 extern afsUUID FS_HostUUID;
 
+afsUUID nulluuid;
 int CEs = 0;			/* active clients */
 int CEBlocks = 0;		/* number of blocks of CEs */
 struct client *CEFree = 0;	/* first free client */
@@ -81,6 +83,8 @@ struct host *hostList = 0;	/* linked list of all hosts */
 int hostCount = 0;		/* number of hosts in hostList */
 int rxcon_ident_key;
 int rxcon_client_key;
+static struct rx_securityClass *sc = NULL;
+
 
 #define CESPERBLOCK 73
 struct CEBlock {		/* block of CESPERBLOCK file entries */
@@ -88,7 +92,6 @@ struct CEBlock {		/* block of CESPERBLOCK file entries */
 };
 
 static void h_TossStuff_r(register struct host *host);
-static int hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host);
 
 /*
  * Make sure the subnet macros have been defined.
@@ -182,8 +185,8 @@ static struct host *HTFree = 0;	/* first free file entry */
  * to map IP addresses onto host pointers, and another
  * to map host UUIDs onto host pointers.
  */
-static struct h_hashChain *hostHashTable[h_HASHENTRIES];
-static struct h_hashChain *hostUuidHashTable[h_HASHENTRIES];
+static struct h_AddrHashChain *hostAddrHashTable[h_HASHENTRIES];
+static struct h_UuidHashChain *hostUuidHashTable[h_HASHENTRIES];
 #define h_HashIndex(hostip) ((hostip) & (h_HASHENTRIES-1))
 #define h_UuidHashIndex(uuidp) (((int)(afs_uuid_hash(uuidp))) & (h_HASHENTRIES-1))
 
@@ -307,7 +310,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
         code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
         if (code)
-	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, error_message(code)));
+	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
         if (code)
             scIndex = 0;        /* use noauth */
         if (scIndex != 2)
@@ -750,7 +753,6 @@ h_Alloc_r(register struct rx_connection *r_con)
 {
     struct servent *serverentry;
     register struct host *host;
-    static struct rx_securityClass *sc = 0;
     afs_int32 now;
 #if FS_STATS_DETAILED
     afs_uint32 newHostAddr_HBO;	/*New host IP addr, in host byte order */
@@ -821,13 +823,13 @@ struct host *
 h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp)
 {
     register afs_int32 now;
-    register struct host *host = 0;
-    register struct h_hashChain *chain;
+    register struct host *host = NULL;
+    register struct h_AddrHashChain *chain;
     register index = h_HashIndex(haddr);
     extern int hostaclRefresh;
 
   restart:
-    for (chain = hostHashTable[index]; chain; chain = chain->next) {
+    for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
 	assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && chain->addr == haddr
@@ -868,7 +870,7 @@ struct host *
 h_LookupUuid_r(afsUUID * uuidp)
 {
     register struct host *host = 0;
-    register struct h_hashChain *chain;
+    register struct h_UuidHashChain *chain;
     register index = h_UuidHashIndex(uuidp);
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
@@ -959,7 +961,7 @@ h_TossStuff_r(register struct host *host)
     host->hostFlags &= ~CLIENTDELETED;
 
     if (host->hostFlags & HOSTDELETED) {
-	register struct h_hashChain **hp, *th;
+        register struct h_AddrHashChain **ahp, *ath;
 	register struct rx_connection *rxconn;
 	afsUUID *uuidp;
 	struct AddrPort hostAddrPort;
@@ -980,49 +982,51 @@ h_TossStuff_r(register struct host *host)
 
 	/* if alternate addresses do not exist */
 	if (!(host->interface)) {
-	    for (hp = &hostHashTable[h_HashIndex(host->host)]; (th = *hp);
-		 hp = &th->next) {
-		assert(th->hostPtr);
-		if (th->hostPtr == host) {
-		    *hp = th->next;
-		    h_DeleteList_r(host);
-		    FreeHT(host);
-		    free(th);
+	    for (ahp = &hostAddrHashTable[h_HashIndex(host->host)]; (ath = *ahp);
+		 ahp = &ath->next) {
+		assert(ath->hostPtr);
+		if (ath->hostPtr == host) {
+		    *ahp = ath->next;
+		    free(ath);
 		    break;
 		}
 	    }
 	} else {
-	    /* delete all hash entries for the UUID */
+            register struct h_UuidHashChain **uhp, *uth;
+	    /* delete the hash entry for the UUID */
 	    uuidp = &host->interface->uuid;
-	    for (hp = &hostUuidHashTable[h_UuidHashIndex(uuidp)]; (th = *hp);
-		 hp = &th->next) {
-		assert(th->hostPtr);
-		if (th->hostPtr == host) {
-		    *hp = th->next;
-		    free(th);
+	    for (uhp = &hostUuidHashTable[h_UuidHashIndex(uuidp)]; (uth = *uhp);
+		 uhp = &uth->next) {
+		assert(uth->hostPtr);
+		if (uth->hostPtr == host) {
+		    *uhp = uth->next;
+		    free(uth);
 		    break;
 		}
 	    }
-	    /* delete all hash entries for alternate addresses */
-	    assert(host->interface->numberOfInterfaces > 0);
+	    /* delete the hash entry for each alternate addresses */
 	    for (i = 0; i < host->interface->numberOfInterfaces; i++) {
 		hostAddrPort = host->interface->interface[i];
 
-		for (hp = &hostHashTable[h_HashIndex(hostAddrPort.addr)]; (th = *hp);
-		     hp = &th->next) {
-		    assert(th->hostPtr);
-		    if (th->hostPtr == host) {
-			*hp = th->next;
-			free(th);
+                if (!hostAddrPort.valid)
+                    continue;
+
+		for (ahp = &hostAddrHashTable[h_HashIndex(hostAddrPort.addr)]; (ath = *ahp);
+		     ahp = &ath->next) {
+		    assert(ath->hostPtr);
+		    if (ath->hostPtr == host) {
+			*ahp = ath->next;
+			free(ath);
 			break;
 		    }
 		}
 	    }
 	    free(host->interface);
 	    host->interface = NULL;
-	    h_DeleteList_r(host);	/* remove host from global host List */
-	    FreeHT(host);
 	}			/* if alternate address exists */
+
+        h_DeleteList_r(host);	/* remove host from global host List */
+        FreeHT(host);
     }
 }				/*h_TossStuff_r */
 
@@ -1109,13 +1113,19 @@ void
 hashInsertUuid_r(struct afsUUID *uuid, struct host *host)
 {
     int index;
-    struct h_hashChain *chain;
+    struct h_UuidHashChain *chain;
 
     /* hash into proper bucket */
     index = h_UuidHashIndex(uuid);
 
+    /* don't add the same entry multiple times */
+    for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
+	if (host->interface && afs_uuid_equal(&host->interface->uuid, uuid))
+	    return;
+    }
+
     /* insert into beginning of list for this bucket */
-    chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+    chain = (struct h_UuidHashChain *)malloc(sizeof(struct h_UuidHashChain));
     if (!chain) {
 	ViceLog(0, ("Failed malloc in hashInsertUuid_r\n"));
 	assert(0);
@@ -1132,35 +1142,46 @@ void
 hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int index;
-    struct h_hashChain *chain;
-
+    struct h_AddrHashChain *chain;
+    int found = 0;
+    char hoststr[16]; 
+  
     /* hash into proper bucket */
     index = h_HashIndex(addr);
 
     /* don't add the same entry multiple times */
-    for (chain = hostHashTable[index]; chain; chain = chain->next) {
-	if (chain->hostPtr == host && chain->addr == addr && chain->port == port)
-	    return;
+    for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
+	if (chain->addr == addr && chain->port == port) {
+	    if (chain->hostPtr == host)
+		found = 1;
+	    else if (!(host->hostFlags & HOSTDELETED))
+		ViceLog(125, ("Addr %s:%d assigned to %x and %x.\n",
+			    afs_inet_ntoa_r(addr, hoststr), ntohs(port),
+			    host, chain));
+	}
     }
 
+    if (found)
+	return;
+
     /* insert into beginning of list for this bucket */
-    chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+    chain = (struct h_AddrHashChain *)malloc(sizeof(struct h_AddrHashChain));
     if (!chain) {
 	ViceLog(0, ("Failed malloc in hashInsert_r\n"));
 	assert(0);
     }
     chain->hostPtr = host;
-    chain->next = hostHashTable[index];
+    chain->next = hostAddrHashTable[index];
     chain->addr = addr;
     chain->port = port;
-    hostHashTable[index] = chain;
+    hostAddrHashTable[index] = chain;
 }
 
 /*
  * This is called with host locked and held. At this point, the
- * hostHashTable should not be having entries for the alternate
+ * hostAddrHashTable should not have entries for the alternate
  * interfaces. This function has to insert these entries in the
- * hostHashTable.
+ * hostAddrHashTable.
  *
  * All addresses are in network byte order.
  */
@@ -1176,10 +1197,6 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     assert(host);
     assert(host->interface);
 
-    ViceLog(125, ("addInterfaceAddr : host %s:%d addr %s:%d\n", 
-		   afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
-		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
-
     /*
      * Make sure this address is on the list of known addresses
      * for this host.
@@ -1187,9 +1204,16 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     number = host->interface->numberOfInterfaces;
     for (i = 0, found = 0; i < number && !found; i++) {
 	if (host->interface->interface[i].addr == addr &&
-	    host->interface->interface[i].port == port)
+            host->interface->interface[i].port == port) {
 	    found = 1;
+            host->interface->interface[i].valid = 1;
+        }
     }
+
+    ViceLog(125, ("addInterfaceAddr : host %x (%s:%d) addr %s:%d : found:%d\n", 
+		   host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
+		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port), found));
+    
     if (!found) {
 	interface = (struct Interface *)
 	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
@@ -1203,14 +1227,10 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 	    interface->interface[i] = host->interface->interface[i];
 	interface->interface[number].addr = addr;
 	interface->interface[number].port = port;
+        interface->interface[number].valid = 1;
 	free(host->interface);
 	host->interface = interface;
     }
-
-    /*
-     * Create a hash table entry for this address
-     */
-    hashInsert_r(addr, port, host);
 
     return 0;
 }
@@ -1218,9 +1238,9 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 
 /*
  * This is called with host locked and held. At this point, the
- * hostHashTable should not be having entries for the alternate
+ * hostAddrHashTable should not be having entries for the alternate
  * interfaces. This function has to insert these entries in the
- * hostHashTable.
+ * hostAddrHashTable.
  *
  * All addresses are in network byte order.
  */
@@ -1236,8 +1256,8 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     assert(host);
     assert(host->interface);
 
-    ViceLog(125, ("removeInterfaceAddr : host %s:%d addr %s:%d\n", 
-		   afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
+    ViceLog(125, ("removeInterfaceAddr : host %x (%s:%d) addr %s:%d\n", 
+		   host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
 		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
 
     /*
@@ -1246,18 +1266,17 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
      */
     interface = host->interface;
     number = host->interface->numberOfInterfaces;
-    for (i = 0, found = 0; i < number; i++) {
+    for (i = 0, found = 0; i < number && !found; i++) {
 	if (interface->interface[i].addr == addr &&
 	    interface->interface[i].port == port) {
 	    found = 1;
-	    break;
+            interface->interface[i].valid = 0;
 	}
     }
     if (found) {
 	number--;
 	for (; i < number; i++) {
-	    interface->interface[i].addr = interface->interface[i+1].addr;
-	    interface->interface[i].port = interface->interface[i+1].port;
+	    interface->interface[i] = interface->interface[i+1];
 	}
 	interface->numberOfInterfaces = number;
     }
@@ -1270,6 +1289,105 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     return 0;
 }
 
+/*
+ * This is called with host locked and held.  This function differs
+ * from removeInterfaceAddr_r in that it is called when the address
+ * is being removed from the host regardless of whether or not there
+ * is an interface list for the host.  This function will delete the
+ * host if there are no addresses left on it.
+ *
+ * All addresses are in network byte order.
+ */
+int
+removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
+{
+    int i;
+    char hoststr[16], hoststr2[16];
+
+    if (!host->interface) {
+        if (host->host == addr && host->port == port) {
+            ViceLog(25,
+                    ("Removing only address for host %x (%s:%d), deleting host.\n",
+                     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+            host->hostFlags |= HOSTDELETED;
+        }
+    } else {
+        removeInterfaceAddr_r(host, host->host, host->port);
+        if (host->interface->numberOfInterfaces == 0) {
+            ViceLog(25,
+                     ("Removed only address for host %x (%s:%d), no alternate interfaces, deleting host.\n",
+                       host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+            host->hostFlags |= HOSTDELETED;
+        } else {
+            struct rx_connection *rxconn;
+
+            rxconn = host->callback_rxcon;
+            host->callback_rxcon = NULL;
+
+            if (rxconn) {
+                struct client *client;
+                /*
+                * If rx_DestroyConnection calls h_FreeConnection we will
+                * deadlock on the host_glock_mutex. Work around the problem
+                * by unhooking the client from the connection before
+                * destroying the connection.
+                */
+                client = rx_GetSpecific(rxconn, rxcon_client_key);
+                rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
+                rx_DestroyConnection(rxconn);
+            }
+
+            for (i=0; i < host->interface->numberOfInterfaces; i++) {
+                if (host->interface->interface[i].valid) {
+                    ViceLog(25,
+                             ("Removed address for host %x (%s:%d), new primary interface %s:%d.\n",
+                               host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+                               afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr2), 
+                               ntohs(host->interface->interface[i].port)));
+                    host->host = host->interface->interface[i].addr;
+                    host->port = host->interface->interface[i].port;
+                    hashInsert_r(host->host, host->port, host);
+                    break;
+                }
+            }
+
+            if (i == host->interface->numberOfInterfaces) {
+                ViceLog(25,
+                         ("Removed only address for host %x (%s:%d), no valid alternate interfaces, deleting host.\n",
+                           host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+                host->hostFlags |= HOSTDELETED;
+            } else {
+                if (!sc)
+                    sc = rxnull_NewClientSecurityObject();
+                host->callback_rxcon =
+                    rx_NewConnection(host->host, host->port, 1, sc, 0);
+                rx_SetConnDeadTime(host->callback_rxcon, 50);
+                rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
+            }
+        }
+    }
+
+    return 0;
+}
+
+int 
+h_threadquota(int waiting) 
+{
+    if (lwps > 64) {
+	if (waiting > 5)
+	    return 1;
+    } else if (lwps > 32) {
+	if (waiting > 4)
+	    return 1;
+    } else if (lwps > 16) {
+	if (waiting > 3)
+	    return 1;
+    } else {
+	if (waiting > 2)
+	    return 1;
+    }
+    return 0;
+}
 
 /* Host is returned held */
 struct host *
@@ -1278,7 +1396,7 @@ h_GetHost_r(struct rx_connection *tcon)
     struct host *host;
     struct host *oldHost;
     int code;
-    int held, oheld;
+    int held;
     struct interfaceAddr interf;
     int interfValid = 0;
     struct Identity *identP = NULL;
@@ -1306,8 +1424,12 @@ h_GetHost_r(struct rx_connection *tcon)
 	 * structure for this address. Verify that the identity
 	 * of the caller matches the identity in the host structure.
 	 */
+	if ((host->hostFlags & HWHO_INPROGRESS) && 
+	    h_threadquota(host->lock.num_waiting))
+	    return 0;
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR)) {
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    /* Another thread is doing initialization */
 	    h_Unlock_r(host);
 	    if (!held)
@@ -1329,7 +1451,8 @@ h_GetHost_r(struct rx_connection *tcon)
 	rx_PutConnection(cb_conn);
 	cb_conn=NULL;
 	H_LOCK;
-	if (code == RXGEN_OPCODE) {
+	if ((code == RXGEN_OPCODE) || 
+	    (afs_uuid_equal(&interf.uuid, &nulluuid))) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
@@ -1347,6 +1470,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			 afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 		host->hostFlags |= HOSTDELETED;
+		host->hostFlags &= ~HWHO_INPROGRESS;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1368,10 +1492,11 @@ h_GetHost_r(struct rx_connection *tcon)
 	     * then this is not the same host as before. */
 	    if (!host->interface
 		|| !afs_uuid_equal(&interf.uuid, &host->interface->uuid)) {
-		ViceLog(25,
-			("Host %s:%d has changed its identity, deleting.\n",
-			 afs_inet_ntoa_r(host->host, hoststr), host->port));
+                ViceLog(25,
+                         ("Uuid doesn't match host %x (%s:%d). Host deleted.\n",
+                           host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 		host->hostFlags |= HOSTDELETED;
+		host->hostFlags &= ~HWHO_INPROGRESS;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1379,9 +1504,9 @@ h_GetHost_r(struct rx_connection *tcon)
 		goto retry;
 	    }
 	} else {
-	    afs_inet_ntoa_r(host->host, hoststr);
 	    ViceLog(0,
-		    ("CB: WhoAreYou failed for %s:%d, error %d\n", hoststr,
+		    ("CB: WhoAreYou failed for host %x (%s:%d), error %d\n", 
+                     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port), code));
 	    host->hostFlags |= VENUSDOWN;
 	}
@@ -1391,6 +1516,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     } else if (host) {
 	if (!(host->hostFlags & ALTADDR)) {
@@ -1400,6 +1526,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	    h_Lock_r(host);
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1432,6 +1559,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
 	    /* The host in the cache is not the host for this connection */
 	    host->hostFlags |= HOSTDELETED;
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1452,7 +1580,8 @@ h_GetHost_r(struct rx_connection *tcon)
 	    rx_PutConnection(cb_conn);
 	    cb_conn=NULL;
 	    H_LOCK;
-	    if (code == RXGEN_OPCODE) {
+	    if ((code == RXGEN_OPCODE) || 
+		afs_uuid_equal(&interf.uuid, &nulluuid)) {
 		if (!identP)
 		    identP =
 			(struct Identity *)malloc(sizeof(struct Identity));
@@ -1505,9 +1634,10 @@ h_GetHost_r(struct rx_connection *tcon)
                 if (oldHost) {
                     int probefail = 0;
 
-		    if (!(oheld = h_Held_r(oldHost)))
+		    if (!h_Held_r(oldHost))
 			h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
+		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
 			int code2;
@@ -1542,15 +1672,20 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* This is a new address for an existing host. Update
 		     * the list of interfaces for the existing host and
 		     * delete the host structure we just allocated. */
+
+                    /* prevent warnings while manipulating interface lists */
+		    host->hostFlags |= HOSTDELETED;
+
 		    if (oldHost->host != haddr || oldHost->port != hport) {
 			struct rx_connection *rxconn;
 
 			ViceLog(25,
-				("CB: new addr %s:%d for old host %s:%d\n",
-				  afs_inet_ntoa_r(haddr, hoststr),
-				  ntohs(hport), 
-				  afs_inet_ntoa_r(oldHost->host, hoststr2),
-				  ntohs(oldHost->port)));
+				("CB: Host %x (%s:%d) has new addr %s:%d\n",
+				  oldHost, 
+                                  afs_inet_ntoa_r(oldHost->host, hoststr2),
+				  ntohs(oldHost->port),
+                                  afs_inet_ntoa_r(haddr, hoststr),
+				  ntohs(hport)));
 			if (probefail || oldHost->host == haddr) {
 			    /* The probe failed which means that the old address is 
 			     * either unreachable or is not the same host we were just
@@ -1578,6 +1713,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			    }
 			}
 			addInterfaceAddr_r(oldHost, haddr, hport);
+                        hashInsert_r(haddr, hport, oldHost);
 			oldHost->host = haddr;
 			oldHost->port = hport;
 			rxconn = oldHost->callback_rxcon;
@@ -1597,7 +1733,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			    rx_DestroyConnection(rxconn);
 			}
 		    }
-		    host->hostFlags |= HOSTDELETED;
+		    host->hostFlags &= ~HWHO_INPROGRESS;
 		    h_Unlock_r(host);
 		    /* release host because it was allocated by h_Alloc_r */
 		    h_Release_r(host);
@@ -1626,15 +1762,14 @@ h_GetHost_r(struct rx_connection *tcon)
 		}
 	    }
 	    if (code) {
-		afs_inet_ntoa_r(host->host, hoststr);
 		ViceLog(0,
-			("CB: RCallBackConnectBack failed for %s:%d\n",
-			 hoststr, ntohs(host->port)));
+			("CB: RCallBackConnectBack failed for host %x (%s:%d)\n",
+			 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 		host->hostFlags |= VENUSDOWN;
 	    } else {
 		ViceLog(125,
-			("CB: RCallBackConnectBack succeeded for %s:%d\n",
-			 hoststr, ntohs(host->port)));
+			("CB: RCallBackConnectBack succeeded for host %x (%s:%d)\n",
+			 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 		host->hostFlags |= RESETDONE;
 	    }
 	}
@@ -1644,6 +1779,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;	/* host structure initialization complete */
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     if (caps.Capabilities_val)
@@ -1662,6 +1798,7 @@ char local_realm[AFS_REALM_SZ] = "";
 void
 h_InitHostPackage()
 {
+    memset(&nulluuid, 0, sizeof(afsUUID));
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
     if (!local_realm[0]) {
 	if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/) {
@@ -1879,6 +2016,9 @@ h_FindClient_r(struct rx_connection *tcon)
 
     if (!client) { /* loop */
 	host = h_GetHost_r(tcon);	/* Returns it h_Held */
+
+	if (!host) 
+	    return 0;
 
     retryfirstclient:
 	/* First try to find the client structure */
@@ -2529,6 +2669,7 @@ CheckHost(register struct host *host, int held)
     }
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
+	host->hostFlags |= HWHO_INPROGRESS;
 	if (!(host->hostFlags & HOSTDELETED)) {
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
@@ -2598,12 +2739,104 @@ CheckHost(register struct host *host, int held)
 	    cb_conn=NULL;
 	    H_LOCK;
 	}
+	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     H_UNLOCK;
     return held;
 
 }				/*CheckHost */
+
+int
+CheckHost_r(register struct host *host, int held, char *dummy)
+{
+    register struct client *client;
+    struct rx_connection *cb_conn = NULL;
+    int code;
+
+    /* Host is held by h_Enumerate_r */
+    for (client = host->FirstClient; client; client = client->next) {
+	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
+	    client->deleted = 1;
+	    host->hostFlags |= CLIENTDELETED;
+	}
+    }
+    if (host->LastCall < checktime) {
+	h_Lock_r(host);
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    cb_conn = host->callback_rxcon;
+	    rx_GetConnection(cb_conn);
+	    if (host->LastCall < clientdeletetime) {
+		host->hostFlags |= HOSTDELETED;
+		if (!(host->hostFlags & VENUSDOWN)) {
+		    host->hostFlags &= ~ALTADDR;	/* alternate address invalid */
+		    if (host->interface) {
+			H_UNLOCK;
+			code =
+			    RXAFSCB_InitCallBackState3(cb_conn,
+						       &FS_HostUUID);
+			H_LOCK;
+		    } else {
+			H_UNLOCK;
+			code =
+			    RXAFSCB_InitCallBackState(cb_conn);
+			H_LOCK;
+		    }
+		    host->hostFlags |= ALTADDR;	/* alternate addresses valid */
+		    if (code) {
+			char hoststr[16];
+			(void)afs_inet_ntoa_r(host->host, hoststr);
+			ViceLog(0,
+				("CB: RCallBackConnectBack (host.c) failed for host %s:%d\n",
+				 hoststr, ntohs(host->port)));
+			host->hostFlags |= VENUSDOWN;
+		    }
+		    /* Note:  it's safe to delete hosts even if they have call
+		     * back state, because break delayed callbacks (called when a
+		     * message is received from the workstation) will always send a 
+		     * break all call backs to the workstation if there is no
+		     *callback.
+		     */
+		}
+	    } else {
+		if (!(host->hostFlags & VENUSDOWN) && host->cblist) {
+		    char hoststr[16];
+		    (void)afs_inet_ntoa_r(host->host, hoststr);
+		    if (host->interface) {
+			afsUUID uuid = host->interface->uuid;
+			H_UNLOCK;
+			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
+			H_LOCK;
+			if (code) {
+			    if (MultiProbeAlternateAddress_r(host)) {
+				ViceLog(0,("CheckHost_r: Probing all interfaces of host %s:%d failed, code %d\n",
+					    hoststr, ntohs(host->port), code));
+				host->hostFlags |= VENUSDOWN;
+			    }
+			}
+		    } else {
+			H_UNLOCK;
+			code = RXAFSCB_Probe(cb_conn);
+			H_LOCK;
+			if (code) {
+			    ViceLog(0,
+				    ("CheckHost_r: Probe failed for host %s:%d, code %d\n", 
+				     hoststr, ntohs(host->port), code));
+			    host->hostFlags |= VENUSDOWN;
+			}
+		    }
+		}
+	    }
+	    H_UNLOCK;
+	    rx_PutConnection(cb_conn);
+	    cb_conn=NULL;
+	    H_LOCK;
+	}
+	h_Unlock_r(host);
+    }
+    return held;
+
+}				/*CheckHost_r */
 
 
 /*
@@ -2627,15 +2860,17 @@ h_CheckHosts()
      */
     checktime = now - 15 * 60;
     clientdeletetime = now - 120 * 60;	/* 2 hours ago */
-    h_Enumerate(CheckHost, NULL);
-
+    
+    H_LOCK;
+    h_Enumerate_r(CheckHost_r, hostList, NULL);
+    H_UNLOCK;
 }				/*h_CheckHosts */
 
 /*
  * This is called with host locked and held. At this point, the
- * hostHashTable should not have any entries for the alternate
+ * hostAddrHashTable should not have any entries for the alternate
  * interfaces. This function has to insert these entries in the
- * hostHashTable.
+ * hostAddrHashTable.
  *
  * The addresses in the interfaceAddr list are in host byte order.
  */
@@ -2649,6 +2884,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     int found;
     struct Interface *interface;
     char hoststr[16];
+    char uuidstr[128];
+    afs_uint16 port7001 = htons(7001);
 
     assert(host);
     assert(interf);
@@ -2669,8 +2906,39 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     }
 
     /*
-     * Convert IP addresses to network byte order, and remove for
-     * duplicate IP addresses from the interface list.
+     * The client's notion of its own IP addresses is not reliable.  
+     *
+     * 1. The client list might contain private address ranges which
+     *    are likely to be re-used by many clients allocated addresses
+     *    by a NAT.
+     *
+     * 2. The client list will not include any public addresses that
+     *    are hidden by a NAT.
+     *
+     * 3. Private address ranges that are exposed to the server will
+     *    be obtained from the rx connections that use them.
+     *
+     * 4. Lists provided by the client are not necessarily truthful.
+     *    Many existing clients (UNIX) do not refresh the IP address
+     *    list as the actual assigned addresses change.  The end result
+     *    is that they report the initial address list for the lifetime
+     *    of the process.  In other words, a client can report addresses
+     *    that they are in fact not using.  Adding these addresses to
+     *    the host interface list without verification is not only
+     *    pointless, it is downright dangerous.
+     *
+     * We therefore do not add alternate addresses to the addr hash table.
+     * We only use them for multi-rx callback breaks.
+     */
+
+    /*
+     * Convert IP addresses to network byte order, and remove
+     * duplicate IP addresses from the interface list, and 
+     * determine whether or not the incoming addr/port is 
+     * listed.  Note that if the address matches it is not
+     * truly a match because the port number for the entries
+     * in the interface list are port 7001 and the port number
+     * for this connection might not be 7001.
      */
     for (i = 0, count = 0, found = 0; i < number; i++) {
 	interf->addr_in[i] = htonl(interf->addr_in[i]);
@@ -2680,7 +2948,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	}
 	if (j == count) {
 	    interf->addr_in[count] = interf->addr_in[i];
-	    if (interf->addr_in[count] == myAddr)
+	    if (interf->addr_in[count] == myAddr &&
+                port7001 == myPort)
 		found = 1;
 	    count++;
 	}
@@ -2694,31 +2963,42 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	    malloc(sizeof(struct Interface) +
 		   (sizeof(struct AddrPort) * (count - 1)));
 	if (!interface) {
-	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r\n"));
+	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 1\n"));
 	    assert(0);
 	}
 	interface->numberOfInterfaces = count;
     } else {
 	interface = (struct Interface *)
 	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * count));
-	assert(interface);
+	if (!interface) {
+	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 2\n"));
+	    assert(0);
+	}
 	interface->numberOfInterfaces = count + 1;
 	interface->interface[count].addr = myAddr;
 	interface->interface[count].port = myPort;
+        interface->interface[count].valid = 1;
     }
-    interface->uuid = interf->uuid;
+
     for (i = 0; i < count; i++) {
-	interface->interface[i].addr = interf->addr_in[i];
-	/* We store the port as 7001 because the addresses reported by 
+
+        interface->interface[i].addr = interf->addr_in[i];
+	/* We store the port as 7001 because the addresses reported by
 	 * TellMeAboutYourself and WhoAreYou RPCs are only valid if they
 	 * are coming from fully connected hosts (no NAT/PATs)
 	 */
-	interface->interface[i].port = htons(7001);
+	interface->interface[i].port = port7001;
+        interface->interface[i].valid = 1;      /* valid until a conflict is found */
     }
+
+    interface->uuid = interf->uuid;
 
     assert(!host->interface);
     host->interface = interface;
 
+    afsUUID_to_string(&interface->uuid, uuidstr, 127);
+
+    ViceLog(125, ("--- uuid %s\n", uuidstr));
     for (i = 0; i < host->interface->numberOfInterfaces; i++) {
 	ViceLog(125, ("--- alt address %s:%d\n", 
 		       afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
@@ -2730,13 +3010,14 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
 /* deleted a HashChain structure for this address and host */
 /* returns 1 on success */
-static int
-hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host)
+int
+hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *
+				host)
 {
     int flag;
-    register struct h_hashChain **hp, *th;
+    register struct h_AddrHashChain **hp, *th;
 
-    for (hp = &hostHashTable[h_HashIndex(addr)]; (th = *hp);) {
+    for (hp = &hostAddrHashTable[h_HashIndex(addr)]; (th = *hp);) {
 	assert(th->hostPtr);
 	if (th->hostPtr == host && th->addr == addr && th->port == port) {
 	    *hp = th->next;
@@ -2764,10 +3045,13 @@ printInterfaceAddr(struct host *host, int level)
     if (host->interface) {
 	/* check alternate addresses */
 	number = host->interface->numberOfInterfaces;
-	assert(number > 0);
-	for (i = 0; i < number; i++)
-	    ViceLog(level, ("%s:%d ", afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
-			     ntohs(host->interface->interface[i].port)));
+        if (number == 0)
+            ViceLog(level, ("no-addresses "));
+        else {
+            for (i = 0; i < number; i++)
+                ViceLog(level, ("%s:%d ", afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
+                                ntohs(host->interface->interface[i].port)));
+        }
     }
     ViceLog(level, ("\n"));
 }

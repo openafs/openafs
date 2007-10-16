@@ -67,6 +67,9 @@
 /* define if you want to have fast restart */
 #undef FAST_RESTART
 
+/* define if your fops.flush takes an fl_owner_t argument */
+#undef FOP_FLUSH_TAKES_FL_OWNER_T
+
 /* define if you have linux/freezer.h */
 #undef FREEZER_H_EXISTS
 
@@ -97,6 +100,12 @@
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
+
+/* Define to 1 if you have the `encode_krb5_enc_tkt_part' function. */
+#undef HAVE_ENCODE_KRB5_ENC_TKT_PART
+
+/* Define to 1 if you have the `encode_krb5_ticket' function. */
+#undef HAVE_ENCODE_KRB5_TICKET
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
@@ -139,6 +148,9 @@
 
 /* define if your linux kernel provides page_follow_link */
 #undef HAVE_KERNEL_PAGE_FOLLOW_LINK
+
+/* define if kmem_cache_t exists */
+#undef HAVE_KMEM_CACHE_T
 
 /* Define to 1 if you have the `krb524_convert_creds_kdc' function. */
 #undef HAVE_KRB524_CONVERT_CREDS_KDC
@@ -367,6 +379,9 @@
 /* define if key_alloc takes a struct task * */
 #undef KEY_ALLOC_NEEDS_STRUCT_TASK
 
+/* define if kmem_cache_create takes a destructor argument */
+#undef KMEM_CACHE_TAKES_DTOR
+
 /* define if your linux kernel uses SELinux features */
 #undef LINUX_KERNEL_IS_SELINUX
 
@@ -397,6 +412,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* define if your linux kernel uses 3 arguments for posix_lock_file */
+#undef POSIX_LOCK_FILE_WAIT_ARG
+
 /* Define to 1 if the C compiler supports function prototypes. */
 #undef PROTOTYPES
 
@@ -414,7 +432,7 @@
    release 3. */
 #undef SETVBUF_REVERSED
 
-/* The size of a `long', as computed by sizeof. */
+/* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
 /* define if your statfs takes a dentry argument */
@@ -428,6 +446,9 @@
 
 /* define if your struct address_space has page_lock */
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+
+/* define if your struct file_operations has sendfile */
+#undef STRUCT_FILE_OPERATIONS_HAS_SENDFILE
 
 /* define if struct fs has fs_rolled */
 #undef STRUCT_FS_HAS_FS_ROLLED
@@ -498,11 +519,17 @@
 /* define if your struct task_struct has tgid */
 #undef STRUCT_TASK_STRUCT_HAS_TGID
 
+/* define if your struct task_struct has thread_info */
+#undef STRUCT_TASK_STRUCT_HAS_THREAD_INFO
+
 /* define if your struct task_struct has todo */
 #undef STRUCT_TASK_STRUCT_HAS_TODO
 
 /* define if you want to have support for nested pts groups */
 #undef SUPERGROUPS
+
+/* define if your kernel has a usable symlink cache API */
+#undef USABLE_KERNEL_PAGE_SYMLINK_CACHE
 
 /* define if you want to use UNIX sockets for fssync. */
 #undef USE_UNIX_SOCKETS
@@ -540,7 +567,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define to `int' if <sys/types.h> does not define. */

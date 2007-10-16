@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_inode.c,v 1.8.2.2 2005/10/15 14:24:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_inode.c,v 1.8.2.3 2007/08/16 03:54:26 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -262,7 +262,6 @@ SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4),)
     struct inode *ip, *newip, *pip;
     register int err, rval1, rc = 0;
     struct vnode *vp = NULL;
-    extern struct vfs *rootvfs;
     register struct vfs *vfsp;
     struct vfs *nvfsp = NULL;
     char error;

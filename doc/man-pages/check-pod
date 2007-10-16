@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+#
+# Written by Jason Edgecombe based on the Test::Pod documentation.  The
+# best way to run it is to run:
+#
+#     prove check-pod
+#
+# from the doc/man-pages directory, which will show any errors found in
+# any of the POD files.
+
+use strict;
+use Test::More;
+eval "use Test::Pod 1.00";
+
+plan skip_all => "Test::Pod 1.00 required for testing POD" if $@;
+my @poddirs = qw( pod1 pod5 pod8 );
+all_pod_files_ok( all_pod_files( @poddirs ) );

@@ -351,12 +351,12 @@ main(int argc, char **argv)
 	    dfd = open(destpath, O_RDWR | O_TRUNC, 0666);
 	    if (dfd < 0) {
 		fprintf(stderr, "Cannot open %s (%s)\n", destpath,
-			error_message(errno));
+			afs_error_message(errno));
 		goto Fail_dconn;
 	    }
 	} else if (dfd < 0) {
 	    fprintf(stderr, "Cannot open %s (%s)\n", destpath,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    goto Fail_dconn;
 	}
     } else {
@@ -372,7 +372,7 @@ main(int argc, char **argv)
 		    code = 0;
 	    } else {
 		printf("Cannot create %s (%s)\n", destpath,
-		       error_message(code));
+		       afs_error_message(code));
 		if (code)
 		    goto Fail_dconn;
 	    }
@@ -383,19 +383,19 @@ main(int argc, char **argv)
 	sfd = open(srcf, O_RDONLY, 0);
 	if (sfd < 0) {
 	    fprintf(stderr, "Cannot open %s (%s)\n", srcf,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    goto Fail_dconn;
 	}
 	if (fstat(sfd, &statbuf) < 0) {
 	    fprintf(stderr, "Cannot stat %s (%s)\n", srcf,
-		    error_message(errno));
+		    afs_error_message(errno));
 	    close(sfd);
 	    goto Fail_dconn;
 	}
     } else {
 	if ((code = RXAFS_FetchStatus(sconn, &sf, &fst, &scb, &vs))) {
 	    printf("Cannot fetchstatus of %d.%d (%s)\n", sf.Volume, sf.Vnode,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_dconn;
 	}
     }
@@ -420,7 +420,7 @@ main(int argc, char **argv)
     if (!slcl) {
 	if ((code = StartRXAFS_FetchData(scall, &sf, 0, filesz))) {
 	    printf("Unable to fetch data from %s (%s)\n", srcf,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_call;
 	}
     }
@@ -441,7 +441,7 @@ main(int argc, char **argv)
 	if ((code =
 	     StartRXAFS_StoreData(dcall, &df, &sst, 0, filesz, filesz))) {
 	    printf("Unable to store data to %s (%s)\n", destpath,
-		   error_message(code));
+		   afs_error_message(code));
 	    goto Fail_call;
 	}
     }
@@ -500,7 +500,7 @@ main(int argc, char **argv)
 	fetchcode = rx_EndCall(scall, fetchcode);
     }
     if (fetchcode && printcallerrs)
-	printf("Error returned from fetch: %s\n", error_message(fetchcode));
+	printf("Error returned from fetch: %s\n", afs_error_message(fetchcode));
 
     if (dlcl) {
 	if (close(dfd) && !storecode)
@@ -509,7 +509,7 @@ main(int argc, char **argv)
 	storecode = rx_EndCall(dcall, storecode);
     }
     if (storecode && printcallerrs)
-	printf("Error returned from store: %s\n", error_message(storecode));
+	printf("Error returned from store: %s\n", afs_error_message(storecode));
 
     gettimeofday(&finish, &tz);
 
@@ -521,7 +521,7 @@ main(int argc, char **argv)
 	scb.CallBackType = CB_DROPPED;
 	if ((code = RXAFS_GiveUpCallBacks(sconn, &theFids, &theCBs)))
 	    printf("Could not give up source callback: %s\n",
-		   error_message(code));
+		   afs_error_message(code));
     }
 
     if (!dlcl) {
@@ -532,7 +532,7 @@ main(int argc, char **argv)
 	dcb.CallBackType = CB_DROPPED;
 	if ((code = RXAFS_GiveUpCallBacks(dconn, &theFids, &theCBs)))
 	    printf("Could not give up target callback: %s\n",
-		   error_message(code));
+		   afs_error_message(code));
     }
 
     if (code == 0)

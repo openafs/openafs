@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kas.c,v 1.7 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kas.c,v 1.7.2.1 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -82,7 +82,7 @@ main(int argc, char *argv[])
 
     code = ka_Init(0);
     if (code) {
-	com_err(whoami, code, "Can't get cell info");
+	afs_com_err(whoami, code, "Can't get cell info");
 	exit(1);
     }
 

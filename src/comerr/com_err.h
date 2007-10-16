@@ -8,21 +8,29 @@
  * with this package.
  */
 
-#ifndef __COM_ERR_H
+#ifndef __AFS_COM_ERR_H
 
 #include <stdarg.h>
 
-extern void com_err(const char *, afs_int32, const char *, ...);
-extern void com_err_va(const char *whoami, afs_int32 code, const char *fmt,
+extern void afs_com_err(const char *, afs_int32, const char *, ...);
+extern void afs_com_err_va(const char *whoami, afs_int32 code, const char *fmt,
 		       va_list args);
-extern const char *error_table_name(afs_int32);
-extern const char *error_message(afs_int32);
+extern const char *afs_error_table_name(afs_int32);
+extern const char *afs_error_message(afs_int32);
 extern
-void (*set_com_err_hook
+void (*afs_set_com_err_hook
       (void (*)(const char *, afs_int32, const char *, va_list)))
   (const char *, afs_int32, const char *, va_list);
-extern void (*reset_com_err_hook(void)) (const char *, afs_int32,
+extern void (*afs_reset_com_err_hook(void)) (const char *, afs_int32,
 					 const char *, va_list);
 
-#define __COM_ERR_H
-#endif /* ! defined(__COM_ERR_H) */
+#define __AFS_COM_ERR_H
+#ifdef AFS_OLD_COM_ERR 
+#define com_err                 afs_com_err
+#define com_err_va              afs_com_err_va
+#define error_table_name        afs_error_table_name
+#define error_message           afs_error_message
+#define set_com_err_hook        afs_set_com_err_hook
+#define reset_com_err_hook      afs_reset_com_err_hook
+#endif /* AFS_OLD_COM_ERR */
+#endif /* ! defined(__AFS_COM_ERR_H) */

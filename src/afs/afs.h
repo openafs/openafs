@@ -268,6 +268,9 @@ enum { AFS_GCPAGS_NOTCOMPILED = 0, AFS_GCPAGS_OK =
 extern afs_int32 afs_gcpags;
 extern afs_int32 afs_gcpags_procsize;
 extern afs_int32 afs_bkvolpref;
+extern char afs_cachebasedir[1024];
+extern afs_int32 afs_numcachefiles;
+extern afs_int32 afs_numfilesperdir;
 
 struct unixuser {
     struct unixuser *next;	/* next hash pointer */

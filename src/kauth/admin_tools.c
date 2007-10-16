@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/admin_tools.c,v 1.16.2.3 2004/12/13 19:38:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/admin_tools.c,v 1.16.2.4 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>
@@ -68,7 +68,7 @@ DefaultCell(void)
 	return 0;
     code = ka_ExpandCell(0, cell, 0 /*local */ );
     if (code) {
-	com_err(whoami, code, "Can't expand cell name");
+	afs_com_err(whoami, code, "Can't expand cell name");
     }
     return code;
 }
@@ -88,7 +88,7 @@ DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
 
     code = ka_ParseLoginName(user, name, instance, 0);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'", user);
+	afs_com_err(whoami, code, "parsing user's name '%s'", user);
 	return KABADCMD;
     }
 
@@ -97,7 +97,7 @@ DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
     code =
 	ubik_Call(KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION, &tentry);
     if (code) {
-	com_err(whoami, code, "getting information for %s.%s", name, inst);
+	afs_com_err(whoami, code, "getting information for %s.%s", name, inst);
 	return code;
     }
     if (tentry.minor_version != KAMINORVERSION)
@@ -254,7 +254,7 @@ ListUsers(struct cmd_syndesc *as, char *arock)
 	    ubik_Call(KAM_ListEntry, conn, 0, index, &next_index, &count,
 		      &name);
 	if (code) {
-	    com_err(whoami, code, "calling KAM_ListEntry");
+	    afs_com_err(whoami, code, "calling KAM_ListEntry");
 	    break;
 	}
 	if (!next_index)
@@ -300,7 +300,7 @@ handle_errors(int code,		/* error code to handle */
 	}
     }
 
-    printf(" : [%s] %s", error_table_name(code), error_message(code));
+    printf(" : [%s] %s", afs_error_table_name(code), afs_error_message(code));
     switch (code) {
     case UNOQUORUM:
 	printf(", wait one second\n");
@@ -331,7 +331,7 @@ CreateUser(struct cmd_syndesc *as, char *arock)
 
     code = ka_ParseLoginName(as->parms[0].items->data, name, instance, 0);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -359,7 +359,7 @@ DeleteUser(struct cmd_syndesc *as, char *arock)
     OKlist[0].code = 0;
     code = ka_ParseLoginName(as->parms[0].items->data, name, instance, 0);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -431,7 +431,7 @@ parse_flags(char *name, char *inst, char *str, afs_int32 * flags)
 		ubik_Call(KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION,
 			  &tentry);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"could get current flag value for %s.%s", name, inst);
 		return -1;
 	    }
@@ -517,7 +517,7 @@ ka_islocked(char *name, char *instance, afs_uint32 * when)
 			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (code) {
 	    if (seriouserror(code))
-		com_err(whoami, code, "");
+		afs_com_err(whoami, code, "");
 	} else if (tempwhen) {	/* user is locked */
 	    if (!*when || tempwhen < *when) {
 		*when = tempwhen;
@@ -542,7 +542,7 @@ Unlock(struct cmd_syndesc *as, char *arock)
 
     code = ka_ParseLoginName(as->parms[0].items->data, name, instance, 0);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -557,7 +557,7 @@ Unlock(struct cmd_syndesc *as, char *arock)
 		&& conn->conns[count - 1]->peer) {
 		server = conn->conns[count - 1]->peer->host;
 	    }
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "so %s.%s may still be locked (on server %d.%d.%d.%d)",
 		    name, instance, ((server >> 24) & 0xFF),
 		    ((server >> 16) & 0xFF), ((server >> 8) & 0xFF),
@@ -589,7 +589,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
 
     code = ka_ParseLoginName(as->parms[0].items->data, name, instance, 0);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -729,7 +729,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
 	return KABADCMD;
     }
     if (code)
-	com_err(whoami, code, "calling KAM_SetFields for %s.%s", name,
+	afs_com_err(whoami, code, "calling KAM_SetFields for %s.%s", name,
 		instance);
     return code;
 }
@@ -744,7 +744,7 @@ StringToKey(struct cmd_syndesc *as, char *arock)
     if (as->parms[1].items) {
 	code = ka_ExpandCell(as->parms[1].items->data, realm, 0 /*local */ );
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "expanding %s as cell name, attempting to continue",
 		    as->parms[1].items->data);
 	}
@@ -783,7 +783,7 @@ SetPassword(struct cmd_syndesc *as, char *arock)
 
     code = ka_ParseLoginName(as->parms[0].items->data, name, instance, realm);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -824,7 +824,7 @@ SetPassword(struct cmd_syndesc *as, char *arock)
     code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, key);
 #endif
     if (code)
-	com_err(whoami, code, "so can't set password for %s.%s", name,
+	afs_com_err(whoami, code, "so can't set password for %s.%s", name,
 		instance);
     return code;
 }
@@ -849,7 +849,7 @@ PrintName(char *name, char *inst, char *acell, int buflen, char *buf)
     if (left) {
       bad_name:
 	code = KABADNAME;
-	com_err(whoami, code, "PrintName: principal name was '%s'.'%s'@'%s'",
+	afs_com_err(whoami, code, "PrintName: principal name was '%s'.'%s'@'%s'",
 		name, inst, acell);
 	return code;
     }
@@ -919,7 +919,7 @@ ListTicket(struct ktc_principal *server, int verbose)
     /* get the ticket info itself */
     code = ktc_GetToken(server, &token, sizeof(token), &client);
     if (code) {
-	com_err(whoami, code, "failed to get token info for server %s",
+	afs_com_err(whoami, code, "failed to get token info for server %s",
 		PrintedPrincipal(server));
 	return code;
     }
@@ -980,7 +980,7 @@ GetTicket(struct cmd_syndesc *as, char *arock)
 	ka_ParseLoginName(as->parms[0].items->data, server.name,
 			  server.instance, server.cell);
     if (code) {
-	com_err(whoami, code, "parsing user's name '%s'",
+	afs_com_err(whoami, code, "parsing user's name '%s'",
 		as->parms[0].items->data);
 	return KABADCMD;
     }
@@ -991,7 +991,7 @@ GetTicket(struct cmd_syndesc *as, char *arock)
     } else {
 	code = ka_ExpandCell(server.cell, server.cell, 0 /*local */ );
 	if (code) {
-	    com_err(whoami, code, "Can't expand cell name");
+	    afs_com_err(whoami, code, "Can't expand cell name");
 	    return code;
 	}
     }
@@ -1001,7 +1001,7 @@ GetTicket(struct cmd_syndesc *as, char *arock)
 	ka_GetServerToken(server.name, server.instance, server.cell, life,
 			  &token, /*new */ 1, /*dosetpag */ 0);
     if (code)
-	com_err(whoami, code, "getting ticket for %s",
+	afs_com_err(whoami, code, "getting ticket for %s",
 		PrintedPrincipal(&server));
     else {
 	code = ListTicket(&server, /*verbose */ 1);
@@ -1021,7 +1021,7 @@ GetPassword(struct cmd_syndesc *as, char *arock)
     code = ka_ParseLoginName(as->parms[0].items->data, name, 0, 0);
     if (code) {
       abort:
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"getting %s's password via loopback connection to GetPassword",
 		name);
 	/* if we got a timeout, print a clarification, too */
@@ -1069,7 +1069,7 @@ GetRandomKey(struct cmd_syndesc *as, char *arock)
 
     code = ubik_Call(KAM_GetRandomKey, conn, 0, &key);
     if (code)
-	com_err(whoami, code, "so can't get random key");
+	afs_com_err(whoami, code, "so can't get random key");
     else {
 	int i;
 	printf("Key: ");
@@ -1159,11 +1159,11 @@ DebugInfo(struct cmd_syndesc *as, char *arock)
 	if (code) {
 	    struct afsconf_cell cellinfo;
 
-	    com_err(whoami, code, "couldn't find host %s in cell %s",
+	    afs_com_err(whoami, code, "couldn't find host %s in cell %s",
 		    as->parms[0].items->data, cell);
 	    code = ka_GetServers(cell, &cellinfo);
 	    if (code)
-		com_err(whoami, code, "getting servers in cell %s", cell);
+		afs_com_err(whoami, code, "getting servers in cell %s", cell);
 	    else {
 		printf("Servers in cell %s, are:\n", cell);
 		for (i = 0; i < cellinfo.numServers; i++)
@@ -1177,7 +1177,7 @@ DebugInfo(struct cmd_syndesc *as, char *arock)
 	code = ubik_Call(KAM_Debug, conn, 0, KAMAJORVERSION, 0, &info);
 
     if (code) {
-	com_err(whoami, code, "call to Debug failed");
+	afs_com_err(whoami, code, "call to Debug failed");
 	return code;
     }
     now = time(0);
@@ -1332,7 +1332,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		ka_ParseLoginName(as->parms[12].items->data, name, instance,
 				  newCell);
 	    if (code) {
-		com_err(whoami, code, "parsing user's name '%s'",
+		afs_com_err(whoami, code, "parsing user's name '%s'",
 			as->parms[12].items->data);
 		return code;
 	    }
@@ -1363,7 +1363,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 	}
 	code = ka_ExpandCell(newCell, newCell, 0 /*local */ );
 	if (code) {
-	    com_err(whoami, code, "Can't expand cell name");
+	    afs_com_err(whoami, code, "Can't expand cell name");
 	    return code;
 	}
 	strcpy(cell, newCell);
@@ -1378,7 +1378,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		ap[i] = ip->data;
 	    code = ubik_ParseClientList(i, ap, serverList);
 	    if (code) {
-		com_err(whoami, code, "could not parse server list");
+		afs_com_err(whoami, code, "could not parse server list");
 		return code;
 	    }
 	    ka_ExplicitCell(cell, serverList);
@@ -1412,7 +1412,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		else if (strlen(passwd) == 0)
 		    code = KANULLPASSWORD;
 		if (code) {
-		    com_err(whoami, code, "reading password");
+		    afs_com_err(whoami, code, "reading password");
 		    return code;
 		}
 	    }
@@ -1453,7 +1453,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		    reason = "Authentication Server was unavailable";
 		    break;
 		default:
-		    reason = (char *)error_message(code);
+		    reason = (char *)afs_error_message(code);
 		}
 		fprintf(stderr,
 			"%s: Auth. as %s to AuthServer failed: %s\nProceeding w/o authentication\n",
@@ -1474,7 +1474,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 				    /*Don't need pwd expiration info here */
 		    );
 		if (acode && (acode != code))	/* codes are usually the same */
-		    com_err(whoami, code,
+		    afs_com_err(whoami, code,
 			    "getting Authentication token for %s",
 			    PrintedName(name, instance, cell));
 	    }
@@ -1485,15 +1485,15 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
     pToken = ((token.ticketLen == 0) ? 0 : &token);
     code = ka_AuthServerConn(cell, KA_MAINTENANCE_SERVICE, pToken, &conn);
     if (code && pToken) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"connecting to AuthServer: now trying w/o authentication");
 	code = ka_AuthServerConn(cell, KA_MAINTENANCE_SERVICE, 0, &conn);
 	if (code)
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "making unauthenticated connection to AuthServer");
     }
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Couldn't establish connection to Authentication Server");
 	return code;
     }
@@ -1518,7 +1518,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 		    else if (strlen(password) == 0)
 			code = KANULLPASSWORD;
 		    if (code) {
-			com_err(whoami, code, "prompting for %s", p + 1);
+			afs_com_err(whoami, code, "prompting for %s", p + 1);
 			return code;
 		    }
 		    ip = (struct cmd_item *)malloc(sizeof(struct cmd_item));
@@ -1552,7 +1552,7 @@ ForgetTicket(struct cmd_syndesc *as, char *arock)
 	    ka_ParseLoginName(name, server.name, server.instance,
 			      server.cell);
 	if (code) {
-	    com_err(whoami, code, "couldn't interpret name '%s'", name);
+	    afs_com_err(whoami, code, "couldn't interpret name '%s'", name);
 	    return code;
 	}
 	if (server.cell[0] == 0) {
@@ -1562,13 +1562,13 @@ ForgetTicket(struct cmd_syndesc *as, char *arock)
 	} else {
 	    code = ka_ExpandCell(server.cell, server.cell, 0 /*local */ );
 	    if (code) {
-		com_err(whoami, code, "Can't expand cell name");
+		afs_com_err(whoami, code, "Can't expand cell name");
 		return code;
 	    }
 	}
 	code = ktc_ForgetToken(&server);
 	if (code) {
-	    com_err(whoami, code, "couldn't remove tokens for %s",
+	    afs_com_err(whoami, code, "couldn't remove tokens for %s",
 		    PrintedPrincipal(&server));
 	    return code;
 	}
@@ -1579,14 +1579,14 @@ ForgetTicket(struct cmd_syndesc *as, char *arock)
 	}
 	code = ktc_ForgetAllTokens();
 	if (code) {
-	    com_err(whoami, code, "couldn't delete all tokens");
+	    afs_com_err(whoami, code, "couldn't delete all tokens");
 	    return code;
 	}
     }
 #endif
     code = ktc_ForgetAllTokens();
     if (code) {
-	com_err(whoami, code, "couldn't delete all tokens");
+	afs_com_err(whoami, code, "couldn't delete all tokens");
 	return code;
     }
     return 0;
@@ -1608,7 +1608,7 @@ ListTickets(struct cmd_syndesc *as, char *arock)
 	    ka_ParseLoginName(name, server.name, server.instance,
 			      server.cell);
 	if (code) {
-	    com_err(whoami, code, "couldn't interpret name '%s'", name);
+	    afs_com_err(whoami, code, "couldn't interpret name '%s'", name);
 	    return code;
 	}
 	if (server.cell[0] == 0) {
@@ -1618,7 +1618,7 @@ ListTickets(struct cmd_syndesc *as, char *arock)
 	} else {
 	    code = ka_ExpandCell(server.cell, server.cell, 0 /*local */ );
 	    if (code) {
-		com_err(whoami, code, "Can't expand cell name");
+		afs_com_err(whoami, code, "Can't expand cell name");
 		return code;
 	    }
 	}
@@ -1833,7 +1833,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 	code =
 	    cmd_ParseLine(line, argv, &argc, sizeof(argv) / sizeof(argv[0]));
 	if (code) {
-	    com_err(whoami, code, "parsing line: '%s'", line);
+	    afs_com_err(whoami, code, "parsing line: '%s'", line);
 	    return code;
 	}
 	code = cmd_Dispatch(argc, argv);

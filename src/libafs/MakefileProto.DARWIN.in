@@ -4,7 +4,7 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
-# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21.2.5 2006/03/09 06:41:47 shadow Exp $
+# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21.2.7 2007/10/09 21:32:01 shadow Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
@@ -33,28 +33,32 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
+<ppc_darwin_80 x86_darwin_80>
+KOPTS_DBUG=-g
+<ppc_darwin_90 x86_darwin_90>
+KOPTS_DBUG=-ggdb
 <ppc_darwin_80 x86_darwin_80 ppc_darwin_90 x86_darwin_90>
-KOPTS_ppc=-static -g -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -mcpu=750 -mmultiple -fschedule-insns
-KOPTS_x86=-static -g -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED -march=i686 -mpreferred-stack-boundary=2 -falign-functions=4
+KOPTS_ppc=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -mcpu=750 -mmultiple -fschedule-insns -force_cpusubtype_ALL
+KOPTS_x86=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED -march=i686 -mpreferred-stack-boundary=2 -falign-functions=4
 ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes)
 ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes)
 ifeq ($(ARCH_ppc),yes)
 ifeq ($(ARCH_x86),yes)
-MODLD=$(CC) -static -g -nostdlib -arch ppc -arch i386
-CFLAGS_ppc=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc)
-CFLAGS_x86=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86)
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch ppc -arch i386
+CFLAGS_ppc=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
+CFLAGS_x86=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
 else
-MODLD=$(CC) -static -g -nostdlib -arch ppc
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch ppc
 KOPTS=$(KOPTS_ppc)
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
 endif
 else
 ifeq ($(ARCH_x86),yes)
-MODLD=$(CC) -static -g -nostdlib -arch i386
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch i386
 KOPTS=$(KOPTS_x86)
 else
 _ARCH=$(shell arch)
-MODLD=$(CC) -static -g -nostdlib -arch $(_ARCH)
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib -arch $(_ARCH)
 KOPTS=$(KOPTS_$(shell echo $(_ARCH) | sed 's/i386/x86/'))
 endif
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
@@ -141,6 +145,12 @@ dest_libafs: $(LIBAFSNONFS) ;
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
+<ppc_darwin_90 x86_darwin_90>
+	dsymutil -o ${LIBAFS}.dSYM ${LIBAFS}
+<all>
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+<ppc_darwin_90 x86_darwin_90>
+	dsymutil -o ${LIBAFSNONFS}.dSYM ${LIBAFSNONFS}
+<all>

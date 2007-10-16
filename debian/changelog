@@ -1,3 +1,15 @@
+openafs (1.4.5~pre2.dfsg1-1) UNRELEASED; urgency=low
+
+  * New upstream release candidate.
+    - Fix errors when compiled with gcc 4.2.  (Closes: #443937)
+    - Add a frightening hack to work around the lack of getcontext and
+      savecontext for 32-bit SPARc.  (Closes: #415952, #446837)
+    - Add support for Linux 2.6.23.
+    - Multiple bug fixes for client tracking in the file server.
+    - Prevent one client from consuming all file server threads.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 15 Oct 2007 23:09:08 -0700
+
 openafs (1.4.4.dfsg1-7) unstable; urgency=low
 
   * Switch to quilt for managing patches to the upstream source.

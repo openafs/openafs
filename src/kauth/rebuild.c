@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/rebuild.c,v 1.11.2.1 2006/03/20 13:39:11 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/rebuild.c,v 1.11.2.2 2007/04/10 18:43:43 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -391,12 +391,12 @@ readDB(offset, buffer, size)
     offset += UBIK_HEADERSIZE;
     code = lseek(fd, offset, SEEK_SET);
     if (code != offset) {
-	com_err(whoami, errno, "skipping Ubik header");
+	afs_com_err(whoami, errno, "skipping Ubik header");
 	exit(2);
     }
     code = read(fd, buffer, size);
     if (code != size) {
-	com_err(whoami, errno, "reading db got %d bytes", code);
+	afs_com_err(whoami, errno, "reading db got %d bytes", code);
 	exit(3);
     }
 }
@@ -427,7 +427,7 @@ WorkerBee(as, arock)
     if (outFile) {
 	out = fopen(outFile, "w");
 	if (!out) {
-	    com_err(whoami, errno, "opening output file %s", outFile);
+	    afs_com_err(whoami, errno, "opening output file %s", outFile);
 	    exit(7);
 	}
     } else
@@ -435,12 +435,12 @@ WorkerBee(as, arock)
 
     fd = open(dbFile, O_RDONLY, 0);
     if (fd < 0) {
-	com_err(whoami, errno, "opening database file %s", dbFile);
+	afs_com_err(whoami, errno, "opening database file %s", dbFile);
 	exit(6);
     }
     code = fstat(fd, &info);
     if (code) {
-	com_err(whoami, errno, "stat'ing file %s", dbFile);
+	afs_com_err(whoami, errno, "stat'ing file %s", dbFile);
 	exit(6);
     }
     if ((info.st_size - UBIK_HEADERSIZE) % UBIK_BUFFERSIZE)

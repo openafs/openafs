@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vsprocs.c,v 1.11.2.1 2005/10/25 06:35:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/vsprocs.c,v 1.11.2.3 2007/07/18 14:24:30 shadow Exp $");
 
 #include "vsprocs.h"
 #include "vosutils.h"
@@ -150,7 +150,7 @@ UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     tstatus.maxquota = quota;
 
     /* next the next 3 available ids from the VLDB */
-    tst = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 3, volumeId);
+    tst = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 3, volumeId);
     if (tst) {
 	goto fail_UV_CreateVolume;
     }
@@ -229,7 +229,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 
     /* Find and read the VLDB entry for this volume */
     tst =
-	ubik_Call(VL_SetLock, cellHandle->vos, 0, volumeId, avoltype,
+	ubik_VL_SetLock(cellHandle->vos, 0, volumeId, avoltype,
 		  VLOP_DELETE);
     if (tst) {
 	if (tst != VL_NOENT) {
@@ -332,7 +332,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     }
 
     if ((entry.nServers <= 0) || !(entry.flags & (RO_EXISTS | RW_EXISTS))) {
-	tst = ubik_Call(VL_DeleteEntry, cellHandle->vos, 0, volumeId, vtype);
+	tst = ubik_VL_DeleteEntry(cellHandle->vos, 0, volumeId, vtype);
 	if (tst) {
 	    goto fail_UV_DeleteVolume;
 	}
@@ -364,7 +364,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 
     if (islocked) {
 	temp =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, volumeId, -1,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, volumeId, -1,
 		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (temp) {
 	    if (!tst)
@@ -437,7 +437,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     }
 
     tst =
-	ubik_Call(VL_SetLock, cellHandle->vos, 0, afromvol, RWVOL, VLOP_MOVE);
+	ubik_VL_SetLock(cellHandle->vos, 0, afromvol, RWVOL, VLOP_MOVE);
     if (tst) {
 	goto fail_UV_MoveVolume;
     }
@@ -454,7 +454,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 	if (!Lp_Match(cellHandle, &entry, atoserver, atopart, &tst)) {
 	    /* the to server and partition do not exist in the vldb entry corresponding to volid */
 	    tst =
-		ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, -1,
+		ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, -1,
 			  (LOCKREL_OPCODE | LOCKREL_AFSID |
 			   LOCKREL_TIMESTAMP));
 	    if (tst) {
@@ -561,7 +561,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
     /* Get a clone id */
     newVol = 0;
-    tst = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, &newVol);
+    tst = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 1, &newVol);
     if (tst) {
 	goto fail_UV_MoveVolume;
     }
@@ -824,7 +824,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
     if (islocked) {
 	etst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, -1,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, -1,
 		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (etst) {
 	    if (!tst)
@@ -878,7 +878,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
     /* unlock VLDB entry */
     if (islocked)
-	ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, -1,
+	ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, -1,
 		  (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 
     if (clonetid)
@@ -962,7 +962,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     }
 
     /* unlock VLDB entry */
-    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, -1,
+    ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, -1,
 	      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 
   done:			/* routine cleanup */
@@ -1018,7 +1018,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 	/* no assigned backup volume id */
 
 	tst =
-	    ubik_Call(VL_SetLock, cellHandle->vos, 0, avolid, RWVOL,
+	    ubik_VL_SetLock(cellHandle->vos, 0, avolid, RWVOL,
 		      VLOP_BACKUP);
 	if (tst) {
 	    goto fail_UV_BackupVolume;
@@ -1041,7 +1041,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 	/* Get a backup volume id from the VLDB and update the vldb
 	 * entry with it. 
 	 */
-	tst = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, &backupID);
+	tst = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 1, &backupID);
 	if (tst) {
 	    goto fail_UV_BackupVolume;
 	}
@@ -1160,7 +1160,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 	    }
 	} else {
 	    temp =
-		ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, avolid, RWVOL,
+		ubik_VL_ReleaseLock(cellHandle->vos, 0, avolid, RWVOL,
 			  (LOCKREL_OPCODE | LOCKREL_AFSID |
 			   LOCKREL_TIMESTAMP));
 	    if (temp) {
@@ -1223,7 +1223,7 @@ CloneVol(afs_cell_handle_p cellHandle, struct rx_connection *conn,
     /* Get the RO volume id. Allocate a new one if need to */
     *rovidp = entry->volumeId[ROVOL];
     if (*rovidp == INVALID_BID) {
-	tst = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, rovidp);
+	tst = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 1, rovidp);
 	if (tst) {
 	    goto fail_CloneVol;
 	}
@@ -1495,7 +1495,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     memset((char *)&results, 0, sizeof(results));
 
     tst =
-	ubik_Call(VL_SetLock, cellHandle->vos, 0, afromvol, RWVOL,
+	ubik_VL_SetLock(cellHandle->vos, 0, afromvol, RWVOL,
 		  VLOP_RELEASE);
     if ((tst) && (tst != VL_RERELEASE)) {
 	goto fail_UV_ReleaseVolume;
@@ -1544,7 +1544,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     /* Make sure we have a RO volume id to work with */
     if (entry.volumeId[ROVOL] == INVALID_BID) {
 	/* need to get a new RO volume id */
-	tst = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, &roVolId);
+	tst = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 1, &roVolId);
 	if (tst) {
 	    goto fail_UV_ReleaseVolume;
 	}
@@ -1969,7 +1969,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     }
     if (islocked) {
 	tst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, RWVOL,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (tst) {
 	    rc = 0;
@@ -2154,7 +2154,7 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
     if (islocked) {
 	etst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, afromvol, -1,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, afromvol, -1,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (etst) {
 	    if (!tst)
@@ -2332,7 +2332,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 	aVLDB_GetEntryByName(cellHandle, tovolname, &entry, &tst);
 	if (tst == VL_NOENT) {
 	    tst =
-		ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, &pvolid);
+		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 1, &pvolid);
 	    if (tst) {
 		goto fail_UV_RestoreVolume;
 	    }
@@ -2479,7 +2479,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 	    islocked = 0;
 	} else {		/*update the existing entry */
 	    tst =
-		ubik_Call(VL_SetLock, cellHandle->vos, 0, pvolid, RWVOL,
+		ubik_VL_SetLock(cellHandle->vos, 0, pvolid, RWVOL,
 			  VLOP_RESTORE);
 	    if (tst) {
 		goto fail_UV_RestoreVolume;
@@ -2557,7 +2557,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     }
     if (islocked) {
 	etst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, pvolid, RWVOL,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, pvolid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (etst) {
 	    if (!tst)
@@ -2607,7 +2607,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     int same = 0;
 
     tst =
-	ubik_Call(VL_SetLock, cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
+	ubik_VL_SetLock(cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
     if (tst) {
 	goto fail_UV_AddSite;
     }
@@ -2665,7 +2665,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 
     if (islocked) {
 	tst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     }
 
@@ -2686,7 +2686,7 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     int islocked = 0;
 
     tst =
-	ubik_Call(VL_SetLock, cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
+	ubik_VL_SetLock(cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
     if (tst) {
 	goto fail_UV_RemoveSite;
     }
@@ -2704,7 +2704,7 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 	if ((entry.nServers == 1) && (entry.flags & RW_EXISTS))
 	    entry.flags &= ~RO_EXISTS;
 	if (entry.nServers < 1) {	/*this is the last ref */
-	    tst = ubik_Call(VL_DeleteEntry, cellHandle->vos, 0, volid, ROVOL);
+	    tst = ubik_VL_DeleteEntry(cellHandle->vos, 0, volid, ROVOL);
 	    if (tst) {
 		goto fail_UV_RemoveSite;
 	    }
@@ -2721,7 +2721,7 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 
     if (islocked) {
 	afs_status_t t;
-	t = ubik_Call(VL_ReleaseLock, cellHandle->vos, 0, volid, RWVOL,
+	t = ubik_VL_ReleaseLock(cellHandle->vos, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (tst == 0) {
 	    tst = t;
@@ -2957,7 +2957,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
     counter = 0;
 
     /* get the next  available id's from the vldb server */
-    vcode = ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 0, &maxVolid);
+    vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 0, &maxVolid);
     if (vcode) {
 	return (vcode);
     }
@@ -2979,7 +2979,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    temp2 = elem.ids[RWVOL] - maxVolid + 1;
 	    maxVolid = 0;
 	    vcode =
-		ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, temp2,
+		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
 
@@ -2991,7 +2991,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    temp2 = elem.ids[ROVOL] - maxVolid + 1;
 	    maxVolid = 0;
 	    vcode =
-		ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, temp2,
+		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
 
@@ -3001,7 +3001,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    temp2 = elem.ids[BACKVOL] - temp1 + 1;
 	    maxVolid = 0;
 	    vcode =
-		ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, temp2,
+		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
 
@@ -3188,7 +3188,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		totalUE++;
 
 		vcode =
-		    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0,
+		    ubik_VL_ReleaseLock(cellHandle->vos, 0,
 			      elem.ids[RWVOL], RWVOL,
 			      LOCKREL_OPCODE | LOCKREL_AFSID |
 			      LOCKREL_TIMESTAMP);
@@ -3488,7 +3488,7 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
      */
     if (++pass == 2) {
 	tst =
-	    ubik_Call(VL_SetLock, cellHandle->vos, 0, entry->volumeId[RWVOL],
+	    ubik_VL_SetLock(cellHandle->vos, 0, entry->volumeId[RWVOL],
 		      RWVOL, VLOP_DELETE);
 	if (tst) {
 	    goto fail_CheckVldb;
@@ -3528,7 +3528,7 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	    && !(entry->flags & RO_EXISTS)) {
 	    /* The RW, BK, nor RO volumes do not exist. Delete the VLDB entry */
 	    tst =
-		ubik_Call(VL_DeleteEntry, cellHandle->vos, 0,
+		ubik_VL_DeleteEntry(cellHandle->vos, 0,
 			  entry->volumeId[RWVOL], RWVOL);
 	    if (tst) {
 		goto fail_CheckVldb;
@@ -3553,10 +3553,9 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 
     if (islocked) {
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0,
-		      entry->volumeId[RWVOL], RWVOL,
-		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP),
-		      &tst);
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0,
+				entry->volumeId[RWVOL], RWVOL,
+				(LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (vcode) {
 	    if (!tst)
 		tst = vcode;
@@ -3661,7 +3660,7 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     tid = 0;
     islocked = 0;
 
-    tst = ubik_Call(VL_SetLock, cellHandle->vos, 0, entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE);	/*last param is dummy */
+    tst = ubik_VL_SetLock(cellHandle->vos, 0, entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE);	/*last param is dummy */
     if (tst) {
 	goto fail_UV_RenameVolume;
     }
@@ -3793,7 +3792,7 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 
     if (islocked) {
 	etst =
-	    ubik_Call(VL_ReleaseLock, cellHandle->vos, 0,
+	    ubik_VL_ReleaseLock(cellHandle->vos, 0,
 		      entry->volumeId[RWVOL], RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (etst) {

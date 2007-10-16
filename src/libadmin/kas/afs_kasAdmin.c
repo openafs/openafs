@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.9.2.3 2005/08/16 18:48:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.9.2.4 2007/07/16 00:00:37 jaltman Exp $");
 
 #include <stdio.h>
 
@@ -34,8 +34,6 @@ RCSID
 #include <pthread.h>
 
 #undef ENCRYPT
-
-extern int ubik_Call();
 
 typedef struct {
     int begin_magic;
@@ -539,7 +537,8 @@ kas_PrincipalCreate(const void *cellHandle, const void *serverHandle,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
-    struct kas_encryptionKey key;
+    EncryptionKey key;
+    struct kas_encryptionKey kas_key;
 
     /*
      * Validate input arguments and make rpc.
@@ -559,12 +558,14 @@ kas_PrincipalCreate(const void *cellHandle, const void *serverHandle,
 	goto fail_kas_PrincipalCreate;
     }
 
-    if (!kas_StringToKey(kaserver.cell, password, &key, &tst)) {
+    if (!kas_StringToKey(kaserver.cell, password, &kas_key, &tst)) {
 	goto fail_kas_PrincipalCreate;
     }
 
+    memcpy(&key, &kas_key, sizeof(key));
+
     tst =
-	ubik_Call(KAM_CreateUser, kaserver.servers, 0, who->principal,
+	ubik_KAM_CreateUser(kaserver.servers, 0, who->principal,
 		  who->instance, key);
     if (tst) {
 	goto fail_kas_PrincipalCreate;
@@ -624,7 +625,7 @@ kas_PrincipalDelete(const void *cellHandle, const void *serverHandle,
 	goto fail_kas_PrincipalDelete;
     }
     tst =
-	ubik_Call(KAM_DeleteUser, kaserver.servers, 0, who->principal,
+	ubik_KAM_DeleteUser(kaserver.servers, 0, who->principal,
 		  who->instance);
     if (tst) {
 	goto fail_kas_PrincipalDelete;
@@ -802,7 +803,7 @@ kas_PrincipalGet(const void *cellHandle, const void *serverHandle,
     }
 
     tst =
-	ubik_Call(KAM_GetEntry, kaserver.servers, 0, who->principal,
+	ubik_KAM_GetEntry(kaserver.servers, 0, who->principal,
 		  who->instance, KAMAJORVERSION, &entry);
     if (tst) {
 	goto fail_kas_PrincipalGet;
@@ -858,8 +859,8 @@ GetPrincipalRPC(void *rpc_specific, int slot, int *last_item,
     principal_get_p prin = (principal_get_p) rpc_specific;
 
     tst =
-	ubik_Call(KAM_ListEntry, prin->kaserver.servers, 0, prin->current,
-		  &prin->next, &prin->count, &prin->principal[slot]);
+	ubik_KAM_ListEntry(prin->kaserver.servers, 0, prin->current,
+                           &prin->next, &prin->count, (kaident *)&prin->principal[slot]);
     if (tst == 0) {
 	prin->current = prin->next;
 	if (prin->next == 0) {
@@ -1109,13 +1110,14 @@ kas_PrincipalGetDone(const void *iterationIdP, afs_status_p st)
 int ADMINAPI
 kas_PrincipalKeySet(const void *cellHandle, const void *serverHandle,
 		    const kas_identity_p who, int keyVersion,
-		    const kas_encryptionKey_p key, afs_status_p st)
+		    const kas_encryptionKey_p kas_keyp, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
+    EncryptionKey key; 
 
     /*
      * Validate input arguments and make rpc.
@@ -1126,7 +1128,7 @@ kas_PrincipalKeySet(const void *cellHandle, const void *serverHandle,
 	goto fail_kas_PrincipalKeySet;
     }
 
-    if (key == NULL) {
+    if (kas_keyp == NULL) {
 	tst = ADMKASKEYNULL;
 	goto fail_kas_PrincipalKeySet;
     }
@@ -1135,9 +1137,12 @@ kas_PrincipalKeySet(const void *cellHandle, const void *serverHandle,
 	goto fail_kas_PrincipalKeySet;
     }
 
+    memcpy(&key, kas_keyp, sizeof(key));
+
     tst =
-	ubik_Call(KAM_SetPassword, kaserver.servers, 0, who->principal,
-		  who->instance, keyVersion, *key);
+	ubik_KAM_SetPassword(kaserver.servers, 0, who->principal,
+		  who->instance, keyVersion, key);
+    memset(&key, 0, sizeof(key));
     if (tst) {
 	goto fail_kas_PrincipalKeySet;
     }
@@ -1311,7 +1316,7 @@ getPrincipalFlags(const void *cellHandle, const void *serverHandle,
     }
 
     tst =
-	ubik_Call(KAM_GetEntry, kaserver.servers, 0, who->principal,
+	ubik_KAM_GetEntry(kaserver.servers, 0, who->principal,
 		  who->instance, KAMAJORVERSION, &tentry);
     if (tst == 0) {
 	*cur_flags = tentry.flags;
@@ -1518,7 +1523,7 @@ kas_PrincipalFieldsSet(const void *cellHandle, const void *serverHandle,
 	    goto fail_kas_PrincipalFieldsSet;
 	}
 	tst =
-	    ubik_Call(KAM_SetFields, kaserver.servers, 0, who->principal,
+	    ubik_KAM_SetFields(kaserver.servers, 0, who->principal,
 		      who->instance, flags, expiration, lifetime, -1,
 		      was_spare, 0);
 	if (tst == 0) {
@@ -1584,7 +1589,7 @@ kas_ServerStatsGet(const void *cellHandle, const void *serverHandle,
     }
 
     tst =
-	ubik_Call(KAM_GetStats, kaserver.servers, 0, KAMAJORVERSION, &admins,
+	ubik_KAM_GetStats(kaserver.servers, 0, KAMAJORVERSION, &admins,
 		  &statics, &dynamics);
     if (tst) {
 	goto fail_kas_ServerStatsGet;
@@ -1672,7 +1677,7 @@ kas_ServerDebugGet(const void *cellHandle, const void *serverHandle,
     if (!ChooseValidServer(c_handle, k_handle, &kaserver, &tst)) {
 	goto fail_kas_ServerDebugGet;
     }
-    tst = ubik_Call(KAM_Debug, kaserver.servers, 0, KAMAJORVERSION, 0, &info);
+    tst = ubik_KAM_Debug(kaserver.servers, 0, KAMAJORVERSION, 0, &info);
     if (tst) {
 	goto fail_kas_ServerDebugGet;
     }
@@ -1741,19 +1746,20 @@ kas_ServerDebugGet(const void *cellHandle, const void *serverHandle,
 
 int ADMINAPI
 kas_ServerRandomKeyGet(const void *cellHandle, const void *serverHandle,
-		       kas_encryptionKey_p key, afs_status_p st)
+		       kas_encryptionKey_p kas_keyp, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
+    EncryptionKey key;
 
     /*
      * Validate input arguments and make rpc.
      */
 
-    if (key == NULL) {
+    if (kas_keyp == NULL) {
 	tst = ADMKASKEYNULL;
 	goto fail_kas_ServerRandomKeyGet;
     }
@@ -1762,10 +1768,11 @@ kas_ServerRandomKeyGet(const void *cellHandle, const void *serverHandle,
 	goto fail_kas_ServerRandomKeyGet;
     }
 
-    tst = ubik_Call(KAM_GetRandomKey, kaserver.servers, 0, key);
+    tst = ubik_KAM_GetRandomKey(kaserver.servers, 0, &key);
     if (tst) {
 	goto fail_kas_ServerRandomKeyGet;
     }
+    memcpy(kas_keyp, &key, sizeof(*kas_keyp));
     rc = 1;
 
   fail_kas_ServerRandomKeyGet:

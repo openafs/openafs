@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.21 2007/02/15 00:29:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.24 2007/10/15 19:22:43 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -643,7 +643,8 @@ afs_vop_access(ap)
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-        code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
+	/* In 10.4 cp will loop forever on EACCES */
+        code = afs_CheckCode(EPERM, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
@@ -1194,8 +1195,12 @@ afs_vop_remove(ap)
     cache_purge(vp);
     if (!error) {
 #ifdef AFS_DARWIN80_ENV
-        ubc_setsize(vp, (off_t)0);
-        vnode_recycle(vp);
+	struct vcache *tvc = VTOAFS(vp);
+	
+	if (!(tvc->states & CUnlinked)) {
+            ubc_setsize(vp, (off_t)0);
+            vnode_recycle(vp);
+	}
 #else
         /* necessary so we don't deadlock ourselves in vclean */
         VOP_UNLOCK(vp, 0, cnp->cn_proc);
@@ -1626,9 +1631,18 @@ afs_vop_inactive(ap)
 	vprint("afs_vop_inactive(): pushing active", vp);
 #endif
     if (tvc) {
-       AFS_GLOCK();
-       afs_InactiveVCache(tvc, 0);	/* decrs ref counts */
-       AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+        int unlinked = tvc->states & CUnlinked;
+#endif
+	AFS_GLOCK();
+	afs_InactiveVCache(tvc, 0);     /* decrs ref counts */
+	AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+	if (unlinked) {
+	    vnode_recycle(vp);
+	    cache_purge(vp);
+	}
+#endif
     }
 #ifndef AFS_DARWIN80_ENV
     VOP_UNLOCK(vp, 0, ap->a_p);
@@ -2083,11 +2097,13 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
-     vnode_addfsref(nvp);
-     avc->v = nvp;
-     avc->states &=~ CDeadVnode;
-     vnode_clearfsnode(ovp);
-     vnode_removefsref(ovp);
+       vnode_addfsref(nvp);
+       avc->v = nvp;
+       avc->states &=~ CDeadVnode;
+       if (!(avc->states & CVInit)) {
+	   vnode_clearfsnode(ovp);
+	   vnode_removefsref(ovp);
+       }
    }
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);

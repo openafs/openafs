@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_interim_ktc.c,v 1.7 2003/07/15 23:15:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/test/test_interim_ktc.c,v 1.7.2.1 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/com_err.h>
@@ -117,7 +117,7 @@ CheckUnixUID(server, token, client)
 
     code = ktc_SetToken(server, token, client, 0);
     if (code) {
-	com_err(whoami, code, "using SetToken to set vice id");
+	afs_com_err(whoami, code, "using SetToken to set vice id");
 	return 1;
     }
     sprintf(name_buf, "Unix UID %d", getuid());
@@ -128,13 +128,13 @@ CheckUnixUID(server, token, client)
 	fprintf(stderr, "GetToken returned bad client: '");
 	PrintPrincipal(stderr, &nclient);
 	fprintf(stderr, "'\n");
-	com_err(whoami, code, "should have gotten '%s'", name_buf);
+	afs_com_err(whoami, code, "should have gotten '%s'", name_buf);
 	return 1;
     }
     lifetime =
 	(unsigned long)ntoken.endTime - (unsigned long)ntoken.startTime;
     if ((lifetime & 1) == 1) {
-	com_err(whoami, code, "GetToken returned even lifetime (%d)",
+	afs_com_err(whoami, code, "GetToken returned even lifetime (%d)",
 		lifetime);
 	return 1;
     }
@@ -157,7 +157,7 @@ CheckAFSId(server, token, client)
     viceId = atoi((client->name) + 7);
     code = ktc_SetToken(server, token, client, 0);
     if (code) {
-	com_err(whoami, code, "using SetToken to set vice id to %d", viceId);
+	afs_com_err(whoami, code, "using SetToken to set vice id to %d", viceId);
 	return 1;
     }
     code = ktc_GetToken(server, &ntoken, sizeof(ntoken), &nclient);
@@ -169,13 +169,13 @@ CheckAFSId(server, token, client)
 	fprintf(stderr, "' should have gotten '");
 	PrintPrincipal(stderr, client);
 	fprintf(stderr, "'\n");
-	com_err(whoami, code, "didn't preserve AFS ID");
+	afs_com_err(whoami, code, "didn't preserve AFS ID");
 	return 1;
     }
     lifetime =
 	(unsigned long)ntoken.endTime - (unsigned long)ntoken.startTime;
     if ((lifetime & 1) == 0) {
-	com_err(whoami, code, "GetToken returned even lifetime (%d)",
+	afs_com_err(whoami, code, "GetToken returned even lifetime (%d)",
 		lifetime);
 	return 1;
     }
@@ -265,7 +265,7 @@ CheckAuth2(server)
     buffer.out_size = 0;
     code = pioctl(0, _VICEIOCTL(3), &buffer, 1);
     if (code) {
-	com_err(whoami, errno, "setting old-style token");
+	afs_com_err(whoami, errno, "setting old-style token");
 	return 1;
     }
 
@@ -322,7 +322,7 @@ ListCellsCmd()
 	    if (errno == EDOM)
 		break;		/* done with the list */
 	    else {
-		com_err(whoami, code, "getting cell list");
+		afs_com_err(whoami, code, "getting cell list");
 		exit(1);
 	    }
 	}
@@ -494,7 +494,7 @@ AddTester(pathname)
     blob.out = space;
     code = pioctl(pathname, VIOCGETAL, &blob, 1);
     if (code) {
-	com_err(whoami, errno, "getting acl for %s", pathname);
+	afs_com_err(whoami, errno, "getting acl for %s", pathname);
 	return 1;
     }
     if (verbose > 1)
@@ -538,7 +538,7 @@ AddTester(pathname)
     blob.in_size = 1 + strlen(blob.in);
     code = pioctl(pathname, VIOCSETAL, &blob, 1);
     if (code) {
-	com_err(whoami, errno, "setting acl on %s to %s", pathname, blob.in);
+	afs_com_err(whoami, errno, "setting acl on %s to %s", pathname, blob.in);
 	return 1;
     }
     if (verbose > 1) {
@@ -566,7 +566,7 @@ FreeUnusedCell()
     token.endTime = 0;
     code = ktc_SetToken(&server, &token, &client, 0);
     if (code) {
-	com_err(whoami, code, "freeing cell");
+	afs_com_err(whoami, code, "freeing cell");
 	exit(1);
     }
 }
@@ -596,7 +596,7 @@ TryAuthenticating(name, password, viceId, cell)
     strcpy(server.cell, cell);
     code = ktc_GetToken(&server, &token, sizeof(token), &client);
     if (code) {
-	com_err(whoami, code, "so couldn't get %s's afs token in %s", name,
+	afs_com_err(whoami, code, "so couldn't get %s's afs token in %s", name,
 		cell);
 	return code;
     }
@@ -648,23 +648,23 @@ CheckAFSTickets()
     strcpy(server.cell, ka_LocalCell());
     code = ktc_GetToken(&server, &token, sizeof(token), &client);
     if (code) {
-	com_err(whoami, code, "so couldn't get afs token");
+	afs_com_err(whoami, code, "so couldn't get afs token");
 	return code;
     }
 
     code = mkdir(tdpath, 0777);
     if (code && (errno != EEXIST)) {
-	com_err(whoami, errno, "making test dir %s", tdpath);
+	afs_com_err(whoami, errno, "making test dir %s", tdpath);
 	return code;
     }
     fd = open(tfpath, O_WRONLY + O_CREAT + O_TRUNC, 0777);
     if (fd == -1) {
-	com_err(whoami, errno, "making test file %s", tfpath);
+	afs_com_err(whoami, errno, "making test file %s", tfpath);
 	goto failed;
     }
     code = close(fd);
     if (code) {
-	com_err(whoami, errno, "failed to close %s after create", tfpath);
+	afs_com_err(whoami, errno, "failed to close %s after create", tfpath);
 	goto failed;
     }
 
@@ -678,7 +678,7 @@ CheckAFSTickets()
 	goto failed;
     code = ktc_GetToken(&server, &ntoken, sizeof(ntoken), &nclient);
     if (code) {
-	com_err(whoami, code, "getting new local afs token");
+	afs_com_err(whoami, code, "getting new local afs token");
 	goto failed;
     }
 
@@ -705,29 +705,29 @@ CheckAFSTickets()
 
     code = open(tfpath, O_RDONLY, 0);	/* check for read access */
     if (!((code == -1) && ((errno == ENOENT) || (errno == EACCES)))) {
-	com_err(whoami, errno, "didn't fail to open %s for read", tfpath);
+	afs_com_err(whoami, errno, "didn't fail to open %s for read", tfpath);
 	goto failed;
     }
 
     /* as tester we should have read but not write */
     code = ktc_SetToken(&server, &ntoken, &nclient, 0);
     if (code) {
-	com_err(whoami, code, "restoring new local afs token");
+	afs_com_err(whoami, code, "restoring new local afs token");
 	goto failed;
     }
     code = open(tfpath, O_RDWR + O_TRUNC, 0);
     if ((code != -1) || (errno != EACCES)) {
-	com_err(whoami, errno, "didn't fail to open %s for write", tfpath);
+	afs_com_err(whoami, errno, "didn't fail to open %s for write", tfpath);
 	goto failed;
     }
     fd = open(tfpath, O_RDONLY, 0);
     if (fd == -1) {
-	com_err(whoami, errno, "failed to open %s for read", tfpath);
+	afs_com_err(whoami, errno, "failed to open %s for read", tfpath);
 	goto failed;
     }
     code = close(fd);
     if (code) {
-	com_err(whoami, errno, "failed to close %s after open", tfpath);
+	afs_com_err(whoami, errno, "failed to close %s after open", tfpath);
 	goto failed;
     }
 
@@ -735,11 +735,11 @@ CheckAFSTickets()
     /* go back to original privileges */
     code = ktc_SetToken(&server, &token, &client, 0);
     if (code) {
-	com_err(whoami, code, "so couldn't set afs token in new pag");
+	afs_com_err(whoami, code, "so couldn't set afs token in new pag");
 	exit(1);
     }
     if (unlink(tfpath) || rmdir(tdpath)) {
-	com_err(whoami, errno, "removing test dir %s", tdpath);
+	afs_com_err(whoami, errno, "removing test dir %s", tdpath);
 	return 1;
     }
     return exitCode;
@@ -765,7 +765,7 @@ main(argc, argv)
 
     srandom(1);
 
-    /* Initialize com_err error code hacking */
+    /* Initialize afs_com_err error code hacking */
     initialize_U_error_table();
     initialize_KA_error_table();
     initialize_RXK_error_table();
@@ -824,10 +824,10 @@ main(argc, argv)
     /* expand requested cell name */
     code = ka_CellConfig(AFSCONF_CLIENTNAME);
     if (code)
-	com_err(whoami, code, "calling cell config");
+	afs_com_err(whoami, code, "calling cell config");
     code = ka_ExpandCell(cell, cell, 0);
     if (code) {
-	com_err(whoami, code, "expanding cell %s", cell);
+	afs_com_err(whoami, code, "expanding cell %s", cell);
 	exit(1);
     }
 
@@ -837,7 +837,7 @@ main(argc, argv)
     if (printToken) {
 	code = ktc_GetToken(&server, &token, sizeof(token), &client);
 	if (code) {
-	    com_err(whoami, code, "so couldn't get afs token");
+	    afs_com_err(whoami, code, "so couldn't get afs token");
 	    exit(1);
 	}
 	PrintAuthentication(stdout, &server, &token, &client);
@@ -867,7 +867,7 @@ main(argc, argv)
     memcpy(&ntoken, &token, sizeof(ntoken));
     code = ktc_SetToken(&server, &ntoken, &client, 0);
     if (code != KTC_NOCELL) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"should have gotten bad pioctl error calling SetToken with bogus cell name");
 	goto failed;
     }
@@ -876,7 +876,7 @@ main(argc, argv)
     ntoken.ticketLen = 0;
     code = ktc_SetToken(&server, &ntoken, &client, 0);
     if ((code != KTC_TOOBIG) && (code != KTC_PIOCTLFAIL)) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"should have gotten error calling SetToken with zero ticket length");
 	goto failed;
     }
@@ -884,7 +884,7 @@ main(argc, argv)
     ntoken.endTime = 0;
     code = ktc_SetToken(&server, &ntoken, &client, 0);
     if (code) {
-	com_err(whoami, code, "calling SetToken with zero expiration time");
+	afs_com_err(whoami, code, "calling SetToken with zero expiration time");
 	goto failed;
     }
     strcpy(nclient.name, "foo");
@@ -892,7 +892,7 @@ main(argc, argv)
     strcpy(nclient.cell, "foo.bar.baz");
     code = ktc_SetToken(&server, &ntoken, &nclient, 0);
     if (code) {
-	com_err(whoami, code, "calling SetToken with bogus client cell");
+	afs_com_err(whoami, code, "calling SetToken with bogus client cell");
 	goto failed;
     }
     memcpy(&ntoken, &token, sizeof(ntoken));

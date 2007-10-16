@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH uss 8 "OpenAFS" "5/Jan/2006" "AFS Command Reference"
+.TH uss 8 "OpenAFS" "27/Jul/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -243,9 +243,11 @@ not combine this flag with any of the command's other options; when it is
 provided, the command interpreter ignores all other options, and only
 prints the help message.
 .Ip "\fB\-skipauth\fR" 4
-Bypasses mutual authentication with the \s-1AFS\s0 Authentication Server,
-allowing a site that uses Kerberos instead of the \s-1AFS\s0 Authentication
-Server to substitute that form of authentication.
+Bypasses mutual authentication with the \s-1AFS\s0 Authentication Server, allowing
+a site that uses Kerberos instead of the \s-1AFS\s0 Authentication Server to
+substitute that form of authentication. If this option is given, \fBuss\fR does
+not create or manipulate Kerberos principals. A Kerberos principal must be
+created separately from the \fBuss add\fR command.
 .SH "PRIVILEGE REQUIRED"
 The issuer of a \fBuss\fR command must have all the rights required for
 performing the equivalent actions individually. See each \fBuss\fR command's

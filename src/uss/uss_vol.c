@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_vol.c,v 1.10 2003/07/15 23:17:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/uss/uss_vol.c,v 1.10.2.1 2007/04/10 18:43:46 shadow Exp $");
 
 #include "uss_vol.h"		/*Interface to this module */
 #include "uss_common.h"		/*Common definitions */
@@ -740,7 +740,7 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
     if (!initDone) {
 	code = InitThisModule(NoAuthFlag, uss_ConfDir, uss_Cell);
 	if (code) {
-	    com_err(uss_whoami, code,
+	    afs_com_err(uss_whoami, code,
 		    "while inititializing VLDB connection(s)\n");
 	    return (code);
 	}

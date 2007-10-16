@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/common.c,v 1.10 2003/11/15 04:59:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/common.c,v 1.10.2.1 2007/04/10 18:43:47 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/afsutil.h>
@@ -33,7 +33,7 @@ void
 LogError(afs_int32 errcode)
 {
     ViceLog(0,
-	    ("%s: %s\n", error_table_name(errcode), error_message(errcode)));
+	    ("%s: %s\n", afs_error_table_name(errcode), afs_error_message(errcode)));
 }
 
 #ifndef AFS_PTHREAD_ENV

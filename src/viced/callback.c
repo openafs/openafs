@@ -83,7 +83,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.14 2006/02/02 21:48:39 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.17 2007/08/21 08:28:37 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -2039,10 +2039,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     if (!host->interface)
 	return 1;		/* failure */
 
-    assert(host->interface->numberOfInterfaces > 0);
-
     /* the only address is the primary interface */
-    if (host->interface->numberOfInterfaces == 1)
+    if (host->interface->numberOfInterfaces <= 1)
 	return 1;		/* failure */
 
     /* initialise a security object only once */
@@ -2087,8 +2085,10 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
+            hashDelete_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
+            hashInsert_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
@@ -2134,11 +2134,9 @@ MultiProbeAlternateAddress_r(struct host *host)
     if (!host->interface)
 	return 1;		/* failure */
 
-    assert(host->interface->numberOfInterfaces > 0);
-
     /* the only address is the primary interface */
-    if (host->interface->numberOfInterfaces == 1)
-	return 1;		/* failure */
+    if (host->interface->numberOfInterfaces <= 1)
+        return 1;               /* failure */
 
     /* initialise a security object only once */
     if (!sc)
@@ -2161,8 +2159,8 @@ MultiProbeAlternateAddress_r(struct host *host)
 
 	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(interfaces[i].addr, 
-			     interfaces[i].port, 1, sc, 0);
+	    rx_NewConnection(interfaces[j].addr, 
+			     interfaces[j].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
 	j++;
@@ -2180,21 +2178,25 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    H_LOCK;
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
+            hashDelete_r(host->host, host->port, host);
 	    host->callback_rxcon = conns[multi_i];
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
+            hashInsert_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
-		    ("multiprobe success with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multiprobe success for host %x; new primary addr %s:%d\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr),
+                     ntohs(host->port)));
 	    H_UNLOCK;
 	    multi_Abort;
 	} else {
 	    ViceLog(125,
-		    ("multiprobe failure with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multiprobe failure with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
             
             /* This is less than desirable but its the best we can do.
              * The AFS Cache Manager will return either 0 for a Uuid  
@@ -2204,18 +2206,9 @@ MultiProbeAlternateAddress_r(struct host *host)
              * Uuid and fix the host tables.
              */
             if (multi_error == 1) {
-                struct host * newhost;
-
                 /* remove the current alternate address from this host */
                 H_LOCK;
-                for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
-                    if (interfaces[multi_i].addr != host->interface->interface[i].addr &&
-			interfaces[multi_i].port != host->interface->interface[i].port) {
-                        host->interface->interface[j] = host->interface->interface[i];
-                        j++;
-                    }
-                }
-                host->interface->numberOfInterfaces--;
+                removeInterfaceAddr_r(host, interfaces[multi_i].addr, interfaces[multi_i].port);
                 H_UNLOCK;
             }
         }

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15.2.5 2005/10/05 05:58:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15.2.6 2007/06/23 15:31:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
@@ -247,6 +247,13 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 	char *oldData = mceP->data;
 
 	mceP->data = afs_osi_Alloc(size + offset);
+	if (mceP->data == NULL) {	/* no available memory */
+	    mceP->data = oldData;	/* revert back change that was made */
+	    MReleaseWriteLock(&mceP->afs_memLock);
+	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
+		     size + offset);
+	    return -ENOMEM;
+	}
 
 	/* may overlap, but this is OK */
 	AFS_GUNLOCK();
@@ -285,6 +292,13 @@ afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
 	char *oldData = mceP->data;
 
 	mceP->data = afs_osi_Alloc(AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
+	if (mceP->data == NULL) {	/* no available memory */
+	    mceP->data = oldData;	/* revert back change that was made */
+	    MReleaseWriteLock(&mceP->afs_memLock);
+	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
+		     AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
+	    return -ENOMEM;
+	}
 
 	AFS_GUNLOCK();
 	memcpy(mceP->data, oldData, mceP->size);
@@ -314,9 +328,17 @@ afs_MemCacheTruncate(register struct osi_file *fP, int size)
     MObtainWriteLock(&mceP->afs_memLock, 313);
     /* old directory entry; g.c. */
     if (size == 0 && mceP->dataSize > memCacheBlkSize) {
-	afs_osi_Free(mceP->data, mceP->dataSize);
+	char *oldData = mceP->data;
 	mceP->data = afs_osi_Alloc(memCacheBlkSize);
-	mceP->dataSize = memCacheBlkSize;
+	if (mceP->data == NULL) {	/* no available memory */
+	    mceP->data = oldData;
+	    MReleaseWriteLock(&mceP->afs_memLock);
+	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
+		     memCacheBlkSize);
+	} else {
+	    afs_osi_Free(oldData, mceP->dataSize);
+	    mceP->dataSize = memCacheBlkSize;
+	}
     }
 
     if (size < mceP->size)

@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/butc_xbsa.c,v 1.8 2004/07/14 04:46:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/butc_xbsa.c,v 1.8.2.1 2007/07/16 20:43:31 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/stds.h>
@@ -132,7 +132,8 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 		       RTLD_NOW | RTLD_LOCAL | RTLD_MEMBER);
 	}
 #elif defined(AFS_SUN5_ENV)
-	dynlib = dlopen("/usr/lib/libXApi.so", RTLD_NOW | RTLD_LOCAL);
+	dlopen ("/usr/lib/libCstd.so.1", RTLD_NOW | RTLD_GLOBAL);
+	dynlib = dlopen("/usr/lib/libXApi.so", RTLD_NOW | RTLD_GLOBAL);
 #else
 	dynlib = NULL;
 #endif

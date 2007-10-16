@@ -1,0 +1,338 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH VOS_SIZE 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+vos size \- Computes the size of a volume dump
+.SH "SYNOPSIS"
+\fBvos size\fR <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-dump\fR]
+    [\fB\-encrypt\fR] [\fB\-help\fR] [\fB\-id\fR] <\fIvolume name or id\fR>
+    [\fB\-localauth\fR] [\fB\-noauth\fR]
+    <<\ [\fB\-partition\fR\ <\fIpartition\ name\fR] >>>
+    <<\ [\fB\-server\fR\ <\fImachine\ name\fR] >>>
+    <<\ [\fB\-time\fR\ <\fIdump\ from\ time\fR] >>> [\fB\-verbose\fR]
+.SH "DESCRIPTION"
+The \fBvos size\fR command shows the size of a volume's dump for backup
+purposes. The size of the dump may differ from the volume size as reported
+by \fBvos examine\fR or \fBfs listquota\fR. The size is shown in bytes.
+.PP
+This command is intended for use with backup systems that want to size
+volume dumps before performing them (to optimize use of tape resources,
+for example).
+.SH "OPTIONS"
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+The cell in which the volume resides, if it's not in the current cell.
+.Ip "\fB\-dump\fR" 4
+Show the size of the volume dump for the specified volume. Currently, this
+flag should always be given for \fBvos size\fR to give useful information.
+It is present to allow this command to provide other size estimates in the
+future.
+.Ip "\fB\-encrypt\fR" 4
+Encrypt the command.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.Ip "\fB\-id\fR <\fIvolume name or id\fR>" 4
+Specifies either the complete name or volume \s-1ID\s0 number of the read/write,
+read-only, or backup volume to size.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBvos\fR command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument or
+\fB\-noauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity anonymous to the issuer. Do not combine
+this flag with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-partition\fR <\fIpartition name\fR>" 4
+Specifies the partition on which the volume resides. Provide the
+\fB\-server\fR argument along with this one.
+.Ip "\fB\-server\fR <\fImachine name\fR>" 4
+Specifies the file server machine on which the volume resides.  Provide
+the \fB\-partition\fR argument along with this one.
+.Ip "\fB\-time\fR <\fIdump from time\fR>" 4
+Specifies whether the dump is full or incremental. Omit this argument to
+size a full dump. See the \fIvos_dump(1)\fR manpage for the valid values for this
+option.
+.Ip "\fB\-verbose\fR" 4
+Show more output about what's going on.
+.SH "OUTPUT"
+When run without \fB\-verbose\fR, the output will be:
+.PP
+.Vb 2
+\&   Volume: <volume>
+\&   dump_size: <size>
+.Ve
+where <volume> is the name of the volume and <size> is the size of the
+dump in bytes. With \fB\-verbose\fR, additional status messages will be
+printed between those two lines.
+.SH "EXAMPLES"
+Sizing a single user volume:
+.PP
+.Vb 3
+\&   % vos size user.thoron -dump
+\&   Volume: user.thoron
+\&   dump_size: 36430
+.Ve
+or, more verbosely:
+.PP
+.Vb 6
+\&   % vos size user.thoron -dump -verbose
+\&   Volume: user.thoron
+\&   Starting transaction on volume 2003434023... done
+\&   Getting size of volume on volume 2003434023... done
+\&   Ending transaction on volume 2003434023... done
+\&   dump_size: 36430
+.Ve
+Sizing an incremental dump for the same volume:
+.PP
+.Vb 3
+\&   % vos size -id user.thoron -time '05/04/2007 00:00:00' -dump 
+\&   Volume: user.thoron
+\&   dump_size: 21095
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on the
+machine specified with the \fB\-server\fR argument or the machine on which the
+volume is located if \fB\-server\fR was not given.  If the \fB\-localauth\fR flag
+is included, the issuer must instead be logged on to a server machine as
+the local superuser \f(CWroot\fR.
+.SH "SEE ALSO"
+the \fIfs_listquota(1)\fR manpage,
+the \fIvos_dump(1)\fR manpage,
+the \fIvos_examine(1)\fR manpage
+.SH "COPYRIGHT"
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+.PP
+This documentation is covered by the IBM Public License Version
+1.0. This man page was written by Jason Edgecombe for OpenAFS.
+
+.rn }` ''
+.IX Title "VOS_SIZE 1"
+.IX Name "vos size - Computes the size of a volume dump"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-dump\fR"
+
+.IX Item "\fB\-encrypt\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Item "\fB\-id\fR <\fIvolume name or id\fR>"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-partition\fR <\fIpartition name\fR>"
+
+.IX Item "\fB\-server\fR <\fImachine name\fR>"
+
+.IX Item "\fB\-time\fR <\fIdump from time\fR>"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

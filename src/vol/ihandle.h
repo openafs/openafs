@@ -211,6 +211,7 @@ typedef struct IHandle_s {
     int ih_vid;			/* Parent volume id. */
     int ih_dev;			/* device id. */
     int ih_flags;		/* Flags */
+    int ih_synced;		/* should be synced next time */
     Inode ih_ino;		/* Inode number */
     int ih_refcnt;		/* reference count */
     struct FdHandle_s *ih_fdhead;	/* List of open file desciptors */
@@ -466,7 +467,7 @@ extern afs_sfsize_t ih_size(int fd);
 #define FDH_WRITE(H, B, S) OS_WRITE((H)->fd_fd, B, S)
 #define FDH_SEEK(H, O, F) OS_SEEK((H)->fd_fd, O, F)
 
-#define FDH_SYNC(H) OS_SYNC((H)->fd_fd)
+#define FDH_SYNC(H) ((H->fd_ih!=NULL) ? ( H->fd_ih->ih_synced = 1) - 1 : 1)
 #define FDH_TRUNC(H, L) OS_TRUNC((H)->fd_fd, L)
 #define FDH_SIZE(H) OS_SIZE((H)->fd_fd)
 

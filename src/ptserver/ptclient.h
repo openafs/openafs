@@ -46,4 +46,4 @@ extern int PR_UpdateEntry();
 extern int PR_ListSuperGroups();
 #endif
 
-#define pr_ErrorMsg error_message
+#define pr_ErrorMsg afs_error_message

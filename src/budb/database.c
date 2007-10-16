@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/database.c,v 1.7 2003/07/15 23:14:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/database.c,v 1.7.2.1 2007/07/06 11:34:00 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -75,11 +75,7 @@ InitDB()
  */
 
 afs_int32
-dbwrite(ut, pos, buff, len)
-     struct ubik_trans *ut;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 
@@ -111,11 +107,7 @@ dbwrite(ut, pos, buff, len)
 /* same thing for read */
 
 afs_int32
-dbread(ut, pos, buff, len)
-     struct ubik_trans *ut;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 
@@ -146,12 +138,7 @@ dbread(ut, pos, buff, len)
 
 /* Same as dbread excepts it does checking */
 afs_int32
-cdbread(ut, type, pos, buff, len)
-     struct ubik_trans *ut;
-     int type;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code = 0;
 

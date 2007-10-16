@@ -89,9 +89,11 @@ prints the help message.
 
 =item B<-skipauth>
 
-Bypasses mutual authentication with the AFS Authentication Server,
-allowing a site that uses Kerberos instead of the AFS Authentication
-Server to substitute that form of authentication.
+Bypasses mutual authentication with the AFS Authentication Server, allowing
+a site that uses Kerberos instead of the AFS Authentication Server to
+substitute that form of authentication. If this option is given, B<uss> does
+not create or manipulate Kerberos principals. A Kerberos principal must be
+created separately from the B<uss add> command.
 
 =back
 

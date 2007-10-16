@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-PROGRAMS=	unlog tokens tokens.krb kseal
+PROGRAMS=	unlog tokens tokens.krb
 
 INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \
 ${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/des.h ${TOP_INCDIR}/rx/rxkad.h \
@@ -32,7 +32,7 @@ KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
 #
 # Main targets
 #
-all: unlog tokens tokens.krb kseal
+all: unlog tokens tokens.krb
 
 #
 # Build targets
@@ -67,8 +67,7 @@ install: \
 	${DESTDIR}${bindir}/tokens \
 	${DESTDIR}${bindir}/tokens.krb \
 	${DESTDIR}${afssrvbindir}/tokens \
-	${DESTDIR}${afssrvbindir}/tokens.krb \
-	${DESTDIR}${sbindir}/kseal
+	${DESTDIR}${afssrvbindir}/tokens.krb
 
 ${DEST}/bin/unlog: unlog
 	${INSTALL} $? $@
@@ -122,6 +121,5 @@ dest: \
 	${DEST}/bin/tokens \
 	${DEST}/bin/tokens.krb \
 	${DEST}/root.server/usr/afs/bin/tokens \
-	${DEST}/root.server/usr/afs/bin/tokens.krb \
-	${DEST}/etc/kseal
+	${DEST}/root.server/usr/afs/bin/tokens.krb
 

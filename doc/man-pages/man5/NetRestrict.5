@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH NetRestrict 5 "OpenAFS" "5/Jan/2006" "AFS File Reference"
+.TH NetRestrict 5 "OpenAFS" "19/Jun/2007" "AFS File Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -193,9 +193,9 @@ NetRestrict \- Defines interfaces not to register with AFS servers
 There are two \fINetRestrict\fR files, one for an AFS client and one for an
 AFS File Server or database server.  The AFS client \fINetRestrict\fR file
 specifies the IP addresses that the client should not register with the
-File Servers it connects to.  The server \fINetInfo\fR file specifies what
-interfaces should not be registered with AFS Database Servers or used to
-talk to other database servers.
+File Servers it connects to.  The server \fINetRestrict\fR file specifies
+what interfaces should not be registered with AFS Database Servers or used
+to talk to other database servers.
 .Sh "Client NetRestrict"
 The \fINetRestrict\fR file, if present in a client machine's \fI/usr/vice/etc\fR
 directory, defines the \s-1IP\s0 addresses of the interfaces that the local Cache
@@ -251,6 +251,7 @@ register or use any of the addresses in the \f(CW192.12.105\fR subnet.
 To display the File Server interface addresses registered in the \s-1VLDB\s0, use
 the \fBvos listaddrs\fR command.
 .SH "SEE ALSO"
+the \fINetInfo(5)\fR manpage,
 the \fIsysid(5)\fR manpage,
 the \fIvldb.DB0(5)\fR manpage,
 the \fIfileserver(8)\fR manpage,

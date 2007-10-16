@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.23 2007/02/09 01:25:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.26 2007/10/15 12:42:26 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -263,7 +263,11 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 
 
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(HAVE_KMEM_CACHE_T)
 static kmem_cache_t *afs_inode_cachep;
+#else
+struct kmem_cache *afs_inode_cachep;
+#endif
 
 static struct inode *
 afs_alloc_inode(struct super_block *sb)
@@ -288,12 +292,18 @@ afs_destroy_inode(struct inode *inode)
 }
 
 static void
+#if defined(HAVE_KMEM_CACHE_T)
 init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+#else
+init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+#endif
 {
     struct vcache *vcp = (struct vcache *) foo;
 
+#if defined(SLAB_CTOR_VERIFY)
     if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
 	SLAB_CTOR_CONSTRUCTOR)
+#endif
 	inode_init_once(AFSTOV(vcp));
 }
 
@@ -304,10 +314,17 @@ afs_init_inodecache(void)
 #define SLAB_RECLAIM_ACCOUNT 0
 #endif
 
+#if defined(KMEM_CACHE_TAKES_DTOR)
     afs_inode_cachep = kmem_cache_create("afs_inode_cache",
 					 sizeof(struct vcache),
 					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
 					 init_once, NULL);
+#else
+    afs_inode_cachep = kmem_cache_create("afs_inode_cache",
+					 sizeof(struct vcache),
+					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
+					 init_once);
+#endif
     if (afs_inode_cachep == NULL)
 	return -ENOMEM;
     return 0;
@@ -316,7 +333,8 @@ afs_init_inodecache(void)
 void
 afs_destroy_inodecache(void)
 {
-    (void) kmem_cache_destroy(afs_inode_cachep);
+    if (afs_inode_cachep)
+	(void) kmem_cache_destroy(afs_inode_cachep);
 }
 #else
 int

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_rxkad_free.c,v 1.7.2.1 2005/05/30 04:57:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/test/test_rxkad_free.c,v 1.7.2.2 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -111,7 +111,7 @@ Main(as, arock)
 	    ka_ParseLoginName(as->parms[12].items->data, name, instance,
 			      newCell);
 	if (code) {
-	    com_err(whoami, code, "parsing user's name '%s'",
+	    afs_com_err(whoami, code, "parsing user's name '%s'",
 		    as->parms[12].items->data);
 	    return code;
 	}
@@ -139,7 +139,7 @@ Main(as, arock)
 
     code = ka_ExpandCell(newCell, newCell, 0 /*local */ );
     if (code) {
-	com_err(whoami, code, "Can't expand cell name");
+	afs_com_err(whoami, code, "Can't expand cell name");
 	return code;
     }
     cell = newCell;
@@ -160,7 +160,7 @@ Main(as, arock)
 	else if (strlen(passwd) == 0)
 	    code = KANULLPASSWORD;
 	if (code) {
-	    com_err(whoami, code, "reading password");
+	    afs_com_err(whoami, code, "reading password");
 	    return code;
 	}
     }
@@ -174,7 +174,7 @@ Main(as, arock)
 	ap[1] = "-servers";
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
-	    com_err(whoami, code, "could not parse server list");
+	    afs_com_err(whoami, code, "could not parse server list");
 	    return code;
 	}
 	ka_ExplicitCell(cell, serverList);
@@ -212,7 +212,7 @@ Main(as, arock)
 		ka_GetAdminToken(name, instance, cell, &key, 3600, &token,
 				 1 /*new */ );
 	    if (code) {
-		com_err(whoami, code, "getting admin token");
+		afs_com_err(whoami, code, "getting admin token");
 		return code;
 	    }
 	    pToken = &token;
@@ -225,7 +225,7 @@ Main(as, arock)
 		ka_AuthServerConn(cell, KA_MAINTENANCE_SERVICE, pToken,
 				  &ubikConn);
 	    if (code) {
-		com_err(whoami, code, "Getting AuthServer ubik conn");
+		afs_com_err(whoami, code, "Getting AuthServer ubik conn");
 		return code;
 	    }
 
@@ -247,7 +247,7 @@ Main(as, arock)
 		ubik_Call(KAM_GetEntry, ubikConn, 0, name, instance,
 			  KAMAJORVERSION, &tentry);
 	    if (code) {
-		com_err(whoami, code, "getting information for %s.%s", name,
+		afs_com_err(whoami, code, "getting information for %s.%s", name,
 			instance);
 		return code;
 	    }

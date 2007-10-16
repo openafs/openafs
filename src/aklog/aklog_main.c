@@ -1,13 +1,42 @@
 /* 
- * $Id: aklog_main.c,v 1.1.2.15 2007/02/10 13:56:54 jaltman Exp $
+ * $Id: aklog_main.c,v 1.1.2.20 2007/10/10 17:47:58 shadow Exp $
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
  */
+/*
+ * Copyright (c) 2005, 2006                                     
+ * The Linux Box Corporation                                    
+ * ALL RIGHTS RESERVED                                          
+ *                                                              
+ * Permission is granted to use, copy, create derivative works  
+ * and redistribute this software and such derivative works     
+ * for any purpose, so long as the name of the Linux Box        
+ * Corporation is not used in any advertising or publicity      
+ * pertaining to the use or distribution of this software       
+ * without specific, written prior authorization.  If the       
+ * above copyright notice or any other identification of the    
+ * Linux Box Corporation is included in any copy of any         
+ * portion of this software, then the disclaimer below must     
+ * also be included.                                            
+ *                                                              
+ * This software is provided as is, without representation      
+ * from the Linux Box Corporation as to its fitness for any     
+ * purpose, and without warranty by the Linux Box Corporation   
+ * of any kind, either express or implied, including            
+ * without limitation the implied warranties of                 
+ * merchantability and fitness for a particular purpose.  The   
+ * regents of the Linux Box Corporation shall not be liable     
+ * for any damages, including special, indirect, incidental, or 
+ * consequential damages, with respect to any claim arising     
+ * out of or in connection with the use of the software, even   
+ * if it has been or is hereafter advised of the possibility of 
+ * such damages.                                                
+ */
 
 #if !defined(lint) && !defined(SABER)
 static char *rcsid =
-	"$Id: aklog_main.c,v 1.1.2.15 2007/02/10 13:56:54 jaltman Exp $";
+	"$Id: aklog_main.c,v 1.1.2.20 2007/10/10 17:47:58 shadow Exp $";
 #endif /* lint || SABER */
 
 #include <afsconfig.h>
@@ -39,27 +68,6 @@ static char *rcsid =
 #include <pwd.h>
 #endif /* WINDOWS */
 
-/* on AIX AFS has an unresolved reference to osi_audit. We will define
- * it here as extern. It also trys to call the ntohl and htonl routines
- * as routines rather then macros. We need a real routine here. 
- * We do this before the ntohl and htonl macros are defined in net/in.h
- */
-int osi_audit()
-    { return(0);}
-
-#if 0
-#ifdef _AIX
-u_long htonl(u_long x)
-    { return(x);}
-
-u_long ntohl(u_long x)
-    { return(x);}
-#endif
-
-#include <netinet/in.h>
-/* #include <krb.h> */
-#endif /* 0 */
-
 #include <afs/stds.h>
 #include <krb5.h>
 
@@ -89,6 +97,13 @@ u_long ntohl(u_long x)
 
 #include "aklog.h"
 #include "linked_list.h"
+
+#ifdef HAVE_KRB5_CREDS_KEYBLOCK
+#define USING_MIT 1
+#endif
+#ifdef HAVE_KRB5_CREDS_SESSION
+#define USING_HEIMDAL 1
+#endif
 
 #define AFSKEY "afs"
 #define AFSINST ""
@@ -184,6 +199,41 @@ static int get_user_realm(krb5_context, char *);
 #error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
 #endif
 
+#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART)
+krb5_error_code
+krb5_encrypt_tkt_part(krb5_context context,
+		      const krb5_keyblock *key,
+		      krb5_ticket *ticket)
+{
+    krb5_data *data = 0;
+    int code;
+    size_t enclen;
+    
+    if ((code = encode_krb5_enc_tkt_part(ticket->enc_part2, &data)))
+	goto Done;
+    if ((code = krb5_c_encrypt_length(context, key->enctype,
+				      data->length, &enclen)))
+	goto Done;
+    ticket->enc_part.ciphertext.length = enclen;
+    if (!(ticket->enc_part.ciphertext.data = malloc(enclen))) {
+	code = ENOMEM;
+	goto Done;
+    }
+    if ((code = krb5_c_encrypt(context, key, KRB5_KEYUSAGE_KDC_REP_TICKET,
+			       0, data, &ticket->enc_part))) {
+	free(ticket->enc_part.ciphertext.data);
+	ticket->enc_part.ciphertext.data = 0;
+    }
+Done:
+    if (data) {
+	if (data->data)
+	    free(data->data);
+	free(data);
+    }
+    return code;
+}
+#endif
+
 #if defined(HAVE_KRB5_CREDS_KEYBLOCK)
 
 #define get_cred_keydata(c) c->keyblock.contents
@@ -203,9 +253,53 @@ static int get_user_realm(krb5_context, char *);
 #if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define krb5_524_convert_creds krb524_convert_creds_kdc
 #elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
-#error "You must have one of krb5_524_convert_creds or krb524_convert_creds_kdc available"
+#define HAVE_NO_KRB5_524
 #endif
 
+#if USING_HEIMDAL
+#define deref_keyblock_enctype(kb)		\
+    ((kb)->keytype)
+
+#define deref_entry_keyblock(entry)		\
+    entry->keyblock
+
+#define deref_session_key(creds)		\
+    creds->session
+
+#define deref_enc_tkt_addrs(tkt)		\
+    tkt->caddr
+
+#define deref_enc_length(enc)			\
+    ((enc)->cipher.length)
+
+#define deref_enc_data(enc)			\
+    ((enc)->cipher.data)
+
+#define krb5_free_keytab_entry_contents krb5_kt_free_entry
+
+#else
+#define deref_keyblock_enctype(kb)		\
+    ((kb)->enctype)
+
+#define deref_entry_keyblock(entry)		\
+    entry->key
+
+#define deref_session_key(creds)		\
+    creds->keyblock
+
+#define deref_enc_tkt_addrs(tkt)		\
+    tkt->caddrs
+
+#define deref_enc_length(enc)			\
+    ((enc)->ciphertext.length)
+
+#define deref_enc_data(enc)			\
+    ((enc)->ciphertext.data)
+
+#endif
+
+#define deref_entry_enctype(entry)			\
+    deref_keyblock_enctype(&deref_entry_keyblock(entry))
 #endif /* WINDOWS */
 
 /*
@@ -223,10 +317,12 @@ static int noauth = FALSE;	/* If true, don't try to get tokens */
 static int zsubs = FALSE;	/* Are we keeping track of zephyr subs? */
 static int hosts = FALSE;	/* Are we keeping track of hosts? */
 static int noprdb = FALSE;	/* Skip resolving name to id? */
-static int linked = FALSE;  /* try for both AFS nodes */
-static int afssetpag = FALSE; /* setpag for AFS */
+static int linked = FALSE;      /* try for both AFS nodes */
+static int afssetpag = FALSE;   /* setpag for AFS */
 static int force = FALSE;	/* Bash identical tokens? */
 static int do524 = FALSE;	/* Should we do 524 instead of rxkad2b? */
+static char *keytab = NULL;     /* keytab for akimpersonate */
+static char *client = NULL;     /* client principal for akimpersonate */
 static linked_list zsublist;	/* List of zephyr subscriptions */
 static linked_list hostlist;	/* List of host addresses */
 static linked_list authedcells;	/* List of cells already logged to */
@@ -244,17 +340,6 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 	memcpy(new_cellinfo, cellinfo, sizeof(cellinfo_t));
     
     return ((char *)new_cellinfo);
-}
-
-
-static char *copy_string(char *string)    
-{
-    char *new_string;
-
-    if ((new_string = (char *)calloc(strlen(string) + 1, sizeof(char))))
-	(void) strcpy(new_string, string);
-
-    return (new_string);
 }
 
 
@@ -625,7 +710,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
 	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		    progname, cell_to_use);
-		com_err(progname, status, "while getting AFS tickets");
+		afs_com_err(progname, status, "while getting AFS tickets");
 	    return(AKLOG_KERBEROS);
 	}
 
@@ -669,6 +754,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		   get_cred_keylen(v5cred));
 	    atoken.ticketLen = v5cred->ticket.length;
 	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+#ifndef HAVE_NO_KRB5_524
 	} else {
     	    CREDENTIALS cred;
 
@@ -678,7 +764,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    status = krb5_524_convert_creds(context, v5cred, &cred);
 
 	    if (status) {
-		com_err(progname, status, "while converting tickets "
+		afs_com_err(progname, status, "while converting tickets "
 			"to Kerberos V4 format");
 		return(AKLOG_KERBEROS);
 	    }
@@ -703,6 +789,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    memcpy(&atoken.sessionKey, cred.session, 8);
 	    atoken.ticketLen = cred.ticket_st.length;
 	    memcpy(atoken.ticket, cred.ticket_st.dat, atoken.ticketLen);
+#endif /* HAVE_NO_KRB5_524 */
 	}
 	
 	if (!force &&
@@ -735,7 +822,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    if ((status = get_user_realm(context, realm_of_user))) {
 		fprintf(stderr, "%s: Couldn't determine realm of user:)",
 			progname);
-		com_err(progname, status, " while getting realm");
+		afs_com_err(progname, status, " while getting realm");
 		return(AKLOG_KERBEROS);
 	    }
 	    if (strcmp(realm_of_user, realm_of_cell)) {
@@ -812,7 +899,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		if ((status = pr_CreateUser(username, &id))) {
 		    fprintf(stderr, "%s: %s so unable to create remote PTS "
 			    "user %s in cell %s (status: %d).\n", progname,
-			    error_message(status), username, cell_to_use,
+			    afs_error_message(status), username, cell_to_use,
 			    status);
 		} else {
 		    printf("created cross-cell entry for %s (Id %d) at %s\n",
@@ -1225,7 +1312,11 @@ static void usage(void)
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
 	    "[[-p | -path] pathname]\n",
 	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
-	    "    [-linked] [-524]\n");
+		"    [-linked]"
+#ifndef HAVE_NO_KRB5_524
+		" [-524]"
+#endif
+		"\n");
     fprintf(stderr, "    -d gives debugging information.\n");
     fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
     fprintf(stderr, "    pathname is the name of a directory to which ");
@@ -1237,7 +1328,9 @@ static void usage(void)
     fprintf(stderr, "    -force means replace identical tickets. \n");
     fprintf(stderr, "    -linked means if AFS node is linked, try both. \n");
     fprintf(stderr, "    -setpag set the AFS process authentication group.\n");
+#ifndef HAVE_NO_KRB5_524
     fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
+#endif
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
@@ -1310,8 +1403,10 @@ void aklog(int argc, char *argv[])
 		linked++;
 	else if (strcmp(argv[i], "-force") == 0)
 	    force++;
+#ifndef HAVE_NO_KRB5_524
 	else if (strcmp(argv[i], "-524") == 0)
 	    do524++;
+#endif
     else if (strcmp(argv[i], "-setpag") == 0)
 	    afssetpag++;
 	else if (((strcmp(argv[i], "-cell") == 0) ||
@@ -1319,6 +1414,18 @@ void aklog(int argc, char *argv[])
 	    if (++i < argc) {
 		cmode++;
 		strcpy(cell, argv[i]);
+	    }
+	    else
+		usage();
+	else if ((strcmp(argv[i], "-keytab") == 0))
+	    if (++i < argc) {
+		keytab = argv[i];
+	    }
+	    else
+		usage();
+	else if ((strcmp(argv[i], "-principal") == 0))
+	    if (++i < argc) {
+		client = argv[i];
 	    }
 	    else
 		usage();
@@ -1394,8 +1501,8 @@ void aklog(int argc, char *argv[])
 	else if (pmode) {
 	    /* Add this path to list of paths */
 	    if ((cur_node = ll_add_node(&paths, ll_tail))) {
-		char *new_path; 
-		if ((new_path = copy_string(path)))
+		char *new_path;
+		if ((new_path = strdup(path)))
 		    ll_add_data(cur_node, new_path);
 		else {
 		    fprintf(stderr, "%s: failure copying path name.\n",
@@ -1558,23 +1665,6 @@ void aklog(int argc, char *argv[])
     exit(status);
 }
 
-#ifndef HAVE_ADD_TO_ERROR_TABLE
-
-#define error_table error_table_compat
-#include <afs/error_table.h>
-#undef error_table
-
-#ifndef HAVE_ADD_ERROR_TABLE
-void add_error_table (const struct error_table *);
-#endif /* !HAVE_ADD_ERROR_TABLE */
-
-void
-add_to_error_table(struct et_list *new_table)
-{
-	add_error_table((struct error_table *) new_table->table);
-}
-#endif /* HAVE_ADD_TO_ERROR_TABLE */
-
 static int isdir(char *path, unsigned char *val)
 {
     struct stat statbuf;
@@ -1590,23 +1680,345 @@ static int isdir(char *path, unsigned char *val)
     }  
 }
 
+static krb5_error_code get_credv5_akimpersonate(krb5_context context,
+						char* keytab,
+						krb5_principal service_principal,
+						krb5_principal client_principal,
+						time_t starttime,
+						time_t endtime,
+						int *allowed_enctypes,
+						int *paddress,
+						krb5_creds** out_creds /* out */ )
+{
+#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET))
+    krb5_error_code code;
+    krb5_keytab kt = 0;
+    krb5_kt_cursor cursor[1];
+    krb5_keytab_entry entry[1];
+    krb5_ccache cc = 0;
+    krb5_creds *creds = 0;
+    krb5_enctype enctype;
+    krb5_kvno kvno;
+    krb5_keyblock session_key[1];
+#if USING_HEIMDAL
+    Ticket ticket_reply[1];
+    EncTicketPart enc_tkt_reply[1];
+    krb5_address address[30];
+    krb5_addresses faddr[1];
+    int temp_vno[1];
+    time_t temp_time[2];
+#else
+    krb5_ticket ticket_reply[1];
+    krb5_enc_tkt_part enc_tkt_reply[1];
+    krb5_address address[30], *faddr[30];
+#endif
+    krb5_data * temp;
+    int i;
+    static int any_enctype[] = {0};
+    *out_creds = 0;
+    if (!(creds = malloc(sizeof *creds))) {
+        code = ENOMEM;
+        goto cleanup;
+    }
+    if (!allowed_enctypes)
+        allowed_enctypes = any_enctype;
+
+    cc = 0;
+    enctype = 0; /* AKIMPERSONATE_IGNORE_ENCTYPE */
+    kvno = 0; /* AKIMPERSONATE_IGNORE_VNO */
+    memset((char*)creds, 0, sizeof *creds);
+    memset((char*)entry, 0, sizeof *entry);
+    memset((char*)session_key, 0, sizeof *session_key);
+    memset((char*)ticket_reply, 0, sizeof *ticket_reply);
+    memset((char*)enc_tkt_reply, 0, sizeof *enc_tkt_reply);
+    code = krb5_kt_resolve(context, keytab, &kt);
+    if (code) {
+        if (keytab)
+            com_err(progname, code, "while resolving keytab %s", keytab);
+        else
+            com_err(progname, code, "while resolving default keytab");
+        goto cleanup;
+    }
+
+    if (service_principal) {
+        for (i = 0; (enctype = allowed_enctypes[i]) || !i; ++i) {
+	    code = krb5_kt_get_entry(context,
+				     kt,
+				     service_principal,
+				     kvno,
+				     enctype,
+				     entry);
+	    if (!code) {
+		if (allowed_enctypes[i])
+		    deref_keyblock_enctype(session_key) = allowed_enctypes[i];
+		break;
+	    }
+        }
+        if (code) {
+	    com_err(progname, code,"while scanning keytab entries");
+	    goto cleanup;
+        }
+    } else {
+        krb5_keytab_entry new[1];
+        int best = -1;
+        memset(new, 0, sizeof *new);
+        if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
+            com_err(progname, code, "while starting keytab scan");
+            goto cleanup;
+        }
+        while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
+            for (i = 0;
+                    allowed_enctypes[i] && allowed_enctypes[i]
+		     != deref_entry_enctype(new); ++i)
+                ;
+            if ((!i || allowed_enctypes[i]) &&
+		(best < 0 || best > i)) {
+                krb5_free_keytab_entry_contents(context, entry);
+                *entry = *new;
+                memset(new, 0, sizeof *new);
+            } else krb5_free_keytab_entry_contents(context, new);
+        }
+        if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
+            com_err(progname, i, "while ending keytab scan");
+            code = i;
+            goto cleanup;
+        }
+        if (best < 0) {
+            com_err(progname, code, "while scanning keytab");
+            goto cleanup;
+        }
+        deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
+    }
+
+    /* Make Ticket */
+
+#if USING_HEIMDAL
+    if ((code = krb5_generate_random_keyblock(context,
+					      deref_keyblock_enctype(session_key), session_key))) {
+        com_err(progname, code, "while making session key");
+        goto cleanup;
+    }
+    enc_tkt_reply->flags.initial = 1;
+    enc_tkt_reply->transited.tr_type = DOMAIN_X500_COMPRESS;
+    enc_tkt_reply->cname = client_principal->name;
+    enc_tkt_reply->crealm = client_principal->realm;
+    enc_tkt_reply->key = *session_key;
+    {
+        static krb5_data empty_string;
+        enc_tkt_reply->transited.contents = empty_string;
+    }
+    enc_tkt_reply->authtime = starttime;
+    enc_tkt_reply->starttime = temp_time;
+    *enc_tkt_reply->starttime = starttime;
+#if 0
+    enc_tkt_reply->renew_till = temp_time + 1;
+    *enc_tkt_reply->renew_till = endtime;
+#endif
+    enc_tkt_reply->endtime = endtime;
+#else
+    if ((code = krb5_c_make_random_key(context,
+				       deref_keyblock_enctype(session_key), session_key))) {
+        com_err(progname, code, "while making session key");
+        goto cleanup;
+    }
+    enc_tkt_reply->magic = KV5M_ENC_TKT_PART;
+#define DATACAST        (unsigned char *)
+    enc_tkt_reply->flags |= TKT_FLG_INITIAL;
+    enc_tkt_reply->transited.tr_type = KRB5_DOMAIN_X500_COMPRESS;
+    enc_tkt_reply->session = session_key;
+    enc_tkt_reply->client = client_principal;
+    {
+        static krb5_data empty_string;
+        enc_tkt_reply->transited.tr_contents = empty_string;
+    }
+    enc_tkt_reply->times.authtime = starttime;
+    enc_tkt_reply->times.starttime = starttime; /* krb524init needs this */
+    enc_tkt_reply->times.endtime = endtime;
+#endif  /* USING_HEIMDAL */
+    /* NB:  We will discard address for now--ignoring caddr field               
+       in any case.  MIT branch does what it always did. */
+
+    if (paddress && *paddress) {
+        deref_enc_tkt_addrs(enc_tkt_reply) = faddr;
+#if USING_HEIMDAL
+        faddr->len = 0;
+        faddr->val = address;
+#endif
+        for (i = 0; paddress[i]; ++i) {
+#if USING_HEIMDAL
+            address[i].addr_type = KRB5_ADDRESS_INET;
+            address[i].address.data = (void*)(paddress+i);
+            address[i].address.length = sizeof(paddress[i]);
+#else
+#if !USING_SSL
+            address[i].magic = KV5M_ADDRESS;
+            address[i].addrtype = ADDRTYPE_INET;
+#else
+            address[i].addrtype = AF_INET;
+#endif
+            address[i].contents = (void*)(paddress+i);
+            address[i].length = sizeof(int);
+            faddr[i] = address+i;
+#endif
+        }
+#if USING_HEIMDAL
+        faddr->len = i;
+#else
+        faddr[i] = 0;
+#endif
+    }
+
+#if USING_HEIMDAL
+    ticket_reply->sname = service_principal->name;
+    ticket_reply->realm = service_principal->realm;
+
+    { /* crypto block */
+        krb5_crypto crypto = 0;
+        unsigned char *buf = 0;
+        size_t buf_size, buf_len;
+        char *what;
+
+        ASN1_MALLOC_ENCODE(EncTicketPart, buf, buf_size,
+			   enc_tkt_reply, &buf_len, code);
+        if(code) {
+            com_err(progname, code, "while encoding ticket");
+            goto cleanup;
+        }
+
+        if(buf_len != buf_size) {
+            com_err(progname, code,
+		    "%d != %d while encoding ticket (internal ASN.1 encoder error",
+		    buf_len, buf_size);
+            goto cleanup;
+        }
+        what = "krb5_crypto_init";
+        code = krb5_crypto_init(context,
+				&deref_entry_keyblock(entry),
+				deref_entry_enctype(entry),
+				&crypto);
+        if(!code) {
+            what = "krb5_encrypt";
+            code = krb5_encrypt_EncryptedData(context, crypto, KRB5_KU_TICKET,
+					      buf, buf_len, entry->vno, &(ticket_reply->enc_part));
+        }
+        if (buf) free(buf);
+        if (crypto) krb5_crypto_destroy(context, crypto);
+        if(code) {
+            com_err(progname, code, "while %s", what);
+            goto cleanup;
+        }
+    } /* crypto block */
+    ticket_reply->enc_part.etype = deref_entry_enctype(entry);
+    ticket_reply->enc_part.kvno = temp_vno;
+    *ticket_reply->enc_part.kvno = entry->vno;
+    ticket_reply->tkt_vno = 5;
+#else
+    ticket_reply->server = service_principal;
+    ticket_reply->enc_part2 = enc_tkt_reply;
+    if ((code = krb5_encrypt_tkt_part(context, &deref_entry_keyblock(entry), ticket_reply))) {
+        com_err(progname, code, "while making ticket");
+        goto cleanup;
+    }
+    ticket_reply->enc_part.kvno = entry->vno;
+#endif
+
+    /* Construct Creds */
+
+    if ((code = krb5_copy_principal(context, service_principal,
+				    &creds->server))) {
+        com_err(progname, code, "while copying service principal");
+        goto cleanup;
+    }
+    if ((code = krb5_copy_principal(context, client_principal,
+				    &creds->client))) {
+        com_err(progname, code, "while copying client principal");
+        goto cleanup;
+    }
+    if ((code = krb5_copy_keyblock_contents(context, session_key,
+					    &deref_session_key(creds)))) {
+        com_err(progname, code, "while copying session key");
+        goto cleanup;
+    }
+
+#if USING_HEIMDAL
+    creds->times.authtime = enc_tkt_reply->authtime;
+    creds->times.starttime = *(enc_tkt_reply->starttime);
+    creds->times.endtime = enc_tkt_reply->endtime;
+    creds->times.renew_till = 0; /* *(enc_tkt_reply->renew_till) */
+    creds->flags.b = enc_tkt_reply->flags;
+#else
+    creds->times = enc_tkt_reply->times;
+    creds->ticket_flags = enc_tkt_reply->flags;
+#endif
+    if (!deref_enc_tkt_addrs(enc_tkt_reply))
+        ;
+    else if ((code = krb5_copy_addresses(context,
+					 deref_enc_tkt_addrs(enc_tkt_reply), &creds->addresses))) {
+        com_err(progname, code, "while copying addresses");
+        goto cleanup;
+    }
+
+#if USING_HEIMDAL
+    {
+	size_t creds_tkt_len;
+	ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length,
+			   ticket_reply, &creds_tkt_len, code);
+	if(code) {
+	    com_err(progname, code, "while encoding ticket");
+	    goto cleanup;
+	}
+    }
+#else
+    if ((code = encode_krb5_ticket(ticket_reply, &temp))) {
+	com_err(progname, code, "while encoding ticket");
+	goto cleanup;
+    }
+    creds->ticket = *temp;
+    free(temp);
+#endif
+    /* return creds */
+    *out_creds = creds;
+    creds = 0;
+cleanup:
+    if (deref_enc_data(&ticket_reply->enc_part))
+        free(deref_enc_data(&ticket_reply->enc_part));
+    krb5_free_keytab_entry_contents(context, entry);
+    if (client_principal)
+        krb5_free_principal(context, client_principal);
+    if (service_principal)
+        krb5_free_principal(context, service_principal);
+    if (cc)
+        krb5_cc_close(context, cc);
+    if (kt)
+        krb5_kt_close(context, kt);
+    if (creds) krb5_free_creds(context, creds);
+    krb5_free_keyblock_contents(context, session_key);
+out:
+    return code;
+#else
+    return -1;
+#endif
+}
+
+
 static krb5_error_code get_credv5(krb5_context context, 
-			char *name, char *inst, char *realm,
-			krb5_creds **creds)
+				  char *name, char *inst, char *realm,
+				  krb5_creds **creds)
 {
     krb5_creds increds;
     krb5_error_code r;
     static krb5_principal client_principal = 0;
-
+    
     memset((char *)&increds, 0, sizeof(increds));
 /* ANL - instance may be ptr to a null string. Pass null then */
     if ((r = krb5_build_principal(context, &increds.server,
-                     strlen(realm), realm,
-                     name,
-           (inst && strlen(inst)) ? inst : (void *) NULL,
-                     (void *) NULL))) {
+				  strlen(realm), realm,
+				  name,
+				  (inst && strlen(inst)) ? inst : (void *) NULL,
+				  (void *) NULL))) {
         return r;
     }
+    
 
     if (!_krb425_ccache) {
         r = krb5_cc_default(context, &_krb425_ccache);
@@ -1614,18 +2026,36 @@ static krb5_error_code get_credv5(krb5_context context,
 	    return r;
     }
     if (!client_principal) {
-        r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+	if (client) {
+	    r = krb5_parse_name(context, client,  &client_principal);
+	} else {
+	    r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+	}
 	if (r)
 	    return r;
     }
-
+    
     increds.client = client_principal;
     increds.times.endtime = 0;
-	/* Ask for DES since that is what V4 understands */
+    /* Ask for DES since that is what V4 understands */
     get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
+    
+    if (keytab) {
+	int allowed_enctypes[] = {
+	    ENCTYPE_DES_CBC_CRC, 0
+	};
 
-    r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
-
+	r = get_credv5_akimpersonate(context,
+				     keytab,
+				     increds.server,
+				     increds.client,
+				     300, ((~0U)>>1),
+				     allowed_enctypes,
+				     0 /* paddress */,
+				     creds /* out */);
+    } else {
+	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+    }    
     return r;
 }
 
@@ -1634,16 +2064,24 @@ static int get_user_realm(krb5_context context, char *realm)
 {
     static krb5_principal client_principal = 0;
     int i;
+    krb5_error_code r = 0;
 
     if (!_krb425_ccache)
         krb5_cc_default(context, &_krb425_ccache);
-    if (!client_principal)
-        krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+    if (!client_principal) {
+	if (client) {
+	    r = krb5_parse_name(context, client,  &client_principal);
+	} else {
+	    r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+	}
+	if (r)
+	    return r;
+    }
 
     i = realm_len(context, client_principal);
     if (i > REALM_SZ-1) i = REALM_SZ-1;
     strncpy(realm,realm_data(context, client_principal), i);
     realm[i] = 0;
 
-    return(0);
+    return(r);
 }

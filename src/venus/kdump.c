@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.6 2006/08/02 19:07:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.7 2007/03/20 19:24:12 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -2515,15 +2515,19 @@ print_nfsclient(kmem, ep, ptr, pnt)
      struct nfsclientpag *ep, *ptr;
 {
     char sysname[100];
+	int count;
 
-    if (ep->sysname) {
-	kread(kmem, (off_t) ep->sysname, sysname, (KDUMP_SIZE_T) 30);
-	Sum_nfssysnames += MAXSYSNAME;
-    }
     if (pnt)
-	printf("%lx: uid=%d, host=%x, pag=%x, @sys=%s, lastt=%d, ref=%d\n",
+	printf("%lx: uid=%d, host=%x, pag=%x, lastt=%d, ref=%d count=%d\n",
 	       ptr, ep->uid, ep->host, ep->pag,
-	       (ep->sysname ? sysname : "nil"), ep->lastcall, ep->refCount);
+	       ep->lastcall, ep->refCount, ep->sysnamecount);
+
+	for(count = 0; count < ep->sysnamecount; count++){
+		kread(kmem, (off_t) ep->sysname[count], sysname, (KDUMP_SIZE_T) 30);
+		printf("   %lx: @sys[%d]=%s\n",
+			ep->sysname[count], count, sysname);
+		Sum_nfssysnames += MAXSYSNAME;
+	}
 }
 
 

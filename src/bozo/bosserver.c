@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.10 2006/12/21 23:15:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.11 2007/05/14 19:27:49 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -1100,12 +1100,11 @@ bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
 	    fprintf(bozo_logFile, "%s ", tdate);
 	    fprintf(bozo_logFile, a, b, c, d, e, f);
 	    fflush(bozo_logFile);
+	    /* close so rm BosLog works */
+	    fclose(bozo_logFile);
 	} else {
 	    printf("%s ", tdate);
 	    printf(a, b, c, d, e, f);
 	}
-
-	/* close so rm BosLog works */
-	fclose(bozo_logFile);
     }
 }

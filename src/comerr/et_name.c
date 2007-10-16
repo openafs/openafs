@@ -9,7 +9,7 @@
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/et_name.c,v 1.5 2003/07/15 23:14:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/et_name.c,v 1.5.2.1 2007/04/10 18:43:42 shadow Exp $");
 
 #include "error_table.h"
 #include "mit-sipb-cr.h"
@@ -26,7 +26,7 @@ static const char char_set[] =
 static char buf[6];
 
 const char *
-error_table_name(afs_int32 num)
+afs_error_table_name(afs_int32 num)
 {
     int ch;
     int i;

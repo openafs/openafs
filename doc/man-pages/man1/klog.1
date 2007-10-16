@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH KLOG 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH KLOG 1 "OpenAFS" "27/Jul/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -227,8 +227,12 @@ token per cell per connection to the client machine. If the user's
 credential structure already contains a token for the requested cell, the
 token resulting from this command replaces it.
 .PP
-Sites that employ standard Kerberos authentication instead of the AFS
-Authentication Server must use the Kerberos version of this command,
+Sites that employ Kerberos authentication instead of the AFS
+Authentication Server should normally use the combination of \fBkinit\fR and
+\fBaklog\fR instead of \fBklog\fR.
+.PP
+Sites using Kerberos v4 authentication (perhaps with the AFS
+Authentication Server) must use the Kerberos version of this command,
 \fBklog.krb\fR, on all client machines. It automatically places the issuer's
 Kerberos tickets in the file named by the KRBTKFILE environment variable,
 which the \fBpagsh.krb\fR command defines automatically as \fI/tmp/tktp\fIX\fR\fR

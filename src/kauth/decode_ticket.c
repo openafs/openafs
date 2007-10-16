@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/decode_ticket.c,v 1.6 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/decode_ticket.c,v 1.6.2.1 2007/04/10 18:43:43 shadow Exp $");
 
 #include <des.h>
 #include <afs/com_err.h>
@@ -45,7 +45,7 @@ main(int argc, char *argv[])
     if (ka_ReadBytes(argv[1], key, sizeof(key)) != 8)
 	printf("Key must be 8 bytes long\n");
     if (!des_check_key_parity(key) || des_is_weak_key(key)) {
-	com_err(whoami, KABADKEY, "server's key for decoding ticket is bad");
+	afs_com_err(whoami, KABADKEY, "server's key for decoding ticket is bad");
 	exit(1);
     }
     ticketLen = ka_ReadBytes(argv[2], ticket, sizeof(ticket));
@@ -55,14 +55,14 @@ main(int argc, char *argv[])
 	tkt_DecodeTicket(ticket, ticketLen, key, client.name, client.instance,
 			 client.cell, &sessionkey, &host, &start, &end);
     if (code) {
-	com_err(whoami, code, "decoding ticket");
+	afs_com_err(whoami, code, "decoding ticket");
 	if (code = tkt_CheckTimes(start, end, time(0)) <= 0)
-	    com_err(whoami, 0, "because of start or end times");
+	    afs_com_err(whoami, 0, "because of start or end times");
 	exit(1);
     }
 
     if (!des_check_key_parity(&sessionkey) || des_is_weak_key(&sessionkey)) {
-	com_err(whoami, KABADKEY, "checking ticket's session key");
+	afs_com_err(whoami, KABADKEY, "checking ticket's session key");
 	exit(1);
     }
 

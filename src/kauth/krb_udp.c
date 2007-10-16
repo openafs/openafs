@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23 2003/12/07 22:49:27 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23.2.1 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -735,12 +735,12 @@ process_udp_auth(ksoc, pkt)
     if (code) {
 	if (code == KANOENT) {
 	    code = KERB_ERR_PRINCIPAL_UNKNOWN;
-	    err_packet(ksoc, pkt, code, (char *)error_message(code));
+	    err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
 	} else if (code == KAPWEXPIRED) {
 	    code = KERB_ERR_NAME_EXP;
 	    err_packet(ksoc, pkt, code, "password has expired");
 	} else
-	    err_packet(ksoc, pkt, code, (char *)error_message(code));
+	    err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
     }
     return 0;
 }
@@ -784,7 +784,7 @@ process_udp_appl(ksoc, pkt)
     if (code) {
 	if (code == KANOENT)
 	    code = KERB_ERR_PRINCIPAL_UNKNOWN;
-	err_packet(ksoc, pkt, code, (char *)error_message(code));
+	err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
 	return -1;
     }
     return 0;

@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.7 2006/03/09 06:41:50 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.8 2007/06/06 17:23:24 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -33,6 +33,7 @@ RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.7 2006/03/09 06:41:50 shadow
 #include <sys/pseg.h>
 #include <sys/core.h>
 #pragma alloca
+int setlim(int limcon, uchar_t hard, int limit);
 #endif
 #ifdef AFS_SGI64_ENV
 extern char *getenv();

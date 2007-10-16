@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.15 2006/07/31 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.19 2007/07/19 18:52:40 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -57,7 +57,12 @@ RCSID
 #include <rx/rxkad.h>
 #include "volser.h"
 #include "volint.h"
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include "dump.h"
 #include "lockdata.h"
+
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -315,6 +320,9 @@ WriteData(struct rx_call *call, char *rock)
     long blksize;
     afs_int32 error, code;
     int ufdIsOpen = 0;
+    afs_hyper_t filesize, currOffset; 
+    afs_uint32 buffer;		
+    afs_uint32 got; 		
 
     error = 0;
 
@@ -335,6 +343,20 @@ WriteData(struct rx_call *call, char *rock)
 	    goto wfail;
 	}
     }
+    /* test if we have a valid dump */
+    hset64(filesize, 0, 0);
+    USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
+    hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
+    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+    USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
+    if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
+	fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
+        error = VOLSERBADOP;
+        goto wfail;
+    }
+    hset64(filesize, 0, 0);
+    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+    /* rewind, we are done */
     code = SendFile(ufd, call, blksize);
     if (code) {
 	error = code;
@@ -2782,8 +2804,8 @@ DumpVolume(as)
      register struct cmd_syndesc *as;
 
 {
-    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i;
-    char filename[NameLen];
+    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i, flags;
+    char filename[MAXPATHLEN];
     struct nvldbentry entry;
 
     rx_SetRxDeadTime(60 * 10);
@@ -2842,14 +2864,20 @@ DumpVolume(as)
 	strcpy(filename, "");
     }
 
+    flags = as->parms[6].items ? VOLDUMPV2_OMITDIRS : 0;
+retry_dump:
     if (as->parms[5].items) {
 	code =
 	    UV_DumpClonedVolume(avolid, aserver, apart, fromdate,
-				DumpFunction, filename);
+				DumpFunction, filename, flags);
     } else {
 	code =
 	    UV_DumpVolume(avolid, aserver, apart, fromdate, DumpFunction,
-			  filename);
+			  filename, flags);
+    }
+    if ((code == RXGEN_OPCODE) && (as->parms[6].items)) {
+	flags &= ~VOLDUMPV2_OMITDIRS;
+	goto retry_dump;
     }
     if (code) {
 	PrintDiagnostics("dump", code);
@@ -2883,7 +2911,7 @@ RestoreVolume(as)
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
     char prompt;
-    char afilename[NameLen], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
+    char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
 
@@ -4164,7 +4192,7 @@ DeleteEntry(as)
 		fflush(STDOUT);
 		continue;
 	    }
-	    vcode = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, RWVOL);
+	    vcode = ubik_VL_DeleteEntry(cstruct, 0, avolid, RWVOL);
 	    if (vcode) {
 		fprintf(STDERR, "Could not delete entry for volume %s\n",
 			itp->data);
@@ -4277,7 +4305,7 @@ DeleteEntry(as)
 
 	/* Only matches the RW volume name */
 	avolid = vllist->volumeId[RWVOL];
-	vcode = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, RWVOL);
+	vcode = ubik_VL_DeleteEntry(cstruct, 0, avolid, RWVOL);
 	if (vcode) {
 	    fprintf(STDOUT, "Could not delete VDLB entry for  %s\n",
 		    vllist->name);
@@ -4912,8 +4940,9 @@ UnlockVLDB(as)
 	vllist = &arrayEntries.nbulkentries_val[j];
 	volid = vllist->volumeId[RWVOL];
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, -1,
-		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, -1,
+				LOCKREL_OPCODE | LOCKREL_AFSID | 
+				LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR, "Could not unlock entry for volume %s\n",
 		    vllist->name);
@@ -5167,8 +5196,8 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_val = 0;
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
-		    ubik_Call(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			      &vlcb, &m_nentries, &m_addrs);
+		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
+				      &vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5338,7 +5367,7 @@ LockEntry(as)
 		    as->parms[0].items->data);
 	exit(1);
     }
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, avolid, -1, VLOP_DELETE);
+    vcode = ubik_VL_SetLock(cstruct, 0, avolid, -1, VLOP_DELETE);
     if (vcode) {
 	fprintf(STDERR, "Could not lock VLDB entry for volume %s\n",
 		as->parms[0].items->data);
@@ -5466,7 +5495,7 @@ ConvertRO(as)
     }
 
     vcode =
-	ubik_Call(VL_SetLock, cstruct, 0, entry.volumeId[RWVOL], RWVOL,
+	ubik_VL_SetLock(cstruct, 0, entry.volumeId[RWVOL], RWVOL,
 		  VLOP_MOVE);
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
@@ -5797,6 +5826,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition");
     cmd_AddParm(ts, "-clone", CMD_FLAG, CMD_OPTIONAL,
 		"dump a clone of the volume");
+    cmd_AddParm(ts, "-omitdirs", CMD_FLAG, CMD_OPTIONAL,
+		"omit unchanged directories from an incremental dump");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("restore", RestoreVolume, 0, "restore a volume");

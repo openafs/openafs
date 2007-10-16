@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17.2.1 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17.2.2 2007/06/14 19:05:03 jaltman Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -445,12 +445,12 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    if (!(sfds = IOMGR_AllocFDSet())) {
 		(osi_Msg "rx failed to alloc fd_set: ");
 		perror("rx_sendmsg");
-		return 3;
+		return -1;
 	    }
 	    FD_SET(socket, sfds);
 	}
 #ifdef AFS_NT40_ENV
-	if (errno)
+	if (WSAGetLastError())
 #elif defined(AFS_LINUX22_ENV)
 	/* linux unfortunately returns ECONNREFUSED if the target port
 	 * is no longer in use */
@@ -463,7 +463,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	{
 	    (osi_Msg "rx failed to send packet: ");
 	    perror("rx_sendmsg");
-	    return 3;
+	    return -1;
 	}
 	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {
 	    if (err >= 0 || errno != EINTR)

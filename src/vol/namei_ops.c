@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.10 2006/09/20 05:52:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.13 2007/09/11 15:40:26 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -604,6 +604,8 @@ namei_icreate(IHandle_t * lh, char *part, int p1, int p2, int p3, int p4)
 
     if (p2 == -1 && p3 == VI_LINKTABLE) {
 	/* hack at tmp to setup for set link count call. */
+	memset((void *)&tfd, 0, sizeof(FdHandle_t));	/* minimalistic still, but a little cleaner */
+	tfd.fd_ih = &tmp;
 	tfd.fd_fd = fd;
 	code = namei_SetLinkCount(&tfd, (Inode) 0, 1, 0);
     }
@@ -1144,6 +1146,8 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     int ninodes;
     struct afs_stat status;
 
+    *forcep = 0; /* no need to salvage until further notice */
+
     if (resultFile) {
 	fp = afs_fopen(resultFile, "w");
 	if (!fp) {
@@ -1443,6 +1447,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
     char fpath[512];
     struct afs_stat status;
     int parm, tag;
+    lb64_string_t check;
 
     (void)strcpy(fpath, dpath);
     (void)strcat(fpath, "/");
@@ -1455,6 +1460,10 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
     info->byteCount = status.st_size;
     info->inodeNumber = (Inode) flipbase64_to_int64(name);
 
+    int64_to_flipbase64(check, info->inodeNumber);
+    if (strcmp(name, check))
+	return -1;
+    
     GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
 	/* p1 - vid, p2 - -1, p3 - type, p4 - rwvid */

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.10.2.2 2005/10/25 06:35:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.10.2.3 2007/07/16 00:00:38 jaltman Exp $");
 
 #include "vosutils.h"
 #include "vsprocs.h"
@@ -108,7 +108,7 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
 
     do {
 	if (cellHandle->vos_new) {
-	    tst = ubik_Call(VL_CreateEntryN, cellHandle->vos, 0, entryp);
+	    tst = ubik_VL_CreateEntryN(cellHandle->vos, 0, entryp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
 		    cellHandle->vos_new = 0;
@@ -118,7 +118,7 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
 	    }
 	} else {
 	    if (NewVLDB_to_OldVLDB(entryp, &oentry, &tst)) {
-		tst = ubik_Call(VL_CreateEntry, cellHandle->vos, 0, &oentry);
+		tst = ubik_VL_CreateEntry(cellHandle->vos, 0, &oentry);
 		if (!tst) {
 		    rc = 1;
 		}
@@ -144,7 +144,7 @@ aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
     do {
 	if (cellHandle->vos_new) {
 	    tst =
-		ubik_Call(VL_GetEntryByIDN, cellHandle->vos, 0, volid,
+		ubik_VL_GetEntryByIDN(cellHandle->vos, 0, volid,
 			  voltype, entryp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
@@ -155,7 +155,7 @@ aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
 	    }
 	} else {
 	    tst =
-		ubik_Call(VL_GetEntryByID, cellHandle->vos, 0, volid, voltype,
+		ubik_VL_GetEntryByID(cellHandle->vos, 0, volid, voltype,
 			  &oentry);
 	    if (tst == 0) {
 		rc = OldVLDB_to_NewVLDB(&oentry, entryp, &tst);
@@ -181,7 +181,7 @@ aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
     do {
 	if (cellHandle->vos_new) {
 	    tst =
-		ubik_Call(VL_GetEntryByNameN, cellHandle->vos, 0, namep,
+		ubik_VL_GetEntryByNameN(cellHandle->vos, 0, namep,
 			  entryp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
@@ -192,7 +192,7 @@ aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
 	    }
 	} else {
 	    tst =
-		ubik_Call(VL_GetEntryByNameO, cellHandle->vos, 0, namep,
+		ubik_VL_GetEntryByNameO(cellHandle->vos, 0, namep,
 			  &oentry);
 	    if (tst == 0) {
 		rc = OldVLDB_to_NewVLDB(&oentry, entryp, &tst);
@@ -219,7 +219,7 @@ VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_int32 volid,
     do {
 	if (cellHandle->vos_new) {
 	    tst =
-		ubik_Call(VL_ReplaceEntryN, cellHandle->vos, 0, volid,
+		ubik_VL_ReplaceEntryN(cellHandle->vos, 0, volid,
 			  voltype, entryp, releasetype);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
@@ -231,7 +231,7 @@ VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_int32 volid,
 	} else {
 	    if (NewVLDB_to_OldVLDB(entryp, &oentry, &tst)) {
 		tst =
-		    ubik_Call(VL_ReplaceEntry, cellHandle->vos, 0, volid,
+		    ubik_VL_ReplaceEntry(cellHandle->vos, 0, volid,
 			      voltype, &oentry, releasetype);
 		if (!tst) {
 		    rc = 1;
@@ -259,7 +259,7 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
     do {
 	if (cellHandle->vos_new) {
 	    tst =
-		ubik_Call(VL_ListAttributesN, cellHandle->vos, 0, attrp,
+		ubik_VL_ListAttributesN(cellHandle->vos, 0, attrp,
 			  entriesp, blkentriesp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
@@ -271,8 +271,8 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 	} else {
 	    memset((void *)&arrayEntries, 0, sizeof(arrayEntries));
 	    tst =
-		ubik_Call(VL_ListAttributes, cellHandle->vos, 0, attrp,
-			  entriesp, arrayEntries);
+		ubik_VL_ListAttributes(cellHandle->vos, 0, attrp,
+			  entriesp, &arrayEntries);
 	    if (tst == 0) {
 		blkentriesp->nbulkentries_val =
 		    (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
@@ -312,7 +312,7 @@ VLDB_ListAttributesN2(afs_cell_handle_p cellHandle,
     afs_status_t tst = 0;
 
     tst =
-	ubik_Call(VL_ListAttributesN2, cellHandle->vos, 0, attrp,
+	ubik_VL_ListAttributesN2(cellHandle->vos, 0, attrp,
 		  (name ? name : ""), thisindex, nentriesp, blkentriesp,
 		  nextindexp);
     if (!tst) {
@@ -351,7 +351,7 @@ VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
     memset(&addrs, 0, sizeof(addrs));
     memset(&uuid, 0, sizeof(uuid));
     tst =
-	ubik_Call(VL_GetAddrsU, cellHandle->vos, 0, &attrs, &uuid, &unique,
+	ubik_VL_GetAddrsU(cellHandle->vos, 0, &attrs, &uuid, &unique,
 		  &nentries, &addrs);
     if (tst) {
 	*equal = 0;
@@ -517,7 +517,8 @@ vsu_ExtractName(char *rname, char *name)
     char sname[32];
     size_t total;
 
-    strcpy(sname, name);
+    strncpy(sname, name, 32);
+    sname[31] ='\0';
     total = strlen(sname);
     if ((total > 9) && (!strcmp(&sname[total - 9], ".readonly"))) {
 	/*discard the last 8 chars */

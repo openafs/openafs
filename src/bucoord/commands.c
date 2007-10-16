@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.7 2007/01/05 03:34:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.9 2007/06/23 15:27:22 shadow Exp $");
 
 #include <afs/stds.h>
 #if defined(AFS_LINUX24_ENV)
@@ -119,7 +119,7 @@ getSPEntries(server, partition, serverlist, ss, ps)
     if (!(*ss)) {
 	*ss = (struct serversort *)malloc(sizeof(struct serversort));
 	if (!(*ss)) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
@@ -140,7 +140,7 @@ getSPEntries(server, partition, serverlist, ss, ps)
     if (!(*ps)) {
 	*ps = (struct partitionsort *)malloc(sizeof(struct partitionsort));
 	if (!(*ps)) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    free(*ss);
 	    *ps = 0;
 	    *ss = 0;
@@ -287,7 +287,7 @@ EvalVolumeSet2(aconfig, avs, avols, uclient)
 				 entries[e].serverPartition[ei], &servers,
 				 &ss, &ps);
 		if (tcode) {
-		    com_err(whoami, tcode, "");
+		    afs_com_err(whoami, tcode, "");
 		    ERROR(tcode);
 		}
 
@@ -319,14 +319,14 @@ EvalVolumeSet2(aconfig, avs, avols, uclient)
 		    tvd = (struct bc_volumeDump *)
 			malloc(sizeof(struct bc_volumeDump));
 		    if (!tvd) {
-			com_err(whoami, BC_NOMEM, "");
+			afs_com_err(whoami, BC_NOMEM, "");
 			ERROR(BC_NOMEM);
 		    }
 		    memset(tvd, 0, sizeof(*tvd));
 
 		    tvd->name = (char *)malloc(strlen(entries[e].name) + 10);
 		    if (!(tvd->name)) {
-			com_err(whoami, BC_NOMEM, "");
+			afs_com_err(whoami, BC_NOMEM, "");
 			free(tvd);
 			ERROR(BC_NOMEM);
 		    }
@@ -489,7 +489,7 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		    sprintf(patt, "^%s$", tve->name);
 		    errm = (char *)re_comp(patt);
 		    if (errm) {
-			com_err(whoami, 0,
+			afs_com_err(whoami, 0,
 				"Can't compile regular expression '%s': %s",
 				patt, errm);
 			return (-1);
@@ -543,7 +543,7 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		}
 
 		if (code < 0)
-		    com_err(whoami, 0, "Internal error in regex package");
+		    afs_com_err(whoami, 0, "Internal error in regex package");
 	    }			/*s */
 
 	    /* If found a match, then create a new volume dump entry */
@@ -554,7 +554,7 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 				 entry.serverPartition[foundentry], &servers,
 				 &ss, &ps);
 		if (code) {
-		    com_err(whoami, code, "");
+		    afs_com_err(whoami, code, "");
 		    return (code);
 		}
 
@@ -562,14 +562,14 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		tvd = (struct bc_volumeDump *)
 		    malloc(sizeof(struct bc_volumeDump));
 		if (!tvd) {
-		    com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, "");
 		    return (BC_NOMEM);
 		}
 		memset(tvd, 0, sizeof(*tvd));
 
 		tvd->name = (char *)malloc(strlen(entry.name) + 10);
 		if (!(tvd->name)) {
-		    com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, "");
 		    free(tvd);
 		    return (BC_NOMEM);
 		}
@@ -712,7 +712,7 @@ bc_CopyString(astring)
     tlen = strlen(astring);
     tp = (char *)malloc(tlen + 1);	/* don't forget the terminating null */
     if (!tp) {
-	com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, "");
 	return (tp);
     }
     strcpy(tp, astring);
@@ -740,13 +740,13 @@ concatParams(itemPtr)
     }
 
     if (length == 0) {		/* no string (0 length) */
-	com_err(whoami, 0, "Can't have zero length date and time string");
+	afs_com_err(whoami, 0, "Can't have zero length date and time string");
 	return (NULL);
     }
 
     string = (char *)malloc(length);	/* allocate the string */
     if (!string) {
-	com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, "");
 	return (NULL);
     }
     string[0] = 0;
@@ -809,10 +809,10 @@ getPortOffset(port)
     portOffset = bc_SafeATOI(port);
 
     if (portOffset < 0) {
-	com_err(whoami, 0, "Can't decode port offset '%s'", port);
+	afs_com_err(whoami, 0, "Can't decode port offset '%s'", port);
 	return (-1);
     } else if (portOffset > BC_MAXPORTOFFSET) {
-	com_err(whoami, 0, "%u exceeds max port offset %u", portOffset,
+	afs_com_err(whoami, 0, "%u exceeds max port offset %u", portOffset,
 		BC_MAXPORTOFFSET);
 	return (-1);
     }
@@ -838,7 +838,7 @@ bc_GetTapeStatusCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -861,7 +861,7 @@ bc_GetTapeStatusCmd(as, arock)
 	if (code) {
 	    if (code == TC_NOTASKS)
 		break;
-	    com_err(whoami, code, "; Can't get status from butc");
+	    afs_com_err(whoami, code, "; Can't get status from butc");
 	    return (-1);
 	}
 	if ((flags & TSK_STAT_NOTFOUND))
@@ -897,7 +897,7 @@ bc_WaitForNoJobs()
 
     extern dlqlinkT statusHead;
 
-    com_err(whoami, 0, "waiting for job termination");
+    afs_com_err(whoami, 0, "waiting for job termination");
 
     while (usefulJobRunning) {
 	usefulJobRunning = (dlqEmpty(&statusHead) ? 0 : 1);
@@ -1058,7 +1058,7 @@ bc_KillCmd(as, arock)
     if (strchr(tp, '.') == 0) {
 	slot = bc_SafeATOI(tp);
 	if (slot == -1) {
-	    com_err(whoami, 0, "Bad syntax for number '%s'", tp);
+	    afs_com_err(whoami, 0, "Bad syntax for number '%s'", tp);
 	    return -1;
 	}
 
@@ -1091,7 +1091,7 @@ bc_KillCmd(as, arock)
 	    }
 	}
 	if (i >= BC_MAXSIMDUMPS) {
-	    com_err(whoami, 0, "Can't find job %s", tp);
+	    afs_com_err(whoami, 0, "Can't find job %s", tp);
 	    return -1;
 	}
 
@@ -1099,7 +1099,7 @@ bc_KillCmd(as, arock)
 	statusPtr = findStatus(td->dumpID);
 
 	if (statusPtr == 0) {
-	    com_err(whoami, 0, "Can't locate status - internal error");
+	    afs_com_err(whoami, 0, "Can't locate status - internal error");
 	    unlock_Status();
 	    return (-1);
 	}
@@ -1139,6 +1139,7 @@ bc_VolRestoreCmd(as, arock)
     afs_int32 code;
     int oldFlag;
     afs_int32 fromDate;
+    afs_int32 dumpID = 0;
     char *newExt, *timeString;
     afs_int32 i;
     afs_int32 *ports = NULL;
@@ -1147,7 +1148,7 @@ bc_VolRestoreCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -1155,7 +1156,7 @@ bc_VolRestoreCmd(as, arock)
     if (as->parms[0].items) {
 	tp = as->parms[0].items->data;
 	if (bc_ParseHost(tp, &destServ)) {
-	    com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
+	    afs_com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
 	    return -1;
 	}
     }
@@ -1164,7 +1165,7 @@ bc_VolRestoreCmd(as, arock)
     if (as->parms[1].items) {
 	tp = as->parms[1].items->data;
 	if (bc_GetPartitionID(tp, &destPartition)) {
-	    com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
+	    afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
 	    return -1;
 	}
     }
@@ -1173,14 +1174,14 @@ bc_VolRestoreCmd(as, arock)
 	/* build list of volume items */
 	tvol = (struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
 	if (!tvol) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 	memset(tvol, 0, sizeof(struct bc_volumeDump));
 
 	tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	if (!tvol->name) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 	strncpy(tvol->name, ti->data, VOLSER_OLDMAXVOLNAME);
@@ -1201,8 +1202,8 @@ bc_VolRestoreCmd(as, arock)
 	code = ktime_DateToLong(timeString, &fromDate);
 	free(timeString);
 	if (code) {
-	    com_err(whoami, 0, "Can't parse restore date and time");
-	    com_err(whoami, 0, "%s", ktime_GetDateUsage());
+	    afs_com_err(whoami, 0, "Can't parse restore date and time");
+	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
 	    return code;
 	}
     } else {
@@ -1220,7 +1221,7 @@ bc_VolRestoreCmd(as, arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 
@@ -1233,17 +1234,24 @@ bc_VolRestoreCmd(as, arock)
 
     dontExecute = (as->parms[6].items ? 1 : 0);	/* -n */
 
+    if (as->parms[7].items)
+      {
+	dumpID = atoi(as->parms[7].items->data);
+	if (dumpID <= 0)
+	  dumpID = 0;
+      }
+    
     /*
      * Perform the call to start the restore.
      */
     code =
 	bc_StartDmpRst(bc_globalConfig, "volume", "restore", volsToRestore,
 		       &destServ, destPartition, fromDate, newExt, oldFlag,
-		       /*parentDump */ 0, /*dumpLevel */ 0,
+		       /*parentDump */ dumpID, /*dumpLevel */ 0,
 		       bc_Restorer, ports, portCount,
 		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
-	com_err(whoami, code, "; Failed to queue restore");
+	afs_com_err(whoami, code, "; Failed to queue restore");
 
     return (code);
 }
@@ -1289,12 +1297,12 @@ bc_DiskRestoreCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -1307,13 +1315,13 @@ bc_DiskRestoreCmd(as, arock)
     tvolumeEntry.partname = as->parms[1].items->data;
 
     if (bc_GetPartitionID(tvolumeEntry.partname, &tvolumeEntry.partition)) {
-	com_err(whoami, 0, "Can't parse partition '%s'",
+	afs_com_err(whoami, 0, "Can't parse partition '%s'",
 		tvolumeEntry.partname);
 	return -1;
     }
 
     if (bc_ParseHost(tvolumeEntry.serverName, &tvolumeEntry.server)) {
-	com_err(whoami, 0, "Can't locate host '%s'", tvolumeEntry.serverName);
+	afs_com_err(whoami, 0, "Can't locate host '%s'", tvolumeEntry.serverName);
 	return -1;
     }
 
@@ -1321,7 +1329,7 @@ bc_DiskRestoreCmd(as, arock)
     if (as->parms[8].items) {
 	tp = as->parms[8].items->data;
 	if (bc_ParseHost(tp, &destServ)) {
-	    com_err(whoami, 0, "Can't locate destination host '%s'", tp);
+	    afs_com_err(whoami, 0, "Can't locate destination host '%s'", tp);
 	    return -1;
 	}
     } else			/* use destination host == original host */
@@ -1331,7 +1339,7 @@ bc_DiskRestoreCmd(as, arock)
     if (as->parms[9].items) {
 	tp = as->parms[9].items->data;
 	if (bc_GetPartitionID(tp, &destPartition)) {
-	    com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
+	    afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
 	    return -1;
 	}
     } else			/* use original partition */
@@ -1344,7 +1352,7 @@ bc_DiskRestoreCmd(as, arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 
@@ -1365,7 +1373,7 @@ bc_DiskRestoreCmd(as, arock)
 	bc_EvalVolumeSet(bc_globalConfig, &tvolumeSet, &volsToRestore,
 			 cstruct);
     if (code) {
-	com_err(whoami, code, "; Failed to evaluate volume set");
+	afs_com_err(whoami, code, "; Failed to evaluate volume set");
 	return (-1);
     }
 
@@ -1406,7 +1414,7 @@ bc_DiskRestoreCmd(as, arock)
 		       bc_Restorer, ports, portCount,
 		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
-	com_err(whoami, code, "; Failed to queue restore");
+	afs_com_err(whoami, code, "; Failed to queue restore");
 
     return (code);
 }
@@ -1439,25 +1447,25 @@ bc_VolsetRestoreCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
     if (as->parms[0].items) {
 	if (as->parms[1].items) {
-	    com_err(whoami, 0, "Can't have both -name and -file options");
+	    afs_com_err(whoami, 0, "Can't have both -name and -file options");
 	    return (-1);
 	}
 
 	volsetName = as->parms[0].items->data;
 	volsetPtr = bc_FindVolumeSet(bc_globalConfig, volsetName);
 	if (!volsetPtr) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Can't find volume set '%s' in backup database",
 		    volsetName);
 	    return (-1);
@@ -1468,7 +1476,7 @@ bc_VolsetRestoreCmd(as, arock)
 	    bc_EvalVolumeSet(bc_globalConfig, volsetPtr, &volsToRestore,
 			     cstruct);
 	if (code) {
-	    com_err(whoami, code, "; Failed to evaluate volume set");
+	    afs_com_err(whoami, code, "; Failed to evaluate volume set");
 	    return (-1);
 	}
     } else if (as->parms[1].items) {
@@ -1480,7 +1488,7 @@ bc_VolsetRestoreCmd(as, arock)
 
 	fd = fopen(as->parms[1].items->data, "r");
 	if (!fd) {
-	    com_err(whoami, errno, "; Cannot open file '%s'",
+	    afs_com_err(whoami, errno, "; Cannot open file '%s'",
 		    as->parms[1].items->data);
 	    return (-1);
 	}
@@ -1499,12 +1507,12 @@ bc_VolsetRestoreCmd(as, arock)
 	    }
 
 	    if (bc_ParseHost(server, &destServer)) {
-		com_err(whoami, 0, "Failed to locate host '%s'", server);
+		afs_com_err(whoami, 0, "Failed to locate host '%s'", server);
 		continue;
 	    }
 
 	    if (bc_GetPartitionID(partition, &destPartition)) {
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Failed to parse destination partition '%s'",
 			partition);
 		continue;
@@ -1517,7 +1525,7 @@ bc_VolsetRestoreCmd(as, arock)
 
 	    tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
-		com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, "");
 		return BC_NOMEM;
 	    }
 	    strncpy(tvol->name, volume, VOLSER_OLDMAXVOLNAME);
@@ -1532,7 +1540,7 @@ bc_VolsetRestoreCmd(as, arock)
 	}
 	fclose(fd);
     } else {
-	com_err(whoami, 0, "-name or -file option required");
+	afs_com_err(whoami, 0, "-name or -file option required");
 	return (-1);
     }
 
@@ -1543,7 +1551,7 @@ bc_VolsetRestoreCmd(as, arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 
@@ -1568,7 +1576,7 @@ bc_VolsetRestoreCmd(as, arock)
 			  bc_Restorer, ports, portCount,
 			  /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
-	com_err(whoami, code, "; Failed to queue restore");
+	afs_com_err(whoami, code, "; Failed to queue restore");
 
     return code;
 }
@@ -1631,17 +1639,17 @@ bc_DumpCmd(as, arock)
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve dump schedule");
+	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
 	return (code);
     }
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -1654,13 +1662,13 @@ bc_DumpCmd(as, arock)
 	loadfile = 1;
 	if (as->parms[0].items || as->parms[1].items || as->parms[2].items
 	    || as->parms[4].items) {
-	    com_err(whoami, 0, "Invalid option specified with -file option");
+	    afs_com_err(whoami, 0, "Invalid option specified with -file option");
 	    return -1;
 	}
     } else {
 	loadfile = 0;
 	if (!as->parms[0].items || !as->parms[1].items) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Must specify volume set name and dump level name");
 	    return -1;
 	}
@@ -1682,8 +1690,8 @@ bc_DumpCmd(as, arock)
 	code = ktime_DateToLong(timeString, &atTime);
 	free(timeString);
 	if (code) {
-	    com_err(whoami, 0, "Can't parse dump start date and time");
-	    com_err(whoami, 0, "%s", ktime_GetDateUsage());
+	    afs_com_err(whoami, 0, "Can't parse dump start date and time");
+	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
 	    return (1);
 	}
     } else
@@ -1703,7 +1711,7 @@ bc_DumpCmd(as, arock)
 	    portCount = 1;
 	    portp = (afs_int32 *) malloc(sizeof(afs_int32));
 	    if (!portp) {
-		com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, "");
 		return BC_NOMEM;
 	    }
 
@@ -1719,13 +1727,13 @@ bc_DumpCmd(as, arock)
 	 */
 	tvs = bc_FindVolumeSet(bc_globalConfig, vsName);
 	if (!tvs) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Can't find volume set '%s' in backup database", vsName);
 	    return (-1);
 	}
 	baseds = bc_FindDumpSchedule(bc_globalConfig, dumpPath);
 	if (!baseds) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Can't find dump schedule '%s' in backup database",
 		    dumpPath);
 	    return (-1);
@@ -1745,7 +1753,7 @@ bc_DumpCmd(as, arock)
      */
     if (doAt) {
 	if (atTime < time(0)) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Time of dump is earlier then current time - not added");
 	} else {
 	    statusPtr = createStatusNode();
@@ -1784,7 +1792,7 @@ bc_DumpCmd(as, arock)
 	    statusPtr->scheduledDump = atTime;
 	    statusPtr->cmdLine = (char *)malloc(length);
 	    if (!statusPtr->cmdLine) {
-		com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, "");
 		return BC_NOMEM;
 	    }
 
@@ -1818,7 +1826,7 @@ bc_DumpCmd(as, arock)
 
 	    printf("Add scheduled dump as job %d\n", statusPtr->jobNumber);
 	    if ((atTime > ttoken.endTime) && (ttoken.endTime != NEVERDATE))
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Warning: job %d starts after expiration of AFS token",
 			statusPtr->jobNumber);
 
@@ -1836,7 +1844,7 @@ bc_DumpCmd(as, arock)
     if (loadfile) {
 	loadFile = (char *)malloc(strlen(as->parms[6].items->data) + 1);
 	if (!loadFile) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    return BC_NOMEM;
 	}
 	strcpy(loadFile, as->parms[6].items->data);
@@ -1898,7 +1906,7 @@ bc_DumpCmd(as, arock)
      * dump at the level we requested it be done at.
      */
     if (problemFindingDump) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Warning: Doing level %d dump due to missing higher-level dumps",
 		level);
 	if (parent) {
@@ -1911,7 +1919,7 @@ bc_DumpCmd(as, arock)
     /* Expand out the volume set into its component list of volumes. */
     code = bc_EvalVolumeSet(bc_globalConfig, tvs, &volsToDump, cstruct);
     if (code) {
-	com_err(whoami, code, "; Failed to evaluate volume set");
+	afs_com_err(whoami, code, "; Failed to evaluate volume set");
 	return (-1);
     }
     if (!volsToDump) {
@@ -1941,7 +1949,7 @@ bc_DumpCmd(as, arock)
 		    tve->cloneDate = 0;
 
 		if (tve->cloneDate && (tve->cloneDate == tve->date)) {
-		    com_err(whoami, 0,
+		    afs_com_err(whoami, 0,
 			    "Warning: Timestamp on volume %s unchanged from previous dump",
 			    tve->name);
 		}
@@ -1966,7 +1974,7 @@ bc_DumpCmd(as, arock)
 			  parent, level, bc_Dumper, portp, /*portCount */ 1,
 			  baseds, doAppend, dontExecute);
     if (code)
-	com_err(whoami, code, "; Failed to queue dump");
+	afs_com_err(whoami, code, "; Failed to queue dump");
 
     return (code);
 }				/*bc_DumpCmd */
@@ -1996,9 +2004,9 @@ bc_QuitCmd(as, arock)
 	statusPtr = (statusP) ptr;
 	if (!(statusPtr->flags & ABORT_REQUEST)) {
 	    unlock_Status();
-	    com_err(whoami, 0, "Job %d still running (and not aborted)",
+	    afs_com_err(whoami, 0, "Job %d still running (and not aborted)",
 		    statusPtr->jobNumber);
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "You must at least 'kill' all running jobs before quitting");
 	    return -1;
 	}
@@ -2010,8 +2018,8 @@ bc_QuitCmd(as, arock)
      */
     for (td = bc_dumpTasks, i = 0; i < BC_MAXSIMDUMPS; i++, td++) {
 	if (td->flags & BC_DI_INUSE) {
-	    com_err(whoami, 0, "A job is still running");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0, "A job is still running");
+	    afs_com_err(whoami, 0,
 		    "You must at least 'kill' all running jobs before quitting");
 	    return -1;
 	}
@@ -2042,26 +2050,26 @@ bc_LabelTapeCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
     if (as->parms[0].items) {	/* -name */
 	tapename = as->parms[0].items->data;
 	if (strlen(tapename) >= TC_MAXTAPELEN) {
-	    com_err(whoami, 0, "AFS tape name '%s' is too long", tapename);
+	    afs_com_err(whoami, 0, "AFS tape name '%s' is too long", tapename);
 	    return -1;
 	}
     }
 
     if (as->parms[3].items) {	/* -pname */
 	if (tapename) {
-	    com_err(whoami, 0, "Can only specify -name or -pname");
+	    afs_com_err(whoami, 0, "Can only specify -name or -pname");
 	    return -1;
 	}
 	pname = as->parms[3].items->data;
 	if (strlen(pname) >= TC_MAXTAPELEN) {
-	    com_err(whoami, 0, "Permanent tape name '%s' is too long", pname);
+	    afs_com_err(whoami, 0, "Permanent tape name '%s' is too long", pname);
 	    return -1;
 	}
     }
@@ -2069,7 +2077,7 @@ bc_LabelTapeCmd(as, arock)
     if (as->parms[1].items) {
 	size = bc_FloatATOI(as->parms[1].items->data);
 	if (size == -1) {
-	    com_err(whoami, 0, "Bad syntax for tape size '%s'",
+	    afs_com_err(whoami, 0, "Bad syntax for tape size '%s'",
 		    as->parms[1].items->data);
 	    return -1;
 	}
@@ -2103,7 +2111,7 @@ bc_ReadLabelCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -2134,7 +2142,7 @@ bc_ScanDumpsCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -2275,7 +2283,7 @@ bc_dbVerifyCmd(as, arock)
 		  &host);
 
     if (code) {
-	com_err(whoami, code, "; Unable to verify database");
+	afs_com_err(whoami, code, "; Unable to verify database");
 	return (-1);
     }
 
@@ -2284,7 +2292,7 @@ bc_dbVerifyCmd(as, arock)
     if (status == 0)
 	printf("Database OK\n");
     else
-	com_err(whoami, status, "; Database is NOT_OK");
+	afs_com_err(whoami, status, "; Database is NOT_OK");
 
     if (detail) {
 	printf("Orphan blocks %d\n", orphans);
@@ -2324,14 +2332,14 @@ deleteDump(dumpid, port, force)
     if (port >= 0) {
 	tcode = bc_UpdateHosts();
 	if (tcode) {
-	    com_err(whoami, tcode, "; Can't retrieve tape hosts");
+	    afs_com_err(whoami, tcode, "; Can't retrieve tape hosts");
 	    ERROR(tcode);
 	}
 
 	/* Find the dump in the backup database */
 	tcode = bcdb_FindDumpByID(dumpid, &dumpEntry);
 	if (tcode) {
-	    com_err(whoami, tcode, "; Unable to locate dumpID %u in database",
+	    afs_com_err(whoami, tcode, "; Unable to locate dumpID %u in database",
 		    dumpid);
 	    ERROR(tcode);
 	}
@@ -2351,7 +2359,7 @@ deleteDump(dumpid, port, force)
 	    if (tcode) {
 		if (tcode == RXGEN_OPCODE)
 		    tcode = BC_VERSIONFAIL;
-		com_err(whoami, tcode,
+		afs_com_err(whoami, tcode,
 			"; Unable to delete dumpID %u via butc", dumpid);
 		ERROR(tcode);
 	    }
@@ -2369,7 +2377,7 @@ deleteDump(dumpid, port, force)
 	    /* Wait for task to finish */
 	    taskflag = waitForTask(taskId);
 	    if (taskflag & (TASK_ERROR | ABORT_DONE)) {
-		com_err(whoami, BUTX_DELETEOBJFAIL,
+		afs_com_err(whoami, BUTX_DELETEOBJFAIL,
 			"; Unable to delete dumpID %u via butc", dumpid);
 		ERROR(BUTX_DELETEOBJFAIL);	/* the task failed */
 	    }
@@ -2389,7 +2397,7 @@ deleteDump(dumpid, port, force)
 
 	tcode = bcdb_deleteDump(dumpid, 0, 0, &dumps);
 	if (tcode) {
-	    com_err(whoami, tcode,
+	    afs_com_err(whoami, tcode,
 		    "; Unable to delete dumpID %u from database", dumpid);
 	    dumps.budb_dumpsList_len = 0;
 	    if (!code)
@@ -2431,13 +2439,13 @@ bc_deleteDumpCmd(as, arock)
     /* Must specify at least one of -dumpid, -from, or -to */
     if (!as->parms[0].items && !as->parms[1].items && !as->parms[2].items
 	&& !as->parms[4].items) {
-	com_err(whoami, 0, "Must specify at least one field");
+	afs_com_err(whoami, 0, "Must specify at least one field");
 	return (-1);
     }
 
     /* Must have -to option with -from option */
     if (as->parms[1].items && !as->parms[2].items) {
-	com_err(whoami, 0, "Must specify '-to' field with '-from' field");
+	afs_com_err(whoami, 0, "Must specify '-to' field with '-from' field");
 	return (-1);
     }
 
@@ -2453,8 +2461,8 @@ bc_deleteDumpCmd(as, arock)
 	code = ktime_DateToLong(timeString, &fromTime);
 	free(timeString);
 	if (code) {
-	    com_err(whoami, 0, "Can't parse 'from' date and time");
-	    com_err(whoami, 0, "%s", ktime_GetDateUsage());
+	    afs_com_err(whoami, 0, "Can't parse 'from' date and time");
+	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
 	    return (-1);
 	}
 	havetime = 1;
@@ -2485,8 +2493,8 @@ bc_deleteDumpCmd(as, arock)
 	code = ktime_DateToLong(timeString, &toTime);
 	free(timeString);
 	if (code) {
-	    com_err(whoami, 0, "Can't parse 'to' date and time");
-	    com_err(whoami, 0, "%s", ktime_GetDateUsage());
+	    afs_com_err(whoami, 0, "Can't parse 'to' date and time");
+	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
 	    return (-1);
 	}
 	toTime += 59;
@@ -2494,7 +2502,7 @@ bc_deleteDumpCmd(as, arock)
     }
 
     if (fromTime > toTime) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"'-from' date/time cannot be later than '-to' date/time");
 	return (-1);
     }
@@ -2528,7 +2536,7 @@ bc_deleteDumpCmd(as, arock)
 	code =
 	    bcdb_listDumps(sflags, groupId, fromTime, toTime, &dumps, &flags);
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Error while deleting dumps from %u to %u", fromTime,
 		    toTime);
 	    rcode = -1;
@@ -2582,7 +2590,7 @@ bc_saveDbCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -2605,8 +2613,8 @@ bc_saveDbCmd(as, arock)
 	code = ktime_DateToLong(timeString, &toTime);
 	free(timeString);
 	if (code) {
-	    com_err(whoami, 0, "Can't parse '-archive' date and time");
-	    com_err(whoami, 0, "%s", ktime_GetDateUsage());
+	    afs_com_err(whoami, 0, "Can't parse '-archive' date and time");
+	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
 	    return (-1);
 	}
 	toTime += 59;
@@ -2619,7 +2627,7 @@ bc_saveDbCmd(as, arock)
 
     code = TC_SaveDb(tconn, toTime, &taskId);
     if (code) {
-	com_err(whoami, code, "; Failed to save database");
+	afs_com_err(whoami, code, "; Failed to save database");
 	goto exit;
     }
 
@@ -2650,7 +2658,7 @@ bc_restoreDbCmd(as, arock)
 
     code = bc_UpdateHosts();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve tape hosts");
+	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
 	return (code);
     }
 
@@ -2666,7 +2674,7 @@ bc_restoreDbCmd(as, arock)
 
     code = TC_RestoreDb(tconn, &taskId);
     if (code) {
-	com_err(whoami, code, "; Failed to restore database");
+	afs_com_err(whoami, code, "; Failed to restore database");
 	goto exit;
     }
 
@@ -2833,7 +2841,7 @@ DBLookupByVolume(volumeName)
     }
 
     if (code)
-	com_err(whoami, code, "");
+	afs_com_err(whoami, code, "");
     return (code);
 }
 
@@ -2923,7 +2931,7 @@ dumpInfo(dumpid, detailFlag)
     for (tapeNumber = dumpEntry.tapes.b; tapeNumber <= dumpEntry.tapes.maxTapes; tapeNumber++) {	/*f */
 	tapeLinkPtr = (struct tapeLink *)malloc(sizeof(struct tapeLink));
 	if (!tapeLinkPtr) {
-	    com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, "");
 	    ERROR(BC_NOMEM);
 	}
 
@@ -2975,7 +2983,7 @@ dumpInfo(dumpid, detailFlag)
 		volumeLinkPtr =
 		    (struct volumeLink *)malloc(sizeof(struct volumeLink));
 		if (!volumeLinkPtr) {
-		    com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, "");
 		    ERROR(BC_NOMEM);
 		}
 		memset(volumeLinkPtr, 0, sizeof(*volumeLinkPtr));
@@ -3044,7 +3052,7 @@ dumpInfo(dumpid, detailFlag)
 
   error_exit:
     if (code)
-	com_err("dumpInfo", code, "; Can't get dump information");
+	afs_com_err("dumpInfo", code, "; Can't get dump information");
 
     /* free all allocated structures */
     tapeLinkPtr = head;
@@ -3103,7 +3111,7 @@ printRecentDumps(ndumps)
 	if (code) {
 	    if (code == BUDB_ENDOFLIST)
 		return 0;
-	    com_err("dumpInfo", code, "; Can't get dump information");
+	    afs_com_err("dumpInfo", code, "; Can't get dump information");
 	    return (code);
 	}
 
@@ -3156,13 +3164,13 @@ bc_dumpInfoCmd(as, arock)
 
     if (as->parms[0].items) {
 	if (as->parms[1].items) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "These options are exclusive - select only one");
 	    return (BC_BADARG);
 	}
 	ndumps = atoi(as->parms[0].items->data);
 	if (ndumps <= 0) {
-	    com_err(whoami, 0, "Must provide a positive number");
+	    afs_com_err(whoami, 0, "Must provide a positive number");
 	    return -1;
 	}
 

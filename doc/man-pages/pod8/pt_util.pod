@@ -1,0 +1,187 @@
+=head1 NAME
+
+pt_util - Load or dump a Protection Server database
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pt_util>
+   S<<< [B<-w>] >>> S<<< [B<-user>] >>> S<<< [B<-group>] >>>
+   S<<< [B<-members>] >>> S<<< [B<-name>] >>> S<<< [B<-system>] >>>
+   S<<< [B<-xtra>] >>> S<<< [B<-prdb> <I<prdb file>>] >>>
+   S<<< [B<-datafile> <I<data file>>] >>> S<<< [B<-help>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pt_util> command can be used to load or dump the protection
+database.  It should only be used when B<ptserver> is not running.
+
+The most likely reason to use it is to initialize the protection database
+when bringing up a new cell.  The current syntax for this, presented
+below, needs improvement.  B<pt_util> can also be used when problems are
+suspected with the database.  It can be used to dump the database or
+portions thereof, in several different ways, and to reload it.
+
+The textual representation of the database has the following form:
+For users,
+
+    name flags/quota viceid ownerid creatorid
+
+For groups,
+
+    name flags/quota viceid ownerid creatorid
+     a-username a-user-viceid
+
+The second line is repeated for each member of the group.  When reading
+the database, membership is not reported unless B<-members> is also
+included.
+
+=head1 OPTIONS
+
+If you don't specify any options, the only thing you'll learn is the ubik
+database epoch and version.
+
+=over 4
+
+=item B<-w>
+
+Write to the protection database instead of reading.  Only the file
+arguments make sense in combination with this argument.
+
+=item B<-user>
+
+When reading, display users.
+
+=item B<-group>
+
+When reading, display groups (but not necessarily members).
+
+=item B<-members>
+
+When reading, display groups and also group members.
+
+=item B<-name>
+
+When reading,
+follow name hashes, instead of id hashes.
+This may print different information if the database was corrupted.
+Otherwise, it should print exactly the same information, except
+in a different order.
+
+=item B<-system>
+
+When reading, display system data, or more precisely, do not display
+entries with a viced <= -32768 or >= +97537.
+
+=item B<-xtra>
+
+When reading, display extra users and groups, or more precisely, do not
+display entries that are in the range -32767...+97536 inclusive.
+
+=item B<-prdb> <I<prdb file>>
+
+Specifies the complete pathname of the file in which the Protection
+Database resides.  Provide the complete name, including the ending
+F<.DB0>.
+
+=item B<-datafile> <I<data file>>
+
+Specify the file to which to dump (or B<-w> from which to read) textual
+database records.
+
+=back
+
+=head1 CAUTIONS
+
+The file dump format does not include supergroup information, so should
+not be used if you have and are using groups within groups.
+
+In all cases, entry timestamps and other information is also not
+preserved.
+
+The epoch and version are reported on standard error.  On little-endian
+machines, they'll be byte swapped, so may be very random.
+
+=head1 EXAMPLES
+
+The following example shows how to initialize the database from scratch.
+
+Before you do this, make sure B<ptserver> is not running.  If you have
+multiple database servers, make sure F<prdb.*> does not exist on any
+server machine.
+
+Now, type this in EXACTLY, including the leading space on the line
+indicated.  But do use Control-D at the end, not up-arrow D.
+
+    pt_util -w
+    admin 128/20 1 -204 -204
+    system:administrators 130/20 -204 -204 -204
+     admin 1
+    ^D
+
+You will see this:
+
+    # pt_util -w
+    pt_util: /usr/afs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
+    Ubik Version is: 2.0
+    admin 128/20 1 -204 -204
+    system:administrators 130/20 -204 -204 -204
+    Error while creating system:administrators: Entry for id already exists
+     admin 1
+    pt_util: Ubik Version number changed during execution.
+    Old Version = 2.0, new version = 33554432.0
+    #
+
+To make a complete copy of the database,
+
+    # pt_util -user -members -datafile /tmp/out
+
+To load from the complete copy,
+
+    # pt_util -w -datafile /tmp/out
+
+Don't do this until you read cautions, above.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the superuser C<root> on a file server
+machine to use B<pt_util>.
+
+=head1 SEE ALSO
+
+L<prdb.DB0(5)>,
+L<ptserver(8)>
+
+=head1 COPYRIGHT
+
+The following copyright covers this documentation:
+
+Copyright (c) 2005 The Regents of the University of Michigan.  ALL RIGHTS
+RESERVED.
+
+Permission is granted to use, copy, create derivative works and
+redistribute this software and such derivative works for any purpose, so
+long as the name of the University of Michigan is not used in any
+advertising or publicity pertaining to the use or distribution of this
+software without specific, written prior authorization.  If the above
+copyright notice or any other identification of the University of Michigan
+is included in any copy of any portion of this software, then the
+disclaimer below must also be included.
+
+This software is provided as is, without representation from the
+University of Michigan as to its fitness for any purpose, and without
+warranty by the University of Michigan of any kind, either express or
+implied, including without limitation the implied warranties of
+merchantability and fitness for a particular purpose.  The regents of the
+University of Michigan shall not be liable for any damages, including
+special, indirect, incidental, or consequential damages, with respect to
+any claim arising out of or in connection with the use of the software,
+even if it has been or is hereafter advised of the possibility of such
+damages.
+
+=cut

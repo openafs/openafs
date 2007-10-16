@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.12 2005/10/15 21:48:28 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.13 2007/06/10 05:54:10 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -844,6 +844,10 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
 
     MarshallString(&preq, fullPath);
     if (blobp->in_size) {
+        if (blobp->in_size > sizeof(preq.data) - (preq.mp - preq.data)*sizeof(char)) {
+            errno = E2BIG;
+            return -1;
+        }
 	memcpy(preq.mp, blobp->in, blobp->in_size);
 	preq.mp += blobp->in_size;
     }

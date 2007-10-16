@@ -37,7 +37,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.5 2005/08/18 04:56:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.6 2007/07/03 04:24:45 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -90,7 +90,7 @@ des_ecb_encrypt(void * clear, void * cipher,
 #error dunno how to do this machine type, you lose;
 #endif
 #endif
-    afs_uint32 P_temp;
+    volatile afs_uint32 P_temp;
     volatile unsigned char *P_temp_p = (unsigned char *)&P_temp;
 #ifdef BITS16
     sbox_out S_out;

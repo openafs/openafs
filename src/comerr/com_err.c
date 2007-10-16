@@ -8,7 +8,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/com_err.c,v 1.5 2003/07/15 23:14:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/com_err.c,v 1.5.2.1 2007/04/10 18:43:42 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>
@@ -25,7 +25,7 @@ default_com_err_proc(const char *whoami, afs_int32 code, const char *fmt,
 	fputs(": ", stderr);
     }
     if (code) {
-	fputs(error_message(code), stderr);
+	fputs(afs_error_message(code), stderr);
 	fputs(" ", stderr);
     }
     if (fmt) {
@@ -42,25 +42,25 @@ typedef void (*errf) (const char *, afs_int32, const char *, va_list);
 static errf com_err_hook = default_com_err_proc;
 
 void
-com_err_va(const char *whoami, afs_int32 code, const char *fmt, va_list args)
+afs_com_err_va(const char *whoami, afs_int32 code, const char *fmt, va_list args)
 {
     (*com_err_hook) (whoami, code, fmt, args);
 }
 
 void
-com_err(const char *whoami, afs_int32 code, const char *fmt, ...)
+afs_com_err(const char *whoami, afs_int32 code, const char *fmt, ...)
 {
     va_list pvar;
 
     if (!com_err_hook)
 	com_err_hook = default_com_err_proc;
     va_start(pvar, fmt);
-    com_err_va(whoami, code, fmt, pvar);
+    afs_com_err_va(whoami, code, fmt, pvar);
     va_end(pvar);
 }
 
 errf
-set_com_err_hook(errf new_proc)
+afs_set_com_err_hook(errf new_proc)
 {
     errf x = com_err_hook;
     if (new_proc)
@@ -71,7 +71,7 @@ set_com_err_hook(errf new_proc)
 }
 
 errf
-reset_com_err_hook(void)
+afs_reset_com_err_hook(void)
 {
     errf x = com_err_hook;
     com_err_hook = default_com_err_proc;
