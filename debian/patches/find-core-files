@@ -8,7 +8,7 @@
  
  #ifdef HAVE_STRING_H
  #include <string.h>
-@@ -105,13 +106,44 @@
+@@ -105,13 +106,45 @@
      char tbuffer[256];
      struct stat tstat;
      register afs_int32 code;
@@ -27,23 +27,24 @@
 +        struct dirent *file;
 +        char *p;
 +        size_t length;
-+        char pid[256];
++        unsigned long pid;
 +
-+        sprintf(pid, "%d", aproc->pid);
 +        logdir = opendir(AFSDIR_LOGS_DIR);
 +        if (logdir == NULL)
 +            return;
 +        while ((file = readdir(logdir)) != NULL) {
 +            if (strncmp(file->d_name, "core.", 5) != 0)
 +                continue;
-+            if (strcmp(file->d_name + 5, pid) == 0) {
++            pid = atol(file->d_name + 5);
++            if (pid == aproc->pid) {
 +                length = strlen(AFSDIR_LOGS_DIR) + strlen(file->d_name) + 2;
 +                corefile = malloc(length);
 +                if (corefile == NULL) {
 +                    closedir(logdir);
 +                    return;
 +                }
-+                sprintf(corefile, "%s/%s", AFSDIR_LOGS_DIR, file->d_name);
++                snprintf(corefile, length, "%s/%s", AFSDIR_LOGS_DIR,
++                         file->d_name);
 +                code = 0;
 +                break;
 +            }
@@ -53,7 +54,7 @@
      if (code)
  	return;
  
-@@ -124,7 +156,12 @@
+@@ -124,7 +157,12 @@
  	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
      strcpy(tbuffer, FileName);
  #endif
