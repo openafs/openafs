@@ -1,0 +1,119 @@
+=head1 NAME
+
+pts interactive - Enters interactive mode
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts interactive> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>]
+    [B<-force>]
+
+B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts interactive> command allows the user to enter an interactive
+mode, useful for running bulk commands like creating new users or groups.
+
+=head1 CAUTIONS
+
+Prior to OpenAFS 1.4.5 and OpenAFS 1.5.23, the B<pts interactive> command
+was only available on Unix or Linux and when OpenAFS was compiled with the
+supergroups option (disabled by default).  As of OpenAFS 1.4.5 and 1.5.23,
+it is always available.
+
+Running bulk B<pts> commands may degrade the performance of the Protection
+Server while they are run and server resources may not be released
+immediately after commands are run. The B<pts sleep> command can be used
+in interactive mode or with B<pts source> to give the Protection Server a
+change to catch up.
+
+=head1 OPTIONS
+
+B<pts interactive> only takes the standard B<pts> options.
+
+=over 4
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+This is useful for bulk operations where you would like to continue even
+if one of many operations fails.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
+
+=back
+
+=head1 OUTPUT
+
+The output is the same as if each individual command were run from the
+command line.
+
+=head1 EXAMPLES
+
+Here is an example of a B<pts interactive> session:
+
+   % pts interactive
+   pts> examine admin
+   Name: admin, id: 1, owner: system:administrators, creator: anonymous,
+     membership: 2, flags: S----, group quota: 20.
+   pts> help
+   pts: Commands are:
+   adduser         add a user to a group
+   apropos         search by help text
+   chown           change ownership of a group
+   creategroup     create a new group
+   createuser      create a new user
+   delete          delete a user or group from database
+   examine         examine an entry
+   help            get help on commands
+   interactive     enter interactive mode
+   listentries     list users/groups in the protection database
+   listmax         list max id
+   listowned       list groups owned by an entry or zero id gets orphaned groups
+   membership      list membership of a user or group
+   quit            exit program
+   removeuser      remove a user from a group
+   rename          rename user or group
+   setfields       set fields for an entry
+   setmax          set max id
+   sleep           pause for a bit
+   source          read commands from file
+   pts> quit
+   %
+
+=head1 PRIVILEGE REQUIRED
+
+The same privilege is required to run the command in interactive mode as
+is required to run the command by itself on the command line. Some
+commands such as B<pts createuser> require that the user belong to the
+system:administrators group, while others do not.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_quit(1)>,
+L<pts_sleep(1)>,
+L<pts_source(1)>,
+L<ptserver(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

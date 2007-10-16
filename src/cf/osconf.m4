@@ -448,7 +448,7 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_80)
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
@@ -461,10 +461,11 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib -c"
 		;;
 
 	*_darwin_90)
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
@@ -478,6 +479,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib -c"
 		;;
 
 	ppc_linux*)

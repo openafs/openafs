@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/up.c,v 1.13 2003/07/15 23:17:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/up.c,v 1.13.2.1 2007/05/07 17:23:11 rra Exp $");
 
 /* missing type from C language */
 #define Boolean short
@@ -528,6 +528,7 @@ Copy(file1, file2, recursive, level)
 	char f1[MAXPATHLEN], f2[MAXPATHLEN];
 	char *p1, *p2;
 	struct dirent *d;
+	struct timeval tv[2];
 
 	if (verbose) {
 	    printf("Level %d: Directory %s to %s\n", level, file1, file2);
@@ -689,6 +690,15 @@ Copy(file1, file2, recursive, level)
 		printf("Not setting acls\n");
 	    }
 	}
+
+        /* preserve access and modification times: ("-x" disables) */
+        if (preserveDate) {
+            tv[0].tv_sec = s1.st_atime;
+            tv[0].tv_usec = 0;
+            tv[1].tv_sec = s1.st_mtime;
+            tv[1].tv_usec = 0;
+            utimes(file2, tv);
+        }
     }
 
     return rcode;

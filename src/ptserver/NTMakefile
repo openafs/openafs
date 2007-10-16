@@ -10,7 +10,7 @@
 RELDIR=ptserver
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
-AFSDEV_AUXCDEFINES = -DAFS_USE_GETTIMEOFDAY
+AFSDEV_AUXCDEFINES = -DAFS_USE_GETTIMEOFDAY -DSUPERGROUPS
 
 ############################################################################
 # Definitions for installing header files
@@ -52,6 +52,7 @@ PTSERVER_EXEOBJS =\
 	$(OUT)\ptutils.obj \
 	$(OUT)\ptprocs.obj \
 	$(OUT)\utils.obj \
+        $(OUT)\map.obj \
 	$(OUT)\ptserver.res
 
 

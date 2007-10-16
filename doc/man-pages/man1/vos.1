@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS 1 "OpenAFS" "5/Jan/2006" "AFS Command Reference"
+.TH VOS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -223,7 +223,8 @@ use the \fBvos syncserv\fR and \fBvos syncvldb\fR commands.
 There are several categories of commands in the vos command suite:
 .Ip "\(bu" 4
 Commands to create, move, and rename volumes: \fBvos backup\fR, \fBvos
-backupsys\fR, \fBvos create\fR, \fBvos move\fR, and \fBvos rename\fR.
+backupsys\fR, \fBvos changeloc\fR, \fBvos create\fR, \fBvos move\fR, and \fBvos
+rename\fR.
 .Ip "\(bu" 4
 Commands to remove \s-1VLDB\s0 volume records or volumes or both: \fBvos
 delentry\fR, \fBvos remove\fR, and \fBvos zap\fR.
@@ -231,7 +232,8 @@ delentry\fR, \fBvos remove\fR, and \fBvos zap\fR.
 Commands to edit or display \s-1VLDB\s0 server entries: \fBvos changeaddr\fR and
 \fBvos listaddrs\fR.
 .Ip "\(bu" 4
-Commands to create and restore dump files: \fBvos dump\fR and \fBvos restore\fR.
+Commands to create, size, and restore dump files: \fBvos dump\fR, \fBvos
+restore\fR, and \fBvos size\fR.
 .Ip "\(bu" 4
 Commands to administer replicated volumes: \fBvos addsite\fR, \fBvos release\fR,
 and \fBvos remsite\fR.
@@ -366,6 +368,7 @@ the \fIvos_apropos(1)\fR manpage,
 the \fIvos_backup(1)\fR manpage,
 the \fIvos_backupsys(1)\fR manpage,
 the \fIvos_changeaddr(1)\fR manpage,
+the \fIvos_changeloc(1)\fR manpage,
 the \fIvos_create(1)\fR manpage,
 the \fIvos_delentry(1)\fR manpage,
 the \fIvos_dump(1)\fR manpage,
@@ -383,6 +386,7 @@ the \fIvos_remove(1)\fR manpage,
 the \fIvos_remsite(1)\fR manpage,
 the \fIvos_rename(1)\fR manpage,
 the \fIvos_restore(1)\fR manpage,
+the \fIvos_size(1)\fR manpage,
 the \fIvos_status(1)\fR manpage,
 the \fIvos_syncserv(1)\fR manpage,
 the \fIvos_syncvldb(1)\fR manpage,

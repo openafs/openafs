@@ -58,7 +58,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.18 2006/08/21 20:39:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.22 2007/10/10 16:57:56 shadow Exp $");
 
 #define VFS 1
 
@@ -165,6 +165,36 @@ kern_return_t DiskArbStart(mach_port_t *);
 kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 							 char *);
 #define DISK_ARB_NETWORK_DISK_FLAG 8
+
+#include <mach/mach_port.h>
+#include <mach/mach_interface.h>
+#include <mach/mach_init.h>
+
+#include <CoreFoundation/CoreFoundation.h>
+
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <SystemConfiguration/SCDynamicStore.h>
+
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
+
+#include <dns_sd.h>
+
+typedef struct DNSSDState
+{
+    DNSServiceRef       service;
+    CFRunLoopSourceRef  source;
+    CFSocketRef         socket;
+} DNSSDState;
+
+static io_connect_t root_port;
+static IONotificationPortRef notify;
+static io_object_t iterator;
+static CFRunLoopSourceRef source;
+static DNSSDState dnsstate;
+
+static int event_pid;
+
 #endif /* AFS_DARWIN_ENV */
 
 #ifndef MOUNT_AFS
@@ -302,8 +332,10 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
+#ifndef AFS_CACHE_VNODE_PATH
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
+#endif
 int missing_DCacheFile = 1;	/*Is the DCACHEFILE missing? */
 int missing_VolInfoFile = 1;	/*Is the VOLINFOFILE missing? */
 int missing_CellInfoFile = 1;	/*Is the CELLINFOFILE missing? */
@@ -311,6 +343,162 @@ int afsd_rmtsys = 0;		/* Default: don't support rmtsys */
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 
 static int HandleMTab();
+
+#ifdef AFS_DARWIN_ENV
+static void
+afsd_sleep_callback(void * refCon, io_service_t service, 
+		    natural_t messageType, void * messageArgument )
+{
+    afs_int32 code;
+    
+    switch (messageType) {
+    case kIOMessageCanSystemSleep:
+	/* Idle sleep is about to kick in; can 
+	   prevent sleep by calling IOCancelPowerChange, otherwise 
+	   if we don't ack in 30s the system sleeps anyway */
+	
+	/* allow it */
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillSleep:
+	/* The system WILL go to sleep. Ack or suffer delay */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillRestart:
+	/* The system WILL restart. Ack or suffer delay */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillPowerOn:
+    case kIOMessageSystemHasPoweredOn:
+	/* coming back from sleep */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    default:
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+    }
+}
+
+static void
+afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
+{
+    /* parse multihomed address files */
+    afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+	mtubuf[MAXIPADDRS];
+    char reason[1024];
+    afs_int32 code;
+
+    code =
+	parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
+		      AFSDIR_CLIENT_NETINFO_FILEPATH,
+		      AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+
+    if (code > 0) {
+	/* Note we're refreshing */
+	code = code | 0x40000000;
+	call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+    } else
+	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
+	       reason);
+}
+
+/* This function is called when the system's ip addresses may have changed. */
+static void
+afsd_ipaddr_callback (SCDynamicStoreRef store, CFArrayRef changed_keys, void *info)
+{
+      CFRunLoopTimerRef timer;
+
+      timer = CFRunLoopTimerCreate (NULL, CFAbsoluteTimeGetCurrent () + 1.0,
+				    0.0, 0, 0, afsd_update_addresses, NULL);
+      CFRunLoopAddTimer (CFRunLoopGetCurrent (), timer,
+			 kCFRunLoopDefaultMode);
+      CFRelease (timer);
+}
+
+static void 
+afsd_event_cleanup(int signo) {
+    DNSSDState *query = &dnsstate;
+
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+    CFRelease (source);
+    IODeregisterForSystemPower(iterator);
+    IOServiceClose(root_port);
+    IONotificationPortDestroy(notify);
+
+    exit(0);
+}
+
+/* Adapted from "Living in a Dynamic TCP/IP Environment" technote. */
+static Boolean
+afsd_install_events(void)
+{
+    SCDynamicStoreContext ctx = {0};
+    SCDynamicStoreRef store;
+
+    root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
+    
+    if (root_port) {
+	CFRunLoopAddSource(CFRunLoopGetCurrent(),
+			   IONotificationPortGetRunLoopSource(notify),
+			   kCFRunLoopDefaultMode);
+    }
+    
+    
+    store = SCDynamicStoreCreate (NULL,
+				  CFSTR ("AddIPAddressListChangeCallbackSCF"),
+				  afsd_ipaddr_callback, &ctx);
+    
+    if (store) {
+	const void *keys[1];
+	
+	/* Request IPV4 address change notification */
+	keys[0] = (SCDynamicStoreKeyCreateNetworkServiceEntity
+		   (NULL, kSCDynamicStoreDomainState,
+		    kSCCompAnyRegex, kSCEntNetIPv4));
+	
+#if 0
+	/* This should tell us when the hostname(s) change. do we care? */
+	keys[N] = SCDynamicStoreKeyCreateHostNames (NULL);
+#endif
+	
+	if (keys[0] != NULL) {
+	    CFArrayRef pattern_array;
+	    
+	    pattern_array = CFArrayCreate (NULL, keys, 1,
+					   &kCFTypeArrayCallBacks);
+	    
+	    if (pattern_array != NULL)
+	    {
+		SCDynamicStoreSetNotificationKeys (store, NULL, pattern_array);
+		source = SCDynamicStoreCreateRunLoopSource (NULL, store, 0);
+		
+		CFRelease (pattern_array);
+	    }
+	    
+	    if (keys[0] != NULL)
+		CFRelease (keys[0]);
+	}
+	
+	CFRelease (store); 
+    }
+    
+    if (source != NULL) {
+	CFRunLoopAddSource (CFRunLoopGetCurrent(),
+			    source, kCFRunLoopDefaultMode);
+    }
+    
+    signal(SIGTERM, afsd_event_cleanup);
+
+    CFRunLoopRun();
+}
+#endif
 
 /* ParseArgs is now obsolete, being handled by cmd */
 
@@ -817,7 +1005,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
+#ifndef AFS_CACHE_VNODE_PATH
 	    inode_for_V[vFileNum] = currp->d_ino;
+#endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
 
 	    if (!maxDir) {
@@ -954,7 +1144,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 			   vFileNum);
 		else {
 		    struct stat statb;
+#ifndef AFS_CACHE_VNODE_PATH
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
+#endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
 		    if (afsd_verbose)
 			printf("%s: Creating '%s'\n", rn, fullpn_VFile);
@@ -965,7 +1157,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
+#ifndef AFS_CACHE_VNODE_PATH
 			inode_for_V[vFileNum] = statb.st_ino;
+#endif
 			dir_for_V[vFileNum] = thisDir;
 			cache_dir_list[thisDir]++;
 			(*vFilesFound)++;
@@ -1247,6 +1441,16 @@ AfsdbLookupHandler()
     kernelMsg[1] = 0;
     acellName[0] = '\0';
 
+#ifdef AFS_DARWIN_ENV
+    /* Fork the event handler also. */
+    code = fork();
+    if (code == 0) {
+	afsd_install_events();
+	exit(1);
+    } else if (code != -1) {
+	event_pid = code;
+    }
+#endif
     while (1) {
 	/* On some platforms you only get 4 args to an AFS call */
 	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
@@ -1276,7 +1480,9 @@ AfsdbLookupHandler()
 	    acellName[sizeof(acellName) - 1] = '\0';
 	}
     }
-
+#ifdef AFS_DARWIN_ENV
+    kill(event_pid, SIGTERM);
+#endif
     exit(1);
 }
 #endif
@@ -1705,6 +1911,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
 		   cacheStatEntries);
     }
 
+#ifndef AFS_CACHE_VNODE_PATH
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -1719,6 +1926,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (afsd_debug)
 	printf("%s: %d inode_for_V entries at 0x%x, %d bytes\n", rn,
 	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
+#endif
 
     /*
      * Set up all the pathnames we'll need for later.
@@ -1737,10 +1945,6 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	exit(1);
 #endif
     }
-#if 0
-    fputs(AFS_GOVERNMENT_MESSAGE, stdout);
-    fflush(stdout);
-#endif
 
     /*
      * Set up all the kernel processes needed for AFS.
@@ -1903,6 +2107,23 @@ mainproc(struct cmd_syndesc *as, char *arock)
 		     rn, vFilesFound, cacheFiles, cacheIteration);
 	} while ((vFilesFound < cacheFiles)
 		 && (cacheIteration < MAX_CACHE_LOOPS));
+#ifdef AFS_CACHE_VNODE_PATH
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEBASEDIR with '%s'\n",
+		 rn, cacheBaseDir);
+	call_syscall(AFSOP_CACHEBASEDIR, cacheBaseDir);
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEDIRS with %d dirs\n",
+		 rn, nFilesPerDir);
+	call_syscall(AFSOP_CACHEDIRS, nFilesPerDir);
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEFILES with %d files\n",
+		 rn, cacheFiles);
+	call_syscall(AFSOP_CACHEFILES, cacheFiles);
+#endif
     } else if (afsd_verbose)
 	printf("%s: Using memory cache, not swept\n", rn);
 
@@ -2037,6 +2258,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) 
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
+#ifndef AFS_CACHE_VNODE_PATH
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
@@ -2055,7 +2277,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	    call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #endif
 	}
-
+#endif
 
     /*end for */
     /*

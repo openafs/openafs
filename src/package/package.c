@@ -341,7 +341,7 @@ main(int argc, char **argv)
      */
     code = cmd_Dispatch(argc, argv);
     if (code) {
-	com_err(argv[0], code, "while dispatching command line");
+	afs_com_err(argv[0], code, "while dispatching command line");
 	exit(-1);
     }
 

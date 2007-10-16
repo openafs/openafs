@@ -10,4 +10,5 @@ mkdir -p $outputdir
 cp  $tmpldir/osi_vfs.hin $outputdir/osi_vfs.h
 # chmod +x $configdir/make_vnode.pl
 # $configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -t ${tmpldir} -o $outputdir
+  AC_MSG_RESULT(yes)
 ])

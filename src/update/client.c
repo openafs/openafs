@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.12 2004/06/23 14:27:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.1 2007/04/10 18:43:46 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -218,7 +218,7 @@ main(int argc, char **argv)
     errcode = rx_Init(0);
     if (errcode) {
 	printf("Rx initialize failed \n");
-	com_err(whoami, errcode, "calling Rx init");
+	afs_com_err(whoami, errcode, "calling Rx init");
 	exit(1);
     }
 
@@ -238,7 +238,7 @@ main(int argc, char **argv)
 	exit(1);
     }
     if (errcode) {
-	com_err(whoami, errcode, "Couldn't get security obect for localAuth");
+	afs_com_err(whoami, errcode, "Couldn't get security obect for localAuth");
 	exit(1);
     }
 
@@ -260,7 +260,7 @@ main(int argc, char **argv)
 
 	    /* construct local path from canonical (wire-format) path */
 	    if ((errcode = ConstructLocalPath(df->name, "/", &curDir))) {
-		com_err(whoami, errcode, "Unable to construct local path");
+		afs_com_err(whoami, errcode, "Unable to construct local path");
 		return errcode;
 	    }
 
@@ -271,7 +271,7 @@ main(int argc, char **argv)
 #else
 		if (mkdir(curDir, 0700) < 0) {
 #endif
-		    com_err(whoami, errno, "can't create dir");
+		    afs_com_err(whoami, errno, "can't create dir");
 		    printf("upclient: Can't update dir %s\n", curDir);
 		    return -1;
 		}
@@ -290,14 +290,14 @@ main(int argc, char **argv)
 	    error = rx_EndCall(call, 0);
 	    if (error && !errcode) {
 		printf("could not end rx call \n");
-		com_err(whoami, error, "calling EndCall");
+		afs_com_err(whoami, error, "calling EndCall");
 		goto fail;
 	    }
 	    if (errcode) {
 		printf
 		    ("warning: could not fetch the contents of directory %s \n",
 		     df->name);
-		com_err(whoami, errcode, "calling FetchFile");
+		afs_com_err(whoami, errcode, "calling FetchFile");
 		cnt++;
 		goto fail;
 	    }
@@ -305,7 +305,7 @@ main(int argc, char **argv)
 	    stream = fopen(dirbuf, "r");
 	    if (stream == NULL) {
 		printf("fopen failed on %s \n", dirbuf);
-		com_err(whoami, errno, "fopen");
+		afs_com_err(whoami, errno, "fopen");
 		goto fail;
 	    }
 	    umask(00);
@@ -354,7 +354,7 @@ main(int argc, char **argv)
 
 		dirp = opendir(curDir);
 		if (dirp == 0) {
-		    com_err(whoami, errno, "Can't open local dir %s", curDir);
+		    afs_com_err(whoami, errno, "Can't open local dir %s", curDir);
 		    goto fail;
 		}
 
@@ -373,7 +373,7 @@ main(int argc, char **argv)
 			errcode = unlink(filename);
 			if (errcode) {
 			    printf("could not delete file %s \n", filename);
-			    com_err(whoami, errno, "could not delete file %s",
+			    afs_com_err(whoami, errno, "could not delete file %s",
 				    filename);
 			}
 		    }
@@ -415,7 +415,7 @@ IsCompatible(char *filename, afs_int32 time, afs_int32 length)
 
     /* construct a local path from canonical (wire-format) path */
     if ((error = ConstructLocalPath(filename, "/", &localname))) {
-	com_err(whoami, error, "Unable to construct local path");
+	afs_com_err(whoami, error, "Unable to construct local path");
 	return error;
     }
 
@@ -448,12 +448,12 @@ FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
     fd = open(localFile, O_CREAT | O_TRUNC | O_WRONLY, 0666);
     if (fd < 0) {
 	printf("Could not create %s\n", localFile);
-	com_err(whoami, errno, "Could not create %s", localFile);
+	afs_com_err(whoami, errno, "Could not create %s", localFile);
 	error = UPDATE_ERROR;
 	return error;
     }
     if (fstat(fd, &status) < 0) {
-	com_err(whoami, errno, "Could not stat %s", localFile);
+	afs_com_err(whoami, errno, "Could not stat %s", localFile);
 	close(fd);
 	printf("could not stast %s\n", localFile);
 	return UPDATE_ERROR;
@@ -503,7 +503,7 @@ update_ReceiveFile(register int fd, register struct rx_call *call, register stru
 	if (!nbytes)
 	    error = UPDATE_ERROR;
 	if (write(fd, buffer, nbytes) != nbytes) {
-	    com_err(whoami, errno, "File system write failed!");
+	    afs_com_err(whoami, errno, "File system write failed!");
 	    printf("File system write failed!\n");
 	    error = UPDATE_ERROR;
 	}
@@ -586,7 +586,7 @@ NotOnHost(char *filename, struct filestr *okhostfiles)
     for (tf = okhostfiles; tf; tf = tf->next) {
 	/* construct local path from canonical (wire-format) path */
 	if ((rc = ConstructLocalPath(tf->name, "/", &hostfile))) {
-	    com_err(whoami, rc, "Unable to construct local path");
+	    afs_com_err(whoami, rc, "Unable to construct local path");
 	    return -1;
 	}
 	if (PathsAreEquivalent(hostfile, filename)) {
@@ -613,7 +613,7 @@ RenameNewFiles(struct filestr *modFiles)
     for (tf = modFiles; tf; tf = tf->next) {
 	/* construct local path from canonical (wire-format) path */
 	if ((errcode = ConstructLocalPath(tf->name, "/", &fname))) {
-	    com_err(whoami, errcode, "Unable to construct local path");
+	    afs_com_err(whoami, errcode, "Unable to construct local path");
 	    return errcode;
 	}
 	strcpy(newname, fname);
@@ -623,7 +623,7 @@ RenameNewFiles(struct filestr *modFiles)
 	errcode = renamefile(newname, fname);
 	if (errcode) {
 	    printf("could not rename %s to %s\n", newname, fname);
-	    com_err(whoami, errno, "could not rename %s to %s", newname,
+	    afs_com_err(whoami, errno, "could not rename %s to %s", newname,
 		    fname);
 	}
 	free(fname);
@@ -664,7 +664,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     /* construct local path from canonical (wire-format) path */
     errcode = ConstructLocalPath(filename, "/", &lfile);
     if (errcode) {
-	com_err(whoami, errcode, "Unable to construct local path");
+	afs_com_err(whoami, errcode, "Unable to construct local path");
 	return -1;
     }
     strcpy(newfile, lfile);
@@ -681,7 +681,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 
     if (errcode) {
 	printf("failed to fetch file %s \n", filename);
-	com_err(whoami, errcode, "fetching file");
+	afs_com_err(whoami, errcode, "fetching file");
 	return 1;
     }
 
@@ -690,7 +690,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     if (errcode) {
 	printf("could not change protection on %s to %u\n", newfile,
 	       (unsigned int)mode);
-	com_err(whoami, errno, "could not change protection on %s to %u",
+	afs_com_err(whoami, errno, "could not change protection on %s to %u",
 		newfile, mode);
 	return 1;
     }
@@ -703,7 +703,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     if (errcode) {
 	printf("warning: could not change uid and gid on %s to %u and %u \n",
 	       newfile, gid, uid);
-	com_err(whoami, errno,
+	afs_com_err(whoami, errno,
 		"warning: could not change uid and gid on %s to %u and %u",
 		newfile, gid, uid);
     }
@@ -716,7 +716,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     if (errcode) {
 	printf("could not change access and modify times on %s to %u %u\n",
 	       newfile, (unsigned int)atime, (unsigned int)mtime);
-	com_err(whoami, errno,
+	afs_com_err(whoami, errno,
 		"could not change access and modify times on %s to %u %u",
 		newfile, atime, mtime);
 	return 1;

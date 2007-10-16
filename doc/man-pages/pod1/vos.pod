@@ -41,7 +41,8 @@ There are several categories of commands in the vos command suite:
 =item *
 
 Commands to create, move, and rename volumes: B<vos backup>, B<vos
-backupsys>, B<vos create>, B<vos move>, and B<vos rename>.
+backupsys>, B<vos changeloc>, B<vos create>, B<vos move>, and B<vos
+rename>.
 
 =item *
 
@@ -55,7 +56,8 @@ B<vos listaddrs>.
 
 =item *
 
-Commands to create and restore dump files: B<vos dump> and B<vos restore>.
+Commands to create, size, and restore dump files: B<vos dump>, B<vos
+restore>, and B<vos size>.
 
 =item *
 
@@ -235,6 +237,7 @@ L<vos_apropos(1)>,
 L<vos_backup(1)>,
 L<vos_backupsys(1)>,
 L<vos_changeaddr(1)>,
+L<vos_changeloc(1)>,
 L<vos_create(1)>,
 L<vos_delentry(1)>,
 L<vos_dump(1)>,
@@ -252,6 +255,7 @@ L<vos_remove(1)>,
 L<vos_remsite(1)>,
 L<vos_rename(1)>,
 L<vos_restore(1)>,
+L<vos_size(1)>,
 L<vos_status(1)>,
 L<vos_syncserv(1)>,
 L<vos_syncvldb(1)>,

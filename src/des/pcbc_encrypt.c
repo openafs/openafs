@@ -24,13 +24,13 @@
 #ifndef KERNEL
 #include <stdio.h>
 #endif
-#include <des.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <des.h>
 #include "des_prototypes.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/pcbc_encrypt.c,v 1.9.2.1 2004/10/18 07:11:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/pcbc_encrypt.c,v 1.9.2.2 2007/07/09 19:16:48 shadow Exp $");
 
 #include "des_internal.h"
 

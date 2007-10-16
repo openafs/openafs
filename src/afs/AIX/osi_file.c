@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_file.c,v 1.9.2.1 2006/11/09 23:26:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_file.c,v 1.9.2.2 2007/08/16 03:54:26 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -30,7 +30,6 @@ osi_UFSOpen(afs_int32 ainode)
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
-    extern struct vfs *rootvfs;
     struct vnode *vp = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
@@ -48,7 +47,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     setuerror(0);
     AFS_GUNLOCK();
-    ip = (struct inode *)igetinode((dev_t) cacheDev.dev, rootvfs,
+    ip = (struct inode *)igetinode((dev_t) cacheDev.dev, afs_cacheVfsp,
 				   (ino_t) ainode, &vp, &dummy);
     AFS_GLOCK();
     if (getuerror()) {

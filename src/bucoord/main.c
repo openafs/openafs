@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/main.c,v 1.16.2.1 2007/01/05 03:34:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/main.c,v 1.16.2.3 2007/06/23 15:27:22 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -251,14 +251,14 @@ backupInit()
 
     /* don't run more than once */
     if (initd) {
-	com_err(whoami, 0, "Backup already initialized.");
+	afs_com_err(whoami, 0, "Backup already initialized.");
 	return 0;
     }
     initd = 1;
 
     code = bc_InitConfig(DefaultConfDir);
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Can't initialize from config files in directory '%s'",
 		DefaultConfDir);
 	return (code);
@@ -269,13 +269,13 @@ backupInit()
      */
     code = LWP_InitializeProcessSupport(LWP_NORMAL_PRIORITY, &pid);
     if (code) {
-	com_err(whoami, code, "; Can't initialize LWP");
+	afs_com_err(whoami, code, "; Can't initialize LWP");
 	return (code);
     }
 
     code = rx_Init(htons(0));
     if (code) {
-	com_err(whoami, code, "; Can't initialize Rx");
+	afs_com_err(whoami, code, "; Can't initialize Rx");
 	return (code);
     }
 
@@ -297,7 +297,7 @@ backupInit()
 	LWP_CreateProcess(statusWatcher, 20480, LWP_NORMAL_PRIORITY,
 			  (void *)2, "statusWatcher", &watcherPid);
     if (code) {
-	com_err(whoami, code, "; Can't create status monitor task");
+	afs_com_err(whoami, code, "; Can't create status monitor task");
 	return (code);
     }
 
@@ -341,14 +341,14 @@ MyBeforeProc(as)
 
 	code = backupInit();
 	if (code) {
-	    com_err(whoami, code, "; Can't initialize backup");
+	    afs_com_err(whoami, code, "; Can't initialize backup");
 	    exit(1);
 	}
 
 	/* Get initial information from the database */
 	code = bc_InitTextConfig();
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Can't obtain configuration text from backup database");
 	    exit(1);
 	}
@@ -409,7 +409,7 @@ doDispatch(targc, targv, dispatchCount)
 
     if (internalLoadFile) {	/* Load a file in */
 	if (dispatchCount > MAXRECURSION) {	/* Beware recursive loops. */
-	    com_err(whoami, 0, "Potential recursion: will not load file %s",
+	    afs_com_err(whoami, 0, "Potential recursion: will not load file %s",
 		    internalLoadFile);
 	    code = -1;
 	    goto done;
@@ -417,7 +417,7 @@ doDispatch(targc, targv, dispatchCount)
 
 	fd = fopen(internalLoadFile, "r");	/* Open the load file */
 	if (!fd) {
-	    com_err(whoami, errno, "; Cannot open file %s", internalLoadFile);
+	    afs_com_err(whoami, errno, "; Cannot open file %s", internalLoadFile);
 	    code = -1;
 	    goto done;
 	}
@@ -444,7 +444,7 @@ doDispatch(targc, targv, dispatchCount)
 		(!noExecute)) {	/*      or no execute */
 		c = cmd_ParseLine(lineBuffer, sargv, &sargc, MAXV);
 		if (c) {
-		    com_err(whoami, c, "; Can't parse line");
+		    afs_com_err(whoami, c, "; Can't parse line");
 		} else {
 		    doDispatch(sargc, sargv, dispatchCount + 1);	/* Recursive - ignore error */
 		    cmd_FreeArgv(sargv);	/* Free up arguments */
@@ -544,6 +544,8 @@ main(argc, argv)
 		"date from which to restore");
     cmd_AddParm(ts, "-portoffset", CMD_LIST, CMD_OPTIONAL, "TC port offsets");
     cmd_AddParm(ts, "-n", CMD_FLAG, CMD_OPTIONAL, "don't really execute it");
+    cmd_AddParm(ts, "-usedump", CMD_SINGLE, CMD_OPTIONAL,
+		"specify the dumpID to restore from");
     if (!interact)
 	add_std_args(ts);
 
@@ -796,8 +798,8 @@ main(argc, argv)
 	if (!LineIsBlank(lineBuffer)) {
 	    code = cmd_ParseLine(lineBuffer, targv, &targc, MAXV);
 	    if (code)
-		com_err(whoami, code, "; Can't parse line: '%s'",
-			error_message(code));
+		afs_com_err(whoami, code, "; Can't parse line: '%s'",
+			afs_error_message(code));
 	    else {
 		doDispatch(targc, targv, 1);
 		cmd_FreeArgv(targv);

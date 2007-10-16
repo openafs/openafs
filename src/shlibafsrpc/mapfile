@@ -57,8 +57,8 @@
 	rxkad_global_stats;
 	rxkad_global_stats_lock;
 	rxkad_stats_key;
-	com_err;
-	error_message;
+	afs_com_err;
+	afs_error_message;
 	rx_socket;
 	rxevent_debugFile;
 	rx_debugFile;

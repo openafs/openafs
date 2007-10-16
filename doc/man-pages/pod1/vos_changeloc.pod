@@ -1,0 +1,150 @@
+=head1 NAME
+
+vos changeloc - Change a volume's entry in the VLDB
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos changeloc> S<<< [B<-server>] <I<new server name>> >>>
+   S<<< [B<-partition>] <I<new partition location>> >>>
+   S<<< [B<-id>] <I<volume name or ID>> >>>
+   S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+   [B<-verbose>] [B<-encrypt>] [B<-help>]
+
+B<vos changel> S<<< [B<-s>] <I<new server name>> >>>
+   S<<< [B<-p>] <I<new partition location>> >>>
+   S<<< [B<-i>] <I<volume name or ID>> >>>
+   S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-e>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos changeloc> command changes the location of a volume in the
+Volume Location Database (VLDB) without needing to contact the original
+file server on which the volume was hosted. This is useful when a file
+server has gone down permanently and the data that was stored on that
+server has been moved to a new file server with a different name and IP
+address (perhaps by mounting the same /vicepX partitions on a different
+host). After moving the data and running B<vos changeloc>, run B<vos
+syncvldb> and then B<vos syncserv> against the new server to ensure full
+synchronization of the VLDB with the file server.
+
+In essence, B<vos changeloc> performs the same operations on the VLDB as
+B<vos move>, but it does NOT move the data from one server's file system
+to another.
+
+=head1 CAUTIONS
+
+Using B<vos changeloc> changes the VLDB without modifying the file server
+data, so it inherently causes the VLDB to be out of sync with the data on
+the servers. It should only be used when recovering from server failure.
+If the servers are on-line, B<vos move> should be used instead. It is
+highly recommended that B<vos syncvldb> and B<vos syncserv> be run after
+using the B<vos changeloc> command to ensure properly synchronization of
+the VLDB with the file servers.
+
+=head1 OPTIONS
+
+B<vos changeloc> takes the following options:
+
+=over 4
+
+=item B<-server> <I<new server name>>
+
+Specifies the new server where the VLDB should believe the volume resides.
+Provide the machine's IP address or its host name (either fully qualified
+or using an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Specifies the partition where the VLDB should believe the volume resides.
+entries. Provide the B<-server> argument along with this one. Provide the
+partition's complete name with preceding slash (for example, C</vicepa>)
+or use one of the three acceptable abbreviated forms. For details, see
+L<vos(1)>.
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies the name or volume ID number on which to operate.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-encrypt>
+
+Encrypts the commands that are sent to the server.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+B<vos changeloc> shows a brief message upon completion:
+
+   Changed location to server2 /vicepa for volume user.jdoe
+
+=head1 EXAMPLES
+
+The following command changes the location of the C<user.jdoe> volume to
+be F</vicepa> on the file server machine C<server2> while being verbose:
+
+   % vos changeloc server2 a user.jdoe -verbose
+    done
+   Changed location to server2 /vicepa for volume user.jdoe
+
+The following command changes the location of the C<user.jdoe> volume to
+be F</vicepa> on C<server1> without being verbose:
+
+   % vos changeloc server1 a user.jdoe
+   Changed location to server1 /vicepa for volume user.jdoe
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on each
+database server machine. If the B<-localauth> flag is included, the issuer
+must instead be logged on to a server machine as the local superuser
+C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_move(1)>,
+L<vos_syncserv(1)>,
+L<vos_syncvldb(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

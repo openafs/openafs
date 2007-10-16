@@ -1,0 +1,376 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH pt_util 8 "OpenAFS" "20/Aug/2007" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+pt_util \- Load or dump a Protection Server database
+.SH "SYNOPSIS"
+\fBpt_util\fR
+   <<\ [\fB\-w\fR]\ >> <<\ [\fB\-user\fR]\ >> <<\ [\fB\-group\fR]\ >>
+   <<\ [\fB\-members\fR]\ >> <<\ [\fB\-name\fR]\ >> <<\ [\fB\-system\fR]\ >>
+   <<\ [\fB\-xtra\fR]\ >> <<\ [\fB\-prdb\fR\ <\fIprdb\ file\fR] >>>
+   <<\ [\fB\-datafile\fR\ <\fIdata\ file\fR] >>> <<\ [\fB\-help\fR]\ >>
+.SH "DESCRIPTION"
+The \fBpt_util\fR command can be used to load or dump the protection
+database.  It should only be used when \fBptserver\fR is not running.
+.PP
+The most likely reason to use it is to initialize the protection database
+when bringing up a new cell.  The current syntax for this, presented
+below, needs improvement.  \fBpt_util\fR can also be used when problems are
+suspected with the database.  It can be used to dump the database or
+portions thereof, in several different ways, and to reload it.
+.PP
+The textual representation of the database has the following form:
+For users,
+.PP
+.Vb 1
+\&    name flags/quota viceid ownerid creatorid
+.Ve
+For groups,
+.PP
+.Vb 2
+\&    name flags/quota viceid ownerid creatorid
+\&     a-username a-user-viceid
+.Ve
+The second line is repeated for each member of the group.  When reading
+the database, membership is not reported unless \fB\-members\fR is also
+included.
+.SH "OPTIONS"
+If you don't specify any options, the only thing you'll learn is the ubik
+database epoch and version.
+.Ip "\fB\-w\fR" 4
+Write to the protection database instead of reading.  Only the file
+arguments make sense in combination with this argument.
+.Ip "\fB\-user\fR" 4
+When reading, display users.
+.Ip "\fB\-group\fR" 4
+When reading, display groups (but not necessarily members).
+.Ip "\fB\-members\fR" 4
+When reading, display groups and also group members.
+.Ip "\fB\-name\fR" 4
+When reading,
+follow name hashes, instead of id hashes.
+This may print different information if the database was corrupted.
+Otherwise, it should print exactly the same information, except
+in a different order.
+.Ip "\fB\-system\fR" 4
+When reading, display system data, or more precisely, do not display
+entries with a viced <= \-32768 or >= +97537.
+.Ip "\fB\-xtra\fR" 4
+When reading, display extra users and groups, or more precisely, do not
+display entries that are in the range \-32767...+97536 inclusive.
+.Ip "\fB\-prdb\fR <\fIprdb file\fR>" 4
+Specifies the complete pathname of the file in which the Protection
+Database resides.  Provide the complete name, including the ending
+\&\fI.\s-1DB0\s0\fR.
+.Ip "\fB\-datafile\fR <\fIdata file\fR>" 4
+Specify the file to which to dump (or \fB\-w\fR from which to read) textual
+database records.
+.SH "CAUTIONS"
+The file dump format does not include supergroup information, so should
+not be used if you have and are using groups within groups.
+.PP
+In all cases, entry timestamps and other information is also not
+preserved.
+.PP
+The epoch and version are reported on standard error.  On little-endian
+machines, they'll be byte swapped, so may be very random.
+.SH "EXAMPLES"
+The following example shows how to initialize the database from scratch.
+.PP
+Before you do this, make sure \fBptserver\fR is not running.  If you have
+multiple database servers, make sure \fIprdb.*\fR does not exist on any
+server machine.
+.PP
+Now, type this in EXACTLY, including the leading space on the line
+indicated.  But do use Control-D at the end, not up-arrow D.
+.PP
+.Vb 5
+\&    pt_util -w
+\&    admin 128/20 1 -204 -204
+\&    system:administrators 130/20 -204 -204 -204
+\&     admin 1
+\&    ^D
+.Ve
+You will see this:
+.PP
+.Vb 10
+\&    # pt_util -w
+\&    pt_util: /usr/afs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
+\&    Ubik Version is: 2.0
+\&    admin 128/20 1 -204 -204
+\&    system:administrators 130/20 -204 -204 -204
+\&    Error while creating system:administrators: Entry for id already exists
+\&     admin 1
+\&    pt_util: Ubik Version number changed during execution.
+\&    Old Version = 2.0, new version = 33554432.0
+\&    #
+.Ve
+To make a complete copy of the database,
+.PP
+.Vb 1
+\&    # pt_util -user -members -datafile /tmp/out
+.Ve
+To load from the complete copy,
+.PP
+.Vb 1
+\&    # pt_util -w -datafile /tmp/out
+.Ve
+Don't do this until you read cautions, above.
+.SH "PRIVILEGE REQUIRED"
+The issuer must be logged in as the superuser \f(CWroot\fR on a file server
+machine to use \fBpt_util\fR.
+.SH "SEE ALSO"
+the \fIprdb.DB0(5)\fR manpage,
+the \fIptserver(8)\fR manpage
+.SH "COPYRIGHT"
+The following copyright covers this documentation:
+.PP
+Copyright (c) 2005 The Regents of the University of Michigan.  ALL RIGHTS
+RESERVED.
+.PP
+Permission is granted to use, copy, create derivative works and
+redistribute this software and such derivative works for any purpose, so
+long as the name of the University of Michigan is not used in any
+advertising or publicity pertaining to the use or distribution of this
+software without specific, written prior authorization.  If the above
+copyright notice or any other identification of the University of Michigan
+is included in any copy of any portion of this software, then the
+disclaimer below must also be included.
+.PP
+This software is provided as is, without representation from the
+University of Michigan as to its fitness for any purpose, and without
+warranty by the University of Michigan of any kind, either express or
+implied, including without limitation the implied warranties of
+merchantability and fitness for a particular purpose.  The regents of the
+University of Michigan shall not be liable for any damages, including
+special, indirect, incidental, or consequential damages, with respect to
+any claim arising out of or in connection with the use of the software,
+even if it has been or is hereafter advised of the possibility of such
+damages.
+
+.rn }` ''
+.IX Title "pt_util 8"
+.IX Name "pt_util - Load or dump a Protection Server database"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-w\fR"
+
+.IX Item "\fB\-user\fR"
+
+.IX Item "\fB\-group\fR"
+
+.IX Item "\fB\-members\fR"
+
+.IX Item "\fB\-name\fR"
+
+.IX Item "\fB\-system\fR"
+
+.IX Item "\fB\-xtra\fR"
+
+.IX Item "\fB\-prdb\fR <\fIprdb file\fR>"
+
+.IX Item "\fB\-datafile\fR <\fIdata file\fR>"
+
+.IX Header "CAUTIONS"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

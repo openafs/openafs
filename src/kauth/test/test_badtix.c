@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_badtix.c,v 1.7 2003/07/15 23:15:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/test/test_badtix.c,v 1.7.2.1 2007/04/10 18:43:43 shadow Exp $");
 
 #include <sys/types.h>
 #include <des.h>
@@ -170,7 +170,7 @@ TestOldKeys(userkey)
 			      &adminConn))
 	) {
       abort:
-	com_err(whoami, code, "testing old keys");
+	afs_com_err(whoami, code, "testing old keys");
 	exit(1);
     }
 
@@ -275,7 +275,7 @@ TestOldKeys(userkey)
 	}
 	if (code) {
 	  abort_1:
-	    com_err(whoami, code, "at %d seconds: calling server with v=%x",
+	    afs_com_err(whoami, code, "at %d seconds: calling server with v=%x",
 		    sleep, v);
 	    exit(2);
 	}
@@ -296,7 +296,7 @@ TestOldKeys(userkey)
 			      &adminTokens[i], &conn);
 	if (code) {
 	  abort_ta:
-	    com_err(whoami, code, "Checking admin token #%d with kvno %d\n",
+	    afs_com_err(whoami, code, "Checking admin token #%d with kvno %d\n",
 		    i, (int)adminTokens[i].kvno);
 	    exit(5);
 	}
@@ -321,7 +321,7 @@ TestOldKeys(userkey)
 	    ka_GetToken(name, inst, localCell, name, inst, tgsConn, now,
 			now + 3600, &tgsTokens[i], "", &token);
 	if (code) {
-	    com_err(whoami, code, "Checking tgs token #%d with kvno %d\n", i,
+	    afs_com_err(whoami, code, "Checking tgs token #%d with kvno %d\n", i,
 		    (int)tgsTokens[i].kvno);
 	    exit(6);
 	}
@@ -329,7 +329,7 @@ TestOldKeys(userkey)
 
     code = ubik_Call(KAM_DeleteUser, adminConn, 0, aaname, aainst);
     if (code) {
-	com_err(whoami, code, "Deleting alternate admin user");
+	afs_com_err(whoami, code, "Deleting alternate admin user");
 	exit(3);
     }
     return;
@@ -414,7 +414,7 @@ main(argc, argv)
 
     code = ka_CellConfig(AFSCONF_CLIENTNAME);
     if (code)
-	com_err(whoami, code, "calling cell config");
+	afs_com_err(whoami, code, "calling cell config");
     localCell = ka_LocalCell();
 
     for (i = 0; i < (sizeof(truncate) / sizeof(int)); i++) {
@@ -453,15 +453,15 @@ main(argc, argv)
 
     code = rx_Init(0);
     if (code) {
-	com_err(whoami, code, "rx_Init'ing");
+	afs_com_err(whoami, code, "rx_Init'ing");
 	exit(1);
     }
     if (code = ka_Init(0)) {
-	com_err(whoami, code, "ka_Init'ing");
+	afs_com_err(whoami, code, "ka_Init'ing");
 	exit(1);
     }
     if (code = ubik_ParseClientList(3, args, serverList)) {
-	com_err(whoami, code, "parsing Ubik server list");
+	afs_com_err(whoami, code, "parsing Ubik server list");
 	exit(1);
     }
     ka_ExplicitCell(localCell, serverList);
@@ -480,7 +480,7 @@ main(argc, argv)
 	code = ubik_ClientInit(conns, &lpbkConn);
 	if (code) {
 	  abort_4:
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "getting %s's password via loopback connection to GetPassword",
 		    name);
 	    exit(1);
@@ -497,7 +497,7 @@ main(argc, argv)
     code = ka_AuthServerConn(localCell, KA_AUTHENTICATION_SERVICE, 0, &aconn);
     if (code) {
       abort:
-	com_err(whoami, code, "connecting to authentication service");
+	afs_com_err(whoami, code, "connecting to authentication service");
 	exit(1);
     }
     end = now + 100 * 3600 + 2;
@@ -522,7 +522,7 @@ main(argc, argv)
 			&token, 0);
     if (code) {
       abort_1:
-	com_err(whoami, code, "using admin ticket with time jitter");
+	afs_com_err(whoami, code, "using admin ticket with time jitter");
 	exit(1);
     }
 
@@ -544,7 +544,7 @@ main(argc, argv)
 	code = ubik_Call(KAM_SetPassword, conn, 0, name, inst, 0, badkey);
 	if (code != KABADKEY) {
 	  abort_5:
-	    com_err(whoami, code, "Trying to set bad key");
+	    afs_com_err(whoami, code, "Trying to set bad key");
 	    exit(1);
 	}
 	memset(&badkey, 0, sizeof(badkey));
@@ -566,7 +566,7 @@ main(argc, argv)
 	code = ubik_Call(KAM_SetPassword, conn, 0, aname, ainst, 0, akey);
 	if (code) {
 	  abort_6:
-	    com_err(whoami, code, "Checking SetPassword");
+	    afs_com_err(whoami, code, "Checking SetPassword");
 	    exit(2);
 	}
 	code =
@@ -595,7 +595,7 @@ main(argc, argv)
 			   &atoken.sessionKey, 0, aname, ainst);
 	if (code) {
 	  abort_3:
-	    com_err(whoami, code, "faking up AuthServer ticket");
+	    afs_com_err(whoami, code, "faking up AuthServer ticket");
 	    exit(1);
 	}
 	{
@@ -644,13 +644,13 @@ main(argc, argv)
     code =
 	ka_AuthServerConn(localCell, KA_MAINTENANCE_SERVICE, &atoken, &conn);
     if (code) {
-	com_err(whoami, code, "contacting admin server with bashed ticket");
+	afs_com_err(whoami, code, "contacting admin server with bashed ticket");
 	exit(0);		/* this is supposed to happen */
     }
     code =
 	ubik_Call(KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION, &tentry);
     if (code != RXKADBADTICKET) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"GetEntry failed to fail even with damaged ticket!!!!\n");
 	exit(1);
     }
@@ -661,7 +661,7 @@ main(argc, argv)
     if (argc == 2) {
 	code = setpag();
 	if (code)
-	    com_err(whoami, code, "calling SetPAG");
+	    afs_com_err(whoami, code, "calling SetPAG");
 	else
 	    printf("Calling SetPAG and exec'ing %s\n", argv[1]);
 	execve(argv[1], argv + 1, 0);

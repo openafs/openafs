@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.26 2007/02/09 01:30:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.28 2007/08/22 02:19:28 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -370,9 +370,21 @@ init_module(void)
     if (err)
 	return err;
     err = afs_init_inodecache();
-    if (err)
+    if (err) {
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
 	return err;
-    register_filesystem(&afs_fs_type);
+    }
+    err = register_filesystem(&afs_fs_type);
+    if (err) {
+	afs_destroy_inodecache();
+#ifndef LINUX_KEYRING_SUPPORT
+	osi_syscall_clean();
+#endif
+	return err;
+    }
+
     osi_sysctl_init();
 #ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_init();
@@ -392,9 +404,13 @@ void
 cleanup_module(void)
 #endif
 {
+#ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_shutdown();
+#endif
     osi_sysctl_clean();
+#ifndef LINUX_KEYRING_SUPPORT
     osi_syscall_clean();
+#endif
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();

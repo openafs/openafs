@@ -488,7 +488,7 @@ else
 			AFS_SYSNAME="s390x_linuxXX"
 			;;
 		sparc-*-linux*)
-			AFS_SYSNAME="sparc_linuxXX"
+			AFS_SYSNAME="`/bin/arch`_linuxXX"
 			;;
 		sparc64-*-linux*)
 			AFS_SYSNAME="sparc64_linuxXX"
@@ -582,6 +582,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         )
 
 		 LINUX_KERNEL_COMPILE_WORKS
+		 LINUX_HAVE_KMEM_CACHE_T
+		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
@@ -606,11 +608,15 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
+	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
+		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
+		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
@@ -626,6 +632,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
@@ -767,6 +774,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
 		 fi
+		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
+		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
+		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
 		 fi
@@ -812,6 +822,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
 		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_thread_info" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_THREAD_INFO, 1, [define if your struct task_struct has thread_info])
+		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
 		 fi
@@ -826,6 +839,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_f_flush_takes_fl_owner_t" = "xyes" ; then
+		  AC_DEFINE(FOP_FLUSH_TAKES_FL_OWNER_T, 1, [define if your fops.flush takes an fl_owner_t argument])
 		 fi
 		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
@@ -842,11 +858,25 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
 		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
+		 fi
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
 		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
+		 fi
+		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
+		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
+		 else
+		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
                 :
 		fi

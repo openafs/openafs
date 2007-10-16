@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS 1 "OpenAFS" "5/Jan/2006" "AFS Command Reference"
+.TH PTS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -226,6 +226,11 @@ other than membership: \fBpts chown\fR, \fBpts examine\fR, \fBpts listentries\fR
 Commands to set and examine the counters used when assigning IDs to users
 and groups: \fBpts listmax\fR and \fBpts setmax\fR.
 .Ip "\(bu" 4
+Commands to run commands interactively: \fBpts interactive\fR, \fBpts
+sleep\fR, and \fBpts quit\fR.
+.Ip "\(bu" 4
+A command to run commands from a file: \fBpts source\fR.
+.Ip "\(bu" 4
 Commands to obtain help: \fBpts apropos\fR and \fBpts help\fR.
 .SH "OPTIONS"
 The following arguments and flags are available on many commands in the
@@ -282,14 +287,18 @@ the \fIpts_createuser(1)\fR manpage,
 the \fIpts_delete(1)\fR manpage,
 the \fIpts_examine(1)\fR manpage,
 the \fIpts_help(1)\fR manpage,
+the \fIpts_interactive(1)\fR manpage,
 the \fIpts_listentries(1)\fR manpage,
 the \fIpts_listmax(1)\fR manpage,
 the \fIpts_listowned(1)\fR manpage,
 the \fIpts_membership(1)\fR manpage,
+the \fIpts_quit(1)\fR manpage,
 the \fIpts_removeuser(1)\fR manpage,
 the \fIpts_rename(1)\fR manpage,
 the \fIpts_setfields(1)\fR manpage,
-the \fIpts_setmax(1)\fR manpage
+the \fIpts_setmax(1)\fR manpage,
+the \fIpts_sleep(1)\fR manpage,
+the \fIpts_source(1)\fR manpage
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP
@@ -304,6 +313,10 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Header "NAME"
 
 .IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
 
 .IX Item "\(bu"
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/livesys.c,v 1.4 2003/07/15 23:17:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/livesys.c,v 1.4.2.1 2007/04/10 18:43:46 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -71,7 +71,7 @@ main(argc, argv)
     memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
-	fprintf(stderr, "livesys: %s\n", error_message(code));
+	fprintf(stderr, "livesys: %s\n", afs_error_message(code));
 	return 1;
     }
     input = space;

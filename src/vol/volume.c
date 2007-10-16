@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.9 2006/10/22 02:02:01 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.10 2007/06/23 13:46:53 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -379,9 +379,11 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
     VInit = 2;			/* Initialized, and all volumes have been attached */
     if (programType == volumeUtility && connect) {
 	if (!VConnectFS()) {
-	    Log("Unable to connect to file server; aborted\n");
+	    Log("Unable to connect to file server; will retry at need\n");
+#if 0
 	    Lock_Destroy(&FSYNC_handler_lock);
 	    exit(1);
+#endif
 	}
     }
     return 0;
@@ -457,17 +459,17 @@ VConnectFS(void)
 {
     int retVal;
     VOL_LOCK;
-    retVal = VConnectFS_r();
+    retVal = VConnectFS_r(0);
     VOL_UNLOCK;
     return retVal;
 }
 
 int
-VConnectFS_r(void)
+VConnectFS_r(int f)
 {
     int rc;
     assert(VInit == 2 && programType == volumeUtility);
-    rc = FSYNC_clientInit();
+    rc = FSYNC_clientInit(f);
     if (rc)
 	VInit = 3;
     return rc;
@@ -700,7 +702,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     int isbusy = 0;
     *ec = 0;
     if (programType == volumeUtility) {
-	assert(VInit == 3);
+	assert(VInit == 3 || VConnectFS_r(1));
 	VLockPartition_r(partition);
     }
     if (programType == fileServer) {

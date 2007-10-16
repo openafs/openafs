@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptclient.c,v 1.12.2.2 2006/07/31 21:51:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptclient.c,v 1.12.2.4 2007/08/11 23:50:02 jaltman Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -237,7 +237,7 @@ main(argc, argv)
 
     code = pr_Initialize(security, confdir, cell);
     if (code) {
-	com_err(whoami, code, "Couldn't initialize protection library");
+	afs_com_err(whoami, code, "Couldn't initialize protection library");
 	exit(1);
     }
 
@@ -252,7 +252,7 @@ main(argc, argv)
 
 	code = GetString(op, sizeof(op));
 	if (code) {
-	    com_err(whoami, PRBADARG,
+	    afs_com_err(whoami, PRBADARG,
 		    "error reading opcode in line '%s', got '%.*s'", line,
 		    sizeof(op), op);
 	    exit(1);
@@ -269,7 +269,7 @@ main(argc, argv)
 	    else
 		code = ubik_PR_INewEntry(pruclient, 0, name, id, oid);
 	    if (CodeOk(code))
-		com_err(whoami, code, "on %s %s %d %d", op, name, id, oid);
+		afs_com_err(whoami, code, "on %s %s %d %d", op, name, id, oid);
 	} else if (!strcmp(op, "sf")) {
 	    afs_int32 mask, access, gq, uq;
 	    if (GetInt32(&id) || GetXInt32(&mask) || GetXInt32(&access)
@@ -280,7 +280,7 @@ main(argc, argv)
 		    ubik_PR_SetFieldsEntry(pruclient, 0, id, mask,
 			      access, gq, uq, 0, 0);
 	    if (CodeOk(code))
-		com_err(whoami, code, "on %s %d %x %x %d %d", op, id, mask,
+		afs_com_err(whoami, code, "on %s %d %x %x %d %d", op, id, mask,
 			access, gq, uq);
 	} else if (!strcmp(op, "ce")) {
 	    char newname[PR_MAXNAMELEN];
@@ -293,7 +293,7 @@ main(argc, argv)
 		    ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid,
 			      newid);
 	    if (CodeOk(code))
-		com_err(whoami, code, "on %s %d %s %d %d", op, id, newname,
+		afs_com_err(whoami, code, "on %s %d %s %d %d", op, id, newname,
 			oid, newid);
 	} else if (!strcmp(op, "wh")) {
 	    /* scanf("%d",&id); */
@@ -334,7 +334,7 @@ main(argc, argv)
 	    else
 		code = ubik_PR_AddToGroup(pruclient, 0, id, gid);
 	    if (CodeOk(code))
-		com_err(whoami, code, "on %s %d %d", op, id, gid);
+		afs_com_err(whoami, code, "on %s %d %d", op, id, gid);
 	} else if (!strcmp(op, "iton")) {
 	    lid.idlist_val = (afs_int32 *) malloc(20 * sizeof(afs_int32));
 	    ptr = lid.idlist_val;
@@ -648,7 +648,7 @@ main(argc, argv)
 	else if (!strcmp(op, "fih")) {
 	    char tname[128];
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%s",name); */
 	    if (GetString(name, sizeof(name))) {
 		code = PRBADARG;
@@ -675,7 +675,7 @@ main(argc, argv)
 	} else if (!strcmp(op, "fnh")) {
 	    int tid;
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%d", &id); */
 	    if (GetInt32(&id)) {
 		code = PRBADARG;

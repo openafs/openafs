@@ -444,6 +444,18 @@ printk("%d\n", _tsk.exit_state);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO], [
+  AC_MSG_CHECKING([for thread_info in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_thread_info], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.thread_info);],
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=yes,
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_thread_info)])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
   AC_MSG_CHECKING([for alloc_inode in struct super_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_alloc_inode], [
@@ -454,6 +466,17 @@ printk("%p\n", _super.alloc_inode);],
       ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
       ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
+
+
+AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
+  AC_MSG_CHECKING([for 3rd argument in posix_lock_file found in new kernels])
+  AC_CACHE_VAL([ac_cv_linux_kernel_posix_lock_file_wait_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[posix_lock_file(0,0,0);],
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=yes,
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
 
 
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
@@ -644,6 +667,22 @@ struct nameidata _nameidata;
   AC_MSG_RESULT($ac_cv_linux_func_i_permission_takes_nameidata)])
 
 
+AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
+  AC_MSG_CHECKING([whether inode_operations.put_link takes an opaque cookie])
+  AC_CACHE_VAL([ac_cv_linux_func_i_put_link_takes_cookie], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>
+#include <linux/namei.h>],
+[struct inode _inode;
+struct dentry _dentry;
+struct nameidata _nameidata;
+void *cookie;
+(void)_inode.i_op->put_link(&_dentry, &_nameidata, cookie);],
+      ac_cv_linux_func_i_put_link_takes_cookie=yes,
+      ac_cv_linux_func_i_put_link_takes_cookie=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_i_put_link_takes_cookie)])
+
+
 AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA], [
   AC_MSG_CHECKING([whether dentry_operations.d_revalidate takes a nameidata])
   AC_CACHE_VAL([ac_cv_linux_func_d_revalidate_takes_nameidata], [
@@ -810,4 +849,48 @@ register_sysctl_table (t);],
       ac_cv_linux_register_sysctl_table_noflag=yes,
       ac_cv_linux_register_sysctl_table_noflag=no)])
   AC_MSG_RESULT($ac_cv_linux_register_sysctl_table_noflag)])
+
+AC_DEFUN([LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T], [
+  AC_MSG_CHECKING([whether file_operations.flush takes a fl_owner_t])
+  AC_CACHE_VAL([ac_cv_linux_func_f_flush_takes_fl_owner_t], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+fl_owner_t id;
+(void)_inode.i_fop->flush(&_file, &id);],
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=yes,
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_f_flush_takes_fl_owner_t)])
+
+AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
+  AC_MSG_CHECKING([whether kmem_cache_t exists])
+  AC_CACHE_VAL([ac_cv_linux_have_kmem_cache_t], [
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[kmem_cache_t *k;],
+      ac_cv_linux_have_kmem_cache_t=yes,
+      ac_cv_linux_have_kmem_cache_t=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_kmem_cache_t)])
+
+AC_DEFUN([LINUX_KMEM_CACHE_CREATE_TAKES_DTOR], [
+  AC_MSG_CHECKING([whether kmem_cache_create takes a destructor argument])
+  AC_CACHE_VAL([ac_cv_linux_kmem_cache_create_takes_dtor], [
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[kmem_cache_create(NULL, 0, 0, 0, NULL, NULL);],
+      ac_cv_linux_kmem_cache_create_takes_dtor=yes,
+      ac_cv_linux_kmem_cache_create_takes_dtor=no)])
+  AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_takes_dtor)])
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SENDFILE], [
+  AC_MSG_CHECKING([for sendfile in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_sendfile], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.sendfile(NULL, NULL, 0, 0, NULL);],
+      ac_cv_linux_fs_struct_fop_has_sendfile=yes,
+      ac_cv_linux_fs_struct_fop_has_sendfile=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
 

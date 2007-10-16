@@ -68,8 +68,8 @@ EXPORTS
 	xdrrx_create				@72
 	hton_syserr_conv			@73
 	rxkad_global_stats			@74 DATA
-	com_err					@75
-	error_message				@76
+	afs_com_err					@75
+	afs_error_message				@76
 	rx_socket				@77 DATA
 ;	AssertionFailed				@79
 	afs_winsockInit				@80
@@ -92,7 +92,7 @@ EXPORTS
 	multi_Select				@97
 	multi_Init				@98
 	multi_Finalize_Ignore			@99
-	add_to_error_table			@100
+	afs_add_to_error_table			@100
 	xdr_afsUUID				@101
 	rx_GetSpecific				@102
 	rx_SetSpecific				@103

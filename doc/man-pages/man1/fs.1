@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS 1 "OpenAFS" "28/Feb/2006" "AFS Command Reference"
+.TH FS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -201,10 +201,12 @@ Commands to set and report how the Cache Manager interacts with server
 machines:
 \fBfs checkservers\fR,
 \fBfs getcellstatus\fR,
+\fBfs getcrypt\fR,
 \fBfs getserverprefs\fR,
 \fBfs listcells\fR,
 \fBfs newcell\fR,
 \fBfs setcell\fR,
+\fBfs setcrypt\fR,
 \fBfs setserverprefs\fR,
 \fBfs sysname\fR,
 and \fBfs wscell\fR.
@@ -212,6 +214,7 @@ and \fBfs wscell\fR.
 Commands to administer access control lists (ACLs):
 \fBfs cleanacl\fR,
 \fBfs copyacl\fR,
+\fBfs getcalleraccess\fR,
 \fBfs listacl\fR,
 and \fBfs setacl\fR.
 .Ip "\(bu" 4
@@ -229,8 +232,11 @@ and \fBfs whichcell\fR.
 Commands to administer the local client cache and related information:
 \fBfs checkvolumes\fR,
 \fBfs flush\fR,
+\fBfs flushall\fR,
 \fBfs flushvolume\fR,
 \fBfs getcacheparms\fR,
+\fBfs listaliases\fR,
+\fBfs newalias\fR,
 and \fBfs setcachesize\fR.
 .Ip "\(bu" 4
 Commands to administer volume mount points:
@@ -313,19 +319,24 @@ the \fIfs_diskfree(1)\fR manpage,
 the \fIfs_examine(1)\fR manpage,
 the \fIfs_exportafs(1)\fR manpage,
 the \fIfs_flush(1)\fR manpage,
+the \fIfs_flushall(1)\fR manpage,
 the \fIfs_flushmount(1)\fR manpage,
 the \fIfs_flushvolume(1)\fR manpage,
 the \fIfs_getcacheparms(1)\fR manpage,
+the \fIfs_getcalleraccess(1)\fR manpage,
 the \fIfs_getcellstatus(1)\fR manpage,
 the \fIfs_getclientaddrs(1)\fR manpage,
+the \fIfs_getcrypt(1)\fR manpage,
 the \fIfs_getserverprefs(1)\fR manpage,
 the \fIfs_help(1)\fR manpage,
 the \fIfs_listacl(1)\fR manpage,
+the \fIfs_listaliases(1)\fR manpage,
 the \fIfs_listcells(1)\fR manpage,
 the \fIfs_listquota(1)\fR manpage,
 the \fIfs_lsmount(1)\fR manpage,
 the \fIfs_messages(1)\fR manpage,
 the \fIfs_mkmount(1)\fR manpage,
+the \fIfs_newalias(1)\fR manpage,
 the \fIfs_newcell(1)\fR manpage,
 the \fIfs_quota(1)\fR manpage,
 the \fIfs_rmmount(1)\fR manpage,
@@ -333,6 +344,7 @@ the \fIfs_setacl(1)\fR manpage,
 the \fIfs_setcachesize(1)\fR manpage,
 the \fIfs_setcell(1)\fR manpage,
 the \fIfs_setclientaddrs(1)\fR manpage,
+the \fIfs_setcrypt(1)\fR manpage,
 the \fIfs_setquota(1)\fR manpage,
 the \fIfs_setserverprefs(1)\fR manpage,
 the \fIfs_setvol(1)\fR manpage,

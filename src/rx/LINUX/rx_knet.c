@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.12 2007/02/26 17:59:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.14 2007/06/12 05:47:48 rra Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -173,7 +173,11 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#else
+            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
+#endif
 #endif
 #endif
 	    )
@@ -213,30 +217,34 @@ osi_StopListener(void)
     struct task_struct *listener;
     extern int rxk_ListenerPid;
 
-#ifdef EXPORTED_TASKLIST_LOCK
-    if (&tasklist_lock)
-      read_lock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
-    else
-#endif
-      rcu_read_lock();
-#endif
-    listener = find_task_by_pid(rxk_ListenerPid);
-#ifdef EXPORTED_TASKLIST_LOCK
-    if (&tasklist_lock)
-       read_unlock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
-    else
-#endif
-      rcu_read_unlock();
-#endif
     while (rxk_ListenerPid) {
-	flush_signals(listener);
-	force_sig(SIGKILL, listener);
+#ifdef EXPORTED_TASKLIST_LOCK
+	if (&tasklist_lock)
+	   read_lock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+	else
+#endif
+	   rcu_read_lock();
+#endif
+	listener = find_task_by_pid(rxk_ListenerPid);
+        if (listener) {
+	    flush_signals(listener);
+	    force_sig(SIGKILL, listener);
+	}
+#ifdef EXPORTED_TASKLIST_LOCK
+	if (&tasklist_lock)
+	    read_unlock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+	else
+#endif
+	   rcu_read_unlock();
+#endif
+	if (!listener)
+	    break;
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
     sock_release(rx_socket);

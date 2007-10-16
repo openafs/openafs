@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6 2003/07/15 23:15:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6.2.2 2007/08/20 17:29:25 shadow Exp $");
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -71,6 +71,161 @@ RCSID
 #include <afs/auth.h>
 #include "kauth.h"
 #include "kautils.h"
+
+#ifndef WORDS_BIGENDIAN
+/* This was taken from jhutz's patch for heimdal krb4. It only
+ * applies to little endian systems. Big endian systems have a
+ * less elegant solution documented below.
+ *
+ * This record is written after every real ticket, to ensure that
+ * both 32- and 64-bit readers will perceive the next real ticket
+ * as starting in the same place.  This record looks like a ticket
+ * with the following properties:
+ *   Field         32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         "."                "."
+ *   sinst         ""                 ""
+ *   srealm        ".."               ".."
+ *   session key   002E2E00 xxxxxxxx  xxxxxxxx 00000000
+ *   lifetime      0                  0
+ *   kvno          0                  12
+ *   ticket        12 nulls           4 nulls
+ *   issue         0                  0
+ */
+static unsigned char align_rec[] = {
+    0x2e, 0x00, 0x00, 0x2e, 0x2e, 0x00, 0x00, 0x2e,
+    0x2e, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00,
+    0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
+
+#else /* AFSLITTLE_ENDIAN */
+
+/* This was taken from asedeno's patch for MIT Kerberos. These
+ * alignment records are for big endian systems. We need more of them
+ * because the portion of the 64-bit issue_date that overlaps with the
+ * start of a ticket on 32-bit systems contains an unpredictable
+ * number of NULL bytes. Preceeding these records is a second copy of
+ * the 32-bit issue_date. The srealm for the alignment records is
+ * always one of ".." or "?.."
+ */
+
+/* No NULL bytes
+ * This is actually two alignment records since both 32- and 64-bit
+ * readers will agree on everything in the first record up through the
+ * issue_date size, except where sname starts.
+ *   Field (1)     32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         "????."            "."
+ *   sinst         ""                 ""
+ *   srealm        ".."               ".."
+ *   session key   00000000 xxxxxxxx  00000000 xxxxxxxx
+ *   lifetime      0                  0
+ *   kvno          0                  0
+ *   ticket        4 nulls           4 nulls
+ *   issue         0                  0
+ *
+ *   Field (2)     32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         "."                "."
+ *   sinst         ""                 ""
+ *   srealm        ".."               ".."
+ *   session key   002E2E00 xxxxxxxx  xxxxxxxx 00000000
+ *   lifetime      0                  0
+ *   kvno          0                  12
+ *   ticket        12 nulls           4 nulls
+ *   issue         0                  0
+ *
+ */
+static unsigned char align_rec_0[] = {
+    0x2e, 0x00, 0x00, 0x2e, 0x2e, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x2e, 0x00, 0x00, 0x2e, 0x2e, 0x00,
+    0x00, 0x2e, 0x2e, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x04,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+/* One NULL byte
+ *   Field         32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         "x"  |"xx"|"xxx"   "."
+ *   sinst         "xx."|"x."|"."     ".."
+ *   srealm        ".."               "..."
+ *   session key   2E2E2E00 xxxxxxxx  xxxxxxxx 00000000
+ *   lifetime      0                  0
+ *   kvno          0                  12
+ *   ticket        12 nulls           4 nulls
+ *   issue         0                  0
+ */
+static unsigned char align_rec_1[] = {
+    0x2e, 0x00, 0x2e, 0x2e, 0x00, 0x2e, 0x2e, 0x2e,
+    0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00
+};
+
+/* Two NULL bytes
+ *   Field         32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         "x"  |"x" |"xx"    ".."
+ *   sinst         ""   |"x" |""      ""
+ *   srealm        "x.."|".."|".."    ".."
+ *   session key   002E2E00 xxxxxxxx  xxxxxxxx 00000000
+ *   lifetime      0                  0
+ *   kvno          0                  12
+ *   ticket        12 nulls           4 nulls
+ *   issue         0                  0
+ */
+ static unsigned char align_rec_2[] = {
+    0x2e, 0x2e, 0x00, 0x00, 0x2e, 0x2e, 0x00, 0xff,
+    0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00,
+    0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+/* Three NULL bytes
+ * Things break here for 32-bit krb4 libraries that don't
+ * understand this alignment record. We can't really do
+ * anything about the fact that the three strings ended
+ * in the duplicate timestamp. The good news is that this
+ * only happens once every 0x1000000 seconds, once roughly
+ * every six and a half months. We'll live.
+ *
+ * Discussion on the krbdev list has suggested the
+ * issue_date be incremented by one in this case to avoid
+ * the problem. I'm leaving this here just in case.
+ *
+ *   Field         32-bit             64-bit
+ *   ============  =================  =================
+ *   sname         ""                 "."
+ *   sinst         ""                 ""
+ *   srealm        ""                 ".."
+ *   session key   2E00002E 2E00FFFF  xxxx0000 0000xxxx
+ *   lifetime      0                  0
+ *   kvno          4294901760         917504
+ *   ticket        14 nulls           4 nulls
+ *   issue         0                  0
+ */
+/*
+static unsigned char align_rec_3[] = {
+    0x2e, 0x00, 0x00, 0x2e, 0x2e, 0x00, 0xff, 0xff,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+*/
+#endif /* AFSLITTLE_ENDIAN */
 
 afs_int32
 krb_write_ticket_file(realm)
@@ -149,12 +304,73 @@ krb_write_ticket_file(realm)
     if (write(fd, (char *)(token.ticket), count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *)&token.startTime, sizeof(afs_int32))
+    if (write(fd, (char *)&(token.startTime), sizeof(afs_int32))
 	!= sizeof(afs_int32))
 	goto bad;
     close(fd);
     return 0;
 
+    /* Alignment Record, from MIT Kerberos */
+#ifndef WORDS_BIGENDIAN
+    if (write(fd, align_rec, sizeof(align_rec)) != sizeof(align_rec))
+	goto bad;
+#else /* AFSLITTLE_ENDIAN */
+    {
+	int null_bytes = 0;
+	if (0 == (token.startTime & 0xff000000))
+	    ++null_bytes;
+	if (0 == (token.startTime & 0x00ff0000))
+	    ++null_bytes;
+	if (0 == (token.startTime & 0x0000ff00))
+	    ++null_bytes;
+	if (0 == (token.startTime & 0x000000ff))
+	    ++null_bytes;
+
+	switch(null_bytes) {
+	case 0:
+	     /* Issue date */
+	    if (write(fd, (char *) token.startTime, sizeof(afs_int32))
+		!= sizeof(afs_int32))
+		goto bad;
+	    if (write(fd, align_rec_0, sizeof(align_rec_0))
+		!= sizeof(align_rec_0))
+		goto bad;
+	    break;
+
+	case 1:
+	    /* Issue date */
+	    if (write(fd, (char *) &token.startTime, sizeof(afs_int32))
+		!= sizeof(afs_int32))
+		goto bad;
+	    if (write(fd, align_rec_1, sizeof(align_rec_1))
+		!= sizeof(align_rec_1))
+		goto bad;
+	    break;
+
+	case 3:
+	    /* Three NULLS are troublesome but rare. We'll just pretend
+	     * they don't exist by decrementing the token.startTime.
+	     */
+	    --token.startTime;
+	case 2:
+	    /* Issue date */
+	    if (write(fd, (char *) &token.startTime, sizeof(afs_int32))
+		!= sizeof(afs_int32))
+		goto bad;
+	    if (write(fd, align_rec_2, sizeof(align_rec_2))
+		!= sizeof(align_rec_2))
+		goto bad;
+	    break;
+
+	default:
+	     goto bad;
+	}
+    }
+#endif  /* AFSLITTLE_ENDIAN */
+    close(fd);
+    return 0;
+      
+    
   bad:
     close(fd);
     return -1;

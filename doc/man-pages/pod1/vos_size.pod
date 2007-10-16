@@ -1,0 +1,147 @@
+=head1 NAME
+
+vos size - Computes the size of a volume dump
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos size> S<<< [B<-cell> <I<cell name>>] >>> [B<-dump>]
+    [B<-encrypt>] [B<-help>] [B<-id>] <I<volume name or id>>
+    [B<-localauth>] [B<-noauth>]
+    S<<< [B<-partition> <I<partition name>>] >>>
+    S<<< [B<-server> <I<machine name>>] >>>
+    S<<< [B<-time> <I<dump from time>>] >>> [B<-verbose>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos size> command shows the size of a volume's dump for backup
+purposes. The size of the dump may differ from the volume size as reported
+by B<vos examine> or B<fs listquota>. The size is shown in bytes.
+
+This command is intended for use with backup systems that want to size
+volume dumps before performing them (to optimize use of tape resources,
+for example).
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cell> <I<cell name>>
+
+The cell in which the volume resides, if it's not in the current cell.
+
+=item B<-dump>
+
+Show the size of the volume dump for the specified volume. Currently, this
+flag should always be given for B<vos size> to give useful information.
+It is present to allow this command to provide other size estimates in the
+future.
+
+=item B<-encrypt>
+
+Encrypt the command.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=item B<-id> <I<volume name or id>>
+
+Specifies either the complete name or volume ID number of the read/write,
+read-only, or backup volume to size.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. Do not combine
+this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Specifies the partition on which the volume resides. Provide the
+B<-server> argument along with this one.
+
+=item B<-server> <I<machine name>>
+
+Specifies the file server machine on which the volume resides.  Provide
+the B<-partition> argument along with this one.
+
+=item B<-time> <I<dump from time>>
+
+Specifies whether the dump is full or incremental. Omit this argument to
+size a full dump. See L<vos_dump(1)> for the valid values for this
+option.
+
+=item B<-verbose>
+
+Show more output about what's going on.
+
+=back
+
+=head1 OUTPUT
+
+When run without B<-verbose>, the output will be:
+
+   Volume: <volume>
+   dump_size: <size>
+
+where <volume> is the name of the volume and <size> is the size of the
+dump in bytes. With B<-verbose>, additional status messages will be
+printed between those two lines.
+
+=head1 EXAMPLES
+
+Sizing a single user volume:
+
+   % vos size user.thoron -dump
+   Volume: user.thoron
+   dump_size: 36430
+
+or, more verbosely:
+
+   % vos size user.thoron -dump -verbose
+   Volume: user.thoron
+   Starting transaction on volume 2003434023... done
+   Getting size of volume on volume 2003434023... done
+   Ending transaction on volume 2003434023... done
+   dump_size: 36430
+
+Sizing an incremental dump for the same volume:
+
+   % vos size -id user.thoron -time '05/04/2007 00:00:00' -dump 
+   Volume: user.thoron
+   dump_size: 21095
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument or the machine on which the
+volume is located if B<-server> was not given.  If the B<-localauth> flag
+is included, the issuer must instead be logged on to a server machine as
+the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<fs_listquota(1)>,
+L<vos_dump(1)>,
+L<vos_examine(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version
+1.0. This man page was written by Jason Edgecombe for OpenAFS.

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.8 2006/12/01 18:49:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.9 2007/03/27 03:22:25 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -56,9 +56,9 @@ RCSID
 
 #if defined(AFS_S390X_LINUX24_ENV) 
 #define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
-	if (POINTER2SYSCALL FUNC > 0x7fffffff) { \
+	if (SYSCALL2POINTER FUNC > 0x7fffffff) { \
 	    TMPPAGE = kmalloc ( PAGE_SIZE, GFP_DMA|GFP_KERNEL );	\
-	    if (POINTER2SYSCALL TMPPAGE > 0x7fffffff) { \
+	    if (SYSCALL2POINTER TMPPAGE > 0x7fffffff) { \
 		printf("Cannot allocate page for FUNC syscall jump vector\n"); \
 		return EINVAL; \
 	    } \

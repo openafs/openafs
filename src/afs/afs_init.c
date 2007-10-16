@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.5 2005/10/05 05:58:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.7 2007/10/10 17:43:35 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -244,8 +244,12 @@ afs_InitCellInfo(char *afile)
     ino_t inode;
     int code;
 
+#ifdef AFS_CACHE_VNODE_PATH
+    return afs_cellname_init(AFS_CACHE_CELLS_INODE, code);
+#else
     code = LookupInodeByPath(afile, &inode, NULL);
     return afs_cellname_init(inode, code);
+#endif
 }
 
 /*
@@ -286,6 +290,8 @@ afs_InitVolumeInfo(char *afile)
      * it in the cache...
      */
     code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
+#elif defined(AFS_CACHE_VNODE_PATH)
+    volumeInode = AFS_CACHE_VOLUME_INODE;
 #else
     code = LookupInodeByPath(afile, &volumeInode, NULL);
 #endif
@@ -416,11 +422,15 @@ afs_InitCacheInfo(register char *afile)
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
 #endif
-    cacheInode = afs_vnodeToInumber(filevp);
-    cacheDev.dev = afs_vnodeToDev(filevp);
+#ifndef AFS_CACHE_VNODE_PATH
 #ifndef AFS_DARWIN80_ENV
     afs_cacheVfsp = filevp->v_vfsp;
 #endif
+    cacheInode = afs_vnodeToInumber(filevp);
+#else
+    cacheInode = AFS_CACHE_ITEMS_INODE;
+#endif
+    cacheDev.dev = afs_vnodeToDev(filevp);
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */

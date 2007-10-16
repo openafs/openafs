@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5.2.1 2004/08/25 07:09:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5.2.2 2007/04/10 18:43:42 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>
@@ -45,7 +45,7 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
  * Function to initialize the et_list_mutex
  */
 
-void
+static void
 et_mutex_once(void)
 {
     assert(!pthread_mutex_init
@@ -110,7 +110,7 @@ volume_message(int code)
 }
 
 const char *
-error_message(afs_int32 code)
+afs_error_message(afs_int32 code)
 {
     int offset;
     struct et_list *et;
@@ -147,7 +147,7 @@ error_message(afs_int32 code)
     UNLOCK_ET_LIST;
     strcpy(buffer, "Unknown code ");
     if (table_num) {
-	strcat(buffer, error_table_name(table_num));
+	strcat(buffer, afs_error_table_name(table_num));
 	strcat(buffer, " ");
     }
     for (cp = buffer; *cp; cp++);
@@ -169,7 +169,7 @@ error_message(afs_int32 code)
 }
 
 void
-add_to_error_table(struct et_list *new_table)
+afs_add_to_error_table(struct et_list *new_table)
 {
     struct et_list *et;
 

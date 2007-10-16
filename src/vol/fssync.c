@@ -51,7 +51,7 @@ static int newVLDB = 1;
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.6 2007/02/08 23:59:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.7 2007/06/23 13:46:53 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -162,7 +162,7 @@ extern int LogLevel;
 struct Lock FSYNC_handler_lock;
 
 int
-FSYNC_clientInit(void)
+FSYNC_clientInit(int f)
 {
 #ifdef USE_UNIX_SOCKETS
     struct sockaddr_un addr;
@@ -178,6 +178,10 @@ FSYNC_clientInit(void)
 	FS_sd = getport(&addr);
 	if (connect(FS_sd, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
 	    return 1;
+	if (!f) {
+	    FSYNC_clientFinis();
+	    return 0;
+	}
 	if (!*timeout)
 	    break;
 	if (!(*timeout & 1))
@@ -206,6 +210,7 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
     byte response;
     struct command command;
     int n;
+    int retrycount = 8;
     command.volume = volume;
     command.command = com;
     command.reason = reason;
@@ -213,38 +218,42 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
 	strcpy(command.partName, partName);
     else
 	command.partName[0] = 0;
-    assert(FS_sd != -1);
     VFSYNC_LOCK;
 #ifdef AFS_NT40_ENV
-    if (send(FS_sd, (char *)&command, sizeof(command), 0) != sizeof(command)) {
-	printf("FSYNC_askfs: write to file server failed\n");
-	response = FSYNC_DENIED;
-	goto done;
-    }
-    while ((n = recv(FS_sd, &response, 1, 0)) != 1) {
-	if (n == 0 || WSAEINTR != WSAGetLastError()) {
-	    printf("FSYNC_askfs: No response from file server\n");
-	    response = FSYNC_DENIED;
-	    goto done;
-	}
-    }
+#define FS_SEND(fd,cmd)	send(fd, (char*)&(cmd), sizeof(cmd), 0)
+#define FS_RECV(fd,resp) recv(fd, &(resp), 1, 0)
+#define FS_PERROR(m)	fprintf(stderr,"%s\n", m)
+#define FS_INTERRUPTED(n)	((n) && WSAEINTR == WSAGetLastError())
 #else
-    if (write(FS_sd, &command, sizeof(command)) != sizeof(command)) {
-	printf("FSYNC_askfs: write to file server failed\n");
+#define FS_SEND(fd,cmd)	write(fd,&(cmd), sizeof (cmd))
+#define FS_RECV(fd,resp) read(fd, &(resp), 1)
+#define FS_PERROR(m)	perror(m)
+#define FS_INTERRUPTED(n)	(n && errno == EINTR)
+#endif
+    for (;;) {
+	if (FS_sd != -1) {
+	    if (FS_SEND(FS_sd, command) == sizeof(command)) break;
+	    FS_PERROR("FSYNC_askfs: write to file server failed");
+	}
+	if (--retrycount > 0) {
+	    FSYNC_clientFinis();
+	    if (FSYNC_clientInit(1)) continue;
+	}
 	response = FSYNC_DENIED;
 	goto done;
     }
-    while ((n = read(FS_sd, &response, 1)) != 1) {
-	if (n == 0 || errno != EINTR) {
-	    printf("FSYNC_askfs: No response from file server\n");
-	    response = FSYNC_DENIED;
-	    goto done;
-	}
+    for (;;) {
+	errno = 0;
+	n = FS_RECV(FS_sd, response);
+	if (n == 1) break;
+	if (FS_INTERRUPTED(n)) continue;
+	fprintf(stderr,"FSYNC_askfs: No response from file server\n");
+	response = FSYNC_DENIED;
+	goto done;
     }
-#endif
     if (response == 0) {
-	printf
-	    ("FSYNC_askfs: negative response from file server; volume %u, command %d\n",
+	fprintf(stderr,
+	    "FSYNC_askfs: negative response from file server; volume %u, command %d\n",
 	     command.volume, (int)command.command);
     }
   done:
@@ -338,13 +347,6 @@ FSYNC_sync()
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 
-#ifdef USE_UNIX_SOCKETS
-    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               "fssync.sock", NULL);
-    /* ignore errors */
-    remove(tbuffer);
-#endif /* USE_UNIX_SOCKETS */
-
     while (!VInit) {
 	/* Let somebody else run until level > 0.  That doesn't mean that 
 	 * all volumes have been attached. */
@@ -366,6 +368,15 @@ FSYNC_sync()
 	if ((code =
 	     bind(AcceptSd, (struct sockaddr *)&addr, sizeof(addr))) == 0)
 	    break;
+#ifdef USE_UNIX_SOCKETS
+	code = errno;
+	if (remove(addr.sun_path) == 0) {
+	    Log("FSYNC_sync: bind failed with (%d), removed bogus %s\n",
+		code, addr.sun_path);
+	    continue;
+	}
+	errno = code;
+#endif
 	Log("FSYNC_sync: bind failed with (%d), will sleep and retry\n",
 	    errno);
 	sleep(5);

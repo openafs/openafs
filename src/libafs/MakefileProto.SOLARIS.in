@@ -33,7 +33,7 @@ DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
 
 <sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
-KDEFS_32 = 
+KDEFS_32 = -xarch=v8
 KDEFS_64 = -xarch=v9 
 
 <sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>

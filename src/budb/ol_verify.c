@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13 2003/11/29 22:08:09 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.1 2007/07/06 11:38:31 jaltman Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -303,9 +303,10 @@ TypeName(index)
     return (typeName[index]);
 }
 
-getDumpID(ut, tapePtr, dumpID)
-     struct tape *tapePtr;
-     afs_int32 *dumpID;
+int
+getDumpID(struct ubik_trans *ut,
+    struct tape *tapePtr,
+    afs_int32 *dumpID)
 {
     struct dump d;
     afs_int32 code;
@@ -314,6 +315,7 @@ getDumpID(ut, tapePtr, dumpID)
     code = dbread(ut, ntohl(tapePtr->dump), &d, sizeof(d));
     if (!code)
 	*dumpID = ntohl(d.id);
+    return code;
 }
 
 /* ------------------------------------

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.6 2006/01/25 03:49:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.11 2007/07/19 18:52:41 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -399,8 +399,8 @@ PrintError(char *msg, afs_int32 errcode)
 	    initialize_VL_error_table();
 
 	    offset = errcode & ((1 << ERRCODE_RANGE) - 1);
-	    fprintf(STDERR, "%s: %s\n", error_table_name(errcode),
-		    error_message(errcode));
+	    fprintf(STDERR, "%s: %s\n", afs_error_table_name(errcode),
+		    afs_error_message(errcode));
 	    break;
 	}
     }
@@ -644,7 +644,7 @@ UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,
 
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
     /* next the next 3 available ids from the VLDB */
-    vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 3, anewid);
+    vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 3, anewid);
     EGOTO1(cfail, vcode, "Could not get an Id for volume %s\n", aname);
 
     code =
@@ -788,7 +788,7 @@ UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     int notondisk = 0, notinvldb = 0;
 
     /* Find and read bhe VLDB entry for this volume */
-    code = ubik_Call(VL_SetLock, cstruct, 0, avolid, avoltype, VLOP_DELETE);
+    code = ubik_VL_SetLock(cstruct, 0, avolid, avoltype, VLOP_DELETE);
     if (code) {
 	if (code != VL_NOENT) {
 	    EGOTO1(error_exit, code,
@@ -938,7 +938,7 @@ UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	    fprintf(STDOUT,
 		    "Last reference to the VLDB entry for %lu - deleting entry\n",
 		    (unsigned long)avolid);
-	code = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, vtype);
+	code = ubik_VL_DeleteEntry(cstruct, 0, avolid, vtype);
 	EGOTO1(error_exit, code,
 	       "Could not delete the VLDB entry for the volume %u \n",
 	       avolid);
@@ -987,8 +987,9 @@ UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 
     if (islocked) {
 	code =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, avolid, -1,
-		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
+	    ubik_VL_ReleaseLock(cstruct, 0, avolid, -1,
+				(LOCKREL_OPCODE | LOCKREL_AFSID | 
+				 LOCKREL_TIMESTAMP));
 	if (code) {
 	    EPRINT1(code,
 		    "Could not release the lock on the VLDB entry for the volume %u \n",
@@ -1109,7 +1110,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	exit(1);
     }
 
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, afromvol, RWVOL, VLOP_MOVE);
+    vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_MOVE);
     EGOTO1(mfail, vcode, "Could not lock entry for volume %u \n", afromvol);
     islocked = 1;
 
@@ -1138,7 +1139,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 		}
 	    }
 	    vcode =
-		ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, -1,
+		ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 			  (LOCKREL_OPCODE | LOCKREL_AFSID |
 			   LOCKREL_TIMESTAMP));
 	    EGOTO1(mfail, vcode,
@@ -1266,7 +1267,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		afromvol);
 	newVol = 0;
-	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &newVol);
 	EGOTO1(mfail, vcode,
 	       "Could not get an ID for the clone of volume %u from the VLDB\n",
 	       afromvol);
@@ -1684,7 +1685,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (islocked) {
 	VPRINT1("Cleanup: Releasing VLDB lock on volume %u ...", afromvol);
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, -1,
+	    ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (vcode) {
 	    VPRINT("\n");
@@ -1766,7 +1767,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     /* unlock VLDB entry */
     if (islocked) {
 	VPRINT1("Recovery: Releasing VLDB lock on volume %u ...", afromvol);
-	ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, -1,
+	ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 		  (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	VDONE;
     }
@@ -1976,7 +1977,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     /* unlock VLDB entry */
     VPRINT1("Recovery: Releasing lock on VLDB entry for volume %u ...",
 	    afromvol);
-    ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, -1,
+    ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 	      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
     VDONE;
 
@@ -2090,7 +2091,7 @@ UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		afromvol);
 	cloneVol = 0;
-	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &cloneVol);
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &cloneVol);
 	EGOTO1(mfail, vcode,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
@@ -2103,7 +2104,7 @@ UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	/* Get a new volume id */
 	VPRINT1("Allocating new volume id for copy of volume %u ...", afromvol);
 	newVol = 0;
-	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &newVol);
 	EGOTO1(mfail, vcode,
 	       "Could not get an ID for the copy of volume %u from the VLDB\n",
 	       afromvol);
@@ -2480,7 +2481,7 @@ cpincr:
 	VPRINT1("Recovery: Creating transaction on clone volume %u ...",
 		cloneVol);
 	code =
-	    AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline,
+	    AFSVolTransCreate(fromconn, cloneVol, afrompart, ITOffline,
 			      &clonetid);
 	if (!code) {
 	    VDONE;
@@ -2561,7 +2562,7 @@ UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	(entry.flags & VLOP_ALLOPERS) ||	/* vldb lock already held */
 	(entry.volumeId[BACKVOL] == INVALID_BID)) {	/* no assigned backup volume id */
 
-	code = ubik_Call(VL_SetLock, cstruct, 0, avolid, RWVOL, VLOP_BACKUP);
+	code = ubik_VL_SetLock(cstruct, 0, avolid, RWVOL, VLOP_BACKUP);
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not lock the VLDB entry for the volume %lu\n",
@@ -2595,7 +2596,7 @@ UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	/* Get a backup volume id from the VLDB and update the vldb
 	 * entry with it. 
 	 */
-	code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &backupID);
+	code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &backupID);
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not allocate ID for the backup volume of  %lu from the VLDB\n",
@@ -2759,7 +2760,7 @@ UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	    }
 	} else {
 	    code =
-		ubik_Call(VL_ReleaseLock, cstruct, 0, avolid, RWVOL,
+		ubik_VL_ReleaseLock(cstruct, 0, avolid, RWVOL,
 			  (LOCKREL_OPCODE | LOCKREL_AFSID |
 			   LOCKREL_TIMESTAMP));
 	    if (code) {
@@ -2826,7 +2827,7 @@ UV_CloneVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid,
 	/* Get a clone id */
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		avolid);
-	code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &acloneid);
+	code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &acloneid);
 	EGOTO1(bfail, code,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   avolid);
@@ -3174,7 +3175,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     memset((char *)remembertime, 0, sizeof(remembertime));
     memset((char *)&results, 0, sizeof(results));
 
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
+    vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
     if (vcode != VL_RERELEASE)
 	ONERROR(vcode, afromvol,
 		"Could not lock the VLDB entry for the volume %u.\n");
@@ -3216,7 +3217,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     /* Make sure we have a RO volume id to work with */
     if (entry.volumeId[ROVOL] == INVALID_BID) {
 	/* need to get a new RO volume id */
-	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &roVolId);
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &roVolId);
 	ONERROR(vcode, entry.name, "Cant allocate ID for RO volume of %s\n");
 
 	entry.volumeId[ROVOL] = roVolId;
@@ -3791,7 +3792,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     }
     if (islocked) {
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, afromvol, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR,
@@ -3832,12 +3833,13 @@ dump_sig_handler(int x)
  */
 int
 UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
-	      afs_int32 fromdate, afs_int32(*DumpFunction) (), char *rock)
+	      afs_int32 fromdate, afs_int32(*DumpFunction) (), char *rock,
+	      afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
     struct rx_call *fromcall = (struct rx_call *)0;
     afs_int32 fromtid = 0, rxError = 0, rcode = 0;
-    afs_int32 code, error = 0;
+    afs_int32 code, error = 0, retry = 0;
 
     if (setjmp(env))
 	ERROR_EXIT(EPIPE);
@@ -3866,23 +3868,28 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     fromcall = rx_NewCall(fromconn);
 
     VPRINT1("Starting volume dump on volume %u...", afromvol);
-    code = StartAFSVolDump(fromcall, fromtid, fromdate);
+    if (flags & VOLDUMPV2_OMITDIRS) 
+	code = StartAFSVolDumpV2(fromcall, fromtid, fromdate, flags);
+    else
+      retryold:
+	code = StartAFSVolDump(fromcall, fromtid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
     VDONE;
 
     VPRINT1("Dumping volume %u...", afromvol);
     code = DumpFunction(fromcall, rock);
+    if (code == RXGEN_OPCODE) 
+	goto error_exit;
     EGOTO(error_exit, code, "Error while dumping volume \n");
     VDONE;
 
   error_exit:
     if (fromcall) {
 	code = rx_EndCall(fromcall, rxError);
-	if (code) {
+	if (code && code != RXGEN_OPCODE) 
 	    fprintf(STDERR, "Error in rx_EndCall\n");
-	    if (!error)
-		error = code;
-	}
+	if (code && !error)
+	    error = code;
     }
     if (fromtid) {
 	VPRINT1("Ending transaction on volume %u...", afromvol);
@@ -3898,7 +3905,10 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (fromconn)
 	rx_DestroyConnection(fromconn);
 
-    PrintError("", error);
+    if (retry)
+	goto retryold;
+    if (error != RXGEN_OPCODE)
+	PrintError("", error);
     return (error);
 }
 
@@ -3911,7 +3921,7 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 int
 UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 		    afs_int32 afrompart, afs_int32 fromdate,
-		    afs_int32(*DumpFunction) (), char *rock)
+		    afs_int32(*DumpFunction) (), char *rock, afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
     struct rx_call *fromcall = (struct rx_call *)0;
@@ -3947,7 +3957,7 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 
     /* Get a clone id */
     VPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
-    code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &clonevol);
+    code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &clonevol);
     EGOTO1(error_exit, code,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
@@ -3993,7 +4003,10 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
     fromcall = rx_NewCall(fromconn);
 
     VPRINT1("Starting volume dump from cloned volume %u...", clonevol);
-    code = StartAFSVolDump(fromcall, clonetid, fromdate);
+    if (flags & VOLDUMPV2_OMITDIRS) 
+	code = StartAFSVolDumpV2(fromcall, clonetid, fromdate, flags);
+    else
+	code = StartAFSVolDump(fromcall, clonetid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
     VDONE;
 
@@ -4098,7 +4111,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     if (pvolid == 0) {		/*alot a new id if needed */
 	vcode = VLDB_GetEntryByName(tovolname, &entry);
 	if (vcode == VL_NOENT) {
-	    vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &pvolid);
+	    vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &pvolid);
 	    if (vcode) {
 		fprintf(STDERR, "Could not get an Id for the volume %s\n",
 			tovolname);
@@ -4348,7 +4361,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		fprintf(STDOUT, "------- New entry -------\n");
 	    }
 	    vcode =
-		ubik_Call(VL_SetLock, cstruct, 0, pvolid, voltype,
+		ubik_VL_SetLock(cstruct, 0, pvolid, voltype,
 			  VLOP_RESTORE);
 	    if (vcode) {
 		fprintf(STDERR,
@@ -4379,9 +4392,10 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		same =
 		    VLDB_IsSameAddrs(toserver, entry.serverNumber[index],
 				     &errcode);
-		EPRINT2(errcode,
-			"Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
-			toserver, errcode);
+		if (errcode)
+		    EPRINT2(errcode,
+			    "Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
+			    toserver, errcode);
 		if ((!errcode && !same)
 		    || (entry.serverPartition[index] != topart)) {
 		    tempconn =
@@ -4467,7 +4481,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     }
     if (islocked) {
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, pvolid, voltype,
+	    ubik_VL_ReleaseLock(cstruct, 0, pvolid, voltype,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR,
@@ -4527,7 +4541,7 @@ UV_LockRelease(afs_int32 volid)
 
     VPRINT("Binding to the VLDB server\n");
     vcode =
-	ubik_Call(VL_ReleaseLock, cstruct, 0, volid, -1,
+	ubik_VL_ReleaseLock(cstruct, 0, volid, -1,
 		  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     if (vcode) {
 	fprintf(STDERR,
@@ -4551,7 +4565,7 @@ UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
     afs_int32 vcode, error = 0;
     char apartName[10];
 
-    error = ubik_Call(VL_SetLock, cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    error = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (error) {
 	fprintf(STDERR,
 		" Could not lock the VLDB entry for the volume %lu \n",
@@ -4635,7 +4649,7 @@ UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
   asfail:
     if (islocked) {
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR,
@@ -4657,7 +4671,7 @@ UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
     struct nvldbentry entry, storeEntry;
     int islocked;
 
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (vcode) {
 	fprintf(STDERR, " Could not lock the VLDB entry for volume %lu \n",
 		(unsigned long)volid);
@@ -4678,13 +4692,13 @@ UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 	/*this site doesnot exist  */
 	fprintf(STDERR, "This site is not a replication site \n");
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR, "Could not update entry for volume %lu \n",
 		    (unsigned long)volid);
 	    PrintError("", vcode);
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return (vcode);
 	}
@@ -4697,7 +4711,7 @@ UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 	if (entry.nServers < 1) {	/*this is the last ref */
 	    VPRINT1("Deleting the VLDB entry for %u ...", volid);
 	    fflush(STDOUT);
-	    vcode = ubik_Call(VL_DeleteEntry, cstruct, 0, volid, ROVOL);
+	    vcode = ubik_VL_DeleteEntry(cstruct, 0, volid, ROVOL);
 	    if (vcode) {
 		fprintf(STDERR,
 			"Could not delete VLDB entry for volume %lu \n",
@@ -4720,7 +4734,7 @@ UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 		    "Could not release lock on volume entry for %lu \n",
 		    (unsigned long)volid);
 	    PrintError("", vcode);
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return (vcode);
 	}
@@ -4737,7 +4751,7 @@ UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
     struct nvldbentry entry, storeEntry;
     int index;
 
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (vcode) {
 	fprintf(STDERR, " Could not lock the VLDB entry for volume %lu \n",
 		(unsigned long)volid);
@@ -4759,7 +4773,7 @@ UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
 	fprintf(STDERR, "No existing RW site for volume %lu",
 		(unsigned long)volid);
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR,
@@ -4781,7 +4795,7 @@ UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
 	    fprintf(STDERR, "Could not update entry for volume %lu \n",
 		    (unsigned long)volid);
 	    PrintError("", vcode);
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, volid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, volid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return (vcode);
 	}
@@ -4921,7 +4935,7 @@ UV_GenerateVolumeClones(afs_int32 aserver, afs_int32 apart,
 	reuseCloneId = 1;
     else {			/*get a bunch of id's from vldb */
 	code =
-	    ubik_Call(VL_GetNewVolumeId, cstruct, 0, arraySize, &curCloneId);
+	    ubik_VL_GetNewVolumeId(cstruct, 0, arraySize, &curCloneId);
 	if (code) {
 	    fprintf(STDERR, "Could not get ID's for the clone from VLDB\n");
 	    PrintError("", code);
@@ -5244,7 +5258,7 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
      * then make the changes to it (pass 2).
      */
     if (++pass == 2) {
-	code = ubik_Call(VL_SetLock, cstruct, 0, rwvolid, RWVOL, VLOP_DELETE);
+	code = ubik_VL_SetLock(cstruct, 0, rwvolid, RWVOL, VLOP_DELETE);
 	if (code) {
 	    fprintf(STDERR, "Could not lock VLDB entry for %lu\n",
 		    (unsigned long)rwvolid);
@@ -5617,7 +5631,7 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
 	    *modentry = modified;
     } else if (pass == 2) {
 	code =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, rwvolid, RWVOL,
+	    ubik_VL_ReleaseLock(cstruct, 0, rwvolid, RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (code) {
 	    PrintError("Could not unlock VLDB entry ", code);
@@ -5860,16 +5874,16 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
     /* Now check if the maxvolid is larger than that stored in the VLDB */
     if (maxvolid) {
 	afs_int32 maxvldbid = 0;
-	code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 0, &maxvldbid);
+	code = ubik_VL_GetNewVolumeId(cstruct, 0, 0, &maxvldbid);
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not get the highest allocated volume id from the VLDB\n");
 	    if (!error)
 		error = code;
 	} else if (maxvolid > maxvldbid) {
-	    afs_uint32 id, nid;
+	    afs_int32 id, nid;
 	    id = maxvolid - maxvldbid + 1;
-	    code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, id, &nid);
+	    code = ubik_VL_GetNewVolumeId(cstruct, 0, id, &nid);
 	    if (code) {
 		fprintf(STDERR,
 			"Error in increasing highest allocated volume id in VLDB\n");
@@ -6004,17 +6018,17 @@ UV_SyncVldb(afs_int32 aserver, afs_int32 apart, int flags, int force)
   error_exit:
     /* Now check if the maxvolid is larger than that stored in the VLDB */
     if (maxvolid) {
-	afs_uint32 maxvldbid = 0;
-	code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 0, &maxvldbid);
+	afs_int32 maxvldbid = 0;
+	code = ubik_VL_GetNewVolumeId(cstruct, 0, 0, &maxvldbid);
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not get the highest allocated volume id from the VLDB\n");
 	    if (!error)
 		error = code;
 	} else if (maxvolid > maxvldbid) {
-	    afs_uint32 id, nid;
+	    afs_int32 id, nid;
 	    id = maxvolid - maxvldbid + 1;
-	    code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, id, &nid);
+	    code = ubik_VL_GetNewVolumeId(cstruct, 0, id, &nid);
 	    if (code) {
 		fprintf(STDERR,
 			"Error in increasing highest allocated volume id in VLDB\n");
@@ -6257,7 +6271,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
      */
     if (++pass == 2) {
 	code =
-	    ubik_Call(VL_SetLock, cstruct, 0, entry->volumeId[RWVOL], RWVOL,
+	    ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL,
 		      VLOP_DELETE);
 	if (code) {
 	    fprintf(STDERR, "Could not lock VLDB entry for %u \n",
@@ -6307,7 +6321,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
 	    && !(entry->flags & RO_EXISTS)) {
 	    /* The RW, BK, nor RO volumes do not exist. Delete the VLDB entry */
 	    code =
-		ubik_Call(VL_DeleteEntry, cstruct, 0, entry->volumeId[RWVOL],
+		ubik_VL_DeleteEntry(cstruct, 0, entry->volumeId[RWVOL],
 			  RWVOL);
 	    if (code) {
 		fprintf(STDERR,
@@ -6349,7 +6363,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
 
     if (islocked) {
 	code =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, entry->volumeId[RWVOL],
+	    ubik_VL_ReleaseLock(cstruct, 0, entry->volumeId[RWVOL],
 		      RWVOL,
 		      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	if (code) {
@@ -6474,7 +6488,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
     tid = 0;
     islocked = 0;
 
-    vcode = ubik_Call(VL_SetLock, cstruct, 0, entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE);	/*last param is dummy */
+    vcode = ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE);	/*last param is dummy */
     if (vcode) {
 	fprintf(STDERR,
 		" Could not lock the VLDB entry for the  volume %u \n",
@@ -6660,7 +6674,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
   rvfail:
     if (islocked) {
 	vcode =
-	    ubik_Call(VL_ReleaseLock, cstruct, 0, entry->volumeId[RWVOL],
+	    ubik_VL_ReleaseLock(cstruct, 0, entry->volumeId[RWVOL],
 		      RWVOL,
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if (vcode) {

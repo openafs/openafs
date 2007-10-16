@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.2 2005/07/11 19:09:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.3 2007/04/10 18:43:44 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
@@ -104,7 +104,7 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
     if (!error_init_done)
 	pthread_once(&error_init_once, init_once);
     code = (afs_int32) errorCode;
-    *errorTextP = error_message(code);
+    *errorTextP = afs_error_message(code);
     rc = 1;
 
   fail_util_AdminErrorCodeTranslate:

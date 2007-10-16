@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.17 2007/02/09 01:07:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.23 2007/10/10 16:57:54 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -29,7 +29,10 @@ RCSID
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
-
+#ifdef AFS_SUN510_ENV
+#include "h/ksynch.h"
+#include "h/sunddi.h"
+#endif
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
 #define	AFS_MINBUFFERS	100
@@ -84,6 +87,11 @@ thread_t afs_global_owner;
 simple_lock_data afs_global_lock;
 #endif
 
+#ifdef AFS_SUN510_ENV
+ddi_taskq_t *afs_taskq;
+krwlock_t afsifinfo_lock;
+#endif
+
 afs_int32 afs_initState = 0;
 afs_int32 afs_termState = 0;
 afs_int32 afs_setTime = 0;
@@ -96,6 +104,9 @@ static int afs_Go_Done = 0;
 extern struct interfaceAddr afs_cb_interface;
 static int afs_RX_Running = 0;
 static int afs_InitSetup_done = 0;
+afs_int32 afs_numcachefiles = -1;
+afs_int32 afs_numfilesperdir = -1;
+char afs_cachebasedir[1024];
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
@@ -120,6 +131,16 @@ afs_InitSetup(int preallocs)
 
     if (afs_InitSetup_done)
 	return EAGAIN;
+
+#ifdef AFS_SUN510_ENV
+    /* Initialize a RW lock for the ifinfo global array */
+    rw_init(&afsifinfo_lock, NULL, RW_DRIVER, NULL);
+
+    /* Create a taskq */
+    afs_taskq = ddi_taskq_create(NULL, "afs_taskq", 2, TASKQ_DEFAULTPRI, 0);
+
+    osi_StartNetIfPoller();
+#endif
 
 #ifndef AFS_NOSTATS
     /*
@@ -484,6 +505,17 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 }
 #endif
 
+static void
+wait_for_cachedefs(void) {
+#ifdef AFS_CACHE_VNODE_PATH
+    while ((afs_numcachefiles < 1) || (afs_numfilesperdir < 1) ||
+	   (afs_cachebasedir[0] != '/')) {
+	printf("afs: waiting for cache parameter definitions\n");
+	afs_osi_Sleep(&afs_initState);
+    }
+#endif
+}
+
 /* leaving as is, probably will barf if we add prototypes here since it's likely being called
 with partial list */
 int
@@ -498,26 +530,27 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_SGI61_ENV */
 
     AFS_STATCNT(afs_syscall_call);
+    if (
 #ifdef	AFS_SUN5_ENV
-    if (!afs_suser(CRED()) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
-	/* only root can run this code */
-	return (EACCES);
+	!afs_suser(CRED())
 #else
-    if (!afs_suser(NULL) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
+	!afs_suser(NULL)
+#endif
+		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
+#if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
 #if defined(KERNEL_HAVE_UERROR)
-	setuerror(EACCES);
-	return (EACCES);
+        setuerror(EACCES);
+#endif
+	code = EACCES;
 #else
-#if defined(AFS_OSF_ENV)
-	return EACCES;
-#else /* AFS_OSF_ENV */
-	return EPERM;
-#endif /* AFS_OSF_ENV */
+	code = EPERM;
 #endif
+	AFS_GLOCK();
+#ifdef AFS_DARWIN80_ENV
+	put_vfs_context();
 #endif
+	goto out;
     }
     AFS_GLOCK();
 #ifdef AFS_DARWIN80_ENV
@@ -792,7 +825,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	get_vfs_context();
 #endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
@@ -800,8 +833,14 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	put_vfs_context();
 #endif
+    } else if (parm == AFSOP_CACHEDIRS) {
+	afs_numfilesperdir = parm2;
+	afs_osi_Wakeup(&afs_initState);
+    } else if (parm == AFSOP_CACHEFILES) {
+	afs_numcachefiles = parm2;
+	afs_osi_Wakeup(&afs_initState);
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
 	while (afs_initState < AFSOP_START_BKG)
@@ -815,7 +854,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    code = 0;
     } else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO
 	       || parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG
-	       || parm == AFSOP_CELLINFO) {
+	       || parm == AFSOP_CELLINFO || parm == AFSOP_CACHEBASEDIR) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
 	code = 0;
@@ -829,22 +868,49 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	    get_vfs_context();
 #endif
-	    if (parm == AFSOP_CACHEFILE)
+	    if (parm == AFSOP_CACHEBASEDIR) {
+		strncpy(afs_cachebasedir, tbuffer, 1024);
+		afs_cachebasedir[1023] = '\0';
+		afs_osi_Wakeup(&afs_initState);
+	    } else if (parm == AFSOP_CACHEFILE) {
+		wait_for_cachedefs();
 		code = afs_InitCacheFile(tbuffer, 0);
-	    else if (parm == AFSOP_CACHEINFO)
+	    } else if (parm == AFSOP_CACHEINFO) {
+		wait_for_cachedefs();
 		code = afs_InitCacheInfo(tbuffer);
-	    else if (parm == AFSOP_VOLUMEINFO)
+	    } else if (parm == AFSOP_VOLUMEINFO) {
+		wait_for_cachedefs();
 		code = afs_InitVolumeInfo(tbuffer);
-	    else if (parm == AFSOP_CELLINFO)
+	    } else if (parm == AFSOP_CELLINFO) {
+		wait_for_cachedefs();
 		code = afs_InitCellInfo(tbuffer);
+	    }
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	    put_vfs_context();
 #endif
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
+#ifdef AFS_CACHE_VNODE_PATH
+       afs_int32 dummy;
+
+       wait_for_cachedefs();
+
+#ifdef AFS_DARWIN80_ENV
+       get_vfs_context();
+#endif
+       if ((afs_numcachefiles > 0) && (afs_numfilesperdir > 0) && 
+           (afs_cachebasedir[0] == '/')) {
+           for (dummy = 0; dummy < afs_numcachefiles; dummy++) {
+               code = afs_InitCacheFile(NULL, dummy);
+           }
+       }
+#ifdef AFS_DARWIN80_ENV
+       put_vfs_context();
+#endif
+#endif
 	/* the generic initialization calls come here.  One parameter: should we do the
 	 * set-time operation on this workstation */
 	if (afs_Go_Done)
@@ -858,6 +924,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
 	afs_nfsclient_init();
 #endif
+	afs_uuid_create(&afs_cb_interface.uuid);
 	printf("found %d non-empty cache files (%d%%).\n",
 	       afs_stats_cmperf.cacheFilesReused,
 	       (100 * afs_stats_cmperf.cacheFilesReused) /
@@ -866,6 +933,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
 	int rxbind = 0;
+	int refresh = 0;
+
 	afs_int32 count = parm2;
 	afs_int32 *buffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -874,6 +943,14 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
+
+	/* This is a refresh */
+	if (count & 0x40000000) {
+	    count &= ~0x40000000;
+	    /* Can't bind after we start. Fix? */
+	    count &= ~0x80000000;
+	    refresh = 1;
+	}
 
 	/* Bind, but only if there's only one address configured */ 
 	if ( count & 0x80000000) {
@@ -914,16 +991,22 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_cb_interface.mtu[i] = (parm5 ? mtubuffer[i] : htonl(1500));
 #endif
 	}
-	afs_uuid_create(&afs_cb_interface.uuid);
 	rxi_setaddr(buffer[0]);
-	if (rxbind)
-	    rx_bindhost = buffer[0];
-	else
-	    rx_bindhost = htonl(INADDR_ANY);
+	if (!refresh) {
+	    if (rxbind)
+		rx_bindhost = buffer[0];
+	    else
+		rx_bindhost = htonl(INADDR_ANY);
+	}
 
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+
+	if (refresh) {
+	    afs_CheckServers(1, NULL);     /* check down servers */
+	    afs_CheckServers(0, NULL);     /* check down servers */
+	}
     }
 #ifdef	AFS_SGI53_ENV
     else if (parm == AFSOP_NFSSTATICADDR) {
@@ -1072,9 +1155,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	code = EINVAL;
 
   out:
-#ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
-    get_vfs_context();
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;
@@ -1658,7 +1738,8 @@ Afs_syscall()
     }
 
 #if defined(AFS_DARWIN80_ENV)
-    put_vfs_context();
+    if (uap->syscall != AFSCALL_CALL)
+	put_vfs_context();
 #endif
 #ifdef AFS_LINUX20_ENV
     code = -code;

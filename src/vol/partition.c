@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.2 2005/10/17 20:47:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.4 2007/05/10 22:44:12 shadow Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -437,10 +437,17 @@ VAttachPartitions(void)
     }
     while (!getmntent(mntfile, &mnt)) {
 	/* Ignore non ufs or non read/write partitions */
-	if ((strcmp(mnt.mnt_fstype, "ufs") != 0)
+	/* but allow zfs too if we're in the NAMEI environment */
+	if (
+#ifdef AFS_NAMEI_ENV
+	    ((!(strcmp(mnt.mnt_fstype, "ufs") &&
+		strcmp(mnt.mnt_fstype, "zfs"))))
+#else
+	    (strcmp(mnt.mnt_fstype, "ufs") != 0)
+#endif
 	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
-
+	
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;

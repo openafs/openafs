@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/ihandle.c,v 1.18.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/ihandle.c,v 1.18.2.3 2007/09/10 21:55:58 jaltman Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -154,6 +154,24 @@ ih_Initialize(void)
     }
 #endif
     fdCacheSize = MIN(fdMaxCacheSize, FD_DEFAULT_CACHESIZE);
+
+    {
+	void *ih_sync_thread();
+#ifdef AFS_PTHREAD_ENV
+	pthread_t syncer;
+	pthread_attr_t tattr;
+
+	pthread_attr_init(&tattr);
+	pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
+
+	pthread_create(&syncer, &tattr, ih_sync_thread, NULL);
+#else /* AFS_PTHREAD_ENV */
+	PROCESS syncer;
+	LWP_CreateProcess(ih_sync_thread, 16*1024, LWP_MAX_PRIORITY - 2,
+	    NULL, "ih_syncer", &syncer);
+#endif /* AFS_PTHREAD_ENV */
+    }
+
 }
 
 /* Make the file descriptor cache as big as possible. Don't this call
@@ -840,6 +858,67 @@ ih_condsync(IHandle_t * ihP)
     return code;
 }
 
+void
+ih_sync_all() {
+    int ihash;
+
+    IH_LOCK;
+    for (ihash = 0; ihash < I_HANDLE_HASH_SIZE; ihash++) {
+	IHandle_t *ihP, *ihPnext;
+
+	ihP = ihashTable[ihash].ihash_head;
+	if (ihP)
+	    ihP->ih_refcnt++;	/* must not disappear over unlock */
+	for (; ihP; ihP = ihPnext) {
+	    
+	    if (ihP->ih_synced) {
+		FdHandle_t *fdP;
+
+		ihP->ih_synced = 0;
+		IH_UNLOCK;
+
+		fdP = IH_OPEN(ihP);
+		if (fdP) OS_SYNC(fdP->fd_fd);
+		FDH_CLOSE(fdP);
+
+	  	IH_LOCK;
+	    }
+
+	    /* when decrementing the refcount, the ihandle might disappear
+	       and we might not even be able to proceed to the next one.
+	       Hence the gymnastics putting a hold on the next one already */
+	    ihPnext = ihP->ih_next;
+	    if (ihPnext) ihPnext->ih_refcnt++;
+
+	    if (ihP->ih_refcnt > 1) {
+		ihP->ih_refcnt--;
+	    } else {
+		IH_UNLOCK;
+		ih_release(ihP);
+		IH_LOCK;
+	    }
+
+	}
+    }
+    IH_UNLOCK;
+}
+
+void *
+ih_sync_thread() {
+    while(1) {
+
+#ifdef AFS_PTHREAD_ENV
+	sleep(10);
+#else /* AFS_PTHREAD_ENV */
+	IOMGR_Sleep(60);
+#endif /* AFS_PTHREAD_ENV */
+
+#ifndef AFS_NT40_ENV
+        sync();
+#endif
+        ih_sync_all();
+    }
+}
 
 
 /*************************************************************************

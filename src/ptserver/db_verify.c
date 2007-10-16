@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16 2004/06/23 14:27:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.2.3 2007/08/11 23:50:02 jaltman Exp $");
 
 /*
  *                      (3) Define a structure, idused, instead of an
@@ -57,6 +57,7 @@ RCSID
 #include <afs/afsutil.h>
 #include <ubik.h>
 #include <afs/cmd.h>
+#include <afs/com_err.h>
 
 #include "ptint.h"
 #include "pterror.h"
@@ -121,7 +122,7 @@ ReadHeader()
 
     code = pr_Read(0, (char *)&cheader, sizeof(cheader));
     if (code) {
-	com_err(whoami, code, "couldn't read header");
+	afs_com_err(whoami, code, "couldn't read header");
 	return code;
     }
     /* Check and see if database exists and is approximately OK. */
@@ -129,7 +130,7 @@ ReadHeader()
 	|| ntohl(cheader.eofPtr) == 0) {
 	if (code)
 	    return code;
-	com_err(whoami, PRDBBAD, "header is bad");
+	afs_com_err(whoami, PRDBBAD, "header is bad");
 	return PRDBBAD;
     }
     return 0;
@@ -313,7 +314,7 @@ WalkHashTable(afs_int32 hashtable[],	/* hash table to walk */
 
 	    id = ntohl(e.id);
 
-	    if (((ntohl(e.flags) & (PRGRP | PRINST)) == 0)
+	    if (((e.flags & htonl((PRGRP | PRINST))) == 0)
 		&& (strchr(e.name, '@'))) {
 		/* Foreign user */
 		if (id > misc->maxForId)
@@ -468,8 +469,8 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		break;
 	}
 #if defined(SUPERGROUPS)
-	sghead = g->nextsg;
-	if ((e->flags & PRGRP)) {
+	sghead = ntohl(g->nextsg);
+	if ((e->flags & htonl(PRGRP))) {
 	    for (i = 0; i < SGSIZE; ++i) {
 		afs_int32 id = ntohl(g->supergroup[i]);
 		if (id == PRBADID)
@@ -501,7 +502,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
     for (na = sghead; na; na = ntohl(c.next)) {
 	code = ConvertDiskAddress(na, &ni);
 	if (code) {
-	    fprintf(stderr, "Bad continuation ptr %d", na);
+	    fprintf(stderr, "Bad SGcontinuation ptr %d", na);
 	    if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
 	    if (na != sghead) {
@@ -688,7 +689,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 #if defined(SUPERGROUPS)
 	noErrors = 0;
     }
-    if (e && (e->flags & PRGRP) && (sgcount != ntohl(g->countsg))) {
+    if (e && (e->flags & htonl(PRGRP)) && (sgcount != ntohl(g->countsg))) {
 	fprintf(stderr, "SGCount was %d should be %d\n", sgcount,
 		ntohl(g->countsg));
 	if (PrintEntryError(misc, ea, e, 2))
@@ -890,7 +891,7 @@ WalkChains(char map[],		/* one byte per db entry */
 	    case PRFOREIGN:
 		fprintf(stderr,
 			"ENTRY IS unexpected type [PRFOREIGN] (flags=0x%x)\n",
-			e.flags);
+			ntohl(e.flags));
 		break;
 	    case PRINST:
 		misc->ninsts++;
@@ -1225,7 +1226,7 @@ DumpRecreate(char map[], struct misc_data *misc)
 		    if (code)
 			return code;
 
-		    if ((id == ntohl(c.id)) && (ntohl(c.flags) & PRCONT)) {
+		    if ((id == ntohl(c.id)) && (c.flags & htonl(PRCONT))) {
 			for (i = 0; i < COSIZE; i++) {
 			    afs_int32 uid = ntohl(c.entries[i]);
 			    if (uid == 0)
@@ -1251,7 +1252,7 @@ DumpRecreate(char map[], struct misc_data *misc)
 		    if (code)
 			return code;
 
-		    if ((id == ntohl(c.id)) && (ntohl(c.flags) & PRCONT)) {
+		    if ((id == ntohl(c.id)) && (c.flags & htonl(PRCONT))) {
 			for (i = 0; i < COSIZE; i++) {
 			    afs_int32 uid = ntohl(c.entries[i]);
 			    if (uid == 0)
@@ -1301,7 +1302,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     n = eof / sizeof(struct prentry);
     if ((eof < 0) || (n * sizeof(struct prentry) != eof)) {
 	code = PRDBBAD;
-	com_err(whoami, code, "eof ptr no good: eof=%d, sizeof(prentry)=%d",
+	afs_com_err(whoami, code, "eof ptr no good: eof=%d, sizeof(prentry)=%d",
 		eof, sizeof(struct prentry));
       abort:
 	return code;
@@ -1318,7 +1319,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = WalkHashTable(cheader.nameHash, MAP_NAMEHASH, map, misc);
     if (code) {
-	com_err(whoami, code, "walking name hash");
+	afs_com_err(whoami, code, "walking name hash");
 	goto abort;
     }
     if (misc->verbose) {
@@ -1327,7 +1328,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = WalkHashTable(cheader.idHash, MAP_IDHASH, map, misc);
     if (code) {
-	com_err(whoami, code, "walking id hash");
+	afs_com_err(whoami, code, "walking id hash");
 	goto abort;
     }
 
@@ -1339,7 +1340,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     misc->idRange = n - misc->minId + 1;
     misc->idmap = (afs_int32 *) malloc(misc->idRange * sizeof(afs_int32));
     if (!misc->idmap) {
-	com_err(whoami, 0, "Unable to malloc space for max ids of %d",
+	afs_com_err(whoami, 0, "Unable to malloc space for max ids of %d",
 		misc->idRange);
 	code = -1;
 	goto abort;
@@ -1353,7 +1354,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = WalkChains(map, misc);
     if (code) {
-	com_err(whoami, code, "walking chains");
+	afs_com_err(whoami, code, "walking chains");
 	goto abort;
     }
     if (misc->verbose) {
@@ -1362,7 +1363,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = WalkNextChain(map, misc, 0, 0);
     if (code) {
-	com_err(whoami, code, "walking free list");
+	afs_com_err(whoami, code, "walking free list");
 	goto abort;
     }
     if (misc->verbose) {
@@ -1371,7 +1372,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = WalkOwnedChain(map, misc, 0, 0);
     if (code) {
-	com_err(whoami, code, "walking orphan list");
+	afs_com_err(whoami, code, "walking orphan list");
 	goto abort;
     }
 
@@ -1381,7 +1382,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     code = GC(map, misc);
     if (code) {
-	com_err(whoami, code, "looking for unreferenced entries");
+	afs_com_err(whoami, code, "looking for unreferenced entries");
 	goto abort;
     }
 
@@ -1453,7 +1454,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
 
     fd = open(pr_dbaseName, O_RDONLY, 0);
     if (fd == -1) {
-	com_err(whoami, errno, "Open failed on db %s", pr_dbaseName);
+	afs_com_err(whoami, errno, "Open failed on db %s", pr_dbaseName);
 	exit(2);
     }
 
@@ -1471,7 +1472,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     if (recreateFile) {
 	misc.recreate = fopen(recreateFile, "w");
 	if (misc.recreate == 0) {
-	    com_err(whoami, errno,
+	    afs_com_err(whoami, errno,
 		    "can't create file for recreation instructions: %s",
 		    recreateFile);
 	    exit(4);
@@ -1479,7 +1480,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     }
     code = CheckPrDatabase(&misc);
     if (code) {
-	com_err(whoami, code, "Checking prserver database");
+	afs_com_err(whoami, code, "Checking prserver database");
 	exit(3);
     }
     exit(0);
@@ -1515,7 +1516,7 @@ void
 zeromap(struct idused *idmap)
 {
     while (idmap) {
-	bzero((char *)idmap->idcount, sizeof idmap->idcount);
+	memset((char *)idmap->idcount, 0, sizeof idmap->idcount);
 	idmap = idmap->idnext;
     }
 }
@@ -1540,7 +1541,7 @@ inccount(struct idused **idmapp, int id)
 	    perror("idmap");
 	    exit(1);
 	}
-	bzero((char *)idmap, sizeof idmap);
+	memset((char *)idmap, 0, sizeof idmap);
 	idmap->idstart = id & ~(IDCOUNT - 1);
 	idmap->idnext = *idmapp;
 	*idmapp = idmap;

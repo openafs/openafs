@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/cmd/test/itest.c,v 1.7 2003/07/15 23:14:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/cmd/test/itest.c,v 1.7.2.1 2007/04/10 18:43:42 shadow Exp $");
 
 #include "cmd.h"
 #include <stdio.h>
@@ -84,13 +84,13 @@ main(argc, argv)
 	    break;
 	code = cmd_ParseLine(tline, tv, &tc, 100);
 	if (code) {
-	    printf("itest: parsing failure: %s\n", error_message(code));
+	    printf("itest: parsing failure: %s\n", afs_error_message(code));
 	    exit(1);
 	}
 	code = cmd_Dispatch(tc, tv);
 	cmd_FreeArgv(tv);
 	if (code) {
-	    printf("itest: execution failed: %s\n", error_message(code));
+	    printf("itest: execution failed: %s\n", afs_error_message(code));
 	}
     }
     return 0;

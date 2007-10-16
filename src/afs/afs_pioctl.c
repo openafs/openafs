@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.25 2006/03/02 06:44:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.28 2007/08/22 02:15:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -90,7 +90,7 @@ DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
-
+DECL_PIOCTL(PNewUuid);
 /*
  * A macro that says whether we're going to need HandleClientContext().
  * This is currently used only by the nfs translator.
@@ -192,6 +192,12 @@ static int (*(CpioctlSw[])) () = {
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PNewUuid,                   /* 9 -- generate new uuid */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3354,6 +3360,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     struct afs_exporter *exporter, *outexporter;
     struct AFS_UCRED *newcred;
     struct unixuser *au;
+    afs_uint32 comp = *com & 0xff00;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -3479,6 +3486,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     } else if (!code) {
 	EXP_RELE(outexporter);
     }
+    if (!code) 
+      *com = (*com) | comp;
     return code;
 }
 #endif /* AFS_NEED_CLIENTCONTEXT */
@@ -3828,6 +3837,21 @@ DECL_PIOCTL(PResidencyCmd)
 	*aoutSize = sizeof(struct ResidencyCmdOutputs);
     }
     return code;
+}
+
+DECL_PIOCTL(PNewUuid)
+{
+    /*AFS_STATCNT(PNewUuid); */
+    if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(acred))
+	return EACCES;
+
+    ObtainWriteLock(&afs_xinterface, 555);
+    afs_uuid_create(&afs_cb_interface.uuid);
+    ReleaseWriteLock(&afs_xinterface);
+    ForceAllNewConnections();
 }
 
 DECL_PIOCTL(PCallBackAddr)

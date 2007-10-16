@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.2 2005/07/11 19:29:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.3 2007/04/10 18:43:41 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -175,8 +175,8 @@ PrintLog(log, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
 	    err1 = "Volume has moved to another server";
 	    break;
 	default:
-	    err1 = (char *)error_message(error1);
-	    err2 = (char *)error_table_name(error1);
+	    err1 = (char *)afs_error_message(error1);
+	    err2 = (char *)afs_error_table_name(error1);
 	    break;
 	}
 	if (error1 == -1)
@@ -184,7 +184,7 @@ PrintLog(log, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
 	else
 	    fprintf(log, "     %s: %s", err2, err1);
 	if (error2)
-	    fprintf(log, ": %s", error_message(error2));
+	    fprintf(log, ": %s", afs_error_message(error2));
 	fprintf(log, "\n");
     }
     fflush(log);
@@ -573,7 +573,7 @@ unmountTape(taskId, tapeInfoPtr)
 	    }
 	    if (rcpid == -1 && errno != EINTR) {
 		tapemounted = 0;
-		com_err(whoami, errno,
+		afs_com_err(whoami, errno,
 			"Error waiting for callout script to terminate.");
 		break;
 	    }
@@ -737,7 +737,7 @@ PromptForTape(flag, name, dbDumpId, taskId, tapecount)
 	    }
 	    /* if waitpid experienced an error, we prompt */
 	    if (rcpid == -1 && errno != EINTR) {
-		com_err(whoami, errno,
+		afs_com_err(whoami, errno,
 			"Error waiting for callout script to terminate.");
 		TLog(taskId,
 		     "Can't get exit status from callout script. will prompt\n");

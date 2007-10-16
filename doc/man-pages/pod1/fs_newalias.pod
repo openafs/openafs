@@ -1,0 +1,96 @@
+=head1 NAME
+
+fs newalias - Creates a new alias for a cell
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs newalias> S<<< [B<-alias>] <I<alias name>> >>>
+    S<<< [B<-name>] <I<cell name>> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs newalias> command is used when the AFS Cache Manager is in
+Dynamic Root (B<-dynroot>) mode. It creates a symbolic link in F</afs>
+from an alias to the full name of the cell. It also creates a symbolic
+link from the alias prepended with C<.> to the full name of the cell
+prepended with C<.>, the convention for access to the read/write version
+of the C<root.cell> volume of that cell.
+
+This command is used to supplement aliases created via the F<CellAlias>
+configuration file when B<afsd> starts.
+
+Traditionally, these aliases would be created by the local AFS
+administrator by creating symbolic links in the C<root.afs> volume. Such
+symlinks do not appear when Dynamic Root is enabled because, with Dynamic
+Root, the Cache Manager does not mount or look at the C<root.afs>
+volume. This alias capability is a replacement that allows such short
+names to be created under client control.
+
+=head1 CAUTIONS
+
+Aliases created with B<fs newcell> are only temporary and will be lost
+when the AFS Cache Manager is restarted or the client machine is
+rebooted. In order to make the alias permanent, it must be put into the
+F<CellAlias> file.
+
+There is no way to remove an alias once created without restarting the
+AFS Cache Manager.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-alias> <I<alias name>>
+
+This is the short name to which the user wants to map the real cell name.
+
+=item B<-name> <I<cell name>>
+
+This is the real cell name.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command has no output.
+
+=head1 EXAMPLES
+
+There are two ways to call B<fs newalias>:
+
+   % fs newalias openafs openafs.org
+   % fs newalias -alias openafs -name openafs.org
+
+Both of the above examples create an alias C<openafs> for the cell
+C<openafs.org>. Two links wil be created in F</afs>:
+
+   /afs/openafs   ->  /afs/openafs.org
+   /afs/.openafs  ->  /afs/.openafs.org
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<afsd(8)>,
+L<CellAlias(5)>,
+L<fs_listaliases(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

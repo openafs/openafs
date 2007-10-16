@@ -46,6 +46,6 @@
 
 /* Prototypes from fssync.c */
 void FSYNC_clientFinis(void);
-int FSYNC_clientInit(void);
+int FSYNC_clientInit(int);
 void FSYNC_fsInit(void);
 int FSYNC_askfs(VolumeId volume, char *partName, int com, int reason);

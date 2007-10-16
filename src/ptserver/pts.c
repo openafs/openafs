@@ -7,23 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- *                      (3) add new pts commands:
- *
- *                          Interactive - allow the pts command
- *                                        to be run interactively.
- *                          Quit        - quit interactive mode.
- *                          Source      - allow input to come from a file(s).
- *                          Sleep       - pause for a specified number
- *                                        of seconds.
- *
- */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.1 2004/10/18 07:12:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.4 2007/08/11 23:54:04 jaltman Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -46,22 +34,12 @@ RCSID
 #include "ptclient.h"
 #include "pterror.h"
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 
 #undef FOREIGN
 
 char *whoami;
 int force = 0;
-
-#if defined(SUPERGROUPS)
-
-/*
- *  Add new pts commands:
- *
- *      Interactive - allow the pts command to be run interactively.
- *      Quit        - quit interactive mode.
- *      Source      - allow input to come from a file(s).
- *      Sleep       - pause for a specified number of seconds.
- */
 
 static int finished;
 static FILE *source;
@@ -73,21 +51,21 @@ struct sourcestack {
 } *shead;
 
 int
-Interactive(register struct cmd_syndesc *as)
+pts_Interactive(register struct cmd_syndesc *as)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(register struct cmd_syndesc *as)
+pts_Quit(register struct cmd_syndesc *as)
 {
     finished = 1;
     return 0;
 }
 
 int
-Source(register struct cmd_syndesc *as)
+pts_Source(register struct cmd_syndesc *as)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -115,7 +93,7 @@ Source(register struct cmd_syndesc *as)
 }
 
 int
-Sleep(register struct cmd_syndesc *as)
+pts_Sleep(register struct cmd_syndesc *as)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -124,6 +102,7 @@ Sleep(register struct cmd_syndesc *as)
     }
     delay = atoi(as->parms[0].items->data);
     IOMGR_Sleep(delay);
+    return 0;
 }
 
 int
@@ -139,8 +118,6 @@ popsource()
     free((char *)sp);
     return 1;
 }
-
-#endif /* SUPERGROUPS */
 
 int
 osi_audit()
@@ -176,7 +153,7 @@ GetGlobals(register struct cmd_syndesc *as)
 	code = pr_Initialize(sec, AFSDIR_CLIENT_ETC_DIRPATH, cell);
     }
     if (code) {
-	com_err(whoami, code, "while initializing");
+	afs_com_err(whoami, code, "while initializing");
 	return code;
     }
     if (as->parms[19].items)
@@ -187,7 +164,6 @@ GetGlobals(register struct cmd_syndesc *as)
 int
 CleanUp(register struct cmd_syndesc *as)
 {
-#if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
 	return 0;
     if (pruclient) {
@@ -195,14 +171,6 @@ CleanUp(register struct cmd_syndesc *as)
 	pr_End();
 	rx_Finalize();
     }
-#else
-    if (!strcmp(as->name, "help"))
-	return 0;
-    /* Need to shutdown the ubik_client & other connections */
-    pr_End();
-    rx_Finalize();
-#endif /* SUPERGROUPS */
-
     return 0;
 }
 
@@ -226,22 +194,22 @@ CreateGroup(register struct cmd_syndesc *as)
 	if (idi) {
 	    code = util_GetInt32(idi->data, &id);
 	    if (code) {
-		com_err(whoami, code, "because group id was: '%s'",
+		afs_com_err(whoami, code, "because group id was: '%s'",
 			idi->data);
 		return code;
 	    }
 	    if (id >= 0) {
 		code = PRBADARG;
-		com_err(whoami, code, "because group id %d was not negative",
+		afs_com_err(whoami, code, "because group id %d was not negative",
 			id);
 		return code;
 	    }
-#if defined(SUPERGROUPS)
-	    if (id == 0) {
+	    
+            if (id == 0) {
 		printf("0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
-#endif
+
 	    idi = idi->next;
 	} else
 	    id = 0;
@@ -249,13 +217,13 @@ CreateGroup(register struct cmd_syndesc *as)
 	code = pr_CreateGroup(namei->data, owner, &id);
 	if (code) {
 	    if (owner || id)
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to create group %s with id %d%s%s%s%s",
 			namei->data, id, owner ? " owned by '" : "",
 			owner ? owner : "", owner ? "'" : "",
 			(force ? " (ignored)" : ""));
 	    else
-		com_err(whoami, code, "; unable to create group %s %s",
+		afs_com_err(whoami, code, "; unable to create group %s %s",
 			namei->data, (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -281,7 +249,7 @@ CreateUser(register struct cmd_syndesc *as)
 	if (idi) {
 	    code = util_GetInt32(idi->data, &id);
 	    if (code) {
-		com_err(whoami, code, "because id was: '%s'", idi->data);
+		afs_com_err(whoami, code, "because id was: '%s'", idi->data);
 		return code;
 	    }
 	    if (id == 0) {
@@ -295,11 +263,11 @@ CreateUser(register struct cmd_syndesc *as)
 	code = pr_CreateUser(namei->data, &id);
 	if (code) {
 	    if (id)
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to create user %s with id %d %s",
 			namei->data, id, (force ? "(ignored)" : ""));
 	    else
-		com_err(whoami, code, "; unable to create user %s %s",
+		afs_com_err(whoami, code, "; unable to create user %s %s",
 			namei->data, (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -321,11 +289,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
     int goodCount;
 
     if (!(as->parms[0].items || as->parms[1].items)) {
-	com_err(whoami, 0, "must specify either a name or an id.");
+	afs_com_err(whoami, 0, "must specify either a name or an id.");
 	return -1;
     }
     if (as->parms[0].items && as->parms[1].items) {
-	com_err(whoami, 0, "can't specify both a name and id.");
+	afs_com_err(whoami, 0, "can't specify both a name and id.");
 	return -1;
     }
 
@@ -354,11 +322,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 
 	code = pr_NameToId(nl, lids);
 	if (code)
-	    com_err(whoami, code, "so couldn't look up names");
+	    afs_com_err(whoami, code, "so couldn't look up names");
 	else {
 	    for (n = 0; n < lids->idlist_len; n++) {
 		if ((lids->idlist_val[n] == ANONYMOUSID)) {
-		    com_err(whoami, PRNOENT, "so couldn't look up id for %s",
+		    afs_com_err(whoami, PRNOENT, "so couldn't look up id for %s",
 			    nl->namelist_val[n]);
 		} else
 		    goodCount++;
@@ -380,7 +348,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	for (i = as->parms[1].items; i; i = i->next) {
 	    code = util_GetInt32(i->data, &lids->idlist_val[n]);
 	    if (code)
-		com_err(whoami, code =
+		afs_com_err(whoami, code =
 			PRNOENT, "because a bogus id '%s' was specified",
 			i->data);
 	    n++;
@@ -390,7 +358,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	    lnames->namelist_len = 0;
 	    code = pr_IdToName(lids, lnames);
 	    if (code)
-		com_err(whoami, code, "translating ids");
+		afs_com_err(whoami, code, "translating ids");
 	}
     }
     if (code) {
@@ -447,11 +415,11 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
     tids.idlist_val = 0;
     code = pr_NameToId(&names, &tids);
     if (code)
-	com_err(whoami, code, "so couldn't look up names");
+	afs_com_err(whoami, code, "so couldn't look up names");
     else {
 	for (n = 0; n < tids.idlist_len; n++) {
 	    if ((tids.idlist_val[n] == ANONYMOUSID)) {
-		com_err(whoami, PRNOENT, "so couldn't look up id for %s",
+		afs_com_err(whoami, PRNOENT, "so couldn't look up id for %s",
 			names.namelist_val[n]);
 	    } else
 		goodCount++;
@@ -470,7 +438,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 	tnames.namelist_len = 0;
 	code = pr_IdToName(&ids, &tnames);
 	if (code)
-	    com_err(whoami, code, "translating ids");
+	    afs_com_err(whoami, code, "translating ids");
 	else
 	    goodCount++;
 	if (lnames) {
@@ -501,7 +469,7 @@ AddToGroup(register struct cmd_syndesc *as)
 	for (g = as->parms[1].items; g; g = g->next) {
 	    code = pr_AddToGroup(u->data, g->data);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to add user %s to group %s %s", u->data,
 			g->data, (force ? "(ignored)" : ""));
 		if (!force)
@@ -522,7 +490,7 @@ RemoveFromGroup(register struct cmd_syndesc *as)
 	for (g = as->parms[1].items; g; g = g->next) {
 	    code = pr_RemoveUserFromGroup(u->data, g->data);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to remove user %s from group %s %s",
 			u->data, g->data, (force ? "(ignored)" : ""));
 		if (!force)
@@ -557,7 +525,7 @@ ListMembership(register struct cmd_syndesc *as)
 	list.namelist_len = 0;
 	code = pr_IDListMembers(ids.idlist_val[i], &list);
 	if (code) {
-	    com_err(whoami, code, "; unable to get membership of %s (id: %d)",
+	    afs_com_err(whoami, code, "; unable to get membership of %s (id: %d)",
 		    name, id);
 	    continue;
 	}
@@ -598,7 +566,7 @@ Delete(register struct cmd_syndesc *as)
 
 	code = pr_DeleteByID(id);
 	if (code) {
-	    com_err(whoami, code, "deleting %s (id: %d) %s", name, id,
+	    afs_com_err(whoami, code, "deleting %s (id: %d) %s", name, id,
 		    (force ? "(ignored)" : ""));
 	    if (!force)
 		return code;
@@ -646,7 +614,7 @@ CheckEntry(register struct cmd_syndesc *as)
 	code = pr_ListEntry(id, &aentry);
 	if (code) {
 	    rcode = code;
-	    com_err(whoami, code, "; unable to find entry for (id: %d)", id);
+	    afs_com_err(whoami, code, "; unable to find entry for (id: %d)", id);
 	    continue;
 	}
 
@@ -655,7 +623,7 @@ CheckEntry(register struct cmd_syndesc *as)
 	code = pr_IdToName(&lids, &lnames);
 	if (code) {
 	    rcode = code;
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "translating owner (%d) and creator (%d) ids",
 		    aentry.owner, aentry.creator);
 	    continue;
@@ -736,7 +704,7 @@ ListEntries(struct cmd_syndesc *as)
 	    pr_ListEntries(flag, startindex, &nentries, &entriesp,
 			   &nextstartindex);
 	if (code) {
-	    com_err(whoami, code, "; unable to list entries\n");
+	    afs_com_err(whoami, code, "; unable to list entries\n");
 	    if (entriesp)
 		free(entriesp);
 	    break;
@@ -764,7 +732,7 @@ ChownGroup(register struct cmd_syndesc *as)
     owner = as->parms[1].items->data;
     code = pr_ChangeEntry(name, "", 0, owner);
     if (code)
-	com_err(whoami, code, "; unable to change owner of %s to %s", name,
+	afs_com_err(whoami, code, "; unable to change owner of %s to %s", name,
 		owner);
     return code;
 }
@@ -780,7 +748,7 @@ ChangeName(register struct cmd_syndesc *as)
     newname = as->parms[1].items->data;
     code = pr_ChangeEntry(oldname, newname, 0, "");
     if (code)
-	com_err(whoami, code, "; unable to change name of %s to %s", oldname,
+	afs_com_err(whoami, code, "; unable to change name of %s to %s", oldname,
 		newname);
     return code;
 }
@@ -793,11 +761,11 @@ ListMax(register struct cmd_syndesc *as)
 
     code = pr_ListMaxUserId(&maxUser);
     if (code)
-	com_err(whoami, code, "getting maximum user id");
+	afs_com_err(whoami, code, "getting maximum user id");
     else {
 	code = pr_ListMaxGroupId(&maxGroup);
 	if (code)
-	    com_err(whoami, code, "getting maximum group id");
+	    afs_com_err(whoami, code, "getting maximum group id");
 	else {
 	    printf("Max user id is %d and max group id is %d.\n", maxUser,
 		   maxGroup);
@@ -817,12 +785,12 @@ SetMax(register struct cmd_syndesc *as)
 	/* set user max */
 	code = util_GetInt32(as->parms[1].items->data, &maxid);
 	if (code) {
-	    com_err(whoami, code, "because id was: '%s'",
+	    afs_com_err(whoami, code, "because id was: '%s'",
 		    as->parms[1].items->data);
 	} else {
 	    code = pr_SetMaxUserId(maxid);
 	    if (code)
-		com_err(whoami, code, "so couldn't set Max User Id to %d",
+		afs_com_err(whoami, code, "so couldn't set Max User Id to %d",
 			maxid);
 	}
     }
@@ -830,12 +798,12 @@ SetMax(register struct cmd_syndesc *as)
 	/* set group max */
 	code = util_GetInt32(as->parms[0].items->data, &maxid);
 	if (code) {
-	    com_err(whoami, code, "because id was: '%s'",
+	    afs_com_err(whoami, code, "because id was: '%s'",
 		    as->parms[0].items->data);
 	} else {
 	    code = pr_SetMaxGroupId(maxid);
 	    if (code)
-		com_err(whoami, code, "so couldn't set Max Group Id to %d",
+		afs_com_err(whoami, code, "so couldn't set Max Group Id to %d",
 			maxid);
 	}
     }
@@ -904,7 +872,7 @@ SetFields(register struct cmd_syndesc *as)
     if (as->parms[2].items) {	/* limitgroups */
 	code = util_GetInt32(as->parms[2].items->data, &ngroups);
 	if (code) {
-	    com_err(whoami, code, "because ngroups was: '%s'",
+	    afs_com_err(whoami, code, "because ngroups was: '%s'",
 		    as->parms[2].items->data);
 	    return code;
 	}
@@ -914,7 +882,7 @@ SetFields(register struct cmd_syndesc *as)
     if (as->parms[3].items) {	/* limitgroups */
 	code = util_GetInt32(as->parms[3].items->data, &nusers);
 	if (code) {
-	    com_err(whoami, code, "because nusers was: '%s'",
+	    afs_com_err(whoami, code, "because nusers was: '%s'",
 		    as->parms[3].items->data);
 	    return code;
 	}
@@ -929,7 +897,7 @@ SetFields(register struct cmd_syndesc *as)
 	    continue;
 	code = pr_SetFieldsEntry(id, mask, flags, ngroups, nusers);
 	if (code) {
-	    com_err(whoami, code, "; unable to set fields for %s (id: %d)",
+	    afs_com_err(whoami, code, "; unable to set fields for %s (id: %d)",
 		    name, id);
 	    return code;
 	}
@@ -971,7 +939,7 @@ ListOwned(register struct cmd_syndesc *as)
 	    list.namelist_len = 0;
 	    code = pr_ListOwned(oid, &list, &more);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; unable to get owner list for %s (id: %d)", name,
 			oid);
 		break;
@@ -1022,13 +990,13 @@ main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-#if defined(SUPERGROUPS)
+
     char line[2048];
     char *cp, *lastp;
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
-#endif
+
 #ifdef WIN32
     WSADATA WSAjunk;
 #endif
@@ -1137,29 +1105,24 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-#if defined(SUPERGROUPS)
-
-    ts = cmd_CreateSyntax("interactive", Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, 0,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, 0, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", Source, 0, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, 0, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", Sleep, 0, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, 0, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-#endif /* SUPERGROUPS */
-
     cmd_SetBeforeProc(GetGlobals, 0);
 
-#if defined(SUPERGROUPS)
     finished = 1;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(0);
@@ -1188,7 +1151,7 @@ main(int argc, char **argv)
 	    cmd_ParseLine(line, parsev, &parsec,
 			  sizeof(parsev) / sizeof(*parsev));
 	if (code) {
-	    com_err(whoami, code, "parsing line: <%s>", line);
+	    afs_com_err(whoami, code, "parsing line: <%s>", line);
 	    exit(2);
 	}
 	savec = parsev[0];
@@ -1199,11 +1162,5 @@ main(int argc, char **argv)
     }
     CleanUp(0);
     exit(0);
-
-#else /* SUPERGROUPS */
-
-    cmd_SetAfterProc(CleanUp, 0);
-    code = cmd_Dispatch(argc, argv);
-    exit(code != 0);
-#endif /* SUPERGROUPS */
 }
+

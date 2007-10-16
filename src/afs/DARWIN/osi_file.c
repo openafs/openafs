@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.8.2.6 2006/11/09 23:26:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.8.2.7 2007/10/10 16:57:55 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -141,6 +141,9 @@ osi_UFSOpen(afs_int32 ainode)
     extern int cacheDiskType;
     afs_int32 code = 0;
     int dummy;
+    char fname[1024];
+    struct osi_stat tstat;
+
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
@@ -154,6 +157,28 @@ osi_UFSOpen(afs_int32 ainode)
     }
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
+#ifdef AFS_CACHE_VNODE_PATH
+    if (ainode < 0) {
+	switch (ainode) {
+	case AFS_CACHE_CELLS_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
+	    break;
+	case AFS_CACHE_ITEMS_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CacheItems");
+	    break;
+	case AFS_CACHE_VOLUME_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "VolumeItems");
+	    break;
+	default:
+	    osi_Panic("Invalid negative inode");
+	}
+    } else {
+	dummy = ainode / afs_numfilesperdir;
+	snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode);
+    }
+
+    code = vnode_open(fname, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
+#else
 #ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_HFS_CACHE)
 	code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, &ainode, &vp, &va, &dummy);	/* XXX hfs is broken */
@@ -166,16 +191,22 @@ osi_UFSOpen(afs_int32 ainode)
     else
 	panic("osi_UFSOpen called before cacheops initialized\n");
 #endif
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
     afile->vnode = vp;
-    afile->size = va.va_size;
     afile->offset = 0;
     afile->proc = (int (*)())0;
     afile->inum = ainode;	/* for hint validity checking */
+#ifndef AFS_CACHE_VNODE_PATH
+    afile->size = va.va_size;
+#else
+    code = afs_osi_Stat(afile, &tstat);
+    afile->size = tstat.size;
+#endif
     return (void *)afile;
 }
 

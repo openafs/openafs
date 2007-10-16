@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.14.2.1 2004/08/25 07:09:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.14.2.2 2007/04/10 18:43:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -262,7 +262,7 @@ CommandProc(as, arock)
     if (code || !(lcell = ka_LocalCell())) {
 #ifndef AFS_FREELANCE_CLIENT
 	if (!Pipe)
-	    com_err(rn, code, "Can't get local cell name!");
+	    afs_com_err(rn, code, "Can't get local cell name!");
 	exit(1);
 #endif
     }
@@ -270,7 +270,7 @@ CommandProc(as, arock)
     code = rx_Init(0);
     if (code) {
 	if (!Pipe)
-	    com_err(rn, code, "Failed to initialize Rx");
+	    afs_com_err(rn, code, "Failed to initialize Rx");
 	exit(1);
     }
 
@@ -301,7 +301,7 @@ CommandProc(as, arock)
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
 	    if (!Pipe)
-		com_err(rn, code, "could not parse server list");
+		afs_com_err(rn, code, "could not parse server list");
 	    return code;
 	}
 	lexplicit = 1;
@@ -382,7 +382,7 @@ CommandProc(as, arock)
 #ifdef AFS_FREELANCE_CLIENT
     if (!foundExplicitCell && !lcell) {
 	if (!Pipe)
-	    com_err(rn, code, "no cell name provided");
+	    afs_com_err(rn, code, "no cell name provided");
 	exit(1);
     }
 #else
@@ -392,7 +392,7 @@ CommandProc(as, arock)
 
     if (code = ka_CellToRealm(realm, realm, &local)) {
 	if (!Pipe)
-	    com_err(rn, code, "Can't convert cell to realm");
+	    afs_com_err(rn, code, "Can't convert cell to realm");
 	exit(1);
     }
     lcstring(cell, realm, sizeof(cell));
@@ -413,7 +413,7 @@ CommandProc(as, arock)
 		memset(&key, 0, sizeof(key));
 		memset(passwd, 0, sizeof(passwd));
 		if (code)
-		    com_err(rn, code, "reading password");
+		    afs_com_err(rn, code, "reading password");
 		exit(1);
 	    }
 	}
@@ -522,17 +522,17 @@ CommandProc(as, arock)
     memset(&mitkey, 0, sizeof(mitkey));
     memset(&key, 0, sizeof(key));
     if (code == KAUBIKCALL)
-	com_err(rn, code, "(Authentication Server unavailable, try later)");
+	afs_com_err(rn, code, "(Authentication Server unavailable, try later)");
     else if (code) {
 	if (code == KABADREQUEST)
 	    fprintf(stderr, "%s: Incorrect old password.\n", rn);
 	else
-	    com_err(rn, code, "so couldn't change password");
+	    afs_com_err(rn, code, "so couldn't change password");
     } else {
 	code =
 	    ka_AuthServerConn(realm, KA_MAINTENANCE_SERVICE, &token, &conn);
 	if (code)
-	    com_err(rn, code, "contacting Admin Server");
+	    afs_com_err(rn, code, "contacting Admin Server");
 	else {
 	    if (dess2k == 1)
 		code =
@@ -546,7 +546,7 @@ CommandProc(as, arock)
 	    memset(&newmitkey, 0, sizeof(newmitkey));
 	    if (code) {
 		char *reason;
-		reason = (char *)error_message(code);
+		reason = (char *)afs_error_message(code);
 		fprintf(stderr, "%s: Password was not changed because %s\n",
 			rn, reason);
 	    } else
@@ -567,7 +567,7 @@ CommandProc(as, arock)
 
   no_change:			/* yuck, yuck, yuck */
     if (code)
-	com_err(rn, code, "getting new password");
+	afs_com_err(rn, code, "getting new password");
   no_change_no_msg:
     memset(&key, 0, sizeof(key));
     memset(npasswd, 0, sizeof(npasswd));

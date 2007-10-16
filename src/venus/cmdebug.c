@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.5 2006/06/26 16:19:06 rra Exp $");
+    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.6 2007/04/10 18:43:46 shadow Exp $");
 
 
 #include <sys/types.h>
@@ -57,7 +57,7 @@ PrintCacheConfig(struct rx_connection *aconn)
     code = RXAFSCB_GetCacheConfig(aconn, 1, &srv_ver, &conflen, &c);
     if (code) {
 	printf("cmdebug: error checking cache config: %s\n",
-	       error_message(code));
+	       afs_error_message(code));
 	return 0;
     }
 
@@ -112,7 +112,7 @@ PrintInterfaces(struct rx_connection *aconn)
         code = RXAFSCB_WhoAreYou(aconn, &addr);
     if (code) {
 	printf("cmdebug: error checking interfaces: %s\n",
-	       error_message(code));
+	       afs_error_message(code));
 	return 0;
     }
 
@@ -203,7 +203,7 @@ PrintLocks(register struct rx_connection *aconn, int aint32)
 		break;
 	    /* otherwise we have an unrecognized error */
 	    printf("cmdebug: error checking locks: %s\n",
-		   error_message(code));
+		   afs_error_message(code));
 	    return code;
 	}
 	/* here we have the lock information, so display it, perhaps */
@@ -274,7 +274,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    if (code == 1)
 		break;
 	    printf("cmdebug: failed to get cache entry %d (%s)\n", i,
-		   error_message(code));
+		   afs_error_message(code));
 	    return code;
 	}
 
@@ -366,7 +366,7 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    if (code == 1)
 		break;
 	    printf("cmdebug: failed to get cache entry %d (%s)\n", i,
-		   error_message(code));
+		   afs_error_message(code));
 	    return code;
 	}
 

@@ -13,7 +13,7 @@
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/compile_et.c,v 1.14 2003/11/29 22:08:10 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/comerr/compile_et.c,v 1.14.2.1 2007/04/10 18:43:42 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -375,7 +375,7 @@ main(int argc, char **argv)
 	fputs("static struct et_list etlink = { 0, &et};\n\n", cfile);
 	fprintf(cfile, "void initialize_%s_error_table(void) {\n",
 		table_name);
-	fputs("    add_to_error_table(&etlink);\n", cfile);
+	fputs("    afs_add_to_error_table(&etlink);\n", cfile);
 	fputs("}\n", cfile);
 	fclose(cfile);
 

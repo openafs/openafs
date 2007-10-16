@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.8 2007/01/15 15:52:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.10 2007/03/20 18:48:52 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -594,13 +594,18 @@ static void afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag = key->payload.value;
     struct unixuser *pu;
+    int locked = ISAFS_GLOCK();
 
+    if (!locked)
+	AFS_GLOCK();
     pu = afs_FindUser(pag, -1, READ_LOCK);
     if (pu) {
 	pu->ct.EndTimestamp = 0;
 	pu->tokenTime = 0;
 	afs_PutUser(pu, READ_LOCK);
     }
+    if (!locked)
+	AFS_GUNLOCK();
 }
 
 struct key_type key_type_afs_pag =
@@ -612,13 +617,36 @@ struct key_type key_type_afs_pag =
     .destroy     = afs_pag_destroy,
 };
 
+#ifdef EXPORTED_TASKLIST_LOCK
+extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
+
 void osi_keyring_init(void)
 {
     struct task_struct *p;
-
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+      read_lock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_lock();
+#endif
     p = find_task_by_pid(1);
     if (p && p->user->session_keyring)
 	__key_type_keyring = p->user->session_keyring->type;
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+       read_unlock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_unlock();
+#endif
 
     register_key_type(&key_type_afs_pag);
 }

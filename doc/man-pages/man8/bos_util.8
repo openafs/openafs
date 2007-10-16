@@ -1,0 +1,303 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH bos_util 8 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+bos_util \- Manipulate the AFS server Keyfile
+.SH "SYNOPSIS"
+\fBbos_util\fR add <\fIkvno\fR>
+.PP
+\fBbos_util\fR adddes <\fIkvno\fR>
+.PP
+\fBbos_util\fR delete <\fIkvno\fR>
+.PP
+\fBbos_util\fR list
+.SH "DESCRIPTION"
+The \fBbos_util\fR command manipulates the AFS server \fBKeyfile\fR. It can take
+a password from standard input, convert it to a key, and add it to the
+\fIKeyFile\fR; list the keys in the \fIKeyFile\fR; or remove a key from thet
+\fIKeyFile\fR. It is very similar in function to \fBasetkey\fR, but \fBasetkey\fR
+works with keytab files wheras \fBbos_util\fR works with passwords directly.
+.PP
+\fBbos_util\fR expects one of the following subcommands:
+.Ip "add <\fIkvno\fR>" 4
+Add a key with key version <\fIkvno\fR> to the \fIKeyFile\fR using a password
+from standard input. This command uses the normal \s-1AFS\s0 password salt
+algorithm to generate the key (equivalent to the des-cbc-crc:afs3 enctype
+in Kerberos v5). This command is basically equivalent to \fBbos addkey\fR.
+.Ip "adddes <\fIkvno\fR>" 4
+Add a key with key version <\fIkvno\fR> to the \fBKeyFile\fR using a password
+from standard input.  This command does not salt the password when
+generating the key (equivalent to the des-cbc-crc:v4 enctype in Kerberos
+v5).
+.Sp
+Since this command applies no salt to the password, it can be used as a
+last resort for generating a \s-1DES\s0 key with a salt algorithm that other
+utilities don't know how to use by giving this command the pre-salted
+password. This can be useful when, for example, using Microsoft Active
+Directory as the Kerberos \s-1KDC\s0, since Active Directory uses a different
+salt algorithm for service principals than most Unix Kerberos
+implementations. The best approach, however, is to find a way to generate
+a keytab and then use \fBasetkey\fR.
+.Ip "delete <\fIkvno\fR>" 4
+Delete the key with the specified key version from the \fIKeyFile\fR. This
+command is equivalent to \fBasetkey delete\fR or \fBbos removekey\fR.
+.Ip "list" 4
+List the keys in the \fIKeyFile\fR. This command is equivalent to \fBasetkey
+list\fR or \fBbos listkeys\fR.
+.PP
+The \fBbos_util\fR command does not use the normal \s-1AFS\s0 option parsing library
+and its subcommands cannot be abbreviated.
+.SH "CAUTIONS"
+\fBbos_util\fR is intended for use with a Kerberos v4 environment and
+therefore is mostly obsolete. Normally, rather than using this command,
+you will want to use \fBktutil\fR to create a keytab (perhaps with its
+\fBadd_entry\fR command) and then use \fBasetkey\fR as normal. \fBbos_util\fR only
+supports the AFS password salt algorithm and no password salt algorithm
+and therefore may not produce the same key from a given password as
+Kerberos v5 utilities unless one is careful to use that same salt
+algorithm when creating the key in the KDC.
+.PP
+Creating an AFS key with a known password and then using \fBbos_util\fR or
+\fBbos addkey\fR to add that key to the \fIKeyFile\fR is not recommended.
+Human-created passwords are usually not as strong as a random key
+generated using a good entropy source, such as with the \fB\-randkey\fR option
+to the MIT Kerberos v5 \fBkadmin ktadd\fR command or the equivalent in other
+Kerberos v5 implementations. The security of AFS depends on the strength
+of the AFS service key; it should therefore be as random as possible.
+.PP
+It is imperative that the key version number (kvno) given matches the kvno
+on the Kerberos server. If it doesn't, users won't be able to
+authenticate. The key generated by \fBbos_util\fR must also match the
+internal representation on the Kerberos server including the salt.
+.SH "OPTIONS"
+\fBbos_util\fR takes no options.
+.SH "PRIVILEGE REQUIRED"
+The issuer must be logged onto a file server machine as the local
+superuser \f(CWroot\fR.
+.SH "SEE ALSO"
+the \fIasetkey(8)\fR manpage,
+the \fIbos_addkey(8)\fR manpage,
+the \fIbos_listkeys(8)\fR manpage,
+the \fIbos_removekey(8)\fR manpage,
+\fIkadmin\fR\|(8),
+\fIktutil\fR\|(8)
+.SH "COPYRIGHT"
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+.PP
+This documentation is covered by the IBM Public License Version 1.0.
+This man page was written by Jason Edgecombe for OpenAFS.
+
+.rn }` ''
+.IX Title "bos_util 8"
+.IX Name "bos_util - Manipulate the AFS server Keyfile"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "add <\fIkvno\fR>"
+
+.IX Item "adddes <\fIkvno\fR>"
+
+.IX Item "delete <\fIkvno\fR>"
+
+.IX Item "list"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

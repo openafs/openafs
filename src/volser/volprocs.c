@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.7 2006/12/19 03:40:14 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.9 2007/10/15 14:18:57 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1279,13 +1279,23 @@ SAFSVolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
 {
     afs_int32 code;
 
-    code = VolDump(acid, fromTrans, fromDate);
+    code = VolDump(acid, fromTrans, fromDate, 0);
     osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);
     return code;
 }
 
 afs_int32
-VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
+SAFSVolDumpV2(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
+{
+    afs_int32 code;
+
+    code = VolDump(acid, fromTrans, fromDate, flags);
+    osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);
+    return code;
+}
+
+afs_int32
+VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
 {
     int code = 0;
     register struct volser_trans *tt;
@@ -1303,7 +1313,8 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
     }
     strcpy(tt->lastProcName, "Dump");
     tt->rxCallPtr = acid;
-    code = DumpVolume(acid, tt->volume, fromDate, 1);	/* squirt out the volume's data, too */
+    code = DumpVolume(acid, tt->volume, fromDate, (flags & VOLDUMPV2_OMITDIRS)
+		      ? 0 : 1);	/* squirt out the volume's data, too */
     if (code) {
 	tt->rxCallPtr = (struct rx_call *)0;
 	TRELE(tt);
@@ -2052,11 +2063,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    xInfoP->accessDate = volDiskDataP->accessDate;
 	    xInfoP->updateDate = volDiskDataP->updateDate;
 	    xInfoP->backupDate = volDiskDataP->backupDate;
-	    now = FT_ApproxTime();
-	    if (now - volDiskDataP->dayUseDate > OneDay)
-		xInfoP->dayUse = 0;
-	    else
-		xInfoP->dayUse = volDiskDataP->dayUse;
 	    xInfoP->filecount = volDiskDataP->filecount;
 	    xInfoP->maxquota = volDiskDataP->maxquota;
 	    xInfoP->size = volDiskDataP->diskused;
@@ -2064,8 +2070,15 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Copy out the stat fields in a single operation.
 	     */
-	    memcpy((char *)&(xInfoP->stat_reads[0]),
+	    now = FT_ApproxTime();
+	    if (now - volDiskDataP->dayUseDate > OneDay) {
+		xInfoP->dayUse = 0;
+		memset((char *)&(xInfoP->stat_reads[0]), 0, numStatBytes);
+	    } else {
+		xInfoP->dayUse = volDiskDataP->dayUse;
+		memcpy((char *)&(xInfoP->stat_reads[0]),
 		   (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
+	    }
 
 	    /*
 	     * We're done copying.  Detach the volume and iterate (at this
