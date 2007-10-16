@@ -503,6 +503,8 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
 	/* Don't touch our arguments when called recursively */
 	*outname = np->sysname;
 	*num = np->sysnamecount;
+	if (!np->sysname[0])
+	    return ENODEV; /* XXX */
     }
     return 0;
 }
