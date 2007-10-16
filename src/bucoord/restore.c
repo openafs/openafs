@@ -224,7 +224,7 @@ bc_Restorer(aindex)
 	    code = bcdb_FindDumpByID(dumpTaskPtr->parentDumpID, dumpDescr);
 	    if (code)
 	      {
-		afs_com_err(whoami, "Couldn't look up info for dump %d\n",
+		afs_com_err(whoami, code, "Couldn't look up info for dump %d\n",
 			dumpTaskPtr->parentDumpID);
 		continue;
 	      }
