@@ -6,15 +6,5 @@ pam-build
 bos-permissions
 compiler-flags
 no-admin-reference
-amd64-syscall-probe
-des-alignment
-ka-forwarder
-kbuild-assembly
-linux-2.6.22
-linux-2.6.22.1-proc
-null-uuid-client
-null-uuid-server
-pag-cleanup-lock
 ucontext-everywhere
-pt_util-man-page
 paravirt-workaround
