@@ -1,5 +1,4 @@
 usr/share/doc
 var/log/openafs
 etc/openafs/server
-var/lib/openafs/cores
 var/lib/openafs/local
