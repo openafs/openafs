@@ -227,7 +227,6 @@ binary-arch: install-stamp
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
 	chmod 700 debian/openafs-fileserver/etc/openafs/server
-	chmod 700 debian/openafs-fileserver/var/lib/openafs/cores
 	dh_perl
 	dh_installdeb
 	dh_shlibdeps
