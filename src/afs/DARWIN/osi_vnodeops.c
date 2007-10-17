@@ -2069,7 +2069,6 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    ObtainWriteLock(&avc->lock,325);
    ovp = AFSTOV(avc);
    if (!(avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
-        ReleaseWriteLock(&avc->lock);
         AFS_GUNLOCK();
 #if 0 /* unsupported */
         if (dvp && cnp)
@@ -2077,7 +2076,11 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
                               cnp->cn_hash,
                               VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
 #endif
+	/* Can end up in reclaim... drop GLOCK */
         vnode_rele(ovp);
+	AFS_GLOCK();
+        ReleaseWriteLock(&avc->lock);
+	AFS_GUNLOCK();
         return 0;
    }
    if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
@@ -2099,20 +2102,24 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
        vnode_addfsref(nvp);
+       if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
+	   printf("vcache %p should not be CDeadVnode", avc);
+       if (avc->v == ovp) {
+	   if (!(avc->states & CVInit)) {
+	       vnode_clearfsnode(ovp);
+	       vnode_removefsref(ovp);
+	   }
+       }
        avc->v = nvp;
        avc->states &=~ CDeadVnode;
-       if (!(avc->states & CVInit)) {
-	   vnode_clearfsnode(ovp);
-	   vnode_removefsref(ovp);
-       }
    }
+   vnode_put(ovp);
+   vnode_rele(ovp);
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);
    if (!error)
       afs_osi_Wakeup(&avc->states);
    AFS_GUNLOCK();
-   vnode_put(ovp);
-   vnode_rele(ovp);
    return error;
 }
 #endif
