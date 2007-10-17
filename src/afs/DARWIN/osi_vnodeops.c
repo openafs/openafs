@@ -2061,12 +2061,13 @@ afs_darwin_getnewvnode(struct vcache *avc)
    Don't touch! */
 int 
 afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot) {
-   vnode_t ovp = AFSTOV(avc);
+   vnode_t ovp;
    vnode_t nvp;
    int error;
    struct vnode_fsparam par;
    AFS_GLOCK();
    ObtainWriteLock(&avc->lock,325);
+   ovp = AFSTOV(avc);
    if (!(avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
         ReleaseWriteLock(&avc->lock);
         AFS_GUNLOCK();
