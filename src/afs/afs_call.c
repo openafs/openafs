@@ -1255,12 +1255,15 @@ afs_shutdown(void)
 #endif
     afs_warn("\n");
 
+#ifdef AFS_AIX51_ENV
+    shutdown_daemons();
+#endif
+
     /* Close file only after daemons which can write to it are stopped. */
     if (afs_cacheInodep) {	/* memcache won't set this */
 	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
 	afs_cacheInodep = 0;
     }
-    return;			/* Just kill daemons for now */
 #ifdef notdef
     shutdown_CB();
     shutdown_AFS();
@@ -1268,21 +1271,16 @@ afs_shutdown(void)
     shutdown_rxevent();
     shutdown_rx();
     afs_shutdown_BKG();
+#endif
     shutdown_bufferpackage();
-#endif
-#ifdef AFS_AIX51_ENV
-    shutdown_daemons();
-#endif
-#ifdef notdef
     shutdown_cache();
     shutdown_osi();
     shutdown_osinet();
     shutdown_osifile();
     shutdown_vnodeops();
-    shutdown_vfsops();
-    shutdown_exporter();
     shutdown_memcache();
 #if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)) && !defined(AFS_OSF_ENV)
+    shutdown_exporter();
     shutdown_nfsclnt();
 #endif
     shutdown_afstest();
@@ -1294,7 +1292,8 @@ afs_shutdown(void)
 */
     afs_warn(" ALL allocated tables\n");
     afs_shuttingdown = 0;
-#endif
+
+    return;			/* Just kill daemons for now */
 }
 
 void
