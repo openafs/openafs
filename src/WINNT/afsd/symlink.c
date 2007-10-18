@@ -620,8 +620,12 @@ void Die(code, filename)
 	else fprintf(stderr,"%s: Invalid argument.\n", pn);
     }
     else if (code == ENOENT) {
-	if (filename) fprintf(stderr,"%s: File '%s' doesn't exist\n", pn, filename);
-	else fprintf(stderr,"%s: no such file returned\n", pn);
+	if (filename) fprintf(stderr,"%s: File '%s' doesn't exist.\n", pn, filename);
+	else fprintf(stderr,"%s: no such file returned.\n", pn);
+    }
+    else if (code == EEXIST) {
+	if (filename) fprintf(stderr,"%s: File '%s' already exists.\n", pn, filename);
+	else fprintf(stderr,"%s: the specified file already exists.\n", pn);
     }
     else if (code == EROFS)  fprintf(stderr,"%s: You can not change a backup or readonly volume\n", pn);
     else if (code == EACCES || code == EPERM) {
