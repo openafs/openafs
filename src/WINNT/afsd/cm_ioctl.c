@@ -286,7 +286,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
 
 	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (p - lastComponent) > 1 &&strlen(p) > 1) {
+	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
@@ -298,7 +298,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 		if (iscp)
 		    cm_ReleaseSCache(iscp);
 	    } else {
-		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD,
 				userp, NULL, reqp, scpp);
 	    }
 	    cm_ReleaseSCache(substRootp);
@@ -333,7 +333,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
 
 	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (p - lastComponent) > 1 &&strlen(p) > 1) {
+	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
@@ -345,7 +345,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 		if (iscp)
 		    cm_ReleaseSCache(iscp);
 	    } else {
-		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD,
 				userp, NULL, reqp, scpp);
 	    }
 
@@ -365,7 +365,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	}
         
 	lastComponent = strrchr(relativePath, '\\');
-	if (lastComponent && (relativePath - lastComponent) > 1 && strlen(relativePath) > 1) {
+	if (lastComponent && (lastComponent - relativePath) > 1 && strlen(lastComponent) > 1) {
 	    *lastComponent = '\0';
 	    lastComponent++;
 
@@ -377,7 +377,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    if (iscp)
 		cm_ReleaseSCache(iscp);
 	} else {
-	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD,
 			     userp, NULL, reqp, scpp);
 	}
         if (code) {
@@ -583,25 +583,32 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     if (code) return code;
 
     /* now make the get acl call */
-    fid.Volume = scp->fid.volume;
-    fid.Vnode = scp->fid.vnode;
-    fid.Unique = scp->fid.unique;
-    do {
-        acl.AFSOpaque_val = ioctlp->outDatap;
-        acl.AFSOpaque_len = 0;
-        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-        if (code) continue;
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = 0;
+        ioctlp->outDatap[0] ='\0';
+    } else
+#endif
+    {
+        fid.Volume = scp->fid.volume;
+        fid.Vnode = scp->fid.vnode;
+        fid.Unique = scp->fid.unique;
+        do {
+            acl.AFSOpaque_val = ioctlp->outDatap;
+            acl.AFSOpaque_len = 0;
+            code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+            if (code) continue;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_FetchACL(callp, &fid, &acl, &fileStatus, &volSync);
-        rx_PutConnection(callp);
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_FetchACL(callp, &fid, &acl, &fileStatus, &volSync);
+            rx_PutConnection(callp);
 
-    } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
-    code = cm_MapRPCError(code, &req);
-    cm_ReleaseSCache(scp);
+        } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
+        cm_ReleaseSCache(scp);
 
-    if (code) return code;
-
+        if (code) return code;
+    }
     /* skip over return data */
     tlen = (int)strlen(ioctlp->outDatap) + 1;
     ioctlp->outDatap += tlen;
@@ -664,28 +671,34 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
 	
-    /* now make the get acl call */
-    fid.Volume = scp->fid.volume;
-    fid.Vnode = scp->fid.vnode;
-    fid.Unique = scp->fid.unique;
-    do {
-        acl.AFSOpaque_val = ioctlp->inDatap;
-        acl.AFSOpaque_len = (u_int)strlen(ioctlp->inDatap)+1;
-        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-        if (code) continue;
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = CM_ERROR_NOACCESS;
+    } else
+#endif
+    {
+        /* now make the get acl call */
+        fid.Volume = scp->fid.volume;
+        fid.Vnode = scp->fid.vnode;
+        fid.Unique = scp->fid.unique;
+        do {
+            acl.AFSOpaque_val = ioctlp->inDatap;
+            acl.AFSOpaque_len = (u_int)strlen(ioctlp->inDatap)+1;
+            code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+            if (code) continue;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_StoreACL(callp, &fid, &acl, &fileStatus, &volSync);
-        rx_PutConnection(callp);
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_StoreACL(callp, &fid, &acl, &fileStatus, &volSync);
+            rx_PutConnection(callp);
 
-    } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
-    code = cm_MapRPCError(code, &req);
+        } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
 
-    /* invalidate cache info, since we just trashed the ACL cache */
-    lock_ObtainMutex(&scp->mx);
-    cm_DiscardSCache(scp);
-    lock_ReleaseMutex(&scp->mx);
-
+        /* invalidate cache info, since we just trashed the ACL cache */
+        lock_ObtainMutex(&scp->mx);
+        cm_DiscardSCache(scp);
+        lock_ReleaseMutex(&scp->mx);
+    }
     cm_ReleaseSCache(scp);
 
     return code;
@@ -732,12 +745,18 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
         
-    volume = scp->fid.volume;
-    cell = scp->fid.cell;
-    cm_ReleaseSCache(scp);
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = CM_ERROR_NOACCESS;
+    } else
+#endif
+    {
+        volume = scp->fid.volume;
+        cell = scp->fid.cell;
+        cm_ReleaseSCache(scp);
 
-    code = cm_FlushVolume(userp, &req, cell, volume);
-
+        code = cm_FlushVolume(userp, &req, cell, volume);
+    }
     return code;
 }
 
@@ -752,7 +771,14 @@ long cm_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
         
-    cm_FlushFile(scp, userp, &req);
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = CM_ERROR_NOACCESS;
+    } else
+#endif
+    {
+        cm_FlushFile(scp, userp, &req);
+    }
     cm_ReleaseSCache(scp);
 
     return 0;
@@ -779,53 +805,60 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
 
-    cellp = cm_FindCellByID(scp->fid.cell);
-    osi_assert(cellp);
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = CM_ERROR_NOACCESS;
+    } else
+#endif
+    {
+        cellp = cm_FindCellByID(scp->fid.cell);
+        osi_assert(cellp);
 
-    if (scp->flags & CM_SCACHEFLAG_RO) {
-        cm_ReleaseSCache(scp);
-        return CM_ERROR_READONLY;
+        if (scp->flags & CM_SCACHEFLAG_RO) {
+            cm_ReleaseSCache(scp);
+            return CM_ERROR_READONLY;
+        }
+
+        code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, 
+                                 CM_GETVOL_FLAG_CREATE, &tvp);
+        if (code) {
+            cm_ReleaseSCache(scp);
+            return code;
+        }
+        cm_PutVolume(tvp);
+
+        /* Copy the junk out, using cp as a roving pointer. */
+        cp = ioctlp->inDatap;
+        memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
+        cp += sizeof(AFSFetchVolumeStatus);
+        StringCbCopyA(volName, sizeof(volName), cp);
+        cp += strlen(volName)+1;
+        StringCbCopyA(offLineMsg, sizeof(offLineMsg), cp);
+        cp +=  strlen(offLineMsg)+1;
+        StringCbCopyA(motd, sizeof(motd), cp);
+        storeStat.Mask = 0;
+        if (volStat.MinQuota != -1) {
+            storeStat.MinQuota = volStat.MinQuota;
+            storeStat.Mask |= AFS_SETMINQUOTA;
+        }
+        if (volStat.MaxQuota != -1) {
+            storeStat.MaxQuota = volStat.MaxQuota;
+            storeStat.Mask |= AFS_SETMAXQUOTA;
+        }
+
+        do {
+            code = cm_ConnFromFID(&scp->fid, userp, &req, &tcp);
+            if (code) continue;
+
+            callp = cm_GetRxConn(tcp);
+            code = RXAFS_SetVolumeStatus(callp, scp->fid.volume,
+                                          &storeStat, volName, offLineMsg, motd);
+            rx_PutConnection(callp);
+
+        } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
     }
-
-    code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, 
-                            CM_GETVOL_FLAG_CREATE, &tvp);
-    if (code) {
-        cm_ReleaseSCache(scp);
-        return code;
-    }
-    cm_PutVolume(tvp);
-
-    /* Copy the junk out, using cp as a roving pointer. */
-    cp = ioctlp->inDatap;
-    memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
-    cp += sizeof(AFSFetchVolumeStatus);
-    StringCbCopyA(volName, sizeof(volName), cp);
-    cp += strlen(volName)+1;
-    StringCbCopyA(offLineMsg, sizeof(offLineMsg), cp);
-    cp +=  strlen(offLineMsg)+1;
-    StringCbCopyA(motd, sizeof(motd), cp);
-    storeStat.Mask = 0;
-    if (volStat.MinQuota != -1) {
-        storeStat.MinQuota = volStat.MinQuota;
-        storeStat.Mask |= AFS_SETMINQUOTA;
-    }
-    if (volStat.MaxQuota != -1) {
-        storeStat.MaxQuota = volStat.MaxQuota;
-        storeStat.Mask |= AFS_SETMAXQUOTA;
-    }
-
-    do {
-        code = cm_ConnFromFID(&scp->fid, userp, &req, &tcp);
-        if (code) continue;
-
-        callp = cm_GetRxConn(tcp);
-        code = RXAFS_SetVolumeStatus(callp, scp->fid.volume,
-                                      &storeStat, volName, offLineMsg, motd);
-        rx_PutConnection(callp);
-
-    } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
-    code = cm_MapRPCError(code, &req);
-
+    
     /* return on failure */
     cm_ReleaseSCache(scp);
     if (code) {
@@ -1008,7 +1041,8 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	return CM_ERROR_NOSUCHCELL;
 
     code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
-    if (code) return code;
+    if (code) 
+        return code;
 	
     cp = ioctlp->outDatap;
         
@@ -1181,7 +1215,8 @@ long cm_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (haveCell) {
         /* have cell name, too */
         cellp = cm_GetCell(cp, 0);
-        if (!cellp) return CM_ERROR_NOSUCHCELL;
+        if (!cellp) 
+            return CM_ERROR_NOSUCHCELL;
     }
     else cellp = (cm_cell_t *) 0;
     if (!cellp && (temp & 2)) {
@@ -1713,7 +1748,8 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_InitReq(&req);
         
     code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
-    if (code) return code;
+    if (code) 
+        return code;
 
     /* Translate chars for the mount point name */
     TranslateExtendedChars(leaf);
@@ -1738,8 +1774,10 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (code && cm_dnsEnabled)
             code = cm_SearchCellByDNS(cell, fullCell, &ttl, 0, 0);
 #endif
-        if (code)
+        if (code) {
+            cm_ReleaseSCache(dscp);
             return CM_ERROR_NOSUCHCELL;
+        }
 	
         StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
     } else {
@@ -2129,7 +2167,8 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
         /* cell name */
         cellp = cm_GetCell(tp, CM_FLAG_CREATE);
-        if (!cellp) return CM_ERROR_NOSUCHCELL;
+        if (!cellp) 
+            return CM_ERROR_NOSUCHCELL;
         tp += strlen(tp) + 1;
 
         /* user name */
@@ -2409,7 +2448,8 @@ long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     /* cell name is right here */
     cellp = cm_GetCell(ioctlp->inDatap, 0);
-    if (!cellp) return CM_ERROR_NOSUCHCELL;
+    if (!cellp) 
+        return CM_ERROR_NOSUCHCELL;
 
     lock_ObtainMutex(&userp->mx);
 
@@ -2903,42 +2943,50 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) 
         return code;
         
-    volume = scp->fid.volume;
+#ifdef AFS_FREELANCE_CLIENT
+    if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
+	code = 0;
+	cm_ReleaseSCache(scp);
+    } else
+#endif
+    {
+        volume = scp->fid.volume;
 
-    cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell);
 
-    cm_ReleaseSCache(scp);
+        cm_ReleaseSCache(scp);
 
-    if (!cellp)
-	return CM_ERROR_NOSUCHCELL;
+        if (!cellp)
+            return CM_ERROR_NOSUCHCELL;
 
-    code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
-    if (code) 
-        return code;
+        code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
+        if (code) 
+            return code;
 	
-    if (volume == tvp->rw.ID)
-        statep = &tvp->rw;
-    else if (volume == tvp->ro.ID)
-        statep = &tvp->ro;
-    else
-        statep = &tvp->bk;
+        if (volume == tvp->rw.ID)
+            statep = &tvp->rw;
+        else if (volume == tvp->ro.ID)
+            statep = &tvp->ro;
+        else
+            statep = &tvp->bk;
 
-    switch (statep->state) {
-    case vl_online:
-    case vl_unknown:
-        code = 0;
-        break;
-    case vl_busy:
-        code = CM_ERROR_ALLBUSY;
-        break;
-    case vl_offline:
-        code = CM_ERROR_ALLOFFLINE;
-        break;
-    case vl_alldown:
-        code = CM_ERROR_ALLDOWN;
-        break;
+        switch (statep->state) {
+        case vl_online:
+        case vl_unknown:
+            code = 0;
+            break;
+        case vl_busy:
+            code = CM_ERROR_ALLBUSY;
+            break;
+        case vl_offline:
+            code = CM_ERROR_ALLOFFLINE;
+            break;
+        case vl_alldown:
+            code = CM_ERROR_ALLDOWN;
+            break;
+        }
+        cm_PutVolume(tvp);
     }
-    cm_PutVolume(tvp);
     return code;
 }       
 
