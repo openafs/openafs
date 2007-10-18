@@ -11,10 +11,13 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
 #include <ntstatus.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <lmaccess.h>
+#pragma warning(pop)
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -3961,7 +3964,6 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     return code;
 }
 
-#ifndef USE_OLD_MATCHING
 // char table for case insensitive comparison
 char mapCaseTable[256];
 
@@ -4085,145 +4087,6 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
     return retval;
 }
 
-#else /* USE_OLD_MATCHING */
-/* do a case-folding search of the star name mask with the name in namep.
- * Return 1 if we match, otherwise 0.
- */
-int smb_V3MatchMask(char *namep, char *maskp, int flags)
-{
-    unsigned char tcp1, tcp2;	/* Pattern characters */
-    unsigned char tcn1;		/* Name characters */
-    int sawDot = 0, sawStar = 0, req8dot3 = 0;
-    char *starNamep, *starMaskp;
-    static char nullCharp[] = {0};
-    int casefold = flags & CM_FLAG_CASEFOLD;
-
-    /* make sure we only match 8.3 names, if requested */
-    req8dot3 = (flags & CM_FLAG_8DOT3);
-    if (req8dot3 && !cm_Is8Dot3(namep)) 
-        return 0;
-
-    /* loop */
-    while (1) {
-        /* Next pattern character */
-        tcp1 = *maskp++;
-
-        /* Next name character */
-        tcn1 = *namep;
-
-        if (tcp1 == 0) {
-            /* 0 - end of pattern */
-            if (tcn1 == 0)
-                return 1;
-            else
-                return 0;
-        }
-        else if (tcp1 == '.' || tcp1 == '"') {
-            if (sawDot) {
-                if (tcn1 == '.') {
-                    namep++;
-                    continue;
-                } else
-                    return 0;
-            }
-            else {
-                /*
-                 * first dot in pattern;
-                 * must match dot or end of name
-                 */
-                sawDot = 1;
-                if (tcn1 == 0)
-                    continue;
-                else if (tcn1 == '.') {
-                    sawStar = 0;
-                    namep++;
-                    continue;
-                }
-                else
-                    return 0;
-            }
-        }
-        else if (tcp1 == '?') {
-            if (tcn1 == 0 || tcn1 == '.')
-                return 0;
-            namep++;
-            continue;
-        }
-        else if (tcp1 == '>') {
-            if (tcn1 != 0 && tcn1 != '.')
-                namep++;
-            continue;
-        }
-        else if (tcp1 == '*' || tcp1 == '<') {
-            tcp2 = *maskp++;
-            if (tcp2 == 0)
-                return 1;
-            else if ((req8dot3 && tcp2 == '.') || tcp2 == '"') {
-                while (req8dot3 && tcn1 != '.' && tcn1 != 0)
-                    tcn1 = *++namep;
-                if (tcn1 == 0) {
-                    if (sawDot)
-                        return 0;
-                    else
-                        continue;
-                }
-                else {
-                    namep++;
-                    continue;
-                }
-            }
-            else {
-                /*
-                 * pattern character after '*' is not null or
-                 * period.  If it is '?' or '>', we are not
-                 * going to understand it.  If it is '*' or
-                 * '<', we are going to skip over it.  None of
-                 * these are likely, I hope.
-                 */
-                /* skip over '*' and '<' */
-                while (tcp2 == '*' || tcp2 == '<')
-                    tcp2 = *maskp++;
-
-                /* skip over characters that don't match tcp2 */
-                while (req8dot3 && tcn1 != '.' && tcn1 != 0 && 
-                        ((casefold && cm_foldUpper[tcn1] != cm_foldUpper[tcp2]) || 
-                          (!casefold && tcn1 != tcp2)))
-                    tcn1 = *++namep;
-
-                /* No match */
-                if ((req8dot3 && tcn1 == '.') || tcn1 == 0)
-                    return 0;
-
-                /* Remember where we are */
-                sawStar = 1;
-                starMaskp = maskp;
-                starNamep = namep;
-
-                namep++;
-                continue;
-            }
-        }
-        else {
-            /* tcp1 is not a wildcard */
-            if ((casefold && cm_foldUpper[tcn1] == cm_foldUpper[tcp1]) || 
-                 (!casefold && tcn1 == tcp1)) {
-                /* they match */
-                namep++;
-                continue;
-            }
-            /* if trying to match a star pattern, go back */
-            if (sawStar) {
-                maskp = starMaskp - 2;
-                namep = starNamep + 1;
-                sawStar = 0;
-                continue;
-            }
-            /* that's all */
-            return 0;
-        }
-    }
-}
-#endif /* USE_OLD_MATCHING */
 
 /* smb_ReceiveTran2SearchDir implements both 
  * Tran2_Find_First and Tran2_Find_Next
@@ -4728,9 +4591,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* we only failover if we see a CM_ERROR_NOSUCHFILE */
             if (code != CM_ERROR_NOSUCHFILE) {
 #ifdef USE_BPLUS
+                /* unless we are using the BPlusTree */
                 if (code == CM_ERROR_BPLUS_NOMATCH)
                     code = CM_ERROR_NOSUCHFILE;
-#endif
+#endif /* USE_BPLUS */
                 return code;
             }
         }
@@ -5109,34 +4973,35 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         /* compute offset of cookie representing next entry */
         nextEntryCookie = curOffset.LowPart + (CM_DIR_CHUNKSIZE * numDirChunks);
 
+        if (dep->fid.vnode == 0) 
+            goto nextEntry;             /* This entry is not in use */
+
         /* Need 8.3 name? */
         NeedShortName = 0;
-        if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO
-             && dep->fid.vnode != 0
-             && !cm_Is8Dot3(dep->name)) {
+        if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO && 
+             !cm_Is8Dot3(dep->name)) {
             cm_Gen8Dot3Name(dep, shortName, &shortNameEnd);
             NeedShortName = 1;
         }
 
         osi_Log4(smb_logp, "T2 search dir vn %u uniq %u name %s (%s)",
                   dep->fid.vnode, dep->fid.unique, 
-		  osi_LogSaveString(smb_logp, dep->name),
+                  osi_LogSaveString(smb_logp, dep->name),
                   NeedShortName ? osi_LogSaveString(smb_logp, shortName) : "");
 
         /* When matching, we are using doing a case fold if we have a wildcard mask.
          * If we get a non-wildcard match, it's a lookup for a specific file. 
          */
-        if (dep->fid.vnode != 0 && 
-            (smb_V3MatchMask(dep->name, maskp, (starPattern? CM_FLAG_CASEFOLD : 0)) ||
-             (NeedShortName &&
-              smb_V3MatchMask(shortName, maskp, CM_FLAG_CASEFOLD)))) {
-
+        if (smb_V3MatchMask(dep->name, maskp, (starPattern? CM_FLAG_CASEFOLD : 0)) ||
+             (NeedShortName && smb_V3MatchMask(shortName, maskp, CM_FLAG_CASEFOLD))) 
+        {
             /* Eliminate entries that don't match requested attributes */
             if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
                  smb_IsDotFile(dep->name)) {
                 osi_Log0(smb_logp, "T2 search dir skipping hidden");
                 goto nextEntry; /* no hidden files */
             }
+        
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
             {
                 /* We have already done the cm_TryBulkStat above */
@@ -5145,15 +5010,15 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 fid.vnode = ntohl(dep->fid.vnode);
                 fid.unique = ntohl(dep->fid.unique);
                 fileType = cm_FindFileType(&fid);
-                /*osi_Log2(smb_logp, "smb_ReceiveTran2SearchDir: file %s "
-                 "has filetype %d", dep->name,
-                 fileType);*/
-                if (fileType == CM_SCACHETYPE_DIRECTORY ||
-                    fileType == CM_SCACHETYPE_MOUNTPOINT ||
-                    fileType == CM_SCACHETYPE_DFSLINK ||
-                    fileType == CM_SCACHETYPE_INVALID)
+                /* osi_Log2(smb_logp, "smb_ReceiveTran2SearchDir: file %s "
+                 * "has filetype %d", dep->name, fileType);
+                 */
+                if ( fileType == CM_SCACHETYPE_DIRECTORY ||
+                     fileType == CM_SCACHETYPE_MOUNTPOINT ||
+                     fileType == CM_SCACHETYPE_DFSLINK ||
+                     fileType == CM_SCACHETYPE_INVALID)
                     osi_Log0(smb_logp, "T2 search dir skipping directory or bad link");
-                    goto nextEntry;
+                goto nextEntry;
             }
 
             /* finally check if this name will fit */
@@ -5173,9 +5038,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 ohbytes += 4;	/* if resume key required */
             }   
 
-            if (infoLevel != SMB_INFO_STANDARD
-                 && infoLevel != SMB_FIND_FILE_DIRECTORY_INFO
-                 && infoLevel != SMB_FIND_FILE_NAMES_INFO)
+            if ( infoLevel != SMB_INFO_STANDARD && 
+                 infoLevel != SMB_FIND_FILE_DIRECTORY_INFO &&
+                 infoLevel != SMB_FIND_FILE_NAMES_INFO)
                 ohbytes += 4;	/* EASIZE */
 
             /* add header to name & term. null */
@@ -5184,7 +5049,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* now, we round up the record to a 4 byte alignment,
              * and we make sure that we have enough room here for
              * even the aligned version (so we don't have to worry
-             * about an * overflow when we pad things out below).
+             * about an overflow when we pad things out below).
              * That's the reason for the alignment arithmetic below.
              */
             if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
@@ -5194,8 +5059,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             if (orbytes + bytesInBuffer + align > maxReturnData) {
                 osi_Log1(smb_logp, "T2 dir search exceed max return data %d",
                           maxReturnData);
-                break;
-            }
+                break;      
+            }       
 
             /* this is one of the entries to use: it is not deleted
              * and it matches the star pattern we're looking for.
@@ -5249,8 +5114,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              */
             if (infoLevel != SMB_FIND_FILE_NAMES_INFO) {
                 curPatchp = malloc(sizeof(*curPatchp));
-                osi_QAdd((osi_queue_t **) &dirListPatchesp,
-                          &curPatchp->q);
+                osi_QAdd((osi_queue_t **) &dirListPatchesp, &curPatchp->q);
                 curPatchp->dptr = op;
                 if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
                     curPatchp->dptr += 8;
@@ -5285,13 +5149,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
         }	/* if we're including this name */
         else if (!starPattern &&
-                 !foundInexact &&
-                 dep->fid.vnode != 0 &&
-                 smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
+                  !foundInexact &&
+                  smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
             /* We were looking for exact matches, but here's an inexact one*/
             foundInexact = 1;
         }
-                
+
       nextEntry:
         /* and adjust curOffset to be where the new cookie is */
         thyper.HighPart = 0;
@@ -5320,8 +5183,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp,
-                              &req);
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp, &req);
         
     /* now put out the final parameters */
     if (returnedNames == 0) 
