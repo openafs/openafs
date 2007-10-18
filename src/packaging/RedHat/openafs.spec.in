@@ -229,7 +229,7 @@ URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Derek Atkins <warlord@MIT.EDU>
 Group: Networking/Filesystems
-BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel
+BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if %{build_userspace}
 BuildRequires: autoconf
 %endif
