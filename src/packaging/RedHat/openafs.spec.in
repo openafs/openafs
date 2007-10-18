@@ -244,6 +244,7 @@ Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
 Source30: openafs-kernel-version.sh
+Source998: openafs-buildall.sh
 Source999: kmodtool
 
 Patch0:  openafs-1.4.0-kmodule26.patch
