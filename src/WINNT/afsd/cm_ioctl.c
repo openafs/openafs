@@ -219,9 +219,13 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     cm_scache_t *substRootp = NULL;
     cm_scache_t *iscp = NULL;
 #endif
-    char * relativePath = ioctlp->inDatap;
+    char * relativePath;
     char * lastComponent = NULL;
     afs_uint32 follow = 0;
+
+    relativePath = ioctlp->inDatap;
+    /* setup the next data value for the caller to use */
+    ioctlp->inDatap += (long)strlen(ioctlp->inDatap) + 1;;
 
     osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
 
@@ -233,6 +237,9 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
      *    \\netbios-name\submount\path\file
      */
     TranslateExtendedChars(relativePath);
+
+    /* This is usually nothing, but for StatMountPoint it is the file name. */
+    TranslateExtendedChars(ioctlp->inDatap);
 
 #ifdef AFSIFS
     /* we have passed the whole path, including the afs prefix.
@@ -387,13 +394,6 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	}
     }
 #endif /* AFSIFS */
-
-    /* # of bytes of path */
-    code = (long)strlen(ioctlp->inDatap) + 1;
-    ioctlp->inDatap += code;
-
-    /* This is usually nothing, but for StatMountPoint it is the file name. */
-    TranslateExtendedChars(ioctlp->inDatap);
 
     if (substRootp)
 	cm_ReleaseSCache(substRootp);
