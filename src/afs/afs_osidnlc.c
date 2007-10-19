@@ -242,7 +242,12 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	ReleaseReadLock(&afs_xvcache);
 	dnlcstats.misses++;
     } else {
-	if (tvc->states & CVInit) {
+	if ((tvc->states & CVInit)
+#ifdef  AFS_DARWIN80_ENV
+	    ||(tvc->states & CDeadVnode)
+#endif
+	    )      
+	{
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
