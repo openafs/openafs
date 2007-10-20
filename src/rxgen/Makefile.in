@@ -25,6 +25,9 @@ ${TOP_INCDIR}/afs/rxgen_consts.h: rxgen_consts.h
 rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
 
+rpc_main.o: rpc_main.c
+	$(CCOBJ) $(CFLAGS) -c $< -D__PROG_CPP__="\"$(CPP)\""
+
 #
 # Install targets
 #

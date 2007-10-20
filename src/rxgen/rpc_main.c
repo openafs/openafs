@@ -98,14 +98,8 @@ char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
 int debug = 0;
 static char *cmdname;
-#ifdef	AFS_SUN5_ENV
-static char CPP[] = "/usr/ccs/lib/cpp";
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN60_ENV)
-static char CPP[] = "/usr/bin/cpp";
-#elif defined(AFS_NT40_ENV)
-static char CPP[MAXCMDLINE];
-#elif defined(AFS_DARWIN_ENV)
-static char CPP[] = "cc -E";
+#ifdef	__PROG_CPP__
+static char CPP[] = __PROG_CPP__;
 #else
 static char CPP[] = "/lib/cpp";
 #endif
