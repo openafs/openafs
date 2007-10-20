@@ -41,6 +41,7 @@ extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_deleteReadOnly;
 extern afs_int32 cm_BPlusTrees;
+extern afs_int32 cm_OfflineROIsValid;
 extern const char **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
@@ -1108,6 +1109,14 @@ int afsd_InitCM(char **reasonP)
     if (!smb_ExecutableExtensions)
         afsi_log("No PrefetchExecutableExtensions");
 
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "OfflineReadOnlyIsValid", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_OfflineROIsValid = (unsigned short) dwValue;
+    } 
+    afsi_log("CM OfflineReadOnlyIsValid is %u", cm_deleteReadOnly);
+    
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
