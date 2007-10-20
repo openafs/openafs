@@ -30,6 +30,8 @@
 /* read/write lock for all global storage in this module */
 osi_rwlock_t cm_callbackLock;
 
+afs_int32 cm_OfflineROIsValid = 0;
+
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -1483,10 +1485,20 @@ int cm_HaveCallback(cm_scache_t *scp)
     }
 #endif
 
-    if (scp->cbServerp != NULL)
+    if (scp->cbServerp != NULL) {
 	return 1;
-    else 
+    } else if (cm_OfflineROIsValid) {
+        switch (cm_GetVolumeStatus(scp->volp, scp->fid.volume)) {
+        case vl_offline:
+        case vl_alldown:
+        case vl_unknown:
+            return 1;
+        default:
+            return 0;
+        }
+    } else {
         return 0;
+    }
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.

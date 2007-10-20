@@ -118,4 +118,5 @@ extern void cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 
 extern void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum volstatus old, enum volstatus new);
 
+extern enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 #endif /*  __CM_VOLUME_H_ENV__ */

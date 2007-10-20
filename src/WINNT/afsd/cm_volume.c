@@ -1480,3 +1480,17 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
 
     cm_VolStatus_Change_Notification(volp->cellp->cellID, volID, new);
 }       
+
+enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
+{
+    if (volp->rw.ID == volID) {
+        return volp->rw.state;
+    } else if (volp->ro.ID == volID) {
+        return volp->ro.state;
+    } else if (volp->bk.ID == volID) {
+        return volp->bk.state;
+    } else {
+        return vl_unknown;
+    }
+}
+
