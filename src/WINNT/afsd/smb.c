@@ -5766,6 +5766,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     cm_scache_t *dscp = NULL;
     char *pathp = NULL;
     cm_scache_t * scp = NULL;
+    cm_scache_t *delscp = NULL;
     int deleted = 0;
     int nullcreator = 0;
 
@@ -5873,8 +5874,14 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         char *fullPathp;
 
 	lock_ReleaseMutex(&fidp->mx);
-        smb_FullName(dscp, scp, pathp, &fullPathp, userp, &req);
-        if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+
+        code = cm_Lookup(dscp, pathp, CM_FLAG_NOMOUNTCHASE, userp, &req, &delscp);
+        if (code) {
+            cm_HoldSCache(scp);
+            delscp = scp;
+        }
+        smb_FullName(dscp, delscp, pathp, &fullPathp, userp, &req);
+        if (delscp->fileType == CM_SCACHETYPE_DIRECTORY) {
             code = cm_RemoveDir(dscp, fullPathp, userp, &req);
 	    if (code == 0) {
 		deleted = 1;
@@ -5930,16 +5937,20 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     if (dscp)
 	cm_ReleaseSCache(dscp);
 
-    if (scp) {
-	if (deleted || nullcreator) {
-	    lock_ObtainMutex(&scp->mx);
-	    if (nullcreator && scp->creator == userp)
-		scp->creator = NULL;
+    if (delscp) {
+	if (deleted) {
+	    lock_ObtainMutex(&delscp->mx);
 	    if (deleted)
-		scp->flags |= CM_SCACHEFLAG_DELETED;
-	    lock_ReleaseMutex(&scp->mx);
+		delscp->flags |= CM_SCACHEFLAG_DELETED;
+	    lock_ReleaseMutex(&delscp->mx);
 	}
+        cm_ReleaseSCache(delscp);
+    }
+
+    if (scp) {
 	lock_ObtainMutex(&scp->mx);
+        if (nullcreator && scp->creator == userp)
+            scp->creator = NULL;
 	scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
 	lock_ReleaseMutex(&scp->mx);
 	cm_ReleaseSCache(scp);
