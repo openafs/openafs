@@ -1,3 +1,59 @@
+Since 1.5.25
+ * Fix an uninitialized variable in lana_IsLoopback() which 
+   could result in a random determination that a loopback 
+   adapter is not a loopback adapter.  This would result in 
+   a computed Netbios service name of %MACHINE%-AFS instead
+   of AFS.  This is a serious problem if the value computed
+   by the AFS Client Service and the client process pioctl
+   calls produce different results as it will result in a  
+   communication failure.
+
+ * Fix a crash in the B+ Tree code that results when a file
+   rename only results in a change of case.
+
+ * Fix the pioctl path parsing.  The previous algorithm 
+   broke the current directory of the client into two parts,
+   the TIDpath which represented the device root and the
+   relative path.  The problem is that this is not sufficient
+   from proper processing of symlinks and mount points.  
+
+   What is required is that the last component of the path
+   must not have the symlink or mount point be evaluated
+   whereas symlink and mount point evaluation must be performed
+   for the rest of the relative path.  Therefore, the path is
+   now split into three parts: TIDpath, intermediate path,
+   and last component.  
+
+   "fs examine" now reports the data of the symlink or mount
+   point object instead of the target and "symlink list" and
+   "symlink remove" now works.  The "Explorer Shell Extension"
+   menu now is displayed for symlink objects.
+
+ * More informative symlink.exe error messages.
+
+ * When the cmd.exe "del" command is used to remove a symlink,
+   not only was the link object removed, but the stat cache
+   object for the target was marked deleted.  This resulted
+   in cache corruption which would require the destruction
+   of the cache to correct.
+
+ * Add undocumented registry value, "OfflineReadOnlyIsValid"
+   which results in cached contents from read only volumes
+   to be treated as valid when there is no callback registered
+   and all servers are down or all instances are offline.
+
+   HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+ * Add documented registry value, "AcceptDottedPrincipalNames"
+   which is used to permit the acquisition of AFS tokens 
+   using Kerberos v5 principal names which include a dot in
+   the first component.
+
+   {HKLM\HKCU}\Software\OpenAFS\Client
+
+ * "fs uuid" does not require "AFS Client Administrator" group
+   membership to display the current UUID value.
+
 Since 1.5.24
  * Update NSIS installer to version 2.30
 
