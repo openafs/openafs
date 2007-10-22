@@ -11,7 +11,10 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
 #include <ntstatus.h>
+#pragma warning(pop)
 #include <stddef.h>
 #include <stdlib.h>
 #include <malloc.h>
