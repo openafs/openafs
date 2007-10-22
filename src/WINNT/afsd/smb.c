@@ -12,7 +12,10 @@
 
 #ifndef DJGPP
 #include <windows.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
 #include <ntstatus.h>
+#pragma warning(pop)
 #else
 #include <sys/timeb.h>
 #include <tzfile.h>
