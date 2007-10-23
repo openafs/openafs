@@ -49,7 +49,7 @@ afs_int32 afs_CheckServerDaemonStarted = 0;
 #ifdef DEFAULT_PROBE_INTERVAL
 afs_int32 PROBE_INTERVAL = DEFAULT_PROBE_INTERVAL;	/* overridding during compile */
 #else
-afs_int32 PROBE_INTERVAL = 180;	/* default to 3 min */
+afs_int32 PROBE_INTERVAL = 30;	/* default to 3 min */
 #endif
 
 #define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
