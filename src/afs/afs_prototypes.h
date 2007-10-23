@@ -301,6 +301,7 @@ extern void init_sys_error_to_et(void);
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
+extern void shutdown_exporter(void);
 
 /* afs_icl.c */
 extern struct afs_icl_set *afs_icl_allSets;
@@ -488,6 +489,7 @@ extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 				    struct AFS_UCRED **cred,
 				    afs_int32 host, afs_int32 *pagparam,
 				    struct afs_exporter **outexporter);
+extern void shutdown_nfsclnt(void);
 
 /* afs_osi.c */
 extern afs_lock_t afs_ftf;
@@ -502,6 +504,7 @@ extern void afs_osi_UnmaskRxkSignals(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_Invisible(void);
 extern void shutdown_osi(void);
+extern void shutdown_osinet(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
