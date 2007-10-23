@@ -47,7 +47,7 @@ afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
 #ifndef DEFAULT_PROBE_INTERVAL
-#define DEFAULT_PROBE_INTERVAL 180	/* default to 3 min */
+#define DEFAULT_PROBE_INTERVAL 30	/* default to 3 min */
 #endif
 afs_int32 afs_probe_interval = DEFAULT_PROBE_INTERVAL;
 afs_int32 afs_probe_all_interval = 600;
