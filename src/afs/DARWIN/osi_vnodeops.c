@@ -643,8 +643,14 @@ afs_vop_access(ap)
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-	/* In 10.4 cp will loop forever on EACCES */
-        code = afs_CheckCode(EPERM, &treq, 57);        /* failure code */
+#if defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)
+	if (ap->a_action == KAUTH_VNODE_READ_DATA) {
+	    /* In 10.4 cp will loop forever on EACCES */
+	    code = afs_CheckCode(EACCES, &treq, 57);
+        } else 
+	    /* but kinit wants EACCES or it gets dumb */
+#endif
+	    code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
