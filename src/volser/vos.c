@@ -340,21 +340,21 @@ WriteData(struct rx_call *call, char *rock)
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
+	/* test if we have a valid dump */
+	hset64(filesize, 0, 0);
+	USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
+	hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
+	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+	USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
+	if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
+	    fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
+	    error = VOLSERBADOP;
+	    goto wfail;
+	}
+	/* rewind, we are done */
+	hset64(filesize, 0, 0);
+	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
     }
-    /* test if we have a valid dump */
-    hset64(filesize, 0, 0);
-    USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
-    hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
-    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
-    USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
-    if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
-	fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
-        error = VOLSERBADOP;
-        goto wfail;
-    }
-    hset64(filesize, 0, 0);
-    USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
-    /* rewind, we are done */
     code = SendFile(ufd, call, blksize);
     if (code) {
 	error = code;
