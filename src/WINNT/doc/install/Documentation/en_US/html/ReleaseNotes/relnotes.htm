@@ -5706,6 +5706,24 @@ style='mso-bookmark:_Toc115416290'>Regkey:<br>
  <tr style='mso-yfti-irow:2;height:119.0pt'>
   <td width=590 valign=top style='width:442.8pt;padding:0pt 5.4pt 0pt 5.4pt;
   height:119.0pt'>
+  <h5><span style='mso-bookmark:
+  _Toc170269029'><span style='mso-bookmark:_Toc152605243'><span
+  style='mso-bookmark:_Toc115416293'>Value: AcceptDottedPrincipalNames</span></span></span></h5>
+  <p class=MsoBodyText>Type: DWORD {0, 1}<br>
+  Default: 1<br>
+  Function: KFW_accept_dotted_usernames()</p>
+  <p class=MsoBodyText>Kerberos v5 principal names are traditionally mapped to 
+	Kerberos v4 names by the AFS servers before they can be looked up in the 
+	Protection database.&nbsp; The mapping algorithm used permits collisions to 
+	occur.&nbsp; Both of the Kerberos v5 names, &quot;<a href="mailto:user.admin@REALM">user.admin@REALM</a>&quot; 
+	and &quot;<a href="mailto:user/admin@REALM">user/admin@REALM</a>&quot; are interpreted 
+	as the same user identity within the cell.&nbsp; To enable both names to be 
+	sent to the server by AFSCreds or Integrated Logon, set this value to 1.</p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:2;height:119.0pt'>
+  <td width=590 valign=top style='width:442.8pt;padding:0pt 5.4pt 0pt 5.4pt;
+  height:119.0pt'>
   <h5><a name="_Toc170269029"></a><a name="_Toc152605243"></a><a
   name="_Value:_Use524"></a><a name=Use524></a><a name="_Toc139993285"></a><a
   name="_Toc126872362"></a><a name="_Toc115416293"></a><a
