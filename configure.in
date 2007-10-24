@@ -1,7 +1,7 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.4.5pre4)
+AM_INIT_AUTOMAKE(openafs,1.4.5pre5)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.4.5fc4
+MACOS_VERSION=1.4.5fc5
 
 AC_SUBST(MACOS_VERSION)
 
