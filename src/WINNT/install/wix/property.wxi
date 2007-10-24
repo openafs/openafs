@@ -117,7 +117,7 @@
 	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Ver" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="DisplayVersion" Type="raw" />
 	</Property>
     <Property Id="NSISUNINSTALL">
-	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="file" />
+	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="raw" />
     </Property>
     
     <Property Id="OLDCELLSERVDB">
