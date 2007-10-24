@@ -19,6 +19,7 @@ RCSID
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#include <linux/fs.h>
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "nfsclient.h"
@@ -96,6 +97,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     struct nfs_server_thread *ns;
     struct afs_exporter *outexp;
     struct AFS_UCRED *credp;
+    struct sockaddr_in *addr;
     int code;
 
     code = afs_orig_authtab[rqstp->rq_authop->flavour]->accept(rqstp, authp);
@@ -109,11 +111,16 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
 	/* XXX maybe we should fail this with rpc_system_err? */
 	return SVC_OK;
     }
+#if HAVE_SVC_ADDR_IN
+    addr = svc_addr_in(rqstp);
+#else
+    addr = &rqstp->rq_addr;
+#endif
 
     ns->active		= 1;
     ns->flavor		= rqstp->rq_authop->flavour;
     ns->code		= EACCES;
-    ns->client_addr	= rqstp->rq_addr;
+    ns->client_addr	= *addr;
     ns->client_addrlen	= rqstp->rq_addrlen;
     ns->client_uid	= rqstp->rq_cred.cr_uid;
     ns->client_gid	= rqstp->rq_cred.cr_gid;
@@ -126,10 +133,9 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     else
 	ns->client_g1	= -1;
 
-    /* NB: Don't check the length; it's not always filled in! */
-    if (rqstp->rq_addr.sin_family != AF_INET) {
+    if (addr->sin_family != AF_INET) {
 	printk("afs: NFS request from non-IPv4 client (family %d len %d)\n",
-	       rqstp->rq_addr.sin_family, rqstp->rq_addrlen);
+	       addr->sin_family, rqstp->rq_addrlen);
 	goto done;
     }
 
@@ -143,7 +149,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
      * clients to afs_nobody */
     if (credp->cr_uid == -1)
 	credp->cr_uid = -2;
-    code = afs_nfsclient_reqhandler(0, &credp, rqstp->rq_addr.sin_addr.s_addr,
+    code = afs_nfsclient_reqhandler(0, &credp, addr->sin_addr.s_addr,
 				    &ns->uid, &outexp);
     if (!code && outexp) EXP_RELE(outexp);
     if (!code) ns->code = 0;
