@@ -379,9 +379,7 @@ init_module(void)
     err = register_filesystem(&afs_fs_type);
     if (err) {
 	afs_destroy_inodecache();
-#ifndef LINUX_KEYRING_SUPPORT
 	osi_syscall_clean();
-#endif
 	return err;
     }
 
@@ -408,9 +406,7 @@ cleanup_module(void)
     osi_keyring_shutdown();
 #endif
     osi_sysctl_clean();
-#ifndef LINUX_KEYRING_SUPPORT
     osi_syscall_clean();
-#endif
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
