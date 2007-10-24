@@ -542,6 +542,8 @@ afs_vop_close(ap)
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, vop_proc);
     osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 60);
     AFS_GUNLOCK();
 
     return code;
@@ -649,8 +651,7 @@ afs_vop_access(ap)
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-	/* In 10.4 cp will loop forever on EACCES */
-        code = afs_CheckCode(EPERM, &treq, 57);        /* failure code */
+        code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
@@ -689,12 +690,15 @@ afs_vop_getattr(ap)
 
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 58);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
     VATTR_SET_SUPPORTED(ap->a_vap, va_type);
     VATTR_SET_SUPPORTED(ap->a_vap, va_mode);
     VATTR_SET_SUPPORTED(ap->a_vap, va_uid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_gid);
+    VATTR_SET_SUPPORTED(ap->a_vap, va_fsid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_fileid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_nlink);
     VATTR_SET_SUPPORTED(ap->a_vap, va_data_size);
@@ -721,6 +725,8 @@ afs_vop_setattr(ap)
     int code;
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 59);
     AFS_GUNLOCK();
     return code;
 }
@@ -1197,6 +1203,7 @@ afs_vop_remove(ap)
     GETNAME();
     AFS_GLOCK();
     error = afs_remove(VTOAFS(dvp), name, vop_cn_cred);
+    error = afs_CheckCode(error, NULL, 61);
     AFS_GUNLOCK();
     cache_purge(vp);
     if (!error) {
@@ -1214,6 +1221,12 @@ afs_vop_remove(ap)
 	/* If crashes continue in ubc_hold, comment this out */
         (void)ubc_uncache(vp);
 #endif
+    } else {
+	/* should check for PRSFS_INSERT and not PRSFS_DELETE, but the
+	   goal here is to deal with Finder's unhappiness with resource
+	   forks that have no resources in a dropbox setting */
+	if (name[0] == '.' && name[1] == '_' && error == EACCES) 
+	    error = 0;
     }
 
 #ifndef AFS_DARWIN80_ENV
