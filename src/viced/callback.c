@@ -1181,7 +1181,7 @@ BreakDelayedCallBacks_r(struct host *host)
 
     cbstuff.nbreakers--;
     /* If we succeeded it's always ok to unset HFE_LATER */
-    if (!host->hostFlags & VENUSDOWN)
+    if (!(host->hostFlags & VENUSDOWN))
 	host->hostFlags &= ~HFE_LATER;
     return (host->hostFlags & VENUSDOWN);
 }
