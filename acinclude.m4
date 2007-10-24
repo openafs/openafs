@@ -586,6 +586,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_EXPORTFS_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
@@ -637,6 +638,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 LINUX_FREEZER_H_EXISTS
+		 LINUX_HAVE_SVC_ADDR_IN
 		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
 		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
 		 fi
@@ -719,6 +721,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
 		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
+		 fi
+		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
+		  AC_DEFINE(EXPORTFS_H_EXISTS, 1, [define if linux/exportfs.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
@@ -878,6 +883,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
+		 if test "x$ac_cv_linux_have_svc_addr_in" = "xyes"; then
+		  AC_DEFINE(HAVE_SVC_ADDR_IN, 1, [define if svc_add_in exists])
+                 fi
                 :
 		fi
 esac

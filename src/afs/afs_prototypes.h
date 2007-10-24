@@ -529,6 +529,7 @@ extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);
 extern void *osi_AllocLargeSpace(size_t size);
 extern void *osi_AllocSmallSpace(size_t size);
+extern void shutdown_osinet(void);
 
 /* afs_osi_pag.c */
 extern int afs_setpag();

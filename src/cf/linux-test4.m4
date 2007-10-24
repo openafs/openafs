@@ -41,6 +41,15 @@ lose
       ac_cv_linux_completion_h_exists=no)])
   AC_MSG_RESULT($ac_cv_linux_completion_h_exists)])
 
+AC_DEFUN([LINUX_EXPORTFS_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/exportfs.h existence])
+  AC_CACHE_VAL([ac_cv_linux_exportfs_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/exportfs.h>],
+[return;],
+      ac_cv_linux_exportfs_h_exists=yes,
+      ac_cv_linux_exportfs_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_exportfs_h_exists)])
 
 AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
   AC_MSG_CHECKING([for defined for_each_process])
@@ -893,4 +902,14 @@ _fop.sendfile(NULL, NULL, 0, 0, NULL);],
       ac_cv_linux_fs_struct_fop_has_sendfile=yes,
       ac_cv_linux_fs_struct_fop_has_sendfile=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
+
+AC_DEFUN([LINUX_HAVE_SVC_ADDR_IN], [
+  AC_MSG_CHECKING([whether svc_addr_in exists])
+  AC_CACHE_VAL([ac_cv_linux_have_svc_addr_in], [
+    AC_TRY_KBUILD(
+[#include <linux/sunrpc/svc.h>],
+[svc_addr_in(NULL);],
+      ac_cv_linux_have_svc_addr_in=yes,
+      ac_cv_linux_have_svc_addr_in=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_svc_addr_in)])
 
