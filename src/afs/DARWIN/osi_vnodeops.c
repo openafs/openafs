@@ -634,22 +634,21 @@ afs_vop_access(ap)
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
     
     code = afs_AccessOK(tvc, bits, &treq, cmb);
-
+#if defined(AFS_DARWIN80_ENV)
+    /* In a dropbox, cp on 10.4 behaves badly, looping on EACCES */
+    /* In a dropbox, Finder may reopen the file. Let it. */
+    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0)) {
+	code = afs_AccessOK(tvc, PRSFS_ADMINISTER|PRSFS_INSERT|bits, &treq, cmb);
+    }
+#endif
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
         ap->a_action & KAUTH_VNODE_EXECUTE &&
         (tvc->m.Mode & 0100) != 0100) {
         code = 0;
-     }
+    }
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-#if defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)
-	if (ap->a_action == KAUTH_VNODE_READ_DATA) {
-	    /* In 10.4 cp will loop forever on EACCES */
-	    code = afs_CheckCode(EACCES, &treq, 57);
-        } else 
-	    /* but kinit wants EACCES or it gets dumb */
-#endif
 	    code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
