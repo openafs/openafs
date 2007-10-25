@@ -1743,6 +1743,9 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp)
 
     bplus_build_time += (end.QuadPart - start.QuadPart);
 
+#if 0
+    cm_BPlusDirEnumTest(scp, 1);
+#endif
     return rc;
 }
 
@@ -1801,5 +1804,261 @@ void cm_BPlusDumpStats(void)
     afsi_log("           Remove: %-16I64d", bplus_remove_time);
     afsi_log("            Build: %-16I64d", bplus_build_time);
     afsi_log("             Free: %-16I64d", bplus_free_time);
+}
+
+static cm_direnum_t * 
+cm_BPlusEnumAlloc(afs_uint32 entries)
+{
+    cm_direnum_t * enump;
+    size_t	   size;
+
+    if (entries == 0)
+	return NULL;
+
+    size = sizeof(cm_direnum_t)+(entries-1)*sizeof(cm_direnum_entry_t);
+    enump = (cm_direnum_t *)malloc(size);
+    memset(enump, 0, size);
+    enump->count = entries;
+    return enump;
+}
+
+long 
+cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, 
+                     char * maskp, cm_direnum_t **enumpp)
+{
+    afs_uint32 count = 0, slot, numentries;
+    Nptr leafNode = NONODE, nextLeafNode;
+    Nptr firstDataNode, dataNode, nextDataNode;
+    cm_direnum_t * enump;
+    long rc = 0;
+    char buffer[512];
+
+    OutputDebugString("cm_BPlusDirEnumerate start");
+
+    /* Read lock the bplus tree so the data can't change */
+    if (!locked)
+	lock_ObtainRead(&scp->dirlock);
+
+    if (scp->dirBplus == NULL) {
+	OutputDebugString("cm_BPlusDirEnumerate No BPlus Tree");
+	goto done;
+    }
+
+    /* Compute the number of entries */
+    for (count = 0, leafNode = getleaf(scp->dirBplus); leafNode; leafNode = nextLeafNode) {
+
+	for ( slot = 1, numentries = numentries(leafNode); slot <= numentries; slot++) {
+	    firstDataNode = getnode(leafNode, slot);
+
+	    for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+                if (maskp == NULL) {
+                    /* name is in getdatakey(dataNode) */
+                    if (getdatavalue(dataNode).longname != NULL ||
+                        cm_Is8Dot3(getdatakey(dataNode).name))
+                        count++;
+                } else {
+		    if (cm_Is8Dot3(getdatakey(dataNode).name) && 
+                        smb_V3MatchMask(getdatakey(dataNode).name, maskp, CM_FLAG_CASEFOLD) ||
+                        getdatavalue(dataNode).longname == NULL &&
+                        smb_V3MatchMask(getdatavalue(dataNode).longname, maskp, CM_FLAG_CASEFOLD))
+                        count++;
+                }
+		nextDataNode = getdatanext(dataNode);
+	    }
+	}
+
+	nextLeafNode = getnextnode(leafNode);
+    }   
+
+    sprintf(buffer, "BPlusTreeEnumerate count = %d", count);
+    OutputDebugString(buffer);
+
+    /* Allocate the enumeration object */
+    enump = cm_BPlusEnumAlloc(count);
+    if (enump == NULL) {
+	OutputDebugString("cm_BPlusDirEnumerate Alloc failed");
+	rc = ENOMEM;
+	goto done;
+    }
+	
+    /* Copy the name and fid for each longname entry into the enumeration */
+    for (count = 0, leafNode = getleaf(scp->dirBplus); leafNode; leafNode = nextLeafNode) {
+
+	for ( slot = 1, numentries = numentries(leafNode); slot <= numentries; slot++) {
+	    firstDataNode = getnode(leafNode, slot);
+
+	    for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+                char * name;
+                int hasShortName;
+                int includeIt = 0;
+
+                if (maskp == NULL) {
+                    if (getdatavalue(dataNode).longname != NULL ||
+                         cm_Is8Dot3(getdatakey(dataNode).name)) 
+                    {
+                        includeIt = 1;
+                    }
+                } else {
+		    if (cm_Is8Dot3(getdatakey(dataNode).name) && 
+                        smb_V3MatchMask(getdatakey(dataNode).name, maskp, CM_FLAG_CASEFOLD) ||
+                        getdatavalue(dataNode).longname == NULL &&
+                         smb_V3MatchMask(getdatavalue(dataNode).longname, maskp, CM_FLAG_CASEFOLD)) 
+                    {
+                        includeIt = 1;
+                    }
+                }
+
+                if (includeIt) {
+                    if (getdatavalue(dataNode).longname) {
+                        name = strdup(getdatavalue(dataNode).longname);
+                        hasShortName = 1;
+                    } else {
+                        name = strdup(getdatakey(dataNode).name);
+                        hasShortName = 0;
+                    }
+
+                    if (name == NULL) {
+                        OutputDebugString("cm_BPlusDirEnumerate strdup failed");
+                        rc = ENOMEM;
+                        goto done;
+                    }
+                    enump->entry[count].name = name;
+                    enump->entry[count].fid  = getdatavalue(dataNode).fid;
+                    if (hasShortName)
+                        strncpy(enump->entry[count].shortName, getdatakey(dataNode).name, 
+                                sizeof(enump->entry[count].shortName));
+                    else
+                        enump->entry[count].shortName[0] = '\0';
+                    count++;
+                }
+		nextDataNode = getdatanext(dataNode);
+	    }
+	}
+
+	nextLeafNode = getnextnode(leafNode);
+    }   
+
+  done:
+    if (!locked)
+	lock_ReleaseRead(&scp->dirlock);
+
+    /* if we failed, cleanup any mess */
+    if (rc != 0) {
+	OutputDebugString("cm_BPlusDirEnumerate rc != 0");
+	if (enump) {
+	    for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
+		free(enump->entry[count].name);
+	    }
+	    free(enump);
+	    enump = NULL;
+	}
+    }
+
+    OutputDebugString("cm_BPlusDirEnumerate end");
+    *enumpp = enump;
+    return rc;
+}
+
+long 
+cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
+{	
+    if (enump == NULL || entrypp == NULL || enump->next > enump->count) {
+	if (entrypp)
+	    *entrypp = NULL;
+	OutputDebugString("cm_BPlusDirNextEnumEntry invalid input");
+	return CM_ERROR_INVAL;			      \
+    }
+
+    *entrypp = &enump->entry[enump->next++];
+    if ( enump->next == enump->count ) {
+	OutputDebugString("cm_BPlusDirNextEnumEntry STOPNOW");
+	return CM_ERROR_STOPNOW;
+    }
+    else {
+	OutputDebugString("cm_BPlusDirNextEnumEntry SUCCESS");
+	return 0;
+    }
+}
+
+long 
+cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
+{
+    afs_uint32 count;
+
+    OutputDebugString("cm_BPlusDirFreeEnumeration");
+
+    if (enump) {
+	for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
+	    free(enump->entry[count].name);
+	}
+	free(enump);
+    }
+    return 0;
+}
+
+long
+cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
+{
+    cm_direnum_t * 	 enump = NULL;
+    cm_direnum_entry_t * entryp;
+    long 	   	 code;
+
+    OutputDebugString("cm_BPlusDirEnumTest start");
+
+    for (code = cm_BPlusDirEnumerate(dscp, locked, NULL, &enump); code == 0; ) {
+	code = cm_BPlusDirNextEnumEntry(enump, &entryp);
+	if (code == 0 || code == CM_ERROR_STOPNOW) {
+	    char buffer[1024];
+	    cm_scache_t *scp;
+	    char * type = "ScpNotFound";
+	    afs_int32 dv = -1;
+
+	    scp = cm_FindSCache(&entryp->fid);
+	    if (scp) {
+		switch (scp->fileType) {
+		case CM_SCACHETYPE_FILE	:
+		    type = "File";
+		    break;
+		case CM_SCACHETYPE_DIRECTORY	:
+		    type = "Directory";
+		    break;
+		case CM_SCACHETYPE_SYMLINK	:
+		    type = "Symlink";
+		    break;
+		case CM_SCACHETYPE_MOUNTPOINT:
+		    type = "MountPoint";
+		    break;
+		case CM_SCACHETYPE_DFSLINK   :
+		    type = "Dfs";
+		    break;
+		case CM_SCACHETYPE_INVALID   :
+		    type = "Invalid";
+		    break;
+		default:
+		    type = "Unknown";
+		    break;
+		}
+
+		dv = scp->dataVersion;
+	    cm_ReleaseSCache(scp);
+	    }
+
+	    sprintf(buffer, "'%s' Fid = (%d,%d,%d,%d) Short = '%s' Type %s DV %d",
+		    entryp->name,
+		    entryp->fid.cell, entryp->fid.volume, entryp->fid.vnode, entryp->fid.unique,
+		    entryp->shortName,
+		    type, 
+		    dv);
+
+	    OutputDebugString(buffer);
+	}
+    }
+
+    if (enump)
+	cm_BPlusDirFreeEnumeration(enump);
+
+    OutputDebugString("cm_BPlusDirEnumTest end");
+
+    return 0;
 }
 #endif /* USE_BPLUS */
