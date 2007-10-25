@@ -1,0 +1,93 @@
+                  OpenAFS Release Notes - Version 1.4.5
+     _________________________________________________________________
+All systems: Minor bugfixes.
+New systems: MacOS 10.5.
+     _________________________________________________________________
+
+All systems:
+
+- fileserver address tracking is improved to avoid potentially merging
+  unrelated hosts.
+
+- Documentation updates.
+
+- namei fileserver now does fsync()s in background batches for performance
+  improvements.
+
+- Kerberos ticket support corrected in bundled Kerberos 4 utilities on 64
+  bit platforms.
+
+- fileserver includes limited per-host thread quota support to avoid
+  resource starvation.
+
+- fileserver deals with more damaged volumes without asserting.
+
+- vos validates dumpfiles before attempting restores.
+
+- vos clone will no longer potentially delete the parent volume.
+
+- Client no longer permits empty UUID to be created.
+
+- fs uuid command for checking, regenerating UUID added.
+
+- Updates for gcc 4.2.
+
+- fileserver treats w (write) permission as granting read lock permission
+  in addition to write.
+
+AIX:
+
+- Bundled NAS Kerberos is now supported. (5.x)
+
+- LAM aklog module is provided. (5.x)
+
+- Associate cache files with correct filesystem to avoid snapshots when
+  performing maintenance on local filesystems.
+
+Irix:
+
+- Makefile updates.
+
+Linux:
+
+- Kernels throigh 2.6.23 are known to work.
+
+- Updates to syscall table probing.
+
+- Bug fix in keyring PAG support to avoid oops.
+
+- updated sample RPM configuration.
+
+- sparc32 lwp support updated.
+
+- Avoid potential oops in symlink support in certain older kernels.
+
+- Avoid potential deadlock during vmalloc.
+
+- Corrected locking while interacting with kernel task list.
+
+MacOS: 
+
+- Several panics fixed, including remove_fsref. (10.4 and later)
+
+- IP address changes now tracked.
+
+- Corrected support for dropboxes (li access without r) with cp and Finder.
+
+- fstrace and ancillary files now included.
+
+- man pages are now installed in the default MANPATH.
+
+- Servers will be timed out quickly if there is no route available.
+
+- Temporary files from remove-while-busy now cleaned up correctly.
+
+Solaris:
+
+- Updates to accomodate kernel interface changes. (10u4 and later)
+
+- knfs and NFS translator support updated.
+
+- Changes to accomodate version 5.4 xbsa library.
+
+- Updates for new SunStudio defaults.
