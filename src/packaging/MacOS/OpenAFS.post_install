@@ -36,6 +36,14 @@ if [ ! -f ThisCell -a -f ThisCell.sample ]; then
    cp ThisCell.sample ThisCell
 fi
 
+# force reversion of 10.4 memcache mistake
+rm -f config/afsd.options.broken
+echo '-memcache -afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > config/afsd.options.broken
+if cmp -s config/afsd.options.broken config/afsd.options ; then
+   rm -f config/afsd.options
+fi
+rm -f config/afsd.options.broken
+
 if [ ! -f config/afsd.options -a -f config/afsd.options.sample ]; then
    cp config/afsd.options.sample config/afsd.options
 fi
@@ -91,7 +99,3 @@ elif [ -e config/afssettings ]; then
   # turn off execution of afssettings
   chmod a-x config/afssettings
 fi
-
-#here we should run tools which configure the client, and then if it's enabled:
-/Library/StartupItems/OpenAFS/OpenAFS start
-
