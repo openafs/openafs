@@ -145,6 +145,25 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);
 void cm_BPlusDumpStats(void);
 int cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
 
+
+/******************* directory enumeration operations ****************/
+typedef struct cm_direnum_entry {
+    char * 	name;
+    cm_fid_t 	fid;
+    char        shortName[13];
+} cm_direnum_entry_t;
+
+typedef struct cm_direnum {
+    afs_uint32		count;
+    afs_uint32  	next;
+    cm_direnum_entry_t 	entry[1];
+} cm_direnum_t;
+
+long cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, char *maskp, cm_direnum_t **enumpp);
+long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
+long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
+long cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked);
+
 extern afs_uint32 bplus_free_tree;
 extern afs_uint32 bplus_dv_error;
 extern afs_uint64 bplus_free_time;

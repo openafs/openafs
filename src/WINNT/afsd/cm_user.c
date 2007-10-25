@@ -196,3 +196,20 @@ void cm_CheckTokenCache(time_t now)
     }
     lock_ReleaseWrite(&smb_rctLock);
 }
+
+#ifdef USE_ROOT_TOKENS
+/*
+ * Service/Parameters/RootTokens/<cellname>/
+ * -> UseLSA
+ * -> Keytab (required if UseLSA is 0)
+ * -> Principal (required if there is more than one principal in the keytab)
+ * -> Realm (required if realm is not upper-case of <cellname>
+ * -> RequireEncryption 
+ */
+
+void
+cm_RefreshRootTokens(void)
+{
+
+}
+#endif 
