@@ -133,7 +133,7 @@ if [ $firstpass = yes ]; then
     chmod -R og-w $PKGROOT/private
     chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
-    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/sbin
+    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/sbin $PKGROOT/usr/share/man/man1 $PKGROOT/usr/share/man/man5 $PKGROOT/usr/share/man/man8
 
     BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb aklog"
     ETCLIST="vos"
@@ -147,6 +147,18 @@ if [ $firstpass = yes ]; then
     done
     for f in $ETCLIST; do
        ln -s ../../Library/OpenAFS/Tools/etc/$f $PKGROOT/usr/sbin/$f
+    done
+    for f in `ls $PKGROOT/Library/OpenAFS/Tools/man/man1`; do
+	gzip -9 $PKGROOT/Library/OpenAFS/Tools/man/man1/$f
+	ln -s ../../../../Library/OpenAFS/Tools/man/man1/$f.gz $PKGROOT/usr/share/man/man1/$f.gz
+    done
+    for f in `ls $PKGROOT/Library/OpenAFS/Tools/man/man5`; do
+	gzip -9 $PKGROOT/Library/OpenAFS/Tools/man/man5/$f
+	ln -s ../../../../Library/OpenAFS/Tools/man/man5/$f.gz $PKGROOT/usr/share/man/man5/$f.gz
+    done
+    for f in `ls $PKGROOT/Library/OpenAFS/Tools/man/man8`; do
+	gzip -9 $PKGROOT/Library/OpenAFS/Tools/man/man8/$f
+	ln -s ../../../../Library/OpenAFS/Tools/man/man8/$f.gz $PKGROOT/usr/share/man/man8/$f.gz
     done
 
     ln -s ../../Library/OpenAFS/Tools/bin/kpasswd $PKGROOT/usr/bin/kpasswd.afs
@@ -188,6 +200,14 @@ if [ $secondpass = yes ]; then
     cp CellServDB.list $PKGRES
     chown -R root${SEP}wheel $PKGRES
     rm -rf $CURDIR/OpenAFS.pkg
+
+    # once we have cm cleanup in 10.4 this can go
+    if [ $majorvers -le 8 ]; then
+	cat $RESSRC/OpenAFS.info|sed 's/RequiresReboot NO/RequiresReboot YES/'>$RESSRC/OpenAFS.info.new
+	rm -f $RESSRC/OpenAFS.info
+	mv $RESSRC/OpenAFS.info.new $RESSRC/OpenAFS.info
+    fi
+
     if [ $majorvers -ge 7 ]; then
 	echo $package -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
