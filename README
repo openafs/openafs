@@ -155,11 +155,6 @@ E  HP-UX 11.0 Notes
 
 F  OpenBSD Notes
 
-   We recommend you build with the following options to configure:
-     --enable-namei-fileserver
-     --enable-largefile-fileserver
-     --enable-supergroups
-
    If you need to run regen.sh to make the configure script, you should
    first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
 
@@ -188,9 +183,6 @@ G  FreeBSD Notes
    mostly have to do with locking, vnode refcounting, and packaging.  The
    server should work.
 
-   We recommend you build with --enable-namei-fileserver and
-   --enable-largefile-fileserver options.
-
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
    in /usr/src/sys.
@@ -199,12 +191,7 @@ G  FreeBSD Notes
    include file.  Use the --with-bsd-kernel-build= configure option if your
    kernel build is not GENERIC in the standard place.
 
-   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
-   should make a package for the client.  Use pkg_add to install.  The
-   package will install using transarc-paths, regardless of how you
-   configured.  The builder uses an old version of the /usr/vice/etc/rc file
-   that probably won't work.  You might be able to replace it with something
-   like "kldload libafs.ko; /usr/vice/etc/afsd".
-
    There is no server package, but I am told that "make install" will put
    server binaries in /usr/afs.
+
+   You can't run arla and OpenAFS at the same time.
