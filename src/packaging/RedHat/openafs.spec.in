@@ -1532,7 +1532,7 @@ fi
 %if %{hugemem_package}
 %files kernel-hugemem
 %defattr(-,root,root)
-%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/kernel/fs/openafs/openafs.*
+%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/fs/openafs/openafs.*
 %endif
 %endif
 
