@@ -1,7 +1,7 @@
 # Openafs Spec $Revision$
 
-%define afsvers 1.4.5pre1
-%define pkgvers 1.4.5pre1
+%define afsvers @VERSION@
+%define pkgvers @VERSION@
 # for beta/rc releases make pkgrel 0.X.<tag>
 # for real releases make pkgrel 1 (or more for extra releases)
 #%define pkgrel 0.1.rc1
@@ -243,7 +243,11 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2007-10-25 
+
 Source30: openafs-kernel-version.sh
+Source996: openafs-kvers-is.sh
+Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
 Source999: kmodtool
 
@@ -832,9 +836,10 @@ make only_libafs_tree || exit 1
 
 %if %{fedorakmod} && %{build_modules}
 for kvariant in %{kvariants} ; do
-  cp -R libafs_tree _kmod_build_${kvariant}
-  pushd _kmod_build_${kvariant}
-  ./configure --with-afs-sysname=${sysname} \
+  if [ -n "${kvariant}" ] ; then
+    cp -R libafs_tree _kmod_build_${kvariant}
+    pushd _kmod_build_${kvariant}
+    ./configure --with-afs-sysname=${sysname} \
   	--prefix=%{_prefix} \
 	--libdir=%{_libdir} \
 	--bindir=%{_bindir} \
@@ -845,7 +850,8 @@ for kvariant in %{kvariants} ; do
 %endif
 	$config_opts \
 	|| exit 1
-  popd
+    popd
+  fi
 done
 %endif
 
@@ -872,9 +878,13 @@ make dest_nolibafs || exit 1
 %if %{fedorakmod}
 for kvariant in %{kvariants}
 do
-  pushd _kmod_build_$kvariant;
-  make all MPS=SP
-  popd
+  if [ -n "${kvariant}" ] ; then
+    pushd _kmod_build_$kvariant;
+    make all MPS=SP
+    popd
+  else
+    make dest_only_libafs MPS=SP
+  fi
 done
 
 %else
@@ -987,7 +997,7 @@ ln -sf pam_afs.krb.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so
 # Populate /usr/vice/etc
 uve=$RPM_BUILD_ROOT%{_prefix}/vice/etc
 install -p -m 644 src/packaging/RedHat/openafs-ThisCell $uve/ThisCell
-install -p -m 644 src/afsd/CellServDB $uve/CellServDB.dist
+install -p -m 644 %{SOURCE20} $uve/CellServDB.dist
 install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $uve/cacheinfo
 
 #
@@ -1162,13 +1172,15 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
 %if %{fedorakmod}
 for kvariant in %{kvariants}
 do
-    pushd _kmod_build_$kvariant
-    srcdir=src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
-    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  if [ -n "$kvariant" ] ; then
+    srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+  else
+    srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
+  fi
 
-    mkdir -p ${dstdir}
-    install -m 744 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
-    popd
+  dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  mkdir -p ${dstdir}
+  install -m 744 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
 done
 %else
 # Install the kernel modules
@@ -1544,6 +1556,11 @@ fi
 ###
 ##############################################################################
 %changelog
+* Tue Oct 29 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
+- Update to match the shipped 1.4.5 RPMS
+- Fix the kvariant stuff to only configure the 'standard' case once
+- Add openafs-kvers.sh back in
+
 * Wed Oct 10 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5pre1-1
 - Use Fedora style kmods, which allows us to install multiple kernel types
 
