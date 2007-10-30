@@ -25,13 +25,7 @@ RCSID
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/rxkad.h>
 #include "ubik_int.h"
 #include "kauth.h"

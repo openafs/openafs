@@ -75,6 +75,7 @@ RCSID
 #endif /* AFS_OSF_ENV */
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "fsck.h"
 

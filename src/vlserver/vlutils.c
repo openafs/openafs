@@ -14,18 +14,11 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <lock.h>

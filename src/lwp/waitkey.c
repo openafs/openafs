@@ -35,13 +35,7 @@ RCSID
 #include <sys/time.h>
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "lwp.h"
 
 #define LWP_KEYSTROKE_DELAY   250	/* 250ms. Must be < 1000 */

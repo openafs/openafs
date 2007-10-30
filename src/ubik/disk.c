@@ -21,13 +21,7 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include <errno.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <lock.h>
 #include <rx/xdr.h>
 

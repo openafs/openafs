@@ -88,13 +88,7 @@ RCSID
 #include "rx_globals.h"
 #include <lwp.h>
 #include <assert.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

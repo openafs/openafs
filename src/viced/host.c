@@ -17,6 +17,7 @@ RCSID
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -24,14 +25,6 @@ RCSID
 #include <sys/file.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <afs/stds.h>

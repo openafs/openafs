@@ -10,6 +10,8 @@ RCSID
     ("$Header$");
 
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "afsutil.h"
 
 /*

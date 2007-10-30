@@ -16,6 +16,7 @@ RCSID
 #include <afs/param.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
+#include <string.h>
 #include <ctype.h>
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
@@ -82,16 +83,6 @@ RCSID
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #include "partition.h"
-
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * returns pointer to static storage; copy it out quickly!

@@ -90,19 +90,13 @@ RCSID
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
 #include <time.h>		/* ANSI standard location for time stuff */
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
 #else
 #include <sys/time.h>
 #include <sys/file.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/assert.h>
 

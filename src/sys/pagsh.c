@@ -25,9 +25,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 #include <pwd.h>
 #ifdef AFS_KERBEROS_ENV
 #include <sys/types.h>

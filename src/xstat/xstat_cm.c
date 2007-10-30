@@ -24,14 +24,7 @@ RCSID
 #include <lwp.h>		/*Lightweight process package */
 
 #include <afs/afsutil.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #define LWP_STACK_SIZE	(16 * 1024)
 

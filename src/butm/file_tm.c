@@ -24,6 +24,7 @@ RCSID
 #include <limits.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <lwp.h>
 #include <afs/com_err.h>

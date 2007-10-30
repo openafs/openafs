@@ -16,6 +16,7 @@ RCSID
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
@@ -25,14 +26,6 @@ RCSID
 #else
 #include <sys/file.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <lock.h>

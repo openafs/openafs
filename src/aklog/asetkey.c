@@ -14,19 +14,11 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif /* HAVE_MEMORY_H */
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else /* HAVE_STRING_H */
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif /* HAVE_STRINGS_H */
-#endif /* HAVE_STRING_H */
 
 #include <afs/stds.h>
 #include <krb5.h>

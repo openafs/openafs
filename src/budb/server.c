@@ -24,15 +24,7 @@ RCSID
 #include <sys/time.h>
 #include <netdb.h>
 #endif
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>

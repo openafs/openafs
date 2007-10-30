@@ -25,14 +25,7 @@ RCSID
 #include <time.h>		/*time(), ctime() */
 #include <pwd.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 #define VIRTUE
 #define VICE

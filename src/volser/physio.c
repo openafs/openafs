@@ -21,13 +21,7 @@ RCSID
 #include <netinet/in.h>
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef	AFS_SUN5_ENV
 #include <sys/fcntl.h>
 #endif

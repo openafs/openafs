@@ -24,6 +24,7 @@ RCSID
 #include <sys/types.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>
 # include <sys/file.h>

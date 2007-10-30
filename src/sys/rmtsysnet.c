@@ -26,13 +26,7 @@ RCSID
 #endif
 #include <sys/stat.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsint.h>
 #include <afs/venus.h>
 #include <rx/xdr.h>

@@ -11,14 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 extern int line;
 extern int uss_perr;

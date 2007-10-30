@@ -25,13 +25,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "uss_common.h"		/*Common uss definitions, globals */
 #include "uss_procs.h"		/*Main uss operations */

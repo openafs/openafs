@@ -44,13 +44,7 @@ RCSID
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 /* netinet/in.h and cellconfig.h  are needed together */
 #include <afs/cellconfig.h>
     /* these are needed together */
