@@ -46,14 +46,7 @@ RCSID
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef AFS_LINUX20_ENV
 #include <net/if.h>

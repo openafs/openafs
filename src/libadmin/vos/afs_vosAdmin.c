@@ -15,13 +15,7 @@ RCSID
 
 #include <afs/stds.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

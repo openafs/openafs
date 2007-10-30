@@ -22,6 +22,7 @@ RCSID
     ("$Header$");
 
 #include <stdio.h>
+#include <string.h>
 #define VICE
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)

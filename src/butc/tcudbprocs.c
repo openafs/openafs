@@ -28,6 +28,7 @@ RCSID
 #include <rx/rx.h>
 #include <afs/afsint.h>
 #include <stdio.h>
+#include <string.h>
 #include <afs/procmgmt.h>
 #include <afs/assert.h>
 #include <afs/prs_fs.h>

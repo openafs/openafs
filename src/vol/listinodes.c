@@ -20,6 +20,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <string.h>
+
 RCSID
     ("$Header$");
 

@@ -60,6 +60,7 @@ RCSID
 #else /* KERNEL */
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <process.h>
@@ -73,13 +74,6 @@ RCSID
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #include <net/if.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

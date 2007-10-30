@@ -15,6 +15,7 @@ RCSID
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <string.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
@@ -23,14 +24,6 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <dirent.h>

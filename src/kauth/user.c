@@ -45,13 +45,7 @@ RCSID
 #else
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/ptint.h>

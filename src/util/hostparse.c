@@ -34,13 +34,7 @@ RCSID
 #include <netdb.h>
 #include <ctype.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <errno.h>
 #include "afsutil.h"
 #endif /* UKERNEL */

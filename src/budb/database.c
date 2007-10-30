@@ -27,15 +27,7 @@ RCSID
 #include "database.h"
 #include "error_macros.h"
 #include "afs/audit.h"
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 int pollCount;
 struct memoryDB db;		/* really allocate it here */

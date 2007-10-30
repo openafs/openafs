@@ -26,13 +26,7 @@ RCSID
 #else
 #include <sys/file.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #endif /* AFS_NT40_ENV */

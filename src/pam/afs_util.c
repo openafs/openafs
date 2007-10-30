@@ -17,13 +17,7 @@
 #include <afs/param.h>
 #include <sys/wait.h>
 #include <limits.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 RCSID

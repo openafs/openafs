@@ -41,6 +41,7 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#include <string.h>
 #include <des.h>
 #include <rx/rxkad.h>
 #include <rx/rx.h>

@@ -24,14 +24,7 @@ RCSID
 #include "uss_common.h"		/*Interface definitions */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
 
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 
 /*

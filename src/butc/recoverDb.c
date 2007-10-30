@@ -24,6 +24,7 @@ RCSID
 #include <strings.h>
 #endif
 #include <sys/types.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>

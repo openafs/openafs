@@ -46,6 +46,7 @@ RCSID
 
 #include "xdr.h"
 #include <stdio.h>
+#include <string.h>
 #define LASTUNSIGNED	((u_int)0-1)
 
 /*

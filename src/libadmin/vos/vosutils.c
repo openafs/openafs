@@ -17,13 +17,7 @@ RCSID
 #include "vsprocs.h"
 #include "lockprocs.h"
 #include <afs/afs_AdminErrors.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 /*
  * VLDB entry conversion routines.

@@ -18,13 +18,7 @@ RCSID
 #include <WINNT/afsevent.h>
 #endif
 #include <ctype.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
