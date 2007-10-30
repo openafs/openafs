@@ -30,9 +30,7 @@ RCSID
 #include <rx/xdr.h>
 #include <errno.h>
 #include <signal.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 

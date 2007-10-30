@@ -29,6 +29,7 @@ RCSID
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -60,14 +61,6 @@ RCSID
 #endif
 #include <afs/vnode.h>
 #include <afs/volume.h>
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "volser.h"
 

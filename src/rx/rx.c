@@ -79,6 +79,7 @@ extern afs_int32 afs_termState;
 # include "rxgen_consts.h"
 #else /* KERNEL */
 # include <sys/types.h>
+# include <string.h>
 # include <errno.h>
 #ifdef AFS_NT40_ENV
 # include <stdlib.h>
@@ -92,13 +93,6 @@ extern afs_int32 afs_termState;
 # include <sys/stat.h>
 # include <netinet/in.h>
 # include <sys/time.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 # include "rx.h"
 # include "rx_user.h"

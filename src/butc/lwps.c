@@ -14,6 +14,7 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <conio.h>

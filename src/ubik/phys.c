@@ -26,13 +26,7 @@ RCSID
 #include <lwp.h>
 #include <lock.h>
 #include <errno.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #define	UBIK_INTERNALS 1
 #include "ubik.h"

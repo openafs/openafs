@@ -28,14 +28,7 @@ RCSID
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>

@@ -16,9 +16,7 @@
 #include <stdlib.h>
 
 #include <afsconfig.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 
 #define TOK_DONTUSE 1		/* Don't copy if match and this flag is set. */
 struct token {

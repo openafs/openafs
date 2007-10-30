@@ -37,13 +37,7 @@ RCSID
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/stat.h>
 #include "afsutil.h"
 #include "fileutil.h"

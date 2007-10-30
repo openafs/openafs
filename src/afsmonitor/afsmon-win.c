@@ -22,9 +22,7 @@ RCSID
 #include <signal.h>
 #include <math.h>
 #include <cmd.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 #undef IN
 #include <time.h>
 

@@ -37,6 +37,7 @@ RCSID
 #else /* !KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
+#include <string.h>
 #include <rx/rx.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

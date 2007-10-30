@@ -25,13 +25,8 @@
 RCSID
     ("$Header$");
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
+
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>
 #else /* defined(AFS_PTHREAD_ENV) */
