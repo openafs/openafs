@@ -40,10 +40,8 @@ RCSID
 #endif
 #include <afs/cellconfig.h>
 
-PrintOneCell(ainfo, arock, adir)
-     struct afsconf_cell *ainfo;
-     char *arock;
-     struct afsconf_dir *adir;
+int 
+PrintOneCell(struct afsconf_cell *ainfo, void *arock, struct afsconf_dir *adir)
 {
     register int i;
     long temp;
@@ -101,7 +99,7 @@ main(argc, argv)
 	    printf("failed to find afsprot service (%d)\n", code);
 	else {
 	    printf("AFSPROT service:\n");
-	    PrintOneCell(&theCell, (char *)NULL, theDir);
+	    PrintOneCell(&theCell, NULL, theDir);
 	}
 	code = afsconf_GetCellInfo(theDir, 0, "bozotheclown", &theCell);
 	if (code == 0)

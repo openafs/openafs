@@ -1390,8 +1390,8 @@ SweepAFSCache(int *vFilesFound)
     return (0);
 }
 
-static
-ConfigCell(register struct afsconf_cell *aci, char *arock,
+static int
+ConfigCell(register struct afsconf_cell *aci, void *arock,
 	   struct afsconf_dir *adir)
 {
     register int isHomeCell;
@@ -1421,10 +1421,7 @@ ConfigCell(register struct afsconf_cell *aci, char *arock,
 }
 
 static int
-ConfigCellAlias(aca, arock, adir)
-	struct afsconf_cellalias *aca;
-	char *arock;
-	struct afsconf_dir *adir;
+ConfigCellAlias(struct afsconf_cellalias *aca, void *arock, struct afsconf_dir *adir)
 {
 	call_syscall(AFSOP_ADDCELLALIAS, (long)aca->aliasName, 
 		     (long)aca->realName, 0, 0, 0);
