@@ -90,7 +90,7 @@ GetUserAccessFromString(const char *in_str, const char *error_msg)
 }
 
 int
-DoPtsGroupMemberAdd(struct cmd_syndesc *as, char *arock)
+DoPtsGroupMemberAdd(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER, GROUP } DoPtsGroupMemberAdd_parm_t;
     afs_status_t st = 0;
@@ -105,7 +105,7 @@ DoPtsGroupMemberAdd(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupOwnerChange(struct cmd_syndesc *as, char *arock)
+DoPtsGroupOwnerChange(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { OWNER, GROUP } DoPtsGroupOwnerChange_parm_t;
     afs_status_t st = 0;
@@ -120,7 +120,7 @@ DoPtsGroupOwnerChange(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupCreate(struct cmd_syndesc *as, char *arock)
+DoPtsGroupCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { OWNER, GROUP } DoPtsGroupCreate_parm_t;
     afs_status_t st = 0;
@@ -170,7 +170,7 @@ Print_pts_GroupEntry_p(pts_GroupEntry_p entry, const char *prefix)
 }
 
 int
-DoPtsGroupGet(struct cmd_syndesc *as, char *arock)
+DoPtsGroupGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { GROUP } DoPtsGroupGet_parm_t;
     afs_status_t st = 0;
@@ -187,7 +187,7 @@ DoPtsGroupGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupDelete(struct cmd_syndesc *as, char *arock)
+DoPtsGroupDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { GROUP } DoPtsGroupDelete_parm_t;
     afs_status_t st = 0;
@@ -201,7 +201,7 @@ DoPtsGroupDelete(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupMaxGet(struct cmd_syndesc *as, char *arock)
+DoPtsGroupMaxGet(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int max_group_id;
@@ -214,7 +214,7 @@ DoPtsGroupMaxGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupMaxSet(struct cmd_syndesc *as, char *arock)
+DoPtsGroupMaxSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { MAX } DoPtsGroupMaxSet_parm_t;
     afs_status_t st = 0;
@@ -231,7 +231,7 @@ DoPtsGroupMaxSet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupMemberList(struct cmd_syndesc *as, char *arock)
+DoPtsGroupMemberList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { GROUP } DoPtsGroupMemberList_parm_t;
     afs_status_t st = 0;
@@ -260,7 +260,7 @@ DoPtsGroupMemberList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupMemberRemove(struct cmd_syndesc *as, char *arock)
+DoPtsGroupMemberRemove(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER, GROUP } DoPtsGroupMemberRemove_parm_t;
     afs_status_t st = 0;
@@ -275,7 +275,7 @@ DoPtsGroupMemberRemove(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupRename(struct cmd_syndesc *as, char *arock)
+DoPtsGroupRename(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { GROUP, NEWNAME } DoPtsGroupRename_parm_t;
     afs_status_t st = 0;
@@ -290,7 +290,7 @@ DoPtsGroupRename(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsGroupModify(struct cmd_syndesc *as, char *arock)
+DoPtsGroupModify(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { GROUP, LISTSTATUS, LISTGROUPSOWNED, LISTMEMBERSHIP,
 	LISTADD, LISTDELTE
@@ -323,7 +323,7 @@ DoPtsGroupModify(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserCreate(struct cmd_syndesc *as, char *arock)
+DoPtsUserCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsUserCreate_parm_t;
     afs_status_t st = 0;
@@ -340,7 +340,7 @@ DoPtsUserCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserDelete(struct cmd_syndesc *as, char *arock)
+DoPtsUserDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsUserDelete_parm_t;
     afs_status_t st = 0;
@@ -383,7 +383,7 @@ Print_pts_UserEntry_p(pts_UserEntry_p entry, const char *prefix)
 }
 
 int
-DoPtsUserGet(struct cmd_syndesc *as, char *arock)
+DoPtsUserGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsUserGet_parm_t;
     afs_status_t st = 0;
@@ -400,7 +400,7 @@ DoPtsUserGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserRename(struct cmd_syndesc *as, char *arock)
+DoPtsUserRename(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER, NEWNAME } DoPtsUserRename_parm_t;
     afs_status_t st = 0;
@@ -415,7 +415,7 @@ DoPtsUserRename(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserModify(struct cmd_syndesc *as, char *arock)
+DoPtsUserModify(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER, GROUPQUOTA, LISTSTATUS, LISTGROUPSOWNED,
 	LISTMEMBERSHIP
@@ -481,7 +481,7 @@ DoPtsUserModify(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserMaxGet(struct cmd_syndesc *as, char *arock)
+DoPtsUserMaxGet(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int max_user_id;
@@ -494,7 +494,7 @@ DoPtsUserMaxGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserMaxSet(struct cmd_syndesc *as, char *arock)
+DoPtsUserMaxSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { MAX } DoPtsUserMaxSet_parm_t;
     afs_status_t st = 0;
@@ -511,7 +511,7 @@ DoPtsUserMaxSet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsUserMemberList(struct cmd_syndesc *as, char *arock)
+DoPtsUserMemberList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsUserMemberList_parm_t;
     afs_status_t st = 0;
@@ -541,7 +541,7 @@ DoPtsUserMemberList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoPtsOwnedGroupList(struct cmd_syndesc *as, char *arock)
+DoPtsOwnedGroupList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsOwnedGroupList_parm_t;
     afs_status_t st = 0;
@@ -575,61 +575,61 @@ SetupPtsAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("PtsGroupMemberAdd", DoPtsGroupMemberAdd, 0,
+    ts = cmd_CreateSyntax("PtsGroupMemberAdd", DoPtsGroupMemberAdd, NULL,
 			  "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to add");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupOwnerChange", DoPtsGroupOwnerChange, 0,
+    ts = cmd_CreateSyntax("PtsGroupOwnerChange", DoPtsGroupOwnerChange, NULL,
 			  "change the owner of a group");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_REQUIRED, "new owner");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupCreate", DoPtsGroupCreate, 0,
+    ts = cmd_CreateSyntax("PtsGroupCreate", DoPtsGroupCreate, NULL,
 			  "create a new group");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_REQUIRED, "owner of group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to create");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupGet", DoPtsGroupGet, 0,
+    ts = cmd_CreateSyntax("PtsGroupGet", DoPtsGroupGet, NULL,
 			  "get information about a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupDelete", DoPtsGroupDelete, 0,
+    ts = cmd_CreateSyntax("PtsGroupDelete", DoPtsGroupDelete, NULL,
 			  "delete a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMaxGet", DoPtsGroupMaxGet, 0,
+    ts = cmd_CreateSyntax("PtsGroupMaxGet", DoPtsGroupMaxGet, NULL,
 			  "get the maximum group id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMaxSet", DoPtsGroupMaxSet, 0,
+    ts = cmd_CreateSyntax("PtsGroupMaxSet", DoPtsGroupMaxSet, NULL,
 			  "set the maximum group id");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_REQUIRED, "new max group id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMemberList", DoPtsGroupMemberList, 0,
+    ts = cmd_CreateSyntax("PtsGroupMemberList", DoPtsGroupMemberList, NULL,
 			  "list members of a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMemberRemove", DoPtsGroupMemberRemove, 0,
+    ts = cmd_CreateSyntax("PtsGroupMemberRemove", DoPtsGroupMemberRemove, NULL,
 			  "remove a member from a group");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to remove");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupRename", DoPtsGroupRename, 0,
+    ts = cmd_CreateSyntax("PtsGroupRename", DoPtsGroupRename, NULL,
 			  "rename a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, CMD_REQUIRED, "new group name");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupModify", DoPtsGroupModify, 0,
+    ts = cmd_CreateSyntax("PtsGroupModify", DoPtsGroupModify, NULL,
 			  "modify a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     cmd_AddParm(ts, "-liststatus", CMD_SINGLE, CMD_REQUIRED,
@@ -644,28 +644,28 @@ SetupPtsAdminCmd(void)
 		"list delete permission <owner | group>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserCreate", DoPtsUserCreate, 0,
+    ts = cmd_CreateSyntax("PtsUserCreate", DoPtsUserCreate, NULL,
 			  "create a new user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to create");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserDelete", DoPtsUserDelete, 0,
+    ts = cmd_CreateSyntax("PtsUserDelete", DoPtsUserDelete, NULL,
 			  "delete a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserGet", DoPtsUserGet, 0,
+    ts = cmd_CreateSyntax("PtsUserGet", DoPtsUserGet, NULL,
 			  "get information about a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserRename", DoPtsUserRename, 0,
+    ts = cmd_CreateSyntax("PtsUserRename", DoPtsUserRename, NULL,
 			  "rename a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to modify");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, CMD_REQUIRED, "new user name");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserModify", DoPtsUserModify, 0,
+    ts = cmd_CreateSyntax("PtsUserModify", DoPtsUserModify, NULL,
 			  "change a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to modify");
     cmd_AddParm(ts, "-groupquota", CMD_SINGLE, CMD_OPTIONAL,
@@ -678,21 +678,21 @@ SetupPtsAdminCmd(void)
 		"list membership permission <owner | any>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMaxGet", DoPtsUserMaxGet, 0,
+    ts = cmd_CreateSyntax("PtsUserMaxGet", DoPtsUserMaxGet, NULL,
 			  "get the max user id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMaxSet", DoPtsUserMaxSet, 0,
+    ts = cmd_CreateSyntax("PtsUserMaxSet", DoPtsUserMaxSet, NULL,
 			  "set the max user id");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_REQUIRED, "max user id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMemberList", DoPtsUserMemberList, 0,
+    ts = cmd_CreateSyntax("PtsUserMemberList", DoPtsUserMemberList, NULL,
 			  "list group membership for a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsOwnedGroupList", DoPtsOwnedGroupList, 0,
+    ts = cmd_CreateSyntax("PtsOwnedGroupList", DoPtsOwnedGroupList, NULL,
 			  "list groups owned by a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);

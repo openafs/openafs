@@ -123,7 +123,7 @@ main(int argc, char **argv)
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication for web servers");
 
 /* define the command line arguments */
@@ -803,10 +803,8 @@ getDFScreds(char *name, char *realm, char *passwd, afs_uint32 lifetime,
  * arrive through a pipe from the httpds, authenticates the user and
  * returns a token (or a failure message) over the pipe
  */
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
-
+static int
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];

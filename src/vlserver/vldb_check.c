@@ -895,7 +895,7 @@ CheckIpAddrs(header)
 int
 WorkerBee(as, arock)
      struct cmd_syndesc *as;
-     char *arock;
+     void *arock;
 {
     char *dbfile;
     afs_int32 maxentries, type;

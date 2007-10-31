@@ -33,7 +33,6 @@ RCSID
 #define	BADSERVERID	255	/* XXX */
 
 
-extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
 static char space[MAXSIZE];
@@ -67,9 +66,8 @@ afs_int32 dbsize;
 char *pathname = NULL;
 const char *dbPath;
 
-static
-handleit(as)
-     struct cmd_syndesc *as;
+static int
+handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     register afs_int32 code;
@@ -990,7 +988,7 @@ main(argc, argv)
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax("initcmd", handleit, 0, "optional");
+    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "optional");
     cmd_AddParm(ts, "-to", CMD_SINGLE, CMD_OPTIONAL, "goal version");
     cmd_AddParm(ts, "-from", CMD_SINGLE, CMD_OPTIONAL, "current version");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "pathname");

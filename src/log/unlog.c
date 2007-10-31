@@ -64,7 +64,7 @@ struct tokenInfo {
 
 
 int 
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
 #define	MAXCELLS 20		/* XXX */
     struct cmd_item *itp;
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "Release Kerberos authentication");
     cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 

@@ -63,7 +63,7 @@ RCSID
 #define KLOGEXIT(code) assert(!code || code >= KAMINERROR); \
                        rx_Finalize(); \
                        (!code ? exit(0) : exit((code)-KAMINERROR+1))
-extern int CommandProc(struct cmd_syndesc *as, char *arock);
+int CommandProc(struct cmd_syndesc *as, void *arock);
 
 static int zero_argc;
 static char **zero_argv;
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -150,7 +150,7 @@ getpipepass(void)
 }
 
 int
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];

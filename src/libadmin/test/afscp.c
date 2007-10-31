@@ -59,7 +59,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 
 static int
-MyBeforeProc(struct cmd_syndesc *as, char *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int no_auth = 0;
@@ -149,7 +149,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-MyAfterProc(struct cmd_syndesc *as)
+MyAfterProc(struct cmd_syndesc *as,void *arock)
 {
 
     afsclient_CellClose(cellHandle, (afs_status_p) 0);

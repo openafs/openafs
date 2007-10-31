@@ -1427,7 +1427,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
 #include "AFS_component_version_number.c"
 
 int
-WorkerBee(struct cmd_syndesc *as, char *arock)
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char *recreateFile;

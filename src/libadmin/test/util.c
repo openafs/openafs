@@ -20,7 +20,7 @@ RCSID
 #include "util.h"
 
 int
-DoUtilErrorTranslate(struct cmd_syndesc *as, char *arock)
+DoUtilErrorTranslate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { ERROR_CODE } DoUtilErrorTranslate_parm_t;
     afs_status_t st = 0;
@@ -37,7 +37,7 @@ DoUtilErrorTranslate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoUtilDatabaseServerList(struct cmd_syndesc *as, char *arock)
+DoUtilDatabaseServerList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { CELL_NAME } DoUtilDatabaseServerList_parm_t;
     afs_status_t st = 0;
@@ -66,7 +66,7 @@ DoUtilDatabaseServerList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoUtilNameToAddress(struct cmd_syndesc *as, char *arock)
+DoUtilNameToAddress(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER_NAME } DoUtilNameToAddress_parm_t;
     afs_status_t st = 0;
@@ -88,17 +88,17 @@ SetupUtilAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("UtilErrorTranslate", DoUtilErrorTranslate, 0,
+    ts = cmd_CreateSyntax("UtilErrorTranslate", DoUtilErrorTranslate, NULL,
 			  "translate an error code");
     cmd_AddParm(ts, "-error", CMD_SINGLE, CMD_REQUIRED, "error code");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("UtilDatabaseServerList", DoUtilDatabaseServerList,
-			  0, "list the database servers in a cell");
+			  NULL, "list the database servers in a cell");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell to list");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("UtilNameToAddress", DoUtilNameToAddress, 0,
+    ts = cmd_CreateSyntax("UtilNameToAddress", DoUtilNameToAddress, NULL,
 			  "translate a host name to an address");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     SetupCommonCmdArgs(ts);

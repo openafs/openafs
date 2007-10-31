@@ -73,7 +73,7 @@ RCSID
 
 /* The following code to make use of libcmd.a also stolen from klog.c. */
 
-int CommandProc();
+int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
@@ -201,9 +201,7 @@ timedout()
 #endif
 
 char passwd[BUFSIZ], npasswd[BUFSIZ], verify[BUFSIZ];
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN] = "";
     char instance[MAXKTCNAMELEN] = "";

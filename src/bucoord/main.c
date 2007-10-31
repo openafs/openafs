@@ -326,8 +326,7 @@ backupInit()
  */
 
 static int
-MyBeforeProc(as)
-     register struct cmd_syndesc *as;
+MyBeforeProc(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
 
@@ -462,9 +461,7 @@ doDispatch(targc, targv, dispatchCount)
 }
 
 int
-bc_interactCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+bc_interactCmd(struct cmd_syndesc *as, void *arock)
 {
     interact = 1;
     return 0;
@@ -516,7 +513,7 @@ main(argc, argv)
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("dump", bc_DumpCmd, 0, "start dump");
+    ts = cmd_CreateSyntax("dump", bc_DumpCmd, NULL, "start dump");
     cmd_AddParm(ts, "-volumeset", CMD_SINGLE, CMD_OPTIONAL,
 		"volume set name");
     cmd_AddParm(ts, "-dump", CMD_SINGLE, CMD_OPTIONAL, "dump level name");
@@ -530,7 +527,7 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("volrestore", bc_VolRestoreCmd, 0,
+    ts = cmd_CreateSyntax("volrestore", bc_VolRestoreCmd, NULL,
 			  "restore volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"destination machine");
@@ -549,7 +546,7 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("diskrestore", bc_DiskRestoreCmd, 0,
+    ts = cmd_CreateSyntax("diskrestore", bc_DiskRestoreCmd, NULL,
 			  "restore partition");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"machine to restore");
@@ -567,9 +564,9 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("quit", bc_QuitCmd, 0, "leave the program");
+    ts = cmd_CreateSyntax("quit", bc_QuitCmd, NULL, "leave the program");
 
-    ts = cmd_CreateSyntax("volsetrestore", bc_VolsetRestoreCmd, 0,
+    ts = cmd_CreateSyntax("volsetrestore", bc_VolsetRestoreCmd, NULL,
 			  "restore a set of volumes");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "volume set name");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "file name");
@@ -580,7 +577,7 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addhost", bc_AddHostCmd, 0, "add host to config");
+    ts = cmd_CreateSyntax("addhost", bc_AddHostCmd, NULL, "add host to config");
     cmd_AddParm(ts, "-tapehost", CMD_SINGLE, CMD_REQUIRED,
 		"tape machine name");
     cmd_AddParm(ts, "-portoffset", CMD_SINGLE, CMD_OPTIONAL,
@@ -588,7 +585,7 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delhost", bc_DeleteHostCmd, 0,
+    ts = cmd_CreateSyntax("delhost", bc_DeleteHostCmd, NULL,
 			  "delete host to config");
     cmd_AddParm(ts, "-tapehost", CMD_SINGLE, CMD_REQUIRED,
 		"tape machine name");
@@ -597,29 +594,29 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listhosts", bc_ListHostsCmd, 0,
+    ts = cmd_CreateSyntax("listhosts", bc_ListHostsCmd, NULL,
 			  "list config hosts");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("jobs", bc_JobsCmd, 0, "list running jobs");
+    ts = cmd_CreateSyntax("jobs", bc_JobsCmd, NULL, "list running jobs");
 
-    ts = cmd_CreateSyntax("kill", bc_KillCmd, 0, "kill running job");
+    ts = cmd_CreateSyntax("kill", bc_KillCmd, NULL, "kill running job");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED,
 		"job ID or dump set name");
 
-    ts = cmd_CreateSyntax("listvolsets", bc_ListVolSetCmd, 0,
+    ts = cmd_CreateSyntax("listvolsets", bc_ListVolSetCmd, NULL,
 			  "list volume sets");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "volume set name");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listdumps", bc_ListDumpScheduleCmd, 0,
+    ts = cmd_CreateSyntax("listdumps", bc_ListDumpScheduleCmd, NULL,
 			  "list dump schedules");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addvolset", bc_AddVolSetCmd, 0,
+    ts = cmd_CreateSyntax("addvolset", bc_AddVolSetCmd, NULL,
 			  "create a new volume set");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "volume set name");
     cmd_AddParm(ts, "-temporary", CMD_FLAG, CMD_OPTIONAL,
@@ -627,20 +624,20 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("status", bc_GetTapeStatusCmd, 0,
+    ts = cmd_CreateSyntax("status", bc_GetTapeStatusCmd, NULL,
 			  "get tape coordinator status");
     cmd_AddParm(ts, "-portoffset", CMD_SINGLE, CMD_OPTIONAL,
 		"TC port offset");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delvolset", bc_DeleteVolSetCmd, 0,
+    ts = cmd_CreateSyntax("delvolset", bc_DeleteVolSetCmd, NULL,
 			  "delete a volume set");
     cmd_AddParm(ts, "-name", CMD_LIST, CMD_REQUIRED, "volume set name");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addvolentry", bc_AddVolEntryCmd, 0,
+    ts = cmd_CreateSyntax("addvolentry", bc_AddVolEntryCmd, NULL,
 			  "add a new volume entry");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "volume set name");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
@@ -650,26 +647,26 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delvolentry", bc_DeleteVolEntryCmd, 0,
+    ts = cmd_CreateSyntax("delvolentry", bc_DeleteVolEntryCmd, NULL,
 			  "delete a volume set sub-entry");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "volume set name");
     cmd_AddParm(ts, "-entry", CMD_SINGLE, CMD_REQUIRED, "volume set index");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("adddump", bc_AddDumpCmd, 0, "add dump schedule");
+    ts = cmd_CreateSyntax("adddump", bc_AddDumpCmd, NULL, "add dump schedule");
     cmd_AddParm(ts, "-dump", CMD_LIST, CMD_REQUIRED, "dump level name");
     cmd_AddParm(ts, "-expires", CMD_LIST, CMD_OPTIONAL, "expiration date");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("deldump", bc_DeleteDumpCmd, 0,
+    ts = cmd_CreateSyntax("deldump", bc_DeleteDumpCmd, NULL,
 			  "delete dump schedule");
     cmd_AddParm(ts, "-dump", CMD_SINGLE, CMD_REQUIRED, "dump level name");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("labeltape", bc_LabelTapeCmd, 0, "label a tape");
+    ts = cmd_CreateSyntax("labeltape", bc_LabelTapeCmd, NULL, "label a tape");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL,
 		"AFS tape name, defaults to NULL");
     cmd_AddParm(ts, "-size", CMD_SINGLE, CMD_OPTIONAL,
@@ -681,14 +678,14 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("readlabel", bc_ReadLabelCmd, 0,
+    ts = cmd_CreateSyntax("readlabel", bc_ReadLabelCmd, NULL,
 			  "read the label on tape");
     cmd_AddParm(ts, "-portoffset", CMD_SINGLE, CMD_OPTIONAL,
 		"TC port offset");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("scantape", bc_ScanDumpsCmd, 0,
+    ts = cmd_CreateSyntax("scantape", bc_ScanDumpsCmd, NULL,
 			  "dump information recovery from tape");
     cmd_AddParm(ts, "-dbadd", CMD_FLAG, CMD_OPTIONAL,
 		"add information to the database");
@@ -697,34 +694,34 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("volinfo", bc_dblookupCmd, 0,
+    ts = cmd_CreateSyntax("volinfo", bc_dblookupCmd, NULL,
 			  "query the backup database");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume name");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setexp", bc_SetExpCmd, 0,
+    ts = cmd_CreateSyntax("setexp", bc_SetExpCmd, NULL,
 			  "set/clear dump expiration dates");
     cmd_AddParm(ts, "-dump", CMD_LIST, CMD_REQUIRED, "dump level name");
     cmd_AddParm(ts, "-expires", CMD_LIST, CMD_OPTIONAL, "expiration date");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("savedb", bc_saveDbCmd, 0, "save backup database");
+    ts = cmd_CreateSyntax("savedb", bc_saveDbCmd, NULL, "save backup database");
     cmd_AddParm(ts, "-portoffset", CMD_SINGLE, CMD_OPTIONAL,
 		"TC port offset");
     cmd_AddParm(ts, "-archive", CMD_LIST, CMD_OPTIONAL, "date time");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("restoredb", bc_restoreDbCmd, 0,
+    ts = cmd_CreateSyntax("restoredb", bc_restoreDbCmd, NULL,
 			  "restore backup database");
     cmd_AddParm(ts, "-portoffset", CMD_SINGLE, CMD_OPTIONAL,
 		"TC port offset");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("dumpinfo", bc_dumpInfoCmd, 0,
+    ts = cmd_CreateSyntax("dumpinfo", bc_dumpInfoCmd, NULL,
 			  "provide information about a dump in the database");
     cmd_AddParm(ts, "-ndumps", CMD_SINGLE, CMD_OPTIONAL, "no. of dumps");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "dump id");
@@ -733,13 +730,13 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("dbverify", bc_dbVerifyCmd, 0,
+    ts = cmd_CreateSyntax("dbverify", bc_dbVerifyCmd, NULL,
 			  "check ubik database integrity");
     cmd_AddParm(ts, "-detail", CMD_FLAG, CMD_OPTIONAL, "additional details");
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("deletedump", bc_deleteDumpCmd, 0,
+    ts = cmd_CreateSyntax("deletedump", bc_deleteDumpCmd, NULL,
 			  "delete dumps from the database");
     cmd_AddParm(ts, "-dumpid", CMD_LIST, CMD_OPTIONAL, "dump id");
     cmd_AddParm(ts, "-from", CMD_LIST, CMD_OPTIONAL, "date time");
@@ -756,7 +753,7 @@ main(argc, argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", bc_interactCmd, 0,
+    ts = cmd_CreateSyntax("interactive", bc_interactCmd, NULL,
 			  "enter interactive mode");
     add_std_args(ts);
 

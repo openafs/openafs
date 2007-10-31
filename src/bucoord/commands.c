@@ -822,10 +822,8 @@ getPortOffset(port)
 /* bc_GetTapeStatusCmd
  *	display status of all tasks on a particular tape coordinator
  */
-
-bc_GetTapeStatusCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_GetTapeStatusCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct rx_connection *tconn;
@@ -920,10 +918,8 @@ bc_WaitForNoJobs()
  * parameters
  *	ignored - a null "as" prints only jobs.
  */
-
-bc_JobsCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 prevTime;
     dlqlinkP ptr;
@@ -1037,9 +1033,8 @@ bc_JobsCmd(as, arock)
     return 0;
 }
 
-bc_KillCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_KillCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 i;
     afs_int32 slot;
@@ -1111,9 +1106,8 @@ bc_KillCmd(as, arock)
 }
 
 /* restore a volume or volumes */
-bc_VolRestoreCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 {
     /*
      * parm 0 is the new server to restore to
@@ -1266,9 +1260,8 @@ bc_VolRestoreCmd(as, arock)
  *	various optional
  */
 
-bc_DiskRestoreCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 {
     struct bc_volumeSet tvolumeSet;	/* temporary volume set for EvalVolumeSet call */
     struct bc_volumeEntry tvolumeEntry;	/* entry within the volume set */
@@ -1423,9 +1416,8 @@ bc_DiskRestoreCmd(as, arock)
  *	restore a volumeset or list of volumes.
  */
 
-bc_VolsetRestoreCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 {
     int oldFlag;
     long fromDate;
@@ -1606,9 +1598,7 @@ bc_VolsetRestoreCmd(as, arock)
 int dontExecute;
 
 int
-bc_DumpCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 {				/*bc_DumpCmd */
     static char rn[] = "bc_DumpCmd";	/*Routine name */
     char *dumpPath, *vsName;	/*Ptrs to various names */
@@ -1986,10 +1976,8 @@ bc_DumpCmd(as, arock)
  * parameters:
  *	ignored
  */
-
-bc_QuitCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_QuitCmd(struct cmd_syndesc *as, void *arock)
 {
     int i;
     struct bc_dumpTask *td;
@@ -2038,10 +2026,8 @@ bc_QuitCmd(as, arock)
  *	Labels a tape i.e. request the tape coordinator to perform this
  *	operation
  */
-
-bc_LabelTapeCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_LabelTapeCmd(struct cmd_syndesc *as, void *arock)
 {
     char *tapename = 0, *pname = 0;
     afs_int32 size;
@@ -2101,10 +2087,8 @@ bc_LabelTapeCmd(as, arock)
  * params:
  *	optional port number
  */
-
-bc_ReadLabelCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_ReadLabelCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     afs_int32 port = 0;
@@ -2131,10 +2115,8 @@ bc_ReadLabelCmd(as, arock)
  *	read content information from dump tapes, and if user desires,
  *	add it to the database
  */
-
-bc_ScanDumpsCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_ScanDumpsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 port = 0;
     afs_int32 dbAddFlag = 0;
@@ -2242,10 +2224,8 @@ bc_ParseExpiration(paramPtr, expType, expDate)
  *	Currently a single option, volumename to search for. Reports
  *	all dumps containing the specified volume
  */
-
-bc_dblookupCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_dblookupCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ciptr;
     afs_int32 code;
@@ -2261,10 +2241,8 @@ bc_dblookupCmd(as, arock)
 
 
 /* for ubik version */
-
-bc_dbVerifyCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_dbVerifyCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 status;
     afs_int32 orphans;
@@ -2420,10 +2398,8 @@ deleteDump(dumpid, port, force)
  * entry:
  *	dump id - single required arg as param 0.
  */
-
-bc_deleteDumpCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 dumpid;
     afs_int32 code = 0;
@@ -2576,9 +2552,8 @@ bc_deleteDumpCmd(as, arock)
     return (rcode);
 }
 
-bc_saveDbCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_saveDbCmd(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     afs_int32 portOffset = 0;
@@ -2646,9 +2621,8 @@ bc_saveDbCmd(as, arock)
     return (code);
 }
 
-bc_restoreDbCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_restoreDbCmd(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     afs_int32 portOffset = 0;
@@ -3151,9 +3125,8 @@ printRecentDumps(ndumps)
  *	as - name of tape
  *	arock -
  */
-bc_dumpInfoCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_dumpInfoCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 dumpid;
     afs_int32 detailFlag;
