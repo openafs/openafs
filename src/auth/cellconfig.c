@@ -770,8 +770,8 @@ ParseCellLine(register char *aline, register char *aname,
 /* call aproc(entry, arock, adir) for all cells.  Proc must return 0, or we'll stop early and return the code it returns */
 int
 afsconf_CellApply(struct afsconf_dir *adir,
-		  int (*aproc) (struct afsconf_cell * cell, char *arock,
-				struct afsconf_dir * dir), char *arock)
+		  int (*aproc) (struct afsconf_cell * cell, void *arock,
+				struct afsconf_dir * dir), void *arock)
 {
     register struct afsconf_entry *tde;
     register afs_int32 code;
@@ -793,8 +793,8 @@ afsconf_CellApply(struct afsconf_dir *adir,
 int
 afsconf_CellAliasApply(struct afsconf_dir *adir,
 		       int (*aproc) (struct afsconf_cellalias * alias,
-				     char *arock, struct afsconf_dir * dir),
-		       char *arock)
+				     void *arock, struct afsconf_dir * dir),
+		       void *arock)
 {
     register struct afsconf_aliasentry *tde;
     register afs_int32 code;
