@@ -34,6 +34,7 @@ RCSID
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <afs/afsutil.h>
 #include "bnode.h"
+#include "bosprototypes.h"
 
 static int fs_timeout(), fs_getstat(), fs_setstat(), fs_delete();
 static int fs_procexit(), fs_getstring(), fs_getparm(), fs_restartp();

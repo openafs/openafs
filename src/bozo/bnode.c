@@ -36,6 +36,7 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include "bnode.h"
+#include "bosprototypes.h"
 
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 /* All known versions of AIX lack WCOREDUMP but this works */
