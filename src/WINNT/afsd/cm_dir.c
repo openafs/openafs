@@ -100,7 +100,7 @@ static int
 cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * buffer, int flags);
 
 static long
-cm_DirCheckStatus(cm_dirOp_t * op);
+cm_DirCheckStatus(cm_dirOp_t * op, afs_uint32 locked);
 
 static long
 cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified);
@@ -958,9 +958,9 @@ cm_DirFindItem(cm_dirOp_t * op,
     }
 }
 
-/* Begin a sequence of directory operations.  scp->mx should be
-   locked.
-*/
+/* Begin a sequence of directory operations.  
+ * Called with scp->mx should unlocked.
+ */
 long
 cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
               afs_uint32 lockType, cm_dirOp_t * op)
@@ -986,13 +986,16 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         op->buffers[i].flags = 0;
     }
 
-    code = cm_DirCheckStatus(op);
-
+    lock_ObtainMutex(&scp->mx);
+    mxheld = 1;
+    code = cm_DirCheckStatus(op, 1);
     if (code == 0) {
         op->length = scp->length;
         op->newLength = op->length;
         op->dataVersion = scp->dataVersion;
         op->newDataVersion = op->dataVersion;
+        lock_ReleaseMutex(&scp->mx);
+        mxheld = 0;
 
 #ifdef USE_BPLUS
         lock_ObtainRead(&scp->dirlock);
@@ -1000,8 +1003,6 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
             (scp->dirBplus &&
              scp->dirDataVersion == scp->dataVersion)) 
         {
-            int mxheld = 0;
-
             switch (lockType) {
             case CM_DIRLOCK_NONE:
                 lock_ReleaseRead(&scp->dirlock);
@@ -1063,6 +1064,9 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         cm_EndDirOp(op);
     }
 
+    if (mxheld)
+        lock_ReleaseMutex(&scp->mx);
+
     return code;
 }
 
@@ -1076,7 +1080,7 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
     if (op->scp == NULL)
         return 0;
 
-    code = cm_DirCheckStatus(op);
+    code = cm_DirCheckStatus(op, 0);
 
     if (code == 0 &&
         op->dataVersion == op->scp->dataVersion - 1) {
@@ -1371,23 +1375,25 @@ cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
    This should be called before cm_DirGetPage() is called per scp.
 
    On entry:
-     scp->mx unlocked
+     scp->mx locked state indicated by parameter
 
    On exit:
-     scp->mx unlocked
+     scp->mx same state as upon entry
 
    During:
      scp->mx may be released
  */
 static long
-cm_DirCheckStatus(cm_dirOp_t * op)
+cm_DirCheckStatus(cm_dirOp_t * op, afs_uint32 locked)
 {
     long code;
 
-    lock_ObtainMutex(&op->scp->mx);
+    if (!locked)
+        lock_ObtainMutex(&op->scp->mx);
     code = cm_SyncOp(op->scp, NULL, op->userp, &op->req, PRSFS_LOOKUP,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&op->scp->mx);
+    if (!locked)
+        lock_ReleaseMutex(&op->scp->mx);
 
     osi_Log2(afsd_logp, "cm_DirCheckStatus for op 0x%p returning code 0x%x",
              op, code);
