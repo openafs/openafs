@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <windows.h>
 #include <winsock2.h>
-#include <afs/unified_afs.h>
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
@@ -62,6 +61,7 @@
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 #endif /* EWOULDBLOCK */
+#include <afs/unified_afs.h>
 
 #include <string.h>
 #include <malloc.h>
@@ -249,8 +249,9 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_NOTDIR;
     else if (error == 2)	/* ENOENT */
         error = CM_ERROR_NOSUCHFILE;
-    else if (error == 11        /* EAGAIN, most servers */
-             || error == 35)	/* EAGAIN, Digital UNIX */
+    else if (error == 11           /* EAGAIN, most servers */
+             || error == 35 	   /* EAGAIN, Digital UNIX */
+             || error == WSAEWOULDBLOCK)
         error = CM_ERROR_WOULDBLOCK;
     else if (error == VDISKFULL
               || error == 28)   /* ENOSPC */ 
