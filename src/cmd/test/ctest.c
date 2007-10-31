@@ -16,19 +16,15 @@ RCSID
 #include "cmd.h"
 #include <stdio.h>
 
-static
-cproc1(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+cproc1(struct cmd_syndesc *as, void *arock)
 {
     printf("in the apple command\n");
     return 0;
 }
 
-static
-cproc2(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+cproc2(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     printf("in the pear command\n");
@@ -43,9 +39,8 @@ cproc2(as, arock)
     return 0;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
 

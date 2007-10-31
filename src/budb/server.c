@@ -54,6 +54,8 @@ RCSID
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
 
+int argHandler(struct cmd_syndesc *, void *);
+
 char lcell[MAXKTCREALMLEN];
 afs_int32 myHost = 0;
 int helpOption;
@@ -123,8 +125,7 @@ convert_cell_to_ubik(cellinfo, myHost, serverList)
  *      If it were, this routine would never have been called.
  */
 static int
-MyBeforeProc(as)
-     register struct cmd_syndesc *as;
+MyBeforeProc(register struct cmd_syndesc *as, void *arock)
 {
     helpOption = 0;
     return 0;
@@ -137,8 +138,6 @@ MyBeforeProc(as)
 initializeArgHandler()
 {
     struct cmd_syndesc *cptr;
-
-    int argHandler();
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
@@ -171,9 +170,7 @@ initializeArgHandler()
 }
 
 int
-argHandler(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+argHandler(struct cmd_syndesc *as, void *arock)
 {
 
     /* globalConfPtr provides the handle for the configuration information */

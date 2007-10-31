@@ -53,7 +53,7 @@ RCSID
        -repeat is the number of times to iterate over the authentication
  */
 
-int CommandProc();
+static int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
@@ -76,7 +76,7 @@ main(argc, argv)
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -129,9 +129,8 @@ getpipepass()
     return gpbuf;
 }
 
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];

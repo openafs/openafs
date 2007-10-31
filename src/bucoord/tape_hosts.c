@@ -49,10 +49,8 @@ extern char *whoami;
  *	Add a host to the tape hosts
  */
 
-afs_int32
-bc_AddHostCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_AddHostCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     udbClientTextP ctPtr;
@@ -107,10 +105,8 @@ bc_AddHostCmd(as, arock)
     return (code);
 }
 
-afs_int32
-bc_DeleteHostCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DeleteHostCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     afs_int32 port = 0;
@@ -174,10 +170,8 @@ bc_DeleteHostCmd(as, arock)
  *	ignored
  */
 
-afs_int32
-bc_ListHostsCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_ListHostsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     register struct bc_hostEntry *tentry;

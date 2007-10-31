@@ -268,7 +268,7 @@ ktime_ParsePeriodic(char *adate, bos_RestartTime_p ak)
 }
 
 int
-DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
+DoBosProcessCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS, BINARY, CRON, CRONTIME,
 	NOTIFIER
@@ -334,7 +334,7 @@ DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosFSProcessCreate(struct cmd_syndesc *as, char *arock)
+DoBosFSProcessCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS, FILESERVER, VOLSERVER, SALVAGER,
 	NOTIFIER
@@ -386,7 +386,7 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessDelete(struct cmd_syndesc *as, char *arock)
+DoBosProcessDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessDelete_parm_t;
     afs_status_t st = 0;
@@ -435,7 +435,7 @@ Print_bos_ProcessExecutionState_p(bos_ProcessExecutionState_p state,
 }
 
 int
-DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
+DoBosProcessExecutionStateGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessExecutionStateGet_parm_t;
     afs_status_t st = 0;
@@ -471,7 +471,7 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
+DoBosProcessExecutionStateSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS, STOPPED,
 	RUNNING
@@ -522,7 +522,7 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
+DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS, STOPPED,
 	RUNNING
@@ -574,7 +574,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessNameList(struct cmd_syndesc *as, char *arock)
+DoBosProcessNameList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosProcessNameList_parm_t;
     afs_status_t st = 0;
@@ -663,7 +663,7 @@ Print_bos_ProcessInfo_p(bos_ProcessInfo_p info, const char *prefix)
 }
 
 int
-DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
+DoBosProcessInfoGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessInfoGet_parm_t;
     afs_status_t st = 0;
@@ -694,7 +694,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
+DoBosProcessParameterList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessParameterList_parm_t;
     afs_status_t st = 0;
@@ -738,7 +738,7 @@ DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessNotifierGet(struct cmd_syndesc *as, char *arock)
+DoBosProcessNotifierGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessNotifierGet_parm_t;
     afs_status_t st = 0;
@@ -773,7 +773,7 @@ DoBosProcessNotifierGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessRestart(struct cmd_syndesc *as, char *arock)
+DoBosProcessRestart(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PROCESS } DoBosProcessRestart_parm_t;
     afs_status_t st = 0;
@@ -801,7 +801,7 @@ DoBosProcessRestart(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessAllStop(struct cmd_syndesc *as, char *arock)
+DoBosProcessAllStop(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosProcessAllStop_parm_t;
     afs_status_t st = 0;
@@ -824,7 +824,7 @@ DoBosProcessAllStop(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessAllStart(struct cmd_syndesc *as, char *arock)
+DoBosProcessAllStart(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosProcessAllStart_parm_t;
     afs_status_t st = 0;
@@ -847,7 +847,7 @@ DoBosProcessAllStart(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessAllWaitStop(struct cmd_syndesc *as, char *arock)
+DoBosProcessAllWaitStop(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosProcessAllWaitStop_parm_t;
     afs_status_t st = 0;
@@ -870,7 +870,7 @@ DoBosProcessAllWaitStop(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessAllWaitTransition(struct cmd_syndesc *as, char *arock)
+DoBosProcessAllWaitTransition(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosProcessAllWaitTransition_parm_t;
     afs_status_t st = 0;
@@ -893,7 +893,7 @@ DoBosProcessAllWaitTransition(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, char *arock)
+DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, INCLUDEBOS } DoBosProcessAllStopAndRestart_parm_t;
     afs_status_t st = 0;
@@ -921,7 +921,7 @@ DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosAdminCreate(struct cmd_syndesc *as, char *arock)
+DoBosAdminCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, ADMIN } DoBosAdminCreate_parm_t;
     afs_status_t st = 0;
@@ -949,7 +949,7 @@ DoBosAdminCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosAdminDelete(struct cmd_syndesc *as, char *arock)
+DoBosAdminDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, ADMIN } DoBosAdminDelete_parm_t;
     afs_status_t st = 0;
@@ -977,7 +977,7 @@ DoBosAdminDelete(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosAdminList(struct cmd_syndesc *as, char *arock)
+DoBosAdminList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosAdminList_parm_t;
     afs_status_t st = 0;
@@ -1016,7 +1016,7 @@ DoBosAdminList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosKeyCreate(struct cmd_syndesc *as, char *arock)
+DoBosKeyCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, VERSIONNUMBER, KEY } DoBosKeyCreate_parm_t;
     afs_status_t st = 0;
@@ -1058,7 +1058,7 @@ DoBosKeyCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosKeyDelete(struct cmd_syndesc *as, char *arock)
+DoBosKeyDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, VERSIONNUMBER } DoBosKeyDelete_parm_t;
     afs_status_t st = 0;
@@ -1106,7 +1106,7 @@ Print_bos_KeyInfo_p(bos_KeyInfo_p key, const char *prefix)
 }
 
 int
-DoBosKeyList(struct cmd_syndesc *as, char *arock)
+DoBosKeyList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosKeyList_parm_t;
     afs_status_t st = 0;
@@ -1145,7 +1145,7 @@ DoBosKeyList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosCellSet(struct cmd_syndesc *as, char *arock)
+DoBosCellSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, CELL } DoBosCellSet_parm_t;
     afs_status_t st = 0;
@@ -1173,7 +1173,7 @@ DoBosCellSet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosCellGet(struct cmd_syndesc *as, char *arock)
+DoBosCellGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosCellGet_parm_t;
     afs_status_t st = 0;
@@ -1199,7 +1199,7 @@ DoBosCellGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosHostCreate(struct cmd_syndesc *as, char *arock)
+DoBosHostCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, HOST } DoBosHostCreate_parm_t;
     afs_status_t st = 0;
@@ -1227,7 +1227,7 @@ DoBosHostCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosHostDelete(struct cmd_syndesc *as, char *arock)
+DoBosHostDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, HOST } DoBosHostDelete_parm_t;
     afs_status_t st = 0;
@@ -1255,7 +1255,7 @@ DoBosHostDelete(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosHostList(struct cmd_syndesc *as, char *arock)
+DoBosHostList(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoBosHostList_parm_t;
     afs_status_t st = 0;
@@ -1294,7 +1294,7 @@ DoBosHostList(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosExecutableCreate(struct cmd_syndesc *as, char *arock)
+DoBosExecutableCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, BINARY, DEST } DoBosExecutableCreate_parm_t;
     afs_status_t st = 0;
@@ -1327,7 +1327,7 @@ DoBosExecutableCreate(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosExecutableRevert(struct cmd_syndesc *as, char *arock)
+DoBosExecutableRevert(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, EXECUTABLE } DoBosExecutableRevert_parm_t;
     afs_status_t st = 0;
@@ -1355,7 +1355,7 @@ DoBosExecutableRevert(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
+DoBosExecutableTimestampGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, EXECUTABLE } DoBosExecutableTimestampGet_parm_t;
     afs_status_t st = 0;
@@ -1387,7 +1387,7 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
+DoBosExecutablePrune(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, OLDFILES, BAKFILES,
 	COREFILES
@@ -1428,7 +1428,7 @@ DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, char *arock)
+DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, DAILY, WEEKLY,
 	TIME
@@ -1527,7 +1527,7 @@ Print_bos_RestartTime_p(bos_RestartTime_p restart, const char *prefix)
 }
 
 int
-DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
+DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, DAILY,
 	WEEKLY
@@ -1578,7 +1578,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
 #define INITIAL_BUF_SIZE 4096
 
 int
-DoBosLogGet(struct cmd_syndesc *as, char *arock)
+DoBosLogGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, LOGFILE } DoBosLogGet_parm_t;
     afs_status_t st = 0;
@@ -1626,7 +1626,7 @@ DoBosLogGet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosAuthSet(struct cmd_syndesc *as, char *arock)
+DoBosAuthSet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, REQUIREAUTH, DISABLEAUTH } DoBosAuthSet_parm_t;
     afs_status_t st = 0;
@@ -1670,7 +1670,7 @@ DoBosAuthSet(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosCommandExecute(struct cmd_syndesc *as, char *arock)
+DoBosCommandExecute(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, COMMAND } DoBosCommandExecute_parm_t;
     afs_status_t st = 0;
@@ -1698,7 +1698,7 @@ DoBosCommandExecute(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DoBosSalvage(struct cmd_syndesc *as, char *arock)
+DoBosSalvage(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER, PARTITION, VOLUME, NUMSALVAGERS, TMPDIR, LOGFILE,
 	FORCE, NOWRITE, INODES, ROOTINODES, SALVAGEDIRS, BLOCKREADS
@@ -1802,7 +1802,7 @@ SetupBosAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("BosProcessCreate", DoBosProcessCreate, 0,
+    ts = cmd_CreateSyntax("BosProcessCreate", DoBosProcessCreate, NULL,
 			  "create a new bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
@@ -1818,7 +1818,7 @@ SetupBosAdminCmd(void)
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosFSProcessCreate", DoBosFSProcessCreate, 0,
+    ts = cmd_CreateSyntax("BosFSProcessCreate", DoBosFSProcessCreate, NULL,
 			  "create a fs bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
@@ -1834,7 +1834,7 @@ SetupBosAdminCmd(void)
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessDelete", DoBosProcessDelete, 0,
+    ts = cmd_CreateSyntax("BosProcessDelete", DoBosProcessDelete, NULL,
 			  "delete a bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be deleted");
@@ -1843,7 +1843,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateGet",
-			  DoBosProcessExecutionStateGet, 0,
+			  DoBosProcessExecutionStateGet, NULL,
 			  "get the process execution state of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1852,7 +1852,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSet",
-			  DoBosProcessExecutionStateSet, 0,
+			  DoBosProcessExecutionStateSet, NULL,
 			  "set the process execution state of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1865,7 +1865,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSetTemporary",
-			  DoBosProcessExecutionStateSetTemporary, 0,
+			  DoBosProcessExecutionStateSetTemporary, NULL,
 			  "set the process execution state "
 			  "of a process temporarily");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1878,12 +1878,12 @@ SetupBosAdminCmd(void)
 		"set the process state to running");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNameList", DoBosProcessNameList, 0,
+    ts = cmd_CreateSyntax("BosProcessNameList", DoBosProcessNameList, NULL,
 			  "list the names of all processes at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessInfoGet", DoBosProcessInfoGet, 0,
+    ts = cmd_CreateSyntax("BosProcessInfoGet", DoBosProcessInfoGet, NULL,
 			  "get information about a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1892,7 +1892,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessParameterList",
-			  DoBosProcessParameterList, 0,
+			  DoBosProcessParameterList, NULL,
 			  "list the parameters of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1900,7 +1900,7 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNotifierGet", DoBosProcessNotifierGet, 0,
+    ts = cmd_CreateSyntax("BosProcessNotifierGet", DoBosProcessNotifierGet, NULL,
 			  "get the notifier for a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1908,7 +1908,7 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessRestart", DoBosProcessRestart, 0,
+    ts = cmd_CreateSyntax("BosProcessRestart", DoBosProcessRestart, NULL,
 			  "restart a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1916,13 +1916,13 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllStop", DoBosProcessAllStop, 0,
+    ts = cmd_CreateSyntax("BosProcessAllStop", DoBosProcessAllStop, NULL,
 			  "stop all processes at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllWaitStop", DoBosProcessAllWaitStop, 0,
+    ts = cmd_CreateSyntax("BosProcessAllWaitStop", DoBosProcessAllWaitStop, NULL,
 			  "stop all processes at a bos server and block "
 			  "until they all exit");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1930,7 +1930,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllWaitTransition",
-			  DoBosProcessAllWaitTransition, 0,
+			  DoBosProcessAllWaitTransition, NULL,
 			  "wait until all processes have transitioned to "
 			  "their desired state");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1938,7 +1938,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllStopAndRestart",
-			  DoBosProcessAllStopAndRestart, 0,
+			  DoBosProcessAllStopAndRestart, NULL,
 			  "stop all processes at a bos server and "
 			  "then restart them");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1947,7 +1947,7 @@ SetupBosAdminCmd(void)
 		"include the bos server in the processes to be restarted");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminCreate", DoBosAdminCreate, 0,
+    ts = cmd_CreateSyntax("BosAdminCreate", DoBosAdminCreate, NULL,
 			  "create an admin user at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be created");
@@ -1955,7 +1955,7 @@ SetupBosAdminCmd(void)
 		"the name of the administrator to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminDelete", DoBosAdminDelete, 0,
+    ts = cmd_CreateSyntax("BosAdminDelete", DoBosAdminDelete, NULL,
 			  "delete an admin user at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be deleted");
@@ -1963,13 +1963,13 @@ SetupBosAdminCmd(void)
 		"the name of the administrator to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminList", DoBosAdminList, 0,
+    ts = cmd_CreateSyntax("BosAdminList", DoBosAdminList, NULL,
 			  "list all admin users at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admins will be listed");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyCreate", DoBosKeyCreate, 0,
+    ts = cmd_CreateSyntax("BosKeyCreate", DoBosKeyCreate, NULL,
 			  "create a key at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be created");
@@ -1978,7 +1978,7 @@ SetupBosAdminCmd(void)
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_REQUIRED, "new encryption key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyDelete", DoBosKeyDelete, 0,
+    ts = cmd_CreateSyntax("BosKeyDelete", DoBosKeyDelete, NULL,
 			  "delete a key at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be deleted");
@@ -1986,41 +1986,41 @@ SetupBosAdminCmd(void)
 		"version number of the key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyList", DoBosKeyList, 0,
+    ts = cmd_CreateSyntax("BosKeyList", DoBosKeyList, NULL,
 			  "list keys at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where keys exist");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellSet", DoBosCellSet, 0,
+    ts = cmd_CreateSyntax("BosCellSet", DoBosCellSet, NULL,
 			  "set the cell at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "new cell");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellGet", DoBosCellGet, 0,
+    ts = cmd_CreateSyntax("BosCellGet", DoBosCellGet, NULL,
 			  "get the cell at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostCreate", DoBosHostCreate, 0,
+    ts = cmd_CreateSyntax("BosHostCreate", DoBosHostCreate, NULL,
 			  "add a host entry to the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostDelete", DoBosHostDelete, 0,
+    ts = cmd_CreateSyntax("BosHostDelete", DoBosHostDelete, NULL,
 			  "delete a host entry from the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostList", DoBosHostList, 0,
+    ts = cmd_CreateSyntax("BosHostList", DoBosHostList, NULL,
 			  "list all host entries from the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableCreate", DoBosExecutableCreate, 0,
+    ts = cmd_CreateSyntax("BosExecutableCreate", DoBosExecutableCreate, NULL,
 			  "create a new binary at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-binary", CMD_SINGLE, CMD_REQUIRED,
@@ -2029,7 +2029,7 @@ SetupBosAdminCmd(void)
 		"path where the binary will be stored");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableRevert", DoBosExecutableRevert, 0,
+    ts = cmd_CreateSyntax("BosExecutableRevert", DoBosExecutableRevert, NULL,
 			  "revert a binary at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
@@ -2037,14 +2037,14 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableTimestampGet",
-			  DoBosExecutableTimestampGet, 0,
+			  DoBosExecutableTimestampGet, NULL,
 			  "get the timestamps for a binary at bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
 		"path to the binary to revert");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutablePrune", DoBosExecutablePrune, 0,
+    ts = cmd_CreateSyntax("BosExecutablePrune", DoBosExecutablePrune, NULL,
 			  "prune various files at bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-oldfiles", CMD_FLAG, CMD_OPTIONAL, "prune .old files");
@@ -2053,7 +2053,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeSet",
-			  DoBosExecutableRestartTimeSet, 0,
+			  DoBosExecutableRestartTimeSet, NULL,
 			  "set the restart times at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
@@ -2065,7 +2065,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeGet",
-			  DoBosExecutableRestartTimeGet, 0,
+			  DoBosExecutableRestartTimeGet, NULL,
 			  "get the restart times at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
@@ -2074,14 +2074,14 @@ SetupBosAdminCmd(void)
 		"get weekly restart time");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosLogGet", DoBosLogGet, 0,
+    ts = cmd_CreateSyntax("BosLogGet", DoBosLogGet, NULL,
 			  "get a log file from the bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_REQUIRED,
 		"path to the log file to retrieve");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAuthSet", DoBosAuthSet, 0,
+    ts = cmd_CreateSyntax("BosAuthSet", DoBosAuthSet, NULL,
 			  "set the authorization level at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-requireauth", CMD_FLAG, CMD_OPTIONAL,
@@ -2098,7 +2098,7 @@ SetupBosAdminCmd(void)
 		"command to execute");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosSalvage", DoBosSalvage, 0,
+    ts = cmd_CreateSyntax("BosSalvage", DoBosSalvage, NULL,
 			  "execute a salvage command at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where salvager will execute");

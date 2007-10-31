@@ -30,9 +30,9 @@ struct cmd_token {
 static int dummy;		/* non-null ptr used for flag existence */
 static struct cmd_syndesc *allSyntax = 0;
 static int noOpcodes = 0;
-static int (*beforeProc) (struct cmd_syndesc * ts, char *beforeRock) =
-    0, (*afterProc) (struct cmd_syndesc * ts, char *afterRock) = 0;
-static char *beforeRock, *afterRock;
+static int (*beforeProc) (struct cmd_syndesc * ts, void *beforeRock) = NULL;
+static int (*afterProc) (struct cmd_syndesc * ts, void *afterRock) = NULL;
+static void *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
 
 /* take name and string, and return null string if name is empty, otherwise return
@@ -168,7 +168,7 @@ PrintParmHelp(register struct cmd_parmdesc *aparm)
 extern char *AFSVersion;
 
 static int
-VersionProc(register struct cmd_syndesc *as, char *arock)
+VersionProc(register struct cmd_syndesc *as, void *arock)
 {
     printf("%s\n", AFSVersion);
     return 0;
@@ -272,7 +272,7 @@ PrintFlagHelp(register struct cmd_syndesc *as)
 }
 
 static int
-AproposProc(register struct cmd_syndesc *as, char *arock)
+AproposProc(register struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_syndesc *ts;
     char *tsub;
@@ -297,7 +297,7 @@ AproposProc(register struct cmd_syndesc *as, char *arock)
 }
 
 static int
-HelpProc(register struct cmd_syndesc *as, char *arock)
+HelpProc(register struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_syndesc *ts;
     register struct cmd_item *ti;
@@ -344,8 +344,8 @@ HelpProc(register struct cmd_syndesc *as, char *arock)
 }
 
 int
-cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, char *beforeRock),
-		  char *arock)
+cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, void *beforeRock),
+		  void *arock)
 {
     beforeProc = aproc;
     beforeRock = arock;
@@ -353,8 +353,8 @@ cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, char *beforeRock),
 }
 
 int
-cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, char *afterRock),
-		 char *arock)
+cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, void *afterRock),
+		 void *arock)
 {
     afterProc = aproc;
     afterRock = arock;
@@ -380,8 +380,8 @@ SortSyntax(struct cmd_syndesc *as)
 
 struct cmd_syndesc *
 cmd_CreateSyntax(char *aname,
-		 int (*aproc) (struct cmd_syndesc * ts, char *arock),
-		 char *arock, char *ahelp)
+		 int (*aproc) (struct cmd_syndesc * ts, void *arock),
+		 void *arock, char *ahelp)
 {
     register struct cmd_syndesc *td;
 
@@ -481,7 +481,7 @@ cmd_AddParm(register struct cmd_syndesc *as, char *aname, int atype,
     strcpy(tp->name, aname);
     tp->type = atype;
     tp->flags = aflags;
-    tp->items = (struct cmd_item *)0;
+    tp->items = NULL;
     if (ahelp) {
 	tp->help = (char *)malloc(strlen(ahelp) + 1);
 	assert(tp->help);
@@ -556,7 +556,7 @@ ResetSyntax(register struct cmd_syndesc *as)
 	default:
 	    break;
 	}
-	tp->items = (struct cmd_item *)0;
+	tp->items = NULL;
     }
 }
 

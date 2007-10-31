@@ -63,9 +63,8 @@ struct rx_securityClass *junk;
 
 extern int VL_GetAddrs();
 
-afs_int32
-InvalidateCache(as)
-     struct cmd_syndesc *as;
+static int
+InvalidateCache(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     struct cmd_item *u;
@@ -212,10 +211,10 @@ ListServers()
     return code;
 }
 
-afs_int32
-GetServerList()
+static int
+GetServerList(struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 code;
+    int code;
     int i;
 
     code = ListServers();
@@ -240,10 +239,8 @@ User enters lists of:
 Command is executed in user's cell.
 */
 
-static
-MyBeforeProc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     register char *tcell = NULL;
     char confdir[200];
@@ -308,13 +305,13 @@ main(argc, argv)
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
     ts = cmd_CreateSyntax("initcmd" /*"invalidatecache" */ , InvalidateCache,
-			  0, "invalidate server ACL cache");
+			  NULL, "invalidate server ACL cache");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user identifier");
     cmd_AddParm(ts, "-ip", CMD_LIST, CMD_OPTIONAL, "IP address");
     cmd_CreateAlias(ts, "ic");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("listservers", GetServerList, 0,
+    ts = cmd_CreateSyntax("listservers", GetServerList, NULL,
 			  "list servers in the cell");
     cmd_CreateAlias(ts, "ls");
 

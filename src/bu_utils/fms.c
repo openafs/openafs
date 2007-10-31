@@ -35,7 +35,7 @@ afs_int32 eotEnabled = 1;
 /* prototypes */
 int fileMark(usd_handle_t hTape);
 int fileMarkSize(char *tapeDevice);
-void tt_fileMarkSize(struct cmd_syndesc *as, char *arock);
+static int tt_fileMarkSize(struct cmd_syndesc *as, void *arock);
 
 #define ERROR(evalue)                                           \
         {                                                       \
@@ -64,23 +64,23 @@ main(argc, argv)
     sigaction(SIGINT, &intaction, &oldaction);
 
     cptr =
-	cmd_CreateSyntax(NULL, tt_fileMarkSize, 0,
+	cmd_CreateSyntax(NULL, tt_fileMarkSize, NULL,
 			 "write a tape full of file marks");
     cmd_AddParm(cptr, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape special file");
 
     cmd_Dispatch(argc, argv);
 }
 
-void
-tt_fileMarkSize(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+tt_fileMarkSize(struct cmd_syndesc *as, void *arock)
 {
     char *tapeDevice;
 
     tapeDevice = as->parms[0].items->data;
 
     fileMarkSize(tapeDevice);
+
+    return 0;
 }
 
 

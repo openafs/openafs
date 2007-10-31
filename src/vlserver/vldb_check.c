@@ -1027,7 +1027,7 @@ FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp,
 }
 
 int
-WorkerBee(struct cmd_syndesc *as, char *arock)
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
     afs_int32 maxentries, type, tmp;

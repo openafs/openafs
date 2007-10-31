@@ -397,9 +397,8 @@ readDB(offset, buffer, size)
 
 #include "AFS_component_version_number.c"
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char *dbFile;

@@ -51,7 +51,7 @@ static char conf_dir[100];
 static char lcell[MAXCELLCHARS];
 
 int
-ListUsedIds(struct cmd_syndesc *as, char *arock)
+ListUsedIds(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     namelist lnames;
@@ -404,7 +404,7 @@ RemUser(int u, int g)
 }
 
 int
-TestManyMembers(struct cmd_syndesc *as, char *arock)
+TestManyMembers(struct cmd_syndesc *as, void *arock)
 {
     char *filled;		/* users filled up */
     char *cleaned;		/* users cleaned up */
@@ -761,7 +761,7 @@ ka_ConvertBytes(char *ascii,		/* output buffer */
  */
 
 int
-TestPrServ(struct cmd_syndesc *as, char *arock)
+TestPrServ(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 id;
     char name[PR_MAXNAMELEN + 1];
@@ -907,7 +907,7 @@ static char tmp_cell_file[128] = "";
 static char tmp_noauth_file[128] = "";
 
 static int
-MyAfterProc(struct cmd_syndesc *as, char *arock)
+MyAfterProc(struct cmd_syndesc *as, void *arock)
 {
     if (strlen(tmp_conf_file))
 	unlink(tmp_conf_file);
@@ -921,7 +921,7 @@ MyAfterProc(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-MyBeforeProc(struct cmd_syndesc *as, char *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     int i;
@@ -1103,7 +1103,7 @@ main(int argc, char *argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("usedIds", ListUsedIds, 0,
+    ts = cmd_CreateSyntax("usedIds", ListUsedIds, NULL,
 			  "Find used (or unused) user (or group) ids");
     cmd_AddParm(ts, "-startId", CMD_SINGLE, CMD_OPTIONAL,
 		"id to start checking");
@@ -1112,10 +1112,10 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-unused", CMD_FLAG, CMD_OPTIONAL, "print unused ids");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("initcmd", TestPrServ, 0, "test the prserver");
+    ts = cmd_CreateSyntax("initcmd", TestPrServ, NULL, "test the prserver");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, 0,
+    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, NULL,
 			  "test creating users and groups w/ many members");
     cmd_AddParm(ts, "-number", CMD_SINGLE, 0,
 		"number of users/groups to create");

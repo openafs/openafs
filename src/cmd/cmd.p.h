@@ -51,8 +51,8 @@ struct cmd_syndesc {
     char *name;			/* subcommand name */
     char *a0name;		/* command name from argv[0] */
     char *help;			/* help description */
-    int (*proc) (struct cmd_syndesc * ts, char *arock);
-    char *rock;
+    int (*proc) (struct cmd_syndesc * ts, void *arock);
+    void *rock;
     int nParms;			/* number of parms */
     afs_int32 flags;		/* random flags */
     struct cmd_parmdesc parms[CMD_MAXPARMS];	/* parms themselves */
@@ -60,14 +60,14 @@ struct cmd_syndesc {
 
 extern struct cmd_syndesc *cmd_CreateSyntax(char *namep,
 					    int (*aprocp) (struct cmd_syndesc
-							   * ts, char *arock),
-					    char *rockp, char *helpp);
+							   * ts, void *arock),
+					    void *rockp, char *helpp);
 extern int
-  cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, char *beforeRock),
-		    char *arock);
+  cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, void *beforeRock),
+		    void *arock);
 extern int
-  cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, char *afterRock),
-		   char *arock);
+  cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, void *afterRock),
+		   void *arock);
 extern int cmd_CreateAlias(struct cmd_syndesc *as, char *aname);
 extern int cmd_Seek(struct cmd_syndesc *as, int apos);
 extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,

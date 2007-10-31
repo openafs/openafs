@@ -29,13 +29,13 @@
 #include "common.h"
 
 int
-  DoUtilErrorTranslate(struct cmd_syndesc *as, char *arock);
+  DoUtilErrorTranslate(struct cmd_syndesc *as, void *arock);
 
 int
-  DoUtilDatabaseServerList(struct cmd_syndesc *as, char *arock);
+  DoUtilDatabaseServerList(struct cmd_syndesc *as, void *arock);
 
 int
-  DoUtilNameToAddress(struct cmd_syndesc *as, char *arock);
+  DoUtilNameToAddress(struct cmd_syndesc *as, void *arock);
 
 void
   SetupUtilAdminCmd(void);
