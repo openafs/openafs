@@ -21,6 +21,7 @@ RCSID
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <direct.h>
@@ -37,6 +38,7 @@ RCSID
 #include <rx/rx_globals.h>
 #include "bosint.h"
 #include "bnode.h"
+#include "bosprototypes.h"
 #include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
@@ -47,13 +49,10 @@ RCSID
 #include <afs/afs_args.h>
 #endif
 
-
 #define BOZO_LWP_STACKSIZE	16000
 extern int BOZO_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
-
-void bozo_Log();
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
 static PROCESS bozo_pid;
@@ -1072,14 +1071,17 @@ main(int argc, char **argv, char **envp)
 }
 
 void
-bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
+bozo_Log(char *format, ...)
 {
     char tdate[27];
     time_t myTime;
+    va_list ap;
+
+    va_start(ap, format);
 
     if (DoSyslog) {
 #ifndef AFS_NT40_ENV
-	syslog(LOG_INFO, a, b, c, d, e, f);
+        vsyslog(LOG_INFO, format, ap);
 #endif
     } else {
 	myTime = time(0);
@@ -1093,11 +1095,11 @@ bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
 	    printf("bosserver: WARNING: problem with %s\n",
 		   AFSDIR_SERVER_BOZLOG_FILEPATH);
 	    printf("%s ", tdate);
-	    printf(a, b, c, d, e, f);
+	    vprintf(format, ap);
 	    fflush(stdout);
 	} else {
 	    fprintf(bozo_logFile, "%s ", tdate);
-	    fprintf(bozo_logFile, a, b, c, d, e, f);
+	    vfprintf(bozo_logFile, format, ap);
 
 	    /* close so rm BosLog works */
 	    fclose(bozo_logFile);

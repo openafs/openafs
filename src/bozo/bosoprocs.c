@@ -41,7 +41,7 @@ RCSID
 
 #include "bnode.h"
 #include "bosint.h"
-
+#include "bosprototypes.h"
 
 extern struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 

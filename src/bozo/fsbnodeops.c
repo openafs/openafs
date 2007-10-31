@@ -34,7 +34,7 @@ RCSID
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <afs/afsutil.h>
 #include "bnode.h"
-
+#include "bosprototypes.h"
 
 static int emergency = 0;
 
