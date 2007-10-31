@@ -225,7 +225,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
         }
-    } 
+    }
+
+    else if (errorCode == UAEWOULDBLOCK || errorCode == EWOULDBLOCK ||
+              errorCode == UAEAGAIN || errorCode == EAGAIN) {
+        if (timeLeft > 5 ) {
+            thrd_Sleep(1000);
+            retry = 1;
+        }
+    }
 
     /* if there is nosuchvolume, then we have a situation in which a 
      * previously known volume no longer has a set of servers 
@@ -596,6 +604,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    case UAENOENT          : s = "UAENOENT";           break;
 	    case VICECONNBAD	   : s = "VICECONNBAD";	       break;
 	    case VICETOKENDEAD     : s = "VICETOKENDEAD";      break;
+            case WSAEWOULDBLOCK    : s = "WSAEWOULDBLOCK";     break;
+            case UAEWOULDBLOCK     : s = "UAEWOULDBLOCK";      break;
 	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			
 	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break; 			
 	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break; 		
