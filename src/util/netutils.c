@@ -51,6 +51,9 @@ RCSID
 #define INADDR_LOOPBACK (afs_uint32)0x7f000001
 #endif
 
+int ParseNetInfoFile_int(afs_uint32 *, afs_uint32 *, afs_uint32 *,
+                         int, char reason[], const char *,
+                         int);
 /* 
  * The line parameter is a pointer to a buffer containing a string of 
  * bytes of the form 
