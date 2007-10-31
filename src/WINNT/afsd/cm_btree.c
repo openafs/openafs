@@ -191,7 +191,10 @@ Nptr bplus_Lookup(Tree *B, keyT key)
         Nptr        dataNode;
         dataT       data;
 
-        slot = findKey(B, findNode, 1, numentries(findNode));
+        slot = getSlot(B, findNode);
+        if (slot <= BTERROR)
+            return NONODE;
+
         dataNode = getnode(findNode, slot);
         data = getdatavalue(dataNode);
 
@@ -219,12 +222,16 @@ static Nptr descendToLeaf(Tree *B, Nptr curr)
 
     memset(prev, 0, sizeof(prev));
 
-    for (depth = 0, slot = getSlot(B, curr); isinternal(curr); depth++, slot = getSlot(B, curr)) {
+    for (depth = 0, slot = getSlot(B, curr); (slot >= 0) && isinternal(curr); depth++, slot = getSlot(B, curr)) {
         prev[depth] = curr;
         if (slot == 0)
             curr = getfirstnode(curr);
-        else
+        else if (slot > 0)
             curr = getnode(curr, slot);
+        else /* BTERROR */ {
+            curr = NONODE;
+            break;
+        }
 #ifdef DEBUG_BTREE
         if ( !isnode(curr) )
             DebugBreak();
@@ -288,6 +295,9 @@ static int bestMatch(Tree *B, Nptr curr, int slot)
     int diff, comp, findslot;
 
     diff = comparekeys(B)(getfunkey(B), getkey(curr, slot), 0);
+    if (diff == 0) {
+        findslot = slot;
+    } else
     if (diff < 0) {		/* also check previous slot */
         if ((slot == 1) ||
              ((comp = comparekeys(B)(getfunkey(B), getkey(curr, slot - 1), 0)) >= 0)) 
@@ -367,6 +377,8 @@ descendSplit(Tree *B, Nptr curr)
         setsplitpath(B, curr);			/* indicates where nodes must split */
 
     slot = getSlot(B, curr);		        /* is null only if the root is empty */
+    if (slot <= BTERROR)
+        return NONODE;
     if (isinternal(curr)) {	/* continue recursion to leaves */
         if (slot == 0)
             downNode = descendSplit(B, getfirstnode(curr));
@@ -666,6 +678,8 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
         setmergepath(B, curr);		/* mark which nodes may need rebalancing */
 
     slot = getSlot(B, curr);
+    if (slot <= BTERROR)
+        return NONODE;
 
     if (isinternal(curr)) 	/* set up next recursion call's parameters */
     {
@@ -883,6 +897,8 @@ merge(Tree *B, Nptr left, Nptr right, Nptr anchor)
 #endif
         setfunkey(B, getkey(right, 1));	/* defined but maybe just deleted */
         z = getSlot(B, anchor);		/* needs the just calculated key */
+        if (z <= BTERROR)
+            return NONODE;
         setfunkey(B, getkey(anchor, z));	/* set slot to delete in anchor */
         setentry(left, numentries(left), getfunkey(B), getfirstnode(right));
     }
@@ -940,6 +956,8 @@ shift(Tree *B, Nptr left, Nptr right, Nptr anchor)
         x = numentries(left) + y;
         setfunkey(B, getkey(right, y + 1 - i));	/* set new anchor key value */
         z = getSlot(B, anchor);			/* find slot in anchor node */
+        if (z <= BTERROR)
+            return NONODE;
 #ifdef DEBUG_BTREE
         if (z == 0 && !isroot(anchor))
             DebugBreak();
@@ -978,6 +996,8 @@ shift(Tree *B, Nptr left, Nptr right, Nptr anchor)
         
         setfunkey(B, getkey(left, x));			/* set new anchor key value */
         z = getSlot(B, anchor) + 1;
+        if (z <= BTERROR)
+            return NONODE;
         if (i) {
             decentries(left);
             incentries(right);
@@ -1399,16 +1419,21 @@ findAllBtreeValues(Tree *B)
 /* 
  * the return must be -1, 0, or 1.  stricmp() in MSVC 8.0
  * does not return only those values.
+ *
+ * the sorting of the tree is by case insensitive sort order
+ * therefore, unless the strings actually match via a case
+ * insensitive search do we want to perform the case sensitive
+ * match.  Otherwise, the search order might be considered 
+ * to be inconsistent when the EXACT_MATCH flag is set.
  */
 static int
 compareKeys(keyT key1, keyT key2, int flags)
 {
     int comp;
 
-    if (flags & EXACT_MATCH)
+    comp = stricmp(key1.name, key2.name);
+    if (comp == 0 && (flags & EXACT_MATCH))
         comp = strcmp(key1.name, key2.name);
-    else
-        comp = stricmp(key1.name, key2.name);
     return (comp < 0 ? -1 : (comp > 0 ? 1 : 0));
 }
 
@@ -1434,6 +1459,8 @@ cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
         goto done;
     }
 
+    lock_AssertAny(&op->scp->dirlock);
+
     QueryPerformanceCounter(&start);
 
     leafNode = bplus_Lookup(op->scp->dirBplus, key);
@@ -1449,7 +1476,12 @@ cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
          * If we have an ambiguous match, return an error.
          * If we have only one inexact match, return that.
          */
-        slot = findKey(op->scp->dirBplus, leafNode, 1, numentries(leafNode));
+        slot = getSlot(op->scp->dirBplus, leafNode);
+        if (slot <= BTERROR) {
+            op->scp->dirDataVersion = 0;
+            rc = EINVAL;
+            goto done;
+        }
         firstDataNode = getnode(leafNode, slot);
 
         for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
@@ -1508,6 +1540,9 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
         goto done;
     }
 
+
+    lock_AssertWrite(&op->scp->dirlock);
+
     data.fid.cell = cfid->cell;
     data.fid.volume = cfid->volume;
     data.fid.vnode = cfid->vnode;
@@ -1559,6 +1594,8 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
         goto done;
     }
 
+    lock_AssertWrite(&op->scp->dirlock);
+
     QueryPerformanceCounter(&start);
 
     bplus_remove_entry++;
@@ -1582,7 +1619,12 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
                  * If we have an ambiguous match, return an error.
                  * If we have only one inexact match, return that.
                  */
-                slot = findKey(op->scp->dirBplus, leafNode, 1, numentries(leafNode));
+                slot = getSlot(op->scp->dirBplus, leafNode);
+                if (slot <= BTERROR) {
+                    op->scp->dirDataVersion = 0;
+                    rc = EINVAL;
+                    goto done;
+                }
                 firstDataNode = getnode(leafNode, slot);
 
                 for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
@@ -1634,7 +1676,13 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
                  * If we have an ambiguous match, return an error.
                  * If we have only one inexact match, return that.
                  */
-                slot = findKey(op->scp->dirBplus, leafNode, 1, numentries(leafNode));
+                slot = getSlot(op->scp->dirBplus, leafNode);
+                if (slot <= BTERROR) {
+                    op->scp->dirDataVersion = 0;
+                    rc = EINVAL;
+                    goto done;
+
+                }
                 firstDataNode = getnode(leafNode, slot);
 
                 for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
@@ -1658,11 +1706,11 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry)
             }
 
             if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
-				if (longname) {
-					key.name = longname;
-					delete(op->scp->dirBplus, key);
-	                key.name = entry;
-				}
+                if (longname) {
+                    key.name = longname;
+                    delete(op->scp->dirBplus, key);
+                    key.name = entry;
+                }
                 delete(op->scp->dirBplus, key);
             }
         }
@@ -1724,6 +1772,8 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp)
     LARGE_INTEGER start, end;
 
     osi_assert(scp->dirBplus == NULL);
+
+    lock_AssertWrite(&scp->dirlock);
 
     QueryPerformanceCounter(&start);
     bplus_build_tree++;
