@@ -69,7 +69,7 @@ dummyThreadNum(void)
 {
     return -1;
 }
-static int (*threadNumProgram) () = dummyThreadNum;
+static int (*threadNumProgram) (void) = dummyThreadNum;
 
 static int serverLogFD = -1;
 
@@ -87,7 +87,7 @@ int printLocks = 0;
 static char ourName[MAXPATHLEN];
 
 void
-SetLogThreadNumProgram(int (*func) () )
+SetLogThreadNumProgram(int (*func) (void) )
 {
     threadNumProgram = func;
 }
@@ -333,9 +333,6 @@ int
 ReOpenLog(const char *fileName)
 {
     int isfifo = 0;
-#if !defined(AFS_PTHREAD_ENV)
-    int tempfd;
-#endif
 #if !defined(AFS_NT40_ENV)
     struct stat statbuf;
 #endif
