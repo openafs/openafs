@@ -137,7 +137,7 @@ static int get_salvage_lock = 0;
 
 
 static int
-handleit(struct cmd_syndesc *as)
+handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
@@ -440,7 +440,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax("initcmd", handleit, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "initialize the program");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 		"Name of partition to salvage");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,

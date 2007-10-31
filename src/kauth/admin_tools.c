@@ -234,7 +234,7 @@ DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
 }
 
 int
-ListUsers(struct cmd_syndesc *as, char *arock)
+ListUsers(struct cmd_syndesc *as, void *arock)
 {
     struct kaident name;
     afs_int32 index;
@@ -273,7 +273,7 @@ ListUsers(struct cmd_syndesc *as, char *arock)
 
 
 int
-ExamineUser(struct cmd_syndesc *as, char *arock)
+ExamineUser(struct cmd_syndesc *as, void *arock)
 {
     int showkey = (as->parms[1].items != NULL);
     return DumpUser(as->parms[0].items->data, arock, 0, showkey, NULL);
@@ -318,7 +318,7 @@ handle_errors(int code,		/* error code to handle */
 }
 
 int
-CreateUser(struct cmd_syndesc *as, char *arock)
+CreateUser(struct cmd_syndesc *as, void *arock)
 {
     int code;
     char name[MAXKTCNAMELEN];
@@ -348,7 +348,7 @@ CreateUser(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DeleteUser(struct cmd_syndesc *as, char *arock)
+DeleteUser(struct cmd_syndesc *as, void *arock)
 {
     int code;
     char name[MAXKTCNAMELEN];
@@ -532,7 +532,7 @@ ka_islocked(char *name, char *instance, afs_uint32 * when)
 }
 
 int
-Unlock(struct cmd_syndesc *as, char *arock)
+Unlock(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, rcode = 0;
     afs_int32 count;
@@ -573,7 +573,7 @@ Unlock(struct cmd_syndesc *as, char *arock)
 }
 
 int
-SetFields(struct cmd_syndesc *as, char *arock)
+SetFields(struct cmd_syndesc *as, void *arock)
 {
     int code;
     char name[MAXKTCNAMELEN];
@@ -735,7 +735,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
 }
 
 int
-StringToKey(struct cmd_syndesc *as, char *arock)
+StringToKey(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char realm[MAXKTCREALMLEN];
@@ -772,7 +772,7 @@ StringToKey(struct cmd_syndesc *as, char *arock)
 }
 
 int
-SetPassword(struct cmd_syndesc *as, char *arock)
+SetPassword(struct cmd_syndesc *as, void *arock)
 {
     int code;
     char name[MAXKTCNAMELEN];
@@ -964,7 +964,7 @@ ListTicket(struct ktc_principal *server, int verbose)
 }
 
 static
-GetTicket(struct cmd_syndesc *as, char *arock)
+GetTicket(struct cmd_syndesc *as, void *arock)
 {
     int code;
     struct ktc_principal server;
@@ -1010,7 +1010,7 @@ GetTicket(struct cmd_syndesc *as, char *arock)
 }
 
 static
-GetPassword(struct cmd_syndesc *as, char *arock)
+GetPassword(struct cmd_syndesc *as, void *arock)
 {
     int code;
     char name[MAXKTCNAMELEN];
@@ -1062,7 +1062,7 @@ GetPassword(struct cmd_syndesc *as, char *arock)
 }
 
 int
-GetRandomKey(struct cmd_syndesc *as, char *arock)
+GetRandomKey(struct cmd_syndesc *as, void *arock)
 {
     int code;
     struct ktc_encryptionKey key;
@@ -1088,7 +1088,7 @@ GetRandomKey(struct cmd_syndesc *as, char *arock)
 }
 
 int
-Statistics(struct cmd_syndesc *as, char *arock)
+Statistics(struct cmd_syndesc *as, void *arock)
 {
     int code;
     kasstats statics;
@@ -1141,7 +1141,7 @@ Statistics(struct cmd_syndesc *as, char *arock)
 }
 
 int
-DebugInfo(struct cmd_syndesc *as, char *arock)
+DebugInfo(struct cmd_syndesc *as, void *arock)
 {
     int code;
     struct ka_debugInfo info;
@@ -1237,21 +1237,21 @@ DebugInfo(struct cmd_syndesc *as, char *arock)
 }
 
 int
-Interactive(struct cmd_syndesc *as, char *arock)
+Interactive(struct cmd_syndesc *as, void *arock)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(struct cmd_syndesc *as, char *arock)
+Quit(struct cmd_syndesc *as, void *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-MyAfterProc(struct cmd_syndesc *as)
+MyAfterProc(struct cmd_syndesc *as, void *arock)
 {
     if (!strcmp(as->name, "help"))
 	return 0;
@@ -1274,14 +1274,14 @@ char newCell[MAXKTCREALMLEN];
 afs_int32 serverList[MAXSERVERS];
 
 int
-NoAuth(struct cmd_syndesc *as, char *arock)
+NoAuth(struct cmd_syndesc *as, void *arock)
 {
     noauth = 1;
     return 0;
 }
 
 static int
-MyBeforeProc(struct cmd_syndesc *as, char *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     extern struct passwd *getpwuid();
     struct ktc_encryptionKey key;
@@ -1539,7 +1539,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 /* These are some helpful command that deal with the cache managers tokens. */
 
 static
-ForgetTicket(struct cmd_syndesc *as, char *arock)
+ForgetTicket(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
 
@@ -1593,7 +1593,7 @@ ForgetTicket(struct cmd_syndesc *as, char *arock)
 }
 
 static
-ListTickets(struct cmd_syndesc *as, char *arock)
+ListTickets(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     int index, newIndex;
@@ -1666,14 +1666,15 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("interactive", Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", Interactive, NULL,
 			  "enter interactive mode");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("noauthentication", NoAuth, 0,
+    ts = cmd_CreateSyntax("noauthentication", NoAuth, NULL,
 			  "connect to AuthServer w/o using token");
 
-    ts = cmd_CreateSyntax("list", ListUsers, 0, "list all users in database");
+    ts = cmd_CreateSyntax("list", ListUsers, NULL, 
+			  "list all users in database");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show detailed info about each user");
     cmd_AddParm(ts, "-showadmin", CMD_FLAG, CMD_OPTIONAL,
@@ -1683,26 +1684,26 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     add_std_args(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("examine", ExamineUser, 0,
+    ts = cmd_CreateSyntax("examine", ExamineUser, NULL,
 			  "examine the entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-showkey", CMD_FLAG, CMD_OPTIONAL,
 		"show the user's actual key rather than the checksum");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("create", CreateUser, 0,
+    ts = cmd_CreateSyntax("create", CreateUser, NULL,
 			  "create an entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-initial_password", CMD_SINGLE, CMD_OPTIONAL,
 		"initial password");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delete", DeleteUser, 0, "delete a user");
+    ts = cmd_CreateSyntax("delete", DeleteUser, NULL, "delete a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     add_std_args(ts);
     cmd_CreateAlias(ts, "rm");
 
-    ts = cmd_CreateSyntax("setfields", SetFields, 0,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
 			  "set various fields in a user's entry");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-flags", CMD_SINGLE, CMD_OPTIONAL,
@@ -1727,18 +1728,18 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "sf");
 
 
-    ts = cmd_CreateSyntax("unlock", Unlock, 0,
+    ts = cmd_CreateSyntax("unlock", Unlock, NULL,
 			  "Enable authentication ID after max failed attempts exceeded");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "authentication ID");
     add_std_args(ts);
 
 
-    ts = cmd_CreateSyntax("stringtokey", StringToKey, 0,
+    ts = cmd_CreateSyntax("stringtokey", StringToKey, NULL,
 			  "convert a string to a key");
     cmd_AddParm(ts, "-string", CMD_SINGLE, 0, "password string");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("setpassword", SetPassword, 0,
+    ts = cmd_CreateSyntax("setpassword", SetPassword, NULL,
 			  "set a user's password");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-new_password", CMD_SINGLE, CMD_OPTIONAL,
@@ -1752,7 +1753,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
 
     /* set a user's key */
-    ts = cmd_CreateSyntax("setkey", SetPassword, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_Seek(ts, 2);
     cmd_AddParm(ts, "-new_key", CMD_SINGLE, 0, "eight byte new key");
@@ -1761,7 +1762,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     add_std_args(ts);
 
     /* get a user's password */
-    ts = cmd_CreateSyntax("getpassword", GetPassword, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     /* don't take standard args */
     /* add_std_args (ts); */
@@ -1770,27 +1771,27 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
 
     /* get a random key */
-    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, 0,
+    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL,
 			  (char *)CMD_HIDDEN);
     add_std_args(ts);
 
     /* get a ticket for a specific server */
-    ts = cmd_CreateSyntax("getticket", GetTicket, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of server");
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL, "ticket lifetime");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("statistics", Statistics, 0,
+    ts = cmd_CreateSyntax("statistics", Statistics, NULL,
 			  "show statistics for AuthServer");
     add_std_args(ts);
 
     /* show debugging info from AuthServer */
-    ts = cmd_CreateSyntax("debuginfo", DebugInfo, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-hostname", CMD_SINGLE, CMD_OPTIONAL,
 		"authentication server host name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, 0,
+    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, NULL,
 			  "delete user's tickets");
 #ifdef notdef
     cmd_AddParm(ts, "-name", CMD_SINGLE, (CMD_OPTIONAL | CMD_HIDE),
@@ -1798,13 +1799,13 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "delete all tickets");
 
-    ts = cmd_CreateSyntax("listtickets", ListTickets, 0,
+    ts = cmd_CreateSyntax("listtickets", ListTickets, NULL,
 			  "show all cache manager tickets");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "name of server");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show session key and ticket");
 
-    ts = cmd_CreateSyntax("quit", Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", Quit, NULL, "exit program");
 
     finished = 1;
     conn = 0;			/* no connection yet */

@@ -104,9 +104,7 @@ StringToAuth(authname)
 #define aKEYFILE 26
 
 static int
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     long code;
     int startServer = (as->parms[aSERVER].items != 0);
@@ -310,7 +308,7 @@ main(argc, argv)
 	exit(1);
     }
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "run Rx authentication stress test");
     cmd_AddParm(ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
     cmd_AddParm(ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");

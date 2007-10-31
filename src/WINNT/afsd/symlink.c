@@ -269,8 +269,8 @@ char *apath; {
 }
 
 
-static ListLinkCmd(as)
-register struct cmd_syndesc *as; {
+static ListLinkCmd(register struct cmd_syndesc *as, void *arock)
+{
     register afs_int32 code;
     struct ViceIoctl blob;
     int error;
@@ -420,8 +420,8 @@ register struct cmd_syndesc *as; {
     return error;
 }
 
-static MakeLinkCmd(as)
-register struct cmd_syndesc *as; {
+static MakeLinkCmd(register struct cmd_syndesc *as, void *arock)
+{
     register afs_int32 code;
     struct ViceIoctl blob;
     char * parent;
@@ -484,8 +484,8 @@ register struct cmd_syndesc *as; {
  *	    symlink (or ``.'' if none is provided)
  *      tp: Set to point to the actual name of the symlink to nuke.
  */
-static RemoveLinkCmd(as)
-register struct cmd_syndesc *as; {
+static RemoveLinkCmd(register struct cmd_syndesc *as, void *arock)
+{
     register afs_int32 code=0;
     struct ViceIoctl blob;
     register struct cmd_item *ti;
@@ -589,14 +589,14 @@ char **argv; {
 
     osi_Init();
 
-    ts = cmd_CreateSyntax("list", ListLinkCmd, 0, "list symlink");    
+    ts = cmd_CreateSyntax("list", ListLinkCmd, NULL, "list symlink");    
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
     
-    ts = cmd_CreateSyntax("make", MakeLinkCmd, 0, "make symlink");
+    ts = cmd_CreateSyntax("make", MakeLinkCmd, NULL, "make symlink");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name");
     cmd_AddParm(ts, "-to", CMD_SINGLE, 0, "target");
 
-    ts = cmd_CreateSyntax("remove", RemoveLinkCmd, 0, "remove symlink");
+    ts = cmd_CreateSyntax("remove", RemoveLinkCmd, NULL, "remove symlink");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
     cmd_CreateAlias(ts, "rm");
 

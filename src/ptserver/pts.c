@@ -51,21 +51,21 @@ struct sourcestack {
 } *shead;
 
 int
-pts_Interactive(struct cmd_syndesc *as, char *arock)
+pts_Interactive(struct cmd_syndesc *as, void *arock)
 {
     finished = 0;
     return 0;
 }
 
 int
-pts_Quit(struct cmd_syndesc *as, char *arock)
+pts_Quit(struct cmd_syndesc *as, void *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-pts_Source(struct cmd_syndesc *as, char *arock)
+pts_Source(struct cmd_syndesc *as, void *arock)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -93,7 +93,7 @@ pts_Source(struct cmd_syndesc *as, char *arock)
 }
 
 int
-pts_Sleep(struct cmd_syndesc *as, char *arock)
+pts_Sleep(struct cmd_syndesc *as, void *arock)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -130,7 +130,7 @@ osi_audit()
 }
 
 int
-GetGlobals(struct cmd_syndesc *as, char *arock)
+GetGlobals(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char *cell;
@@ -162,7 +162,7 @@ GetGlobals(struct cmd_syndesc *as, char *arock)
 }
 
 int
-CleanUp(struct cmd_syndesc *as, char *arock)
+CleanUp(struct cmd_syndesc *as, void *arock)
 {
     if (as && !strcmp(as->name, "help"))
 	return 0;
@@ -175,7 +175,7 @@ CleanUp(struct cmd_syndesc *as, char *arock)
 }
 
 int
-CreateGroup(struct cmd_syndesc *as, char *arock)
+CreateGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -235,7 +235,7 @@ CreateGroup(struct cmd_syndesc *as, char *arock)
 }
 
 int
-CreateUser(struct cmd_syndesc *as, char *arock)
+CreateUser(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -460,7 +460,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 
 
 int
-AddToGroup(struct cmd_syndesc *as, char *arock)
+AddToGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -481,7 +481,7 @@ AddToGroup(struct cmd_syndesc *as, char *arock)
 }
 
 int
-RemoveFromGroup(struct cmd_syndesc *as, char *arock)
+RemoveFromGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -502,7 +502,7 @@ RemoveFromGroup(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ListMembership(struct cmd_syndesc *as, char *arock)
+ListMembership(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -547,7 +547,7 @@ ListMembership(struct cmd_syndesc *as, char *arock)
 }
 
 int
-Delete(struct cmd_syndesc *as, char *arock)
+Delete(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -586,7 +586,7 @@ char *flags_dncase = "s mar";	/* legal member acces values */
 int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 
 int
-CheckEntry(struct cmd_syndesc *as, char *arock)
+CheckEntry(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 rcode = 1;
@@ -685,7 +685,7 @@ CheckEntry(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ListEntries(struct cmd_syndesc *as, char *arock)
+ListEntries(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     afs_int32 flag, startindex, nentries, nextstartindex;
@@ -722,7 +722,7 @@ ListEntries(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ChownGroup(struct cmd_syndesc *as, char *arock)
+ChownGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char *name;
@@ -738,7 +738,7 @@ ChownGroup(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ChangeName(struct cmd_syndesc *as, char *arock)
+ChangeName(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char *oldname;
@@ -754,7 +754,7 @@ ChangeName(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ListMax(struct cmd_syndesc *as, char *arock)
+ListMax(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 maxUser, maxGroup;
@@ -775,7 +775,7 @@ ListMax(struct cmd_syndesc *as, char *arock)
 }
 
 int
-SetMax(struct cmd_syndesc *as, char *arock)
+SetMax(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 maxid;
@@ -815,7 +815,7 @@ SetMax(struct cmd_syndesc *as, char *arock)
 }
 
 int
-SetFields(struct cmd_syndesc *as, char *arock)
+SetFields(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -910,7 +910,7 @@ SetFields(struct cmd_syndesc *as, char *arock)
 }
 
 int
-ListOwned(struct cmd_syndesc *as, char *arock)
+ListOwned(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -1020,7 +1020,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax("creategroup", CreateGroup, 0,
+    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
 			  "create a new group");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_OPTIONAL, "owner of the group");
@@ -1029,60 +1029,60 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "cg");
 
-    ts = cmd_CreateSyntax("createuser", CreateUser, 0, "create a new user");
+    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, "create a new user");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "cu");
 
-    ts = cmd_CreateSyntax("adduser", AddToGroup, 0, "add a user to a group");
+    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, 0,
+    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL,
 			  "remove a user from a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("membership", ListMembership, 0,
+    ts = cmd_CreateSyntax("membership", ListMembership, NULL,
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 
-    ts = cmd_CreateSyntax("delete", Delete, 0,
+    ts = cmd_CreateSyntax("delete", Delete, NULL,
 			  "delete a user or group from database");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("examine", CheckEntry, 0, "examine an entry");
+    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, "examine an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "check");
 
-    ts = cmd_CreateSyntax("chown", ChownGroup, 0,
+    ts = cmd_CreateSyntax("chown", ChownGroup, NULL,
 			  "change ownership of a group");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "new owner");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("rename", ChangeName, 0, "rename user or group");
+    ts = cmd_CreateSyntax("rename", ChangeName, NULL, "rename user or group");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, 0, "old name");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "new name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "chname");
 
-    ts = cmd_CreateSyntax("listmax", ListMax, 0, "list max id");
+    ts = cmd_CreateSyntax("listmax", ListMax, NULL, "list max id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setmax", SetMax, 0, "set max id");
+    ts = cmd_CreateSyntax("setmax", SetMax, NULL, "set max id");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_OPTIONAL, "group max");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_OPTIONAL, "user max");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setfields", SetFields, 0,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
 			  "set fields for an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-access", CMD_SINGLE, CMD_OPTIONAL, "set privacy flags");
@@ -1094,30 +1094,30 @@ main(int argc, char **argv)
 #endif
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listowned", ListOwned, 0,
+    ts = cmd_CreateSyntax("listowned", ListOwned, NULL,
 			  "list groups owned by an entry or zero id gets orphaned groups");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listentries", ListEntries, 0,
+    ts = cmd_CreateSyntax("listentries", ListEntries, NULL,
 			  "list users/groups in the protection database");
     cmd_AddParm(ts, "-users", CMD_FLAG, CMD_OPTIONAL, "list user entries");
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", pts_Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", pts_Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", pts_Source, 0, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, NULL, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", pts_Sleep, 0, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 

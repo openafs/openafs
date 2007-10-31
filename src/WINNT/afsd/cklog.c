@@ -22,7 +22,7 @@
 #define BAD_ARGUMENT 1
 #define KLOGEXIT(code) exit(code)
 
-int CommandProc();
+static int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
@@ -40,7 +40,7 @@ void main (argc, argv)
     /* Start up sockets */
     WSAStartup(0x0101, &WSAjunk);
 
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "obtain Kerberos authentication");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "obtain Kerberos authentication");
 
 #define aXFLAG 0
 #define aPRINCIPAL 1
@@ -135,9 +135,8 @@ static int read_pw_string(char *s, int max)
     return !ok;
 }
 
-CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+static int
+CommandProc (struct cmd_syndesc *as, void *arock)
 {
     char  name[MAXKTCNAMELEN];
     char  instance[MAXKTCNAMELEN];

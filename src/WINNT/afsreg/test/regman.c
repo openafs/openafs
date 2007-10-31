@@ -35,7 +35,7 @@
 static char* whoami;
 
 
-static int DoVptList(struct cmd_syndesc *as, char *arock)
+static int DoVptList(struct cmd_syndesc *as, void *arock)
 {
     struct vpt_iter vpiter;
     struct vptab vpentry;
@@ -51,7 +51,7 @@ static int DoVptList(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
-static int DoVptAdd(struct cmd_syndesc *as, char *arock)
+static int DoVptAdd(struct cmd_syndesc *as, void *arock)
 {
     char *vpName, *vpDev;
     struct vptab vpentry;
@@ -79,7 +79,7 @@ static int DoVptAdd(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
-static int DoVptDel(struct cmd_syndesc *as, char *arock)
+static int DoVptDel(struct cmd_syndesc *as, void *arock)
 {
     char *vpName;
 
@@ -98,7 +98,7 @@ static int DoVptDel(struct cmd_syndesc *as, char *arock)
 }
 
 
-static int DoDirGet(struct cmd_syndesc *as, char *arock)
+static int DoDirGet(struct cmd_syndesc *as, void *arock)
 {
     char *buf;
 
@@ -115,7 +115,7 @@ static int DoDirGet(struct cmd_syndesc *as, char *arock)
 }
 
 
-static int DoDirSet(struct cmd_syndesc *as, char *arock)
+static int DoDirSet(struct cmd_syndesc *as, void *arock)
 {
     long status;
     HKEY key;
@@ -143,7 +143,7 @@ static int DoDirSet(struct cmd_syndesc *as, char *arock)
 }
 
 
-static int DoBosCfg(struct cmd_syndesc *as, char *arock)
+static int DoBosCfg(struct cmd_syndesc *as, void *arock)
 {
     char bosSvcPath[AFSDIR_PATH_MAX];
     SC_HANDLE scmHandle, svcHandle;
@@ -213,7 +213,7 @@ static int DoBosCfg(struct cmd_syndesc *as, char *arock)
 }
 
 
-static int DoBosDel(struct cmd_syndesc *as, char *arock)
+static int DoBosDel(struct cmd_syndesc *as, void *arock)
 {
     int rc = 0;
     SC_HANDLE scmHandle, svcHandle;
@@ -258,7 +258,7 @@ static int DoBosDel(struct cmd_syndesc *as, char *arock)
     return (rc);
 }
 
-static int DoVersionGet(struct cmd_syndesc *as, char *arock)
+static int DoVersionGet(struct cmd_syndesc *as, void *arock)
 {
     unsigned major, minor, patch;
 
@@ -286,15 +286,15 @@ SetupVptCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("vptlist", DoVptList, 0,
+    ts = cmd_CreateSyntax("vptlist", DoVptList, NULL,
 			  "list vice partition table");
 
-    ts = cmd_CreateSyntax("vptadd", DoVptAdd, 0,
+    ts = cmd_CreateSyntax("vptadd", DoVptAdd, NULL,
 			  "add entry to vice partition table");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED, "partition name");
     cmd_AddParm(ts, "-dev", CMD_SINGLE, CMD_REQUIRED, "device name");
 
-    ts = cmd_CreateSyntax("vptdel", DoVptDel, 0,
+    ts = cmd_CreateSyntax("vptdel", DoVptDel, NULL,
 			  "remove entry from vice partition table");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED, "partition name");
 }
@@ -304,10 +304,10 @@ SetupDirCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("dirget", DoDirGet, 0,
+    ts = cmd_CreateSyntax("dirget", DoDirGet, NULL,
 			  "display the AFS server installation directory");
 
-    ts = cmd_CreateSyntax("dirset", DoDirSet, 0,
+    ts = cmd_CreateSyntax("dirset", DoDirSet, NULL,
 			  "set the AFS server installation directory");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_REQUIRED, "directory path");
 }
@@ -317,11 +317,11 @@ SetupBosCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("boscfg", DoBosCfg, 0,
+    ts = cmd_CreateSyntax("boscfg", DoBosCfg, NULL,
 			  "configure the AFS BOS control service");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "service binary path");
 
-    ts = cmd_CreateSyntax("bosdel", DoBosDel, 0,
+    ts = cmd_CreateSyntax("bosdel", DoBosDel, NULL,
 			  "delete (unconfigure) the AFS BOS control service");
 }
 
@@ -330,7 +330,7 @@ SetupVersionCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("version", DoVersionGet, 0,
+    ts = cmd_CreateSyntax("version", DoVersionGet, NULL,
 			  "display AFS version information");
 }
 

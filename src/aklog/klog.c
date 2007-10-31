@@ -82,7 +82,7 @@ extern krb5_cc_ops krb5_mcc_ops;
 
 #define KLOGEXIT(code) rx_Finalize(); \
                        (exit(!!code))
-extern int CommandProc(struct cmd_syndesc *as, char *arock);
+static int CommandProc(struct cmd_syndesc *as, void *arock);
 
 static int zero_argc;
 static char **zero_argv;
@@ -114,7 +114,7 @@ main(int argc, char *argv[])
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -341,8 +341,8 @@ prompts[i].reply->data);
     return 0;
 }
 
-int
-CommandProc(struct cmd_syndesc *as, char *arock)
+static int
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     krb5_principal princ = 0;
     char *cell, *pname, **hrealms, *service;

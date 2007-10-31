@@ -1517,7 +1517,7 @@ AfsdbLookupHandler()
 #endif
 #endif
 
-mainproc(struct cmd_syndesc *as, char *arock)
+mainproc(struct cmd_syndesc *as, void *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */

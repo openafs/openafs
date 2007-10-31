@@ -792,9 +792,8 @@ ReadVNode(count)
     return ((afs_int32) tag);
 }
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     int code = 0, c, len;
     afs_int32 type, count, vcount;

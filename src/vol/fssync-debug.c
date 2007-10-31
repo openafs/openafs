@@ -89,17 +89,17 @@ static char * command_code_to_string(afs_int32);
 static char * reason_code_to_string(afs_int32);
 static char * program_type_to_string(afs_int32);
 
-static int VolOnline(struct cmd_syndesc * as, char * rock);
-static int VolOffline(struct cmd_syndesc * as, char * rock);
-static int VolMode(struct cmd_syndesc * as, char * rock);
-static int VolDetach(struct cmd_syndesc * as, char * rock);
-static int VolBreakCBKs(struct cmd_syndesc * as, char * rock);
-static int VolMove(struct cmd_syndesc * as, char * rock);
-static int VolList(struct cmd_syndesc * as, char * rock);
-static int VolQuery(struct cmd_syndesc * as, char * rock);
-static int VolHdrQuery(struct cmd_syndesc * as, char * rock);
-static int VolOpQuery(struct cmd_syndesc * as, char * rock);
-static int StatsQuery(struct cmd_syndesc * as, char * rock);
+static int VolOnline(struct cmd_syndesc * as, void * rock);
+static int VolOffline(struct cmd_syndesc * as, void * rock);
+static int VolMode(struct cmd_syndesc * as, void * rock);
+static int VolDetach(struct cmd_syndesc * as, void * rock);
+static int VolBreakCBKs(struct cmd_syndesc * as, void * rock);
+static int VolMove(struct cmd_syndesc * as, void * rock);
+static int VolList(struct cmd_syndesc * as, void * rock);
+static int VolQuery(struct cmd_syndesc * as, void * rock);
+static int VolHdrQuery(struct cmd_syndesc * as, void * rock);
+static int VolOpQuery(struct cmd_syndesc * as, void * rock);
+static int StatsQuery(struct cmd_syndesc * as, void * rock);
 
 
 static void print_vol_stats_general(VolPkgStats * stats);
@@ -154,43 +154,43 @@ main(int argc, char **argv)
     }
 
     
-    ts = cmd_CreateSyntax("online", VolOnline, 0, "bring a volume online (FSYNC_VOL_ON opcode)");
+    ts = cmd_CreateSyntax("online", VolOnline, NULL, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("offline", VolOffline, 0, "take a volume offline (FSYNC_VOL_OFF opcode)");
+    ts = cmd_CreateSyntax("offline", VolOffline, NULL, "take a volume offline (FSYNC_VOL_OFF opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("mode", VolMode, 0, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
+    ts = cmd_CreateSyntax("mode", VolMode, NULL, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "needvolume");
 
-    ts = cmd_CreateSyntax("detach", VolDetach, 0, "detach a volume (FSYNC_VOL_DONE opcode)");
+    ts = cmd_CreateSyntax("detach", VolDetach, NULL, "detach a volume (FSYNC_VOL_DONE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("callback", VolBreakCBKs, 0, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
+    ts = cmd_CreateSyntax("callback", VolBreakCBKs, NULL, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "cbk");
 
-    ts = cmd_CreateSyntax("move", VolMove, 0, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
+    ts = cmd_CreateSyntax("move", VolMove, NULL, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("list", VolList, 0, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
+    ts = cmd_CreateSyntax("list", VolList, NULL, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("query", VolQuery, 0, "get volume structure (FSYNC_VOL_QUERY opcode)");
+    ts = cmd_CreateSyntax("query", VolQuery, NULL, "get volume structure (FSYNC_VOL_QUERY opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
-    ts = cmd_CreateSyntax("header", VolHdrQuery, 0, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
+    ts = cmd_CreateSyntax("header", VolHdrQuery, NULL, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "hdr");
 
-    ts = cmd_CreateSyntax("volop", VolOpQuery, 0, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
+    ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vop");
 
-    ts = cmd_CreateSyntax("stats", StatsQuery, 0, "see 'stats help' for more information");
+    ts = cmd_CreateSyntax("stats", StatsQuery, NULL, "see 'stats help' for more information");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-cmd", CMD_SINGLE, 0, "subcommand");
     cmd_AddParm(ts, "-arg1", CMD_SINGLE, CMD_OPTIONAL, "arg1");
@@ -412,7 +412,7 @@ program_type_to_string(afs_int32 type)
 }
 
 static int 
-VolOnline(struct cmd_syndesc * as, char * rock)
+VolOnline(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -425,7 +425,7 @@ VolOnline(struct cmd_syndesc * as, char * rock)
 }
 
 static int 
-VolOffline(struct cmd_syndesc * as, char * rock)
+VolOffline(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -438,7 +438,7 @@ VolOffline(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolMode(struct cmd_syndesc * as, char * rock)
+VolMode(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -451,7 +451,7 @@ VolMode(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolDetach(struct cmd_syndesc * as, char * rock)
+VolDetach(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -464,7 +464,7 @@ VolDetach(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolBreakCBKs(struct cmd_syndesc * as, char * rock)
+VolBreakCBKs(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -477,7 +477,7 @@ VolBreakCBKs(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolMove(struct cmd_syndesc * as, char * rock)
+VolMove(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -490,7 +490,7 @@ VolMove(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolList(struct cmd_syndesc * as, char * rock)
+VolList(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -636,7 +636,7 @@ vlru_idx_to_string(int idx)
 #endif
 
 static int
-VolQuery(struct cmd_syndesc * as, char * rock)
+VolQuery(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
     SYNC_PROTO_BUF_DECL(res_buf);
@@ -765,7 +765,7 @@ VolQuery(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolHdrQuery(struct cmd_syndesc * as, char * rock)
+VolHdrQuery(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
     SYNC_PROTO_BUF_DECL(res_buf);
@@ -836,7 +836,7 @@ VolHdrQuery(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-VolOpQuery(struct cmd_syndesc * as, char * rock)
+VolOpQuery(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
     SYNC_PROTO_BUF_DECL(res_buf);
@@ -892,7 +892,7 @@ VolOpQuery(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-StatsQuery(struct cmd_syndesc * as, char * rock)
+StatsQuery(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
     int command;

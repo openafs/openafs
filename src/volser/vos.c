@@ -1455,9 +1455,8 @@ VolumeStats(pntr, entry, server, part, voltype)
 }
 
 /* command to forcibly remove a volume */
-static
-NukeVolume(as)
-     register struct cmd_syndesc *as;
+static int
+NukeVolume(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 volID, err;
@@ -1521,9 +1520,8 @@ NukeVolume(as)
  *	As advertised.
  *------------------------------------------------------------------------
  */
-static
-ExamineVolume(as)
-     register struct cmd_syndesc *as;
+static int
+ExamineVolume(register struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_int32 vcode = 0;
@@ -1674,9 +1672,8 @@ ExamineVolume(as)
  *	As advertised.
  *------------------------------------------------------------------------
  */
-static
-SetFields(as)
-     register struct cmd_syndesc *as;
+static int
+SetFields(register struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_int32 vcode = 0;
@@ -1759,9 +1756,8 @@ SetFields(as)
  *	As advertised.
  *------------------------------------------------------------------------
  */
-static
-volOnline(as)
-     register struct cmd_syndesc *as;
+static int
+volOnline(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 server, partition, volid;
     afs_int32 code, err = 0;
@@ -1820,7 +1816,7 @@ volOnline(as)
  *------------------------------------------------------------------------
  */
 static int
-volOffline(register struct cmd_syndesc *as)
+volOffline(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 server, partition, volid;
     afs_int32 code, err = 0;
@@ -1870,7 +1866,7 @@ volOffline(register struct cmd_syndesc *as)
 }
 
 static int
-CreateVolume(register struct cmd_syndesc *as)
+CreateVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum;
     char part[10];
@@ -1978,9 +1974,8 @@ DeleteAll(entry)
     return error;
 }
 
-static
-DeleteVolume(as)
-     struct cmd_syndesc *as;
+static int
+DeleteVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 err, code = 0;
     afs_int32 server = 0, partition = -1, volid;
@@ -2100,8 +2095,7 @@ DeleteVolume(as)
 
 #define TESTM	0		/* set for move space tests, clear for production */
 static
-MoveVolume(as)
-     register struct cmd_syndesc *as;
+MoveVolume(register struct cmd_syndesc *as, void *arock)
 {
 
     afs_int32 volid, fromserver, toserver, frompart, topart;
@@ -2227,9 +2221,8 @@ MoveVolume(as)
     return 0;
 }
 
-static
-CopyVolume(as)
-     register struct cmd_syndesc *as;
+static int
+CopyVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 volid, fromserver, toserver, frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
@@ -2374,9 +2367,8 @@ CopyVolume(as)
 }
 
 
-static
-ShadowVolume(as)
-     register struct cmd_syndesc *as;
+static int
+ShadowVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 volid, fromserver, toserver, frompart, topart, tovolid;
     afs_int32 code, err, flags;
@@ -2571,9 +2563,8 @@ ShadowVolume(as)
 }
 
 
-static
-CloneVolume(as)
-     register struct cmd_syndesc *as;
+static int
+CloneVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 server, part, volid, cloneid, voltype;
     char partName[10], *volname;
@@ -2679,9 +2670,8 @@ CloneVolume(as)
 }
 
 
-static
-BackupVolume(as)
-     register struct cmd_syndesc *as;
+static int
+BackupVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aserver, apart, vtype, code, err;
     struct nvldbentry entry;
@@ -2748,9 +2738,8 @@ BackupVolume(as)
     return 0;
 }
 
-static
-ReleaseVolume(as)
-     register struct cmd_syndesc *as;
+static int
+ReleaseVolume(register struct cmd_syndesc *as, void *arock)
 {
 
     struct nvldbentry entry;
@@ -2795,9 +2784,7 @@ ReleaseVolume(as)
 }
 
 static
-DumpVolume(as)
-     register struct cmd_syndesc *as;
-
+DumpVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
@@ -2896,10 +2883,8 @@ retry_dump:
 #define TS_KEEP	2
 #define TS_NEW	3
 
-static
-RestoreVolume(as)
-     register struct cmd_syndesc *as;
-
+static int
+RestoreVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aparentid, aserver, apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
@@ -3188,10 +3173,8 @@ RestoreVolume(as)
     return 0;
 }
 
-static
-LockReleaseCmd(as)
-     register struct cmd_syndesc *as;
-
+static int
+LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, code, err;
 
@@ -3215,9 +3198,8 @@ LockReleaseCmd(as)
     return 0;
 }
 
-static
-AddSite(as)
-     register struct cmd_syndesc *as;
+static int
+AddSite(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aserver, apart, code, err;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
@@ -3264,9 +3246,8 @@ AddSite(as)
     return 0;
 }
 
-static
-RemoveSite(as)
-     register struct cmd_syndesc *as;
+static int
+RemoveSite(register struct cmd_syndesc *as, void *arock)
 {
 
     afs_int32 avolid, aserver, apart, code, err;
@@ -3316,9 +3297,8 @@ RemoveSite(as)
     return 0;
 }
 
-static
-ChangeLocation(as)
-     register struct cmd_syndesc *as;
+static int
+ChangeLocation(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aserver, apart, code, err;
     char apartName[10];
@@ -3364,9 +3344,8 @@ ChangeLocation(as)
     return 0;
 }
 
-static
-ListPartitions(as)
-     register struct cmd_syndesc *as;
+static int
+ListPartitions(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 aserver, code;
     struct partList dummyPartList;
@@ -3530,8 +3509,7 @@ XCompareVolID(a_obj1P, a_obj2P)
  *------------------------------------------------------------------------*/
 
 static
-ListVolumes(as)
-     register struct cmd_syndesc *as;
+ListVolumes(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
     afs_int32 aserver, code;
@@ -3686,9 +3664,8 @@ ListVolumes(as)
     return 0;
 }
 
-static
-SyncVldb(as)
-     register struct cmd_syndesc *as;
+static int
+SyncVldb(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum = 0, code;	/* part name */
     char part[10];
@@ -3765,10 +3742,8 @@ SyncVldb(as)
     return 0;
 }
 
-static
-SyncServer(as)
-     register struct cmd_syndesc *as;
-
+static int
+SyncServer(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum, code;	/* part name */
     char part[10];
@@ -3846,10 +3821,8 @@ VolumeInfoCmd(name)
     return 0;
 }
 
-static
-VolumeZap(as)
-     register struct cmd_syndesc *as;
-
+static int
+VolumeZap(register struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_int32 volid, code, server, part, zapbackupid = 0, backupid = 0, err;
@@ -3933,10 +3906,8 @@ VolumeZap(as)
     return 0;
 }
 
-static
-VolserStatus(as)
-     register struct cmd_syndesc *as;
-
+static int
+VolserStatus(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 server, code;
     transDebugInfo *pntr, *oldpntr;
@@ -4026,9 +3997,8 @@ VolserStatus(as)
     return 0;
 }
 
-static
-RenameVolume(as)
-     register struct cmd_syndesc *as;
+static int
+RenameVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code1, code2, code;
     struct nvldbentry entry;
@@ -4147,10 +4117,8 @@ GetVolumeInfo(volid, server, part, voltype, rentry)
     return -1;
 }
 
-static
-DeleteEntry(as)
-     register struct cmd_syndesc *as;
-
+static int
+DeleteEntry(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_int32 avolid;
@@ -4372,9 +4340,8 @@ char *p1,*p2;
 }
 
 */
-static
-ListVLDB(as)
-     struct cmd_syndesc *as;
+static int
+ListVLDB(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_int32 aserver, code;
@@ -4543,9 +4510,8 @@ ListVLDB(as)
     return 0;
 }
 
-static
-BackSys(as)
-     register struct cmd_syndesc *as;
+static int
+BackSys(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart = 0, avolid;
     afs_int32 aserver = 0, code, aserver1, apart1;
@@ -4873,9 +4839,8 @@ BackSys(as)
     return 0;
 }
 
-static
-UnlockVLDB(as)
-     register struct cmd_syndesc *as;
+static int
+UnlockVLDB(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_int32 aserver, code;
@@ -5003,9 +4968,8 @@ PrintInt64Size(afs_uint64 in)
     return output;
 }
 
-static
-PartitionInfo(as)
-     register struct cmd_syndesc *as;
+static int
+PartitionInfo(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_int32 aserver, code;
@@ -5088,10 +5052,8 @@ PartitionInfo(as)
     return 0;
 }
 
-static
-ChangeAddr(as)
-     register struct cmd_syndesc *as;
-
+static int
+ChangeAddr(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 ip1, ip2, vcode;
     int remove = 0;
@@ -5238,9 +5200,8 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
     return;
 }
 
-static
-ListAddrs(as)
-     register struct cmd_syndesc *as;
+static int
+ListAddrs(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 vcode;
     afs_int32 i, noresolve = 0, printuuid = 0;
@@ -5346,10 +5307,8 @@ ListAddrs(as)
     return 0;
 }
 
-static
-LockEntry(as)
-     register struct cmd_syndesc *as;
-
+static int
+LockEntry(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, vcode, err;
 
@@ -5374,10 +5333,8 @@ LockEntry(as)
     return 0;
 }
 
-static
-ConvertRO(as)
-     register struct cmd_syndesc *as;
-
+static int
+ConvertRO(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 partition = -1;
     afs_int32 server, volid, code, i, same;
@@ -5540,9 +5497,8 @@ ConvertRO(as)
     return code;
 }
 
-static
-Sizes(as)
-     register struct cmd_syndesc *as;
+static int
+Sizes(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i;
     struct nvldbentry entry;
@@ -5641,10 +5597,8 @@ PrintDiagnostics(astring, acode)
 }
 
 
-static
-MyBeforeProc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     register char *tcell;
     register afs_int32 code;
@@ -5714,7 +5668,7 @@ main(argc, argv)
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("create", CreateVolume, 0, "create a new volume");
+    ts = cmd_CreateSyntax("create", CreateVolume, NULL, "create a new volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "volume name");
@@ -5725,14 +5679,14 @@ main(argc, argv)
 #endif
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("remove", DeleteVolume, 0, "delete a volume");
+    ts = cmd_CreateSyntax("remove", DeleteVolume, NULL, "delete a volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
 
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("move", MoveVolume, 0, "move a volume");
+    ts = cmd_CreateSyntax("move", MoveVolume, NULL, "move a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-fromserver", CMD_SINGLE, 0, "machine name on source");
     cmd_AddParm(ts, "-frompartition", CMD_SINGLE, 0,
@@ -5745,7 +5699,7 @@ main(argc, argv)
 		"copy live volume without cloning");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("copy", CopyVolume, 0, "copy a volume");
+    ts = cmd_CreateSyntax("copy", CopyVolume, NULL, "copy a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID on source");
     cmd_AddParm(ts, "-fromserver", CMD_SINGLE, 0, "machine name on source");
     cmd_AddParm(ts, "-frompartition", CMD_SINGLE, 0,
@@ -5763,7 +5717,7 @@ main(argc, argv)
 		"copy live volume without cloning");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("shadow", ShadowVolume, 0,
+    ts = cmd_CreateSyntax("shadow", ShadowVolume, NULL,
 			  "make or update a shadow volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID on source");
     cmd_AddParm(ts, "-fromserver", CMD_SINGLE, 0, "machine name on source");
@@ -5787,12 +5741,12 @@ main(argc, argv)
 		"do incremental update if target exists");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("backup", BackupVolume, 0,
+    ts = cmd_CreateSyntax("backup", BackupVolume, NULL,
 			  "make backup of a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("clone", CloneVolume, 0,
+    ts = cmd_CreateSyntax("clone", CloneVolume, NULL,
 			  "make clone of a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "server");
@@ -5807,13 +5761,13 @@ main(argc, argv)
 		"make clone volume read-only, not readwrite");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("release", ReleaseVolume, 0, "release a volume");
+    ts = cmd_CreateSyntax("release", ReleaseVolume, NULL, "release a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"force a complete release");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("dump", DumpVolume, 0, "dump a volume");
+    ts = cmd_CreateSyntax("dump", DumpVolume, NULL, "dump a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "dump file");
@@ -5825,7 +5779,7 @@ main(argc, argv)
 		"omit unchanged directories from an incremental dump");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("restore", RestoreVolume, 0, "restore a volume");
+    ts = cmd_CreateSyntax("restore", RestoreVolume, NULL, "restore a volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of volume to be restored");
@@ -5843,12 +5797,12 @@ main(argc, argv)
 		"dump | keep | new");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("unlock", LockReleaseCmd, 0,
+    ts = cmd_CreateSyntax("unlock", LockReleaseCmd, NULL,
 			  "release lock on VLDB entry for a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("changeloc", ChangeLocation, 0,
+    ts = cmd_CreateSyntax("changeloc", ChangeLocation, NULL,
 			  "change an RW volume's location in the VLDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0,
 		"machine name for new location");
@@ -5857,25 +5811,25 @@ main(argc, argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("addsite", AddSite, 0, "add a replication site");
+    ts = cmd_CreateSyntax("addsite", AddSite, NULL, "add a replication site");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name for new site");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0,
 		"partition name for new site");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("remsite", RemoveSite, 0,
+    ts = cmd_CreateSyntax("remsite", RemoveSite, NULL,
 			  "remove a replication site");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("listpart", ListPartitions, 0, "list partitions");
+    ts = cmd_CreateSyntax("listpart", ListPartitions, NULL, "list partitions");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("listvol", ListVolumes, 0,
+    ts = cmd_CreateSyntax("listvol", ListVolumes, NULL,
 			  "list volumes on server (bypass VLDB)");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
@@ -5892,20 +5846,20 @@ main(argc, argv)
 #endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("syncvldb", SyncVldb, 0,
+    ts = cmd_CreateSyntax("syncvldb", SyncVldb, NULL,
 			  "synchronize VLDB with server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("syncserv", SyncServer, 0,
+    ts = cmd_CreateSyntax("syncserv", SyncServer, NULL,
 			  "synchronize server with VLDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("examine", ExamineVolume, 0,
+    ts = cmd_CreateSyntax("examine", ExamineVolume, NULL,
 			  "everything about the volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
@@ -5917,7 +5871,7 @@ main(argc, argv)
     COMMONPARMS;
     cmd_CreateAlias(ts, "volinfo");
 
-    ts = cmd_CreateSyntax("setfields", SetFields, 0,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
 			  "change volume info fields");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL, "quota (KB)");
@@ -5925,7 +5879,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-clearVolUpCounter", CMD_FLAG, CMD_OPTIONAL, "clear volUpdateCounter");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("offline", volOffline, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("offline", volOffline, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
@@ -5933,13 +5887,13 @@ main(argc, argv)
     cmd_AddParm(ts, "-busy", CMD_FLAG, CMD_OPTIONAL, "busy volume");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("online", volOnline, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("online", volOnline, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("zap", VolumeZap, 0,
+    ts = cmd_CreateSyntax("zap", VolumeZap, NULL,
 			  "delete the volume, don't bother with VLDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
@@ -5950,17 +5904,17 @@ main(argc, argv)
 		"also delete backup volume if one is found");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("status", VolserStatus, 0,
+    ts = cmd_CreateSyntax("status", VolserStatus, NULL,
 			  "report on volser status");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("rename", RenameVolume, 0, "rename a volume");
+    ts = cmd_CreateSyntax("rename", RenameVolume, NULL, "rename a volume");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, 0, "old volume name ");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "new volume name ");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("listvldb", ListVLDB, 0,
+    ts = cmd_CreateSyntax("listvldb", ListVLDB, NULL,
 			  "list volumes in the VLDB");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
@@ -5972,7 +5926,7 @@ main(argc, argv)
 		"do not alphabetically sort the volume names");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("backupsys", BackSys, 0, "en masse backups");
+    ts = cmd_CreateSyntax("backupsys", BackSys, NULL, "en masse backups");
     cmd_AddParm(ts, "-prefix", CMD_LIST, CMD_OPTIONAL,
 		"common prefix on volume(s)");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
@@ -5984,7 +5938,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL, "no action");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("delentry", DeleteEntry, 0,
+    ts = cmd_CreateSyntax("delentry", DeleteEntry, NULL,
 			  "delete VLDB entry for a volume");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "volume name or ID");
     cmd_AddParm(ts, "-prefix", CMD_SINGLE, CMD_OPTIONAL,
@@ -5995,7 +5949,7 @@ main(argc, argv)
 		"no execute");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("partinfo", PartitionInfo, 0,
+    ts = cmd_CreateSyntax("partinfo", PartitionInfo, NULL,
 			  "list partition information");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
@@ -6003,18 +5957,18 @@ main(argc, argv)
 		"print storage summary");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("unlockvldb", UnlockVLDB, 0,
+    ts = cmd_CreateSyntax("unlockvldb", UnlockVLDB, NULL,
 			  "unlock all the locked entries in the VLDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("lock", LockEntry, 0,
+    ts = cmd_CreateSyntax("lock", LockEntry, NULL,
 			  "lock VLDB entry for a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("changeaddr", ChangeAddr, 0,
+    ts = cmd_CreateSyntax("changeaddr", ChangeAddr, NULL,
 			  "change the IP address of a file server");
     cmd_AddParm(ts, "-oldaddr", CMD_SINGLE, 0, "original IP address");
     cmd_AddParm(ts, "-newaddr", CMD_SINGLE, CMD_OPTIONAL, "new IP address");
@@ -6022,7 +5976,7 @@ main(argc, argv)
 		"remove the IP address from the VLDB");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("listaddrs", ListAddrs, 0,
+    ts = cmd_CreateSyntax("listaddrs", ListAddrs, NULL,
 			  "list the IP address of all file servers registered in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, CMD_OPTIONAL, "uuid of server");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_OPTIONAL, "address of host");
@@ -6032,7 +5986,7 @@ main(argc, argv)
 		"print uuid of hosts");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("convertROtoRW", ConvertRO, 0,
+    ts = cmd_CreateSyntax("convertROtoRW", ConvertRO, NULL,
 			  "convert a RO volume into a RW volume (after loss of old RW volume)");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
@@ -6040,7 +5994,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "don't ask");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("size", Sizes, 0,
+    ts = cmd_CreateSyntax("size", Sizes, NULL,
 			  "obtain various sizes of the volume.");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");

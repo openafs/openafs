@@ -2210,10 +2210,7 @@ static void scout_AdoptThresholds(a_thresh_item)
  *	Initializes this program.
  *------------------------------------------------------------------------*/
 
-static int scoutInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+static int scoutInit(struct cmd_syndesc *as, void *arock)
 {				/*scoutInit */
 
     static char rn[] = "scoutInit";	/*Routine name */
@@ -2349,7 +2346,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", scoutInit, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", scoutInit, NULL, "initialize the program");
     cmd_AddParm(ts, "-server", CMD_LIST, CMD_REQUIRED,
 		"FileServer name(s) to monitor");
     cmd_AddParm(ts, "-basename", CMD_SINGLE, CMD_OPTIONAL,

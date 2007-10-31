@@ -386,10 +386,7 @@ test_objects(pkg)
  *------------------------------------------------------------------------*/
 
 static int
-object_testInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+object_testInit(struct cmd_syndesc *as, void *arock)
 {				/*object_testInit */
 
     static char rn[] = "object_testInit";	/*Routine name */
@@ -442,7 +439,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", object_testInit, 0,
+    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL,
 			  "Initialize the program");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

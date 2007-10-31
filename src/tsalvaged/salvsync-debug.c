@@ -101,12 +101,12 @@ static char * program_type_to_string(afs_int32);
 static char * state_code_to_string(afs_int32);
 
 
-static int OpStats(struct cmd_syndesc * as, char * rock);
-static int OpSalvage(struct cmd_syndesc * as, char * rock);
-static int OpCancel(struct cmd_syndesc * as, char * rock);
-static int OpCancelAll(struct cmd_syndesc * as, char * rock);
-static int OpRaisePrio(struct cmd_syndesc * as, char * rock);
-static int OpQuery(struct cmd_syndesc * as, char * rock);
+static int OpStats(struct cmd_syndesc * as, void * rock);
+static int OpSalvage(struct cmd_syndesc * as, void * rock);
+static int OpCancel(struct cmd_syndesc * as, void * rock);
+static int OpCancelAll(struct cmd_syndesc * as, void * rock);
+static int OpRaisePrio(struct cmd_syndesc * as, void * rock);
+static int OpQuery(struct cmd_syndesc * as, void * rock);
 
 
 #ifndef AFS_NT40_ENV
@@ -153,25 +153,25 @@ main(int argc, char **argv)
     }
 
 
-    ts = cmd_CreateSyntax("stats", OpStats, 0, "get salvageserver statistics (SALVSYNC_NOP opcode)");
+    ts = cmd_CreateSyntax("stats", OpStats, NULL, "get salvageserver statistics (SALVSYNC_NOP opcode)");
     COMMON_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "nop");
 
-    ts = cmd_CreateSyntax("salvage", OpSalvage, 0, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
+    ts = cmd_CreateSyntax("salvage", OpSalvage, NULL, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
     SALV_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("cancel", OpCancel, 0, "cancel a salvage (SALVSYNC_CANCEL opcode)");
+    ts = cmd_CreateSyntax("cancel", OpCancel, NULL, "cancel a salvage (SALVSYNC_CANCEL opcode)");
     SALV_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, 0, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
+    ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, NULL, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
     SALV_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "rp");
 
-    ts = cmd_CreateSyntax("query", OpQuery, 0, "query salvage status (SALVSYNC_QUERY opcode)");
+    ts = cmd_CreateSyntax("query", OpQuery, NULL, "query salvage status (SALVSYNC_QUERY opcode)");
     SALV_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
-    ts = cmd_CreateSyntax("kill", OpCancelAll, 0, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
+    ts = cmd_CreateSyntax("kill", OpCancelAll, NULL, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
     COMMON_PARMS_DECL(ts);
 
     err = cmd_Dispatch(argc, argv);
@@ -395,7 +395,7 @@ state_code_to_string(afs_int32 state)
 }
 
 static int
-OpStats(struct cmd_syndesc * as, char * rock)
+OpStats(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -408,7 +408,7 @@ OpStats(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-OpSalvage(struct cmd_syndesc * as, char * rock)
+OpSalvage(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -421,7 +421,7 @@ OpSalvage(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-OpCancel(struct cmd_syndesc * as, char * rock)
+OpCancel(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -434,7 +434,7 @@ OpCancel(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-OpCancelAll(struct cmd_syndesc * as, char * rock)
+OpCancelAll(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -447,7 +447,7 @@ OpCancelAll(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-OpRaisePrio(struct cmd_syndesc * as, char * rock)
+OpRaisePrio(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 
@@ -460,7 +460,7 @@ OpRaisePrio(struct cmd_syndesc * as, char * rock)
 }
 
 static int
-OpQuery(struct cmd_syndesc * as, char * rock)
+OpQuery(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
 

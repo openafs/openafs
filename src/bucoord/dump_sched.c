@@ -56,13 +56,11 @@ extern char *whoami;
  *	parm 1: expiration date (list)
  */
 
-afs_int32
-bc_AddDumpCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_AddDumpCmd(struct cmd_syndesc *as, void *arock)
 {
     register char *dname;	/* dump schedule name */
-    register afs_int32 code;
+    register int code;
     afs_int32 expType, expDate;
     register struct cmd_item *ti;
     udbClientTextP ctPtr;
@@ -146,16 +144,14 @@ bc_AddDumpCmd(as, arock)
  *	delete a dump schedule
  */
 
-afs_int32
-bc_DeleteDumpCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DeleteDumpCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is vol set name
      * parm 1 is dump schedule name
      */
     register char *dname;
-    register afs_int32 code;
+    register int code;
     udbClientTextP ctPtr;
 
     /* lock schedules and check validity */
@@ -265,11 +261,11 @@ ListDumpSchedule(register struct bc_dumpSchedule *adump, int alevel)
  *      ignored
  */
 
-afs_int32
-bc_ListDumpScheduleCmd(struct cmd_syndesc *as, char *arock)
+int
+bc_ListDumpScheduleCmd(struct cmd_syndesc *as, void *arock)
 {
     /* no parms */
-    afs_int32 code;
+    int code;
     register struct bc_dumpSchedule *tdump;
 
     /* first check to see if schedules must be updated */
@@ -298,17 +294,15 @@ bc_ListDumpScheduleCmd(struct cmd_syndesc *as, char *arock)
  *	parm 1: expiration date (list)
  */
 
-afs_int32
-bc_SetExpCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_SetExpCmd(struct cmd_syndesc *as, void *arock)
 {
     register char *dname;	/* dump schedule name */
     register struct cmd_item *ti;
     struct bc_dumpSchedule *node, *parent;
     afs_int32 expType, expDate;
     udbClientTextP ctPtr;
-    register afs_int32 code;
+    register int code;
 
     afs_int32 bc_ParseExpiration();
 
