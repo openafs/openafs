@@ -23,6 +23,7 @@ RCSID
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
 #include "des/des.h"
+#include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"
 #include "afs/cellconfig.h"
@@ -42,7 +43,9 @@ RCSID
 #include <netdb.h>
 #endif
 #include <string.h>
+#include <stdio.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include <rx/rxkad.h>
 #include <rx/rx.h>
 #include "cellconfig.h"
@@ -52,9 +55,7 @@ RCSID
 
 /* return a null security object if nothing else can be done */
 static afs_int32
-QuickAuth(astr, aindex)
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
+QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 {
     register struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
@@ -66,10 +67,9 @@ QuickAuth(astr, aindex)
 #if !defined(UKERNEL)
 /* Return an appropriate security class and index */
 afs_int32
-afsconf_ServerAuth(adir, astr, aindex)
-     register struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
+afsconf_ServerAuth(register struct afsconf_dir *adir, 
+		   struct rx_securityClass **astr, 
+		   afs_int32 *aindex)
 {
     register struct rx_securityClass *tclass;
 
@@ -89,11 +89,10 @@ afsconf_ServerAuth(adir, astr, aindex)
 #endif /* !defined(UKERNEL) */
 
 static afs_int32
-GenericAuth(adir, astr, aindex, enclevel)
-     struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
-     rxkad_level enclevel;
+GenericAuth(struct afsconf_dir *adir, 
+	    struct rx_securityClass **astr, 
+	    afs_int32 *aindex, 
+	    rxkad_level enclevel)
 {
     char tbuffer[256];
     struct ktc_encryptionKey key, session;
@@ -160,10 +159,9 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(adir, astr, aindex)
-     struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
+afsconf_ClientAuthSecure(struct afsconf_dir *adir, 
+			 struct rx_securityClass **astr, 
+			 afs_int32 *aindex)
 {
     afs_int32 rc;
 

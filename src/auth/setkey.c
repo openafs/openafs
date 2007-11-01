@@ -28,6 +28,7 @@ RCSID
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
+#include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"
 #include <afs/afsutil.h>
@@ -37,9 +38,7 @@ static int char2hex(char c);
 static int hex2char(char c);
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     struct afsconf_dir *tdir;
     register afs_int32 code;
