@@ -855,7 +855,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -962,7 +962,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=amd64'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
