@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -68,7 +68,14 @@ extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 
-static SYNC_client_state salvsync_client_state = { -1, 2041, SALVSYNC_PROTO_VERSION, 5, 120 };
+static SYNC_client_state salvsync_client_state = 
+    { -1,                     /* file descriptor */
+      2041,                   /* port */
+      SALVSYNC_PROTO_VERSION, /* protocol version */
+      5,                      /* connect retry limit */
+      120,                    /* hard timeout */
+      "SALVSYNC",             /* protocol name string */
+    };
 
 /*
  * client-side routines
@@ -97,6 +104,9 @@ afs_int32
 SALVSYNC_askSalv(SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code;
+    SALVSYNC_command_hdr * scom = com->payload.buf;
+
+    scom->hdr_version = SALVSYNC_PROTO_VERSION;
 
     VSALVSYNC_LOCK;
     code = SYNC_ask(&salvsync_client_state, com, res);
@@ -150,7 +160,50 @@ SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int command, int reason,
     com.hdr.reason = reason;
     com.hdr.command_len = sizeof(com.hdr) + sizeof(scom);
     scom.volume = volume;
+    scom.parent = volume;
     scom.prio = prio;
+
+    if (partName) {
+	strlcpy(scom.partName, partName, sizeof(scom.partName));
+    } else {
+	scom.partName[0] = '\0';
+    }
+
+    return SALVSYNC_askSalv(&com, res);
+}
+
+afs_int32
+SALVSYNC_LinkVolume(VolumeId parent, 
+		    VolumeId clone,
+		    char * partName,
+		    SYNC_response * res_in)
+{
+    SYNC_command com;
+    SYNC_response res_l, *res;
+    SALVSYNC_command_hdr scom;
+    SALVSYNC_response_hdr sres;
+    int n, tot;
+
+    memset(&com, 0, sizeof(com));
+    memset(&scom, 0, sizeof(scom));
+
+    if (res_in) {
+	res = res_in;
+    } else {
+	memset(&res_l, 0, sizeof(res_l));
+	memset(&sres, 0, sizeof(sres));
+	res_l.payload.buf = (void *) &sres;
+	res_l.payload.len = sizeof(sres);
+	res = &res_l;
+    }
+
+    com.payload.buf = (void *) &scom;
+    com.payload.len = sizeof(scom);
+    com.hdr.command = SALVSYNC_OP_LINK;
+    com.hdr.reason = SALVSYNC_REASON_WHATEVER;
+    com.hdr.command_len = sizeof(com.hdr) + sizeof(scom);
+    scom.volume = clone;
+    scom.parent = parent;
 
     if (partName) {
 	strlcpy(scom.partName, partName, sizeof(scom.partName));

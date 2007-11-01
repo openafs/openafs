@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 /*
@@ -380,12 +380,27 @@ FSYNC_com(int fd)
 	return;
     }
 
+    if (com.recv_len < sizeof(com.hdr)) {
+	Log("FSSYNC_com:  invalid protocol message length (%u)\n", com.recv_len);
+	res.hdr.response = SYNC_COM_ERROR;
+	res.hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
     if (com.hdr.proto_version != FSYNC_PROTO_VERSION) {
 	Log("FSYNC_com:  invalid protocol version (%u)\n", com.hdr.proto_version);
 	res.hdr.response = SYNC_COM_ERROR;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	goto respond;
     }
+
+    if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
+	res.hdr.response = SYNC_OK;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
 
     VOL_LOCK;
     switch (com.hdr.command) {
@@ -407,10 +422,6 @@ FSYNC_com(int fd)
     case FSYNC_VOL_STATS_HDR:
     case FSYNC_VOL_STATS_VLRU:
 	res.hdr.response = FSYNC_com_StatsOp(fd, &com, &res);
-	break;
-    case SYNC_COM_CHANNEL_CLOSE:
-	res.hdr.response = SYNC_OK;
-	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	break;
     default:
 	res.hdr.response = SYNC_BAD_COMMAND;

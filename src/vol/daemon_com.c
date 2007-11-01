@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -109,7 +109,8 @@ SYNC_connect(SYNC_client_state * state)
 	if (!*timeout)
 	    break;
 	if (!(*timeout & 1))
-	    Log("SYNC_connect temporary failure (will retry)\n");
+	    Log("SYNC_connect: temporary failure on circuit '%s' (will retry)\n",
+		state->proto_name);
 	SYNC_disconnect(state);
 	sleep(*timeout++);
     }
@@ -148,26 +149,16 @@ SYNC_closeChannel(SYNC_client_state * state)
 
     com.hdr.command = SYNC_COM_CHANNEL_CLOSE;
     com.hdr.command_len = sizeof(SYNC_command_hdr);
+    com.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 
     /* in case the other end dropped, don't do any retries */
     state->retry_limit = 0;
     state->hard_timeout = 0;
 
-    code = SYNC_ask(state, &com, &res);
-
-    if (code == SYNC_OK) {
-	if (res.hdr.response != SYNC_OK) {
-	    Log("SYNC_closeChannel:  channel shutdown request denied; closing socket anyway\n");
-	} else if (!(res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN)) {
-	    Log("SYNC_closeChannel:  channel shutdown request mishandled by server\n");
-	}
-    } else {
-	Log("SYNC_closeChannel: channel communications problem");
-    }
-
+    SYNC_ask(state, &com, &res);
     SYNC_disconnect(state);
 
-    return code;
+    return SYNC_OK;
 }
 
 int
@@ -242,21 +233,28 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 	if (code == SYNC_OK) {
 	    break;
 	} else if (code == SYNC_BAD_COMMAND) {
-	    Log("SYNC_ask: protocol mismatch; make sure fileserver, volserver, salvageserver and salvager are same version\n");
+	    Log("SYNC_ask: protocol mismatch on circuit '%s'; make sure "
+		"fileserver, volserver, salvageserver and salvager are same "
+		"version\n", state->proto_name);
 	    break;
-	} else if (code == SYNC_COM_ERROR) {
-	    Log("SYNC_ask: protocol communications failure; attempting reconnect to server\n");
+	} else if ((code == SYNC_COM_ERROR) && (tries < state->retry_limit)) {
+	    Log("SYNC_ask: protocol communications failure on circuit '%s'; "
+		"attempting reconnect to server\n", state->proto_name);
 	    SYNC_reconnect(state);
 	    /* try again */
 	} else {
-	    /* unknown (probably protocol-specific) response code, pass it up to the caller, and let them deal with it */
+	    /* 
+	     * unknown (probably protocol-specific) response code, pass it up to 
+	     * the caller, and let them deal with it 
+	     */
 	    break;
 	}
     }
 
     if (code == SYNC_COM_ERROR) {
-	Log("SYNC_ask: fatal protocol error; disabling sync protocol to server running on port %d until next server restart\n", 
-	    state->port);
+	Log("SYNC_ask: fatal protocol error on circuit '%s'; disabling sync "
+	    "protocol to server running on port %d until next server restart\n", 
+	    state->proto_name, state->port);
 	state->fatal_error = 1;
     }
 
@@ -274,13 +272,15 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #endif
 
     if (state->fd == -1) {
-	Log("SYNC_ask:  invalid sync file descriptor\n");
+	Log("SYNC_ask:  invalid sync file descriptor on circuit '%s'\n",
+	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
 
     if (com->hdr.command_len > SYNC_PROTO_MAX_LEN) {
-	Log("SYNC_ask:  internal SYNC buffer too small; please file a bug\n");
+	Log("SYNC_ask:  internal SYNC buffer too small on circuit '%s'; "
+	    "please file a bug\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
@@ -296,22 +296,34 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #ifdef AFS_NT40_ENV
     n = send(state->fd, buf, com->hdr.command_len, 0);
     if (n != com->hdr.command_len) {
-	Log("SYNC_ask:  write failed\n");
+	Log("SYNC_ask:  write failed on circuit '%s'\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
+	goto done;
+    }
+
+    if (com->hdr.command == SYNC_COM_CHANNEL_CLOSE) {
+	/* short circuit close channel requests */
+	res->hdr.response = SYNC_OK;
 	goto done;
     }
 
     n = recv(state->fd, buf, SYNC_PROTO_MAX_LEN, 0);
     if (n == 0 || (n < 0 && WSAEINTR != WSAGetLastError())) {
-	Log("SYNC_ask:  No response\n");
+	Log("SYNC_ask:  No response on circuit '%s'\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
 #else /* !AFS_NT40_ENV */
     n = write(state->fd, buf, com->hdr.command_len);
     if (com->hdr.command_len != n) {
-	Log("SYNC_ask: write failed\n");
+	Log("SYNC_ask: write failed on circuit '%s'\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
+	goto done;
+    }
+
+    if (com->hdr.command == SYNC_COM_CHANNEL_CLOSE) {
+	/* short circuit close channel requests */
+	res->hdr.response = SYNC_OK;
 	goto done;
     }
 
@@ -327,7 +339,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
     }
     n = readv(state->fd, iov, iovcnt);
     if (n == 0 || (n < 0 && errno != EINTR)) {
-	Log("SYNC_ask: No response\n");
+	Log("SYNC_ask: No response on circuit '%s'\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
@@ -336,7 +348,8 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
     res->recv_len = n;
 
     if (n < sizeof(res->hdr)) {
-	Log("SYNC_ask:  response too short\n");
+	Log("SYNC_ask:  response too short on circuit '%s'\n", 
+	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
@@ -345,7 +358,8 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #endif
 
     if ((n - sizeof(res->hdr)) > res->payload.len) {
-	Log("SYNC_ask:  response too long\n");
+	Log("SYNC_ask:  response too long on circuit '%s'\n", 
+	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
@@ -354,12 +368,13 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #endif
 
     if (res->hdr.response_len != n) {
-	Log("SYNC_ask:  length field in response inconsistent\n");
+	Log("SYNC_ask:  length field in response inconsistent "
+	    "on circuit '%s'\n", state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
     if (res->hdr.response == SYNC_DENIED) {
-	Log("SYNC_ask: negative response\n");
+	Log("SYNC_ask: negative response on circuit '%s'\n", state->proto_name);
     }
 
   done:

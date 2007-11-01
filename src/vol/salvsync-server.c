@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -112,24 +112,34 @@ struct Lock SALVSYNC_handler_lock;
  * SALVSYNC is a feature specific to the demand attach fileserver
  */
 
+static int AllocNode(struct SalvageQueueNode ** node);
+
 static int AddToSalvageQueue(struct SalvageQueueNode * node);
 static void DeleteFromSalvageQueue(struct SalvageQueueNode * node);
 static void AddToPendingQueue(struct SalvageQueueNode * node);
 static void DeleteFromPendingQueue(struct SalvageQueueNode * node);
 static struct SalvageQueueNode * LookupPendingCommand(SALVSYNC_command_hdr * qry);
 static struct SalvageQueueNode * LookupPendingCommandByPid(int pid);
-static void RaiseCommandPrio(struct SalvageQueueNode * node, SALVSYNC_command_hdr * com);
+static void UpdateCommandPrio(struct SalvageQueueNode * node);
+static void HandlePrio(struct SalvageQueueNode * clone, 
+		       struct SalvageQueueNode * parent,
+		       afs_uint32 new_prio);
 
-static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName);
-static struct SalvageQueueNode * LookupNodeByCommand(SALVSYNC_command_hdr * qry);
+static int LinkNode(struct SalvageQueueNode * parent,
+		    struct SalvageQueueNode * clone);
+
+static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName, 
+					    struct SalvageQueueNode ** parent);
+static struct SalvageQueueNode * LookupNodeByCommand(SALVSYNC_command_hdr * qry,
+						     struct SalvageQueueNode ** parent);
 static void AddNodeToHash(struct SalvageQueueNode * node);
 static void DeleteNodeFromHash(struct SalvageQueueNode * node);
 
 static afs_int32 SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res);
 static afs_int32 SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res);
-static afs_int32 SALVSYNC_com_RaisePrio(SALVSYNC_command * com, SALVSYNC_response * res);
 static afs_int32 SALVSYNC_com_Query(SALVSYNC_command * com, SALVSYNC_response * res);
 static afs_int32 SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_response * res);
+static afs_int32 SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res);
 
 
 extern int LogLevel;
@@ -139,21 +149,24 @@ extern pthread_mutex_t vol_salvsync_mutex;
 static int AcceptSd = -1;		/* Socket used by server for accepting connections */
 
 
-/* be careful about rearranging elements in this structure.
- * element placement has been optimized for locality of reference
- * in SALVSYNC_getWork() */
+/**
+ * queue of all volumes waiting to be salvaged.
+ */
 struct SalvageQueue {
     volatile int total_len;
-    volatile afs_int32 last_insert;    /* id of last partition to have a salvage node insert */
+    volatile afs_int32 last_insert;    /**< id of last partition to have a salvage node inserted */
     volatile int len[VOLMAXPARTS+1];
-    volatile struct rx_queue part[VOLMAXPARTS+1];
+    volatile struct rx_queue part[VOLMAXPARTS+1]; /**< per-partition queues of pending salvages */
     pthread_cond_t cv;
 };
 static struct SalvageQueue salvageQueue;  /* volumes waiting to be salvaged */
 
+/**
+ * queue of all volumes currently being salvaged.
+ */
 struct QueueHead {
-    volatile struct rx_queue q;
-    volatile int len;
+    volatile struct rx_queue q;  /**< queue of salvages in progress */
+    volatile int len;            /**< length of in-progress queue */
     pthread_cond_t queue_change_cv;
 };
 static struct QueueHead pendingQueue;  /* volumes being salvaged */
@@ -183,7 +196,8 @@ static int partition_salvaging[VOLMAXPARTS+1];
 static struct QueueHead  SalvageHashTable[VSHASH_SIZE];
 
 static struct SalvageQueueNode *
-LookupNode(afs_uint32 vid, char * partName)
+LookupNode(afs_uint32 vid, char * partName,
+	   struct SalvageQueueNode ** parent)
 {
     struct rx_queue *qp, *nqp;
     struct SalvageQueueNode *vsp;
@@ -200,13 +214,24 @@ LookupNode(afs_uint32 vid, char * partName)
     if (queue_IsEnd(&SalvageHashTable[idx], qp)) {
 	vsp = NULL;
     }
+
+    if (parent) {
+	if (vsp) {
+	    *parent = (vsp->type == SALVSYNC_VOLGROUP_CLONE) ?
+		vsp->volgroup.parent : vsp;
+	} else {
+	    *parent = NULL;
+	}
+    }
+
     return vsp;
 }
 
 static struct SalvageQueueNode *
-LookupNodeByCommand(SALVSYNC_command_hdr * qry)
+LookupNodeByCommand(SALVSYNC_command_hdr * qry,
+		    struct SalvageQueueNode ** parent)
 {
-    return LookupNode(qry->volume, qry->partName);
+    return LookupNode(qry->volume, qry->partName, parent);
 }
 
 static void
@@ -420,9 +445,23 @@ SALVSYNC_com(int fd)
 	return;
     }
 
+    if (com.recv_len < sizeof(com.hdr)) {
+	Log("SALVSYNC_com:  invalid protocol message length (%u)\n", com.recv_len);
+	res.hdr.response = SYNC_COM_ERROR;
+	res.hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
     if (com.hdr.proto_version != SALVSYNC_PROTO_VERSION) {
 	Log("SALVSYNC_com:  invalid protocol version (%u)\n", com.hdr.proto_version);
 	res.hdr.response = SYNC_COM_ERROR;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
+    if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
+	res.hdr.response = SYNC_OK;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	goto respond;
     }
@@ -440,6 +479,7 @@ SALVSYNC_com(int fd)
     case SALVSYNC_NOP:
 	break;
     case SALVSYNC_SALVAGE:
+    case SALVSYNC_RAISEPRIO:
 	res.hdr.response = SALVSYNC_com_Salvage(&scom, &sres);
 	break;
     case SALVSYNC_CANCEL:
@@ -450,17 +490,13 @@ SALVSYNC_com(int fd)
 	/* cancel all queued salvages */
 	res.hdr.response = SALVSYNC_com_CancelAll(&scom, &sres);
 	break;
-    case SALVSYNC_RAISEPRIO:
-	/* raise the priority of a salvage */
-	res.hdr.response = SALVSYNC_com_RaisePrio(&scom, &sres);
-	break;
     case SALVSYNC_QUERY:
 	/* query whether a volume is done salvaging */
 	res.hdr.response = SALVSYNC_com_Query(&scom, &sres);
 	break;
-    case SYNC_COM_CHANNEL_CLOSE:
-	res.hdr.response = SYNC_OK;
-	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+    case SALVSYNC_OP_LINK:
+	/* link a clone to its parent in the scheduler */
+	res.hdr.response = SALVSYNC_com_Link(&scom, &sres);
 	break;
     default:
 	res.hdr.response = SYNC_BAD_COMMAND;
@@ -482,7 +518,8 @@ static afs_int32
 SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
-    struct SalvageQueueNode * node;
+    struct SalvageQueueNode * node, * clone;
+    int hash = 0;
 
     if (SYNC_verifyProtocolString(com->sop->partName, sizeof(com->sop->partName))) {
 	code = SYNC_FAILED;
@@ -490,41 +527,41 @@ SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
 	goto done;
     }
 
-    node = LookupNodeByCommand(com->sop);
+    clone = LookupNodeByCommand(com->sop, &node);
 
-    /* schedule a salvage for this volume */
-    if (node != NULL) {
-	switch (node->state) {
-	case SALVSYNC_STATE_ERROR:
-	case SALVSYNC_STATE_DONE:
-	    memcpy(&node->command.com, com->hdr, sizeof(SYNC_command_hdr));
-	    memcpy(&node->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
-	    node->command.sop.prio = 0;
-	    if (AddToSalvageQueue(node)) {
-		code = SYNC_DENIED;
-	    }
-	    break;
-	default:
-	    break;
-	}
-    } else {
-	node = (struct SalvageQueueNode *) malloc(sizeof(struct SalvageQueueNode));
-	if (node == NULL) {
+    if (node == NULL) {
+	if (AllocNode(&node)) {
 	    code = SYNC_DENIED;
+	    res->hdr->reason = SYNC_REASON_NOMEM;
 	    goto done;
 	}
-	memset(node, 0, sizeof(struct SalvageQueueNode));
-	memcpy(&node->command.com, com->hdr, sizeof(SYNC_command_hdr));
-	memcpy(&node->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
-	AddNodeToHash(node);
+	clone = node;
+	hash = 1;
+    }
+
+    HandlePrio(clone, node, com->sop->prio);
+
+    switch (node->state) {
+    case SALVSYNC_STATE_QUEUED:
+	UpdateCommandPrio(node);
+	break;
+
+    case SALVSYNC_STATE_ERROR:
+    case SALVSYNC_STATE_DONE:
+    case SALVSYNC_STATE_UNKNOWN:
+	memcpy(&clone->command.com, com->hdr, sizeof(SYNC_command_hdr));
+	memcpy(&clone->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
 	if (AddToSalvageQueue(node)) {
-	    /* roll back */
-	    DeleteNodeFromHash(node);
-	    free(node);
-	    node = NULL;
 	    code = SYNC_DENIED;
-	    goto done;
 	}
+	break;
+
+    default:
+	break;
+    }
+
+    if (hash) {
+	AddNodeToHash(node);
     }
 
     res->hdr->flags |= SALVSYNC_FLAG_VOL_STATS_VALID;
@@ -547,7 +584,7 @@ SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res)
 	goto done;
     }
 
-    node = LookupNodeByCommand(com->sop);
+    node = LookupNodeByCommand(com->sop, NULL);
 
     if (node == NULL) {
 	res->sop->state = SALVSYNC_STATE_UNKNOWN;
@@ -556,7 +593,8 @@ SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res)
 	res->hdr->flags |= SALVSYNC_FLAG_VOL_STATS_VALID;
 	res->sop->prio = node->command.sop.prio;
 	res->sop->state = node->state;
-	if (node->state == SALVSYNC_STATE_QUEUED) {
+	if ((node->type == SALVSYNC_VOLGROUP_PARENT) && 
+	    (node->state == SALVSYNC_STATE_QUEUED)) {
 	    DeleteFromSalvageQueue(node);
 	}
     }
@@ -580,11 +618,14 @@ SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_response * res)
     return SYNC_OK;
 }
 
+/**
+ * link a queue node for a clone to its parent volume.
+ */
 static afs_int32
-SALVSYNC_com_RaisePrio(SALVSYNC_command * com, SALVSYNC_response * res)
+SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
-    struct SalvageQueueNode * node;
+    struct SalvageQueueNode * clone, * parent;
 
     if (SYNC_verifyProtocolString(com->sop->partName, sizeof(com->sop->partName))) {
 	code = SYNC_FAILED;
@@ -592,35 +633,31 @@ SALVSYNC_com_RaisePrio(SALVSYNC_command * com, SALVSYNC_response * res)
 	goto done;
     }
 
-    node = LookupNodeByCommand(com->sop);
-
-    /* raise the priority of a salvage */
-    if (node == NULL) {
-	code = SALVSYNC_com_Salvage(com, res);
-	node = LookupNodeByCommand(com->sop);
-    } else {
-	switch (node->state) {
-	case SALVSYNC_STATE_QUEUED:
-	    RaiseCommandPrio(node, com->sop);
-	    break;
-	case SALVSYNC_STATE_SALVAGING:
-	    break;
-	case SALVSYNC_STATE_ERROR:
-	case SALVSYNC_STATE_DONE:
-	    code = SALVSYNC_com_Salvage(com, res);
-	    break;
-	default:
-	    break;
-	}
+    /* lookup clone's salvage scheduling node */
+    clone = LookupNodeByCommand(com->sop, NULL);
+    if (clone == NULL) {
+	code = SYNC_DENIED;
+	res->hdr->reason = SALVSYNC_REASON_ERROR;
+	goto done;
     }
 
-    if (node == NULL) {
-	res->sop->prio = 0;
-	res->sop->state = SALVSYNC_STATE_UNKNOWN;
-    } else {
-	res->hdr->flags |= SALVSYNC_FLAG_VOL_STATS_VALID;
-	res->sop->prio = node->command.sop.prio;
-	res->sop->state = node->state;
+    /* lookup parent's salvage scheduling node */
+    parent = LookupNode(com->sop->parent, com->sop->partName, NULL);
+    if (parent == NULL) {
+	if (AllocNode(&parent)) {
+	    code = SYNC_DENIED;
+	    res->hdr->reason = SYNC_REASON_NOMEM;
+	    goto done;
+	}
+	memcpy(&parent->command.com, com->hdr, sizeof(SYNC_command_hdr));
+	memcpy(&parent->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
+	parent->command.sop.volume = parent->command.sop.parent = com->sop->parent;
+	AddNodeToHash(parent);
+    }
+
+    if (LinkNode(parent, clone)) {
+	code = SYNC_DENIED;
+	goto done;
     }
 
  done:
@@ -639,7 +676,7 @@ SALVSYNC_com_Query(SALVSYNC_command * com, SALVSYNC_response * res)
 	goto done;
     }
 
-    node = LookupNodeByCommand(com->sop);
+    LookupNodeByCommand(com->sop, &node);
 
     /* query whether a volume is done salvaging */
     if (node == NULL) {
@@ -791,9 +828,127 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
 }
 
 static int
+AllocNode(struct SalvageQueueNode ** node_out)
+{
+    int code = 0;
+    struct SalvageQueueNode * node;
+
+    *node_out = node = (struct SalvageQueueNode *) 
+	malloc(sizeof(struct SalvageQueueNode));
+    if (node == NULL) {
+	code = 1;
+	goto done;
+    }
+
+    memset(node, 0, sizeof(struct SalvageQueueNode));
+    node->type = SALVSYNC_VOLGROUP_PARENT;
+    node->state = SALVSYNC_STATE_UNKNOWN;
+
+ done:
+    return code;
+}
+
+static int
+LinkNode(struct SalvageQueueNode * parent,
+	 struct SalvageQueueNode * clone)
+{
+    int code = 0;
+    int idx;
+
+    /* check for attaching a clone to a clone */
+    if (parent->type != SALVSYNC_VOLGROUP_PARENT) {
+	code = 1;
+	goto done;
+    }
+
+    /* check for pre-existing registration and openings */
+    for (idx = 0; idx < VOLMAXTYPES; idx++) {
+	if (parent->volgroup.children[idx] == clone) {
+	    goto linked;
+	}
+	if (parent->volgroup.children[idx] == NULL) {
+	    break;
+	}
+    }
+    if (idx == VOLMAXTYPES) {
+	code = 1;
+	goto done;
+    }
+
+    /* link parent and child */
+    parent->volgroup.children[idx] = clone;
+    clone->type = SALVSYNC_VOLGROUP_CLONE;
+    clone->volgroup.parent = parent;
+
+
+ linked:
+    switch (clone->state) {
+    case SALVSYNC_STATE_QUEUED:
+	DeleteFromSalvageQueue(clone);
+
+    case SALVSYNC_STATE_SALVAGING:
+	switch (parent->state) {
+	case SALVSYNC_STATE_UNKNOWN:
+	case SALVSYNC_STATE_ERROR:
+	case SALVSYNC_STATE_DONE:
+	    parent->command.sop.prio = clone->command.sop.prio;
+	    AddToSalvageQueue(parent);
+	    break;
+
+	case SALVSYNC_STATE_QUEUED:
+	    if (clone->command.sop.prio) {
+		parent->command.sop.prio += clone->command.sop.prio;
+		UpdateCommandPrio(parent);
+	    }
+	    break;
+
+	default:
+	    break;
+	}
+	break;
+
+    default:
+	break;
+    }
+
+ done:
+    return code;
+}
+
+static void
+HandlePrio(struct SalvageQueueNode * clone, 
+	   struct SalvageQueueNode * node,
+	   afs_uint32 new_prio)
+{
+    afs_uint32 delta;
+
+    switch (node->state) {
+    case SALVSYNC_STATE_ERROR:
+    case SALVSYNC_STATE_DONE:
+    case SALVSYNC_STATE_UNKNOWN:
+	node->command.sop.prio = 0;
+	break;
+    }
+
+    if (new_prio < clone->command.sop.prio) {
+	/* strange. let's just set our delta to 1 */
+	delta = 1;
+    } else {
+	delta = new_prio - clone->command.sop.prio;
+    }
+
+    if (clone->type == SALVSYNC_VOLGROUP_CLONE) {
+	clone->command.sop.prio = new_prio;
+    }
+
+    node->command.sop.prio += delta;
+}
+
+static int
 AddToSalvageQueue(struct SalvageQueueNode * node)
 {
     afs_int32 id;
+    struct SalvageQueueNode * last = NULL;
 
     id = volutil_GetPartitionID(node->command.sop.partName);
     if (id < 0 || id > VOLMAXPARTS) {
@@ -803,12 +958,25 @@ AddToSalvageQueue(struct SalvageQueueNode * node)
 	/* don't enqueue salvage requests for unmounted partitions */
 	return 1;
     }
+    if (queue_IsOnQueue(node)) {
+	return 0;
+    }
+
+    if (queue_IsNotEmpty(&salvageQueue.part[id])) {
+	last = queue_Last(&salvageQueue.part[id], SalvageQueueNode);
+    }
     queue_Append(&salvageQueue.part[id], node);
     salvageQueue.len[id]++;
     salvageQueue.total_len++;
     salvageQueue.last_insert = id;
     node->partition_id = id;
     node->state = SALVSYNC_STATE_QUEUED;
+
+    /* reorder, if necessary */
+    if (last && last->command.sop.prio < node->command.sop.prio) {
+	UpdateCommandPrio(node);
+    }
+
     assert(pthread_cond_broadcast(&salvageQueue.cv) == 0);
     return 0;
 }
@@ -880,21 +1048,22 @@ LookupPendingCommandByPid(int pid)
 
 /* raise the priority of a previously scheduled salvage */
 static void
-RaiseCommandPrio(struct SalvageQueueNode * node, SALVSYNC_command_hdr * com)
+UpdateCommandPrio(struct SalvageQueueNode * node)
 {
     struct SalvageQueueNode *np, *nnp;
     afs_int32 id;
+    afs_uint32 prio;
 
     assert(queue_IsOnQueue(node));
 
-    node->command.sop.prio = com->prio;
+    prio = node->command.sop.prio;
     id = node->partition_id;
-    if (queue_First(&salvageQueue.part[id], SalvageQueueNode)->command.sop.prio < com->prio) {
+    if (queue_First(&salvageQueue.part[id], SalvageQueueNode)->command.sop.prio < prio) {
 	queue_Remove(node);
 	queue_Prepend(&salvageQueue.part[id], node);
     } else {
 	for (queue_ScanBackwardsFrom(&salvageQueue.part[id], node, np, nnp, SalvageQueueNode)) {
-	    if (np->command.sop.prio > com->prio)
+	    if (np->command.sop.prio > prio)
 		break;
 	}
 	if (queue_IsEnd(&salvageQueue.part[id], np)) {
@@ -926,7 +1095,6 @@ SALVSYNC_getWork(void)
     while (!salvageQueue.total_len || !DiskPartitionList) {
       assert(pthread_cond_wait(&salvageQueue.cv, &vol_glock_mutex) == 0);
     }
-
 
     /* 
      * short circuit for simple case where only one partition has
@@ -1004,6 +1172,8 @@ static void
 SALVSYNC_doneWork_r(struct SalvageQueueNode * node, int result)
 {
     afs_int32 partid;
+    int idx;
+
     DeleteFromPendingQueue(node);
     partid = node->partition_id;
     if (partid >=0 && partid <= VOLMAXPARTS) {
@@ -1011,8 +1181,16 @@ SALVSYNC_doneWork_r(struct SalvageQueueNode * node, int result)
     }
     if (result == 0) {
 	node->state = SALVSYNC_STATE_DONE;
-    } else {
+    } else if (result != SALSRV_EXIT_VOLGROUP_LINK) {
 	node->state = SALVSYNC_STATE_ERROR;
+    }
+
+    if (node->type == SALVSYNC_VOLGROUP_PARENT) {
+	for (idx = 0; idx < VOLMAXTYPES; idx++) {
+	    if (node->volgroup.children[idx]) {
+		node->volgroup.children[idx]->state = node->state;
+	    }
+	}
     }
 }
 

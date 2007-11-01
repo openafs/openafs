@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -529,6 +529,9 @@ SalvageServer(void)
 	node = SALVSYNC_getWork();
 	assert(node != NULL);
 
+	Log("dispatching child to salvage volume %u...\n",
+	    node->command.sop.parent);
+
 	VOL_LOCK;
 	/* find a slot */
 	for (slot = 0; slot < Parallel; slot++) {
@@ -572,7 +575,8 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     int ret;
     struct DiskPartition * partP;
 
-    VChildProcReconnectFS();
+    /* do not allow further forking inside salvager */
+    canfork = 0;
 
     /* do not attempt to close parent's logFile handle as
      * another thread may have held the lock on the FILE
@@ -587,7 +591,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 	ShowLog = 0;
     }
 
-    if (node->command.sop.volume <= 0) {
+    if (node->command.sop.parent <= 0) {
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");
 	return 1;
     }
@@ -600,9 +604,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     }
 
     /* Salvage individual volume; don't notify fs */
-    SalvageFileSys1(partP, node->command.sop.volume);
-
-    VDisconnectFS();
+    SalvageFileSys1(partP, node->command.sop.parent);
 
     fclose(logFile);
     return 0;
@@ -654,7 +656,7 @@ SalvageChildReaperThread(void * args)
 
 	/* ok, we've reaped a child */
 	current_workers--;
-	SALVSYNC_doneWorkByPid(pid, 0);
+	SALVSYNC_doneWorkByPid(pid, WEXITSTATUS(status));
 	assert(pthread_cond_broadcast(&worker_cv) == 0);
     }
 
@@ -671,7 +673,9 @@ Reap_Child(char *prog, int * pid, int * status)
 	*pid = ret;
         if (WCOREDUMP(*status))
 	    Log("\"%s\" core dumped!\n", prog);
-	if (WIFSIGNALED(*status) != 0 || WEXITSTATUS(*status) != 0)
+	if ((WIFSIGNALED(*status) != 0) ||
+	    ((WEXITSTATUS(*status) != 0) &&
+	     (WEXITSTATUS(*status) != SALSRV_EXIT_VOLGROUP_LINK)))
 	    Log("\"%s\" (pid=%d) terminated abnormally!\n", prog, ret);
     } else {
 	Log("wait returned -1\n");
