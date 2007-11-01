@@ -1768,6 +1768,7 @@ h_GetHost_r(struct rx_connection *tcon)
 						   &FS_HostUUID);
 		    rx_PutConnection(cb_conn);
 		    cb_conn=NULL;
+		    H_LOCK;
 		    if (code == 0) {
 			ViceLog(25,
 				("InitCallBackState3 success on host %x (%s:%d)\n",
