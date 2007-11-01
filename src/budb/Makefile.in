@@ -90,16 +90,16 @@ budb_server: $(SERVER_OBJS) ${LIBS}
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
 budb.cs.c: budb.rg
-	${RXGEN} -u -C -o $@ ${srcdir}/budb.rg
+	${RXGEN} -A -u -C -o $@ ${srcdir}/budb.rg
 
 budb.ss.c: budb.rg
-	${RXGEN} -S -o $@ ${srcdir}/budb.rg
+	${RXGEN} -A -S -o $@ ${srcdir}/budb.rg
 
 budb.xdr.c: budb.rg
-	${RXGEN} -c -o $@ ${srcdir}/budb.rg
+	${RXGEN} -A -c -o $@ ${srcdir}/budb.rg
 
 budb.h: budb.rg
-	${RXGEN} -u -h -o $@ ${srcdir}/budb.rg
+	${RXGEN} -A -u -h -o $@ ${srcdir}/budb.rg
 
 budb.cs.c: budb.h
 budb.xdr.c: budb.h

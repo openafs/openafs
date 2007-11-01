@@ -37,16 +37,16 @@ utils.o: utils.c update.h global.h
 client.o server.o: update.h global.h AFS_component_version_number.c
 
 update.cs.c: update.xg
-	${RXGEN} -u -C -o $@ ${srcdir}/update.xg
+	${RXGEN} -A -u -C -o $@ ${srcdir}/update.xg
 
 update.ss.c: update.xg
-	${RXGEN} -S -o $@ ${srcdir}/update.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/update.xg
 
 update.xdr.c: update.xg
-	${RXGEN} -c -o $@ ${srcdir}/update.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/update.xg
 
 update.h: update.xg
-	${RXGEN} -u -h -o $@ ${srcdir}/update.xg
+	${RXGEN} -A -u -h -o $@ ${srcdir}/update.xg
 
 update.cs.c: update.h
 upcate.ss.c: update.h

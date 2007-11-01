@@ -29,16 +29,16 @@ ${TOP_LIBDIR}/librxstat.a: librxstat.a
 # Build targets
 #
 rxstat.cs.c: rxstat.xg
-	${RXGEN} -x -C -o $@ ${srcdir}/rxstat.xg
+	${RXGEN} -A -x -C -o $@ ${srcdir}/rxstat.xg
 
 rxstat.ss.c: rxstat.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/rxstat.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/rxstat.xg
 
 rxstat.xdr.c: rxstat.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/rxstat.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/rxstat.xg
 
 rxstat.h: rxstat.xg
-	${RXGEN} -x -h -o $@ ${srcdir}/rxstat.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/rxstat.xg
 
 rxstat.xdr.c: rxstat.h
 rxstat.cs.c: rxstat.h
