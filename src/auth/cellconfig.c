@@ -305,7 +305,10 @@ IsClientConfigDirectory(const char *path)
 static int
 afsconf_Check(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
+#ifdef AFS_NT40_ENV
+    char *p;
+#endif
     struct stat tstat;
     register afs_int32 code;
 
@@ -351,9 +354,11 @@ afsconf_Check(register struct afsconf_dir *adir)
 static int
 afsconf_Touch(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
+#else
+    char *p;
 #endif
 
     adir->timeRead = 0;		/* just in case */
@@ -1276,7 +1281,8 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 
 /* get latest key */
 afs_int32
-afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
+afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, 
+		     struct ktc_encryptionKey *akey)
 {
     register int i;
     int maxa;
@@ -1317,8 +1323,9 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
 
 /* get a particular key */
 int
-afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, char *akey)
+afsconf_GetKey(void *rock, int avno, struct ktc_encryptionKey *akey)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) rock;
     register int i, maxa;
     register struct afsconf_key *tk;
     register afs_int32 code;

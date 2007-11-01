@@ -35,6 +35,7 @@ RCSID
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"
 
@@ -43,8 +44,7 @@ RCSID
 */
 
 static int
-VerifyEntries(aci)
-     register struct afsconf_cell *aci;
+VerifyEntries(register struct afsconf_cell *aci)
 {
     register int i;
     register struct hostent *th;
@@ -85,10 +85,8 @@ VerifyEntries(aci)
    */
 
 int
-afsconf_SetCellInfo(adir, apath, acellInfo)
-     struct afsconf_dir *adir;
-     char *apath;
-     struct afsconf_cell *acellInfo;
+afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath, 
+		    struct afsconf_cell *acellInfo)
 {
     afs_int32 code;
 
@@ -97,11 +95,9 @@ afsconf_SetCellInfo(adir, apath, acellInfo)
 }
 
 int
-afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
-     struct afsconf_dir *adir;
-     char *apath;
-     struct afsconf_cell *acellInfo;
-     char clones[];
+afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, 
+			    const char *apath, 
+			    struct afsconf_cell *acellInfo, char clones[])
 {
     register afs_int32 code;
     register int fd;

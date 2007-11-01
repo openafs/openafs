@@ -46,13 +46,10 @@ RCSID
 #include "keys.h"
 #include "afs/audit.h"
 
-afs_int32 afsconf_SuperUser();
-
 #if !defined(UKERNEL)
 int
-afsconf_CheckAuth(adir, acall)
-     register struct rx_call *acall;
-     register struct afsconf_dir *adir;
+afsconf_CheckAuth(register struct afsconf_dir *adir, 
+		  register struct rx_call *acall)
 {
     LOCK_GLOBAL_MUTEX;
     return ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
@@ -61,8 +58,7 @@ afsconf_CheckAuth(adir, acall)
 #endif /* !defined(UKERNEL) */
 
 static int
-GetNoAuthFlag(adir)
-     struct afsconf_dir *adir;
+GetNoAuthFlag(struct afsconf_dir *adir)
 {
     if (access(AFSDIR_SERVER_NOAUTH_FILEPATH, 0) == 0) {
 	osi_audit(NoAuthEvent, 0, AUD_END);	/* some random server is running noauth */
@@ -73,8 +69,7 @@ GetNoAuthFlag(adir)
 
 
 int
-afsconf_GetNoAuthFlag(adir)
-     struct afsconf_dir *adir;
+afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 {
     int rc;
 
@@ -85,9 +80,7 @@ afsconf_GetNoAuthFlag(adir)
 }
 
 void
-afsconf_SetNoAuthFlag(adir, aflag)
-     struct afsconf_dir *adir;
-     int aflag;
+afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag)
 {
     register afs_int32 code;
 
@@ -112,9 +105,7 @@ afsconf_SetNoAuthFlag(adir, aflag)
 
 /* deletes a user from the UserList file */
 int
-afsconf_DeleteUser(adir, auser)
-     struct afsconf_dir *adir;
-     register char *auser;
+afsconf_DeleteUser(struct afsconf_dir *adir, register char *auser)
 {
     char tbuffer[1024];
     char nbuffer[1024];
@@ -204,11 +195,8 @@ afsconf_DeleteUser(adir, auser)
 
 /* returns nth super user from the UserList file */
 int
-afsconf_GetNthUser(adir, an, abuffer, abufferLen)
-     struct afsconf_dir *adir;
-     afs_int32 an;
-     char *abuffer;
-     afs_int32 abufferLen;
+afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer, 
+		   afs_int32 abufferLen)
 {
     char tbuffer[256];
     register FILE *tf;
@@ -246,9 +234,7 @@ afsconf_GetNthUser(adir, an, abuffer, abufferLen)
 
 /* returns true iff user is in the UserList file */
 static int
-FindUser(adir, auser)
-     struct afsconf_dir *adir;
-     register char *auser;
+FindUser(struct afsconf_dir *adir, register char *auser)
 {
     char tbuffer[256];
     register bufio_p bp;
@@ -280,9 +266,7 @@ FindUser(adir, auser)
 
 /* add a user to the user list, checking for duplicates */
 int
-afsconf_AddUser(adir, aname)
-     struct afsconf_dir *adir;
-     char *aname;
+afsconf_AddUser(struct afsconf_dir *adir, char *aname)
 {
     FILE *tf;
     register afs_int32 code;
@@ -316,12 +300,8 @@ afsconf_AddUser(adir, aname)
 	otherwise returns NULL. The resulting string should be immediately
 	copied to other storage prior to release of mutex. */
 static char *
-CompFindUser(adir, name, sep, inst, realm)
-     struct afsconf_dir *adir;
-     char *name;
-     char *sep;
-     char *inst;
-     char *realm;
+CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst, 
+	     char *realm)
 {
     static char fullname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
 
@@ -360,10 +340,7 @@ CompFindUser(adir, name, sep, inst, realm)
     if a pointer is passed.
 */
 afs_int32
-afsconf_SuperUser(adir, acall, namep)
-     struct afsconf_dir *adir;
-     struct rx_call *acall;
-     char *namep;
+afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -429,7 +406,7 @@ afsconf_SuperUser(adir, acall, namep)
 	tmp = tcell_l;
 	while (*tmp) {
 	    *tmp = tolower(*tmp);
-	    *tmp++;
+	    tmp++;
 	}
 
 	/* determine local cell name. It's static, so will only get

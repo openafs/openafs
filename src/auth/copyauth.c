@@ -28,9 +28,8 @@ RCSID
 
 char whoami[256];
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     char localName[64];
     register afs_int32 code;
