@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -53,7 +53,7 @@
 /* general reason codes */
 #define SYNC_REASON_NONE                 0
 #define SYNC_REASON_MALFORMED_PACKET     1
-
+#define SYNC_REASON_NOMEM                2
 
 /* SYNC protocol flags
  *
@@ -84,6 +84,7 @@ typedef struct SYNC_client_state {
     afs_uint32 proto_version;
     int retry_limit;            /* max number of times for SYNC_ask to retry */
     afs_int32 hard_timeout;     /* upper limit on time to keep trying */
+    char * proto_name;          /**< sync protocol associated with this conn */
     byte fatal_error;           /* fatal error on this client conn */
 } SYNC_client_state;
 

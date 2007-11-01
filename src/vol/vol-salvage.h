@@ -211,10 +211,9 @@ typedef struct {
     struct InodeSummary *svgp_inodeSummaryp;
     int svgp_count;
 } SVGParms_t;
-#define canfork 0
-#else /* AFS_NT40_ENV */
-#define canfork 1
 #endif /* AFS_NT40_ENV */
+
+extern int canfork;
 
 
 /* prototypes */
