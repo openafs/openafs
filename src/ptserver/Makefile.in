@@ -75,29 +75,29 @@ ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
 ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
 
 ptint.cs.c: ptint.xg
-	${RXGEN} -x -C -u -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -C -A -u -o $@ ${srcdir}/ptint.xg
 
 ptint.ss.c: ptint.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -S -A -o $@ ${srcdir}/ptint.xg
 
 ptint.xdr.c: ptint.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -c -A -o $@ ${srcdir}/ptint.xg
 
 ptint.h: ptint.xg
-	${RXGEN} -x -h -u -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -h -A -u -o $@ ${srcdir}/ptint.xg
 
 ptint.cs.c: ptint.h
 ptint.ss.c: ptint.h
 ptint.xdr.c: ptint.h
 
 Kptint.cs.c: ptint.xg Kptint.h
-	${RXGEN} -x -k -C -o Kptint.cs.c ${srcdir}/ptint.xg
+	${RXGEN} -x -k -A -C -o Kptint.cs.c ${srcdir}/ptint.xg
  
 Kptint.xdr.c: ptint.xg
-	${RXGEN} -x -k -c -o Kptint.xdr.c ${srcdir}/ptint.xg
+	${RXGEN} -x -k -A -c -o Kptint.xdr.c ${srcdir}/ptint.xg
  
 Kptint.h: ptint.xg
-	${RXGEN} -x -k -h -o Kptint.h ${srcdir}/ptint.xg
+	${RXGEN} -x -k -A -h -o Kptint.h ${srcdir}/ptint.xg
 
 display.o: display.c ${INCLS}
 

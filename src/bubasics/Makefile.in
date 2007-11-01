@@ -18,16 +18,16 @@ libbubasics.a: $(OBJS) AFS_component_version_number.o
 	${RANLIB} libbubasics.a
 
 butc.xdr.c: butc.xg
-	${RXGEN} -c -o $@ ${srcdir}/butc.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/butc.xg
 
 butc.ss.c: butc.xg
-	${RXGEN} -S -o $@ ${srcdir}/butc.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/butc.xg
 
 butc.cs.c: butc.xg
-	${RXGEN} -C -o $@ ${srcdir}/butc.xg
+	${RXGEN} -A -C -o $@ ${srcdir}/butc.xg
 
 butc.h: butc.xg
-	${RXGEN} -h -o $@ ${srcdir}/butc.xg
+	${RXGEN} -A -h -o $@ ${srcdir}/butc.xg
 
 butc.xdr.c: butc.h
 butc.cs.c: butc.h

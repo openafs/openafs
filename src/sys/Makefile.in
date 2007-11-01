@@ -95,16 +95,16 @@ rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
-	${RXGEN} -C -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -C -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.ss.c: rmtsys.xg
-	${RXGEN} -S -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.xdr.c: rmtsys.xg
-	${RXGEN} -c -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.h: rmtsys.xg
-	${RXGEN} -h -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -h -o $@ ${srcdir}/rmtsys.xg
 
 rmtsysd: rmtsysd.o libsys.a
 	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
