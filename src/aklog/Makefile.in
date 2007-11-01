@@ -16,13 +16,17 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
 SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
 OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
 
-all: aklog asetkey
+all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
 
 asetkey: asetkey.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+
+klog: klog.o skipwrap.o ${AFSLIBS}
+	${CC} -o $@ ${CFLAGS} skipwrap.o klog.o ${AKLIBS} ${AFSLIBS} \
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/librx.a ${XLIBS}
 
 #
 # Installation targets
@@ -49,7 +53,7 @@ ${DEST}/root.server/usr/afs/bin/asetkey: asetkey
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o ${OBJS} aklog asetkey
+	$(RM) -f *.o ${OBJS} aklog asetkey klog
 
 include ../config/Makefile.version
 
