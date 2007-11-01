@@ -29,67 +29,67 @@ libafsint.a: ${OBJS} AFS_component_version_number.o
 afsaux.o: afsaux.c afsint.h
 
 Kcallback.cs.c: common.xg afscbint.xg Kvice.h Kcallback.h
-	${RXGEN} -x -k -C -o Kcallback.cs.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -k -C -o Kcallback.cs.c ${srcdir}/afscbint.xg
 
 Kcallback.ss.c: common.xg afscbint.xg Kvice.h Kcallback.h
-	${RXGEN} -x -k -S -o Kcallback.ss.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -k -S -o Kcallback.ss.c ${srcdir}/afscbint.xg
 
 Kcallback.xdr.c: common.xg afscbint.xg Kvice.h Kcallback.h
-	${RXGEN} -x -k -y -c -o Kcallback.xdr.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -k -y -c -o Kcallback.xdr.c ${srcdir}/afscbint.xg
 
 Kvice.cs.c: common.xg afsint.xg Kvice.h
-	${RXGEN} -x -k -C -o Kvice.cs.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -k -C -o Kvice.cs.c ${srcdir}/afsint.xg
 
 Kvice.ss.c: common.xg afsint.xg Kvice.h
-	${RXGEN} -x -k -S -o Kvice.ss.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -k -S -o Kvice.ss.c ${srcdir}/afsint.xg
 
 Kvice.xdr.c: common.xg afsint.xg
-	${RXGEN} -x -k -c -o Kvice.xdr.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -k -c -o Kvice.xdr.c ${srcdir}/afsint.xg
 
 Kvice.h: common.xg afsint.xg
-	${RXGEN} -x -k -h -o Kvice.h ${srcdir}/afsint.xg
+	${RXGEN} -A -x -k -h -o Kvice.h ${srcdir}/afsint.xg
 
 Kpagcb.cs.c: pagcb.xg Kpagcb.h
-	${RXGEN} -x -k -C -o Kpagcb.cs.c ${srcdir}/pagcb.xg
+	${RXGEN} -A -x -k -C -o Kpagcb.cs.c ${srcdir}/pagcb.xg
 
 Kpagcb.ss.c: pagcb.xg Kpagcb.h
-	${RXGEN} -x -k -S -o Kpagcb.ss.c ${srcdir}/pagcb.xg
+	${RXGEN} -A -x -k -S -o Kpagcb.ss.c ${srcdir}/pagcb.xg
 
 Kpagcb.xdr.c: pagcb.xg
-	${RXGEN} -x -k -c -o Kpagcb.xdr.c ${srcdir}/pagcb.xg
+	${RXGEN} -A -x -k -c -o Kpagcb.xdr.c ${srcdir}/pagcb.xg
 
 Kpagcb.h: pagcb.xg
-	${RXGEN} -x -k -h -o Kpagcb.h ${srcdir}/pagcb.xg
+	${RXGEN} -A -x -k -h -o Kpagcb.h ${srcdir}/pagcb.xg
 
 pagcb.h: pagcb.xg
-	${RXGEN} -x -h -o pagcb.h ${srcdir}/pagcb.xg
+	${RXGEN} -A -x -h -o pagcb.h ${srcdir}/pagcb.xg
 
 Kcallback.h: common.xg afscbint.xg
-	${RXGEN} -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
 
 afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
-	${RXGEN} -x -C -o afscbint.cs.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -C -o afscbint.cs.c ${srcdir}/afscbint.xg
 
 afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h
-	${RXGEN} -x -S -o afscbint.ss.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -S -o afscbint.ss.c ${srcdir}/afscbint.xg
 
 afscbint.xdr.c: common.xg afscbint.xg afsint.h afscbint.h
-	${RXGEN} -x -y -c -o afscbint.xdr.c ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -y -c -o afscbint.xdr.c ${srcdir}/afscbint.xg
 
 afsint.cs.c: common.xg afsint.xg afsint.h
-	${RXGEN} -x -C -o afsint.cs.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -C -o afsint.cs.c ${srcdir}/afsint.xg
 
 afsint.ss.c: common.xg afsint.xg afsint.h
-	${RXGEN} -x -S -o afsint.ss.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -S -o afsint.ss.c ${srcdir}/afsint.xg
 
 afsint.xdr.c: common.xg afsint.xg
-	${RXGEN} -x -c -o afsint.xdr.c ${srcdir}/afsint.xg
+	${RXGEN} -A -x -c -o afsint.xdr.c ${srcdir}/afsint.xg
 
 afsint.h: common.xg afsint.xg
-	${RXGEN} -x -h -o afsint.h ${srcdir}/afsint.xg
+	${RXGEN} -A -x -h -o afsint.h ${srcdir}/afsint.xg
 
 afscbint.h: common.xg afscbint.xg
-	${RXGEN} -x -h -o afscbint.h ${srcdir}/afscbint.xg
+	${RXGEN} -A -x -h -o afscbint.h ${srcdir}/afscbint.xg
 
 #
 # Installation targets
