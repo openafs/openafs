@@ -47,6 +47,9 @@ RCSID
 #include <vm/seg_map.h>
 #include <vm/seg_vn.h>
 #include <vm/rm.h>
+#if defined(AFS_SUN511_ENV)
+#include <sys/vfs_opreg.h>
+#endif
 #include <sys/modctl.h>
 #include <sys/syscall.h>
 #include <sys/debug.h>
@@ -1441,7 +1444,56 @@ extern int gafs_fid(), gafs_readlink(), fs_setfl(), afs_pathconf();
 extern int afs_lockctl();
 extern void gafs_inactive();
 
-#ifdef AFS_SUN510_ENV
+#if defined(AFS_SUN511_ENV)
+/* The following list must always be NULL-terminated */
+const fs_operation_def_t afs_vnodeops_template[] = {
+    VOPNAME_OPEN,		{ .vop_open = gafs_open },
+    VOPNAME_CLOSE,		{ .vop_close = gafs_close },
+    VOPNAME_READ,		{ .vop_read = afs_vmread },
+    VOPNAME_WRITE,		{ .vop_write = afs_vmwrite },
+    VOPNAME_IOCTL,		{ .vop_ioctl = afs_ioctl },
+    VOPNAME_SETFL,		{ .vop_setfl = fs_setfl },
+    VOPNAME_GETATTR,		{ .vop_getattr = gafs_getattr },
+    VOPNAME_SETATTR,		{ .vop_setattr = gafs_setattr },
+    VOPNAME_ACCESS,		{ .vop_access = gafs_access },
+    VOPNAME_LOOKUP,		{ .vop_lookup = gafs_lookup },
+    VOPNAME_CREATE,		{ .vop_create = gafs_create },
+    VOPNAME_REMOVE,		{ .vop_remove = gafs_remove },
+    VOPNAME_LINK,		{ .vop_link = gafs_link },
+    VOPNAME_RENAME,		{ .vop_rename = gafs_rename },
+    VOPNAME_MKDIR,		{ .vop_mkdir = gafs_mkdir },
+    VOPNAME_RMDIR,		{ .vop_rmdir = gafs_rmdir },
+    VOPNAME_READDIR,		{ .vop_readdir = gafs_readdir },
+    VOPNAME_SYMLINK,		{ .vop_symlink = gafs_symlink },   
+    VOPNAME_READLINK,		{ .vop_readlink = gafs_readlink },
+    VOPNAME_FSYNC,		{ .vop_fsync = gafs_fsync },
+    VOPNAME_INACTIVE,		{ .vop_inactive = gafs_inactive },
+    VOPNAME_FID,		{ .vop_fid = gafs_fid },
+    VOPNAME_RWLOCK,		{ .vop_rwlock = afs_rwlock },
+    VOPNAME_RWUNLOCK,		{ .vop_rwunlock = afs_rwunlock },
+    VOPNAME_SEEK,		{ .vop_seek = afs_seek },
+    VOPNAME_CMP,		{ .vop_cmp = afs_cmp },
+    VOPNAME_FRLOCK,		{ .vop_frlock = afs_frlock },
+    VOPNAME_SPACE,		{ .vop_space = afs_space },
+    VOPNAME_REALVP,		{ .vop_realvp = afs_realvp },
+    VOPNAME_GETPAGE,		{ .vop_getpage = afs_getpage },
+    VOPNAME_PUTPAGE,		{ .vop_putpage = afs_putpage },
+    VOPNAME_MAP,		{ .vop_map = afs_map },
+    VOPNAME_ADDMAP,		{ .vop_addmap = afs_addmap },
+    VOPNAME_DELMAP,		{ .vop_delmap = afs_delmap },
+    VOPNAME_POLL,		{ .vop_poll = fs_poll },
+    VOPNAME_PATHCONF,		{ .vop_pathconf = afs_pathconf },
+    VOPNAME_PAGEIO,		{ .vop_pageio = afs_pageio },
+    VOPNAME_DUMP,		{ .vop_dump = afs_dump },
+    VOPNAME_DUMPCTL,		{ .vop_dumpctl = afs_dumpctl },   
+    VOPNAME_DISPOSE,		{ .vop_dispose = afs_dispose },
+    VOPNAME_GETSECATTR,		{ .vop_getsecattr = afs_getsecattr },
+    VOPNAME_SETSECATTR, 	{ .vop_setsecattr = afs_setsecattr },
+    VOPNAME_SHRLOCK,		{ .vop_shrlock = fs_shrlock },
+    NULL,			NULL
+};
+vnodeops_t *afs_ops;
+#elif defined(AFS_SUN510_ENV)
 /* The following list must always be NULL-terminated */
 const fs_operation_def_t afs_vnodeops_template[] = {
     VOPNAME_OPEN,		gafs_open,
