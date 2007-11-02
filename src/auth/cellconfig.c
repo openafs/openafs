@@ -18,6 +18,8 @@ RCSID
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "des/des.h"
+#include "rx/rxkad.h"
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -51,6 +53,8 @@ RCSID
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <rx/rxkad.h>
+#include <rx/rx.h>
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
 #include "cellconfig.h"
@@ -1323,7 +1327,7 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno,
 
 /* get a particular key */
 int
-afsconf_GetKey(void *rock, int avno, struct ktc_encryptionKey *akey)
+afsconf_GetKey(void *rock, afs_int32 avno, struct ktc_encryptionKey *akey)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) rock;
     register int i, maxa;
