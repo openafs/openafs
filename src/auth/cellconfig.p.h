@@ -125,9 +125,10 @@ extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
 extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
-				      afs_int32 * avno, char *akey);
-extern int afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno,
-			  char *akey);
+				      afs_int32 * avno, 
+				      struct ktc_encryptionKey *akey);
+extern int afsconf_GetKey(void *rock, afs_int32 avno,
+			  struct ktc_encryptionKey *akey);
 extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno,
 			  char akey[8], afs_int32 overwrite);
 extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
