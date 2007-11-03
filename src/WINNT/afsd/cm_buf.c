@@ -1504,6 +1504,8 @@ long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 
     unsigned int i;
     int found = 0;
 
+    lock_AssertMutex(&scp->mx);
+
     i = BUF_FILEHASH(&scp->fid);
 
     lock_ObtainWrite(&buf_globalLock);
