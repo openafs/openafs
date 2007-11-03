@@ -32,6 +32,7 @@ INCFILEDIR = $(DESTDIR)\include
 INCFILES =\
 	$(INCFILEDIR)\des.h \
 	$(INCFILEDIR)\des_conf.h \
+        $(INCFILEDIR)\des_prototypes.h \
 	$(INCFILEDIR)\mit-cpyright.h \
 	$(INCFILEDIR)\des_odd.h \
 	$(INCFILEDIR)\crypt.h \
