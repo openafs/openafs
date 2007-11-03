@@ -36,6 +36,8 @@ osi_rwlock_t cm_scacheLock;
 /* Dummy scache entry for use with pioctl fids */
 cm_scache_t cm_fakeSCache;
 
+osi_queue_t * cm_allFreeWaiters;        /* protected by cm_scacheLock */
+
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -164,6 +166,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->dataVersion = 0;
     scp->bulkStatProgress = hzero;
     scp->waitCount = 0;
+    scp->waitQueueT = NULL;
 
     if (scp->cbServerp) {
         cm_PutServer(scp->cbServerp);
@@ -201,6 +204,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->serverLock = (-1);
     scp->exclusiveLocks = 0;
     scp->sharedLocks = 0;
+    scp->lockDataVersion = -1;
 
     /* not locked, but there can be no references to this guy
      * while we hold the global refcount lock.
@@ -574,6 +578,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->dirBplus = NULL;
                 scp->dirDataVersion = -1;
 #endif
+                scp->waitQueueT = NULL;
                 scp->flags &= ~CM_SCACHEFLAG_WAITING;
             }
         }
@@ -581,6 +586,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
         cm_freeFileLocks = NULL;
         cm_lockRefreshCycle = 0;
         cm_fakeSCacheInit(newFile);
+        cm_allFreeWaiters = NULL;
         cm_dnlcInit(newFile);
         osi_EndOnce(&once);
     }
@@ -882,6 +888,69 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     return pscp;
 }
 
+void cm_SyncOpAddToWaitQueue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
+{
+    cm_scache_waiter_t * w;
+
+    lock_ObtainWrite(&cm_scacheLock);
+    if (cm_allFreeWaiters == NULL) {
+        w = malloc(sizeof(*w));
+        memset(w, 0, sizeof(*w));
+    } else {
+        w = (cm_scache_waiter_t *) cm_allFreeWaiters;
+        osi_QRemove(&cm_allFreeWaiters, (osi_queue_t *) w);
+    }
+
+    w->threadId = thrd_Current();
+    w->scp = scp;
+    cm_HoldSCacheNoLock(scp);
+    w->flags = flags;
+    w->bufp = bufp;
+
+    osi_QAddT(&scp->waitQueueH, &scp->waitQueueT, (osi_queue_t *) w);
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    osi_Log2(afsd_logp, "cm_SyncOpAddToWaitQueue : Adding thread to wait queue scp 0x%p w 0x%p", scp, w);
+}
+
+int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
+{
+    cm_scache_waiter_t * w;
+    int this_is_me;
+
+    osi_Log0(afsd_logp, "cm_SyncOpCheckContinue checking for continuation");
+
+    lock_ObtainRead(&cm_scacheLock);
+    for (w = (cm_scache_waiter_t *)scp->waitQueueH;
+         w;
+         w = (cm_scache_waiter_t *)osi_QNext((osi_queue_t *) w)) {
+        if (w->flags == flags && w->bufp == bufp) {
+            break;
+        }
+    }
+
+    osi_assert(w != NULL);
+    this_is_me = (w->threadId == thrd_Current());
+    lock_ReleaseRead(&cm_scacheLock);
+
+    if (!this_is_me) {
+        osi_Log1(afsd_logp, "cm_SyncOpCheckContinue MISS: Waiter 0x%p", w);
+        return 0;
+    }
+
+    osi_Log1(afsd_logp, "cm_SyncOpCheckContinue HIT: Waiter 0x%p", w);
+
+    lock_ObtainWrite(&cm_scacheLock);
+    osi_QRemoveHT(&scp->waitQueueH, &scp->waitQueueT, (osi_queue_t *) w);
+    cm_ReleaseSCacheNoLock(scp);
+    memset(w, 0, sizeof(*w));
+    osi_QAdd(&cm_allFreeWaiters, (osi_queue_t *) w);
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    return 1;
+}
+
+
 /* synchronize a fetch, store, read, write, fetch status or store status.
  * Called with scache mutex held, and returns with it held, but temporarily
  * drops it during the fetch.
@@ -948,12 +1017,13 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     afs_uint32 sleep_scp_flags = 0;
     afs_uint32 sleep_buf_cmflags = 0;
     afs_uint32 sleep_scp_bufs = 0;
+    int wakeupCycle;
 
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
 
-	if (bufp)
-		osi_assert(bufp->refCount > 0);
+    if (bufp)
+        osi_assert(bufp->refCount > 0);
 
 
     /* Do the access check.  Now we don't really do the access check
@@ -1179,6 +1249,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         if (flags & CM_SCACHESYNC_NOWAIT) 
             return CM_ERROR_WOULDBLOCK;
 
+        /* These are used for minidump debugging */
 	sleep_scp_flags = scp->flags;		/* so we know why we slept */
 	sleep_buf_cmflags = bufp ? bufp->cmFlags : 0;
 	sleep_scp_bufs = (scp->bufReadsp ? 1 : 0) | (scp->bufWritesp ? 2 : 0);
@@ -1195,9 +1266,17 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             scp->flags |= CM_SCACHEFLAG_WAITING;
             scp->waitCount = scp->waitRequests = 1;
         }
+
         if (bufLocked) 
             lock_ReleaseMutex(&bufp->mx);
-        osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
+
+        cm_SyncOpAddToWaitQueue(scp, flags, bufp);
+        wakeupCycle = 0;
+        do {
+            if (wakeupCycle++ != 0)
+                lock_ObtainMutex(&scp->mx);
+            osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
+        } while (!cm_SyncOpCheckContinue(scp, flags, bufp));
 
 	smb_UpdateServerPriority();
 
