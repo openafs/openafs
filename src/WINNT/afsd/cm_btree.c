@@ -169,13 +169,13 @@ void freeBtree(Tree *B)
 
 
 /***********************************************************************\
-|	Find location for data						|
+|	Find leaf node in which data nodes can be found                 |
 \***********************************************************************/
 
 /**********************   top level lookup   **********************/
 Nptr bplus_Lookup(Tree *B, keyT key)
 {
-    Nptr	findNode;
+    Nptr	leafNode;
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "LOOKUP:  key %s.\n", key.name);
@@ -183,24 +183,24 @@ Nptr bplus_Lookup(Tree *B, keyT key)
 #endif
 
     setfunkey(B, key);			/* set search key */
-    findNode = descendToLeaf(B, getroot(B));	/* start search from root node */
+    leafNode = descendToLeaf(B, getroot(B));	/* start search from root node */
 
 #ifdef DEBUG_BTREE
-    if (findNode) {
+    if (leafNode) {
         int         slot;
         Nptr        dataNode;
         dataT       data;
 
-        slot = getSlot(B, findNode);
+        slot = getSlot(B, leafNode);
         if (slot <= BTERROR)
             return NONODE;
 
-        dataNode = getnode(findNode, slot);
+        dataNode = getnode(leafNode, slot);
         data = getdatavalue(dataNode);
 
         sprintf(B->message, "LOOKUP: %s found on page %d value (%d.%d.%d).\n",
                  key.name,
-                 getnodenumber(B, findNode), 
+                 getnodenumber(B, leafNode), 
                  data.fid.volume, 
                  data.fid.vnode,
                  data.fid.unique);
@@ -209,7 +209,7 @@ Nptr bplus_Lookup(Tree *B, keyT key)
     OutputDebugString(B->message);
 #endif
 
-    return findNode;
+    return leafNode;
 }
 
 /**********************   `recurse' down B+tree   **********************/
@@ -228,7 +228,7 @@ static Nptr descendToLeaf(Tree *B, Nptr curr)
             curr = getfirstnode(curr);
         else if (slot > 0)
             curr = getnode(curr, slot);
-        else /* BTERROR */ {
+        else /* BTERROR, BTLOWER, BTUPPER */ {
             curr = NONODE;
             break;
         }
@@ -267,8 +267,9 @@ static int findKey(Tree *B, Nptr curr, int lo, int hi)
 
 #ifdef DEBUG_BTREE
         if (findslot == BTERROR) {
-            sprintf(B->message, "Bad key ordering on node %d\n", getnodenumber(B, curr));
-            OutputDebugString(B->message);
+            sprintf(B->message, "FINDKEY: (lo %d hi %d) Bad key ordering on node %d (0x%p)\n", 
+                    lo, hi, getnodenumber(B, curr), curr);
+            osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         }
 #endif
     } else {
@@ -281,9 +282,17 @@ static int findKey(Tree *B, Nptr curr, int lo, int hi)
             findslot = findKey(B, curr, mid + 1, hi);
             break;
         case BTERROR:
-            sprintf(B->message, "Bad key ordering on node %d\n", getnodenumber(B, curr));
-            OutputDebugString(B->message);
+            sprintf(B->message, "FINDKEY: (lo %d hi %d) Bad key ordering on node %d (0x%p)\n", 
+                    lo, hi, getnodenumber(B, curr), curr);
+            osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         }
+    }
+
+    if (isleaf(curr) && findslot == 0)
+    {
+        sprintf(B->message, "FINDKEY: (lo %d hi %d) findslot %d is invalid for leaf nodes, bad key ordering on node %d (0x%p)\n", 
+                lo, hi, findslot, getnodenumber(B, curr), curr);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     }
     return findslot;
 }
@@ -292,45 +301,53 @@ static int findKey(Tree *B, Nptr curr, int lo, int hi)
 /************   comparison of key with a target key slot   *************/
 static int bestMatch(Tree *B, Nptr curr, int slot)
 {
-    int diff, comp, findslot;
+    int diff, comp=2, findslot;
 
     diff = comparekeys(B)(getfunkey(B), getkey(curr, slot), 0);
     if (diff == 0) {
         findslot = slot;
-    } else
-    if (diff < 0) {		/* also check previous slot */
-        if ((slot == 1) ||
-             ((comp = comparekeys(B)(getfunkey(B), getkey(curr, slot - 1), 0)) >= 0)) 
-        {
+    } else if (diff < 0) {		/* also check previous slot */
+        if (slot == 1) {
+            if (isleaf(curr))
+                 findslot = BTLOWER;	/* not found in the tree */
+            else
+                 findslot = 0;				
+        } 
+        else if ((comp = comparekeys(B)(getfunkey(B), getkey(curr, slot - 1), 0)) >= 0) {
             findslot = slot - 1;
-        }
-        else if (comp < diff) {
+        } else if (comp < diff) {
             findslot = BTERROR;		/* inconsistent ordering of keys */
 #ifdef DEBUG_BTREE
             DebugBreak();
 #endif
-        }
-        else {
+        } else {
             findslot = BTLOWER;		/* key must be below in node ordering */
         }
     } else {			/* or check following slot */
-        if ((slot == numentries(curr)) ||
-             ((comp = comparekeys(B)(getfunkey(B), getkey(curr, slot + 1), 0)) < 0))
-        {
+        if (slot == numentries(curr)) {
+            if (isleaf(curr) && numentries(curr) == getfanout(B)) 
+                findslot = BTUPPER;
+            else 
+                findslot = slot;
+        } else if ((comp = comparekeys(B)(getfunkey(B), getkey(curr, slot + 1), 0)) < 0) {
             findslot = slot;
-        }
-        else if (comp == 0) {
+        } else if (comp == 0) {
             findslot = slot + 1;
-        }
-        else if (comp > diff) {
+        } else if (comp > diff) {
             findslot = BTERROR;		/* inconsistent ordering of keys */
 #ifdef DEBUG_BTREE
             DebugBreak();
 #endif
-        }
-        else {
+        } else {
             findslot = BTUPPER;		/* key must be above in node ordering */
         }
+    }
+
+    if (findslot == BTERROR || isleaf(curr) && findslot == 0)
+    {
+        sprintf(B->message, "BESTMATCH: node %d (0x%p) slot %d diff %d comp %d findslot %d\n", 
+                getnodenumber(B, curr), curr, slot, diff, comp, findslot);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     }
     return findslot;
 }
@@ -348,7 +365,7 @@ void insert(Tree *B, keyT key, dataT data)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "INSERT:  key %s.\n", key.name);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
     setfunkey(B, key);			        /* set insertion key */
@@ -377,8 +394,16 @@ descendSplit(Tree *B, Nptr curr)
         setsplitpath(B, curr);			/* indicates where nodes must split */
 
     slot = getSlot(B, curr);		        /* is null only if the root is empty */
-    if (slot <= BTERROR)
+    if (slot == BTERROR)
         return NONODE;
+
+    if (isleaf(curr)) {
+        if (slot == BTLOWER)
+            slot = 0;
+        else if (slot == BTUPPER)
+            slot = getfanout(B);
+    }
+
     if (isinternal(curr)) {	/* continue recursion to leaves */
         if (slot == 0)
             downNode = descendSplit(B, getfirstnode(curr));
@@ -414,7 +439,7 @@ insertEntry(Tree *B, Nptr currNode, int slot, Nptr sibling, Nptr downPtr)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "INSERT:  slot %d, down node %d.\n", slot, getnodenumber(B, downPtr));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
     if (sibling == NONODE) {		/* no split occurred */
@@ -618,7 +643,7 @@ void delete(Tree *B, keyT key)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "DELETE:  key %s.\n", key.name);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
     setfunkey(B, key);			/* set deletion key */
@@ -627,7 +652,7 @@ void delete(Tree *B, keyT key)
     if (isnode(newNode)) {
 #ifdef DEBUG_BTREE
         sprintf(B->message, "DELETE: collapsing node %d", getnodenumber(B, newNode));
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
         collapseRoot(B, getroot(B), newNode);	/* remove root when superfluous */
     }
@@ -641,7 +666,7 @@ collapseRoot(Tree *B, Nptr oldRoot, Nptr newRoot)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "COLLAPSE:  old %d, new %d.\n", getnodenumber(B, oldRoot), getnodenumber(B, newRoot));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     showNode(B, "collapseRoot oldRoot", oldRoot);
     showNode(B, "collapseRoot newRoot", newRoot);
 #endif
@@ -669,7 +694,7 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
              lAnc ? getnodenumber(B, lAnc) : -1,
              rAnc ? getnodenumber(B, rAnc) : -1,
              parent ? getnodenumber(B, parent) : -1);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
     if (!isfew(curr))
@@ -678,8 +703,15 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
         setmergepath(B, curr);		/* mark which nodes may need rebalancing */
 
     slot = getSlot(B, curr);
-    if (slot <= BTERROR)
+    if (slot == BTERROR)
         return NONODE;
+
+    if (isleaf(curr)) {
+        if (slot == BTLOWER)
+            slot = 0;
+        else if (slot == BTUPPER)
+            slot = getfanout(B);
+    }
 
     if (isinternal(curr)) 	/* set up next recursion call's parameters */
     {
@@ -797,7 +829,7 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
     if (newMe != NONODE) {	/* this node removal doesn't consider duplicates */
 #ifdef DEBUG_BTREE
         sprintf(B->message, "descendBalance DELETE:  slot %d, node %d.\n", slot, getnodenumber(B, curr));
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
         removeEntry(B, curr, slot + (newMe != newNode));	/* removes one of two */
@@ -851,7 +883,7 @@ descendBalance(Tree *B, Nptr curr, Nptr left, Nptr right, Nptr lAnc, Nptr rAnc, 
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "descendBalance returns %d\n", getnodenumber(B, newNode));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
     return newNode;
 }
@@ -883,7 +915,7 @@ merge(Tree *B, Nptr left, Nptr right, Nptr anchor)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "MERGE:  left %d, right %d.\n", getnodenumber(B, left), getnodenumber(B, right));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     showNode(B, "pre-merge anchor", anchor);
     showNode(B, "pre-merge left", left);
     showNode(B, "pre-merge right", right);
@@ -943,7 +975,7 @@ shift(Tree *B, Nptr left, Nptr right, Nptr anchor)
              getnodenumber(B, left), 
              getnodenumber(B, right), 
              getnodenumber(B, anchor));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     showNode(B, "pre-shift anchor", anchor);
     showNode(B, "pre-shift left", left);
     showNode(B, "pre-shift right", right);
@@ -995,9 +1027,11 @@ shift(Tree *B, Nptr left, Nptr right, Nptr anchor)
             pushentry(right, z, y);
         
         setfunkey(B, getkey(left, x));			/* set new anchor key value */
-        z = getSlot(B, anchor) + 1;
+        z = getSlot(B, anchor);
         if (z <= BTERROR)
             return NONODE;
+        z += 1;
+
         if (i) {
             decentries(left);
             incentries(right);
@@ -1039,7 +1073,7 @@ shift(Tree *B, Nptr left, Nptr right, Nptr anchor)
 
 #ifdef DEBUG_BTREE
     sprintf(B->message, "SHIFT:  left %d, right %d.\n", getnodenumber(B, left), getnodenumber(B, right));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     showNode(B, "post-shift anchor", anchor);
     showNode(B, "post-shift left", left);
     showNode(B, "post-shift right", right);
@@ -1257,61 +1291,61 @@ void showNode(Tree *B, const char * where, Nptr n)
     int x;
 
     sprintf(B->message, "-  --  --  --  --  --  --  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "| %-20s                        |\n", where);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "| node %6d                 ", getnodenumber(B, n));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "  magic    %4x  |\n", getmagic(n));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "-  --  --  --  --  --  --  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "| flags   %1d%1d%1d%1d ", isfew(n), isfull(n), isroot(n), isleaf(n));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "| keys = %5d ", numentries(n));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "| node = %6d  |\n", getnodenumber(B, getfirstnode(n)));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     for (x = 1; x <= numentries(n); x++) {
         sprintf(B->message, "| entry %6d ", x);
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         sprintf(B->message, "| key = %6s ", getkey(n, x).name);
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         sprintf(B->message, "| node = %6d  |\n", getnodenumber(B, getnode(n, x)));
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     }
     sprintf(B->message, "-  --  --  --  --  --  --  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 }
 
 /******************   B+tree class variable printer   ******************/
 void showBtree(Tree *B)
 {
     sprintf(B->message, "-  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  B+tree  %10p  |\n", (void *) B);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "-  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  root        %6d  |\n", getnodenumber(B, getroot(B)));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  leaf        %6d  |\n", getnodenumber(B, getleaf(B)));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  fanout         %3d  |\n", getfanout(B) + 1);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  minfanout      %3d  |\n", getminfanout(B, getroot(B)) + 1);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  height         %3d  |\n", gettreeheight(B));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  freenode    %6d  |\n", getnodenumber(B, getfirstfreenode(B)));
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  theKey      %6s  |\n", getfunkey(B).name);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "|  theData     %d.%d.%d |\n", getfundata(B).volume,
              getfundata(B).vnode, getfundata(B).unique);
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     sprintf(B->message, "-  --  --  --  --  --  -\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 }
 
 void 
@@ -1323,7 +1357,7 @@ listBtreeNodes(Tree *B, const char * parent_desc, Nptr node)
 
     if (isntnode(node)) {
         sprintf(B->message, "%s - NoNode!!!\n");
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         return;
     } 
     
@@ -1333,7 +1367,7 @@ listBtreeNodes(Tree *B, const char * parent_desc, Nptr node)
         sprintf(B->message, "%s - data node %d (%d.%d.%d)\n", 
                  parent_desc, getnodenumber(B, node),
                  data.fid.volume, data.fid.vnode, data.fid.unique);
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         return;
     } else 
         showNode(B, parent_desc, node);
@@ -1341,7 +1375,7 @@ listBtreeNodes(Tree *B, const char * parent_desc, Nptr node)
     if ( isinternal(node) || isroot(node) ) {
         sprintf(thisnode, "parent %6d", getnodenumber(B , node));
 
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         for ( i= isinternal(node) ? 0 : 1; i <= numentries(node); i++ ) {
             listBtreeNodes(B, thisnode, i == 0 ? getfirstnode(node) : getnode(node, i));
         }
@@ -1359,19 +1393,19 @@ listBtreeValues(Tree *B, Nptr n, int num)
     for (slot = 1; (n != NONODE) && num && numentries(n); num--) {
         if (comparekeys(B)(getkey(n, slot),prev, 0) < 0) {
             sprintf(B->message, "BOMB %8s\n", getkey(n, slot).name);
-            OutputDebugString(B->message);
+            osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
             DebugBreak();
         }
         prev = getkey(n, slot);
         data = getdatavalue(getnode(n, slot));
         sprintf(B->message, "%8s (%d.%d.%d)\n", 
                 prev.name, data.fid.volume, data.fid.vnode, data.fid.unique);
-        OutputDebugString(B->message);
+        osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         if (++slot > numentries(n))
             n = getnextnode(n), slot = 1;
     }   
     sprintf(B->message, "\n\n");
-    OutputDebugString(B->message);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 }
 
 /********************   entire B+tree data printer   *******************/
@@ -1393,7 +1427,7 @@ findAllBtreeValues(Tree *B)
     for (slot = 1; (n != NONODE) && num && numentries(n); num--) {
         if (comparekeys(B)(getkey(n, slot),prev, 0) < 0) {
             sprintf(B->message,"BOMB %8s\n", getkey(n, slot).name);
-            OutputDebugString(B->message);
+            osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #ifdef DEBUG_BTREE
             DebugBreak();
 #endif
@@ -1405,7 +1439,7 @@ findAllBtreeValues(Tree *B)
                 sprintf(B->message,"BOMB %8s cannot be found\n", prev.name);
             else 
                 sprintf(B->message,"BOMB lookup(%8s) finds wrong node\n", prev.name);
-            OutputDebugString(B->message);
+            osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #ifdef DEBUG_BTREE
             DebugBreak();
 #endif
@@ -1479,7 +1513,7 @@ cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
         slot = getSlot(op->scp->dirBplus, leafNode);
         if (slot <= BTERROR) {
             op->scp->dirDataVersion = 0;
-            rc = EINVAL;
+            rc = (slot == BTERROR ? EINVAL : ENOENT);
             goto done;
         }
         firstDataNode = getnode(leafNode, slot);
@@ -1883,14 +1917,14 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     long rc = 0;
     char buffer[512];
 
-    OutputDebugString("cm_BPlusDirEnumerate start");
+    osi_Log0(afsd_logp, "cm_BPlusDirEnumerate start");
 
     /* Read lock the bplus tree so the data can't change */
     if (!locked)
 	lock_ObtainRead(&scp->dirlock);
 
     if (scp->dirBplus == NULL) {
-	OutputDebugString("cm_BPlusDirEnumerate No BPlus Tree");
+	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate No BPlus Tree");
 	goto done;
     }
 
@@ -1921,12 +1955,12 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     }   
 
     sprintf(buffer, "BPlusTreeEnumerate count = %d", count);
-    OutputDebugString(buffer);
+    osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, buffer));
 
     /* Allocate the enumeration object */
     enump = cm_BPlusEnumAlloc(count);
     if (enump == NULL) {
-	OutputDebugString("cm_BPlusDirEnumerate Alloc failed");
+	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate Alloc failed");
 	rc = ENOMEM;
 	goto done;
     }
@@ -1968,7 +2002,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
                     }
 
                     if (name == NULL) {
-                        OutputDebugString("cm_BPlusDirEnumerate strdup failed");
+                        osi_Log0(afsd_logp, "cm_BPlusDirEnumerate strdup failed");
                         rc = ENOMEM;
                         goto done;
                     }
@@ -1994,7 +2028,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 
     /* if we failed, cleanup any mess */
     if (rc != 0) {
-	OutputDebugString("cm_BPlusDirEnumerate rc != 0");
+	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate rc != 0");
 	if (enump) {
 	    for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
 		free(enump->entry[count].name);
@@ -2004,7 +2038,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 	}
     }
 
-    OutputDebugString("cm_BPlusDirEnumerate end");
+    osi_Log0(afsd_logp, "cm_BPlusDirEnumerate end");
     *enumpp = enump;
     return rc;
 }
@@ -2015,17 +2049,17 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
     if (enump == NULL || entrypp == NULL || enump->next > enump->count) {
 	if (entrypp)
 	    *entrypp = NULL;
-	OutputDebugString("cm_BPlusDirNextEnumEntry invalid input");
+	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry invalid input");
 	return CM_ERROR_INVAL;			      \
     }
 
     *entrypp = &enump->entry[enump->next++];
     if ( enump->next == enump->count ) {
-	OutputDebugString("cm_BPlusDirNextEnumEntry STOPNOW");
+	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry STOPNOW");
 	return CM_ERROR_STOPNOW;
     }
     else {
-	OutputDebugString("cm_BPlusDirNextEnumEntry SUCCESS");
+	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry SUCCESS");
 	return 0;
     }
 }
@@ -2035,7 +2069,7 @@ cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
 {
     afs_uint32 count;
 
-    OutputDebugString("cm_BPlusDirFreeEnumeration");
+    osi_Log0(afsd_logp, "cm_BPlusDirFreeEnumeration");
 
     if (enump) {
 	for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
@@ -2053,7 +2087,7 @@ cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
     cm_direnum_entry_t * entryp;
     long 	   	 code;
 
-    OutputDebugString("cm_BPlusDirEnumTest start");
+    osi_Log0(afsd_logp, "cm_BPlusDirEnumTest start");
 
     for (code = cm_BPlusDirEnumerate(dscp, locked, NULL, &enump); code == 0; ) {
 	code = cm_BPlusDirNextEnumEntry(enump, &entryp);
@@ -2100,14 +2134,14 @@ cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
 		    type, 
 		    dv);
 
-	    OutputDebugString(buffer);
+	    osi_Log0(afsd_logp, osi_LogSaveString(afsd_logp, buffer));
 	}
     }
 
     if (enump)
 	cm_BPlusDirFreeEnumeration(enump);
 
-    OutputDebugString("cm_BPlusDirEnumTest end");
+    osi_Log0(afsd_logp, "cm_BPlusDirEnumTest end");
 
     return 0;
 }
