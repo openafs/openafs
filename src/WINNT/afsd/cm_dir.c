@@ -957,14 +957,14 @@ cm_DirFindItem(cm_dirOp_t * op,
 }
 
 /* Begin a sequence of directory operations.  
- * Called with scp->mx should unlocked.
+ * Called with scp->mx unlocked.
  */
 long
 cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
               afs_uint32 lockType, cm_dirOp_t * op)
 {
     long code;
-    int i, mxheld = 0;
+    int i, mxheld = 0, haveWrite = 0;
 
     osi_Log3(afsd_logp, "Beginning dirOp[0x%p] for scp[0x%p], userp[0x%p]",
              op, scp, userp);
@@ -984,6 +984,13 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         op->buffers[i].flags = 0;
     }
 
+    if (lockType == CM_DIRLOCK_WRITE) {
+        lock_ObtainWrite(&scp->dirlock);
+        haveWrite = 1;
+    } else { 
+        lock_ObtainRead(&scp->dirlock);
+        haveWrite = 0;
+    }
     lock_ObtainMutex(&scp->mx);
     mxheld = 1;
     code = cm_DirCheckStatus(op, 1);
@@ -992,44 +999,79 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         op->newLength = op->length;
         op->dataVersion = scp->dataVersion;
         op->newDataVersion = op->dataVersion;
-        lock_ReleaseMutex(&scp->mx);
-        mxheld = 0;
 
 #ifdef USE_BPLUS
-        lock_ObtainRead(&scp->dirlock);
         if (!cm_BPlusTrees ||
             (scp->dirBplus &&
              scp->dirDataVersion == scp->dataVersion)) 
         {
+            /* we know that haveWrite matches lockType at this point */
             switch (lockType) {
             case CM_DIRLOCK_NONE:
-                lock_ReleaseRead(&scp->dirlock);
+                if (haveWrite)
+                    lock_ReleaseWrite(&scp->dirlock);
+                else
+                    lock_ReleaseRead(&scp->dirlock);
                 break;
             case CM_DIRLOCK_READ:
-                /* got it already */
+                osi_assert(!haveWrite);
                 break;
             case CM_DIRLOCK_WRITE:
             default:
-                lock_ReleaseRead(&scp->dirlock);
-                lock_ObtainWrite(&scp->dirlock);
+                osi_assert(haveWrite);
             }
         } else {
-            lock_ReleaseRead(&scp->dirlock);
-            lock_ObtainWrite(&scp->dirlock);
-            if (scp->dirBplus && 
-                scp->dirDataVersion != scp->dataVersion)
+            if (!(scp->dirBplus && 
+                  scp->dirDataVersion == scp->dataVersion)) 
             {
-                bplus_dv_error++;
-                bplus_free_tree++;
-                freeBtree(scp->dirBplus);
-                scp->dirBplus = NULL;
-                scp->dirDataVersion = -1;
-            }
+              repeat:
+                if (!haveWrite) {
+                    if (mxheld) {
+                        lock_ReleaseMutex(&scp->mx);
+                        mxheld = 0;
+                    }
+                    lock_ReleaseRead(&scp->dirlock);
+                    lock_ObtainWrite(&scp->dirlock);
+                    haveWrite = 1;
+                }
+                if (!mxheld) {
+                    lock_ObtainMutex(&scp->mx);
+                    mxheld = 1;
+                }
+                if (scp->dirBplus && 
+                     scp->dirDataVersion != scp->dataVersion)
+                {
+                    bplus_dv_error++;
+                    bplus_free_tree++;
+                    freeBtree(scp->dirBplus);
+                    scp->dirBplus = NULL;
+                    scp->dirDataVersion = -1;
+                }
 
-            if (!scp->dirBplus) {
-                cm_BPlusDirBuildTree(scp, userp, reqp);
-                if (scp->dirBplus)
-                    scp->dirDataVersion = scp->dataVersion;
+                if (!scp->dirBplus) {
+                    if (mxheld) {
+                        lock_ReleaseMutex(&scp->mx);
+                        mxheld = 0;
+                    }
+                    cm_BPlusDirBuildTree(scp, userp, reqp);
+                    if (!mxheld) {
+                        lock_ObtainMutex(&scp->mx);
+                        mxheld = 1;
+                    }
+                    if (op->dataVersion != scp->dataVersion) {
+                        /* We lost the race, therefore we must update the
+                         * dirop state and retry to build the tree.
+                         */
+                        op->length = scp->length;
+                        op->newLength = op->length;
+                        op->dataVersion = scp->dataVersion;
+                        op->newDataVersion = op->dataVersion;
+                        goto repeat;
+                    }
+
+                    if (scp->dirBplus)
+                        scp->dirDataVersion = scp->dataVersion;
+                }
             }
 
             switch (lockType) {
@@ -1043,27 +1085,37 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
             default:
                 /* got it already */;
             }
+            haveWrite = 0;
         }
 #else
+        /* we know that haveWrite matches lockType at this point */
         switch (lockType) {
         case CM_DIRLOCK_NONE:
+            if (haveWrite)
+                lock_ReleaseWrite(&scp->dirlock);
+            else
+                lock_ReleaseRead(&scp->dirlock);
             break;
         case CM_DIRLOCK_READ:
-            lock_ObtainRead(&scp->dirlock);
+            osi_assert(!haveWrite);
             break;
         case CM_DIRLOCK_WRITE:
         default:
-            lock_ObtainWrite(&scp->dirlock);
+            osi_assert(haveWrite);
         }
 #endif
         op->lockType = lockType;
+        if (mxheld)
+            lock_ReleaseMutex(&scp->mx);
     } else {
-    
+        if (haveWrite)
+            lock_ReleaseWrite(&scp->dirlock);
+        else
+            lock_ReleaseRead(&scp->dirlock);
+        if (mxheld)
+            lock_ReleaseMutex(&scp->mx);
         cm_EndDirOp(op);
     }
-
-    if (mxheld)
-        lock_ReleaseMutex(&scp->mx);
 
     return code;
 }
@@ -1074,11 +1126,13 @@ int
 cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 {
     long code;
+    int  rc = 0;
 
     if (op->scp == NULL)
         return 0;
 
-    code = cm_DirCheckStatus(op, 0);
+    lock_ObtainMutex(&op->scp->mx);
+    code = cm_DirCheckStatus(op, 1);
 
     if (code == 0 &&
         op->dataVersion == op->scp->dataVersion - 1) {
@@ -1088,19 +1142,21 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
         op->newDataVersion = op->scp->dataVersion;
         op->newLength = op->scp->serverLength;
 
-        osi_Log0(afsd_logp, "cm_CheckDirOpForSingleChange succeeded");
-
-        return 1;
+        rc = 1;
     }
-
-    osi_Log3(afsd_logp,
-             "cm_CheckDirOpForSingleChange failed.  code=0x%x, old dv=%d, new dv=%d",
-             code, op->dataVersion, op->scp->dataVersion);
-    return 0;
+    lock_ReleaseMutex(&op->scp->mx); 
+    
+    if (rc)
+        osi_Log0(afsd_logp, "cm_CheckDirOpForSingleChange succeeded");
+    else
+        osi_Log3(afsd_logp,
+                 "cm_CheckDirOpForSingleChange failed.  code=0x%x, old dv=%d, new dv=%d",
+                 code, op->dataVersion, op->scp->dataVersion);
+    return rc;
 }
 
-/* End a sequence of directory operations.  Called with op->scp->mx
-   unlocked.*/
+/* End a sequence of directory operations.  
+ * Called with op->scp->mx unlocked.*/
 long
 cm_EndDirOp(cm_dirOp_t * op)
 {
@@ -1113,14 +1169,10 @@ cm_EndDirOp(cm_dirOp_t * op)
              op, op->dirtyBufCount);
 
     if (op->dirtyBufCount > 0) {
-        /* we made changes.  We should go through the list of buffers
-           and update the dataVersion for each. */
-        code = buf_ForceDataVersion(op->scp, op->dataVersion, op->newDataVersion);
-
 #ifdef USE_BPLUS
-        /* and update the data version on the B+ tree */
+        /* update the data version on the B+ tree */
         if (op->scp->dirBplus && 
-            op->scp->dirDataVersion == op->dataVersion) {
+             op->scp->dirDataVersion == op->dataVersion) {
 
             switch (op->lockType) {
             case CM_DIRLOCK_READ:
@@ -1137,6 +1189,12 @@ cm_EndDirOp(cm_dirOp_t * op)
             op->scp->dirDataVersion = op->newDataVersion;
         }
 #endif
+
+        /* we made changes.  We should go through the list of buffers
+         * and update the dataVersion for each. */
+        lock_ObtainMutex(&op->scp->mx);
+        code = buf_ForceDataVersion(op->scp, op->dataVersion, op->newDataVersion);
+        lock_ReleaseMutex(&op->scp->mx);
     }
 
     switch (op->lockType) {
@@ -1205,19 +1263,19 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
         lock_ObtainMutex(&op->scp->mx);
 
         /* Make sure we are synchronized. */
+        osi_assert(op->lockType != CM_DIRLOCK_NONE);
+
         code = cm_SyncOp(op->scp, bufferp, op->userp, &op->req, PRSFS_LOOKUP,
                          CM_SCACHESYNC_NEEDCALLBACK |
-                         CM_SCACHESYNC_WRITE |
+                         (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                          CM_SCACHESYNC_BUFLOCKED);
 
-        if (code == 0 &&
-            bufferp->dataVersion != op->dataVersion) {
-
+        if (code == 0 && bufferp->dataVersion != op->dataVersion) {
             osi_Log2(afsd_logp, "cm_DirOpAddBuffer: buffer version mismatch. buf ver = %d. want %d", bufferp->dataVersion, op->dataVersion);
 
             cm_SyncOpDone(op->scp, bufferp,
                           CM_SCACHESYNC_NEEDCALLBACK |
-                          CM_SCACHESYNC_WRITE |
+                         (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                           CM_SCACHESYNC_BUFLOCKED);
 
             code = CM_ERROR_INVAL;
@@ -1317,7 +1375,7 @@ cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
 
             cm_SyncOpDone(op->scp, bufferp,
                           CM_SCACHESYNC_NEEDCALLBACK |
-                          CM_SCACHESYNC_WRITE);
+                         (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ));
 
 #ifdef DEBUG
             osi_assert(bufferp->dataVersion == op->dataVersion);
