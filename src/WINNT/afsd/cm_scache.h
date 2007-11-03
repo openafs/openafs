@@ -209,6 +209,12 @@ typedef struct cm_scache {
     /* syncop state */
     afs_uint32 waitCount;           /* number of threads waiting */
     afs_uint32 waitRequests;        /* num of thread wait requests */
+    osi_queue_t * waitQueueH;       /* Queue of waiting threads.
+                                       Holds queue of
+                                       cm_scache_waiter_t
+                                       objects. Protected by
+                                       cm_cacheLock. */
+    osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
 } cm_scache_t;
 
 /* mask field - tell what has been modified */
@@ -311,6 +317,15 @@ typedef struct cm_scache {
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
 					% cm_data.scacheHashTableSize)
+
+typedef struct cm_scache_waiter {
+    osi_queue_t q;
+    afs_int32   threadId;
+
+    cm_scache_t *scp;
+    afs_int32   flags;
+    void        *bufp;
+} cm_scache_waiter_t;
 
 #include "cm_conn.h"
 #include "cm_buf.h"
