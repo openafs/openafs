@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 05 Jul 2007
+>grand.central.org      #GCO Public CellServDB 25 Oct 2007
 18.92.0.108                     #grand-opening.mit.edu
 128.2.203.61                    #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
@@ -48,8 +48,6 @@
 66.93.118.125                   #stormy
 130.85.24.11                    #weasel
 130.85.24.13                    #straykitten
->midnightlinux.com      #Midnight Linux, Pittsburgh PA
-208.10.142.82                   #outpost.midnightlinux.com
 >setfilepointer.com     #SetFilePointer.com
 63.224.10.2                     #hamlet.SetFilePointer.com
 63.224.10.4                     #troilus.SetFilePointer.com
@@ -62,6 +60,10 @@
 213.187.92.33                   #gpp1.gppc.de
 213.187.92.34                   #paulchen.gppc.de
 213.187.92.35                   #lotus.gppc.de
+>cms.hu-berlin.de       #Humboldt University Berlin
+141.20.1.65                     #commodus.cms.hu-berlin.de
+141.20.1.66                     #faustinus.cms.hu-berlin.de
+141.20.1.67                     #marcellus.cms.hu-berlin.de
 >ifh.de                 #DESY Zeuthen
 141.34.22.10                    #romulus.ifh.de
 141.34.22.11                    #remus.ifh.de
@@ -147,8 +149,12 @@
 129.219.10.70                   #authen1.asu.edu
 129.219.10.72                   #authen3.asu.edu
 129.219.100.16                  #authen4.asu.edu
->hep.caltech.edu        #CalTech High Energy Physics
-131.215.126.150                 #afs.hep.caltech.edu
+>eecs.berkeley.edu      #University of California, Berkeley - EECS Dept.
+128.32.139.34                   #greed.eecs.berkeley.edu
+128.32.139.35                   #gluttony.eecs.berkeley.edu
+169.229.60.112                  #envy.eecs.berkeley.edu
+>hep.caltech.edu        #Caltech High Energy Physics
+131.215.116.20                  #afs.hep.caltech.edu
 >clarkson.edu           #Clarkson University, Potsdam, New York USA
 128.153.1.111                   #arthur.clarkson.edu
 128.153.9.111                   #lancelot.clarkson.edu
@@ -160,14 +166,15 @@
 128.2.10.28                     #vice28.fs.andrew.cmu.edu
 128.2.32.44                     #new-vice12.fs.andrew.cmu.edu
 >club.cc.cmu.edu        #Carnegie Mellon University Computer Club
+128.2.204.149                   #barium.club.cc.cmu.edu
 128.237.157.11                  #sodium.club.cc.cmu.edu
 128.237.157.13                  #potassium.club.cc.cmu.edu
 >chem.cmu.edu           #Carnegie Mellon University - Chemistry Dept.
 128.2.40.134                    #afs.chem.cmu.edu
 128.2.40.140                    #afs2.chem.cmu.edu
 >cs.cmu.edu             #Carnegie Mellon University - School of Comp. Sci.
+128.2.184.215                   #pumpkin.srv.cs.cmu.edu
 128.2.201.46                    #strawberry.srv.cs.cmu.edu
-128.2.201.47                    #pumpkin.srv.cs.cmu.edu
 128.2.201.48                    #cherry.srv.cs.cmu.edu
 >ece.cmu.edu            #Carnegie Mellon University - Elec. Comp. Eng. Dept.
 128.2.129.7                     #porok.ece.cmu.edu
@@ -199,7 +206,7 @@
 >cs.fhm.edu             #Department Computer Science Munich University Of Applied Science
 129.187.208.2                   #srv1.informatik.fh-muenchen.de
 >eecs.harvard.edu       #Harvard - EECS
-140.247.60.61                   #zermelo.eecs.harvard.edu
+140.247.60.64                   #lefkada.eecs.harvard.edu
 140.247.60.83                   #corfu.eecs.harvard.edu
 >iastate.edu            #Iowa State University
 129.186.1.243                   #afsdb-1.iastate.edu
@@ -380,10 +387,14 @@
 134.158.232.11                  #ccafsdb1.in2p3.fr
 134.158.232.12                  #ccafsdb2.in2p3.fr
 134.158.232.13                  #ccafsdb3.in2p3.fr
+>mcc.ac.gb              #University of Manchester
+130.88.203.41                   #nevis.mc.man.ac.uk
+130.88.203.144                  #eryri.mc.man.ac.uk
+130.88.203.145                  #scafell.mc.man.ac.uk
 >anl.gov                #Argonne National Laboratory
-146.137.96.33                   #arteus.ctd.anl.gov
-146.137.162.88                  #agamemnon.ctd.anl.gov
-146.137.194.80                  #antenor.ctd.anl.gov
+146.137.96.33                   #arteus.it.anl.gov
+146.137.162.88                  #agamemnon.it.anl.gov
+146.137.194.80                  #antenor.it.anl.gov
 >rhic.bnl.gov           #Relativistic Heavy Ion Collider
 130.199.6.51                    #rafs03.rcf.bnl.gov
 130.199.6.52                    #rafs02.rcf.bnl.gov
@@ -484,9 +495,10 @@
 >laroia.net             #Laroia Networks
 66.66.102.254                   #supercore.laroia.net
 >sinenomine.net         #Sine Nomine Associates
-192.204.203.218                 #va.sinenomine.net
+66.135.48.108                   #tx2srv03.sinenomine.net
+72.73.30.42                     #va.sinenomine.net
 >slackers.net           #The Slackers' Network
-63.201.48.27                    #alexandria.slackers.net
+199.4.150.159                   #alexandria.slackers.net
 >tproa.net              #The People's Republic of Ames
 72.13.4.23                      #service-3.tproa.net
 72.13.4.24                      #service-4.tproa.net
@@ -506,6 +518,10 @@
 >dementia.org           #Dementia Unlimited
 128.2.12.45                     #alycia.dementia.org
 128.2.120.216                   #meredith.dementia.org
+>dsrw.org               #The DSRW
+65.103.82.83                    #straylight.dsrw.org
+65.103.82.84                    #chiba.dsrw.org
+65.103.82.85                    #freeside.dsrw.org
 >hackish.org            #Hackish.org
 24.167.65.213                   #avatar.sys.hackish.org
 128.2.120.138                   #kurma.sys.hackish.org
@@ -572,6 +588,8 @@
 194.249.156.1                   #brenta.ijs.si
 >p-ng.si                #Nova Gorica Polytechnic
 193.2.120.2                     #solkan.p-ng.si
+>hep-ex.physics.metu.edu.tr #METU Department of Physics, Experimental HEP group, Ankara/Turke
+144.122.31.131                  #neutrino.physics.metu.edu.tr
 >phy.bris.ac.uk         #Bristol University - phyics
 137.222.58.9                    #afs1.phy.bris.ac.uk
 >inf.ed.ac.uk           #School of Informatics, University of Edinburgh
