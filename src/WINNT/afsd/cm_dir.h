@@ -186,5 +186,5 @@ cm_DirDumpStats(void);
 extern int
 cm_MemDumpDirStats(FILE *outputFile, char *cookie, int lock);
 
-extern afs_int64 dir_enums;
+extern afs_uint64 dir_enums;
 #endif /*  __CM_DIR_ENV__ */
