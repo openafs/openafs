@@ -1420,7 +1420,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
 #ifndef SIZE_MAX
 #define SIZE_MAX UINT_MAX
 #endif
-    osi_assert(allocsize < SIZE_MAX);
+    osi_assertx(allocsize < SIZE_MAX, "allocsize >= SIZE_MAX");
 #endif
     *configCount = (afs_uint32)allocsize;
     config->cacheConfig_val = t_config;
@@ -1551,10 +1551,12 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
-        osi_assert(cm_activeCallbackGrantingCalls > 0);
+        osi_assertx(cm_activeCallbackGrantingCalls > 0, 
+                    "CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
     else {
-        osi_assert(cm_activeCallbackGrantingCalls-- > 0);
+        osi_assertx(cm_activeCallbackGrantingCalls-- > 0,
+                    "!CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
     if (cm_activeCallbackGrantingCalls == 0) 
         freeFlag = 1;

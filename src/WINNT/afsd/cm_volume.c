@@ -456,7 +456,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             if ( !tsp->cellp ) 
                 tsp->cellp = cellp;
 
-            osi_assert(tsp != NULL);
+            osi_assertx(tsp != NULL, "null cm_server_t");
                         
             /* and add it to the list(s). */
             /*
@@ -605,7 +605,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp == volp2);
+    osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -690,7 +690,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp2 == volp);
+    osi_assertx(volp2 == volp, "unexpected cm_vol_t");
 #endif
 
     if (!volp && (flags & CM_GETVOL_FLAG_CREATE)) {
@@ -856,7 +856,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp == volp2);
+    osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -917,7 +917,7 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
 void cm_PutVolume(cm_volume_t *volp)
 {
     lock_ObtainWrite(&cm_volumeLock);
-    osi_assert(volp->refCount-- > 0);
+    osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     lock_ReleaseWrite(&cm_volumeLock);
 }
 
@@ -956,7 +956,7 @@ void cm_RefreshVolumes(void)
 	lock_ReleaseMutex(&volp->mx);
 	
         lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 
@@ -1112,7 +1112,7 @@ void cm_CheckOfflineVolumes(void)
         cm_CheckOfflineVolume(volp, 0);
 
 	lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 }
@@ -1205,7 +1205,7 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 
 	lock_ReleaseMutex(&volp->mx);
 	lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 }	

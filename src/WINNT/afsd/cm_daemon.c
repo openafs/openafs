@@ -101,7 +101,7 @@ void cm_BkgDaemon(long parm)
 	}
 
         osi_QRemoveHT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **) &cm_bkgListEndp, &rp->q);
-        osi_assert(cm_bkgQueueCount-- > 0);
+        osi_assertx(cm_bkgQueueCount-- > 0, "cm_bkgQueueCount 0");
         lock_ReleaseWrite(&cm_daemonLock);
 
 	osi_Log1(afsd_logp,"cm_BkgDaemon processing request 0x%p", rp);
@@ -471,21 +471,21 @@ void cm_InitDaemon(int nDaemons)
 	/* creating IP Address Change monitor daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_IpAddrDaemon, 0, 0, &pid, "cm_IpAddrDaemon");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "cm_IpAddrDaemon thread creation failure");
         thrd_CloseHandle(phandle);
 #endif /* DJGPP */
 
         /* creating pinging daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "cm_Daemon thread creation failure");
         thrd_CloseHandle(phandle);
 
 	for(i=0; i < nDaemons; i++) {
             phandle = thrd_Create((SecurityAttrib) 0, 0,
                                    (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
                                    "cm_BkgDaemon");
-            osi_assert(phandle != NULL);
+            osi_assertx(phandle != NULL, "cm_BkgDaemon thread creation failure");
             thrd_CloseHandle(phandle);
         }
     }

@@ -75,8 +75,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     int require_64bit_ops = 0;
 
-    osi_assert(userp != NULL);
-    osi_assert(scp != NULL);
+    osi_assertx(userp != NULL, "null cm_user_t");
+    osi_assertx(scp != NULL, "null cm_scache_t");
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
@@ -207,7 +207,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                     qdp = biod.bufListEndp;
                 else
                     qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
-                osi_assert(qdp != NULL);
+                osi_assertx(qdp != NULL, "null osi_queueData_t");
                 bufp = osi_GetQData(qdp);
                 bufferp = bufp->datap;
                 wbytes = nbytes;
@@ -1573,7 +1573,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  * our check above for nbytes being less than
                  * biod.length should ensure this.
                  */
-                osi_assert(bufferp != NULL);
+                osi_assertx(bufferp != NULL, "null cm_buf_t");
 
                 /* read rbytes of data */
                 rbytes = (nbytes > cm_data.buf_blockSize? cm_data.buf_blockSize : nbytes);
@@ -1624,7 +1624,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
              * all of the rest of the pages.
              */
             /* bytes fetched */
-	    osi_assert((bufferp - tbufp->datap) < LONG_MAX);
+	    osi_assertx((bufferp - tbufp->datap) < LONG_MAX, "data >= LONG_MAX");
             rbytes = (long) (bufferp - tbufp->datap);
 
             /* bytes left to zero */

@@ -169,12 +169,12 @@ void cm_InitFreelance() {
     /* Start the registry monitor */
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
                           NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "cm_FreelanceChangeNotifier thread create failure");
     thrd_CloseHandle(phandle);
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceSymlinkChangeNotifier,
                           NULL, 0, &lpid, "cm_FreelanceSymlinkChangeNotifier");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "cm_FreelanceSymlinkChangeNotifier thread create failure");
     thrd_CloseHandle(phandle);
 #endif
 }

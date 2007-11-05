@@ -149,8 +149,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	buf_CleanDirtyBuffers(scp); 
     } else {
 	/* look for things that shouldn't still be set */
-	osi_assert(scp->bufWritesp == NULL);
-	osi_assert(scp->bufReadsp == NULL);
+	osi_assertx(scp->bufWritesp == NULL, "non-null cm_scache_t bufWritesp");
+	osi_assertx(scp->bufReadsp == NULL, "non-null cm_scache_t bufReadsp");
     }
 #endif
 
@@ -244,7 +244,8 @@ cm_scache_t *cm_GetNewSCache(void)
 	  scp;
 	  scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
     {
-	osi_assert(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep);
+	osi_assertx(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep,
+                    "invalid cm_scache_t address");
 
 	if (scp->refCount == 0) {
 	    if (scp->flags & CM_SCACHEFLAG_DELETED) {
@@ -313,7 +314,8 @@ cm_scache_t *cm_GetNewSCache(void)
      * quota or we have a leak and need to allocate a new one to avoid panicing.
      */
     scp = cm_data.scacheBaseAddress + cm_data.currentSCaches;
-    osi_assert(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep);
+    osi_assertx(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep,
+                "invalid cm_scache_t address");
     memset(scp, 0, sizeof(cm_scache_t));
     scp->magic = CM_SCACHE_MAGIC;
     lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
@@ -639,7 +641,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     hash = CM_SCACHE_HASH(fidp);
         
-    osi_assert(fidp->cell != 0);
+    osi_assertx(fidp->cell != NULL, "null cm_cell_t");
 
     if (fidp->cell== cm_data.rootFid.cell && 
          fidp->volume==cm_data.rootFid.volume &&
@@ -785,7 +787,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	    osi_Log1(afsd_logp,"cm_GetSCache (3) outScpp 0x%p", scp);
 #endif
             cm_HoldSCacheNoLock(scp);
-            osi_assert(scp->volp == volp);
+            osi_assertx(scp->volp == volp, "cm_scache_t volume has unexpected value");
             cm_AdjustScacheLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             if (volp)
@@ -806,7 +808,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
     osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%x flags 0x%x", scp, scp->flags);
 
-    osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
+    osi_assertx(!(scp->flags & CM_SCACHEFLAG_INHASH), "CM_SCACHEFLAG_INHASH set");
 
 #if not_too_dangerous
     /* dropping the cm_scacheLock allows more than one thread
@@ -931,7 +933,7 @@ int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
         }
     }
 
-    osi_assert(w != NULL);
+    osi_assertx(w != NULL, "null cm_scache_waiter_t");
     this_is_me = (w->threadId == thrd_Current());
     lock_ReleaseRead(&cm_scacheLock);
 
@@ -1025,7 +1027,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
 
     if (bufp)
-        osi_assert(bufp->refCount > 0);
+        osi_assertx(bufp->refCount > 0, "cm_buf_t refCount 0");
 
 
     /* Do the access check.  Now we don't really do the access check
@@ -1217,7 +1219,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
 
         if (rights) {
             /* can't check access rights without a callback */
-            osi_assert(flags & CM_SCACHESYNC_NEEDCALLBACK);
+            osi_assertx(flags & CM_SCACHESYNC_NEEDCALLBACK, "!CM_SCACHESYNC_NEEDCALLBACK");
 
             if ((rights & PRSFS_WRITE) && (scp->flags & CM_SCACHEFLAG_RO))
                 return CM_ERROR_READONLY;
@@ -1317,7 +1319,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         if (bufp) {
             for(qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
                 tbufp = osi_GetQData(qdp);
-                osi_assert(tbufp != bufp);
+                osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
             }
         }
 
@@ -1336,7 +1338,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         if (bufp) {
             for(qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
                 tbufp = osi_GetQData(qdp);
-                osi_assert(tbufp != bufp);
+                osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
             }
         }
 
@@ -1439,7 +1441,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     if (flags & CM_SCACHESYNC_WRITE) {
         if (bufp) {
-            osi_assert(bufp->cmFlags & CM_BUF_CMWRITING);
+            osi_assertx(bufp->cmFlags & CM_BUF_CMWRITING, "!CM_BUF_CMWRITING");
 
             bufp->cmFlags &= ~CM_BUF_CMWRITING;
         }
@@ -1676,7 +1678,7 @@ void cm_HoldSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
 void cm_HoldSCacheNoLock(cm_scache_t *scp)
 #endif
 {
-    osi_assert(scp != 0);
+    osi_assertx(scp != NULL, "null cm_scache_t");
     scp->refCount++;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, scp->refCount);
@@ -1690,7 +1692,7 @@ void cm_HoldSCacheDbg(cm_scache_t *scp, char * file, long line)
 void cm_HoldSCache(cm_scache_t *scp)
 #endif
 {
-    osi_assert(scp != 0);
+    osi_assertx(scp != NULL, "null cm_scache_t");
     lock_ObtainWrite(&cm_scacheLock);
     scp->refCount++;
 #ifdef DEBUG_REFCOUNT
@@ -1706,10 +1708,10 @@ void cm_ReleaseSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
 void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 #endif
 {
-    osi_assert(scp != NULL);
+    osi_assertx(scp != NULL, "null cm_scache_t");
     if (scp->refCount == 0)
 	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
-    osi_assert(scp->refCount-- >= 0);
+    osi_assertx(scp->refCount-- >= 0, "cm_scache_t refCount 0");
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp,scp->refCount);
     afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, scp->refCount);
@@ -1722,11 +1724,11 @@ void cm_ReleaseSCacheDbg(cm_scache_t *scp, char * file, long line)
 void cm_ReleaseSCache(cm_scache_t *scp)
 #endif
 {
-    osi_assert(scp != NULL);
+    osi_assertx(scp != NULL, "null cm_scache_t");
     lock_ObtainWrite(&cm_scacheLock);
     if (scp->refCount == 0)
 	osi_Log1(afsd_logp,"cm_ReleaseSCache about to panic scp 0x%x",scp);
-    osi_assert(scp->refCount != 0);
+    osi_assertx(scp->refCount != 0, "cm_scache_t refCount 0");
     scp->refCount--;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp,scp->refCount);
@@ -1744,7 +1746,7 @@ int cm_FindFileType(cm_fid_t *fidp)
         
     hash = CM_SCACHE_HASH(fidp);
         
-    osi_assert(fidp->cell != 0);
+    osi_assertx(fidp->cell != NULL, "null cm_cell_t");
 
     lock_ObtainWrite(&cm_scacheLock);
     for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
