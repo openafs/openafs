@@ -408,7 +408,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	KLOGEXIT(code);
     }
     initialize_U_error_table();
-    initialize_krb5_error_table();
+    /*initialize_krb5_error_table();*/ 
     initialize_RXK_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
