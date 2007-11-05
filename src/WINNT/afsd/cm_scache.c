@@ -639,7 +639,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     hash = CM_SCACHE_HASH(fidp);
         
-    osi_assertx(fidp->cell != NULL, "null cm_cell_t");
+    osi_assertx(fidp->cell != 0, "unassigned cell value");
 
     if (fidp->cell== cm_data.rootFid.cell && 
          fidp->volume==cm_data.rootFid.volume &&
@@ -1744,7 +1744,7 @@ int cm_FindFileType(cm_fid_t *fidp)
         
     hash = CM_SCACHE_HASH(fidp);
         
-    osi_assertx(fidp->cell != NULL, "null cm_cell_t");
+    osi_assertx(fidp->cell != 0, "unassigned cell value");
 
     lock_ObtainWrite(&cm_scacheLock);
     for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
