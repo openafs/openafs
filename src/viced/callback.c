@@ -1854,7 +1854,7 @@ ReadDump(char *file)
     read(fd, &tfirst, sizeof(tfirst));
     read(fd, &freelisthead, sizeof(freelisthead));
     CB = ((struct CallBack
-	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
+	   *)(calloc(cbstuff.nblks, sizeof(struct CallBack)))) - 1;
     FE = ((struct FileEntry
 	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
     CBfree = (struct CallBack *)itocb(freelisthead);
