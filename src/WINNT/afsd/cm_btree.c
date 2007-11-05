@@ -66,6 +66,14 @@ static void _pullentry(Nptr node, int entry, int offset);
 static void _xferentry(Nptr srcNode, int srcEntry, Nptr destNode, int destEntry);
 static void _setentry(Nptr node, int entry, keyT key, Nptr downNode);
 
+/* access key and data values for B+tree methods */
+/* pass values to getSlot(), descend...() */
+static keyT   getfunkey(Tree  *B);
+static dataT  getfundata(Tree *B);
+static void   setfunkey(Tree *B,  keyT v);
+static void   setfundata(Tree *B, dataT v);
+
+
 #ifdef DEBUG_BTREE
 static int _isRoot(Tree *B, Nptr n)
 {
@@ -114,6 +122,19 @@ static int _isFull(Tree *B, Nptr n)
 /***********************************************************************\
 |	B+tree Initialization and Cleanup Routines                      |
 \***********************************************************************/
+static DWORD TlsKeyIndex;
+static DWORD TlsDataIndex;
+
+long cm_InitBPlusDir(void)
+{
+    if ((TlsKeyIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES) 
+        return 0;
+
+    if ((TlsDataIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES) 
+        return 0;
+
+    return 1;
+}
 
 /********************   Set up B+tree structure   **********************/
 Tree *initBtree(unsigned int poolsz, unsigned int fanout, KeyCmp keyCmp)
@@ -165,6 +186,73 @@ void freeBtree(Tree *B)
 
     memset(B, 0, sizeof(*B));
     free((void *) B);
+}
+
+
+/* access key and data values for B+tree methods */
+/* pass values to getSlot(), descend...() */
+static keyT getfunkey(Tree *B) {
+    keyT *tlsKey; 
+ 
+    // Retrieve a data pointer for the current thread. 
+    tlsKey = (keyT *) TlsGetValue(TlsKeyIndex); 
+    if (tlsKey == NULL) {
+        if (GetLastError() != ERROR_SUCCESS)
+            osi_panic("TlsGetValue failed", __FILE__, __LINE__);
+        else
+            osi_panic("get before set", __FILE__, __LINE__);
+    }
+
+    return *tlsKey;
+}
+
+static dataT getfundata(Tree *B) {
+    dataT *tlsData; 
+ 
+    // Retrieve a data pointer for the current thread. 
+    tlsData = (dataT *) TlsGetValue(TlsDataIndex); 
+    if (tlsData == NULL) {
+        if (GetLastError() != ERROR_SUCCESS)
+            osi_panic("TlsGetValue failed", __FILE__, __LINE__);
+        else
+            osi_panic("get before set", __FILE__, __LINE__);
+    }
+
+    return *tlsData;
+}
+
+static void setfunkey(Tree *B, keyT theKey) {
+    keyT *tlsKey;
+
+    tlsKey = (keyT *) TlsGetValue(TlsKeyIndex); 
+    if (tlsKey == NULL) {
+        if (GetLastError() != ERROR_SUCCESS)
+            osi_panic("TlsGetValue failed", __FILE__, __LINE__);
+
+        tlsKey = malloc(sizeof(keyT));
+        
+        if (!TlsSetValue(TlsKeyIndex, tlsKey)) 
+            osi_panic("TlsSetValue failed", __FILE__, __LINE__);
+    }
+
+    *tlsKey = theKey;
+}
+
+static void setfundata(Tree *B, dataT theData) {
+    dataT *tlsData;
+
+    tlsData = (dataT *) TlsGetValue(TlsDataIndex); 
+    if (tlsData == NULL) {
+        if (GetLastError() != ERROR_SUCCESS)
+            osi_panic("TlsGetValue failed", __FILE__, __LINE__);
+
+        tlsData = malloc(sizeof(dataT));
+        
+        if (!TlsSetValue(TlsDataIndex, tlsData)) 
+            osi_panic("TlsSetValue failed", __FILE__, __LINE__);
+    }
+
+    *tlsData = theData;
 }
 
 
@@ -276,10 +364,12 @@ static int findKey(Tree *B, Nptr curr, int lo, int hi)
         mid = (lo + hi) >> 1;
         switch (findslot = bestMatch(B, curr, mid)) {
         case BTLOWER:				/* check lower half of range */
-            findslot = findKey(B, curr, lo, mid - 1);		/* never in 2-3+trees */
+            if (mid > 1)
+                findslot = findKey(B, curr, lo, mid - 1);		/* never in 2-3+trees */
             break;
         case BTUPPER:				/* check upper half of range */
-            findslot = findKey(B, curr, mid + 1, hi);
+            if (mid < getfanout(B))
+                findslot = findKey(B, curr, mid + 1, hi);
             break;
         case BTERROR:
             sprintf(B->message, "FINDKEY: (lo %d hi %d) Bad key ordering on node %d (0x%p)\n", 
