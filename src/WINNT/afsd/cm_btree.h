@@ -107,10 +107,8 @@ typedef struct tree {
     unsigned int	height;		/* nodes traversed from root to leaves */
     Nptr		pool;		/* list of all nodes */
     Nptr                empty;          /* list of empty nodes */
-    keyT		theKey;		/*  the key value used in tree operations */
-    dataT		theData;	/*  data used for insertions/deletions */
     union {			        /* nodes to change in insert and delete */
-        Nptr	split;
+        Nptr	split;                  /* protected by scp->dirlock write-lock */
         Nptr	merge;
     } branch;
     KeyCmp	keycmp;		        /* pointer to function comparing two keys */
@@ -164,9 +162,14 @@ long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
 long cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked);
 
+long cm_InitBPlusDir(void);
+
+/************ Statistic Counter ***************************************/
+
 extern afs_uint32 bplus_free_tree;
 extern afs_uint32 bplus_dv_error;
 extern afs_uint64 bplus_free_time;
+
 
 /************ Accessor Macros *****************************************/
 			
@@ -245,14 +248,6 @@ extern afs_uint64 bplus_free_time;
 #define pullentry(j, q, v) _pullentry(j, q, v)
 #define xferentry(j, q, v, z) _xferentry(j, q, v, z)
 #define setentry(j, q, v, z) _setentry(j, q, v, z)
-
-
-/* access key and data values for B+tree methods */
-/* pass values to getSlot(), descend...() */
-#define getfunkey(B) ((B)->theKey)
-#define getfundata(B) ((B)->theData)
-#define setfunkey(B,v) ((B)->theKey = (v))
-#define setfundata(B,v) ((B)->theData = (v))
 
 /* define number of B+tree nodes for free node pool */
 #define getpoolsize(B) ((B)->poolsize)

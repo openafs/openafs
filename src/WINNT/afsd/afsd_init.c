@@ -23,6 +23,9 @@
 
 #include <osi.h>
 #include "afsd.h"
+#ifdef USE_BPLUS
+#include "cm_btree.h"
+#endif
 #include <rx\rx.h>
 #include <rx\rx_null.h>
 #include <WINNT/syscfg.h>
@@ -40,7 +43,9 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_deleteReadOnly;
+#ifdef USE_BPLUS
 extern afs_int32 cm_BPlusTrees;
+#endif
 extern afs_int32 cm_OfflineROIsValid;
 extern const char **smb_ExecutableExtensions;
 
@@ -1067,6 +1072,7 @@ int afsd_InitCM(char **reasonP)
     } 
     afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
     
+#ifdef USE_BPLUS
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "BPlusTrees", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
@@ -1074,6 +1080,14 @@ int afsd_InitCM(char **reasonP)
         cm_BPlusTrees = (unsigned short) dwValue;
     } 
     afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
+
+    if (cm_BPlusTrees && !cm_InitBPlusDir()) {
+        cm_BPlusTrees = 0;
+        afsi_log("CM BPlusTree initialization failure; disabled for this session");
+    }
+#else
+    afsi_log("CM BPlusTrees is not supported");
+#endif
 
     if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, 
                           &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
@@ -1159,7 +1173,7 @@ int afsd_InitCM(char **reasonP)
     smb_InitIoctl();
         
     cm_InitCallback();
-        
+
     code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
