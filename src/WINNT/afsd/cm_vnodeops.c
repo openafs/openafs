@@ -335,7 +335,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     long rights;
     long code;
 
-    osi_assert(ldpp != NULL);
+    osi_assertx(ldpp != NULL, "null cm_lock_data_t");
     *ldpp = NULL;
 
     /* Always allow delete; the RPC will tell us if it's OK */
@@ -2284,7 +2284,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%p", dscp);
 
     /* should be on a buffer boundary */
-    osi_assert((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0);
+    osi_assertx((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0, "invalid offset");
 
     memset(&bb, 0, sizeof(bb));
     bb.bufOffset = *offsetp;
@@ -3903,7 +3903,7 @@ static cm_file_lock_t * cm_GetFileLock(void) {
         osi_QRemove(&cm_freeFileLocks, &l->q);
     } else {
         l = malloc(sizeof(cm_file_lock_t));
-        osi_assert(l);
+        osi_assertx(l, "null cm_file_lock_t");
     }
 
     memset(l, 0, sizeof(cm_file_lock_t));
@@ -4046,7 +4046,7 @@ long cm_LockCheckPerms(cm_scache_t * scp,
         rights |= PRSFS_WRITE | PRSFS_LOCK;
     else {
         /* hmmkay */
-        osi_assert(FALSE);
+        osi_assertx(FALSE, "invalid lock type");
         return 0;
     }
 
@@ -4290,7 +4290,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 newLock = Which;
 
                 /* am I sane? */
-                osi_assert(newLock == LockRead);
+                osi_assertx(newLock == LockRead, "lock type not read");
 
                 code = cm_IntSetLock(scp, userp, newLock, reqp);
             }
@@ -4506,7 +4506,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
                      fileLock->scp->fid.volume,
                      fileLock->scp->fid.vnode,
                      fileLock->scp->fid.unique);
-            osi_assert(FALSE);
+            osi_assertx(FALSE, "invalid fid value");
         }
 #endif
 
@@ -4681,7 +4681,7 @@ long cm_Unlock(cm_scache_t *scp,
                      fileLock->scp->fid.volume,
                      fileLock->scp->fid.vnode,
                      fileLock->scp->fid.unique);
-            osi_assert(FALSE);
+            osi_assertx(FALSE, "invalid fid value");
         }
 #endif
         if (!IS_LOCK_DELETED(fileLock) &&
@@ -4848,7 +4848,7 @@ static void cm_LockMarkSCacheLost(cm_scache_t * scp)
 
 #ifdef DEBUG
     /* With the current code, we can't lose a lock on a RO scp */
-    osi_assert(!(scp->flags & CM_SCACHEFLAG_RO));
+    osi_assertx(!(scp->flags & CM_SCACHEFLAG_RO), "CM_SCACHEFLAG_RO unexpected");
 #endif
 
     /* cm_scacheLock needed because we are modifying fileLock->flags */
@@ -4909,10 +4909,10 @@ void cm_CheckLocks()
 
             /* Server locks must have been enabled for us to have
                received an active non-client-only lock. */
-            osi_assert(cm_enableServerLocks);
+            osi_assertx(cm_enableServerLocks, "!cm_enableServerLocks");
 
             scp = fileLock->scp;
-            osi_assert(scp != NULL);
+            osi_assertx(scp != NULL, "null cm_scache_t");
 
             cm_HoldSCacheNoLock(scp);
 
@@ -4929,7 +4929,7 @@ void cm_CheckLocks()
                          fileLock->scp->fid.volume,
                          fileLock->scp->fid.vnode,
                          fileLock->scp->fid.unique);
-                osi_assert(FALSE);
+                osi_assertx(FALSE, "invalid fid");
             }
 #endif
             /* Server locks are extended once per scp per refresh
@@ -5135,7 +5135,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     scp = oldFileLock->scp;
 
-    osi_assert(scp != NULL);
+    osi_assertx(scp != NULL, "null cm_scache_t");
 
     lock_ReleaseRead(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
@@ -5241,7 +5241,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
-    osi_assert(IS_LOCK_WAITLOCK(oldFileLock));
+    osi_assertx(IS_LOCK_WAITLOCK(oldFileLock), "!IS_LOCK_WAITLOCK");
 
     if (force_client_lock ||
         !SERVERLOCKS_ENABLED(scp) ||
@@ -5313,7 +5313,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
         if (scp->serverLock == LockRead) {
 
-            osi_assert(newLock == LockWrite);
+            osi_assertx(newLock == LockWrite, "!LockWrite");
 
             osi_Log0(afsd_logp, "  Attempting to UPGRADE from LockRead to LockWrite");
 
@@ -5392,9 +5392,9 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 cm_key_t cm_GenerateKey(unsigned int session_id, unsigned long process_id, unsigned int file_id)
 {
 #ifdef DEBUG
-    osi_assert((process_id & 0xffffffff) == process_id);
-    osi_assert((session_id & 0xffff) == session_id);
-    osi_assert((file_id & 0xffff) == file_id);
+    osi_assertx((process_id & 0xffffffff) == process_id, "unexpected process_id");
+    osi_assertx((session_id & 0xffff) == session_id, "unexpected session_id");
+    osi_assertx((file_id & 0xffff) == file_id, "unexpected file_id");
 #endif
 
     return 

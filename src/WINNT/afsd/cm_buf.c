@@ -89,7 +89,7 @@ static int buf_ShutdownFlag = 0;
 
 void buf_HoldLocked(cm_buf_t *bp)
 {
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
     bp->refCount++;
 }
 
@@ -105,12 +105,12 @@ void buf_Hold(cm_buf_t *bp)
 void buf_ReleaseLocked(cm_buf_t *bp)
 {
     /* ensure that we're in the LRU queue if our ref count is 0 */
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
 #ifdef DEBUG
     if (bp->refCount == 0)
 	osi_panic("buf refcount 0",__FILE__,__LINE__);;
 #else
-    osi_assert(bp->refCount > 0);
+    osi_assertx(bp->refCount > 0, "cm_buf_t refCount == 0");
 #endif
     if (--bp->refCount == 0) {
         if (!(bp->flags & CM_BUF_INLRU)) {
@@ -321,8 +321,10 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             cm_data.buf_allp = NULL;
             
             for (i=0; i<cm_data.buf_nbuffers; i++) {
-                osi_assert(bp >= cm_data.bufHeaderBaseAddress && bp < (cm_buf_t *)cm_data.bufDataBaseAddress);
-                osi_assert(data >= cm_data.bufDataBaseAddress && data < cm_data.bufEndOfData);
+                osi_assertx(bp >= cm_data.bufHeaderBaseAddress && bp < (cm_buf_t *)cm_data.bufDataBaseAddress, 
+                            "invalid cm_buf_t address");
+                osi_assertx(data >= cm_data.bufDataBaseAddress && data < cm_data.bufEndOfData,
+                            "invalid cm_buf_t data address");
                 
                 /* allocate and zero some storage */
                 memset(bp, 0, sizeof(cm_buf_t));
@@ -436,8 +438,8 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
     int release = 0;
 
     if (scp)
-        osi_assert(scp->magic == CM_SCACHE_MAGIC);
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+        osi_assertx(scp->magic == CM_SCACHE_MAGIC, "invalid cm_scache_t magic");
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     while (1) {
         /* if no IO is happening, we're done */
@@ -549,7 +551,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
     cm_scache_t * scp = NULL;
     osi_hyper_t offset;
 
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
 	isdirty = 1;
@@ -629,7 +631,7 @@ void buf_Recycle(cm_buf_t *bp)
     cm_buf_t *tbp;
     cm_buf_t *prevBp, *nextBp;
 
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     /* if we get here, we know that the buffer still has a 0 ref count,
      * and that it is clean and has no currently pending I/O.  This is
@@ -641,8 +643,9 @@ void buf_Recycle(cm_buf_t *bp)
     osi_Log3( buf_logp, "buf_Recycle recycles 0x%p, off 0x%x:%08x",
               bp, bp->offset.HighPart, bp->offset.LowPart);
 
-    osi_assert(bp->refCount == 0);
-    osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)));
+    osi_assertx(bp->refCount == 0, "cm_buf_t refcount != 0");
+    osi_assertx(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)),
+                "incorrect cm_buf_t flags");
     lock_AssertWrite(&buf_globalLock);
 
     if (bp->flags & CM_BUF_INHASH) {
@@ -990,7 +993,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
      */
     if (created) {
         /* load the page; freshly created pages should be idle */
-        osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)));
+        osi_assertx(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)), "incorrect cm_buf_t flags");
 
         /* start the I/O; may drop lock */
         bp->flags |= CM_BUF_READING;
@@ -1096,7 +1099,7 @@ long buf_CountFreeList(void)
 long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
 {
     long code;
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     lock_ObtainMutex(&bp->mx);
     code = buf_CleanAsyncLocked(bp, reqp);
@@ -1108,7 +1111,7 @@ long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
 /* wait for a buffer's cleaning to finish */
 void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp)
 {
-    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     lock_ObtainMutex(&bp->mx);
     if (bp->flags & CM_BUF_WRITING) {
@@ -1124,8 +1127,8 @@ void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp)
  */
 void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
 {
-    osi_assert(bp->magic == CM_BUF_MAGIC);
-    osi_assert(bp->refCount > 0);
+    osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
+    osi_assertx(bp->refCount > 0, "cm_buf_t refcount 0");
 
     lock_ObtainWrite(&buf_globalLock);
     if (bp->flags & CM_BUF_DIRTY) {
@@ -1375,7 +1378,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                  * visible again.
                  */
                 bufferPos = sizep->LowPart & (cm_data.buf_blockSize - 1);
-                osi_assert(bufferPos != 0);
+                osi_assertx(bufferPos != 0, "non-zero bufferPos");
                 memset(bufp->datap + bufferPos, 0,
                         cm_data.buf_blockSize - bufferPos);
             }

@@ -2297,13 +2297,13 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         /* don't create if not found */
         if (dscp) 
             cm_ReleaseSCache(dscp);
-        osi_assert(scp == NULL);
+        osi_assertx(scp == NULL, "null cm_scache_t");
         cm_ReleaseUser(userp);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_NOSUCHFILE;
     }
     else {
-        osi_assert(dscp != NULL && scp == NULL);
+        osi_assertx(dscp != NULL && scp == NULL, "null dsc || non-null sc");
         openAction = 2;	/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
@@ -2376,7 +2376,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
     /* now all we have to do is open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 	
     cm_HoldUser(userp);
     lock_ObtainMutex(&fidp->mx);
@@ -4143,7 +4143,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     cm_InitReq(&req);
 
     eos = 0;
-    osi_assert(p->opcode == 1);
+    osi_assertx(p->opcode == 1, "invalid opcode");
 
     /* find first; obtain basic parameters from request */
 
@@ -4606,7 +4606,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         strcpy(dsp->mask, maskp);	/* and save mask */
     }
     else {
-        osi_assert(p->opcode == 2);
+        osi_assertx(p->opcode == 2, "invalid opcode");
         /* find next; obtain basic parameters from request or open dir file */
         dsp = smb_FindDirSearch(p->parmsp[0]);
         maxCount = p->parmsp[1];
@@ -5471,7 +5471,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_NOSUCHFILE;
     }
     else {
-        osi_assert(dscp != NULL);
+        osi_assertx(dscp != NULL, "null cm_scache_t");
         osi_Log1(smb_logp, "smb_ReceiveV3OpenX creating file %s",
                  osi_LogSaveString(smb_logp, lastNamep));
         openAction = 2;	/* created file */
@@ -5526,7 +5526,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* now all we have to do is open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 	
     cm_HoldUser(userp);
     lock_ObtainMutex(&fidp->mx);
@@ -5749,7 +5749,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
                 wlRequest = malloc(sizeof(smb_waitingLockRequest_t));
 
-                osi_assert(wlRequest != NULL);
+                osi_assertx(wlRequest != NULL, "null wlRequest");
 
                 wlRequest->vcp = vcp;
                 smb_HoldVC(vcp);
@@ -5780,7 +5780,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
                     wLock = malloc(sizeof(smb_waitingLock_t));
 
-                    osi_assert(wLock != NULL);
+                    osi_assertx(wLock != NULL, "null smb_waitingLock_t");
 
                     wLock->key = tkey;
                     wLock->LOffset = tOffset;
@@ -5794,7 +5794,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
             wLock = malloc(sizeof(smb_waitingLock_t));
 
-            osi_assert(wLock != NULL);
+            osi_assertx(wLock != NULL, "null smb_waitingLock_t");
 
             wLock->key = key;
             wLock->LOffset = LOffset;
@@ -6778,7 +6778,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             code = 0;
             while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
                 targetScp = 0;
-                osi_assert(dscp != NULL);
+                osi_assertx(dscp != NULL, "null cm_scache_t");
                 code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
                 if (code == 0) {
                     /* we have a more accurate file to use (the
@@ -6818,7 +6818,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         free(realPathp);
         return CM_ERROR_NOSUCHFILE;
     } else if (realDirFlag == 0 || realDirFlag == -1) {
-        osi_assert(dscp != NULL);
+        osi_assertx(dscp != NULL, "null cm_scache_t");
         osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
                   osi_LogSaveString(smb_logp, lastNamep));
         openAction = 2;		/* created file */
@@ -6876,7 +6876,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* create directory */
         if ( !treeCreate ) 
             treeStartp = lastNamep;
-        osi_assert(dscp != NULL);
+        osi_assertx(dscp != NULL, "null cm_scache_t");
         osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
                   osi_LogSaveString(smb_logp, treeStartp));
         openAction = 2;		/* created directory */
@@ -7012,7 +7012,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 
     /* save a reference to the user */
     cm_HoldUser(userp);
@@ -7550,7 +7550,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         return CM_ERROR_NOSUCHFILE;
     }
     else if (realDirFlag == 0 || realDirFlag == -1) {
-        osi_assert(dscp != NULL);
+        osi_assertx(dscp != NULL, "null cm_scache_t");
         osi_Log1(smb_logp, "smb_ReceiveNTTranCreate creating file %s",
                   osi_LogSaveString(smb_logp, lastNamep));
         openAction = 2;		/* created file */
@@ -7601,7 +7601,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         }
     } else {
         /* create directory */
-        osi_assert(dscp != NULL);
+        osi_assertx(dscp != NULL, "null cm_scache_t");
         osi_Log1(smb_logp,
                   "smb_ReceiveNTTranCreate creating directory %s",
                   osi_LogSaveString(smb_logp, lastNamep));
@@ -7679,7 +7679,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     /* open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 
     /* save a reference to the user */
     cm_HoldUser(userp);

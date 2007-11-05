@@ -34,7 +34,7 @@ afs_int32 cryptall = 0;
 void cm_PutConn(cm_conn_t *connp)
 {
 	lock_ObtainWrite(&cm_connLock);
-	osi_assert(connp->refCount-- > 0);
+	osi_assertx(connp->refCount-- > 0, "cm_conn_t refcount 0");
 	lock_ReleaseWrite(&cm_connLock);
 }
 
@@ -805,7 +805,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         serviceID = 52;
     }
     else {
-        osi_assert(serverp->type == CM_SERVER_FILE);
+        osi_assertx(serverp->type == CM_SERVER_FILE, "incorrect server type");
         port = htons(7000);
         serviceID = 1;
     }
@@ -825,7 +825,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         tcp->cryptlevel = rxkad_clear;
         secObjp = rxnull_NewClientSecurityObject();
     }
-    osi_assert(secObjp != NULL);
+    osi_assertx(secObjp != NULL, "null rx_securityClass");
     tcp->callp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
                                   port,
                                   serviceID,

@@ -334,7 +334,7 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     userp = smb_GetUserFromUID(uidp);
-    osi_assert(userp != 0);
+    osi_assertx(userp != NULL, "null cm_user_t");
     iop->uidp = uidp;
     if (uidp && uidp->unp) {
         osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",

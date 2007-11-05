@@ -794,7 +794,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 #endif
     {
         cellp = cm_FindCellByID(scp->fid.cell);
-        osi_assert(cellp);
+        osi_assertx(cellp, "null cm_cell_t");
 
         if (scp->flags & CM_SCACHEFLAG_RO) {
             cm_ReleaseSCache(scp);

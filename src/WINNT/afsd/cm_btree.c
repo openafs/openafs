@@ -1805,7 +1805,7 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp)
     osi_hyper_t thyper;
     LARGE_INTEGER start, end;
 
-    osi_assert(scp->dirBplus == NULL);
+    osi_assertx(scp->dirBplus == NULL, "cm_BPlusDirBuildTree called on non-empty tree");
 
     lock_AssertWrite(&scp->dirlock);
 
