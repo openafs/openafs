@@ -630,6 +630,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
+		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
@@ -880,6 +881,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_splice" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SPLICE, 1, [define if your struct file_operations has splice_write and splice_read])
 		 fi
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
