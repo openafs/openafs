@@ -894,3 +894,15 @@ _fop.sendfile(NULL, NULL, 0, 0, NULL);],
       ac_cv_linux_fs_struct_fop_has_sendfile=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
 
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
+  AC_MSG_CHECKING([for splice_write and splice_read in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_splice], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.splice_write(NULL, NULL, NULL, 0, 0);
+_fop.splice_read(NULL, NULL, NULL, 0, 0);],
+      ac_cv_linux_fs_struct_fop_has_splice=yes,
+      ac_cv_linux_fs_struct_fop_has_splice=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
+

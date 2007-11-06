@@ -643,6 +643,10 @@ struct file_operations afs_file_fops = {
 #if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
   .sendfile =   generic_file_sendfile,
 #endif
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
+  .splice_write = generic_file_splice_write,
+  .splice_read = generic_file_splice_read,
+#endif
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
   .lock =	afs_linux_lock,
