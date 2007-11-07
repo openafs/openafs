@@ -1,3 +1,116 @@
+Since 1.5.26
+ * Fix NSIS uninstall from the .MSI installer.
+
+ * Add Stack Frame logging for AMD64
+
+ * Add support for EWOULDBLOCK to cm_Analyze.  If the file 
+   server returns EWOULDBLOCK, retry the request every two 
+   seconds for up to the RDRtimeout.
+
+ * Reorganize the order of the includes to ensure that EWOULDBLOCK 
+   is not assigned the same value as EIO.
+
+ * Update CellServDB to GCO Public 25 Oct 2007
+
+ * Add additional validation and error handling code after 
+   each call to getSlot().  If an invalid slot is returned, 
+   return NONODE.  If the invalid slot is returned when 
+   extracting a data node, invalidate the tree.
+
+ * Modify compareKeys() to always perform a case-insensitive 
+   comparison and only perform a case sensistive comparison 
+   if the case-insensitive one matches.  This ensures the 
+   ordering is consistently reported.
+
+ * Add lock assertions to ensure that all calls are being 
+   performed with the correct locks being held.  There have been 
+   some crash reports that provide stack data that does not appear 
+   to be possible unless there is a race.  However, there are no 
+   obvious locations where the race is taking place and the test 
+   suite indicates that all of the correct locks are being held. 
+   We shall see what happens in the field.
+
+ * For consistency replace all calls to findKey in which the range i
+   s (1,numentries) with calls to getSlot().
+
+ * Optimize the depth search loop by testing the slot value in the 
+   for statement instead of forcing the loop to be broken later.
+
+ * Reorganize the locking for cm_BeginDirOp and cm_EndDirOp.
+   There are a number of locations where locks are obtained, dropped, 
+   and reobtained.  This reorganization attempts to accomplish several 
+   things:
+
+   (1) be optimistic for the most common case so it will be fast
+
+   (2) add consistency checks after each location where locks are 
+       dropped and re-obtained.  If we lose a race in cm_BeginDirOp 
+       and the bplus tree is out of date, retry until we get to a 
+       consistent state that we can use.
+
+   (3) Ensure that all operations take place with the correct locks.
+
+ * One of the issues that has become a serious problem since the 
+   addition of the local directory updates is that although cm_SyncOp 
+   synchronizes operations, it does not preserve the order of requests. 
+   This has always been a problem in that it has been possible for a 
+   request to fail to complete due to its worker thread's bad luck. 
+   When a request takes longer than the Windows SMB Redirector's timeout, 
+   the SMB Redirector tears down the SMB virtual circuit. 
+
+   When using the local directory updates it is really important that 
+   the directory update operations complete in the order that they were 
+   sent to the file server. If they don't, then the local directory state 
+   and the file server state will not match and the local directory state 
+   must be discarded which in turn forces a new read of the entire 
+   directory contents over the network. 
+
+   This patch adds a new cm_scache_waiter_t object that is used to store 
+   the current thread, buffer, and syncop flags within a waiters queue 
+   on each cm_scache_t object. If a thread is forced to sleep in 
+   cm_SyncOp, upon waking it will check to see if there are any other 
+   threads waiting that are attempting to perform a similar task ahead 
+   of it in the queue. If yes, the thread goes back to sleep. If not, 
+   it goes ahead and enters the cm_SyncOp conflict resolution block. 
+
+   This patch has the additional side effect of reducing the number of 
+   competing threads that must obtain the cm_scache_t mutex and process 
+   the cm_SyncOp conflict resolution block. As a result, the overall CPU 
+   utilization of the service and the clock time associated with processing 
+   requests will be reduced.
+
+ * assert that the cm_scache_t mutex is held when calling
+   buf_ForceDataVersion().
+
+ * rename findNode to leafNode in bplus_Lookup
+
+ * replace all OutputDebugString calls with osi_LogX calls
+
+ * modify bestMatch to special case the return values for leaf nodes.
+   If an entry is above or below the values available in the leaf node
+   return BTLOWER or BTUPPER instead of BTERROR.
+
+ * In insert and delete operations check for BTLOWER/BTUPPER and isleaf,
+   if true convert to either slot 0 or Max and perform the insertion.
+   This produces easier to read code when performing lookups.
+ 
+ * modify lock_AssertXXX macros to call osi_assertx() and provide a
+   descriptive message.
+
+ * the difference between osi_assert() and osi_assertx() is whether or not
+   a description is specified as part of the call.  When no message is
+   specified afsd_notifier() is called with a NULL msgp parameter.  This
+   results in a null pointer dereference during the EventLog() call.
+
+   As a result, none of the information describing the assertion is written
+   to the log file.
+
+   This commit sets a default message for use when no other message is
+   provided and it replaces all calls to osi_assert with osi_assertx and
+   adds descriptions.
+   
+ * Migrate B+ tree search key into thread local storage
+
 Since 1.5.25
  * Fix an uninitialized variable in lana_IsLoopback() which 
    could result in a random determination that a loopback 
