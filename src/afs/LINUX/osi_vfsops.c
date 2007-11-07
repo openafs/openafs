@@ -531,8 +531,11 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_size = vp->va_size;
 #if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
+    ip->i_atime.tv_nsec = 0;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+    ip->i_mtime.tv_nsec = 0;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
+    ip->i_ctime.tv_nsec = 0;
 #else
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;
