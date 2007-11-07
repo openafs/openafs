@@ -1272,6 +1272,7 @@ afs_shutdown(void)
     shutdown_rx();
     afs_shutdown_BKG();
 #endif
+    return;
     shutdown_bufferpackage();
     shutdown_cache();
     shutdown_osi();
