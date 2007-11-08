@@ -709,7 +709,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
 	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		    progname, cell_to_use);
-		com_err(progname, status, "while getting AFS tickets");
+		afs_com_err(progname, status, "while getting AFS tickets");
 	    return(AKLOG_KERBEROS);
 	}
 
@@ -763,7 +763,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    status = krb5_524_convert_creds(context, v5cred, &cred);
 
 	    if (status) {
-		com_err(progname, status, "while converting tickets "
+		afs_com_err(progname, status, "while converting tickets "
 			"to Kerberos V4 format");
 		return(AKLOG_KERBEROS);
 	    }
@@ -821,7 +821,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    if ((status = get_user_realm(context, realm_of_user))) {
 		fprintf(stderr, "%s: Couldn't determine realm of user:)",
 			progname);
-		com_err(progname, status, " while getting realm");
+		afs_com_err(progname, status, " while getting realm");
 		return(AKLOG_KERBEROS);
 	    }
 	    if (strcmp(realm_of_user, realm_of_cell)) {
@@ -1733,9 +1733,9 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
     code = krb5_kt_resolve(context, keytab, &kt);
     if (code) {
         if (keytab)
-            com_err(progname, code, "while resolving keytab %s", keytab);
+            afs_com_err(progname, code, "while resolving keytab %s", keytab);
         else
-            com_err(progname, code, "while resolving default keytab");
+            afs_com_err(progname, code, "while resolving default keytab");
         goto cleanup;
     }
 
@@ -1754,7 +1754,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 	    }
         }
         if (code) {
-	    com_err(progname, code,"while scanning keytab entries");
+	    afs_com_err(progname, code,"while scanning keytab entries");
 	    goto cleanup;
         }
     } else {
@@ -1762,7 +1762,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         int best = -1;
         memset(new, 0, sizeof *new);
         if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
-            com_err(progname, code, "while starting keytab scan");
+            afs_com_err(progname, code, "while starting keytab scan");
             goto cleanup;
         }
         while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
@@ -1778,12 +1778,12 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
             } else krb5_free_keytab_entry_contents(context, new);
         }
         if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
-            com_err(progname, i, "while ending keytab scan");
+            afs_com_err(progname, i, "while ending keytab scan");
             code = i;
             goto cleanup;
         }
         if (best < 0) {
-            com_err(progname, code, "while scanning keytab");
+            afs_com_err(progname, code, "while scanning keytab");
             goto cleanup;
         }
         deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
@@ -1794,7 +1794,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 #if USING_HEIMDAL
     if ((code = krb5_generate_random_keyblock(context,
 					      deref_keyblock_enctype(session_key), session_key))) {
-        com_err(progname, code, "while making session key");
+        afs_com_err(progname, code, "while making session key");
         goto cleanup;
     }
     enc_tkt_reply->flags.initial = 1;
@@ -1817,7 +1817,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 #else
     if ((code = krb5_c_make_random_key(context,
 				       deref_keyblock_enctype(session_key), session_key))) {
-        com_err(progname, code, "while making session key");
+        afs_com_err(progname, code, "while making session key");
         goto cleanup;
     }
     enc_tkt_reply->magic = KV5M_ENC_TKT_PART;
@@ -1880,12 +1880,12 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         ASN1_MALLOC_ENCODE(EncTicketPart, buf, buf_size,
 			   enc_tkt_reply, &buf_len, code);
         if(code) {
-            com_err(progname, code, "while encoding ticket");
+            afs_com_err(progname, code, "while encoding ticket");
             goto cleanup;
         }
 
         if(buf_len != buf_size) {
-            com_err(progname, code,
+            afs_com_err(progname, code,
 		    "%d != %d while encoding ticket (internal ASN.1 encoder error",
 		    buf_len, buf_size);
             goto cleanup;
@@ -1903,7 +1903,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         if (buf) free(buf);
         if (crypto) krb5_crypto_destroy(context, crypto);
         if(code) {
-            com_err(progname, code, "while %s", what);
+            afs_com_err(progname, code, "while %s", what);
             goto cleanup;
         }
     } /* crypto block */
@@ -1915,7 +1915,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
     ticket_reply->server = service_principal;
     ticket_reply->enc_part2 = enc_tkt_reply;
     if ((code = krb5_encrypt_tkt_part(context, &deref_entry_keyblock(entry), ticket_reply))) {
-        com_err(progname, code, "while making ticket");
+        afs_com_err(progname, code, "while making ticket");
         goto cleanup;
     }
     ticket_reply->enc_part.kvno = entry->vno;
@@ -1925,17 +1925,17 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 
     if ((code = krb5_copy_principal(context, service_principal,
 				    &creds->server))) {
-        com_err(progname, code, "while copying service principal");
+        afs_com_err(progname, code, "while copying service principal");
         goto cleanup;
     }
     if ((code = krb5_copy_principal(context, client_principal,
 				    &creds->client))) {
-        com_err(progname, code, "while copying client principal");
+        afs_com_err(progname, code, "while copying client principal");
         goto cleanup;
     }
     if ((code = krb5_copy_keyblock_contents(context, session_key,
 					    &deref_session_key(creds)))) {
-        com_err(progname, code, "while copying session key");
+        afs_com_err(progname, code, "while copying session key");
         goto cleanup;
     }
 
@@ -1953,7 +1953,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         ;
     else if ((code = krb5_copy_addresses(context,
 					 deref_enc_tkt_addrs(enc_tkt_reply), &creds->addresses))) {
-        com_err(progname, code, "while copying addresses");
+        afs_com_err(progname, code, "while copying addresses");
         goto cleanup;
     }
 
@@ -1963,13 +1963,13 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 	ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length,
 			   ticket_reply, &creds_tkt_len, code);
 	if(code) {
-	    com_err(progname, code, "while encoding ticket");
+	    afs_com_err(progname, code, "while encoding ticket");
 	    goto cleanup;
 	}
     }
 #else
     if ((code = encode_krb5_ticket(ticket_reply, &temp))) {
-	com_err(progname, code, "while encoding ticket");
+	afs_com_err(progname, code, "while encoding ticket");
 	goto cleanup;
     }
     creds->ticket = *temp;
