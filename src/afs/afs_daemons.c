@@ -123,12 +123,9 @@ afs_CheckServerDaemon(void)
     }
     afs_CheckServerDaemonStarted = 0;
 }
-#define RECURSIVE_VFS_CONTEXT 1
-#if RECURSIVE_VFS_CONTEXT
+
 extern int vfs_context_ref;
-#else
-#define vfs_context_ref 1
-#endif
+
 void
 afs_Daemon(void)
 {
@@ -153,10 +150,8 @@ afs_Daemon(void)
         osi_Panic("vfs context already initialized");
     while (afs_osi_ctxtp && vfs_context_ref)
         afs_osi_Sleep(&afs_osi_ctxtp);
-#if RECURSIVE_VFS_CONTEXT
     if (afs_osi_ctxtp && !vfs_context_ref)
        vfs_context_rele(afs_osi_ctxtp);
-#endif
     afs_osi_ctxtp = vfs_context_create(NULL);
     afs_osi_ctxtp_initialized = 1;
 #endif
