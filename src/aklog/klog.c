@@ -396,15 +396,15 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     Silent = (as->parms[aSILENT].items ? 1 : 0);
 
     if (Silent) {
-	set_com_err_hook(silent_errors);
+	afs_set_com_err_hook(silent_errors);
     }
 
     if ((code = krb5_init_context(&k5context))) {
-	com_err(rn, code, "while initializing Kerberos 5 library");
+	afs_com_err(rn, code, "while initializing Kerberos 5 library");
 	KLOGEXIT(code);
     }
     if ((code = rx_Init(0))) {
-	com_err(rn, code, "while initializing rx");
+	afs_com_err(rn, code, "while initializing rx");
 	KLOGEXIT(code);
     }
     initialize_U_error_table();
@@ -414,7 +414,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     initialize_ACFG_error_table();
     /* initialize_rx_error_table(); */
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
-	com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
+	afs_com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
 	    rn, AFSDIR_CLIENT_ETC_DIRPATH);
 	KLOGEXIT(1);
     }
@@ -440,9 +440,9 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     cell = as->parms[aCELL].items ? cell = as->parms[aCELL].items->data : 0;
     if ((code = afsconf_GetCellInfo(tdir, cell, "afsprot", cellconfig))) {
 	if (cell)
-	    com_err(rn, code, "Can't get cell information for '%s'", cell);
+	    afs_com_err(rn, code, "Can't get cell information for '%s'", cell);
 	else
-	    com_err(rn, code, "Can't get determine local cell!");
+	    afs_com_err(rn, code, "Can't get determine local cell!");
 	KLOGEXIT(code);
     }
 
@@ -450,13 +450,13 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	code = krb5_set_default_realm(k5context,
 		(const char *) as->parms[aKRBREALM].items);
 	if (code) {
-	    com_err(rn, code, "Can't make <%s> the default realm",
+	    afs_com_err(rn, code, "Can't make <%s> the default realm",
 		as->parms[aKRBREALM].items);
 	    KLOGEXIT(code);
 	}
     }
     else if ((code = krb5_get_host_realm(k5context, cellconfig->hostName[0], &hrealms))) {
-	com_err(rn, code, "Can't get realm for host <%s> in cell <%s>\n",
+	afs_com_err(rn, code, "Can't get realm for host <%s> in cell <%s>\n",
 		cellconfig->hostName[0], cellconfig->name);
 	KLOGEXIT(code);
     } else {
@@ -464,7 +464,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    code = krb5_set_default_realm(k5context,
 		    *hrealms);
 	    if (code) {
-		com_err(rn, code, "Can't make <%s> the default realm",
+		afs_com_err(rn, code, "Can't make <%s> the default realm",
 		    *hrealms);
 		KLOGEXIT(code);
 	    }
@@ -480,7 +480,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	struct passwd *pw;
 	pw = getpwuid(id);
 	if (pw == 0) {
-	    com_err(rn, 0,
+	    afs_com_err(rn, 0,
 		"Can't figure out your name from your user id (%d).", id);
 	    if (!Silent)
 		fprintf(stderr, "%s: Try providing the user name.\n", rn);
@@ -490,7 +490,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     }
     code = krb5_parse_name(k5context, pname, &princ);
     if (code) {
-	com_err(rn, code, "Can't parse principal <%s>", pname);
+	afs_com_err(rn, code, "Can't parse principal <%s>", pname);
 	KLOGEXIT(code);
     }
 
@@ -586,11 +586,11 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	if (krb5_get_default_realm(k5context, &r))
 	    r = 0;
 	if (service)
-	    com_err(rn, code, "Unable to authenticate to use %s", service);
+	    afs_com_err(rn, code, "Unable to authenticate to use %s", service);
 	else if (r)
-	    com_err(rn, code, "Unable to authenticate in realm %s", r);
+	    afs_com_err(rn, code, "Unable to authenticate in realm %s", r);
 	else
-	    com_err(rn, code, "Unable to authenticate to use cell %s",
+	    afs_com_err(rn, code, "Unable to authenticate to use cell %s",
 		cellconfig->name);
 	if (r) free(r);
 	KLOGEXIT(code);
@@ -624,7 +624,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    break;
 	Failed:
 	    if (code)
-		com_err(rn, code, what);
+		afs_com_err(rn, code, what);
 	    if (writeTicketFile) {
 		if (cc) {
 		    krb5_cc_close(k5context, cc);
@@ -640,7 +640,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    mcred->client = princ;
 	    code = krb5_parse_name(k5context, service, &mcred->server);
 	    if (code) {
-		com_err(rn, code, "Unable to parse service <%s>\n", service);
+		afs_com_err(rn, code, "Unable to parse service <%s>\n", service);
 		KLOGEXIT(code);
 	    }
 	    if (tofree) { free(tofree); tofree = 0; }
@@ -657,7 +657,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	afscred = outcred;
     }
     if (code) {
-	com_err(rn, code, "Unable to get credentials to use %s", outname);
+	afs_com_err(rn, code, "Unable to get credentials to use %s", outname);
 	KLOGEXIT(code);
     }
 
@@ -670,7 +670,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	strncpy(aserver->cell, cellconfig->name, MAXKTCREALMLEN-1);
 	code = ktc_SetK5Token(k5context, aserver, afscred, viceid, dosetpag);
 	if (code) {
-	    com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s\n",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
@@ -686,7 +686,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    if (afs_krb5_skip_ticket_wrapper(afscred->ticket.data,
 			afscred->ticket.length, &enc_part->data,
 			&enc_part->length)) {
-		com_err(rn, 0, "Can't unwrap %s AFS credential",
+		afs_com_err(rn, 0, "Can't unwrap %s AFS credential",
 		    cellconfig->name);
 		KLOGEXIT(1);
 	    }
@@ -712,7 +712,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {
-		com_err(rn, code, "Can't get your viceid", cellconfig->name);
+		afs_com_err(rn, code, "Can't get your viceid", cellconfig->name);
 		*aclient->name = 0;
 	    } else
 		snprintf(aclient->name, MAXKTCNAMELEN-1, "AFS ID %d", viceid);
@@ -721,7 +721,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	code = ktc_SetToken(aserver, atoken, aclient, dosetpag);
 	if (code) {
-	    com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s\n",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
