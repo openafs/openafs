@@ -85,6 +85,7 @@ src/null/Makefile \
 src/package/Makefile \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
+src/packaging/MacOS/buildpkg.sh \
 src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/pinstall/Makefile \
