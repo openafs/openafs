@@ -25,6 +25,15 @@ CURDIR=`pwd`
 RESSRC=`dirname $0`
 RESSRC=`cd $RESSRC && pwd`
 majorvers=`uname -r | sed 's/\..*//'`
+if [ $majorvers -eq 7 ]; then
+  RELNAME="Panther"
+fi
+if [ $majorvers -eq 8 ]; then
+  RELNAME="Tiger"
+fi
+if [ $majorvers -eq 9 ]; then
+  RELNAME="Leopard"
+fi
 
 PKGROOT=$CURDIR/pkgroot
 PKGRES=$CURDIR/pkgres
@@ -67,7 +76,7 @@ if [ $firstpass = yes ]; then
           die=1
        fi
     fi
-    FILES="ReadMe.rtf License.rtf CellServDB.list OpenAFS.info OpenAFS.post_install OpenAFS.pre_upgrade csrvdbmerge.pl 2.0.txt"
+    FILES="ReadMe.rtf.$majorvers License.rtf CellServDB.list OpenAFS.info OpenAFS.post_install OpenAFS.pre_upgrade csrvdbmerge.pl 2.0.txt"
     for f in $FILES; do
        if [ ! -f $RESSRC/$f ]; then
 	 echo "file missing: " $RESSRC/$f
@@ -194,7 +203,8 @@ if [ $secondpass = yes ]; then
 	cp OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade
 	chmod a+x $PKGRES/OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade $PKGRES/OpenAFS.pre_upgrade
     fi
-    cp License.rtf ReadMe.rtf $PKGRES
+    cp License.rtf $PKGRES
+    cp ReadMe.rtf.$majorvers $PKGRES/ReadMe.rtf
     cp csrvdbmerge.pl $PKGRES
     chmod a+x $PKGRES/csrvdbmerge.pl
     cp CellServDB.list $PKGRES
@@ -236,7 +246,7 @@ if [ $secondpass = yes ]; then
     cp afslogo.jpg $CURDIR/dmg/.background
 #    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
     hdiutil makehybrid -hfs -hfs-volume-name OpenAFS -hfs-openfolder $CURDIR/dmg $CURDIR/dmg -o $CURDIR/TMP.dmg
-    hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS.dmg
+    hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
     rm $CURDIR/TMP.dmg
     rm -rf $CURDIR/dmg
     # Unfortunately, sudo sets $USER to root, so I can't chown the 
