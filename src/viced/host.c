@@ -1575,6 +1575,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     host->interface ? uuid2 : "no_uuid"));
 
 	    /* The host in the cache is not the host for this connection */
+            h_Lock_r(host);
 	    host->hostFlags |= HOSTDELETED;
 	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
