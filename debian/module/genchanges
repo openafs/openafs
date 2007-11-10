@@ -11,7 +11,7 @@ umask 022
 MODVERS=`cat debian/VERSION | sed s/:/\+/`
 ARCH=`dpkg --print-architecture`
 
-mprefix=`grep Package: debian/control.module | cut -d' ' -f 2 | cut -d= -f 1`
+mprefix=`grep Package: debian/control.in | cut -d' ' -f 2 | cut -d= -f 1`
 chfile="$KSRC/../$mprefix${KVERS}${INT_SUBARCH}_${MODVERS}_${ARCH}.changes"
 
 dpkg-genchanges -b ${KMAINT:+-m"$KMAINT <$KEMAIL>"} -u"$KSRC/.." \

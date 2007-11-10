@@ -1,8 +1,11 @@
 openafs (1.4.5.dfsg1-1) unstable; urgency=low
 
   * New upstream release.
+  * Fix signing the generated the changes file on a kernel module build.
+    The module build file reorganization required an additional change to
+    genchanges.  Thanks, Anders Kaseorg.  (Closes: #448449)
 
- --
+ -- Russ Allbery <rra@debian.org>  Fri, 09 Nov 2007 19:09:32 -0800
 
 openafs (1.4.5~pre2.dfsg1-1) unstable; urgency=low
 
