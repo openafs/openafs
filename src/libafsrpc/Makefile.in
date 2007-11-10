@@ -382,8 +382,8 @@ rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
-	${CCRULE} ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
 
 afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c
