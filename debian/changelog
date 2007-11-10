@@ -12,8 +12,9 @@ openafs (1.4.5.dfsg1-1) unstable; urgency=low
     The module build file reorganization required an additional change to
     genchanges.  Thanks, Anders Kaseorg.  (Closes: #448449)
   * Expose prototypes for the ktc_* functions.  (Closes: #449432)
+  * Update CellServDB to 2007-10-25 GCO release.
 
- -- Russ Allbery <rra@debian.org>  Fri, 09 Nov 2007 19:51:31 -0800
+ -- Russ Allbery <rra@debian.org>  Fri, 09 Nov 2007 20:12:31 -0800
 
 openafs (1.4.5~pre2.dfsg1-1) unstable; urgency=low
 
