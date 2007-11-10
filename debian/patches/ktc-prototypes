@@ -1,0 +1,24 @@
+Expose prototypes for the ktc_* functions on platforms other than Windows.
+Fixed upstream in a different way, but only on the 1.5 branch.
+
+Debian Bug#449432
+
+--- openafs.orig/src/auth/auth.p.h
++++ openafs/src/auth/auth.p.h
+@@ -24,7 +24,6 @@
+     char ticket[MAXKTCTICKETLEN];
+ };
+ 
+-#ifdef AFS_NT40_ENV
+ extern int ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
+ 			struct ktc_principal *client, afs_int32 flags);
+ 
+@@ -38,6 +37,8 @@
+ 
+ extern int ktc_ForgetAllTokens(void);
+ 
++#ifdef AFS_NT40_ENV
++
+ /* Flags for the flag word sent along with a token */
+ #define PIOCTL_LOGON		0x1	/* invoked from integrated logon */
+ 
