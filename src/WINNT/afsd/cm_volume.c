@@ -77,7 +77,7 @@ cm_ShutdownVolume(void)
             cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_alldown);
         if (volp->bk.ID)
             cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
-
+        volp->cbExpiresRO = 0;
         lock_FinalizeMutex(&volp->mx);
     }
 
@@ -118,6 +118,7 @@ void cm_InitVolume(int newFile, long maxVols)
                     cm_VolumeStatusNotification(volp, volp->ro.ID, vl_alldown, volp->ro.state);
                 if (volp->bk.ID)
                     cm_VolumeStatusNotification(volp, volp->bk.ID, vl_alldown, volp->bk.state);
+                volp->cbExpiresRO = 0;
             }
         }
         osi_EndOnce(&once);
@@ -768,6 +769,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         volp->rw.state = volp->ro.state = volp->bk.state = vl_unknown;
         volp->rw.nextp = volp->ro.nextp = volp->bk.nextp = NULL;
         volp->rw.flags = volp->ro.flags = volp->bk.flags = 0;
+        volp->cbExpiresRO = 0;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
@@ -1497,4 +1499,39 @@ enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
         return vl_unknown;
     }
 }
+
+
+void 
+cm_VolumeRenewROCallbacks(void)
+{
+    cm_volume_t * volp;
+
+
+    lock_ObtainRead(&cm_volumeLock);
+    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
+        if ( volp->cbExpiresRO > 0) {
+            cm_req_t      req;
+            cm_fid_t      fid;
+            cm_scache_t * scp;
+
+            fid.cell = volp->cellp->cellID;
+            fid.volume = volp->ro.ID;
+            fid.vnode = 1;
+            fid.unique = 1;
+
+            cm_InitReq(&req);
+
+            if (cm_GetSCache(&fid, &scp, cm_rootUserp, &req) == 0) {
+                lock_ReleaseRead(&cm_volumeLock);
+                lock_ObtainMutex(&scp->mx);
+                cm_GetCallback(scp, cm_rootUserp, &req, 1);
+                lock_ReleaseMutex(&scp->mx);
+                cm_ReleaseSCache(scp);
+                lock_ObtainRead(&cm_volumeLock);
+            }
+        }
+    }
+    lock_ReleaseRead(&cm_volumeLock);
+}
+
 

@@ -498,8 +498,14 @@ cm_SuspendSCache(void)
 
     lock_ObtainWrite(&cm_scacheLock);
     for ( scp = cm_data.allSCachesp; scp; scp = scp->allNextp ) {
-        if (scp->cbServerp)
+        if (scp->cbServerp) {
+            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
+                if (scp->volp->cbExpiresRO == scp->cbExpires) {
+                    scp->volp->cbExpiresRO = now+1;
+                }
+            }
             scp->cbExpires = now+1;
+        }
     }
     lock_ReleaseWrite(&cm_scacheLock);
 }
