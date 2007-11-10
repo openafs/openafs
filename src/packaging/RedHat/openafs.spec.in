@@ -1,4 +1,4 @@
-# Openafs Spec $Revision: 1.1.2.4 $
+# Openafs Spec $Revision: 1.1.2.6 $
 
 %define afsvers 1.4.5pre1
 %define pkgvers 1.4.5pre1
@@ -229,7 +229,7 @@ URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Derek Atkins <warlord@MIT.EDU>
 Group: Networking/Filesystems
-BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel
+BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if %{build_userspace}
 BuildRequires: autoconf
 %endif
@@ -244,6 +244,7 @@ Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
 Source30: openafs-kernel-version.sh
+Source998: openafs-buildall.sh
 Source999: kmodtool
 
 Patch0:  openafs-1.4.0-kmodule26.patch

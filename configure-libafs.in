@@ -1,7 +1,7 @@
 AC_INIT(src/libafs/Makefile.common.in)
-AM_INIT_AUTOMAKE(openafs-libafs,1.4.5pre2)
+AM_INIT_AUTOMAKE(openafs-libafs,1.4.5)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.4.5fc2
+MACOS_VERSION=1.4.5
 
 AC_SUBST(MACOS_VERSION)
 

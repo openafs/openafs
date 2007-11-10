@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.23 2007/10/10 16:57:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.25 2007/10/17 03:51:44 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -508,11 +508,12 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 static void
 wait_for_cachedefs(void) {
 #ifdef AFS_CACHE_VNODE_PATH
-    while ((afs_numcachefiles < 1) || (afs_numfilesperdir < 1) ||
-	   (afs_cachebasedir[0] != '/')) {
-	printf("afs: waiting for cache parameter definitions\n");
-	afs_osi_Sleep(&afs_initState);
-    }
+    if (cacheDiskType != AFS_FCACHE_TYPE_MEM) 
+	while ((afs_numcachefiles < 1) || (afs_numfilesperdir < 1) ||
+	       (afs_cachebasedir[0] != '/')) {
+	    printf("afs: waiting for cache parameter definitions\n");
+	    afs_osi_Sleep(&afs_initState);
+	}
 #endif
 }
 
@@ -894,22 +895,24 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
 #ifdef AFS_CACHE_VNODE_PATH
-       afs_int32 dummy;
-
-       wait_for_cachedefs();
-
+	if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
+	    afs_int32 dummy;
+	    
+	    wait_for_cachedefs();
+	    
 #ifdef AFS_DARWIN80_ENV
-       get_vfs_context();
+	    get_vfs_context();
 #endif
-       if ((afs_numcachefiles > 0) && (afs_numfilesperdir > 0) && 
-           (afs_cachebasedir[0] == '/')) {
-           for (dummy = 0; dummy < afs_numcachefiles; dummy++) {
-               code = afs_InitCacheFile(NULL, dummy);
-           }
-       }
+	    if ((afs_numcachefiles > 0) && (afs_numfilesperdir > 0) && 
+		(afs_cachebasedir[0] == '/')) {
+		for (dummy = 0; dummy < afs_numcachefiles; dummy++) {
+		    code = afs_InitCacheFile(NULL, dummy);
+		}
+	    }
 #ifdef AFS_DARWIN80_ENV
-       put_vfs_context();
+	    put_vfs_context();
 #endif
+	}
 #endif
 	/* the generic initialization calls come here.  One parameter: should we do the
 	 * set-time operation on this workstation */
