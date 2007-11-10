@@ -1,3 +1,9 @@
+openafs (1.4.5.dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ --
+
 openafs (1.4.5~pre2.dfsg1-1) unstable; urgency=low
 
   * New upstream release candidate.

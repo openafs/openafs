@@ -4,7 +4,7 @@
 #
 # Written by:  Derek Atkins <warlord@MIT.EDU>
 #
-# $Revision: 1.1.2.2 $
+# $Revision: 1.1.2.3 $
 #
 
 # Define where the Specfile is located.
@@ -21,7 +21,14 @@ buildopts=
 if [ `echo $rhrel | grep -c 'Fedora Core'` = 1 ] ; then
   ostype='fc'
   osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
+elif [ `echo $rhrel | grep -c 'Fedora'` = 1 ] ; then
+  ostype='fc'
+  osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
 elif [ `echo $rhrel | grep -c 'Red Hat Enterprise Linux'` = 1 ] ; then
+  ostype='rhel'
+  excludearch=i586
+  osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
+elif [ `echo $rhrel | grep -c 'CentOS'` = 1 ] ; then
   ostype='rhel'
   excludearch=i586
   osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`

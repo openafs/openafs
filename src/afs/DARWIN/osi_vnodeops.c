@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.24 2007/10/15 19:22:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.28 2007/10/24 05:45:38 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -542,6 +542,8 @@ afs_vop_close(ap)
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, vop_proc);
     osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 60);
     AFS_GUNLOCK();
 
     return code;
@@ -634,17 +636,22 @@ afs_vop_access(ap)
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
     
     code = afs_AccessOK(tvc, bits, &treq, cmb);
-
+#if defined(AFS_DARWIN80_ENV)
+    /* In a dropbox, cp on 10.4 behaves badly, looping on EACCES */
+    /* In a dropbox, Finder may reopen the file. Let it. */
+    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0)) {
+	code = afs_AccessOK(tvc, PRSFS_ADMINISTER|PRSFS_INSERT|bits, &treq, cmb);
+    }
+#endif
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
         ap->a_action & KAUTH_VNODE_EXECUTE &&
         (tvc->m.Mode & 0100) != 0100) {
         code = 0;
-     }
+    }
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-	/* In 10.4 cp will loop forever on EACCES */
-        code = afs_CheckCode(EPERM, &treq, 57);        /* failure code */
+        code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
@@ -683,12 +690,15 @@ afs_vop_getattr(ap)
 
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 58);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
     VATTR_SET_SUPPORTED(ap->a_vap, va_type);
     VATTR_SET_SUPPORTED(ap->a_vap, va_mode);
     VATTR_SET_SUPPORTED(ap->a_vap, va_uid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_gid);
+    VATTR_SET_SUPPORTED(ap->a_vap, va_fsid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_fileid);
     VATTR_SET_SUPPORTED(ap->a_vap, va_nlink);
     VATTR_SET_SUPPORTED(ap->a_vap, va_data_size);
@@ -715,6 +725,8 @@ afs_vop_setattr(ap)
     int code;
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+    /* This is legit; it just forces the fstrace event to happen */
+    code = afs_CheckCode(code, NULL, 59);
     AFS_GUNLOCK();
     return code;
 }
@@ -1191,6 +1203,7 @@ afs_vop_remove(ap)
     GETNAME();
     AFS_GLOCK();
     error = afs_remove(VTOAFS(dvp), name, vop_cn_cred);
+    error = afs_CheckCode(error, NULL, 61);
     AFS_GUNLOCK();
     cache_purge(vp);
     if (!error) {
@@ -1208,6 +1221,12 @@ afs_vop_remove(ap)
 	/* If crashes continue in ubc_hold, comment this out */
         (void)ubc_uncache(vp);
 #endif
+    } else {
+	/* should check for PRSFS_INSERT and not PRSFS_DELETE, but the
+	   goal here is to deal with Finder's unhappiness with resource
+	   forks that have no resources in a dropbox setting */
+	if (name[0] == '.' && name[1] == '_' && error == EACCES) 
+	    error = 0;
     }
 
 #ifndef AFS_DARWIN80_ENV
@@ -2061,14 +2080,14 @@ afs_darwin_getnewvnode(struct vcache *avc)
    Don't touch! */
 int 
 afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot) {
-   vnode_t ovp = AFSTOV(avc);
+   vnode_t ovp;
    vnode_t nvp;
    int error;
    struct vnode_fsparam par;
    AFS_GLOCK();
    ObtainWriteLock(&avc->lock,325);
+   ovp = AFSTOV(avc);
    if (!(avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
-        ReleaseWriteLock(&avc->lock);
         AFS_GUNLOCK();
 #if 0 /* unsupported */
         if (dvp && cnp)
@@ -2076,7 +2095,11 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
                               cnp->cn_hash,
                               VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
 #endif
+	/* Can end up in reclaim... drop GLOCK */
         vnode_rele(ovp);
+	AFS_GLOCK();
+        ReleaseWriteLock(&avc->lock);
+	AFS_GUNLOCK();
         return 0;
    }
    if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
@@ -2098,20 +2121,24 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
        vnode_addfsref(nvp);
+       if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
+	   printf("vcache %p should not be CDeadVnode", avc);
+       if (avc->v == ovp) {
+	   if (!(avc->states & CVInit)) {
+	       vnode_clearfsnode(ovp);
+	       vnode_removefsref(ovp);
+	   }
+       }
        avc->v = nvp;
        avc->states &=~ CDeadVnode;
-       if (!(avc->states & CVInit)) {
-	   vnode_clearfsnode(ovp);
-	   vnode_removefsref(ovp);
-       }
    }
+   vnode_put(ovp);
+   vnode_rele(ovp);
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);
    if (!error)
       afs_osi_Wakeup(&avc->states);
    AFS_GUNLOCK();
-   vnode_put(ovp);
-   vnode_rele(ovp);
    return error;
 }
 #endif

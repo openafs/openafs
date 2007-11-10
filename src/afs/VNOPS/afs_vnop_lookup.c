@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.18 2006/02/18 04:09:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.19 2007/10/16 22:03:46 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -497,7 +497,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
 	    if (au->exporter) {
 		error =
-		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num);
 		if (error) {
 		    return 0;
 		}
