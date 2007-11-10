@@ -1521,17 +1521,15 @@ cm_VolumeRenewROCallbacks(void)
 
             cm_InitReq(&req);
 
+            lock_ReleaseRead(&cm_volumeLock);
             if (cm_GetSCache(&fid, &scp, cm_rootUserp, &req) == 0) {
-                lock_ReleaseRead(&cm_volumeLock);
                 lock_ObtainMutex(&scp->mx);
                 cm_GetCallback(scp, cm_rootUserp, &req, 1);
                 lock_ReleaseMutex(&scp->mx);
                 cm_ReleaseSCache(scp);
-                lock_ObtainRead(&cm_volumeLock);
             }
+            lock_ObtainRead(&cm_volumeLock);
         }
     }
     lock_ReleaseRead(&cm_volumeLock);
 }
-
-
