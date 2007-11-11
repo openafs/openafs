@@ -12,10 +12,13 @@ openafs (1.4.5.dfsg1-1) unstable; urgency=low
     The module build file reorganization required an additional change to
     genchanges.  Thanks, Anders Kaseorg.  (Closes: #448449)
   * Expose prototypes for the ktc_* functions.  (Closes: #449432)
+  * Fix man pages for subcommands to use an underscore in the NAME section
+    instead of a space so that they'll be indexed properly by the current
+    groff and man-db.
   * Update CellServDB to 2007-10-25 GCO release.
   * Add Homepage to the package control fields.
 
- -- Russ Allbery <rra@debian.org>  Sun, 11 Nov 2007 13:27:07 -0800
+ -- Russ Allbery <rra@debian.org>  Sun, 11 Nov 2007 15:54:59 -0800
 
 openafs (1.4.5~pre2.dfsg1-1) unstable; urgency=low
 

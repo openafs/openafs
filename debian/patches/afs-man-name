@@ -1,0 +1,1878 @@
+Current groff can't deal with NAME sections with a space on the left
+side of the -.  This patch has also been applied upstream and will be
+in the next release after 1.4.5.
+
+--- openafs.orig/doc/man-pages/README
++++ openafs/doc/man-pages/README
+@@ -78,7 +78,10 @@
+   documents common options, and discusses the general use of the suite.
+   Then, each operation code in the suite should have a separate man page,
+   named after the command with the space between the command suite and the
+-  operation code replaced with an underscore.
++  operation code replaced with an underscore.  The NAME section of the
++  operation man page must also use an underscore (fs_listacl, not fs
++  listacl) for compatibility with some man programs.  The SYNOPSIS section
++  should, of course, use a space, since that's what the user must type.
+ 
+   All man pages must follow the standard layout for man page sections and
+   formatting.  The best general reference is the pod2man man page,
+--- openafs.orig/doc/man-pages/pod1/fs_checkservers.pod
++++ openafs/doc/man-pages/pod1/fs_checkservers.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs checkservers - Displays the status of server machines
++fs_checkservers - Displays the status of server machines
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_checkvolumes.pod
++++ openafs/doc/man-pages/pod1/fs_checkvolumes.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs checkvolumes - Forces the Cache Manager to update volume information
++fs_checkvolumes - Forces the Cache Manager to update volume information
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_cleanacl.pod
++++ openafs/doc/man-pages/pod1/fs_cleanacl.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs cleanacl - Remove obsolete entries from an ACL
++fs_cleanacl - Remove obsolete entries from an ACL
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_copyacl.pod
++++ openafs/doc/man-pages/pod1/fs_copyacl.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs copyacl - Copies an ACL from a directory to one or more other directories
++fs_copyacl - Copies an ACL from a directory to one or more other directories
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_diskfree.pod
++++ openafs/doc/man-pages/pod1/fs_diskfree.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs diskfree - Shows data about the partition housing a directory or file
++fs_diskfree - Shows data about the partition housing a directory or file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_examine.pod
++++ openafs/doc/man-pages/pod1/fs_examine.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs examine - Shows data about the volume containing a directory or file
++fs_examine - Shows data about the volume containing a directory or file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_exportafs.pod
++++ openafs/doc/man-pages/pod1/fs_exportafs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs exportafs - Configures export of AFS to clients of other file systems
++fs_exportafs - Configures export of AFS to clients of other file systems
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_flush.pod
++++ openafs/doc/man-pages/pod1/fs_flush.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs flush - Forces the Cache Manager to discard a cached file or directory
++fs_flush - Forces the Cache Manager to discard a cached file or directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_flushall.pod
++++ openafs/doc/man-pages/pod1/fs_flushall.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs flushall - Force the AFS Cache Manager to discard all data
++fs_flushall - Force the AFS Cache Manager to discard all data
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_flushmount.pod
++++ openafs/doc/man-pages/pod1/fs_flushmount.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs flushmount - Forces the Cache Manager to discard a mount point
++fs_flushmount - Forces the Cache Manager to discard a mount point
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_flushvolume.pod
++++ openafs/doc/man-pages/pod1/fs_flushvolume.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs flushvolume - Forces the Cache Manager to discard cached data from a volume
++fs_flushvolume - Forces the Cache Manager to discard cached data from a volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getcacheparms.pod
++++ openafs/doc/man-pages/pod1/fs_getcacheparms.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getcacheparms - Displays the current size and usage of the cache
++fs_getcacheparms - Displays the current size and usage of the cache
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getcalleraccess.pod
++++ openafs/doc/man-pages/pod1/fs_getcalleraccess.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getcalleraccess - Show the current user's access to a file or directory
++fs_getcalleraccess - Show the current user's access to a file or directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getcellstatus.pod
++++ openafs/doc/man-pages/pod1/fs_getcellstatus.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getcellstatus - Reports whether setuid programs are honored in a cell
++fs_getcellstatus - Reports whether setuid programs are honored in a cell
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getclientaddrs.pod
++++ openafs/doc/man-pages/pod1/fs_getclientaddrs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getclientaddrs - Displays the client interfaces to register
++fs_getclientaddrs - Displays the client interfaces to register
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getcrypt.pod
++++ openafs/doc/man-pages/pod1/fs_getcrypt.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getcrypt - Displays the state of encryption for AFS file transfers
++fs_getcrypt - Displays the state of encryption for AFS file transfers
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_getserverprefs.pod
++++ openafs/doc/man-pages/pod1/fs_getserverprefs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs getserverprefs - Displays preference ranks for file servers or VL servers
++fs_getserverprefs - Displays preference ranks for file servers or VL servers
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_help.pod
++++ openafs/doc/man-pages/pod1/fs_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs help - Displays help for fs commands
++fs_help - Displays help for fs commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_listacl.pod
++++ openafs/doc/man-pages/pod1/fs_listacl.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs listacl - Displays ACLs
++fs_listacl - Displays ACLs
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_listaliases.pod
++++ openafs/doc/man-pages/pod1/fs_listaliases.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs listaliases - Displays the current list of aliases for AFS cells
++fs_listaliases - Displays the current list of aliases for AFS cells
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_listcells.pod
++++ openafs/doc/man-pages/pod1/fs_listcells.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs listcells - Displays the database server machines known to the Cache Manager
++fs_listcells - Displays the database server machines known to the Cache Manager
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_listquota.pod
++++ openafs/doc/man-pages/pod1/fs_listquota.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs listquota - Displays quota information for a volume
++fs_listquota - Displays quota information for a volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_lsmount.pod
++++ openafs/doc/man-pages/pod1/fs_lsmount.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs lsmount - Reports the volume for which a directory is the mount point.
++fs_lsmount - Reports the volume for which a directory is the mount point.
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_messages.pod
++++ openafs/doc/man-pages/pod1/fs_messages.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs messages - Sets whether the Cache Manager writes log messages
++fs_messages - Sets whether the Cache Manager writes log messages
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_mkmount.pod
++++ openafs/doc/man-pages/pod1/fs_mkmount.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs mkmount - Creates a mount point for a volume
++fs_mkmount - Creates a mount point for a volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_newalias.pod
++++ openafs/doc/man-pages/pod1/fs_newalias.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs newalias - Creates a new alias for a cell
++fs_newalias - Creates a new alias for a cell
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_newcell.pod
++++ openafs/doc/man-pages/pod1/fs_newcell.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs newcell - Changes the kernel-resident list of a cell's database servers
++fs_newcell - Changes the kernel-resident list of a cell's database servers
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_quota.pod
++++ openafs/doc/man-pages/pod1/fs_quota.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs quota - Displays the quota used in the volume containing a directory or file
++fs_quota - Displays the quota used in the volume containing a directory or file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_rmmount.pod
++++ openafs/doc/man-pages/pod1/fs_rmmount.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs rmmount - Removes a mount point
++fs_rmmount - Removes a mount point
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setacl.pod
++++ openafs/doc/man-pages/pod1/fs_setacl.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setacl - Sets the ACL for a directory
++fs_setacl - Sets the ACL for a directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setcachesize.pod
++++ openafs/doc/man-pages/pod1/fs_setcachesize.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setcachesize - Sets the size of the disk cache
++fs_setcachesize - Sets the size of the disk cache
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setcell.pod
++++ openafs/doc/man-pages/pod1/fs_setcell.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setcell - Configures permissions for setuid programs from specified cells
++fs_setcell - Configures permissions for setuid programs from specified cells
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setclientaddrs.pod
++++ openafs/doc/man-pages/pod1/fs_setclientaddrs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setclientaddrs - Sets the client interfaces to register with the File Server
++fs_setclientaddrs - Sets the client interfaces to register with the File Server
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setcrypt.pod
++++ openafs/doc/man-pages/pod1/fs_setcrypt.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setcrypt - Enables of disables the encryption of AFS file transfers
++fs_setcrypt - Enables of disables the encryption of AFS file transfers
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setquota.pod
++++ openafs/doc/man-pages/pod1/fs_setquota.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setquota - Sets the quota for the volume containing a file or directory
++fs_setquota - Sets the quota for the volume containing a file or directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setserverprefs.pod
++++ openafs/doc/man-pages/pod1/fs_setserverprefs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setserverprefs - Sets the preference ranks for file servers or VL servers
++fs_setserverprefs - Sets the preference ranks for file servers or VL servers
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_setvol.pod
++++ openafs/doc/man-pages/pod1/fs_setvol.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs setvol - Set quota and messages for a volume containing a file or directory
++fs_setvol - Set quota and messages for a volume containing a file or directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_storebehind.pod
++++ openafs/doc/man-pages/pod1/fs_storebehind.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs storebehind - Enables asynchronous writes to the file server
++fs_storebehind - Enables asynchronous writes to the file server
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_sysname.pod
++++ openafs/doc/man-pages/pod1/fs_sysname.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs sysname - Reports or sets the CPU/operating system type
++fs_sysname - Reports or sets the CPU/operating system type
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_uuid.pod
++++ openafs/doc/man-pages/pod1/fs_uuid.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs uuid - Prints the uuid of the client or generates a new one
++fs_uuid - Prints the uuid of the client or generates a new one
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_whereis.pod
++++ openafs/doc/man-pages/pod1/fs_whereis.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs whereis - Reports each file server housing a file or directory
++fs_whereis - Reports each file server housing a file or directory
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_whichcell.pod
++++ openafs/doc/man-pages/pod1/fs_whichcell.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs whichcell - Returns the cell to which a file or directory belongs
++fs_whichcell - Returns the cell to which a file or directory belongs
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/fs_wscell.pod
++++ openafs/doc/man-pages/pod1/fs_wscell.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs wscell - Returns the name of the cell to which a machine belongs
++fs_wscell - Returns the name of the cell to which a machine belongs
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_adduser.pod
++++ openafs/doc/man-pages/pod1/pts_adduser.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts adduser - Adds a user or machine to a Protection Database group
++pts_adduser - Adds a user or machine to a Protection Database group
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_apropos.pod
++++ openafs/doc/man-pages/pod1/pts_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts apropos - Displays each help entry containing a keyword string
++pts_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_chown.pod
++++ openafs/doc/man-pages/pod1/pts_chown.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts chown - Changes the owner of a Protection Database entry
++pts_chown - Changes the owner of a Protection Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_creategroup.pod
++++ openafs/doc/man-pages/pod1/pts_creategroup.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts creategroup - Creates an (empty) Protection Database group entry
++pts_creategroup - Creates an (empty) Protection Database group entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_createuser.pod
++++ openafs/doc/man-pages/pod1/pts_createuser.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts createuser - Creates a user or machine entry in the Protection Database
++pts_createuser - Creates a user or machine entry in the Protection Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_delete.pod
++++ openafs/doc/man-pages/pod1/pts_delete.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts delete - Deletes a Protection Database entry
++pts_delete - Deletes a Protection Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_examine.pod
++++ openafs/doc/man-pages/pod1/pts_examine.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts examine - Displays a Protection Database entry
++pts_examine - Displays a Protection Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_help.pod
++++ openafs/doc/man-pages/pod1/pts_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts help - Displays help for pts commands
++pts_help - Displays help for pts commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_interactive.pod
++++ openafs/doc/man-pages/pod1/pts_interactive.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts interactive - Enters interactive mode
++pts_interactive - Enters interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_listentries.pod
++++ openafs/doc/man-pages/pod1/pts_listentries.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts listentries - Displays all users or groups in the Protection Database
++pts_listentries - Displays all users or groups in the Protection Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_listmax.pod
++++ openafs/doc/man-pages/pod1/pts_listmax.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts listmax - Displays the max user id and max group id counters
++pts_listmax - Displays the max user id and max group id counters
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_listowned.pod
++++ openafs/doc/man-pages/pod1/pts_listowned.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts listowned - Show the Protection Database groups owned by a user or group
++pts_listowned - Show the Protection Database groups owned by a user or group
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_membership.pod
++++ openafs/doc/man-pages/pod1/pts_membership.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts membership - Displays the membership list for a user or group
++pts_membership - Displays the membership list for a user or group
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_quit.pod
++++ openafs/doc/man-pages/pod1/pts_quit.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts quit - Exit from pts interactive mode
++pts_quit - Exit from pts interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_removeuser.pod
++++ openafs/doc/man-pages/pod1/pts_removeuser.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts removeuser - Removes a user from a Protection Database group
++pts_removeuser - Removes a user from a Protection Database group
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_rename.pod
++++ openafs/doc/man-pages/pod1/pts_rename.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts rename - Changes the name of a Protection Database entry
++pts_rename - Changes the name of a Protection Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_setfields.pod
++++ openafs/doc/man-pages/pod1/pts_setfields.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts setfields - Sets privacy flags or quota for a Protection Database entry
++pts_setfields - Sets privacy flags or quota for a Protection Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_setmax.pod
++++ openafs/doc/man-pages/pod1/pts_setmax.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts setmax - Sets the value of the max group id or max user id counter
++pts_setmax - Sets the value of the max group id or max user id counter
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_sleep.pod
++++ openafs/doc/man-pages/pod1/pts_sleep.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts sleep - Pauses for a few seconds
++pts_sleep - Pauses for a few seconds
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/pts_source.pod
++++ openafs/doc/man-pages/pod1/pts_source.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-pts source - Read pts commands from a file
++pts_source - Read pts commands from a file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_addsite.pod
++++ openafs/doc/man-pages/pod1/vos_addsite.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos addsite - Adds a read-only site definition to a volume's VLDB entry
++vos_addsite - Adds a read-only site definition to a volume's VLDB entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_apropos.pod
++++ openafs/doc/man-pages/pod1/vos_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos apropos - Displays each help entry containing a keyword string
++vos_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_backup.pod
++++ openafs/doc/man-pages/pod1/vos_backup.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos backup - Creates a backup volume for a single read/write volume
++vos_backup - Creates a backup volume for a single read/write volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_backupsys.pod
++++ openafs/doc/man-pages/pod1/vos_backupsys.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos backupsys - Creates a backup volume for several read/write volumes
++vos_backupsys - Creates a backup volume for several read/write volumes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_changeaddr.pod
++++ openafs/doc/man-pages/pod1/vos_changeaddr.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos changeaddr - Changes or removes a file server machine's entry in the VLDB
++vos_changeaddr - Changes or removes a file server machine's entry in the VLDB
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_changeloc.pod
++++ openafs/doc/man-pages/pod1/vos_changeloc.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos changeloc - Change a volume's entry in the VLDB
++vos_changeloc - Change a volume's entry in the VLDB
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_create.pod
++++ openafs/doc/man-pages/pod1/vos_create.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos create - Creates a read/write volume and associated VLDB entry
++vos_create - Creates a read/write volume and associated VLDB entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_delentry.pod
++++ openafs/doc/man-pages/pod1/vos_delentry.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos delentry - Removes a volume entry from the VLDB.
++vos_delentry - Removes a volume entry from the VLDB.
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_dump.pod
++++ openafs/doc/man-pages/pod1/vos_dump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos dump - Converts a volume into ASCII format and writes it to a file
++vos_dump - Converts a volume into ASCII format and writes it to a file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_examine.pod
++++ openafs/doc/man-pages/pod1/vos_examine.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos examine - Shows volume header and VLDB entry information for a volume
++vos_examine - Shows volume header and VLDB entry information for a volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_help.pod
++++ openafs/doc/man-pages/pod1/vos_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos help - Displays help for vos commands
++vos_help - Displays help for vos commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_listaddrs.pod
++++ openafs/doc/man-pages/pod1/vos_listaddrs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos listaddrs - Displays all VLDB server entries
++vos_listaddrs - Displays all VLDB server entries
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_listpart.pod
++++ openafs/doc/man-pages/pod1/vos_listpart.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos listpart - Displays all AFS partitions on a file server machine
++vos_listpart - Displays all AFS partitions on a file server machine
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_listvldb.pod
++++ openafs/doc/man-pages/pod1/vos_listvldb.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos listvldb - Displays a volume's VLDB entry
++vos_listvldb - Displays a volume's VLDB entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_listvol.pod
++++ openafs/doc/man-pages/pod1/vos_listvol.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos listvol - Displays information from a volume header
++vos_listvol - Displays information from a volume header
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_lock.pod
++++ openafs/doc/man-pages/pod1/vos_lock.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos lock - Locks a VLDB volume entry
++vos_lock - Locks a VLDB volume entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_move.pod
++++ openafs/doc/man-pages/pod1/vos_move.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos move - Moves a read/write volume to another site
++vos_move - Moves a read/write volume to another site
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_offline.pod
++++ openafs/doc/man-pages/pod1/vos_offline.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos offline - Takes a volume offline
++vos_offline - Takes a volume offline
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_online.pod
++++ openafs/doc/man-pages/pod1/vos_online.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos online - Brings a volume online
++vos_online - Brings a volume online
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_partinfo.pod
++++ openafs/doc/man-pages/pod1/vos_partinfo.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos partinfo - Reports the available and total space on a partition
++vos_partinfo - Reports the available and total space on a partition
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_release.pod
++++ openafs/doc/man-pages/pod1/vos_release.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos release - Updates read-only volumes to match the read/write source volume
++vos_release - Updates read-only volumes to match the read/write source volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_remove.pod
++++ openafs/doc/man-pages/pod1/vos_remove.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos remove - Removes a volume from a site
++vos_remove - Removes a volume from a site
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_remsite.pod
++++ openafs/doc/man-pages/pod1/vos_remsite.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos remsite - Removes a read-only site definition from a VLDB entry
++vos_remsite - Removes a read-only site definition from a VLDB entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_rename.pod
++++ openafs/doc/man-pages/pod1/vos_rename.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos rename - Renames a volume
++vos_rename - Renames a volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_restore.pod
++++ openafs/doc/man-pages/pod1/vos_restore.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos restore - Converts an ASCII dump file into an AFS volume
++vos_restore - Converts an ASCII dump file into an AFS volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_size.pod
++++ openafs/doc/man-pages/pod1/vos_size.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos size - Computes the size of a volume dump
++vos_size - Computes the size of a volume dump
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_status.pod
++++ openafs/doc/man-pages/pod1/vos_status.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos status - Reports a Volume Server's status
++vos_status - Reports a Volume Server's status
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_syncserv.pod
++++ openafs/doc/man-pages/pod1/vos_syncserv.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos syncserv - Verifies VLDB entries that mention a specified site
++vos_syncserv - Verifies VLDB entries that mention a specified site
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_syncvldb.pod
++++ openafs/doc/man-pages/pod1/vos_syncvldb.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos syncvldb - Verifies VLDB entries for volumes residing at specified site
++vos_syncvldb - Verifies VLDB entries for volumes residing at specified site
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_unlock.pod
++++ openafs/doc/man-pages/pod1/vos_unlock.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos unlock - Unlocks a single VLDB entry
++vos_unlock - Unlocks a single VLDB entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_unlockvldb.pod
++++ openafs/doc/man-pages/pod1/vos_unlockvldb.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos unlockvldb - Unlocks several locked VLDB entries
++vos_unlockvldb - Unlocks several locked VLDB entries
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod1/vos_zap.pod
++++ openafs/doc/man-pages/pod1/vos_zap.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-vos zap - Removes a volume from its site without writing to the VLDB
++vos_zap - Removes a volume from its site without writing to the VLDB
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_adddump.pod
++++ openafs/doc/man-pages/pod8/backup_adddump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup adddump - Defines a dump level in the dump hierarchy
++backup_adddump - Defines a dump level in the dump hierarchy
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_addhost.pod
++++ openafs/doc/man-pages/pod8/backup_addhost.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup addhost - Adds a Tape Coordinator entry to the Backup Database
++backup_addhost - Adds a Tape Coordinator entry to the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_addvolentry.pod
++++ openafs/doc/man-pages/pod8/backup_addvolentry.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup addvolentry - Defines a volume entry in a volume set
++backup_addvolentry - Defines a volume entry in a volume set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_addvolset.pod
++++ openafs/doc/man-pages/pod8/backup_addvolset.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup addvolset - Creates a new (empty) volume set
++backup_addvolset - Creates a new (empty) volume set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_apropos.pod
++++ openafs/doc/man-pages/pod8/backup_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup apropos - Displays each help entry containing a keyword string
++backup_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_dbverify.pod
++++ openafs/doc/man-pages/pod8/backup_dbverify.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup dbverify - Checks the integrity of the Backup Database
++backup_dbverify - Checks the integrity of the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_deldump.pod
++++ openafs/doc/man-pages/pod8/backup_deldump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup deldump - Deletes a dump level from the Backup Database
++backup_deldump - Deletes a dump level from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_deletedump.pod
++++ openafs/doc/man-pages/pod8/backup_deletedump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup deletedump - Deletes one or more dump records from the Backup Database
++backup_deletedump - Deletes one or more dump records from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_delhost.pod
++++ openafs/doc/man-pages/pod8/backup_delhost.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup delhost - Deletes a Tape Coordinator entry from the Backup Database
++backup_delhost - Deletes a Tape Coordinator entry from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_delvolentry.pod
++++ openafs/doc/man-pages/pod8/backup_delvolentry.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup delvolentry - Deletes a volume entry from a volume set
++backup_delvolentry - Deletes a volume entry from a volume set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_delvolset.pod
++++ openafs/doc/man-pages/pod8/backup_delvolset.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup delvolset - Deletes one or more volume sets from the Backup Database
++backup_delvolset - Deletes one or more volume sets from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_diskrestore.pod
++++ openafs/doc/man-pages/pod8/backup_diskrestore.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup diskrestore - Restores the entire contents of a partition
++backup_diskrestore - Restores the entire contents of a partition
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_dump.pod
++++ openafs/doc/man-pages/pod8/backup_dump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup dump - Creates a dump (dumps a volume set at a particular dump level)
++backup_dump - Creates a dump (dumps a volume set at a particular dump level)
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_dumpinfo.pod
++++ openafs/doc/man-pages/pod8/backup_dumpinfo.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup dumpinfo - Displays a dump record from the Backup Database
++backup_dumpinfo - Displays a dump record from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_help.pod
++++ openafs/doc/man-pages/pod8/backup_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup help - Displays help for backup commands
++backup_help - Displays help for backup commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_interactive.pod
++++ openafs/doc/man-pages/pod8/backup_interactive.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup interactive - Enters interactive mode
++backup_interactive - Enters interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_jobs.pod
++++ openafs/doc/man-pages/pod8/backup_jobs.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup jobs - Lists pending and running operations in interactive mode
++backup_jobs - Lists pending and running operations in interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_kill.pod
++++ openafs/doc/man-pages/pod8/backup_kill.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup kill - Terminates a pending or running operation
++backup_kill - Terminates a pending or running operation
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_labeltape.pod
++++ openafs/doc/man-pages/pod8/backup_labeltape.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup labeltape - Creates the magnetic label on a tape
++backup_labeltape - Creates the magnetic label on a tape
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_listdumps.pod
++++ openafs/doc/man-pages/pod8/backup_listdumps.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup listdumps - Displays the dump hierarchy from the Backup Database
++backup_listdumps - Displays the dump hierarchy from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_listhosts.pod
++++ openafs/doc/man-pages/pod8/backup_listhosts.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup listhosts - Lists Tape Coordinators registered in the Backup Database
++backup_listhosts - Lists Tape Coordinators registered in the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_listvolsets.pod
++++ openafs/doc/man-pages/pod8/backup_listvolsets.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup listvolsets - Lists volume set entries from the Backup Database
++backup_listvolsets - Lists volume set entries from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_quit.pod
++++ openafs/doc/man-pages/pod8/backup_quit.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup quit - Leaves interactive mode
++backup_quit - Leaves interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_readlabel.pod
++++ openafs/doc/man-pages/pod8/backup_readlabel.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup readlabel - Reads and displays a tape's label
++backup_readlabel - Reads and displays a tape's label
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_restoredb.pod
++++ openafs/doc/man-pages/pod8/backup_restoredb.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup restoredb - Restores a saved copy of the Backup Database
++backup_restoredb - Restores a saved copy of the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_savedb.pod
++++ openafs/doc/man-pages/pod8/backup_savedb.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup savedb - Creates a saved copy of the Backup Database
++backup_savedb - Creates a saved copy of the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_scantape.pod
++++ openafs/doc/man-pages/pod8/backup_scantape.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup scantape - Extracts dump information from a tape
++backup_scantape - Extracts dump information from a tape
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_setexp.pod
++++ openafs/doc/man-pages/pod8/backup_setexp.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup setexp - Sets the expiration date for existing dump levels.
++backup_setexp - Sets the expiration date for existing dump levels.
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_status.pod
++++ openafs/doc/man-pages/pod8/backup_status.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup status - Reports a Tape Coordinator's status
++backup_status - Reports a Tape Coordinator's status
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_volinfo.pod
++++ openafs/doc/man-pages/pod8/backup_volinfo.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup volinfo - Displays a volume's dump history from the Backup Database
++backup_volinfo - Displays a volume's dump history from the Backup Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_volrestore.pod
++++ openafs/doc/man-pages/pod8/backup_volrestore.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup volrestore - Restores one or more volumes
++backup_volrestore - Restores one or more volumes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/backup_volsetrestore.pod
++++ openafs/doc/man-pages/pod8/backup_volsetrestore.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-backup volsetrestore - Restores all volumes in a volume set
++backup_volsetrestore - Restores all volumes in a volume set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_addhost.pod
++++ openafs/doc/man-pages/pod8/bos_addhost.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos addhost - Adds a database server machine to the CellServDB file
++bos_addhost - Adds a database server machine to the CellServDB file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_addkey.pod
++++ openafs/doc/man-pages/pod8/bos_addkey.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos addkey - Adds a new server encryption key to the KeyFile file
++bos_addkey - Adds a new server encryption key to the KeyFile file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_adduser.pod
++++ openafs/doc/man-pages/pod8/bos_adduser.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos adduser - Adds a privileged user to the UserList file
++bos_adduser - Adds a privileged user to the UserList file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_apropos.pod
++++ openafs/doc/man-pages/pod8/bos_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos apropos - Displays each help entry containing a keyword string
++bos_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_create.pod
++++ openafs/doc/man-pages/pod8/bos_create.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos create - Defines a new process in the BosConfig file and starts it
++bos_create - Defines a new process in the BosConfig file and starts it
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_delete.pod
++++ openafs/doc/man-pages/pod8/bos_delete.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos delete - Deletes a server process from the BosConfig file
++bos_delete - Deletes a server process from the BosConfig file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_exec.pod
++++ openafs/doc/man-pages/pod8/bos_exec.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos exec - Executes a command on a remote server machine
++bos_exec - Executes a command on a remote server machine
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_getdate.pod
++++ openafs/doc/man-pages/pod8/bos_getdate.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos getdate - Displays the time stamps on an AFS binary file
++bos_getdate - Displays the time stamps on an AFS binary file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_getlog.pod
++++ openafs/doc/man-pages/pod8/bos_getlog.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos getlog - Prints a server process's log file
++bos_getlog - Prints a server process's log file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_getrestart.pod
++++ openafs/doc/man-pages/pod8/bos_getrestart.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos getrestart - Displays the automatic restart times for server processes
++bos_getrestart - Displays the automatic restart times for server processes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_help.pod
++++ openafs/doc/man-pages/pod8/bos_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos help - Displays help for bos commands
++bos_help - Displays help for bos commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_install.pod
++++ openafs/doc/man-pages/pod8/bos_install.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos install - Installs a new version of a binary file
++bos_install - Installs a new version of a binary file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_listhosts.pod
++++ openafs/doc/man-pages/pod8/bos_listhosts.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos listhosts - Displays the contents of the CellServDB file
++bos_listhosts - Displays the contents of the CellServDB file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_listkeys.pod
++++ openafs/doc/man-pages/pod8/bos_listkeys.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos listkeys - Displays the server encryption keys from the KeyFile file
++bos_listkeys - Displays the server encryption keys from the KeyFile file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_listusers.pod
++++ openafs/doc/man-pages/pod8/bos_listusers.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos listusers - Lists the privileged users from the UserList file
++bos_listusers - Lists the privileged users from the UserList file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_prune.pod
++++ openafs/doc/man-pages/pod8/bos_prune.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos prune - Removes obsolete files from /usr/afs/bin and /usr/afs/logs
++bos_prune - Removes obsolete files from /usr/afs/bin and /usr/afs/logs
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_removehost.pod
++++ openafs/doc/man-pages/pod8/bos_removehost.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos removehost - Removes a database server machine from the CellServDB file
++bos_removehost - Removes a database server machine from the CellServDB file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_removekey.pod
++++ openafs/doc/man-pages/pod8/bos_removekey.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos removekey - Removes a server encryption key from the KeyFile file
++bos_removekey - Removes a server encryption key from the KeyFile file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_removeuser.pod
++++ openafs/doc/man-pages/pod8/bos_removeuser.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos removeuser - Removes a privileged user from the UserList file
++bos_removeuser - Removes a privileged user from the UserList file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_restart.pod
++++ openafs/doc/man-pages/pod8/bos_restart.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos restart - Restarts a server process
++bos_restart - Restarts a server process
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_salvage.pod
++++ openafs/doc/man-pages/pod8/bos_salvage.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos salvage - Restores internal consistency to a file system or volume
++bos_salvage - Restores internal consistency to a file system or volume
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_setauth.pod
++++ openafs/doc/man-pages/pod8/bos_setauth.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos setauth - Sets authorization checking requirements for all server processes
++bos_setauth - Sets authorization checking requirements for all server processes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_setcellname.pod
++++ openafs/doc/man-pages/pod8/bos_setcellname.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos setcellname - Sets the cell's name in ThisCell and CellServDB
++bos_setcellname - Sets the cell's name in ThisCell and CellServDB
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_setrestart.pod
++++ openafs/doc/man-pages/pod8/bos_setrestart.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos setrestart - Sets when the BOS Server restarts processes
++bos_setrestart - Sets when the BOS Server restarts processes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_shutdown.pod
++++ openafs/doc/man-pages/pod8/bos_shutdown.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos shutdown - Stops a process without changing its status flag
++bos_shutdown - Stops a process without changing its status flag
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_start.pod
++++ openafs/doc/man-pages/pod8/bos_start.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos start - Starts a process after setting its status flag
++bos_start - Starts a process after setting its status flag
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_startup.pod
++++ openafs/doc/man-pages/pod8/bos_startup.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos startup - Starts a process without changing its status flag
++bos_startup - Starts a process without changing its status flag
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_status.pod
++++ openafs/doc/man-pages/pod8/bos_status.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos status - Displays the status of server processes
++bos_status - Displays the status of server processes
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_stop.pod
++++ openafs/doc/man-pages/pod8/bos_stop.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos stop - Stops a process after changing its status flag
++bos_stop - Stops a process after changing its status flag
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/bos_uninstall.pod
++++ openafs/doc/man-pages/pod8/bos_uninstall.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-bos uninstall - Reverts to the former version of a process's binary file
++bos_uninstall - Reverts to the former version of a process's binary file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_apropos.pod
++++ openafs/doc/man-pages/pod8/fstrace_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace apropos - Displays each help entry containing a keyword string
++fstrace_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_clear.pod
++++ openafs/doc/man-pages/pod8/fstrace_clear.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace clear - Clears the trace log
++fstrace_clear - Clears the trace log
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_dump.pod
++++ openafs/doc/man-pages/pod8/fstrace_dump.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace dump - Dumps a trace log
++fstrace_dump - Dumps a trace log
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_help.pod
++++ openafs/doc/man-pages/pod8/fstrace_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace help - Displays help for fstrace commands
++fstrace_help - Displays help for fstrace commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_lslog.pod
++++ openafs/doc/man-pages/pod8/fstrace_lslog.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace lslog - Displays information about a log
++fstrace_lslog - Displays information about a log
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_lsset.pod
++++ openafs/doc/man-pages/pod8/fstrace_lsset.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace lsset - Reports the status of an event set
++fstrace_lsset - Reports the status of an event set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_setlog.pod
++++ openafs/doc/man-pages/pod8/fstrace_setlog.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace setlog - Sets the size of a trace log
++fstrace_setlog - Sets the size of a trace log
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/fstrace_setset.pod
++++ openafs/doc/man-pages/pod8/fstrace_setset.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fstrace setset - Sets the status of an event set
++fstrace_setset - Sets the status of an event set
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_apropos.pod
++++ openafs/doc/man-pages/pod8/kas_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas apropos - Displays each help entry containing a keyword string
++kas_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_create.pod
++++ openafs/doc/man-pages/pod8/kas_create.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas create - Creates an entry in the Authentication Database
++kas_create - Creates an entry in the Authentication Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_delete.pod
++++ openafs/doc/man-pages/pod8/kas_delete.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas delete - Deletes an entry from the Authentication Database
++kas_delete - Deletes an entry from the Authentication Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_examine.pod
++++ openafs/doc/man-pages/pod8/kas_examine.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas examine - Displays information from an Authentication Database entry
++kas_examine - Displays information from an Authentication Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_forgetticket.pod
++++ openafs/doc/man-pages/pod8/kas_forgetticket.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas forgetticket - Discards all tickets for the issuer
++kas_forgetticket - Discards all tickets for the issuer
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_help.pod
++++ openafs/doc/man-pages/pod8/kas_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas help - Displays help for kas commands
++kas_help - Displays help for kas commands
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_interactive.pod
++++ openafs/doc/man-pages/pod8/kas_interactive.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas interactive - Enters interactive mode
++kas_interactive - Enters interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_list.pod
++++ openafs/doc/man-pages/pod8/kas_list.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas list - Displays all entries in the Authentication Database
++kas_list - Displays all entries in the Authentication Database
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_listtickets.pod
++++ openafs/doc/man-pages/pod8/kas_listtickets.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas listtickets - Displays all of the issuer's tickets (tokens)
++kas_listtickets - Displays all of the issuer's tickets (tokens)
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_noauthentication.pod
++++ openafs/doc/man-pages/pod8/kas_noauthentication.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas noauthentication - Discards an authenticated identity in interactive mode
++kas_noauthentication - Discards an authenticated identity in interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_quit.pod
++++ openafs/doc/man-pages/pod8/kas_quit.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas quit - Leaves interactive mode
++kas_quit - Leaves interactive mode
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_setfields.pod
++++ openafs/doc/man-pages/pod8/kas_setfields.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas setfields - Sets fields in an Authentication Database entry
++kas_setfields - Sets fields in an Authentication Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_setpassword.pod
++++ openafs/doc/man-pages/pod8/kas_setpassword.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas setpassword - Changes the key field in an Authentication Database entry
++kas_setpassword - Changes the key field in an Authentication Database entry
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_statistics.pod
++++ openafs/doc/man-pages/pod8/kas_statistics.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas statistics - Displays statistics from an Authentication Server process
++kas_statistics - Displays statistics from an Authentication Server process
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_stringtokey.pod
++++ openafs/doc/man-pages/pod8/kas_stringtokey.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas stringtokey - Converts a character string into an octal key
++kas_stringtokey - Converts a character string into an octal key
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/kas_unlock.pod
++++ openafs/doc/man-pages/pod8/kas_unlock.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-kas unlock - Unlocks a locked user account
++kas_unlock - Unlocks a locked user account
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/uss_add.pod
++++ openafs/doc/man-pages/pod8/uss_add.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-uss add - Creates a user account
++uss_add - Creates a user account
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/uss_apropos.pod
++++ openafs/doc/man-pages/pod8/uss_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-uss apropos - Displays each help entry containing a keyword string.
++uss_apropos - Displays each help entry containing a keyword string.
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/uss_bulk.pod
++++ openafs/doc/man-pages/pod8/uss_bulk.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-uss bulk - Executes multiple uss commands listed in a file
++uss_bulk - Executes multiple uss commands listed in a file
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/uss_delete.pod
++++ openafs/doc/man-pages/pod8/uss_delete.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-uss delete - Deletes a user account
++uss_delete - Deletes a user account
+ 
+ =head1 SYNOPSIS
+ 
+--- openafs.orig/doc/man-pages/pod8/uss_help.pod
++++ openafs/doc/man-pages/pod8/uss_help.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-uss help - Displays help for uss commands
++uss_help - Displays help for uss commands
+ 
+ =head1 SYNOPSIS
+ 
