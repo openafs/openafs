@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos install - Installs a new version of a binary file
+bos_install - Installs a new version of a binary file
 
 =head1 SYNOPSIS
 

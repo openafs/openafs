@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup scantape - Extracts dump information from a tape
+backup_scantape - Extracts dump information from a tape
 
 =head1 SYNOPSIS
 

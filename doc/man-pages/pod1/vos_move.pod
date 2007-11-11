@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos move - Moves a read/write volume to another site
+vos_move - Moves a read/write volume to another site
 
 =head1 SYNOPSIS
 

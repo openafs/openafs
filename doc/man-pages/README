@@ -78,7 +78,10 @@ Formatting Standards
   documents common options, and discusses the general use of the suite.
   Then, each operation code in the suite should have a separate man page,
   named after the command with the space between the command suite and the
-  operation code replaced with an underscore.
+  operation code replaced with an underscore.  The NAME section of the
+  operation man page must also use an underscore (fs_listacl, not fs
+  listacl) for compatibility with some man programs.  The SYNOPSIS section
+  should, of course, use a space, since that's what the user must type.
 
   All man pages must follow the standard layout for man page sections and
   formatting.  The best general reference is the pod2man man page,

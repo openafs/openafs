@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs uuid - Prints the uuid of the client or generates a new one
+fs_uuid - Prints the uuid of the client or generates a new one
 
 =head1 SYNOPSIS
 

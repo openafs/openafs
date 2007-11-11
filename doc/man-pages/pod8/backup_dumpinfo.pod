@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup dumpinfo - Displays a dump record from the Backup Database
+backup_dumpinfo - Displays a dump record from the Backup Database
 
 =head1 SYNOPSIS
 

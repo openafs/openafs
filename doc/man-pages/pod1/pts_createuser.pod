@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts createuser - Creates a user or machine entry in the Protection Database
+pts_createuser - Creates a user or machine entry in the Protection Database
 
 =head1 SYNOPSIS
 

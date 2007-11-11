@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs sysname - Reports or sets the CPU/operating system type
+fs_sysname - Reports or sets the CPU/operating system type
 
 =head1 SYNOPSIS
 

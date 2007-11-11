@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs listquota - Displays quota information for a volume
+fs_listquota - Displays quota information for a volume
 
 =head1 SYNOPSIS
 

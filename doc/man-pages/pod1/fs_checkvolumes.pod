@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs checkvolumes - Forces the Cache Manager to update volume information
+fs_checkvolumes - Forces the Cache Manager to update volume information
 
 =head1 SYNOPSIS
 

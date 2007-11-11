@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts setmax - Sets the value of the max group id or max user id counter
+pts_setmax - Sets the value of the max group id or max user id counter
 
 =head1 SYNOPSIS
 

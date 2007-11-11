@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup delhost - Deletes a Tape Coordinator entry from the Backup Database
+backup_delhost - Deletes a Tape Coordinator entry from the Backup Database
 
 =head1 SYNOPSIS
 

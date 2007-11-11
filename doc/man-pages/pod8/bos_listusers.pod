@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos listusers - Lists the privileged users from the UserList file
+bos_listusers - Lists the privileged users from the UserList file
 
 =head1 SYNOPSIS
 

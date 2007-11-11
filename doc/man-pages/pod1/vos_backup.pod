@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos backup - Creates a backup volume for a single read/write volume
+vos_backup - Creates a backup volume for a single read/write volume
 
 =head1 SYNOPSIS
 

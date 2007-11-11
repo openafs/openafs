@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts removeuser - Removes a user from a Protection Database group
+pts_removeuser - Removes a user from a Protection Database group
 
 =head1 SYNOPSIS
 

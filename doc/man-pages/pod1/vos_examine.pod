@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos examine - Shows volume header and VLDB entry information for a volume
+vos_examine - Shows volume header and VLDB entry information for a volume
 
 =head1 SYNOPSIS
 

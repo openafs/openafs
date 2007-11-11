@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setquota - Sets the quota for the volume containing a file or directory
+fs_setquota - Sets the quota for the volume containing a file or directory
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup dbverify - Checks the integrity of the Backup Database
+backup_dbverify - Checks the integrity of the Backup Database
 
 =head1 SYNOPSIS
 
