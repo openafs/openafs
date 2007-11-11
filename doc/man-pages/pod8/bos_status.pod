@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos status - Displays the status of server processes
+bos_status - Displays the status of server processes
 
 =head1 SYNOPSIS
 

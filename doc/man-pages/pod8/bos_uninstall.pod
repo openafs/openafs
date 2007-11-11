@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos uninstall - Reverts to the former version of a process's binary file
+bos_uninstall - Reverts to the former version of a process's binary file
 
 =head1 SYNOPSIS
 

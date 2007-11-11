@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts setfields - Sets privacy flags or quota for a Protection Database entry
+pts_setfields - Sets privacy flags or quota for a Protection Database entry
 
 =head1 SYNOPSIS
 

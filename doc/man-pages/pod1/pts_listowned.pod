@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts listowned - Show the Protection Database groups owned by a user or group
+pts_listowned - Show the Protection Database groups owned by a user or group
 
 =head1 SYNOPSIS
 

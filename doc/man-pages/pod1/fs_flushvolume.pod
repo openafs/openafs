@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs flushvolume - Forces the Cache Manager to discard cached data from a volume
+fs_flushvolume - Forces the Cache Manager to discard cached data from a volume
 
 =head1 SYNOPSIS
 

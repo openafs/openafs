@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup diskrestore - Restores the entire contents of a partition
+backup_diskrestore - Restores the entire contents of a partition
 
 =head1 SYNOPSIS
 

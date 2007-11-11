@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup listdumps - Displays the dump hierarchy from the Backup Database
+backup_listdumps - Displays the dump hierarchy from the Backup Database
 
 =head1 SYNOPSIS
 

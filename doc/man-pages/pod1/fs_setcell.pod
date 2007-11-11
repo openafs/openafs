@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setcell - Configures permissions for setuid programs from specified cells
+fs_setcell - Configures permissions for setuid programs from specified cells
 
 =head1 SYNOPSIS
 

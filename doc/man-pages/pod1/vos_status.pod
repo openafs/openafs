@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos status - Reports a Volume Server's status
+vos_status - Reports a Volume Server's status
 
 =head1 SYNOPSIS
 

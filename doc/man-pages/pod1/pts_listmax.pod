@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts listmax - Displays the max user id and max group id counters
+pts_listmax - Displays the max user id and max group id counters
 
 =head1 SYNOPSIS
 

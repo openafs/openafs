@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setcachesize - Sets the size of the disk cache
+fs_setcachesize - Sets the size of the disk cache
 
 =head1 SYNOPSIS
 

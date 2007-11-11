@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs listaliases - Displays the current list of aliases for AFS cells
+fs_listaliases - Displays the current list of aliases for AFS cells
 
 =head1 SYNOPSIS
 

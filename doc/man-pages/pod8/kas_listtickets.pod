@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas listtickets - Displays all of the issuer's tickets (tokens)
+kas_listtickets - Displays all of the issuer's tickets (tokens)
 
 =head1 SYNOPSIS
 

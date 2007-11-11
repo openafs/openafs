@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace lsset - Reports the status of an event set
+fstrace_lsset - Reports the status of an event set
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos zap - Removes a volume from its site without writing to the VLDB
+vos_zap - Removes a volume from its site without writing to the VLDB
 
 =head1 SYNOPSIS
 

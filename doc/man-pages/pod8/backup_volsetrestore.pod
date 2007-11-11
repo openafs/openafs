@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup volsetrestore - Restores all volumes in a volume set
+backup_volsetrestore - Restores all volumes in a volume set
 
 =head1 SYNOPSIS
 

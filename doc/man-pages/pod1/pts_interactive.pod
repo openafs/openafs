@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts interactive - Enters interactive mode
+pts_interactive - Enters interactive mode
 
 =head1 SYNOPSIS
 

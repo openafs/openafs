@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts sleep - Pauses for a few seconds
+pts_sleep - Pauses for a few seconds
 
 =head1 SYNOPSIS
 

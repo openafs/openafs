@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos dump - Converts a volume into ASCII format and writes it to a file
+vos_dump - Converts a volume into ASCII format and writes it to a file
 
 =head1 SYNOPSIS
 

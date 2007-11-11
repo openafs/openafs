@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup listhosts - Lists Tape Coordinators registered in the Backup Database
+backup_listhosts - Lists Tape Coordinators registered in the Backup Database
 
 =head1 SYNOPSIS
 

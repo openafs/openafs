@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup kill - Terminates a pending or running operation
+backup_kill - Terminates a pending or running operation
 
 =head1 SYNOPSIS
 

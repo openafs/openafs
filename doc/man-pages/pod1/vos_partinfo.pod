@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos partinfo - Reports the available and total space on a partition
+vos_partinfo - Reports the available and total space on a partition
 
 =head1 SYNOPSIS
 

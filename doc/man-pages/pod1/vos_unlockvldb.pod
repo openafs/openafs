@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos unlockvldb - Unlocks several locked VLDB entries
+vos_unlockvldb - Unlocks several locked VLDB entries
 
 =head1 SYNOPSIS
 

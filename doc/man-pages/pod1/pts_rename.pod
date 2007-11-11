@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts rename - Changes the name of a Protection Database entry
+pts_rename - Changes the name of a Protection Database entry
 
 =head1 SYNOPSIS
 
