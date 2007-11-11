@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss add - Creates a user account
+uss_add - Creates a user account
 
 =head1 SYNOPSIS
 

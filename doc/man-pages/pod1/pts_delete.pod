@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts delete - Deletes a Protection Database entry
+pts_delete - Deletes a Protection Database entry
 
 =head1 SYNOPSIS
 

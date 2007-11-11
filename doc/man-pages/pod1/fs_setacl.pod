@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setacl - Sets the ACL for a directory
+fs_setacl - Sets the ACL for a directory
 
 =head1 SYNOPSIS
 

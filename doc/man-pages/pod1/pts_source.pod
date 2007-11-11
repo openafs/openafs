@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts source - Read pts commands from a file
+pts_source - Read pts commands from a file
 
 =head1 SYNOPSIS
 

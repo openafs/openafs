@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup addvolentry - Defines a volume entry in a volume set
+backup_addvolentry - Defines a volume entry in a volume set
 
 =head1 SYNOPSIS
 

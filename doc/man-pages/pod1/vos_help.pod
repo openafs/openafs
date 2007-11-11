@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos help - Displays help for vos commands
+vos_help - Displays help for vos commands
 
 =head1 SYNOPSIS
 

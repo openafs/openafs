@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos setcellname - Sets the cell's name in ThisCell and CellServDB
+bos_setcellname - Sets the cell's name in ThisCell and CellServDB
 
 =head1 SYNOPSIS
 

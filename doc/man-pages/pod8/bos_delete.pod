@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos delete - Deletes a server process from the BosConfig file
+bos_delete - Deletes a server process from the BosConfig file
 
 =head1 SYNOPSIS
 

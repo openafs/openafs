@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace setset - Sets the status of an event set
+fstrace_setset - Sets the status of an event set
 
 =head1 SYNOPSIS
 

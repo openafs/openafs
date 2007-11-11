@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos listhosts - Displays the contents of the CellServDB file
+bos_listhosts - Displays the contents of the CellServDB file
 
 =head1 SYNOPSIS
 

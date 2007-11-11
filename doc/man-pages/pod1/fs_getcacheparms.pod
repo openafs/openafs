@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs getcacheparms - Displays the current size and usage of the cache
+fs_getcacheparms - Displays the current size and usage of the cache
 
 =head1 SYNOPSIS
 

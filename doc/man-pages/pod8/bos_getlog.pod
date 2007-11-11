@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos getlog - Prints a server process's log file
+bos_getlog - Prints a server process's log file
 
 =head1 SYNOPSIS
 

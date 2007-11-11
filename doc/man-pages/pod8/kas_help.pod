@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas help - Displays help for kas commands
+kas_help - Displays help for kas commands
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos online - Brings a volume online
+vos_online - Brings a volume online
 
 =head1 SYNOPSIS
 

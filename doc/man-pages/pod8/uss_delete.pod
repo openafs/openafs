@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss delete - Deletes a user account
+uss_delete - Deletes a user account
 
 =head1 SYNOPSIS
 

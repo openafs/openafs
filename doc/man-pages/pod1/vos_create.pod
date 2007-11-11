@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos create - Creates a read/write volume and associated VLDB entry
+vos_create - Creates a read/write volume and associated VLDB entry
 
 =head1 SYNOPSIS
 

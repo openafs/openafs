@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace dump - Dumps a trace log
+fstrace_dump - Dumps a trace log
 
 =head1 SYNOPSIS
 

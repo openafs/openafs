@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup adddump - Defines a dump level in the dump hierarchy
+backup_adddump - Defines a dump level in the dump hierarchy
 
 =head1 SYNOPSIS
 

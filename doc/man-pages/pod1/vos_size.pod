@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos size - Computes the size of a volume dump
+vos_size - Computes the size of a volume dump
 
 =head1 SYNOPSIS
 

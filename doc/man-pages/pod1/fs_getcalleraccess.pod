@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs getcalleraccess - Show the current user's access to a file or directory
+fs_getcalleraccess - Show the current user's access to a file or directory
 
 =head1 SYNOPSIS
 

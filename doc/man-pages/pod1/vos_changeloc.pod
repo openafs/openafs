@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos changeloc - Change a volume's entry in the VLDB
+vos_changeloc - Change a volume's entry in the VLDB
 
 =head1 SYNOPSIS
 

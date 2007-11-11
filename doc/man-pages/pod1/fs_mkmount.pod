@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs mkmount - Creates a mount point for a volume
+fs_mkmount - Creates a mount point for a volume
 
 =head1 SYNOPSIS
 

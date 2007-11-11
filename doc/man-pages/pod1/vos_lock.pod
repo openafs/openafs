@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos lock - Locks a VLDB volume entry
+vos_lock - Locks a VLDB volume entry
 
 =head1 SYNOPSIS
 

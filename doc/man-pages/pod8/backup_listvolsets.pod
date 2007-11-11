@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup listvolsets - Lists volume set entries from the Backup Database
+backup_listvolsets - Lists volume set entries from the Backup Database
 
 =head1 SYNOPSIS
 
