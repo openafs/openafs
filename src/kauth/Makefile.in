@@ -249,37 +249,37 @@ install: \
 	${DESTDIR}${includedir}/afs/kaport.h
 
 ${DESTDIR}${afssrvlibexecdir}/kaserver: kaserver
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kas: kas
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/kas: kas
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/klog: klog
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/klog.krb: klog.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${afssrvbindir}/klog: klog
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvbindir}/klog.krb: klog.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${bindir}/knfs: knfs
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/kpasswd: kpasswd
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
@@ -294,7 +294,7 @@ ${DESTDIR}${afssrvsbindir}/kadb_check: rebuild
 	${INSTALL} -f $? $@
 
 ${DESTDIR}${afssrvsbindir}/kdb: kdb
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/ka-forwarder: ka-forwarder
 	${INSTALL} $? $@
@@ -331,25 +331,25 @@ dest: \
 	${DEST}/include/afs/kaport.h
 
 ${DEST}/root.server/usr/afs/bin/kaserver: kaserver
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/etc/kas ${DEST}/root.server/usr/afs/bin/kas: kas 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/kpwvalid ${DEST}/etc/kpwvalid ${DEST}/root.server/usr/afs/bin/kpwvalid: kpwvalid 
 	${INSTALL} $? $@
 
 ${DEST}/bin/klog ${DEST}/root.server/usr/afs/bin/klog: klog 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/klog.krb ${DEST}/root.server/usr/afs/bin/klog.krb: klog.krb 
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DEST}/bin/knfs: knfs 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/kpasswd: kpasswd 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/lib/afs/libkauth.a: libkauth.a 
 	${INSTALL} $? $@
@@ -361,7 +361,7 @@ ${DEST}/etc/kadb_check: rebuild
 	${INSTALL} -f $? $@
 
 ${DEST}/etc/kdb: kdb 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/ka-forwarder: ka-forwarder
 	${INSTALL} $? $@

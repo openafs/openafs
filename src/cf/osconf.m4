@@ -18,6 +18,8 @@ DBG=-g
 OPTMZ=-O
 LWP_DBG=-g
 LWP_OPTMZ=-O
+NO_STRIP_BIN=-ns
+NO_STRIP_KRB=-ns
 
 dnl standard programs
 AC_PROG_RANLIB
@@ -1013,6 +1015,8 @@ fi
 
 if test "x$enable_debug" = "xno"; then
   DBG=
+  NO_STRIP_BIN=
+  NO_STRIP_KRB=-s
 fi
 
 if test "x$enable_optimize" = "xno"; then
@@ -1025,6 +1029,19 @@ fi
 
 if test "x$enable_optimize_lwp" = "xno"; then
   LWP_OPTMZ=
+fi
+
+if test "x$enable_strip_binaries" != "xno"; then
+  if test "x$enable_strip_binaries" = "xmaybe" -a "x$enable_debug" = "xyes"; then
+    NO_STRIP_BIN=-ns
+    NO_STRIP_KRB=-ns
+  else
+    NO_STRIP_BIN=
+    NO_STRIP_KRB=-s
+  fi
+else
+  NO_STRIP_BIN=-ns
+  NO_STRIP_KRB=-ns
 fi
 
 AC_SUBST(CCXPG2)
@@ -1047,6 +1064,8 @@ AC_SUBST(MT_CC)
 AC_SUBST(MT_CFLAGS)
 AC_SUBST(MT_LIBS)
 AC_SUBST(MV)
+AC_SUBST(NO_STRIP_BIN)
+AC_SUBST(NO_STRIP_KRB)
 AC_SUBST(OPTMZ)
 AC_SUBST(PAM_CFLAGS)
 AC_SUBST(PAM_LIBS)

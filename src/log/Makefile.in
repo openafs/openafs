@@ -76,13 +76,13 @@ ${DEST}/bin/tokens: tokens
 	${INSTALL} $? $@
 
 ${DEST}/bin/tokens.krb: tokens.krb
-	${INSTALL} $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DEST}/root.server/usr/afs/bin/tokens: tokens
 	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/tokens.krb: tokens.krb
-	${INSTALL} $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DEST}/etc/kseal: kseal
 	${INSTALL} $? $@
@@ -105,13 +105,13 @@ ${DESTDIR}${bindir}/tokens: tokens
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/tokens.krb: tokens.krb
-	${INSTALL} $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${afssrvbindir}/tokens: tokens
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvbindir}/tokens.krb: tokens.krb
-	${INSTALL} $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${sbindir}/kseal: kseal
 	${INSTALL} $? $@
