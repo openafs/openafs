@@ -3328,6 +3328,16 @@ CheckHost_r(register struct host *host, int held, char *dummy)
     struct rx_connection *cb_conn = NULL;
     int code;
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* kill the checkhost lwp ASAP during shutdown */
+    FS_STATE_RDLOCK;
+    if (fs_state.mode == FS_MODE_SHUTDOWN) {
+	FS_STATE_UNLOCK;
+	return H_ENUMERATE_BAIL(held);
+    }
+    FS_STATE_UNLOCK;
+#endif
+
     /* Host is held by h_Enumerate_r */
     for (client = host->FirstClient; client; client = client->next) {
 	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
