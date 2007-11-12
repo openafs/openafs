@@ -30,7 +30,7 @@ long cm_daemonCheckDownInterval  = 180;
 long cm_daemonCheckUpInterval    = 240;
 long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
-long cm_daemonCheckVolCBInterval = 1800;
+long cm_daemonCheckVolCBInterval = 0;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
@@ -347,7 +347,8 @@ void cm_Daemon(long parm)
     now = osi_Time();
     lastVolCheck = now - cm_daemonCheckVolInterval/2 + (rand() % cm_daemonCheckVolInterval);
     lastCBExpirationCheck = now - cm_daemonCheckCBInterval/2 + (rand() % cm_daemonCheckCBInterval);
-    lastVolCBRenewalCheck = now - cm_daemonCheckVolCBInterval/2 + (rand() % cm_daemonCheckVolCBInterval);
+    if (cm_daemonCheckVolCBInterval)
+        lastVolCBRenewalCheck = now - cm_daemonCheckVolCBInterval/2 + (rand() % cm_daemonCheckVolCBInterval);
     lastLockCheck = now - cm_daemonCheckLockInterval/2 + (rand() % cm_daemonCheckLockInterval);
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
@@ -406,7 +407,8 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
         }
 
-        if (now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval) {
+        if (cm_daemonCheckVolCBInterval && 
+            now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval) {
             lastVolCBRenewalCheck = now;
             cm_VolumeRenewROCallbacks();
             now = osi_Time();
