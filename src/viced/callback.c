@@ -381,7 +381,7 @@ CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
 	CcdelB++;
     *cbp = cb->cnext;
     FreeCB(cb);
-    if (deletefe && (--fe->ncbs == 0))
+    if ((--fe->ncbs == 0) && deletefe)
 	FDel(fe);
     return 0;
 }
@@ -922,6 +922,7 @@ DeleteFileCallBacks(AFSFid * fid)
 	TDel(cb);
 	HDel(cb);
 	FreeCB(cb);
+	fe->ncbs--;
     }
     FDel(fe);
     H_UNLOCK;
