@@ -310,16 +310,16 @@ ${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
 		${DESTDIR}${libdir}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX} ;; \
 
 ${DESTDIR}${sbindir}/rmtsysd: rmtsysd
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/pagsh: pagsh
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${includedir}/afs/afs.exp: afs.exp
 	@set -x; case ${SYS_NAME} in \
@@ -361,13 +361,13 @@ ${DEST}/include/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${DEST}/etc/rmtsysd: rmtsysd
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/pagsh: pagsh
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/pagsh.krb: pagsh.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 #
 # Misc targets

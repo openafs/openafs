@@ -414,7 +414,7 @@ ptserver_depinstall: pinstall rxgen comerr
 	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
 
 ${DEST}/bin/dedebug: dedebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 
 #

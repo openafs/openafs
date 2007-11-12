@@ -52,22 +52,22 @@ cacheout: cacheout.o
 cacheout.o: cacheout.c
 
 ${DEST}/bin/fs ${DEST}/root.server/usr/afs/bin/fs: fs
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/livesys: livesys
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/up: up
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/etc/fstrace: fstrace
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/cmdebug: cmdebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/dedebug: dedebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 
 up.o: up.c AFS_component_version_number.c
@@ -283,29 +283,29 @@ ${DEST}/etc/kdump: kdump-build
 		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP22; \
 		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP32; \
 		for f in kdump.IP??; \
-			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
+			do ${INSTALL} $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun*_5[789] | sun*_510 ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.solaris7 ${DEST}/etc/kdump; \
-		${INSTALL} -s -f ${srcdir}/kdump ${DEST}/etc/kdump32;; \
+		${INSTALL} -f ${srcdir}/kdump ${DEST}/etc/kdump32;; \
 	*alpha_linux* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
-		${INSTALL} -s kdump-alpha_linux-${LINUX_VERSION} $@ ;; \
+		${INSTALL} kdump-alpha_linux-${LINUX_VERSION} $@ ;; \
 	*linux* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
-		${INSTALL} -s kdump-linux-${LINUX_VERSION} $@-${LINUX_VERSION} ;; \
+		${INSTALL} kdump-linux-${LINUX_VERSION} $@-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.hp_ux11 ${DEST}/etc/kdump; \
-		${INSTALL} -s -f $? $@;; \
+		${INSTALL} -f $? $@;; \
 	*nbsd*) \
 		;; \
 	*) \
-		${INSTALL} -s $? $@ ;; \
+		${INSTALL} $? $@ ;; \
 	esac
 
 ${DEST}/etc/kdump64: kdump-build
 	if [ -f kdump64 ]; then \
-		${INSTALL} -s kdump64 $@; \
+		${INSTALL} kdump64 $@; \
 	fi
 
 
@@ -335,25 +335,25 @@ test:
 include ../config/Makefile.version
 
 ${DESTDIR}${bindir}/fs: fs
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/livesys: livesys
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvbindir}/fs: fs
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/up: up
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/fstrace: fstrace
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/cmdebug: cmdebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/dedebug: dedebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kdump: kdump-build
 	-set -x; \
@@ -364,24 +364,24 @@ ${DESTDIR}${sbindir}/kdump: kdump-build
 		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP22; \
 		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP32; \
 		for f in kdump.IP??; \
-			do ${INSTALL} -s $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
+			do ${INSTALL} $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
 		done ;; \
 	sun*_5[789] | sun*_510 ) \
 		${INSTALLex} -f kdump.sh.solaris7 ${DESTDIR}${sbindir}/kdump32; \
-		${INSTALL} -s -f $? $@;; \
+		${INSTALL} -f $? $@;; \
 	*linux* ) \
 		${INSTALLex} -f kdump.sh.linux ${DESTDIR}${sbindir}/kdump; \
-		${INSTALL} -s $? $@ ;; \
+		${INSTALL} $? $@ ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump; \
-		${INSTALL} -s -f $? $@;; \
+		${INSTALL} -f $? $@;; \
 	*) \
-		${INSTALL} -s $? $@ ;; \
+		${INSTALL} $? $@ ;; \
 	esac
 
 ${DESTDIR}${sbindir}/kdump64: kdump-build
 	if [ -f kdump64 ]; then \
-		${INSTALL} -s kdump64 $@; \
+		${INSTALL} kdump64 $@; \
 	fi
 
 dest: \

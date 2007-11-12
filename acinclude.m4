@@ -72,6 +72,9 @@ AC_ARG_ENABLE(optimize-kernel,
 AC_ARG_ENABLE(debug,
 [  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
 )
+AC_ARG_ENABLE(strip-binaries,
+[  --disable-strip-binaries             disable stripping of symbol information from binaries (defaults to enabled)],, enable_strip_binaries="maybe"
+)
 AC_ARG_ENABLE(optimize,
 [  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
 )
