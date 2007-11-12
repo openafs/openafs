@@ -18,6 +18,7 @@ KERN_OPTMZ=-O
 DBG=-g
 OPTMZ=-O
 LWP_DBG=-g
+NO_STRIP_BIN=
 LWP_OPTMZ=-O
 PAM_DBG=-g
 PAM_OPTMZ=
@@ -1029,6 +1030,7 @@ fi
 
 if test "x$enable_debug" = "xno"; then
   DBG=
+  NO_STRIP_BIN=-s
 fi
 
 if test "x$enable_optimize" = "xno"; then
@@ -1042,6 +1044,18 @@ fi
 if test "x$enable_optimize_lwp" = "xno"; then
   LWP_OPTMZ=
 fi
+
+if test "x$enable_strip_binaries" != "xno"; then
+  if test "x$enable_strip_binaries" = "xmaybe" -a "x$enable_debug" = "xyes"; then
+    NO_STRIP_BIN=
+  else
+    NO_STRIP_BIN=-s
+  fi
+else
+  NO_STRIP_BIN=
+fi
+
+INSTALL_PROGRAM="${INSTALL_PROGRAM} ${NO_STRIP_BIN}"
 
 AC_SUBST(CCXPG2)
 AC_SUBST(CCOBJ)
@@ -1063,6 +1077,7 @@ AC_SUBST(MT_CC)
 AC_SUBST(MT_CFLAGS)
 AC_SUBST(MT_LIBS)
 AC_SUBST(MV)
+AC_SUBST(NO_STRIP_BIN)
 AC_SUBST(OPTMZ)
 AC_SUBST(PAM_CFLAGS)
 AC_SUBST(PAM_LIBS)

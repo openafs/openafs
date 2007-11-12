@@ -212,14 +212,14 @@ state_analyzer: ${SDBGOBJS}
 install: fileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL_PROGRAM} fileserver \
+	${INSTALL} fileserver \
 		${DESTDIR}${afssrvlibexecdir}/fileserver
 	${INSTALL_PROGRAM} state_analyzer \
 		${DESTDIR}${afssrvsbindir}/state_analyzer
 
 dest: fileserver state_analyzer
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} fileserver \
+	${INSTALL} fileserver \
 		${DEST}/root.server/usr/afs/bin/fileserver
 	${INSTALL_PROGRAM} state_analyzer \
 		${DEST}/root.server/usr/afs/bin/state_analyzer

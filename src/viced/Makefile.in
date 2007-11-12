@@ -106,13 +106,13 @@ install: fileserver fs_stats.h
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
+		echo ${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
+		${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
 	*_darwin_*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
-		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
+		echo ${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
+		${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
 	esac
 
 dest: fileserver fs_stats.h
@@ -123,13 +123,13 @@ dest: fileserver fs_stats.h
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
+		echo ${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
+		${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
 	*_darwin_*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
-		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
+		echo ${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
+		${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
 	esac
 
 clean:

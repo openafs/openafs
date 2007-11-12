@@ -204,11 +204,11 @@ volserver: ${objects} ${LIBS}
 
 install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL_PROGRAM} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
+	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
 
 dest: volserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} volserver ${DEST}/root.server/usr/afs/bin/volserver
+	${INSTALL} volserver ${DEST}/root.server/usr/afs/bin/volserver
 
 clean:
 	$(RM) -f *.o volserver core AFS_component_version_number.c

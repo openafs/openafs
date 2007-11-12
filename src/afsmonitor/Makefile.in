@@ -56,11 +56,11 @@ afsmon-parselog:  afsmon-parselog.o ${LIBS}
 
 install: afsmonitor
 	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL} afsmonitor ${DESTDIR}${bindir}/afsmonitor
+	${INSTALL_PROGRAM} afsmonitor ${DESTDIR}${bindir}/afsmonitor
 
 dest: afsmonitor
 	${INSTALL} -d ${DEST}/bin
-	${INSTALL} afsmonitor ${DEST}/bin/afsmonitor
+	${INSTALL_PROGRAM} afsmonitor ${DEST}/bin/afsmonitor
 
 clean:
 	$(RM) -f *.o afsmonitor AFS_component_version_number.c

@@ -148,16 +148,16 @@ install: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} volserver \
+		echo ${INSTALL} volserver \
 			${DESTDIR}${afssrvlibexecdir}/volserver ; \
-		${INSTALL_PROGRAM} volserver \
+		${INSTALL} volserver \
 			${DESTDIR}${afssrvlibexecdir}/volserver ;; \
 	*_darwin_*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*) \
 		echo ${INSTALL_PRORAM} volserver \
 			${DESTDIR}${afssrvlibexecdir}/volserver ; \
-		${INSTALL_PROGRAM} volserver \
+		${INSTALL} volserver \
 			${DESTDIR}${afssrvlibexecdir}/volserver ;; \
 	esac
 
@@ -177,16 +177,16 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} volserver \
+		echo ${INSTALL} volserver \
 			${DEST}/root.server/usr/afs/bin/volserver ; \
-		${INSTALL_PROGRAM} -ns volserver \
+		${INSTALL} -ns volserver \
 			${DEST}/root.server/usr/afs/bin/volserver ;; \
 	*_darwin_*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*) \
-		echo ${INSTALL_PROGRAM} volserver \
+		echo ${INSTALL} volserver \
 			${DEST}/root.server/usr/afs/bin/volserver ; \
-		${INSTALL_PROGRAM} volserver \
+		${INSTALL} volserver \
 			${DEST}/root.server/usr/afs/bin/volserver ;; \
 	esac
 

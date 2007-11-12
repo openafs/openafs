@@ -201,11 +201,11 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver
-	${INSTALL} pts ${DESTDIR}${afssrvbindir}/pts
-	${INSTALL} pts ${DESTDIR}${bindir}/pts
-	${INSTALL} pt_util ${DESTDIR}${afssrvsbindir}/pt_util
-	${INSTALL} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check
+	${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver
+	${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts
+	${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts
+	${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util
+	${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check
 	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
 	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/prerror.h
@@ -224,11 +224,11 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL} ptserver ${DEST}/root.server/usr/afs/bin/ptserver
-	${INSTALL} pts ${DEST}/root.server/usr/afs/bin/pts
-	${INSTALL} pts ${DEST}/bin/pts
-	${INSTALL} pt_util ${DEST}/root.server/usr/afs/bin/pt_util
-	${INSTALL} db_verify ${DEST}/etc/prdb_check
+	${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver
+	${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts
+	${INSTALL_PROGRAM} pts ${DEST}/bin/pts
+	${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util
+	${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check
 	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
 	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DEST}/include/afs/prerror.h
