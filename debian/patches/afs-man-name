@@ -1876,3 +1876,13 @@ in the next release after 1.4.5.
  
  =head1 SYNOPSIS
  
+--- openafs.orig/doc/man-pages/pod1/fs_apropos.pod
++++ openafs/doc/man-pages/pod1/fs_apropos.pod
+@@ -1,6 +1,6 @@
+ =head1 NAME
+ 
+-fs apropos - Displays each help entry containing a keyword string
++fs_apropos - Displays each help entry containing a keyword string
+ 
+ =head1 SYNOPSIS
+ 
