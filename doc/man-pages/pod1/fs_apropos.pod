@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs apropos - Displays each help entry containing a keyword string
+fs_apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
