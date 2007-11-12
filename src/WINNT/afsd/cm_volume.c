@@ -1500,16 +1500,18 @@ enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
     }
 }
 
-
+/* Renew .readonly volume callbacks that are more than
+ * 30 minutes old.  (A volume callback is issued for 2 hours.)
+ */
 void 
 cm_VolumeRenewROCallbacks(void)
 {
     cm_volume_t * volp;
-
+    time_t minexp = time(NULL) + 90 * 60;
 
     lock_ObtainRead(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-        if ( volp->cbExpiresRO > 0) {
+        if ( volp->cbExpiresRO > 0 && volp->cbExpiresRO < minexp) {
             cm_req_t      req;
             cm_fid_t      fid;
             cm_scache_t * scp;
