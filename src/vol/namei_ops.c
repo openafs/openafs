@@ -41,6 +41,7 @@ RCSID
 #include "voldefs.h"
 #include "partition.h"
 #include <afs/errors.h>
+#include <afs/fssync.h>
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -1543,7 +1544,7 @@ convertVolumeInfo(fdr, fdw, vid)
  */
 
 int
-namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
+namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 {
     namei_t n;
     char dir_name[512], oldpath[512], newpath[512];
@@ -1551,17 +1552,48 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     char largeName[64];
     char infoName[64];
     IHandle_t t_ih;
+    IHandle_t *ih;
     char infoSeen = 0;
     char smallSeen = 0;
     char largeSeen = 0;
     char linkSeen = 0;
-    int code, fd, fd2;
+    int code, fd, fd2, found;
     char *p;
     DIR *dirp;
+    Inode ino;
     struct dirent *dp;
+    struct DiskPartition *partP;
     struct ViceInodeInfo info;
+    struct VolumeDiskHeader h;
+    char volname[20];
+    char headername[16];
+    afs_int32 error = 0;
 
-    namei_HandleToName(&n, h);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
+    fd = open(oldpath, O_RDONLY);
+    if (fd < 0) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
+        return ENOENT;
+    }
+    if (read(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n", volumeId);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+
+    for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
+         partP = partP->next);
+    if (!partP) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
+        return EIO;
+    }
+    ino = namei_MakeSpecIno(h.parent, VI_LINKTABLE);
+    IH_INIT(ih, partP->device, h.parent, ino);
+
+    namei_HandleToName(&n, ih);
     strcpy(dir_name, n.n_path);
     p = strrchr(dir_name, '/');
     *p = 0;
@@ -1576,7 +1608,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 
 	if (*dp->d_name == '.')
 	    continue;
-	if (DecodeInode(dir_name, dp->d_name, &info, h->ih_vid) < 0) {
+	if (DecodeInode(dir_name, dp->d_name, &info, ih->ih_vid) < 0) {
 	    Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s/%s\n",
 		dir_name, dp->d_name);
 	    closedir(dirp);
@@ -1587,8 +1619,8 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 	    closedir(dirp);
 	    return -1;
 	}
-	if (info.u.param[0] != vid) {
-	    if (info.u.param[0] == h->ih_vid) {
+	if (info.u.param[0] != volumeId) {
+	    if (info.u.param[0] == ih->ih_vid) {
 		if (info.u.param[2] == VI_LINKTABLE) {	/* link table */
 		    linkSeen = 1;
 		    continue;
@@ -1626,8 +1658,8 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
      */
 
     memset(&t_ih, 0, sizeof(t_ih));
-    t_ih.ih_dev = h->ih_dev;
-    t_ih.ih_vid = h->ih_vid;
+    t_ih.ih_dev = ih->ih_dev;
+    t_ih.ih_vid = ih->ih_vid;
 
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", dir_name, infoName);
     fd = afs_open(oldpath, O_RDWR, 0);
@@ -1636,7 +1668,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 	    oldpath);
 	return -1;
     }
-    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_VOLINFO);
+    t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
     fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
     if (fd2 < 0) {
@@ -1644,17 +1676,17 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 	close(fd);
 	return -1;
     }
-    code = convertVolumeInfo(fd, fd2, h->ih_vid);
+    code = convertVolumeInfo(fd, fd2, ih->ih_vid);
     close(fd);
     if (code) {
 	close(fd2);
 	unlink(n.n_path);
 	return -1;
     }
-    SetOGM(fd2, h->ih_vid, 1);
+    SetOGM(fd2, ih->ih_vid, 1);
     close(fd2);
 
-    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_SMALLINDEX);
+    t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_SMALLINDEX);
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, smallName);
     fd = afs_open(newpath, O_RDWR, 0);
@@ -1662,12 +1694,12 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
 	return -1;
     }
-    SetOGM(fd, h->ih_vid, 2);
+    SetOGM(fd, ih->ih_vid, 2);
     close(fd);
     link(newpath, n.n_path);
     unlink(newpath);
 
-    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_LARGEINDEX);
+    t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_LARGEINDEX);
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, largeName);
     fd = afs_open(newpath, O_RDWR, 0);
@@ -1675,12 +1707,37 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
 	return -1;
     }
-    SetOGM(fd, h->ih_vid, 3);
+    SetOGM(fd, ih->ih_vid, 3);
     close(fd);
     link(newpath, n.n_path);
     unlink(newpath);
 
     unlink(oldpath);
+
+    h.id = h.parent;
+    h.volumeInfo_hi = h.id;
+    h.smallVnodeIndex_hi = h.id;
+    h.largeVnodeIndex_hi = h.id;
+    h.linkTable_hi = h.id;
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
+    fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
+    if (fd < 0) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);
+        return EIO;
+    }
+    if (write(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't write header for RW-volume\
+ %lu.\n", h.id);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    if (unlink(oldpath) < 0) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
+    }
+    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
+    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
     return 0;
 }
 
