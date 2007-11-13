@@ -808,6 +808,7 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --libdir=%{_libdir} \
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
+       --disable-strip-binaries \
 %if %{build_modules}
        --with-linux-kernel-headers=%{ksrc} \
 %endif
