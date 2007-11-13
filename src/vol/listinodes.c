@@ -109,7 +109,13 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #if defined(AFS_HPUX101_ENV)
 #include <unistd.h>
 #endif
+#include "lock.h"
+#include "ihandle.h"
+#include "vnode.h"
+#include "volume.h"
+#include "volinodes.h"
 #include "partition.h"
+#include "fssync.h"
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -278,10 +284,12 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	return -1;
     }
 
-    inodeFile = fopen(resultFile, "w");
-    if (inodeFile == NULL) {
-	Log("Unable to create inode description file %s\n", resultFile);
-	goto out;
+    if (resultFile) {
+	inodeFile = fopen(resultFile, "w");
+	if (inodeFile == NULL) {
+	    Log("Unable to create inode description file %s\n", resultFile);
+	    goto out;
+	}
     }
 
     /*
@@ -325,43 +333,47 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 	    continue;
 
-	if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
-	    Log("Error writing inode file for partition %s\n", partition);
-	    goto out;
+	if (inodeFile) {
+	    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+		Log("Error writing inode file for partition %s\n", partition);
+		goto out;
+	    }
 	}
 	++ninodes;
     }
 
-    if (fflush(inodeFile) == EOF) {
-	Log("Unable to successfully flush inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (fsync(fileno(inodeFile)) == -1) {
-	Log("Unable to successfully fsync inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (fclose(inodeFile) == EOF) {
-	Log("Unable to successfully close inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
+    if (inodeFile) {
+	if (fflush(inodeFile) == EOF) {
+	    Log("Unable to successfully flush inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (fsync(fileno(inodeFile)) == -1) {
+	    Log("Unable to successfully fsync inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (fclose(inodeFile) == EOF) {
+	    Log("Unable to successfully close inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
 
-    /*
-     * Paranoia:  check that the file is really the right size
-     */
-    if (stat(resultFile, &status) == -1) {
-	Log("Unable to successfully stat inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
-	Log("Wrong size (%d instead of %d) in inode file for %s\n",
-	    status.st_size, ninodes * sizeof(struct ViceInodeInfo),
-	    partition);
-	err = -2;
-	goto out1;
+	/*
+	 * Paranoia:  check that the file is really the right size
+	 */
+	if (stat(resultFile, &status) == -1) {
+	    Log("Unable to successfully stat inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
+		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+		partition);
+	    err = -2;
+	    goto out1;
+	}
     }
     close(pfd);
     return 0;
@@ -683,10 +695,12 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	return -1;
     }
 
-    inodeFile = fopen(resultFile, "w");
-    if (inodeFile == NULL) {
-	Log("Unable to create inode description file %s\n", resultFile);
-	return -1;
+    if (resultFile) {
+	inodeFile = fopen(resultFile, "w");
+	if (inodeFile == NULL) {
+	    Log("Unable to create inode description file %s\n", resultFile);
+	    return -1;
+	}
     }
 
     if ((top_dirp = opendir(mountedOn)) == NULL) {
@@ -790,11 +804,13 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 		n_renames++;
 	    }
 
-	    if (fwrite
-		(&info.ili_info, sizeof(vice_inode_info_t), 1, inodeFile)
-		!= 1) {
-		Log("Error writing inode file for partition %s\n", mountedOn);
-		goto err1_exit;
+	    if (inodeFile) {
+		if (fwrite
+		    (&info.ili_info, sizeof(vice_inode_info_t), 1, inodeFile)
+		    != 1) {
+		    Log("Error writing inode file for partition %s\n", mountedOn);
+		    goto err1_exit;
+		}
 	    }
 	    ninodes++;
 
@@ -813,32 +829,34 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     closedir(top_dirp);
     if (renames)
 	free((char *)renames);
-    if (fflush(inodeFile) == EOF) {
-	("Unable to successfully flush inode file for %s\n", mountedOn);
-	fclose(inodeFile);
-	return errors ? -1 : -2;
-    }
-    if (fsync(fileno(inodeFile)) == -1) {
-	Log("Unable to successfully fsync inode file for %s\n", mountedOn);
-	fclose(inodeFile);
-	return errors ? -1 : -2;
-    }
-    if (fclose(inodeFile) == EOF) {
-	Log("Unable to successfully close inode file for %s\n", mountedOn);
-	return errors ? -1 : -2;
-    }
-    /*
-     * Paranoia:  check that the file is really the right size
-     */
-    if (stat(resultFile, &status) == -1) {
-	Log("Unable to successfully stat inode file for %s\n", partition);
-	return errors ? -1 : -2;
-    }
-    if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
-	Log("Wrong size (%d instead of %d) in inode file for %s\n",
-	    status.st_size, ninodes * sizeof(struct ViceInodeInfo),
-	    partition);
-	return errors ? -1 : -2;
+    if (inodeFile) {
+	if (fflush(inodeFile) == EOF) {
+	    ("Unable to successfully flush inode file for %s\n", mountedOn);
+	    fclose(inodeFile);
+	    return errors ? -1 : -2;
+	}
+	if (fsync(fileno(inodeFile)) == -1) {
+	    Log("Unable to successfully fsync inode file for %s\n", mountedOn);
+	    fclose(inodeFile);
+	    return errors ? -1 : -2;
+	}
+	if (fclose(inodeFile) == EOF) {
+	    Log("Unable to successfully close inode file for %s\n", mountedOn);
+	    return errors ? -1 : -2;
+	}
+	/*
+	 * Paranoia:  check that the file is really the right size
+	 */
+	if (stat(resultFile, &status) == -1) {
+	    Log("Unable to successfully stat inode file for %s\n", partition);
+	    return errors ? -1 : -2;
+	}
+	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
+		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+		partition);
+	    return errors ? -1 : -2;
+	}
     }
 
     if (errors) {
@@ -984,10 +1002,12 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	goto out;
     }
 
-    inodeFile = fopen(resultFile, "w");
-    if (inodeFile == NULL) {
-	Log("Unable to create inode description file %s\n", resultFile);
-	goto out;
+    if (resultFile) {
+	inodeFile = fopen(resultFile, "w");
+	if (inodeFile == NULL) {
+	    Log("Unable to create inode description file %s\n", resultFile);
+	    goto out;
+	}
     }
 #ifdef	AFS_AIX_ENV
     /*
@@ -1031,9 +1051,11 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	info.u.param[3] = auxp->aux_param4;
 	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 	    continue;
-	if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
-	    Log("Error writing inode file for partition %s\n", partition);
-	    goto out;
+	if (inodeFile) {
+	    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+		Log("Error writing inode file for partition %s\n", partition);
+		goto out;
+	    }
 	}
 	ninodes++;
     }
@@ -1240,10 +1262,12 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 		    info.linkCount = p->di_nlink;
 		    if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 			continue;
-		    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
-			Log("Error writing inode file for partition %s\n",
-			    partition);
-			goto out;
+		    if (inodeFile) {
+			if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+			    Log("Error writing inode file for partition %s\n",
+				partition);
+			    goto out;
+			}
 		    }
 		    ninodes++;
 		}
@@ -1253,36 +1277,38 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     if (inodes)
 	free(inodes);
 #endif
-    if (fflush(inodeFile) == EOF) {
-	Log("Unable to successfully flush inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (fsync(fileno(inodeFile)) == -1) {
-	Log("Unable to successfully fsync inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (fclose(inodeFile) == EOF) {
-	Log("Unable to successfully close inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-
-    /*
-     * Paranoia:  check that the file is really the right size
-     */
-    if (stat(resultFile, &status) == -1) {
-	Log("Unable to successfully stat inode file for %s\n", partition);
-	err = -2;
-	goto out1;
-    }
-    if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
-	Log("Wrong size (%d instead of %d) in inode file for %s\n",
-	    status.st_size, ninodes * sizeof(struct ViceInodeInfo),
-	    partition);
-	err = -2;
-	goto out1;
+    if (inodeFile) {
+	if (fflush(inodeFile) == EOF) {
+	    Log("Unable to successfully flush inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (fsync(fileno(inodeFile)) == -1) {
+	    Log("Unable to successfully fsync inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (fclose(inodeFile) == EOF) {
+	    Log("Unable to successfully close inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	
+	/*
+	 * Paranoia:  check that the file is really the right size
+	 */
+	if (stat(resultFile, &status) == -1) {
+	    Log("Unable to successfully stat inode file for %s\n", partition);
+	    err = -2;
+	    goto out1;
+	}
+	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
+		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+		partition);
+	    err = -2;
+	    goto out1;
+	}
     }
     close(pfd);
     return 0;
@@ -1333,4 +1359,223 @@ bread(int fd, char *buf, daddr_t blk, afs_int32 size)
 }
 
 #endif /* AFS_LINUX20_ENV */
+static afs_int32
+convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
+{
+    struct VolumeDiskData vd;
+    char *p;
+
+    if (read(fdr, &vd, sizeof(struct VolumeDiskData)) !=
+        sizeof(struct VolumeDiskData)) {
+        Log("1 convertiVolumeInfo: read failed for %lu with code %d\n", vid,
+            errno);
+        return -1;
+    }
+    vd.restoredFromId = vd.id;  /* remember the RO volume here */
+    vd.cloneId = vd.id;
+    vd.id = vd.parentId;
+    vd.type = RWVOL;
+    vd.dontSalvage = 0;
+    vd.inUse = 0;
+    vd.uniquifier += 5000;      /* just in case there are still file copies 
+				   from the old RW volume around */
+
+    p = strrchr(vd.name, '.');
+    if (p && !strcmp(p, ".readonly")) {
+        memset(p, 0, 9);
+    }
+
+    if (write(fdw, &vd, sizeof(struct VolumeDiskData)) !=
+        sizeof(struct VolumeDiskData)) {
+        Log("1 convertiVolumeInfo: write failed for %lu with code %d\n", vid,
+            errno);
+        return -1;
+    }
+    return 0;
+}
+
+struct specino {
+    afs_int32 inodeType;
+    Inode inodeNumber;
+    Inode ninodeNumber;
+};
+
+
+int
+UpdateThisVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber, 
+		 struct specino *specinos)
+{
+    struct dinode *p;
+    if ((inodeinfo->u.vnode.vnodeNumber == INODESPECIAL) &&
+	(inodeinfo->u.vnode.volumeId == singleVolumeNumber)) {
+	specinos[inodeinfo->u.special.type].inodeNumber = 
+	    inodeinfo->inodeNumber;
+    }
+    return 0; /* We aren't using a result file, we're caching */
+}
+
+static char *
+getDevName(char *pbuffer, char *wpath)
+{
+    char pbuf[128], *ptr;
+    strcpy(pbuf, pbuffer);
+    ptr = (char *)strrchr(pbuf, '/');
+    if (ptr) {
+        *ptr = '\0';
+        strcpy(wpath, pbuf);
+    } else
+        return NULL;
+    ptr = (char *)strrchr(pbuffer, '/');
+    if (ptr) {
+        strcpy(pbuffer, ptr + 1);
+        return pbuffer;
+    } else
+        return NULL;
+}
+
+int
+inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
+{
+    char dir_name[512], oldpath[512], newpath[512];
+    char volname[20];
+    char headername[16];
+    char *name;
+    int fd, err, forcep, len, j, code;
+    struct dirent *dp;
+    struct DiskPartition *partP;
+    struct ViceInodeInfo info;
+    struct VolumeDiskHeader h;
+    IHandle_t *ih, *ih2;
+    FdHandle_t *fdP, *fdP2;
+    char wpath[100];
+    char tmpDevName[100];
+    char buffer[128];
+    struct specino specinos[VI_LINKTABLE+1];
+    Inode nearInode = 0;
+
+    memset(&specinos, 0, sizeof(specinos));
+	   
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
+    fd = open(oldpath, O_RDONLY);
+    if (fd < 0) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
+        return ENOENT;
+    }
+    if (read(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n", volumeId);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+
+    /* now do the work */
+	   
+    for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
+         partP = partP->next);
+    if (!partP) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
+        return EIO;
+    }
+
+    strcpy(tmpDevName, partP->devName);
+    name = getDevName(tmpDevName, wpath);
+
+    if ((err = ListViceInodes(name, VPartitionPath(partP), 
+			      NULL, UpdateThisVolume, volumeId, 
+			      &forcep, 0, wpath, &specinos)) < 0)
+    {
+	Log("1 inode_ConvertROtoRWvolume: Couldn't get special inodes\n");
+	return EIO;
+    }
+	   
+#if defined(NEARINODE_HINT)
+    nearInodeHash(volumeId, nearInode);
+    nearInode %= partP->f_files;
+#endif
+
+    for (j = VI_VOLINFO; j < VI_LINKTABLE+1; j++) {
+	if (specinos[j].inodeNumber > 0) {
+	    specinos[j].ninodeNumber = 
+		IH_CREATE(NULL, partP->device, VPartitionPath(partP),
+			  nearInode, h.parent, INODESPECIAL, j, h.parent);
+	    IH_INIT(ih, partP->device, volumeId, 
+		    specinos[j].inodeNumber);
+	    fdP = IH_OPEN(ih);
+	    if (!fdP) {
+		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, volumeId); 
+		return -1;
+	    }
+	    
+	    IH_INIT(ih2, partP->device, h.parent, specinos[j].ninodeNumber);
+	    fdP2 = IH_OPEN(ih2); 
+	    if (!fdP2) { 
+		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, h.parent);  
+		return -1; 
+	    } 
+	    
+	    if (j == VI_VOLINFO)
+		convertVolumeInfo(fdP->fd_fd, fdP2->fd_fd, ih2->ih_vid);
+	    else {
+		while (1) {
+		    len = read(fdP->fd_fd, buffer, sizeof(buffer));
+		    if (len < 0)
+			return errno;
+		    if (len == 0)
+			break;
+		    code = write(fdP2->fd_fd, buffer, len);
+		    if (code != len)
+			return -1;
+		}
+	    }
+		
+	    FDH_CLOSE(fdP);
+	    FDH_CLOSE(fdP2);
+	    IH_RELEASE(ih);
+	    IH_RELEASE(ih2);
+	}
+    }
+   
+    h.id = h.parent;
+#ifdef AFS_64BIT_IOPS_ENV
+    h.volumeInfo_lo = (afs_int32)specinos[VI_VOLINFO].ninodeNumber & 0xffffffff;
+    h.volumeInfo_hi = (afs_int32)(specinos[VI_VOLINFO].ninodeNumber >> 32) && 0xffffffff;
+    h.smallVnodeIndex_lo = (afs_int32)specinos[VI_SMALLINDEX].ninodeNumber & 0xffffffff;
+    h.smallVnodeIndex_hi = (afs_int32)(specinos[VI_SMALLINDEX].ninodeNumber >> 32) & 0xffffffff;
+    h.largeVnodeIndex_lo = (afs_int32)specinos[VI_LARGEINDEX].ninodeNumber & 0xffffffff;
+    h.largeVnodeIndex_hi = (afs_int32)(specinos[VI_LARGEINDEX].ninodeNumber >> 32) & 0xffffffff;
+    if (specinos[VI_LINKTABLE].ninodeNumber) {
+	h.linkTable_lo = (afs_int32)specinos[VI_LINKTABLE].ninodeNumber & 0xffffffff;
+	h.linkTable_hi = (afs_int32)specinos[VI_LINKTABLE].ninodeNumber & 0xffffffff;
+    }
+#else
+    h.volumeInfo_lo = specinos[VI_VOLINFO].ninodeNumber;
+    h.smallVnodeIndex_lo = specinos[VI_SMALLINDEX].ninodeNumber;
+    h.largeVnodeIndex_lo = specinos[VI_LARGEINDEX].ninodeNumber;
+    if (specinos[VI_LINKTABLE].ninodeNumber) {
+	h.linkTable_lo = specinos[VI_LINKTABLE].ninodeNumber;
+    }
+#endif
+
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
+    fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
+    if (fd < 0) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);
+        return EIO;
+    }
+    if (write(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't write header for RW-volume %lu.\n", h.id);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    if (unlink(oldpath) < 0) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
+    }
+    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
+    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    return 0;
+}
 #endif /* AFS_NAMEI_ENV */
