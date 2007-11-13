@@ -24,15 +24,12 @@ foreach my $variant ('', 'PAE', 'kdump', 'xen') {
     $package=~/([^\-]*\-[^\-]*)\.([^\.]*)$/;
     my ($version, $arch) = ($1,$2);
     die "Couldn't extract version and architecture" if !$version or !$arch;
-    my @archs=map {/^.*\-([^\-]*)/;$1;} split(' ',`ls -d /usr/src/kernels/$version$append-*`);
-    foreach my $arch (@archs) {
-      print "Adding $variant, version $version for $arch\n";
-      $list{$arch} = {} if !$list{$arch};
-      $list{$arch}{$version} =[] if !$list{$arch}{$version};
-      push @{$list{$arch}{$version}}, $variant;
-    }
-  } 
+    $list{$arch} = {} if !$list{$arch};
+    $list{$arch}{$version} =[] if !$list{$arch}{$version};
+    push @{$list{$arch}{$version}}, $variant;
+  }
 }
+
 # Build the base package
 print "Building the base system\n";
 system("rpmbuild -ba --define \"fedorakmod 1\" --define \"osvers fc$fedoraversion\" $specdir/openafs.spec") == 0 or exit 1;
