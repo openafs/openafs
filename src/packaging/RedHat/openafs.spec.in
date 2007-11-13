@@ -20,7 +20,7 @@
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 
 # Determine the version of the kernel to build against
-# - automatically select the latest kernel with sources from /lib/modules
+# - automatically select running kernel if there are sources in /lib/modules
 # - note that this can be overridden on the command line
 #
 %if !%{kernvers_on_cmdline}
@@ -46,7 +46,7 @@
 %endif
 %{!?kvariants: %define kvariants %{?upvar} %{?smpvar} %{?paevar} %{?xenvar} %{?kdumpvar}}
 
-%define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}
+%{!?ksrcdir: %define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}}
 
 %else # Legacy kernel build stuff 
 
@@ -230,6 +230,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Derek Atkins <warlord@MIT.EDU>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
+%if %{krb5support}
+BuildRequires: krb5-devel
+%endif
 %if %{build_userspace}
 BuildRequires: autoconf
 %endif
@@ -459,7 +462,7 @@ you are using KAserver instead of Krb5.
 Summary: OpenAFS programs to use with krb5
 Requires: openafs = %{PACKAGE_VERSION}
 Group: Networking/Filesystems
-BuildRequires: krb5-devel, autoconf, automake
+BuildRequires: autoconf, automake
 
 %description krb5
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -642,37 +645,6 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 # Patch openafs to build a kernel module named "openafs" instead of "libafs"
 %patch0 -p1 -b .kmod26
 
-%if %{build_userspace}
-# Save some time -- install these if we're building userspace
-
-# Install the Krb5 Migration Kit
-tar -xzf src/packaging/RedHat/openafs-krb5-2.0.tar.gz
-
-#
-# patch afs-krb5 migration kit to work with openafs-1.3 and krb5-1.3;
-# add some features and fix bugs
-#
-
-# krb524 is no longer in a separate library as of krb5-1.3; handle this
-patch -p0 -b -z .krb524 < src/packaging/RedHat/afs-krb5-2.0-krb524.patch
-
-# make sure NETLIBS gets added to the proper programs (seems to be 
-# needed only for Solaris)
-patch -p0 -b -z .libsocket < src/packaging/RedHat/afs-krb5-2.0-libsocket.patch
-
-# find an existing libcom_err and use that
-patch -p0 -b -z .com_err < src/packaging/RedHat/afs-krb5-2.0-com_err.patch
-
-# make afs-krb5 work with recent OpenAFS; includes and prototypes
-patch -p0 -b -z .openafs13 < src/packaging/RedHat/afs-krb5-2.0-openafs1.3.patch
-
-# nothing in afs-krb5 actually uses res_search
-patch -p0 -b -z .res_search < src/packaging/RedHat/afs-krb5-2.0-res_search.patch
-
-(cd afs-krb5/src && autoreconf) || exit 1
-
-%endif
-
 ##############################################################################
 #
 # building
@@ -813,6 +785,22 @@ config_opts="--enable-redhat-buildsys \
 
 # Configure AFS
 
+# If we're using Fedora kmods, work out which is the best kernel module to 
+# use for the userland configuration step. If no variants have been specified,
+# then use the standard kernel. If variants are specified, use the standard kernel
+# if it's listed, otherwise pick the first listed kernel.
+ksrc=""
+%if %{fedorakmod} 
+  for kvariant in %{kvariants} ; do
+    if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
+      ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+    fi
+  done
+%endif
+if [ -z "$ksrc" ] ; then
+ksrc=%{ksrcdir}
+fi
+
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
 ./configure --with-afs-sysname=${sysname} \
@@ -821,7 +809,7 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
 %if %{build_modules}
-       --with-linux-kernel-headers=%{ksrcdir} \
+       --with-linux-kernel-headers=%{ksrc} \
 %endif
 %if %{krb5support}
 	--with-krb5-conf \
@@ -858,20 +846,6 @@ done
 %if %{build_userspace}
 # Build the user-space AFS stuff
 make dest_nolibafs || exit 1
-
-%if %{krb5support}
-# Now build ka-forwarder
-(cd afs-krb5/src &&
-	./configure --prefix=%{_prefix} --with-krb5=%{_prefix}/kerberos \
-               --libdir=%{_libdir} \
-               --bindir=%{_bindir} \
-               --sbindir=%{_sbindir} \
-               --with-afs=`pwd`/../../${sysname}/dest/ && \
-	make all PROGS="ka-forwarder" && \
-	install -c -s ka-forwarder `pwd`/../../${sysname}/dest/etc ) \
-	|| exit 1
-%endif
-
 %endif
 
 %if %{build_modules}
@@ -1202,7 +1176,7 @@ do
 
     # Mark kernel modules as executable; otherwise they won't get stripped 
     # by /usr/lib/rpm/brp-strip
-    install -m 744 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
+    install -m 644 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
 done
 %endif
 %endif
@@ -1507,7 +1481,6 @@ fi
 %defattr(-,root,root)
 %{_bindir}/aklog
 %{_sbindir}/asetkey
-%{_sbindir}/ka-forwarder
 %{_mandir}/man1/aklog.*
 %{_mandir}/man8/asetkey.*
 %endif
