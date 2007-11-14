@@ -4257,7 +4257,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 osi_Log0(afsd_logp,
                          "   attempting to UPGRADE from LockRead to LockWrite.");
                 osi_Log1(afsd_logp,
-                         "   dataVersion on scp: %d", scp->dataVersion);
+                         "   dataVersion on scp: %I64d", scp->dataVersion);
 
                 /* we assume at this point (because scp->serverLock
                    was valid) that we had a valid server lock. */
@@ -4348,7 +4348,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
                 osi_Log2(afsd_logp,
-                         "  Data versions before=%d, after=%d",
+                         "  Data versions before=%I64d, after=%I64d",
                          scp->lockDataVersion,
                          scp->dataVersion);
                 osi_Log1(afsd_logp,
@@ -4582,7 +4582,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
         /* since scp->serverLock looked sane, we are going to assume
            that we have a valid server lock. */
         scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "  dataVersion on scp = %d", scp->dataVersion);
+        osi_Log1(afsd_logp, "  dataVersion on scp = %I64d", scp->dataVersion);
 
         code = cm_IntReleaseLock(scp, userp, reqp);
 
@@ -4604,7 +4604,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
                we have lost the lock we had during the transition. */
 
             osi_Log0(afsd_logp, "Data version mismatch during lock downgrade");
-            osi_Log2(afsd_logp, "  Data versions before=%d, after=%d",
+            osi_Log2(afsd_logp, "  Data versions before=%I64d, after=%I64d",
                      scp->lockDataVersion,
                      scp->dataVersion);
             
@@ -4759,7 +4759,7 @@ long cm_Unlock(cm_scache_t *scp,
         /* Since we already had a lock, we assume that there is a
            valid server lock. */
         scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "   dataVersion on scp is %d", scp->dataVersion);
+        osi_Log1(afsd_logp, "   dataVersion on scp is %I64d", scp->dataVersion);
 
         /* before we downgrade, make sure that we have enough
            permissions to get the read lock. */
@@ -4794,7 +4794,7 @@ long cm_Unlock(cm_scache_t *scp,
             osi_Log0(afsd_logp,
                      "Data version mismatch while downgrading lock");
             osi_Log2(afsd_logp,
-                     "  Data versions before=%d, after=%d",
+                     "  Data versions before=%I64d, after=%I64d",
                      scp->lockDataVersion,
                      scp->dataVersion);
             
@@ -5032,7 +5032,7 @@ void cm_CheckLocks()
                                      "Data version mismatch on scp 0x%p",
                                      scp);
                             osi_Log2(afsd_logp,
-                                     "   Data versions: before=%d, after=%d",
+                                     "   Data versions: before=%I64d, after=%I64d",
                                      scp->lockDataVersion,
                                      scp->dataVersion);
 
@@ -5339,7 +5339,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
                 osi_Log2(afsd_logp,
-                         "  Data versions before=%d, after=%d",
+                         "  Data versions before=%I64d, after=%I64d",
                          scp->lockDataVersion,
                          scp->dataVersion);
                 osi_Log1(afsd_logp,

@@ -1152,7 +1152,7 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
         osi_Log0(afsd_logp, "cm_CheckDirOpForSingleChange succeeded");
     else
         osi_Log3(afsd_logp,
-                 "cm_CheckDirOpForSingleChange failed.  code=0x%x, old dv=%d, new dv=%d",
+                 "cm_CheckDirOpForSingleChange failed.  code=0x%x, old dv=%I64d, new dv=%I64d",
                  code, op->dataVersion, op->scp->dataVersion);
     return rc;
 }
@@ -1273,7 +1273,8 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                          CM_SCACHESYNC_BUFLOCKED);
 
         if (code == 0 && bufferp->dataVersion != op->dataVersion) {
-            osi_Log2(afsd_logp, "cm_DirOpAddBuffer: buffer version mismatch. buf ver = %d. want %d", bufferp->dataVersion, op->dataVersion);
+            osi_Log2(afsd_logp, "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %I64d. needs %I64d", 
+                     bufferp->dataVersion, op->dataVersion);
 
             cm_SyncOpDone(op->scp, bufferp,
                           CM_SCACHESYNC_NEEDCALLBACK |

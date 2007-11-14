@@ -1788,7 +1788,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p type=%d dv=%d len=0x%I64x mp='%s' flags=0x%x cb=0x%x refCount=%u\r\n", 
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p type=%d dv=%I64d len=0x%I64x mp='%s' flags=0x%x cb=0x%x refCount=%u\r\n", 
                 cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                 scp->volp, scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, scp->flags,
                 (unsigned long)scp->cbExpires, scp->refCount);
