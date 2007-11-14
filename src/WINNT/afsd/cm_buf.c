@@ -1550,10 +1550,9 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 }       
 
 /* Must be called with scp->mx held */
-long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 toVersion)
+long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion)
 {
     cm_buf_t * bp;
-    cm_buf_t * nbp;
     unsigned int i;
     int found = 0;
 

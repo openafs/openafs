@@ -1478,6 +1478,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
 		    AFSVolSync *volsyncp,
                     cm_user_t *userp, afs_uint32 flags)
 {
+    afs_uint64 dataVersion;
+
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory
 #ifdef AFS_FREELANCE_CLIENT
@@ -1488,7 +1490,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         statusp->LinkCount = scp->linkCount;
         statusp->Length = cm_fakeDirSize;
         statusp->Length_hi = 0;
-        statusp->DataVersion = cm_data.fakeDirVersion;
+        statusp->DataVersion = (afs_uint32)(cm_data.fakeDirVersion & 0xFFFFFFFF);
         statusp->Author = 0x1;
         statusp->Owner = 0x0;
         statusp->CallerAccess = 0x9;
@@ -1501,7 +1503,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         statusp->ServerModTime = FakeFreelanceModTime;
         statusp->Group = 0;
         statusp->SyncCounter = 0;
-        statusp->dataVersionHigh = 0;
+        statusp->dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
 	statusp->errorCode = 0;
     }
 #endif /* AFS_FREELANCE_CLIENT */
@@ -1537,8 +1539,11 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
     }
 
-    if (!(flags & CM_MERGEFLAG_FORCE)
-         && statusp->DataVersion < (unsigned long) scp->dataVersion) {
+    dataVersion = statusp->dataVersionHigh;
+    dataVersion <<= 32;
+    dataVersion |= statusp->DataVersion;
+
+    if (!(flags & CM_MERGEFLAG_FORCE) && dataVersion < scp->dataVersion) {
         struct cm_cell *cellp;
 
         cellp = cm_FindCellByID(scp->fid.cell);
@@ -1553,8 +1558,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
             if (volp)
                 cm_PutVolume(volp);
         }
-        osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %d, RPC dv %d",
-                  scp, scp->dataVersion, statusp->DataVersion);
+        osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %I64d, RPC dv %I64d",
+                  scp, scp->dataVersion, dataVersion);
         /* we have a number of data fetch/store operations running
          * concurrently, and we can tell which one executed last at the
          * server by its mtime.
@@ -1631,19 +1636,18 @@ void cm_MergeStatus(cm_scache_t *dscp,
         cm_AddACLCache(scp, userp, statusp->CallerAccess);
     }
 
-    if ((flags & CM_MERGEFLAG_STOREDATA) &&
-	statusp->DataVersion - scp->dataVersion == 1) {
+    if ((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion == 1) {
 	cm_buf_t *bp;
 
 	for (bp = cm_data.buf_fileHashTablepp[BUF_FILEHASH(&scp->fid)]; bp; bp=bp->fileHashp)
 	{
 	    if (cm_FidCmp(&scp->fid, &bp->fid) == 0 && 
 		bp->dataVersion == scp->dataVersion)
-		bp->dataVersion = statusp->DataVersion;
+		bp->dataVersion = dataVersion;
 	}
 
     }
-    scp->dataVersion = statusp->DataVersion;
+    scp->dataVersion = dataVersion;
 }
 
 /* note that our stat cache info is incorrect, so force us eventually

@@ -46,7 +46,7 @@ typedef struct cm_config_data {
     cm_fid_t            rootFid;
     cm_scache_t *       rootSCachep;
     cm_scache_t         fakeSCache;
-    afs_uint32          fakeDirVersion;
+    afs_uint64          fakeDirVersion;
 
     cm_aclent_t *       aclLRUp;
     cm_aclent_t	*       aclLRUEndp;

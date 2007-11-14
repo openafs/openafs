@@ -1414,7 +1414,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         afsStatus.FileType = 0x2;
         afsStatus.LinkCount = scp->linkCount;
         afsStatus.Length = cm_fakeDirSize;
-        afsStatus.DataVersion = cm_data.fakeDirVersion;
+        afsStatus.DataVersion = (afs_uint32)(cm_data.fakeDirVersion & 0xFFFFFFFF);
         afsStatus.Author = 0x1;
         afsStatus.Owner = 0x0;
         afsStatus.CallerAccess = 0x9;
@@ -1427,7 +1427,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         afsStatus.ServerModTime = (afs_uint32)FakeFreelanceModTime;
         afsStatus.Group = 0;
         afsStatus.SyncCounter = 0;
-        afsStatus.dataVersionHigh = 0;
+        afsStatus.dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
         afsStatus.lockCount = 0;
         afsStatus.Length_hi = 0;
         afsStatus.errorCode = 0;
@@ -1681,7 +1681,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
              qdp;
              qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
-            tbufp->dataVersion = afsStatus.DataVersion;
+            tbufp->dataVersion = afsStatus.dataVersionHigh;
+            tbufp->dataVersion <<= 32;
+            tbufp->dataVersion |= afsStatus.DataVersion;
 
 #ifdef DISKCACHE95
             /* write buffer out to disk cache */
