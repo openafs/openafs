@@ -1374,7 +1374,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         if ((bufp->dataVersion == -1 || bufp->dataVersion < scp->dataVersion) && 
              LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength)) 
         {
-            osi_Log3(afsd_logp, "Bad DVs %d, %d or length 0x%x",
+            osi_Log3(afsd_logp, "Bad DVs %I64d, %I64d or length 0x%x",
                       bufp->dataVersion, scp->dataVersion, biod.length);
 
             if (bufp->dataVersion == -1)
@@ -1396,7 +1396,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     }
 
 #ifdef DISKCACHE95
-    DPRINTF("cm_GetBuffer: fetching data scpDV=%d bufDV=%d scp=%x bp=%x dcp=%x\n",
+    DPRINTF("cm_GetBuffer: fetching data scpDV=%I64d bufDV=%I64d scp=%x bp=%x dcp=%x\n",
             scp->dataVersion, bufp->dataVersion, scp, bufp, bufp->dcp);
 #endif /* DISKCACHE95 */
 

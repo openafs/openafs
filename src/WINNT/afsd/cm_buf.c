@@ -1643,7 +1643,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
         {
 	    StringCbPrintfA(output, sizeof(output), 
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
-			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			    "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
 			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
@@ -1661,7 +1661,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
-			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
@@ -1677,7 +1677,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     for(bp = cm_data.buf_dirtyListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
-			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
