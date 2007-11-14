@@ -116,7 +116,7 @@ typedef struct cm_scache {
     cm_prefetch_t prefetch;		/* prefetch info structure */
     afs_uint32 unixModeBits;		/* unix protection mode bits */
     afs_uint32 linkCount;		/* link count */
-    afs_uint32 dataVersion;		/* data version */
+    afs_uint64 dataVersion;		/* data version */
     afs_uint32 owner; 			/* file owner */
     afs_uint32 group;			/* file owning group */
     cm_user_t *creator;			/* user, if new file */
@@ -161,7 +161,7 @@ typedef struct cm_scache {
                                  */
     unsigned long lastRefreshCycle; /* protected with cm_scacheLock
                                      * for all scaches. */
-    afs_uint32 lockDataVersion; /* dataVersion of the scp at the time
+    afs_uint64  lockDataVersion; /* dataVersion of the scp at the time
                                    the server lock for the scp was
                                    asserted for this lock the last
                                    time. */
@@ -192,7 +192,7 @@ typedef struct cm_scache {
 #ifdef USE_BPLUS
     /* directory B+ tree */             /* only allocated if is directory */
     osi_rwlock_t dirlock;               /* controls access to dirBplus */
-    afs_uint32   dirDataVersion;        /* data version represented by dirBplus */
+    afs_uint64   dirDataVersion;        /* data version represented by dirBplus */
     struct tree *dirBplus;              /* dirBplus */
 #endif
 

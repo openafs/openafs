@@ -116,15 +116,15 @@ typedef struct cm_dirOp {
     osi_hyper_t   length;       /* scp->length at the time
                                    cm_BeginDirOp() was called.*/
     osi_hyper_t   newLength;    /* adjusted scp->length */
-    afs_uint32    dataVersion;  /* scp->dataVersion when
+    afs_uint64    dataVersion;  /* scp->dataVersion when
                                    cm_BeginDirOp() was called.*/
-    afs_uint32    newDataVersion; /* scp->dataVersion when
+    afs_uint64    newDataVersion; /* scp->dataVersion when
                                      cm_CheckDirOpForSingleChange()
                                      was called. */
 
-    afs_uint32    dirtyBufCount;
+    afs_uint64    dirtyBufCount;
 
-    afs_uint32    nBuffers;     /* number of buffers below */
+    afs_uint64    nBuffers;     /* number of buffers below */
     cm_dirOpBuffer_t buffers[CM_DIROP_MAXBUFFERS];
 } cm_dirOp_t;
 

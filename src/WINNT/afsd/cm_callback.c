@@ -744,7 +744,7 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     cep->lock.pid_writer = 0;
     cep->lock.src_indicator = 0;
     cep->Length = scp->length.LowPart;
-    cep->DataVersion = scp->dataVersion;
+    cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
     if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
         cep->cbExpires = scp->volp->cbExpiresRO;
@@ -858,7 +858,7 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
 #else
     cep->Length = (afs_int64) scp->length.QuadPart;
 #endif
-    cep->DataVersion = scp->dataVersion;
+    cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
     if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
         cep->cbExpires = scp->volp->cbExpiresRO;

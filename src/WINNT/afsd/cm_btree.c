@@ -2185,7 +2185,7 @@ cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
 	    char buffer[1024];
 	    cm_scache_t *scp;
 	    char * type = "ScpNotFound";
-	    afs_int32 dv = -1;
+	    afs_uint64 dv = -1;
 
 	    scp = cm_FindSCache(&entryp->fid);
 	    if (scp) {
@@ -2214,10 +2214,10 @@ cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
 		}
 
 		dv = scp->dataVersion;
-	    cm_ReleaseSCache(scp);
+                cm_ReleaseSCache(scp);
 	    }
 
-	    sprintf(buffer, "'%s' Fid = (%d,%d,%d,%d) Short = '%s' Type %s DV %d",
+	    sprintf(buffer, "'%s' Fid = (%d,%d,%d,%d) Short = '%s' Type %s DV %I64d",
 		    entryp->name,
 		    entryp->fid.cell, entryp->fid.volume, entryp->fid.vnode, entryp->fid.unique,
 		    entryp->shortName,
