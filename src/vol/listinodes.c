@@ -1468,7 +1468,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
         return EIO;
     }
     close(fd);
-    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 
     /* now do the work */
 	   
@@ -1574,8 +1574,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     if (unlink(oldpath) < 0) {
         Log("1 inode_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
     }
-    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
-    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
+    FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
     return 0;
 }
 #endif /* AFS_NAMEI_ENV */
