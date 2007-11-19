@@ -74,7 +74,7 @@ Changes Relative to Stock OpenAFS
   The OpenAFS PAM modules have been built with pthreads rather than the
   standard LWP AFS libraries for compatibility with a threaded sshd.
 
-Debugging
+Debugging and Bug Reporting
 
   The current OpenAFS installation process installs fileserver and
   volserver unstripped, since backtraces and other debugging information
@@ -88,6 +88,27 @@ Debugging
   Eventually the openafs-dbg package will contain debugging information
   for all OpenAFS binaries.  This is pending upstream changes to the stock
   OpenAFS installation rules.
+
+  When reporting a bug in the OpenAFS client, please include your exact
+  kernel version and architecture (reportbug will do this for you).  Also,
+  if the client caused a kernel oops or BUG, be sure to include the
+  complete kernel output, including the lines before the oops.  That's
+  where the OpenAFS error message, if any, will be.
+
+  When reporting a bug in the OpenAFS file server, please include
+  backtrace information from a core dump, if any.  If the file server is
+  deadlocked, you can capture a core dump using the gcore script that
+  comes with the gdb package.  The file server is threaded, so use the
+  command "thread apply all backtrace" in gdb to get a complete backtrace.
+  It's also often useful to have the output of rxdebug <server> 7000 at
+  the time of the problem and the FileLog from the file server.  You can
+  increase the logging level of the file server with kill -TSTP (and reset
+  it to 0 with kill -HUP).
+
+  You can report any bug in OpenAFS against the Debian package with
+  reportbug and the OpenAFS package maintainers will forward the bug
+  upstream as necessary.  If you do want to report a bug directly
+  upstream, see http://www.openafs.org/ for bug reporting instructions.
 
 PAM Authentication
 
@@ -138,4 +159,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Tue, 26 Sep 2006 16:32:58 z
+ -- Russ Allbery <rra@debian.org>, Sun, 18 Nov 2007 19:57:23 -0800
