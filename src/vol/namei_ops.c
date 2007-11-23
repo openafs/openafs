@@ -41,7 +41,7 @@ RCSID
 #include "voldefs.h"
 #include "partition.h"
 #include <afs/errors.h>
-#include <afs/fssync.h>
+#include "fssync.h"
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
