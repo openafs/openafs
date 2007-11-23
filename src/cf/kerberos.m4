@@ -58,7 +58,7 @@ if test X$conf_krb5 = XYES; then
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register])
 	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
 	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
@@ -101,6 +101,10 @@ fi
 dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])
 	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
+fi
+
+if test "x$ac_cv_krb5_cc_register_exists" = "xyes"; then
+        AC_DEFINE(HAVE_KRB5_CC_REGISTER, 1, [define if krb5_cc_register exists])
 fi
 
 AC_SUBST(BUILD_KRB5)
