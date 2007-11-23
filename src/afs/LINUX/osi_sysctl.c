@@ -28,7 +28,11 @@ static struct ctl_table_header *afs_sysctl = NULL;
 
 static ctl_table afs_sysctl_table[] = {
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name 	= 1, 
+#endif
 	.procname 	= "hm_retry_RO",
 	.data 		= &hm_retry_RO, 
 	.maxlen		= sizeof(afs_int32), 
@@ -36,7 +40,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
         .ctl_name 	= 2, 
+#endif
         .procname 	= "hm_retry_RW",
         .data		= &hm_retry_RW,
 	.maxlen		= sizeof(afs_int32), 
@@ -44,7 +52,11 @@ static ctl_table afs_sysctl_table[] = {
      	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 3, 
+#endif
 	.procname	= "hm_retry_int",
 	.data		= &hm_retry_int, 
 	.maxlen		= sizeof(afs_int32), 
@@ -52,7 +64,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 4, 
+#endif
 	.procname	= "GCPAGs",
 	.data		= &afs_gcpags, 
 	.maxlen		= sizeof(afs_int32), 
@@ -60,7 +76,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler 	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 5, 
+#endif
 	.procname	= "rx_deadtime",
 	.data		= &afs_rx_deadtime, 
 	.maxlen		= sizeof(afs_int32), 
@@ -68,7 +88,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 6, 
+#endif
 	.procname	= "bkVolPref",
 	.data		= &afs_bkvolpref, 
 	.maxlen		= sizeof(afs_int32), 
@@ -80,7 +104,11 @@ static ctl_table afs_sysctl_table[] = {
 
 static ctl_table fs_sysctl_table[] = {
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 1, 
+#endif
 	.procname	= "afs", 
 	.mode		= 0555, 
 	.child		= afs_sysctl_table

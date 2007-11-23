@@ -2,9 +2,12 @@
 #                 [ACTION-IF-SUCCESS], [ACTION-IF-FAILURE])
 #
 AC_DEFUN([AC_TRY_KBUILD26],[  rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
   if mkdir conftest.dir &&
     cat >conftest.dir/Makefile <<_ACEOF &&
-CFLAGS += $CPPFLAGS
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
 
 obj-m += conftest.o
 _ACEOF
@@ -65,3 +68,16 @@ AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
     [],:,AC_MSG_RESULT(no)
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
+
+AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
+  AC_MSG_CHECKING([if linux kbuild requires EXTRA_CFLAGS])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS=-Wall
+  AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/fs.h>],
+    [],
+    ac_linux_kbuild_requires_extra_cflags=no,
+    ac_linux_kbuild_requires_extra_cflags=yes)
+    CPPFLAGS="$save_CPPFLAGS"
+    AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
