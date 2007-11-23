@@ -195,7 +195,12 @@ extern void afs_InitCBQueue(int doLockInit);
 extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
+extern afs_int32 afs_cellindex;
 extern afs_rwlock_t afs_xcell;
+#ifdef AFS_AFSDB_ENV
+extern afs_rwlock_t afsdb_client_lock;
+extern afs_rwlock_t afsdb_req_lock;
+#endif
 extern struct afs_q CellLRU;           
 
 extern void afs_CellInit(void);
