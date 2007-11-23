@@ -585,6 +585,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         )
 
 		 LINUX_KERNEL_COMPILE_WORKS
+                 LINUX_KBUILD_USES_EXTRA_CFLAGS
+                 LINUX_HAVE_CURRENT_KERNEL_TIME
+                 LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_CONFIG_H_EXISTS
@@ -625,6 +628,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
+                 LINUX_KEY_TYPE_H_EXISTS
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -653,6 +657,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_GENERIC_FILE_AIO_READ
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
+		 LINUX_SYSCTL_TABLE_CHECKING
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -728,6 +733,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
 		  AC_DEFINE(EXPORTFS_H_EXISTS, 1, [define if linux/exportfs.h exists])
+		 fi
+		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
+		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if key-type.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
@@ -876,11 +884,20 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
 		 fi
+		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
+		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
+		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
 		 fi
 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
 		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
+		 fi
+		 if test "x$ac_cv_linux_kmem_cache_init" = "xyes" ; then
+		  AC_DEFINE(KMEM_CACHE_INIT, 1, [define for new kmem_cache init function parameters])
+		 fi
+		 if test "x$ac_cv_linux_have_current_kernel_time" = "xyes" ; then
+		  AC_DEFINE(HAVE_CURRENT_KERNEL_TIME, 1, [define if current_kernel_time() exists])
 		 fi
 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
 		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])

@@ -301,7 +301,11 @@ static void
 #if defined(HAVE_KMEM_CACHE_T)
 init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
 #else
+#if defined(KMEM_CACHE_INIT)
+init_once(struct kmem_cache * cachep, void * foo)
+#else
 init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+#endif
 #endif
 {
     struct vcache *vcp = (struct vcache *) foo;
