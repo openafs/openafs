@@ -75,6 +75,9 @@
 #if defined(LINUX_KEYRING_SUPPORT)
 #include <linux/rwsem.h>
 #include <linux/key.h>
+#if defined(KEY_TYPE_H_EXISTS)
+#include <linux/key-type.h>
+#endif
 #ifndef KEY_ALLOC_IN_QUOTA
 #define KEY_ALLOC_IN_QUOTA 1
 #endif
