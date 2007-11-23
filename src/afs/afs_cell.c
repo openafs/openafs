@@ -36,7 +36,8 @@ afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
  */
 
 #ifdef AFS_AFSDB_ENV
-static afs_rwlock_t afsdb_client_lock;	/* Serializes client requests */
+afs_rwlock_t afsdb_client_lock;	/* Serializes client requests */
+afs_rwlock_t afsdb_req_lock;	/* Serializes client requests */
 static char afsdb_handler_running;	/* Protected by GLOCK */
 static char afsdb_handler_shutdown;	/* Protected by GLOCK */
 
@@ -68,11 +69,11 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 	return -2;
     afsdb_handler_running = 1;
 
-    ObtainSharedLock(&afsdb_req.lock, 683);
+    ObtainSharedLock(&afsdb_req_lock, 683);
     if (afsdb_req.pending) {
 	int i, hostCount;
 
-	UpgradeSToWLock(&afsdb_req.lock, 684);
+	UpgradeSToWLock(&afsdb_req_lock, 684);
 	hostCount = kernelMsg[0];
 	*afsdb_req.timeout = kernelMsg[1];
 	if (*afsdb_req.timeout)
@@ -90,20 +91,20 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 	afsdb_req.pending = 0;
 	afsdb_req.complete = 1;
 	afs_osi_Wakeup(&afsdb_req);
-	ConvertWToSLock(&afsdb_req.lock);
+	ConvertWToSLock(&afsdb_req_lock);
     }
-    ConvertSToRLock(&afsdb_req.lock);
+    ConvertSToRLock(&afsdb_req_lock);
 
     /* Wait for a request */
     while (afsdb_req.pending == 0 && afs_termState != AFSOP_STOP_AFSDB) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 	afs_osi_Sleep(&afsdb_req);
-	ObtainReadLock(&afsdb_req.lock);
+	ObtainReadLock(&afsdb_req_lock);
     }
 
     /* Check if we're shutting down */
     if (afs_termState == AFSOP_STOP_AFSDB) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 
 	/* Inform anyone waiting for us that we're going away */
 	afsdb_handler_shutdown = 1;
@@ -117,7 +118,7 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 
     /* Return the lookup request to userspace */
     strncpy(acellName, afsdb_req.cellname, acellNameLen);
-    ReleaseReadLock(&afsdb_req.lock);
+    ReleaseReadLock(&afsdb_req_lock);
     return 0;
 }
 
@@ -130,7 +131,7 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
 	return ENOENT;
 
     ObtainWriteLock(&afsdb_client_lock, 685);
-    ObtainWriteLock(&afsdb_req.lock, 686);
+    ObtainWriteLock(&afsdb_req_lock, 686);
 
     *acellHosts = 0;
     afsdb_req.cellname = afs_strdup(acellName);
@@ -141,16 +142,16 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
     afsdb_req.complete = 0;
     afsdb_req.pending = 1;
     afs_osi_Wakeup(&afsdb_req);
-    ConvertWToRLock(&afsdb_req.lock);
+    ConvertWToRLock(&afsdb_req_lock);
 
     while (afsdb_handler_running && !afsdb_req.complete) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 	afs_osi_Sleep(&afsdb_req);
-	ObtainReadLock(&afsdb_req.lock);
+	ObtainReadLock(&afsdb_req_lock);
     };
 
     afs_osi_FreeStr(afsdb_req.cellname);
-    ReleaseReadLock(&afsdb_req.lock);
+    ReleaseReadLock(&afsdb_req_lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
     if (*acellHosts)
@@ -190,7 +191,9 @@ afs_LookupAFSDB(char *acellName)
     if (afs_strcasecmp(acellName, *realName))
 	afs_NewCellAlias(acellName, *realName);
 
-  done:
+      done:
+    afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, acellName, 
+              ICL_TYPE_INT32, code);
     if(timeout)
 	afs_osi_Free(timeout, sizeof(int));
     if (realName && *realName)
@@ -862,7 +865,7 @@ afs_CellInit()
     RWLOCK_INIT(&afs_xcell, "afs_xcell");
 #ifdef AFS_AFSDB_ENV
     RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
-    RWLOCK_INIT(&afsdb_req.lock, "afsdb_req.lock");
+    RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");
 #endif
     QInit(&CellLRU);
 
