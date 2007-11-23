@@ -239,7 +239,7 @@ if [ $secondpass = yes ]; then
     rm -rf $PKGROOT $PKGRES
     mkdir $CURDIR/dmg
     mv $CURDIR/OpenAFS.pkg $CURDIR/dmg
-    rm -rf $CURDIR/OpenAFS.dmg
+    rm -rf $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
     cp Uninstall $CURDIR/dmg/Uninstall.command
     cp DS_Store $CURDIR/dmg/.DS_Store
     mkdir $CURDIR/dmg/.background
