@@ -539,4 +539,5 @@ main(int argc, char **argv)
 
     osi_audit(VS_FinishEvent, (-1), AUD_END);
     Abort("StartServer returned?");
+    return 0; /* not reached */
 }

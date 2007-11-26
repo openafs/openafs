@@ -96,7 +96,7 @@ cfg_ClientQueryStatus(const char *hostName,	/* name of host */
     afs_status_t clientSt = 0;
     char *clientCellName = NULL;
     short cmInstalled = 0;
-    unsigned cmVersion;
+    unsigned cmVersion = 0;
 
     /* validate parameters */
 

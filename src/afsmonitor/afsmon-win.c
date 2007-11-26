@@ -565,6 +565,7 @@ afsmonExit_gtx()
     }
 
     afsmon_Exit(0);
+    return 0; /* not reached */
 }
 
 

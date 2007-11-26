@@ -2378,4 +2378,5 @@ main(argc, argv)
     } else
 	scout_CleanExit(0);
 
+    return 0; /* not reachable */
 }				/*main */

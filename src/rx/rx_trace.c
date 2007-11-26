@@ -182,6 +182,7 @@ main(argc, argv)
 	printf(" %3u %7u %7u      %x.%x\n", ip.qlen, ip.servicetime,
 	       ip.waittime, ip.cid, ip.call);
     }
+    return 0;
 }
 
 #endif /* DUMPTRACE */

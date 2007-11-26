@@ -2281,4 +2281,5 @@ main(int argc, char *argv[])
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
+    return 0;
 }

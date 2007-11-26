@@ -93,6 +93,10 @@
 static char expbuf[ESIZE], *braslist[NBRA], *braelist[NBRA];
 static char circf;
 
+static int advance();
+static int backref();
+static int cclass();
+
 /*
  * compile the regular expression argument into a dfa
  */

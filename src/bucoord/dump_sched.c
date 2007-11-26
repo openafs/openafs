@@ -12,6 +12,8 @@
  */
 
 #include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -43,6 +45,7 @@ extern struct bc_config *bc_globalConfig;
 extern struct udbHandleS udbHandle;
 extern char *whoami;
 
+static ListDumpSchedule();
 
 /* ------------------------------------
  * command level routines

@@ -107,6 +107,7 @@ static afs_int32 keyCacheVersion = 0;
 static afs_int32 maxKeyLifetime;
 static int dbfixup = 0;
 
+void
 init_kadatabase(initFlags)
      int initFlags;		/* same as init_kaprocs (see which) */
 {

@@ -547,6 +547,7 @@ callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
  *     Regardless of error, the closecallout routine will be called
  *     (unless a tape is not mounted in the first place).
  */
+void
 unmountTape(taskId, tapeInfoPtr)
      afs_int32 taskId;
      struct butm_tapeInfo *tapeInfoPtr;
@@ -1923,6 +1924,7 @@ Restorer(newNode)
 
 /* this is just scaffolding, creates new tape label with name <tapeName> */
 
+void
 GetNewLabel(tapeInfoPtr, pName, AFSName, tapeLabel)
      struct butm_tapeInfo *tapeInfoPtr;
      char *pName, *AFSName;
@@ -2284,6 +2286,7 @@ Labeller(labelIfPtr)
  *	print out the tape label.
  */
 
+void
 PrintTapeLabel(labelptr)
      struct butm_tapeLabel *labelptr;
 {

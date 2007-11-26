@@ -822,7 +822,7 @@ process_udp_request(ksoc, pkt)
     return;
 }
 
-static
+static void
 SocketListener()
 {
     fd_set rfds;

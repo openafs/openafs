@@ -69,7 +69,7 @@ main(int argc, char *argv[])
     struct rx_debugConn conn;
     afs_uint32 supportedStats;
     afs_uint32 supportedValues;
-    int allconns;
+    int allconns = 1;
     int i;
 
     ParseArgs(argc, argv, &srvrName, &srvrPort);

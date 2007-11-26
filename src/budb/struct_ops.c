@@ -107,6 +107,7 @@ printDumpEntry(struct budb_dumpEntry *deptr)
  *	print the hash table structure, i.e. the header structure.
  */
 
+void
 printHashTable(fid, htptr)
      FILE *fid;
      struct hashTable *htptr;
@@ -311,6 +312,7 @@ printVolInfo(fid, viptr)
  *	currently used for debug only
  */
 
+void
 volFragment_ntoh(netVfPtr, hostVfPtr)
      struct volFragment *netVfPtr, *hostVfPtr;
 {
@@ -327,6 +329,7 @@ volFragment_ntoh(netVfPtr, hostVfPtr)
     hostVfPtr->sequence = ntohs(netVfPtr->sequence);
 }
 
+void
 volInfo_ntoh(netViPtr, hostViPtr)
      struct volInfo *netViPtr, *hostViPtr;
 {
@@ -342,6 +345,7 @@ volInfo_ntoh(netViPtr, hostViPtr)
     hostViPtr->nFrags = ntohl(netViPtr->nFrags);
 }
 
+void
 tape_ntoh(netTapePtr, hostTapePtr)
      struct tape *netTapePtr, *hostTapePtr;
 {
@@ -363,6 +367,7 @@ tape_ntoh(netTapePtr, hostTapePtr)
     hostTapePtr->useCount = ntohl(netTapePtr->useCount);
 }
 
+void
 dump_ntoh(netDumpPtr, hostDumpPtr)
      struct dump *netDumpPtr, *hostDumpPtr;
 {
@@ -385,6 +390,7 @@ dump_ntoh(netDumpPtr, hostDumpPtr)
     principal_ntoh(&netDumpPtr->dumper, &hostDumpPtr->dumper);
 }
 
+void
 DbHeader_ntoh(netptr, hostptr)
      struct DbHeader *netptr, *hostptr;
 {
@@ -396,6 +402,7 @@ DbHeader_ntoh(netptr, hostptr)
     hostptr->lastTapeId = ntohl(netptr->lastTapeId);
 }
 
+void
 dumpEntry_ntoh(netptr, hostptr)
      struct budb_dumpEntry *netptr, *hostptr;
 {
@@ -434,6 +441,7 @@ principal_ntoh(netptr, hostptr)
     return 0;
 }
 
+void
 structDumpHeader_hton(hostPtr, netPtr)
      struct structDumpHeader *hostPtr, *netPtr;
 {
@@ -442,6 +450,7 @@ structDumpHeader_hton(hostPtr, netPtr)
     netPtr->size = htonl(hostPtr->size);
 }
 
+void
 structDumpHeader_ntoh(netPtr, hostPtr)
      struct structDumpHeader *hostPtr, *netPtr;
 {
@@ -450,6 +459,7 @@ structDumpHeader_ntoh(netPtr, hostPtr)
     hostPtr->size = ntohl(netPtr->size);
 }
 
+void
 tapeEntry_ntoh(netptr, hostptr)
      struct budb_tapeEntry *netptr, *hostptr;
 {
@@ -494,6 +504,7 @@ tapeSet_ntoh(netptr, hostptr)
     return 0;
 }
 
+void
 textBlock_hton(hostptr, netptr)
      struct textBlock *hostptr, *netptr;
 {
@@ -504,6 +515,7 @@ textBlock_hton(hostptr, netptr)
     netptr->newTextAddr = htonl(hostptr->newTextAddr);
 }
 
+void
 textBlock_ntoh(netptr, hostptr)
      struct textBlock *netptr, *hostptr;
 {
@@ -514,6 +526,7 @@ textBlock_ntoh(netptr, hostptr)
     hostptr->newTextAddr = ntohl(netptr->newTextAddr);
 }
 
+void
 textLock_hton(hostptr, netptr)
      db_lockP hostptr, netptr;
 {
@@ -525,6 +538,7 @@ textLock_hton(hostptr, netptr)
     netptr->lockHost = htonl(hostptr->lockHost);
 }
 
+void
 textLock_ntoh(netptr, hostptr)
      db_lockP netptr, hostptr;
 {
@@ -536,6 +550,7 @@ textLock_ntoh(netptr, hostptr)
     hostptr->lockHost = ntohl(netptr->lockHost);
 }
 
+void
 volumeEntry_ntoh(netptr, hostptr)
      struct budb_volumeEntry *netptr, *hostptr;
 {
@@ -562,7 +577,7 @@ volumeEntry_ntoh(netptr, hostptr)
  * -------------------------------------
  */
 
-
+void
 copy_ktcPrincipal_to_budbPrincipal(ktcPtr, budbPtr)
      struct ktc_principal *ktcPtr;
      struct budb_principal *budbPtr;
@@ -666,4 +681,5 @@ default_tapeset(tapesetPtr, dumpname)
     tapesetPtr->a = 1;
     tapesetPtr->b = 1;
     tapesetPtr->maxTapes = 0;
+    return 0;
 }

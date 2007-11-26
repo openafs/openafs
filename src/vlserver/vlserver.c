@@ -409,4 +409,6 @@ main(argc, argv)
     rx_SetRxStatUserOk(vldb_rxstat_userok);
 
     rx_StartServer(1);		/* Why waste this idle process?? */
+
+    return 0; /* not reachable */
 }

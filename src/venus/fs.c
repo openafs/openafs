@@ -279,6 +279,7 @@ PRights(afs_int32 arights, int dfs)
 	if (arights & DFS_USR7)
 	    printf("H");
     }
+    return 0;
 }
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */

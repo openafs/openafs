@@ -166,6 +166,7 @@ ktc_newpag(void)
     strcat(*denv, fname5);
     *++denv = 0;
     environ = newenv;
+    return 0;
 }
 
 #endif

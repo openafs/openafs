@@ -46,6 +46,7 @@
 #else /* KERNEL */
 # include <sys/types.h>
 # include <stdio.h>
+# include <string.h>
 #ifdef AFS_PTHREAD_ENV
 # include "rx_pthread.h"
 #else

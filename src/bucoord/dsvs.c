@@ -44,6 +44,8 @@ struct ubik_client *cstructp;	/*Ptr to Ubik client structure */
 extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf,
 					     char *name);
 
+static FreeVolumeEntryList();
+static FreeVolumeEntry();
 
 /* Code to maintain dump schedule and volume set abstractions.
  * A volume set looks like this:
