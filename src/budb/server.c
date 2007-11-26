@@ -135,6 +135,7 @@ MyBeforeProc(register struct cmd_syndesc *as, void *arock)
  *	initialize all the supported commands and their arguments
  */
 
+void
 initializeArgHandler()
 {
     struct cmd_syndesc *cptr;
@@ -591,7 +592,7 @@ main(argc, argv)
     return (code);
 }
 
-
+void
 consistencyCheckDb()
 {
     /* do consistency checks on structure sizes */

@@ -43,6 +43,11 @@ RCSID
 #include "error_macros.h"
 #include "butc_xbsa.h"
 
+static CopyDumpDesc();
+static CopyRestoreDesc();
+static CopyTapeSetDesc();
+
+
 int
 callPermitted(struct rx_call *call)
 {
@@ -140,7 +145,7 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     PROCESS pid;
 #endif
     struct labelTapeIf *ptr;
-    statusP statusPtr;
+    statusP statusPtr = NULL;
     afs_int32 code;
 
     extern int Labeller();
@@ -312,7 +317,7 @@ afs_int32
 STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *arestores, afs_int32 *taskID)
 {
     struct dumpNode *newNode;
-    statusP statusPtr;
+    statusP statusPtr = 0;
     afs_int32 code = 0;
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -418,7 +423,7 @@ STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 #else
     PROCESS pid;
 #endif
-    statusP statusPtr;
+    statusP statusPtr = 0;
     afs_int32 code = 0;
 
     extern afs_int32 restoreDbFromTape();
@@ -488,7 +493,7 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 #else
     PROCESS pid;
 #endif
-    statusP statusPtr;
+    statusP statusPtr = NULL;
     afs_int32 code = 0;
     struct saveDbIf *ptr;
 
@@ -572,7 +577,7 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
     PROCESS pid;
 #endif
     struct scanTapeIf *ptr;
-    statusP statusPtr;
+    statusP statusPtr = 0;
     afs_int32 code = 0;
 
     extern afs_int32 ScanDumps();

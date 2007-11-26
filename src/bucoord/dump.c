@@ -178,6 +178,7 @@ bc_Dumper(aindex)
  *	free the list of volumes used for dumps
  */
 
+void
 freeDumpTaskVolumeList(vdptr)
      struct bc_volumeDump *vdptr;
 {

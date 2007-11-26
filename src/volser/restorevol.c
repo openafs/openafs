@@ -118,7 +118,7 @@ readchar()
 #define BUFSIZE 16384
 char buf[BUFSIZE];
 
-char
+void
 readdata(buffer, size)
      char *buffer;
      afs_sfsize_t size;

@@ -1988,6 +1988,7 @@ main(int argc, char **argv)
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
+    return 0;
 }
 
 int
@@ -1999,6 +2000,7 @@ PrintCB(register struct CallBack *cb, afs_uint32 now)
     printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
 	   expires - now, ctime(&expires));
+    return 0;
 }
 
 #endif

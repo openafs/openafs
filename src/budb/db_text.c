@@ -484,7 +484,7 @@ SaveText(call, lockHandle, textType, offset, flags, charListPtr)
 }
 
 /* debug support */
-
+void
 saveTextToFile(ut, tbPtr)
      struct ubik_trans *ut;
      struct textBlock *tbPtr;

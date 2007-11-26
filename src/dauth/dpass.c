@@ -136,6 +136,7 @@ CommandProc(as, arock)
 #define s(n) ((k(n) << 8) | k(n+1))
     printf("\nThe new DCE password is: %0.4x-%0.4x-%0.4x-%0.4x\n", s(0), s(2),
 	   s(4), s(6));
+    return 0;
 }
 
 main(argc, argv)

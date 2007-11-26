@@ -12,6 +12,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 
 RCSID
     ("$Header$");

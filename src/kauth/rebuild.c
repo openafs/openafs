@@ -214,6 +214,7 @@ PrintEntry(index, entry)
 }
 
 /* ntohEntry - convert back to host-order */
+void
 ntohEntry(struct kaentry *entryp)
 {
     entryp->flags = ntohl(entryp->flags);
@@ -393,6 +394,7 @@ readDB(offset, buffer, size)
 	afs_com_err(whoami, errno, "reading db got %d bytes", code);
 	exit(3);
     }
+    return 0;
 }
 
 #include "AFS_component_version_number.c"

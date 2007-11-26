@@ -2773,7 +2773,8 @@ DECL_PIOCTL(PGetVnodeXStatus2)
 DECL_PIOCTL(PSetSysName)
 {
     char *cp, *cp2 = NULL, inname[MAXSYSNAME], outname[MAXSYSNAME];
-    int setsysname, foundname = 0;
+    afs_int32 setsysname;
+    int foundname = 0;
     register struct afs_exporter *exporter;
     register struct unixuser *au;
     register afs_int32 pag, error;
@@ -2790,7 +2791,7 @@ DECL_PIOCTL(PSetSysName)
 #endif
     }
     memset(inname, 0, MAXSYSNAME);
-    memcpy((char *)&setsysname, ain, sizeof(afs_int32));
+    memcpy(&setsysname, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (setsysname) {
 

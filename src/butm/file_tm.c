@@ -627,6 +627,7 @@ ShutdownAccess(usd_handle_t fid)
  *	dataSize - bytes used on the tape
  */
 
+void
 incSize(info, dataSize)
      struct butm_tapeInfo *info;
      afs_uint32 dataSize;
@@ -648,6 +649,7 @@ incSize(info, dataSize)
  *	dataSize - bytes used on the tape
  */
 
+void
 incPosition(info, fid, dataSize)
      struct butm_tapeInfo *info;
      usd_handle_t fid;

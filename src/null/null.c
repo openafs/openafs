@@ -20,4 +20,5 @@ main()
      * Shortest routine in history.
      */
 
+    return 0; 
 }				/*main */

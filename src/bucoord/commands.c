@@ -765,7 +765,8 @@ concatParams(itemPtr)
 /* printIfStatus
  *	print out an interface status node as received from butc
  */
-
+ 
+void
 printIfStatus(statusPtr)
      struct tciStatusS *statusPtr;
 {

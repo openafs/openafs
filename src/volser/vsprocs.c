@@ -647,7 +647,7 @@ UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,
 
     code = AFSVolSetInfo(aconn, tid, &tstatus);
     if (code)
-	EPRINT(code, "Could not change quota (error %d), continuing...\n");
+	EPRINT(code, "Could not change quota, continuing...\n");
 
     code = AFSVolSetFlags(aconn, tid, 0);	/* bring it online (mark it InService */
     EGOTO2(cfail, vcode, "Could not bring the volume %s %u online \n", aname,

@@ -565,6 +565,7 @@ afsmonExit_gtx()
     }
 
     afsmon_Exit(0);
+    return 0; /* not reached */
 }
 
 
@@ -1579,7 +1580,7 @@ display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
 	    }
 	}
     }
-
+    return 0;
 }				/* display_Server_label */
 
 

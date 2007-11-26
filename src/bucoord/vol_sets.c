@@ -41,6 +41,7 @@ extern char *whoami;
 extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf, char *name);
 extern void FreeVolumeSet(struct bc_volumeSet *avset);
 
+static ListVolSet();
 
 /* ------------------------------------
  * command level routines

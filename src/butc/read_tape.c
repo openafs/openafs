@@ -82,6 +82,7 @@ readblock(buffer)
     return 0;
 }
 
+void
 printLabel(tapeLabelPtr)
      struct tapeLabel *tapeLabelPtr;
 {
@@ -130,6 +131,7 @@ printLabel(tapeLabelPtr)
     }
 }
 
+void
 printHeader(headerPtr, isvolheader)
      struct volumeHeader *headerPtr;
      afs_int32 *isvolheader;

@@ -17,6 +17,7 @@ RCSID
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 
 main(argc, argv)
@@ -40,41 +41,41 @@ main(argc, argv)
     dirName = argv[1];
     mkdir(dirName, 0777);
     if (chdir(dirName) < 0)
-	return perror("chdir");
+	{perror("chdir");return;}
     if (getcwd(tempName, 1024) == 0) {
 	return printf("Could not get working dir.\n");
     }
     /* now create some files */
     fd1 = open("hi", O_CREAT | O_TRUNC | O_RDWR, 0666);
     if (fd1 < 0)
-	return perror("open1");
+	{perror("open1");return;}
     if (close(fd1) < 0)
-	return perror("close1");
+	{perror("close1");return;}
     if (access("hi", 2) < 0)
 	return printf("New file can not be written (access)\n");
     if (chmod("hi", 0741) < 0)
-	return perror("chmod1");
+	{perror("chmod1");return;}
     if (stat("hi", &tstat) < 0)
-	return perror("stat1");
+	{perror("stat1");return;}
     if ((tstat.st_mode & 0777) != 0741)
 	return printf("chmod failed to set mode properly\n");
 
     fd1 = open("hi", O_RDWR);
     if (fd1 < 0)
-	return perror("open2");
+	{perror("open2");return;}
     if (fchmod(fd1, 0654) < 0)
-	return perror("fchmod");
+	{perror("fchmod");return;}
     if (fstat(fd1, &tstat) < 0)
-	return perror("fstat1");
+	{perror("fstat1");return;}
     if ((tstat.st_mode & 0777) != 0654)
 	return printf("fchmod failed to set mode properly\n");
 #if 0
     /* These appear to be defunct routines;
      * I don't know what, if anything, replaced them */
     if (osi_ExclusiveLockNoBlock(fd1) < 0)
-	return perror("flock1");
+	{perror("flock1");return;}
     if (osi_UnLock(fd1) < 0)
-	return perror("flock/unlock");
+	{perror("flock/unlock");return;}
 #endif
 
 /* How about shared lock portability? */
@@ -87,7 +88,7 @@ main(argc, argv)
 	fl.l_len = 0;
 
 	if (fcntl(fd1, F_SETLK, &fl) == -1)
-	    return perror("fcntl1: RDLCK");
+	    {perror("fcntl1: RDLCK");return;}
 
 	fl.l_type = F_UNLCK;
 	fl.l_whence = SEEK_SET;
@@ -95,7 +96,7 @@ main(argc, argv)
 	fl.l_len = 0;
 
 	if (fcntl(fd1, F_SETLK, &fl) == -1)
-	    return perror("fcntl2: UNLCK");
+	    {perror("fcntl2: UNLCK");return;}
 
 	fl.l_type = F_WRLCK;
 	fl.l_whence = SEEK_SET;
@@ -103,7 +104,7 @@ main(argc, argv)
 	fl.l_len = 0;
 
 	if (fcntl(fd1, F_SETLK, &fl) == -1)
-	    return perror("fcntl3: WRLCK");
+	    {perror("fcntl3: WRLCK");return;}
 
 	fl.l_type = F_UNLCK;
 	fl.l_whence = SEEK_SET;
@@ -111,61 +112,61 @@ main(argc, argv)
 	fl.l_len = 0;
 
 	if (fcntl(fd1, F_SETLK, &fl) == -1)
-	    return perror("fcntl4: UNLCK");
+	    {perror("fcntl4: UNLCK");return;}
     }
 
     if (fsync(fd1) < 0)
-	return perror("fsync");
+	{perror("fsync");return;}
     if (write(fd1, "hi\n", 3) != 3)
-	return perror("write");
+	{perror("write");return;}
     if (ftruncate(fd1, 2) < 0)
-	return perror("ftruncate");
+	{perror("ftruncate");return;}
     if (close(fd1) < 0)
-	return perror("close2");
+	{perror("close2");return;}
 
     fd1 = open("hi", O_RDONLY);
     if (fd1 < 0)
-	return perror("open3");
+	{perror("open3");return;}
     if (read(fd1, tempName, 100) != 2)
-	return perror("read2");
+	{perror("read2");return;}
     if (close(fd1) < 0)
-	return perror("close3");
+	{perror("close3");return;}
 
     if (link("hi", "bye") < 0)
-	return perror("link");
+	{perror("link");return;}
     if (stat("bye", &tstat) < 0)
-	return perror("link/stat");
+	{perror("link/stat");return;}
 
     if (unlink("bye") < 0)
-	return perror("unlink");
+	{perror("unlink");return;}
 
     if (symlink("hi", "bye") < 0)
-	return perror("symlink");
+	{perror("symlink");return;}
     if (readlink("bye", tempName, 100) != 2)
-	return perror("readlink");
+	{perror("readlink");return;}
     if (strncmp(tempName, "hi", 2) != 0)
 	return printf("readlink contents");
     if (mkdir("tdir", 0777) < 0)
-	return perror("mkdir");
+	{perror("mkdir");return;}
     fd1 = open("tdir/fdsa", O_CREAT | O_TRUNC, 0777);
     close(fd1);
     if (rmdir("tdir") == 0)
 	return printf("removed non-empty dir\n");
     if (unlink("tdir/fdsa") < 0)
-	return perror("unlink tdir contents");
+	{perror("unlink tdir contents");return;}
     if (rmdir("tdir") < 0)
-	return perror("rmdir");
+	{perror("rmdir");return;}
 
     fd1 = open(".", O_RDONLY);
     if (fd1 < 0)
-	return perror("open dot");
+	{perror("open dot");return;}
     if (read(fd1, tempName, 20) < 20)
 	perror("read dir");
     close(fd1);
 
     fd1 = open("rotest", O_RDWR | O_CREAT, 0444);
     if (fd1 < 0)
-	return perror("open ronly");
+	{perror("open ronly");return;}
     fchown(fd1, 1, -1);		/* don't check error code, may fail on Ultrix */
     code = write(fd1, "test", 4);
     if (code != 4) {
@@ -174,40 +175,41 @@ main(argc, argv)
     }
     code = close(fd1);
     if (code)
-	return perror("close ronly");
+	{perror("close ronly");return;}
     code = stat("rotest", &tstat);
     if (code < 0)
-	return perror("stat ronly");
+	{perror("stat ronly");return;}
     if (tstat.st_size != 4) {
 	printf("rotest short close\n");
 	exit(1);
     }
     if (unlink("rotest") < 0)
-	return perror("rotest unlink");
+	{perror("rotest unlink");return;}
 
     if (rename("hi", "bye") < 0)
-	return perror("rename1");
+	{perror("rename1");return;}
     if (stat("bye", &tstat) < 0)
-	return perror("rename target invisible\n");
+	{perror("rename target invisible\n");return;}
     if (stat("hi", &tstat) == 0)
 	return printf("rename source still there\n");
 
 #ifndef	AFS_AIX_ENV
 /* No truncate(2) on aix so the following are excluded */
     if (truncate("bye", 1) < 0)
-	return perror("truncate");
+	{perror("truncate");return;}
     if (stat("bye", &tstat) < 0)
-	return perror("truncate zapped");
+	{perror("truncate zapped");return;}
     if (tstat.st_size != 1)
 	return printf("truncate failed\n");
 #endif
     if (utimes("bye", tvp) < 0)
-	return perror("utimes");
+	{perror("utimes");return;}
     if (unlink("bye") < 0)
-	return perror("unlink bye");
+	{perror("unlink bye");return;}
 
     /* now finish up */
     chdir("..");
     rmdir(dirName);
     printf("Test completed successfully.\n");
+    return 0;
 }

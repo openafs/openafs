@@ -1069,6 +1069,7 @@ main(int argc, char **argv, char **envp)
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_StartServer(1);		/* donate this process */
+    return 0;
 }
 
 void

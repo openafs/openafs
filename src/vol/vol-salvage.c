@@ -844,6 +844,7 @@ main(int argc, char **argv)
 #endif /* FAST_RESTART */
     err = cmd_Dispatch(argc, argv);
     Exit(err);
+    return 0; /* not reached */
 }
 
 /* Get the salvage lock if not already held. Hold until process exits. */

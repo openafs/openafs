@@ -24,6 +24,7 @@ RCSID
 #undef	_NONSTD_TYPES
 #endif
 #include <stdio.h>
+#include <unistd.h>
 #include <afs/afs_args.h>
 #include <sys/param.h>
 #ifdef	AFS_SUN5_ENV
@@ -119,7 +120,7 @@ main(argc, argv)
     exit(0);
 }
 
-
+void
 ScanArgs(argc, argv)
      int argc;
      char *argv[];

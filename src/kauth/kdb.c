@@ -129,5 +129,6 @@ int
 main(void)
 {
     printf("kdb not supported\n");
+    return 1;
 }
 #endif

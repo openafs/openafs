@@ -102,6 +102,7 @@ SetAValue(entry, oserver, opart, nserver, npart, type)
 }
 
 /* Changes the RW site only */
+void
 Lp_SetRWValue(entry, oserver, opart, nserver, npart)
      struct nvldbentry *entry;
      afs_int32 oserver, opart, nserver, npart;
@@ -110,6 +111,7 @@ Lp_SetRWValue(entry, oserver, opart, nserver, npart)
 }
 
 /* Changes the RO site only */
+void
 Lp_SetROValue(entry, oserver, opart, nserver, npart)
      struct nvldbentry *entry;
      afs_int32 oserver, opart, nserver, npart;
@@ -143,6 +145,7 @@ Lp_GetRwIndex(entry)
 }
 
 /*initialize queue pointed by <ahead>*/
+void
 Lp_QInit(ahead)
      struct qHead *ahead;
 {
@@ -151,6 +154,7 @@ Lp_QInit(ahead)
 }
 
 /*add <elem> in front of queue <ahead> */
+void
 Lp_QAdd(ahead, elem)
      struct qHead *ahead;
      struct aqueue *elem;
@@ -192,6 +196,7 @@ Lp_QScan(ahead, id, success, elem)
 
 /*return the element in the beginning of the queue <ahead>, free
 *the space used by that element . <success> indicates if enumeration was ok*/
+void
 Lp_QEnumerate(ahead, success, elem)
      struct qHead *ahead;
      struct aqueue *elem;
@@ -217,6 +222,7 @@ Lp_QEnumerate(ahead, success, elem)
 	*success = 0;
 }
 
+void
 Lp_QTraverse(ahead)
      struct qHead *ahead;
 {

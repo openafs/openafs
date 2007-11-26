@@ -422,6 +422,7 @@ init_child(char *myname)
 	argv[1] = NULL;
 	argv[0] = dirpath;
 	execv(dirpath, argv);
+	return 0;
     } else {
 	using_child = pid;	/* save it for later */
 	childin = fdopen(pipe1[1], "w");

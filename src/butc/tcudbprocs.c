@@ -53,6 +53,10 @@ RCSID
 extern int dump_namecheck;
 extern int autoQuery;
 
+static void initTapeBuffering();
+static writeDbDump();
+static restoreDbEntries();
+
 /* CreateDBDump
  *      create a dump entry for a saved database 
  */
@@ -906,7 +910,7 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
 }
 
 static afs_int32 nbytes = 0;	/* # bytes left in buffer */
-static
+static void
 initTapeBuffering()
 {
     nbytes = 0;

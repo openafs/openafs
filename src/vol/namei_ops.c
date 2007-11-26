@@ -18,6 +18,7 @@ RCSID
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>

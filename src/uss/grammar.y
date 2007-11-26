@@ -127,4 +127,5 @@ yyerror(s)
 char *s;
 {
 fprintf(stderr,"%s. ",s);
+return 0;
 }

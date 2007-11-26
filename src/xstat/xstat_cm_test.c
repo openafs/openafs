@@ -152,6 +152,7 @@ PrintCallInfo()
 
 /* Print detailed functional call statistics */
 
+void
 print_cmCallStats()
 {
     static char rn[] = "print_cmCallStats";	/*Routine name */

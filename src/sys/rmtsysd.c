@@ -78,4 +78,5 @@ main(int argc, char *argv[])
      * at some point... */
     rx_SetMaxProcs(service, 2);
     rx_StartServer(1);		/* Donate this process to the server process pool */
+    return 0;
 }

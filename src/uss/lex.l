@@ -70,6 +70,7 @@ EOL	[\n]
  * and replaces the second with a null.
  */
 
+void
 Replace(in, out)
     char *in, *out;
 
