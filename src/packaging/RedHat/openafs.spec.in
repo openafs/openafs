@@ -1139,6 +1139,8 @@ done
 %if !%{build_authlibs}
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so.*
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so.*
 %endif
 
 %endif
