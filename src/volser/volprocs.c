@@ -203,14 +203,14 @@ ViceCreateRoot(Volume *vp)
     struct acl_accessList *ACL;
     ViceFid did;
     Inode inodeNumber, nearInode;
-    char buf[SIZEOF_LARGEDISKVNODE];
-    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
     FdHandle_t *fdP;
     int code;
     afs_fsize_t length;
 
+    vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     memset(vnode, 0, SIZEOF_LARGEDISKVNODE);
 
     V_pref(vp, nearInode);
@@ -275,6 +275,7 @@ ViceCreateRoot(Volume *vp)
     VNDISK_GET_LEN(length, vnode);
     V_diskused(vp) = nBlocks(length);
 
+    free(vnode);
     return 1;
 }
 
