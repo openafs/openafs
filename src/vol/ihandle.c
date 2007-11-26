@@ -320,9 +320,10 @@ ih_open(IHandle_t * ihP)
      */
     fdInUseCount += 1;
     IH_UNLOCK;
+ih_open_retry:
     fd = OS_IOPEN(ihP);
     IH_LOCK;
-    if (fd == INVALID_FD) {
+    if (fd == INVALID_FD && (errno != EMFILE || fdLruHead == NULL) ) {
 	fdInUseCount -= 1;
 	IH_UNLOCK;
 	return NULL;
@@ -332,13 +333,23 @@ ih_open(IHandle_t * ihP)
      * we permit the number of open files to exceed fdCacheSize.
      * We only recycle open file descriptors when the number
      * of open files reaches the size of the cache */
-    if (fdInUseCount > fdCacheSize && fdLruHead != NULL) {
+    if ((fdInUseCount > fdCacheSize || fd == INVALID_FD)  && fdLruHead != NULL) {
 	fdP = fdLruHead;
 	assert(fdP->fd_status == FD_HANDLE_OPEN);
 	DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	DLL_DELETE(fdP, fdP->fd_ih->ih_fdhead, fdP->fd_ih->ih_fdtail,
 		   fd_ihnext, fd_ihprev);
 	closeFd = fdP->fd_fd;
+	if (fd == INVALID_FD) {
+	    fdCacheSize--;          /* reduce in order to not run into here too often */
+	    DLL_INSERT_TAIL(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
+	    fdP->fd_status = FD_HANDLE_AVAIL;
+	    fdP->fd_ih = NULL;
+	    fdP->fd_fd = INVALID_FD;
+	    IH_UNLOCK;
+	    OS_CLOSE(closeFd);
+	    goto ih_open_retry;
+	}
     } else {
 	if (fdAvailHead == NULL) {
 	    fdHandleAllocateChunk();
