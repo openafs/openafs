@@ -246,4 +246,5 @@ main()
     keymap_Delete(tmap);
 
     gtx_InputServer(win);
+    return 0;
 }

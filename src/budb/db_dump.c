@@ -93,6 +93,7 @@ canWrite(fid)
  *	no return value
  */
 
+void
 haveWritten(nbytes)
      afs_int32 nbytes;
 {
@@ -114,6 +115,7 @@ haveWritten(nbytes)
  *	done flag.
  */
 
+void
 doneWriting(error)
      afs_int32 error;
 {

@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <stdio.h>
 
 RCSID
     ("$Header$");

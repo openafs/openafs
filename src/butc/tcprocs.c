@@ -42,6 +42,11 @@ RCSID
 #include "error_macros.h"
 #include "butc_xbsa.h"
 
+static CopyDumpDesc();
+static CopyRestoreDesc();
+static CopyTapeSetDesc();
+
+
 int
 callPermitted(struct rx_call *call)
 {
@@ -139,7 +144,7 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     PROCESS pid;
 #endif
     struct labelTapeIf *ptr;
-    statusP statusPtr;
+    statusP statusPtr = NULL;
     afs_int32 code;
 
     extern int Labeller();
@@ -487,7 +492,7 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 #else
     PROCESS pid;
 #endif
-    statusP statusPtr;
+    statusP statusPtr = NULL;
     afs_int32 code = 0;
     struct saveDbIf *ptr;
 

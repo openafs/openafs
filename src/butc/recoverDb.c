@@ -52,6 +52,8 @@ struct tapeScanInfo {
 extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
 
+static readDump();
+
 /* PrintDumpLabel
  *	print out the tape (dump) label.
  */

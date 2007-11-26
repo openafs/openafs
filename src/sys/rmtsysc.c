@@ -305,7 +305,7 @@ afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1)
     return NOPAG;
 }
 
-
+void
 afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p)
 {
     unsigned short g0, g1;

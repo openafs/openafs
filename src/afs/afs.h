@@ -923,6 +923,9 @@ struct afs_fheader {
 #endif
 #endif
 
+
+#ifdef KERNEL
+/* it does not compile outside kernel */
 struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
   afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
@@ -950,6 +953,7 @@ struct fcache {
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
 };
+#endif
 
 /* magic numbers to specify the cache type */
 

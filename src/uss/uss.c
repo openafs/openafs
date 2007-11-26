@@ -1995,4 +1995,5 @@ main(argc, argv)
     if (doUnlog) {
 	code = uss_fs_UnlogToken(uss_Cell);
     }
+    return 0;
 }				/*Main routine */

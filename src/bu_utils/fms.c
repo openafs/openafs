@@ -69,6 +69,7 @@ main(argc, argv)
     cmd_AddParm(cptr, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape special file");
 
     cmd_Dispatch(argc, argv);
+    return 0;
 }
 
 static int

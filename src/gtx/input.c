@@ -61,6 +61,7 @@ gtx_InputServer(awin)
 	tframe->flags &= ~GTXFRAME_RECURSIVEEND;
 	WOP_DISPLAY(awin);	/* eventually calls gtxframe_Display */
     }
+    return 0;
 }
 
 struct gwin *

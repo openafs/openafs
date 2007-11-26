@@ -489,7 +489,7 @@ uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
 #endif /* USS_FS_DB */
 	return (-1);
     }
-
+    return 0;
 }				/*uss_fs_MkMountPoint */
 
 

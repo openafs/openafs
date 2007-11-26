@@ -961,6 +961,8 @@ Dispatcher(void)
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
+    
+    return 0; /* not reachable */
 }
 
 /* Complain of a stack overflow to stderr without using stdio. */

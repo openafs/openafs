@@ -77,6 +77,7 @@ static verifyInterfaceAddress();
  */
 
 /* procedure called from debug rpc call to get this module's state for debugging */
+void
 ubeacon_Debug(aparm)
      register struct ubik_debug *aparm;
 {

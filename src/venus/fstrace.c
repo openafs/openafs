@@ -81,6 +81,7 @@ struct logInfo {
 } *allInfo = 0;
 
 char dumpFileName[256] = "";
+void
 RegisterIclDumpFileName(name)
      char *name;
 {
@@ -252,7 +253,7 @@ CheckTypes(bufferp, typesp, typeCount)
 #if defined(AFS_SGI61_ENV) && !defined(AFS_SGI62_ENV)
 #define uint64_t long long
 #endif
-static
+static void
 DisplayRecord(outFilep, alp, rsize)
      FILE *outFilep;
      register afs_int32 *alp;

@@ -26,6 +26,8 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#include <stdio.h>
+#include <string.h>
 #include <dirent.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>

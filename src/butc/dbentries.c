@@ -310,6 +310,7 @@ waitDbWatcher()
     if (message) {
 	printf("Updating database - done\n");
     }
+    return 0;
 }
 
 #define MAXVOLUMESTOADD 100

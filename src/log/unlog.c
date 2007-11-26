@@ -259,6 +259,7 @@ unlog_NormalizeCellNames(char **list, int size)
 	*list = newCellName;
     }
     afsconf_Close(conf);
+    return 0;
 }
 
 /*
@@ -283,4 +284,5 @@ unlog_VerifyUnlog(char **cellList, int cellListSize, struct tokenInfo *tokenList
 	    fprintf(stderr, "unlog: Warning - no tokens held for cell %s\n",
 		    cellList[index]);
     }
+    return 0;
 }

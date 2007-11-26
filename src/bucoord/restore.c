@@ -131,6 +131,7 @@ extractTapeSeq(tapename)
     return (atol(sptr));
 }
 
+void
 viceName(value)
      long value;
 {

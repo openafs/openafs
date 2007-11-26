@@ -318,6 +318,7 @@ gtxframe_DisplayString(aframe, amsgLine)
     if (aframe->messageLine)
 	free(aframe->messageLine);
     aframe->messageLine = gtx_CopyString(amsgLine);
+    return 0;
 }
 
 /* Called by input processor to try to clear the dude */

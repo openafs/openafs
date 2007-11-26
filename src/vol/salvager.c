@@ -490,5 +490,6 @@ main(int argc, char **argv)
 #endif /* FAST_RESTART */
     err = cmd_Dispatch(argc, argv);
     Exit(err);
+    return 0; /* not reached */
 }
 
