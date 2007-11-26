@@ -553,15 +553,15 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 
     version = 2;
     code =
-	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance, start,
-			 end, &arequest, &oanswer);
+	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
+			 start, end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
 	code =
 	    ubik_Call(KAA_Authenticate, conn, 0, name, instance, start, end,
-		      &arequest, &oanswer);
+		      &arequest, &oanswer, 0, 0);
 	if (code == RXGEN_OPCODE) {
 	    extern int KAA_Authenticate_old();
 	    oanswer.MaxSeqLen = sizeof(answer_old);
