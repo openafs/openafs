@@ -743,6 +743,9 @@ afs_vop_read(ap)
     int code;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
+
+    if (vnode_isdir(ap->a_vp)) 
+	return EISDIR;
 #ifdef AFS_DARWIN80_ENV
     ubc_sync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_PUSHDIRTY);
 #else
