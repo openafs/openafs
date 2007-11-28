@@ -44,6 +44,8 @@ static afs_int32 hostAddr = 0;
 static int hostAddrLookup = 0;
 char *afs_server = 0, server_name[128];
 static afs_int32 SetClientCreds();
+int afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1);
+void afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p);
 
 /* Picks up the name of the remote afs client host where the rmtsys 
  * daemon resides. Since the clients may be diskless and/or readonly
