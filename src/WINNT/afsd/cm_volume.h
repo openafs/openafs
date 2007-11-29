@@ -14,8 +14,6 @@
 
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
 
-enum volstatus {vl_online, vl_busy, vl_offline, vl_alldown, vl_unknown};
-
 typedef struct cm_vol_state {
     afs_uint32      ID;                 /* by mx */
     struct cm_volume *nextp;            /* volumeIDHashTable; by cm_volumeLock */
