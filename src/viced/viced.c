@@ -692,6 +692,9 @@ ShutDownAndCore(int dopanic)
 	}
     }
 
+    if (dopanic)
+	assert(0);
+
     exit(0);
 
 }				/*ShutDown */
