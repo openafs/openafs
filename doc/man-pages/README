@@ -220,9 +220,6 @@ Known Problems
    * Some of the documentation in fs getserverprefs needs minor updates to
      reflect what happens in the dynroot case.
 
-   * fs sysname documentation needs to include the possibility of setting
-     multiple sysnames and the resulting behavior.
-
    * bos listkeys and the KeyFile man page assume that you're using the
      kaserver.
 
