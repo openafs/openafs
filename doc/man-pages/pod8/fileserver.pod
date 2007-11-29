@@ -7,8 +7,7 @@ fileserver - Initializes the File Server component of the fs process
 =for html
 <div class="synopsis">
 
-B<fileserver> S<<< [B<-auditlog> <I<log path>>] >>>
-    S<<< [B<-d> <I<debug level>>] >>>
+B<fileserver> S<<< [B<-d> <I<debug level>>] >>>
     S<<< [B<-p> <I<number of processes>>] >>>
     S<<< [B<-spare> <I<number of spare blocks>>] >>>
     S<<< [B<-pctspare> <I<percentage spare>>] >>> S<<< [B<-b> <I<buffers>>] >>>
