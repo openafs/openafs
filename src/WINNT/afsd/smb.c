@@ -840,7 +840,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
              */
             NTSTATUS nts = STATUS_UNSUCCESSFUL, ntsEx = STATUS_UNSUCCESSFUL;
             MSV1_0_LM20_CHALLENGE_REQUEST lsaReq;
-            PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp;
+            PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp = NULL;
             ULONG lsaRespSize = 0;
 
             lsaReq.MessageType = MsV1_0Lm20ChallengeRequest;
@@ -852,13 +852,25 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
                                                 &lsaResp,
                                                 &lsaRespSize,
                                                 &ntsEx);
-            if (nts != STATUS_SUCCESS)
+            if (nts != STATUS_SUCCESS || ntsEx != STATUS_SUCCESS) {
                 osi_Log4(smb_logp,"MsV1_0Lm20ChallengeRequest failure: nts 0x%x ntsEx 0x%x respSize is %u needs %u",
                          nts, ntsEx, sizeof(lsaReq), lsaRespSize);
+                    afsi_log("MsV1_0Lm20ChallengeRequest failure: nts 0x%x ntsEx 0x%x respSize %u",
+                         nts, ntsEx, lsaRespSize);
+            }
             osi_assertx(nts == STATUS_SUCCESS, "LsaCallAuthenticationPackage failed"); /* this had better work! */
 
-            memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
-            LsaFreeReturnBuffer(lsaResp);
+            if (ntsEx == STATUS_SUCCESS) {
+                memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
+                LsaFreeReturnBuffer(lsaResp);
+            } else {
+                /* 
+                 * This will cause the subsequent authentication to fail but
+                 * that is better than us dereferencing a NULL pointer and 
+                 * crashing.
+                 */
+                memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
+            }
         }
         else
             memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
