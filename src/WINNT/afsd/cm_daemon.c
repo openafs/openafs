@@ -361,7 +361,10 @@ void cm_Daemon(long parm)
 	 */
 	smb_RestartListeners();
 
-	if (configureFirewall) {
+        if (daemon_ShutdownFlag == 1)
+            return;
+
+        if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
 	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
 	    case 0:
@@ -386,55 +389,79 @@ void cm_Daemon(long parm)
         now = osi_Time();
 
         /* check down servers */
-        if (now > lastDownServerCheck + cm_daemonCheckDownInterval) {
+        if (now > lastDownServerCheck + cm_daemonCheckDownInterval &&
+            daemon_ShutdownFlag == 0) {
             lastDownServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
         /* check up servers */
-        if (now > lastUpServerCheck + cm_daemonCheckUpInterval) {
+        if (now > lastUpServerCheck + cm_daemonCheckUpInterval &&
+            daemon_ShutdownFlag == 0) {
             lastUpServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastVolCheck + cm_daemonCheckVolInterval) {
+        if (now > lastVolCheck + cm_daemonCheckVolInterval &&
+            daemon_ShutdownFlag == 0) {
             lastVolCheck = now;
             cm_RefreshVolumes();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
         if (cm_daemonCheckVolCBInterval && 
-            now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval) {
+            now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval &&
+            daemon_ShutdownFlag == 0) {
             lastVolCBRenewalCheck = now;
             cm_VolumeRenewROCallbacks();
+            if (daemon_ShutdownFlag == 1)
+                return;
             now = osi_Time();
         }
 
-        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) {
+        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval &&
+            daemon_ShutdownFlag == 0) {
             lastVolCheck = now;
             cm_CheckOfflineVolumes();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval) {
+        if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval &&
+            daemon_ShutdownFlag == 0) {
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastLockCheck + cm_daemonCheckLockInterval) {
+        if (now > lastLockCheck + cm_daemonCheckLockInterval &&
+            daemon_ShutdownFlag == 0) {
             lastLockCheck = now;
             cm_CheckLocks();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
+        if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval &&
+            daemon_ShutdownFlag == 0) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
@@ -457,9 +484,9 @@ void cm_Daemon(long parm)
             }
         }
 
-	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
         if (daemon_ShutdownFlag == 1)
             return;
+	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
     }
 }       
 
