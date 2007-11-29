@@ -202,7 +202,6 @@ Known Problems
    * The following installed commands have no man pages:
 
        copyauth
-       fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
        restorevol

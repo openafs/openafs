@@ -1,0 +1,67 @@
+=head1 NAME
+
+fs_rxstatpeer - Enables Rx packet logging in the OpenAFS kernel module
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs rxstatpeer> [B<-clear>] [B<-disable>] [B<-enable>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<fs rxstatpeer> manipulates some of the Rx protocol counters in the
+OpenAFS kernel interface.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-clear>
+
+Clear the Rx stats for peers in the kernel module.
+
+=item B<-disable>
+
+Disable logging of Rx stats for peers in the kernel module.
+
+=item B<-enable>
+
+Enable logging of Rx stats for peers in the kernel module.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output other than error messages.
+
+=head1 EXAMPLES
+
+Enable Rx Stats for peers:
+
+   % fs rxstatpeer -enable
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fs(1)>,
+L<rxdebug(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
