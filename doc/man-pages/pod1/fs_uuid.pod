@@ -14,18 +14,18 @@ B<fs uuid> [B<-generate>] [B<-help>]
 
 =head1 DESCRIPTION
 
-B<fs uuid> prints the current uuid of an OpenAFS client. It can
-optionally force the generation of a new uuid, if needed. The client
-uuid is used by the B<fileserver> to differentiate clients with the
-same IP address.
+B<fs uuid> prints the current UUID of an OpenAFS client.  It can
+optionally force the generation of a new UUID, if needed.  The client UUID
+is used by the B<fileserver> to differentiate clients with the same IP
+address.
 
 =head1 CAUTIONS
 
-The B<fs uuid> command is only available in OpenAFS versions after
-1.4.5 and 1.5.8. The behavior differs slightly between versions. In
-OpenAFS 1.4.5 and later, the B<-generate> option is required and the
-uuid for the client machine is never printed. OpenAFS versions 1.5.8
-and later will print the uuid.
+The B<fs uuid> command is only available in OpenAFS versions after 1.4.5
+and 1.5.8.  The behavior differs slightly between versions.  In OpenAFS
+1.4.5 and later, the B<-generate> option is required and the UUID for the
+client machine is never printed.  OpenAFS versions 1.5.8 and later will
+print the UUID.
 
 =head1 OPTIONS
 
@@ -33,21 +33,21 @@ and later will print the uuid.
 
 =item B<-generate>
 
-Generates a new uuid for the cache manager. This is useful if two
-clients share the same uuid. B<-generate> is optional in OpenAFS
-versions 1.5.8 and later, but it is required in OpenAFS versions 1.4.5
-and later.
+Generates a new UUID for the cache manager.  This is useful if two clients
+share the same UUID (if systems were cloned incorrectly, for example).
+B<-generate> is optional in OpenAFS versions 1.5.8 and later, but it is
+required in OpenAFS versions 1.4.5 and later.
 
 =item B<-help>
 
-Prints the online help for this command. All other valid options are
+Prints the online help for this command.  All other valid options are
 ignored.
 
 =back
 
 =head1 OUTPUT
 
-B<fs uuid> prints out the current uuid for the client or the new uuid
+B<fs uuid> prints out the current UUID for the client or the new UUID
 if the B<-generate> option is passed to it.
 
 =head1 EXAMPLES
@@ -64,7 +64,6 @@ Here is the only way to invoke B<fs uuid> under OpenAFS 1.4.5 and later:
 
    % fs uuid -generate
    New uuid generated.
-
 
 =head1 PRIVILEGE REQUIRED
 
