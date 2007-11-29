@@ -9,7 +9,7 @@
 
 /* Define VERSIONINFO resource */
 
-#define  AFS_VERINFO_FILE_DESCRIPTION "AFS File Server Command"
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Token from Kerberos Ticket Granting Ticket"
 #define AFS_VERINFO_NAME "aklog"
 #define AFS_VERINFO_FILENAME "aklog.exe"
 

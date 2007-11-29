@@ -5,9 +5,37 @@
  *
  * Updated for Kerberos 5
  */
+/*
+ * Copyright (c) 2007 Secure Endpoints Inc.
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Neither the name of the Secure Endpoints Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <winsock.h>
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <krb5.h>
 
@@ -19,12 +47,31 @@
 #endif /* !PRE_AFS35 */
 #include <afs/com_err.h>
 
+void
+validate_krb5_availability(void)
+{
+#ifndef _WIN64
+#define KRB5LIB "krb5_32.dll"
+#else
+#define KRB5LIB "krb5_64.dll"
+#endif
+    HINSTANCE h = LoadLibrary(KRB5LIB);
+    if (h) 
+        FreeLibrary(h);
+    else {
+        fprintf(stderr, "Kerberos for Windows library %s is not available.\n", KRB5LIB);
+        exit(2);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
     struct afsconf_dir *tdir;
     register long code;
     const char *confdir;
+
+    validate_krb5_availability();
 
     if (argc == 1) {
 	printf("asetkey: usage is 'setkey <opcode> options, e.g.\n");
