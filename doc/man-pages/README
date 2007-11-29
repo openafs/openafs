@@ -205,13 +205,11 @@ Known Problems
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
-       read_tape
        restorevol
        rmtsysd
        vldb_convert
        vos clone
-       vos convertROtoRW
-       vos copy
+       vos setfields
        vos shadow
        vsys
 
