@@ -26,8 +26,7 @@ failed server, or accidental deletion.
 =head1 CAUTIONS
 
 This command can only be used with namei AFS file servers.  If used on an
-inode AFS file server (normally found only on Solaris or AIX systems), it
-will fail with an error.
+inode AFS file server, it will fail with an error.
 
 The command name is case-sensitive.  It must be issued with the capital "RO"
 and "RW".
