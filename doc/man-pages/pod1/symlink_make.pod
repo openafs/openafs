@@ -1,0 +1,76 @@
+=head1 NAME
+
+symlink_make - Create a symbolic link
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<symlink make> S<<< [B<-name>] <I<file name>> >>>
+   S<<< [B<-to>] <I<file name>> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<symlink make> command creates a new symbolic link to a file.  The file
+to which the link points does not have to exist when the link is created.
+
+=head1 CAUTIONS
+
+The B<symlink> commands are only available on Windows platforms.  On other
+platforms, use the C<ln -s> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<-name>] <I<file name>>
+
+Specify the name of the new link.  B<-name> is optional, but the file name
+is not.
+
+=item [B<-to>] <I<file name>>
+
+Specify the file to which the new link points.  B<-to> is optional, but the
+file name is not.
+
+=item B<-help>
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=head1 EXAMPLES
+
+In order to create a link named C<mylink> pointing to the file C<myfile>,
+use one of the following commands:
+
+   % symlink make -name mylink -to myfile
+   % symlink make mylink myfile
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (look) and C<i> (insert) permissions on the
+ACL of the directory that houses the symlink.
+
+=head1 SEE ALSO
+
+L<symlink(1)>,
+L<symlink_list(1)>,
+L<symlink_remove(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
