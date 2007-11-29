@@ -1,0 +1,40 @@
+=head1 NAME
+
+symlink - Introduction to the symlink command suite
+
+=head1 DESCRIPTION
+
+The B<symlink> command creates, lists and removes Unix-style symbolic links
+(symlinks) in OpenAFS filespace from a platform that does not support
+symlinks, like Windows.  The B<symlink make> command is equivalent to
+C<ln -s> on a Unix platform.  B<symlink> can manipulate symlinks created
+by C<ln -s> on Unix and vice versa.
+
+=head1 CAUTIONS
+
+The B<symlink> commands are only available on Windows platforms.  On
+other platforms, use the C<ln -s> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=back
+
+=head1 SEE ALSO
+
+L<symlink_list(1)>,
+L<symlink_make(1)>,
+L<symlink_remove(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

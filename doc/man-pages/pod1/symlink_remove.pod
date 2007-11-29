@@ -1,0 +1,70 @@
+=head1 NAME
+
+symlink_remove - Remove a symbolic link.
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<symlink remove> S<<< [B<-name>] <I<file name>> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<symlink remove> command removes a symbolic link to a file.
+
+=head1 CAUTIONS
+
+The B<symlink> commands are only available on Windows platforms. On other
+platforms, use the B<rm> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<-name>] <I<file name>>
+
+Specify one or more symbolic links to remove.  The B<-name> is optional, but
+the file name is not.
+
+=item B<-help>
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command has no output except error and help messages.  If the command
+is passed a real file instead of a symlink, it prints "symlink: 'file name'
+is not a symlink" instead of removing the file.
+
+=head1 EXAMPLES
+
+Given that file C<mylink> is a link pointing to file C<myfile>, the
+following commands will remove the link C<mylink>:
+
+   % symlink remove -name mylink
+   % symlink remove mylink
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (look) and C<d> (delete) permissions on
+the ACL of the directory that houses the symlink.
+
+=head1 SEE ALSO
+
+L<symlink(1)>,
+L<symlink_list(1)>,
+L<symlink_make(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
