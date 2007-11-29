@@ -1,0 +1,79 @@
+=head1 NAME
+
+symlink_list - Show the file to which a symlink points
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<symlink list> S<<< [B<-name>] <I<file name>> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<symlink list> command shows if a file is a symbolic link and, if so,
+shows to which file the link points.
+
+=head1 CAUTIONS
+
+The B<symlink> commands are only available on Windows platforms.  On other
+platforms, use the B<readlink> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<-name>] <I<file name>>
+
+Specify one or more symbolic links to list.  The C<-name> is optional, but
+the file name is not.
+
+=item B<-help>
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command prints "'file' is a symlink to 'otherfile'" or "'file' is
+not a symlink."
+
+=head1 EXAMPLES
+
+Given that file C<mylink> is a link pointing to file C<myfile>, the
+following commands will list the files:
+
+   % symlink list -name mylink
+   'mylink' is a symlink to 'myfile'
+
+   % symlink list mylink
+   'mylink' is a symlink to 'myfile'
+
+   % symlink list -name myfile
+   'myfile' is not a symlink.
+
+   % symlink list myfile
+   'myfile' is not a symlink.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (look) and C<r> (read) permissions on the ACL
+of the directory that houses the symlink.
+
+=head1 SEE ALSO
+
+L<symlink(1)>,
+L<symlink_make(1)>,
+L<symlink_remove(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.
