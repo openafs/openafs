@@ -120,7 +120,11 @@ osi_AllocSmallSpace(size_t size)
     if (!freeSmallList) {
 	afs_stats_cmperf.SmallBlocksAlloced++;
 	afs_stats_cmperf.SmallBlocksActive++;
-	return afs_osi_Alloc(AFS_SMALLOCSIZ);
+	tp = afs_osi_Alloc(AFS_SMALLOCSIZ);
+#ifdef KERNEL_HAVE_PIN
+        pin((char *)tp, AFS_SMALLOCSIZ);
+#endif
+        return (char *)tp;
     }
     afs_stats_cmperf.SmallBlocksActive++;
     MObtainWriteLock(&osi_fsplock, 327);
