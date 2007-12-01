@@ -285,6 +285,14 @@ else
 		amd64-*-netbsd*2.0*)
 			AFS_SYSNAME="amd64_nbsd20"
 			;;
+		x86_64-*-netbsd*3.[0-8]*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="amd64_nbsd30"
+			;;
+		x86_64-*-netbsd*4.[0-8]*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="amd64_nbsd40"
+			;;
 		powerpc-*-netbsd*2.0*)
 			AFS_SYSNAME="ppc_nbsd20"
 			;;
