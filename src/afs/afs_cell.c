@@ -40,14 +40,13 @@ afs_rwlock_t afsdb_req_lock;	/* Serializes client requests */
 static char afsdb_handler_running;	/* Protected by GLOCK */
 static char afsdb_handler_shutdown;	/* Protected by GLOCK */
 
+/* from cellconfig.h */
+#define MAXCELLCHARS    64
 static struct {
-    afs_rwlock_t lock;
+    /* lock moved to afsdb_req_lock for cmdebug */
     char pending;
     char complete;
     char *cellname;
-    afs_int32 *cellhosts;
-    int *timeout;
-    char **realname;
 } afsdb_req;
 
 void
@@ -64,6 +63,9 @@ afs_StopAFSDB()
 int
 afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 {
+    afs_int32 timeout, code;
+    afs_int32 cellHosts[MAXCELLHOSTS];
+
     if (afsdb_handler_shutdown)
 	return -2;
     afsdb_handler_running = 1;
@@ -74,17 +76,28 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 
 	UpgradeSToWLock(&afsdb_req_lock, 684);
 	hostCount = kernelMsg[0];
-	*afsdb_req.timeout = kernelMsg[1];
-	if (*afsdb_req.timeout)
-	    *afsdb_req.timeout += osi_Time();
-	*afsdb_req.realname = afs_strdup(acellName);
+	timeout = kernelMsg[1];
+	if (timeout)
+	    timeout += osi_Time();
 
 	for (i = 0; i < MAXCELLHOSTS; i++) {
 	    if (i >= hostCount)
-		afsdb_req.cellhosts[i] = 0;
+		cellHosts[i] = 0;
 	    else
-		afsdb_req.cellhosts[i] = kernelMsg[2 + i];
+		cellHosts[i] = kernelMsg[2 + i];
 	}
+
+	if (hostCount)
+	    code = afs_NewCell(acellName, cellHosts, CNoSUID, NULL, 0, 0, 
+			       timeout);
+
+	if (!hostCount || (code && code != EEXIST)) 
+	    /* null out the cellname if the lookup failed */
+	    afsdb_req.cellname = NULL;
+	else
+	    /* If we found an alias, create it */
+	    if (afs_strcasecmp(afsdb_req.cellname, acellName))
+		afs_NewCellAlias(afsdb_req.cellname, acellName);
 
 	/* Request completed, wake up the relevant thread */
 	afsdb_req.pending = 0;
@@ -122,8 +135,7 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 }
 
 static int
-afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
-		      char **realName)
+afs_GetCellHostsAFSDB(char *acellName)
 {
     AFS_ASSERT_GLOCK();
     if (!afsdb_handler_running)
@@ -132,11 +144,7 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
     ObtainWriteLock(&afsdb_client_lock, 685);
     ObtainWriteLock(&afsdb_req_lock, 686);
 
-    *acellHosts = 0;
     afsdb_req.cellname = acellName;
-    afsdb_req.cellhosts = acellHosts;
-    afsdb_req.timeout = timeout;
-    afsdb_req.realname = realName;
 
     afsdb_req.complete = 0;
     afsdb_req.pending = 1;
@@ -151,9 +159,9 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
     ReleaseReadLock(&afsdb_req_lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
-    if (*acellHosts) 
+    if (afsdb_req.cellname) {
 	return 0;
-    else
+    } else
 	return ENOENT;
 }
 #endif
@@ -162,26 +170,14 @@ void
 afs_LookupAFSDB(char *acellName)
 {
 #ifdef AFS_AFSDB_ENV
-    afs_int32 cellHosts[MAXCELLHOSTS];
-    char *realName = NULL;
-    int code, timeout;
+    int code;
+    char *cellName = afs_strdup(acellName);
 
-    code = afs_GetCellHostsAFSDB(acellName, cellHosts, &timeout, &realName);
-    if (code)
-	goto done;
-    code = afs_NewCell(realName, cellHosts, CNoSUID, NULL, 0, 0, timeout);
-    if (code && code != EEXIST)
-	goto done;
+    code = afs_GetCellHostsAFSDB(cellName);
 
-    /* If we found an alias, create it */
-    if (afs_strcasecmp(acellName, realName))
-	afs_NewCellAlias(acellName, realName);
-
-  done:
-    afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, acellName, 
+    afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, cellName, 
 	       ICL_TYPE_INT32, code);
-    if (realName)
-	afs_osi_FreeStr(realName);
+    afs_osi_FreeStr(cellName);
 #endif
 }
 
