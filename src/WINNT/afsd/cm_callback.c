@@ -32,6 +32,8 @@ osi_rwlock_t cm_callbackLock;
 
 afs_int32 cm_OfflineROIsValid = 0;
 
+afs_int32 cm_giveUpAllCBs = 0;
+
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -1926,6 +1928,9 @@ void
 cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
 {
     cm_server_t *tsp;
+
+    if (!cm_giveUpAllCBs)
+        return;
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {

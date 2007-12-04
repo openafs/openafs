@@ -47,6 +47,7 @@ extern int cm_deleteReadOnly;
 extern afs_int32 cm_BPlusTrees;
 #endif
 extern afs_int32 cm_OfflineROIsValid;
+extern afs_int32 cm_giveUpAllCBs;
 extern const char **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
@@ -1128,6 +1129,14 @@ int afsd_InitCM(char **reasonP)
         cm_OfflineROIsValid = (unsigned short) dwValue;
     } 
     afsi_log("CM OfflineReadOnlyIsValid is %u", cm_deleteReadOnly);
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "GiveUpAllCallBacks", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_giveUpAllCBs = (unsigned short) dwValue;
+    } 
+    afsi_log("CM GiveUpAllCallBacks is %u", cm_giveUpAllCBs);
     
     RegCloseKey (parmKey);
 
