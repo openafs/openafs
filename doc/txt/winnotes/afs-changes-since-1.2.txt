@@ -1,3 +1,39 @@
+Since 1.5.27
+ * The GiveUpAllCallBacks functionality that was added in 1.5.21
+   has been disabled.  It has been disabled because it turns out
+   that the RPC is improperly implemented in all file servers 
+   previous to 1.4.6.  The RPC is executed without the proper 
+   locks being held resulting in data corruption and eventual file
+   server failure.  The functionality will be re-enabled in a 
+   a few months.
+
+ * a couple of .readonly Volume Callback optimizations were 
+   implemented:
+   -  Apply most recent volume callback to all stat cache objects 
+      in the volume.  This avoids premature callback expirations 
+      and unnecessary FetchStatus calls.
+   - Add option to permit attempts to renew .readonly Volume 
+     Callbacks on a periodic basis to avoid invalidation of stat 
+     cache data.  [Requires daemonCheckVolCBInterval be set to 
+     non-zero number of seconds.  1800 (30 minutes) is suggested.]
+
+ * Adds support for 64-bit data version values.  Previous releases 
+   only supported 32-bit values.  Larger values sent by the file server 
+   would result in rollover.
+
+ * aklog and asetkey no longer generate an exception if Kerberos for 
+   Windows is not installed.
+
+ * If the LSA authentication functions report a temporary out of memory 
+   condition, fail the current authentication and do not cause the AFS 
+   client service to terminate unexpectedly.
+
+ * When the AFS client service is shutting down, prevent the daemon check 
+   thread from executing additional checks which might attempt to access 
+   discarded locks or unmapped memory.
+
+ * Correct a double free condition in the NIM AFS credentials provider.
+
 Since 1.5.26
  * Fix NSIS uninstall from the .MSI installer.
 
