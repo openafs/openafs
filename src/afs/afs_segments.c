@@ -92,6 +92,10 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 		afs_int32 l1, l2;
 		l1 = avc->m.Length;
 		l2 = tlen;
+		if ((avc->m.Length > 0x7fffffff) ||
+		    (tlen > 0x7fffffff) ||
+		    ((0x7fffffff - tlen) < avc->m.Length))
+		    return EFBIG;
 		code =
 		    StartRXAFS_StoreData(tcall,
 					 (struct AFSFid *)&avc->fid.Fid,
