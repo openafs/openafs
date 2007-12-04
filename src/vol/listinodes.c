@@ -1642,6 +1642,7 @@ getDevName(char *pbuffer, char *wpath)
         return NULL;
 }
 
+#ifdef FSSYNC_BUILD_CLIENT
 int
 inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 {
@@ -1787,4 +1788,5 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
     return 0;
 }
+#endif /* FSSYNC_BUILD_CLIENT */
 #endif /* AFS_NAMEI_ENV */
