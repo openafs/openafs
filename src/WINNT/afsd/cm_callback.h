@@ -73,4 +73,6 @@ extern void cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown);
 extern void cm_GiveUpAllCallbacksAllServers(afs_int32 markDown);
 
 extern afs_int32 cm_OfflineROIsValid;
+
+extern afs_int32 cm_giveUpAllCBs;
 #endif /*  _CM_CALLBACK_H_ENV__ */
