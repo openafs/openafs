@@ -640,6 +640,8 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     struct CallBack *newcb = 0;
     int safety;
 
+    cbstuff.AddCallBacks++;
+
     host->Console |= 2;
 
     /* allocate these guys first, since we can't call the allocator with
@@ -963,9 +965,9 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     register afs_uint32 *pcb;
     char hoststr[16];
 
+    H_LOCK;
     cbstuff.DeleteCallBacks++;
 
-    H_LOCK;
     h_Lock_r(host);
     fe = FindFE(fid);
     if (!fe) {
