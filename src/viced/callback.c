@@ -1793,11 +1793,14 @@ PrintCallBackStats(void)
 int
 DumpCallBackState(void)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
 
-    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, O_WRONLY | O_CREAT | O_TRUNC,
-	      0666);
+    oflag = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, oflag, 0666);
     if (fd < 0) {
 	ViceLog(0,
 		("Couldn't create callback dump file %s\n",
@@ -1831,11 +1834,15 @@ DumpCallBackState(void)
 time_t
 ReadDump(char *file)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic, freelisthead;
-    time_t now;
+    afs_uint32 now;
 
-    fd = open(file, O_RDONLY);
+    oflag = O_RDONLY;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(file, oflag);
     if (fd < 0) {
 	fprintf(stderr, "Couldn't read dump file %s\n", file);
 	exit(1);
