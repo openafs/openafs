@@ -34,6 +34,11 @@ Since 1.5.27
 
  * Correct a double free condition in the NIM AFS credentials provider.
 
+ * Add "FollowBackupPath" service parameter registry value.   
+   This provides equivalent functionality to the UNIX afsd -backuptree
+   option.  When set to a non-zero value, normal mount points originating
+   in a .backup volume will prefer a .backup volume.
+
 Since 1.5.26
  * Fix NSIS uninstall from the .MSI installer.
 
