@@ -92,12 +92,12 @@
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="AfscredsShortcutParams" Type="string" Value="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Id="reg_Client54" />
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="ShowTrayIcon" Type="integer" Value="1" Id="reg_Client18" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client21" />
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="AuthentProviderPath" Type="expandable" Value="[SystemFolder]afslogon.dll" Id="reg_Client22" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="AuthentProviderPath" Type="expandable" Value="[AFSDIR]Client\Program\afslogon.dll" Id="reg_Client22" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Id="reg_Client23" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonOptions" Type="integer" Value="[LOGONOPTIONS]" Id="reg_Client24" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="VerboseLogging" Type="integer" Value="10" Id="reg_Client25" />
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[SystemFolder]afslogon.dll" Id="reg_Client26" />
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonScript" Type="expandable" Value="[AFSDIR]Client\Program\afscreds.exe -:%s -x -a -m -n -q" Id="reg_Client27" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[AFSDIR]Client\Program\afslogon.dll" Id="reg_Client26" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonScript" Type="expandable" Value="afscreds.exe -:%s -x -a -m -n -q" Id="reg_Client27" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Class" Type="integer" Value="2" Id="reg_Client29" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Name" Type="string" Value="TransarcAFSDaemon" Id="reg_Client30" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client31" />

@@ -1,35 +1,5 @@
 <?xml version="1.0"?>
 <Include>
-  <?ifndef BinsOnly?>
-    <Directory Id="$(var.PISystemFolder)" SourceName="System">
-        <Component Win64="$(var.Win64)" Id="cmf_afslogon_DLL" Guid="$(var.cmf_afslogon_DLL_guid)">
-            <File Id="fileafslogon_DLL" Name="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
-            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
-            <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
-            <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
-            <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Type="integer" Value="1" />
-            <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
-            <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
-            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logon" Type="string" Value="AFS_Logon_Event" />
-            <Registry Id="reg_afslogon08" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
-	    <!-- KFW includes this functionality - OpenAFS does not need to provide it
-            <Registry Id="reg_afslogon09" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Asynchronous" Type="integer" Value="0" />
-            <Registry Id="reg_afslogon10" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Impersonate" Type="integer" Value="0" />
-            <Registry Id="reg_afslogon11" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
-            <Registry Id="reg_afslogon13" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Logon" Type="string" Value="KFW_Logon_Event" />
-	    -->
-        </Component>
-        <Component Win64="$(var.Win64)" Id="cmf_afscpcc_EXE" Guid="$(var.cmf_afscpcc_EXE_guid)">
-            <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" KeyPath="yes"/>
-        </Component>
-    <?ifdef DebugSyms?>
-        <Component Win64="$(var.Win64)" Id="cmp_ClientSystemDebug" Guid="$(var.cmp_ClientSystemDebug_guid)">
-			<File Id="fileafslogon_PDB" Name="afslogon.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.pdb" />
-			<File Id="fileafscpcc_PDB" Name="afscpcc.pdb" DiskId="1" src="$(var.ClientDir)afscpcc.pdb" />
-        </Component>
-    <?endif?>
-    </Directory>
-  <?endif?>
     <Directory Id="$(var.PIProgramFilesFolder)">
         <Directory Id="AFSDIR" Name="OpenAFS" SourceName=".">
 	    <Component Id="efl_desktop_INI" Guid="0ADB427F-3648-4BE0-983B-C454AA51895C">
@@ -922,6 +892,32 @@
                         </ServiceInstall>
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />
                     </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afslogon_DLL" Guid="$(var.cmf_afslogon_DLL_guid)">
+                            <File Id="fileafslogon_DLL" Name="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
+                            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
+                            <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
+                            <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
+                            <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Type="integer" Value="1" />
+                            <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
+                            <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
+                            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logon" Type="string" Value="AFS_Logon_Event" />
+                            <Registry Id="reg_afslogon08" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
+                	    <!-- KFW includes this functionality - OpenAFS does not need to provide it
+                            <Registry Id="reg_afslogon09" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Asynchronous" Type="integer" Value="0" />
+                            <Registry Id="reg_afslogon10" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Impersonate" Type="integer" Value="0" />
+                            <Registry Id="reg_afslogon11" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
+                            <Registry Id="reg_afslogon13" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Logon" Type="string" Value="KFW_Logon_Event" />
+                	    -->
+                        </Component>
+                        <Component Win64="$(var.Win64)" Id="cmf_afscpcc_EXE" Guid="$(var.cmf_afscpcc_EXE_guid)">
+                            <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" KeyPath="yes"/>
+                        </Component>
+                    <?ifdef DebugSyms?>
+                        <Component Win64="$(var.Win64)" Id="cmp_ClientSystemDebug" Guid="$(var.cmp_ClientSystemDebug_guid)">
+		        	<File Id="fileafslogon_PDB" Name="afslogon.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.pdb" />
+        			<File Id="fileafscpcc_PDB" Name="afscpcc.pdb" DiskId="1" src="$(var.ClientDir)afscpcc.pdb" />
+                        </Component>
+                    <?endif?>
   <?endif?>
                      <Component Win64="$(var.Win64)" Id="cmf_symlink_EXE" Guid="$(var.cmf_symlink_EXE_guid)">
                         <File Id="filesymlink_EXE" Name="symlink.exe" LongName="symlink.exe" KeyPath="yes" DiskId="1" />
