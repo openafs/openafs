@@ -29,6 +29,8 @@ extern void afsi_log(char *pattern, ...);
 
 int cm_enableServerLocks = 1;
 
+int cm_followBackupPath = 0;
+
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
  * I do not know anything more about it.
@@ -1048,7 +1050,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     char mtType;
     cm_fid_t tfid;
     size_t vnLength;
-    int type;
+    int targetType;
 
     if (scp->mountRootFid.cell != 0 && scp->mountRootGen >= cm_data.mountRootGen) {
         tfid = scp->mountRootFid;
@@ -1092,15 +1094,15 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     vnLength = strlen(volNamep);
     if (vnLength >= 8 && strcmp(volNamep + vnLength - 7, ".backup") == 0)
-        type = BACKVOL;
+        targetType = BACKVOL;
     else if (vnLength >= 10
               && strcmp(volNamep + vnLength - 9, ".readonly") == 0)
-        type = ROVOL;
+        targetType = ROVOL;
     else
-        type = RWVOL;
+        targetType = RWVOL;
 
     /* check for backups within backups */
-    if (type == BACKVOL
+    if (targetType == BACKVOL
          && (scp->flags & (CM_SCACHEFLAG_RO | CM_SCACHEFLAG_PURERO))
          == CM_SCACHEFLAG_RO) {
         code = CM_ERROR_NOSUCHVOLUME;
@@ -1130,17 +1132,30 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         lock_ReleaseMutex(&volp->mx);
 
         scp->mountRootFid.cell = cellp->cellID;
+        
+        /* if the mt pt originates in a .backup volume (not a .readonly)
+         * and FollowBackupPath is active, and if there is a .backup
+         * volume for the target, then use the .backup of the target
+         * instead of the read-write.
+         */
+        if (cm_followBackupPath && targetType == RWVOL &&
+            (scp->flags & CM_SCACHEFLAG_RO|CM_SCACHEFLAG_PURERO) == CM_SCACHEFLAG_RO &&
+            volp->bk.ID != 0) {
+            targetType = BACKVOL;
+        } 
         /* if the mt pt is in a read-only volume (not just a
          * backup), and if there is a read-only volume for the
-         * target, and if this is a type '#' mount point, use
+         * target, and if this is a targetType '#' mount point, use
          * the read-only, otherwise use the one specified.
          */
-        if (mtType == '#' && (scp->flags & CM_SCACHEFLAG_PURERO)
-             && volp->ro.ID != 0 && type == RWVOL)
-            type = ROVOL;
-        if (type == ROVOL)
+        else if (mtType == '#' && targetType == RWVOL && 
+                 (scp->flags & CM_SCACHEFLAG_PURERO) && 
+                 volp->ro.ID != 0) {
+            targetType = ROVOL;
+        }
+        if (targetType == ROVOL)
             scp->mountRootFid.volume = volp->ro.ID;
-        else if (type == BACKVOL)
+        else if (targetType == BACKVOL)
             scp->mountRootFid.volume = volp->bk.ID;
         else
             scp->mountRootFid.volume = volp->rw.ID;

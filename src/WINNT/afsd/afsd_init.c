@@ -42,6 +42,7 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
+extern int cm_followBackupPath;
 extern int cm_deleteReadOnly;
 #ifdef USE_BPLUS
 extern afs_int32 cm_BPlusTrees;
@@ -1137,7 +1138,15 @@ int afsd_InitCM(char **reasonP)
         cm_giveUpAllCBs = (unsigned short) dwValue;
     } 
     afsi_log("CM GiveUpAllCallBacks is %u", cm_giveUpAllCBs);
-    
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "FollowBackupPath", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_followBackupPath = (unsigned short) dwValue;
+    } 
+    afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
+
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
