@@ -127,7 +127,9 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	ObtainWriteLock(&tdc->lock, 635);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
+	ObtainWriteLock(&afs_xdcache, 290);
 	code = afs_dir_Create(tdc, aname, &avc->fid.Fid);
+	ReleaseWriteLock(&afs_xdcache);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- invalid value */
 	    DZap(tdc);

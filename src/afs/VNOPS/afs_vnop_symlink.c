@@ -173,7 +173,9 @@ int afs_symlink
     /* otherwise, we should see if we can make the change to the dir locally */
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
+	ObtainWriteLock(&afs_xdcache, 293);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
+	ReleaseWriteLock(&afs_xdcache);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- use invalid value */
 	    DZap(tdc);
