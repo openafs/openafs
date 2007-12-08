@@ -46,8 +46,10 @@ _ACEOF
 #
 AC_DEFUN([AC_TRY_KBUILD24], [
   ac_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ $CPPFLAGS"
-  AC_TRY_COMPILE([$1], [$2], [$3], [$4])
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  AC_TRY_COMPILE([
+#include <linux/kernel.h>
+$1], [$2], [$3], [$4])
   CPPFLAGS="$ac_save_CPPFLAGS"])
 
 
