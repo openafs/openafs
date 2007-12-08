@@ -971,8 +971,7 @@ AC_DEFUN([LINUX_SYSCTL_TABLE_CHECKING], [
   AC_CACHE_VAL([ac_cv_linux_sysctl_table_checking], [
     AC_TRY_KBUILD(
 [#include <linux/sysctl.h>],
-[extern int sysctl_check_table(struct ctl_table *t);
-sysctl_check_table(NULL);],
+[ sysctl_check_table(NULL);],
       ac_cv_linux_sysctl_table_checking=yes,
       ac_cv_linux_sysctl_table_checking=no)])
   AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
