@@ -929,11 +929,14 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    printf("Setting tokens. %s / %s @ %s \n",
 		    aclient.name, aclient.instance, aclient.cell );
 	}
+#ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
 	 * this routine, it will not add the token. It is not clear what 
-	 * is going on here! So we will do the following operation
+	 * is going on here! So we will do the following operation.
+	 * On AIX 5, it causes the parent program to die, so we won't.
 	 */
 	write(2,"",0); /* dummy write */
+#endif
 #ifndef WINDOWS
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
 	    fprintf(stderr, 
