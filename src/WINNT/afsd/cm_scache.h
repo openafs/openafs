@@ -307,6 +307,7 @@ typedef struct cm_scache {
 						 * in old info.
                                                  */
 #define CM_MERGEFLAG_STOREDATA		2	/* Merge due to storedata op */
+#define CM_MERGEFLAG_DIROP              4       /* Merge due to directory op */ 
 
 /* hash define.  Must not include the cell, since the callback revocation code
  * doesn't necessarily know the cell in the case of a multihomed server
