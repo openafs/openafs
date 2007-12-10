@@ -700,19 +700,23 @@ void buf_Recycle(cm_buf_t *bp)
         i = BUF_HASH(&bp->fid, &bp->offset);
         lbpp = &(cm_data.buf_scacheHashTablepp[i]);
         for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
-            if (tbp == bp) break;
+            if (tbp == bp) 
+                break;
         }
 
         /* we better find it */
         osi_assertx(tbp != NULL, "buf_Recycle: hash table screwup");
 
         *lbpp = bp->hashp;	/* hash out */
+        bp->hashp = NULL;
 
         /* Remove from file hash */
 
         i = BUF_FILEHASH(&bp->fid);
         prevBp = bp->fileHashBackp;
+        bp->fileHashBackp = NULL;
         nextBp = bp->fileHashp;
+        bp->fileHashp = NULL;
         if (prevBp)
             prevBp->fileHashp = nextBp;
         else
@@ -1560,7 +1564,7 @@ long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 
 
     i = BUF_FILEHASH(&scp->fid);
 
-    lock_ObtainWrite(&buf_globalLock);
+    lock_ObtainRead(&buf_globalLock);
 
     for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp = bp->fileHashp) {
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
@@ -1570,7 +1574,7 @@ long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 
             }
         }
     }
-    lock_ReleaseWrite(&buf_globalLock);
+    lock_ReleaseRead(&buf_globalLock);
 
     if (found)
         return 0;
