@@ -1644,7 +1644,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     cm_dnlcRemove(dscp, namep);
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     } else if (code == CM_ERROR_NOSUCHFILE) {
 	/* windows would not have allowed the request to delete the file 
 	 * if it did not believe the file existed.  therefore, we must 
@@ -2714,7 +2714,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2864,7 +2864,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2974,7 +2974,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -3056,7 +3056,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -3160,7 +3160,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, namep); 
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -3355,7 +3355,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
-                        userp, 0);
+                        userp, CM_MERGEFLAG_DIROP);
     lock_ReleaseMutex(&oldDscp->mx);
 
     if (code == 0) {
@@ -3398,7 +3398,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         if (code == 0)
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
-                            userp, 0);
+                            userp, CM_MERGEFLAG_DIROP);
         lock_ReleaseMutex(&newDscp->mx);
 
         if (code == 0) {

@@ -1635,15 +1635,54 @@ void cm_MergeStatus(cm_scache_t *dscp,
     }
 
     if ((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion == 1) {
-	cm_buf_t *bp;
+        buf_ForceDataVersion(scp, scp->dataVersion, dataVersion);
+    } else if (scp->dataVersion != 0 && 
+        (!(flags & CM_MERGEFLAG_DIROP) && dataVersion != scp->dataVersion ||
+         (flags & CM_MERGEFLAG_DIROP) && dataVersion - scp->dataVersion > 1)) {
+        /* 
+         * We now know that all of the data buffers that we have associated
+         * with this scp are invalid.  Subsequent operations will go faster
+         * if the buffers are removed from the hash tables.
+         *
+         * We do not remove directory buffers if the dataVersion delta is 1 because
+         * those version numbers will be updated as part of the directory operation.
+         */
+        int i, j;
+        cm_buf_t **lbpp;
+        cm_buf_t *tbp;
+        cm_buf_t *bp, *prevBp, *nextBp;
 
-	for (bp = cm_data.buf_fileHashTablepp[BUF_FILEHASH(&scp->fid)]; bp; bp=bp->fileHashp)
+        lock_ObtainWrite(&buf_globalLock);
+        i = BUF_FILEHASH(&scp->fid);
+       	for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=nextBp)
 	{
-	    if (cm_FidCmp(&scp->fid, &bp->fid) == 0 && 
-		bp->dataVersion == scp->dataVersion)
-		bp->dataVersion = dataVersion;
+            nextBp = bp->fileHashp;
+
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0) {
+                prevBp = bp->fileHashBackp;
+                bp->fileHashBackp = bp->fileHashp = NULL;
+                if (prevBp)
+                    prevBp->fileHashp = nextBp;
+                else
+                    cm_data.buf_fileHashTablepp[i] = nextBp;
+                if (nextBp)
+                    nextBp->fileHashBackp = prevBp;
+
+                j = BUF_HASH(&bp->fid, &bp->offset);
+                lbpp = &(cm_data.buf_scacheHashTablepp[j]);
+                for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
+                    if (tbp == bp) 
+                        break;
+                }
+
+                *lbpp = bp->hashp;	/* hash out */
+                bp->hashp = NULL;
+
+                bp->flags &= ~CM_BUF_INHASH;
+            }
 	}
 
+        lock_ReleaseWrite(&buf_globalLock);
     }
     scp->dataVersion = dataVersion;
 }
