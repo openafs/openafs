@@ -16,6 +16,7 @@ RCSID
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#include <fcntl.h>
 #else
 #include <sys/file.h>
 #include <netinet/in.h>
@@ -24,6 +25,7 @@ RCSID
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <errno.h>
 #include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
@@ -488,13 +490,17 @@ SDISK_SendFile(rxcall, file, length, avers)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
-    char tbuffer[256];
+    char tbuffer[1024];
     afs_int32 offset;
     struct ubik_version tversion;
     register int tlen;
     struct rx_peer *tpeer;
     struct rx_connection *tconn;
     afs_uint32 otherHost;
+#ifndef OLD_URECOVERY
+    char pbuffer[1028];
+    int flen, fd = -1;
+#endif
 
     /* send the file back to the requester */
 
@@ -532,10 +538,25 @@ SDISK_SendFile(rxcall, file, length, avers)
 	       afs_inet_ntoa(otherHost));
 
     offset = 0;
+#ifdef OLD_URECOVERY
     (*dbase->truncate) (dbase, file, 0);	/* truncate first */
     tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     tversion.counter = 0;
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
+#else
+    flen = length;
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+    fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
+    if (fd < 0) {
+	code = errno;
+	goto failed;
+    }
+    code = lseek(fd, HDRSIZE, 0);
+    if (code != HDRSIZE) {
+	close(fd);
+	goto failed;
+    }
+#endif
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
@@ -544,29 +565,63 @@ SDISK_SendFile(rxcall, file, length, avers)
 	    DBRELE(dbase);
 	    ubik_dprint("Rx-read length error=%d\n", code);
 	    code = BULK_ERROR;
+	    close(fd);
 	    goto failed;
 	}
+#ifdef OLD_URECOVERY
 	code = (*dbase->write) (dbase, file, tbuffer, offset, tlen);
+#else
+	code = write(fd, tbuffer, tlen);
+#endif
 	if (code != tlen) {
 	    DBRELE(dbase);
 	    ubik_dprint("write failed error=%d\n", code);
 	    code = UIOERROR;
+	    close(fd);
 	    goto failed;
 	}
 	offset += tlen;
 	length -= tlen;
     }
+#ifndef OLD_URECOVERY
+    code = close(fd);
+    if (code)
+	goto failed;
+#endif     
 
     /* sync data first, then write label and resync (resync done by setlabel call).
      * This way, good label is only on good database. */
+#ifdef OLD_URECOVERY
     (*ubik_dbase->sync) (dbase, file);
+#else
+    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB0", ubik_dbase->pathName);
+#ifdef AFS_NT40_ENV
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    code = unlink(pbuffer);
+    if (!code)
+	code = rename(tbuffer, pbuffer);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+#endif
+    if (!code) 
+	code = rename(pbuffer, tbuffer);
+    if (!code)
+#endif
     code = (*ubik_dbase->setlabel) (dbase, file, avers);
+#ifndef OLD_URECOVERY
+#ifdef AFS_NT40_ENV
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    unlink(pbuffer);
+#endif
+#endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));
     udisk_Invalidate(dbase, file);	/* new dbase, flush disk buffers */
     LWP_NoYieldSignal(&dbase->version);
     DBRELE(dbase);
   failed:
     if (code) {
+#ifndef OLD_URECOVERY
+	unlink(pbuffer);
+#endif
 	ubik_print
 	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
 	     afs_inet_ntoa(otherHost), code);
