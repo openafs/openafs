@@ -24,6 +24,7 @@ int line=1;
 #else
 #define dprint(x)
 #endif
+void Replace(char *in, char *out);
 %}
 
 /* definitions */
