@@ -6,7 +6,7 @@ MACOS_VERSION=1.5.28
 AC_SUBST(MACOS_VERSION)
 
 AC_PROG_CC
-AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp])
+AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp],,[$PATH:/])
 OPENAFS_CONFIGURE_COMMON
 
 if test -d 'doc/man-pages' ; then
