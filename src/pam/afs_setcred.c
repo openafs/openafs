@@ -62,7 +62,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int auth_ok = 0;
     char *lh;
     char *user = NULL;
-    long password_expires = -1;
+    int password_expires = -1;
     char *reason = NULL;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */
