@@ -1129,7 +1129,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
 	    sa->sa_iprank = afs_min(sa->sa_iprank, MED);
 	}
     }
-    return 0;
+    return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
 #if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
