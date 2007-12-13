@@ -349,8 +349,6 @@ afs_osi_MapStrategy(int (*aproc) (struct buf * bp), register struct buf *bp)
 void
 shutdown_osifile(void)
 {
-    extern int afs_cold_shutdown;
-
     AFS_STATCNT(shutdown_osifile);
     if (afs_cold_shutdown) {
 	afs_osicred_initialized = 0;

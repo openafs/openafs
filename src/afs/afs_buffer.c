@@ -533,7 +533,6 @@ shutdown_bufferpackage(void)
     register struct buffer *tp;
 #endif
     int i;
-    extern int afs_cold_shutdown;
 
     AFS_STATCNT(shutdown_bufferpackage);
     /* Free all allocated Buffers and associated buffer pages */
