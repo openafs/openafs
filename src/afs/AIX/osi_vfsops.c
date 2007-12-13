@@ -34,8 +34,6 @@ extern struct afs_exporter *afs_nfsexporter;
 struct vfs *afs_globalVFS = 0;
 struct vcache *afs_globalVp = 0;
 
-extern int afs_cold_shutdown;
-
 static int afs_root_nolock(struct vfs *afsp, struct vnode **avpp);
 
 static int
