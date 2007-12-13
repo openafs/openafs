@@ -207,7 +207,6 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
      int flags;
      cred_t *cr;
 {
-    extern int afs_afs_cold_shutdown;
     struct vcache *tvc;
     vnode_t *vp, *rootvp = NULL;
     register struct afs_q *tq;

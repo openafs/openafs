@@ -140,29 +140,34 @@ osi_AllocSmallSpace(size_t size)
 void
 shutdown_osinet(void)
 {
-    extern int afs_cold_shutdown;
-
     AFS_STATCNT(shutdown_osinet);
     if (afs_cold_shutdown) {
 	struct osi_packet *tp;
 
 	while ((tp = freePacketList)) {
 	    freePacketList = tp->next;
-	    afs_osi_Free(tp, AFS_LRALLOCSIZ);
 #ifdef  KERNEL_HAVE_PIN
 	    unpin(tp, AFS_LRALLOCSIZ);
 #endif
+	    afs_osi_Free(tp, AFS_LRALLOCSIZ);
 	}
 
 	while ((tp = freeSmallList)) {
 	    freeSmallList = tp->next;
-	    afs_osi_Free(tp, AFS_SMALLOCSIZ);
 #ifdef  KERNEL_HAVE_PIN
 	    unpin(tp, AFS_SMALLOCSIZ);
 #endif
+	    afs_osi_Free(tp, AFS_SMALLOCSIZ);
 	}
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
+    }
+    if (afs_stats_cmperf.LargeBlocksActive || 
+	afs_stats_cmperf.SmallBlocksActive) 
+    {
+	afs_warn("WARNING: not all blocks freed: large %d small %d\n", 
+		 afs_stats_cmperf.LargeBlocksActive, 
+		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
 #endif
