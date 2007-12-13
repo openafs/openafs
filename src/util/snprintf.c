@@ -520,6 +520,16 @@ vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 }
 #endif /* AFS_OSF20_ENV || AFS_AIX32_ENV */
 
+#ifndef HAVE_VSYSLOG
+void
+vsyslog(int priority, const char *format, va_list args)
+{
+  char buf[1024];
+  vsnprintf(buf, sizeof(buf), format, args);
+  syslog(priority, "%s", buf);
+}
+#endif
+
 #ifndef AFS_NT40_ENV
 #if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_SNPRINTF)
 
