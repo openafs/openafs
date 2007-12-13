@@ -6112,7 +6112,9 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
 		 (tcon->peer ? tcon->peer->host : 0)));
 	errorCode = GetClient(tcon, &client);
 	if (!errorCode) {
+	    H_LOCK;
 	    DeleteAllCallBacks_r(client->host, 1);
+	    H_UNLOCK;
 	    PutClient(&client);
 	}
     } else {
