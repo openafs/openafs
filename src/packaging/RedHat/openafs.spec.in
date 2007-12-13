@@ -233,9 +233,6 @@ BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
-%if %{build_userspace}
-BuildRequires: autoconf
-%endif
 ExclusiveArch: %{ix86} x86_64 ia64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
@@ -462,7 +459,7 @@ you are using KAserver instead of Krb5.
 Summary: OpenAFS programs to use with krb5
 Requires: openafs = %{PACKAGE_VERSION}
 Group: Networking/Filesystems
-BuildRequires: autoconf, automake
+BuildRequires: krb5-devel
 
 %description krb5
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -810,10 +807,10 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
 %if %{build_modules}
-       --with-linux-kernel-headers=%{ksrc} \
+       --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf \
+	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
 %endif
        $config_opts \
        || exit 1
@@ -835,7 +832,7 @@ for kvariant in %{kvariants} ; do
 	--sbindir=%{_sbindir} \
 	--with-linux-kernel-headers=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} \
 %if %{krb5support}
-	--with-krb5-conf \
+	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
 %endif
 	$config_opts \
 	|| exit 1
@@ -1131,11 +1128,6 @@ for f in pam_afs.krb.so.1 pam_afs.so.1 ; do
   rm -f $RPM_BUILD_ROOT%{_libdir}/$f
 done
 
-# Remove empty files from the krb5 migration
-for f in afs2k5db fakeka ; do
-  rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
-done
-
 %if !%{build_authlibs}
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
@@ -1157,7 +1149,7 @@ do
 
   dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
   mkdir -p ${dstdir}
-  install -m 744 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
+  install -m 644 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
 done
 %else
 # Install the kernel modules
@@ -1177,8 +1169,6 @@ do
 
     mkdir -p ${dstdir}
 
-    # Mark kernel modules as executable; otherwise they won't get stripped 
-    # by /usr/lib/rpm/brp-strip
     install -m 644 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
 done
 %endif
@@ -1532,6 +1522,9 @@ fi
 ###
 ##############################################################################
 %changelog
+* Wed Dec 12 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
+- Make the RPM mockable
+
 * Tue Oct 29 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
 - Update to match the shipped 1.4.5 RPMS
 - Fix the kvariant stuff to only configure the 'standard' case once
