@@ -440,7 +440,7 @@ VAttachPartitions(void)
 	/* but allow zfs too if we're in the NAMEI environment */
 	if (
 #ifdef AFS_NAMEI_ENV
-	    ((!(strcmp(mnt.mnt_fstype, "ufs") &&
+	    (((strcmp(mnt.mnt_fstype, "ufs") &&
 		strcmp(mnt.mnt_fstype, "zfs"))))
 #else
 	    (strcmp(mnt.mnt_fstype, "ufs") != 0)
