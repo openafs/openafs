@@ -32,6 +32,7 @@ RCSID
 #include <afs/dirpath.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
+#include <afs/ptserver.h>
 #include "aix_auth_prototypes.h"
 
 struct afsconf_cell ak_cellconfig; /* General information about the cell */
@@ -525,6 +526,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
      * not work if you change %d to something else.
      */
     
+    /* Don't do first-time registration. Handle only the simple case */
+    if ((status == 0) && (viceId != ANONYMOUSID))
+	sprintf (username, "AFS ID %d", (int) viceId);
+
     /* Reset the "aclient" structure before we call ktc_SetToken.
      * This structure was first set by the ktc_GetToken call when
      * we were comparing whether identical tokens already existed.
