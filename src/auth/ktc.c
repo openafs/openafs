@@ -54,6 +54,10 @@ RCSID
 #include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#endif
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -1610,6 +1614,12 @@ afs_tf_dest_tkt(void)
 static afs_uint32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+	code = 0;
+    return code;
+#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -1633,6 +1643,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 int

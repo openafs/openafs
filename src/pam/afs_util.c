@@ -19,6 +19,10 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#endif
 
 RCSID
     ("$Header$");
@@ -174,6 +178,12 @@ do_klog(const char *user, const char *password, const char *lifetime,
 static afs_int32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+        code = 0;
+    return code;
+#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -197,6 +207,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 /* Returns the AFS pag number, if any, otherwise return -1 */
