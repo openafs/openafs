@@ -54,6 +54,10 @@ RCSID
 #include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#endif
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -412,12 +416,11 @@ OldSetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     return 0;
 }
 
-
-ktc_SetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+int
+ktc_SetToken(struct ktc_principal *aserver,
+    struct ktc_token *atoken,
+    struct ktc_principal *aclient,
+    afs_int32 flags)
 {
     int ncode, ocode;
 
@@ -688,9 +691,10 @@ ktc_ForgetToken(struct ktc_principal *aserver)
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
  * success.  */
 
-ktc_ListTokens(aprevIndex, aindex, aserver)
-     int aprevIndex, *aindex;
-     struct ktc_principal *aserver;
+int
+ktc_ListTokens(int aprevIndex,
+    int *aindex,
+    struct ktc_principal *aserver)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -840,7 +844,7 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 /* discard all tokens from this user's cache */
 
 static int
-NewForgetAll()
+NewForgetAll(void)
 {
 #ifndef NO_AFS_CLIENT
     TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
@@ -849,7 +853,7 @@ NewForgetAll()
 }
 
 static int
-OldForgetAll()
+OldForgetAll(void)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
@@ -871,7 +875,7 @@ OldForgetAll()
 }
 
 int
-ktc_ForgetAllTokens()
+ktc_ForgetAllTokens(void)
 {
     int ncode, ocode;
 
@@ -1610,6 +1614,12 @@ afs_tf_dest_tkt(void)
 static afs_uint32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+	code = 0;
+    return code;
+#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -1633,6 +1643,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 int
