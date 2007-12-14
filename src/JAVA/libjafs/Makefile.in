@@ -13,7 +13,7 @@ TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
 TOP_JLIBDIR=@TOP_SRCDIR@/JAVA/libjafs
-JNI_INC=${JAVA_HOME}/include
+JNI_INC=-I ${JAVA_HOME}/include -I `dirname ${JAVA_HOME}/include/*/jni_md.h`
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -35,10 +35,10 @@ SHARED_FLAGS = -shared -Xlinker -Bsymbolic
 OBJECT_FLAGS = -fPIC -c
 
 ifeq "$(BUILD_TYPE)" "admin"
-	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ -I${JAVA_HOME}/include -I ${JNI_INC}
+	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 else
-	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${JAVA_HOME}/include -I ${JNI_INC}
+	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${MT_CFLAGS}
 endif
 
@@ -50,7 +50,7 @@ PACKAGEDIR = ${ROOTPACKAGEDIR}/${RELPACKAGEDIR}
 JAVADOCSDIR = javadocs/
 
 JAVAH = ${JAVA_HOME}/bin/javah -classpath ${ROOTPACKAGEDIR} -jni -d ${LIBJAFSADMDIR}
-JAVAC = ${JAVA_HOME}/bin/javac -classpath ${ROOTPACKAGEDIR}
+JAVAC = ${JAVA_HOME}/bin/javac -source 1.4 -classpath ${ROOTPACKAGEDIR}
 
 J_NATIVE_PREFIX = org.openafs.jafs.
 C_NATIVE_PREFIX = org_openafs_jafs_
@@ -153,6 +153,7 @@ CLIENTADMINLIB = ${TOP_LIBDIR}/libclientadmin.a
 
 LIBJAFS_LIBS =\
 	${TOP_LIBDIR}/libjuafs.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libdes.a \
 	-lresolv \
 	-lpthread
