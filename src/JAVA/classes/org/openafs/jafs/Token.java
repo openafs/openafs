@@ -144,6 +144,20 @@ public class Token implements Serializable, Comparable
   }
 
   /**
+   * Constructs a new <CODE>Token</CODE> object instance given the
+   * name of the AFS cell it represents; the token for administrative
+   * access will be extracted from the kernel cache manager if possible.
+   *
+   * @param cellName    the name of the cell to Token into
+   * @exception AFSException  If an error occurs in the native code
+   */
+  public Token(String cellName) 
+      throws AFSException
+  {
+      this(null, null, cellName);
+  }
+
+  /**
    * Constructs a new <CODE>Token</CODE> object instance given 
    * the name of the AFS cell it represents and the username and password 
    * of the user to be Tokend for 
