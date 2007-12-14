@@ -80,11 +80,15 @@ $(CBD): $(OUT)\cbd.obj $(CBDRES)
 
 ############################################################################
 # generate versioninfo resources
-$(EXERES): AFS_component_version_number.h
+$(EXERES): fileserver.rc AFS_component_version_number.h
 
-$(CBDRES): AFS_component_version_number.h
+$(CBDRES): cbd.rc AFS_component_version_number.h
 
-install:  $(INCFILES) $(EXERES) $(CBD) $(CBDRES)
+install:  $(INCFILES) $(CBD)
 
 mkdir:
 	
+clean::
+	$(DEL) $(EXERES)
+	$(DEL) $(CBDRES)
+
