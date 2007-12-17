@@ -79,7 +79,7 @@
 	multi_Select;
 	multi_Init;
 	multi_Finalize_Ignore;
-	add_to_error_table;
+	afs_add_to_error_table;
 	xdr_afsUUID;
 	xdr_afs_int32;
 	xdr_afs_uint32;
