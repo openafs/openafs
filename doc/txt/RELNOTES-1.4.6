@@ -1,0 +1,25 @@
+                  OpenAFS Release Notes - Version 1.4.6
+     _________________________________________________________________
+All systems: Major bugfixes.
+     _________________________________________________________________
+
+* Bugfixes:
+
+All systems:
+
+- fileserver host tracking code had a missing lock on a host structure;
+  that lock has been added.
+
+- fileserver handling for clients which are giving up callbacks did not
+  hold a lock, making it unsafe and allowing clients to potentially 
+  crash the server by racing. 
+
+- fileserver will now leave a corefile when it is doing a shutdown due
+  to error conditions.
+
+- fileserver again allows ufs as a valid filesystem type (regression in 1.4.5).
+
+- cbd handler for fileserver status data has an interpretation error which
+  could cause crashes corrected.
+
+- fileserver accurately tracks number of callbacks on a given file.

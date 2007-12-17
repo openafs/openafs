@@ -1,0 +1,89 @@
+                  OpenAFS Release Notes - Version 1.4.2
+     _________________________________________________________________
+All systems: Major bugfixes.
+     _________________________________________________________________
+
+* Bugfixes:
+
+All systems:
+
+- Volume dump parsing code in the volserver has better error checking.
+
+- salvager has improved damaged volume handling on namei fileservers.
+
+- fileserver has size validity checks for when large file support is disabled.
+
+- fileserver avoids potentially multiply adding a host to its hash table.
+
+- rxkad client private data storage is allocated dynamically on ticket size.
+
+- Handle universal error code translation for file locking.
+
+- fileserver needs to swap callback connections on a client IP change.
+
+- fileserver host package revised to reduce lock contention.
+
+- Rx has been fixed to count hard acks, thus opening the congestion window.
+
+- All servers support bound Rx sockets (on one interface).
+
+- namei fileserver no longer use lockf() to avoid range locking issues.
+
+- most binaries now support the -version switch.
+
+- backup suite fixes for 64 bit platforms.
+
+- volserver avoids holding holds during volume purges.
+
+- volserver avoids losing files on namei during vos zap.
+
+AIX:
+
+- fileserver now properly supports large files.
+
+- TSM updates for AIX 5
+
+- Kernel module avoids leaking Rx packets.
+
+- Avoid use of global ubik client structure in fileserver.
+
+- Update ubik call client interface to allow for prototyping.
+
+- audit logging fixes when stdarg does not provide integral va_list type.
+
+MacOS 10.4:
+
+- A bug where the client kernel module could free stack memory (which caused issues with 64 bit Intel most commonly) has been fixed.
+
+- Packaging fixes and updates.
+
+- Uninstaller added.
+
+- Fix large file support.
+
+Linux:
+
+- autoconf kernel feature testing has been restructured.
+
+- PAG garbage collection is enabled by default.
+
+- Kerberos updates for RHEL3.
+
+- Fix POSIX lock enrollment for older Linux kernels.
+
+- Updates for new 2.6 kernels.
+
+- Avoid deadlocks in put_inode handler.
+
+- Keyring-based PAG support.
+
+- Fixes to avoid getting better oops info in the kernel.
+
+Solaris: 
+
+- Remove some kernel symbol bindings for symbols we don't use.
+
+- Cleanup for loopback mount of AFS on Solaris 10.
+
+- Avoid issues with stdio not supporting file descriptors above 255 on 
+  Solaris 8 and lower in the fileserver.
