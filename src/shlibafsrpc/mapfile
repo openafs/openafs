@@ -115,6 +115,11 @@
 	RXSTATS_ClearProcessRPCStats;
 	RXSTATS_ClearPeerRPCStats;
 	TM_GetTimeOfDay;
+	strcompose;
+	stolower;
+	ucstring;
+	lcstring;
+	AssertionFailed;
 
     local:
 	*;
