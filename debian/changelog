@@ -7,10 +7,14 @@ openafs (1.4.6.dfsg1-1) UNRELEASED; urgency=low
   * Apply upstream patch to allocate vnodes from the malloc pool rather
     than off the stack, fixing file server problems on SPARC.  Thanks to
     Barney Sowood for tracking down the patch.  (Closes: #448380)
+  * Apply upstream patch from the 1.5 series to allow multiple realms to
+    be listed in the server krb.conf and hence treated as local.
   * Add more debugging and bug reporting instructions to README.Debian.
+  * Mention in README.Debian that the server is built with supergroups
+    enabled and with the multiple local realm patch.  (Closes: #453399)
   * Update to standards version 3.7.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 16:42:41 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 18:23:26 -0800
 
 openafs (1.4.5.dfsg1-1) unstable; urgency=low
 

@@ -60,6 +60,21 @@ Changes Relative to Stock OpenAFS
   To distinguish between an SMP and a non-SMP kernel module package, use
   --append_to_version; see README.modules for more information.
 
+  The OpenAFS servers have been built with --enable-supergroups, which
+  permits nesting of PTS groups.  Be aware that the PT database created by
+  these packages is not compatible with servers not built with
+  --enable-supergroups if nested PTS groups are used.  In other words, if
+  you need the openafs-dbserver package to interoperate with ptservers
+  that aren't built with this option, don't use this capability.
+
+  The OpenAFS servers have been patched to support listing up to four
+  realms in /etc/openafs/server/krb.conf.  Any realms listed in that file
+  (all on one line, space-separated) will be treated as local for
+  authorization decisions (in other words, the relam will be stripped off
+  and the unqualified principal name checked against AFS ACLs, UserList,
+  PTS groups, and so forth).  The default OpenAFS server only supports
+  listing one realm in this file.
+
   The AFS up utility is installed as afs-up, since the standard name is
   rather generic.
 
@@ -159,4 +174,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Sun, 18 Nov 2007 19:57:23 -0800
+ -- Russ Allbery <rra@debian.org>, Mon, 17 Dec 2007 18:22:35 -0800
