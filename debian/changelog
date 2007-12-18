@@ -18,9 +18,10 @@ openafs (1.4.6.dfsg1-1) unstable; urgency=low
   * Mention in README.Debian that the server is built with supergroups
     enabled and with the multiple local realm patch.  (Closes: #453399)
   * Support reconfigure in postinst.
+  * Recode debian/copyright to UTF-8.
   * Update to standards version 3.7.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 18:33:49 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 20:19:13 -0800
 
 openafs (1.4.5.dfsg1-1) unstable; urgency=low
 

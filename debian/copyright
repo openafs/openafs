@@ -159,7 +159,7 @@ Copyright:
    Each Contributor must include the following in a conspicuous location
    in the Program:
    
-   Copyright © {date here}, International Business Machines Corporation
+   Copyright Â© {date here}, International Business Machines Corporation
        and others. All Rights Reserved.
        
    In addition, each Contributor must identify itself as the originator
@@ -279,7 +279,7 @@ Copyright:
 
 Kerberos 5 ticket support in rxkad is subject to the following copyright:
 /*
- * Copyright (c) 1995, 1996, 1997, 2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 2002 Kungliga Tekniska HÃ¶gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
