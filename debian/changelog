@@ -1,8 +1,10 @@
-openafs (1.4.5.dfsg1-2) UNRELEASED; urgency=low
+openafs (1.4.6.dfsg1-1) UNRELEASED; urgency=low
 
+  * New upstream release.
+    - Fixes multiple serious problems with the file server.
   * Add more debugging and bug reporting instructions to README.Debian.
 
- -- Russ Allbery <rra@debian.org>  Sun, 18 Nov 2007 19:57:53 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 16:17:01 -0800
 
 openafs (1.4.5.dfsg1-1) unstable; urgency=low
 
