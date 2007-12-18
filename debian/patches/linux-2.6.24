@@ -1,0 +1,395 @@
+Add support for Linux 2.6.24.  This patch combines the upstream deltas:
+
+STABLE14-linux-afs-unlinked-file-dentry-flagging-20071031
+STABLE14-linux-nsec-timestamp-zero-20071106
+STABLE14-linux-splice-support-20071106
+STABLE14-linux-2624-20071123
+
+Debian Bug#456258
+
+--- openafs.orig/acinclude.m4
++++ openafs/acinclude.m4
+@@ -582,6 +582,9 @@
+ 	         )
+ 
+ 		 LINUX_KERNEL_COMPILE_WORKS
++                 LINUX_KBUILD_USES_EXTRA_CFLAGS
++                 LINUX_HAVE_CURRENT_KERNEL_TIME
++                 LINUX_KMEM_CACHE_INIT
+ 		 LINUX_HAVE_KMEM_CACHE_T
+ 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
+ 		 LINUX_CONFIG_H_EXISTS
+@@ -614,12 +617,14 @@
+ 	  	 LINUX_AOP_WRITEBACK_CONTROL
+ 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
+ 		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
++		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
+ 		 LINUX_KERNEL_LINUX_SYSCALL_H
+ 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
+ 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
+ 		 LINUX_KERNEL_SELINUX
+ 		 LINUX_KERNEL_SOCK_CREATE
+ 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
++                 LINUX_KEY_TYPE_H_EXISTS
+ 		 LINUX_NEED_RHCONFIG
+ 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
+ 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
+@@ -647,6 +652,7 @@
+ 		 LINUX_GENERIC_FILE_AIO_READ
+ 		 LINUX_INIT_WORK_HAS_DATA
+ 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
++		 LINUX_SYSCTL_TABLE_CHECKING
+                  LINUX_EXPORTS_SYS_CHDIR
+                  LINUX_EXPORTS_SYS_CLOSE
+                  LINUX_EXPORTS_SYS_OPEN
+@@ -720,6 +726,9 @@
+ 		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
+ 		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
+ 		 fi
++		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
++		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if key-type.h exists])
++		 fi
+ 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
+ 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
+ 		 fi
+@@ -861,15 +870,27 @@
+ 		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
+ 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
+ 		 fi
++		 if test "x$ac_cv_linux_fs_struct_fop_has_splice" = "xyes" ; then
++		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SPLICE, 1, [define if your struct file_operations has splice_write and splice_read])
++		 fi
+ 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
+ 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
+ 		 fi
++		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
++		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
++		 fi
+ 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
+ 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
+ 		 fi
+ 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+ 		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
+ 		 fi
++		 if test "x$ac_cv_linux_kmem_cache_init" = "xyes" ; then
++		  AC_DEFINE(KMEM_CACHE_INIT, 1, [define for new kmem_cache init function parameters])
++		 fi
++		 if test "x$ac_cv_linux_have_current_kernel_time" = "xyes" ; then
++		  AC_DEFINE(HAVE_CURRENT_KERNEL_TIME, 1, [define if current_kernel_time() exists])
++		 fi
+ 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+ 		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
+ 		 fi
+--- openafs.orig/src/afs/LINUX/osi_machdep.h
++++ openafs/src/afs/LINUX/osi_machdep.h
+@@ -76,7 +76,18 @@
+ 
+ #define afs_hz HZ
+ #include "h/sched.h"
++#if defined(HAVE_CURRENT_KERNEL_TIME)
++static inline time_t osi_Time(void) { 
++    struct timespec xtime;
++    xtime = current_kernel_time();
++    return xtime.tv_sec;
++}
++#else
+ #define osi_Time() (xtime.tv_sec)
++#endif
++
++
++
+ #ifdef AFS_LINUX_64BIT_KERNEL
+ #define osi_GetTime(V)                                 \
+     do {                                               \
+--- openafs.orig/src/afs/LINUX/osi_sysctl.c
++++ openafs/src/afs/LINUX/osi_sysctl.c
+@@ -1,7 +1,7 @@
+ /*
+  * osi_sysctl.c: Linux sysctl interface to OpenAFS
+  *
+- * $Id: osi_sysctl.c,v 1.7.2.5 2007/06/12 18:28:49 shadow Exp $
++ * $Id: osi_sysctl.c,v 1.7.2.6 2007/11/23 13:45:04 shadow Exp $
+  *
+  * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
+  */
+@@ -28,7 +28,11 @@
+ 
+ static ctl_table afs_sysctl_table[] = {
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name 	= 1, 
++#endif
+ 	.procname 	= "hm_retry_RO",
+ 	.data 		= &hm_retry_RO, 
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -36,7 +40,11 @@
+ 	.proc_handler	= &proc_dointvec
+     },
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+         .ctl_name 	= 2, 
++#endif
+         .procname 	= "hm_retry_RW",
+         .data		= &hm_retry_RW,
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -44,7 +52,11 @@
+      	.proc_handler	= &proc_dointvec
+     },
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name	= 3, 
++#endif
+ 	.procname	= "hm_retry_int",
+ 	.data		= &hm_retry_int, 
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -52,7 +64,11 @@
+ 	.proc_handler	= &proc_dointvec
+     },
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name	= 4, 
++#endif
+ 	.procname	= "GCPAGs",
+ 	.data		= &afs_gcpags, 
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -60,7 +76,11 @@
+ 	.proc_handler 	= &proc_dointvec
+     },
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name	= 5, 
++#endif
+ 	.procname	= "rx_deadtime",
+ 	.data		= &afs_rx_deadtime, 
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -68,7 +88,11 @@
+ 	.proc_handler	= &proc_dointvec
+     },
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name	= 6, 
++#endif
+ 	.procname	= "bkVolPref",
+ 	.data		= &afs_bkvolpref, 
+ 	.maxlen		= sizeof(afs_int32), 
+@@ -80,7 +104,11 @@
+ 
+ static ctl_table fs_sysctl_table[] = {
+     {
++#if defined(SYSCTL_TABLE_CHECKING)
++	.ctl_name 	= CTL_UNNUMBERED, 
++#else
+ 	.ctl_name	= 1, 
++#endif
+ 	.procname	= "afs", 
+ 	.mode		= 0555, 
+ 	.child		= afs_sysctl_table
+--- openafs.orig/src/afs/LINUX/osi_vfsops.c
++++ openafs/src/afs/LINUX/osi_vfsops.c
+@@ -16,7 +16,7 @@
+ #include "afs/param.h"
+ 
+ RCSID
+-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.26 2007/10/15 12:42:26 shadow Exp $");
++    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.28 2007/11/23 13:45:04 shadow Exp $");
+ 
+ #define __NO_VERSION__		/* don't define kernel_version in module.h */
+ #include <linux/module.h> /* early to avoid printf->printk mapping */
+@@ -295,8 +295,12 @@
+ #if defined(HAVE_KMEM_CACHE_T)
+ init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+ #else
++#if defined(KMEM_CACHE_INIT)
++init_once(struct kmem_cache * cachep, void * foo)
++#else
+ init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+ #endif
++#endif
+ {
+     struct vcache *vcp = (struct vcache *) foo;
+ 
+@@ -531,8 +535,11 @@
+     ip->i_size = vp->va_size;
+ #if defined(AFS_LINUX26_ENV)
+     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
++    ip->i_atime.tv_nsec = 0;
+     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
++    ip->i_mtime.tv_nsec = 0;
+     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
++    ip->i_ctime.tv_nsec = 0;
+ #else
+     ip->i_atime = vp->va_atime.tv_sec;
+     ip->i_mtime = vp->va_mtime.tv_sec;
+--- openafs.orig/src/afs/LINUX/osi_vnodeops.c
++++ openafs/src/afs/LINUX/osi_vnodeops.c
+@@ -22,7 +22,7 @@
+ #include "afs/param.h"
+ 
+ RCSID
+-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.57 2007/10/15 12:42:26 shadow Exp $");
++    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.59 2007/11/06 18:35:32 shadow Exp $");
+ 
+ #include "afs/sysincludes.h"
+ #include "afsincludes.h"
+@@ -643,6 +643,10 @@
+ #if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
+   .sendfile =   generic_file_sendfile,
+ #endif
++#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
++  .splice_write = generic_file_splice_write,
++  .splice_read = generic_file_splice_read,
++#endif
+   .release =	afs_linux_release,
+   .fsync =	afs_linux_fsync,
+   .lock =	afs_linux_lock,
+@@ -878,6 +882,15 @@
+     AFS_GLOCK();
+     (void) afs_InactiveVCache(vcp, NULL);
+     AFS_GUNLOCK();
++#ifdef DCACHE_NFSFS_RENAMED
++#ifdef AFS_LINUX26_ENV
++    spin_lock(&dp->d_lock);
++#endif
++    dp->d_flags &= ~DCACHE_NFSFS_RENAMED;   
++#ifdef AFS_LINUX26_ENV
++    spin_unlock(&dp->d_lock);
++#endif
++#endif
+ 
+     iput(ip);
+ }
+@@ -1095,6 +1108,15 @@
+             }
+             tvc->uncred = credp;
+ 	    tvc->states |= CUnlinked;
++#ifdef DCACHE_NFSFS_RENAMED
++#ifdef AFS_LINUX26_ENV
++	    spin_lock(&dp->d_lock);
++#endif
++	    dp->d_flags |= DCACHE_NFSFS_RENAMED;   
++#ifdef AFS_LINUX26_ENV
++	    spin_unlock(&dp->d_lock);
++#endif
++#endif
+ 	} else {
+ 	    osi_FreeSmallSpace(__name);	
+ 	}
+--- openafs.orig/src/afs/sysincludes.h
++++ openafs/src/afs/sysincludes.h
+@@ -75,6 +75,9 @@
+ #if defined(LINUX_KEYRING_SUPPORT)
+ #include <linux/rwsem.h>
+ #include <linux/key.h>
++#if defined(KEY_TYPE_H_EXISTS)
++#include <linux/key-type.h>
++#endif
+ #ifndef KEY_ALLOC_IN_QUOTA
+ #define KEY_ALLOC_IN_QUOTA 1
+ #endif
+--- openafs.orig/src/cf/linux-test1.m4
++++ openafs/src/cf/linux-test1.m4
+@@ -2,9 +2,12 @@
+ #                 [ACTION-IF-SUCCESS], [ACTION-IF-FAILURE])
+ #
+ AC_DEFUN([AC_TRY_KBUILD26],[  rm -fr conftest.dir
++  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
++    CFLAGS_PREFIX='EXTRA_'
++  fi
+   if mkdir conftest.dir &&
+     cat >conftest.dir/Makefile <<_ACEOF &&
+-CFLAGS += $CPPFLAGS
++${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+ 
+ obj-m += conftest.o
+ _ACEOF
+@@ -65,3 +68,16 @@
+     [],:,AC_MSG_RESULT(no)
+     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
+   AC_MSG_RESULT(yes)])
++
++AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
++  AC_MSG_CHECKING([if linux kbuild requires EXTRA_CFLAGS])
++  save_CPPFLAGS="$CPPFLAGS"
++  CPPFLAGS=-Wall
++  AC_TRY_KBUILD(
++[#include <linux/sched.h>
++#include <linux/fs.h>],
++    [],
++    ac_linux_kbuild_requires_extra_cflags=no,
++    ac_linux_kbuild_requires_extra_cflags=yes)
++    CPPFLAGS="$save_CPPFLAGS"
++    AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
+--- openafs.orig/src/cf/linux-test4.m4
++++ openafs/src/cf/linux-test4.m4
+@@ -894,3 +894,59 @@
+       ac_cv_linux_fs_struct_fop_has_sendfile=no)])
+   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
+ 
++AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
++  AC_MSG_CHECKING([for splice_write and splice_read in struct file_operations])
++  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_splice], [
++    AC_TRY_KBUILD(
++[#include <linux/fs.h>],
++[struct file_operations _fop;
++_fop.splice_write(NULL, NULL, NULL, 0, 0);
++_fop.splice_read(NULL, NULL, NULL, 0, 0);],
++      ac_cv_linux_fs_struct_fop_has_splice=yes,
++      ac_cv_linux_fs_struct_fop_has_splice=no)])
++  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
++
++AC_DEFUN([LINUX_KEY_TYPE_H_EXISTS], [
++  AC_MSG_CHECKING([whether linux/key-type.h exists])
++  AC_CACHE_VAL([ac_cv_linux_key_type_h_exists], [
++    AC_TRY_KBUILD(
++[#include <linux/key-type.h>],
++[return;],
++      ac_cv_linux_key_type_h_exists=yes,
++      ac_cv_linux_key_type_h_exists=no)])
++  AC_MSG_RESULT($ac_cv_linux_key_type_h_exists)])
++
++AC_DEFUN([LINUX_HAVE_CURRENT_KERNEL_TIME], [
++  AC_MSG_CHECKING([for current_kernel_time()])
++  AC_CACHE_VAL([ac_cv_linux_have_current_kernel_time], [
++    AC_TRY_KBUILD(
++[#include <linux/time.h>],
++[struct timespec s = current_kernel_time();],
++      ac_cv_linux_have_current_kernel_time=yes,
++      ac_cv_linux_have_current_kernel_time=no)])
++  AC_MSG_RESULT($ac_cv_linux_have_current_kernel_time)])
++
++AC_DEFUN([LINUX_KMEM_CACHE_INIT], [
++  AC_MSG_CHECKING([for new kmem_cache init function parameters])
++  AC_CACHE_VAL([ac_cv_linux_kmem_cache_init], [
++    AC_TRY_KBUILD(
++[#include <linux/slab.h>],
++[extern struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
++                        unsigned long,
++                        void (*)(struct kmem_cache *, void *));
++return;],
++      ac_cv_linux_kmem_cache_init=yes,
++      ac_cv_linux_kmem_cache_init=no)])
++  AC_MSG_RESULT($ac_cv_linux_kmem_cache_init)])
++
++AC_DEFUN([LINUX_SYSCTL_TABLE_CHECKING], [
++  AC_MSG_CHECKING([for sysctl table checking])
++  AC_CACHE_VAL([ac_cv_linux_sysctl_table_checking], [
++    AC_TRY_KBUILD(
++[#include <linux/sysctl.h>],
++[extern int sysctl_check_table(struct ctl_table *t);
++sysctl_check_table(NULL);],
++      ac_cv_linux_sysctl_table_checking=yes,
++      ac_cv_linux_sysctl_table_checking=no)])
++  AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
++
