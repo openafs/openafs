@@ -1,4 +1,4 @@
-openafs (1.4.6.dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.6.dfsg1-1) unstable; urgency=low
 
   * New upstream release.
     - Fixes multiple serious problems with the file server.
