@@ -83,7 +83,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.18 2007/10/24 15:37:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.18.2.2 2007/12/13 20:57:11 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -493,7 +493,7 @@ CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
 	CcdelB++;
     *cbp = cb->cnext;
     FreeCB(cb);
-    if (deletefe && (--fe->ncbs == 0))
+    if ((--fe->ncbs == 0) && deletefe)
 	FDel(fe);
     return 0;
 }
@@ -1030,6 +1030,7 @@ DeleteFileCallBacks(AFSFid * fid)
 	TDel(cb);
 	HDel(cb);
 	FreeCB(cb);
+	fe->ncbs--;
     }
     FDel(fe);
     H_UNLOCK;
@@ -1860,7 +1861,7 @@ ReadDump(char *file)
     read(fd, &tfirst, sizeof(tfirst));
     read(fd, &freelisthead, sizeof(freelisthead));
     CB = ((struct CallBack
-	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
+	   *)(calloc(cbstuff.nblks, sizeof(struct CallBack)))) - 1;
     FE = ((struct FileEntry
 	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
     CBfree = (struct CallBack *)itocb(freelisthead);

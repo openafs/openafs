@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.19 2007/01/12 05:23:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.19.2.1 2007/12/13 21:00:43 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -698,6 +698,9 @@ ShutDownAndCore(int dopanic)
 		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	}
     }
+
+    if (dopanic)
+	assert(0);
 
     exit(0);
 
