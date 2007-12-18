@@ -12,12 +12,15 @@ openafs (1.4.6.dfsg1-1) UNRELEASED; urgency=low
   * Build bosserver with --enable-bos-new-config.  On startup, if
     BosConfig.new exists, it will be renamed to BosConfig before the
     configuration is read.  (Closes: #453398)
+  * Add a comment to /etc/openafs/afs.conf.client that the file is managed
+    by debconf.  (Closes: #447183)
   * Add more debugging and bug reporting instructions to README.Debian.
   * Mention in README.Debian that the server is built with supergroups
     enabled and with the multiple local realm patch.  (Closes: #453399)
+  * Support reconfigure in postinst.
   * Update to standards version 3.7.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 18:28:35 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Dec 2007 18:33:49 -0800
 
 openafs (1.4.5.dfsg1-1) unstable; urgency=low
 
