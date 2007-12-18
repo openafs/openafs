@@ -11,3 +11,4 @@ find-core-files
 ktc-prototypes
 afs-man-name
 linux-2.6.24
+alloc-vnode
