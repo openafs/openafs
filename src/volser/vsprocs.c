@@ -141,6 +141,16 @@ do { \
 	{ if (verbose) { fprintf(STDOUT, (es), (p1), (p2), (p3)); fflush(STDOUT); } }
 #define VDONE \
 	{ if (verbose) { fprintf(STDOUT, " done\n"); fflush(STDOUT); } }
+#define VEPRINT(es) \
+	{ if (verbose) { fprintf(STDERR, (es)); fflush(STDERR); } }
+#define VEPRINT1(es, p) \
+	{ if (verbose) { fprintf(STDERR, (es), (p)); fflush(STDERR); } }
+#define VEPRINT2(es, p1, p2) \
+	{ if (verbose) { fprintf(STDERR, (es), (p1), (p2)); fflush(STDERR); } }
+#define VEPRINT3(es, p1, p2, p3) \
+	{ if (verbose) { fprintf(STDERR, (es), (p1), (p2), (p3)); fflush(STDERR); } }
+#define VEDONE \
+	{ if (verbose) { fprintf(STDERR, " done\n"); fflush(STDERR); } }
 
 
 
@@ -3845,39 +3855,39 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     (void)signal(SIGINT, dump_sig_handler);
 
     if (!fromdate) {
-	VPRINT("Full Dump ...\n");
+	VEPRINT("Full Dump ...\n");
     } else {
-	VPRINT1("Incremental Dump (as of %.24s)...\n",
+	VEPRINT1("Incremental Dump (as of %.24s)...\n",
 		ctime(&tmv));
     }
 
     /* get connections to the servers */
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
 
-    VPRINT1("Starting transaction on volume %u...", afromvol);
+    VEPRINT1("Starting transaction on volume %u...", afromvol);
     code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
     EGOTO1(error_exit, code,
 	   "Could not start transaction on the volume %u to be dumped\n",
 	   afromvol);
-    VDONE;
+    VEDONE;
 
     fromcall = rx_NewCall(fromconn);
 
-    VPRINT1("Starting volume dump on volume %u...", afromvol);
+    VEPRINT1("Starting volume dump on volume %u...", afromvol);
     if (flags & VOLDUMPV2_OMITDIRS) 
 	code = StartAFSVolDumpV2(fromcall, fromtid, fromdate, flags);
     else
       retryold:
 	code = StartAFSVolDump(fromcall, fromtid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
-    VDONE;
+    VEDONE;
 
-    VPRINT1("Dumping volume %u...", afromvol);
+    VEPRINT1("Dumping volume %u...", afromvol);
     code = DumpFunction(fromcall, rock);
     if (code == RXGEN_OPCODE) 
 	goto error_exit;
     EGOTO(error_exit, code, "Error while dumping volume \n");
-    VDONE;
+    VEDONE;
 
   error_exit:
     if (fromcall) {
@@ -3888,7 +3898,7 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	    error = code;
     }
     if (fromtid) {
-	VPRINT1("Ending transaction on volume %u...", afromvol);
+	VEPRINT1("Ending transaction on volume %u...", afromvol);
 	code = AFSVolEndTrans(fromconn, fromtid, &rcode);
 	if (code || rcode) {
 	    fprintf(STDERR, "Could not end transaction on the volume %lu\n",
@@ -3896,7 +3906,7 @@ UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	    if (!error)
 		error = (code ? code : rcode);
 	}
-	VDONE;
+	VEDONE;
     }
     if (fromconn)
 	rx_DestroyConnection(fromconn);
@@ -3936,41 +3946,41 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
     (void)signal(SIGINT, dump_sig_handler);
 
     if (!fromdate) {
-	VPRINT("Full Dump ...\n");
+	VEPRINT("Full Dump ...\n");
     } else {
-	VPRINT1("Incremental Dump (as of %.24s)...\n",
+	VEPRINT1("Incremental Dump (as of %.24s)...\n",
 		ctime(&tmv));
     }
 
     /* get connections to the servers */
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
 
-    VPRINT1("Starting transaction on volume %u...", afromvol);
+    VEPRINT1("Starting transaction on volume %u...", afromvol);
     code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
     EGOTO1(error_exit, code,
 	   "Could not start transaction on the volume %u to be dumped\n",
 	   afromvol);
-    VDONE;
+    VEDONE;
 
     /* Get a clone id */
-    VPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
+    VEPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
     code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &clonevol);
     EGOTO1(error_exit, code,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
-    VDONE;
+    VEDONE;
 
     /* Do the clone. Default flags on clone are set to delete on salvage and out of service */
-    VPRINT2("Cloning source volume %u to clone volume %u...", afromvol,
+    VEPRINT2("Cloning source volume %u to clone volume %u...", afromvol,
 	    clonevol);
     strcpy(vname, "dump-clone-temp");
     code =
 	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &clonevol);
     EGOTO1(error_exit, code, "Failed to clone the source volume %u\n",
 	   afromvol);
-    VDONE;
+    VEDONE;
 
-    VPRINT1("Ending the transaction on the volume %u ...", afromvol);
+    VEPRINT1("Ending the transaction on the volume %u ...", afromvol);
     rcode = 0;
     code = AFSVolEndTrans(fromconn, fromtid, &rcode);
     fromtid = 0;
@@ -3978,49 +3988,49 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 	code = rcode;
     EGOTO1(error_exit, code,
 	   "Failed to end the transaction on the volume %u\n", afromvol);
-    VDONE;
+    VEDONE;
 
 
-    VPRINT1("Starting transaction on the cloned volume %u ...", clonevol);
+    VEPRINT1("Starting transaction on the cloned volume %u ...", clonevol);
     code =
 	AFSVolTransCreate(fromconn, clonevol, afrompart, ITOffline,
 			  &clonetid);
     EGOTO1(error_exit, code,
 	   "Failed to start a transaction on the cloned volume%u\n",
 	   clonevol);
-    VDONE;
+    VEDONE;
 
-    VPRINT1("Setting flags on cloned volume %u ...", clonevol);
+    VEPRINT1("Setting flags on cloned volume %u ...", clonevol);
     code = AFSVolSetFlags(fromconn, clonetid, VTDeleteOnSalvage | VTOutOfService);	/*redundant */
     EGOTO1(error_exit, code, "Could not set falgs on the cloned volume %u\n",
 	   clonevol);
-    VDONE;
+    VEDONE;
 
 
     fromcall = rx_NewCall(fromconn);
 
-    VPRINT1("Starting volume dump from cloned volume %u...", clonevol);
+    VEPRINT1("Starting volume dump from cloned volume %u...", clonevol);
     if (flags & VOLDUMPV2_OMITDIRS) 
 	code = StartAFSVolDumpV2(fromcall, clonetid, fromdate, flags);
     else
 	code = StartAFSVolDump(fromcall, clonetid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
-    VDONE;
+    VEDONE;
 
-    VPRINT1("Dumping volume %u...", afromvol);
+    VEPRINT1("Dumping volume %u...", afromvol);
     code = DumpFunction(fromcall, rock);
     EGOTO(error_exit, code, "Error while dumping volume \n");
-    VDONE;
+    VEDONE;
 
   error_exit:
     /* now delete the clone */
-    VPRINT1("Deleting the cloned volume %u ...", clonevol);
+    VEPRINT1("Deleting the cloned volume %u ...", clonevol);
     code = AFSVolDeleteVolume(fromconn, clonetid);
     if (code) {
 	fprintf(STDERR, "Failed to delete the cloned volume %lu\n",
 		(unsigned long)clonevol);
     } else {
-	VDONE;
+	VEDONE;
     }
 
     if (fromcall) {
@@ -4032,7 +4042,7 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 	}
     }
     if (clonetid) {
-	VPRINT1("Ending transaction on cloned volume %u...", clonevol);
+	VEPRINT1("Ending transaction on cloned volume %u...", clonevol);
 	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 	if (code || rcode) {
 	    fprintf(STDERR,
@@ -4041,7 +4051,7 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
 	    if (!error)
 		error = (code ? code : rcode);
 	}
-	VDONE;
+	VEDONE;
     }
     if (fromconn)
 	rx_DestroyConnection(fromconn);
