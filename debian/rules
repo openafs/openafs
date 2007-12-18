@@ -80,9 +80,10 @@ configure-stamp: patch
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
 	    --sysconfdir=/etc --libexecdir=/usr/lib \
-	    --localstatedir=/var/lib --enable-supergroups \
-	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
-	    --with-krb5-conf=/usr/bin/krb5-config \
+	    --localstatedir=/var/lib --with-krb5-conf=/usr/bin/krb5-config \
+	    --enable-supergroups --enable-largefile-fileserver \
+	    --enable-bos-new-config \
+	    --enable-debug --enable-lwp-debug \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	touch configure-stamp
