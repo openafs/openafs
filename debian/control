@@ -5,7 +5,7 @@ Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 5), libncurses5-dev, libpam0g-dev, bison,
  flex, perl, comerr-dev, libkrb5-dev, autoconf, automake, quilt (>= 0.40)
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 Homepage: http://www.openafs.org/
 
 Package: openafs-client
