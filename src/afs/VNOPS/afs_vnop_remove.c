@@ -418,7 +418,11 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
     afs_PutFakeStat(&fakestate);
+#ifndef AFS_DARWIN80_ENV
+    /* we can't track by thread, it's not exported in the KPI; only do
+       this on !macos */
     osi_Assert(!WriteLocked(&adp->lock) || (adp->lock.pid_writer != MyPidxx));
+#endif
     return code;
 }
 
