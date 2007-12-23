@@ -1922,13 +1922,11 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 scp->fileType == CM_SCACHETYPE_DFSLINK ||
                code == CM_ERROR_NOSUCHPATH &&
                 scp->fileType == CM_SCACHETYPE_INVALID) {
+
         cp = ioctlp->outDatap;
-        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), spacep->data);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), scp->mountPointStringp);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
-        cm_FreeSpace(spacep);
-        if (newRootScp != NULL)
-            cm_ReleaseSCache(newRootScp);
         code = 0;
     }
 
