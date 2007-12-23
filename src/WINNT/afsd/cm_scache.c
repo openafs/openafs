@@ -638,7 +638,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     long code;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
-    char* mp = NULL;
     int special; // yj: boolean variable to test if file is on root.afs
     int isRoot;
     extern cm_fid_t cm_rootFid;
@@ -695,14 +694,24 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
 	  
     if (cm_freelanceEnabled && special) {
+        char mp[MOUNTPOINTLEN] = "";
+        afs_uint32 fileType;
+
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
-        if (fidp->vnode > 1 && fidp->vnode <= cm_noLocalMountPoints + 2) {
-	    lock_ObtainMutex(&cm_Freelance_Lock);
-            mp =(cm_localMountPoints+fidp->vnode-2)->mountPointStringp;
-            lock_ReleaseMutex(&cm_Freelance_Lock);
+        lock_ObtainMutex(&cm_Freelance_Lock);
+        if (fidp->vnode >= 2 && fidp->vnode - 2 < cm_noLocalMountPoints) {
+            strncpy(mp,(cm_localMountPoints+fidp->vnode-2)->mountPointStringp, MOUNTPOINTLEN);
+            mp[MOUNTPOINTLEN-1] = '\0';
+            if ( !strnicmp(mp, "msdfs:", strlen("msdfs:")) )
+                fileType = CM_SCACHETYPE_DFSLINK;
+            else
+                fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
         } else {
-            mp = "";
+            fileType = CM_SCACHETYPE_INVALID;
+
         }
+        lock_ReleaseMutex(&cm_Freelance_Lock);
+
         scp = cm_GetNewSCache();
 	if (scp == NULL) {
 	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
@@ -733,18 +742,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->flags |= CM_SCACHEFLAG_INHASH;
         scp->refCount = 1;
 	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%x", scp);
-        if (fidp->vnode > 1 && fidp->vnode <= cm_noLocalMountPoints + 2)
-            scp->fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
-        else 
-            scp->fileType = CM_SCACHETYPE_INVALID;
-
-        lock_ObtainMutex(&cm_Freelance_Lock);
+        scp->fileType = fileType;
         scp->length.LowPart = (DWORD)strlen(mp)+4;
         scp->length.HighPart = 0;
         strncpy(scp->mountPointStringp,mp,MOUNTPOINTLEN);
-        scp->mountPointStringp[MOUNTPOINTLEN-1] = '\0';
-        lock_ReleaseMutex(&cm_Freelance_Lock);
-
         scp->owner=0x0;
         scp->unixModeBits=0777;
         scp->clientModTime=FakeFreelanceModTime;
@@ -1502,7 +1503,9 @@ void cm_MergeStatus(cm_scache_t *dscp,
         statusp->Group = 0;
         statusp->SyncCounter = 0;
         statusp->dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
-	statusp->errorCode = 0;
+        statusp->errorCode = 0;
+
+        buf_ForceDataVersion(scp, scp->dataVersion, cm_data.fakeDirVersion);
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
@@ -1707,6 +1710,9 @@ void cm_DiscardSCache(cm_scache_t *scp)
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
+
+    if (scp->fileType == CM_SCACHETYPE_DFSLINK)
+        cm_VolStatus_Invalidate_DFS_Mapping(scp);
 
     /* Force mount points and symlinks to be re-evaluated */
     scp->mountPointStringp[0] = '\0';
