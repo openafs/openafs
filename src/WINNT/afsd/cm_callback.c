@@ -1842,7 +1842,7 @@ void cm_CheckCBExpiration(void)
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
-    now = osi_Time();
+    now = time(NULL);
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
