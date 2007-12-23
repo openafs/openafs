@@ -492,7 +492,7 @@ cm_SuspendSCache(void)
      * without network, the stat cache item will still be
      * considered valid.
      */
-    now = osi_Time();
+    now = time(NULL);
 
     lock_ObtainWrite(&cm_scacheLock);
     for ( scp = cm_data.allSCachesp; scp; scp = scp->allNextp ) {
