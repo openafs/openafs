@@ -474,7 +474,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
     long code;
     osi_hyper_t thyper;
     cm_buf_t *bufferp;
-    cm_dirEntry_t *dep;
+    cm_dirEntry_t *dep = 0;
     unsigned short *hashTable;
     unsigned int i, idx;
     int BeyondPage = 0, HaveDot = 0, HaveDotDot = 0;
@@ -573,7 +573,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 {
     char *tp;
     long code;
-    cm_dirEntry_t *dep;
+    cm_dirEntry_t *dep = 0;
     cm_buf_t *bufferp;
     long temp;
     osi_hyper_t dirLength;
@@ -1717,6 +1717,9 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         if (!linkScp->mountPointStringp[0]) {
             strncpy(linkScp->mountPointStringp, bufp->datap, temp);
             linkScp->mountPointStringp[temp] = 0;	/* null terminate */
+
+            if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
+                 linkScp->fileType = CM_SCACHETYPE_DFSLINK;
         }
         buf_Release(bufp);
     }	/* don't have sym link contents cached */
@@ -1739,9 +1742,12 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
     char *linkp;
     cm_space_t *tsp;
 
+    *newRootScpp = NULL;
+    *newSpaceBufferp = NULL;
+
     lock_ObtainMutex(&linkScp->mx);
     code = cm_HandleLink(linkScp, userp, reqp);
-    if (code) 
+    if (code)
         goto done;
 
     /* if we may overflow the buffer, bail out; buffer is signficantly
@@ -1778,13 +1784,12 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
         } else {
             linkScp->fileType = CM_SCACHETYPE_DFSLINK;
             strcpy(tsp->data, linkp);
-            *newRootScpp = NULL;
             code = CM_ERROR_PATH_NOT_COVERED;
         }
-    } else if ( !strnicmp(linkp, "msdfs:", (len = (long)strlen("msdfs:"))) ) {
+    } else if ( linkScp->fileType == CM_SCACHETYPE_DFSLINK ||
+                !strnicmp(linkp, "msdfs:", (len = (long)strlen("msdfs:"))) ) {
         linkScp->fileType = CM_SCACHETYPE_DFSLINK;
         strcpy(tsp->data, linkp);
-        *newRootScpp = NULL;
         code = CM_ERROR_PATH_NOT_COVERED;
     } else if (*linkp == '\\' || *linkp == '/') {
 #if 0   
@@ -1800,19 +1805,24 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
          */
         linkScp->fileType = CM_SCACHETYPE_INVALID;
         strcpy(tsp->data, linkp);
-        *newRootScpp = NULL;
         code = CM_ERROR_NOSUCHPATH;
 #endif  
     } else {
         /* a relative link */
         strcpy(tsp->data, linkp);
-        *newRootScpp = NULL;
     }
     if (pathSuffixp[0] != 0) {	/* if suffix string is non-null */
         strcat(tsp->data, "\\");
         strcat(tsp->data, pathSuffixp);
     }
-    *newSpaceBufferp = tsp;
+    if (code == 0)
+        *newSpaceBufferp = tsp;
+    else {
+        cm_FreeSpace(tsp);
+
+        if (code == CM_ERROR_PATH_NOT_COVERED && reqp->tidPathp && reqp->relPathp)
+            cm_VolStatus_Notify_DFS_Mapping(linkScp, reqp->tidPathp, reqp->relPathp);
+    }
 
   done:
     lock_ReleaseMutex(&linkScp->mx);

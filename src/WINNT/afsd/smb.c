@@ -2630,23 +2630,12 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_PATH_NOT_COVERED) {
         NTStatus = 0xC0000257L; /* Path Not Covered */
     } 
-#ifdef COMMENT
     else if (code == CM_ERROR_ALLBUSY) {
-        NTStatus = 0xC00000BFL; /* Network Busy */
+        NTStatus = 0xC000022DL; /* Retry */
     } 
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
-        NTStatus = 0xC0000350L; /* Remote Host Down */
-    } 
-#else
-    /* we do not want to be telling the SMB/CIFS client that
-     * the AFS Client Service is busy or down.  
-     */
-    else if (code == CM_ERROR_ALLBUSY || 
-             code == CM_ERROR_ALLOFFLINE ||
-	     code == CM_ERROR_ALLDOWN) {
         NTStatus = 0xC00000BEL; /* Bad Network Path */
-    }
-#endif
+    } 
     else if (code == RXKADUNKNOWNKEY) {
 	NTStatus = 0xC0000322L; /* Bad Kerberos key */
     } 
@@ -3611,23 +3600,31 @@ int smb_Get8Dot3MaskFromPath(unsigned char *maskp, unsigned char *pathp)
 
     /* mask starts out all blanks */
     memset(maskp, ' ', 11);
+    maskp[11] = '\0';
 
     /* find last backslash, or use whole thing if there is none */
     tp = strrchr(pathp, '\\');
-    if (!tp) tp = pathp;
-    else tp++;	/* skip slash */
+    if (!tp) 
+        tp = pathp;
+    else 
+        tp++;	/* skip slash */
         
     up = maskp;
 
     /* names starting with a dot are illegal */
-    if (*tp == '.') valid8Dot3 = 0;
+    if (*tp == '.') 
+        valid8Dot3 = 0;
 
     for(i=0;; i++) {
         tc = *tp++;
-        if (tc == 0) return valid8Dot3;
-        if (tc == '.' || tc == '"') break;
-        if (i < 8) *up++ = tc;
-        else valid8Dot3 = 0;
+        if (tc == 0) 
+            return valid8Dot3;
+        if (tc == '.' || tc == '"') 
+            break;
+        if (i < 8) 
+            *up++ = tc;
+        else
+            valid8Dot3 = 0;
     }
         
     /* if we get here, tp point after the dot */
@@ -3706,7 +3703,7 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 {
     unsigned char *pathp;
     unsigned char *tp;
-    unsigned char mask[11];
+    unsigned char mask[12];
     unsigned char *statBlockp;
     unsigned char initStatBlock[21];
     int statLen;
@@ -3772,8 +3769,10 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     return 0;
 }       
 
-long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
-                             cm_user_t *userp, cm_req_t *reqp)
+static long 
+smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
+                        char * tidPathp, char * relPathp,
+                        cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
     cm_scache_t *scp;
@@ -3783,13 +3782,20 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     char attr;
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
+    char path[AFSPATHMAX];
 
     for (patchp = *dirPatchespp; patchp; patchp =
          (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
 
         dptr = patchp->dptr;
 
+        snprintf(path, AFSPATHMAX, "%s\\%s", relPathp ? relPathp : "", patchp->dep->name);
+        reqp->relPathp = path;
+        reqp->tidPathp = tidPathp;
+
         code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        reqp->relPathp = reqp->tidPathp = NULL;
+
         if (code) {
             if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
                 *dptr++ = SMB_ATTR_HIDDEN;
@@ -3853,7 +3859,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     char *tp;
     long code = 0;
     char *pathp;
-    cm_dirEntry_t *dep;
+    cm_dirEntry_t *dep = 0;
     int maxCount;
     smb_dirListPatch_t *dirListPatchesp;
     smb_dirListPatch_t *curPatchp;
@@ -3876,7 +3882,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     char shortName[13];
     char *actualName;
     char *shortNameEnd;
-    char mask[11];
+    char mask[12];
     int returnedNames;
     long nextEntryCookie;
     int numDirChunks;		/* # of 32 byte dir chunks in this entry */
@@ -3887,7 +3893,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     int starPattern;
     int rootPath = 0;
     int caseFold;
-    char *tidPathp;
+    char *tidPathp = 0;
     cm_req_t req;
     cm_fid_t fid;
     int fileType;
@@ -3938,7 +3944,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         dsp = smb_NewDirSearch(0);
         dsp->attribute = attribute;
         smb_Get8Dot3MaskFromPath(mask, pathp);
-        memcpy(dsp->mask, mask, 11);
+        memcpy(dsp->mask, mask, 12);
 
         /* track if this is likely to match a lot of entries */
         if (smb_IsStarMask(mask)) 
@@ -3964,7 +3970,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
          */
         memcpy(&clientCookie, &inCookiep[17], 4);
 
-        memcpy(mask, dsp->mask, 11);
+        memcpy(mask, dsp->mask, 12);
 
         /* assume we're doing a star match if it has continued for more
          * than one call.
@@ -3995,17 +4001,21 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             smb_ReleaseDirSearch(dsp);
             return CM_ERROR_NOFILES;
         }
+        strcpy(dsp->tidPath, tidPathp ? tidPathp : "/");
+        strcpy(dsp->relPath, spacep->data);
+
         code = cm_NameI(cm_data.rootSCachep, spacep->data,
                         caseFold | CM_FLAG_FOLLOW, userp, tidPathp, &req, &scp);
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, spacep->data);
                 cm_ReleaseSCache(scp);
                 lock_ReleaseMutex(&dsp->mx);
                 cm_ReleaseUser(userp);
                 smb_DeleteDirSearch(dsp);
                 smb_ReleaseDirSearch(dsp);
-                if ( WANTS_DFS_PATHNAMES(inp) )
+                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
                     return CM_ERROR_BADSHARENAME;
@@ -4129,7 +4139,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * the status info for files in the dir.
              */
             if (starPattern) {
-                smb_ApplyDirListPatches(&dirListPatchesp, userp, &req);
+                smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
                 lock_ObtainMutex(&scp->mx);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                      LargeIntegerGreaterThanOrEqualTo(thyper, 
@@ -4352,7 +4362,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    smb_ApplyDirListPatches(&dirListPatchesp, userp, &req);
+    smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
 
     /* special return code for unsuccessful search */
     if (code == 0 && dataLength < 21 && returnedNames == 0)
@@ -4439,9 +4449,10 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         
 #ifdef DFS_SUPPORT
     if (newScp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newScp, tidPathp, pathp);
         cm_ReleaseSCache(newScp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -4526,9 +4537,10 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
 #ifdef DFS_SUPPORT
     if (newScp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newScp, tidPathp, pathp);
         cm_ReleaseSCache(newScp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -4660,7 +4672,8 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                if ( WANTS_DFS_PATHNAMES(inp) )
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
                     return CM_ERROR_BADSHARENAME;
@@ -4694,9 +4707,10 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         
 #ifdef DFS_SUPPORT
     if (newScp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newScp, tidPathp, pathp);
         cm_ReleaseSCache(newScp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -4849,9 +4863,10 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 #ifdef DFS_SUPPORT
     if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, pathp);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -4963,11 +4978,11 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 
         cm_DirEntryListAdd(dep->name, &rockp->matches);
 
-            rockp->any = 1;
+        rockp->any = 1;
 
-            /* If we made a case sensitive exact match, we might as well quit now. */
-            if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
-                code = CM_ERROR_STOPNOW;
+        /* If we made a case sensitive exact match, we might as well quit now. */
+        if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
+            code = CM_ERROR_STOPNOW;
         else
             code = 0;
     }
@@ -5025,9 +5040,10 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp,spacep->data);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5186,9 +5202,10 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
         
 #ifdef DFS_SUPPORT
     if (oldDscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->data);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5207,10 +5224,11 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
 
 #ifdef DFS_SUPPORT
     if (newDscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->data);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseSCache(newDscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5386,9 +5404,10 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
         
 #ifdef DFS_SUPPORT
     if (oldDscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->data);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5406,10 +5425,11 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
 
 #ifdef DFS_SUPPORT
     if (newDscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->data);
         cm_ReleaseSCache(newDscp);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5611,9 +5631,10 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -6944,9 +6965,10 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -7068,9 +7090,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;

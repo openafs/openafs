@@ -114,7 +114,7 @@ extern long rx_mtu;
 
 extern HANDLE WaitToTerminate;
 
-#undef  DFS_SUPPORT
+#define DFS_SUPPORT 1
 #define LOG_PACKET 1
 #undef  NOTSERVICE
 #define LOCK_TESTING 1

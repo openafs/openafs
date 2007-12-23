@@ -1068,10 +1068,21 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	if (vcp->flags & SMB_VCFLAG_USENT)
         {
             int policy = smb_FindShareCSCPolicy(shareName);
+            HKEY parmKey;
+            DWORD code;
+            DWORD dwAdvertiseDFS = 0, dwSize = sizeof(DWORD);
+
+            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                                 0, KEY_QUERY_VALUE, &parmKey);
+            if (code == ERROR_SUCCESS) {
+                code = RegQueryValueEx(parmKey, "AdvertiseDFS", NULL, NULL,
+                                       (BYTE *)&dwAdvertiseDFS, &dwSize);
+                if (code != ERROR_SUCCESS)
+                    dwAdvertiseDFS = 0;
+                RegCloseKey (parmKey);
+            }
             smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | 
-#ifdef DFS_SUPPORT
-                            SMB_SHARE_IS_IN_DFS |
-#endif
+                           (dwAdvertiseDFS ? SMB_SHARE_IS_IN_DFS : 0) |
                             (policy << 2));
         }
     } else {
@@ -2216,10 +2227,11 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         
 #ifdef DFS_SUPPORT
         if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             smb_FreeTran2Packet(outp);
-            if ( WANTS_DFS_PATHNAMES(p) )
+            if ( WANTS_DFS_PATHNAMES(p) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_BADSHARENAME;
@@ -2245,10 +2257,11 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     } else {
 #ifdef DFS_SUPPORT
         if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, lastNamep);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             smb_FreeTran2Packet(outp);
-            if ( WANTS_DFS_PATHNAMES(p) )
+            if ( WANTS_DFS_PATHNAMES(p) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_BADSHARENAME;
@@ -2621,6 +2634,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
+        DebugBreak();
         return CM_ERROR_PATH_NOT_COVERED;
     }
 #endif /* DFS_SUPPORT */
@@ -2764,7 +2778,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 if (code == 0) {
 #ifdef DFS_SUPPORT
                     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                        if ( WANTS_DFS_PATHNAMES(p) )
+                        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+                        if ( WANTS_DFS_PATHNAMES(p) || pnc )
                             code = CM_ERROR_PATH_NOT_COVERED;
                         else
                             code = CM_ERROR_BADSHARENAME;
@@ -2810,9 +2825,10 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 #ifdef DFS_SUPPORT
     if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, pathp);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(p) )
+        if ( WANTS_DFS_PATHNAMES(p) || pnc )
             code = CM_ERROR_PATH_NOT_COVERED;
         else
             code = CM_ERROR_BADSHARENAME;
@@ -2976,7 +2992,8 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	infoLevel != SMB_INFO_QUERY_ALL_EAS) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
+        smb_SendTran2Error(vcp, p, opx, 
+                           infoLevel == SMB_INFO_QUERY_ALL_EAS ? CM_ERROR_EAS_NOT_SUPPORTED : CM_ERROR_BAD_LEVEL);
         return 0;
     }
 
@@ -3034,7 +3051,8 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                 if (code == 0) {
 #ifdef DFS_SUPPORT
                     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                        if ( WANTS_DFS_PATHNAMES(p) )
+                        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+                        if ( WANTS_DFS_PATHNAMES(p) || pnc )
                             code = CM_ERROR_PATH_NOT_COVERED;
                         else
                             code = CM_ERROR_BADSHARENAME;
@@ -3156,7 +3174,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }               
     else if (infoLevel == SMB_INFO_QUERY_ALL_EAS) {
 	/* we don't support EAs */
-	code = CM_ERROR_INVAL;
+	code = CM_ERROR_EAS_NOT_SUPPORTED;
     }       
 
   done:
@@ -3569,11 +3587,14 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     long code = 0;
     int maxReferralLevel = 0;
     char requestFileName[1024] = "";
+    char referralPath[1024] = "";
     smb_tran2Packet_t *outp = 0;
     cm_user_t *userp = 0;
+    cm_scache_t *scp = 0;
+    cm_scache_t *dscp = 0;
     cm_req_t req;
     CPINFO CodePageInfo;
-    int i, nbnLen, reqLen;
+    int i, nbnLen, reqLen, refLen;
     int idx;
 
     cm_InitReq(&req);
@@ -3590,57 +3611,152 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     nbnLen = strlen(cm_NetbiosName);
     reqLen = strlen(requestFileName);
 
-    if (reqLen == nbnLen + 5 &&
-        requestFileName[0] == '\\' &&
+    if (reqLen > nbnLen + 2 && requestFileName[0] == '\\' &&
         !_strnicmp(cm_NetbiosName,&requestFileName[1],nbnLen) &&
-        requestFileName[nbnLen+1] == '\\' &&
-        (!_strnicmp("all",&requestFileName[nbnLen+2],3) || 
-	  !_strnicmp("*.",&requestFileName[nbnLen+2],2)))
+        requestFileName[nbnLen+1] == '\\') 
     {
-        USHORT * sp;
-        struct smb_v2_referral * v2ref;
-        outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, 2 * (reqLen + 8));
+        int found = 0;
 
-        sp = (USHORT *)outp->datap;
-        idx = 0;
-        sp[idx++] = reqLen;   /* path consumed */
-        sp[idx++] = 1;        /* number of referrals */
-        sp[idx++] = 0x03;     /* flags */
+        if (!_strnicmp("all",&requestFileName[nbnLen+2],3) ||
+             !_strnicmp("*.",&requestFileName[nbnLen+2],2)) 
+        {
+            found = 1;
+            strcpy(referralPath, requestFileName);
+            refLen = reqLen;
+        } else {
+            userp = smb_GetTran2User(vcp, p);
+            if (!userp) {
+                osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral unable to resolve user [%d]", p->uid);
+                code = CM_ERROR_BADSMB;
+                goto done;
+            }   
+
+            /* 
+             * We have a requested path.  Check to see if it is something 
+             * we know about.
+             */
+            code = cm_NameI(cm_data.rootSCachep, &requestFileName[nbnLen+2],
+                            CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                            userp, NULL, &req, &scp);
+            if (code == 0) {
+                /* Yes it is. */
+                found = 1;
+                strcpy(referralPath, requestFileName);
+                refLen = reqLen;
+            } else if (code == CM_ERROR_PATH_NOT_COVERED ) {
+                char temp[1024];
+                char pathName[1024];
+                char *lastComponent;
+                /* 
+                 * we have a msdfs link somewhere in the path
+                 * we should figure out where in the path the link is.
+                 * and return it.
+                 */
+                osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral PATH_NOT_COVERED [%s]", requestFileName);
+
+                strcpy(temp, &requestFileName[nbnLen+2]);
+
+                do {
+                    if (dscp) {
+                        cm_ReleaseSCache(dscp);
+                        dscp = 0;
+                    }
+                    if (scp) {
+                        cm_ReleaseSCache(scp);
+                        scp = 0;
+                    }
+                    smb_StripLastComponent(pathName, &lastComponent, temp);
+
+                    code = cm_NameI(cm_data.rootSCachep, pathName,
+                                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                                    userp, NULL, &req, &dscp);
+                    if (code == 0) {
+                        code = cm_NameI(dscp, ++lastComponent,
+                                        CM_FLAG_CASEFOLD,
+                                        userp, NULL, &req, &scp);
+                        if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK)
+                            break;
+                    }
+                } while (code == CM_ERROR_PATH_NOT_COVERED);
+
+                /* scp should now be the DfsLink we are looking for */
+                if (scp) {
+                    /* figure out how much of the input path was used */
+                    reqLen = nbnLen+2 + strlen(pathName) + 1 + strlen(lastComponent);
+
+                    strcpy(referralPath, &scp->mountPointStringp[strlen("msdfs:")]);
+                    refLen = strlen(referralPath);
+                    found = 1;
+                }
+            } else {
+                char shareName[MAX_PATH + 1];
+                char *p, *q;
+                /* we may have a sharename that is a volume reference */
+
+                for (p = &requestFileName[nbnLen+2], q = shareName; *p && *p != '\\'; p++, q++)
+                {
+                    *q = *p;
+                }
+                *q = '\0';
+                
+                if (smb_FindShare(vcp, vcp->usersp, shareName, &p)) {
+                    code = cm_NameI(cm_data.rootSCachep, "", 
+                                    CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                                    userp, p, &req, &scp);
+                    free(p);
+
+                    if (code == 0) {
+                        found = 1;
+                        strcpy(referralPath, requestFileName);
+                        refLen = reqLen;
+                    }
+                }
+            }
+        }
+        
+        if (found)
+        {
+            USHORT * sp;
+            struct smb_v2_referral * v2ref;
+            outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, 2 * (refLen + 8));
+
+            sp = (USHORT *)outp->datap;
+            idx = 0;
+            sp[idx++] = reqLen;   /* path consumed */
+            sp[idx++] = 1;        /* number of referrals */
+            sp[idx++] = 0x03;     /* flags */
 #ifdef DFS_VERSION_1
-        sp[idx++] = 1;        /* Version Number */
-        sp[idx++] = reqLen + 4;  /* Referral Size */ 
-        sp[idx++] = 1;        /* Type = SMB Server */
-        sp[idx++] = 0;        /* Do not strip path consumed */
-        for ( i=0;i<=reqLen; i++ )
-            sp[i+idx] = requestFileName[i];
+            sp[idx++] = 1;        /* Version Number */
+            sp[idx++] = refLen + 4;  /* Referral Size */ 
+            sp[idx++] = 1;        /* Type = SMB Server */
+            sp[idx++] = 0;        /* Do not strip path consumed */
+            for ( i=0;i<=refLen; i++ )
+                sp[i+idx] = referralPath[i];
 #else /* DFS_VERSION_2 */
-        sp[idx++] = 2;      /* Version Number */
-        sp[idx++] = sizeof(struct smb_v2_referral);     /* Referral Size */
-        idx += (sizeof(struct smb_v2_referral) / 2);
-        v2ref = (struct smb_v2_referral *) &sp[5];
-        v2ref->ServerType = 1;  /* SMB Server */
-        v2ref->ReferralFlags = 0x03;
-        v2ref->Proximity = 0;   /* closest */
-        v2ref->TimeToLive = 3600; /* seconds */
-        v2ref->DfsPathOffset = idx * 2;
-        v2ref->DfsAlternativePathOffset = idx * 2;
-        v2ref->NetworkAddressOffset = 0;
-        for ( i=0;i<=reqLen; i++ )
-            sp[i+idx] = requestFileName[i];
+            sp[idx++] = 2;      /* Version Number */
+            sp[idx++] = sizeof(struct smb_v2_referral);     /* Referral Size */
+            idx += (sizeof(struct smb_v2_referral) / 2);
+            v2ref = (struct smb_v2_referral *) &sp[5];
+            v2ref->ServerType = 1;  /* SMB Server */
+            v2ref->ReferralFlags = 0x03;
+            v2ref->Proximity = 0;   /* closest */
+            v2ref->TimeToLive = 3600; /* seconds */
+            v2ref->DfsPathOffset = idx * 2;
+            v2ref->DfsAlternativePathOffset = idx * 2;
+            v2ref->NetworkAddressOffset = 0;
+            for ( i=0;i<=refLen; i++ )
+                sp[i+idx] = referralPath[i];
 #endif
+        } 
     } else {
-        userp = smb_GetTran2User(vcp, p);
-        if (!userp) {
-            osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral unable to resolve user [%d]", p->uid);
-            code = CM_ERROR_BADSMB;
-            goto done;
-        }   
-
-		/* not done yet */
         code = CM_ERROR_NOSUCHPATH;
     }
-
+         
   done:
+    if (dscp)
+        cm_ReleaseSCache(dscp);
+    if (scp)
+        cm_ReleaseSCache(scp);
     if (userp)
         cm_ReleaseUser(userp);
     if (code == 0) 
@@ -3673,10 +3789,11 @@ smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_
     return CM_ERROR_BADOP;
 }
 
-long 
-smb_ApplyV3DirListPatches(cm_scache_t *dscp,
-	smb_dirListPatch_t **dirPatchespp, int infoLevel, cm_user_t *userp,
-	cm_req_t *reqp)
+static long 
+smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp, 
+                          char * tidPathp, char * relPathp, 
+                          int infoLevel, cm_user_t *userp,
+                          cm_req_t *reqp)
 {
     long code = 0;
     cm_scache_t *scp;
@@ -3691,6 +3808,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     smb_dirListPatch_t *npatchp;
     afs_uint32 rights;
     afs_int32 mustFake = 0;
+    char path[AFSPATHMAX];
 
     code = cm_FindACLCache(dscp, userp, &rights);
     if (code == 0 && !(rights & PRSFS_READ))
@@ -3710,7 +3828,12 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
     for(patchp = *dirPatchespp; patchp; patchp =
          (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
+        snprintf(path, AFSPATHMAX, "%s\\%s", relPathp ? relPathp : "", patchp->dep->name);
+        reqp->relPathp = path;
+        reqp->tidPathp = tidPathp;
+
         code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        reqp->relPathp = reqp->tidPathp = NULL;
         if (code) 
             continue;
 
@@ -3834,7 +3957,11 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
         code = 0;
         while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
             lock_ReleaseMutex(&scp->mx);
+            snprintf(path, AFSPATHMAX, "%s\\%s", relPathp ? relPathp : "", patchp->dep->name);
+            reqp->relPathp = path;
+            reqp->tidPathp = tidPathp;
             code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, reqp);
+            reqp->relPathp = reqp->tidPathp = NULL;
             if (code == 0) {
                 /* we have a more accurate file to use (the
                  * target of the symbolic link).  Otherwise,
@@ -3878,7 +4005,8 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
             /* Copy attributes */
             lattr = smb_ExtAttributes(scp);
-            if (code == CM_ERROR_NOSUCHPATH && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+            if (code == CM_ERROR_NOSUCHPATH && scp->fileType == CM_SCACHETYPE_SYMLINK ||
+                code == CM_ERROR_PATH_NOT_COVERED && scp->fileType == CM_SCACHETYPE_DFSLINK) {
                 if (lattr == SMB_ATTR_NORMAL)
                     lattr = SMB_ATTR_DIRECTORY;
                 else
@@ -4111,7 +4239,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     int attribute;
     long nextCookie;
     long code = 0, code2 = 0;
-    char *pathp;
+    char *pathp = 0;
     int maxCount;
     smb_dirListPatch_t *dirListPatchesp;
     smb_dirListPatch_t *curPatchp;
@@ -4132,11 +4260,12 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     int searchFlags;
     int eos;
     smb_tran2Packet_t *outp;		/* response packet */
-    char *tidPathp;
+    char *tidPathp = 0;
     int align;
     char shortName[13];			/* 8.3 name if needed */
     int NeedShortName;
     char *shortNameEnd;
+    cm_dirEntry_t * dep = NULL;
     cm_req_t req;
     char * s;
 
@@ -4262,9 +4391,10 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
 #ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
     if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, spacep->data);
 	cm_ReleaseSCache(scp);
 	cm_ReleaseUser(userp);
-	if ( WANTS_DFS_PATHNAMES(p) )
+        if ( WANTS_DFS_PATHNAMES(p) || pnc )
 	    code = CM_ERROR_PATH_NOT_COVERED;
 	else
 	    code = CM_ERROR_BADSHARENAME;
@@ -4455,7 +4585,11 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         curPatchp->fid.unique = targetscp->fid.unique;
 
         /* temp */
-        curPatchp->dep = NULL;
+        dep = (cm_dirEntry_t *)malloc(sizeof(cm_dirEntry_t)+strlen(maskp));
+        strcpy(dep->name, maskp);
+        dep->fid.vnode = targetscp->fid.vnode;
+        dep->fid.unique = targetscp->fid.unique;
+        curPatchp->dep = dep;
     }   
 
     if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
@@ -4474,7 +4608,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     }
 
     /* apply the patches */
-    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp, &req);
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, tidPathp, spacep->data, infoLevel, userp, &req);
 
     outp->parmsp[0] = 0;
     outp->parmsp[1] = 1;        /* number of names returned */
@@ -4498,6 +4632,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
  skip_file:
     smb_FreeTran2Packet(outp);
+    if (dep)
+        free(dep);
     cm_ReleaseSCache(scp);
     cm_ReleaseSCache(targetscp);
     cm_ReleaseUser(userp);
@@ -4513,10 +4649,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     char *tp;
     long code = 0, code2 = 0;
     char *pathp;
-    cm_dirEntry_t *dep;
+    cm_dirEntry_t *dep = 0;
     int maxCount;
-    smb_dirListPatch_t *dirListPatchesp;
-    smb_dirListPatch_t *curPatchp;
+    smb_dirListPatch_t *dirListPatchesp = 0;
+    smb_dirListPatch_t *curPatchp = 0;
     cm_buf_t *bufferp;
     long temp;
     long orbytes;			/* # of bytes in this output record */
@@ -4725,6 +4861,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             smb_ReleaseDirSearch(dsp);
             return 0;
         }
+
+        strcpy(dsp->tidPath, tidPathp ? tidPathp : "/");
+        strcpy(dsp->relPath, spacep->data);
+
         code = cm_NameI(cm_data.rootSCachep, spacep->data,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
@@ -4733,9 +4873,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         if (code == 0) {
 #ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
             if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, spacep->data);
                 cm_ReleaseSCache(scp);
                 cm_ReleaseUser(userp);
-                if ( WANTS_DFS_PATHNAMES(p) )
+                if ( WANTS_DFS_PATHNAMES(p) || pnc )
                     code = CM_ERROR_PATH_NOT_COVERED;
                 else
                     code = CM_ERROR_BADSHARENAME;
@@ -4871,9 +5012,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * of all of the status info for files in the dir.
              */
             if (starPattern) {
-                smb_ApplyV3DirListPatches(scp, &dirListPatchesp,
-                                           infoLevel, userp,
-                                           &req);
+                code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, infoLevel, userp, &req);
+                
                 lock_ObtainMutex(&scp->mx);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
@@ -5183,8 +5323,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp, &req);
-        
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, 
+                                      dsp->relPath, infoLevel, userp, &req);
+
     /* now put out the final parameters */
     if (returnedNames == 0) 
         eos = 1;
@@ -5387,9 +5528,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 #ifdef DFS_SUPPORT
     if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, pathp);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-        if ( WANTS_DFS_PATHNAMES(inp) )
+        if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
             return CM_ERROR_BADSHARENAME;
@@ -5407,9 +5549,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 #ifdef DFS_SUPPORT
         if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
-            if ( WANTS_DFS_PATHNAMES(inp) )
+            if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_BADSHARENAME;
@@ -6565,12 +6708,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
 		if (baseFidp) 
 		    smb_ReleaseFID(baseFidp);
-                if ( WANTS_DFS_PATHNAMES(inp) )
+                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
                     return CM_ERROR_BADSHARENAME;
@@ -6598,12 +6742,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                         userp, tidPathp, &req, &scp);
 #ifdef DFS_SUPPORT
         if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, realPathp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
 	    if (baseFidp) 
 		smb_ReleaseFID(baseFidp);
-            if ( WANTS_DFS_PATHNAMES(inp) )
+            if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_BADSHARENAME;
@@ -6634,6 +6779,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 #ifdef DFS_SUPPORT
                 if (code == 0 && dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                    int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
                     if (scp)
                         cm_ReleaseSCache(scp);
                     cm_ReleaseSCache(dscp);
@@ -6641,7 +6787,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     free(realPathp);
 		    if (baseFidp) 
 			smb_ReleaseFID(baseFidp);
-                    if ( WANTS_DFS_PATHNAMES(inp) )
+                    if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                         return CM_ERROR_PATH_NOT_COVERED;
                     else
                         return CM_ERROR_BADSHARENAME;
@@ -7364,12 +7510,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
 		if (baseFidp)
 		    smb_ReleaseFID(baseFidp);
-                if ( WANTS_DFS_PATHNAMES(inp) )
+                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
                     return CM_ERROR_BADSHARENAME;
@@ -7397,12 +7544,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                         userp, tidPathp, &req, &scp);
 #ifdef DFS_SUPPORT
         if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, realPathp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
 	    if (baseFidp)
 		smb_ReleaseFID(baseFidp);
-            if ( WANTS_DFS_PATHNAMES(inp) )
+            if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_BADSHARENAME;
@@ -7421,12 +7569,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                              userp, tidPathp, &req, &dscp);
 #ifdef DFS_SUPPORT
             if (code == 0 && dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
 		if (baseFidp)
 		    smb_ReleaseFID(baseFidp);
-                if ( WANTS_DFS_PATHNAMES(inp) )
+                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
                     return CM_ERROR_BADSHARENAME;

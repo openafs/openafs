@@ -299,6 +299,7 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_NOT_A_DFSLINK          (CM_ERROR_BASE+53)
 #define CM_ERROR_INEXACT_MATCH          (CM_ERROR_BASE+54)
 #define CM_ERROR_BPLUS_NOMATCH          (CM_ERROR_BASE+55)
+#define CM_ERROR_EAS_NOT_SUPPORTED      (CM_ERROR_BASE+56)
 
 /* Used by cm_FollowMountPoint and cm_GetVolumeByName */
 #define RWVOL	0
