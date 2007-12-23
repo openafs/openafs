@@ -6,7 +6,6 @@ typedef struct cm_localMountPoint {
     char*                       namep;
     char*                       mountPointStringp;
     unsigned int                fileType;
-    struct cm_localMountPoint*  next;
 } cm_localMountPoint_t;
 
 extern int cm_getNoLocalMountPoints();
