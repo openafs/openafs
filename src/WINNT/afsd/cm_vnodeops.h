@@ -189,6 +189,10 @@ extern long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp,
 extern long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
 	cm_scache_t **outScpp, cm_user_t *userp, cm_req_t *reqp);
 
+extern long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
+                                cm_req_t *reqp, cm_scache_t **outScpp);
+
+
 extern long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
 	int allowWait, cm_user_t *userp, cm_req_t *reqp,

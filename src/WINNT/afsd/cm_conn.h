@@ -32,13 +32,19 @@ typedef struct cm_conn {
 
 #define CM_CONN_FLAG_FORCE_NEW	1
 
-/* structure used for tracking RPC progress */
+/* 
+ * structure used for tracking RPC progress
+ * and for passing path info from the smb layer 
+ * to the cache manager functions.
+ */
 typedef struct cm_req {
 	DWORD startTime;		/* Quit before RDR times us out */
 	int rpcError;			/* RPC error code */
 	int volumeError;		/* volume error code */
 	int accessError;		/* access error code */
 	int flags;
+        char * tidPathp;
+        char * relPathp;
 } cm_req_t;
 
 /* flags in cm_req structure */

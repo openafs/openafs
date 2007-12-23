@@ -1305,6 +1305,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
+        /* Notify any volume status handlers that the cache manager has started */
+        cm_VolStatus_Service_Started();
+
 /* the following ifdef chooses the mode of operation for the service.  to enable
  * a runtime flag (instead of compile-time), pioctl() would need to dynamically
  * determine the mode, in order to use the correct ioctl special-file path. */
@@ -1366,9 +1369,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
     }
-
-    /* Notify any volume status handlers that we have started */
-    cm_VolStatus_Service_Started();
 
     /* allow an exit to be called when started */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);

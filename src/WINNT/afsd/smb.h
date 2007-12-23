@@ -460,6 +460,8 @@ typedef struct smb_dirSearch {
 					 * locked by smb_globalLock */
     unsigned short attribute;	        /* search attribute
 					 * (used for extended protocol) */
+    char tidPath[256];                  /* tid path */
+    char relPath[1024];                 /* relative path */        
     char mask[256];			/* search mask for V3 */
 } smb_dirSearch_t;
 

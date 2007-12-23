@@ -55,25 +55,36 @@ extern long cm_VolStatus_Network_Addr_Change(void);
 
 extern long cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volstatus status);
 
-extern long __fastcall cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID);
+extern long __fastcall cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID, enum volstatus *pstatus);
 
 extern long __fastcall cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *pBufSize, char *pBuffer);
 
-#define DLL_VOLSTATUS_FUNCS_VERSION 1
+extern long cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, char *tidPathp, char *pathp);
+
+extern long cm_VolStatus_Invalidate_DFS_Mapping(cm_scache_t *scp);
+
+#define DLL_VOLSTATUS_FUNCS_VERSION 2
 typedef struct dll_VolStatus_Funcs {
     afs_uint32          version;
+    /* version 1 */
     long (__fastcall * dll_VolStatus_Service_Started)(void);
     long (__fastcall * dll_VolStatus_Service_Stopped)(void);
     long (__fastcall * dll_VolStatus_Network_Started)(const char *netbios32, const char *netbios64);
     long (__fastcall * dll_VolStatus_Network_Stopped)(const char *netbios32, const char *netbios64);
     long (__fastcall * dll_VolStatus_Network_Addr_Change)(void);
     long (__fastcall * dll_VolStatus_Change_Notification)(afs_uint32 cellID, afs_uint32 volID, enum volstatus status);
+    /* version 2 */
+    long (__fastcall * dll_VolStatus_Notify_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID, 
+                                                         afs_uint32 vnodeID, afs_uint32 uniqID,
+                                                         char *src, char *target);
+    long (__fastcall * dll_VolStatus_Invalidate_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID, 
+                                                             afs_uint32 vnodeID, afs_uint32 uniqID);
 } dll_VolStatus_Funcs_t;
 
 #define CM_VOLSTATUS_FUNCS_VERSION 1
 typedef struct cm_VolStatus_Funcs {
     afs_uint32          version;
-    long (__fastcall * cm_VolStatus_Path_To_ID)(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID);
+    long (__fastcall * cm_VolStatus_Path_To_ID)(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID, enum volstatus *pstatus);
     long (__fastcall * cm_VolStatus_Path_To_DFSlink)(const char * share, const char * path, afs_uint32 *pBufSize, char *pBuffer);
 } cm_VolStatus_Funcs_t;
 

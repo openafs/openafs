@@ -46,6 +46,14 @@ HMODULE hVolStatus = NULL;
 dll_VolStatus_Funcs_t dll_funcs;
 cm_VolStatus_Funcs_t cm_funcs;
 
+static char volstat_NetbiosName[64] = "";
+
+afs_uint32
+cm_VolStatus_Active(void)
+{
+    return (hVolStatus != NULL);
+}
+
 /* This function is used to load any Volume Status Handlers 
  * and their associated function pointers.  
  */
@@ -64,6 +72,12 @@ cm_VolStatus_Initialization(void)
         dummyLen = sizeof(wd);
         code = RegQueryValueEx(parmKey, "VolStatusHandler", NULL, NULL,
                                 (BYTE *) &wd, &dummyLen);
+
+        if (code == 0) {
+            dummyLen = sizeof(volstat_NetbiosName);
+            code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL, 
+                                   (BYTE *)volstat_NetbiosName, &dummyLen);
+        }
         RegCloseKey (parmKey);
     }
 
@@ -76,6 +90,7 @@ cm_VolStatus_Initialization(void)
             cm_funcs.cm_VolStatus_Path_To_ID = cm_VolStatus_Path_To_ID;
             cm_funcs.cm_VolStatus_Path_To_DFSlink = cm_VolStatus_Path_To_DFSlink;
 
+            dll_funcs.version = DLL_VOLSTATUS_FUNCS_VERSION;
             code = dll_VolStatus_Initialization(&dll_funcs, &cm_funcs);
         } 
 
@@ -87,6 +102,8 @@ cm_VolStatus_Initialization(void)
         }
     }
 
+    osi_Log1(afsd_logp,"cm_VolStatus_Initialization 0x%x", code);
+
     return code;
 }
 
@@ -96,6 +113,8 @@ cm_VolStatus_Initialization(void)
 long 
 cm_VolStatus_Finalize(void)
 {
+    osi_Log1(afsd_logp,"cm_VolStatus_Finalize handle 0x%x", hVolStatus);
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -112,6 +131,8 @@ long
 cm_VolStatus_Service_Started(void)
 {
     long code = 0;
+
+    osi_Log1(afsd_logp,"cm_VolStatus_Service_Started handle 0x%x", hVolStatus);
 
     if (hVolStatus == NULL)
         return 0;
@@ -130,6 +151,8 @@ long
 cm_VolStatus_Service_Stopped(void)
 {
     long code = 0;
+
+    osi_Log1(afsd_logp,"cm_VolStatus_Service_Stopped handle 0x%x", hVolStatus);
 
     if (hVolStatus == NULL)
         return 0;
@@ -225,22 +248,68 @@ cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volst
 }
 
 
-long __fastcall
-cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID)
+
+long
+cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, char *tidPathp, char *pathp)
 {
-    afs_uint32  code;
+    long code = 0;
+    char src[1024], *p;
+    size_t len;
+
+    if (hVolStatus == NULL || dll_funcs.version < 2)
+        return 0;
+
+    snprintf(src,sizeof(src), "\\\\%s%s", volstat_NetbiosName, tidPathp);
+    len = strlen(src);
+    if ((src[len-1] == '\\' || src[len-1] == '/') &&
+        (pathp[0] == '\\' || pathp[0] == '/'))
+        strncat(src, &pathp[1], sizeof(src));
+    else
+        strncat(src, pathp, sizeof(src));
+
+    for ( p=src; *p; p++ ) {
+        if (*p == '/')
+            *p = '\\';
+    }
+
+    code = dll_funcs.dll_VolStatus_Notify_DFS_Mapping(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                                      src, scp->mountPointStringp);
+
+    return code;
+}
+
+long
+cm_VolStatus_Invalidate_DFS_Mapping(cm_scache_t *scp)
+{
+    long code = 0;
+
+    if (hVolStatus == NULL || dll_funcs.version < 2)
+        return 0;
+
+    code = dll_funcs.dll_VolStatus_Invalidate_DFS_Mapping(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+
+    return code;
+}
+
+
+long __fastcall
+cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID, enum volstatus *pstatus)
+{
+    afs_uint32  code = 0;
     cm_req_t    req;
     cm_scache_t *scp;
 
     if (cellID == NULL || volID == NULL)
         return CM_ERROR_INVAL;
 
+    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_ID share %s path %s", 
+              osi_LogSaveString(afsd_logp, (char *)share), osi_LogSaveString(afsd_logp, (char *)path));
+
     cm_InitReq(&req);
 
-
-    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_FOLLOW, cm_rootUserp, (char *)share, &req, &scp);
+    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, cm_rootUserp, (char *)share, &req, &scp);
     if (code)
-        return code;
+        goto done;
 
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL,cm_rootUserp, &req, 0,
@@ -248,24 +317,27 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     if (code) {
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
-        return code;
+        goto done;
     }
         
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     *cellID = scp->fid.cell;
     *volID  = scp->fid.volume;
+    *pstatus = cm_GetVolumeStatus(scp->volp, scp->fid.volume);
 
     lock_ReleaseMutex(&scp->mx);
     cm_ReleaseSCache(scp);
 
-    return 0;
+  done:
+    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_ID code 0x%x",code); 
+    return code;
 }
 
 long __fastcall
 cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *pBufSize, char *pBuffer)
 {
-    afs_uint32  code;
+    afs_uint32  code = 0;
     cm_req_t    req;
     cm_scache_t *scp;
     size_t      len;
@@ -273,11 +345,15 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     if (pBufSize == NULL || (pBuffer == NULL && *pBufSize != 0))
         return CM_ERROR_INVAL;
 
+    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_DFSlink share %s path %s", 
+              osi_LogSaveString(afsd_logp, (char *)share), osi_LogSaveString(afsd_logp, (char *)path));
+
     cm_InitReq(&req);
 
-    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_FOLLOW, cm_rootUserp, (char *)share, &req, &scp);
+    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, 
+                    cm_rootUserp, (char *)share, &req, &scp);
     if (code)
-        return code;
+        goto done;
 
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, cm_rootUserp, &req, 0,
@@ -285,13 +361,15 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     if (code) {
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
-        return code;
+        goto done;
     }
         
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-    if (scp->fileType != CM_SCACHETYPE_DFSLINK)
-        return CM_ERROR_NOT_A_DFSLINK;
+    if (scp->fileType != CM_SCACHETYPE_DFSLINK) {
+        code = CM_ERROR_NOT_A_DFSLINK;
+        goto done;
+    }
 
     len = strlen(scp->mountPointStringp) + 1;
     if (pBuffer == NULL)
@@ -299,11 +377,15 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     else if (*pBufSize >= len) {
         strcpy(pBuffer, scp->mountPointStringp);
         *pBufSize = len;
-    } else 
+    } else {
         code = CM_ERROR_TOOBIG;
+        goto done;
+    }
 
     lock_ReleaseMutex(&scp->mx);
     cm_ReleaseSCache(scp);
 
-    return 0;
+  done:
+    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_DFSlink code 0x%x",code); 
+    return code;
 }
