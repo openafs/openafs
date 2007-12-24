@@ -752,9 +752,11 @@ int afsd_InitCM(char **reasonP)
     dummyLen = sizeof(numBkgD);
     code = RegQueryValueEx(parmKey, "Daemons", NULL, NULL,
                             (BYTE *) &numBkgD, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS) {
+        if (numBkgD > CM_MAX_DAEMONS)
+            numBkgD = CM_MAX_DAEMONS;
         afsi_log("%d background daemons", numBkgD);
-    else {
+    } else {
         numBkgD = CM_CONFIGDEFAULT_DAEMONS;
         afsi_log("Defaulting to %d background daemons", numBkgD);
     }
