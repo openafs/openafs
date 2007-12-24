@@ -1905,8 +1905,6 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                 tsp->downTime = osi_Time();
             }
             cm_ForceNewConnections(tsp);
-            lock_ReleaseMutex(&tsp->mx);
-
             /* Now update the volume status */
             for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
                 for (i=0; i<NUM_SERVER_VOLS; i++) {
@@ -1924,6 +1922,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                     }
                 }
             }
+            lock_ReleaseMutex(&tsp->mx);
         }
     }
 }

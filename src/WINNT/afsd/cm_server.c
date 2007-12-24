@@ -133,7 +133,6 @@ cm_PingServer(cm_server_t *tsp)
             cm_volume_t * volp;
             int i;
 
-            lock_ReleaseMutex(&tsp->mx);
             for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
                 for (i=0; i<NUM_SERVER_VOLS; i++) {
                     if (tsrvp->ids[i] != 0) {
@@ -148,7 +147,6 @@ cm_PingServer(cm_server_t *tsp)
                     }
                 }
             }
-            lock_ObtainMutex(&tsp->mx);
         }
     } else {
 	/* mark server as down */
@@ -170,7 +168,6 @@ cm_PingServer(cm_server_t *tsp)
             cm_volume_t * volp;
             int i;
 
-            lock_ReleaseMutex(&tsp->mx);
             for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
                 for (i=0; i<NUM_SERVER_VOLS; i++) {
                     if (tsrvp->ids[i] != 0) {
@@ -185,7 +182,6 @@ cm_PingServer(cm_server_t *tsp)
                     }
                 }
             }
-            lock_ObtainMutex(&tsp->mx);
         }
     }
 
