@@ -45,31 +45,58 @@ cm_bkgRequest_t *cm_bkgListp;		/* first elt in the list of requests */
 cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
 static int daemon_ShutdownFlag = 0;
+static int cm_nDaemons = 0;
+
+static EVENT_HANDLE cm_Daemon_ShutdownEvent = NULL;
+static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
+static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] = 
+       {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 void cm_IpAddrDaemon(long parm)
 {
     extern void smb_CheckVCs(void);
+    char * name = "cm_IPAddrDaemon_ShutdownEvent";
+
+    cm_IPAddrDaemon_ShutdownEvent = thrd_CreateEvent(NULL, FALSE, FALSE, name);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", name);
 
     rx_StartClientThread();
 
     while (daemon_ShutdownFlag == 0) {
-	DWORD Result = NotifyAddrChange(NULL,NULL);
-	if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
+	DWORD Result;
+        
+        thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
+        Result = NotifyAddrChange(NULL,NULL);
+        if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
+            thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
 	    Sleep(2500);
-	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
-            cm_CheckServers(CM_FLAG_CHECKVLDBSERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
-	    cm_ForceNewConnectionsAllServers();
-            cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
-	    smb_CheckVCs();
-            cm_VolStatus_Network_Addr_Change();
+            if (daemon_ShutdownFlag == 0) {
+                osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
+                cm_CheckServers(CM_FLAG_CHECKVLDBSERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
+                cm_ForceNewConnectionsAllServers();
+                cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
+                smb_CheckVCs();
+                cm_VolStatus_Network_Addr_Change();
+            }
 	}	
     }
+
+    thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
 }
 
-void cm_BkgDaemon(long parm)
+void cm_BkgDaemon(void * parm)
 {
     cm_bkgRequest_t *rp;
     afs_int32 code;
+    char name[32] = "";
+    long daemonID = (long)parm;
+
+    snprintf(name, sizeof(name), "cm_BkgDaemon_ShutdownEvent%d", daemonID);
+
+    cm_BkgDaemon_ShutdownEvent[daemonID] = thrd_CreateEvent(NULL, FALSE, FALSE, name);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", name);
 
     rx_StartClientThread();
 
@@ -138,6 +165,9 @@ void cm_BkgDaemon(long parm)
 	}
     }
     lock_ReleaseWrite(&cm_daemonLock);
+
+    thrd_SetEvent(cm_BkgDaemon_ShutdownEvent[daemonID]);
+
 }
 
 void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
@@ -316,7 +346,12 @@ void cm_Daemon(long parm)
     unsigned long code;
     struct hostent *thp;
     HMODULE hHookDll;
+    char * name = "cm_Daemon_ShutdownEvent";
     int configureFirewall = IsWindowsFirewallPresent();
+
+    cm_Daemon_ShutdownEvent = thrd_CreateEvent(NULL, FALSE, FALSE, name);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", name);
 
     if (!configureFirewall) {
 	afsi_log("No Windows Firewall detected");
@@ -362,7 +397,7 @@ void cm_Daemon(long parm)
 	smb_RestartListeners();
 
         if (daemon_ShutdownFlag == 1)
-            return;
+            break;
 
         if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
@@ -395,7 +430,7 @@ void cm_Daemon(long parm)
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -406,7 +441,7 @@ void cm_Daemon(long parm)
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -415,7 +450,7 @@ void cm_Daemon(long parm)
             lastVolCheck = now;
             cm_RefreshVolumes();
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -425,7 +460,7 @@ void cm_Daemon(long parm)
             lastVolCBRenewalCheck = now;
             cm_VolumeRenewROCallbacks();
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
             now = osi_Time();
         }
 
@@ -434,7 +469,7 @@ void cm_Daemon(long parm)
             lastVolCheck = now;
             cm_CheckOfflineVolumes();
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -443,7 +478,7 @@ void cm_Daemon(long parm)
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -452,7 +487,7 @@ void cm_Daemon(long parm)
             lastLockCheck = now;
             cm_CheckLocks();
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -461,7 +496,7 @@ void cm_Daemon(long parm)
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
             if (daemon_ShutdownFlag == 1)
-                return;
+                break;
 	    now = osi_Time();
         }
 
@@ -484,15 +519,33 @@ void cm_Daemon(long parm)
             }
         }
 
-        if (daemon_ShutdownFlag == 1)
-            return;
+        if (daemon_ShutdownFlag == 1) {
+            break;
+        }
 	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
     }
+    thrd_SetEvent(cm_Daemon_ShutdownEvent);
 }       
 
 void cm_DaemonShutdown(void)
 {
+    int i;
+    DWORD code;
+
     daemon_ShutdownFlag = 1;
+    osi_Wakeup((LONG_PTR) &cm_bkgListp);
+
+    /* wait for shutdown */
+    if (cm_Daemon_ShutdownEvent)
+        code = thrd_WaitForSingleObject_Event(cm_Daemon_ShutdownEvent, INFINITE); 
+
+    for ( i=0; i<cm_nDaemons; i++) {
+        if (cm_BkgDaemon_ShutdownEvent[i])
+            code = thrd_WaitForSingleObject_Event(cm_BkgDaemon_ShutdownEvent[i], INFINITE);
+    }
+
+    if (cm_IPAddrDaemon_ShutdownEvent)
+        code = thrd_WaitForSingleObject_Event(cm_IPAddrDaemon_ShutdownEvent, INFINITE);
 }
 
 void cm_InitDaemon(int nDaemons)
@@ -501,7 +554,9 @@ void cm_InitDaemon(int nDaemons)
     long pid;
     thread_t phandle;
     int i;
-        
+
+    cm_nDaemons = (nDaemons > CM_MAX_DAEMONS) ? CM_MAX_DAEMONS : nDaemons;
+    
     if (osi_Once(&once)) {
         lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
         osi_EndOnce(&once);
@@ -518,9 +573,9 @@ void cm_InitDaemon(int nDaemons)
         osi_assertx(phandle != NULL, "cm_Daemon thread creation failure");
         thrd_CloseHandle(phandle);
 
-	for(i=0; i < nDaemons; i++) {
+	for(i=0; i < cm_nDaemons; i++) {
             phandle = thrd_Create((SecurityAttrib) 0, 0,
-                                   (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
+                                   (ThreadFunc) cm_BkgDaemon, (LPVOID)i, 0, &pid,
                                    "cm_BkgDaemon");
             osi_assertx(phandle != NULL, "cm_BkgDaemon thread creation failure");
             thrd_CloseHandle(phandle);

@@ -41,4 +41,6 @@ typedef struct cm_bkgRequest {
 extern void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1,
 	afs_uint32 p2, afs_uint32 p3, afs_uint32 p4, cm_user_t *userp);
 
+#define CM_MAX_DAEMONS 8
+
 #endif /*  __CM_DAEMON_H_ENV_ */
