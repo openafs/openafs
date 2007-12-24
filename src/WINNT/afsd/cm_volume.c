@@ -1119,24 +1119,16 @@ void cm_CheckOfflineVolumes(void)
     lock_ReleaseWrite(&cm_volumeLock);
 }
 
-void
-cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
+
+static void
+cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
 {
-    struct cm_vol_state * statep = NULL;
     enum volstatus newStatus;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
 
-    if (volp->rw.ID == volID) {
-        statep = &volp->rw;
-    } else if (volp->ro.ID == volID) {
-        statep = &volp->ro;
-    } else if (volp->bk.ID == volID) {
-        statep = &volp->bk;
-    }
-
-    if (!statep) {
+    if (!volp || !statep) {
 #ifdef DEBUG
         DebugBreak();
 #endif
@@ -1173,11 +1165,37 @@ cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
     else
 	newStatus = vl_online;
 
-
     if (statep->ID && statep->state != newStatus)
         cm_VolumeStatusNotification(volp, statep->ID, statep->state, newStatus);
 
     statep->state = newStatus;
+}
+
+void
+cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
+{
+
+    if (volp->rw.ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->rw);
+    } else if (volp->ro.ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->ro);
+    } else if (volp->bk.ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->bk);
+    } else {
+        /*
+         * If we are called with volID == 0 then something has gone wrong.
+         * Most likely a race occurred in the server volume list maintenance.
+         * Since we don't know which volume's status should be updated, 
+         * just update all of them that are known to exist.  Better to be 
+         * correct than fast.
+         */
+        if (volp->rw.ID != 0)
+            cm_UpdateVolumeStatusInt(volp, &volp->rw);
+        if (volp->ro.ID != 0)
+            cm_UpdateVolumeStatusInt(volp, &volp->ro);
+        if (volp->bk.ID != 0)
+            cm_UpdateVolumeStatusInt(volp, &volp->bk);
+    }
 }
 
 /*
