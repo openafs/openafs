@@ -31,13 +31,13 @@ cm_ForceNewConnectionsAllServers(void)
 {
     cm_server_t *tsp;
 
-    lock_ObtainRead(&cm_serverLock);
+    lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
 	cm_ForceNewConnections(tsp);
         cm_PutServerNoLock(tsp);
     }
-    lock_ReleaseRead(&cm_serverLock);
+    lock_ReleaseWrite(&cm_serverLock);
 }
 
 void 
