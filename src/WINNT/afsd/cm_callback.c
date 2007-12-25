@@ -355,7 +355,6 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
     unsigned long host = 0;
     unsigned short port = 0;
     cm_server_t *tsp = NULL;
-    cm_cell_t * cellp = NULL;
 
     MUTEX_ENTER(&callp->lock);
 
@@ -363,14 +362,13 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
 
-        tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
-        if (tsp)
-            cellp = tsp->cellp;
+        osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
+                  ntohl(host),
+                  ntohs(port));
+    } else {
+        osi_Log0(afsd_logp, "SRXAFSCB_CallBack from unknown host");
     }
 
-    osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
-              ntohl(host),
-              ntohs(port));
 
     for (i=0; i < (long) fidsArrayp->AFSCBFids_len; i++) {
         tfidp = &fidsArrayp->AFSCBFids_val[i];
@@ -378,9 +376,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         if (tfidp->Volume == 0)
             continue;   /* means don't do anything */
         else if (tfidp->Vnode == 0)
-            cm_RevokeVolumeCallback(callp, cellp, tfidp);
+            cm_RevokeVolumeCallback(callp, NULL, tfidp);
         else
-            cm_RevokeCallback(callp, cellp, tfidp);
+            cm_RevokeCallback(callp, NULL, tfidp);
     }
 
     MUTEX_EXIT(&callp->lock);
