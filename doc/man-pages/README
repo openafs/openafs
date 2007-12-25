@@ -202,6 +202,11 @@ Known Problems
    * The following installed commands have no man pages:
 
        copyauth
+       fs cscpolicy
+       fs memdump
+       fs minidump
+       fs monitor
+       fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
        restorevol
