@@ -428,7 +428,7 @@ behavior in the following ways:
   Any server       TSTP        Any     Increases Debug level by a power
                                        of 5 -- 1,5,25,125, etc.
                                        This has the same effect as the
-                                       -debug XXX command-line option.
+                                       -d XXX command-line option.
 
   Any Server       HUP         Any     Resets Debug level to 0
 
