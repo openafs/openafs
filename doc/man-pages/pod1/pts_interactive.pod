@@ -115,5 +115,6 @@ L<ptserver(8)>
 
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
