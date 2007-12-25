@@ -146,7 +146,9 @@ event_handler(void *argp)
     unsigned long rx_pthread_n_event_expired = 0;
     unsigned long rx_pthread_n_event_waits = 0;
     long rx_pthread_n_event_woken = 0;
+    unsigned long rx_pthread_n_event_error = 0;
     struct timespec rx_pthread_next_event_time = { 0, 0 };
+    int error;
 
     assert(pthread_mutex_lock(&event_handler_mutex) == 0);
 
@@ -171,16 +173,25 @@ event_handler(void *argp)
 	rx_pthread_next_event_time.tv_sec = cv.sec;
 	rx_pthread_next_event_time.tv_nsec = cv.usec * 1000;
 	rx_pthread_n_event_waits++;
-	if (pthread_cond_timedwait
+	error = pthread_cond_timedwait
 	    (&rx_event_handler_cond, &event_handler_mutex,
-	     &rx_pthread_next_event_time) == -1) {
-#ifdef notdef
-	    assert(errno == EAGAIN);
-#endif
+	     &rx_pthread_next_event_time);
+        if (error == 0) {
+	    rx_pthread_n_event_woken++;
+        } 
+#ifdef AFS_NT40_ENV        
+        else if (error == ETIMEDOUT) {
 	    rx_pthread_n_event_expired++;
 	} else {
-	    rx_pthread_n_event_woken++;
-	}
+            rx_pthread_n_event_error++;
+        }
+#else
+        else if (errno == ETIMEDOUT) {
+            rx_pthread_n_event_expired++;
+        } else {
+            rx_pthread_n_event_error++;
+        }
+#endif
 	rx_pthread_event_rescheduled = 0;
     }
 }
