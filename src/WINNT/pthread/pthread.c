@@ -126,7 +126,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mp) {
 	    if (mp->isLocked) {
 		/* same thread tried to recursively lock, fail */
 		LeaveCriticalSection(&mp->cs);
-		rc = EBUSY;
+		rc = EDEADLK;
 	    } else {
 		mp->isLocked = 1;
 		mp->tid = GetCurrentThreadId();
@@ -161,8 +161,14 @@ int pthread_mutex_lock(pthread_mutex_t *mp) {
 	     */
 	    LeaveCriticalSection(&mp->cs);
 	    rc = EDEADLK;
+#ifdef PTHREAD_DEBUG
+            DebugBreak();
+#endif
 	}
     } else {
+#ifdef PTHREAD_DEBUG
+        DebugBreak();
+#endif
 	rc = EINVAL;
     }
 	
@@ -178,9 +184,15 @@ int pthread_mutex_unlock(pthread_mutex_t *mp) {
 	    mp->tid = 0;
 	    LeaveCriticalSection(&mp->cs);
 	} else {
-	    rc = 0;
+#ifdef PTHREAD_DEBUG
+            DebugBreak();
+#endif
+	    rc = EPERM;
 	}
     } else {
+#ifdef PTHREAD_DEBUG
+        DebugBreak();
+#endif
 	rc = EINVAL;
     }
     return rc;
@@ -192,6 +204,9 @@ int pthread_mutex_destroy(pthread_mutex_t *mp) {
     if (mp != NULL) {
 	DeleteCriticalSection(&mp->cs);
     } else {
+#ifdef PTHREAD_DEBUG
+        DebugBreak();
+#endif
 	rc = EINVAL;
     }
 
@@ -806,66 +821,63 @@ static int cond_wait_internal(pthread_cond_t *cond, pthread_mutex_t *mutex, cons
 	queue_Append(&cond->waiting_threads, my_entry);
 	LeaveCriticalSection(&cond->cs);
 
-	if (!pthread_mutex_unlock(mutex)) {
+	if (pthread_mutex_unlock(mutex) == 0) {
 	    switch(WaitForSingleObject(my_entry->event, time)) {
-		case WAIT_FAILED:
-		    rc = -1;
-		    break;
-		case WAIT_TIMEOUT:
-		    rc = ETIME;
-		    /*
-		     * This is a royal pain.  We've timed out waiting
-		     * for the signal, but between the time out and here
-		     * it is possible that we were actually signalled by 
-		     * another thread.  So we grab the condition lock
-		     * and scan the waiting thread queue to see if we are
-		     * still there.  If we are, we just remove ourselves.
-		     *
-		     * If we are no longer listed in the waiter queue,
-		     * it means that we were signalled after the time
-		     * out occurred and so we have to do another wait
-		     * WHICH HAS TO SUCCEED!  In this case, we reset
-		     * rc to indicate that we were signalled.
-		     *
-		     * We have to wait or otherwise, the event
-		     * would be cached in the signalled state, which
-		     * is wrong.  It might be more efficient to just
-		     * close and reopen the event.
-		     */
-		    EnterCriticalSection(&cond->cs);
-		    for(queue_Scan(&cond->waiting_threads, cur,
-				   next, cond_waiter)) {
-			if (cur == my_entry) {
-			    hasnt_been_signalled = 1;
-			    break;
-			}
-		    }
-		    if (hasnt_been_signalled) {
-			queue_Remove(cur);
-		    } else {
-			rc = 0;
-			if (ResetEvent(my_entry->event)) {
-			    if (pthread_mutex_lock(mutex)) {
-				rc = -5;
-			    }
-			} else {
-			    rc = -6;
-			}
-		    }
-		    LeaveCriticalSection(&cond->cs);
-		    break;
-		case WAIT_ABANDONED:
-		    rc = -2;
-		    break;
-		case WAIT_OBJECT_0:
-		    if (pthread_mutex_lock(mutex)) {
-			rc = -3;
-		    }
-		    break;
-		default:
-		    rc = -4;
-		    break;
-	    }
+            case WAIT_FAILED:
+                rc = -1;
+                break;
+            case WAIT_TIMEOUT:
+                rc = ETIMEDOUT;
+                /*
+                 * This is a royal pain.  We've timed out waiting
+                 * for the signal, but between the time out and here
+                 * it is possible that we were actually signalled by 
+                 * another thread.  So we grab the condition lock
+                 * and scan the waiting thread queue to see if we are
+                 * still there.  If we are, we just remove ourselves.
+                 *
+                 * If we are no longer listed in the waiter queue,
+                 * it means that we were signalled after the time
+                 * out occurred and so we have to do another wait
+                 * WHICH HAS TO SUCCEED!  In this case, we reset
+                 * rc to indicate that we were signalled.
+                 *
+                 * We have to wait or otherwise, the event
+                 * would be cached in the signalled state, which
+                 * is wrong.  It might be more efficient to just
+                 * close and reopen the event.
+                 */
+                EnterCriticalSection(&cond->cs);
+                for(queue_Scan(&cond->waiting_threads, cur,
+                                next, cond_waiter)) {
+                    if (cur == my_entry) {
+                        hasnt_been_signalled = 1;
+                        break;
+                    }
+                }
+                if (hasnt_been_signalled) {
+                    queue_Remove(cur);
+                } else {
+                    rc = 0;
+                    if (!ResetEvent(my_entry->event)) {
+                        rc = -6;
+                    }
+                }
+                LeaveCriticalSection(&cond->cs);
+                break;
+            case WAIT_ABANDONED:
+                rc = -2;
+                break;
+            case WAIT_OBJECT_0:
+                rc = 0;
+                break;
+            default:
+                rc = -4;
+                break;
+            }
+            if (pthread_mutex_lock(mutex) != 0) {
+                rc = -3;
+            }   
 	} else {
 	    rc = EINVAL;
 	}
