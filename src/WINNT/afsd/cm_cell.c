@@ -24,7 +24,9 @@
 osi_rwlock_t cm_cellLock;
 
 /* function called as callback proc from cm_SearchCellFile.  Return 0 to
- * continue processing.
+ * continue processing.  
+ *
+ * At the present time the return value is ignored by the caller.
  */
 long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 {
@@ -39,6 +41,10 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
     {
         if ( !tsp->cellp )
             tsp->cellp = cellp;
+        else if (tsp->cellp != cellp) {
+            osi_Log2(afsd_logp, "found a vlserver associated with two cell names %s and %s",
+                     osi_LogSaveString(afsd_logp,tsp->cellp->name), osi_LogSaveString(afsd_logp,cellp->name));
+        }
     }       
     else
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
@@ -50,6 +56,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
     lock_ObtainWrite(&cm_serverLock);
     tsrp->refCount--;
     lock_ReleaseWrite(&cm_serverLock);
+
     return 0;
 }
 
