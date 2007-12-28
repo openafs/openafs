@@ -73,6 +73,8 @@ private int moveHash(register Vnode * vnp, bit32 newHash);
 private void StickOnLruChain_r(register Vnode * vnp,
 			       register struct VnodeClassInfo *vcp);
 
+extern int LogLevel;
+
 #define BAD_IGET	-1000
 
 /* There are two separate vnode queue types defined here:
@@ -699,6 +701,9 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 #endif
 		mlkReason = 4;
 	    } else {
+		/* Probably legit; Don't knock the volume offline */
+		if (LogLevel >= 5) 
+		    Log("VGetVnode: Couldn't read vnode %u, volume %u (%s); errno %d\n", vnodeNumber, V_id(vp), V_name(vp), errno);
 		mlkReason = 5;
 		*ec = VIO;
 	    }
