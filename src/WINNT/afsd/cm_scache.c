@@ -1278,22 +1278,19 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             scp->waitCount = scp->waitRequests = 1;
         }
 
-        if (bufLocked) 
-            lock_ReleaseMutex(&bufp->mx);
-
         cm_SyncOpAddToWaitQueue(scp, flags, bufp);
         wakeupCycle = 0;
         do {
-            if (wakeupCycle++ != 0)
-                lock_ObtainMutex(&scp->mx);
+            if (bufLocked) 
+                lock_ReleaseMutex(&bufp->mx);
             osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
+            if (bufLocked) 
+                lock_ObtainMutex(&bufp->mx);
+            lock_ObtainMutex(&scp->mx);
         } while (!cm_SyncOpCheckContinue(scp, flags, bufp));
 
 	smb_UpdateServerPriority();
 
-        if (bufLocked) 
-            lock_ObtainMutex(&bufp->mx);
-        lock_ObtainMutex(&scp->mx);
         scp->waitCount--;
         osi_Log3(afsd_logp, "CM SyncOp woke! scp 0x%p; still waiting %d threads of %d requests", 
                  scp, scp->waitCount, scp->waitRequests);

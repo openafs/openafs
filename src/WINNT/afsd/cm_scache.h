@@ -319,17 +319,17 @@ typedef struct cm_scache {
 				    (fidp)->unique))	\
 					% cm_data.scacheHashTableSize)
 
+#include "cm_conn.h"
+#include "cm_buf.h"
+
 typedef struct cm_scache_waiter {
     osi_queue_t q;
     afs_int32   threadId;
 
     cm_scache_t *scp;
     afs_int32   flags;
-    void        *bufp;
+    cm_buf_t    *bufp;
 } cm_scache_waiter_t;
-
-#include "cm_conn.h"
-#include "cm_buf.h"
 
 extern void cm_InitSCache(int, long);
 
