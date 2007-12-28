@@ -28,7 +28,7 @@ osi_rwlock_t cm_cellLock;
  *
  * At the present time the return value is ignored by the caller.
  */
-long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
+long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
 {
     cm_server_t *tsp;
     cm_serverRef_t *tsrp;
@@ -42,8 +42,10 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
         if ( !tsp->cellp )
             tsp->cellp = cellp;
         else if (tsp->cellp != cellp) {
-            osi_Log2(afsd_logp, "found a vlserver associated with two cell names %s and %s",
-                     osi_LogSaveString(afsd_logp,tsp->cellp->name), osi_LogSaveString(afsd_logp,cellp->name));
+            osi_Log3(afsd_logp, "found a vlserver %s associated with two cells named %s and %s",
+                     osi_LogSaveString(afsd_logp,hostnamep),
+                     osi_LogSaveString(afsd_logp,tsp->cellp->name), 
+                     osi_LogSaveString(afsd_logp,cellp->name));
         }
     }       
     else
@@ -144,8 +146,18 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             strcpy(fullname, cp->name);
             break;
         }
-    }   
-    lock_ReleaseRead(&cm_cellLock);	
+    }
+
+    if (!cp) {
+        for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
+            if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
+                strcpy(fullname, cp->name);
+                break;
+            }
+        }   
+    }
+
+    lock_ReleaseRead(&cm_cellLock);
 
     if (cp) {
         cm_UpdateCell(cp);
@@ -158,6 +170,16 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          */
         for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
             if (stricmp(namep, cp->name) == 0) {
+                strcpy(fullname, cp->name);
+                break;
+            }
+        }   
+
+        if (cp)
+            goto done;
+
+        for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
+            if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
                 strcpy(fullname, cp->name);
                 break;
             }
