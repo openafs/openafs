@@ -1,3 +1,69 @@
+Since 1.5.28
+ * Speed up write buffer operations by holding a global read-lock
+   instead of a write-lock when updating the buffer data version 
+   number.  The data version is protect by the associated stat
+   cache mutex.
+
+ * Speed up read buffer operations by removing out of date buffers
+   from the buffer hash tables.
+
+ * Protect against a null pointer dereference in afslogon.dll
+   if QueryAdHomePathFromSid() fails.
+   
+ * Remove a race condition while accessing private freelance data
+   structures.
+
+ * Update the buffer data versions when Freelance directory data
+   changes.
+
+ * Complete the implementation of smb_ReceiveTran2GetDFSReferral().
+   Critical for Vista.  
+
+ * Return EAS_NOT_SUPPORTED in response to EA read/store/query 
+   instead of returning zero length.
+
+ * Return ERROR_RETRY when a server sends VBUSY.
+
+ * Return PATH_NOT_COVERED instead of BADSHARENAME for DfsLinks when
+   a volstat plug-in is in use.
+
+ * Enhance the volstat interface to support Dfs path mappings.
+
+ * Fix "symlink list" to do the right thing for Dfs links
+
+ * Fix callback expiration that was broken in 1.5.27.
+
+ * Fix a crash at shutdown caused by the lack of synchronization
+   within the daemon threads (cm_Daemon, cm_BkgDaemon, cm_IPAddrDaemon)
+
+ * Hold the cm_server_t mutex while walking or modifying the 
+   cm_server_vols_t list in order to avoid a race condition.
+
+ * Ensure that the cm_server_t refCount is safely modified.
+
+ * The pthread library implementations of pthread_cond_wait
+   and pthread_cond_timedwait were failing to return with 
+   the mutex held when error conditions occurred.  This could
+   result in race conditions wherever they are used.  One case
+   in which problems were seen was the Rx event_handler().
+
+ * Prevent cm_GetBuffer() from locking all buffers associated with 
+   a stat cache object before deciding if the current buffer is up 
+   to date.
+
+ * Fix cm_BkgPrefetch to actually ensure that there is a cm_buf_t 
+   object for each offset that we will attempt to reserve.
+
+ * Reduce the default number of background daemon threads used to 
+   prefetch or store to one in order to prevent two or more threads 
+   from stepping on each other.
+
+ * Reduce the default chunk size to 256KB in order to prevent read 
+   timeouts on low bandwidth connections.
+
+ * Fix a race condition that could result in threads becoming stranded 
+   when synchronizing multiple requests on the same stat cache object.
+
 Since 1.5.27
  * The GiveUpAllCallBacks functionality that was added in 1.5.21
    has been disabled.  It has been disabled because it turns out
