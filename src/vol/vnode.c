@@ -69,6 +69,8 @@ private int moveHash(register Vnode * vnp, bit32 newHash);
 void StickOnLruChain_r(register Vnode * vnp,
 		       register struct VnodeClassInfo *vcp);
 
+extern int LogLevel;
+
 #define BAD_IGET	-1000
 
 /* There are two separate vnode queue types defined here:
