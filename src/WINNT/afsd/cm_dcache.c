@@ -694,7 +694,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             lock_ReleaseMutex(&scp->mx);
             mxheld = 0;
         }
-        code = buf_Get(scp, &base, &bp);
+        code = buf_Get(scp, &offset, &bp);
         if (!mxheld) {
             lock_ObtainMutex(&scp->mx);
             mxheld = 1;
@@ -1353,6 +1353,11 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     if (getroot)
         osi_Log1(afsd_logp,"GetBuffer returns cm_data.rootSCachep=%x",cm_data.rootSCachep);
 #endif
+
+    if (cm_HaveCallback(scp) && bufp->dataVersion == scp->dataVersion) {
+        /* We already have this buffer don't do extra work */
+        return 0;
+    }
 
     cm_AFSFidFromFid(&tfid, &scp->fid);
 
