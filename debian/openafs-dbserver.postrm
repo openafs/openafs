@@ -10,7 +10,7 @@ set -e
 case "$1" in
 purge)
     for file in prdb.DB0 prdb.DBSYS1 vldb.DB0 vldb.DBSYS1 ; do
-        rm -f "/var/lib/openafs/db"
+        rm -f "/var/lib/openafs/db/$file"
     done
     for file in PtLog PtLog.old VLLog VLLog.old ; do
         rm -f "/var/log/openafs/$file"
@@ -21,7 +21,7 @@ remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 
 *)
-    echo "postrm called with unknown argument \`$1'" >&2
+    echo "postrm called with unknown argument $1" >&2
     exit 0
 esac
 
