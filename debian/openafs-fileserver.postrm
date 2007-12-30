@@ -17,12 +17,10 @@ purge)
     for file in CellServDB CellServDB.old KeyFile ThisCell UserList ; do
         rm -f "/etc/openafs/server/$file"
     done
-    rm -f /etc/openafs/BosConfig
-    rmdir --parents --ignore-fail-on-non-empty /etc/openafs/server
     for file in SALVAGE.fs fssync.sock salvage.lock sysid sysid.old ; do
         rm -f "/var/lib/openafs/local/$file"
     done
-    rmdir --parents --ignore-fail-on-non-empty /var/lib/openafs/local
+    rm -f /etc/openafs/BosConfig
     ;;
 
 remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
