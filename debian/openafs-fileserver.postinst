@@ -1,14 +1,4 @@
-#!/bin/sh -e
-#
-# Summary of how this script can be called:
-#
-#  * <postinst> `configure' <most-recently-configured-version>
-#  * <old-postinst> `abort-upgrade' <new version>
-#  * <conflictor's-postinst> `abort-remove' `in-favour' <package>
-#    <new-version>
-#  * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
-#    <failed-install-package> <version> `removing'
-#    <conflicting-package> <version>
+#!/bin/sh
 
 set -e
 
