@@ -1,3 +1,11 @@
+openafs (1.4.6.dfsg1-2) unstable; urgency=low
+
+  * Apply additional upstream patches to the 2.6.24 support to fix
+    builds with older kernels.  Thanks to Felix Koop for the testing.
+    (Closes: #458331)
+
+ -- Russ Allbery <rra@debian.org>  Sun, 30 Dec 2007 14:42:56 -0800
+
 openafs (1.4.6.dfsg1-1) unstable; urgency=low
 
   * New upstream release.

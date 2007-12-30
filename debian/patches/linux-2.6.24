@@ -4,8 +4,10 @@ STABLE14-linux-afs-unlinked-file-dentry-flagging-20071031
 STABLE14-linux-nsec-timestamp-zero-20071106
 STABLE14-linux-splice-support-20071106
 STABLE14-linux-2624-20071123
+STABLE14-linux-try-kbuild-deal-with-old-modpost-20071127
+STABLE14-linux24-kernel-configure-test-20071208
 
-Debian Bug#456258
+Debian Bug#456258, Bug#458331
 
 --- openafs.orig/acinclude.m4
 +++ openafs/acinclude.m4
@@ -314,7 +316,32 @@ Debian Bug#456258
  
  obj-m += conftest.o
  _ACEOF
-@@ -65,3 +68,16 @@
+@@ -24,8 +27,9 @@
+ 
+ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+ _ACEOF
+-    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD
+-    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err
++    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
++    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
++    ! grep "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+     then [$3]
+     else
+       sed '/^ *+/d' conftest.err >&AS_MESSAGE_LOG_FD
+@@ -42,8 +46,10 @@
+ #
+ AC_DEFUN([AC_TRY_KBUILD24], [
+   ac_save_CPPFLAGS="$CPPFLAGS"
+-  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ $CPPFLAGS"
+-  AC_TRY_COMPILE([$1], [$2], [$3], [$4])
++  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
++  AC_TRY_COMPILE([
++#include <linux/kernel.h>
++$1], [$2], [$3], [$4])
+   CPPFLAGS="$ac_save_CPPFLAGS"])
+ 
+ 
+@@ -65,3 +71,16 @@
      [],:,AC_MSG_RESULT(no)
      AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
    AC_MSG_RESULT(yes)])
@@ -333,7 +360,7 @@ Debian Bug#456258
 +    AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
 --- openafs.orig/src/cf/linux-test4.m4
 +++ openafs/src/cf/linux-test4.m4
-@@ -894,3 +894,59 @@
+@@ -894,3 +894,58 @@
        ac_cv_linux_fs_struct_fop_has_sendfile=no)])
    AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
  
@@ -387,8 +414,7 @@ Debian Bug#456258
 +  AC_CACHE_VAL([ac_cv_linux_sysctl_table_checking], [
 +    AC_TRY_KBUILD(
 +[#include <linux/sysctl.h>],
-+[extern int sysctl_check_table(struct ctl_table *t);
-+sysctl_check_table(NULL);],
++[ sysctl_check_table(NULL);],
 +      ac_cv_linux_sysctl_table_checking=yes,
 +      ac_cv_linux_sysctl_table_checking=no)])
 +  AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
