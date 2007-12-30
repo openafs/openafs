@@ -6,6 +6,9 @@ openafs (1.4.6.dfsg1-2) UNRELEASED; urgency=low
   * Remove old /etc/openafs/server-local files from older versions when
     purging openafs-fileserver.
   * Minor reformatting of openafs-client's postrm.
+  * Remove databases on purge of openafs-dbserver.
+  * Remove log files when purging openafs-fileserver or openafs-dbserver
+    per Policy 10.8.
 
  -- Russ Allbery <rra@debian.org>  Sun, 30 Dec 2007 14:42:56 -0800
 

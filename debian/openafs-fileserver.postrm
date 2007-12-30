@@ -21,6 +21,10 @@ purge)
         rm -f "/var/lib/openafs/local/$file"
     done
     rm -f /etc/openafs/BosConfig
+    for file in BosLog FileLog SalvageLog VolserLog ; do
+        rm -f "/var/log/openafs/$file"
+        rm -f "/var/log/openafs/$file.old"
+    done
 
     # Clean up after files left behind from older versions of the package.
     if [ -d /etc/openafs/server-local ] ; then
