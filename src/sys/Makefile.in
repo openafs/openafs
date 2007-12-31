@@ -19,8 +19,8 @@ CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCF
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
-OBJECTS= afssyscalls.o setpag.o glue.o syscall.o
-SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
+OBJECTS= afssyscalls.o setpag.o glue.o
+SHLIBOBJS = picobj/setpag.o picobj/glue.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
 LIBAFSSETPAG = libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}
@@ -48,8 +48,14 @@ all: \
 
 libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@
-	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
-		AFS_component_version_number.o ${LIBSYS_AIX_EXP}
+	@set -x; case "${SYS_NAME}" in                   	\
+		hp_ux11*) \
+			$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
+				AFS_component_version_number.o ${LIBSYS_AIX_EXP} ;; \
+		*) \
+			$(AR) crv $@ ${OBJECTS} ${RMTOBJS} syscall.o \
+				AFS_component_version_number.o ${LIBSYS_AIX_EXP} ;; \
+	esac
 	$(RANLIB) $@
 	@set -x; case "${SYS_NAME}" in                   	\
 		rs_aix*) 			        \
@@ -61,15 +67,17 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
 	        -o ${LIBAFSSETPAG} -Wl,--version-script=${srcdir}/mapfile \
-	        ${SHLIBOBJS};; \
+	        ${SHLIBOBJS} syscall.o ;; \
 	rs_aix4*) \
-	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} \
+	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o \
 	        -bE:afssetpag.exp;; \
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
-	*) \
+	        -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o;; \
+	hp_ux11*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
+	*) \
+	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o ;; \
 	esac
 
 ${LIBAFSSETPAG_DARWIN}: ${SHLIBOBJS}
