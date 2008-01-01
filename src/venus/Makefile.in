@@ -173,7 +173,7 @@ kdump: kdump.o
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
 		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
 	ncrx86_* ) ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
-	*nbsd*) touch kdump ;; \
+	*bsd*) touch kdump ;; \
 	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	esac
 
@@ -219,7 +219,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				esac || exit $$?; \
 			done \
 			;; \
-		*nbsd*) \
+		*bsd*) \
 			touch kdump.o ;; \
 		*) \
 			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
@@ -290,7 +290,7 @@ ${DEST}/etc/kdump: kdump-build
 	hp_ux11* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.hp_ux11 ${DEST}/etc/kdump; \
 		${INSTALL} -f $? $@;; \
-	*nbsd*) \
+	*bsd*) \
 		;; \
 	*) \
 		${INSTALL} $? $@ ;; \
