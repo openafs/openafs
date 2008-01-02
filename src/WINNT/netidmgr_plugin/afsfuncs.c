@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005,2006,2007 Secure Endpoints Inc.
+ * Copyright (c) 2005,2006,2007, 2008 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -727,7 +727,7 @@ afs_klog(khm_handle identity,
     char	CellName[128];
     char	ServiceName[128];
     khm_handle	confighandle = NULL;
-    khm_int32	supports_krb4 = 1;
+    khm_int32	supports_krb4 = (pkrb_get_tf_realm == NULL ? 0 : 1);
     khm_int32   got524cred = 0;
 
     /* signalling */
@@ -1036,13 +1036,14 @@ afs_klog(khm_handle identity,
     /* Kerberos 4 */
  try_krb4:
 
-    kcdb_identity_get_config(identity, 0, &confighandle);
-    khc_read_int32(confighandle, L"Krb4Cred\\Krb4NewCreds", &supports_krb4);
-    khc_close_space(confighandle);
-
-    if (!supports_krb4) {
-        _reportf(L"Kerberos 4 not configured");
+    if (supports_krb4) {
+	kcdb_identity_get_config(identity, 0, &confighandle);
+	khc_read_int32(confighandle, L"Krb4Cred\\Krb4NewCreds", &supports_krb4);
+	khc_close_space(confighandle); 
     }
+
+    if (!supports_krb4)
+        _reportf(L"Kerberos 4 not configured");
 
     if (!bGotCreds && supports_krb4 && 
         (method == AFS_TOKEN_AUTO ||
