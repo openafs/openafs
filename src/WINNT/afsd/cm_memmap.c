@@ -234,20 +234,20 @@ cm_ShutdownMappedMemory(void)
 
     afsi_log("Closing AFS Cache:");
     afsi_log("  Base Address   = %p", config_data_p);
-    afsi_log("  stats          = %d", cm_data.stats);
-    afsi_log("  chunkSize      = %d", cm_data.chunkSize);
-    afsi_log("  blockSize      = %d", cm_data.blockSize);
-    afsi_log("  bufferSize     = %d", cm_data.bufferSize);
-    afsi_log("  cacheType      = %d", cm_data.cacheType);
-    afsi_log("  volumeHashTableSize = %d", cm_data.volumeHashTableSize);
-    afsi_log("  currentVolumes = %d", cm_data.currentVolumes);
-    afsi_log("  maxVolumes     = %d", cm_data.maxVolumes);
-    afsi_log("  cellHashTableSize = %d", cm_data.cellHashTableSize);
-    afsi_log("  currentCells   = %d", cm_data.currentCells);
-    afsi_log("  maxCells       = %d", cm_data.maxCells);
-    afsi_log("  scacheHashTableSize  = %d", cm_data.scacheHashTableSize);
-    afsi_log("  currentSCaches = %d", cm_data.currentSCaches);
-    afsi_log("  maxSCaches     = %d", cm_data.maxSCaches);
+    afsi_log("  stats          = %u", cm_data.stats);
+    afsi_log("  chunkSize      = %u", cm_data.chunkSize);
+    afsi_log("  blockSize      = %u", cm_data.blockSize);
+    afsi_log("  bufferSize     = %I64u", cm_data.bufferSize);
+    afsi_log("  cacheType      = %u", cm_data.cacheType);
+    afsi_log("  volumeHashTableSize = %u", cm_data.volumeHashTableSize);
+    afsi_log("  currentVolumes = %u", cm_data.currentVolumes);
+    afsi_log("  maxVolumes     = %u", cm_data.maxVolumes);
+    afsi_log("  cellHashTableSize = %u", cm_data.cellHashTableSize);
+    afsi_log("  currentCells   = %u", cm_data.currentCells);
+    afsi_log("  maxCells       = %u", cm_data.maxCells);
+    afsi_log("  scacheHashTableSize  = %u", cm_data.scacheHashTableSize);
+    afsi_log("  currentSCaches = %u", cm_data.currentSCaches);
+    afsi_log("  maxSCaches     = %u", cm_data.maxSCaches);
 
     cm_ShutdownDCache();
     cm_ShutdownSCache();
@@ -419,20 +419,20 @@ cm_ValidateMappedMemory(char * cachePath)
 
     fprintf(stderr,"AFS Cache data:\n");
     fprintf(stderr,"  Base Address   = %p\n",baseAddress);
-    fprintf(stderr,"  stats          = %d\n", config_data_p->stats);
-    fprintf(stderr,"  chunkSize      = %d\n", config_data_p->chunkSize);
-    fprintf(stderr,"  blockSize      = %d\n", config_data_p->blockSize);
-    fprintf(stderr,"  bufferSize     = %d\n", config_data_p->bufferSize);
-    fprintf(stderr,"  cacheType      = %d\n", config_data_p->cacheType);
-    fprintf(stderr,"  volumeHashTableSize = %d", config_data_p->volumeHashTableSize);
-    fprintf(stderr,"  currentVolumes = %d\n", config_data_p->currentVolumes);
-    fprintf(stderr,"  maxVolumes     = %d\n", config_data_p->maxVolumes);
-    fprintf(stderr,"  cellHashTableSize = %d", config_data_p->cellHashTableSize);
-    fprintf(stderr,"  currentCells   = %d\n", config_data_p->currentCells);
-    fprintf(stderr,"  maxCells       = %d\n", config_data_p->maxCells);
-    fprintf(stderr,"  scacheHashTableSize  = %d\n", config_data_p->scacheHashTableSize);
-    fprintf(stderr,"  currentSCaches = %d\n", config_data_p->currentSCaches);
-    fprintf(stderr,"  maxSCaches     = %d\n", config_data_p->maxSCaches);
+    fprintf(stderr,"  stats          = %u\n", config_data_p->stats);
+    fprintf(stderr,"  chunkSize      = %u\n", config_data_p->chunkSize);
+    fprintf(stderr,"  blockSize      = %u\n", config_data_p->blockSize);
+    fprintf(stderr,"  bufferSize     = %I64u\n", config_data_p->bufferSize);
+    fprintf(stderr,"  cacheType      = %u\n", config_data_p->cacheType);
+    fprintf(stderr,"  volumeHashTableSize = %u", config_data_p->volumeHashTableSize);
+    fprintf(stderr,"  currentVolumes = %u\n", config_data_p->currentVolumes);
+    fprintf(stderr,"  maxVolumes     = %u\n", config_data_p->maxVolumes);
+    fprintf(stderr,"  cellHashTableSize = %u", config_data_p->cellHashTableSize);
+    fprintf(stderr,"  currentCells   = %u\n", config_data_p->currentCells);
+    fprintf(stderr,"  maxCells       = %u\n", config_data_p->maxCells);
+    fprintf(stderr,"  scacheHashTableSize  = %u\n", config_data_p->scacheHashTableSize);
+    fprintf(stderr,"  currentSCaches = %u\n", config_data_p->currentSCaches);
+    fprintf(stderr,"  maxSCaches     = %u\n", config_data_p->maxSCaches);
     cm_data = *config_data_p;      
 
     // perform validation of persisted data structures
@@ -820,20 +820,20 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data = *config_data_p;      
 
 	afsi_log("  Base Address   = %p",baseAddress);
-	afsi_log("  stats          = %d", config_data_p->stats);
-	afsi_log("  chunkSize      = %d", config_data_p->chunkSize);
-	afsi_log("  blockSize      = %d", config_data_p->blockSize);
-	afsi_log("  bufferSize     = %d", config_data_p->bufferSize);
-	afsi_log("  cacheType      = %d", config_data_p->cacheType);
-	afsi_log("  volumeHashTableSize  = %d", config_data_p->volumeHashTableSize);
-	afsi_log("  currentVolumes = %d", config_data_p->currentVolumes);
-	afsi_log("  maxVolumes     = %d", config_data_p->maxVolumes);
-        afsi_log("  cellHashTableSize = %d", config_data_p->cellHashTableSize);
-	afsi_log("  currentCells   = %d", config_data_p->currentCells);
-	afsi_log("  maxCells       = %d", config_data_p->maxCells);
-	afsi_log("  scacheHashTableSize  = %d", config_data_p->scacheHashTableSize);
-	afsi_log("  currentSCaches = %d", config_data_p->currentSCaches);
-	afsi_log("  maxSCaches     = %d", config_data_p->maxSCaches);
+	afsi_log("  stats          = %u", config_data_p->stats);
+	afsi_log("  chunkSize      = %u", config_data_p->chunkSize);
+	afsi_log("  blockSize      = %u", config_data_p->blockSize);
+	afsi_log("  bufferSize     = %I64u", config_data_p->bufferSize);
+	afsi_log("  cacheType      = %u", config_data_p->cacheType);
+	afsi_log("  volumeHashTableSize  = %u", config_data_p->volumeHashTableSize);
+	afsi_log("  currentVolumes = %u", config_data_p->currentVolumes);
+	afsi_log("  maxVolumes     = %u", config_data_p->maxVolumes);
+        afsi_log("  cellHashTableSize = %u", config_data_p->cellHashTableSize);
+	afsi_log("  currentCells   = %u", config_data_p->currentCells);
+	afsi_log("  maxCells       = %u", config_data_p->maxCells);
+	afsi_log("  scacheHashTableSize  = %u", config_data_p->scacheHashTableSize);
+	afsi_log("  currentSCaches = %u", config_data_p->currentSCaches);
+	afsi_log("  maxSCaches     = %u", config_data_p->maxSCaches);
 
         // perform validation of persisted data structures
         // if there is a failure, start from scratch
