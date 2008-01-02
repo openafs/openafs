@@ -1000,7 +1000,11 @@ BOOL AFSModulesVerify(void)
         RegCloseKey (parmKey);
     }
 
-    if (verifyServiceSig && cacheSize < 716800) {
+    if (verifyServiceSig 
+#ifndef _WIN64
+         && cacheSize < 716800
+#endif
+         ) {
         trustVerified = VerifyTrust(filename);
     } else {
         afsi_log("Signature Verification disabled");
