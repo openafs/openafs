@@ -1009,8 +1009,8 @@ afs_klog(khm_handle identity,
 
         _reportf(L"Trying Krb524");
 
-        if (method == AFS_TOKEN_AUTO ||
-            method == AFS_TOKEN_KRB524) {
+        if (pkrb524_convert_creds_kdc && 
+            (method == AFS_TOKEN_AUTO || method == AFS_TOKEN_KRB524)) {
             /* This requires krb524d to be running with the KDC */
             r = pkrb524_convert_creds_kdc(context, k5creds, &creds);
             if (r) {
