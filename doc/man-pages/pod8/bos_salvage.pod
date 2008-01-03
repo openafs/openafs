@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos salvage - Restores internal consistency to a file system or volume
+bos_salvage - Restores internal consistency to a file system or volume
 
 =head1 SYNOPSIS
 

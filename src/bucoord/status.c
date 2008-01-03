@@ -38,6 +38,7 @@ extern struct Lock cmdLineLock;	/* lock on the cmdLine */
  * These routines are common the backup coordinator and tape coordinator
  */
 
+void
 initStatus()
 {
     dlqInit(&statusHead);
@@ -47,21 +48,25 @@ initStatus()
 
 /* lock managment */
 
+void
 lock_Status()
 {
     ObtainWriteLock(&statusQueueLock);
 }
 
+void
 unlock_Status()
 {
     ReleaseWriteLock(&statusQueueLock);
 }
 
+void
 lock_cmdLine()
 {
     ObtainWriteLock(&cmdLineLock);
 }
 
+void
 unlock_cmdLine()
 {
     ReleaseWriteLock(&cmdLineLock);
@@ -109,6 +114,7 @@ createStatusNode()
     return (ptr);
 }
 
+void
 deleteStatusNode(ptr)
      statusP ptr;
 {

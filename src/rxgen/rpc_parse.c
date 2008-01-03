@@ -41,13 +41,7 @@ RCSID
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
@@ -1116,20 +1110,29 @@ cs_Proc_CodeGeneration(definition * defp, int split_flag, char *procheader)
     }
 }
 
-
 static void
 cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 {
     proc1_list *plist;
+    char *first_arg;
+
+    if (ansic_flag) {
+	if (split_flag) {
+	    first_arg = "register struct rx_call *z_call";
+	} else {
+	    first_arg = "register struct rx_connection *z_conn";
+	}
+    } else {
+	if (split_flag) {
+	    first_arg = "z_call";
+	} else {
+	    first_arg = "z_conn";
+	}
+    }
 
     if (!cflag) {
-	if (split_flag) {
-	    f_print(fout, "int %s%s%s%s(z_call", procheader, prefix,
-		    PackagePrefix[PackageIndex], defp->pc.proc_name);
-	} else {
-	    f_print(fout, "int %s%s%s%s(z_conn", procheader, prefix,
-		    PackagePrefix[PackageIndex], defp->pc.proc_name);
-	}
+	f_print(fout, "int %s%s%s%s(%s", procheader, prefix,
+		PackagePrefix[PackageIndex], defp->pc.proc_name, first_arg);
     }
     if ((strlen(procheader) + strlen(prefix) +
 	 strlen(PackagePrefix[PackageIndex]) + strlen(defp->pc.proc_name)) >=
@@ -1139,19 +1142,31 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
-		plist->pl.param_flag &= ~PROCESSED_PARAM;
-		f_print(fout, ", %s", plist->pl.param_name);
+		if (ansic_flag) {
+		    if (plist->pl.param_flag & OUT_STRING) {
+			f_print(fout, ",%s *%s", plist->pl.param_type,
+				plist->pl.param_name);
+		    } else {
+			f_print(fout, ",%s %s", plist->pl.param_type,
+				plist->pl.param_name);
+		    }
+		} else {
+		    f_print(fout, ", %s", plist->pl.param_name);    
+		    plist->pl.param_flag &= ~PROCESSED_PARAM;
+		}
 	    }
 	}
 	f_print(fout, ")\n");
     }
 }
 
-
 static void
 cs_ProcParams_setup(definition * defp, int split_flag)
 {
     proc1_list *plist, *plist1;
+
+    if (ansic_flag)
+	return;
 
     if (!split_flag)
 	f_print(fout, "\tregister struct rx_connection *z_conn;\n");
@@ -1748,8 +1763,14 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     proc1_list *plist;
 
     if (!cflag) {
-      f_print(fout, "int %s%s%s%s(aclient, aflags", procheader, prefix,
-	      PackagePrefix[PackageIndex], defp->pc.proc_name);
+     	if (ansic_flag) {
+	    f_print(fout, "int %s%s%s%s(register struct ubik_client *aclient, afs_int32 aflags",
+			  procheader, prefix, PackagePrefix[PackageIndex],
+			  defp->pc.proc_name);
+	} else {
+	    f_print(fout, "int %s%s%s%s(aclient, aflags", procheader, prefix,
+			  PackagePrefix[PackageIndex], defp->pc.proc_name);
+	}
     }
     if ((strlen(procheader) + strlen(prefix) +
 	 strlen(PackagePrefix[PackageIndex]) + strlen(defp->pc.proc_name)) >=
@@ -1759,8 +1780,18 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
-		plist->pl.param_flag &= ~PROCESSED_PARAM;
-		f_print(fout, ", %s", plist->pl.param_name);
+		if (ansic_flag) {
+		    if (plist->pl.param_flag & OUT_STRING) {
+			f_print(fout, ",%s *%s", plist->pl.param_type,
+				plist->pl.param_name);
+		    } else {
+			f_print(fout, ",%s %s", plist->pl.param_type,
+				plist->pl.param_name);
+		    }
+		} else {
+		    plist->pl.param_flag &= ~PROCESSED_PARAM;
+		    f_print(fout, ", %s", plist->pl.param_name);
+		}
 	    }
 	}
 	f_print(fout, ")\n");
@@ -1772,6 +1803,9 @@ static void
 ucs_ProcParams_setup(definition * defp, int split_flag)
 {
     proc1_list *plist, *plist1;
+
+    if (ansic_flag)
+	return;
 
     f_print(fout, "\tregister struct ubik_client *aclient;\n\tafs_int32 aflags;\n");
     for (plist = defp->pc.plists; plist; plist = plist->next) {

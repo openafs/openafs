@@ -2,9 +2,12 @@
 #                 [ACTION-IF-SUCCESS], [ACTION-IF-FAILURE])
 #
 AC_DEFUN([AC_TRY_KBUILD26],[  rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
   if mkdir conftest.dir &&
     cat >conftest.dir/Makefile <<_ACEOF &&
-CFLAGS += $CPPFLAGS
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
 
 obj-m += conftest.o
 _ACEOF
@@ -24,8 +27,9 @@ $2
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
-    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD
-    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
+    ! grep "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then [$3]
     else
       sed '/^ *+/d' conftest.err >&AS_MESSAGE_LOG_FD
@@ -42,8 +46,10 @@ _ACEOF
 #
 AC_DEFUN([AC_TRY_KBUILD24], [
   ac_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ $CPPFLAGS"
-  AC_TRY_COMPILE([$1], [$2], [$3], [$4])
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  AC_TRY_COMPILE([
+#include <linux/kernel.h>
+$1], [$2], [$3], [$4])
   CPPFLAGS="$ac_save_CPPFLAGS"])
 
 
@@ -77,3 +83,16 @@ lose
 ],:,AC_MSG_RESULT(no)
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
+
+AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
+  AC_MSG_CHECKING([if linux kbuild requires EXTRA_CFLAGS])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS=-Wall
+  AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/fs.h>],
+    [],
+    ac_linux_kbuild_requires_extra_cflags=no,
+    ac_linux_kbuild_requires_extra_cflags=yes)
+    CPPFLAGS="$save_CPPFLAGS"
+    AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])

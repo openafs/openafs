@@ -119,7 +119,12 @@ extern void afs_InitCBQueue(int doLockInit);
 extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
+extern afs_int32 afs_cellindex;
 extern afs_rwlock_t afs_xcell;
+#ifdef AFS_AFSDB_ENV
+extern afs_rwlock_t afsdb_client_lock;
+extern afs_rwlock_t afsdb_req_lock;
+#endif
 extern struct afs_q CellLRU;           
 
 extern void afs_CellInit(void);
@@ -301,6 +306,7 @@ extern void init_sys_error_to_et(void);
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
+extern void shutdown_exporter(void);
 
 /* afs_icl.c */
 extern struct afs_icl_set *afs_icl_allSets;
@@ -488,6 +494,7 @@ extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 				    struct AFS_UCRED **cred,
 				    afs_int32 host, afs_int32 *pagparam,
 				    struct afs_exporter **outexporter);
+extern void shutdown_nfsclnt(void);
 
 /* afs_osi.c */
 extern afs_lock_t afs_ftf;
@@ -502,6 +509,7 @@ extern void afs_osi_UnmaskRxkSignals(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_Invisible(void);
 extern void shutdown_osi(void);
+extern void shutdown_osinet(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
@@ -525,6 +533,7 @@ extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);
 extern void *osi_AllocLargeSpace(size_t size);
 extern void *osi_AllocSmallSpace(size_t size);
+extern void shutdown_osinet(void);
 
 /* afs_osi_pag.c */
 extern int afs_setpag();

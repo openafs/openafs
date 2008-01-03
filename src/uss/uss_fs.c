@@ -30,13 +30,7 @@ RCSID
 #endif
 #include <netinet/in.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/venus.h>
 #include "uss_common.h"
@@ -495,7 +489,7 @@ uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
 #endif /* USS_FS_DB */
 	return (-1);
     }
-
+    return 0;
 }				/*uss_fs_MkMountPoint */
 
 

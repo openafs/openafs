@@ -533,11 +533,14 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     strcpy(aclient.instance, "");
     strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
     
+#ifndef AFS_AIX51_ENV
     /* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
      * this routine, it will not add the token. It is not clear what 
-     * is going on here! So we will do the following operation
+     * is going on here! So we will do the following operation.
+     * On AIX 5 this kills our parent. So we won't.
      */
     write(2,"",0); /* dummy write */
+#endif
     status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag);
 
     return(status);

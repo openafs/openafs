@@ -30,13 +30,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #undef VIRTUE
 #undef VICE
@@ -69,20 +63,19 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), NewUuidCmd();
+static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), UuidCmd();
 
 extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
 
 
-extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
 static void ZapList();
 static int PruneList();
 static CleanAcl();
-static SetVolCmd();
+static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 static GetCellName();
 static VLDBInit();
 static void Die();
@@ -286,6 +279,7 @@ PRights(afs_int32 arights, int dfs)
 	if (arights & DFS_USR7)
 	    printf("H");
     }
+    return 0;
 }
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
@@ -731,7 +725,7 @@ AclToString(struct Acl *acl)
 }
 
 static int
-SetACLCmd(struct cmd_syndesc *as, char *arock)
+SetACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -865,7 +859,7 @@ SetACLCmd(struct cmd_syndesc *as, char *arock)
 
 
 static int
-CopyACLCmd(struct cmd_syndesc *as, char *arock)
+CopyACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1045,7 +1039,7 @@ CleanAcl(struct Acl *aa, char *fname)
 
 /* clean up an acl to not have bogus entries */
 static int
-CleanACLCmd(struct cmd_syndesc *as, char *arock)
+CleanACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct Acl *ta = 0;
@@ -1132,7 +1126,7 @@ CleanACLCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-ListACLCmd(struct cmd_syndesc *as, char *arock)
+ListACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct Acl *ta;
@@ -1196,7 +1190,7 @@ ListACLCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-GetCallerAccess(struct cmd_syndesc *as, char *arock)
+GetCallerAccess(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     int error = 0;
@@ -1223,7 +1217,7 @@ GetCallerAccess(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
+FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1244,26 +1238,45 @@ FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
     return error;
 }
 
+/* 
+ * The Windows version of UuidCmd displays the UUID.
+ * When the UNIX version is updated to do the same
+ * be sure to replace the CMD_REQUIRED flag with
+ * CMD_OPTIONAL in the cmd_AddParam(-generate) call 
+ */
 static int
-NewUuidCmd(struct cmd_syndesc *as, char *arock)
+UuidCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
 
     blob.in_size = 0;
     blob.out_size = 0;
-    code = pioctl(0, VIOC_NEWUUID, &blob, 1);
-    if (code) {
-	Die(errno, 0);
-	return 1;
-    }
+    
+    if (as->parms[0].items) {
+        if (geteuid()) {
+            fprintf (stderr, "Permission denied: requires root access.\n");
+            return EACCES;
+        }
 
-    printf("New uuid generated.\n");
+        /* generate new UUID */
+        code = pioctl(0, VIOC_NEWUUID, &blob, 1);
+
+        if (code) {
+            Die(errno, 0);
+            return 1;
+        }
+
+        printf("New uuid generated.\n");
+    } else {
+        /* This will never execute */
+        printf("Please add the '-generate' option to generate a new UUID.\n");
+    }
     return 0;
 }
 
 static int
-FlushCmd(struct cmd_syndesc *as, char *arock)
+FlushCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1290,17 +1303,17 @@ FlushCmd(struct cmd_syndesc *as, char *arock)
 
 /* all this command does is repackage its args and call SetVolCmd */
 static int
-SetQuotaCmd(struct cmd_syndesc *as, char *arock)
+SetQuotaCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_syndesc ts;
 
     /* copy useful stuff from our command slot; we may later have to reorder */
     memcpy(&ts, as, sizeof(ts));	/* copy whole thing */
-    return SetVolCmd(&ts);
+    return SetVolCmd(&ts, arock);
 }
 
 static int
-SetVolCmd(struct cmd_syndesc *as, char *arock)
+SetVolCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1364,7 +1377,7 @@ struct VenusFid {
 };
 
 static int
-ExamineCmd(struct cmd_syndesc *as, char *arock)
+ExamineCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1405,7 +1418,7 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-ListQuotaCmd(struct cmd_syndesc *as, char *arock)
+ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1436,7 +1449,7 @@ ListQuotaCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-WhereIsCmd(struct cmd_syndesc *as, char *arock)
+WhereIsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1475,7 +1488,7 @@ WhereIsCmd(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DiskFreeCmd(struct cmd_syndesc *as, char *arock)
+DiskFreeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1506,7 +1519,7 @@ DiskFreeCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-QuotaCmd(struct cmd_syndesc *as, char *arock)
+QuotaCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1539,7 +1552,7 @@ QuotaCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-ListMountCmd(struct cmd_syndesc *as, char *arock)
+ListMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1659,8 +1672,8 @@ ListMountCmd(struct cmd_syndesc *as, char *arock)
     return error;
 }
 
-static
-MakeMountCmd(struct cmd_syndesc *as, char *arock)
+static int
+MakeMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char *cellName, *volName, *tmpName;
@@ -1768,7 +1781,7 @@ defect #3069
  *      tp: Set to point to the actual name of the mount point to nuke.
  */
 static int
-RemoveMountCmd(struct cmd_syndesc *as, char *arock)
+RemoveMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -1820,7 +1833,7 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock)
 */
 
 static int
-CheckServersCmd(struct cmd_syndesc *as, char *arock)
+CheckServersCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1919,7 +1932,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-MessagesCmd(struct cmd_syndesc *as, char *arock)
+MessagesCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -1965,7 +1978,7 @@ MessagesCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-CheckVolumesCmd(struct cmd_syndesc *as, char *arock)
+CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1983,7 +1996,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
+SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2022,7 +2035,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
 
 #define MAXGCSIZE	16
 static int
-GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
+GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, filesUsed;
     struct ViceIoctl blob;
@@ -2096,7 +2109,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-ListCellsCmd(struct cmd_syndesc *as, char *arock)
+ListCellsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     afs_int32 i, j;
@@ -2147,7 +2160,7 @@ ListCellsCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-ListAliasesCmd(struct cmd_syndesc *as, char *arock)
+ListAliasesCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, i;
     char *tp, *aliasName, *realName;
@@ -2177,7 +2190,7 @@ ListAliasesCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-CallBackRxConnCmd(struct cmd_syndesc *as, char *arock)
+CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2216,7 +2229,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-NukeNFSCredsCmd(struct cmd_syndesc *as, char *arock)
+NukeNFSCredsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2247,7 +2260,7 @@ NukeNFSCredsCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-NewCellCmd(struct cmd_syndesc *as, char *arock)
+NewCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, linkedstate = 0, size = 0, *lp;
     struct ViceIoctl blob;
@@ -2359,7 +2372,7 @@ NewCellCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-NewAliasCmd(struct cmd_syndesc *as, char *arock)
+NewAliasCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2394,7 +2407,7 @@ NewAliasCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-WhichCellCmd(struct cmd_syndesc *as, char *arock)
+WhichCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -2419,7 +2432,7 @@ WhichCellCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-WSCellCmd(struct cmd_syndesc *as, char *arock)
+WSCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2449,7 +2462,7 @@ static PrimaryCellCmd(as)
 */
 
 static int
-MonitorCmd(struct cmd_syndesc *as, char *arock)
+MonitorCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2510,7 +2523,7 @@ MonitorCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-SysNameCmd(struct cmd_syndesc *as, char *arock)
+SysNameCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2564,7 +2577,7 @@ SysNameCmd(struct cmd_syndesc *as, char *arock)
 
 static char *exported_types[] = { "null", "nfs", "" };
 static int
-ExportAfsCmd(struct cmd_syndesc *as, char *arock)
+ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2691,7 +2704,7 @@ ExportAfsCmd(struct cmd_syndesc *as, char *arock)
 
 
 static int
-GetCellCmd(struct cmd_syndesc *as, char *arock)
+GetCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2742,7 +2755,7 @@ GetCellCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-SetCellCmd(struct cmd_syndesc *as, char *arock)
+SetCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2926,7 +2939,7 @@ addServer(char *name, afs_int32 rank)
 
 
 static int
-SetPrefCmd(struct cmd_syndesc *as, char *arock)
+SetPrefCmd(struct cmd_syndesc *as, void *arock)
 {
     FILE *infd;
     afs_int32 code;
@@ -3032,7 +3045,7 @@ SetPrefCmd(struct cmd_syndesc *as, char *arock)
 
 
 static int
-GetPrefCmd(struct cmd_syndesc *as, char *arock)
+GetPrefCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -3102,7 +3115,7 @@ GetPrefCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-StoreBehindCmd(struct cmd_syndesc *as, char *arock)
+StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -3202,8 +3215,8 @@ StoreBehindCmd(struct cmd_syndesc *as, char *arock)
 }
 
 
-static afs_int32
-SetCryptCmd(struct cmd_syndesc *as, char *arock)
+static int
+SetCryptCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -3229,8 +3242,8 @@ SetCryptCmd(struct cmd_syndesc *as, char *arock)
 }
 
 
-static afs_int32
-GetCryptCmd(struct cmd_syndesc *as, char *arock)
+static int
+GetCryptCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -3267,8 +3280,8 @@ static char *modenames[] = {
     NULL
 };
 
-static afs_int32
-DisconCmd(struct cmd_syndesc *as, char *arock)
+static int
+DisconCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     char *modename;
@@ -3336,17 +3349,17 @@ main(int argc, char **argv)
 #endif
 
     /* try to find volume location information */
-    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, 0,
+    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, NULL,
 			  "get client network interface addresses");
     cmd_CreateAlias(ts, "gc");
 
-    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, 0,
+    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, NULL,
 			  "set client network interface addresses");
     cmd_AddParm(ts, "-address", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"client network interfaces");
     cmd_CreateAlias(ts, "sc");
 
-    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, 0,
+    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, NULL,
 			  "set server ranks");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"fileserver names and ranks");
@@ -3357,7 +3370,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-stdin", CMD_FLAG, CMD_OPTIONAL, "input from stdin");
     cmd_CreateAlias(ts, "sp");
 
-    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, 0,
+    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, NULL,
 			  "get server ranks");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL,
 		"output to named file");
@@ -3366,7 +3379,7 @@ main(int argc, char **argv)
 /*    cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
     cmd_CreateAlias(ts, "gp");
 
-    ts = cmd_CreateSyntax("setacl", SetACLCmd, 0, "set access control list");
+    ts = cmd_CreateSyntax("setacl", SetACLCmd, NULL, "set access control list");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
     cmd_AddParm(ts, "-acl", CMD_LIST, 0, "access list entries");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "clear access list");
@@ -3379,7 +3392,7 @@ main(int argc, char **argv)
 		"initial file acl (DFS only)");
     cmd_CreateAlias(ts, "sa");
 
-    ts = cmd_CreateSyntax("listacl", ListACLCmd, 0,
+    ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL,
 			  "list access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     parm_listacl_id = ts->nParms;
@@ -3387,16 +3400,16 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
     cmd_CreateAlias(ts, "la");
 
-    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, 0,
+    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL,
             "list callers access");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "gca");
 
-    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, 0,
+    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL,
 			  "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, 0,
+    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL,
 			  "copy access control list");
     cmd_AddParm(ts, "-fromdir", CMD_SINGLE, 0,
 		"source directory (or DFS file)");
@@ -3410,13 +3423,13 @@ main(int argc, char **argv)
 
     cmd_CreateAlias(ts, "ca");
 
-    ts = cmd_CreateSyntax("flush", FlushCmd, 0, "flush file from cache");
+    ts = cmd_CreateSyntax("flush", FlushCmd, NULL, "flush file from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
-    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, 0,
+    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL,
 			  "flush mount symlink from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("setvol", SetVolCmd, 0, "set volume status");
+    ts = cmd_CreateSyntax("setvol", SetVolCmd, NULL, "set volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_OPTIONAL,
 		"disk space quota in 1K units");
@@ -3429,32 +3442,32 @@ main(int argc, char **argv)
 		"offline message");
     cmd_CreateAlias(ts, "sv");
 
-    ts = cmd_CreateSyntax("messages", MessagesCmd, 0,
+    ts = cmd_CreateSyntax("messages", MessagesCmd, NULL,
 			  "control Cache Manager messages");
     cmd_AddParm(ts, "-show", CMD_SINGLE, CMD_OPTIONAL,
 		"[user|console|all|none]");
 
-    ts = cmd_CreateSyntax("examine", ExamineCmd, 0, "display file/volume status");
+    ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, "display file/volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
 
-    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, 0, "list volume quota");
+    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, "list volume quota");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lq");
 
-    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, 0,
+    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL,
 			  "show server disk space usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "df");
 
-    ts = cmd_CreateSyntax("quota", QuotaCmd, 0, "show volume quota usage");
+    ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, "show volume quota usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("lsmount", ListMountCmd, 0, "list mount point");
+    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, 0, "make mount point");
+    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
     cmd_AddParm(ts, "-vol", CMD_SINGLE, 0, "volume name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -3470,10 +3483,10 @@ defect 3069
 */
 
 
-    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, 0, "remove mount point");
+    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, "remove mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, 0,
+    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL,
 			  "check local cell's servers");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell to check");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "check all cells");
@@ -3482,12 +3495,12 @@ defect 3069
     cmd_AddParm(ts, "-interval", CMD_SINGLE, CMD_OPTIONAL,
 		"seconds between probes");
 
-    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, 0,
+    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL,
 			  "check volumeID/name mappings");
     cmd_CreateAlias(ts, "checkbackups");
 
 
-    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, 0,
+    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL,
 			  "set cache size");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
 		"size in 1K byte blocks (0 => reset)");
@@ -3496,19 +3509,19 @@ defect 3069
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL,
 		"reset size back to boot value");
 
-    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, 0,
+    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL,
 			  "get cache usage info");
     cmd_AddParm(ts, "-files", CMD_FLAG, CMD_OPTIONAL, "Show cach files used as well");
     cmd_AddParm(ts, "-excessive", CMD_FLAG, CMD_OPTIONAL, "excessively verbose cache stats");
 
-    ts = cmd_CreateSyntax("listcells", ListCellsCmd, 0,
+    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL,
 			  "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
-    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, 0,
+    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL,
 			  "list configured cell aliases");
 
-    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, 0, "set volume quota");
+    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
 #ifdef notdef
@@ -3516,13 +3529,13 @@ defect 3069
 #endif
     cmd_CreateAlias(ts, "sq");
 
-    ts = cmd_CreateSyntax("newcell", NewCellCmd, 0, "configure new cell");
+    ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, "configure new cell");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL,
 		"linked cell name");
 
-    ts = cmd_CreateSyntax("newalias", NewAliasCmd, 0,
+    ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL,
 			  "configure new cell alias");
     cmd_AddParm(ts, "-alias", CMD_SINGLE, 0, "alias name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "real name of cell");
@@ -3540,42 +3553,42 @@ defect 3069
 		"cell's vldb server port");
 #endif
 
-    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, 0, "list file's cell");
+    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, "list file's cell");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("whereis", WhereIsCmd, 0, "list file's location");
+    ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, "list file's location");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("wscell", WSCellCmd, 0, "list workstation's cell");
+    ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
 
 /*
-    ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
+    ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, NULL, "obsolete (listed primary cell)");
 */
 
     /* set cache monitor host address */
-    ts = cmd_CreateSyntax("monitor", MonitorCmd, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"host name or 'off'");
     cmd_CreateAlias(ts, "mariner");
 
-    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, 0, "get cell status");
+    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, "get cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
 
-    ts = cmd_CreateSyntax("setcell", SetCellCmd, 0, "set cell status");
+    ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, "set cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     cmd_AddParm(ts, "-suid", CMD_FLAG, CMD_OPTIONAL, "allow setuid programs");
     cmd_AddParm(ts, "-nosuid", CMD_FLAG, CMD_OPTIONAL,
 		"disallow setuid programs");
 
-    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, 0,
+    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL,
 			  "flush all data in volume");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("sysname", SysNameCmd, 0,
+    ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL,
 			  "get/set sysname (i.e. @sys) value");
     cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
-    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, 0,
+    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL,
 			  "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");
     cmd_AddParm(ts, "-start", CMD_SINGLE, CMD_OPTIONAL,
@@ -3592,7 +3605,7 @@ defect 3069
 		"enable callbacks to get creds from new clients (on  | off)");
 
 
-    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, 0,
+    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL,
 			  "store to server after file close");
     cmd_AddParm(ts, "-kbytes", CMD_SINGLE, CMD_OPTIONAL,
 		"asynchrony for specified names");
@@ -3602,44 +3615,44 @@ defect 3069
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "show status");
     cmd_CreateAlias(ts, "sb");
 
-    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, 0,
+    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL,
 			  "set cache manager encryption flag");
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
-    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, 0,
+    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL,
 			  "get cache manager encryption flag");
 
-    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
+    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL,
 			  "Manage per process RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, 0,
+    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL,
 			  "Manage per peer RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, 0, "configure callback connection address");
+    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 
     /* try to find volume location information */
-    ts = cmd_CreateSyntax("getfid", GetFidCmd, 0,
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
 #ifdef AFS_DISCON_ENV
-    ts = cmd_CreateSyntax("discon", DisconCmd, 0,
+    ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
 			  "disconnection mode");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "nat | full");
 #endif
 
-    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, 0, "nuke credentials for NFS client");
+    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
 
-    ts = cmd_CreateSyntax("newuuid", NewUuidCmd, 0,
-			  "force a new uuid");
+    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, "manage the UUID for the cache manager");
+    cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_REQUIRED, "generate a new UUID");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
@@ -3693,7 +3706,7 @@ Die(int errnum, char *filename)
 
 /* get clients interface addresses */
 static int
-GetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
+GetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -3739,7 +3752,7 @@ GetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-SetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
+SetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, addr;
     struct cmd_item *ti;
@@ -3813,7 +3826,7 @@ SetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-FlushMountCmd(struct cmd_syndesc *as, char *arock)
+FlushMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -3929,7 +3942,7 @@ FlushMountCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-RxStatProcCmd(struct cmd_syndesc *as, char *arock)
+RxStatProcCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     afs_int32 flags = 0;
@@ -3964,7 +3977,7 @@ RxStatProcCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
+RxStatPeerCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     afs_int32 flags = 0;
@@ -3999,7 +4012,7 @@ RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-GetFidCmd(struct cmd_syndesc *as, char *arock)
+GetFidCmd(struct cmd_syndesc *as, void *arock)
 {
     struct ViceIoctl blob;
     struct cmd_item *ti;

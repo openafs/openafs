@@ -18,6 +18,7 @@ RCSID
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "des/des.h"
 #include "rx/rxkad.h"
 #else /* UKERNEL */
 #include <sys/types.h>
@@ -48,16 +49,12 @@ RCSID
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <rx/rxkad.h>
+#include <rx/rx.h>
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
@@ -312,7 +309,10 @@ IsClientConfigDirectory(const char *path)
 static int
 afsconf_Check(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
+#ifdef AFS_NT40_ENV
+    char *p;
+#endif
     struct stat tstat;
     register afs_int32 code;
 
@@ -358,9 +358,11 @@ afsconf_Check(register struct afsconf_dir *adir)
 static int
 afsconf_Touch(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
+#else
+    char *p;
 #endif
 
     adir->timeRead = 0;		/* just in case */
@@ -782,8 +784,8 @@ ParseCellLine(register char *aline, register char *aname,
 /* call aproc(entry, arock, adir) for all cells.  Proc must return 0, or we'll stop early and return the code it returns */
 int
 afsconf_CellApply(struct afsconf_dir *adir,
-		  int (*aproc) (struct afsconf_cell * cell, char *arock,
-				struct afsconf_dir * dir), char *arock)
+		  int (*aproc) (struct afsconf_cell * cell, void *arock,
+				struct afsconf_dir * dir), void *arock)
 {
     register struct afsconf_entry *tde;
     register afs_int32 code;
@@ -805,8 +807,8 @@ afsconf_CellApply(struct afsconf_dir *adir,
 int
 afsconf_CellAliasApply(struct afsconf_dir *adir,
 		       int (*aproc) (struct afsconf_cellalias * alias,
-				     char *arock, struct afsconf_dir * dir),
-		       char *arock)
+				     void *arock, struct afsconf_dir * dir),
+		       void *arock)
 {
     register struct afsconf_aliasentry *tde;
     register afs_int32 code;
@@ -1283,9 +1285,8 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 
 /* get latest key */
 afs_int32
-afsconf_GetLatestKey(struct afsconf_dir * adir,
-    afs_int32 * avno,
-    struct ktc_encryptionKey *akey)
+afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, 
+		     struct ktc_encryptionKey *akey)
 {
     register int i;
     int maxa;
@@ -1346,10 +1347,10 @@ have_afs_keyfile(struct afsconf_dir *adir)
 int
 afsconf_GetKey(void *rock, afs_int32 avno, struct ktc_encryptionKey *akey)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) rock;
     register int i, maxa;
     register struct afsconf_key *tk;
     register afs_int32 code;
-    struct afsconf_dir *adir = rock;
 
     LOCK_GLOBAL_MUTEX;
     code = afsconf_Check(adir);

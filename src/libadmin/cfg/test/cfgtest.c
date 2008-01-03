@@ -90,7 +90,7 @@ CellServDbCallBack(void *callBackId, cfg_cellServDbStatus_t * statusItemP,
 
 
 static int
-DoCellServDbAddHost(struct cmd_syndesc *as, char *arock)
+DoCellServDbAddHost(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int maxUpdates;
@@ -135,7 +135,7 @@ DoCellServDbAddHost(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoCellServDbRemoveHost(struct cmd_syndesc *as, char *arock)
+DoCellServDbRemoveHost(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int maxUpdates;
@@ -181,7 +181,7 @@ DoCellServDbRemoveHost(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoCellServDbEnumerate(struct cmd_syndesc *as, char *arock)
+DoCellServDbEnumerate(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     char *fsDbHost = as->parms[0].items->data;
@@ -216,21 +216,21 @@ SetupCellServDbCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("CellServDbAddHost", DoCellServDbAddHost, 0,
+    ts = cmd_CreateSyntax("CellServDbAddHost", DoCellServDbAddHost, NULL,
 			  "add configuration target to server CellServDB");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-syshost", CMD_SINGLE, CMD_OPTIONAL,
 		"system control host");
 
-    ts = cmd_CreateSyntax("CellServDbRemoveHost", DoCellServDbRemoveHost, 0,
+    ts = cmd_CreateSyntax("CellServDbRemoveHost", DoCellServDbRemoveHost, NULL,
 			  "remove configuration target from server CellServDB");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-syshost", CMD_SINGLE, CMD_OPTIONAL,
 		"system control host");
 
-    ts = cmd_CreateSyntax("CellServDbEnumerate", DoCellServDbEnumerate, 0,
+    ts = cmd_CreateSyntax("CellServDbEnumerate", DoCellServDbEnumerate, NULL,
 			  "enumerate server CellServDB from specified host");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
 
@@ -245,7 +245,7 @@ SetupCellServDbCmd(void)
 
 
 static int
-DoDbServersWaitForQuorum(struct cmd_syndesc *as, char *arock)
+DoDbServersWaitForQuorum(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -273,7 +273,7 @@ DoDbServersWaitForQuorum(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoFileServerStop(struct cmd_syndesc *as, char *arock)
+DoFileServerStop(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -294,7 +294,7 @@ DoFileServerStop(struct cmd_syndesc *as, char *arock)
 }
 
 static int
-DoFileServerStart(struct cmd_syndesc *as, char *arock)
+DoFileServerStart(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -321,18 +321,18 @@ SetupServerCmd(void)
     struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax("DbServersWaitForQuorum", DoDbServersWaitForQuorum,
-			  0, "wait for database servers to achieve quorum");
+			  NULL, "wait for database servers to achieve quorum");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_OPTIONAL,
 		"timeout in seconds");
 
-    ts = cmd_CreateSyntax("FileServerStop", DoFileServerStop, 0,
+    ts = cmd_CreateSyntax("FileServerStop", DoFileServerStop, NULL,
 			  "stop and unconfigure fileserver on specified host");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
 
-    ts = cmd_CreateSyntax("FileServerStart", DoFileServerStart, 0,
+    ts = cmd_CreateSyntax("FileServerStart", DoFileServerStart, NULL,
 			  "start the fileserver on specified host");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
@@ -344,7 +344,7 @@ SetupServerCmd(void)
 
 
 static int
-DoHostPartitionTableEnumerate(struct cmd_syndesc *as, char *arock)
+DoHostPartitionTableEnumerate(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     cfg_partitionEntry_t *vptable;
@@ -385,7 +385,7 @@ SetupHostCmd(void)
     struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax("HostPartitionTableEnumerate",
-			  DoHostPartitionTableEnumerate, 0,
+			  DoHostPartitionTableEnumerate, NULL,
 			  "enumerate vice partition table");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
@@ -398,7 +398,7 @@ SetupHostCmd(void)
 
 
 static int
-DoClientCellServDbAdd(struct cmd_syndesc *as, char *arock)
+DoClientCellServDbAdd(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -422,7 +422,7 @@ DoClientCellServDbAdd(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoClientCellServDbRemove(struct cmd_syndesc *as, char *arock)
+DoClientCellServDbRemove(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -447,7 +447,7 @@ DoClientCellServDbRemove(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoClientStart(struct cmd_syndesc *as, char *arock)
+DoClientStart(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -474,7 +474,7 @@ DoClientStart(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoClientStop(struct cmd_syndesc *as, char *arock)
+DoClientStop(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -501,7 +501,7 @@ DoClientStop(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoClientSetCell(struct cmd_syndesc *as, char *arock)
+DoClientSetCell(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     void *hostHandle;
@@ -544,7 +544,7 @@ DoClientSetCell(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoClientQueryStatus(struct cmd_syndesc *as, char *arock)
+DoClientQueryStatus(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     char *cfgHost = as->parms[0].items->data;
@@ -578,7 +578,7 @@ DoClientQueryStatus(struct cmd_syndesc *as, char *arock)
 
 
 static int
-DoHostQueryStatus(struct cmd_syndesc *as, char *arock)
+DoHostQueryStatus(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     char *cfgHost = as->parms[0].items->data;
@@ -610,7 +610,7 @@ SetupClientCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("ClientCellServDbAdd", DoClientCellServDbAdd, 0,
+    ts = cmd_CreateSyntax("ClientCellServDbAdd", DoClientCellServDbAdd, NULL,
 			  "add host entry to client CellServDB");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
@@ -618,38 +618,38 @@ SetupClientCmd(void)
     cmd_AddParm(ts, "-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to add");
 
     ts = cmd_CreateSyntax("ClientCellServDbRemove", DoClientCellServDbRemove,
-			  0, "remove host entry from client CellServDB");
+			  NULL, "remove host entry from client CellServDB");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
     cmd_AddParm(ts, "-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to remove");
 
-    ts = cmd_CreateSyntax("ClientSetCell", DoClientSetCell, 0,
+    ts = cmd_CreateSyntax("ClientSetCell", DoClientSetCell, NULL,
 			  "set default client cell");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
     cmd_AddParm(ts, "-dbhosts", CMD_LIST, CMD_REQUIRED, "database hosts");
 
-    ts = cmd_CreateSyntax("ClientQueryStatus", DoClientQueryStatus, 0,
+    ts = cmd_CreateSyntax("ClientQueryStatus", DoClientQueryStatus, NULL,
 			  "query status of client on host");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
 
-    ts = cmd_CreateSyntax("HostQueryStatus", DoHostQueryStatus, 0,
+    ts = cmd_CreateSyntax("HostQueryStatus", DoHostQueryStatus, NULL,
 			  "query status of server on host");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
 
 
-    ts = cmd_CreateSyntax("ClientStart", DoClientStart, 0,
+    ts = cmd_CreateSyntax("ClientStart", DoClientStart, NULL,
 			  "start the client");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");
 
 
-    ts = cmd_CreateSyntax("ClientStop", DoClientStop, 0, "stop the client");
+    ts = cmd_CreateSyntax("ClientStop", DoClientStop, NULL, "stop the client");
     cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
 		"configuration host");
     cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");

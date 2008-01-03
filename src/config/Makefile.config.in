@@ -32,6 +32,7 @@ AS = @AS@
 AFSD_LIBS = @AFSD_LIBS@
 AFSD_LDFLAGS = @AFSD_LDFLAGS@
 CC = @CC@
+CPP = @CPP@
 CCOBJ = @CCOBJ@
 CCXPG2 = @CCXPG2@
 CFLAGS = @CFLAGS@
@@ -58,6 +59,8 @@ MT_CC = @MT_CC@
 MT_CFLAGS = @MT_CFLAGS@
 MT_LIBS = @MT_LIBS@
 MV = @MV@
+NO_STRIP_BIN = @NO_STRIP_BIN@
+NO_STRIP_KRB = @NO_STRIP_KRB@
 OPTMZ = @OPTMZ@
 PAM_CFLAGS = @PAM_CFLAGS@
 PAM_LIBS = @PAM_LIBS@
@@ -116,7 +119,7 @@ KERNELDIR = ../libafs
 # Build helper apps
 #
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
-INSTALL = ${TOP_OBJDIR}/src/pinstall/pinstall
+INSTALL = ${TOP_OBJDIR}/src/pinstall/pinstall ${NO_STRIP_BIN}
 INSTALLex = ${INSTALL} -m 755
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh

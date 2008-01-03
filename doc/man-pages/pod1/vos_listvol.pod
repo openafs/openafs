@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos listvol - Displays information from a volume header
+vos_listvol - Displays information from a volume header
 
 =head1 SYNOPSIS
 

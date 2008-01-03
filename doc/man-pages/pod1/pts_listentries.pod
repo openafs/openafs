@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts listentries - Displays all users or groups in the Protection Database
+pts_listentries - Displays all users or groups in the Protection Database
 
 =head1 SYNOPSIS
 

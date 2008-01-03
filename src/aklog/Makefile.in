@@ -31,11 +31,6 @@ asetkey: asetkey.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} asetkey.o ${LIBS} ${AFSLIBS} \
 	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
-klog:	klog.o skipwrap.o ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${LIBS} ${AFSLIBS} \
-	${TOP_LIBDIR}/libcmd.a \
-	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
-
 verifykt:	verifykt.o skipwrap.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} verifykt.o skipwrap.o ${LIBS} ${AFSLIBS} \
 	${TOP_LIBDIR}/libcmd.a \
@@ -43,6 +38,11 @@ verifykt:	verifykt.o skipwrap.o ${AFSLIBS}
 
 afserror.o: $(COMERR)/afserror.c
 	$(CC) $(CFLAGS) -c $(COMERR)/afserror.c
+
+klog: klog.o skipwrap.o ${AFSLIBS}
+	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${AKLIBS} ${AFSLIBS} \
+		${TOP_LIBDIR}/libcmd.a \
+		${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 #
 # Installation targets

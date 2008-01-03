@@ -80,9 +80,8 @@ GetServer(aname)
 }
 
 
-static
-PerformDump(as)
-     register struct cmd_syndesc *as;
+static int
+PerformDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -127,11 +126,12 @@ PerformDump(as)
 	exit(1);
     }
     printf("dumpid returned %u\n", tdumpID);
+
+    return 0;
 }
 
-static
-PerformRestore(as)
-     register struct cmd_syndesc *as;
+static int
+PerformRestore(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -169,11 +169,11 @@ PerformRestore(as)
 	exit(1);
     }
     printf("dumpid returned %u\n", tdumpID);
+    return 0;
 }
 
-static
-CheckDump(as)
-     register struct cmd_syndesc *as;
+static int
+CheckDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -189,11 +189,11 @@ CheckDump(as)
 	printf("call to TC_CheckDump failed %u\n", code);
 	exit(1);
     }
+    return 0;
 }
 
-static
-AbortDump(as)
-     register struct cmd_syndesc *as;
+static int
+AbortDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -209,11 +209,11 @@ AbortDump(as)
 	printf("call to TC_AbortDump failed %u\n", code);
 	exit(1);
     }
+    return 0;
 }
 
-static
-WaitForDump(as)
-     register struct cmd_syndesc *as;
+static int
+WaitForDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -229,11 +229,11 @@ WaitForDump(as)
 	printf("call to TC_WaitForDump failed %u\n", code);
 	exit(1);
     }
+    return 0;
 }
 
-static
-EndDump(as)
-     register struct cmd_syndesc *as;
+static int
+EndDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -249,12 +249,11 @@ EndDump(as)
 	printf("call to TC_EndDump failed %u\n", code);
 	exit(1);
     }
+    return 0;
 }
 
-static
-MyBeforeProc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
 
@@ -295,20 +294,20 @@ main(argc, argv)
 #endif
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("dump", PerformDump, 0, "perform a dump");
+    ts = cmd_CreateSyntax("dump", PerformDump, NULL, "perform a dump");
 
-    ts = cmd_CreateSyntax("restore", PerformRestore, 0, "perform a restore");
+    ts = cmd_CreateSyntax("restore", PerformRestore, NULL, "perform a restore");
 
-    ts = cmd_CreateSyntax("check", CheckDump, 0, "check a dump");
+    ts = cmd_CreateSyntax("check", CheckDump, NULL, "check a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("abort", AbortDump, 0, "abort a dump");
+    ts = cmd_CreateSyntax("abort", AbortDump, NULL, "abort a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("wait", WaitForDump, 0, "wait for a dump");
+    ts = cmd_CreateSyntax("wait", WaitForDump, NULL, "wait for a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("end", EndDump, 0, "end a dump");
+    ts = cmd_CreateSyntax("end", EndDump, NULL, "end a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
     code = cmd_Dispatch(argc, argv);

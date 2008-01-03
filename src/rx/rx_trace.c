@@ -14,13 +14,7 @@ RCSID
     ("$Header$");
 
 #ifdef RXDEBUG
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
@@ -188,6 +182,7 @@ main(argc, argv)
 	printf(" %3u %7u %7u      %x.%x\n", ip.qlen, ip.servicetime,
 	       ip.waittime, ip.cid, ip.call);
     }
+    return 0;
 }
 
 #endif /* DUMPTRACE */

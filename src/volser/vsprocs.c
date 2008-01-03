@@ -16,6 +16,7 @@ RCSID
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
@@ -25,14 +26,6 @@ RCSID
 #else
 #include <sys/file.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <lock.h>
@@ -654,7 +647,7 @@ UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,
 
     code = AFSVolSetInfo(aconn, tid, &tstatus);
     if (code)
-	EPRINT(code, "Could not change quota (error %d), continuing...\n");
+	EPRINT(code, "Could not change quota, continuing...\n");
 
     code = AFSVolSetFlags(aconn, tid, 0);	/* bring it online (mark it InService */
     EGOTO2(cfail, vcode, "Could not bring the volume %s %u online \n", aname,

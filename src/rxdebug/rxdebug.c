@@ -32,13 +32,7 @@ RCSID
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/stat.h>
 #include <afs/stds.h>
 #include <afs/cmd.h>
@@ -85,9 +79,7 @@ PortName(aname)
 }
 
 int
-MainCommand(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+MainCommand(struct cmd_syndesc *as, void *arock)
 {
     register int i;
     osi_socket s;
@@ -604,7 +596,7 @@ main(argc, argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax(NULL, MainCommand, 0, "probe RX server");
+    ts = cmd_CreateSyntax(NULL, MainCommand, NULL, "probe RX server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-nodally", CMD_FLAG, CMD_OPTIONAL,

@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas unlock - Unlocks a locked user account
+kas_unlock - Unlocks a locked user account
 
 =head1 SYNOPSIS
 

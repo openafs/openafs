@@ -1,0 +1,122 @@
+=head1 NAME
+
+vos_convertROtoRW - Converts a Read-Only volume into a Read/Write volume
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos convertROtoRW> S<<< [B<-server>] <I<machine name>> >>>
+   S<<< [B<-partition>] <I<partition name>> >>>
+   S<<< [B<-id>] <I<volume name or ID>> >>> [B<-force>]
+   S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+   [B<-verbose>] [B<-encrypt>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<vos convertROtoRW> converts a Read-Only volume into a Read/Write volume
+when the original Read/Write volume is no longer available.  It's normal use
+is to recover the Read/Write volume from a replica after a failed disk,
+failed server, or accidental deletion.
+
+=head1 CAUTIONS
+
+This command can only be used with namei AFS file servers.  If used on an
+inode AFS file server, it will fail with an error.
+
+The command name is case-sensitive.  It must be issued with the capital "RO"
+and "RW".
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<server name>>
+
+Identifies the file server machine that houses the Read-Only volume which
+will be converted.  Provide the machine's IP address or its host name
+(either fully qualified or using an unambiguous abbreviation).  For details,
+see L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition on the file server machine that houses the
+Read-Only volume which will be converted.  Provide the full partition name
+(for, example, B</vicepa>) or one of the abbreviated forms described in
+L<vos(1)>.
+
+=item B<-id> <I<volume ID>>
+
+Specifies either the complete name or volume ID number of a Read/Write
+volume.
+
+=item B<-force>
+
+Don't ask for confirmation.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example converts the read-only volume test3.readonly in
+partition vicepb on server1 to a read-write volume:
+
+   % vos convertROtoRW server1 b test3.readonly
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machines specified with the B<-toserver> and B<-fromserver> arguments and
+on each database server machine.  If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

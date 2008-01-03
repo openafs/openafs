@@ -14,6 +14,8 @@ extern unsigned int cm_mountRootGen;
 
 extern int cm_enableServerLocks;
 
+extern int cm_followBackupPath;
+
 /* parms for attribute setting call */
 typedef struct cm_attr {
 	int mask;

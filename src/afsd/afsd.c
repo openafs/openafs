@@ -334,8 +334,10 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
+#ifndef AFS_CACHE_VNODE_PATH
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
+#endif
 int missing_DCacheFile = 1;	/*Is the DCACHEFILE missing? */
 int missing_VolInfoFile = 1;	/*Is the VOLINFOFILE missing? */
 int missing_CellInfoFile = 1;	/*Is the CELLINFOFILE missing? */
@@ -428,7 +430,7 @@ afsd_event_cleanup(int signo) {
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
-    IODeregisterForSystemPower(iterator);
+    IODeregisterForSystemPower(&iterator);
     IOServiceClose(root_port);
     IONotificationPortDestroy(notify);
 
@@ -1007,7 +1009,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
+#ifndef AFS_CACHE_VNODE_PATH
 	    inode_for_V[vFileNum] = currp->d_ino;
+#endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
 
 	    if (!maxDir) {
@@ -1144,7 +1148,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 			   vFileNum);
 		else {
 		    struct stat statb;
+#ifndef AFS_CACHE_VNODE_PATH
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
+#endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
 		    if (afsd_verbose)
 			printf("%s: Creating '%s'\n", rn, fullpn_VFile);
@@ -1155,7 +1161,9 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
+#ifndef AFS_CACHE_VNODE_PATH
 			inode_for_V[vFileNum] = statb.st_ino;
+#endif
 			dir_for_V[vFileNum] = thisDir;
 			cache_dir_list[thisDir]++;
 			(*vFilesFound)++;
@@ -1383,8 +1391,8 @@ SweepAFSCache(vFilesFound)
     return doSweepAFSCache(vFilesFound, cacheBaseDir, -2, maxDir);
 }
 
-static
-ConfigCell(struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
+static int
+ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 {
     int isHomeCell;
     int i, code;
@@ -1416,7 +1424,7 @@ ConfigCell(struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
 
 static
 ConfigCellAlias(struct afsconf_cellalias *aca,
-		char *arock, struct afsconf_dir *adir)
+		void *arock, struct afsconf_dir *adir)
 {
     /* push the alias into the kernel */
     call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
@@ -1509,7 +1517,7 @@ AfsdbLookupHandler()
 #endif
 #endif
 
-mainproc(struct cmd_syndesc *as, char *arock)
+mainproc(struct cmd_syndesc *as, void *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */
@@ -1923,6 +1931,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
 		   cacheStatEntries);
     }
 
+#ifndef AFS_CACHE_VNODE_PATH
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -1937,6 +1946,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (afsd_debug)
 	printf("%s: %d inode_for_V entries at 0x%x, %d bytes\n", rn,
 	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
+#endif
 
     /*
      * Set up all the pathnames we'll need for later.
@@ -2125,6 +2135,23 @@ mainproc(struct cmd_syndesc *as, char *arock)
 		     rn, vFilesFound, cacheFiles, cacheIteration);
 	} while ((vFilesFound < cacheFiles)
 		 && (cacheIteration < MAX_CACHE_LOOPS));
+#ifdef AFS_CACHE_VNODE_PATH
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEBASEDIR with '%s'\n",
+		 rn, cacheBaseDir);
+	call_syscall(AFSOP_CACHEBASEDIR, cacheBaseDir);
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEDIRS with %d dirs\n",
+		 rn, nFilesPerDir);
+	call_syscall(AFSOP_CACHEDIRS, nFilesPerDir);
+	if (afsd_debug)
+	    printf
+		("%s: Calling AFSOP_CACHEFILES with %d files\n",
+		 rn, cacheFiles);
+	call_syscall(AFSOP_CACHEFILES, cacheFiles);
+#endif
     } else if (afsd_verbose)
 	printf("%s: Using memory cache, not swept\n", rn);
 
@@ -2259,6 +2286,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
+#ifndef AFS_CACHE_VNODE_PATH
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
@@ -2277,7 +2305,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	    call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #endif
 	}
-
+#endif
 
     /*end for */
     /*

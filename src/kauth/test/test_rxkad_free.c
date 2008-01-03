@@ -52,12 +52,10 @@ PrintRxkadStats()
 	   rxkad_stats.destroyUnauth);
 }
 
-static long
-Main(as, arock)
-     IN struct cmd_syndesc *as;
-     IN char *arock;
+static int
+Main(struct cmd_syndesc *as, void *arock)
 {
-    long code;
+    int code;
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
     char newCell[MAXKTCREALMLEN];
@@ -374,7 +372,7 @@ main(argc, argv)
     initialize_KA_error_table();
     initialize_rx_error_table();
 
-    ts = cmd_CreateSyntax(0, Main, 0, "Main program");
+    ts = cmd_CreateSyntax(NULL, Main, NULL, "Main program");
     /* 0 */ cmd_AddParm(ts, "-number", CMD_SINGLE, CMD_OPTIONAL,
 			"number of iterations");
     /* 1 */ cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,

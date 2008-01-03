@@ -362,9 +362,8 @@ SkipSc:
     return tconn;
 }
 
-static
-SetAuth(as)
-     struct cmd_syndesc *as;
+static int
+SetAuth(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     register struct rx_connection *tconn;
@@ -433,9 +432,8 @@ CopyBytes(afd, acall)
     }
 }
 
-static
-Prune(as)
-     register struct cmd_syndesc *as;
+static int
+Prune(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     register struct rx_connection *tconn;
@@ -457,9 +455,8 @@ Prune(as)
     return code;
 }
 
-static
-Exec(as)
-     register struct cmd_syndesc *as;
+static int
+Exec(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -471,9 +468,8 @@ Exec(as)
     return code;
 }
 
-static
-GetDate(as)
-     register struct cmd_syndesc *as;
+static int
+GetDate(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char tbuffer[256];
@@ -522,9 +518,8 @@ GetDate(as)
     return 0;
 }
 
-static
-UnInstall(as)
-     register struct cmd_syndesc *as;
+static int
+UnInstall(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char tbuffer[256];
@@ -581,9 +576,8 @@ GetServerGoal(aconn, aname)
 	return BSTAT_NORMAL;
 }
 
-static
-Install(as)
-     struct cmd_syndesc *as;
+static int
+Install(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     register afs_int32 code;
@@ -639,9 +633,8 @@ Install(as)
     return 0;
 }
 
-static
-Shutdown(as)
-     struct cmd_syndesc *as;
+static int
+Shutdown(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -669,10 +662,8 @@ Shutdown(as)
     return 0;
 }
 
-static
-BlockScannerCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+BlockScannerCmd(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct rx_connection *tconn;
@@ -687,10 +678,8 @@ BlockScannerCmd(as, arock)
     return 0;
 }
 
-static
-UnBlockScannerCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+UnBlockScannerCmd(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct rx_connection *tconn;
@@ -705,10 +694,8 @@ UnBlockScannerCmd(as, arock)
     return 0;
 }
 
-static
-GetRestartCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+GetRestartCmd(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct ktime generalTime, newBinaryTime;
@@ -750,10 +737,8 @@ GetRestartCmd(as, arock)
     return 0;
 }
 
-static
-SetRestartCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+SetRestartCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 count;
     register afs_int32 code;
@@ -792,9 +777,8 @@ SetRestartCmd(as, arock)
     return 0;
 }
 
-static
-Startup(as)
-     struct cmd_syndesc *as;
+static int
+Startup(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -816,9 +800,8 @@ Startup(as)
     return 0;
 }
 
-static
-Restart(as)
-     struct cmd_syndesc *as;
+static int
+Restart(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -862,9 +845,8 @@ Restart(as)
     return 0;
 }
 
-static
-SetCellName(as)
-     struct cmd_syndesc *as;
+static int
+SetCellName(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -876,9 +858,8 @@ SetCellName(as)
     return 0;
 }
 
-static
-AddHost(as)
-     register struct cmd_syndesc *as;
+static int
+AddHost(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -904,9 +885,8 @@ AddHost(as)
     return 0;
 }
 
-static
-RemoveHost(as)
-     register struct cmd_syndesc *as;
+static int
+RemoveHost(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -922,9 +902,8 @@ RemoveHost(as)
     return 0;
 }
 
-static
-ListHosts(as)
-     register struct cmd_syndesc *as;
+static int
+ListHosts(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -953,9 +932,8 @@ ListHosts(as)
     return 0;
 }
 
-static
-AddKey(as)
-     register struct cmd_syndesc *as;
+static int
+AddKey(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1023,9 +1001,8 @@ AddKey(as)
     return 0;
 }
 
-static
-RemoveKey(as)
-     register struct cmd_syndesc *as;
+static int
+RemoveKey(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1044,9 +1021,8 @@ RemoveKey(as)
     return 0;
 }
 
-static
-ListKeys(as)
-     IN register struct cmd_syndesc *as;
+static int
+ListKeys(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1085,9 +1061,8 @@ ListKeys(as)
     return 0;
 }
 
-static
-AddSUser(as)
-     register struct cmd_syndesc *as;
+static int
+AddSUser(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1106,9 +1081,8 @@ AddSUser(as)
     return failed;
 }
 
-static
-RemoveSUser(as)
-     register struct cmd_syndesc *as;
+static int
+RemoveSUser(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register struct cmd_item *ti;
@@ -1132,9 +1106,8 @@ RemoveSUser(as)
 }
 
 #define	NPERLINE    10		/* dudes to print per line */
-static
-ListSUsers(as)
-     register struct cmd_syndesc *as;
+static int
+ListSUsers(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register int i;
@@ -1201,9 +1174,8 @@ ListSUsers(as)
     return 0;
 }
 
-static
-StatServer(as)
-     register struct cmd_syndesc *as;
+static int
+StatServer(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1236,9 +1208,8 @@ StatServer(as)
     return 0;
 }
 
-static
-CreateServer(as)
-     register struct cmd_syndesc *as;
+static int
+CreateServer(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1269,9 +1240,8 @@ CreateServer(as)
     return code;
 }
 
-static
-DeleteServer(as)
-     register struct cmd_syndesc *as;
+static int
+DeleteServer(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1292,9 +1262,8 @@ DeleteServer(as)
     return code;
 }
 
-static
-StartServer(as)
-     register struct cmd_syndesc *as;
+static int
+StartServer(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1311,9 +1280,8 @@ StartServer(as)
     return code;
 }
 
-static
-StopServer(as)
-     register struct cmd_syndesc *as;
+static int
+StopServer(register struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code;
@@ -1571,9 +1539,8 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     return code;
 }
 
-static
-GetLogCmd(as)
-     register struct cmd_syndesc *as;
+static int
+GetLogCmd(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     register struct rx_call *tcall;
@@ -1610,9 +1577,8 @@ GetLogCmd(as)
     return code;
 }
 
-static
-SalvageCmd(as)
-     struct cmd_syndesc *as;
+static int
+SalvageCmd(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     register afs_int32 code, rc, i;
@@ -2028,9 +1994,8 @@ DoStat(aname, aconn, aint32p, firstTime)
 }
 
 #ifdef BOS_RESTRICTED_MODE
-static
-GetRestrict(as)
-     struct cmd_syndesc *as;
+static int
+GetRestrict(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     afs_int32 code, val;
@@ -2045,9 +2010,8 @@ GetRestrict(as)
     return 0;
 }
 
-static
-SetRestrict(as)
-     struct cmd_syndesc *as;
+static int
+SetRestrict(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
     afs_int32 code, val;
@@ -2132,12 +2096,12 @@ main(argc, argv)
 #endif
     initialize_rx_error_table();
 
-    ts = cmd_CreateSyntax("start", StartServer, 0, "start running a server");
+    ts = cmd_CreateSyntax("start", StartServer, NULL, "start running a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("stop", StopServer, 0, "halt a server instance");
+    ts = cmd_CreateSyntax("stop", StopServer, NULL, "halt a server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     cmd_Seek(ts, 8);
@@ -2145,7 +2109,7 @@ main(argc, argv)
 		"wait for process to stop");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("status", StatServer, 0,
+    ts = cmd_CreateSyntax("status", StatServer, NULL,
 			  "show server instance status");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL,
@@ -2153,7 +2117,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "long status");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("shutdown", Shutdown, 0, "shutdown all processes");
+    ts = cmd_CreateSyntax("shutdown", Shutdown, NULL, "shutdown all processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_Seek(ts, 8);
@@ -2161,12 +2125,12 @@ main(argc, argv)
 		"wait for process to stop");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("startup", Startup, 0, "start all processes");
+    ts = cmd_CreateSyntax("startup", Startup, NULL, "start all processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("restart", Restart, 0, "restart processes");
+    ts = cmd_CreateSyntax("restart", Restart, NULL, "restart processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_AddParm(ts, "-bosserver", CMD_FLAG, CMD_OPTIONAL,
@@ -2176,7 +2140,7 @@ main(argc, argv)
 
 #ifndef OPBOS
 
-    ts = cmd_CreateSyntax("create", CreateServer, 0,
+    ts = cmd_CreateSyntax("create", CreateServer, NULL,
 			  "create a new server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_SINGLE, 0, "server process name");
@@ -2186,108 +2150,108 @@ main(argc, argv)
 		"Notifier program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delete", DeleteServer, 0,
+    ts = cmd_CreateSyntax("delete", DeleteServer, NULL,
 			  "delete a server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("adduser", AddSUser, 0,
+    ts = cmd_CreateSyntax("adduser", AddSUser, NULL,
 			  "add users to super-user list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user names");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveSUser, 0,
+    ts = cmd_CreateSyntax("removeuser", RemoveSUser, NULL,
 			  "remove users from super-user list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user names");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listusers", ListSUsers, 0, "list super-users");
+    ts = cmd_CreateSyntax("listusers", ListSUsers, NULL, "list super-users");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
     cmd_Seek(ts, ADDPARMOFFSET*2);
     cmd_AddParm(ts, "-width", CMD_SINGLE, CMD_OPTIONAL, "output width");
     cmd_AddParm(ts, "-onecol", CMD_FLAG, CMD_OPTIONAL, "one per col");
 
-    ts = cmd_CreateSyntax("addkey", AddKey, 0,
+    ts = cmd_CreateSyntax("addkey", AddKey, NULL,
 			  "add keys to key dbase (kvno 999 is bcrypt)");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL, "key");
     cmd_AddParm(ts, "-kvno", CMD_SINGLE, 0, "key version number");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removekey", RemoveKey, 0,
+    ts = cmd_CreateSyntax("removekey", RemoveKey, NULL,
 			  "remove keys from key dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-kvno", CMD_LIST, 0, "key version number");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listkeys", ListKeys, 0, "list keys");
+    ts = cmd_CreateSyntax("listkeys", ListKeys, NULL, "list keys");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-showkey", CMD_FLAG, CMD_OPTIONAL,
 		"show the actual key rather than the checksum");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listhosts", ListHosts, 0, "get cell host list");
+    ts = cmd_CreateSyntax("listhosts", ListHosts, NULL, "get cell host list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "getcell");
 
-    ts = cmd_CreateSyntax("setcellname", SetCellName, 0, "set cell name");
+    ts = cmd_CreateSyntax("setcellname", SetCellName, NULL, "set cell name");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addhost", AddHost, 0, "add host to cell dbase");
+    ts = cmd_CreateSyntax("addhost", AddHost, NULL, "add host to cell dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "host name");
     cmd_AddParm(ts, "-clone", CMD_FLAG, CMD_OPTIONAL, "vote doesn't count");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removehost", RemoveHost, 0,
+    ts = cmd_CreateSyntax("removehost", RemoveHost, NULL,
 			  "remove host from cell dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "host name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setauth", SetAuth, 0,
+    ts = cmd_CreateSyntax("setauth", SetAuth, NULL,
 			  "set authentication required flag");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-authrequired", CMD_SINGLE, 0,
 		"on or off: authentication required for admin requests");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("install", Install, 0, "install program");
+    ts = cmd_CreateSyntax("install", Install, NULL, "install program");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to install");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("uninstall", UnInstall, 0, "uninstall program");
+    ts = cmd_CreateSyntax("uninstall", UnInstall, NULL, "uninstall program");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to uninstall");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getlog", GetLogCmd, 0, "examine log file");
+    ts = cmd_CreateSyntax("getlog", GetLogCmd, NULL, "examine log file");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "log file to examine");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getdate", GetDate, 0, "get dates for programs");
+    ts = cmd_CreateSyntax("getdate", GetDate, NULL, "get dates for programs");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to check");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("exec", Exec, 0, "execute shell command on server");
+    ts = cmd_CreateSyntax("exec", Exec, NULL, "execute shell command on server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-cmd", CMD_SINGLE, 0, "command to execute");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("prune", Prune, 0, "prune server files");
+    ts = cmd_CreateSyntax("prune", Prune, NULL, "prune server files");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-bak", CMD_FLAG, CMD_OPTIONAL, "delete .BAK files");
     cmd_AddParm(ts, "-old", CMD_FLAG, CMD_OPTIONAL, "delete .OLD files");
@@ -2295,7 +2259,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "delete all junk files");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setrestart", SetRestartCmd, 0,
+    ts = cmd_CreateSyntax("setrestart", SetRestartCmd, NULL,
 			  "set restart times");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_REQUIRED,
@@ -2306,12 +2270,12 @@ main(argc, argv)
 		"set new binary restart time");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getrestart", GetRestartCmd, 0,
+    ts = cmd_CreateSyntax("getrestart", GetRestartCmd, NULL,
 			  "get restart times");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("salvage", SalvageCmd, 0,
+    ts = cmd_CreateSyntax("salvage", SalvageCmd, NULL,
 			  "salvage partition or volumes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
@@ -2369,23 +2333,23 @@ main(argc, argv)
 		"(MR-AFS) Numeric mask of residencies to be included in the salvage.  Do not use with -SalvageRemote or -SalvageArchival");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("blockscanner", BlockScannerCmd, 0,
+    ts = cmd_CreateSyntax("blockscanner", BlockScannerCmd, NULL,
 			  "block scanner daemon from making migration requests");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("unblockscanner", UnBlockScannerCmd, 0,
+    ts = cmd_CreateSyntax("unblockscanner", UnBlockScannerCmd, NULL,
 			  "allow scanner daemon to make migration requests again");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
 
 #ifdef BOS_RESTRICTED_MODE
-    ts = cmd_CreateSyntax("getrestricted", GetRestrict, 0,
+    ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL,
 			  "get restrict mode");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setrestricted", SetRestrict, 0,
+    ts = cmd_CreateSyntax("setrestricted", SetRestrict, NULL,
 			  "set restrict mode");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "mode to set");

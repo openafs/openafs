@@ -26,6 +26,7 @@ int
 afs_xsetgroups()
 {
     usr_assert(0);
+    return 0;
 }
 
 static int

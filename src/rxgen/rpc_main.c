@@ -43,13 +43,7 @@ RCSID
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -66,6 +60,7 @@ RCSID
 #define EXTEND	1		/* alias for TRUE */
 
 struct commandline {
+    int ansic_flag;
     int cflag;
     int hflag;
     int lflag;
@@ -93,19 +88,14 @@ int nincludes = 0;
 char *OutFileFlag = "";
 char OutFile[256];
 char Sflag = 0, Cflag = 0, hflag = 0, cflag = 0, kflag = 0, uflag = 0;
+char ansic_flag = 0;		/* If set, build ANSI C style prototypes */
 char zflag = 0;			/* If set, abort server stub if rpc call returns non-zero */
 char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
 int debug = 0;
 static char *cmdname;
-#ifdef	AFS_SUN5_ENV
-static char CPP[] = "/usr/ccs/lib/cpp";
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN60_ENV)
-static char CPP[] = "/usr/bin/cpp";
-#elif defined(AFS_NT40_ENV)
-static char CPP[MAXCMDLINE];
-#elif defined(AFS_DARWIN_ENV)
-static char CPP[] = "cc -E";
+#ifdef	__PROG_CPP__
+static char CPP[] = __PROG_CPP__;
 #else
 static char CPP[] = "/lib/cpp";
 #endif
@@ -808,6 +798,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 	    for (j = 1; argv[i][j] != 0; j++) {
 		c = argv[i][j];
 		switch (c) {
+		case 'A':
 		case 'c':
 		case 'h':
 		case 'l':
@@ -867,6 +858,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 	    ;
 	}
     }
+    cmd->ansic_flag = ansic_flag = flag['A'];
     cmd->cflag = cflag = flag['c'];
     cmd->hflag = hflag = flag['h'];
     cmd->sflag = flag['s'];

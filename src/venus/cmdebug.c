@@ -26,13 +26,7 @@ RCSID
 #include <netdb.h>
 #endif
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -45,6 +39,8 @@ RCSID
 #include <afs/com_err.h>
 
 extern struct hostent *hostutil_GetHostByName();
+
+static int print_ctime = 0;
 
 static int
 PrintCacheConfig(struct rx_connection *aconn)
@@ -310,8 +306,13 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	}
 	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
-	printf("    callback %08x\texpires %u\n", centry.callback,
-	       centry.cbExpires);
+        if (print_ctime) {
+            time_t t = centry.cbExpires;
+            printf("    callback %08x\texpires %s\n", centry.callback,
+                    ctime(&t));
+        } else
+            printf("    callback %08x\texpires %u\n", centry.callback,
+                   centry.cbExpires);
 	printf("    %d opens\t%d writers\n", centry.opens, centry.writers);
 
 	/* now display states */
@@ -412,8 +413,13 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #endif
-	printf("    callback %08x\texpires %u\n", centry.callback,
-	       centry.cbExpires);
+        if (print_ctime) {
+            time_t t = centry.cbExpires;
+            printf("    callback %08x\texpires %s\n", centry.callback,
+                    ctime(&t));
+        } else
+            printf("    callback %08x\texpires %u\n", centry.callback,
+                   centry.cbExpires);
 	printf("    %d opens\t%d writers\n", centry.opens, centry.writers);
 
 	/* now display states */
@@ -468,7 +474,7 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
 }
 
 int
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *conn;
     register char *hostName;
@@ -506,6 +512,10 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	PrintCacheConfig(conn);
 	return 0;
     }
+
+    if (as->parms[7].items)
+        print_ctime = 1;
+
     if (as->parms[2].items)
         /* -long */
 	int32p = 1;
@@ -559,7 +569,7 @@ main(int argc, char **argv)
     initialize_rx_error_table();
     rx_Init(0);
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe unik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "probe unik server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
@@ -571,6 +581,8 @@ main(int argc, char **argv)
 		"print only host interfaces");
     cmd_AddParm(ts, "-cache", CMD_FLAG, CMD_OPTIONAL,
 		"print only cache configuration");
+    cmd_AddParm(ts, "-ctime", CMD_FLAG, CMD_OPTIONAL, 
+                "print human readable expiration time");
 
     cmd_Dispatch(argc, argv);
     exit(0);

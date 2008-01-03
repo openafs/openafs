@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts interactive - issue multiple multiple pts commands
+pts_interactive - issue multiple multiple pts commands
 
 =head1 SYNOPSIS
 

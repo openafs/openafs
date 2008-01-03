@@ -23,13 +23,7 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
@@ -223,6 +217,7 @@ PrintEntry(index, entry)
 }
 
 /* ntohEntry - convert back to host-order */
+void
 ntohEntry(struct kaentry *entryp)
 {
     entryp->flags = ntohl(entryp->flags);
@@ -402,13 +397,13 @@ readDB(offset, buffer, size)
 	afs_com_err(whoami, errno, "reading db got %d bytes", code);
 	exit(3);
     }
+    return 0;
 }
 
 #include "AFS_component_version_number.c"
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char *dbFile;

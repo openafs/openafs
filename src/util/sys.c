@@ -18,7 +18,7 @@ RCSID
 #include "AFS_component_version_number.c"
 
 int
-main()
+main(int argc, char **argv)
 {
     printf("%s\n", SYS_NAME);
     return 0;

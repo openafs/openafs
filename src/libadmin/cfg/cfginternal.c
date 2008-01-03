@@ -480,8 +480,8 @@ cfgutil_HostAddressFetchAll(const char *hostName, int *addrCount,
 {
     int rc = 1;
     afs_status_t tst = 0;
-    int aCount;
-    afs_int32 *aList;
+    int aCount = 0;
+    afs_int32 *aList = NULL;
 
 #ifdef AFS_NT40_ENV
     /* Note: gethostbyname() allocs hostent on a per-thread basis */

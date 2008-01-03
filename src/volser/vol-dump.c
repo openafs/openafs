@@ -166,7 +166,7 @@ AttachVolume(struct DiskPartition * dp, char *volname,
 
 
 static int
-handleit(struct cmd_syndesc *as, char *arock)
+handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
@@ -291,7 +291,7 @@ main(int argc, char **argv)
 
     VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
 
-    ts = cmd_CreateSyntax(NULL, handleit, 0,
+    ts = cmd_CreateSyntax(NULL, handleit, NULL,
 			  "Dump a volume to a 'vos dump' format file without using volserver");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id");

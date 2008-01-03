@@ -61,6 +61,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 #ifdef AFSIFS
     int i;
 #endif
+    if (!msgp)
+        msgp = "unspecified assert";
 
     if (filep)
     	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG_AND_LOCATION, 

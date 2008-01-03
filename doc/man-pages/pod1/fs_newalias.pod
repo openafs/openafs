@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs newalias - Creates a new alias for a cell
+fs_newalias - Creates a new alias for a cell
 
 =head1 SYNOPSIS
 

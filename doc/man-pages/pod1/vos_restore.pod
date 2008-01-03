@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos restore - Converts an ASCII dump file into an AFS volume
+vos_restore - Converts an ASCII dump file into an AFS volume
 
 =head1 SYNOPSIS
 

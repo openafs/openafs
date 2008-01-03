@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs storebehind - Enables asynchronous writes to the file server
+fs_storebehind - Enables asynchronous writes to the file server
 
 =head1 SYNOPSIS
 

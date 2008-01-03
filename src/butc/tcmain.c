@@ -822,7 +822,7 @@ GetConfigParams(char *filename, afs_int32 port)
 }
 
 static int
-WorkerBee(struct cmd_syndesc *as, char *arock)
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);

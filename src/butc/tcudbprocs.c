@@ -28,6 +28,7 @@ RCSID
 #include <rx/rx.h>
 #include <afs/afsint.h>
 #include <stdio.h>
+#include <string.h>
 #include <afs/procmgmt.h>
 #include <afs/assert.h>
 #include <afs/prs_fs.h>
@@ -50,6 +51,10 @@ RCSID
 
 extern int dump_namecheck;
 extern int autoQuery;
+
+static void initTapeBuffering();
+static writeDbDump();
+static restoreDbEntries();
 
 /* CreateDBDump
  *      create a dump entry for a saved database 
@@ -904,7 +909,7 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
 }
 
 static afs_int32 nbytes = 0;	/* # bytes left in buffer */
-static
+static void
 initTapeBuffering()
 {
     nbytes = 0;

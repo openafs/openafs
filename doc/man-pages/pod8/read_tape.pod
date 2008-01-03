@@ -1,0 +1,106 @@
+=head1 NAME
+
+read_tape - Reads volume dumps from a backup tape to a file
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<read_tape> S<<< B<-tape> <I<tape device>> >>>
+   S<<< B<-restore> <I<# of volumes to restore>> >>>
+   S<<< B<-skip> <I<# of volumes to skip>> >>>
+   S<<< B<-file> <I<filename>> >>> [B<-scan>] [B<-noask>] [B<-label>]
+   [B<-vheaders>] [B<-verbose>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<read_tape> reads an OpenAFS backup tape and prompts for each dump file to
+save.  This command does not require any OpenAFS infrastructure.  This
+command does not need an OpenAFS client or server to be available, which is
+not the case with the L<backup(8)> command.
+
+The dump files will be named for the Read/Write name of the volume restored.
+After saving each dump file, B<vos restore> or B<restorevol> can be used to
+restore the volume into AFS and non-AFS space respectively.
+
+B<read_tape> reads the tape while skipping the specified number of volumes.
+After that, it restores the specified number of volumes.  B<read_tape>
+doesn't rewind the tape so that it may be used multiple times in succession.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-tape> <I<tape device>>
+
+Specifies the tape device from which to restore.
+
+=item B<-restore> <I<# of volumes to restore>>
+
+Specifies the number of volumes to restore from tape.
+
+=item B<-skip> <I<# of volumes to skip>>
+
+Specifies the number of volumes to skip before starting the restore.
+
+=item B<-file> <I<filename>>
+
+Specifies an alternate name for the restored volume dump file rather than
+the default of the volume name.
+
+=item B<-scan>
+
+Scans the tape.
+
+=item B<-noask>
+
+Doesn't prompt for each volume.
+
+=item B<-label>
+
+Displays the full dump label.
+
+=item B<-vheaders>
+
+Displays the full volume headers.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution.  If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command will read the third through fifth volumes from
+the tape device /dev/tape without prompting:
+
+   % read_tape -tape /dev/tape -skip 2 -restore 3 -noask
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have access to read and write to the specified tape device.
+
+=head1 SEE ALSO
+
+L<backup(8)>,
+L<restorevol(8)>,
+L<vos_restore(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

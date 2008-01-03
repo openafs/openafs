@@ -3073,6 +3073,7 @@ afs_WriteDCache(register struct dcache *adc, int atime)
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
 	return 0;
     AFS_STATCNT(afs_WriteDCache);
+    osi_Assert(WriteLocked(&afs_xdcache));
     if (atime)
 	adc->f.modTime = osi_Time();
     /*

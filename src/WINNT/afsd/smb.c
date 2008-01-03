@@ -12,7 +12,10 @@
 
 #ifndef DJGPP
 #include <windows.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
 #include <ntstatus.h>
+#pragma warning(pop)
 #else
 #include <sys/timeb.h>
 #include <tzfile.h>
@@ -879,7 +882,7 @@ void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime)
 {
     time_t diff_t = unixTime - smb_localZero;
 #if defined(DEBUG) && !defined(_USE_32BIT_TIME_T)
-    osi_assert(diff_t < _UI32_MAX);
+    osi_assertx(diff_t < _UI32_MAX, "time_t > _UI32_MAX");
 #endif
     *dosUTimep = (afs_uint32)diff_t;
 }
@@ -933,7 +936,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
              */
             NTSTATUS nts = STATUS_UNSUCCESSFUL, ntsEx = STATUS_UNSUCCESSFUL;
             MSV1_0_LM20_CHALLENGE_REQUEST lsaReq;
-            PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp;
+            PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp = NULL;
             ULONG lsaRespSize = 0;
 
             lsaReq.MessageType = MsV1_0Lm20ChallengeRequest;
@@ -945,13 +948,25 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
                                                 &lsaResp,
                                                 &lsaRespSize,
                                                 &ntsEx);
-            if (nts != STATUS_SUCCESS)
+            if (nts != STATUS_SUCCESS || ntsEx != STATUS_SUCCESS) {
                 osi_Log4(smb_logp,"MsV1_0Lm20ChallengeRequest failure: nts 0x%x ntsEx 0x%x respSize is %u needs %u",
                          nts, ntsEx, sizeof(lsaReq), lsaRespSize);
-            osi_assert(nts == STATUS_SUCCESS); /* this had better work! */
+                    afsi_log("MsV1_0Lm20ChallengeRequest failure: nts 0x%x ntsEx 0x%x respSize %u",
+                         nts, ntsEx, lsaRespSize);
+            }
+            osi_assertx(nts == STATUS_SUCCESS, "LsaCallAuthenticationPackage failed"); /* this had better work! */
 
-            memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
-            LsaFreeReturnBuffer(lsaResp);
+            if (ntsEx == STATUS_SUCCESS) {
+                memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
+                LsaFreeReturnBuffer(lsaResp);
+            } else {
+                /* 
+                 * This will cause the subsequent authentication to fail but
+                 * that is better than us dereferencing a NULL pointer and 
+                 * crashing.
+                 */
+                memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
+            }
         }
         else
             memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
@@ -1194,14 +1209,14 @@ void smb_ReleaseTID(smb_tid_t *tidp)
 
     userp = NULL;
     lock_ObtainWrite(&smb_rctLock);
-    osi_assert(tidp->refCount-- > 0);
+    osi_assertx(tidp->refCount-- > 0, "smb_tid_t refCount 0");
     if (tidp->refCount == 0 && (tidp->delete)) {
         ltpp = &tidp->vcp->tidsp;
         for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
             if (tp == tidp) 
                 break;
         }
-        osi_assert(tp != NULL);
+        osi_assertx(tp != NULL, "null smb_tid_t");
         *ltpp = tp->nextp;
         lock_FinalizeMutex(&tidp->mx);
         userp = tidp->userp;	/* remember to drop ref later */
@@ -1303,7 +1318,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
     time_t 	now = osi_Time();
 
     lock_ObtainWrite(&smb_rctLock);
-    osi_assert(unp->refCount-- > 0);
+    osi_assertx(unp->refCount-- > 0, "smb_username_t refCount 0");
     if (unp->refCount == 0 && !(unp->flags & SMB_USERNAMEFLAG_AFSLOGON) &&
 	(unp->flags & SMB_USERNAMEFLAG_LOGOFF)) {
         lupp = &usernamesp;
@@ -1311,7 +1326,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
             if (up == unp) 
                 break;
         }
-        osi_assert(up != NULL);
+        osi_assertx(up != NULL, "null smb_username_t");
         *lupp = up->nextp;
 	up->nextp = NULL;			/* do not remove this */
         lock_FinalizeMutex(&unp->mx);
@@ -1339,14 +1354,14 @@ void smb_ReleaseUID(smb_user_t *uidp)
     smb_username_t *unp = NULL;
 
     lock_ObtainWrite(&smb_rctLock);
-    osi_assert(uidp->refCount-- > 0);
+    osi_assertx(uidp->refCount-- > 0, "smb_user_t refCount 0");
     if (uidp->refCount == 0) {
         lupp = &uidp->vcp->usersp;
         for(up = *lupp; up; lupp = &up->nextp, up = *lupp) {
             if (up == uidp) 
                 break;
         }
-        osi_assert(up != NULL);
+        osi_assertx(up != NULL, "null smb_user_t");
         *lupp = up->nextp;
         lock_FinalizeMutex(&uidp->mx);
 	unp = uidp->unp;
@@ -1563,7 +1578,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
 
     lock_ObtainMutex(&fidp->mx);
     lock_ObtainWrite(&smb_rctLock);
-    osi_assert(fidp->refCount-- > 0);
+    osi_assertx(fidp->refCount-- > 0, "smb_fid_t refCount 0");
     if (fidp->refCount == 0 && (fidp->delete)) {
         vcp = fidp->vcp;
         fidp->vcp = NULL;
@@ -2060,7 +2075,7 @@ void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
     cm_scache_t *scp = NULL;
 
     lock_ObtainMutex(&dsp->mx);
-    osi_assert(dsp->refCount-- > 0);
+    osi_assertx(dsp->refCount-- > 0, "cm_scache_t refCount 0");
     if (dsp->refCount == 0 && (dsp->flags & SMB_DIRSEARCH_DELETE)) {
         if (&dsp->q == (osi_queue_t *) smb_lastDirSearchp)
             smb_lastDirSearchp = (smb_dirSearch_t *) osi_QPrev(&smb_lastDirSearchp->q);
@@ -2262,7 +2277,7 @@ static smb_packet_t *GetPacket(void)
         tbp->dos_pkt_sel = tb_sel;
 #endif /* DJGPP */
     }
-    osi_assert(tbp->magic == SMB_PACKETMAGIC);
+    osi_assertx(tbp->magic == SMB_PACKETMAGIC, "invalid smb_packet_t magic");
 
     return tbp;
 }
@@ -2316,7 +2331,7 @@ static NCB *GetNCB(void)
         tbp->magic = SMB_NCBMAGIC;
     }
         
-    osi_assert(tbp->magic == SMB_NCBMAGIC);
+    osi_assertx(tbp->magic == SMB_NCBMAGIC, "invalid smb_packet_t magic");
 
     memset(&tbp->ncb, 0, sizeof(NCB));
     ncbp = &tbp->ncb;
@@ -2329,7 +2344,7 @@ static NCB *GetNCB(void)
 void smb_FreePacket(smb_packet_t *tbp)
 {
     smb_vc_t * vcp = NULL;
-    osi_assert(tbp->magic == SMB_PACKETMAGIC);
+    osi_assertx(tbp->magic == SMB_PACKETMAGIC, "invalid smb_packet_t magic");
         
     lock_ObtainWrite(&smb_globalLock);
     tbp->nextp = smb_packetFreeListp;
@@ -2357,7 +2372,7 @@ static void FreeNCB(NCB *bufferp)
     smb_ncb_t *tbp;
         
     tbp = (smb_ncb_t *) bufferp;
-    osi_assert(tbp->magic == SMB_NCBMAGIC);
+    osi_assertx(tbp->magic == SMB_NCBMAGIC, "invalid smb_packet_t magic");
         
     lock_ObtainWrite(&smb_globalLock);
     tbp->nextp = smb_ncbFreeListp;
@@ -3674,7 +3689,7 @@ void smb_WaitingLocksDaemon()
                 if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
                     continue;
 
-                osi_assert(wl->state != SMB_WAITINGLOCKSTATE_ERROR);
+                osi_assertx(wl->state != SMB_WAITINGLOCKSTATE_ERROR, "!SMB_WAITINGLOCKSTATE_ERROR");
                 
                 /* wl->state is either _DONE or _WAITING.  _ERROR
                    would no longer be on the queue. */
@@ -3981,11 +3996,11 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     /* pull pathname and stat block out of request */
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, (char **) &tp);
-    osi_assert(pathp != NULL);
+    osi_assertx(pathp != NULL, "null path");
     if (smb_StoreAnsiFilenames)
         OemToChar(pathp,pathp);
     statBlockp = smb_ParseVblBlock(tp, (char **) &tp, &statLen);
-    osi_assert(statBlockp != NULL);
+    osi_assertx(statBlockp != NULL, "null statBlock");
     if (statLen == 0) {
         statBlockp = initStatBlock;
         statBlockp[0] = 8;
@@ -4645,7 +4660,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
      * Deduct for them and fill in the length field.
      */
     temp -= 3;		/* deduct vbl block info */
-    osi_assert(temp == (43 * returnedNames));
+    osi_assertx(temp == (43 * returnedNames), "unexpected data length");
     origOp[1] = (char)(temp & 0xff);
     origOp[2] = (char)((temp>>8) & 0xff);
     if (returnedNames == 0) 
@@ -5141,7 +5156,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 
     /* save a pointer to the vnode */
     fidp->scp = scp;
@@ -6046,6 +6061,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     cm_scache_t *dscp = NULL;
     char *pathp = NULL;
     cm_scache_t * scp = NULL;
+    cm_scache_t *delscp = NULL;
     int deleted = 0;
     int nullcreator = 0;
 
@@ -6153,8 +6169,14 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         char *fullPathp;
 
 	lock_ReleaseMutex(&fidp->mx);
-        smb_FullName(dscp, scp, pathp, &fullPathp, userp, &req);
-        if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+
+        code = cm_Lookup(dscp, pathp, CM_FLAG_NOMOUNTCHASE, userp, &req, &delscp);
+        if (code) {
+            cm_HoldSCache(scp);
+            delscp = scp;
+        }
+        smb_FullName(dscp, delscp, pathp, &fullPathp, userp, &req);
+        if (delscp->fileType == CM_SCACHETYPE_DIRECTORY) {
             code = cm_RemoveDir(dscp, fullPathp, userp, &req);
 	    if (code == 0) {
 		deleted = 1;
@@ -6192,8 +6214,8 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         fidp->NTopen_pathp = NULL;
 	fidp->flags &= ~SMB_FID_NTOPEN;
     } else {
-	osi_assert(fidp->NTopen_dscp == NULL);
-	osi_assert(fidp->NTopen_pathp == NULL);
+	osi_assertx(fidp->NTopen_dscp == NULL, "null NTopen_dsc");
+	osi_assertx(fidp->NTopen_pathp == NULL, "null NTopen_path");
     }
 
     if (fidp->NTopen_wholepathp) {
@@ -6210,16 +6232,20 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     if (dscp)
 	cm_ReleaseSCache(dscp);
 
-    if (scp) {
-	if (deleted || nullcreator) {
-	    lock_ObtainMutex(&scp->mx);
-	    if (nullcreator && scp->creator == userp)
-		scp->creator = NULL;
+    if (delscp) {
+	if (deleted) {
+	    lock_ObtainMutex(&delscp->mx);
 	    if (deleted)
-		scp->flags |= CM_SCACHEFLAG_DELETED;
-	    lock_ReleaseMutex(&scp->mx);
+		delscp->flags |= CM_SCACHEFLAG_DELETED;
+	    lock_ReleaseMutex(&delscp->mx);
 	}
+        cm_ReleaseSCache(delscp);
+    }
+
+    if (scp) {
 	lock_ObtainMutex(&scp->mx);
+        if (nullcreator && scp->creator == userp)
+            scp->creator = NULL;
 	scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
 	lock_ReleaseMutex(&scp->mx);
 	cm_ReleaseSCache(scp);
@@ -7481,7 +7507,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* now all we have to do is open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assert(fidp);
+    osi_assertx(fidp, "null smb_fid_t");
 	
     cm_HoldUser(userp);
 
@@ -7893,7 +7919,7 @@ void smb_ClientWaiter(void *parmp)
         {
             /* this is fatal - log as much as possible */
             osi_Log1(smb_logp, "Fatal: NCBevents idx [ %d ] out of range.\n", idx);
-            osi_assert(0);
+            osi_assertx(0, "invalid index");
         }
         
         thrd_ResetEvent(NCBevents[idx]);
@@ -7951,7 +7977,7 @@ void smb_ServerWaiter(void *parmp)
         {
             /* this is fatal - log as much as possible */
             osi_Log1(smb_logp, "Fatal: session idx [ %d ] out of range.\n", idx_session);
-            osi_assert(0);
+            osi_assertx(0, "invalid index");
         }
 
 		/* Get an NCB */
@@ -7995,7 +8021,7 @@ void smb_ServerWaiter(void *parmp)
         {
             /* this is fatal - log as much as possible */
             osi_Log1(smb_logp, "Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
-            osi_assert(0);
+            osi_assertx(0, "invalid index");
         }
 
         /* Link them together */
@@ -8104,7 +8130,7 @@ void smb_Server(VOID *parmp)
         {
             /* this is fatal - log as much as possible */
             osi_Log1(smb_logp, "Fatal: idx_NCB %d out of range.\n", idx_NCB);
-            osi_assert(0);
+            osi_assertx(0, "invalid index");
         }
 
         ncbp = NCBs[idx_NCB];
@@ -8360,7 +8386,7 @@ void InitNCBslot(int idx)
     int i;
     char eventName[MAX_PATH];
 
-    osi_assert( idx < (sizeof(NCBs) / sizeof(NCBs[0])) );
+    osi_assertx( idx < (sizeof(NCBs) / sizeof(NCBs[0])), "invalid index" );
 
     NCBs[idx] = GetNCB();
     sprintf(eventName,"NCBavails[%d]", idx);
@@ -8657,8 +8683,8 @@ void smb_Listener(void *parmp)
              * we should probably want to wait for a session to be freed in case
              * we run out.
              */
-            osi_assert(session < SESSION_MAX - 1);
-            osi_assert(numNCBs < NCB_MAX - 1);   /* if we pass this test we can allocate one more */
+            osi_assertx(session < SESSION_MAX - 1, "invalid session");
+            osi_assertx(numNCBs < NCB_MAX - 1, "invalid numNCBs");   /* if we pass this test we can allocate one more */
 
 	    lock_ObtainMutex(&vcp->mx);
 	    vcp->session   = session;
@@ -8888,7 +8914,7 @@ int smb_NetbiosInit(void)
         }
     }
 
-    osi_assert(lana_list.length >= 0);
+    osi_assertx(lana_list.length >= 0, "empty lana list");
     if (!lana_found) {
         afsi_log("No valid LANA numbers found!");
 	lana_list.length = 0;
@@ -8928,7 +8954,7 @@ void smb_StartListeners()
             continue;
         phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
                                (void*)lana_list.lana[i], 0, &lpid, "smb_Listener");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "smb_Listener thread creation failure");
         thrd_CloseHandle(phandle);
     }
 }
@@ -9383,30 +9409,30 @@ void smb_Init(osi_log_t *logp, int useV3,
 #ifndef DJGPP
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ClientWaiter,
                           NULL, 0, &lpid, "smb_ClientWaiter");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "smb_ClientWaiter thread creation failure");
     thrd_CloseHandle(phandle);
 #endif /* !DJGPP */
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ServerWaiter,
                           NULL, 0, &lpid, "smb_ServerWaiter");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "smb_ServerWaiter thread creation failure");
     thrd_CloseHandle(phandle);
 
     for (i=0; i<smb_NumServerThreads; i++) {
         phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Server,
                               (void *) i, 0, &lpid, "smb_Server");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "smb_Server thread creation failure");
         thrd_CloseHandle(phandle);
     }
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Daemon,
                           NULL, 0, &lpid, "smb_Daemon");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "smb_Daemon thread creation failure");
     thrd_CloseHandle(phandle);
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_WaitingLocksDaemon,
                           NULL, 0, &lpid, "smb_WaitingLocksDaemon");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "smb_WaitingLocksDaemon thread creation failure");
     thrd_CloseHandle(phandle);
 
 #ifdef DJGPP

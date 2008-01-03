@@ -269,7 +269,11 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 
 
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(HAVE_KMEM_CACHE_T)
 static kmem_cache_t *afs_inode_cachep;
+#else
+struct kmem_cache *afs_inode_cachep;
+#endif
 
 static struct inode *
 afs_alloc_inode(struct super_block *sb)
@@ -294,7 +298,15 @@ afs_destroy_inode(struct inode *inode)
 }
 
 static void
+#if defined(HAVE_KMEM_CACHE_T)
 init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+#else
+#if defined(KMEM_CACHE_INIT)
+init_once(struct kmem_cache * cachep, void * foo)
+#else
+init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+#endif
+#endif
 {
     struct vcache *vcp = (struct vcache *) foo;
 
@@ -312,10 +324,17 @@ afs_init_inodecache(void)
 #define SLAB_RECLAIM_ACCOUNT 0
 #endif
 
+#if defined(KMEM_CACHE_TAKES_DTOR)
     afs_inode_cachep = kmem_cache_create("afs_inode_cache",
 					 sizeof(struct vcache),
 					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
 					 init_once, NULL);
+#else
+    afs_inode_cachep = kmem_cache_create("afs_inode_cache",
+					 sizeof(struct vcache),
+					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
+					 init_once);
+#endif
     if (afs_inode_cachep == NULL)
 	return -ENOMEM;
     return 0;
@@ -523,6 +542,7 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_size = vp->va_size;
 #if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
+    ip->i_atime.tv_nsec = 0;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
     /* Set the mtime nanoseconds to the sysname generation number.
      * This convinces NFS clients that all directories have changed
@@ -530,6 +550,7 @@ vattr2inode(struct inode *ip, struct vattr *vp)
      */
     ip->i_mtime.tv_nsec = afs_sysnamegen;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
+    ip->i_ctime.tv_nsec = 0;
 #else
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;

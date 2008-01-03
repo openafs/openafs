@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos addsite - Adds a read-only site definition to a volume's VLDB entry
+vos_addsite - Adds a read-only site definition to a volume's VLDB entry
 
 =head1 SYNOPSIS
 

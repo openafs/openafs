@@ -90,16 +90,16 @@ volser.h volerr.c: volerr.et volser.p.h
 	${COMPILE_ET} -p ${srcdir} volerr -h volser
 
 volint.cs.c: volint.xg
-	${RXGEN} -x -C -o $@ ${srcdir}/volint.xg
+	${RXGEN} -A -x -C -o $@ ${srcdir}/volint.xg
 
 volint.ss.c: volint.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/volint.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/volint.xg
 
 volint.xdr.c: volint.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/volint.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/volint.xg
 
 volint.h: volint.xg
-	${RXGEN} -x -h -o $@ ${srcdir}/volint.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/volint.xg
 
 volint.cs.c: volint.h
 volint.ss.c: volint.h

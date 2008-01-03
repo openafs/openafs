@@ -77,7 +77,7 @@ cm_ShutdownVolume(void)
             cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_alldown);
         if (volp->bk.ID)
             cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
-
+        volp->cbExpiresRO = 0;
         lock_FinalizeMutex(&volp->mx);
     }
 
@@ -118,6 +118,7 @@ void cm_InitVolume(int newFile, long maxVols)
                     cm_VolumeStatusNotification(volp, volp->ro.ID, vl_alldown, volp->ro.state);
                 if (volp->bk.ID)
                     cm_VolumeStatusNotification(volp, volp->bk.ID, vl_alldown, volp->bk.state);
+                volp->cbExpiresRO = 0;
             }
         }
         osi_EndOnce(&once);
@@ -188,6 +189,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     enum volstatus rwNewstate = vl_online;
     enum volstatus roNewstate = vl_online;
     enum volstatus bkNewstate = vl_online;
+#ifdef AFS_FREELANCE_CLIENT
+    int freelance = 0;
+#endif
 
     /* clear out old bindings */
     if (volp->rw.serversp)
@@ -198,8 +202,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         cm_FreeServerList(&volp->bk.serversp, CM_FREESERVERLIST_DELETE);
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && atoi(volp->namep)==AFS_FAKE_ROOT_VOL_ID ) 
+    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->rw.ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
+	freelance = 1;
         memset(&vldbEntry, 0, sizeof(vldbEntry));
         vldbEntry.flags |= VLF_RWEXISTS;
         vldbEntry.volumeId[0] = AFS_FAKE_ROOT_VOL_ID;
@@ -288,6 +293,11 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         afs_int32 roServers_alldown = 1;
         afs_int32 bkServers_alldown = 1;
         char      name[VL_MAXNAMELEN];
+
+#ifdef AFS_FREELANCE_CLIENT
+	if (freelance)
+	    rwServers_alldown = 0;
+#endif
 
         switch ( method ) {
         case 0:
@@ -447,7 +457,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             if ( !tsp->cellp ) 
                 tsp->cellp = cellp;
 
-            osi_assert(tsp != NULL);
+            osi_assertx(tsp != NULL, "null cm_server_t");
                         
             /* and add it to the list(s). */
             /*
@@ -596,7 +606,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp == volp2);
+    osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -631,7 +641,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     /* otherwise, we didn't find it so consult the VLDB */
     sprintf(volNameString, "%u", volumeID);
     code = cm_GetVolumeByName(cellp, volNameString, userp, reqp,
-			       flags, outVolpp);
+			      flags, outVolpp);
     return code;
 }
 
@@ -681,7 +691,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp2 == volp);
+    osi_assertx(volp2 == volp, "unexpected cm_vol_t");
 #endif
 
     if (!volp && (flags & CM_GETVOL_FLAG_CREATE)) {
@@ -759,6 +769,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         volp->rw.state = volp->ro.state = volp->bk.state = vl_unknown;
         volp->rw.nextp = volp->ro.nextp = volp->bk.nextp = NULL;
         volp->rw.flags = volp->ro.flags = volp->bk.flags = 0;
+        volp->cbExpiresRO = 0;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
@@ -847,7 +858,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    osi_assert(volp == volp2);
+    osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -908,7 +919,7 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
 void cm_PutVolume(cm_volume_t *volp)
 {
     lock_ObtainWrite(&cm_volumeLock);
-    osi_assert(volp->refCount-- > 0);
+    osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     lock_ReleaseWrite(&cm_volumeLock);
 }
 
@@ -947,7 +958,7 @@ void cm_RefreshVolumes(void)
 	lock_ReleaseMutex(&volp->mx);
 	
         lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 
@@ -1103,7 +1114,7 @@ void cm_CheckOfflineVolumes(void)
         cm_CheckOfflineVolume(volp, 0);
 
 	lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 }
@@ -1196,7 +1207,7 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 
 	lock_ReleaseMutex(&volp->mx);
 	lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
+	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
     }
     lock_ReleaseWrite(&cm_volumeLock);
 }	
@@ -1475,3 +1486,52 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
 
     cm_VolStatus_Change_Notification(volp->cellp->cellID, volID, new);
 }       
+
+enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
+{
+    if (volp->rw.ID == volID) {
+        return volp->rw.state;
+    } else if (volp->ro.ID == volID) {
+        return volp->ro.state;
+    } else if (volp->bk.ID == volID) {
+        return volp->bk.state;
+    } else {
+        return vl_unknown;
+    }
+}
+
+/* Renew .readonly volume callbacks that are more than
+ * 30 minutes old.  (A volume callback is issued for 2 hours.)
+ */
+void 
+cm_VolumeRenewROCallbacks(void)
+{
+    cm_volume_t * volp;
+    time_t minexp = time(NULL) + 90 * 60;
+
+    lock_ObtainRead(&cm_volumeLock);
+    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
+        if ( volp->cbExpiresRO > 0 && volp->cbExpiresRO < minexp) {
+            cm_req_t      req;
+            cm_fid_t      fid;
+            cm_scache_t * scp;
+
+            fid.cell = volp->cellp->cellID;
+            fid.volume = volp->ro.ID;
+            fid.vnode = 1;
+            fid.unique = 1;
+
+            cm_InitReq(&req);
+
+            lock_ReleaseRead(&cm_volumeLock);
+            if (cm_GetSCache(&fid, &scp, cm_rootUserp, &req) == 0) {
+                lock_ObtainMutex(&scp->mx);
+                cm_GetCallback(scp, cm_rootUserp, &req, 1);
+                lock_ReleaseMutex(&scp->mx);
+                cm_ReleaseSCache(scp);
+            }
+            lock_ObtainRead(&cm_volumeLock);
+        }
+    }
+    lock_ReleaseRead(&cm_volumeLock);
+}

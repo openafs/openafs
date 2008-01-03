@@ -34,6 +34,10 @@
 /* read/write lock for all global storage in this module */
 osi_rwlock_t cm_callbackLock;
 
+afs_int32 cm_OfflineROIsValid = 0;
+
+afs_int32 cm_giveUpAllCBs = 0;
+
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -265,6 +269,11 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
+
+                if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
+                    scp->volp->cbExpiresRO = 0;
+                }
+                
             }
         }	/* search one hash bucket */
     }	/* search all hash buckets */
@@ -482,6 +491,10 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                     cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
+
+                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO) && scp->volp && scp->volp->cbExpiresRO != 0)
+                    scp->volp->cbExpiresRO = 0;
+
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
 	
@@ -737,9 +750,12 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     cep->lock.pid_writer = 0;
     cep->lock.src_indicator = 0;
     cep->Length = scp->length.LowPart;
-    cep->DataVersion = scp->dataVersion;
+    cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
-    cep->cbExpires = scp->cbExpires;
+    if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
+        cep->cbExpires = scp->volp->cbExpiresRO;
+    else
+        cep->cbExpires = scp->cbExpires;
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
     cep->writers = scp->openWrites;
@@ -848,9 +864,12 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
 #else
     cep->Length = (afs_int64) scp->length.QuadPart;
 #endif
-    cep->DataVersion = scp->dataVersion;
+    cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
-    cep->cbExpires = scp->cbExpires;
+    if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
+        cep->cbExpires = scp->volp->cbExpiresRO;
+    else
+        cep->cbExpires = scp->cbExpires;
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
     cep->writers = scp->openWrites;
@@ -1418,7 +1437,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
 #ifndef SIZE_MAX
 #define SIZE_MAX UINT_MAX
 #endif
-    osi_assert(allocsize < SIZE_MAX);
+    osi_assertx(allocsize < SIZE_MAX, "allocsize >= SIZE_MAX");
 #endif
     *configCount = (afs_uint32)allocsize;
     config->cacheConfig_val = t_config;
@@ -1487,10 +1506,20 @@ int cm_HaveCallback(cm_scache_t *scp)
     }
 #endif
 
-    if (scp->cbServerp != NULL)
+    if (scp->cbServerp != NULL) {
 	return 1;
-    else 
+    } else if (cm_OfflineROIsValid) {
+        switch (cm_GetVolumeStatus(scp->volp, scp->fid.volume)) {
+        case vl_offline:
+        case vl_alldown:
+        case vl_unknown:
+            return 1;
+        default:
+            return 0;
+        }
+    } else {
         return 0;
+    }
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
@@ -1517,7 +1546,7 @@ void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
     lock_ObtainWrite(&cm_callbackLock);
     cbrp->callbackCount = cm_callbackCount;
     cm_activeCallbackGrantingCalls++;
-    cbrp->startTime = osi_Time();
+    cbrp->startTime = time(NULL);
     cbrp->serverp = NULL;
     lock_ReleaseWrite(&cm_callbackLock);
 }
@@ -1535,14 +1564,16 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
     int freeFlag;
     cm_server_t * serverp = NULL;
-    int discardScp = 0;
+    int discardScp = 0, discardVolCB = 0;
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
-        osi_assert(cm_activeCallbackGrantingCalls > 0);
+        osi_assertx(cm_activeCallbackGrantingCalls > 0, 
+                    "CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
     else {
-        osi_assert(cm_activeCallbackGrantingCalls-- > 0);
+        osi_assertx(cm_activeCallbackGrantingCalls-- > 0,
+                    "!CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
     if (cm_activeCallbackGrantingCalls == 0) 
         freeFlag = 1;
@@ -1562,6 +1593,8 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                     serverp = cbrp->serverp;
             }
             scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
+            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
+                scp->volp->cbExpiresRO = scp->cbExpires;
         } else {
             if (freeFlag)
                 serverp = cbrp->serverp;
@@ -1599,6 +1632,10 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
             discardScp = 1;
+
+            if ((scp->flags & CM_SCACHEFLAG_PURERO) && scp->volp && 
+                (revp->flags & (CM_RACINGFLAG_CANCELVOL | CM_RACINGFLAG_CANCELALL)))
+                scp->volp->cbExpiresRO = 0;
         }
         if (freeFlag) 
             free(revp);
@@ -1810,6 +1847,11 @@ void cm_CheckCBExpiration(void)
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
             downTime = 0;
+            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
+                if (scp->volp->cbExpiresRO > scp->cbExpires && scp->cbExpires > 0)
+                    scp->cbExpires = scp->volp->cbExpiresRO;
+            }
+
             if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
                  (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
             {
@@ -1890,6 +1932,9 @@ void
 cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
 {
     cm_server_t *tsp;
+
+    if (!cm_giveUpAllCBs)
+        return;
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {

@@ -235,9 +235,16 @@ int ShowMounts = 0;		/* -showmounts flag */
 int orphans = ORPH_IGNORE;	/* -orphans option */
 int Showmode = 0;
 
+
 #ifndef AFS_NT40_ENV
 int useSyslog = 0;		/* -syslog flag */
 int useSyslogFacility = LOG_DAEMON;	/* -syslogfacility option */
+#endif
+
+#ifdef AFS_NT40_ENV
+int canfork = 0;
+#else
+int canfork = 1;
 #endif
 
 #define	MAXPARALLEL	32
@@ -1258,9 +1265,23 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		DiskToVolumeHeader(&vsp->header, &diskHeader);
 		if (singleVolumeNumber && vsp->header.id == singleVolumeNumber
 		    && vsp->header.parent != singleVolumeNumber) {
-		    Log("%u is a read-only volume; not salvaged\n",
-			singleVolumeNumber);
-		    Exit(1);
+		    if (programType == salvageServer) {
+#ifdef SALVSYNC_BUILD_CLIENT
+			Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
+			    vsp->header.id, vsp->header.parent);
+			if (SALVSYNC_LinkVolume(vsp->header.parent,
+						vsp->header.id,
+						fileSysPartition->name,
+						NULL) != SYNC_OK) {
+			    Log("schedule request failed\n");
+			}
+#endif
+			Exit(SALSRV_EXIT_VOLGROUP_LINK);
+		    } else {
+			Log("%u is a read-only volume; not salvaged\n",
+			    singleVolumeNumber);
+			Exit(1);
+		    }
 		}
 		if (!singleVolumeNumber
 		    || (vsp->header.id == singleVolumeNumber
@@ -3287,7 +3308,18 @@ Fork(void)
 #else
     f = fork();
     assert(f >= 0);
+#ifdef AFS_DEMAND_ATTACH_FS
+    if ((f == 0) && (programType == salvageServer)) {
+	/* we are a salvageserver child */
+#ifdef FSSYNC_BUILD_CLIENT
+	VChildProcReconnectFS_r();
 #endif
+#ifdef SALVSYNC_BUILD_CLIENT
+	VReconnectSALV_r();
+#endif
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* !AFS_NT40_ENV */
     return f;
 }
 
@@ -3297,6 +3329,18 @@ Exit(code)
 {
     if (ShowLog)
 	showlog();
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (programType == salvageServer) {
+#ifdef SALVSYNC_BUILD_CLIENT
+	VDisconnectSALV();
+#endif
+#ifdef FSSYNC_BUILD_CLIENT
+	VDisconnectFS();
+#endif
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 #ifdef AFS_NT40_ENV
     if (main_thread != pthread_self())
 	pthread_exit((void *)code);
@@ -3427,11 +3471,11 @@ Log(const char *format, ...)
 	syslog(LOG_INFO, "%s", tmp);
     } else
 #endif
-    {
-	gettimeofday(&now, 0);
-	fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
-	fflush(logFile);
-    }
+	if (logFile) {
+	    gettimeofday(&now, 0);
+	    fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
+	    fflush(logFile);
+	}
 }
 
 void
@@ -3448,12 +3492,12 @@ Abort(const char *format, ...)
 	syslog(LOG_INFO, "%s", tmp);
     } else
 #endif
-    {
-	fprintf(logFile, "%s", tmp);
-	fflush(logFile);
-	if (ShowLog)
-	    showlog();
-    }
+	if (logFile) {
+	    fprintf(logFile, "%s", tmp);
+	    fflush(logFile);
+	    if (ShowLog)
+		showlog();
+	}
 
     if (debug)
 	abort();

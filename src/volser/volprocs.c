@@ -15,6 +15,7 @@ RCSID
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <string.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
@@ -23,14 +24,6 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <dirent.h>
@@ -198,7 +191,7 @@ XAttachVolume(afs_int32 *error, afs_int32 avolid, afs_int32 apartid, int amode)
 	*error = EINVAL;
 	return NULL;
     }
-    tv = VAttachVolumeByName(error, pbuf, vbuf, amode);
+    tv = VAttachVolumeByName((Error *)error, pbuf, vbuf, amode);
     return tv;
 }
 
@@ -210,14 +203,14 @@ ViceCreateRoot(Volume *vp)
     struct acl_accessList *ACL;
     ViceFid did;
     Inode inodeNumber, nearInode;
-    char buf[SIZEOF_LARGEDISKVNODE];
-    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
     FdHandle_t *fdP;
     int code;
     afs_fsize_t length;
 
+    vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     memset(vnode, 0, SIZEOF_LARGEDISKVNODE);
 
     V_pref(vp, nearInode);
@@ -282,6 +275,7 @@ ViceCreateRoot(Volume *vp)
     VNDISK_GET_LEN(length, vnode);
     V_diskused(vp) = nBlocks(length);
 
+    free(vnode);
     return 1;
 }
 
@@ -1650,8 +1644,7 @@ VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
     namehead[7] = '\0';
     for (i = 0; i < 26; i++) {
 	namehead[6] = i + 'a';
-	if (VGetPartition(namehead, 0))
-	    partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
+	partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
     }
 
     return 0;
@@ -2069,11 +2062,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    xInfoP->accessDate = volDiskDataP->accessDate;
 	    xInfoP->updateDate = volDiskDataP->updateDate;
 	    xInfoP->backupDate = volDiskDataP->backupDate;
-	    now = FT_ApproxTime();
-	    if (now - volDiskDataP->dayUseDate > OneDay)
-		xInfoP->dayUse = 0;
-	    else
-		xInfoP->dayUse = volDiskDataP->dayUse;
 	    xInfoP->filecount = volDiskDataP->filecount;
 	    xInfoP->maxquota = volDiskDataP->maxquota;
 	    xInfoP->size = volDiskDataP->diskused;
@@ -2081,8 +2069,15 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Copy out the stat fields in a single operation.
 	     */
-	    memcpy((char *)&(xInfoP->stat_reads[0]),
+	    now = FT_ApproxTime();
+	    if (now - volDiskDataP->dayUseDate > OneDay) {
+		xInfoP->dayUse = 0;
+		memset((char *)&(xInfoP->stat_reads[0]), 0, numStatBytes);
+	    } else {
+		xInfoP->dayUse = volDiskDataP->dayUse;
+		memcpy((char *)&(xInfoP->stat_reads[0]),
 		   (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
+	    }
 
 	    /*
 	     * We're done copying.  Detach the volume and iterate (at this
@@ -2764,116 +2759,65 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
     return error;
 }
 
-#ifdef AFS_NAMEI_ENV
-/* 
- * Inode number format  (from namei_ops.c): 
- * low 26 bits - vnode number - all 1's if volume special file.
- * next 3 bits - tag
- * next 3 bits spare (0's)
- * high 32 bits - uniquifier (regular) or type if spare
- */
-#define NAMEI_VNODEMASK    0x003ffffff
-#define NAMEI_TAGMASK      0x7
-#define NAMEI_TAGSHIFT     26
-#define NAMEI_UNIQMASK     0xffffffff
-#define NAMEI_UNIQSHIFT    32
-#define NAMEI_INODESPECIAL ((Inode)NAMEI_VNODEMASK)
-#define NAMEI_VNODESPECIAL NAMEI_VNODEMASK
-#endif /* AFS_NAMEI_ENV */
-
 afs_int32
 SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 			   afs_int32 volumeId)
 {
-#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
-    DIR *dirp;
-    char pname[16];
-    char volname[20];
-    afs_int32 error = 0;
-    afs_int32 volid;
-    int found = 0;
+#ifdef AFS_NT40_ENV
+    return EXDEV;
+#else
     char caller[MAXKTCNAMELEN];
-    char headername[16];
-    char opath[256];
-    char npath[256];
-    struct VolumeDiskHeader h;
-    int fd;
-    IHandle_t *ih;
-    Inode ino;
-    struct DiskPartition *dp;
+    DIR *dirp;
+    register struct volser_trans *ttc;
+    char pname[16], volname[20];
+    struct DiskPartition *partP;
+    afs_int32 ret = ENODEV;
+    afs_int32 volid;
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
     if (GetPartName(partId, pname))
-	return VOLSERILLEGAL_PARTITION;
-    dirp = opendir(pname);
+        return VOLSERILLEGAL_PARTITION;
+    if (!(partP = VGetPartition(pname, 0)))
+        return VOLSERILLEGAL_PARTITION;
+    dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
     strcpy(volname, "");
+    ttc = (struct volser_trans *)0;
 
-    while (strcmp(volname, "EOD") && !found) {	/*while there are more volumes in the partition */
-	GetNextVol(dirp, volname, &volid);
-	if (strcmp(volname, "")) {	/* its a volume */
-	    if (volid == volumeId)
-		found = 1;
+    while (strcmp(volname, "EOD")) {
+	if (!strcmp(volname, "")) {     /* its not a volume, fetch next file */
+            GetNextVol(dirp, volname, &volid);
+            continue;           /*back to while loop */
+        }
+	
+	if (volid == volumeId) {        /*copy other things too */
+#ifndef AFS_PTHREAD_ENV
+            IOMGR_Poll();       /*make sure that the client doesnot time out */
+#endif
+            ttc = NewTrans(volumeId, partId);
+            if (!ttc) {
+		return VBUSY;
+            }
+#ifdef AFS_NAMEI_ENV
+	    ret = namei_ConvertROtoRWvolume(pname, volumeId);
+#else
+	    ret = inode_ConvertROtoRWvolume(pname, volumeId);
+#endif
+	    break;
 	}
+	GetNextVol(dirp, volname, &volid);
     }
-    if (!found)
-	return ENOENT;
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
-    (void)afs_snprintf(opath, sizeof opath, "%s/%s", pname, headername);
-    fd = open(opath, O_RDONLY);
-    if (fd < 0) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
-	return ENOENT;
+    
+    if (ttc) {
+        DeleteTrans(ttc, 1);
+        ttc = (struct volser_trans *)0;
     }
-    if (read(fd, &h, sizeof(h)) != sizeof(h)) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n", volumeId);
-	close(fd);
-	return EIO;
-    }
-    close(fd);
-    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
-
-    for (dp = DiskPartitionList; dp && strcmp(dp->name, pname);
-	 dp = dp->next);
-    if (!dp) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
-	return EIO;
-    }
-    ino = namei_MakeSpecIno(h.parent, VI_LINKTABLE);
-    IH_INIT(ih, dp->device, h.parent, ino);
-
-    error = namei_ConvertROtoRWvolume(ih, volumeId);
-    if (error)
-	return error;
-    h.id = h.parent;
-    h.volumeInfo_hi = h.id;
-    h.smallVnodeIndex_hi = h.id;
-    h.largeVnodeIndex_hi = h.id;
-    h.linkTable_hi = h.id;
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
-    (void)afs_snprintf(npath, sizeof npath, "%s/%s", pname, headername);
-    fd = open(npath, O_CREAT | O_EXCL | O_RDWR, 0644);
-    if (fd < 0) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);
-	return EIO;
-    }
-    if (write(fd, &h, sizeof(h)) != sizeof(h)) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't write header for RW-volume %lu.\n", h.id);
-	close(fd);
-	return EIO;
-    }
-    close(fd);
-    if (unlink(opath) < 0) {
-	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
-    }
-    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
-    FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
-    return 0;
-#else /* AFS_NAMEI_ENV */
-    return EINVAL;
-#endif /* AFS_NAMEI_ENV */
+    
+    closedir(dirp);
+    return ret;
+#endif
 }
 
 afs_int32

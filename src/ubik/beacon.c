@@ -26,13 +26,7 @@ RCSID
 #endif
 #include <errno.h>
 #include <lock.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_multi.h>
@@ -83,6 +77,7 @@ static verifyInterfaceAddress();
  */
 
 /* procedure called from debug rpc call to get this module's state for debugging */
+void
 ubeacon_Debug(aparm)
      register struct ubik_debug *aparm;
 {

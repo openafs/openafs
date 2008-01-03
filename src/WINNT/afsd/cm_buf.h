@@ -78,7 +78,7 @@ typedef struct cm_buf {
     cm_user_t *userp;	        /* user who wrote to the buffer last */
         
     /* fields added for the CM; locked by scp->mx */
-    afs_uint32 dataVersion;	/* data version of this page */
+    afs_uint64 dataVersion;	/* data version of this page */
     afs_uint32 cmFlags;		/* flags for cm */
 
     /* syncop state */
@@ -201,7 +201,7 @@ extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
 
 extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
 
-extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint32 fromVersion, afs_uint32 toVersion);
+extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */

@@ -32,6 +32,7 @@
 #include "afs/param.h"
 #else
 #include <afs/param.h>
+#include <string.h>
 #endif
 
 RCSID

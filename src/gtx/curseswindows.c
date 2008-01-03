@@ -37,14 +37,7 @@ RCSID
 #include <stdio.h>
 #include <sys/time.h>
 #include <errno.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include "gtxcurseswin.h"	/*Interface definition */

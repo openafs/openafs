@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos setauth - Sets authorization checking requirements for all server processes
+bos_setauth - Sets authorization checking requirements for all server processes
 
 =head1 SYNOPSIS
 

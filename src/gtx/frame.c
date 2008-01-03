@@ -19,13 +19,7 @@ RCSID
 #endif
 #include <lwp.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include "gtxobjects.h"
@@ -324,6 +318,7 @@ gtxframe_DisplayString(aframe, amsgLine)
     if (aframe->messageLine)
 	free(aframe->messageLine);
     aframe->messageLine = gtx_CopyString(amsgLine);
+    return 0;
 }
 
 /* Called by input processor to try to clear the dude */

@@ -31,6 +31,7 @@ RCSID
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
@@ -39,14 +40,6 @@ RCSID
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include "vlserver.h"
@@ -249,6 +242,7 @@ readheader(headerp)
     if (headerp->vital_header.headersize != sizeof(*headerp))
 	printf("Header reports its size as %d (should be %d)\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
+    return 0;
 }
 
 readMH(addr, mhblockP)
@@ -273,6 +267,7 @@ readMH(addr, mhblockP)
 	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++)
 	    e->ex_addrs[j] = ntohl(e->ex_addrs[j]);
     }
+    return 0;
 }
 
 readentry(addr, vlentryp, type)
@@ -353,6 +348,7 @@ readentry(addr, vlentryp, type)
 	    }
 	}
     }
+    return 0;
 }
 
 void
@@ -569,6 +565,7 @@ FollowNameHash(header)
 	    ("%d entries in name hash, longest is %d, shortest is %d, average length is %f\n",
 	     count, longest, shortest, ((float)count / (float)HASHSIZE));
     }
+    return 0;
 }
 
 /*
@@ -642,6 +639,7 @@ FollowIdHash(header)
 		 ((float)count / (float)HASHSIZE));
 	}
     }
+    return 0;
 }
 
 /*
@@ -686,6 +684,7 @@ FollowFreeChain(header)
     }
     if (verbose)
 	printf("%d entries on free chain\n", count);
+    return 0;
 }
 
 /*
@@ -896,13 +895,13 @@ CheckIpAddrs(header)
 	printf("%d simple entries, %d multihomed entries, Total = %d\n",
 	       regentries, mhentries, mhentries + regentries);
     }
-
+    return 0;
 }
 
 int
 WorkerBee(as, arock)
      struct cmd_syndesc *as;
-     char *arock;
+     void *arock;
 {
     char *dbfile;
     afs_int32 maxentries, type;

@@ -658,8 +658,12 @@ struct file_operations afs_file_fops = {
   .mmap =	afs_linux_mmap,
   .open =	afs_linux_open,
   .flush =	afs_linux_flush,
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
   .sendfile =   generic_file_sendfile,
+#endif
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
+  .splice_write = generic_file_splice_write,
+  .splice_read = generic_file_splice_read,
 #endif
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
@@ -896,6 +900,15 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     AFS_GLOCK();
     (void) afs_InactiveVCache(vcp, NULL);
     AFS_GUNLOCK();
+#ifdef DCACHE_NFSFS_RENAMED
+#ifdef AFS_LINUX26_ENV
+    spin_lock(&dp->d_lock);
+#endif
+    dp->d_flags &= ~DCACHE_NFSFS_RENAMED;   
+#ifdef AFS_LINUX26_ENV
+    spin_unlock(&dp->d_lock);
+#endif
+#endif
 
     iput(ip);
 }
@@ -957,6 +970,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
+	insert_inode_hash(ip);
 	dp->d_op = &afs_dentry_operations;
 	dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
 	d_instantiate(dp, ip);
@@ -1005,6 +1019,11 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
+#if defined(AFS_LINUX24_ENV)
+#define hlist_unhashed(x) list_empty(x)
+#endif
+	if (hlist_unhashed(&ip->i_hash))
+	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
     dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
@@ -1131,6 +1150,15 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
             }
             tvc->uncred = credp;
 	    tvc->states |= CUnlinked;
+#ifdef DCACHE_NFSFS_RENAMED
+#ifdef AFS_LINUX26_ENV
+	    spin_lock(&dp->d_lock);
+#endif
+	    dp->d_flags |= DCACHE_NFSFS_RENAMED;   
+#ifdef AFS_LINUX26_ENV
+	    spin_unlock(&dp->d_lock);
+#endif
+#endif
 	} else {
 	    osi_FreeSmallSpace(__name);	
 	}
@@ -1858,5 +1886,4 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 #endif
     }
 
-    /* insert_inode_hash(ip);	-- this would make iget() work (if we used it) */
 }

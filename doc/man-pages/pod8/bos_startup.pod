@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos startup - Starts a process without changing its status flag
+bos_startup - Starts a process without changing its status flag
 
 =head1 SYNOPSIS
 

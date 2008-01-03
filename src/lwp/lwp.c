@@ -39,13 +39,7 @@ int setlim(int limcon, uchar_t hard, int limit);
 extern char *getenv();
 #include <time.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #if	!defined(USE_PTHREADS) && !defined(USE_SOLARIS_THREADS)
 
@@ -967,6 +961,8 @@ Dispatcher(void)
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
+    
+    return 0; /* not reachable */
 }
 
 /* Complain of a stack overflow to stderr without using stdio. */

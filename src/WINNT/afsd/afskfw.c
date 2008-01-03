@@ -161,6 +161,36 @@ KFW_cleanup(void)
     KFW_cleanup_funcs();
 }
 
+
+int
+KFW_accept_dotted_usernames(void)
+{
+    HKEY parmKey;
+    DWORD code, len;
+    DWORD value = 1;
+
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        len = sizeof(value);
+        code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
+                                (BYTE *) &value, &len);
+        RegCloseKey(parmKey);
+    }
+    if (code != ERROR_SUCCESS) {
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code == ERROR_SUCCESS) {
+            len = sizeof(value);
+            code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
+                                    (BYTE *) &value, &len);
+            RegCloseKey (parmKey);
+        }
+    }
+    return value;
+}
+
+
 int
 KFW_use_krb524(void)
 {
@@ -934,24 +964,27 @@ KFW_AFS_get_cred( char * username,
     userrealm = strchr(username,'@');
     if ( userrealm ) {
         pname = strdup(username);
-        userrealm = strchr(pname, '@');
-        *userrealm = '\0';
+        if (!KFW_accept_dotted_usernames()) {
+            userrealm = strchr(pname, '@');
+            *userrealm = '\0';
 
-        /* handle kerberos iv notation */
-        while ( dot = strchr(pname,'.') ) {
-            *dot = '/';
+            /* handle kerberos iv notation */
+            while ( dot = strchr(pname,'.') ) {
+                *dot = '/';
+            }
+            *userrealm++ = '@';
         }
-        *userrealm++ = '@';
     } else {
         pname = malloc(strlen(username) + strlen(realm) + 2);
 
         strcpy(pname, username);
 
-        /* handle kerberos iv notation */
-        while ( dot = strchr(pname,'.') ) {
-            *dot = '/';
+        if (!KFW_accept_dotted_usernames()) {
+            /* handle kerberos iv notation */
+            while ( dot = strchr(pname,'.') ) {
+                *dot = '/';
+            }
         }
-
         strcat(pname,"@");
         strcat(pname,realm);
     }
@@ -2414,19 +2447,21 @@ KFW_AFS_klog(
         goto skip_krb5_init;
     }
 
-    /* look for client principals which cannot be distinguished 
-     * from Kerberos 4 multi-component principal names
-     */
-    k5data = krb5_princ_component(ctx,client_principal,0);
-    for ( i=0; i<k5data->length; i++ ) {
-        if ( k5data->data[i] == '.' )
-            break;
-    }
-    if (i != k5data->length)
-    {
-        OutputDebugString("Illegal Principal name contains dot in first component\n");
-        rc = KRB5KRB_ERR_GENERIC;
-        goto cleanup;
+    if (!KFW_accept_dotted_usernames()) {
+        /* look for client principals which cannot be distinguished 
+         * from Kerberos 4 multi-component principal names
+         */
+        k5data = krb5_princ_component(ctx,client_principal,0);
+        for ( i=0; i<k5data->length; i++ ) {
+            if ( k5data->data[i] == '.' )
+                break;
+        }
+        if (i != k5data->length)
+        {
+            OutputDebugString("Illegal Principal name contains dot in first component\n");
+            rc = KRB5KRB_ERR_GENERIC;
+            goto cleanup;
+        }
     }
 
     i = krb5_princ_realm(ctx, client_principal)->length;

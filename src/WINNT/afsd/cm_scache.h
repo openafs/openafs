@@ -120,7 +120,7 @@ typedef struct cm_scache {
     cm_prefetch_t prefetch;		/* prefetch info structure */
     afs_uint32 unixModeBits;		/* unix protection mode bits */
     afs_uint32 linkCount;		/* link count */
-    afs_uint32 dataVersion;		/* data version */
+    afs_uint64 dataVersion;		/* data version */
     afs_uint32 owner; 			/* file owner */
     afs_uint32 group;			/* file owning group */
     cm_user_t *creator;			/* user, if new file */
@@ -165,7 +165,7 @@ typedef struct cm_scache {
                                  */
     unsigned long lastRefreshCycle; /* protected with cm_scacheLock
                                      * for all scaches. */
-    afs_uint32 lockDataVersion; /* dataVersion of the scp at the time
+    afs_uint64  lockDataVersion; /* dataVersion of the scp at the time
                                    the server lock for the scp was
                                    asserted for this lock the last
                                    time. */
@@ -196,7 +196,7 @@ typedef struct cm_scache {
 #ifdef USE_BPLUS
     /* directory B+ tree */             /* only allocated if is directory */
     osi_rwlock_t dirlock;               /* controls access to dirBplus */
-    afs_uint32   dirDataVersion;        /* data version represented by dirBplus */
+    afs_uint64   dirDataVersion;        /* data version represented by dirBplus */
     struct tree *dirBplus;              /* dirBplus */
 #endif
 
@@ -209,6 +209,12 @@ typedef struct cm_scache {
     /* syncop state */
     afs_uint32 waitCount;           /* number of threads waiting */
     afs_uint32 waitRequests;        /* num of thread wait requests */
+    osi_queue_t * waitQueueH;       /* Queue of waiting threads.
+                                       Holds queue of
+                                       cm_scache_waiter_t
+                                       objects. Protected by
+                                       cm_cacheLock. */
+    osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
 } cm_scache_t;
 
 /* mask field - tell what has been modified */
@@ -311,6 +317,15 @@ typedef struct cm_scache {
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
 					% cm_data.scacheHashTableSize)
+
+typedef struct cm_scache_waiter {
+    osi_queue_t q;
+    afs_int32   threadId;
+
+    cm_scache_t *scp;
+    afs_int32   flags;
+    void        *bufp;
+} cm_scache_waiter_t;
 
 #include "cm_conn.h"
 #include "cm_buf.h"

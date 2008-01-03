@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts examine - Displays a Protection Database entry
+pts_examine - Displays a Protection Database entry
 
 =head1 SYNOPSIS
 

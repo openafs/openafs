@@ -114,7 +114,7 @@ void cm_ReleaseUser(cm_user_t *userp)
         return;
 
     lock_ObtainWrite(&cm_userLock);
-    osi_assert(userp->refCount-- > 0);
+    osi_assertx(userp->refCount-- > 0, "cm_user_t refCount 0");
     if (userp->refCount == 0) {
         lock_FinalizeMutex(&userp->mx);
         for (ucp = userp->cellInfop; ucp; ucp = ncp) {
@@ -145,7 +145,7 @@ void cm_HoldUserVCRef(cm_user_t *userp)
 void cm_ReleaseUserVCRef(cm_user_t *userp)
 {
     lock_ObtainMutex(&userp->mx);
-    osi_assert(userp->vcRefs-- > 0);
+    osi_assertx(userp->vcRefs-- > 0, "cm_user_t refCount 0");
     lock_ReleaseMutex(&userp->mx);
 }       
 
@@ -222,3 +222,20 @@ void cm_CheckTokenCache(time_t now)
     }
     lock_ReleaseWrite(&smb_rctLock);
 }
+
+#ifdef USE_ROOT_TOKENS
+/*
+ * Service/Parameters/RootTokens/<cellname>/
+ * -> UseLSA
+ * -> Keytab (required if UseLSA is 0)
+ * -> Principal (required if there is more than one principal in the keytab)
+ * -> Realm (required if realm is not upper-case of <cellname>
+ * -> RequireEncryption 
+ */
+
+void
+cm_RefreshRootTokens(void)
+{
+
+}
+#endif 

@@ -44,7 +44,7 @@ afs_int32 cryptall = 0;
 void cm_PutConn(cm_conn_t *connp)
 {
 	lock_ObtainWrite(&cm_connLock);
-	osi_assert(connp->refCount-- > 0);
+	osi_assertx(connp->refCount-- > 0, "cm_conn_t refcount 0");
 	lock_ReleaseWrite(&cm_connLock);
 }
 
@@ -244,7 +244,16 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
         }
-    } 
+    }
+
+    else if (errorCode == UAEWOULDBLOCK || errorCode == EWOULDBLOCK ||
+              errorCode == UAEAGAIN || errorCode == EAGAIN) {
+	osi_Log0(afsd_logp, "cm_Analyze passed EWOULDBLOCK or EAGAIN.");
+        if (timeLeft > 5 ) {
+            thrd_Sleep(1000);
+            retry = 1;
+        }
+    }
 
     /* if there is nosuchvolume, then we have a situation in which a 
      * previously known volume no longer has a set of servers 
@@ -639,6 +648,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    case UAENOENT          : s = "UAENOENT";           break;
 	    case VICECONNBAD	   : s = "VICECONNBAD";	       break;
 	    case VICETOKENDEAD     : s = "VICETOKENDEAD";      break;
+            case WSAEWOULDBLOCK    : s = "WSAEWOULDBLOCK";     break;
+            case UAEWOULDBLOCK     : s = "UAEWOULDBLOCK";      break;
 	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			
 	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break; 			
 	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break; 		
@@ -846,7 +857,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         serviceID = 52;
     }
     else {
-        osi_assert(serverp->type == CM_SERVER_FILE);
+        osi_assertx(serverp->type == CM_SERVER_FILE, "incorrect server type");
         port = htons(7000);
         serviceID = 1;
     }
@@ -894,7 +905,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         tcp->cryptlevel = rxkad_clear;
         secObjp = rxnull_NewClientSecurityObject();
     }
-    osi_assert(secObjp != NULL);
+    osi_assertx(secObjp != NULL, "null rx_securityClass");
     tcp->callp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
                                   port,
                                   serviceID,

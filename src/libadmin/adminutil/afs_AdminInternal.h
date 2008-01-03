@@ -50,6 +50,12 @@ typedef struct afs_cell_handle {
     int pts_valid;
     int vos_valid;
     int vos_new;
+    /* need to add server lists with TTL 
+     * so we don't pound the dns servers constantly 
+     * when generating the iterators
+     */
+    void *server_list;
+    time_t server_ttl;	/* expiration time */
     int end_magic;
 } afs_cell_handle_t, *afs_cell_handle_p;
 

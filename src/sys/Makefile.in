@@ -80,7 +80,7 @@ tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 syscall.o: syscall.s
 	@set -x; case "$(SYS_NAME)" in \
 	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sun4x_5?? | sunx86_5? | sunx86_5?? ) \
-		/usr/ccs/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		$(CPP) -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* |*_darwin* ) \
@@ -96,7 +96,7 @@ syscall.o: syscall.s
 		${AS} syscall.S -o syscall.o ;  \
 		$(RM) -f syscall.S ;;\
 	 *) \
-		/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		$(CPP) -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
@@ -128,25 +128,25 @@ rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
-	${RXGEN} -C -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -C -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.ss.c: rmtsys.xg
-	${RXGEN} -S -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.xdr.c: rmtsys.xg
-	${RXGEN} -c -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/rmtsys.xg
 
 rmtsys.h: rmtsys.xg
-	${RXGEN} -h -o $@ ${srcdir}/rmtsys.xg
+	${RXGEN} -A -h -o $@ ${srcdir}/rmtsys.xg
 
 Krmtsys.cs.c: rmtsys.xg Krmtsys.h
-	${RXGEN} -k -C -o Krmtsys.cs.c ${srcdir}/rmtsys.xg
+	${RXGEN} -A -k -C -o Krmtsys.cs.c ${srcdir}/rmtsys.xg
 
 Krmtsys.xdr.c: rmtsys.xg
-	${RXGEN} -k -c -o Krmtsys.xdr.c ${srcdir}/rmtsys.xg
+	${RXGEN} -A -k -c -o Krmtsys.xdr.c ${srcdir}/rmtsys.xg
 
 Krmtsys.h: rmtsys.xg
-	${RXGEN} -k -h -o Krmtsys.h ${srcdir}/rmtsys.xg
+	${RXGEN} -A -k -h -o Krmtsys.h ${srcdir}/rmtsys.xg
 
 rmtsysd: rmtsysd.o libsys.a
 	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
@@ -310,16 +310,16 @@ ${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
 		${DESTDIR}${libdir}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX} ;; \
 
 ${DESTDIR}${sbindir}/rmtsysd: rmtsysd
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/pagsh: pagsh
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${includedir}/afs/afs.exp: afs.exp
 	@set -x; case ${SYS_NAME} in \
@@ -361,13 +361,13 @@ ${DEST}/include/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${DEST}/etc/rmtsysd: rmtsysd
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/pagsh: pagsh
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/pagsh.krb: pagsh.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 #
 # Misc targets

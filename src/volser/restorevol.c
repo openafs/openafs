@@ -64,14 +64,7 @@ RCSID
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 
 char rootdir[MAXPATHLEN];
@@ -125,7 +118,7 @@ readchar()
 #define BUFSIZE 16384
 char buf[BUFSIZE];
 
-char
+void
 readdata(buffer, size)
      char *buffer;
      afs_sfsize_t size;
@@ -799,9 +792,8 @@ ReadVNode(count)
     return ((afs_int32) tag);
 }
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     int code = 0, c, len;
     afs_int32 type, count, vcount;

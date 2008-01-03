@@ -107,10 +107,8 @@ typedef struct tree {
     unsigned int	height;		/* nodes traversed from root to leaves */
     Nptr		pool;		/* list of all nodes */
     Nptr                empty;          /* list of empty nodes */
-    keyT		theKey;		/*  the key value used in tree operations */
-    dataT		theData;	/*  data used for insertions/deletions */
     union {			        /* nodes to change in insert and delete */
-        Nptr	split;
+        Nptr	split;                  /* protected by scp->dirlock write-lock */
         Nptr	merge;
     } branch;
     KeyCmp	keycmp;		        /* pointer to function comparing two keys */
@@ -145,9 +143,33 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);
 void cm_BPlusDumpStats(void);
 int cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
 
+
+/******************* directory enumeration operations ****************/
+typedef struct cm_direnum_entry {
+    char * 	name;
+    cm_fid_t 	fid;
+    char        shortName[13];
+} cm_direnum_entry_t;
+
+typedef struct cm_direnum {
+    afs_uint32		count;
+    afs_uint32  	next;
+    cm_direnum_entry_t 	entry[1];
+} cm_direnum_t;
+
+long cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, char *maskp, cm_direnum_t **enumpp);
+long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
+long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
+long cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked);
+
+long cm_InitBPlusDir(void);
+
+/************ Statistic Counter ***************************************/
+
 extern afs_uint32 bplus_free_tree;
 extern afs_uint32 bplus_dv_error;
 extern afs_uint64 bplus_free_time;
+
 
 /************ Accessor Macros *****************************************/
 			
@@ -226,14 +248,6 @@ extern afs_uint64 bplus_free_time;
 #define pullentry(j, q, v) _pullentry(j, q, v)
 #define xferentry(j, q, v, z) _xferentry(j, q, v, z)
 #define setentry(j, q, v, z) _setentry(j, q, v, z)
-
-
-/* access key and data values for B+tree methods */
-/* pass values to getSlot(), descend...() */
-#define getfunkey(B) ((B)->theKey)
-#define getfundata(B) ((B)->theData)
-#define setfunkey(B,v) ((B)->theKey = (v))
-#define setfundata(B,v) ((B)->theData = (v))
 
 /* define number of B+tree nodes for free node pool */
 #define getpoolsize(B) ((B)->poolsize)

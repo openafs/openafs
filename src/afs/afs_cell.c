@@ -36,18 +36,18 @@ afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
  */
 
 #ifdef AFS_AFSDB_ENV
-static afs_rwlock_t afsdb_client_lock;	/* Serializes client requests */
+afs_rwlock_t afsdb_client_lock;	/* Serializes client requests */
+afs_rwlock_t afsdb_req_lock;	/* Serializes client requests */
 static char afsdb_handler_running;	/* Protected by GLOCK */
 static char afsdb_handler_shutdown;	/* Protected by GLOCK */
 
+/* from cellconfig.h */
+#define MAXCELLCHARS    64
 static struct {
-    afs_rwlock_t lock;
+    /* lock moved to afsdb_req_lock for cmdebug */
     char pending;
     char complete;
     char *cellname;
-    afs_int32 *cellhosts;
-    int *timeout;
-    char **realname;
 } afsdb_req;
 
 void
@@ -64,46 +64,60 @@ afs_StopAFSDB()
 int
 afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 {
+    afs_int32 timeout, code;
+    afs_int32 cellHosts[MAXCELLHOSTS];
+
     if (afsdb_handler_shutdown)
 	return -2;
     afsdb_handler_running = 1;
 
-    ObtainSharedLock(&afsdb_req.lock, 683);
+    ObtainSharedLock(&afsdb_req_lock, 683);
     if (afsdb_req.pending) {
 	int i, hostCount;
 
-	UpgradeSToWLock(&afsdb_req.lock, 684);
+	UpgradeSToWLock(&afsdb_req_lock, 684);
 	hostCount = kernelMsg[0];
-	*afsdb_req.timeout = kernelMsg[1];
-	if (*afsdb_req.timeout)
-	    *afsdb_req.timeout += osi_Time();
-	*afsdb_req.realname = afs_strdup(acellName);
+	timeout = kernelMsg[1];
+	if (timeout)
+	    timeout += osi_Time();
 
 	for (i = 0; i < MAXCELLHOSTS; i++) {
 	    if (i >= hostCount)
-		afsdb_req.cellhosts[i] = 0;
+		cellHosts[i] = 0;
 	    else
-		afsdb_req.cellhosts[i] = kernelMsg[2 + i];
+		cellHosts[i] = kernelMsg[2 + i];
 	}
+
+	if (hostCount)
+	    code = afs_NewCell(acellName, cellHosts, CNoSUID, NULL, 0, 0, 
+			       timeout);
+
+	if (!hostCount || (code && code != EEXIST)) 
+	    /* null out the cellname if the lookup failed */
+	    afsdb_req.cellname = NULL;
+	else
+	    /* If we found an alias, create it */
+	    if (afs_strcasecmp(afsdb_req.cellname, acellName))
+		afs_NewCellAlias(afsdb_req.cellname, acellName);
 
 	/* Request completed, wake up the relevant thread */
 	afsdb_req.pending = 0;
 	afsdb_req.complete = 1;
 	afs_osi_Wakeup(&afsdb_req);
-	ConvertWToSLock(&afsdb_req.lock);
+	ConvertWToSLock(&afsdb_req_lock);
     }
-    ConvertSToRLock(&afsdb_req.lock);
+    ConvertSToRLock(&afsdb_req_lock);
 
     /* Wait for a request */
     while (afsdb_req.pending == 0 && afs_termState != AFSOP_STOP_AFSDB) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 	afs_osi_Sleep(&afsdb_req);
-	ObtainReadLock(&afsdb_req.lock);
+	ObtainReadLock(&afsdb_req_lock);
     }
 
     /* Check if we're shutting down */
     if (afs_termState == AFSOP_STOP_AFSDB) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 
 	/* Inform anyone waiting for us that we're going away */
 	afsdb_handler_shutdown = 1;
@@ -117,43 +131,38 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 
     /* Return the lookup request to userspace */
     strncpy(acellName, afsdb_req.cellname, acellNameLen);
-    ReleaseReadLock(&afsdb_req.lock);
+    ReleaseReadLock(&afsdb_req_lock);
     return 0;
 }
 
 static int
-afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
-		      char **realName)
+afs_GetCellHostsAFSDB(char *acellName)
 {
     AFS_ASSERT_GLOCK();
     if (!afsdb_handler_running)
 	return ENOENT;
 
     ObtainWriteLock(&afsdb_client_lock, 685);
-    ObtainWriteLock(&afsdb_req.lock, 686);
+    ObtainWriteLock(&afsdb_req_lock, 686);
 
-    *acellHosts = 0;
-    afsdb_req.cellname = afs_strdup(acellName);
-    afsdb_req.cellhosts = acellHosts;
-    afsdb_req.timeout = timeout;
-    afsdb_req.realname = realName;
+    afsdb_req.cellname = acellName;
 
     afsdb_req.complete = 0;
     afsdb_req.pending = 1;
     afs_osi_Wakeup(&afsdb_req);
-    ConvertWToRLock(&afsdb_req.lock);
+    ConvertWToRLock(&afsdb_req_lock);
 
     while (afsdb_handler_running && !afsdb_req.complete) {
-	ReleaseReadLock(&afsdb_req.lock);
+	ReleaseReadLock(&afsdb_req_lock);
 	afs_osi_Sleep(&afsdb_req);
-	ObtainReadLock(&afsdb_req.lock);
+	ObtainReadLock(&afsdb_req_lock);
     };
 
     afs_osi_FreeStr(afsdb_req.cellname);
-    ReleaseReadLock(&afsdb_req.lock);
+    ReleaseReadLock(&afsdb_req_lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
-    if (*acellHosts)
+    if (afsdb_req.cellname) 
 	return 0;
     else
 	return ENOENT;
@@ -164,41 +173,13 @@ void
 afs_LookupAFSDB(char *acellName)
 {
 #ifdef AFS_AFSDB_ENV
-    afs_int32 *cellHosts;
-    char **realName=NULL;
     int code;
-    int *timeout=NULL;
+    char *cellName = afs_strdup(acellName);
 
-    if(!(cellHosts = afs_osi_Alloc(MAXCELLHOSTS * sizeof(afs_int32))))
-	goto done;
-
-    if(!(realName = afs_osi_Alloc(sizeof(char *))))
-	goto done;
-    *realName = NULL;
-
-    if(!(timeout = afs_osi_Alloc(sizeof(int))))
-	goto done;
-
-    code = afs_GetCellHostsAFSDB(acellName, cellHosts, timeout, realName);
-    if (code)
-	goto done;
-    code = afs_NewCell(*realName, cellHosts, CNoSUID, NULL, 0, 0, *timeout);
-    if (code && code != EEXIST)
-	goto done;
-
-    /* If we found an alias, create it */
-    if (afs_strcasecmp(acellName, *realName))
-	afs_NewCellAlias(acellName, *realName);
-
-  done:
-    if(timeout)
-	afs_osi_Free(timeout, sizeof(int));
-    if (realName && *realName)
-	afs_osi_FreeStr(*realName);
-    if(realName)
-	afs_osi_Free(realName, sizeof(char *));
-    if(cellHosts)
-	afs_osi_Free(cellHosts, MAXCELLHOSTS * sizeof(afs_int32));
+    code = afs_GetCellHostsAFSDB(cellName);
+    afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, cellName, 
+               ICL_TYPE_INT32, code);
+    afs_osi_FreeStr(cellName);
 #endif
 }
 
@@ -862,7 +843,7 @@ afs_CellInit()
     RWLOCK_INIT(&afs_xcell, "afs_xcell");
 #ifdef AFS_AFSDB_ENV
     RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
-    RWLOCK_INIT(&afsdb_req.lock, "afsdb_req.lock");
+    RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");
 #endif
     QInit(&CellLRU);
 

@@ -50,6 +50,7 @@ RCSID
 #else /* KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
+#include <string.h>
 #include <time.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -61,13 +62,6 @@ RCSID
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsutil.h>
 #endif /* KERNEL */
 

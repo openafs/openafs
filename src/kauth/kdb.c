@@ -29,8 +29,8 @@ RCSID
 
 char *dbmfile;
 
-static
-cmdproc(register struct cmd_syndesc *as, afs_int32 arock)
+static int
+cmdproc(register struct cmd_syndesc *as, void * arock)
 {
     DBM *kdb;
     datum key, data;
@@ -96,6 +96,7 @@ cmdproc(register struct cmd_syndesc *as, afs_int32 arock)
 	}
     }
     dbm_close(kdb);
+    return 0;
 }
 
 
@@ -111,7 +112,7 @@ main(int argc, char **argv)
     sprintf(dbmfile_help, "dbmfile to use (default %s)",
 	    AFSDIR_SERVER_KALOGDB_FILEPATH);
     dbmfile = AFSDIR_SERVER_KALOGDB_FILEPATH;
-    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "Dump contents of dbm database");
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, "Dump contents of dbm database");
     cmd_AddParm(ts, "-dbmfile", CMD_SINGLE, CMD_OPTIONAL, dbmfile_help);
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL,
 		"extract entries that match specified key");
@@ -128,5 +129,6 @@ int
 main(void)
 {
     printf("kdb not supported\n");
+    return 1;
 }
 #endif

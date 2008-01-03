@@ -21,6 +21,7 @@
 #define AFS_NBSD15_ENV 1
 #define AFS_NBSD16_ENV 1
 #define AFS_NBSD20_ENV 1
+#define AFS_NBSD30_ENV 1
 #define AFS_NONFSTRANS 1
 #define AFS_KERBEROS_ENV 1
 

@@ -169,12 +169,12 @@ void cm_InitFreelance() {
     /* Start the registry monitor */
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
                           NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "cm_FreelanceChangeNotifier thread create failure");
     thrd_CloseHandle(phandle);
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceSymlinkChangeNotifier,
                           NULL, 0, &lpid, "cm_FreelanceSymlinkChangeNotifier");
-    osi_assert(phandle != NULL);
+    osi_assertx(phandle != NULL, "cm_FreelanceSymlinkChangeNotifier thread create failure");
     thrd_CloseHandle(phandle);
 #endif
 }
@@ -1232,23 +1232,23 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
               osi_LogSaveString(afsd_logp,destination));
     
     if ( filename[0] == '\0' || destination[0] == '\0' )
-        return -1;
+        return CM_ERROR_INVAL;
 
     fullname[0] = '\0';
     if (filename[0] == '.') {
         cm_GetCell_Gen(&filename[1], fullname, CM_FLAG_CREATE);
         if (stricmp(&filename[1],fullname) == 0)
-            return -1;
+            return CM_ERROR_EXISTS;
     } else {
         cm_GetCell_Gen(filename, fullname, CM_FLAG_CREATE);
         if (stricmp(filename,fullname) == 0)
-            return -1;
+            return CM_ERROR_EXISTS;
     }
 
 #if !defined(DJGPP)
     if ( cm_FreelanceMountPointExists(filename) ||
          cm_FreelanceSymlinkExists(filename) )
-        return -1;
+        return CM_ERROR_EXISTS;
 #endif
 
     lock_ObtainMutex(&cm_Freelance_Lock);

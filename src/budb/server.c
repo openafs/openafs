@@ -24,15 +24,7 @@ RCSID
 #include <sys/time.h>
 #include <netdb.h>
 #endif
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>
@@ -65,6 +57,8 @@ RCSID
 
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
+
+int argHandler(struct cmd_syndesc *, void *);
 
 char lcell[MAXKTCREALMLEN];
 afs_int32 myHost = 0;
@@ -135,8 +129,7 @@ convert_cell_to_ubik(cellinfo, myHost, serverList)
  *      If it were, this routine would never have been called.
  */
 static int
-MyBeforeProc(as)
-     register struct cmd_syndesc *as;
+MyBeforeProc(register struct cmd_syndesc *as, void *arock)
 {
     helpOption = 0;
     return 0;
@@ -146,11 +139,10 @@ MyBeforeProc(as)
  *	initialize all the supported commands and their arguments
  */
 
+void
 initializeArgHandler()
 {
     struct cmd_syndesc *cptr;
-
-    int argHandler();
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
@@ -183,9 +175,7 @@ initializeArgHandler()
 }
 
 int
-argHandler(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+argHandler(struct cmd_syndesc *as, void *arock)
 {
 
     /* globalConfPtr provides the handle for the configuration information */
@@ -623,7 +613,7 @@ main(argc, argv)
     return (code);
 }
 
-
+void
 consistencyCheckDb()
 {
     /* do consistency checks on structure sizes */

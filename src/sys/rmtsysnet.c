@@ -26,13 +26,7 @@ RCSID
 #endif
 #include <sys/stat.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsint.h>
 #include <afs/venus.h>
 #include <rx/xdr.h>
@@ -153,6 +147,7 @@ RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 	sprintf(tstring, "%s %d\n", tp->name, tp->rights);
 	strcat(mydata, tstring);
     }
+    return 0;
 }
 
 
@@ -171,6 +166,7 @@ RCleanAcl(struct Acl *aa)
 	free(te);
     }
     free(aa);
+    return 0;
 }
 
 
@@ -212,6 +208,7 @@ RFetchVolumeStatus_conversion(char *data, int ntoh_conv)
 	status->PartBlocksAvail = htonl(status->PartBlocksAvail);
 	status->PartMaxBlocks = htonl(status->PartMaxBlocks);
     }
+    return 0;
 }
 
 int
@@ -230,6 +227,7 @@ RClearToken_convert(char *ptr, int ntoh_conv)
 	ticket->BeginTimestamp = htonl(ticket->BeginTimestamp);
 	ticket->EndTimestamp = htonl(ticket->EndTimestamp);
     }
+    return 0;
 }
 
 int
@@ -340,6 +338,7 @@ inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	/* Note that new pioctls are supposed to be in network order! */
 	break;
     }
+    return 0;
 }
 
 
@@ -450,4 +449,5 @@ outparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	/* Note that new pioctls are supposed to be in network order! */
 	break;
     }
+    return 0;
 }

@@ -160,7 +160,7 @@ extern void ResetDebug_Signal(int signo);
 extern void SetupLogSignals(void);
 extern int OpenLog(const char *fileName);
 extern int ReOpenLog(const char *fileName);
-extern int LogThreadNum();
+extern int LogThreadNum(void);
 
 /* snprintf.c */
 

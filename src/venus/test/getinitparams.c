@@ -34,7 +34,7 @@ RCSID
 
 
 int
-GetInitParamsCmd(struct cmd_syndesc *as)
+GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cm_initparams cm_initParams;
     struct ViceIoctl blob;

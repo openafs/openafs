@@ -117,7 +117,21 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
      * Locks held:
      * avc->lock(R)
      */
-    while (totalLength > 0) {
+    if (filePos >= avc->m.Length) {
+	if (len > AFS_ZEROS)
+	    len = sizeof(afs_zeros);	/* and in 0 buffer */
+#ifdef AFS_DARWIN80_ENV
+	trimlen = len;
+	tuiop = afsio_darwin_partialcopy(auio, trimlen);
+#else
+	afsio_copy(auio, &tuio, tvec);
+	trimlen = len;
+	afsio_trim(&tuio, trimlen);
+#endif
+	AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
+    }
+
+    while (avc->m.Length > 0 && totalLength > 0) {
 	/* read all of the cached info */
 	if (filePos >= avc->m.Length)
 	    break;		/* all done */
@@ -536,7 +550,22 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
     }
 #endif
 
-    while (totalLength > 0) {
+    if (filePos >= avc->m.Length) {
+	if (len > AFS_ZEROS)
+	    len = sizeof(afs_zeros);	/* and in 0 buffer */
+	len = 0;
+#ifdef AFS_DARWIN80_ENV
+	trimlen = len;
+	tuiop = afsio_darwin_partialcopy(auio, trimlen);
+#else
+	afsio_copy(auio, &tuio, tvec);
+	trimlen = len;
+	afsio_trim(&tuio, trimlen);
+#endif
+	AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
+    }
+
+    while (avc->m.Length > 0 && totalLength > 0) {
 	/* read all of the cached info */
 	if (filePos >= avc->m.Length)
 	    break;		/* all done */

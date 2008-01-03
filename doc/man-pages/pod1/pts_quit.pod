@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts quit - Exit from pts interactive mode
+pts_quit - Exit from pts interactive mode
 
 =head1 SYNOPSIS
 

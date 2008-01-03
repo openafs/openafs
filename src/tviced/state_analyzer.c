@@ -26,14 +26,7 @@ RCSID
 #include <netdb.h>
 #include <netinet/in.h>
 #include <time.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/stds.h>
 #include <rx/xdr.h>

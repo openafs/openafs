@@ -14,13 +14,7 @@ RCSID
     ("$Header$");
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
@@ -49,4 +43,5 @@ main(int argc, char *argv[])
 		fflush(stdout);
 	    }
 	}
+    return rc;
 }

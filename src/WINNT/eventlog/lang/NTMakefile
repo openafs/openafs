@@ -75,3 +75,4 @@ clean::
 	$(DEL) $(LANGNAME)\event.h
 	$(DEL) $(LANGNAME)\event.rc
 	$(DEL) $(LANGNAME)\MSG*.bin
+	$(DEL) AFS_component_version_number.h

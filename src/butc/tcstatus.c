@@ -24,6 +24,7 @@ RCSID
 #include <strings.h>
 #endif
 #include <stdio.h>
+#include <string.h>
 #include <afs/com_err.h>
 #include <lock.h>
 #include <afs/bubasics.h>

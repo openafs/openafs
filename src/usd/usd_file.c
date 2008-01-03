@@ -31,13 +31,7 @@ RCSID
 #include <sys/mtio.h>
 #endif /* AFS_AIX_ENV */
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include <afs/debug.h>

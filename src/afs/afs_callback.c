@@ -61,7 +61,11 @@ static struct ltable {
     {
       "afs_xsrvAddr", (char *)&afs_xsrvAddr},
     {
-    "afs_xvreclaim", (char *)&afs_xvreclaim}
+      "afs_xvreclaim", (char *)&afs_xvreclaim},
+#ifdef AFS_AFSDB_ENV
+    { "afsdb_client_lock", (char *)&afsdb_client_lock},
+    { "afsdb_req_lock", (char *)&afsdb_req_lock},
+#endif
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
@@ -307,11 +311,35 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
 
     AFS_STATCNT(SRXAFSCB_GetLock);
     nentries = sizeof(ltable) / sizeof(struct ltable);
-    if (a_index < 0 || a_index >= nentries) {
+    if (a_index < 0 || a_index >= nentries+afs_cellindex) {
 	/*
 	 * Past EOF
 	 */
 	code = 1;
+    } else if (a_index >= nentries) {
+	struct cell *tc = afs_GetCellByIndex(a_index-nentries, 0);
+	strcpy(a_result->name, tc->cellName);
+	a_result->lock.waitStates =
+	    ((struct afs_lock *)&(tc->lock))->wait_states;
+	a_result->lock.exclLocked =
+	    ((struct afs_lock *)&(tc->lock))->excl_locked;
+	a_result->lock.readersReading =
+	    ((struct afs_lock *)&(tc->lock))->readers_reading;
+	a_result->lock.numWaiting =
+	    ((struct afs_lock *)&(tc->lock))->num_waiting;
+#ifdef INSTRUMENT_LOCKS
+	a_result->lock.pid_last_reader =
+	    MyPidxx2Pid(((struct afs_lock *)&(tc->lock))->pid_last_reader);
+	a_result->lock.pid_writer =
+	    MyPidxx2Pid(((struct afs_lock *)&(tc->lock))->pid_writer);
+	a_result->lock.src_indicator =
+	    ((struct afs_lock *)&(tc->lock))->src_indicator;
+#else
+	a_result->lock.pid_last_reader = 0;
+	a_result->lock.pid_writer = 0;
+	a_result->lock.src_indicator = 0;
+#endif
+	code = 0;
     } else {
 	/*
 	 * Found it - copy out its contents.

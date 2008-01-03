@@ -17,6 +17,7 @@ RCSID
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -35,14 +36,6 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -440,4 +433,6 @@ main(argc, argv)
     rx_SetRxStatUserOk(vldb_rxstat_userok);
 
     rx_StartServer(1);		/* Why waste this idle process?? */
+
+    return 0; /* not reachable */
 }

@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos getdate - Displays the time stamps on an AFS binary file
+bos_getdate - Displays the time stamps on an AFS binary file
 
 =head1 SYNOPSIS
 

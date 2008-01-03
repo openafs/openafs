@@ -22,13 +22,7 @@ RCSID
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>

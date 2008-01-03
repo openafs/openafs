@@ -55,16 +55,16 @@ bosint.xdr.o: bosint.xdr.c ${RPCINCLS}
 bosint.cs.o: bosint.cs.c ${RPCINCLS}
 
 bosint.cs.c: bosint.xg
-	${RXGEN} -x -C -o $@ ${srcdir}/bosint.xg
+	${RXGEN} -x -A -C -o $@ ${srcdir}/bosint.xg
 
 bosint.ss.c: bosint.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/bosint.xg
+	${RXGEN} -x -A -S -o $@ ${srcdir}/bosint.xg
 
 bosint.xdr.c: bosint.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/bosint.xg
+	${RXGEN} -x -A -c -o $@ ${srcdir}/bosint.xg
 
 bosint.h: bosint.xg
-	${RXGEN} -x -h -o $@ ${srcdir}/bosint.xg
+	${RXGEN} -x -A -h -o $@ ${srcdir}/bosint.xg
 
 bosint.cs.c: bosint.h
 bosint.ss.c: bosint.h

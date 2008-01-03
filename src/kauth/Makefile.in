@@ -101,29 +101,29 @@ kauth.xdr.o: kauth.xdr.c kauth.h
 $(UKSRCS): kauth.h
 
 kauth.cs.c: kauth.rg
-	${RXGEN} -u -x -C -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -A -u -x -C -o $@ ${srcdir}/kauth.rg
 
 kauth.ss.c: kauth.rg
-	${RXGEN} -x -S -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/kauth.rg
 
 kauth.xdr.c: kauth.rg
-	${RXGEN} -x -c -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/kauth.rg
 
 kauth.h: kauth.rg
-	${RXGEN} -u -x -h -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -A -u -x -h -o $@ ${srcdir}/kauth.rg
 
 kauth.xdr.c: kauth.h
 kauth.cs.c: kauth.h
 kauth.ss.c: kauth.h
 
 Kkauth.cs.c: kauth.rg Kkauth.h
-	${RXGEN} -x -k -C -o Kkauth.cs.c ${srcdir}/kauth.rg
+	${RXGEN} -A -x -k -C -o Kkauth.cs.c ${srcdir}/kauth.rg
 
 Kkauth.xdr.c: kauth.rg
-	${RXGEN} -x -k -c -o Kkauth.xdr.c ${srcdir}/kauth.rg
+	${RXGEN} -A -x -k -c -o Kkauth.xdr.c ${srcdir}/kauth.rg
 
 Kkauth.h: kauth.rg
-	${RXGEN} -x -k -h -o Kkauth.h ${srcdir}/kauth.rg
+	${RXGEN} -A -x -k -h -o Kkauth.h ${srcdir}/kauth.rg
 
 libkauth.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f $@
@@ -262,37 +262,37 @@ install: \
 	${DESTDIR}${includedir}/afs/kaport.h
 
 ${DESTDIR}${afssrvlibexecdir}/kaserver: kaserver
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kas: kas
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/kas: kas
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/klog@KAUTH_KLOG_SUFFIX@: klog
-	${INSTALL} -f -s $? $@
+	${INSTALL} -f $? $@
 
 ${DESTDIR}${bindir}/klog.krb: klog.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${afssrvbindir}/klog@KAUTH_KLOG_SUFFIX@: klog
-	${INSTALL} -f -s $? $@
+	${INSTALL} -f $? $@
 
 ${DESTDIR}${afssrvbindir}/klog.krb: klog.krb
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DESTDIR}${bindir}/knfs: knfs
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/kpasswd@KAUTH_KLOG_SUFFIX@: kpasswd
-	${INSTALL} -f -s $? $@
+	${INSTALL} -f $? $@
 
 ${DESTDIR}${bindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
@@ -307,7 +307,7 @@ ${DESTDIR}${afssrvsbindir}/kadb_check: rebuild
 	${INSTALL} -f $? $@
 
 ${DESTDIR}${afssrvsbindir}/kdb: kdb
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/ka-forwarder: ka-forwarder
 	${INSTALL} $? $@
@@ -348,25 +348,25 @@ dest: \
 	${DEST}/include/afs/kaport.h
 
 ${DEST}/root.server/usr/afs/bin/kaserver: kaserver
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/etc/kas ${DEST}/root.server/usr/afs/bin/kas: kas 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/kpwvalid ${DEST}/etc/kpwvalid ${DEST}/root.server/usr/afs/bin/kpwvalid: kpwvalid 
 	${INSTALL} $? $@
 
 ${DEST}/bin/klog@KAUTH_KLOG_SUFFIX@ ${DEST}/root.server/usr/afs/bin/klog@KAUTH_KLOG_SUFFIX@: klog
-	${INSTALL} -f -s $? $@
+	${INSTALL} -f $? $@
 
 ${DEST}/bin/klog.krb ${DEST}/root.server/usr/afs/bin/klog.krb: klog.krb 
-	${INSTALL} -s $? $@
+	${INSTALL} ${NO_STRIP_KRB} $? $@
 
 ${DEST}/bin/knfs: knfs 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/bin/kpasswd@KAUTH_KLOG_SUFFIX@: kpasswd 
-	${INSTALL} -f -s $? $@
+	${INSTALL} -f $? $@
 
 ${DEST}/lib/afs/libkauth.a: libkauth.a 
 	${INSTALL} $? $@
@@ -378,7 +378,7 @@ ${DEST}/etc/kadb_check: rebuild
 	${INSTALL} -f $? $@
 
 ${DEST}/etc/kdb: kdb 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/ka-forwarder: ka-forwarder
 	${INSTALL} $? $@

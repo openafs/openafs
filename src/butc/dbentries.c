@@ -24,6 +24,7 @@ RCSID
 #include <netdb.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -309,6 +310,7 @@ waitDbWatcher()
     if (message) {
 	printf("Updating database - done\n");
     }
+    return 0;
 }
 
 #define MAXVOLUMESTOADD 100

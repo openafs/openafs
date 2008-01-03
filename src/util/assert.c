@@ -14,13 +14,7 @@
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 RCSID
     ("$Header$");
@@ -44,7 +38,7 @@ AssertionFailed(char *file, int line)
     time_t when;
 
     time(&when);
-    afs_ctime(&when, tdate, 25);
+    (void)afs_ctime(&when, tdate, 25);
     fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);

@@ -30,9 +30,7 @@ RCSID
 #include <rx/xdr.h>
 #include <errno.h>
 #include <signal.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 
@@ -85,6 +83,7 @@ rmtsysd()
      * at some point... */
     rx_SetMaxProcs(service, 2);
     rx_StartServer(1);		/* Donate this process to the server process pool */
+    return 0; /* not reached */
 }
 
 

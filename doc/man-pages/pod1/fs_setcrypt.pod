@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setcrypt - Enables of disables the encryption of AFS file transfers
+fs_setcrypt - Enables of disables the encryption of AFS file transfers
 
 =head1 SYNOPSIS
 

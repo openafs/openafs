@@ -25,13 +25,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "uss_common.h"		/*Common uss definitions, globals */
 #include "uss_procs.h"		/*Main uss operations */
@@ -129,10 +123,8 @@ static int DoAdd();
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static afs_int32
-GetCommon(a_as)
-     register struct cmd_syndesc *a_as;
-
+static int
+GetCommon(register struct cmd_syndesc *a_as, void *arock)
 {				/*GetCommon */
 
     int code;			/*Result of ka_LocalCell */
@@ -376,10 +368,7 @@ DoDelete()
  *------------------------------------------------------------------------*/
 
 static int
-DelUser(a_as, a_rock)
-     struct cmd_syndesc *a_as;
-     char *a_rock;
-
+DelUser(struct cmd_syndesc *a_as, void *a_rock)
 {				/*DelUser */
 
     int code;
@@ -473,10 +462,7 @@ DelUser(a_as, a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-PurgeVolumes(a_as, a_rock)
-     struct cmd_syndesc *a_as;
-     char *a_rock;
-
+PurgeVolumes(struct cmd_syndesc *a_as, void *a_rock)
 {				/*PurgeVolumes */
 
     fprintf(stderr, "Sorry, purgevolumes has not yet been implemented.\n");
@@ -508,10 +494,7 @@ PurgeVolumes(a_as, a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-RestoreUser(a_as, a_rock)
-     struct cmd_syndesc *a_as;
-     char *a_rock;
-
+RestoreUser(struct cmd_syndesc *a_as, void *a_rock)
 {				/*RestoreUser */
 
     fprintf(stderr, "Sorry, restoreuser has not yet been implemented.\n");
@@ -1323,10 +1306,7 @@ DoBulkExecLine(a_buf, a_tp)
  *------------------------------------------------------------------------*/
 extern int Pipe;
 static int
-HandleBulk(a_as, a_rock)
-     register struct cmd_syndesc *a_as;
-     char *a_rock;
-
+HandleBulk(register struct cmd_syndesc *a_as, void *a_rock)
 {				/*HandleBulk */
 
 #define USS_BULK_CMD_CHARS	 128
@@ -1535,10 +1515,7 @@ HandleBulk(a_as, a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-AddUser(a_as, a_rock)
-     register struct cmd_syndesc *a_as;
-     char *a_rock;
-
+AddUser(register struct cmd_syndesc *a_as, void *a_rock)
 {				/*AddUser */
 
     int i;
@@ -1842,7 +1819,7 @@ main(argc, argv)
 
     /* ----------------------------- add ----------------------------- */
 
-    cs = cmd_CreateSyntax("add", AddUser, 0, "create a new user account");
+    cs = cmd_CreateSyntax("add", AddUser, NULL, "create a new user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name");
     cmd_AddParm(cs, "-realname", CMD_SINGLE, CMD_OPTIONAL,
 		"full name in quotes");
@@ -1877,7 +1854,7 @@ main(argc, argv)
 
     /* ---------------------------- bulk ----------------------------- */
 
-    cs = cmd_CreateSyntax("bulk", HandleBulk, 0, "bulk input mode");
+    cs = cmd_CreateSyntax("bulk", HandleBulk, NULL, "bulk input mode");
     cmd_AddParm(cs, "-file", CMD_SINGLE, 0, "bulk input file");
     cmd_Seek(cs, AUSS_TEMPLATE);
     cmd_AddParm(cs, "-template", CMD_SINGLE, CMD_OPTIONAL,
@@ -1902,7 +1879,7 @@ main(argc, argv)
 
     /* ---------------------------- delete --------------------------- */
 
-    cs = cmd_CreateSyntax("delete", DelUser, 0, "delete a user account");
+    cs = cmd_CreateSyntax("delete", DelUser, NULL, "delete a user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name");
     cmd_AddParm(cs, "-mountpoint", CMD_SINGLE, CMD_OPTIONAL,
 		"mountpoint for user's volume");
@@ -1936,7 +1913,7 @@ main(argc, argv)
 #if USS_DONT_HIDE_SOME_FEATURES
     /* ------------------------- purgevolumes ------------------------ */
 
-    cs = cmd_CreateSyntax("purgevolumes", PurgeVolumes, 0,
+    cs = cmd_CreateSyntax("purgevolumes", PurgeVolumes, NULL,
 			  "destroy a deleted user's volume");
     cmd_AddParm(cs, "-volname", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"Name(s) of volume(s) to destroy");
@@ -1959,7 +1936,7 @@ main(argc, argv)
 #if USS_DONT_HIDE_SOME_FEATURES
     /* ---------------------------- restore -------------------------- */
 
-    cs = cmd_CreateSyntax("restore", RestoreUser, 0,
+    cs = cmd_CreateSyntax("restore", RestoreUser, NULL,
 			  "restore a deleted user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name to restore");
     cmd_AddParm(cs, "-uid", CMD_SINGLE, 0, "user id number");
@@ -2011,4 +1988,5 @@ main(argc, argv)
     if (doUnlog) {
 	code = uss_fs_UnlogToken(uss_Cell);
     }
+    return 0;
 }				/*Main routine */

@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos delentry - Removes a volume entry from the VLDB.
+vos_delentry - Removes a volume entry from the VLDB.
 
 =head1 SYNOPSIS
 

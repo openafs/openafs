@@ -21,6 +21,7 @@ RCSID
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #include <afs/usd.h>
@@ -81,6 +82,7 @@ readblock(buffer)
     return 0;
 }
 
+void
 printLabel(tapeLabelPtr)
      struct tapeLabel *tapeLabelPtr;
 {
@@ -129,6 +131,7 @@ printLabel(tapeLabelPtr)
     }
 }
 
+void
 printHeader(headerPtr, isvolheader)
      struct volumeHeader *headerPtr;
      afs_int32 *isvolheader;
@@ -381,9 +384,8 @@ writeData(data, size)
     return 0;
 }
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *tapedev;
     struct tapeLabel *label;

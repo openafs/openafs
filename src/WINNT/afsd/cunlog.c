@@ -15,9 +15,8 @@
 #include <afsint.h>
 #include <winsock2.h>
 
-CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+static int
+CommandProc (struct cmd_syndesc *as, void *arock)
 {
   afs_int32 code, ecode=0;
   struct ktc_principal server;
@@ -55,7 +54,7 @@ main(argc, argv)
 
   WSAStartup(0x0101, &WSAjunk);
 
-  ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "Release Kerberos authentication");
+  ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "Release Kerberos authentication");
   cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
   code = cmd_Dispatch(argc, argv);

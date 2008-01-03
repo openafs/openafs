@@ -23,6 +23,9 @@
 
 #include <osi.h>
 #include "afsd.h"
+#ifdef USE_BPLUS
+#include "cm_btree.h"
+#endif
 #include <rx\rx.h>
 #include <rx\rx_null.h>
 #include <WINNT/syscfg.h>
@@ -39,8 +42,13 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
+extern int cm_followBackupPath;
 extern int cm_deleteReadOnly;
+#ifdef USE_BPLUS
 extern afs_int32 cm_BPlusTrees;
+#endif
+extern afs_int32 cm_OfflineROIsValid;
+extern afs_int32 cm_giveUpAllCBs;
 extern const char **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
@@ -1068,6 +1076,7 @@ int afsd_InitCM(char **reasonP)
     } 
     afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
     
+#ifdef USE_BPLUS
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "BPlusTrees", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
@@ -1075,6 +1084,14 @@ int afsd_InitCM(char **reasonP)
         cm_BPlusTrees = (unsigned short) dwValue;
     } 
     afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
+
+    if (cm_BPlusTrees && !cm_InitBPlusDir()) {
+        cm_BPlusTrees = 0;
+        afsi_log("CM BPlusTree initialization failure; disabled for this session");
+    }
+#else
+    afsi_log("CM BPlusTrees is not supported");
+#endif
 
     if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, 
                           &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
@@ -1107,6 +1124,30 @@ int afsd_InitCM(char **reasonP)
     }
     if (!smb_ExecutableExtensions)
         afsi_log("No PrefetchExecutableExtensions");
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "OfflineReadOnlyIsValid", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_OfflineROIsValid = (unsigned short) dwValue;
+    } 
+    afsi_log("CM OfflineReadOnlyIsValid is %u", cm_deleteReadOnly);
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "GiveUpAllCallBacks", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_giveUpAllCBs = (unsigned short) dwValue;
+    } 
+    afsi_log("CM GiveUpAllCallBacks is %u", cm_giveUpAllCBs);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "FollowBackupPath", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_followBackupPath = (unsigned short) dwValue;
+    } 
+    afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
 
     RegCloseKey (parmKey);
 
@@ -1155,7 +1196,7 @@ int afsd_InitCM(char **reasonP)
     smb_InitIoctl();
         
     cm_InitCallback();
-        
+
     code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
@@ -1360,7 +1401,6 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 
 void afsd_printStack(HANDLE hThread, CONTEXT *c)
 {
-#if defined(_X86_)
     HANDLE hProcess = GetCurrentProcess();
     int frameNum;
 #if defined(_AMD64_)
@@ -1407,9 +1447,9 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
 #error The STACKFRAME initialization in afsd_printStack() for this platform
 #error must be properly configured
 #elif defined(_AMD64_)
-    s.AddrPC.Offset = 0;
+    s.AddrPC.Offset = c->Rip;
     s.AddrPC.Mode = AddrModeFlat;
-    s.AddrFrame.Offset = 0;
+    s.AddrFrame.Offset = c->Rbp;
     s.AddrFrame.Mode = AddrModeFlat;
 #else
     s.AddrPC.Offset = c->Eip;
@@ -1509,7 +1549,6 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
   
     SymCleanup(hProcess);
     GlobalFree(pSym);
-#endif /* _X86_ */
 }
 
 #ifdef _DEBUG
@@ -1658,6 +1697,9 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
 #endif         
 #if defined(_X86)    
         ep->ContextRecord->Eip++;
+#endif
+#if defined(_AMD64_)
+        ep->ContextRecord->Rip++;
 #endif
         return EXCEPTION_CONTINUE_EXECUTION;
     }

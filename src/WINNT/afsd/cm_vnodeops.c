@@ -31,6 +31,8 @@ extern void afsi_log(char *pattern, ...);
 
 int cm_enableServerLocks = 1;
 
+int cm_followBackupPath = 0;
+
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
  * I do not know anything more about it.
@@ -337,7 +339,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     long rights;
     long code;
 
-    osi_assert(ldpp != NULL);
+    osi_assertx(ldpp != NULL, "null cm_lock_data_t");
     *ldpp = NULL;
 
     /* Always allow delete; the RPC will tell us if it's OK */
@@ -1050,7 +1052,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     char mtType;
     cm_fid_t tfid;
     size_t vnLength;
-    int type;
+    int targetType;
 
     if (scp->mountRootFid.cell != 0 && scp->mountRootGen >= cm_data.mountRootGen) {
         tfid = scp->mountRootFid;
@@ -1094,15 +1096,15 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     vnLength = strlen(volNamep);
     if (vnLength >= 8 && strcmp(volNamep + vnLength - 7, ".backup") == 0)
-        type = BACKVOL;
+        targetType = BACKVOL;
     else if (vnLength >= 10
               && strcmp(volNamep + vnLength - 9, ".readonly") == 0)
-        type = ROVOL;
+        targetType = ROVOL;
     else
-        type = RWVOL;
+        targetType = RWVOL;
 
     /* check for backups within backups */
-    if (type == BACKVOL
+    if (targetType == BACKVOL
          && (scp->flags & (CM_SCACHEFLAG_RO | CM_SCACHEFLAG_PURERO))
          == CM_SCACHEFLAG_RO) {
         code = CM_ERROR_NOSUCHVOLUME;
@@ -1132,17 +1134,30 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         lock_ReleaseMutex(&volp->mx);
 
         scp->mountRootFid.cell = cellp->cellID;
+        
+        /* if the mt pt originates in a .backup volume (not a .readonly)
+         * and FollowBackupPath is active, and if there is a .backup
+         * volume for the target, then use the .backup of the target
+         * instead of the read-write.
+         */
+        if (cm_followBackupPath && targetType == RWVOL &&
+            (scp->flags & CM_SCACHEFLAG_RO|CM_SCACHEFLAG_PURERO) == CM_SCACHEFLAG_RO &&
+            volp->bk.ID != 0) {
+            targetType = BACKVOL;
+        } 
         /* if the mt pt is in a read-only volume (not just a
          * backup), and if there is a read-only volume for the
-         * target, and if this is a type '#' mount point, use
+         * target, and if this is a targetType '#' mount point, use
          * the read-only, otherwise use the one specified.
          */
-        if (mtType == '#' && (scp->flags & CM_SCACHEFLAG_PURERO)
-             && volp->ro.ID != 0 && type == RWVOL)
-            type = ROVOL;
-        if (type == ROVOL)
+        else if (mtType == '#' && targetType == RWVOL && 
+                 (scp->flags & CM_SCACHEFLAG_PURERO) && 
+                 volp->ro.ID != 0) {
+            targetType = ROVOL;
+        }
+        if (targetType == ROVOL)
             scp->mountRootFid.volume = volp->ro.ID;
-        else if (type == BACKVOL)
+        else if (targetType == BACKVOL)
             scp->mountRootFid.volume = volp->bk.ID;
         else
             scp->mountRootFid.volume = volp->rw.ID;
@@ -2286,7 +2301,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%p", dscp);
 
     /* should be on a buffer boundary */
-    osi_assert((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0);
+    osi_assertx((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0, "invalid offset");
 
     memset(&bb, 0, sizeof(bb));
     bb.bufOffset = *offsetp;
@@ -3905,7 +3920,7 @@ static cm_file_lock_t * cm_GetFileLock(void) {
         osi_QRemove(&cm_freeFileLocks, &l->q);
     } else {
         l = malloc(sizeof(cm_file_lock_t));
-        osi_assert(l);
+        osi_assertx(l, "null cm_file_lock_t");
     }
 
     memset(l, 0, sizeof(cm_file_lock_t));
@@ -4048,7 +4063,7 @@ long cm_LockCheckPerms(cm_scache_t * scp,
         rights |= PRSFS_WRITE | PRSFS_LOCK;
     else {
         /* hmmkay */
-        osi_assert(FALSE);
+        osi_assertx(FALSE, "invalid lock type");
         return 0;
     }
 
@@ -4257,7 +4272,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 osi_Log0(afsd_logp,
                          "   attempting to UPGRADE from LockRead to LockWrite.");
                 osi_Log1(afsd_logp,
-                         "   dataVersion on scp: %d", scp->dataVersion);
+                         "   dataVersion on scp: %I64d", scp->dataVersion);
 
                 /* we assume at this point (because scp->serverLock
                    was valid) that we had a valid server lock. */
@@ -4292,7 +4307,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 newLock = Which;
 
                 /* am I sane? */
-                osi_assert(newLock == LockRead);
+                osi_assertx(newLock == LockRead, "lock type not read");
 
                 code = cm_IntSetLock(scp, userp, newLock, reqp);
             }
@@ -4348,7 +4363,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
                 osi_Log2(afsd_logp,
-                         "  Data versions before=%d, after=%d",
+                         "  Data versions before=%I64d, after=%I64d",
                          scp->lockDataVersion,
                          scp->dataVersion);
                 osi_Log1(afsd_logp,
@@ -4508,7 +4523,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
                      fileLock->scp->fid.volume,
                      fileLock->scp->fid.vnode,
                      fileLock->scp->fid.unique);
-            osi_assert(FALSE);
+            osi_assertx(FALSE, "invalid fid value");
         }
 #endif
 
@@ -4582,7 +4597,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
         /* since scp->serverLock looked sane, we are going to assume
            that we have a valid server lock. */
         scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "  dataVersion on scp = %d", scp->dataVersion);
+        osi_Log1(afsd_logp, "  dataVersion on scp = %I64d", scp->dataVersion);
 
         code = cm_IntReleaseLock(scp, userp, reqp);
 
@@ -4604,7 +4619,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
                we have lost the lock we had during the transition. */
 
             osi_Log0(afsd_logp, "Data version mismatch during lock downgrade");
-            osi_Log2(afsd_logp, "  Data versions before=%d, after=%d",
+            osi_Log2(afsd_logp, "  Data versions before=%I64d, after=%I64d",
                      scp->lockDataVersion,
                      scp->dataVersion);
             
@@ -4683,7 +4698,7 @@ long cm_Unlock(cm_scache_t *scp,
                      fileLock->scp->fid.volume,
                      fileLock->scp->fid.vnode,
                      fileLock->scp->fid.unique);
-            osi_assert(FALSE);
+            osi_assertx(FALSE, "invalid fid value");
         }
 #endif
         if (!IS_LOCK_DELETED(fileLock) &&
@@ -4759,7 +4774,7 @@ long cm_Unlock(cm_scache_t *scp,
         /* Since we already had a lock, we assume that there is a
            valid server lock. */
         scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "   dataVersion on scp is %d", scp->dataVersion);
+        osi_Log1(afsd_logp, "   dataVersion on scp is %I64d", scp->dataVersion);
 
         /* before we downgrade, make sure that we have enough
            permissions to get the read lock. */
@@ -4794,7 +4809,7 @@ long cm_Unlock(cm_scache_t *scp,
             osi_Log0(afsd_logp,
                      "Data version mismatch while downgrading lock");
             osi_Log2(afsd_logp,
-                     "  Data versions before=%d, after=%d",
+                     "  Data versions before=%I64d, after=%I64d",
                      scp->lockDataVersion,
                      scp->dataVersion);
             
@@ -4850,7 +4865,7 @@ static void cm_LockMarkSCacheLost(cm_scache_t * scp)
 
 #ifdef DEBUG
     /* With the current code, we can't lose a lock on a RO scp */
-    osi_assert(!(scp->flags & CM_SCACHEFLAG_RO));
+    osi_assertx(!(scp->flags & CM_SCACHEFLAG_RO), "CM_SCACHEFLAG_RO unexpected");
 #endif
 
     /* cm_scacheLock needed because we are modifying fileLock->flags */
@@ -4911,10 +4926,10 @@ void cm_CheckLocks()
 
             /* Server locks must have been enabled for us to have
                received an active non-client-only lock. */
-            osi_assert(cm_enableServerLocks);
+            osi_assertx(cm_enableServerLocks, "!cm_enableServerLocks");
 
             scp = fileLock->scp;
-            osi_assert(scp != NULL);
+            osi_assertx(scp != NULL, "null cm_scache_t");
 
             cm_HoldSCacheNoLock(scp);
 
@@ -4931,7 +4946,7 @@ void cm_CheckLocks()
                          fileLock->scp->fid.volume,
                          fileLock->scp->fid.vnode,
                          fileLock->scp->fid.unique);
-                osi_assert(FALSE);
+                osi_assertx(FALSE, "invalid fid");
             }
 #endif
             /* Server locks are extended once per scp per refresh
@@ -5032,7 +5047,7 @@ void cm_CheckLocks()
                                      "Data version mismatch on scp 0x%p",
                                      scp);
                             osi_Log2(afsd_logp,
-                                     "   Data versions: before=%d, after=%d",
+                                     "   Data versions: before=%I64d, after=%I64d",
                                      scp->lockDataVersion,
                                      scp->dataVersion);
 
@@ -5137,7 +5152,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     scp = oldFileLock->scp;
 
-    osi_assert(scp != NULL);
+    osi_assertx(scp != NULL, "null cm_scache_t");
 
     lock_ReleaseRead(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
@@ -5243,7 +5258,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
-    osi_assert(IS_LOCK_WAITLOCK(oldFileLock));
+    osi_assertx(IS_LOCK_WAITLOCK(oldFileLock), "!IS_LOCK_WAITLOCK");
 
     if (force_client_lock ||
         !SERVERLOCKS_ENABLED(scp) ||
@@ -5315,7 +5330,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
         if (scp->serverLock == LockRead) {
 
-            osi_assert(newLock == LockWrite);
+            osi_assertx(newLock == LockWrite, "!LockWrite");
 
             osi_Log0(afsd_logp, "  Attempting to UPGRADE from LockRead to LockWrite");
 
@@ -5339,7 +5354,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
                 osi_Log2(afsd_logp,
-                         "  Data versions before=%d, after=%d",
+                         "  Data versions before=%I64d, after=%I64d",
                          scp->lockDataVersion,
                          scp->dataVersion);
                 osi_Log1(afsd_logp,
@@ -5394,9 +5409,9 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 cm_key_t cm_GenerateKey(unsigned int session_id, unsigned long process_id, unsigned int file_id)
 {
 #ifdef DEBUG
-    osi_assert((process_id & 0xffffffff) == process_id);
-    osi_assert((session_id & 0xffff) == session_id);
-    osi_assert((file_id & 0xffff) == file_id);
+    osi_assertx((process_id & 0xffffffff) == process_id, "unexpected process_id");
+    osi_assertx((session_id & 0xffff) == session_id, "unexpected session_id");
+    osi_assertx((file_id & 0xffff) == file_id, "unexpected file_id");
 #endif
 
     return 

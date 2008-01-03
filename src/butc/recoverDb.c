@@ -24,6 +24,7 @@ RCSID
 #include <strings.h>
 #endif
 #include <sys/types.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -50,6 +51,8 @@ struct tapeScanInfo {
 
 extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
+
+static readDump();
 
 /* PrintDumpLabel
  *	print out the tape (dump) label.

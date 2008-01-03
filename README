@@ -71,6 +71,30 @@ A. Creating the proper directory structure.
       or insecure software included with OpenAFS. See README.OBSOLETE and
       README.SECURITY for more details.
 
+      There is an option to control whether or not binaries are stripped
+      of their symbol table information.  All binaries, except for the
+      'fileserver' and 'volserver' executables, are stripped by default.
+
+      To prevent stripping, specify the '--disable-strip-binaries' option on
+      the ./configure command line.
+
+      This option works alongside the existing --enable-debug option to
+      control how binaries are produced.  When --enable-debug is specified,
+      binaries will not be stripped.  This behavior can be modified by
+      using different combinations of --enable-debug and --enable (or
+      --disable)-strip-binaries.  One can, for example, compile binaries for
+      debug and strip them anyway.  Alternatively, one can compile without
+      debug and force the binaries to not be stripped.  Note that these
+      combinations are not necessarily useful.
+
+      If neither of these options is specified, the default will be to build
+      non-debug binaries that are stripped (with the exceptions noted above,
+      which are never stripped at present).  Specifying --enable-debug also
+      turns on --disable-strip-binaries.  These are the most useful settings.
+
+      The two binaries noted above, 'fileserver' and 'volserver' will never
+      be stripped, regardless of any options given to configure.
+
   There are two modes for directory path handling: "Transarc mode" and "default mode":
   - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
     by putting client configuaration files in /usr/vice/etc, and server

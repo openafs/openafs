@@ -183,6 +183,7 @@ int
 ufs_brelse(struct usr_vnode *vp, struct usr_buf *bp)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -192,12 +193,14 @@ int
 iodone(struct usr_buf *bp)
 {
     usr_assert(0);
+    return 0;
 }
 
 struct usr_file *
 getf(int fd)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -233,6 +236,7 @@ int
 usr_flock(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -243,6 +247,7 @@ int
 usr_ioctl(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -252,24 +257,28 @@ int
 afs_syscall_icreate(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 afs_syscall_iincdec(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 afs_syscall_iopen(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 afs_syscall_ireadwrite(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -280,24 +289,28 @@ int
 vno_close(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 vno_ioctl(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 vno_rw(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 int
 vno_select(void)
 {
     usr_assert(0);
+    return 0;
 }
 
 /*
@@ -374,12 +387,14 @@ usr_crfree(struct usr_ucred *credp)
     if (credp->cr_ref == 0) {
 	afs_osi_Free((char *)credp, sizeof(struct usr_ucred));
     }
+    return 0;
 }
 
 int
 usr_crhold(struct usr_ucred *credp)
 {
     credp->cr_ref++;
+    return 0;
 }
 
 void
@@ -517,6 +532,7 @@ afs_osi_Wakeup(void *x)
 	waitp = waitp->next;
     }
     usr_mutex_unlock(&osi_waitq_lock);
+    return 0;
 }
 
 int
@@ -608,6 +624,7 @@ afs_osi_CheckTimedWaits(void)
 	waitp = waitp->timedNext;
     }
     usr_mutex_unlock(&osi_waitq_lock);
+    return 0;
 }
 
 /*
@@ -1389,8 +1406,8 @@ SweepAFSCache(int *vFilesFound)
     return (0);
 }
 
-static
-ConfigCell(register struct afsconf_cell *aci, char *arock,
+static int
+ConfigCell(register struct afsconf_cell *aci, void *arock,
 	   struct afsconf_dir *adir)
 {
     register int isHomeCell;
@@ -1420,10 +1437,7 @@ ConfigCell(register struct afsconf_cell *aci, char *arock,
 }
 
 static int
-ConfigCellAlias(aca, arock, adir)
-	struct afsconf_cellalias *aca;
-	char *arock;
-	struct afsconf_dir *adir;
+ConfigCellAlias(struct afsconf_cellalias *aca, void *arock, struct afsconf_dir *adir)
 {
 	call_syscall(AFSOP_ADDCELLALIAS, (long)aca->aliasName, 
 		     (long)aca->realName, 0, 0, 0);
@@ -1980,6 +1994,7 @@ syscallThread(void *argp)
 		 sysArgsP->param2, sysArgsP->param3, sysArgsP->param4);
 
     afs_osi_Free(argp, -1);
+    return 0;
 }
 
 fork_syscall(syscall, afscall, param1, param2, param3, param4)
@@ -2000,6 +2015,7 @@ fork_syscall(syscall, afscall, param1, param2, param3, param4)
 
     usr_thread_create(&tid, syscallThread, sysArgsP);
     usr_thread_detach(tid);
+    return 0;
 }
 
 call_syscall(syscall, afscall, param1, param2, param3, param4)
@@ -2186,7 +2202,7 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
     struct usr_vnode *linkVp;
     char *tmpPath;
     char *pathP;
-    char *nextPathP;
+    char *nextPathP = NULL;
 
     AFS_ASSERT_GLOCK();
 

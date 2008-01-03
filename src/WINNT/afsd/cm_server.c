@@ -277,13 +277,13 @@ void cm_GetServerNoLock(cm_server_t *serverp)
 void cm_PutServer(cm_server_t *serverp)
 {
     lock_ObtainWrite(&cm_serverLock);
-    osi_assert(serverp->refCount-- > 0);
+    osi_assertx(serverp->refCount-- > 0, "cm_server_t refCount 0");
     lock_ReleaseWrite(&cm_serverLock);
 }
 
 void cm_PutServerNoLock(cm_server_t *serverp)
 {
-    osi_assert(serverp->refCount-- > 0);
+    osi_assertx(serverp->refCount-- > 0, "cm_server_t refCount 0");
 }
 
 void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit)
@@ -368,7 +368,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp) {
     cm_server_t *tsp;
 
-    osi_assert(socketp->sin_family == AF_INET);
+    osi_assertx(socketp->sin_family == AF_INET, "unexpected socket family");
 
     tsp = malloc(sizeof(*tsp));
     if (tsp) {
@@ -413,7 +413,7 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
 {
     cm_server_t *tsp;
 
-    osi_assert(addrp->sin_family == AF_INET);
+    osi_assertx(addrp->sin_family == AF_INET, "unexpected socket value");
         
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {

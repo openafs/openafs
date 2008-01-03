@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005,2006 Secure Endpoints Inc.
+ * Copyright (c) 2005,2006,2007 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -900,6 +900,7 @@ afs_klog(khm_handle identity,
 
         if (r) {
             _reportf(L"Code %d while getting credentials", r);
+            k5creds = NULL;
             goto end_krb5;
         }
 

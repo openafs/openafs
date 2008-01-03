@@ -1,0 +1,35 @@
+Beginning with the 1.4.5 release, OpenAFS's prebuilt binaries use a new
+mechanism for packaging kernel modules on Fedora Core (all versions)
+and RHEL 5 (and derivatives). This new mechanism allows the
+installation of modules for multiple kernel variants simultaneously,
+and is identical to the technique used by Fedora and Red Hat's own
+out of tree kernel modules.
+
+The difference is that instead of a single 'openafs-kernel' module,
+multiple kmod-openafs-<variant> RPMs are produced. When manually
+upgrading to OpenAFS 1.4.5, it may be necessary to remove any openafs-
+kernel modules left behind by your old installation, and to ensure
+that the appropriate kmod-openafs module is installed.
+
+If you wish to build 'kmod' modules for new kernel release, this may
+be done by rebuilding the SRPM  with 'fedorakmod' defined, and the
+'kvariants' parameter set to the list of kernel variants you wish to
+build modules for (a kernel-devel package must be installed for each
+of these variants). Note that supplying '' as a variant will build
+for a normal kernel. The 'kernvers' variable can be set to specify 
+what kernel release version you wish to build for.
+
+For example:
+       rpmbuild -bb --define "fedorakmod 1" \
+            --target i686 \
+            --define "build_modules 1" \
+            --define "kvariants '' PAE"  \
+            openafs.spec
+
+would build a kernel module for the normal and PAE variants of the
+currently running kernel.
+
+Old-style packages may still be built in the same way as previous
+releases. However, note that you must use userland RPMs which match
+the packaging of your kernel module. Old style kernel modules will
+not work with a set of userland RPMs which expect kmod-style packages.

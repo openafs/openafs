@@ -27,6 +27,7 @@ RCSID
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <sys/stat.h>
@@ -40,14 +41,6 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>		/* sysconf() */
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef ITIMER_REAL
 #include <sys/time.h>
@@ -868,6 +861,9 @@ ShutDownAndCore(int dopanic)
 		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	}
     }
+
+    if (dopanic)
+	assert(0);
 
     exit(0);
 }
@@ -2190,7 +2186,18 @@ main(int argc, char *argv[])
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
 
+#if !defined(AFS_DEMAND_ATTACH_FS)
+    /* 
+     * For DAFS, we do not start the Rx server threads until after
+     * the volume package is initialized, and fileserver state is
+     * restored.  This is necessary in order to keep host and callback
+     * package state pristine until we have a chance to restore state.
+     *
+     * Furthermore, startup latency is much lower with dafs, so this
+     * shouldn't pose a serious problem.
+     */
     rx_StartServer(0);		/* now start handling requests */
+#endif
 
     /* we ensure that there is enough space in the vnode buffer to satisfy
      ** requests from all concurrent threads. 
@@ -2230,6 +2237,7 @@ main(int argc, char *argv[])
 	 * restore fileserver state */
 	fs_stateRestore();
     }
+    rx_StartServer(0);  /* now start handling requests */
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /*
@@ -2325,4 +2333,5 @@ main(int argc, char *argv[])
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_WaitProcess((char*) &parentPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
+    return 0;
 }

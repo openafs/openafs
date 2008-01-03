@@ -41,13 +41,7 @@ RCSID
 #include <winsock2.h>
 #include <crypt.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #define __USE_XOPEN
 #include <unistd.h>

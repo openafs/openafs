@@ -2761,12 +2761,14 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		}
 	    }
 	    *ec = VOFFLINE;
+	    ReleaseVolumeHeader(vp->header);
 	    vp = NULL;
 	    break;
 	}
 
 	if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
 	    *ec = VOFFLINE;
+	    ReleaseVolumeHeader(vp->header);
 	    vp = NULL;
 	    break;
 	}
@@ -3735,8 +3737,6 @@ VConnectSALV(void)
 int
 VConnectSALV_r(void)
 {
-    assert((programType != salvageServer) &&
-	   (programType != volumeUtility));
     return SALVSYNC_clientInit();
 }
 
@@ -3753,8 +3753,6 @@ VDisconnectSALV(void)
 int
 VDisconnectSALV_r(void)
 { 
-    assert((programType != salvageServer) &&
-	   (programType != volumeUtility));
     return SALVSYNC_clientFinis();
 }
 
@@ -3771,8 +3769,6 @@ VReconnectSALV(void)
 int
 VReconnectSALV_r(void)
 {
-    assert((programType != salvageServer) &&
-	   (programType != volumeUtility));
     return SALVSYNC_clientReconnect();
 }
 #endif /* SALVSYNC_BUILD_CLIENT */
@@ -3828,7 +3824,7 @@ VDisconnectFS(void)
     VOL_UNLOCK;
 }
 
-static int
+int
 VChildProcReconnectFS_r(void)
 {
     return FSYNC_clientChildProcReconnect();

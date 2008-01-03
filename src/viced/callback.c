@@ -90,19 +90,13 @@ RCSID
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
 #include <time.h>		/* ANSI standard location for time stuff */
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
 #else
 #include <sys/time.h>
 #include <sys/file.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/assert.h>
 
@@ -387,7 +381,7 @@ CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
 	CcdelB++;
     *cbp = cb->cnext;
     FreeCB(cb);
-    if (deletefe && (--fe->ncbs == 0))
+    if ((--fe->ncbs == 0) && deletefe)
 	FDel(fe);
     return 0;
 }
@@ -542,6 +536,8 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     afs_uint32 *Thead = thead;
     struct CallBack *newcb = 0;
     int safety;
+
+    cbstuff.AddCallBacks++;
 
     host->Console |= 2;
 
@@ -867,9 +863,9 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     register afs_uint32 *pcb;
     char hoststr[16];
 
+    H_LOCK;
     cbstuff.DeleteCallBacks++;
 
-    H_LOCK;
     h_Lock_r(host);
     fe = FindFE(fid);
     if (!fe) {
@@ -928,6 +924,7 @@ DeleteFileCallBacks(AFSFid * fid)
 	TDel(cb);
 	HDel(cb);
 	FreeCB(cb);
+	fe->ncbs--;
     }
     FDel(fe);
     H_UNLOCK;
@@ -1079,7 +1076,7 @@ BreakDelayedCallBacks_r(struct host *host)
 
     cbstuff.nbreakers--;
     /* If we succeeded it's always ok to unset HFE_LATER */
-    if (!host->hostFlags & VENUSDOWN)
+    if (!(host->hostFlags & VENUSDOWN))
 	host->hostFlags &= ~HFE_LATER;
     return (host->hostFlags & VENUSDOWN);
 }
@@ -1335,6 +1332,7 @@ BreakLaterCallBacks(void)
 			 fe->volid));
 		fid.Volume = fe->volid;
 		*feip = fe->fnext;
+		fe->status &= ~FE_LATER;
 		/* Works since volid is deeper than the largest pointer */
 		tmpfe = (struct object *)fe;
 		tmpfe->next = (struct object *)myfe;
@@ -2315,7 +2313,7 @@ cb_stateRestoreFEs(struct fs_dump_state * state)
 static int
 cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 {
-    int ret = 0, iovcnt, cbi, idx, len, written = 0;
+    int ret = 0, iovcnt, cbi, written = 0;
     afs_uint32 fei;
     struct callback_state_entry_header hdr;
     struct FEDiskEntry fedsk;
@@ -2336,24 +2334,24 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
     }
 
     iov[0].iov_base = (char *)&hdr;
-    len = iov[0].iov_len = sizeof(hdr);
+    iov[0].iov_len = sizeof(hdr);
     iov[1].iov_base = (char *)&fedsk;
-    len += iov[1].iov_len = sizeof(struct FEDiskEntry);
+    iov[1].iov_len = sizeof(struct FEDiskEntry);
     iovcnt = 2;
 
-    for (cbi = fe->firstcb, cb = itocb(cbi), idx = 2; 
+    for (cbi = fe->firstcb, cb = itocb(cbi); 
 	 cb != NULL; 
-	 cbi = cb->cnext, cb = itocb(cbi), idx++, hdr.nCBs++) {
+	 cbi = cb->cnext, cb = itocb(cbi), hdr.nCBs++) {
 	if (cbi > state->cb_hdr->cb_max) {
 	    state->cb_hdr->cb_max = cbi;
 	}
-	if (cb_stateCBToDiskEntry(cb, &cbdsk[idx])) {
+	if (cb_stateCBToDiskEntry(cb, &cbdsk[iovcnt])) {
 	    ret = 1;
 	    goto done;
 	}
-	cbdsk[idx].index = cbi;
-	iov[iovcnt].iov_base = (char *)&cbdsk[idx];
-	len += iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
+	cbdsk[iovcnt].index = cbi;
+	iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
 	iovcnt++;
 	if ((iovcnt == 16) || (!cb->cnext)) {
 	    if (fs_stateWriteV(state, iov, iovcnt)) {
@@ -2362,7 +2360,6 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 	    }
 	    written = 1;
 	    iovcnt = 0;
-	    len = 0;
 	}
     }
 
@@ -2401,7 +2398,7 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
 static int
 cb_stateRestoreFE(struct fs_dump_state * state)
 {
-    int ret = 0, iovcnt, len, nCBs, idx;
+    int ret = 0, iovcnt, nCBs;
     struct callback_state_entry_header hdr;
     struct FEDiskEntry fedsk;
     struct CBDiskEntry cbdsk[16];
@@ -2410,9 +2407,9 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     struct CallBack * cb;
 
     iov[0].iov_base = (char *)&hdr;
-    len = iov[0].iov_len = sizeof(hdr);
+    iov[0].iov_len = sizeof(hdr);
     iov[1].iov_base = (char *)&fedsk;
-    len += iov[1].iov_len = sizeof(fedsk);
+    iov[1].iov_len = sizeof(fedsk);
     iovcnt = 2;
 
     if (fs_stateReadV(state, iov, iovcnt)) {
@@ -2438,11 +2435,11 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     }
 
     if (hdr.nCBs) {
-	for (iovcnt = 0, idx = 0, len = 0, nCBs = 0;
+	for (iovcnt = 0, nCBs = 0;
 	     nCBs < hdr.nCBs;
-	     idx++, nCBs++) {
-	    iov[idx].iov_base = (char *)&cbdsk[idx];
-	    len += iov[idx].iov_len = sizeof(struct CBDiskEntry);
+	     nCBs++) {
+	    iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	    iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
 	    iovcnt++;
 	    if ((iovcnt == 16) || (nCBs == hdr.nCBs - 1)) {
 		if (fs_stateReadV(state, iov, iovcnt)) {
@@ -2453,7 +2450,6 @@ cb_stateRestoreFE(struct fs_dump_state * state)
 		    ret = 1;
 		    goto done;
 		}
-		len = 0;
 		iovcnt = 0;
 	    }
 	}
@@ -2646,11 +2642,14 @@ cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 int
 DumpCallBackState(void)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
 
-    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, O_WRONLY | O_CREAT | O_TRUNC,
-	      0666);
+    oflag = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, oflag, 0666);
     if (fd < 0) {
 	ViceLog(0,
 		("Couldn't create callback dump file %s\n",
@@ -2684,11 +2683,15 @@ DumpCallBackState(void)
 time_t
 ReadDump(char *file)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic, freelisthead;
-    time_t now;
+    afs_uint32 now;
 
-    fd = open(file, O_RDONLY);
+    oflag = O_RDONLY;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(file, oflag);
     if (fd < 0) {
 	fprintf(stderr, "Couldn't read dump file %s\n", file);
 	exit(1);
@@ -2709,7 +2712,7 @@ ReadDump(char *file)
     read(fd, &tfirst, sizeof(tfirst));
     read(fd, &freelisthead, sizeof(freelisthead));
     CB = ((struct CallBack
-	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
+	   *)(calloc(cbstuff.nblks, sizeof(struct CallBack)))) - 1;
     FE = ((struct FileEntry
 	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
     CBfree = (struct CallBack *)itocb(freelisthead);

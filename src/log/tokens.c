@@ -44,15 +44,10 @@ RCSID
 #endif /* AFS_RXK5 */
 #include <afs/auth.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef AFS_NT40_ENV
+
 #define VIRTUE
 #define VICE
 

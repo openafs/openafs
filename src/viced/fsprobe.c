@@ -21,15 +21,7 @@ RCSID
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ubik.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
@@ -265,6 +257,7 @@ main(int argc, char **argv)
 	}
     }
 #endif
+    return 0;
 }
 
 

@@ -87,6 +87,14 @@
 /* For SGI, this can't interfere with any of the 64 bit inode calls. */
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
 
+/* skip 64 bit calls */
+#define AFSOP_CACHEBASEDIR       50     /* cache base dir */
+#define AFSOP_CACHEDIRS          51     /* number of files per dir */
+#define AFSOP_CACHEFILES         52     /* number of files */
+
+#define AFSOP_SETINT             60     /* we should just set key/value pairs 
+                                          for things which are just ints */
+
 /* these are for initialization flags */
 
 #define AFSCALL_INIT_MEMCACHE 0x1
@@ -225,6 +233,12 @@ struct afssysargs {
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOWR(VIOC_SYSCALL_TYPE,1,struct afssysargs)
 #define SYSCALL_DEV_FNAME "/dev/openafs_ioctl"
+#endif
+
+#ifdef AFS_CACHE_VNODE_PATH
+#define AFS_CACHE_CELLS_INODE -2
+#define AFS_CACHE_ITEMS_INODE -3
+#define AFS_CACHE_VOLUME_INODE -4
 #endif
 
 #endif /* _AFS_ARGS_H_ */

@@ -1,15 +1,15 @@
 =head1 NAME
 
-fs sysname - Reports or sets the CPU/operating system type
+fs_sysname - Reports or sets the CPU/operating system type
 
 =head1 SYNOPSIS
 
 =for html
 <div class="synopsis">
 
-B<fs sysname> S<<< [B<-newsys> <I<new sysname>>] >>> [B<-help>]
+B<fs sysname> S<<< [B<-newsys> <I<new sysname>>]+ >>> [B<-help>]
 
-B<fs sy> S<<< [B<-n> <I<new sysname>>] >>> [B<-h>]
+B<fs sy> S<<< [B<-n> <I<new sysname>>]+ >>> [B<-h>]
 
 =for html
 </div>
@@ -19,7 +19,7 @@ B<fs sy> S<<< [B<-n> <I<new sysname>>] >>> [B<-h>]
 The B<fs sysname> command sets or displays the local machine's
 CPU/operating system type as recorded in kernel memory. The Cache Manager
 substitutes the string for the I<@sys> variable which can occur in AFS
-pathnames; the I<IBM AFS Quick Beginnings> and I<IBM AFS Administration
+pathnames; the I<OpenAFS Quick Beginnings> and I<OpenAFS Administration
 Guide> explain how using I<@sys> can simplify cell configuration. It is
 best to use it sparingly, however, because it can make the effect of
 changing directories unpredictable.
@@ -42,10 +42,14 @@ must verify that the correct string is set for the new identity also.
 
 =item B<-newsys> <I<new sysname>>
 
-Sets the CPU/operating system indicator string for the local machine. If
-this argument is omitted, the output displays the current setting
-instead. AFS uses a standardized set of strings; consult the I<IBM AFS
-Quick Beginnings> or I<AFS Release Notes>.
+Sets the CPU/operating system indicator string for the local machine. This
+option may be used multiple times in the same invocation, which sets I<@sys>
+to an array of values. When I<@sys> contains an array of values, the first
+value that matches a path is used.
+
+If this argument is omitted, the output displays the current setting
+instead. AFS uses a standardized set of strings; consult the I<OpenAFS Quick
+Beginnings> or I<OpenAFS Release Notes>.
 
 =item B<-help>
 
@@ -61,6 +65,10 @@ system type in the following format:
 
    Current sysname is '<system_type>'
 
+When the B<-newsys> argument is included, the output is the following:
+
+   fs: new sysname list set.
+
 =head1 EXAMPLES
 
 The following example shows the output produced on a Sun SPARCStation
@@ -74,6 +82,18 @@ The following command defines a machine to be a IBM RS/6000 running AIX
 
    % fs sysname -newsys rs_aix42
 
+The following command defines a machine to be Mac OS X PPC and a
+custom type 'foo'. The second command queries the new sysname:
+
+   % fs sysname -newsys ppc_darwin_80 -newsys foo
+   fs: new sysname list set.
+   % fs sysname
+   Current sysname list is 'ppc_darwin_80' 'foo'
+
+If I<@sys> is C<ppc_darwin_80 foo>, then C<cd @sys> will try to change
+to the C<ppc_darwin_80> directory. If the C<ppc_darwin_80> directory
+doesn't exist, then the C<foo> directory is tried.
+
 =head1 PRIVILEGE REQUIRED
 
 To display the current setting, no privilege is required. To include the
@@ -85,9 +105,14 @@ as the local superuser C<root>.
 L<fs_exportafs(1)>,
 L<sys(1)>
 
-I<IBM AFS Quick Beginnings>
+I<OpenAFS Quick Beginnings>
+L<http://www.openafs.org/pages/doc/QuickStartUnix/auqbg000.htm>
 
-I<IBM AFS Administration Guide>
+I<OpenAFS Administration Guide>
+L<http://www.openafs.org/pages/doc/AdminGuide/auagd000.htm>
+
+For the list of assigned standard sysname values, see
+L<http://grand.central.org/numbers/systypes.html>
 
 =head1 COPYRIGHT
 

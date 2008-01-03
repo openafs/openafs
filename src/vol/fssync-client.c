@@ -65,15 +65,7 @@ RCSID
 #include <afs/assert.h>
 #endif /* AFS_PTHREAD_ENV */
 #include <signal.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -100,7 +92,14 @@ RCSID
 
 extern int LogLevel;
 
-static SYNC_client_state fssync_state = { -1, 2040, FSYNC_PROTO_VERSION, 5, 120 };
+static SYNC_client_state fssync_state = 
+    { -1,                    /* file descriptor */
+      2040,                  /* port number */
+      FSYNC_PROTO_VERSION,   /* protocol version */
+      5,                     /* connect retry limit */
+      120,                   /* hard timeout */
+      "FSSYNC",              /* protocol name string */
+    };
 
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t vol_fsync_mutex;

@@ -905,7 +905,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     }
 #endif /* AFS_SGI_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
-	if (afs_BBusy()) {
+	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred))) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
 	    code = afs_StoreOnLastReference(avc, &treq);

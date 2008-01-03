@@ -731,7 +731,7 @@ WriteCltTrailer(char *serverName, int first, int last, FILE * itl_h)
     fprintf(itl_h, "}\n");
 
     fprintf(itl_h,
-	    "\n\nstatic void DoRun(struct cmd_syndesc *as, char *arock) {\n");
+	    "\n\nstatic void DoRun(struct cmd_syndesc *as, void *arock) {\n");
 
     if (threadModel == PTHREADS) {
 	fprintf(itl_h, "\tpthread_t *tid;\n");
@@ -802,7 +802,7 @@ WriteCltTrailer(char *serverName, int first, int last, FILE * itl_h)
 
     fprintf(itl_h,
 	    "static void SetupRunCmd(void) {\n" "\tstruct cmd_syndesc *ts;\n"
-	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test client program\");\n"
+	    "\tts = cmd_CreateSyntax(NULL,DoRun, NULL, \"run the test client program\");\n"
 	    "\tcmd_AddParm(ts, \"-threadCount\", CMD_SINGLE, CMD_REQUIRED, \"number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-iterationCount\", CMD_SINGLE, CMD_REQUIRED, \"number of iterations to make over entire interface for each thread\");\n"
 	    "\tcmd_AddParm(ts, \"-secType\", CMD_SINGLE, CMD_REQUIRED, \"security level to use (1 -> unauthenticated, 2 -> authenticated)\");\n"
@@ -1187,7 +1187,7 @@ WriteServTrailer(FILE * srv_h)
 	    "\nstatic long GetKey (char *rock, long kvno, struct ktc_encryptionKey *key) {\n"
 	    "\tmemcpy ((void *) key, (void *) &serviceKey, sizeof(*key));\n"
 	    "\treturn 0;\n" "}\n\n"
-	    "static void DoRun(struct cmd_syndesc *as, char *arock) {\n"
+	    "static void DoRun(struct cmd_syndesc *as, void *arock) {\n"
 	    "\tstruct rx_service *serv;\n"
 	    "\tstruct rx_securityClass *sc[3];\n\n"
 	    "\tint port=0, errflg=0;\n" "\tint lowThreads=4, highThreads=8;\n"
@@ -1204,7 +1204,7 @@ WriteServTrailer(FILE * srv_h)
 	    "\t\trx_SetMaxProcs(serv,highThreads);\n"
 	    "\t\trx_StartServer(1);\n" "\t}\n" "\texit(0);\n" "}\n\n"
 	    "static void SetupRunCmd(void) {\n" "\tstruct cmd_syndesc *ts;\n"
-	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test server program\");\n"
+	    "\tts = cmd_CreateSyntax(NULL,DoRun, NULL, \"run the test server program\");\n"
 	    "\tcmd_AddParm(ts, \"-lowThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"minimum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-highThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"maximum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-serverPort\", CMD_SINGLE, CMD_REQUIRED, \"port that server is using\");\n"

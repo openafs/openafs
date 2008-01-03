@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts chown - Changes the owner of a Protection Database entry
+pts_chown - Changes the owner of a Protection Database entry
 
 =head1 SYNOPSIS
 

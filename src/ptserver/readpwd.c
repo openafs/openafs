@@ -17,13 +17,7 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
@@ -95,4 +89,5 @@ main(afs_int32 argc, char **argv)
 	    fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);
 	}
     }
+    return 0;
 }

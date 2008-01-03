@@ -75,8 +75,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     int require_64bit_ops = 0;
 
-    osi_assert(userp != NULL);
-    osi_assert(scp != NULL);
+    osi_assertx(userp != NULL, "null cm_user_t");
+    osi_assertx(scp != NULL, "null cm_scache_t");
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
@@ -207,7 +207,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                     qdp = biod.bufListEndp;
                 else
                     qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
-                osi_assert(qdp != NULL);
+                osi_assertx(qdp != NULL, "null osi_queueData_t");
                 bufp = osi_GetQData(qdp);
                 bufferp = bufp->datap;
                 wbytes = nbytes;
@@ -1376,7 +1376,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         if ((bufp->dataVersion == -1 || bufp->dataVersion < scp->dataVersion) && 
              LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength)) 
         {
-            osi_Log3(afsd_logp, "Bad DVs %d, %d or length 0x%x",
+            osi_Log3(afsd_logp, "Bad DVs %I64d, %I64d or length 0x%x",
                       bufp->dataVersion, scp->dataVersion, biod.length);
 
             if (bufp->dataVersion == -1)
@@ -1398,7 +1398,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     }
 
 #ifdef DISKCACHE95
-    DPRINTF("cm_GetBuffer: fetching data scpDV=%d bufDV=%d scp=%x bp=%x dcp=%x\n",
+    DPRINTF("cm_GetBuffer: fetching data scpDV=%I64d bufDV=%I64d scp=%x bp=%x dcp=%x\n",
             scp->dataVersion, bufp->dataVersion, scp, bufp, bufp->dcp);
 #endif /* DISKCACHE95 */
 
@@ -1414,7 +1414,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         afsStatus.FileType = 0x2;
         afsStatus.LinkCount = scp->linkCount;
         afsStatus.Length = cm_fakeDirSize;
-        afsStatus.DataVersion = cm_data.fakeDirVersion;
+        afsStatus.DataVersion = (afs_uint32)(cm_data.fakeDirVersion & 0xFFFFFFFF);
         afsStatus.Author = 0x1;
         afsStatus.Owner = 0x0;
         afsStatus.CallerAccess = 0x9;
@@ -1427,7 +1427,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         afsStatus.ServerModTime = (afs_uint32)FakeFreelanceModTime;
         afsStatus.Group = 0;
         afsStatus.SyncCounter = 0;
-        afsStatus.dataVersionHigh = 0;
+        afsStatus.dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
         afsStatus.lockCount = 0;
         afsStatus.Length_hi = 0;
         afsStatus.errorCode = 0;
@@ -1573,7 +1573,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  * our check above for nbytes being less than
                  * biod.length should ensure this.
                  */
-                osi_assert(bufferp != NULL);
+                osi_assertx(bufferp != NULL, "null cm_buf_t");
 
                 /* read rbytes of data */
                 rbytes = (nbytes > cm_data.buf_blockSize? cm_data.buf_blockSize : nbytes);
@@ -1624,7 +1624,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
              * all of the rest of the pages.
              */
             /* bytes fetched */
-	    osi_assert((bufferp - tbufp->datap) < LONG_MAX);
+	    osi_assertx((bufferp - tbufp->datap) < LONG_MAX, "data >= LONG_MAX");
             rbytes = (long) (bufferp - tbufp->datap);
 
             /* bytes left to zero */
@@ -1681,7 +1681,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
              qdp;
              qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
-            tbufp->dataVersion = afsStatus.DataVersion;
+            tbufp->dataVersion = afsStatus.dataVersionHigh;
+            tbufp->dataVersion <<= 32;
+            tbufp->dataVersion |= afsStatus.DataVersion;
 
 #ifdef DISKCACHE95
             /* write buffer out to disk cache */

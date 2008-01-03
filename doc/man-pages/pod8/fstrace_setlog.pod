@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace setlog - Sets the size of a trace log
+fstrace_setlog - Sets the size of a trace log
 
 =head1 SYNOPSIS
 

@@ -10,6 +10,7 @@ RCSID
 #include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #ifndef AFS_NT40_ENV
 #include <netinet/in.h>
 #include <netdb.h>
@@ -18,13 +19,6 @@ RCSID
 #endif
 #if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI65_ENV)
 #include <sys/socket.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #define MAXPREC 100

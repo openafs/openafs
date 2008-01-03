@@ -23,7 +23,7 @@
 #include "forceremove.h"
 
 
-static int DoClient34(struct cmd_syndesc *as, char *arock)
+static int DoClient34(struct cmd_syndesc *as, void *arock)
 {
     DWORD status = Client34Eradicate(FALSE);
 
@@ -40,7 +40,7 @@ SetupCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("client34", DoClient34, 0,
+    ts = cmd_CreateSyntax("client34", DoClient34, NULL,
 			  "remove AFS 3.4a client");
 }
 

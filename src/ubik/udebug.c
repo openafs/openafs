@@ -15,13 +15,7 @@ RCSID
 
 #include <sys/types.h>
 #include <stdlib.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -90,7 +84,7 @@ PortName(char *aname)
 }
 
 static int
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char *hostName, *portName, *times;
     afs_int32 hostAddr;
@@ -355,7 +349,7 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe ubik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "probe ubik server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

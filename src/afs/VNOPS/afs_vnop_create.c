@@ -353,7 +353,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	UpgradeSToWLock(&tdc->lock, 631);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
+	ObtainWriteLock(&afs_xdcache, 291);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
+	ReleaseWriteLock(&afs_xdcache);
 	if (code) {
 	    ZapDCE(tdc);
 	    DZap(tdc);

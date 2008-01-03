@@ -1,0 +1,158 @@
+=head1 NAME
+
+vos_copy - Make a copy of a volume
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos copy> S<<< [B<-id>] <I<volume name or ID of source>> >>>
+   S<<< [B<-fromserver>] <I<machine name for source>> >>>
+   S<<< [B<-frompartition>] <I<partition name for source>> >>>
+   S<<< [B<-toname>] <I<volume name for new copy>> >>>
+   S<<< [B<-toserver>] <I<machine name for destination>> >>>
+   S<<< [B<-topartition>] <I<partition name for destination>> >>>
+   [B<-offline>] [B<-readonly>] [B<-live>] S<<< [B<-cell> <I<cell name>>] >>>
+   [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-encrypt>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos copy> command makes a copy of a volume with a new name.  It is
+equivalent to B<vos dump> followed by B<vos restore>, but doesn't require
+the volume be stored locally by the client.
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<-id>] <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of a read/write
+volume.
+
+=item [B<-fromserver>] <I<machine name for source>>
+
+Identifies the file server machine where the source volume resides. Provide
+the machine's IP address or its host name (either fully qualified or using
+an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=item [B<-frompartition>] <I<partition name for source>>
+
+Names the partition where the source volume resides. Provide the full
+partition name (for, example, B</vicepa>) or one of the abbreviated forms
+described in L<vos(1)>.
+
+=item [B<-toname>] <I<volume name for new copy>>
+
+The complete name of the new volume to create.
+
+=item [B<-toserver>] <I<machine name for destination>>
+
+Identifies the file server machine to which to copy the volume.  Provide
+the machine's IP address or its host name (either fully qualified or using
+an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=item [B<-topartition>] <I<partition name for destination>>
+
+Names the partition to which to copy the volume. Provide the full partition
+name (for, example, B</vicepa>) or one of the abbreviated forms described in
+L<vos(1)>.
+
+=item B<-offline>
+
+Leaves the new volume flagged as off-line in the volume database.
+
+=item B<-readonly>
+
+Flags the new volume as read-only in the volume database.
+
+=item B<-live>
+
+Copies the live volume without cloning.  This is normally not necessary and
+causes the volume to be kept locked for longer than the normal copy
+mechanism.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it to
+the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command has no output unless C<-verbose> is specified or there is
+an error.
+
+=head1 EXAMPLES
+
+The following example makes a verbose copy of the C<test> volume named
+C<test2> in the cell C<localcell>. The volume and copy both reside on
+C</vicepa> of C<server1>.
+
+   % vos copy test server1  a test2 server1 a -cell localcell -verbose
+   Starting transaction on source volume 536870921 ... done
+   Allocating new volume id for clone of volume 536870921 ... done
+   Allocating new volume id for copy of volume 536870921 ... done
+   Cloning source volume 536870921 ... done
+   Ending the transaction on the source volume 536870921 ... done
+   Starting transaction on the cloned volume 536870926 ... done
+   Setting flags on cloned volume 536870926 ... done
+   Getting status of cloned volume 536870926 ... done
+   Creating the destination volume 536870927 ... done
+   Setting volume flags on destination volume 536870927 ... done
+   Dumping from clone 536870926 on source to volume 536870927 on destination ... done
+   Ending transaction on cloned volume 536870926 ... done
+   Starting transaction on source volume 536870921 ... done
+   Doing the incremental dump from source to destination for volume 536870921 ...  done
+   Setting volume flags on destination volume 536870927 ... done
+   Ending transaction on destination volume 536870927 ... done
+   Ending transaction on source volume 536870921 ... done
+   Starting transaction on the cloned volume 536870926 ... done
+   Deleting the cloned volume 536870926 ... done
+   Ending transaction on cloned volume 536870926 ... done
+   Created the VLDB entry for the volume test2 536870927
+   Volume 536870921 copied from server1 /vicepa to test2 on server1 /vicepa 
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_clone(1)>,
+L<vos_move(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the IBM Public License Version 1.0. This
+man page was written by Jason Edgecombe for OpenAFS.

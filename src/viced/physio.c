@@ -21,19 +21,13 @@ RCSID
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #else
 #include <sys/file.h>
 #include <sys/time.h>
 #include <unistd.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/nfs.h>
 #include <afs/assert.h>

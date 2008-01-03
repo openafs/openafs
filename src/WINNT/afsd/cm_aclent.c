@@ -92,9 +92,6 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
             } else {
                 *rightsp = aclp->randomAccess;
 		if (cm_data.aclLRUp != aclp) {
-		    if (cm_data.aclLRUEndp == aclp)
-			cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
-
 		    /* move to the head of the LRU queue */
 		    osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
 		    osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
@@ -123,8 +120,10 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
     if (cm_data.aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
+    if (cm_data.aclLRUEndp == NULL)
+        osi_panic("inconsistent aclent LRUEndp == NULL", __FILE__, __LINE__);
+
     aclp = cm_data.aclLRUEndp;
-    cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
     osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
 
     if (aclp->backp && scp != aclp->backp) {

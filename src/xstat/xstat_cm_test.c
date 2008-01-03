@@ -22,13 +22,7 @@ RCSID
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <cmd.h>		/*Command line interpreter */
 #include <time.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 /*
  * External routines that don't have explicit include file definitions.
@@ -158,6 +152,7 @@ PrintCallInfo()
 
 /* Print detailed functional call statistics */
 
+void
 print_cmCallStats()
 {
     static char rn[] = "print_cmCallStats";	/*Routine name */
@@ -1238,9 +1233,7 @@ CountListItems(a_firstItem)
  *------------------------------------------------------------------------*/
 
 int
-RunTheTest(a_s)
-     struct cmd_syndesc *a_s;
-
+RunTheTest(struct cmd_syndesc *a_s, void *arock)
 {				/*RunTheTest */
 
     static char rn[] = "RunTheTest";	/*Routine name */
@@ -1448,7 +1441,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", RunTheTest, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", RunTheTest, NULL, "initialize the program");
     cmd_AddParm(ts, "-cmname", CMD_LIST, CMD_REQUIRED,
 		"Cache Manager name(s) to monitor");
     cmd_AddParm(ts, "-collID", CMD_LIST, CMD_REQUIRED,

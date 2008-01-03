@@ -49,13 +49,15 @@ EXELIBS = \
 OTHERLIBS = \
     ..\kfw\lib\$(CPU)\krb5_64.lib \
     ..\kfw\lib\$(CPU)\comerr64.lib \
-    dnsapi.lib mpr.lib
+    dnsapi.lib mpr.lib delayimp.lib
+LINKOPTS = /DELAYLOAD:krb5_64.dll /DELAYLOAD:comerr64.dll
 !else
 OTHERLIBS = \
     ..\kfw\lib\$(CPU)\krbv4w32.lib \
     ..\kfw\lib\$(CPU)\krb5_32.lib \
     ..\kfw\lib\$(CPU)\comerr32.lib \
-    dnsapi.lib mpr.lib
+    dnsapi.lib mpr.lib delayimp.lib
+LINKOPTS = /DELAYLOAD:krbv4w32.dll /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
 !endif
 afscflags = -I..\kfw\inc\krb5 -I..\kfw\inc\krb4 $(afscflags)
 
@@ -68,12 +70,12 @@ $(ASETKEYOBJS): $$(@B).c
 ############################################################################
 
 $(AKLOG) : $(AKLOGOBJS) $(EXELIBS) $(OUT)\aklog.res
-	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS)
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 $(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res
-	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS)
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 

@@ -13,14 +13,7 @@
 RCSID
     ("$Header$");
 
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "gtxwindows.h"
 #include "gtxobjects.h"
@@ -253,4 +246,5 @@ main()
     keymap_Delete(tmap);
 
     gtx_InputServer(win);
+    return 0;
 }

@@ -176,10 +176,10 @@ ${DEST}/root.server/usr/afs/bin/salvageserver: salvageserver
 	${INSTALL} -ns $? $@
 
 ${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/salvsync-debug: salvsync-debug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 install: ${INSTALL_TARGS}
 
@@ -192,9 +192,9 @@ ${DESTDIR}${afssrvlibexecdir}/salvageserver: salvageserver
 	${INSTALL} -ns $? $@
 
 ${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/salvsync-debug: salvsync-debug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 dest: ${DEST_TARGS}

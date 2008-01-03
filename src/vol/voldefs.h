@@ -25,6 +25,8 @@
 #define ROVOL			1
 #define BACKVOL			2
 
+#define VOLMAXTYPES             3   /* _current_ max number of types */
+
 /* maximum numbe of Vice partitions */
 #define	VOLMAXPARTS	255
 

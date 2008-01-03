@@ -18,14 +18,7 @@ RCSID
 #include <errno.h>
 #include <stdio.h>
 #include <sys/file.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "cnvldb.h"		/* CHANGEME! */
 #include <netinet/in.h>
@@ -40,7 +33,6 @@ RCSID
 #define	BADSERVERID	255	/* XXX */
 
 
-extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
 static char space[MAXSIZE];
@@ -52,6 +44,10 @@ static int convert_vlentry();
 static int rewrite_header();
 
 static char tspace[1024];	/* chdir can't handle anything bigger, anyway */
+
+void read_mhentries(afs_uint32 mh_addr, int oldfd);
+void convert_mhentries(int oldfd, int newfd, struct vlheader_2 *header, int fromver, int tover);
+
 /* return a static pointer to a buffer */
 static char *
 Parent(apath)
@@ -74,9 +70,8 @@ afs_int32 dbsize;
 char *pathname = NULL;
 const char *dbPath;
 
-static
-handleit(as)
-     struct cmd_syndesc *as;
+static int
+handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     register afs_int32 code;
@@ -366,6 +361,7 @@ struct extentaddr *base[VL_MAX_ADDREXTBLKS];
  * verifying their address is not pass the EOF and the flags are good.
  * If it's not good, then don't read the block in.
  */
+void
 read_mhentries(mh_addr, oldfd)
      int oldfd;
      afs_uint32 mh_addr;
@@ -472,6 +468,7 @@ read_mhentries(mh_addr, oldfd)
  * 
  * Before this can be called, the routine read_mhentries must be called.
  */
+void
 convert_mhentries(oldfd, newfd, header, fromver, tover)
      int oldfd, newfd;
      struct vlheader_2 *header;
@@ -997,7 +994,7 @@ main(argc, argv)
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax("initcmd", handleit, 0, "optional");
+    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "optional");
     cmd_AddParm(ts, "-to", CMD_SINGLE, CMD_OPTIONAL, "goal version");
     cmd_AddParm(ts, "-from", CMD_SINGLE, CMD_OPTIONAL, "current version");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "pathname");

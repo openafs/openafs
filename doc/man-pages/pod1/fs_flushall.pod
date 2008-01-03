@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs flushall - Force the AFS Cache Manager to discard all data
+fs_flushall - Force the AFS Cache Manager to discard all data
 
 =head1 SYNOPSIS
 

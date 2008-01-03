@@ -556,11 +556,7 @@ PagInCred(const struct AFS_UCRED *cred)
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
 #else
-#if defined(AFS_AIX51_ENV)
-    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
-	pag = NOPAG;
-    return pag;
-#elif defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV)
     if (cred->cr_ngrps < 2) {
 	return NOPAG;
     }

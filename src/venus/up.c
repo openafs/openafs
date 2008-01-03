@@ -21,6 +21,7 @@ RCSID
 #undef	_NONSTD_TYPES
 #endif
 #include <stdio.h>
+#include <unistd.h>
 #include <afs/afs_args.h>
 #include <sys/param.h>
 #ifdef	AFS_SUN5_ENV
@@ -42,13 +43,7 @@ RCSID
 #include <netinet/in.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/venus.h>
 

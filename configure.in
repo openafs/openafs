@@ -1,9 +1,13 @@
-AC_INIT(openafs,1.5.25)
+AC_INIT(openafs,1.5.28)
 AC_CONFIG_SRCDIR(src/config/stds.h)
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER(src/config/afsconfig.h)
+MACOS_VERSION=1.5.28
+
+AC_SUBST(MACOS_VERSION)
 
 AC_PROG_CC
+AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp])
 OPENAFS_CONFIGURE_COMMON
 
 if test -e 'doc/man-pages/Makefile.in' ; then
@@ -81,6 +85,10 @@ src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
+src/packaging/MacOS/OpenAFS.Info.plist \
+src/packaging/MacOS/OpenAFS.info \
+src/packaging/MacOS/buildpkg.sh \
+src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/pinstall/Makefile \
 src/pinstall/test/Makefile \

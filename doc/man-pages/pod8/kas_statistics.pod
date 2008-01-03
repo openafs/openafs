@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas statistics - Displays statistics from an Authentication Server process
+kas_statistics - Displays statistics from an Authentication Server process
 
 =head1 SYNOPSIS
 

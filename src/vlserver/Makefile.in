@@ -80,26 +80,26 @@ vldbint.cs.o: vldbint.cs.c vldbint.xdr.c
 vldbint.xdr.o: vldbint.xdr.c vldbint.h
 
 vldbint.cs.c: vldbint.xg
-	${RXGEN} -u -x -C -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -u -x -C -o $@ ${srcdir}/vldbint.xg
 
 vldbint.ss.c: vldbint.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/vldbint.xg
 
 vldbint.xdr.c: vldbint.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/vldbint.xg
 
 vldbint.h: vldbint.xg
-	${RXGEN} -u -x -h -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -u -x -h -o $@ ${srcdir}/vldbint.xg
 
 vldbint.cs.c: vldbint.h
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
 
 Kvldbint.cs.c: vldbint.xg
-	${RXGEN} -x -k -C -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -x -k -C -o $@ ${srcdir}/vldbint.xg
 
 Kvldbint.xdr.c: vldbint.xg
-	${RXGEN} -x -k -c -o $@ ${srcdir}/vldbint.xg
+	${RXGEN} -A -x -k -c -o $@ ${srcdir}/vldbint.xg
 
 libvldb.a: $(OBJS) AFS_component_version_number.o
 	$(RM) -f $@

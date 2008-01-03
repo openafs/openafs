@@ -29,7 +29,10 @@ RCSID
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
-
+#ifdef AFS_SUN510_ENV
+#include "h/ksynch.h"
+#include "h/sunddi.h"
+#endif
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
 #define	AFS_MINBUFFERS	100
@@ -46,6 +49,11 @@ char afs_zeros[AFS_ZEROS];
 char afs_rootVolumeName[64] = "";
 afs_uint32 rx_bindhost;
 
+#ifdef AFS_SUN510_ENV
+ddi_taskq_t *afs_taskq;
+krwlock_t afsifinfo_lock;
+#endif
+
 afs_int32 afs_initState = 0;
 afs_int32 afs_termState = 0;
 afs_int32 afs_setTime = 0;
@@ -58,6 +66,9 @@ static int afs_Go_Done = 0;
 extern struct interfaceAddr afs_cb_interface;
 static int afs_RX_Running = 0;
 static int afs_InitSetup_done = 0;
+afs_int32 afs_numcachefiles = -1;
+afs_int32 afs_numfilesperdir = -1;
+char afs_cachebasedir[1024];
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
@@ -79,6 +90,16 @@ afs_InitSetup(int preallocs)
 
     if (afs_InitSetup_done)
 	return EAGAIN;
+
+#ifdef AFS_SUN510_ENV
+    /* Initialize a RW lock for the ifinfo global array */
+    rw_init(&afsifinfo_lock, NULL, RW_DRIVER, NULL);
+
+    /* Create a taskq */
+    afs_taskq = ddi_taskq_create(NULL, "afs_taskq", 2, TASKQ_DEFAULTPRI, 0);
+
+    osi_StartNetIfPoller();
+#endif
 
 #ifndef AFS_NOSTATS
     /*
@@ -443,6 +464,18 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 }
 #endif
 
+static void
+wait_for_cachedefs(void) {
+#ifdef AFS_CACHE_VNODE_PATH
+    if (cacheDiskType != AFS_FCACHE_TYPE_MEM) 
+	while ((afs_numcachefiles < 1) || (afs_numfilesperdir < 1) ||
+	       (afs_cachebasedir[0] != '/')) {
+	    printf("afs: waiting for cache parameter definitions\n");
+	    afs_osi_Sleep(&afs_initState);
+	}
+#endif
+}
+
 /* leaving as is, probably will barf if we add prototypes here since it's likely being called
 with partial list */
 int
@@ -774,6 +807,12 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #ifdef AFS_DARWIN80_ENV
 	put_vfs_context();
 #endif
+    } else if (parm == AFSOP_CACHEDIRS) {
+	afs_numfilesperdir = parm2;
+	afs_osi_Wakeup(&afs_initState);
+    } else if (parm == AFSOP_CACHEFILES) {
+	afs_numcachefiles = parm2;
+	afs_osi_Wakeup(&afs_initState);
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
 	while (afs_initState < AFSOP_START_BKG)
@@ -787,7 +826,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    code = 0;
     } else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO
 	       || parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG
-	       || parm == AFSOP_CELLINFO) {
+	       || parm == AFSOP_CELLINFO || parm == AFSOP_CACHEBASEDIR) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
 	code = 0;
@@ -803,20 +842,49 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #ifdef AFS_DARWIN80_ENV
     get_vfs_context();
 #endif
-	    if (parm == AFSOP_CACHEFILE)
+	    if (parm == AFSOP_CACHEBASEDIR) {
+		strncpy(afs_cachebasedir, tbuffer, 1024);
+		afs_cachebasedir[1023] = '\0';
+		afs_osi_Wakeup(&afs_initState);
+	    } else if (parm == AFSOP_CACHEFILE) {
+		wait_for_cachedefs();
 		code = afs_InitCacheFile(tbuffer, 0);
-	    else if (parm == AFSOP_CACHEINFO)
+	    } else if (parm == AFSOP_CACHEINFO) {
+		wait_for_cachedefs();
 		code = afs_InitCacheInfo(tbuffer);
-	    else if (parm == AFSOP_VOLUMEINFO)
+	    } else if (parm == AFSOP_VOLUMEINFO) {
+		wait_for_cachedefs();
 		code = afs_InitVolumeInfo(tbuffer);
-	    else if (parm == AFSOP_CELLINFO)
+	    } else if (parm == AFSOP_CELLINFO) {
+		wait_for_cachedefs();
 		code = afs_InitCellInfo(tbuffer);
+	    }
 #ifdef AFS_DARWIN80_ENV
 	    put_vfs_context();
 #endif
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
+#ifdef AFS_CACHE_VNODE_PATH
+	if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
+	    afs_int32 dummy;
+	    
+	    wait_for_cachedefs();
+	    
+#ifdef AFS_DARWIN80_ENV
+	    get_vfs_context();
+#endif
+	    if ((afs_numcachefiles > 0) && (afs_numfilesperdir > 0) && 
+		(afs_cachebasedir[0] == '/')) {
+		for (dummy = 0; dummy < afs_numcachefiles; dummy++) {
+		    code = afs_InitCacheFile(NULL, dummy);
+		}
+	    }
+#ifdef AFS_DARWIN80_ENV
+	    put_vfs_context();
+#endif
+	}
+#endif
 	/* the generic initialization calls come here.  One parameter: should we do the
 	 * set-time operation on this workstation */
 	if (afs_Go_Done)
@@ -1187,12 +1255,15 @@ afs_shutdown(void)
 #endif
     afs_warn("\n");
 
+#ifdef AFS_AIX51_ENV
+    shutdown_daemons();
+#endif
+
     /* Close file only after daemons which can write to it are stopped. */
     if (afs_cacheInodep) {	/* memcache won't set this */
 	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
 	afs_cacheInodep = 0;
     }
-    return;			/* Just kill daemons for now */
 #ifdef notdef
     shutdown_CB();
     shutdown_AFS();
@@ -1200,21 +1271,17 @@ afs_shutdown(void)
     shutdown_rxevent();
     shutdown_rx();
     afs_shutdown_BKG();
+#endif
+    return;
     shutdown_bufferpackage();
-#endif
-#ifdef AFS_AIX51_ENV
-    shutdown_daemons();
-#endif
-#ifdef notdef
     shutdown_cache();
     shutdown_osi();
     shutdown_osinet();
     shutdown_osifile();
     shutdown_vnodeops();
-    shutdown_vfsops();
-    shutdown_exporter();
     shutdown_memcache();
 #if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)) && !defined(AFS_OSF_ENV)
+    shutdown_exporter();
     shutdown_nfsclnt();
 #endif
     shutdown_afstest();
@@ -1226,7 +1293,8 @@ afs_shutdown(void)
 */
     afs_warn(" ALL allocated tables\n");
     afs_shuttingdown = 0;
-#endif
+
+    return;			/* Just kill daemons for now */
 }
 
 void

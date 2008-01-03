@@ -210,7 +210,7 @@ if test "X$KRB5VENDOR" != X && test "X$KRB5VENDOR" != XK5SSL; then
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register])
 	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
 	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
@@ -269,8 +269,13 @@ else
 	ENABLE_KRB5='#'
 fi
 
+if test "x$ac_cv_krb5_cc_register_exists" = "xyes"; then
+        AC_DEFINE(HAVE_KRB5_CC_REGISTER, 1, [define if krb5_cc_register exists])
+fi
+
 AC_SUBST(DISABLE_KRB5)
 AC_SUBST(ENABLE_KRB5)
+AC_SUBST(BUILD_KRB5)
 AC_SUBST(KRB5CFLAGS)
 AC_SUBST(KRB5LIBS)
 dnl KRB5LIBS_RAW is not used; only output in case -lcom_err is missed.

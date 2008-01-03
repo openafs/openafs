@@ -22,13 +22,7 @@ RCSID
 #include <sys/file.h>
 #include <sys/param.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/types.h>
 #include <ubik.h>
 #include <afs/bubasics.h>
@@ -489,7 +483,7 @@ SaveText(call, lockHandle, textType, offset, flags, charListPtr)
 }
 
 /* debug support */
-
+void
 saveTextToFile(ut, tbPtr)
      struct ubik_trans *ut;
      struct textBlock *tbPtr;

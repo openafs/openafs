@@ -34,6 +34,7 @@ long cm_daemonCheckDownInterval  = 180;
 long cm_daemonCheckUpInterval    = 240;
 long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
+long cm_daemonCheckVolCBInterval = 0;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
@@ -101,7 +102,7 @@ void cm_BkgDaemon(long parm)
 	}
 
         osi_QRemoveHT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **) &cm_bkgListEndp, &rp->q);
-        osi_assert(cm_bkgQueueCount-- > 0);
+        osi_assertx(cm_bkgQueueCount-- > 0, "cm_bkgQueueCount 0");
         lock_ReleaseWrite(&cm_daemonLock);
 
 	osi_Log1(afsd_logp,"cm_BkgDaemon processing request 0x%p", rp);
@@ -275,6 +276,13 @@ cm_DaemonCheckInit(void)
     afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
 
     dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckVolCBInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckVolCBInterval = dummy;
+    afsi_log("daemonCheckVolCBInterval is %d", cm_daemonCheckVolCBInterval);
+
+    dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
@@ -305,6 +313,7 @@ void cm_Daemon(long parm)
     time_t lastLockCheck;
     time_t lastVolCheck;
     time_t lastCBExpirationCheck;
+    time_t lastVolCBRenewalCheck;
     time_t lastDownServerCheck;
     time_t lastUpServerCheck;
     time_t lastTokenCacheCheck;
@@ -344,6 +353,8 @@ void cm_Daemon(long parm)
     now = osi_Time();
     lastVolCheck = now - cm_daemonCheckVolInterval/2 + (rand() % cm_daemonCheckVolInterval);
     lastCBExpirationCheck = now - cm_daemonCheckCBInterval/2 + (rand() % cm_daemonCheckCBInterval);
+    if (cm_daemonCheckVolCBInterval)
+        lastVolCBRenewalCheck = now - cm_daemonCheckVolCBInterval/2 + (rand() % cm_daemonCheckVolCBInterval);
     lastLockCheck = now - cm_daemonCheckLockInterval/2 + (rand() % cm_daemonCheckLockInterval);
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
@@ -356,7 +367,10 @@ void cm_Daemon(long parm)
 	 */
 	smb_RestartListeners();
 
-	if (configureFirewall) {
+        if (daemon_ShutdownFlag == 1)
+            return;
+
+        if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
 	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
 	    case 0:
@@ -381,48 +395,79 @@ void cm_Daemon(long parm)
         now = osi_Time();
 
         /* check down servers */
-        if (now > lastDownServerCheck + cm_daemonCheckDownInterval) {
+        if (now > lastDownServerCheck + cm_daemonCheckDownInterval &&
+            daemon_ShutdownFlag == 0) {
             lastDownServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
         /* check up servers */
-        if (now > lastUpServerCheck + cm_daemonCheckUpInterval) {
+        if (now > lastUpServerCheck + cm_daemonCheckUpInterval &&
+            daemon_ShutdownFlag == 0) {
             lastUpServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastVolCheck + cm_daemonCheckVolInterval) {
+        if (now > lastVolCheck + cm_daemonCheckVolInterval &&
+            daemon_ShutdownFlag == 0) {
             lastVolCheck = now;
             cm_RefreshVolumes();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) {
+        if (cm_daemonCheckVolCBInterval && 
+            now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval &&
+            daemon_ShutdownFlag == 0) {
+            lastVolCBRenewalCheck = now;
+            cm_VolumeRenewROCallbacks();
+            if (daemon_ShutdownFlag == 1)
+                return;
+            now = osi_Time();
+        }
+
+        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval &&
+            daemon_ShutdownFlag == 0) {
             lastVolCheck = now;
             cm_CheckOfflineVolumes();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval) {
+        if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval &&
+            daemon_ShutdownFlag == 0) {
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastLockCheck + cm_daemonCheckLockInterval) {
+        if (now > lastLockCheck + cm_daemonCheckLockInterval &&
+            daemon_ShutdownFlag == 0) {
             lastLockCheck = now;
             cm_CheckLocks();
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
-        if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
+        if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval &&
+            daemon_ShutdownFlag == 0) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+            if (daemon_ShutdownFlag == 1)
+                return;
 	    now = osi_Time();
         }
 
@@ -445,9 +490,9 @@ void cm_Daemon(long parm)
             }
         }
 
-	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
         if (daemon_ShutdownFlag == 1)
             return;
+	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
     }
 }       
 
@@ -471,21 +516,21 @@ void cm_InitDaemon(int nDaemons)
 	/* creating IP Address Change monitor daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_IpAddrDaemon, 0, 0, &pid, "cm_IpAddrDaemon");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "cm_IpAddrDaemon thread creation failure");
         thrd_CloseHandle(phandle);
 #endif /* DJGPP */
 
         /* creating pinging daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
-        osi_assert(phandle != NULL);
+        osi_assertx(phandle != NULL, "cm_Daemon thread creation failure");
         thrd_CloseHandle(phandle);
 
 	for(i=0; i < nDaemons; i++) {
             phandle = thrd_Create((SecurityAttrib) 0, 0,
                                    (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
                                    "cm_BkgDaemon");
-            osi_assert(phandle != NULL);
+            osi_assertx(phandle != NULL, "cm_BkgDaemon thread creation failure");
             thrd_CloseHandle(phandle);
         }
     }

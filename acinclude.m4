@@ -120,6 +120,9 @@ AC_ARG_ENABLE(optimize-kernel,
 AC_ARG_ENABLE(debug,
 [  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
 )
+AC_ARG_ENABLE(strip-binaries,
+[  --disable-strip-binaries             disable stripping of symbol information from binaries (defaults to enabled)],, enable_strip_binaries="maybe"
+)
 AC_ARG_ENABLE(optimize,
 [  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
 )
@@ -349,6 +352,14 @@ else
 		amd64-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="amd64_nbsd20"
+			;;
+		x86_64-*-netbsd*3.[0-8]*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="amd64_nbsd30"
+			;;
+		x86_64-*-netbsd*4.[0-8]*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="amd64_nbsd40"
 			;;
 		powerpc-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
@@ -625,10 +636,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 
 		 LINUX_KERNEL_COMPILE_WORKS
+                 LINUX_KBUILD_USES_EXTRA_CFLAGS
+                 LINUX_HAVE_CURRENT_KERNEL_TIME
+                 LINUX_KMEM_CACHE_INIT
+		 LINUX_HAVE_KMEM_CACHE_T
+		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_EXPORTFS_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
@@ -656,12 +673,15 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
+		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
+		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
+                 LINUX_KEY_TYPE_H_EXISTS
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -679,6 +699,7 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 LINUX_FREEZER_H_EXISTS
+		 LINUX_HAVE_SVC_ADDR_IN
 		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
 		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
 		 fi
@@ -689,6 +710,7 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_GENERIC_FILE_AIO_READ
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
+		 LINUX_SYSCTL_TABLE_CHECKING
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -761,6 +783,12 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 fi
 		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
 		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
+		 fi
+		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
+		  AC_DEFINE(EXPORTFS_H_EXISTS, 1, [define if linux/exportfs.h exists])
+		 fi
+		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
+		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if key-type.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE([DEFINED_FOR_EACH_PROCESS], 1, [define if for_each_process defined])
@@ -900,17 +928,41 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_splice" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SPLICE, 1, [define if your struct file_operations has splice_write and splice_read])
+		 fi
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
 		 fi
+		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
+		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
+		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
+		 fi
+		 if test "x$ac_cv_linux_kmem_cache_init" = "xyes" ; then
+		  AC_DEFINE(KMEM_CACHE_INIT, 1, [define for new kmem_cache init function parameters])
+		 fi
+		 if test "x$ac_cv_linux_have_current_kernel_time" = "xyes" ; then
+		  AC_DEFINE(HAVE_CURRENT_KERNEL_TIME, 1, [define if current_kernel_time() exists])
+		 fi
+		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
+		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
+		 if test "x$ac_cv_linux_have_svc_addr_in" = "xyes"; then
+		  AC_DEFINE(HAVE_SVC_ADDR_IN, 1, [define if svc_add_in exists])
+                 fi
                 :
 		fi
 esac
@@ -1226,7 +1278,7 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
+AC_CHECK_HEADERS(stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)

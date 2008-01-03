@@ -121,12 +121,12 @@ extern void osi_BaseInit(void);
 
 /* and friendly macros */
 
-#define lock_AssertRead(x) osi_assert(lock_GetRWLockState(x) & OSI_RWLOCK_READHELD)
+#define lock_AssertRead(x) osi_assertx(lock_GetRWLockState(x) & OSI_RWLOCK_READHELD, "!OSI_RWLOCK_READHELD")
 
-#define lock_AssertWrite(x) osi_assert(lock_GetRWLockState(x) & OSI_RWLOCK_WRITEHELD)
+#define lock_AssertWrite(x) osi_assertx(lock_GetRWLockState(x) & OSI_RWLOCK_WRITEHELD, "!OSI_RWLOCK_WRITEHELD")
 
-#define lock_AssertAny(x) osi_assert(lock_GetRWLockState(x) != 0)
+#define lock_AssertAny(x) osi_assertx(lock_GetRWLockState(x) != 0, "!(OSI_RWLOCK_READHELD | OSI_RWLOCK_WRITEHELD)")
 
-#define lock_AssertMutex(x) osi_assert(lock_GetMutexState(x) & OSI_MUTEX_HELD)
+#define lock_AssertMutex(x) osi_assertx(lock_GetMutexState(x) & OSI_MUTEX_HELD, "!OSI_MUTEX_HELD")
 
 #endif /*_OSIBASEL_H_ENV_ */

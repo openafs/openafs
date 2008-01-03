@@ -30,13 +30,7 @@ RCSID
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsutil.h>
 #include <time.h>
 #include <afs/com_err.h>
@@ -823,7 +817,7 @@ process_udp_request(ksoc, pkt)
     return;
 }
 
-static
+static void
 SocketListener()
 {
     fd_set rfds;

@@ -15,6 +15,7 @@ RCSID
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <string.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
@@ -24,13 +25,6 @@ RCSID
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/keys.h>
 #include "vlserver.h"
@@ -61,17 +55,17 @@ static char rxinfo_str[128];	/* Need rxinfo string to be non-local */
 static int put_attributeentry();
 static int put_nattributeentry();
 static int RemoveEntry();
-static ReleaseEntry();
+static void ReleaseEntry();
 static int check_vldbentry();
 static int check_nvldbentry();
 static int vldbentry_to_vlentry();
 static int nvldbentry_to_vlentry();
 static get_vldbupdateentry();
 static int repsite_exists();
-static repsite_compress();
-static vlentry_to_vldbentry();
-static vlentry_to_nvldbentry();
-static vlentry_to_uvldbentry();
+static void repsite_compress();
+static void vlentry_to_vldbentry();
+static void vlentry_to_nvldbentry();
+static void vlentry_to_uvldbentry();
 static int InvalidVolname();
 static int InvalidVoltype();
 static int InvalidOperation();
@@ -2585,7 +2579,7 @@ RemoveEntry(trans, entryptr, tentry)
     return 0;
 }
 
-static
+static void
 ReleaseEntry(tentry, releasetype)
      struct nvlentry *tentry;
      afs_int32 releasetype;
@@ -2890,7 +2884,7 @@ repsite_exists(VlEntry, server, partition)
 
 
 /* Repsite table compression: used when deleting a repsite entry so that all active repsite entries are on the top of the table. */
-static
+static void
 repsite_compress(VlEntry, offset)
      struct nvlentry *VlEntry;
      int offset;
@@ -2911,7 +2905,7 @@ repsite_compress(VlEntry, offset)
 
 
 /* Convert from the internal (compacted) vldb entry to the external representation used by the interface. */
-static
+static void
 vlentry_to_vldbentry(VlEntry, VldbEntry)
      struct nvlentry *VlEntry;
      struct vldbentry *VldbEntry;
@@ -2953,7 +2947,7 @@ vlentry_to_vldbentry(VlEntry, VldbEntry)
 
 
 /* Convert from the internal (compacted) vldb entry to the external representation used by the interface. */
-static
+static void
 vlentry_to_nvldbentry(VlEntry, VldbEntry)
      struct nvlentry *VlEntry;
      struct nvldbentry *VldbEntry;
@@ -2993,7 +2987,7 @@ vlentry_to_nvldbentry(VlEntry, VldbEntry)
     VldbEntry->flags = VlEntry->flags;
 }
 
-static
+static void
 vlentry_to_uvldbentry(VlEntry, VldbEntry)
      struct nvlentry *VlEntry;
      struct uvldbentry *VldbEntry;

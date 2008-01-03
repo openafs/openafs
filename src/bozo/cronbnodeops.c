@@ -23,19 +23,14 @@ RCSID
 #include <io.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include "bnode.h"
+#include "bosprototypes.h"
 
 static int cron_timeout(), cron_getstat(), cron_setstat(), cron_delete();
 static int cron_procexit(), cron_getstring(), cron_getparm(), cron_restartp();

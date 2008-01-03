@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts adduser - Adds a user or machine to a Protection Database group
+pts_adduser - Adds a user or machine to a Protection Database group
 
 =head1 SYNOPSIS
 

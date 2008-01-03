@@ -38,14 +38,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -72,7 +65,7 @@ struct tokenInfo {
 
 
 int 
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *itp;
     afs_int32 code, i;
@@ -126,7 +119,7 @@ main(int argc, char *argv[])
     initialize_ktc_error_table();
     initialize_rx_error_table();
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "Release Kerberos authentication");
     cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
@@ -259,6 +252,7 @@ unlog_NormalizeCellNames(char **list, int size)
 	*list = newCellName;
     }
     afsconf_Close(conf);
+    return 0;
 }
 
 /*
@@ -284,4 +278,5 @@ unlog_VerifyUnlog(char **cellList, int cellListSize, struct token_list *tokenLis
 	    fprintf(stderr, "unlog: Warning - no tokens held for cell %s\n",
 		    cellList[index]);
     }
+    return 0;
 }

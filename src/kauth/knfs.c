@@ -27,20 +27,11 @@ RCSID
 #include <netdb.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
-
-
-extern struct cmd_syndesc *cmd_CreateSyntax();
 
 /*
 Modifications:
@@ -358,10 +349,8 @@ NFSCopyToken(ahost, auid)
     return code;
 }
 
-static
-cmdproc(as, arock)
-     register struct cmd_syndesc *as;
-     afs_int32 arock;
+static int
+cmdproc(register struct cmd_syndesc *as, void *arock)
 {
     register struct hostent *the;
     char *tp, *sysname = 0;
@@ -469,7 +458,7 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "copy tickets for NFS");
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
     cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL,

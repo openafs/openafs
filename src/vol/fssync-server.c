@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 /*
@@ -74,15 +74,7 @@ RCSID
 #include <afs/assert.h>
 #endif /* AFS_PTHREAD_ENV */
 #include <signal.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -97,6 +89,10 @@ RCSID
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+
+#ifdef HAVE_POLL
+#include <sys/poll.h>
+#endif /* HAVE_POLL */
 
 #ifdef USE_UNIX_SOCKETS
 #include <sys/un.h>
@@ -140,13 +136,17 @@ static void FSYNC_Drop();
 static void AcceptOn();
 static void AcceptOff();
 static void InitHandler();
-static void CallHandler(fd_set * fdsetp);
 static int AddHandler();
 static int FindHandler();
 static int FindHandler_r();
 static int RemoveHandler();
+#if defined(HAVE_POLL) && defined (AFS_PTHREAD_ENV)
+static void CallHandler(struct pollfd *fds, int nfds, int mask);
+static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
+#else
+static void CallHandler(fd_set * fdsetp);
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
-
+#endif
 extern int LogLevel;
 
 static afs_int32 FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res);
@@ -203,7 +203,11 @@ FSYNC_fsInit(void)
 #endif /* AFS_PTHREAD_ENV */
 }
 
+#if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
+static struct pollfd FSYNC_readfds[MAXHANDLERS];
+#else
 static fd_set FSYNC_readfds;
+#endif
 
 #ifdef USE_UNIX_SOCKETS
 static int
@@ -309,6 +313,12 @@ FSYNC_sync()
     InitHandler();
     AcceptOn();
     for (;;) {
+#if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
+        int nfds;
+        GetHandler(FSYNC_readfds, MAXHANDLERS, POLLIN|POLLPRI, &nfds);
+        if (poll(FSYNC_readfds, nfds, -1) >=1)
+	    CallHandler(FSYNC_readfds, nfds, POLLIN|POLLPRI);
+#else
 	int maxfd;
 	GetHandler(&FSYNC_readfds, &maxfd);
 	/* Note: check for >= 1 below is essential since IOMGR_select
@@ -320,6 +330,7 @@ FSYNC_sync()
 	if (IOMGR_Select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #endif /* AFS_PTHREAD_ENV */
 	    CallHandler(&FSYNC_readfds);
+#endif
     }
 }
 
@@ -369,12 +380,27 @@ FSYNC_com(int fd)
 	return;
     }
 
+    if (com.recv_len < sizeof(com.hdr)) {
+	Log("FSSYNC_com:  invalid protocol message length (%u)\n", com.recv_len);
+	res.hdr.response = SYNC_COM_ERROR;
+	res.hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
     if (com.hdr.proto_version != FSYNC_PROTO_VERSION) {
 	Log("FSYNC_com:  invalid protocol version (%u)\n", com.hdr.proto_version);
 	res.hdr.response = SYNC_COM_ERROR;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	goto respond;
     }
+
+    if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
+	res.hdr.response = SYNC_OK;
+	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	goto respond;
+    }
+
 
     VOL_LOCK;
     switch (com.hdr.command) {
@@ -396,10 +422,6 @@ FSYNC_com(int fd)
     case FSYNC_VOL_STATS_HDR:
     case FSYNC_VOL_STATS_VLRU:
 	res.hdr.response = FSYNC_com_StatsOp(fd, &com, &res);
-	break;
-    case SYNC_COM_CHANNEL_CLOSE:
-	res.hdr.response = SYNC_OK;
-	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	break;
     default:
 	res.hdr.response = SYNC_BAD_COMMAND;
@@ -1129,6 +1151,24 @@ InitHandler()
     ReleaseWriteLock(&FSYNC_handler_lock);
 }
 
+#if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
+static void
+CallHandler(struct pollfd *fds, int nfds, int mask)
+{
+    int i;
+    int handler;
+    ObtainReadLock(&FSYNC_handler_lock);
+    for (i = 0; i < nfds; i++) {
+        if (fds[i].revents & mask) {
+	    handler = FindHandler_r(fds[i].fd);
+            ReleaseReadLock(&FSYNC_handler_lock);
+            (*HandlerProc[handler]) (fds[i].fd);
+	    ObtainReadLock(&FSYNC_handler_lock);
+        }
+    }
+    ReleaseReadLock(&FSYNC_handler_lock);
+}
+#else
 static void
 CallHandler(fd_set * fdsetp)
 {
@@ -1143,6 +1183,7 @@ CallHandler(fd_set * fdsetp)
     }
     ReleaseReadLock(&FSYNC_handler_lock);
 }
+#endif
 
 static int
 AddHandler(int afd, int (*aproc) ())
@@ -1198,6 +1239,24 @@ RemoveHandler(register int afd)
     return 1;
 }
 
+#if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
+static void
+GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
+{
+    int i;
+    int fdi = 0;
+    ObtainReadLock(&FSYNC_handler_lock);
+    for (i = 0; i < MAXHANDLERS; i++)
+	if (HandlerFD[i] != -1) {
+	    assert(fdi<maxfds);
+	    fds[fdi].fd = HandlerFD[i];
+	    fds[fdi].events = events;
+	    fds[fdi].revents = 0;
+	    fdi++;
+	}
+    *nfds = fdi;
+}
+#else
 static void
 GetHandler(fd_set * fdsetp, int *maxfdp)
 {
@@ -1214,5 +1273,6 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
     *maxfdp = maxfd;
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */
 }
+#endif /* HAVE_POLL && AFS_PTHREAD_ENV */
 
 #endif /* FSSYNC_BUILD_SERVER */

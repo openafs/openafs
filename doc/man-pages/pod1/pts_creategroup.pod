@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts creategroup - Creates an (empty) Protection Database group entry
+pts_creategroup - Creates an (empty) Protection Database group entry
 
 =head1 SYNOPSIS
 

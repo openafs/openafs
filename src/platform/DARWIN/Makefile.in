@@ -21,10 +21,10 @@ dest: \
 	${DEST}/etc/afssettings
 
 ${DESTDIR}${sbindir}/afssettings: afssettings
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/etc/afssettings: afssettings
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 clean:
 	$(RM) -f *.o core afssettings AFS_component_version_number.c 

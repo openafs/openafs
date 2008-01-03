@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs getcrypt - Displays the state of encryption for AFS file transfers
+fs_getcrypt - Displays the state of encryption for AFS file transfers
 
 =head1 SYNOPSIS
 

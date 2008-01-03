@@ -14,8 +14,6 @@
 
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
 
-enum volstatus {vl_online, vl_busy, vl_offline, vl_alldown, vl_unknown};
-
 typedef struct cm_vol_state {
     afs_uint32      ID;                 /* by mx */
     struct cm_volume *nextp;            /* volumeIDHashTable; by cm_volumeLock */
@@ -39,6 +37,7 @@ typedef struct cm_volume {
     osi_mutex_t mx;
     afs_uint32 flags;			/* by mx */
     afs_uint32 refCount;		/* by cm_volumeLock */
+    time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */
@@ -118,4 +117,7 @@ extern void cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 
 extern void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum volstatus old, enum volstatus new);
 
+extern enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
+
+extern void cm_VolumeRenewROCallbacks(void);
 #endif /*  __CM_VOLUME_H_ENV__ */

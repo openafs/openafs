@@ -28,13 +28,7 @@ RCSID
 #include <sys/statfs.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/dirpath.h>
 #include <errno.h>

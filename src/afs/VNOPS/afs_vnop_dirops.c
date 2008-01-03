@@ -132,7 +132,9 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ObtainWriteLock(&tdc->lock, 632);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
+	ObtainWriteLock(&afs_xdcache, 294);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
+	ReleaseWriteLock(&afs_xdcache);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- use invalid value */
 	    DZap(tdc);

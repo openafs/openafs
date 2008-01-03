@@ -18,6 +18,10 @@ RCSID
     ("$Header$");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#include <linux/fs.h>
+#ifdef EXPORTFS_H_EXISTS
+#include <linux/exportfs.h>
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_dynroot.h"

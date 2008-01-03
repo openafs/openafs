@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts membership - Displays the membership list for a user or group
+pts_membership - Displays the membership list for a user or group
 
 =head1 SYNOPSIS
 

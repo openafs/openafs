@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs newcell - Changes the kernel-resident list of a cell's database servers
+fs_newcell - Changes the kernel-resident list of a cell's database servers
 
 =head1 SYNOPSIS
 

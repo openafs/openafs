@@ -32,6 +32,7 @@ RCSID
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
 #include "des/des.h"
+#include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"
 #include "afs/keys.h"
@@ -50,8 +51,11 @@ RCSID
 #include <netdb.h>
 #endif
 #if defined(AFS_RXK5) && !defined(AFS_NT40_ENV)
+#include <string.h>
+#include <stdio.h>
 #include <des.h>
 #endif
+#include <des_prototypes.h>
 #include <rx/rxkad.h>
 #include <rx/rx.h>
 #include "cellconfig.h"
@@ -66,9 +70,7 @@ RCSID
 
 /* return a null security object if nothing else can be done */
 static afs_int32
-QuickAuth(astr, aindex)
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
+QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 {
     register struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
@@ -118,11 +120,10 @@ afsconf_ServerAuth(void *parm1,
 #endif /* !defined(UKERNEL) */
 
 static afs_int32
-GenericAuth(adir, astr, aindex, flags)
-     struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
-     afs_int32 flags;
+GenericAuth(struct afsconf_dir *adir,
+    struct rx_securityClass **astr,
+    afs_int32 *aindex,
+    afs_int32 flags)
 {
     char tbuffer[256];
     struct ktc_encryptionKey key, session;
@@ -227,10 +228,9 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(adir, astr, aindex)
-     struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
+afsconf_ClientAuthSecure(struct afsconf_dir *adir, 
+			 struct rx_securityClass **astr, 
+			 afs_int32 *aindex)
 {
     afs_int32 rc;
 

@@ -58,6 +58,7 @@ RCSID
 #endif /* AFS_LINUX20_ENV */
 #else
 #include <stdio.h>
+#include <string.h>
 #endif
 #include "xdr.h"
 

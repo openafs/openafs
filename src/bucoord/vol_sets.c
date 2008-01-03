@@ -41,6 +41,7 @@ extern char *whoami;
 extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf, char *name);
 extern void FreeVolumeSet(struct bc_volumeSet *avset);
 
+static ListVolSet();
 
 /* ------------------------------------
  * command level routines
@@ -57,11 +58,10 @@ extern void FreeVolumeSet(struct bc_volumeSet *avset);
  *	parm 3 is volume regexp
  */
 
-bc_AddVolEntryCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_AddVolEntryCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    register int code;
     char *volSetName, *serverName, *partitionName, *volRegExp;
     udbClientTextP ctPtr;
     struct bc_volumeSet *tset;
@@ -129,13 +129,11 @@ bc_AddVolEntryCmd(as, arock)
  *	name of new volume set
  */
 
-afs_int32
-bc_AddVolSetCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_AddVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is vol set name */
-    register afs_int32 code;
+    register int code;
     register struct cmd_item *ti;
     udbClientTextP ctPtr;
     afs_int32 flags;
@@ -190,12 +188,10 @@ bc_AddVolSetCmd(as, arock)
  *	parm 1 is entry # (integer, 1 based)
  */
 
-afs_int32
-bc_DeleteVolEntryCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DeleteVolEntryCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    register int code;
     afs_int32 entry;
     char *vsname;
     udbClientTextP ctPtr;
@@ -279,13 +275,11 @@ bc_DeleteVolEntryCmd(as, arock)
  *	name of volumeset to delete
  */
 
-afs_int32
-bc_DeleteVolSetCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DeleteVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is vol set name */
-    register afs_int32 code;
+    register int code;
     register struct cmd_item *ti;
     udbClientTextP ctPtr;
     afs_int32 c;
@@ -364,13 +358,13 @@ ListVolSet(struct bc_volumeSet *aset)
   *     optional parameter specifies a volumeset name
   */
 
-afs_int32
-bc_ListVolSetCmd(struct cmd_syndesc *as, char *arock)
+int
+bc_ListVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is optional volume set to display */
     register struct bc_volumeSet *tset;
     register struct cmd_item *ti;
-    afs_int32 code = 0;
+    int code = 0;
 
     code = bc_UpdateVolumeSet();
     if (code) {

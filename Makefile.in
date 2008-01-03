@@ -443,7 +443,7 @@ volser_depinstall: pinstall rxgen comerr
 	${COMPILE_PART1} volser ${COMPILE_DEPINSTALL}
 
 ${DEST}/bin/dedebug: dedebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 
 #
@@ -722,6 +722,7 @@ clean2:
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} platform ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}

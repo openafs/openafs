@@ -66,6 +66,8 @@ RCSID
 
 static const unsigned long ADMIN_TICKET_LIFETIME = 24 * 3600;
 
+static const unsigned long SERVER_TTL = 10 * 60;
+
 /*
  * We need a way to track whether or not the client library has been 
  * initialized.  We count on the fact that the other library initialization
@@ -972,6 +974,8 @@ if (!t_handle->kas_token_set) continue;
 	c_handle->begin_magic = BEGIN_MAGIC;
 	c_handle->is_valid = 1;
 	c_handle->is_null = 0;
+	c_handle->server_list = NULL;
+	c_handle->server_ttl = 0;
 	c_handle->end_magic = END_MAGIC;
 	*cellHandleP = (void *)c_handle;
     }
@@ -1046,9 +1050,11 @@ afsclient_NullCellOpen(void **cellHandleP, afs_status_p st)
     c_handle->kas_valid = 0;
     c_handle->pts_valid = 0;
     c_handle->vos_valid = 0;
-    c_handle->kas = 0;
-    c_handle->pts = 0;
-    c_handle->vos = 0;
+    c_handle->kas = NULL;
+    c_handle->pts = NULL;
+    c_handle->vos = NULL;
+    c_handle->server_list = NULL;
+    c_handle->server_ttl = 0;
     *cellHandleP = (void *)c_handle;
     rc = 1;
 
@@ -1097,6 +1103,8 @@ afsclient_CellClose(const void *cellHandle, afs_status_p st)
 	goto fail_afsclient_CellClose;
     }
 
+    if (c_handle->server_list)
+	free(c_handle->server_list);
     if (c_handle->kas_valid)
 	ubik_ClientDestroy(c_handle->kas);
     if (c_handle->pts_valid)
@@ -1851,6 +1859,7 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
     afs_admin_iterator_p iter =
 	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     server_get_p serv = (server_get_p) calloc(1, sizeof(server_get_t));
+    server_get_p serv_cache = NULL;
     const char *cellName;
     void *database_iter;
     util_databaseServerEntry_t database_entry;
@@ -1873,57 +1882,77 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
 	goto fail_afsclient_AFSServerGetBegin;
     }
 
-    /*
-     * Retrieve the list of database servers for this cell.
-     */
-
-    if (!afsclient_CellNameGet(cellHandle, &cellName, &tst)) {
-	goto fail_afsclient_AFSServerGetBegin;
+  restart:
+    LOCK_GLOBAL_MUTEX;
+    if (c_handle->server_list != NULL && c_handle->server_ttl < time(NULL)) {
+	serv_cache = c_handle->server_list;
+	c_handle->server_list = NULL;
     }
+    UNLOCK_GLOBAL_MUTEX;
 
-    if (!util_DatabaseServerGetBegin(cellName, &database_iter, &tst)) {
-	goto fail_afsclient_AFSServerGetBegin;
-    }
+    if (c_handle->server_list == NULL) {
+	if (serv_cache == NULL) {
+	    serv_cache = (server_get_p) calloc(1, sizeof(server_get_t));
 
-    while (util_DatabaseServerGetNext(database_iter, &database_entry, &tst)) {
-	serv->server[serv->total].serverAddress[0] =
-	    database_entry.serverAddress;
-	serv->server[serv->total].serverType = DATABASE_SERVER;
-	serv->total++;
-    }
+	    if (serv_cache == NULL) {
+		tst = ADMNOMEM;
+		goto fail_afsclient_AFSServerGetBegin;
+	    }
+	}
 
-    if (tst != ADMITERATORDONE) {
-	util_DatabaseServerGetDone(database_iter, 0);
-	goto fail_afsclient_AFSServerGetBegin;
-    }
-
-    if (!util_DatabaseServerGetDone(database_iter, &tst)) {
-	goto fail_afsclient_AFSServerGetBegin;
-    }
-
-    /*
-     * Retrieve the list of file servers for this cell.
-     */
-
-    if (!vos_FileServerGetBegin(cellHandle, 0, &fileserver_iter, &tst)) {
-	goto fail_afsclient_AFSServerGetBegin;
-    }
-
-    while (vos_FileServerGetNext(fileserver_iter, &fileserver_entry, &tst)) {
 	/*
-	 * See if any of the addresses returned in this fileserver_entry
-	 * structure already exist in the list of servers we're building.
-	 * If not, create a new record for this server.
+	 * Retrieve the list of database servers for this cell.
 	 */
-	is_dup = 0;
-	for (iserv = 0; iserv < serv->total; iserv++) {
-	    for (ientryaddr = 0; ientryaddr < fileserver_entry.count;
-		 ientryaddr++) {
-		for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
-		     iservaddr++) {
-		    if (serv->server[iserv].serverAddress[iservaddr] ==
-			fileserver_entry.serverAddress[ientryaddr]) {
-			is_dup = 1;
+
+	if (!afsclient_CellNameGet(c_handle, &cellName, &tst)) {
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	if (!util_DatabaseServerGetBegin(cellName, &database_iter, &tst)) {
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	while (util_DatabaseServerGetNext(database_iter, &database_entry, &tst)) {
+	    serv->server[serv->total].serverAddress[0] =
+		database_entry.serverAddress;
+	    serv->server[serv->total].serverType = DATABASE_SERVER;
+	    serv->total++;
+	}
+
+	if (tst != ADMITERATORDONE) {
+	    util_DatabaseServerGetDone(database_iter, 0);
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	if (!util_DatabaseServerGetDone(database_iter, &tst)) {
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	/*
+ 	 * Retrieve the list of file servers for this cell.
+	 */
+
+	if (!vos_FileServerGetBegin(c_handle, 0, &fileserver_iter, &tst)) {
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	while (vos_FileServerGetNext(fileserver_iter, &fileserver_entry, &tst)) {
+	    /*
+	     * See if any of the addresses returned in this fileserver_entry
+	     * structure already exist in the list of servers we're building.
+	     * If not, create a new record for this server.
+	     */
+	    is_dup = 0;
+	    for (iserv = 0; iserv < serv->total; iserv++) {
+		for (ientryaddr = 0; ientryaddr < fileserver_entry.count; ientryaddr++) {
+		    for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS; iservaddr++) {
+			if (serv->server[iserv].serverAddress[iservaddr] ==
+			     fileserver_entry.serverAddress[ientryaddr]) {
+			    is_dup = 1;
+			    break;
+			}
+		    }
+		    if (is_dup) {
 			break;
 		    }
 		}
@@ -1931,72 +1960,80 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
 		    break;
 		}
 	    }
+
 	    if (is_dup) {
-		break;
+		serv->server[iserv].serverType |= FILE_SERVER;
+	    } else {
+		iserv = serv->total++;
+		serv->server[iserv].serverType = FILE_SERVER;
 	    }
-	}
 
-	if (is_dup) {
-	    serv->server[iserv].serverType |= FILE_SERVER;
-	} else {
-	    iserv = serv->total++;
-	    serv->server[iserv].serverType = FILE_SERVER;
-	}
+	    /*
+	     * Add the addresses from the vldb list to the serv->server[iserv]
+	     * record.  Remember that VLDB's list-of-addrs is not guaranteed
+	     * to be unique in a particular entry, or to return only one entry
+	     * per machine--so when we add addresses, always check for
+	     * duplicate entries.
+	     */
 
-	/*
-	 * Add the addresses from the vldb list to the serv->server[iserv]
-	 * record.  Remember that VLDB's list-of-addrs is not guaranteed
-	 * to be unique in a particular entry, or to return only one entry
-	 * per machine--so when we add addresses, always check for
-	 * duplicate entries.
-	 */
-
-	for (ientryaddr = 0; ientryaddr < fileserver_entry.count;
-	     ientryaddr++) {
-	    for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
-		 iservaddr++) {
-		if (serv->server[iserv].serverAddress[iservaddr] ==
-		    fileserver_entry.serverAddress[ientryaddr]) {
-		    break;
-		}
-	    }
-	    if (iservaddr == AFS_MAX_SERVER_ADDRESS) {
-		for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
-		     iservaddr++) {
-		    if (!serv->server[iserv].serverAddress[iservaddr]) {
-			serv->server[iserv].serverAddress[iservaddr] =
-			    fileserver_entry.serverAddress[ientryaddr];
+	    for (ientryaddr = 0; ientryaddr < fileserver_entry.count; ientryaddr++) {
+		for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS; iservaddr++) {
+		    if (serv->server[iserv].serverAddress[iservaddr] ==
+			 fileserver_entry.serverAddress[ientryaddr]) {
 			break;
+		    }
+		}
+		if (iservaddr == AFS_MAX_SERVER_ADDRESS) {
+		    for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
+			  iservaddr++) {
+			if (!serv->server[iserv].serverAddress[iservaddr]) {
+			    serv->server[iserv].serverAddress[iservaddr] =
+				fileserver_entry.serverAddress[ientryaddr];
+			    break;
+			}
 		    }
 		}
 	    }
 	}
-    }
 
-    if (tst != ADMITERATORDONE) {
-	vos_FileServerGetDone(fileserver_iter, 0);
-	goto fail_afsclient_AFSServerGetBegin;
-    }
-
-    if (!vos_FileServerGetDone(fileserver_iter, &tst)) {
-	goto fail_afsclient_AFSServerGetBegin;
-    }
-
-    /*
-     * Iterate over the list and fill in the hostname of each of the servers
-     */
-
-    LOCK_GLOBAL_MUTEX;
-    for (iserv = 0; iserv < serv->total; iserv++) {
-	int addr = htonl(serv->server[iserv].serverAddress[0]);
-	host = gethostbyaddr((const char *)&addr, sizeof(int), AF_INET);
-	if (host != NULL) {
-	    strncpy(serv->server[iserv].serverName, host->h_name,
-		    AFS_MAX_SERVER_NAME_LEN);
-            serv->server[iserv].serverName[AFS_MAX_SERVER_NAME_LEN - 1] = '\0';
+	if (tst != ADMITERATORDONE) {
+	    vos_FileServerGetDone(fileserver_iter, 0);
+	    goto fail_afsclient_AFSServerGetBegin;
 	}
+
+	if (!vos_FileServerGetDone(fileserver_iter, &tst)) {
+	    goto fail_afsclient_AFSServerGetBegin;
+	}
+
+	/*
+	 * Iterate over the list and fill in the hostname of each of the servers
+	 */
+
+	for (iserv = 0; iserv < serv->total; iserv++) {
+	    int addr = htonl(serv->server[iserv].serverAddress[0]);
+	    LOCK_GLOBAL_MUTEX;
+	    host = gethostbyaddr((const char *)&addr, sizeof(int), AF_INET);
+	    if (host != NULL) {
+		strncpy(serv->server[iserv].serverName, host->h_name,
+			 AFS_MAX_SERVER_NAME_LEN);
+		serv->server[iserv].serverName[AFS_MAX_SERVER_NAME_LEN - 1] = '\0';
+	    }
+	    UNLOCK_GLOBAL_MUTEX;
+	}
+    
+	memcpy(serv_cache, serv, sizeof(server_get_t));
+    } else {
+	int race = 0;
+	LOCK_GLOBAL_MUTEX;
+	if (c_handle->server_list == NULL)
+	    race = 1;
+	else
+	    memcpy(serv, c_handle->server_list, sizeof(server_get_t));
+	UNLOCK_GLOBAL_MUTEX;
+	if (race)
+	    goto restart;
     }
-    UNLOCK_GLOBAL_MUTEX;
+
     if (IteratorInit
 	    (iter, (void *)serv, GetServerRPC, GetServerFromCache, NULL, NULL,
 	     &tst)) {
@@ -2007,17 +2044,28 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
   fail_afsclient_AFSServerGetBegin:
 
     if (rc == 0) {
-	if (iter != NULL) {
+	if (iter != NULL)
 	    free(iter);
-	}
-	if (serv != NULL) {
+	if (serv != NULL)
 	    free(serv);
+	if (serv_cache != NULL)
+	    free(serv_cache);
+    } else {
+	if (serv_cache) {
+	    LOCK_GLOBAL_MUTEX;
+	    /* in case there was a race and we constructed the list twice */
+	    if (c_handle->server_list)
+		free(c_handle->server_list);
+
+	    c_handle->server_list = serv_cache;
+	    c_handle->server_ttl = time(NULL) + SERVER_TTL;
+	    UNLOCK_GLOBAL_MUTEX;
 	}
     }
 
-    if (st != NULL) {
+    if (st != NULL)
 	*st = tst;
-    }
+
     return rc;
 }
 

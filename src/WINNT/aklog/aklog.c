@@ -13,6 +13,34 @@
  * or implied warranty.
  */
 
+/*
+ * Copyright (c) 2007 Secure Endpoints Inc.
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Neither the name of the Secure Endpoints Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _WIN64
 #define HAVE_KRB4
 #endif
@@ -145,6 +173,7 @@ get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep
 #define AKLOG_TOKEN 5
 #define AKLOG_BADPATH 6
 #define AKLOG_MISC 7
+#define AKLOG_KFW_NOT_INSTALLED 8
 
 #ifndef NULL
 #define NULL 0
@@ -1369,6 +1398,40 @@ static void usage(void)
     exit(AKLOG_USAGE);
 }
 
+void
+validate_krb5_availability(void)
+{
+#ifndef _WIN64
+#define KRB5LIB "krb5_32.dll"
+#else
+#define KRB5LIB "krb5_64.dll"
+#endif
+    HINSTANCE h = LoadLibrary(KRB5LIB);
+    if (h) 
+        FreeLibrary(h);
+    else {
+        fprintf(stderr, "Kerberos for Windows library %s is not available.\n", KRB5LIB);
+        exit(AKLOG_KFW_NOT_INSTALLED);
+    }
+}
+
+void
+validate_krb4_availability(void)
+{
+#ifdef HAVE_KRB4
+    HINSTANCE h = LoadLibrary("krbv4w32.dll");
+    if (h) 
+        FreeLibrary(h);
+    else {
+        fprintf(stderr, "Kerberos for Windows library krbv4w32.dll is not available.\n");
+        exit(AKLOG_KFW_NOT_INSTALLED);
+    }
+#else
+    fprintf(stderr, "Kerberos v4 is not available in this build of aklog.\n");
+    exit(AKLOG_USAGE);
+#endif
+}
+
 int main(int argc, char *argv[])
 {
     int status = AKLOG_SUCCESS;
@@ -1541,6 +1604,11 @@ int main(int argc, char *argv[])
             memset(path, 0, sizeof(path));
         }
     }
+
+    if (usev5)
+        validate_krb5_availability();
+    else 
+        validate_krb4_availability();
 
     if(usev5)
         krb5_init_context(&context);		

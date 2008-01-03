@@ -14,13 +14,7 @@
 RCSID("$Header$");
 
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "y.tab.h"
 #include "uss_common.h"
@@ -76,6 +70,7 @@ EOL	[\n]
  * and replaces the second with a null.
  */
 
+void
 Replace(in, out)
     char *in, *out;
 

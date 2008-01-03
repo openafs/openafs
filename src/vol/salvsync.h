@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -14,46 +14,86 @@
 #ifndef _AFS_VOL_SALVSYNC_H
 #define _AFS_VOL_SALVSYNC_H
 
+#define SALSRV_EXIT_VOLGROUP_LINK 10
+
+
 #ifdef AFS_DEMAND_ATTACH_FS
 #include "daemon_com.h"
+#include "voldefs.h"
 
 
-#define SALVSYNC_PROTO_VERSION        1
+#define SALVSYNC_PROTO_VERSION_V1     1
+#define SALVSYNC_PROTO_VERSION_V2     2
+#define SALVSYNC_PROTO_VERSION        SALVSYNC_PROTO_VERSION_V2
 
 
-/* SALVSYNC command codes */
-#define SALVSYNC_NOP            SYNC_COM_CODE_DECL(0)   /* just return stats */
-#define SALVSYNC_SALVAGE	SYNC_COM_CODE_DECL(1)	/* schedule a salvage */
-#define SALVSYNC_CANCEL         SYNC_COM_CODE_DECL(2)   /* Cancel a salvage */
-#define SALVSYNC_RAISEPRIO      SYNC_COM_CODE_DECL(3)   /* move a salvage operation to
-							 * the head of the work queue */
-#define SALVSYNC_QUERY          SYNC_COM_CODE_DECL(4)   /* query the status of a salvage */
-#define SALVSYNC_CANCELALL      SYNC_COM_CODE_DECL(5)   /* cancel all pending salvages */
+/** 
+ * SALVSYNC protocol command codes.
+ */
+typedef enum {
+    SALVSYNC_OP_NOP           = SYNC_COM_CODE_DECL(0),     /**< just return stats */
+    SALVSYNC_OP_SALVAGE       = SYNC_COM_CODE_DECL(1),     /**< schedule a salvage */
+    SALVSYNC_OP_CANCEL        = SYNC_COM_CODE_DECL(2),     /**< cancel a salvage */
+    SALVSYNC_OP_RAISEPRIO     = SYNC_COM_CODE_DECL(3),     /**< raise salvage priority */
+    SALVSYNC_OP_QUERY         = SYNC_COM_CODE_DECL(4),     /**< query status of a salvage */
+    SALVSYNC_OP_CANCELALL     = SYNC_COM_CODE_DECL(5),     /**< cancel all pending salvages */
+    SALVSYNC_OP_LINK          = SYNC_COM_CODE_DECL(6),     /**< link a clone to its parent */
+    SALVSYNC_OP_MAX_ID /* must be at end of enum */
+} SALVSYNC_op_code_t;
 
-/* SALVSYNC reason codes */
-#define SALVSYNC_WHATEVER	SYNC_REASON_CODE_DECL(0)  /* XXXX */
-#define SALVSYNC_ERROR		SYNC_REASON_CODE_DECL(1)  /* volume is in error state */
-#define SALVSYNC_OPERATOR	SYNC_REASON_CODE_DECL(2)  /* operator forced salvage */
-#define SALVSYNC_SHUTDOWN       SYNC_REASON_CODE_DECL(3)  /* cancel due to shutdown */
-#define SALVSYNC_NEEDED         SYNC_REASON_CODE_DECL(4)  /* needsSalvaged flag set */
+#define SALVSYNC_NOP         SALVSYNC_OP_NOP
+#define SALVSYNC_SALVAGE     SALVSYNC_OP_SALVAGE
+#define SALVSYNC_CANCEL      SALVSYNC_OP_CANCEL
+#define SALVSYNC_RAISEPRIO   SALVSYNC_OP_RAISEPRIO
+#define SALVSYNC_QUERY       SALVSYNC_OP_QUERY
+#define SALVSYNC_CANCELALL   SALVSYNC_OP_CANCELALL
+#define SALVSYNC_LINK        SALVSYNC_OP_LINK
+
+/**
+ * SALVSYNC protocol reason codes.
+ */
+typedef enum {
+    SALVSYNC_REASON_WHATEVER   = SYNC_REASON_CODE_DECL(0), /**< XXX */
+    SALVSYNC_REASON_ERROR      = SYNC_REASON_CODE_DECL(1), /**< volume is in error state */
+    SALVSYNC_REASON_OPERATOR   = SYNC_REASON_CODE_DECL(2), /**< operator forced salvage */
+    SALVSYNC_REASON_SHUTDOWN   = SYNC_REASON_CODE_DECL(3), /**< cancel due to shutdown */
+    SALVSYNC_REASON_NEEDED     = SYNC_REASON_CODE_DECL(4), /**< needsSalvaged flag set */
+    SALVSYNC_REASON_MAX_ID /* must be at end of enum */
+} SALVSYNC_reason_code_t;
+
+#define SALVSYNC_WHATEVER    SALVSYNC_REASON_WHATEVER
+#define SALVSYNC_ERROR       SALVSYNC_REASON_ERROR
+#define SALVSYNC_OPERATOR    SALVSYNC_REASON_OPERATOR
+#define SALVSYNC_SHUTDOWN    SALVSYNC_REASON_SHUTDOWN
+#define SALVSYNC_NEEDED      SALVSYNC_REASON_NEEDED
 
 /* SALVSYNC response codes */
 
 /* SALVSYNC flags */
 #define SALVSYNC_FLAG_VOL_STATS_VALID SYNC_FLAG_CODE_DECL(0) /* volume stats in response are valid */
 
-/* SALVSYNC command state fields */
-#define SALVSYNC_STATE_UNKNOWN        0         /* unknown state */
-#define SALVSYNC_STATE_QUEUED         1         /* salvage request on queue */
-#define SALVSYNC_STATE_SALVAGING      2         /* salvage is happening now */
-#define SALVSYNC_STATE_ERROR          3         /* salvage ended in an error */
-#define SALVSYNC_STATE_DONE           4         /* last salvage ended successfully */
+/** 
+ * SALVSYNC command state.
+ */
+typedef enum {
+    SALVSYNC_STATE_UNKNOWN = 0,       /**< unknown state */
+    SALVSYNC_STATE_QUEUED  = 1,       /**< salvage request is queued */
+    SALVSYNC_STATE_SALVAGING = 2,     /**< salvage is happening now */
+    SALVSYNC_STATE_ERROR = 3,         /**< salvage ended in an error */
+    SALVSYNC_STATE_DONE = 4           /**< last salvage ended successfully */
+} SALVSYNC_command_state_t;
 
 
+/**
+ * on-wire salvsync protocol payload.
+ */
 typedef struct SALVSYNC_command_hdr {
-    afs_uint32 prio;
-    afs_uint32 volume;
-    char partName[16];		/* partition name, e.g. /vicepa */
+    afs_uint32 hdr_version;     /**< salvsync protocol header version */
+    afs_uint32 prio;            /**< salvage priority */
+    afs_uint32 volume;          /**< volume on which to operate */
+    afs_uint32 parent;          /**< parent volume (for vol group linking command) */
+    char partName[16];		/**< partition name, e.g. /vicepa */
+    afs_uint32 reserved[6];
 } SALVSYNC_command_hdr;
 
 typedef struct SALVSYNC_response_hdr {
@@ -61,6 +101,7 @@ typedef struct SALVSYNC_response_hdr {
     afs_int32 prio;
     afs_int32 sq_len;
     afs_int32 pq_len;
+    afs_uint32 reserved[4];
 } SALVSYNC_response_hdr;
 
 typedef struct SALVSYNC_command {
@@ -80,10 +121,20 @@ typedef struct SALVSYNC_command_info {
     SALVSYNC_command_hdr sop;
 } SALVSYNC_command_info;
 
+typedef enum {
+    SALVSYNC_VOLGROUP_PARENT,
+    SALVSYNC_VOLGROUP_CLONE
+} SalvageQueueNodeType_t;
+
 struct SalvageQueueNode {
     struct rx_queue q;
     struct rx_queue hash_chain;
-    afs_uint32 state;
+    SalvageQueueNodeType_t type;
+    union {
+	struct SalvageQueueNode * parent;
+	struct SalvageQueueNode * children[VOLMAXTYPES];
+    } volgroup;
+    SALVSYNC_command_state_t state;
     struct SALVSYNC_command_info command;
     afs_int32 partition_id;
     int pid;
@@ -99,6 +150,8 @@ extern int SALVSYNC_clientReconnect(void);
 extern afs_int32 SALVSYNC_askSalv(SYNC_command * com, SYNC_response * res);
 extern afs_int32 SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int com, int reason,
 					afs_uint32 prio, SYNC_response * res);
+extern afs_int32 SALVSYNC_LinkVolume(VolumeId parent, VolumeId clone,
+				     char * partName, SYNC_response * res_in);
 
 /* salvage server interfaces */
 extern void SALVSYNC_salvInit(void);

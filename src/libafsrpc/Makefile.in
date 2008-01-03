@@ -401,7 +401,7 @@ fasttime.o: ${LWP}/fasttime.c
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
 	     sun4x_5* | sunx86_5*) \
-		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* | *_darwin_* ) \
@@ -413,7 +413,7 @@ syscall.o: ${SYS}/syscall.s
 	 *bsd* ) \
 		touch syscall.o ;; \
 	 *) \
-		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
@@ -427,8 +427,8 @@ rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
-	${CCRULE} ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
 
 afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c

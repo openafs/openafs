@@ -78,7 +78,10 @@ Formatting Standards
   documents common options, and discusses the general use of the suite.
   Then, each operation code in the suite should have a separate man page,
   named after the command with the space between the command suite and the
-  operation code replaced with an underscore.
+  operation code replaced with an underscore.  The NAME section of the
+  operation man page must also use an underscore (fs_listacl, not fs
+  listacl) for compatibility with some man programs.  The SYNOPSIS section
+  should, of course, use a space, since that's what the user must type.
 
   All man pages must follow the standard layout for man page sections and
   formatting.  The best general reference is the pod2man man page,
@@ -199,17 +202,13 @@ Known Problems
    * The following installed commands have no man pages:
 
        copyauth
-       fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
-       kseal
-       read_tape
        restorevol
        rmtsysd
        vldb_convert
        vos clone
-       vos convertROtoRW
-       vos copy
+       vos setfields
        vos shadow
        vsys
 
@@ -220,9 +219,6 @@ Known Problems
 
    * Some of the documentation in fs getserverprefs needs minor updates to
      reflect what happens in the dynroot case.
-
-   * fs sysname documentation needs to include the possibility of setting
-     multiple sysnames and the resulting behavior.
 
    * bos listkeys and the KeyFile man page assume that you're using the
      kaserver.

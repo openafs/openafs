@@ -25,6 +25,7 @@ RCSID
     ("$Header$");
 
 #include <ctype.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <winbase.h>
@@ -105,14 +106,6 @@ RCSID
 #include <stdio.h>
 #include <sys/file.h>
 #include <mntent.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <rx/xdr.h>
@@ -463,7 +456,7 @@ VAttachPartitions(void)
 	/* but allow zfs too if we're in the NAMEI environment */
 	if (
 #ifdef AFS_NAMEI_ENV
-	    ((!(strcmp(mnt.mnt_fstype, "ufs") &&
+	    (((strcmp(mnt.mnt_fstype, "ufs") &&
 		strcmp(mnt.mnt_fstype, "zfs"))))
 #else
 	    (strcmp(mnt.mnt_fstype, "ufs") != 0)

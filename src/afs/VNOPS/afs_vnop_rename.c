@@ -227,7 +227,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		code = afs_dir_Delete(tdc2, aname2);
 	    }
 	    if (code == 0) {
+		ObtainWriteLock(&afs_xdcache, 292);
 		code = afs_dir_Create(tdc2, aname2, &fileFid.Fid);
+		ReleaseWriteLock(&afs_xdcache);
 	    }
 	    if (code != 0) {
 		ZapDCE(tdc1);

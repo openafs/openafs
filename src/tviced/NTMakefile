@@ -48,7 +48,7 @@ RXOBJS = $(OUT)\xdr_int64.obj \
          $(OUT)\xdr_int32.obj
 
 VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
-VICEDRES =	$(OUT)\$(VICED)\fileserver.res
+TVICEDRES =  $(OUT)\fileserver.res
 
 TVICEDOBJS = $(OUT)\serialize_state.obj
 
@@ -68,7 +68,7 @@ VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.o
 
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
-EXEOBJS = $(VICEDOBJS) $(VICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
+EXEOBJS = $(VICEDOBJS) $(TVICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
 	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS) $(K5OBJS) #$(TVICEDOBJS)
 
 noversion: install
@@ -80,6 +80,9 @@ $(RXOBJS): $(RX)\$$(@B).c
 
 $(VICEDOBJS): $(VICED)\$$(@B).c
 	$(C2OBJ) -I$(VICED) -I$(UTIL) $**
+
+$(TVICEDRES): $(VICED)\fileserver.rc AFS_component_version_number.h
+	$(RC) /fo $(TVICEDRES) $(VICED)\fileserver.rc 
 
 $(TVICEDOBJS): $(TVICED)\$$(@B).c
 	$(C2OBJ) -I$(TVICED) -I$(UTIL) $**
@@ -131,4 +134,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 install:  $(EXEFILE)
 
 mkdir:
+
+clean::
+	$(DEL) $(TVICEDRES)
 

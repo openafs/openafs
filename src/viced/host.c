@@ -17,6 +17,7 @@ RCSID
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -24,14 +25,6 @@ RCSID
 #include <sys/file.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <afs/stds.h>
@@ -1552,6 +1545,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     host->interface ? uuid2 : "no_uuid"));
 
 	    /* The host in the cache is not the host for this connection */
+            h_Lock_r(host);
 	    host->hostFlags |= HOSTDELETED;
 	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
@@ -1744,6 +1738,7 @@ h_GetHost_r(struct rx_connection *tcon)
 						   &FS_HostUUID);
 		    rx_PutConnection(cb_conn);
 		    cb_conn=NULL;
+		    H_LOCK;
 		    if (code == 0) {
 			ViceLog(25,
 				("InitCallBackState3 success on host %x (%s:%d)\n",
@@ -3345,6 +3340,16 @@ CheckHost_r(register struct host *host, int held, char *dummy)
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
     int code;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* kill the checkhost lwp ASAP during shutdown */
+    FS_STATE_RDLOCK;
+    if (fs_state.mode == FS_MODE_SHUTDOWN) {
+	FS_STATE_UNLOCK;
+	return H_ENUMERATE_BAIL(held);
+    }
+    FS_STATE_UNLOCK;
+#endif
 
     /* Host is held by h_Enumerate_r */
     for (client = host->FirstClient; client; client = client->next) {

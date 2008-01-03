@@ -9,12 +9,12 @@
 /*
  * HISTORY
  * $Log$
- * Revision 1.2.6.2  2007/09/26 16:34:30  rees
- * DELTA mdw-rxk5-m55-20070926
+ * Revision 1.2.6.3  2008/01/03 16:47:47  rees
+ * DELTA mdw-rxk5-m58-20080103
  * AUTHOR mdw@umich.edu
  *
  * merge in latest changes from openafs-devel-1_5_x
- * update to rxk5-m55
+ * update to rxk5-m58
  *
  * Revision 1.2.2.2  2007/08/19 22:15:29  rra
  * DELTA DEVEL15-ka-forwarder-20060731

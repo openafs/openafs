@@ -28,14 +28,7 @@ RCSID
 #include <time.h>
 #endif
 #include <sys/stat.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <lwp.h>
@@ -43,6 +36,7 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include "bnode.h"
+#include "bosprototypes.h"
 
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 /* All known versions of AIX lack WCOREDUMP but this works */

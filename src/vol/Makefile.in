@@ -73,14 +73,14 @@ install: \
 	${DESTDIR}${includedir}/afs/namei_ops.h
 
 ${DEST}/root.server/usr/afs/bin/salvager: salvager 
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/volinfo: volinfo
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
 	if test "@DEMAND_ATTACH@" = "no"; then \
-		${INSTALL} -s $? $@ ; \
+		${INSTALL} $? $@ ; \
 	fi
 
 ${DEST}/lib/afs/vlib.a: vlib.a
@@ -90,22 +90,22 @@ ${DEST}/lib/afs/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/fs_conv_dux40D:  fs_conv_dux40D
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/xfs_size_check:  xfs_size_check
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/fs_conv_sol26:  fs_conv_sol26
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 $(DEST)/root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 $(DEST)/root.server/usr/afs/bin/xfs_size_check:  xfs_size_check
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 $(DEST)/root.server/usr/afs/bin/fs_conv_sol26:  fs_conv_sol26
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DEST}/include/afs/nfs.h: nfs.h
 	${INSTALL} $? $@
@@ -232,14 +232,14 @@ ${TOP_LIBDIR}/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvlibexecdir}/salvager: salvager
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/volinfo: volinfo
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
 	if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL} -s $? $@ ; \
+		${INSTALL} $? $@ ; \
 	fi
 
 ${DESTDIR}${includedir}/afs/nfs.h: nfs.h
