@@ -13,7 +13,7 @@ ln -s \
   $SRC/comerr/compile_et \
   $SRC/venus/fs \
   $SRC/kauth/kas \
-  $SRC/kauth/klog \
+  $SRC/aklog/klog \
   $SRC/sys/pagsh \
   $SRC/ptserver/pts \
   $SRC/log/tokens \
