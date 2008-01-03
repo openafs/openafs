@@ -27,7 +27,7 @@ RCSID
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
-/* #include <vm/vm_ubc.h> */
+#include <sys/namei.h>
 #include <limits.h>
 #include <float.h>
 
@@ -50,6 +50,16 @@ RCSID
 int
 osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
+    struct vnode *vp = AFSTOV(avc);
+
+    if (!vp)
+	return 0;
+    AFS_GUNLOCK();
+
+    cache_purge(vp);
+    uvm_vnp_uncache(vp);
+
+    AFS_GLOCK();
     return 0;
 }
 
@@ -57,6 +67,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
  *
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
+ *
  */
 void
 osi_VM_StoreAllSegments(struct vcache *avc)
@@ -75,6 +86,9 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 void
 osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
+    ReleaseWriteLock(&avc->lock);
+    osi_VM_FlushVCache(avc, NULL);
+    ObtainWriteLock(&avc->lock, 59);
 }
 
 /* Purge VM for a file when its callback is revoked.
@@ -84,6 +98,13 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 void
 osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
+    struct vnode *vp = AFSTOV(avc);
+
+    if (!vp)
+	return;
+    cache_purge(vp);
+    uvm_vnp_uncache(vp);
+    uvm_vnp_setsize(vp, avc->m.Length);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -95,4 +116,5 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 void
 osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
+    uvm_vnp_setsize(AFSTOV(avc), alen);
 }
