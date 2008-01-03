@@ -932,7 +932,7 @@ afs_nbsd_bmap(void *v)
 
     AFS_STATCNT(afs_bmap);
     if (ap->a_bnp)
-	ap->a_bnp = (daddr_t *) (ap->a_bn * (8192 / DEV_BSIZE));
+	*ap->a_bnp = ap->a_bn * btodb(8192);
     if (ap->a_vpp)
 	*ap->a_vpp = (vcp) ? AFSTOV(vcp) : NULL;
     return 0;
@@ -958,15 +958,14 @@ afs_nbsd_strategy(void *v)
     tuio.afsio_iovcnt = 1;
     tuio.afsio_seg = AFS_UIOSYS;
     tuio.afsio_resid = len;
-    tiovec[0].iov_base = abp->b_un.b_addr;
+    tiovec[0].iov_base = abp->b_data;
     tiovec[0].iov_len = len;
 
     AFS_GLOCK();
     if ((abp->b_flags & B_READ) == B_READ) {
 	code = afs_rdwr(tvc, &tuio, UIO_READ, 0, credp);
 	if (code == 0 && tuio.afsio_resid > 0)
-	    bzero(abp->b_un.b_addr + len - tuio.afsio_resid,
-		  tuio.afsio_resid);
+	    bzero(abp->b_data + len - tuio.afsio_resid, tuio.afsio_resid);
     } else
 	code = afs_rdwr(tvc, &tuio, UIO_WRITE, 0, credp);
     AFS_GUNLOCK();
