@@ -144,8 +144,6 @@ int afs_nbsd_readdir(void *);
 int afs_nbsd_readlink(void *);
 int afs_nbsd_inactive(void *);
 int afs_nbsd_reclaim(void *);
-int afs_nbsd_lock(void *);
-int afs_nbsd_unlock(void *);
 int afs_nbsd_bmap(void *);
 int afs_nbsd_strategy(void *);
 int afs_nbsd_print(void *);
@@ -189,8 +187,8 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_abortop_desc, vop_generic_abortop},	/* abortop */
     {&vop_inactive_desc, afs_nbsd_inactive},	/* inactive */
     {&vop_reclaim_desc, afs_nbsd_reclaim},	/* reclaim */
-    {&vop_lock_desc, afs_nbsd_lock},		/* lock */
-    {&vop_unlock_desc, afs_nbsd_unlock},	/* unlock */
+    {&vop_lock_desc, ((int (*)(void *))vop_generic_lock)},	/* lock */
+    {&vop_unlock_desc, ((int (*)(void *))vop_generic_unlock)},	/* unlock */
     {&vop_bmap_desc, afs_nbsd_bmap},		/* bmap */
     {&vop_strategy_desc, afs_nbsd_strategy},	/* strategy */
     {&vop_print_desc, afs_nbsd_print},		/* print */
@@ -918,40 +916,6 @@ afs_nbsd_reclaim(void *v)
 	AFS_GUNLOCK();
     return code;
 #endif
-}
-
-int
-afs_nbsd_lock(void *v)
-{
-    struct vop_lock_args	/* {
-				 * struct vnode *a_vp;
-				 * int a_flags;
-				 * sturct proc *a_p;
-				 * } */ *ap = v;
-    struct vnode *vp = ap->a_vp;
-    struct vcache *vc = VTOAFS(vp);
-
-    if (!vc)
-	panic("afs_nbsd_lock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
-		   ap->a_p);
-}
-
-int
-afs_nbsd_unlock(void *v)
-{
-    struct vop_unlock_args	/* {
-				 * struct vnode *a_vp;
-				 * int a_flags;
-				 * struct proc *a_p;
-				 * } */ *ap = v;
-    struct vnode *vp = ap->a_vp;
-    struct vcache *vc = VTOAFS(vp);
-
-    if (!vc)
-	panic("afs_nbsd_unlock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
-		   ap->a_p);
 }
 
 int
