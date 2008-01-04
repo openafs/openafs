@@ -1489,7 +1489,6 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     struct VolumeStatus *status;
     char *name, *offmsg, *motd;
-    long   online_state;
     int error = 0;
     
     SetDotDefault(&as->parms[0].items);
@@ -1540,22 +1539,25 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         } else {
             Die(errno, ti->data);
         }
-        online_state = pioctl(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
-        switch (online_state) {
+
+        errno = 0;
+        code = pioctl(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
+        switch (errno) {
         case 0:
             printf("Volume is online\n");
             break;
-        case CM_ERROR_ALLOFFLINE:
-            printf("Volume offline\n");
+        case ENXIO:
+            printf("Volume is offline\n");
             break;
-        case CM_ERROR_ALLDOWN:
+        case ENOSYS:
             printf("All Volume servers are down\n");
             break;
-        case CM_ERROR_ALLBUSY:
+        case EBUSY:
             printf("All volume servers are busy\n");
             break;
         default:
-            Die(online_state, ti->data);
+            printf("Unknown volume state\n");
+            Die(errno, ti->data);
         }
         printf("\n");
     }
