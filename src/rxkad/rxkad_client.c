@@ -26,7 +26,7 @@ RCSID
 #ifndef UKERNEL
 #include "h/types.h"
 #include "h/time.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #include "h/systm.h"
 #endif
 #ifdef AFS_LINUX20_ENV
