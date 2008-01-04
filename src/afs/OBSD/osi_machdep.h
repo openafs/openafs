@@ -69,7 +69,7 @@
 /* time */
 #define	afs_hz		hz
 #define osi_GetTime(x)	microtime(x)
-#define osi_Time()	(time.tv_sec)
+extern time_t osi_Time();
 
 /* str */
 #define afs_strcasecmp(s1, s2)	strncasecmp((s1), (s2), 65535)

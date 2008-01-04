@@ -206,7 +206,7 @@ afs_osi_Invisible(void)
 }
 
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 /* set the real time */
 void
 afs_osi_SetTime(osi_timeval_t * atv)
