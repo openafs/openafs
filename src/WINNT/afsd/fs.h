@@ -17,7 +17,7 @@ static int PruneList (struct AclEntry **ae, int dfs);
 
 static int CleanAcl(struct Acl *aa, char *fname);
 
-static int SetVolCmd(struct cmd_syndesc *as, char *arock);
+static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 
 static int GetCellName(char *cellNamep, struct afsconf_cell *infop);
 
