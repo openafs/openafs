@@ -145,6 +145,7 @@ getpag(void)
  */
 
 static int afs_pag_sleepcnt = 0;
+static int afs_pag_timewarn = 0;
 
 static int
 afs_pag_sleep(struct AFS_UCRED **acred)
@@ -154,6 +155,13 @@ afs_pag_sleep(struct AFS_UCRED **acred)
     if (!afs_suser(acred)) {
 	if(osi_Time() - pag_epoch < pagCounter) {
 	    rv = 1;
+	}
+	if (rv && (osi_Time() < pag_epoch)) {
+	    if (!afs_pag_timewarn) {
+		afs_pag_timewarn = 1;
+		printf("clock went backwards, not PAG throttling");
+	    }
+	    rv = 0;
 	}
     }
 
