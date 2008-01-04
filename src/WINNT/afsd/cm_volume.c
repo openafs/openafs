@@ -1031,6 +1031,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
             cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_online);
             volp->rw.state = vl_online;
             online = 1;
+        } else if (code == CM_ERROR_NOACCESS) {
+            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_unknown);
+            volp->rw.state = vl_unknown;
+            online = 1;
         }
     }
 
@@ -1060,6 +1064,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
             cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_online);
             volp->ro.state = vl_online;
             online = 1;
+        } else if (code == CM_ERROR_NOACCESS) {
+            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_unknown);
+            volp->ro.state = vl_unknown;
+            online = 1;
         }
     }
 
@@ -1088,6 +1096,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
         if (code == 0 && volStat.Online) {
             cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_online);
             volp->bk.state = vl_online;
+            online = 1;
+        } else if (code == CM_ERROR_NOACCESS) {
+            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_unknown);
+            volp->bk.state = vl_unknown;
             online = 1;
         }
     }
