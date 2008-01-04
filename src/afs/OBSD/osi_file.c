@@ -136,7 +136,7 @@ osi_DisableAtimes(struct vnode *avp)
 int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Read);
@@ -164,8 +164,8 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
     } else {
-	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
-		   ICL_TYPE_INT32, code);
+	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32,
+		   (unsigned int) resid, ICL_TYPE_INT32, code);
 	code = -1;
     }
     return code;
@@ -176,7 +176,7 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Write);
