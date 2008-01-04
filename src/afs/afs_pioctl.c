@@ -3843,6 +3843,7 @@ DECL_PIOCTL(PNewUuid)
     afs_uuid_create(&afs_cb_interface.uuid);
     ReleaseWriteLock(&afs_xinterface);
     ForceAllNewConnections();
+    return 0;
 }
 
 DECL_PIOCTL(PCallBackAddr)
