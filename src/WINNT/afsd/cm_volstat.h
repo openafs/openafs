@@ -88,3 +88,17 @@ typedef struct cm_VolStatus_Funcs {
     long (__fastcall * cm_VolStatus_Path_To_DFSlink)(const char * share, const char * path, afs_uint32 *pBufSize, char *pBuffer);
 } cm_VolStatus_Funcs_t;
 
+/* pioctl */
+struct VolStatTest {
+    afs_uint32  flags;
+    cm_fid_t    fid;
+    char cellname[CELL_MAXNAMELEN];
+    char volname[VL_MAXNAMELEN];
+    enum volstatus state;
+};
+
+#define VOLSTAT_TEST_APPLY_TO_SERVER 1
+#define VOLSTAT_TEST_CHECK_VOLUME    2
+#define VOLSTAT_TEST_NETWORK_UP      4
+#define VOLSTAT_TEST_NETWORK_DOWN    8
+

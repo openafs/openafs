@@ -85,6 +85,7 @@ void smb_InitIoctl(void)
         smb_ioctlProcsp[VIOC_RXSTAT_PEER] = cm_IoctlRxStatPeer;
         smb_ioctlProcsp[VIOC_UUIDCTL] = cm_IoctlUUIDControl;
         smb_ioctlProcsp[VIOC_PATH_AVAILABILITY] = cm_IoctlPathAvailability;
+        smb_ioctlProcsp[VIOC_VOLSTAT_TEST] = cm_IoctlVolStatTest;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
