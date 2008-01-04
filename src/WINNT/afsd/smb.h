@@ -332,7 +332,7 @@ typedef struct smb_ioctl {
     char *inDatap;			/* ioctl func's current position
 					 * in input parameter block */
     char *inAllocp;			/* allocated input parameter block */
-    long inCopied;			/* # of input bytes copied in so far
+    afs_uint32 inCopied;			/* # of input bytes copied in so far
 					 * by write calls */
     cm_space_t *prefix;		        /* prefix for subst drives */
     char *tidPathp;			/* Pathname associated with Tree ID */
@@ -340,11 +340,11 @@ typedef struct smb_ioctl {
     /* output side */
     char *outDatap;			/* output results assembled so far */
     char *outAllocp;		        /* output results assembled so far */
-    long outCopied;			/* # of output bytes copied back so far
+    afs_uint32 outCopied;		/* # of output bytes copied back so far
                                          * by read calls */
 	
     /* flags */
-    long flags;
+    afs_uint32 flags;
 
     /* fid pointer */
     struct smb_fid *fidp;
