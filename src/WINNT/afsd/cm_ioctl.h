@@ -171,6 +171,8 @@ extern long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp
 
 extern long cm_IoctlPathAvailability(struct smb_ioctl * ioctlp, struct cm_user *userp);
 
+extern long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp);
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

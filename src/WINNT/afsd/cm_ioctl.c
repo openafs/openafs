@@ -2939,3 +2939,105 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
 }       
 
 
+long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    long code;
+    cm_cell_t *cellp = NULL;
+    cm_volume_t *volp;
+    cm_vol_state_t *statep;
+    struct VolStatTest * testp;
+    cm_req_t req;
+    afs_uint32 n;
+    size_t len;
+
+    cm_InitReq(&req);
+
+    cm_SkipIoctlPath(ioctlp);	/* we don't care about the path */
+    testp = (struct VolStatTest *)ioctlp->inDatap;
+
+#ifdef AFS_FREELANCE_CLIENT
+    if (testp->fid.cell == -1) 
+        return CM_ERROR_NOACCESS;
+#endif
+
+    if (testp->flags & VOLSTAT_TEST_CHECK_VOLUME) {
+        cm_CheckOfflineVolumes();
+        return 0;
+    }
+
+    if (testp->flags & VOLSTAT_TEST_NETWORK_UP) {
+        cm_VolStatus_Network_Started(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
+        return 0;
+    }
+
+    if (testp->flags & VOLSTAT_TEST_NETWORK_DOWN) {
+        cm_VolStatus_Network_Stopped(cm_NetbiosName
+#ifdef _WIN64
+                                  , cm_NetbiosName
+#endif
+                                  );
+        return 0;
+    }
+
+    if (testp->cellname[0]) {
+        n = atoi(testp->cellname);
+        if (n)
+            testp->fid.cell = n;
+        else
+            cellp = cm_GetCell(testp->cellname, 0);
+    }
+
+    if (testp->fid.cell > 0) {
+        cellp = cm_FindCellByID(testp->fid.cell);
+    }
+
+    if (!cellp)
+        return CM_ERROR_NOSUCHCELL;
+
+    if (testp->volname[0]) {
+        n = atoi(testp->volname);
+        if (n)
+            testp->fid.volume = n;
+        else
+            code = cm_GetVolumeByName(cellp, testp->volname, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+    }
+
+    if (testp->fid.volume > 0)
+        code = cm_GetVolumeByID(cellp, testp->fid.volume, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+
+    if (code)
+        return code;
+	
+    if (testp->fid.volume) {
+        if (testp->fid.volume == volp->rw.ID)
+            statep = &volp->rw;
+        else if (testp->fid.volume == volp->ro.ID)
+            statep = &volp->ro;
+        else
+            statep = &volp->bk;
+    } else {
+        len = strlen(testp->volname);
+
+        if (stricmp(".readonly", &testp->volname[len-9]) == 0)
+            statep = &volp->ro;
+        else if (stricmp(".backup", &testp->volname[len-7]) == 0)
+            statep = &volp->bk;
+        else 
+            statep = &volp->rw;
+    }
+
+    if (statep) {
+        statep->state = testp->state;
+        code = cm_VolStatus_Change_Notification(cellp->cellID, statep->ID, testp->state);
+    }
+
+    cm_PutVolume(volp);
+
+    return code;
+}       
+
+

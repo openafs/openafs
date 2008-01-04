@@ -4316,6 +4316,86 @@ RxStatPeerCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+static int
+TestVolStatCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct VolStatTest test;
+    struct ViceIoctl blob;
+    char * tp;
+    afs_uint32 n;
+
+    memset(&test, 0, sizeof(test));
+
+    if (as->parms[0].items) {	/* -network */
+        tp = as->parms[0].items->data;
+        if (strcmp(tp, "up") == 0)
+            test.flags |= VOLSTAT_TEST_NETWORK_UP;
+        else if (strcmp(tp, "down") == 0)
+            test.flags |= VOLSTAT_TEST_NETWORK_DOWN;
+        else {
+            fprintf (stderr, "%s: %s must be \"up\" or \"down\".\n", pn, tp);
+            return EINVAL;
+        }
+    }
+    if (as->parms[1].items) {	/* check */
+        test.flags |= VOLSTAT_TEST_CHECK_VOLUME;
+    }
+    if (as->parms[2].items) {	/* cell */
+        tp = as->parms[2].items->data;
+        n = atoi(tp);
+        if (n != 0)
+            test.fid.cell = n;
+        else {
+            strncpy(test.cellname, tp, sizeof(test.cellname));
+            test.cellname[sizeof(test.cellname)-1] = '\0';
+        }
+    }
+    if (as->parms[3].items) {	/* volume */
+        tp = as->parms[3].items->data;
+        n = atoi(tp);
+        if (n != 0)
+            test.fid.volume = n;
+        else {
+            strncpy(test.volname, tp, sizeof(test.volname));
+            test.volname[sizeof(test.volname)-1] = '\0';
+        }
+    }
+    if (as->parms[4].items) {   /* state */
+        tp = as->parms[4].items->data;
+        if (strcmp(tp, "online") == 0)
+            test.state = vl_online;
+        else if (strcmp(tp, "busy") == 0)
+            test.state = vl_busy;
+        else if (strcmp(tp, "offline") == 0)
+            test.state = vl_offline;
+        else if (strcmp(tp, "down") == 0)
+            test.state = vl_alldown;
+        else {
+            fprintf (stderr, "%s: %s must be \"online\", \"busy\", \"offline\" or \"down\".\n", pn, tp);
+            return EINVAL;
+        }
+    }
+
+    if ((test.fid.cell || test.cellname[0]) && !(test.fid.volume || test.volname[0]) ||
+         !(test.fid.cell || test.cellname[0]) && (test.fid.volume || test.volname[0])) {
+        fprintf (stderr, "%s: both a cell and a volume must be specified.\n", pn, tp);
+        return EINVAL;
+    }
+
+    blob.in = (char *)&test;
+    blob.in_size = sizeof(test);
+    blob.out_size = 0;
+
+    code = pioctl(NULL, VIOC_VOLSTAT_TEST, &blob, 1);
+    if (code != 0) {
+	Die(errno, NULL);
+	return 1;
+    }
+
+    return 0;
+}
+
 #ifndef WIN32
 #include "AFS_component_version_number.c"
 #endif
@@ -4607,6 +4687,13 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "disable caching");
 
     ts = cmd_CreateSyntax("minidump", MiniDumpCmd, NULL, "Generate MiniDump of current service state");
+
+    ts = cmd_CreateSyntax("test_volstat", TestVolStatCmd, NULL, (char *)CMD_HIDDEN);
+    cmd_AddParm(ts, "-network", CMD_SINGLE, CMD_OPTIONAL, "set network state up or down");
+    cmd_AddParm(ts, "-check",   CMD_FLAG,   CMD_OPTIONAL, "check state of offline volumes");
+    cmd_AddParm(ts, "-cell",    CMD_SINGLE, CMD_OPTIONAL, "cell name or number");
+    cmd_AddParm(ts, "-volume",  CMD_SINGLE, CMD_OPTIONAL, "volume name or number");
+    cmd_AddParm(ts, "-state",   CMD_SINGLE, CMD_OPTIONAL, "new volume state: online, busy, offline, down");
 
     code = cmd_Dispatch(argc, argv);
 
