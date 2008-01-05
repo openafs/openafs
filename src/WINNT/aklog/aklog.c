@@ -701,6 +701,31 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                             NULL,
 #endif
                             &v5cred);
+
+        if (status == 0 && strcmp(realm_of_cell, "") == 0) {
+            krb5_error_code code;
+            krb5_ticket *ticket;
+
+            code = krb5_decode_ticket(&v5cred->ticket, &ticket);
+
+            if (code != 0) {
+                fprintf(stderr,
+                         "%s: Couldn't decode ticket to determine realm for "
+                         "cell %s.\n",
+                         progname, cell_to_use);
+            } else {
+                int len = krb5_princ_realm(context, ticket->server)->length;
+                /* This really shouldn't happen. */
+                if (len > REALM_SZ-1)
+                    len = REALM_SZ-1;
+
+                strncpy(realm_of_cell, krb5_princ_realm(context, ticket->server)->data, len);
+                realm_of_cell[len] = 0;
+
+                krb5_free_ticket(context, ticket);
+            }
+        }
+
 	if (status == KRB5_ERR_HOST_REALM_UNKNOWN) {
 	    realm_fallback = 1;
 	    goto try_v5;
