@@ -670,6 +670,33 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	status = get_credv5(context, name, primary_instance, realm_of_cell,
 			    &v5cred);
 
+#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_DECODE_TICKET)
+	if (status == 0 && strcmp(realm_of_cell, "") == 0) {
+	    krb5_error_code code;
+	    krb5_ticket *ticket;
+
+	    code = krb5_decode_ticket(&v5cred->ticket, &ticket);
+
+	    if (code != 0) {
+		fprintf(stderr,
+			"%s: Couldn't decode ticket to determine realm for "
+			"cell %s.\n",
+			progname, cell_to_use);
+	    } else {
+		int len = realm_len(context, ticket->server);
+		/* This really shouldn't happen. */
+		if (len > REALM_SZ-1)
+		    len = REALM_SZ-1;
+
+		strncpy(realm_of_cell, realm_data(context, ticket->server), 
+			len);
+		realm_of_cell[len] = 0;
+
+		krb5_free_ticket(context, ticket);
+	    }
+	}
+#endif
+
 	if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) &&
 	    !realm_of_cell[0]) {
 	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, TRUE);
