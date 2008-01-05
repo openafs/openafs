@@ -60,7 +60,7 @@ osi_rwlock_t smb_globalLock;
 osi_rwlock_t smb_rctLock;
 osi_mutex_t  smb_ListenerLock;
  
-char smb_LANadapter;
+char smb_LANadapter = -1;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 
 BOOL isGateway = FALSE;
@@ -8319,6 +8319,28 @@ void smb_Listener(void *parmp)
     }	/* dispatch while loop */
 
     FreeNCB(ncbp);
+}
+
+
+void smb_LanAdapterChange(void) {
+    lana_number_t lanaNum;
+    BOOL          bGateway;
+    char          NetbiosName[MAX_NB_NAME_LENGTH] = "";
+    int           change = 0;
+
+    if (SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
+                                                  LANA_NETBIOS_NAME_FULL))) {
+        if (smb_LANadapter != lanaNum ||
+            isGateway != bGateway ||
+            strcmp(cm_NetbiosName, NetbiosName))
+            change = 1;
+    } 
+
+    if (change) {
+        afsi_log("Lan Adapter Change detected");
+        smb_StopListeners();
+        smb_RestartListeners();
+    }
 }
 
 /* initialize Netbios */

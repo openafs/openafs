@@ -734,6 +734,7 @@ extern void smb_RestartListeners(void);
 extern void smb_StopListeners(void);
 extern void smb_StopListener(NCB *ncbp, int lana);
 extern long smb_IsNetworkStarted(void);
+extern void smb_LanAdapterChange(void);
 
 #define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0

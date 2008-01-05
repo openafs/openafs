@@ -69,6 +69,7 @@ void cm_IpAddrDaemon(long parm)
         thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
         Result = NotifyAddrChange(NULL,NULL);
         if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
+            smb_LanAdapterChange();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
 	    Sleep(2500);
             if (daemon_ShutdownFlag == 0) {
