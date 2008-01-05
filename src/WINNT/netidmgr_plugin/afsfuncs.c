@@ -703,6 +703,25 @@ ViceIDToUsername(char *username,
 }
 
 
+static void
+copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_creds *v5cred) {
+    krb5_error_code code;
+    krb5_ticket *ticket;
+    size_t len;
+
+    code = pkrb5_decode_ticket(&v5cred->ticket, &ticket);
+    if (code == 0) {
+        len = krb5_princ_realm(context, ticket->server)->length;
+        if (len > destlen - 1)
+            len = destlen - 1;
+
+        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
+        dest[len] = 0;
+
+        pkrb5_free_ticket(context, ticket);
+    }
+}
+
 int
 afs_klog(khm_handle identity,
          char *service,
@@ -845,7 +864,7 @@ afs_klog(khm_handle identity,
 #endif
       retry_retcred:
         r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
-	if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+        if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
 	      r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
 	     !RealmName[0]) {
 	    StringCbCopyA(RealmName, sizeof(RealmName), 
@@ -886,6 +905,9 @@ afs_klog(khm_handle identity,
 	    k5creds = NULL;
 	    goto retry_retcred;
 	}
+
+        if (r == 0 && strlen(RealmName) == 0) 
+            copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
 
         pkrb5_free_principal(context, increds.server);
         pkrb5_free_principal(context, client_principal);
