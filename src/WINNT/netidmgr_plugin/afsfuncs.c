@@ -715,8 +715,7 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
         if (len > destlen - 1)
             len = destlen - 1;
 
-        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
-        dest[len] = 0;
+        StringCbCopyA(dest, len, krb5_princ_realm(context, ticket->server)->data);
 
         pkrb5_free_ticket(context, ticket);
     }
