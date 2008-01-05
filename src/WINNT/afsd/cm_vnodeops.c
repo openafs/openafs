@@ -1140,9 +1140,11 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
          * volume for the target, then use the .backup of the target
          * instead of the read-write.
          */
-        if (cm_followBackupPath && targetType == RWVOL &&
-            (scp->flags & CM_SCACHEFLAG_RO|CM_SCACHEFLAG_PURERO) == CM_SCACHEFLAG_RO &&
-            volp->bk.ID != 0) {
+        if (cm_followBackupPath && 
+            volp->bk.ID != 0 &&
+            (dscp->flags & (CM_SCACHEFLAG_RO|CM_SCACHEFLAG_PURERO)) == CM_SCACHEFLAG_RO &&
+            (targetType == RWVOL || targetType == ROVOL && volp->ro.ID == 0)
+            ) {
             targetType = BACKVOL;
         } 
         /* if the mt pt is in a read-only volume (not just a
