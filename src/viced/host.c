@@ -1440,8 +1440,11 @@ h_GetHost_r(struct rx_connection *tcon)
 	 * of the caller matches the identity in the host structure.
 	 */
 	if ((host->hostFlags & HWHO_INPROGRESS) && 
-	    h_threadquota(host->lock.num_waiting))
+	    h_threadquota(host->lock.num_waiting)) {
+	    if (!held)
+		h_Release_r(host);
 	    return 0;
+	}
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR)) {
 	    host->hostFlags &= ~HWHO_INPROGRESS;
