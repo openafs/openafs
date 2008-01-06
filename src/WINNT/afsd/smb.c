@@ -8328,8 +8328,9 @@ void smb_LanAdapterChange(void) {
     char          NetbiosName[MAX_NB_NAME_LENGTH] = "";
     int           change = 0;
 
-    if (SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
-                                                  LANA_NETBIOS_NAME_FULL))) {
+    if (!powerStateSuspended && 
+        SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
+                                          LANA_NETBIOS_NAME_FULL))) {
         if (smb_LANadapter != lanaNum ||
             isGateway != bGateway ||
             strcmp(cm_NetbiosName, NetbiosName))
@@ -8506,7 +8507,7 @@ int smb_NetbiosInit(void)
     /* we're done with the NCB now */
     FreeNCB(ncbp);
 
-    return (lana_list.length > 0 ? 1 : 0);
+    return ((lana_list.length > 0 && smb_LANadapter != -1) ? 1 : 0);
 }
 
 void smb_StartListeners()
@@ -8537,9 +8538,13 @@ void smb_StartListeners()
 
 void smb_RestartListeners()
 {
-    if (!powerStateSuspended && smb_ListenerState == SMB_LISTENER_STOPPED) {
-	if (smb_NetbiosInit())
-	    smb_StartListeners();
+    if (!powerStateSuspended) {
+	if (smb_ListenerState == SMB_LISTENER_STOPPED) {
+		if (smb_NetbiosInit())
+		    smb_StartListeners();
+	}
+	if (smb_LANadapter == -1)
+		smb_LanAdapterChange();
     }
 }
 

@@ -250,6 +250,11 @@ afsd_ServiceControlHandlerEx(
     {
     case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_STOP:
+	if (ctrlCode == SERVICE_CONTROL_SHUTDOWN)
+	    afsi_log("SERVICE_CONTROL_SHUTDOWN");
+	else
+            afsi_log("SERVICE_CONTROL_STOP");
+
         ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
         ServiceStatus.dwCheckPoint = 1;
