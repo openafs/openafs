@@ -138,8 +138,10 @@ cm_PingServer(cm_server_t *tsp)
                     if (tsrvp->ids[i] != 0) {
                         cm_InitReq(&req);
 
+                        lock_ReleaseMutex(&tsp->mx);
                         code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                        lock_ObtainMutex(&tsp->mx);
                         if (code == 0) {
                             cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
                             cm_PutVolume(volp);
