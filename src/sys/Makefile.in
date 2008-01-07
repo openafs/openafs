@@ -79,7 +79,7 @@ depinstall: \
 	${UKERNELDIR}/afs/afsl.exp \
 	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h 
 
-libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
+libsys.a: ${OBJECTS} ${RMTOBJS} syscall.o afsl.exp AFS_component_version_number.o
 	$(RM) -f $@
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_* | hp_ux10*) \
