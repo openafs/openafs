@@ -375,7 +375,10 @@ hpr_GetHostCPS(afs_int32 host, prlist *CPS)
 
     if (!uclient) {
         code = hpr_Initialize(&uclient);
-        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code) 
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	else
+	    return code;
     }
 
     over = 0;
@@ -406,7 +409,10 @@ hpr_NameToId(namelist *names, idlist *ids)
 
     if (!uclient) {
         code = hpr_Initialize(&uclient);
-        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code)
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	else
+	    return code;
     }
 
     for (i = 0; i < names->namelist_len; i++)
@@ -428,7 +434,10 @@ hpr_IdToName(idlist *ids, namelist *names)
     
     if (!uclient) {
         code = hpr_Initialize(&uclient);
-        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code)
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	else
+	    return code;
     }
 
     code = ubik_PR_IDToName(uclient, 0, ids, names);
@@ -449,7 +458,10 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
 
     if (!uclient) {
         code = hpr_Initialize(&uclient);
-        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code)
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	else
+	    return code;
     }
 
     over = 0;
