@@ -688,32 +688,34 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
         
     osi_Log3(afsd_logp, "Starting BKG prefetch scp 0x%p, base 0x%x:%x", scp, p2, p1);
 
-    for (code = 0, offset = base;
+    for ( code = 0, offset = base;
           code == 0 && LargeIntegerLessThan(offset, end); 
-          offset = LargeIntegerAdd(offset, tblocksize))
+          offset = LargeIntegerAdd(offset, tblocksize) )
     {
         if (mxheld) {
             lock_ReleaseMutex(&scp->mx);
             mxheld = 0;
         }
         code = buf_Get(scp, &offset, &bp);
+        if (code)
+            break;
+
+        if (bp->cmFlags & CM_BUF_CMFETCHING) {
+            /* skip this buffer as another thread is already fetching it */
+            buf_Release(bp);
+            bp = NULL;
+            continue;
+        }
+
         if (!mxheld) {
             lock_ObtainMutex(&scp->mx);
             mxheld = 1;
         }
 
-        if (code || (bp->cmFlags & CM_BUF_CMFETCHING)) {
-            code = 0;
-            if (bp) {
-                buf_Release(bp);
-                bp = NULL;
-            }
-            break;
-        }
-
         code = cm_GetBuffer(scp, bp, NULL, userp, &req);
         if (code == 0)
             fetched = LargeIntegerAdd(fetched, tblocksize); 
+        buf_Release(bp);
     }
     
     if (!mxheld) {
@@ -723,10 +725,6 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
     cm_ClearPrefetchFlag(LargeIntegerGreaterThanZero(fetched) ? 0 : code, 
                          scp, &base, &fetched);
     lock_ReleaseMutex(&scp->mx);
-    if (bp) {
-        buf_Release(bp);
-        bp = NULL;
-    }
 
     osi_Log4(afsd_logp, "Ending BKG prefetch scp 0x%p, code %d bytes 0x%x:%x", 
               scp, code, fetched.HighPart, fetched.LowPart);
