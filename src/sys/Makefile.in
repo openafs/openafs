@@ -46,7 +46,7 @@ all: \
 	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG}';; \
 	esac
 
-libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
+libsys.a: ${OBJECTS} ${RMTOBJS} syscall.o afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@
 	@set -x; case "${SYS_NAME}" in                   	\
 		hp_ux11*) \
@@ -62,7 +62,7 @@ libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 			$(AR) crv $@ afsl.exp;;         \
 	esac
 
-${LIBAFSSETPAG}: ${SHLIBOBJS}
+${LIBAFSSETPAG}: ${SHLIBOBJS} syscall.o
 	@set -x; case ${SYS_NAME} in \
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
