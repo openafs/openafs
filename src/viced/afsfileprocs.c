@@ -342,7 +342,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	    hpr_End(uclient);
 	code = hpr_Initialize(&uclient);
 
-	assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code)
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
 #else
 	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
