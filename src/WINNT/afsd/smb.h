@@ -755,11 +755,13 @@ extern DWORD smb_ServerExceptionFilter(void);
 extern void smb_UpdateServerPriority(void);
 extern void smb_SetRequestStartTime(void);
 extern void smb_ResetServerPriority(void);
-extern void smb_RestartListeners(void);
-extern void smb_StopListeners(void);
+extern void smb_RestartListeners(int);
+extern void smb_StopListeners(int);
 extern void smb_StopListener(NCB *ncbp, int lana);
 extern long smb_IsNetworkStarted(void);
-extern void smb_LanAdapterChange(void);
+extern void smb_LanAdapterChange(int);
+extern void smb_SetLanAdapterChangeDetected(void);
+
 
 #define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0

@@ -35,8 +35,6 @@ extern "C" {
 
   typedef BYTE lana_number_t;
 
-#define LANA_INVALID 0xff
-
     struct LANAINFO
     {
         lana_number_t lana_number;

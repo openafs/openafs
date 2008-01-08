@@ -74,7 +74,7 @@ void cm_IpAddrDaemon(long parm)
         thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
         Result = NotifyAddrChange(NULL,NULL);
         if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
-            smb_LanAdapterChange();
+            smb_SetLanAdapterChangeDetected();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
 	    Sleep(2500);
             if (daemon_ShutdownFlag == 0) {
@@ -401,7 +401,7 @@ void cm_Daemon(long parm)
 	/* check to see if the listener threads halted due to network 
 	 * disconnect or other issues.  If so, attempt to restart them.
 	 */
-	smb_RestartListeners();
+	smb_RestartListeners(0);
 
         if (daemon_ShutdownFlag == 1)
             break;
@@ -529,7 +529,7 @@ void cm_Daemon(long parm)
         if (daemon_ShutdownFlag == 1) {
             break;
         }
-	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
+	thrd_Sleep(1000);		/* sleep 30 seconds */
     }
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
 }       
