@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005,2006 Secure Endpoints Inc.
+ * Copyright (c) 2005,2006,2007,2008 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -545,6 +545,112 @@ afs_check_add_token_to_identity(wchar_t * cell, khm_handle ident,
     return ok_to_add;
 }
 
+static void
+add_token_to_list(afs_cred_list * l,
+                  khm_handle h_gcells,
+                  HKEY hk_gcells,
+                  const wchar_t * c_cell)
+{
+    khm_size cb;
+    int i;
+    afs_cred_row * r;
+    khm_handle h_cell = NULL;
+    HKEY       hk_cell = NULL;
+    wchar_t wbuf[MAXCELLCHARS];
+    wchar_t wmethod[KHUI_MAXCCH_NAME];
+
+    if (FAILED(StringCbLength(c_cell, (MAXCELLCHARS + 1) * sizeof(wchar_t),
+                              &cb)))
+        return;
+    cb += sizeof(wchar_t);
+
+    for (i=0; i < l->n_rows; i++) {
+        if (!_wcsicmp(l->rows[i].cell, c_cell))
+            break;
+    }
+
+    if (i < l->n_rows)
+        return;
+
+    r = afs_cred_get_new_row(l);
+
+    r->cell = PMALLOC(cb);
+    StringCbCopy(r->cell, cb, c_cell);
+
+    if (h_gcells &&
+        KHM_SUCCEEDED(khc_open_space(h_gcells, c_cell, 0, &h_cell))) {
+
+        cb = sizeof(wmethod);
+        if (KHM_SUCCEEDED(khc_read_string(h_cell, L"MethodName",
+                                          wmethod, &cb))) {
+
+            r->method = afs_get_method_id(wmethod);
+
+            /* remove the deprecated value if it is present. */
+            khc_remove_value(h_cell, L"Method", 0);
+
+        } else if (KHM_SUCCEEDED(khc_read_int32(h_cell, 
+                                                L"Method", &i))) {
+            /* the Method property is deprecated.  We detect and
+               correct this whenever possible. */
+
+            if (!afs_is_valid_method_id(i))
+                i = AFS_TOKEN_AUTO;
+
+            r->method = i;
+
+            afs_get_method_name(i, wmethod, sizeof(wmethod));
+
+            khc_write_string(h_cell, L"MethodName", wmethod);
+
+            khc_remove_value(h_cell, L"Method", 0);
+        } else {
+            r->method = AFS_TOKEN_AUTO;
+        }
+
+        cb = sizeof(wbuf);
+        if (KHM_SUCCEEDED(khc_read_string(h_cell, L"Realm", wbuf, &cb)) &&
+            cb > sizeof(wchar_t)) {
+            r->realm = PMALLOC(cb);
+            StringCbCopy(r->realm, cb, wbuf);
+        } else {
+            r->realm = NULL;
+        }
+
+        khc_close_space(h_cell);
+        h_cell = NULL;
+    } else if (hk_gcells &&
+               RegOpenKeyEx(hk_gcells, c_cell, 0, KEY_READ, &hk_cell) == ERROR_SUCCESS) {
+
+        DWORD cbd;
+
+        cbd = sizeof(wmethod);
+        if (RegQueryValueEx(hk_cell, L"MethodName", NULL, NULL, (LPBYTE) wmethod, &cbd) == ERROR_SUCCESS) {
+            r->method = afs_get_method_id(wmethod);
+        } else {
+            r->method = AFS_TOKEN_AUTO;
+        }
+
+        cbd = sizeof(wbuf);
+        if (RegQueryValueEx(hk_cell, L"Realm", NULL, NULL, (LPBYTE) wbuf, &cbd) == ERROR_SUCCESS) {
+            cbd += sizeof(wchar_t);
+            r->realm = PMALLOC(cbd);
+            ZeroMemory(r->realm, cbd);
+            StringCbCopy(r->realm, cbd, wbuf);
+        } else {
+            r->realm = NULL;
+        }
+
+        RegCloseKey(hk_cell);
+
+    } else {
+        r->realm = NULL;
+        r->method = AFS_TOKEN_AUTO;
+    }
+
+    r->flags = 0;
+}
+
 
 void 
 afs_cred_get_identity_creds(afs_cred_list * l, 
@@ -598,70 +704,7 @@ afs_cred_get_identity_creds(afs_cred_list * l,
 
     s = ms;
     for(s = ms; s && *s; s = multi_string_next(s)) {
-        afs_cred_row * r;
-        size_t cb;
-        khm_handle h_cell = NULL;
-
-        /* is this a valid cell name? */
-        if(FAILED(StringCbLength(s, MAXCELLCHARS, &cb)))
-            continue;
-        cb += sizeof(wchar_t);
-
-        r = afs_cred_get_new_row(l);
-
-        r->cell = PMALLOC(cb);
-        StringCbCopy(r->cell, cb, s);
-
-        r->realm = NULL;
-        r->method = AFS_TOKEN_AUTO;
-        r->flags = DLGROW_FLAG_CONFIG;
-
-        if(KHM_SUCCEEDED(khc_open_space(h_cells, s, 
-                                        0, &h_cell))) {
-            khm_int32 i;
-            wchar_t wname[KHUI_MAXCCH_NAME];
-            khm_size cb;
-
-            if(khc_read_string(h_cell, L"Realm", 
-                               NULL, &cbi) == 
-               KHM_ERROR_TOO_LONG &&
-               cbi > sizeof(wchar_t)) {
-
-                r->realm = PMALLOC(cbi);
-                khc_read_string(h_cell, L"Realm", r->realm, &cbi);
-            }
-
-            i = AFS_TOKEN_AUTO;
-
-            cb = sizeof(wname);
-            if (KHM_SUCCEEDED(khc_read_string(h_cell, L"MethodName",
-                                              wname, &cb))) {
-
-                r->method = afs_get_method_id(wname);
-
-                /* remove the deprecated value if it is present. */
-                khc_remove_value(h_cell, L"Method", 0);
-
-            } else if (KHM_SUCCEEDED(khc_read_int32(h_cell, 
-                                                    L"Method", &i))) {
-                /* the Method property is deprecated.  We detect and
-                   correct this whenever possible. */
-
-                if (!afs_is_valid_method_id(i))
-                    i = AFS_TOKEN_AUTO;
-
-                r->method = i;
-
-                afs_get_method_name(i, wname, sizeof(wname));
-
-                khc_write_string(h_cell, L"MethodName",
-                                 wname);
-
-                khc_remove_value(h_cell, L"Method", 0);
-            }
-
-            khc_close_space(h_cell);
-        }
+        add_token_to_list(l, h_cells, NULL, s);
     }
 
     if(ms) {
@@ -675,11 +718,8 @@ afs_cred_get_identity_creds(afs_cred_list * l,
         /* We want to load defaults */
         char buf[MAXCELLCHARS];
         wchar_t wbuf[MAXCELLCHARS];
-        wchar_t wmethod[KHUI_MAXCCH_NAME];
         wchar_t * defcells;
         khm_size cb_defcells;
-        afs_cred_row * r;
-        khm_size sz;
 
         khc_open_space(csp_params, L"Cells", 0, &h_gcells);
 
@@ -688,43 +728,7 @@ afs_cred_get_identity_creds(afs_cred_list * l,
             AnsiStrToUnicode(wbuf, sizeof(wbuf), buf);
 
             if (afs_check_add_token_to_identity(wbuf, ident, NULL)) {
-                khm_handle h_cell = NULL;
-
-                r = afs_cred_get_new_row(l);
-
-                StringCbLength(wbuf, sizeof(wbuf), &sz);
-                sz += sizeof(wchar_t);
-
-                r->cell = PMALLOC(sz);
-                StringCbCopy(r->cell, sz, wbuf);
-
-                if (h_gcells &&
-                    KHM_SUCCEEDED(khc_open_space(h_gcells, wbuf, 0, &h_cell))) {
-                    khm_size cb;
-
-                    cb = sizeof(wmethod);
-                    if (KHM_SUCCEEDED(khc_read_string(h_cell, L"MethodName", wmethod, &cb))) {
-                        r->method = afs_get_method_id(wmethod);
-                    } else {
-                        r->method = AFS_TOKEN_AUTO;
-                    }
-
-                    cb = sizeof(wbuf);
-                    if (KHM_SUCCEEDED(khc_read_string(h_cell, L"Realm", wbuf, &cb))) {
-                        r->realm = PMALLOC(cb);
-                        StringCbCopy(r->realm, cb, wbuf);
-                    } else {
-                        r->realm = NULL;
-                    }
-
-                    khc_close_space(h_cell);
-
-                } else {
-                    r->realm = NULL;
-                    r->method = AFS_TOKEN_AUTO;
-                }
-
-                r->flags = 0;
+                add_token_to_list(l, h_gcells, NULL, wbuf);
             }
         }
 
@@ -746,67 +750,94 @@ afs_cred_get_identity_creds(afs_cred_list * l,
             for (c_cell = defcells;
                  c_cell && *c_cell;
                  c_cell = multi_string_next(c_cell)) {
+                char cell[MAXCELLCHARS];
 
-                khm_size cb;
-                int i;
-                khm_handle h_cell = NULL;
-                afs_cred_row * r;
+                UnicodeStrToAnsi(cell, sizeof(cell), c_cell);
 
-                if (FAILED(StringCbLength(c_cell, (MAXCELLCHARS + 1) * sizeof(wchar_t),
-                                          &cb)))
-                    continue;
-                cb += sizeof(wchar_t);
-
-                for (i=0; i < l->n_rows; i++) {
-                    if (!_wcsicmp(l->rows[i].cell, c_cell))
-                        break;
-                }
-
-                if (i < l->n_rows)
+                if (!afs_check_for_cell_realm_match(ident, cell))
                     continue;
 
-                {
-                    char cell[MAXCELLCHARS];
-
-                    UnicodeStrToAnsi(cell, sizeof(cell), c_cell);
-
-                    if (!afs_check_for_cell_realm_match(ident, cell))
-                        continue;
+                add_token_to_list(l, h_gcells, NULL, c_cell);
                 }
-
-                r = afs_cred_get_new_row(l);
-
-                r->cell = PMALLOC(cb);
-                StringCbCopy(r->cell, cb, c_cell);
-
-                if (h_gcells &&
-                    KHM_SUCCEEDED(khc_open_space(h_gcells, c_cell, 0, &h_cell))) {
-
-                    cb = sizeof(wmethod);
-                    if (KHM_SUCCEEDED(khc_read_string(h_cell, L"MethodName", wmethod, &cb))) {
-                        r->method = afs_get_method_id(wmethod);
-                    } else {
-                        r->method = AFS_TOKEN_AUTO;
-                    }
-
-                    cb = sizeof(wbuf);
-                    if (KHM_SUCCEEDED(khc_read_string(h_cell, L"Realm", wbuf, &cb))) {
-                        r->realm = PMALLOC(cb);
-                        StringCbCopy(r->realm, cb, wbuf);
-                    } else {
-                        r->realm = NULL;
-                    }
-
-                    khc_close_space(h_cell);
-                } else {
-                    r->realm = NULL;
-                    r->method = AFS_TOKEN_AUTO;
-                }
-
-                r->flags = 0;
-            }
 
             PFREE(defcells);
+        }
+
+        /* Check HKLM\Software\OpenAFS\Client\Realms\<Realm> registry key as well */
+        {
+            wchar_t idname[KCDB_IDENT_MAXCCH_NAME];
+            wchar_t * realm;
+            wchar_t * cell=NULL;
+            khm_size cb;
+            HKEY hk_realms = NULL, hk_realm = NULL;
+
+            cb = sizeof(idname);
+            kcdb_identity_get_name(ident, idname, &cb);
+
+            realm = wcsrchr(idname, L'@');
+            if (realm == NULL || realm[1] == L'\0')
+                goto _done_realms;
+
+            realm++;
+
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\OpenAFS\\Client\\Realms", 0, KEY_READ, &hk_realms) != ERROR_SUCCESS)
+                goto _done_realms;
+
+            if (RegOpenKeyEx(hk_realms, realm, 0, KEY_READ, &hk_realm) != ERROR_SUCCESS)
+                goto _done_realms;
+
+            if (penabled) {
+                DWORD enabled = 1;
+                DWORD cbd;
+
+                cbd = sizeof(enabled);
+
+                if (RegQueryValueEx(hk_realm, L"AFSEnabled",
+                                    NULL, NULL, (LPBYTE) &enabled, &cbd) == ERROR_SUCCESS) {
+                    *penabled = !!enabled;
+                }
+            }
+
+            {
+                DWORD dwNumCells=0, dwMaxCellLen=0, dwIndex, dwCellBufSz;
+
+                RegQueryInfoKey( hk_realm,
+                                 NULL,  /* lpClass */
+                                 NULL,  /* lpcClass */
+                                 NULL,  /* lpReserved */
+                                 &dwNumCells,  /* lpcSubKeys */
+                                 &dwMaxCellLen,  /* lpcMaxSubKeyLen */
+                                 NULL,  /* lpcMaxClassLen */
+                                 NULL, /* lpcValues */
+                                 NULL,  /* lpcMaxValueNameLen */
+                                 NULL,  /* lpcMaxValueLen */
+                                 NULL,  /* lpcbSecurityDescriptor */
+                                 NULL   /* lpftLastWriteTime */
+                                 );
+
+                dwCellBufSz = (dwMaxCellLen + 1) * sizeof(wchar_t);
+                cell = PMALLOC(dwCellBufSz);
+                ZeroMemory(cell, dwCellBufSz);
+
+                for ( dwIndex=0; dwIndex < dwNumCells; dwIndex++ ) {
+                    if (RegEnumKey( hk_realm, dwIndex, cell, dwCellBufSz) != ERROR_SUCCESS)
+                        goto _done_realms;
+
+                    if (afs_check_add_token_to_identity(cell, ident, NULL))
+                        add_token_to_list(l, NULL, hk_realm, cell);
+                }
+            }
+
+        _done_realms:
+
+            if (hk_realm)
+                RegCloseKey(hk_realm);
+
+            if (hk_realms)
+                RegCloseKey(hk_realms);
+
+            if (cell)
+                PFREE(cell);
         }
     }
 
