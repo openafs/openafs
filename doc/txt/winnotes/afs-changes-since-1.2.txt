@@ -1,3 +1,40 @@
+Since 1.5.29
+ * Fix buffer refcount leak introduced in 1.5.29
+
+ * Prevent the NIM AFS Provider from crashing when configured to use 
+   Kerberos v4 for token acquisition in situations where no Kerberos v4
+   support is available.  For example, 64-bit KFW or sites that delete
+   the Kerberos v4 DLL.
+
+ * In afsd_init.log, support logging cache sizes greater than 2GB.
+
+ * The volume status output of "fs examine" was being determined based
+   upon the wrong error value.  Instead of using the pioctl() return
+   code, the errno value must be used.  
+
+ * Prevent invalid pts auto-registration attempts by aklog and the 
+   NIM afs provider when Kerberos referrals are in use.  (krb5 1.6+)
+
+ * Add synchronization protection to all of the SMB Listener State 
+   variables.  This prevents race conditions when the addition or
+   loss of a network adapter takes place.
+
+ * On Vista, there is a race condition between the restart of the 
+   afs client service and the network adapters.  Ensure that the 
+   afs client service can handle switching between loopback and 
+   non-loopback modes of operation.
+
+ * Fix FollowBackupPath to work with mount points that are not 
+   explicitly read/write.
+
+ * Fix a deadlock that has been observed on Vista while resuming
+   after at least four hours of sleep.
+
+ * Add new HKLM registry configuration options that can be used 
+   to provide configuration hints to the NIM AFS Provider when 
+   creating new identities.  See release notes for details on
+   HKLM\SOFTWARE\OpenAFS\Client\Realms\.
+
 Since 1.5.28
  * Speed up write buffer operations by holding a global read-lock
    instead of a write-lock when updating the buffer data version 
