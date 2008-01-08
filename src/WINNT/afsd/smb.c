@@ -9083,7 +9083,6 @@ void smb_RestartListeners(int locked)
         lock_ObtainMutex(&smb_StartedLock);
 
     if (!powerStateSuspended && smb_ListenerState != SMB_LISTENER_UNINITIALIZED) {
-        afsi_log("smb_RestartListeners");
 	if (smb_ListenerState == SMB_LISTENER_STOPPED) {
             if (smb_NetbiosInit(1))
                 smb_StartListeners(1);
