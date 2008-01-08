@@ -371,7 +371,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         if (tsp)
             cellp = tsp->cellp;
 
-        if (cellp)
+        if (!cellp)
             osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
                      ntohl(host),
                      ntohs(port));
