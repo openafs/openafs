@@ -344,7 +344,7 @@ afsd_ServiceControlHandlerEx(
 		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6) {
                         cm_SuspendSCache();
-			smb_StopListeners();
+			smb_StopListeners(0);
                     }
                     dwRet = NO_ERROR;                       
                     break;                                  
@@ -353,14 +353,14 @@ afsd_ServiceControlHandlerEx(
 		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6) {
                         cm_SuspendSCache();
-			smb_StopListeners();
+			smb_StopListeners(0);
                     }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMECRITICAL:             
                     afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL"); 
 		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners();
+			smb_RestartListeners(0);
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMESUSPEND:                                                        
@@ -394,7 +394,7 @@ afsd_ServiceControlHandlerEx(
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC"); 
 		    powerStateSuspended = 0;
 		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners();
+			smb_RestartListeners(0);
                     dwRet = NO_ERROR;                       
                     break;                                  
                 default:                                                                          
@@ -441,7 +441,7 @@ static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
 
     dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey);
     if (dwResult != ERROR_SUCCESS)
-        return;
+        return 0;
 
     while (dwIndex < MAX_DRIVES) {
         dwDriveSize = sizeof(szDriveToMapTo);

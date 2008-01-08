@@ -59,9 +59,11 @@ osi_log_t *  smb_logp;
 osi_rwlock_t smb_globalLock;
 osi_rwlock_t smb_rctLock;
 osi_mutex_t  smb_ListenerLock;
+osi_mutex_t  smb_StartedLock;
  
-char smb_LANadapter = -1;
+unsigned char smb_LANadapter = LANA_INVALID;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
+int  smb_LanAdapterChangeDetected = 0;
 
 BOOL isGateway = FALSE;
 
@@ -163,7 +165,7 @@ DWORD smb_TlsRequestSlot = -1;
 /* forward decl */
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 			NCB *ncbp, raw_write_cont_t *rwcp);
-int smb_NetbiosInit(void);
+int smb_NetbiosInit(int);
 
 #ifdef LOG_PACKET
 void smb_LogPacket(smb_packet_t *packet);
@@ -8087,7 +8089,9 @@ void smb_Listener(void *parmp)
 	if (code == NRC_BRIDGE) {
 	    int lanaRemaining = 0;
 
+	    lock_ObtainMutex(&smb_StartedLock);
 	    if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
+	        lock_ReleaseMutex(&smb_StartedLock);
 		ExitThread(1);
 	    }
 
@@ -8111,10 +8115,11 @@ void smb_Listener(void *parmp)
 #endif
                                               );
 		smb_ListenerState = SMB_LISTENER_STOPPED;
-		smb_LANadapter = -1;
+		smb_LANadapter = LANA_INVALID;
 		lana_list.length = 0;
 	    }
 	    FreeNCB(ncbp);
+            lock_ReleaseMutex(&smb_StartedLock);
 	    return;
 	} else if (code != 0) {
             char tbuffer[AFSPATHMAX];
@@ -8124,16 +8129,16 @@ void smb_Listener(void *parmp)
                 ExitThread(1);
             }
 
-            osi_Log2(smb_logp, 
-                     "NCBLISTEN lana=%d failed with code %d",
-                     ncbp->ncb_lana_num, code);
+            osi_Log3(smb_logp, 
+                     "NCBLISTEN lana=%d failed with code %d [%s]",
+                     ncbp->ncb_lana_num, code, ncb_error_string(code));
             osi_Log0(smb_logp, 
                      "Client exiting due to network failure. Please restart client.\n");
 
             sprintf(tbuffer, 
                      "Client exiting due to network failure.  Please restart client.\n"
-                     "NCBLISTEN lana=%d failed with code %d",
-                     ncbp->ncb_lana_num, code);
+                     "NCBLISTEN lana=%d failed with code %d [%s]",
+                     ncbp->ncb_lana_num, code, ncb_error_string(code));
             if (showErrors)
                 code = (*smb_MBfunc)(NULL, tbuffer, "AFS Client Service: Fatal Error",
                                       MB_OK|MB_SERVICE_NOTIFICATION);
@@ -8321,31 +8326,71 @@ void smb_Listener(void *parmp)
     FreeNCB(ncbp);
 }
 
+void smb_SetLanAdapterChangeDetected(void)
+{
+    lock_ObtainMutex(&smb_StartedLock);
+    smb_LanAdapterChangeDetected = 1;
+    lock_ReleaseMutex(&smb_StartedLock);
+}
 
-void smb_LanAdapterChange(void) {
+void smb_LanAdapterChange(int locked) {
     lana_number_t lanaNum;
     BOOL          bGateway;
     char          NetbiosName[MAX_NB_NAME_LENGTH] = "";
     int           change = 0;
+    LANA_ENUM     temp_list;           
+    long          code;
+    int           i;
+
+
+    afsi_log("smb_LanAdapterChange");
+
+    if (!locked)
+        lock_ObtainMutex(&smb_StartedLock);
+    
+    smb_LanAdapterChangeDetected = 0;
 
     if (!powerStateSuspended && 
         SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
                                           LANA_NETBIOS_NAME_FULL))) {
-        if (smb_LANadapter != lanaNum ||
-            isGateway != bGateway ||
-            strcmp(cm_NetbiosName, NetbiosName))
+
+        if ( lanaNum != LANA_INVALID && smb_LANadapter != lanaNum ||
+             isGateway != bGateway ||
+             strcmp(cm_NetbiosName, NetbiosName) ) {
             change = 1;
+        } else {
+            NCB *ncbp = GetNCB();
+            ncbp->ncb_command = NCBENUM;
+            ncbp->ncb_buffer = (PUCHAR)&temp_list;
+            ncbp->ncb_length = sizeof(temp_list);
+            code = Netbios(ncbp);
+            if (code == 0) {
+                if (temp_list.length != lana_list.length)
+                    change = 1;
+                else {
+                    for (i=0; i<lana_list.length; i++) {
+                        if ( temp_list.lana[i] != lana_list.lana[i] ) {
+                            change = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+	    FreeNCB(ncbp);
+        }
     } 
 
     if (change) {
         afsi_log("Lan Adapter Change detected");
-        smb_StopListeners();
-        smb_RestartListeners();
+        smb_StopListeners(1);
+        smb_RestartListeners(1);
     }
+    if (!locked)
+        lock_ReleaseMutex(&smb_StartedLock);
 }
 
 /* initialize Netbios */
-int smb_NetbiosInit(void)
+int smb_NetbiosInit(int locked)
 {
     NCB *ncbp;
     int i, lana, code, l;
@@ -8355,6 +8400,16 @@ int smb_NetbiosInit(void)
     int lana_found = 0;
     lana_number_t lanaNum;
 
+    if (!locked)
+        lock_ObtainMutex(&smb_StartedLock);
+
+    if (smb_ListenerState != SMB_LISTENER_UNINITIALIZED &&
+         smb_ListenerState != SMB_LISTENER_STOPPED) {
+
+        if (!locked)
+            lock_ReleaseMutex(&smb_StartedLock);
+        return 0;
+    }
     /* setup the NCB system */
     ncbp = GetNCB();
 
@@ -8362,7 +8417,7 @@ int smb_NetbiosInit(void)
     if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
         smb_LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
 
-        if (smb_LANadapter != -1)
+        if (smb_LANadapter != LANA_INVALID)
 	    afsi_log("LAN adapter number %d", smb_LANadapter);
         else
 	    afsi_log("LAN adapter number not determined");
@@ -8387,7 +8442,7 @@ int smb_NetbiosInit(void)
     afsi_log("smb_localNamep is >%s<", smb_localNamep);
 
 
-    if (smb_LANadapter == -1) {
+    if (smb_LANadapter == LANA_INVALID) {
         ncbp->ncb_command = NCBENUM;
         ncbp->ncb_buffer = (PUCHAR)&lana_list;
         ncbp->ncb_length = sizeof(lana_list);
@@ -8487,6 +8542,7 @@ int smb_NetbiosInit(void)
             }
         }
         if (code == 0) {
+            smb_LANadapter = lana;
             lana_found = 1;   /* at least one worked */
         }
     }
@@ -8495,7 +8551,7 @@ int smb_NetbiosInit(void)
     if (!lana_found) {
         afsi_log("No valid LANA numbers found!");
 	lana_list.length = 0;
-	smb_LANadapter = -1;
+	smb_LANadapter = LANA_INVALID;
 	smb_ListenerState = SMB_LISTENER_STOPPED;
         cm_VolStatus_Network_Stopped(cm_NetbiosName
 #ifdef _WIN64
@@ -8507,18 +8563,32 @@ int smb_NetbiosInit(void)
     /* we're done with the NCB now */
     FreeNCB(ncbp);
 
-    return ((lana_list.length > 0 && smb_LANadapter != -1) ? 1 : 0);
+    afsi_log("smb_NetbiosInit smb_LANadapter=%d",smb_LANadapter);
+    if (lana_list.length > 0)
+        osi_assert(smb_LANadapter != LANA_INVALID);
+
+    if (!locked)
+        lock_ReleaseMutex(&smb_StartedLock);
+
+    return (lana_list.length > 0 ? 1 : 0);
 }
 
-void smb_StartListeners()
+void smb_StartListeners(int locked)
 {
     int i;
     int lpid;
     thread_t phandle;
 
-    if (smb_ListenerState == SMB_LISTENER_STARTED)
+    if (!locked)
+        lock_ObtainMutex(&smb_StartedLock);
+
+    if (smb_ListenerState == SMB_LISTENER_STARTED) {
+        if (!locked)
+            lock_ReleaseMutex(&smb_StartedLock);
 	return;
-    
+    }
+
+    afsi_log("smb_StartListeners");
     smb_ListenerState = SMB_LISTENER_STARTED;
     cm_VolStatus_Network_Started(cm_NetbiosName
 #ifdef _WIN64
@@ -8534,18 +8604,26 @@ void smb_StartListeners()
         osi_assertx(phandle != NULL, "smb_Listener thread creation failure");
         thrd_CloseHandle(phandle);
     }
+    if (!locked)
+        lock_ReleaseMutex(&smb_StartedLock);
 }
 
-void smb_RestartListeners()
+void smb_RestartListeners(int locked)
 {
-    if (!powerStateSuspended) {
+    if (!locked)
+        lock_ObtainMutex(&smb_StartedLock);
+
+    afsi_log("smb_RestartListeners");
+    if (!powerStateSuspended && smb_ListenerState != SMB_LISTENER_UNINITIALIZED) {
 	if (smb_ListenerState == SMB_LISTENER_STOPPED) {
-		if (smb_NetbiosInit())
-		    smb_StartListeners();
-	}
-	if (smb_LANadapter == -1)
-		smb_LanAdapterChange();
+            if (smb_NetbiosInit(1))
+                smb_StartListeners(1);
+        } else if (smb_LanAdapterChangeDetected) {
+            smb_LanAdapterChange(1);
+        }
     }
+    if (!locked)
+        lock_ReleaseMutex(&smb_StartedLock);
 }
 
 void smb_StopListener(NCB *ncbp, int lana)
@@ -8576,14 +8654,21 @@ void smb_StopListener(NCB *ncbp, int lana)
     }
 }
 
-void smb_StopListeners(void)
+void smb_StopListeners(int locked)
 {
     NCB *ncbp;
     int lana, l;
 
-    if (smb_ListenerState == SMB_LISTENER_STOPPED)
-	return;
+    if (!locked)
+        lock_ObtainMutex(&smb_StartedLock);
 
+    if (smb_ListenerState == SMB_LISTENER_STOPPED) {
+        if (!locked)
+            lock_ReleaseMutex(&smb_StartedLock);
+	return;
+    }
+
+    afsi_log("smb_StopListeners");
     smb_ListenerState = SMB_LISTENER_STOPPED;
     cm_VolStatus_Network_Stopped(cm_NetbiosName
 #ifdef _WIN64
@@ -8607,8 +8692,10 @@ void smb_StopListeners(void)
 
     /* force a re-evaluation of the network adapters */
     lana_list.length = 0;
-    smb_LANadapter = -1;
+    smb_LANadapter = LANA_INVALID;
     FreeNCB(ncbp);
+    if (!locked)
+        lock_ReleaseMutex(&smb_StartedLock);
     Sleep(1000);	/* give the listener threads a chance to exit */
 }
 
@@ -8624,6 +8711,7 @@ void smb_Init(osi_log_t *logp, int useV3,
     struct tm myTime;
     EVENT_HANDLE retHandle;
     char eventName[MAX_PATH];
+    int startListeners = 0;
 
     smb_TlsRequestSlot = TlsAlloc();
 
@@ -8661,6 +8749,7 @@ void smb_Init(osi_log_t *logp, int useV3,
     lock_InitializeMutex(&smb_RawBufLock, "smb raw buffer lock");
 
     lock_InitializeMutex(&smb_ListenerLock, "smb listener lock");
+    lock_InitializeMutex(&smb_StartedLock, "smb started lock");
 	
     /* 4 Raw I/O buffers */
     smb_RawBufs = calloc(65536,1);
@@ -8675,7 +8764,8 @@ void smb_Init(osi_log_t *logp, int useV3,
     smb_ncbFreeListp = NULL;
     smb_packetFreeListp = NULL;
 
-    smb_NetbiosInit();
+    lock_ObtainMutex(&smb_StartedLock);
+    startListeners = smb_NetbiosInit(1);
 
     /* Initialize listener and server structures */
     numVCs = 0;
@@ -8942,8 +9032,8 @@ void smb_Init(osi_log_t *logp, int useV3,
     }
 
     /* Start listeners, waiters, servers, and daemons */
-
-    smb_StartListeners();
+    if (startListeners)
+        smb_StartListeners(1);
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ClientWaiter,
                           NULL, 0, &lpid, "smb_ClientWaiter");
@@ -8972,6 +9062,7 @@ void smb_Init(osi_log_t *logp, int useV3,
     osi_assertx(phandle != NULL, "smb_WaitingLocksDaemon thread creation failure");
     thrd_CloseHandle(phandle);
 
+    lock_ReleaseMutex(&smb_StartedLock);
     return;
 }
 
@@ -9250,5 +9341,9 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 
 long smb_IsNetworkStarted(void)
 {
-    return (smb_ListenerState == SMB_LISTENER_STARTED && smbShutdownFlag == 0);
+    long rc;
+    lock_ObtainWrite(&smb_globalLock);
+    rc = (smb_ListenerState == SMB_LISTENER_STARTED && smbShutdownFlag == 0);
+    lock_ReleaseWrite(&smb_globalLock);
+    return rc;
 }
