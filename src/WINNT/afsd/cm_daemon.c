@@ -529,7 +529,7 @@ void cm_Daemon(long parm)
         if (daemon_ShutdownFlag == 1) {
             break;
         }
-	thrd_Sleep(1000);		/* sleep 30 seconds */
+	thrd_Sleep(10000);		/* sleep 10 seconds */
     }
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
 }       
