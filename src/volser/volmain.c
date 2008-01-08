@@ -512,10 +512,12 @@ main(int argc, char **argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(service, lwps);
-#ifdef AFS_SGI_ENV
-    rx_SetStackSize(service, 49152);
+#if defined(AFS_XBSD_ENV)
+    rx_SetStackSize(service, (128 * 1024));
+#elif defined(AFS_SGI_ENV)
+    rx_SetStackSize(service, (48 * 1024));
 #else
-    rx_SetStackSize(service, 32768);
+    rx_SetStackSize(service, (32 * 1024));
 #endif
 
     service =

@@ -1819,12 +1819,16 @@ main(int argc, char *argv[])
     rx_SetBusyThreshold(busy_threshold, VBUSY);
     rx_SetCallAbortThreshold(abort_threshold);
     rx_SetConnAbortThreshold(abort_threshold);
+#ifdef AFS_XBSD_ENV
+    stackSize = 128 * 1024;
+#else
     stackSize = lwps * 4000;
     if (stackSize < 32000)
 	stackSize = 32000;
     else if (stackSize > 44000)
 	stackSize = 44000;
-#if    defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV)
+#endif
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV) || defined(AFS_XBSD_ENV)
     rx_SetStackSize(1, stackSize);
 #endif
     if (udpBufSize)
