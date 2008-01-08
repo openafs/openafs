@@ -37,7 +37,7 @@ process.o	: process.s process.i386.s process.c
 	pmax_he1) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* ) \
-		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
+		$(CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \
 	sgi_5* ) \
@@ -45,11 +45,11 @@ process.o	: process.s process.i386.s process.c
 	sgi_61 | sgi_62 | sgi_63 ) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	s390_*) \
-		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
+		$(CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	s390x_*) \
-		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
+		$(CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	*_darwin* ) \
@@ -88,11 +88,11 @@ process.o	: process.s process.i386.s process.c
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
 	ncrx86_* | sunx86_*) \
-		/usr/ccs/lib/cpp -P -D__sun -D__i386 -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s process.ss; \
+		$(CPP) -P -D__sun -D__i386 -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	alpha_nbsd* ) \
-		/usr/bin/cpp -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
+		$(CPP) -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
@@ -103,11 +103,11 @@ process.o	: process.s process.i386.s process.c
 	ia64_hpux11* | hp_ux11* ) \
 		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
 	i386_*) \
-		/lib/cpp -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s process.ss; \
+		$(CPP) -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s process.ss; \
 		${AS} process.ss -o process.o; \
 		$(RM) process.ss ;; \
 	*) \
-		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
+		$(CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 		$(RM) process.ss ;; \
 	esac
