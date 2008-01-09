@@ -8086,7 +8086,13 @@ void smb_Listener(void *parmp)
 
         code = Netbios(ncbp);
 
-	if (code == NRC_BRIDGE) {
+        if (code == NRC_NAMERR) {
+	  /* An smb shutdown must have taken place */
+	  osi_Log2(smb_logp,
+		   "NCBLISTEN lana=%d failed with NRC_NAMERR.",
+		   ncbp->ncb_lana_num, code);
+	  continue;
+        } else if (code == NRC_BRIDGE) {
 	    int lanaRemaining = 0;
 
 	    lock_ObtainMutex(&smb_StartedLock);
