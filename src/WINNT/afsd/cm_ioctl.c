@@ -62,6 +62,8 @@ extern char cm_NetbiosName[];
 
 extern void afsi_log(char *pattern, ...);
 
+afs_uint32 cm_pioctlFollowMountPoint = 0;
+
 void cm_InitIoctl(void)
 {
     lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
@@ -221,7 +223,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 #endif
     char * relativePath;
     char * lastComponent = NULL;
-    afs_uint32 follow = 0;
+    afs_uint32 follow = (cm_pioctlFollowMountPoint ? CM_FLAG_FOLLOW : CM_FLAG_NOMOUNTCHASE);
 
     relativePath = ioctlp->inDatap;
     /* setup the next data value for the caller to use */
@@ -247,7 +249,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        and it returns the correct (full) path.  therefore, there is
        no drive letter, and the path is absolute. */
     code = cm_NameI(cm_data.rootSCachep, relativePath,
-                     CM_FLAG_CASEFOLD | follow,
+                     CM_FLAG_CASEFOLD,
                      userp, "", reqp, scpp);
 
     if (code) {
@@ -300,7 +302,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
 				 userp, NULL, reqp, &iscp);
 		if (code == 0)
-		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
 				    userp, NULL, reqp, scpp);
 		if (iscp)
 		    cm_ReleaseSCache(iscp);
@@ -347,7 +349,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
 				 userp, NULL, reqp, &iscp);
 		if (code == 0)
-		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
 				    userp, NULL, reqp, scpp);
 		if (iscp)
 		    cm_ReleaseSCache(iscp);
@@ -379,7 +381,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
 			     userp, NULL, reqp, &iscp);
 	    if (code == 0)
-		code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | CM_FLAG_NOMOUNTCHASE,
+		code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
 				 userp, NULL, reqp, scpp);
 	    if (iscp)
 		cm_ReleaseSCache(iscp);
