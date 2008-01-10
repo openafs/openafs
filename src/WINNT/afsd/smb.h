@@ -732,7 +732,7 @@ extern void smb_SetRequestStartTime(void);
 extern void smb_ResetServerPriority(void);
 extern void smb_RestartListeners(int);
 extern void smb_StopListeners(int);
-extern void smb_StopListener(NCB *ncbp, int lana);
+extern void smb_StopListener(NCB *ncbp, int lana, int wait);
 extern long smb_IsNetworkStarted(void);
 extern void smb_LanAdapterChange(int);
 extern void smb_SetLanAdapterChangeDetected(void);
