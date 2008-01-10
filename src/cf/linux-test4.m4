@@ -728,11 +728,28 @@ extern int vfs_statfs(struct dentry *, struct kstatfs *);
       ac_cv_linux_statfs_takes_dentry=no)])
   AC_MSG_RESULT($ac_cv_linux_statfs_takes_dentry)])
 
+
+AC_DEFUN([LINUX_KEY_TYPE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/key-type.h existance])
+  AC_CACHE_VAL([ac_cv_linux_key_type_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/key-type.h>],
+[return;],
+      ac_cv_linux_key_type_h_exists=yes,
+      ac_cv_linux_key_type_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_key_type_h_exists)
+  if test "x$ac_cv_linux_key_type_h_exists" = "xyes"; then
+    AC_DEFINE([KEY_TYPE_H_EXISTS], 1, [define if linux/key-type.h exists])
+  fi])
+
 AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
   AC_MSG_CHECKING([for linux kernel keyring support])
   AC_CACHE_VAL([ac_cv_linux_keyring_support], [
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
+#ifdef KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
 #include <linux/key.h>
 #include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS

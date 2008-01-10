@@ -17,6 +17,9 @@
 #include "afs/param.h"
 #ifdef LINUX_KEYRING_SUPPORT
 #include <linux/seq_file.h>
+#if KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
 #endif
 
 RCSID
