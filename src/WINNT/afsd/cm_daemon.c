@@ -50,6 +50,7 @@ cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
 static int daemon_ShutdownFlag = 0;
 static int cm_nDaemons = 0;
+static time_t lastIPAddrChange = 0;
 
 static EVENT_HANDLE cm_Daemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
@@ -74,17 +75,9 @@ void cm_IpAddrDaemon(long parm)
         thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
         Result = NotifyAddrChange(NULL,NULL);
         if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
+            lastIPAddrChange = osi_Time();
             smb_SetLanAdapterChangeDetected();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
-	    Sleep(2500);
-            if (daemon_ShutdownFlag == 0) {
-                osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
-                cm_CheckServers(CM_FLAG_CHECKVLDBSERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
-                cm_ForceNewConnectionsAllServers();
-                cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
-                smb_CheckVCs();
-                cm_VolStatus_Network_Addr_Change();
-            }
 	}	
     }
 
@@ -355,6 +348,7 @@ void cm_Daemon(long parm)
     HMODULE hHookDll;
     char * name = "cm_Daemon_ShutdownEvent";
     int configureFirewall = IsWindowsFirewallPresent();
+    int bAddrChangeCheck = 0;
 
     cm_Daemon_ShutdownEvent = thrd_CreateEvent(NULL, FALSE, FALSE, name);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -429,9 +423,18 @@ void cm_Daemon(long parm)
 
         /* find out what time it is */
         now = osi_Time();
+        
+        /* Determine whether an address change took place that we need to respond to */
+        if (bAddrChangeCheck)
+            bAddrChangeCheck = 0;
+
+        if (lastIPAddrChange != 0 && lastIPAddrChange + 2500 < now) {
+            bAddrChangeCheck = 1;
+            lastIPAddrChange = 0;
+        }
 
         /* check down servers */
-        if (now > lastDownServerCheck + cm_daemonCheckDownInterval &&
+        if ((bAddrChangeCheck || now > lastDownServerCheck + cm_daemonCheckDownInterval) &&
             daemon_ShutdownFlag == 0) {
             lastDownServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
@@ -441,8 +444,11 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
         }
 
+        if (bAddrChangeCheck)
+            cm_ForceNewConnectionsAllServers();
+
         /* check up servers */
-        if (now > lastUpServerCheck + cm_daemonCheckUpInterval &&
+        if ((bAddrChangeCheck || now > lastUpServerCheck + cm_daemonCheckUpInterval) &&
             daemon_ShutdownFlag == 0) {
             lastUpServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
@@ -450,6 +456,11 @@ void cm_Daemon(long parm)
             if (daemon_ShutdownFlag == 1)
                 break;
 	    now = osi_Time();
+        }
+
+        if (bAddrChangeCheck) {
+            smb_CheckVCs();
+            cm_VolStatus_Network_Addr_Change();
         }
 
         if (now > lastVolCheck + cm_daemonCheckVolInterval &&
@@ -471,7 +482,7 @@ void cm_Daemon(long parm)
             now = osi_Time();
         }
 
-        if (now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval &&
+        if ((bAddrChangeCheck || now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) &&
             daemon_ShutdownFlag == 0) {
             lastVolCheck = now;
             cm_CheckOfflineVolumes();

@@ -98,6 +98,7 @@ EVENT_HANDLE NCBavails[NCB_MAX], NCBevents[NCB_MAX];
 EVENT_HANDLE **NCBreturns;
 EVENT_HANDLE **NCBShutdown;
 EVENT_HANDLE *smb_ServerShutdown;
+EVENT_HANDLE ListenerShutdown[256];
 DWORD NCBsessions[NCB_MAX];
 NCB *NCBs[NCB_MAX];
 struct smb_packet *bufs[NCB_MAX];
@@ -108,7 +109,6 @@ unsigned short LSNs[SESSION_MAX];
 int lanas[SESSION_MAX];
 BOOL dead_sessions[SESSION_MAX];
 LANA_ENUM lana_list;
-
 /* for raw I/O */
 osi_mutex_t smb_RawBufLock;
 #ifdef DJGPP
@@ -8453,6 +8453,12 @@ void smb_Listener(void *parmp)
     time_t now;
 #endif /* DJGPP */
     INT_PTR lana = (INT_PTR) parmp;
+    char eventName[MAX_PATH];
+
+    sprintf(eventName,"smb_Listener_lana_%d", (char)lana);
+    ListenerShutdown[lana] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        thrd_ResetEvent(ListenerShutdown[lana]);
 
     ncbp = GetNCB();
 #ifdef DJGPP
@@ -8487,34 +8493,35 @@ void smb_Listener(void *parmp)
         code = Netbios(ncbp, dos_ncb);
 #endif
         if (code == NRC_NAMERR) {
-            /* An smb shutdown must have taken place */
+            /* An smb shutdown or Vista resume must have taken place */
 	    osi_Log2(smb_logp,
                      "NCBLISTEN lana=%d failed with NRC_NAMERR.",
                      ncbp->ncb_lana_num, code);
-            continue;
-        } else if (code == NRC_BRIDGE) {
+
+            if (lock_TryMutex(&smb_StartedLock)) {
+                lana_list.lana[i] = LANA_INVALID;
+                lock_ReleaseMutex(&smb_StartedLock);
+            }
+            break;
+        } else if (code == NRC_BRIDGE || code != 0) {
 	    int lanaRemaining = 0;
 
-            lock_ObtainMutex(&smb_StartedLock);
-            if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
-                lock_ReleaseMutex(&smb_StartedLock);
-#ifndef DJGPP
-                ExitThread(1);
-#else
-                thrd_Exit(1);
-#endif
+            while (!lock_TryMutex(&smb_StartedLock)) {
+                if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1)
+                    goto exit_thread;
+                Sleep(50);
             }
 
-	    osi_Log2(smb_logp,
-                     "NCBLISTEN lana=%d failed with NRC_BRIDGE.  Listener thread exiting.",
-                     ncbp->ncb_lana_num, code);
+            osi_Log2(smb_logp,
+                     "NCBLISTEN lana=%d failed with %s.  Listener thread exiting.",
+                     ncbp->ncb_lana_num, ncb_error_string(code));
 
 	    for (i = 0; i < lana_list.length; i++) {
-		if (lana_list.lana[i] == ncbp->ncb_lana_num) {
-		    smb_StopListener(ncbp, lana_list.lana[i]);
-		    lana_list.lana[i] = 255;
+		if (lana_list.lana[i] == lana) {
+		    smb_StopListener(ncbp, lana_list.lana[i], FALSE);
+		    lana_list.lana[i] = LANA_INVALID;
 		}
-		if (lana_list.lana[i] != 255)
+		if (lana_list.lana[i] != LANA_INVALID)
 		    lanaRemaining++;
 	    }
 
@@ -8528,21 +8535,20 @@ void smb_Listener(void *parmp)
 		smb_LANadapter = LANA_INVALID;
 		lana_list.length = 0;
 	    }
-	    FreeNCB(ncbp);
             lock_ReleaseMutex(&smb_StartedLock);
-	    return;
-	} else if (code != 0) {
+	    break;
+	}
+#if 0
+        else if (code != 0) {
 #ifndef DJGPP
             char tbuffer[AFSPATHMAX];
 #endif
 
             /* terminate silently if shutdown flag is set */
-            if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
-#ifndef DJGPP
-                ExitThread(1);
-#else
-                thrd_Exit(1);
-#endif
+            while (!lock_TryMutex(&smb_StartedLock)) {
+                if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1)
+                    goto exit_thread;
+                Sleep(50);
             }
 
             osi_Log3(smb_logp, 
@@ -8568,7 +8574,11 @@ void smb_Listener(void *parmp)
             fprintf(stderr, "Please restart client.\n");
             afs_exit(AFS_EXITCODE_NETWORK_FAILURE);
 #endif /* !DJGPP */
+
+            lock_ReleaseMutex(&smb_StartedLock);
+            break;
         }
+#endif /* 0 */
 
         /* check for remote conns */
         /* first get remote name and insert null terminator */
@@ -8762,7 +8772,10 @@ void smb_Listener(void *parmp)
         lock_ReleaseMutex(&smb_ListenerLock);
     }	/* dispatch while loop */
 
+exit_thread:
     FreeNCB(ncbp);
+    thrd_SetEvent(ListenerShutdown[lana]);
+    return;
 }
 
 void smb_SetLanAdapterChangeDetected(void)
@@ -8791,10 +8804,9 @@ void smb_LanAdapterChange(int locked) {
 
     if (!powerStateSuspended && 
         SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
-                                          LANA_NETBIOS_NAME_FULL))) {
-
-        if ( lanaNum != LANA_INVALID && smb_LANadapter != lanaNum ||
-             isGateway != bGateway ||
+                                          LANA_NETBIOS_NAME_FULL)) &&
+        lanaNum != LANA_INVALID && smb_LANadapter != lanaNum) {
+        if ( isGateway != bGateway ||
              strcmp(cm_NetbiosName, NetbiosName) ) {
             change = 1;
         } else {
@@ -8916,7 +8928,7 @@ int smb_NetbiosInit(int locked)
             code = ncbp->ncb_retcode;
         if (code != 0) {
             afsi_log("Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
-            lana_list.lana[i] = 255;  /* invalid lana */
+            lana_list.lana[i] = LANA_INVALID;  /* invalid lana */
         } else {
             afsi_log("Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
         }
@@ -8978,7 +8990,7 @@ int smb_NetbiosInit(int locked)
         else {
             afsi_log("Netbios NCBADDNAME lana %d error code %d", lana, code);
             if (code == NRC_BRIDGE) {    /* invalid LANA num */
-                lana_list.lana[l] = 255;
+                lana_list.lana[l] = LANA_INVALID;
                 continue;
             }
             else if (code == NRC_DUPNAME) {
@@ -8998,7 +9010,7 @@ int smb_NetbiosInit(int locked)
                     afsi_log("Netbios NCBDELNAME lana %d error code %d\n", lana, code);
                 }
                 if (code != 0 || delname_tried) {
-                    lana_list.lana[l] = 255;
+                    lana_list.lana[l] = LANA_INVALID;
                 }
                 else if (code == 0) {
                     if (!delname_tried) {
@@ -9010,7 +9022,7 @@ int smb_NetbiosInit(int locked)
             }
             else {
                 afsi_log("Netbios NCBADDNAME lana %d error code %d", lana, code);
-                lana_list.lana[l] = 255;  /* invalid lana */
+                lana_list.lana[l] = LANA_INVALID;  /* invalid lana */
             }
         }
         if (code == 0) {
@@ -9072,7 +9084,7 @@ void smb_StartListeners(int locked)
                                   );
 
     for (i = 0; i < lana_list.length; i++) {
-        if (lana_list.lana[i] == 255) 
+        if (lana_list.lana[i] == LANA_INVALID) 
             continue;
         phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
                                (void*)lana_list.lana[i], 0, &lpid, "smb_Listener");
@@ -9100,7 +9112,7 @@ void smb_RestartListeners(int locked)
         lock_ReleaseMutex(&smb_StartedLock);
 }
 
-void smb_StopListener(NCB *ncbp, int lana)
+void smb_StopListener(NCB *ncbp, int lana, int wait)
 {
     long code;
 
@@ -9126,6 +9138,9 @@ void smb_StopListener(NCB *ncbp, int lana)
     } else {
 	afsi_log("Netbios NCBRESET lana %d succeeded", lana);
     }
+
+    if (wait)
+        thrd_WaitForSingleObject_Event(ListenerShutdown[lana], INFINITE);
 }
 
 void smb_StopListeners(int locked)
@@ -9156,11 +9171,11 @@ void smb_StopListeners(int locked)
     for (l = 0; l < lana_list.length; l++) {
         lana = lana_list.lana[l];
 
-	if (lana != 255) {
-	    smb_StopListener(ncbp, lana);
+	if (lana != LANA_INVALID) {
+	    smb_StopListener(ncbp, lana, TRUE);
 
 	    /* mark the adapter invalid */
-	    lana_list.lana[l] = 255;  /* invalid lana */
+	    lana_list.lana[l] = LANA_INVALID;  /* invalid lana */
 	}
     }
 
@@ -9170,7 +9185,6 @@ void smb_StopListeners(int locked)
     FreeNCB(ncbp);
     if (!locked)
         lock_ReleaseMutex(&smb_StartedLock);
-    Sleep(1000);	/* give the listener threads a chance to exit */
 }
 
 void smb_Init(osi_log_t *logp, int useV3,
@@ -9654,7 +9668,7 @@ void smb_Shutdown(void)
     /* Delete Netbios name */
     memset((char *)ncbp, 0, sizeof(NCB));
     for (i = 0; i < lana_list.length; i++) {
-        if (lana_list.lana[i] == 255) continue;
+        if (lana_list.lana[i] == LANA_INVALID) continue;
         ncbp->ncb_command = NCBDELNAME;
         ncbp->ncb_lana_num = lana_list.lana[i];
         memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
