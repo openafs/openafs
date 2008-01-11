@@ -451,7 +451,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
             if (!tsp)
                 tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE,
-                                    cellp);
+                                    cellp, 0);
 
             /* if this server was created by fs setserverprefs */
             if ( !tsp->cellp ) 
@@ -818,7 +818,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 
     if (!fidp) return;
 
-    cellp = cm_FindCellByID(fidp->cell);
+    cellp = cm_FindCellByID(fidp->cell, 0);
     if (!cellp) return;
 
     /* search for the volume */

@@ -82,7 +82,7 @@ typedef struct cm_serverRef {
 #define CM_MAXINTERFACE_ADDR          16
 
 extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
-	struct cm_cell *cellp);
+	struct cm_cell *cellp, afs_uint32 flags);
 
 extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp, afs_uint32 volID);
 

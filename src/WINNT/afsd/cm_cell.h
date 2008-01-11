@@ -50,7 +50,7 @@ extern cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags);
 
 extern cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags);
 
-extern cm_cell_t *cm_FindCellByID(afs_int32 cellID);
+extern cm_cell_t *cm_FindCellByID(afs_int32 cellID, afs_uint32 flags);
 
 extern void cm_ChangeRankCellVLServer(cm_server_t *tsp);
 

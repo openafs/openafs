@@ -361,8 +361,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
     cm_server_t *tsp = NULL;
     cm_cell_t* cellp = NULL;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -395,8 +396,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         else
             cm_RevokeCallback(callp, cellp, tfidp);
     }
-
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -436,8 +438,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -518,7 +521,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
             cm_PutServer(tsp);
 	} 
     }
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -550,8 +555,9 @@ SRXAFSCB_Probe(struct rx_call *callp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -561,7 +567,9 @@ SRXAFSCB_Probe(struct rx_call *callp)
               ntohl(host),
               ntohs(port));
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -656,8 +664,9 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -700,7 +709,9 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
         code = 0;
     }
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return code;
 }
 
@@ -716,8 +727,9 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -809,7 +821,9 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
   fcnDone:
     lock_ReleaseRead(&cm_scacheLock);
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return (code);
 }
 
@@ -825,8 +839,9 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -923,7 +938,9 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
   fcnDone:
     lock_ReleaseRead(&cm_scacheLock);
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return (code);
 }
 
@@ -936,8 +953,9 @@ SRXAFSCB_XStatsVersion(struct rx_call *callp, long *vp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -947,7 +965,9 @@ SRXAFSCB_XStatsVersion(struct rx_call *callp, long *vp)
              ntohl(host), ntohs(port));
     *vp = -1;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return RXGEN_OPCODE;
 }
 
@@ -961,8 +981,9 @@ SRXAFSCB_GetXStats(struct rx_call *callp, long cvn, long coln, long *srvp, long 
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -971,7 +992,9 @@ SRXAFSCB_GetXStats(struct rx_call *callp, long cvn, long coln, long *srvp, long 
     osi_Log2(afsd_logp, "SRXAFSCB_GetXStats from host 0x%x port %d - not implemented",
              ntohl(host), ntohs(port));
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return RXGEN_OPCODE;
 }
 
@@ -999,8 +1022,9 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1026,7 +1050,9 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
             cm_NetMtu[i] : rx_mtu;
     }
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -1055,8 +1081,9 @@ SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
     char *p,*q;
     int code = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1079,40 +1106,23 @@ SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
                   ntohl(host),
                   ntohs(port));
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return code;
 }
 
 /* debug interface */
-int 
-SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
-                      char **a_name, serverList *a_hosts)
+static int 
+GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
 {
     afs_int32 sn;
     cm_cell_t * cellp;
     cm_serverRef_t * serverRefp; 
-    struct rx_connection *connp;
-    struct rx_peer *peerp;
-    unsigned long host = 0;
-    unsigned short port = 0;
 
-    MUTEX_ENTER(&callp->lock);
-
-    if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
-        host = rx_HostOf(peerp);
-        port = rx_PortOf(peerp);
-    }
-
-    osi_Log3(afsd_logp, "SRXAFSCB_GetCellByNum(%d) from host 0x%x port %d",
-             a_cellnum, ntohl(host), ntohs(port));
-
-    a_hosts->serverList_val = 0;
-    a_hosts->serverList_len = 0;
-
-    cellp = cm_FindCellByID(a_cellnum);
+    cellp = cm_FindCellByID(a_cellnum, CM_FLAG_NOPROBE);
     if (!cellp) {
         *a_name = strdup("");
-        MUTEX_EXIT(&callp->lock);
         return 0;
     }
 
@@ -1134,8 +1144,41 @@ SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
     }
 
     lock_ReleaseRead(&cm_serverLock);
-    MUTEX_EXIT(&callp->lock);
     return 0;
+}
+
+/* debug interface */
+int 
+SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
+                      char **a_name, serverList *a_hosts)
+{
+    struct rx_connection *connp;
+    struct rx_peer *peerp;
+    unsigned long host = 0;
+    unsigned short port = 0;
+    int rc;
+
+#ifdef HOLD_CALL_MUTEX
+    MUTEX_ENTER(&callp->lock);
+#endif
+    if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
+        host = rx_HostOf(peerp);
+        port = rx_PortOf(peerp);
+    }
+
+    osi_Log3(afsd_logp, "SRXAFSCB_GetCellByNum(%d) from host 0x%x port %d",
+             a_cellnum, ntohl(host), ntohs(port));
+
+    a_hosts->serverList_val = 0;
+    a_hosts->serverList_len = 0;
+
+
+    rc = GetCellCommon(a_cellnum, a_name, a_hosts);
+
+#ifdef HOLD_CALL_MUTEX
+    MUTEX_EXIT(&callp->lock);
+#endif
+    return rc;
 }
 
 /* debug interface */
@@ -1158,8 +1201,9 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1191,7 +1235,9 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -1228,8 +1274,9 @@ int SRXAFSCB_GetServerPrefs(
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1242,7 +1289,9 @@ int SRXAFSCB_GetServerPrefs(
     *a_srvr_addr = 0xffffffff;
     *a_srvr_rank = 0xffffffff;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -1271,14 +1320,15 @@ int SRXAFSCB_GetServerPrefs(
 int SRXAFSCB_GetCellServDB(struct rx_call *callp, afs_int32 index, char **a_name, 
                            serverList *a_hosts)
 {
-    char *t_name;
     struct rx_connection *connp;
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+    int rc;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1287,12 +1337,14 @@ int SRXAFSCB_GetCellServDB(struct rx_call *callp, afs_int32 index, char **a_name
     osi_Log2(afsd_logp, "SRXAFSCB_GetCellServDB from host 0x%x port %d - not implemented",
              ntohl(host), ntohs(port));
 
-    t_name = (char *)malloc(AFSNAMEMAX);
-    t_name[0] = '\0';
-    *a_name = t_name;
-    a_hosts->serverList_len = 0;
-
-    MUTEX_EXIT(&callp->lock);
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && index == 0) {
+        rc = GetCellCommon(AFS_FAKE_ROOT_CELL_ID, a_name, a_hosts);
+    } else
+#endif
+    {
+        rc = GetCellCommon(index+1, a_name, a_hosts);
+    }
     return 0;
 }
 
@@ -1324,8 +1376,9 @@ int SRXAFSCB_GetLocalCell(struct rx_call *callp, char **a_name)
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1343,7 +1396,9 @@ int SRXAFSCB_GetLocalCell(struct rx_call *callp, char **a_name)
     }
     *a_name = t_name;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
@@ -1423,8 +1478,9 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
     unsigned long host = 0;
     unsigned short port = 0;
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_ENTER(&callp->lock);
-
+#endif
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1452,7 +1508,9 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
     config->cacheConfig_val = t_config;
     config->cacheConfig_len = (*configCount)/sizeof(afs_uint32);
 
+#ifdef HOLD_CALL_MUTEX
     MUTEX_EXIT(&callp->lock);
+#endif
     return 0;
 }
 
