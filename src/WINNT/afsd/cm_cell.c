@@ -28,13 +28,21 @@ osi_rwlock_t cm_cellLock;
  *
  * At the present time the return value is ignored by the caller.
  */
+typedef struct cm_cell_rock {
+    cm_cell_t * cellp;
+    afs_uint32  flags;
+} cm_cell_rock_t;
+
 long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
 {
     cm_server_t *tsp;
     cm_serverRef_t *tsrp;
     cm_cell_t *cellp;
+    cm_cell_rock_t *cellrockp = (cm_cell_rock_t *)rockp;
+    afs_uint32 probe;
         
-    cellp = rockp;
+    cellp = cellrockp->cellp;
+    probe = !(cellrockp->flags & CM_FLAG_NOPROBE);
 
     /* if this server was previously created by fs setserverprefs */
     if ( tsp = cm_FindServer(addrp, CM_SERVER_VLDB))
@@ -49,7 +57,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
         }
     }       
     else
-        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
+        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, probe ? 0 : CM_FLAG_NOPROBE);
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
     tsrp = cm_NewServerRef(tsp, 0);
@@ -66,9 +74,10 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
  * and check to make sure we have a valid set of volume servers
  * this function must be called with a Write Lock on cm_cellLock
  */
-cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
+static cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 {
     long code = 0;
+    cm_cell_rock_t rock;
 
     if (cp == NULL)
         return NULL;
@@ -90,13 +99,15 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
             cp->vlServersp = NULL;
         }
 
-        code = cm_SearchCellFile(cp->name, NULL, cm_AddCellProc, cp);
+        rock.cellp = cp;
+        rock.flags = flags;
+        code = cm_SearchCellFile(cp->name, NULL, cm_AddCellProc, &rock);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
 
-                code = cm_SearchCellByDNS(cp->name, NULL, &ttl, cm_AddCellProc, cp);
+                code = cm_SearchCellByDNS(cp->name, NULL, &ttl, cm_AddCellProc, &rock);
                 if (code == 0) {   /* got cell from DNS */
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
@@ -134,6 +145,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     char fullname[200]="";
     int  hasWriteLock = 0;
     afs_uint32 hash;
+    cm_cell_rock_t rock;
 
     if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
         return NULL;
@@ -160,7 +172,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     lock_ReleaseRead(&cm_cellLock);
 
     if (cp) {
-        cm_UpdateCell(cp);
+        cm_UpdateCell(cp, flags);
     } else if (flags & CM_FLAG_CREATE) {
         lock_ObtainWrite(&cm_cellLock);
         hasWriteLock = 1;
@@ -198,7 +210,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         memset(cp, 0, sizeof(cm_cell_t));
         cp->magic = CM_CELL_MAGIC;
         
-        code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
+        rock.cellp = cp;
+        rock.flags = flags;
+        code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, &rock);
         if (code) {
             osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
                       osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
@@ -207,7 +221,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             if (cm_dnsEnabled) {
                 int ttl;
 
-                code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
+                code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, &rock);
                 if ( code ) {
                     osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
@@ -286,7 +300,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     return cp;
 }
 
-cm_cell_t *cm_FindCellByID(afs_int32 cellID)
+cm_cell_t *cm_FindCellByID(afs_int32 cellID, afs_uint32 flags)
 {
     cm_cell_t *cp;
     afs_uint32 hash;
@@ -302,7 +316,7 @@ cm_cell_t *cm_FindCellByID(afs_int32 cellID)
     lock_ReleaseRead(&cm_cellLock);	
 
     if (cp)
-        cm_UpdateCell(cp);
+        cm_UpdateCell(cp, flags);
 
     return cp;
 }

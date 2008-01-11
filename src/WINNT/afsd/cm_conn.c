@@ -116,7 +116,7 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
         return CM_ERROR_INVAL;
     }
 
-    cellp = cm_FindCellByID(fidp->cell);
+    cellp = cm_FindCellByID(fidp->cell, 0);
     if (!cellp) 
         return CM_ERROR_NOSUCHCELL;
 
@@ -215,7 +215,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             }
         } 
         if (cellp == NULL && fidp) {
-            cellp = cm_FindCellByID(fidp->cell);
+            cellp = cm_FindCellByID(fidp->cell, 0);
         }
     }
 

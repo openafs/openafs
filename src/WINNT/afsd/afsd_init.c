@@ -465,7 +465,7 @@ static void afsd_InitServerPreferences(void)
             }
             else	/* add a new server without a cell */
             {
-                tsp = cm_NewServer(&saddr, CM_SERVER_VLDB, NULL); /* refcount = 1 */
+                tsp = cm_NewServer(&saddr, CM_SERVER_VLDB, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
                 tsp->ipRank = (USHORT)dwRank;
             }
         }
@@ -535,7 +535,7 @@ static void afsd_InitServerPreferences(void)
             }
             else	/* add a new server without a cell */
             {
-                tsp = cm_NewServer(&saddr, CM_SERVER_FILE, NULL); /* refcount = 1 */
+                tsp = cm_NewServer(&saddr, CM_SERVER_FILE, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
                 tsp->ipRank = (USHORT)dwRank;
             }
         }

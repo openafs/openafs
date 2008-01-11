@@ -772,7 +772,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     /* otherwise, we need to find the volume */
     if (!cm_freelanceEnabled || !isRoot) {
         lock_ReleaseWrite(&cm_scacheLock);	/* for perf. reasons */
-        cellp = cm_FindCellByID(fidp->cell);
+        cellp = cm_FindCellByID(fidp->cell, 0);
         if (!cellp) 
             return CM_ERROR_NOSUCHCELL;
 
@@ -1544,7 +1544,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
     if (!(flags & CM_MERGEFLAG_FORCE) && dataVersion < scp->dataVersion) {
         struct cm_cell *cellp;
 
-        cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell, 0);
         if (scp->cbServerp) {
             struct cm_volume *volp = NULL;
 

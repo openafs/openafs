@@ -359,7 +359,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     } /* and of for loop */
 }
 
-cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp) {
+cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp, afs_uint32 flags) {
     cm_server_t *tsp;
 
     osi_assertx(socketp->sin_family == AF_INET, "unexpected socket family");
@@ -381,7 +381,8 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         cm_allServersp = tsp;
         lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
-        cm_PingServer(tsp);			/* Obtain Capabilities and check up/down state */
+        if ( !(flags & CM_FLAG_NOPROBE) )
+            cm_PingServer(tsp);	                /* Obtain Capabilities and check up/down state */
     }
     return tsp;
 }

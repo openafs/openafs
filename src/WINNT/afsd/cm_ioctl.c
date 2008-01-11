@@ -624,7 +624,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     } else 
 #endif /* AFS_FREELANCE_CLIENT */
     {
-        cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell, CM_FLAG_NOPROBE);
         if (cellp) {
             StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), cellp->name);
             ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
@@ -795,7 +795,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     } else
 #endif
     {
-        cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell, 0);
         osi_assertx(cellp, "null cm_cell_t");
 
         if (scp->flags & CM_SCACHEFLAG_RO) {
@@ -1017,7 +1017,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         
     volume = scp->fid.volume;
 
-    cellp = cm_FindCellByID(scp->fid.cell);
+    cellp = cm_FindCellByID(scp->fid.cell, 0);
 
     cm_ReleaseSCache(scp);
 
@@ -1198,14 +1198,14 @@ long cm_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp)
      */
     if (haveCell) {
         /* have cell name, too */
-        cellp = cm_GetCell(cp, 0);
+        cellp = cm_GetCell(cp, (temp & 1) ? CM_FLAG_NOPROBE : 0);
         if (!cellp) 
             return CM_ERROR_NOSUCHCELL;
     }
     else cellp = (cm_cell_t *) 0;
     if (!cellp && (temp & 2)) {
         /* use local cell */
-        cellp = cm_FindCellByID(1);
+        cellp = cm_FindCellByID(1, 0);
     }
     if (!(temp & 1)) {	/* if not fast, call server checker routine */
         /* check down servers */
@@ -1650,7 +1650,7 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         else	/* add a new server without a cell */
         {
-            tsp = cm_NewServer(&tmp, type, NULL); /* refcount = 1 */
+            tsp = cm_NewServer(&tmp, type, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
             tsp->ipRank = rank;
         }
 	lock_ObtainMutex(&tsp->mx);
@@ -2148,7 +2148,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         tp += sizeof(int);
 
         /* cell name */
-        cellp = cm_GetCell(tp, CM_FLAG_CREATE);
+        cellp = cm_GetCell(tp, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
         if (!cellp) 
             return CM_ERROR_NOSUCHCELL;
         tp += strlen(tp) + 1;
@@ -2902,7 +2902,7 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     {
         volume = scp->fid.volume;
 
-        cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell, 0);
 
         cm_ReleaseSCache(scp);
 
@@ -2994,7 +2994,7 @@ long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     if (testp->fid.cell > 0) {
-        cellp = cm_FindCellByID(testp->fid.cell);
+        cellp = cm_FindCellByID(testp->fid.cell, 0);
     }
 
     if (!cellp)

@@ -1084,7 +1084,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         /* normal mt pt */
         strcpy(volNamep, mpNamep+1);
 
-        cellp = cm_FindCellByID(scp->fid.cell);
+        cellp = cm_FindCellByID(scp->fid.cell, 0);
     }
 
     if (!cellp) {
