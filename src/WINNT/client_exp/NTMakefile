@@ -44,6 +44,7 @@ DLLOBJS =\
 	$(OUT)\unlog_dlg.obj \
 	$(OUT)\volumeinfo.obj \
 	$(OUT)\make_symbolic_link_dlg.obj \
+        $(OUT)\symlinks_dlg.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSD = ..\afsd

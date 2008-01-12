@@ -32,6 +32,7 @@
 #define SUBMOUNTS_HELP_ID			44
 #define ADD_SUBMT_HELP_ID			45
 #define EDIT_PATH_NAME_HELP_ID		46
+#define SYMLINK_HELP_ID                 47
 
 void SetHelpPath(const char *pszDefaultHelpFilePath);
 void ShowHelp(HWND hWnd, DWORD nHelpID);

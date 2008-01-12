@@ -118,7 +118,7 @@
 #define IDS_REALLY_REMOVE_SYMLINK              118
 
 #define IDS_SYMBOLICLINK_ADD                   128
-#define IDS_SYMBOLICLINK_EDIT                  129
+#define IDS_SYMBOLICLINK_SHOW                  129
 #define IDS_SYMBOLICLINK_REMOVE                130
 #define IDS_SYMBOLIC_LINK_ITEM                 131
 #define IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK     132
@@ -129,6 +129,7 @@
 #define IDS_NOT_AFS_CLIENT_ADMIN_ERROR         137
 #define IDS_WARNING			       138
 #define IDS_VOLUME_NOT_IN_CELL_WARNING         139
+#define IDS_NOT_SYMLINK_ERROR                  140
 
 #define IDM_AUTHENTICATION                    0
 #define IDM_ACL_SET                           1
@@ -148,7 +149,8 @@
 #define IDM_ACL_CLEAN                         15
 #define IDM_SUBMOUNTS_EDIT                    16
 #define IDM_REMOVE_SYMLINK                    17
-                                           
+#define IDM_SYMBOLICLINK_SHOW		      18
+
 #define ID_GET_TOKENS                   917
 #define ID_DISCARD_TOKENS               918
 #define IDD_KLOG_DIALOG                 920
@@ -177,6 +179,8 @@
 #define ID_REMOVE_SYMLINK               957
 #define ID_SYMBOLICLINK_ADD             958
 #define ID_SYMBOLICLINK_REMOVE          959
+#define ID_SYMBOLICLINK_SHOW            960
+#define IDD_SYMLINKS                    961
 #define IDC_LIST                        1001
 #define IDC_PASSWORD                    1002
 #define IDC_OFFLINE_MSG                 1003

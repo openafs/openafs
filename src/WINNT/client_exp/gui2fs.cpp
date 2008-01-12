@@ -24,6 +24,7 @@ extern "C" {
 #include "results_dlg.h"
 #include "volume_inf.h"
 #include "mount_points_dlg.h"
+#include "symlinks_dlg.h"
 #include "hourglass.h"
 #include "down_servers_dlg.h"
 
@@ -995,6 +996,15 @@ CString ParseMountPoint(const CString strFile, CString strMountPoint)
     return strMountPointInfo;
 }       
 
+CString ParseSymlink(const CString strFile, CString strSymlink)
+{
+    CString strSymlinkInfo;
+
+    strSymlinkInfo = strFile + "\t" + strSymlink;
+
+    return strSymlinkInfo;
+}       
+
 BOOL IsPathInAfs(const CHAR *strPath)
 {
     struct ViceIoctl blob;
@@ -1002,13 +1012,23 @@ BOOL IsPathInAfs(const CHAR *strPath)
 
     HOURGLASS hourglass;
 
+    char buf[512];
+    sprintf(buf, "IsPathInAfs(%s)", strPath);
+    OutputDebugString(buf);
+
     blob.in_size = 0;
     blob.out_size = MAXSIZE;
     blob.out = space;
 
     code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code)
+
+    sprintf(buf, "VIOC_FILE_CELL_NAME=%d", code);
+    OutputDebugString(buf);
+
+    if (code) {
+	if ((errno == EINVAL) || (errno == ENOENT))
         return FALSE;
+    }
     return TRUE;
 }
 
@@ -1517,6 +1537,10 @@ BOOL IsSymlink(const char * true_name)
 
     HOURGLASS hourglass;
 
+    char buf[512];
+    sprintf(buf, "IsSymlink(%s)", true_name);
+    OutputDebugString(buf);
+
     last_component = (char *) strrchr(true_name, '\\');
     if (!last_component)
         last_component = (char *) strrchr(true_name, '/');
@@ -1553,6 +1577,9 @@ BOOL IsSymlink(const char * true_name)
         fs_StripDriveLetter(true_name, strip_name, sizeof(strip_name));
     }
 
+    sprintf(buf, "last_component=%s", last_component);
+    OutputDebugString(buf);
+
     blob.in = last_component;
     blob.in_size = strlen(last_component)+1;
     blob.out_size = MAXSIZE;
@@ -1572,8 +1599,14 @@ BOOL IsMountPoint(const char * name)
     register char *tp;
     char szCurItem[1024];
 
+    HOURGLASS hourglass;
+
     strcpy(szCurItem, name);
 	
+    char buf[512];
+    sprintf(buf, "IsMountPoint(%s)", name);
+    OutputDebugString(buf);
+
     tp = (char *)strrchr(szCurItem, '\\');
     if (tp) {
         strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
@@ -1598,6 +1631,9 @@ BOOL IsMountPoint(const char * name)
         tp = szCurItem;
         fs_StripDriveLetter(tp, tp, 0);
     }
+
+    sprintf(buf, "last_component=%s", tp);
+    OutputDebugString(buf);
 
     blob.in = tp;
     blob.in_size = strlen(tp)+1;
@@ -2085,3 +2121,89 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     ASSERT(strlen(space)<MAX_PATH);
     strncpy(strPath,space,nlenPath);
 }       
+
+BOOL ListSymlink(CStringArray& files)
+{
+    register LONG code;
+    struct ViceIoctl blob;
+    int error;
+    char orig_name[1024];			/* Original name, may be modified */
+    char true_name[1024];			/* ``True'' dirname (e.g., symlink target) */
+    char parent_dir[1024];			/* Parent directory of true name */
+    register char *last_component;	/* Last component of true name */
+    CStringArray symlinks;
+    
+    HOURGLASS hourglass;
+
+    error = 0;
+
+    for (int i = 0; i < files.GetSize(); i++) {
+        strcpy(orig_name, files[i]);
+        strcpy(true_name, orig_name);
+
+        /*
+         * Find rightmost slash, if any.
+         */
+        last_component = (char *)strrchr(true_name, '\\');
+        if (last_component) {
+            /*
+             * Found it.  Designate everything before it as the parent directory,
+             * everything after it as the final component.
+             */
+            strncpy(parent_dir, true_name, last_component - true_name + 1);
+            parent_dir[last_component - true_name + 1] = 0;
+            last_component++;   /* Skip the slash */
+
+	    if (!IsPathInAfs(parent_dir)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		    parent_dir[len+2] == '\\' &&
+		    parent_dir[len+3] == '\0' &&
+		    !strnicmp(nbname,&parent_dir[2],len))
+		{
+		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+		}
+	    }
+        }
+        else {
+            /*
+             * No slash appears in the given file name.  Set parent_dir to the current
+             * directory, and the last component as the given name.
+             */
+            fs_ExtractDriveLetter(true_name, parent_dir);
+            strcat(parent_dir, ".");
+            last_component = true_name;
+            fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
+        }
+
+        blob.in = last_component;
+        blob.in_size = strlen(last_component) + 1;
+        blob.out_size = MAXSIZE;
+        blob.out = space;
+        memset(space, 0, MAXSIZE);
+
+        code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
+        if (code == 0) {
+            int nPos = strlen(space) - 1;
+            if (space[nPos] == '.')
+                space[nPos] = 0;
+            symlinks.Add(ParseSymlink(StripPath(files[i]), space));
+        } else {
+            error = 1;
+            if (errno == EINVAL)
+                symlinks.Add(GetMessageString(IDS_NOT_SYMLINK_ERROR, StripPath(files[i])));
+            else
+                symlinks.Add(GetMessageString(IDS_LIST_MOUNT_POINT_ERROR, GetAfsError(errno, StripPath(files[i]))));
+        }
+    }
+
+    CSymlinksDlg dlg;
+    dlg.SetSymlinks(symlinks);
+    dlg.DoModal();
+
+    return !error;
+}
+
+

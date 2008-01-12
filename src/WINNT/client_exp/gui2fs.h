@@ -42,5 +42,6 @@ BOOL IsSymlink(const char * true_name);
 BOOL IsMountPoint(const char * name);
 UINT MakeSymbolicLink(const char *,const char *);
 void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath);
+BOOL ListSymlink(CStringArray& files);
 const char * NetbiosName(void);
 #endif //__GUI2FS_H__

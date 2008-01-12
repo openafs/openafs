@@ -186,7 +186,7 @@ STDMETHODIMP_(ULONG) CShellExt::XMenuExt::Release(void)
 // IConextMenu Functions
 /////////////////////////////////////////////////////////////////////////////
 STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
-    UINT idCmdFirst, UINT idCmdLast,UINT uFlags)
+						   UINT idCmdFirst, UINT idCmdLast,UINT uFlags)
 {
     METHOD_PROLOGUE(CShellExt, MenuExt);
 
@@ -210,7 +210,7 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
-	if ((!lstrcmp(szItemText,"Cu&t"))&&(pThis->m_bIsSymlink)) {		/*same for cut*/
+	if ((!lstrcmp(szItemText,"Cu&t"))&&(pThis->m_bIsSymlink)) {	/*same for cut*/
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
@@ -220,11 +220,6 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
     // Create the AFS submenu using the allowed ID's.
     HMENU hAfsMenu = CreatePopupMenu();
     int indexAfsMenu = 0;
-
-    // The Authentication item has been removed from the AFS menu because
-    // there is now a tray icon to handle authentication.
-    //
-    //::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_AUTHENTICATION, GetMessageString(IDS_AUTHENTICATION_ITEM));
 
     // Only enable the ACL menu item if a single directory is selected
     int nSingleDirOnly = MF_GRAYED;
@@ -262,22 +257,28 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 
     HMENU hSymbolicMenu = CreatePopupMenu();
     int indexSymbolicMenu = 0;
+    int nSymlinkSelected = MF_GRAYED;
+    for (int n = pThis->m_astrFileNames.GetSize() - 1 ; n >= 0; n--) {
+	if ( IsSymlink(pThis->m_astrFileNames[n]) ) {
+	    nSymlinkSelected = MF_ENABLED;
+	    break;
+	}
+    }
+
     ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_ADD, GetMessageString(IDS_SYMBOLICLINK_ADD));
-    // ::InsertMenu(hSymbolicMenu, indexSymbolicMenu, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_EDIT, GetMessageString(IDS_SYMBOLICLINK_EDIT));
-    // ::EnableMenuItem(hSymbolicMenu,indexSymbolicMenu++,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
-    ::InsertMenu(hSymbolicMenu, indexSymbolicMenu, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_REMOVE, GetMessageString(IDS_SYMBOLICLINK_REMOVE));
-    ::EnableMenuItem(hSymbolicMenu,indexSymbolicMenu++,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
+    ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION | nSymlinkSelected, idCmdFirst + IDM_SYMBOLICLINK_SHOW, GetMessageString(IDS_SYMBOLICLINK_SHOW));
+    ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION | nSymlinkSelected, idCmdFirst + IDM_SYMBOLICLINK_REMOVE, GetMessageString(IDS_SYMBOLICLINK_REMOVE));
     ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hSymbolicMenu, GetMessageString(IDS_SYMBOLIC_LINK_ITEM));
 
     // The Submounts menu has been removed because the AFS tray icon
     // and control panel now support mapping drives directly to an AFS
     // path.
     //
-    // HMENU hSubmountMenu = CreatePopupMenu();
-    // int indexSubmountMenu = 0;
-    // ::InsertMenu(hSubmountMenu, indexSubmountMenu++, MF_STRING | MF_BYPOSITION | nSingleDirOnly, idCmdFirst + IDM_SUBMOUNTS_CREATE, GetMessageString(IDS_SUBMOUNTS_CREATE_ITEM));
-    // ::InsertMenu(hSubmountMenu, indexSubmountMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SUBMOUNTS_EDIT, GetMessageString(IDS_SUBMOUNTS_EDIT_ITEM));
-    // ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hSubmountMenu, GetMessageString(IDS_SUBMOUNTS_ITEM));
+    //HMENU hSubmountMenu = CreatePopupMenu();
+    //int indexSubmountMenu = 0;
+    //::InsertMenu(hSubmountMenu, indexSubmountMenu++, MF_STRING | MF_BYPOSITION | nSingleDirOnly, idCmdFirst + IDM_SUBMOUNTS_CREATE, GetMessageString(IDS_SUBMOUNTS_CREATE_ITEM));
+    //::InsertMenu(hSubmountMenu, indexSubmountMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SUBMOUNTS_EDIT, GetMessageString(IDS_SUBMOUNTS_EDIT_ITEM));
+    //::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hSubmountMenu, GetMessageString(IDS_SUBMOUNTS_ITEM));
 
     // Add a separator
     ::InsertMenu (hMenu, indexMenu + indexShellMenu++, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, TEXT(""));
@@ -421,7 +422,11 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	dlg.DoModal();
 	break;
     }
-		
+
+    case IDM_SYMBOLICLINK_SHOW:	
+	ListSymlink(files);
+	break;
+
     case IDM_REMOVE_SYMLINK:	{
 	if (files.GetSize()>1)
 	    break;
@@ -505,6 +510,10 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
 	nCmdStrID = ID_SYMBOLICLINK_ADD;
 	break;
 		
+    case IDM_SYMBOLICLINK_SHOW:
+	nCmdStrID = ID_SYMBOLICLINK_SHOW;
+	break;
+
     case IDM_SYMBOLICLINK_REMOVE: 
 	nCmdStrID = ID_SYMBOLICLINK_REMOVE;
 	break;
