@@ -318,10 +318,24 @@ BEGIN
     LISTBOX         IDC_LIST,10,20,280,115,LBS_SORT | LBS_USETABSTOPS | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
                     WS_TABSTOP
-    LTEXT           "File",IDC_STATIC,10,11,13,8
+    LTEXT           "Name",IDC_STATIC,10,11,20,8
     LTEXT           "Volume",IDC_STATIC,75,11,27,8
     LTEXT           "Cell",IDC_STATIC,155,11,15,8
     LTEXT           "Type",IDC_STATIC,230,11,20,8
+END
+
+IDD_SYMLINKS DIALOG DISCARDABLE  0, 0, 299, 168
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Symlinks"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,65,145,50,14
+    PUSHBUTTON      "Help",9,180,145,50,14
+    LISTBOX         IDC_LIST,10,20,280,115,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Name",IDC_STATIC,10,11,20,8
+    LTEXT           "Target",IDC_STATIC,75,11,27,8
 END
 
 IDD_DOWN_SERVERS DIALOG DISCARDABLE  0, 0, 209, 163
@@ -650,7 +664,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_SYMBOLICLINK_ADD                  "&Add"
-    IDS_SYMBOLICLINK_EDIT                 "&Edit..."
+    IDS_SYMBOLICLINK_SHOW                 "&Show"
     IDS_SYMBOLICLINK_REMOVE               "&Remove"
     IDS_SYMBOLIC_LINK_ITEM                "Symbolic &Link"
     IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK    "Unable to create symbolic link: %o."
@@ -661,6 +675,10 @@ BEGIN
     IDS_NOT_AFS_CLIENT_ADMIN_ERROR        "Must be AFS Client Administrators to modify the root.afs volume."
     IDS_WARNING				  "Warning"
     IDS_VOLUME_NOT_IN_CELL_WARNING	  "Volume %s does not exist in cell %s.\n"
+    IDS_NOT_SYMLINK_ERROR                 "%o is not a symbolic link."
+    ID_SYMBOLICLINK_ADD         "symlink make"
+    ID_SYMBOLICLINK_SHOW        "symlink list"
+    ID_SYMBOLICLINK_REMOVE      "symlink remove"
 END
 
 STRINGTABLE DISCARDABLE 
