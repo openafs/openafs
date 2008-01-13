@@ -40,13 +40,14 @@ static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
 static char *
 NName(char *a1, char *a2)
 {
-    static char tbuffer[80];
+    static char tbuffer[300];
     if (strlen(a1) == 0) {
-	return "";
+        return "";
     } else {
-	strcpy(tbuffer, a1);
-	strcat(tbuffer, a2);
-	return tbuffer;
+        strncpy(tbuffer, a1, sizeof(tbuffer));
+        strncat(tbuffer, a2, sizeof(tbuffer));
+        tbuffer[sizeof(tbuffer)-1]='\0';
+        return tbuffer;
     }
 }
 
