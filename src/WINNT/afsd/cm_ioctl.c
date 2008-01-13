@@ -386,7 +386,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    if (iscp)
 		cm_ReleaseSCache(iscp);
 	} else {
-	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD,
+	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | follow,
 			     userp, NULL, reqp, scpp);
 	}
         if (code) {
