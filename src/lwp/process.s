@@ -10,8 +10,63 @@
 #define	IGNORE_STDS_H	1
 #include <afs/param.h>
 
-#if defined(RIOS)
+#if defined(__arm32__) || defined(__arm__)
+       /* register definitions */
+       fp      .req    r11
+       ip      .req    r12
+       sp      .req    r13
+       lp      .req    r14
+       pc      .req    r15
+       
+       /*
+          savecontext(f, area1, newsp)
+               int (*f)()#if defined(RIOS);
+               struct savearea *area1;
+               char *newsp;
+       */
 
+       /* Arguments appear as:	   f in r0, area1 in r1, newsp in r2 */
+
+       .text
+       .align  0
+       .globl  savecontext
+       .type   savecontext, #function
+savecontext:
+       @ build the frame
+       mov     ip, sp
+       stmfd   sp!, {fp, ip, lr, pc}
+       sub     fp, ip, #4
+       @ stack r0 - r10, current fp
+       stmfd   sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, fp}
+       str     sp, [r1, #0]
+       @ check if newsp is zero
+       movs    r2, r2
+       movne   sp, r2
+       @ call function ...
+       mov     pc, r0
+
+       /*      should never get here ... */
+       /*      bl      EXT(abort) */
+
+       /*
+         returnto(area2)
+            struct savearea *area2;
+       */
+
+       /* area2 is in r0. */
+
+       .globl returnto
+       .type  returnto, #function
+returnto:
+       @ restore r0-r10, fp
+       ldr     r0, [r0, #0]
+       ldmfd   r0, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, fp}
+       @ return from function call
+       ldmea   fp, {fp, sp, pc}
+
+#endif /* __arm32__ or __arm__ */
+
+#if defined(RIOS)
 /*                 I don't know if we have to save the TOC (R2) or not...
  *		   Note that stack-frame is supposed to be aligned on 
  *		   a double-word boundary.
