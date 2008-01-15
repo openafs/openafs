@@ -262,6 +262,11 @@
 
 #define SYS_NAME_ID_i64_w2k             3500
 
+#define SYS_NAME_ID_arm_linux2          3800
+#define SYS_NAME_ID_arm_linux22         3801
+#define SYS_NAME_ID_arm_linux24         3802
+#define SYS_NAME_ID_arm_linux26         3803
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

@@ -119,6 +119,38 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
+	arm_linux24)
+		CCOBJ="${CC} -fPIC"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	arm_linux26)
+		CCOBJ="${CC} -fPIC"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
 	hp_ux102)
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc -Ae"

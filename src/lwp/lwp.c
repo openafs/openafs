@@ -47,10 +47,12 @@ extern char *getenv();
 extern void *malloc(int size);
 extern void *realloc(void *ptr, int size);
 #endif
+#ifndef AFS_ARM_LINUX20_ENV
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 extern int PRE_Block;		/* from preempt.c */
 #else
 extern char PRE_Block;		/* from preempt.c */
+#endif
 #endif
 
 #define ON		1
@@ -367,11 +369,13 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackmemory, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
+#ifndef AFS_ARM_LINUX20_ENV
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
 	/* Gross hack: beware! */
 	PRE_Block = 1;
+#endif
 	lwp_cpptr = temp;
 #if defined(AFS_PARISC_LINUX24_ENV)
 	savecontext(Create_Process_Part2, &temp2->context,
@@ -460,11 +464,13 @@ LWP_CreateProcess2(int (*ep) (), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackptr, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
+#ifndef AFS_ARM_LINUX20_ENV
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
 	/* Gross hack: beware! */
 	PRE_Block = 1;
+#endif
 	lwp_cpptr = temp;
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + stacksize - sizeof(void *));
@@ -956,8 +962,10 @@ Dispatcher(void)
 	printf("Dispatch %d [PCB at 0x%x] \"%s\"\n", ++dispatch_count,
 	       runnable[i].head, runnable[i].head->name);
 #endif
+#ifndef AFS_ARM_LINUX20_ENV
     if (PRE_Block != 1)
 	Abort_LWP("PRE_Block not 1");
+#endif
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
