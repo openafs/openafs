@@ -19,7 +19,11 @@ OPTF=-O
 
 TEST_CFLAGS=-D_REENTRANT -DAFS_PTHREAD_ENV -DAFS_FBSD40_ENV
 TEST_LDFLAGS=
+<all -i386_fbsd_62 -i386_fbsd_70>
 TEST_LIBS=-lc_r
+<i386_fbsd_62 -i386_fbsd_70>
+TEST_LIBS=-lpthread
+<all>
 
 LIBUAFS = libuafs.a
 LIBJUAFS = libjuafs.a
