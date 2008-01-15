@@ -746,7 +746,11 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * now tell them that it is ok to use.
 	     */
 	    if (!code) {
+#if defined(AFS_FBSD70_ENV)
+		if(0) /* XXXX fixme for 7.0 */
+#else
 		if (m->flags & PG_WANTED)
+#endif
 		    vm_page_activate(m);
 		else
 		    vm_page_deactivate(m);
