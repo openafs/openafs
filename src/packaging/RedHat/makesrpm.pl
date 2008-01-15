@@ -16,9 +16,10 @@ my $srcball = shift;
 my $docball = shift;
 my $relnotes = shift;
 my $changelog = shift;
+my $cellservdb = shift;
 
 if (!$srcball && !$docball) {
-  printf "Usage:  <version> <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog>]]\n";
+  printf "Usage:  <version> <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog> [<cellservdb>]]]\n";
   exit(1);
 }
 
@@ -67,7 +68,6 @@ File::Copy::copy($docball,
 		 $tmpdir."/rpmdir/SOURCES/openafs-$version-doc.tar.bz2")
   or die "Unable to copy $docball into position\n";
 
-
 # Populate it with all the stuff in the packaging directory, except the 
 # specfile
 my $pkgdirh = IO::Dir->new($srcdir."/src/packaging/RedHat")
@@ -95,6 +95,14 @@ system("cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in | ".
        "    -e 's/\%define pkgvers.*/%define pkgvers $version/g' > ".
        $tmpdir."/rpmdir/SPECS/openafs.spec") == 0
   or die "sed failed : $!\n";
+
+if ($cellservdb) {
+    File::Copy::copy($cellservdb,
+		     $tmpdir."/rpmdir/SOURCES/$cellservdb")
+	or die "Unable to copy $cellservdb into position\n";
+} else {
+    system("cd ".$tmpdir."/rpmdir/SOURCES && wget `cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in |grep dl/cellservdb |awk '{print \$2}'`")
+}
 
 if ($relnotes) {
   File::Copy::copy($relnotes,
