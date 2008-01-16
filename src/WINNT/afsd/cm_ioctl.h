@@ -13,6 +13,13 @@
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 #include "smb.h"
 #include "cm_user.h"
+#else
+typedef struct cm_fid {
+        unsigned long cell;
+        unsigned long volume;
+        unsigned long vnode;
+        unsigned long unique;
+} cm_fid_t;
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 /* the following four structures are used for fs get/set serverprefs command*/
@@ -45,6 +52,47 @@ typedef struct cm_cacheParms {
         afs_uint64 parms[CM_IOCTLCACHEPARMS];
 } cm_cacheParms_t;
 
+/* 
+ * The cm_IoctlQueryOptions structure is designed to be extendible.
+ * None of the fields are required but when specified 
+ * by the client and understood by the server will be 
+ * used to more precisely specify the desired data.
+ *
+ * size must be set to the size of the structure 
+ * sent by the client including any variable length
+ * data appended to the end of the static structure.
+ *
+ * field_flags are used to determine which fields have
+ * been filled in and should be used.
+ *
+ * variable length data can be specified with fields
+ * that include offsets to data appended to the 
+ * structure.
+ *
+ * when adding new fields you must:
+ *  - add the field
+ *  - define a CM_IOCTL_QOPTS_FIELD_xxx bit flag
+ *  - define a CM_IOCTL_QOPTS_HAVE_xxx macro
+ *
+ * It is critical that flags be consistent across all
+ * implementations of the pioctl interface for a given
+ * platform.  This should be considered a public 
+ * interface used by third party application developers.
+ */
+
+typedef struct cm_IoctlQueryOptions {
+    afs_uint32  size; 
+    afs_uint32  field_flags;
+    afs_uint32  literal;
+    cm_fid_t    fid;
+} cm_ioctlQueryOptions_t;
+
+/* field flags -  */
+#define CM_IOCTL_QOPTS_FIELD_LITERAL 1
+#define CM_IOCTL_QOPTS_FIELD_FID     2
+
+#define CM_IOCTL_QOPTS_HAVE_LITERAL(p) (p->size >= 12 && (p->field_flags & CM_IOCTL_QOPTS_FIELD_LITERAL))
+#define CM_IOCTL_QOPTS_HAVE_FID(p)     (p->size >= 28 && (p->field_flags & CM_IOCTL_QOPTS_FIELD_FID))
 
 #define MAXNUMSYSNAMES    16      /* max that current constants allow */
 #define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
@@ -170,6 +218,8 @@ extern long cm_IoctlRxStatPeer(smb_ioctl_t *ioctlp, cm_user_t *userp);
 extern long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp);
 
 extern long cm_IoctlPathAvailability(struct smb_ioctl * ioctlp, struct cm_user *userp);
+
+extern long cm_IoctlGetFileType(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp);
 

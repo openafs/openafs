@@ -44,7 +44,6 @@ extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
 extern int cm_followBackupPath;
 extern int cm_deleteReadOnly;
-extern afs_uint32 cm_pioctlFollowMountPoint;
 #ifdef USE_BPLUS
 extern afs_int32 cm_BPlusTrees;
 #endif
@@ -1149,14 +1148,6 @@ int afsd_InitCM(char **reasonP)
         cm_followBackupPath = (unsigned short) dwValue;
     } 
     afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
-
-    dummyLen = sizeof(DWORD);
-    code = RegQueryValueEx(parmKey, "PioctlFollowMountPoint", NULL, NULL,
-                           (BYTE *) &dwValue, &dummyLen);
-    if (code == ERROR_SUCCESS) {
-        cm_pioctlFollowMountPoint = (afs_uint32) dwValue;
-    } 
-    afsi_log("CM PioctlFollowMountPoint is %u", cm_pioctlFollowMountPoint);
 
     RegCloseKey (parmKey);
 
