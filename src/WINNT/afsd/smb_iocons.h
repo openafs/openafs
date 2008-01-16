@@ -93,6 +93,7 @@ struct sbstruct {
 #define VIOC_RXSTAT_PEER                0x2f
 #define VIOC_UUIDCTL                    0x30
 #define VIOC_PATH_AVAILABILITY          0x31
+#define VIOC_GETFILETYPE                0x32
 
 #define VIOC_VOLSTAT_TEST               0x3F
 /* Not to exceed SMB_IOCTL_MAXPROCS from smb_ioctl.h */

@@ -1374,11 +1374,23 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-
     int error = 0;
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
 
+    if (as->parms[1].items)
+        literal = 1;
+    
     for(ti=as->parms[0].items; ti; ti=ti->next) {
-	blob.in_size = blob.out_size = 0;
+        /* once per file */
+        memset(&options, 0, sizeof(options));
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
+
+	blob.out_size = 0;
 	code = pioctl(ti->data, VIOCFLUSH, &blob, 0);
 	if (code) {
 	    if (errno == EMFILE) {
@@ -1470,16 +1482,31 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
     return error;
 }
 
-#ifndef WIN32
-/* 
- * Why is VenusFid declared in the kernel-only section of afs.h, 
- * if it's the exported interface of the (UNIX) cache manager?
- */
-struct VenusFid {
-    afs_int32 Cell;
-    AFSFid Fid;
-};
-#endif /* WIN32 */
+/* values match cache manager File Types */
+static char *
+filetypestr(afs_uint32 type)
+{
+    char * s = "Object";
+
+    switch (type) {
+    case 1:     /* file */
+        s = "File";
+        break;
+    case 2:
+        s = "Directory";
+        break;
+    case 3:
+        s = "Symlink";
+        break;
+    case 4:
+        s = "Mountpoint";
+        break;
+    case 5:
+        s = "DfsLink";
+        break;
+    }
+    return s;
+}
 
 static int 
 ExamineCmd(struct cmd_syndesc *as, void *arock)
@@ -1490,30 +1517,53 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
     struct VolumeStatus *status;
     char *name, *offmsg, *motd;
     int error = 0;
-    
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
+
+    if (as->parms[1].items)
+        literal = 1;
+
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
+        afs_uint32 filetype;
 	afs_uint32 owner[2];
 	char cell[MAXCELLCHARS];
 
-	code = GetCell(ti->data, cell);
-	if (code) {
-	    Die(errno, ti->data);
-	    error = 1;
-	    continue;
-	}
-
-	/* once per file */
-	blob.in_size = 0;
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&options, 0, sizeof(options));
+        filetype = 0;
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
         if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
-            printf("File %s (%u.%u.%u) contained in cell %s\n",
-                    ti->data, fid.volume, fid.vnode, fid.unique,
-                    cell);
+            options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
         }
+
+        blob.out_size = sizeof(filetype);
+        blob.out = &filetype;
+
+        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+
+        blob.out_size = MAXCELLCHARS;
+        blob.out = cell;
+
+        code = pioctl(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        printf("%s %s (%u.%u.%u) contained in cell %s\n",
+                filetypestr(filetype),
+                ti->data, fid.volume, fid.vnode, fid.unique,
+                code ? "unknown-cell" : cell);
 
 	blob.out_size = 2 * sizeof(afs_uint32);
         blob.out = (char *) &owner;
@@ -1606,12 +1656,44 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 *hosts;
     char *tp;
     int error = 0;
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
+
+    if (as->parms[1].items)
+        literal = 1;
     
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
-	/* once per file */
-	blob.out_size = MAXSIZE;
-	blob.in_size = 0;
+        cm_fid_t fid;
+        afs_uint32 filetype;
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&options, 0, sizeof(options));
+        filetype = 0;
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
+        
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+            options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        blob.out_size = sizeof(filetype);
+        blob.out = &filetype;
+
+        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+
+        blob.out_size = MAXSIZE;
 	blob.out = space;
 	memset(space, 0, sizeof(space));
 	code = pioctl(ti->data, VIOCWHEREIS, &blob, 1);
@@ -1621,7 +1703,9 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
 	hosts = (afs_int32 *) space;
-	printf("File %s is on host%s ", ti->data, 
+	printf("%s %s is on host%s ", 
+                filetypestr(filetype),
+                ti->data,
                 (hosts[0] && !hosts[1]) ? "": "s");
 	for(j=0; j<MAXHOSTS; j++) {
 	    if (hosts[j] == 0) 
@@ -2575,12 +2659,50 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
+    struct ViceIoctl blob;
     int error = 0;
-    char cell[MAXCELLCHARS]="";
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
+
+    if (as->parms[1].items)
+        literal = 1;
     
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
-        code = GetCell(ti->data, cell);
+        cm_fid_t fid;
+        afs_uint32 filetype;
+	char cell[MAXCELLCHARS];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&options, 0, sizeof(options));
+        filetype = 0;
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+            options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        blob.out_size = sizeof(filetype);
+        blob.out = &filetype;
+
+        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+
+        blob.out_size = MAXCELLCHARS;
+        blob.out = cell;
+
+        code = pioctl(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
 	if (code) {
 	    if (errno == ENOENT)
 		fprintf(stderr,"%s: no such cell as '%s'\n", pn, ti->data);
@@ -2589,7 +2711,9 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 	    error = 1;
 	    continue;
 	}
-        printf("File %s lives in cell '%s'\n", ti->data, cell);
+        printf("%s %s lives in cell '%s'\n",
+                filetypestr(filetype),
+                ti->data, cell);
     }
     return error;
 }
@@ -2625,6 +2749,7 @@ PrimaryCellCmd(struct cmd_syndesc *as, void *arock)
 }
 */
 
+#ifndef AFS_NT40_ENV
 static int
 MonitorCmd(struct cmd_syndesc *as, void *arock)
 {
@@ -2684,6 +2809,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     }
     return 0;
 }
+#endif /* AFS_NT40_ENV */
 
 static int
 SysNameCmd(struct cmd_syndesc *as, void *arock)
@@ -2755,6 +2881,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#ifndef AFS_NT40_ENV
 static char *exported_types[] = {"null", "nfs", ""};
 static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 {
@@ -2856,7 +2983,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     }
     return 0;
 }
-
+#endif
 
 static int
 GetCellCmd(struct cmd_syndesc *as, void *arock)
@@ -3006,7 +3133,7 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
 
-    code = ugen_ClientInit(noAuthFlag, AFSDIR_CLIENT_ETC_DIRPATH, 
+    code = ugen_ClientInit(noAuthFlag, (char *)AFSDIR_CLIENT_ETC_DIRPATH, 
 			   info->name, 0, &uclient, 
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
@@ -4486,6 +4613,7 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("flush", FlushCmd, NULL, "flush file from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
     
 #ifndef WIN32
     ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL,
@@ -4508,6 +4636,7 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, "display file/volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
     
@@ -4597,9 +4726,11 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, "list file's cell");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
     ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, "list file's location");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
     ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
     
@@ -4607,11 +4738,12 @@ main(int argc, char **argv)
      ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
      */
     
+#ifndef AFS_NT40_ENV
     ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "host name or 'off'");
     cmd_CreateAlias(ts, "mariner");
-    
-   
+#endif
+
     ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, "get cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     
@@ -4628,13 +4760,14 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL, "get/set sysname (i.e. @sys) value");
     cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
+#ifndef AFS_NT40_ENV
     ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL, "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");
     cmd_AddParm(ts, "-start", CMD_SINGLE, CMD_OPTIONAL, "start/stop translator ('on' or 'off')");
     cmd_AddParm(ts, "-convert", CMD_SINGLE, CMD_OPTIONAL, "convert from afs to unix mode ('on or 'off')");
     cmd_AddParm(ts, "-uidcheck", CMD_SINGLE, CMD_OPTIONAL, "run on strict 'uid check' mode ('on' or 'off')");
     cmd_AddParm(ts, "-submounts", CMD_SINGLE, CMD_OPTIONAL, "allow nfs mounts to subdirs of /afs/.. ('on' or 'off')");
-
+#endif
 
     ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL, 
 			  "store to server after file close");
