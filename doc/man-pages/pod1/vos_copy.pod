@@ -25,6 +25,17 @@ The B<vos copy> command makes a copy of a volume with a new name.  It is
 equivalent to B<vos dump> followed by B<vos restore>, but doesn't require
 the volume be stored locally by the client.
 
+=head1 CAUTIONS
+
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+B<vos partinfo> or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
+
 =head1 OPTIONS
 
 =over 4
