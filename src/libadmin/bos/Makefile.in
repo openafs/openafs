@@ -12,7 +12,7 @@ CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
-BOZO = ../../bozo/
+BOZO = ../../bozo
 
 ADMINOBJS = afs_bosAdmin.o
 

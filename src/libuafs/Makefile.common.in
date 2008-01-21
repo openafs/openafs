@@ -839,9 +839,9 @@ $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 
 # These files are for the netscape plugin
 
-$(WEBOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util//afs_atomlist.c
+$(WEBOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
 	$(CRULE2)
-$(WEBOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util//afs_lhash.c
+$(WEBOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
 	$(CRULE2)
 $(WEBOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 	$(CRULE2)
@@ -1102,7 +1102,7 @@ $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 
 $(JUAFS)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
 	$(CRULE1)
-$(JUAFS)/afs_lhash.o: $(TOP_SRCDIR)/util//afs_lhash.c
+$(JUAFS)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
 	$(CRULE1)
 $(JUAFS)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 	$(CRULE1)
