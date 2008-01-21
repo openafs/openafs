@@ -12,9 +12,9 @@ CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
-VLSERVER = ../../vlserver/
-VOLSER = ../../volser/
-FSINT = ../../fsint/
+VLSERVER = ../../vlserver
+VOLSER = ../../volser
+FSINT = ../../fsint
 
 ADMINOBJS =\
 	afs_vosAdmin.o \
