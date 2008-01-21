@@ -11,7 +11,7 @@
 %define osvers 1
 %endif
 
-%{!?fedorakmod: %define fedorakmod 0}
+%{!?fedorakmod: %define fedorakmod 1}
 
 # Determine presence of rpmbuild command line --define arguments used for
 # option specification
@@ -34,17 +34,7 @@
 %define kverrel %(%{kmodtool} verrel %{?kernvers} 2>/dev/null)
 
 %define upvar ""
-%ifarch i686
-%define paevar PAE
-%endif
-%ifarch ppc
-%define smpvar smp
-%endif
-%ifarch i686 x86_64
-%define xenvar xen
-%define kdumpvar kdump
-%endif
-%{!?kvariants: %define kvariants %{?upvar} %{?smpvar} %{?paevar} %{?xenvar} %{?kdumpvar}}
+%{!?kvariants: %define kvariants %{?upvar}}
 
 %{!?ksrcdir: %define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}}
 
@@ -295,7 +285,16 @@ what gets built:
                                   will be installed.  You probably don't
                                   need to change this ever.
 
- --define "fedorakmod 1"	  Build 'Fedora' style kernel modules
+ --define "fedorakmod 0"	  Disable the building of 'Fedora' style kernel 
+				  modules, and use the old format.
+
+ --define "kvariants <variants>"  When building Fedora style kernel modules,
+                                  this defines the set of kernel variants
+                                  to build.
+                                  <variants> is a space seperated list which
+                                  may contain one or more of
+                                  '' (for the generic kernel), smp, PAE, xen
+                                  or kdump 
 
 To a kernel module for your running kernel, just run:
   rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{osvers}.%{pkgrel}.src.rpm
@@ -1149,7 +1148,7 @@ do
 
   dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
   mkdir -p ${dstdir}
-  install -m 644 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
+  install -m 755 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
 done
 %else
 # Install the kernel modules
@@ -1169,7 +1168,7 @@ do
 
     mkdir -p ${dstdir}
 
-    install -m 644 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
+    install -m 755 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
 done
 %endif
 %endif
