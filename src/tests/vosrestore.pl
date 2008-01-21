@@ -11,7 +11,7 @@ my ($host, $ret);
 $host = `hostname`;
 &AFS_Init();
 
-&AFS_vos_restore("service2","localhost","a","/usr/tmp/service.dump",,"full",);
+&AFS_vos_restore("service2","localhost","a","/tmp/service.dump",,"full",);
 
 exit(0);
 

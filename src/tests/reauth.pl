@@ -1,12 +1,34 @@
 #!/usr/bin/env perl
-use Term::ReadLine;
 use strict;
-use OpenAFS::ConfigUtils;
+use warnings;
 use OpenAFS::Dirpath;
-use OpenAFS::OS;
 use OpenAFS::Auth;
 use Getopt::Long;
-use vars qw($admin $server $cellname $cachesize $part
-          $requirements_met  $shutdown_needed $csdb);
 
-&OpenAFS::Auth::authadmin();
+# options
+my $debug = 0;
+my $cellname = 'testcell';
+my $admin = 'admin';
+my $kerberos_type = 'MIT';
+my $kerberos_realm = 'TESTCELL';
+my $kerberos_keytab = "$openafsdirpath->{'afsconfdir'}/krb5.keytab";
+
+GetOptions (
+       "debug!" => \$debug,
+       "cellname=s" => \$cellname, 
+       "admin=s" => \$admin,
+       "kerberos-type=s" => \$kerberos_type,
+       "kerberos-realm=s" => \$kerberos_realm,
+       "kerberos-keytab=s" => \$kerberos_keytab,
+       );
+
+my $auth = OpenAFS::Auth::create(
+      'debug'=>$debug,
+      'type'=>$kerberos_type, 
+      'cell'=>$cellname,
+      'realm'=>$kerberos_realm,
+      'keytab'=>$kerberos_keytab,
+      );
+
+# Run as the administrator.
+$auth->authorize($admin);

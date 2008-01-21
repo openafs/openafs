@@ -11,7 +11,7 @@ my ($host, $ret);
 $host = `hostname`;
 &AFS_Init();
 
-&AFS_vos_restore("badvol","localhost","a","/usr/tmp/t.uniq-bad","100","full",);
+&AFS_vos_restore("badvol","localhost","a","/tmp/t.uniq-bad","100","full",);
 &AFS_bos_salvage("localhost","a","badvol",,,,,,);
 &AFS_fs_mkmount("badvol", "badvol",,,);
 if ( -f "badvol/test" ) {

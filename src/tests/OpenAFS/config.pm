@@ -66,7 +66,7 @@ an exotic locally-compiled version of AFS.
 
 =cut
 
-$def_ConfDir = "$openafsdirpath->{'viceetcdir'}";
+$def_ConfDir = $OpenAFS::Dirpath::openafsdirpath->{'viceetcdir'};
 #$def_ConfDir = "/usr/vice/etc";
 
 
@@ -95,7 +95,7 @@ what you want...
 =cut
 
 @CmdPath = (split(/:/, $ENV{PATH}),
-            "$openafsdirpath->{'afssrvbindir'}",        # For servers
+            $OpenAFS::Dirpath::openafsdirpath->{'afssrvbindir'},        # For servers
 	    '/usr/local/bin',      # Many sites put AFS in /usr/local
 	    '/usr/local/etc',
 	    '/usr/afsws/bin',      # For people who use Transarc's
