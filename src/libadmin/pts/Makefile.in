@@ -16,7 +16,7 @@ CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
-PTSERVER = ../../ptserver/
+PTSERVER = ../../ptserver
 
 ADMINOBJS = \
 	afs_ptsAdmin.o
