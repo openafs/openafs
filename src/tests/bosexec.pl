@@ -15,11 +15,11 @@ $host = `hostname`;
 &AFS_Init();
 
 &AFS_bos_exec(localhost,"$openafsdirpath->{'afssrvbindir'}/foo.sh",);
-if (-f "/usr/tmp/garbage") {
+if (-f "/tmp/garbage") {
 } else {
     exit(1);
 }
-unlink "/usr/tmp/garbage";
+unlink "/tmp/garbage";
 exit(0);
 
 

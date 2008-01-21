@@ -5,7 +5,10 @@ if test "X$FAST" != "X" ; then echo "Not running $0" ;  exit 0 ; fi
 
 FS=${FS:-${objdir}/../appl/fs/fs}
 
+# Should not be able to create a hardlink across volumes. In this test
+# ../../service is mounted on the separate volume. Suppress the expected
+# error message from the ln command which clutters the test output.
 touch file
-ln file ../../service/file && exit 1
+ln file ../../service/file 2>/dev/null && (echo "hardlink ../../service/file should not have been created"; exit 1)
 rm file
 

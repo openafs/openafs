@@ -2,6 +2,19 @@
 #
 # $Id$
 #
+
+# Directory paths configured during the build.
+if test -f dirpath.conf; then
+  . dirpath.conf
+else
+  echo "error: Missing dirpath.conf file, try make dirpath.conf"
+fi
+
+if test -f run-test.conf; then
+  . run-test.conf
+fi  
+
+
 srcdir=@srcdir@
 objdir=`pwd`
 SHELL=/bin/sh
@@ -9,13 +22,22 @@ SHELLVERBOSE=
 VERSION=@VERSION@
 PACKAGE=@PACKAGE@
 host=@host@
-RUNAS=nobody
-FS=@afssrvbindir@/fs
+RUNAS=
+FS=${afssrvbindir}/fs
+CELLNAME=${CELLNAME-testcell}
 export FS
 export SHELL
 
+
+PERL5LIB=${PERL5LIB-`pwd`}
 AFSROOT=${AFSROOT-/afs}
+TESTDIR=${TESTDIR-unreplicated}
+WORKDIR=$AFSROOT/$CELLNAME/$TESTDIR
 export AFSROOT
+export TESTDIR
+export WORKDIR
+export PERL5LIB
+
 
 BASIC_TESTS="creat1			\
 	    mkdir1			\
@@ -55,8 +77,7 @@ ACL_TESTS="acladduser.pl		\
 	    aclcopy.pl"
 
 EXEC_TESTS="exec			\
-	    hello-world			\
-	    build-openafs"
+	    hello-world"
 
 MMAP_TESTS="append-over-page		\
 	    mmap-shared-write		\
@@ -184,7 +205,6 @@ ALL_TESTS="creat1			\
 	    aclcopy.pl			\
 	    exec			\
 	    hello-world			\
-	    build-openafs		\
 	    append-over-page		\
 	    mmap-shared-write		\
 	    mmap-vs-read2		\
@@ -285,7 +305,7 @@ do
   -large) LARGE=yes;;
   -j) PARALLELL="&";;
   -verbose) VERBOSE=yes;;
-  -user) RUNAS=$1; shift;;
+  -user) RUNAS=$2; shift;;
   -x) SHELLVERBOSE="-x";;
   -p) PRINT_CACHESIZE="yes";;
   -basic) TESTS="$BASIC_TESTS";TEST_MODE="basic";;
@@ -386,7 +406,9 @@ for a in $RUNTESTS; do
   if test "$a" = "setgroups" ; then
      b="${objdir}/asu root $b"
   else
-     b="${objdir}/asu $RUNAS $b"
+     if test "X$RUNAS" != "X" ; then
+        b="${objdir}/asu $RUNAS $b"
+	 fi 
   fi
   tmpdir="`hostname`-$a-`date +%Y-%m-%d-%H-%M-%S`-$$"
   cd $WORKDIR && mkdir $tmpdir && (cd $tmpdir && $b ${PARALLELL})
@@ -412,8 +434,10 @@ date
 if test "$FAILEDTESTS"; then
   echo "-----------------------------------------------------------"
   echo "Failed test(s) were: $FAILEDTESTS"
+  exitval=1
 else
   echo "All test(s) were succesful!"
+  exitval=0
 fi
 
 exit $exitval
