@@ -333,15 +333,15 @@ dest_libafs:	$(LIBAFS)
 
 dest_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_MP)
+	${INSTALL} -m 644 $(LIBAFS_MP) $(DEST_LIBAFS_MP)
 	echo MP Install Complete
 
 dest_libafs.ep: $(LIBAFS_EP)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_EP)
+	${INSTALL} -m 644 $(LIBAFS_EP) $(DEST_LIBAFS_EP)
 	echo EP Install Complete
 
 dest_libafs.bm: $(LIBAFS_BM)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_BM)
+	${INSTALL} -m 644 $(LIBAFS_BM) $(DEST_LIBAFS_BM)
 	echo BM Install Complete
