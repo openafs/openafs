@@ -103,6 +103,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
     register afs_int32 code = 0;
     struct vrequest treq;
     register struct vcache *tvp = 0;
+    struct vcache *gvp;
     struct proc *proc = ttoproc(curthread);
     struct vnode *vp = afsp->vfs_vnodecovered;
     int locked = 0;
@@ -118,6 +119,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 
     AFS_STATCNT(afs_root);
 
+again:
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
@@ -128,8 +130,9 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 	}
 
 	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
+	    gvp = afs_globalVp;
 	    afs_globalVp = NULL;
+	    afs_PutVCache(gvp);
 	}
 
 	if (!(code = afs_InitReq(&treq, proc->p_cred))
@@ -137,6 +140,12 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
+		if (afs_globalVp) {
+		    /* someone else got there before us! */
+		    afs_PutVCache(tvp);
+		    tvp = 0;
+		    goto again;
+		}
 		afs_globalVp = tvp;
 	    } else
 		code = ENOENT;
