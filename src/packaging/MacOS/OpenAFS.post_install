@@ -44,8 +44,17 @@ if cmp -s config/afsd.options.broken config/afsd.options ; then
 fi
 rm -f config/afsd.options.broken
 
-if [ ! -f config/afsd.options -a -f config/afsd.options.sample ]; then
-   cp config/afsd.options.sample config/afsd.options
+# if the user hasn't changed these settings, then they should just use the new
+# afsd.conf file
+rm -f config/afsd.options.old
+echo '-afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' >config/afsd.options.old
+if cmp -s config/afsd.options.old config/afsd.options ; then
+   rm -f config/afsd.options
+fi
+rm -f config/afsd.options.old
+
+if [ ! -f config/afs.conf -a -f config/afs.conf.sample ]; then
+   cp config/afs.conf.sample config/afs.conf
 fi
 
 # testing case -- upgrading from pre 1.2.7, but .last file exists.
