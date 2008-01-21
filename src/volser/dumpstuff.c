@@ -1034,8 +1034,6 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     iod_Init(iodp, call);
 
     vp = avp;
-    if (V_parentId(vp) == V_id(vp))
-      delo = incremental;
 
     if (!ReadDumpHeader(iodp, &header)) {
 	Log("1 Volser: RestoreVolume: Error reading header file for dump; aborted\n");
