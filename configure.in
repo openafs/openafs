@@ -109,7 +109,6 @@ src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \
 src/tests/run-tests \
-src/tests/OpenAFS/Dirpath.pm \
 src/tsalvaged/Makefile \
 src/tsm41/Makefile \
 src/tviced/Makefile \

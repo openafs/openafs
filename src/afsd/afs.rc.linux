@@ -58,7 +58,7 @@ runcmd() {
    echo
 }
 
-SYSCNF=/etc/sysconfig/afs
+SYSCNF=${SYSCNF:-/etc/sysconfig/afs}
 KERNEL_VERSION=`uname -r`
 
 # Gather up options and post startup script name, if present
@@ -69,6 +69,10 @@ fi
 CACHEINFO=${CACHEINFO:-/usr/vice/etc/cacheinfo}
 CACHE=${CACHEDIR:-/usr/vice/cache}
 AFS=${AFSDIR:-/afs}
+AFSD=${AFSD:-/usr/vice/etc/afsd}
+BOSSERVER=${BOSSERVER:-/usr/afs/bin/bosserver}
+BOS=${BOS:-/usr/bin/bos}
+KILLAFS=${KILLAFS:-/usr/vice/etc/killafs}
 
 # is_on returns 1 if value of arg is "on"
 is_on() {
@@ -183,7 +187,7 @@ set_prefix()
 	esac
 }
 
-MODLOADDIR=/usr/vice/etc/modload
+MODLOADDIR=${MODLOADDIR:-/usr/vice/etc/modload}
 # load_client loads the AFS client module if it's not already loaded. 
 load_client() {
 	# If LIBAFS is set, use it.
@@ -279,13 +283,13 @@ case "$1" in
 
 	echo "Starting AFS services..... "
 	# Start bosserver, it if exists
-	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
-		/usr/afs/bin/bosserver 
+	if  is_on $AFS_SERVER && test -x $BOSSERVER  ; then
+		$BOSSERVER 
 		test "$afs_rh" && touch /var/lock/subsys/afs
 		if is_on $WAIT_FOR_SALVAGE; then
 			# wait for fileserver to finish salvaging
 			sleep 10
-			while /usr/bin/bos status localhost fs 2>&1 | grep 'Auxiliary.*salvaging'; do
+			while $BOS status localhost fs 2>&1 | grep 'Auxiliary.*salvaging'; do
 				echo "Waiting for salvager to finish..... "
 				sleep 10
 			done
@@ -293,10 +297,10 @@ case "$1" in
 	fi
 
 	# Start AFS client
-	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
+	if  is_on $AFS_CLIENT && test -x $AFSD  ; then
 		generate_cacheinfo
 		choose_afsdoptions
-		/usr/vice/etc/afsd ${AFSD_OPTIONS}
+		$AFSD ${AFSD_OPTIONS}
 		test "$afs_rh" && touch /var/lock/subsys/afs
 		$AFS_POST_INIT
 	fi
@@ -309,16 +313,16 @@ case "$1" in
 	echo "Stopping AFS services..... "
 
 	if  is_on $AFS_CLIENT  ; then
-		if [ -x /usr/vice/etc/killafs ] ; then
-			runcmd "Sending all processes using /afs the TERM signal ..." /usr/vice/etc/killafs TERM
-			runcmd "Sending all processes using /afs the KILL signal ..." /usr/vice/etc/killafs KILL
+		if [ -x $KILLAFS ] ; then
+			runcmd "Sending all processes using /afs the TERM signal ..." $KILLAFS TERM
+			runcmd "Sending all processes using /afs the KILL signal ..." $KILLAFS KILL
 		fi
 		umount /afs
 	fi
 
-	if  is_on $AFS_SERVER && test -x /usr/bin/bos ; then
+	if  is_on $AFS_SERVER && test -x $BOS ; then
 		echo "Stopping AFS bosserver"
-		/usr/bin/bos shutdown localhost -localauth -wait
+		$BOS shutdown localhost -localauth -wait
 		killall -HUP bosserver
 	fi
 
