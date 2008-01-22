@@ -1011,7 +1011,8 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man8/asetkey.*
 
 # remove unused man pages
 for x in afs_ftpd afs_inetd afs_login afs_rcp afs_rlogind afs_rsh \
-    dkload knfs package runntp; do
+    dkload knfs package runntp symlink symlink_list symlink_make \
+    symlink_remove; do
 	rm -f $RPM_BUILD_ROOT%{_mandir}/man1/${x}.1
 done
 
@@ -1031,7 +1032,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^uss' \
+	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
