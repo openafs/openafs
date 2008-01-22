@@ -2621,12 +2621,18 @@ CloneVolume(register struct cmd_syndesc *as, void *arock)
 		volname, VOLSER_OLDMAXVOLNAME - 1);
 	    return E2BIG;
 	}
+#if 0
+	/* 
+	 * In order that you be able to make clones of RO or BK, this
+	 * check must be omitted.
+	 */
 	if (!VolNameOK(volname)) {
 	    fprintf(STDERR,
 		"Illegal volume name %s, should not end in .readonly or .backup\n",
 		volname);
 	    return EINVAL;
 	}
+#endif
 	if (IsNumeric(volname)) {
 	    fprintf(STDERR,
 		"Illegal volume name %s, should not be a number\n",
@@ -2661,7 +2667,7 @@ CloneVolume(register struct cmd_syndesc *as, void *arock)
 	return code;
     }
     MapPartIdIntoName(part, partName);
-    fprintf(STDOUT, "Created clone for volume %lu\n",
+    fprintf(STDOUT, "Created clone for volume %s\n",
 	    as->parms[0].items->data);
 
     return 0;
@@ -3152,6 +3158,10 @@ RestoreVolume(register struct cmd_syndesc *as, void *arock)
 	default:
 	    restoreflags |= RV_LUDUMP;
     }
+    if (as->parms[10].items) {
+	restoreflags |= RV_NODEL;
+    }
+    
 
     code =
 	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
@@ -3199,7 +3209,7 @@ LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 static int
 AddSite(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, code, err;
+    afs_int32 avolid, aserver, apart, code, err, valid = 0;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);;
@@ -3233,7 +3243,10 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    code = UV_AddSite(aserver, apart, avolid);
+    if (as->parms[3].items) {
+	valid = 1;
+    }
+    code = UV_AddSite(aserver, apart, avolid, valid);
     if (code) {
 	PrintDiagnostics("addsite", code);
 	exit(1);
@@ -5793,6 +5806,8 @@ main(argc, argv)
 		"dump | keep | new");
     cmd_AddParm(ts, "-lastupdate", CMD_SINGLE, CMD_OPTIONAL,
 		"dump | keep | new");
+    cmd_AddParm(ts, "-nodelete", CMD_FLAG, CMD_OPTIONAL,
+		"do not delete old site when restoring to a new site");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("unlock", LockReleaseCmd, NULL,
@@ -5814,6 +5829,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0,
 		"partition name for new site");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, "publish as an up-to-date site in VLDB");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("remsite", RemoveSite, NULL,

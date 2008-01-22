@@ -4075,6 +4075,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     struct volser_status tstatus;
     struct volintInfo vinfo;
     char partName[10];
+    char tovolreal[VOLSER_OLDMAXVOLNAME];
     afs_int32 pvolid, pparentid;
     afs_int32 temptid;
     int success;
@@ -4146,18 +4147,28 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     }
     if (!pparentid) pparentid = pvolid;
     /* at this point we have a volume id to use/reuse for the volume to be restored */
+    strncpy(tovolreal, tovolname, VOLSER_OLDMAXVOLNAME);
+	    
     if (strlen(tovolname) > (VOLSER_OLDMAXVOLNAME - 1)) {
 	EGOTO1(refail, VOLSERBADOP,
 	       "The volume name %s exceeds the maximum limit of (VOLSER_OLDMAXVOLNAME -1 ) bytes\n",
 	       tovolname);
+    } else {
+	if ((pparentid != pvolid) && (flags & RV_RDONLY)) {
+	    if (strlen(tovolname) > (VOLSER_OLDMAXVOLNAME - 10)) {
+		EGOTO1(refail, VOLSERBADOP,
+		       "The volume name %s exceeds the maximum limit of (VOLSER_OLDMAXVOLNAME -1 ) bytes\n", tovolname);
+	    }
+	    snprintf(tovolreal, VOLSER_OLDMAXVOLNAME, "%s.readonly", tovolname);
+	}
     }
     MapPartIdIntoName(topart, partName);
     fprintf(STDOUT, "Restoring volume %s Id %lu on server %s partition %s ..",
-	    tovolname, (unsigned long)pvolid,
+	    tovolreal, (unsigned long)pvolid,
 	    hostutil_GetNameByINet(toserver), partName);
     fflush(STDOUT);
     code =
-	AFSVolCreateVolume(toconn, topart, tovolname, volsertype, pparentid, &pvolid,
+	AFSVolCreateVolume(toconn, topart, tovolreal, volsertype, pparentid, &pvolid,
 			   &totid);
     if (code) {
 	if (flags & RV_FULLRST) {	/* full restore: delete then create anew */
@@ -4193,7 +4204,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    VDONE;
 
 	    code =
-		AFSVolCreateVolume(toconn, topart, tovolname, volsertype, pparentid,
+		AFSVolCreateVolume(toconn, topart, tovolreal, volsertype, pparentid,
 				   &pvolid, &totid);
 	    EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
 	} else {
@@ -4217,7 +4228,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     cookie.parent = pparentid;
     cookie.type = voltype;
     cookie.clone = 0;
-    strncpy(cookie.name, tovolname, VOLSER_OLDMAXVOLNAME);
+    strncpy(cookie.name, tovolreal, VOLSER_OLDMAXVOLNAME);
 
     tocall = rx_NewCall(toconn);
     terror = StartAFSVolRestore(tocall, totid, 1, &cookie);
@@ -4247,7 +4258,7 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	error = code;
 	goto refail;
     }
-    code = AFSVolSetIdsTypes(toconn, totid, tovolname, voltype, pparentid, 0, 0);
+    code = AFSVolSetIdsTypes(toconn, totid, tovolreal, voltype, pparentid, 0, 0);
     if (code) {
 	fprintf(STDERR, "Could not set the right type and ID on %lu\n",
 		(unsigned long)pvolid);
@@ -4401,55 +4412,62 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 			    toserver, errcode);
 		if ((!errcode && !same)
 		    || (entry.serverPartition[index] != topart)) {
-		    tempconn =
-			UV_Bind(entry.serverNumber[index],
-				AFSCONF_VOLUMEPORT);
-
-		    MapPartIdIntoName(entry.serverPartition[index],
-				      apartName);
-		    VPRINT3
-			("Deleting the previous volume %u on server %s, partition %s ...",
-			 pvolid,
-			 hostutil_GetNameByINet(entry.serverNumber[index]),
-			 apartName);
-		    code =
-			AFSVolTransCreate(tempconn, pvolid,
-					  entry.serverPartition[index],
-					  ITOffline, &temptid);
-		    if (!code) {
-			code =
-			    AFSVolSetFlags(tempconn, temptid,
-					   VTDeleteOnSalvage |
-					   VTOutOfService);
-			if (code) {
-			    fprintf(STDERR,
-				    "Could not set flags on volume %lu on the older site\n",
-				    (unsigned long)pvolid);
-			    error = code;
-			    goto refail;
-			}
-			code = AFSVolDeleteVolume(tempconn, temptid);
-			if (code) {
-			    fprintf(STDERR,
-				    "Could not delete volume %lu on the older site\n",
-				    (unsigned long)pvolid);
-			    error = code;
-			    goto refail;
-			}
-			code = AFSVolEndTrans(tempconn, temptid, &rcode);
-			temptid = 0;
-			if (!code)
-			    code = rcode;
-			if (code) {
-			    fprintf(STDERR,
-				    "Could not end transaction on volume %lu on the older site\n",
-				    (unsigned long)pvolid);
-			    error = code;
-			    goto refail;
-			}
-			VDONE;
+		    if (flags & RV_NODEL) {
+			VPRINT2
+			    ("Not deleting the previous volume %u on server %s, ...",
+			     pvolid,
+			     hostutil_GetNameByINet(entry.serverNumber[index]));
+		    } else {
+			tempconn =
+			    UV_Bind(entry.serverNumber[index],
+				    AFSCONF_VOLUMEPORT);
+			
 			MapPartIdIntoName(entry.serverPartition[index],
-					  partName);
+					  apartName);
+			VPRINT3
+			    ("Deleting the previous volume %u on server %s, partition %s ...",
+			     pvolid,
+			     hostutil_GetNameByINet(entry.serverNumber[index]),
+			     apartName);
+			code =
+			    AFSVolTransCreate(tempconn, pvolid,
+					      entry.serverPartition[index],
+					      ITOffline, &temptid);
+			if (!code) {
+			    code =
+				AFSVolSetFlags(tempconn, temptid,
+					       VTDeleteOnSalvage |
+					       VTOutOfService);
+			    if (code) {
+				fprintf(STDERR,
+					"Could not set flags on volume %lu on the older site\n",
+					(unsigned long)pvolid);
+				error = code;
+				goto refail;
+			    }
+			    code = AFSVolDeleteVolume(tempconn, temptid);
+			    if (code) {
+				fprintf(STDERR,
+					"Could not delete volume %lu on the older site\n",
+					(unsigned long)pvolid);
+				error = code;
+				goto refail;
+			    }
+			    code = AFSVolEndTrans(tempconn, temptid, &rcode);
+			    temptid = 0;
+			    if (!code)
+				code = rcode;
+			    if (code) {
+				fprintf(STDERR,
+					"Could not end transaction on volume %lu on the older site\n",
+					(unsigned long)pvolid);
+				error = code;
+				goto refail;
+			    }
+			    VDONE;
+			    MapPartIdIntoName(entry.serverPartition[index],
+					      partName);
+			}
 		    }
 		}
 		entry.serverNumber[index] = toserver;
@@ -4561,7 +4579,7 @@ UV_LockRelease(afs_int32 volid)
 /*adds <server> and <part> as a readonly replication site for <volid>
 *in vldb */
 int
-UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
+UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid, afs_int32 valid)
 {
     int j, nro = 0, islocked = 0;
     struct nvldbentry entry, storeEntry;
@@ -4634,7 +4652,11 @@ UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
     VPRINT("Adding a new site ...");
     entry.serverNumber[entry.nServers] = server;
     entry.serverPartition[entry.nServers] = part;
-    entry.serverFlags[entry.nServers] = (ITSROVOL | RO_DONTUSE);
+    if (!valid) {
+	entry.serverFlags[entry.nServers] = (ITSROVOL | RO_DONTUSE);
+    } else {
+	entry.serverFlags[entry.nServers] = (ITSROVOL);
+    }
     entry.nServers++;
 
     MapNetworkToHost(&entry, &storeEntry);
