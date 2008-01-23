@@ -164,6 +164,7 @@ int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
 int rxBind = 0;		/* don't bind */
+int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */ 
 int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						 * already implied */
@@ -891,6 +892,7 @@ FlagMsg()
     fputs("[-rxdbge (enable rxevent debugging)] ", stdout);
     fputs("[-rxmaxmtu <bytes>] ", stdout);
     fputs("[-rxbind (bind the Rx socket to one address)] ", stdout);
+    fputs("[-allow-dotted-principals (disable the rxkad principal name dot check)] ", stdout);
 #ifdef AFS_DEMAND_ATTACH_FS
     fputs("[-fs-state-dont-save (disable state save during shutdown)] ", stdout);
     fputs("[-fs-state-dont-restore (disable state restore during startup)] ", stdout);
@@ -1269,6 +1271,8 @@ ParseArgs(int argc, char *argv[])
 	    rxJumbograms = 0;
 	} else if (!strcmp(argv[i], "-rxbind")) {
 	    rxBind = 1;
+	} else if (!strcmp(argv[i], "-allow-dotted-principals")) {
+	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -2085,6 +2089,11 @@ main(int argc, char *argv[])
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));
 	exit(-1);
+    }
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
     }
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);

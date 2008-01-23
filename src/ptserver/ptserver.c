@@ -163,6 +163,7 @@ char *pr_realmName;
 int restricted = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -308,6 +309,9 @@ main(int argc, char **argv)
 	else if (strncmp(arg, "-rxbind", alen) == 0) {
 	    rxBind = 1;
 	}
+	else if (strncmp(arg, "-allow-dotted-principals", alen) == 0) {
+	    rxkadDisableDotCheck = 1;
+	}
 	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
@@ -378,6 +382,7 @@ main(int argc, char **argv)
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-allow-dotted-principals] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
@@ -385,6 +390,7 @@ main(int argc, char **argv)
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
 		   "[-p <number of processes>] [-rebuild] [-rxbind] "
+		   "[-allow-dotted-principals] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-groupdepth <depth>] " "[-help]\n");
@@ -398,12 +404,14 @@ main(int argc, char **argv)
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-allow-dotted-principals] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-allow-dotted-principals] "
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
 #endif
 #endif
@@ -552,6 +560,11 @@ main(int argc, char **argv)
     }
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, lwps);
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
+    }
 
     tservice =
 	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,

@@ -1343,6 +1343,23 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
     return 0;
 }
 
+/* Set configuration options for all of a service's security objects */
+
+afs_int32 
+rx_SetSecurityConfiguration(struct rx_service *service, 
+			    rx_securityConfigVariables type,
+			    void *value)
+{
+    int i;
+    for (i = 0; i<service->nSecurityObjects; i++) {
+	if (service->securityObjects[i]) {
+	    RXS_SetConfiguration(service->securityObjects[i], NULL, type, 
+				 value, NULL);
+	}
+    }
+    return 0;
+}
+
 struct rx_service *
 rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	      struct rx_securityClass **securityObjects, int nSecurityObjects,

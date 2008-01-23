@@ -8,7 +8,8 @@ vlserver - Initializes the Volume Location Server
 <div class="synopsis">
 
 B<vlserver> S<<< [B<-p> <I<lwp processes>>] >>> [B<-nojumbo>]
-    [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
+    [B<-allow-dotted-principal>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
+    [B<-help>]
 
 =for html
 </div>
@@ -82,6 +83,15 @@ storage. A separate record is kept for each type of RPC (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
+
+=item B<-allow-dotted-principal>
+
+By default, the RXKAD security layer will disallow access by Kerberos
+principals with a dot in the first component of their name. This is to avoid
+the confusion where principals user/admin and user.admin are both mapped to the
+user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
+between principal names may disable this check by starting the server
+with this option.
 
 =item B<-help>
 
