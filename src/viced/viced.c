@@ -574,11 +574,6 @@ FsyncCheckLWP()
 
     setThreadId("FsyncCheckLWP");
 
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
-    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
-#endif
-
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_WRLOCK;
     while (fs_state.mode == FS_MODE_NORMAL) {
@@ -2136,6 +2131,11 @@ main(int argc, char *argv[])
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
+    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
+#endif
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
     /* 
