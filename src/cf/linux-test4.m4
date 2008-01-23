@@ -923,16 +923,6 @@ _fop.splice_read(NULL, NULL, NULL, 0, 0);],
       ac_cv_linux_fs_struct_fop_has_splice=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
 
-AC_DEFUN([LINUX_KEY_TYPE_H_EXISTS], [
-  AC_MSG_CHECKING([whether linux/key-type.h exists])
-  AC_CACHE_VAL([ac_cv_linux_key_type_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/key-type.h>],
-[return;],
-      ac_cv_linux_key_type_h_exists=yes,
-      ac_cv_linux_key_type_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_key_type_h_exists)])
-
 AC_DEFUN([LINUX_HAVE_CURRENT_KERNEL_TIME], [
   AC_MSG_CHECKING([for current_kernel_time()])
   AC_CACHE_VAL([ac_cv_linux_have_current_kernel_time], [
