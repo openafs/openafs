@@ -66,6 +66,7 @@ int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -179,7 +180,8 @@ main(argc, argv)
 
 	} else if (strcmp(argv[index], "-rxbind") == 0) {
 	    rxBind = 1;
-
+	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
+	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
 	    if ((index + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -246,14 +248,14 @@ main(argc, argv)
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -385,6 +387,12 @@ main(argc, argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(tservice, lwps);
+
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
+    }
 
     tservice =
 	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,

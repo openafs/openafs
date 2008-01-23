@@ -195,7 +195,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (char *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, char *session_key, afs_int32 * host,
-		  afs_int32 * start, afs_int32 * end)
+		  afs_int32 * start, afs_int32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
@@ -312,13 +312,15 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	goto bad_ticket;
     }
 
-    /* 
-     * If the first part of the name_string contains a dot, punt since
-     * then we can't see the diffrence between the kerberos 5
-     * principals foo.root and foo/root later in the fileserver.
-     */
-    if (strchr(decr_part.cname.name_string.val[0], '.') != NULL)
-	goto bad_ticket;
+    if (!disableCheckdot) {
+        /* 
+         * If the first part of the name_string contains a dot, punt since
+         * then we can't see the diffrence between the kerberos 5
+         * principals foo.root and foo/root later in the fileserver.
+         */
+        if (strchr(decr_part.cname.name_string.val[0], '.') != NULL)
+	    goto bad_ticket;
+    }
 
     /* Verify that decr_part.key is of right type */
     switch (decr_part.key.keytype) {

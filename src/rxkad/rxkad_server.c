@@ -57,7 +57,7 @@ static struct rx_securityOps rxkad_server_ops = {
     rxkad_CheckPacket,		/* check data packet */
     rxkad_DestroyConnection,
     rxkad_GetStats,
-    0,				/* spare 1 */
+    rxkad_SetConfiguration,
     0,				/* spare 2 */
     0,				/* spare 3 */
 };
@@ -327,7 +327,8 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	code =
 	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
 			      kvno, client.name, client.instance, client.cell,
-			      &sessionkey, &host, &start, &end);
+			      &sessionkey, &host, &start, &end, 
+			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
 	if (code)
 	    return code;
     }
@@ -451,4 +452,27 @@ rxkad_GetServerInfo(struct rx_connection * aconn, rxkad_level * level,
 	return 0;
     } else
 	return RXKADNOAUTH;
+}
+
+/* Set security object configuration variables */
+afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
+                                 struct rx_connection *aconn, 
+                                 rx_securityConfigVariables atype,
+		                         void * avalue, void **currentValue)
+{
+    struct rxkad_sprivate *private = 
+    (struct rxkad_sprivate *) aobj->privateData;
+
+    switch (atype) {
+    case RXS_CONFIG_FLAGS:
+        if (currentValue) {
+            *((afs_uint32 *)currentValue) = private->flags;
+        } else { 
+            private->flags = (afs_uint32) avalue;
+        }
+        break;
+    default:
+        break;
+    }
+    return 0;
 }
