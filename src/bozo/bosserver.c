@@ -71,6 +71,7 @@ static afs_int32 nextDay;
 struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 int bozo_newKTs;
 int rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -820,6 +821,9 @@ main(int argc, char **argv, char **envp)
 	else if (strcmp(argv[code], "-rxbind") == 0) {
 	    rxBind = 1;
 	}
+	else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
+	    rxkadDisableDotCheck = 1;
+	}
 	else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -871,14 +875,14 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif
@@ -1061,6 +1065,11 @@ main(int argc, char **argv, char **envp)
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_SetStackSize(tservice, BOZO_LWP_STACKSIZE);	/* so gethostbyname works (in cell stuff) */
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK, 
+                                    NULL);
+    }
 
     tservice =
 	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", bozo_rxsc,

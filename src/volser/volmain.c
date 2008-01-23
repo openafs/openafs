@@ -89,6 +89,7 @@ int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
 int rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -288,6 +289,8 @@ main(int argc, char **argv)
 	    goto usage;
 	} else if (strcmp(argv[code], "-rxbind") == 0) {
 	    rxBind = 1;
+	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
+	    rxkadDisableDotCheck = 1;
 	} else if (strcmp(argv[code], "-p") == 0) {
 	    lwps = atoi(argv[++code]);
 	    if (lwps > MAXLWP) {
@@ -379,7 +382,7 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -387,7 +390,7 @@ main(int argc, char **argv)
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -516,6 +519,12 @@ main(int argc, char **argv)
 #else
     rx_SetStackSize(service, 32768);
 #endif
+
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
+    }
 
     service =
 	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects, 3,

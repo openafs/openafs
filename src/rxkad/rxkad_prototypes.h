@@ -120,8 +120,10 @@ extern afs_int32 rxkad_GetServerInfo(struct rx_connection *aconn,
 				     afs_uint32 * expiration, char *name,
 				     char *instance, char *cell,
 				     afs_int32 * kvno);
-
-
+extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
+                                        struct rx_connection *aconn, 
+                                        rx_securityConfigVariables atype,
+                                        void * avalue, void **aresult);
 
 /* ticket.c */
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
@@ -147,6 +149,6 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     char *get_key_rock, int serv_kvno, char *name,
 			     char *inst, char *cell, char *session_key,
 			     afs_int32 * host, afs_int32 * start,
-			     afs_int32 * end);
+			     afs_int32 * end, afs_int32 disableDotCheck);
 
 #endif
