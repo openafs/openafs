@@ -482,11 +482,6 @@ FsyncCheckLWP()
 
     setThreadId("FsyncCheckLWP");
 
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
-    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
-#endif
-
     while (1) {
 	FSYNC_LOCK;
 #ifdef AFS_PTHREAD_ENV
@@ -1912,6 +1907,11 @@ main(int argc, char *argv[])
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
+    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
+#endif
 
     rx_StartServer(0);		/* now start handling requests */
 
