@@ -223,7 +223,7 @@ BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
-ExclusiveArch: %{ix86} x86_64 ia64
+ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
