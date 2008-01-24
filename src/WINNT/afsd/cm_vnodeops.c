@@ -1939,6 +1939,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                             if (!cm_FidCmp(&nscp->fid, &fids[i]))
                                 break;
                         }
+                        fid_count = i+1;
                     } else {
                         /* add the new fid to the list */
                         for ( i=0; i<fid_count; i++) {
