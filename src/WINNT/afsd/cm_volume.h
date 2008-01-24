@@ -62,6 +62,7 @@ extern long cm_GetVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
 
 #define CM_GETVOL_FLAG_CREATE               1
 #define CM_GETVOL_FLAG_NO_LRU_UPDATE        2
+#define CM_GETVOL_FLAG_NO_RESET		    4
 
 /* hash define.  Must not include the cell, since the callback revocation code
  * doesn't necessarily know the cell in the case of a multihomed server

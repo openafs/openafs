@@ -1968,6 +1968,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                 tsp->downTime = osi_Time();
             }
             cm_ForceNewConnections(tsp);
+
             /* Now update the volume status */
             for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
                 for (i=0; i<NUM_SERVER_VOLS; i++) {
@@ -1977,7 +1978,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                         cm_InitReq(&req);
 
                         code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
-                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE | CM_GETVOL_FLAG_NO_RESET, &volp);
                         if (code == 0) {    
                             cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
                             cm_PutVolume(volp);
