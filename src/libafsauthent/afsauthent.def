@@ -114,3 +114,4 @@ EXPORTS
 	rx_InitHost					@112
 	VOTE_GetSyncSite				@113
 	ubik_RefreshConn				@114
+        rx_SetSecurityConfiguration                     @115
