@@ -220,3 +220,4 @@ EXPORTS
 	rx_NewServiceHost			@225
         osi_AssertFailU				@226
 	DllMain					@227
+        rx_SetSecurityConfiguration             @228
