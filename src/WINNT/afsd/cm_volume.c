@@ -617,25 +617,27 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
         
     /* return it held */
     if (volp) {
-	lock_ObtainMutex(&volp->mx);
+        lock_ObtainMutex(&volp->mx);
         
-	code = 0;
-	if (volp->flags & CM_VOLUMEFLAG_RESET) {
-	    code = cm_UpdateVolume(cellp, userp, reqp, volp);
-	    if (code == 0)
-		volp->flags &= ~CM_VOLUMEFLAG_RESET;
-	}
-	lock_ReleaseMutex(&volp->mx);
-	if (code == 0) {
-	    *outVolpp = volp;
+        code = 0;
+        if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
+            code = cm_UpdateVolume(cellp, userp, reqp, volp);
+            if (code == 0)
+                volp->flags &= ~CM_VOLUMEFLAG_RESET;
+        }
+        lock_ReleaseMutex(&volp->mx);
+        if (code == 0) {
+            *outVolpp = volp;
 
-            lock_ObtainWrite(&cm_volumeLock);
-            cm_AdjustVolumeLRU(volp);
-            lock_ReleaseWrite(&cm_volumeLock);
+            if (!(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
+                lock_ObtainWrite(&cm_volumeLock);
+                cm_AdjustVolumeLRU(volp);
+                lock_ReleaseWrite(&cm_volumeLock);
+            }
         } else
-	    cm_PutVolume(volp);
+            cm_PutVolume(volp);
 
-	return code;
+        return code;
     }
         
     /* otherwise, we didn't find it so consult the VLDB */
@@ -784,10 +786,10 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     }
 
     /* if we get here we are holding the mutex */
-    if (volp->flags & CM_VOLUMEFLAG_RESET) {
-	code = cm_UpdateVolume(cellp, userp, reqp, volp);
-	if (code == 0)
-	    volp->flags &= ~CM_VOLUMEFLAG_RESET;
+    if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
+        code = cm_UpdateVolume(cellp, userp, reqp, volp);
+        if (code == 0)
+            volp->flags &= ~CM_VOLUMEFLAG_RESET;
     }	
     lock_ReleaseMutex(&volp->mx);
 
@@ -796,13 +798,15 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         code = CM_ERROR_NOSUCHVOLUME;
 
     if (code == 0) {
-	*outVolpp = volp;
-
-        lock_ObtainWrite(&cm_volumeLock);
-        cm_AdjustVolumeLRU(volp);
-        lock_ReleaseWrite(&cm_volumeLock);
+		*outVolpp = volp;
+		
+		if (!(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
+	        lock_ObtainWrite(&cm_volumeLock);
+			cm_AdjustVolumeLRU(volp);
+			lock_ReleaseWrite(&cm_volumeLock);
+		}
     } else
-	cm_PutVolume(volp);
+		cm_PutVolume(volp);
 
     return code;
 }	
