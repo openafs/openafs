@@ -12,6 +12,7 @@
 %endif
 
 %{!?fedorakmod: %define fedorakmod 1}
+%{!?build_dkmspkg: %define build_dkmspkg 1}
 
 # Determine presence of rpmbuild command line --define arguments used for
 # option specification
@@ -70,6 +71,8 @@
 # End legacy kernel build stuff
 %endif 
 
+%define dkms_version %{osvers}.%{pkgrel}
+
 # Set 'debugspec' to 1 if you want to debug the spec file.  This will
 # not remove the installed tree as part of the %clean operation
 %if %{?debugspec:0}%{!?debugspec:1}
@@ -79,6 +82,12 @@
 # Set 'krb5support' to 1 if you want to build the openafs-krb5 package
 # to distribute aklog and asetkey
 %define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
+
+%if %{krb5support}
+%if %{?krb5config:0}%{!?krb5config:1}
+%define krb5config /usr/kerberos/bin/krb5-config
+%endif
+%endif
 
 # Set 'bootkernelsupport' to 1 if you want to build the
 # kernel module for Red Hat BOOT Kernels on x86.
@@ -217,7 +226,7 @@ Release: %{osvers}.%{pkgrel}
 License: IBM Public License
 URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-Packager: Derek Atkins <warlord@MIT.EDU>
+Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if %{krb5support}
@@ -341,6 +350,29 @@ administrative management.
 
 This package provides basic server support to host files in an AFS
 Cell.
+
+%if %{build_dkmspkg}
+%package -n dkms-%{name}
+Summary:        DKMS-ready kernel source for AFS distributed filesystem
+Group:          Development/Kernel
+Provides:       openafs-kernel = %{PACKAGE_VERSION}
+%if %{fedorakmod}
+Provides: %{name}-kmod = %{PACKAGE_VERSION}
+%endif
+Requires(pre):  dkms
+Requires(pre):  flex
+Requires(post): dkms
+Requires:	%{name}-kmod-common = %{version}
+
+%description -n dkms-%{name}
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides the source code to allow DKMS to build an
+AFS kernel module.
+%endif
 
 %if %{build_authlibs}
 %package authlibs
@@ -809,7 +841,7 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
+	--with-krb5-conf=%{krb5config} \
 %endif
        $config_opts \
        || exit 1
@@ -970,6 +1002,28 @@ uve=$RPM_BUILD_ROOT%{_prefix}/vice/etc
 install -p -m 644 src/packaging/RedHat/openafs-ThisCell $uve/ThisCell
 install -p -m 644 %{SOURCE20} $uve/CellServDB.dist
 install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $uve/cacheinfo
+
+#
+# install dkms source
+#
+install -d -m 755 $RPM_BUILD_ROOT%{_prefix}/src
+cp -a libafs_tree $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}
+
+cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
+
+PACKAGE_VERSION="%{dkms_version}"
+
+# Items below here should not have to change with each driver version
+PACKAGE_NAME="%{name}"
+MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; ./configure --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/openafs.ko ."
+CLEAN="make -C src/libafs clean"
+
+BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
+DEST_MODULE_LOCATION[0]="/kernel/3rdparty/\$PACKAGE_NAME/"
+
+AUTOINSTALL=yes
+
+EOF
 
 #
 # install kernel-source
@@ -1256,6 +1310,15 @@ if [ $1 = 0 ] ; then
         chkconfig --del openafs-server
 fi
 
+%if %{build_dkmspkg}
+%post -n dkms-%{name}
+dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+
+%preun -n dkms-%{name}
+dkms remove -m %{namee} -v %{dkms_version} --rpm_safe_upgrade --all ||:
+%endif
 %endif
 
 %if %{build_modules}
@@ -1302,7 +1365,6 @@ fi
 %endif
 %endif
 %endif
-
 
 ##############################################################################
 ###
@@ -1452,6 +1514,12 @@ fi
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.*
+
+%if %{build_dkmspkg}
+%files -n dkms-%{name}
+%defattr(-,root,root)
+%{_prefix}/src/%{name}-%{dkms_version}
+%endif
 
 %files kernel-source
 %defattr(-,root,root)
