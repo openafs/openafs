@@ -4,6 +4,7 @@
 #
 # chkconfig: 2345 50 50
 # description: OpenAFS is a distributed filesystem.
+# Should-Start: dkms
 #
 # $Revision$
 
