@@ -1,0 +1,302 @@
+#!/usr/bin/perl
+
+# decode-panic - decode a Mac OS panic log to show source line numbers
+# see the end of the file for full documentation and license.
+
+use Carp;
+use English qw( -no_match_vars ) ;
+use File::Basename;
+use File::Temp qw( tempdir );
+use Getopt::Long;
+use IO::Dir;
+use IO::File;
+use Pod::Usage;
+use warnings;
+use strict;
+
+my $panic_file = "/Library/Logs/panic.log";
+my %crash_info;
+my $backtrace;
+my $kextload   = "/sbin/kextload";
+my $gdb        = "/usr/bin/gdb";
+my $gdb_file   = "gdb.input";
+my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
+                        TMPDIR => 1, CLEANUP => 1 );
+my $dump_file  = "/var/db/openafs/logs/crash.dump";
+
+my $option_quiet;
+my $option_help;
+my $result = GetOptions ("input=s"  => \$panic_file,
+                         "output=s" => \$dump_file,
+                         "quiet"    => \$option_quiet,
+                         "help"     => \$option_help
+                     );
+
+if ( !$result ) {
+    pod2usage(-message => "Syntax error.",
+              -exitval => 2,
+              -verbose => 1,
+              -output  => \*STDERR);
+    
+    exit;
+}
+
+if ($option_help) {
+    pod2usage(-message => "",
+              -exitval => 2,
+              -verbose => 3,
+              -output  => \*STDERR);
+    exit;
+}
+
+# check for necessary programs & panic file
+for my $program ( $kextload, $gdb ) {
+    if ( ! -x $program ) {
+        if ( $option_quiet ) {
+            exit 1;
+        } else {
+            croak "Can't find $program!\n"
+        }
+    }
+}
+
+croak "Can't find panic file: $panic_file!\n" if ( ! -r $panic_file );
+
+read_panic( $panic_file, \%crash_info );
+
+generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir );
+
+write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
+
+my $gdb_output = `$gdb /mach_kernel -batch -x $temp_dir/$gdb_file`;
+croak "gdb failed!\n" if $CHILD_ERROR;
+
+write_dump_file( $dump_file, \%crash_info, $gdb_output );
+
+# read the panic file and parse out the addresses
+sub read_panic {
+
+    my $filename      = shift;
+    my $hash_ref      = shift;
+
+    my $kernel_line;
+    my $line;
+    my @panic_section_positions = ( 0 );
+
+    
+    my $panic_fh = IO::File->new( $filename, '<' )
+        or croak "Can't open backtrace file $filename: $OS_ERROR\n";
+
+    # find the last panic section as denoted by "*********"
+    while ( $line = <$panic_fh> ) {
+        chomp $line;
+        if ( $line eq "*********" ) {
+            # skip a line
+            $line = <$panic_fh>;
+            push @panic_section_positions, $panic_fh->tell;
+        }
+    }
+
+    # ignore the empty last section
+    if ( @panic_section_positions > 2 ) {
+        pop @panic_section_positions
+    }
+
+    # Seek to last full panic section
+    # or the beginning of the file if appropriate
+    $panic_fh->seek( $panic_section_positions[-1], 0 );
+
+    $hash_ref->{ "date" } = <$panic_fh>;
+    chomp $hash_ref->{ "date" };
+
+    while ( $line = <$panic_fh> ) {
+        chomp $line;
+    
+        #skip lines until "Backtrace" is seen
+        $line =~ /^\s*(Backtrace,|Backtrace:)/;
+        $backtrace = $1;
+        last if $backtrace;
+    }
+    
+    if ( !$backtrace ) {
+        if ( $option_quiet ) {
+            exit 1;
+        } else {
+            croak "Couldn't find a backtrace in $filename\n";
+        }
+    }
+    
+    # gather the backtrace addresses
+    if ( $backtrace eq "Backtrace:" ) {
+        # ppc format panic
+        while ( $line = <$panic_fh> ) {
+            chomp $line;
+            last if $line !~ /^\s*(0x[0-9a-fA-F]{8})/;
+            my @memory_addresses = split /\s+/, $line;
+
+            # add non-empty array elements to the list
+            push @{ $hash_ref->{ "backtrace" } },
+                grep { /0x/ } @memory_addresses;
+        }
+    } else {
+        # intel format panic
+        while ( $line = <$panic_fh> ) {
+            chomp $line;
+            last if $line !~ /^\s*0x[0-9a-fA-F]{8} : (0x[0-9a-fA-F]*)/;
+            push @{ $hash_ref->{ "backtrace" } }, $1;
+        }
+    }
+
+    # now we need the address for the afs kernel module
+    while ( $line = <$panic_fh> ) {
+        chomp $line;
+        next if ( $line !~ /org\.openafs\.filesystems\.afs/ );
+
+        $kernel_line = $line;
+        $line =~ /\@(0x[0-9a-fA-F]+)/;
+        $hash_ref->{ "afs_kernel_address" } = $1;
+        $kernel_line =~ /^\s+([^@]+)@.+/;
+        $hash_ref->{ "afs_info" } = $1;
+
+        last;
+    }
+
+    # grab the kernel version
+    while ( $line = <$panic_fh> ) {
+        chomp $line;
+        next if ( $line !~ /^Darwin Kernel Version/ );
+        $hash_ref->{ "kernel_version" } = $line;
+    }
+    
+    $panic_fh->close()
+        or croak "Can't close file $filename: $OS_ERROR\n";
+    
+    if ( !$kernel_line ) {
+        if ( $option_quiet ) {
+            exit 1;
+        } else {
+            croak "No OpenAFS reference found in latest panic!";
+        }
+    }
+}
+
+# generate the symbol files that will be read by gdb
+sub generate_symbol_files {
+    my $kernel_address   = shift;
+    my $symbol_write_dir = shift;
+
+    system( "/sbin/kextload",
+            "-s",  $temp_dir,
+            "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+            "-n", "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/" );
+    if ( $CHILD_ERROR ) {
+        # error
+        croak "kextload failed to run: $OS_ERROR\n";
+    }
+}
+
+
+sub write_gdb_input_file {
+
+    my $write_dir     = shift;
+    my $filename      = shift;
+    my $backtrace_ref = shift;
+    
+    my @symbol_files = ( $write_dir . "/org.openafs.filesystems.afs.sym" );
+        
+    my $fh = IO::File->new( $write_dir . "/" . $filename, '>' )
+        or croak "Can't open gdb file $filename for writing: $OS_ERROR\n";
+
+    for my $symbol ( @symbol_files ) {
+        print $fh "add-symbol-file $symbol\n";
+    }
+
+    print $fh "set print asm-demangle on\n";
+
+    for my $address ( @{ $backtrace_ref } ) {
+        print $fh "x/i $address\n";
+    }
+
+   $fh->close()
+        or croak "Can't close file $filename: $OS_ERROR\n";
+}
+
+# write out the pertinent details to a file.
+sub write_dump_file {
+    my $filename = shift;
+    my $hash_ref = shift;
+    my $output   = shift;
+
+    my $log_dir  = dirname $filename;
+
+    if ( ! -d $log_dir ) {
+        mkdir $log_dir, 0755;
+        croak "Can't create directory $log_dir: $OS_ERROR\n" if $CHILD_ERROR;
+    }
+
+    croak "Can't write to folder $log_dir." if ( ! -w $log_dir );
+
+    my $fh = IO::File->new( $filename, '>', 0664 )
+        or croak "Can't open dump file $filename for writing: $OS_ERROR\n";
+    
+    print $fh "Panic Date:      ", $hash_ref->{ "date" }, "\n";
+    print $fh "Kernel Version:  ", $hash_ref->{ "kernel_version" }, "\n";
+    print $fh "OpenAFS Version: ", $hash_ref->{ "afs_info" }, "\n";
+    print $fh "=============\n";
+    print $fh $output;
+    
+    $fh->close()
+        or croak "Can't close file $filename: $OS_ERROR\n";
+}
+
+__END__
+
+=head1 NAME
+
+decode-panic - decode a Mac OS panic log to show source line numbers
+
+=head1 VERSION
+
+This documentation refers to decode-panic version $Revision$
+
+=head1 SYNOPSIS
+ 
+   decode-panic [-i <input panic log>] [-o <output dump file>] [-q]
+
+=head1 OPTIONS
+
+   -i The path to the panic log that should be read
+   -o The path to where the decoded panic log should be written
+   -q Quiet mode - don't complain if there is a problem.
+   -h print full help
+
+=head1 DESCRIPTION
+
+It parses the panic log for Mac OS X kernel panics that are caused by
+openafs in order to produce a human-readable backtrace.
+
+This program uses crash isolation procedure as outlined in
+http://developer.apple.com/technotes/tn2002/tn2063.html#IsolatingCrash
+
+Here is an example file that is fed to gdb:
+
+   add-symbol-file /tmp/afsdebugt8dGOb/org.openafs.filesystems.afs.sym
+   set print asm-demangle on
+   x/i 0x2ED1F7C0
+   x/i 0x2ED0D1A4
+
+=head1 DEPENDENCIES
+
+This program needs gdb and kextload.
+
+=head1 BUGS AND LIMITATIONS
+
+It clobbers the output file.
+
+=head1 AUTHOR
+
+Copyright 2008. Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file in the OpenAFS source tree. This program was written by
+Jason Edgecombe for OpenAFS.
