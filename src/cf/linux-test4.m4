@@ -754,8 +754,8 @@ AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
 #include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS
 request_key(NULL, NULL, NULL);
-#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
-#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
+#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH) || !defined(KEY_POS_SETATTR) 
+#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH or KEY_POS_SETATTR"
 #endif
 #else
 #error rebuild your kernel with CONFIG_KEYS
@@ -785,18 +785,14 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
 AC_DEFUN([LINUX_DO_SYNC_READ], [
   AC_MSG_CHECKING([for linux do_sync_read()])
   AC_CACHE_VAL([ac_cv_linux_do_sync_read], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[do_sync_read(NULL, NULL, 0, NULL, 0);],
-      ac_cv_linux_do_sync_read=no,
-      ac_cv_linux_do_sync_read=maybe)
-    if test "x$ac_cv_linux_do_sync_read" = "xmaybe"; then
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
 [do_sync_read(NULL, NULL, 0, NULL);],
       ac_cv_linux_do_sync_read=yes,
-      ac_cv_linux_do_sync_read=no)])
-    fi
+      ac_cv_linux_do_sync_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_do_sync_read)
   if test "x$ac_cv_linux_do_sync_read" = "xyes"; then
     AC_DEFINE([DO_SYNC_READ], 1, [define if your kernel has do_sync_read()])
@@ -805,18 +801,14 @@ AC_DEFUN([LINUX_DO_SYNC_READ], [
 AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
   AC_MSG_CHECKING([for linux generic_file_aio_read()])
   AC_CACHE_VAL([ac_cv_linux_generic_file_aio_read], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[generic_file_aio_read(NULL, NULL, 0, 0, 0);],
-      ac_cv_linux_generic_file_aio_read=no,
-      ac_cv_linux_generic_file_aio_read=maybe)
-    if test "x$ac_cv_linux_generic_file_aio_read" = "xmaybe"; then
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
 [generic_file_aio_read(NULL, NULL, 0, 0);],
       ac_cv_linux_generic_file_aio_read=yes,
-      ac_cv_linux_generic_file_aio_read=no)])
-    fi
+      ac_cv_linux_generic_file_aio_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
   if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
