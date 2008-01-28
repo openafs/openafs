@@ -246,6 +246,7 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_FLAG_DIRSEARCH	0x40		/* for directory search */
 #define CM_FLAG_CHECKPATH	0x80		/* Path instead of File */
 #define CM_FLAG_NOPROBE         0x100           /* For use with cm_GetCellxxx - do not probe server status */
+#define CM_FLAG_DFS_REFERRAL    0x200           /* The request is a DFS Referral - the last char of the lookup name may be missing */
 
 /* error codes */
 #define CM_ERROR_BASE			0x66543200

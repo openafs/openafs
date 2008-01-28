@@ -821,7 +821,7 @@ int cm_getNoLocalMountPoints() {
 }
 
 #if !defined(DJGPP)
-long cm_FreelanceMountPointExists(char * filename)
+long cm_FreelanceMountPointExists(char * filename, int prefix_ok)
 {
     char* cp;
     char line[512];
@@ -889,6 +889,11 @@ long cm_FreelanceMountPointExists(char * filename)
                 found = 1;
                 break;
             }
+
+            if (prefix_ok && strlen(shortname) - strlen(filename) == 1 && !strncmp(shortname, filename, strlen(filename))) {
+                found = 1;
+                break;
+            }
         }
         RegCloseKey(hkFreelance);
     }
@@ -898,7 +903,7 @@ long cm_FreelanceMountPointExists(char * filename)
     return found;
 }
 
-long cm_FreelanceSymlinkExists(char * filename)
+long cm_FreelanceSymlinkExists(char * filename, int prefix_ok)
 {
     char* cp;
     char line[512];
@@ -943,6 +948,11 @@ long cm_FreelanceSymlinkExists(char * filename)
             shortname[cp-line]=0;
 
             if (!strcmp(shortname, filename)) {
+                found = 1;
+                break;
+            }
+
+            if (prefix_ok && strlen(shortname) - strlen(filename) == 1 && !strncmp(shortname, filename, strlen(filename))) {
                 found = 1;
                 break;
             }
@@ -1009,8 +1019,8 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     }
 
 #if !defined(DJGPP)
-    if ( cm_FreelanceMountPointExists(filename) ||
-         cm_FreelanceSymlinkExists(filename) )
+    if ( cm_FreelanceMountPointExists(filename, 0) ||
+         cm_FreelanceSymlinkExists(filename, 0) )
         return -1;
 #endif
     
@@ -1246,8 +1256,8 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     }
 
 #if !defined(DJGPP)
-    if ( cm_FreelanceMountPointExists(filename) ||
-         cm_FreelanceSymlinkExists(filename) )
+    if ( cm_FreelanceMountPointExists(filename, 0) ||
+         cm_FreelanceSymlinkExists(filename, 0) )
         return CM_ERROR_EXISTS;
 #endif
 
