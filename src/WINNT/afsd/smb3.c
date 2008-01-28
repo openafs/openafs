@@ -168,7 +168,7 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
     for (i=0;i<len;i++) {
         if(!(i%16)) {
             if(i) {
-                osi_Log0(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
+                osi_Log1(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
                 strcat(buf,"\r\n");
                 OutputDebugString(buf);
             }
@@ -189,7 +189,7 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
         buf[j] = (k>32 && k<127)?k:'.';
     }    
     if(i) {
-        osi_Log0(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
+        osi_Log1(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
         strcat(buf,"\r\n");
         OutputDebugString(buf);
     }   
@@ -3634,9 +3634,13 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* 
              * We have a requested path.  Check to see if it is something 
              * we know about.
+			 *
+			 * But be careful because the name that we might be searching
+			 * for might be a known name with the final character stripped
+			 * off.  If we 
              */
             code = cm_NameI(cm_data.rootSCachep, &requestFileName[nbnLen+2],
-                            CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                            CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                             userp, NULL, &req, &scp);
             if (code == 0) {
                 /* Yes it is. */

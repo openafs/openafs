@@ -1288,21 +1288,29 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
 
             osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", 
                       osi_LogSaveString(afsd_logp,namep));
+
+            /* 
+             * There is an ugly behavior where a share name "foo" will be searched
+             * for as "fo".  If the searched for name differs by an already existing
+             * symlink or mount point in the Freelance directory, do not add the 
+             * new value automatically.
+             */
+
             if (namep[0] == '.') {
                 if (cm_GetCell_Gen(&namep[1], &fullname[1], CM_FLAG_CREATE)) {
                     found = 1;
-                    if ( stricmp(&namep[1], &fullname[1]) )
+                    if (!cm_FreelanceMountPointExists(fullname, 0))
+                        code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.", 1, &rock.fid);
+                    if ( stricmp(&namep[1], &fullname[1]) && !cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
                         code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
-                    else
-                        code = cm_FreelanceAddMount(namep, &fullname[1], "root.cell.", 1, &rock.fid);
                 }
             } else {
                 if (cm_GetCell_Gen(namep, fullname, CM_FLAG_CREATE)) {
                     found = 1;
-                    if ( stricmp(namep, fullname) )
+                    if (!cm_FreelanceMountPointExists(fullname, 0))
+                        code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
+                    if ( stricmp(namep, fullname) && !cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
                         code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
-                    else
-                        code = cm_FreelanceAddMount(namep, fullname, "root.cell.", 0, &rock.fid);
                 }
             }
             if (!found || code < 0) {   /* add mount point failed, so give up */
