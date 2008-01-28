@@ -158,13 +158,12 @@ afs_GetCellHostsAFSDB(char *acellName)
 	ObtainReadLock(&afsdb_req_lock);
     };
 
-    afs_osi_FreeStr(afsdb_req.cellname);
     ReleaseReadLock(&afsdb_req_lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
-    if (afsdb_req.cellname) 
+    if (afsdb_req.cellname) {
 	return 0;
-    else
+    } else
 	return ENOENT;
 }
 #endif
