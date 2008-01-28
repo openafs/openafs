@@ -29,6 +29,11 @@
 #include "afskfw.h"
 #include "lanahelper.h"
 
+/* Allocated in Windows Driver Kit */
+#ifndef WNNC_NET_OPENAFS
+#define WNNC_NET_OPENAFS     0x00390000
+#endif
+
 #include <WINNT\afsreg.h>
 
 DWORD TraceOption = 0;
@@ -217,7 +222,7 @@ DWORD APIENTRY NPGetCaps(DWORD index)
     switch (index) {
     case WNNC_NET_TYPE:
         /* Don't have our own type; use somebody else's. */
-        return WNNC_NET_SUN_PC_NFS;
+        return WNNC_NET_OPENAFS;
 
     case WNNC_START:
         /* Say we are already started, even though we might wait after we receive NPLogonNotify */
