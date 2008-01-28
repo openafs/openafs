@@ -657,10 +657,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
 		 fi
 		 LINUX_REFRIGERATOR
-		 LINUX_KEY_TYPE_H_EXISTS
-		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
-		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if you have linux/key-type.h])
-		 fi
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_DO_SYNC_READ

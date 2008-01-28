@@ -777,7 +777,7 @@ AC_DEFUN([LINUX_DO_SYNC_READ], [
   AC_MSG_CHECKING([for linux do_sync_read()])
   AC_CACHE_VAL([ac_cv_linux_do_sync_read], [
     save_CPPFLAGS="$CPPFLAGS"
-    EXTRA_FLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
 [do_sync_read(NULL, NULL, 0, NULL);],
