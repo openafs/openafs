@@ -657,6 +657,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     krb5_principal principal = 0;
     char * pname = NULL;
     const char * ccname = NULL;
+    const char * cctype = NULL;
     krb5_error_code code = 0;
     krb5_error_code cc_code = 0;
     krb5_cc_cursor cur;
@@ -676,6 +677,9 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     ccname = pkrb5_cc_get_name(ctx, cc);
     if (!ccname) goto cleanup;
 
+    cctype = pkrb5_cc_get_type(ctx, cc);
+    if (!cctype) goto cleanup;
+
     // Search the existing list to see if we have a match 
     if ( next ) {
         for ( ; next ; next = next->next ) {
@@ -690,7 +694,9 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
         next->next = princ_cc_data;
         princ_cc_data = next;
         next->principal = _strdup(pname);
-        next->ccache_name = _strdup(ccname);
+        next->ccache_name = malloc(strlen(ccname) + strlen(cctype) + 2);
+        if (next->ccache_name) 
+            sprintf(next->ccache_name, "%s:%s", cctype, ccname);
         next->from_lsa = lsa;
         next->expired = 1;
         next->expiration_time = 0;
