@@ -572,8 +572,10 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	rv = RegQueryValueEx(hkConfig, szNetbiosNameValue, NULL, NULL, (LPBYTE) &regNbName, &dummyLen);
 	if(rv != ERROR_SUCCESS) 
 	    strcpy(regNbName, "AFS");
-	else 
-	    regNbName[15] = 0;
+	else {
+            /* Max Suffix Length is 6 */
+	    regNbName[6] = 0;
+        }
 
 	RegCloseKey(hkConfig);
     } else {
@@ -617,26 +619,30 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
     if(regNbName[0] &&
 	(regLana >=0 && lana_IsLoopback((lana_number_t) regLana,FALSE))) 	
     {
-        strncpy(nbName,regNbName,15);
-        nbName[16] = 0;
+        strncpy(nbName,regNbName,14);
+        nbName[14] = 0;
         strupr(nbName);
     } else {
-	char * dot;
-
 	if(flags & LANA_NETBIOS_NAME_SUFFIX) {
-	    strcpy(nbName,"-AFS");
+	    _snprintf(nbName, MAX_NB_NAME_LENGTH, "-%s", regNbName);
+            nbName[14] = 0;
 	} else {
+            char * dot;
+
 	    dummyLen = sizeof(hostname);
 	    // assume we are not a cluster.
 	    rv = GetComputerName(hostname, &dummyLen);
 	    if(!SUCCEEDED(rv)) { // should not happen, but...
 		return rv;
 	    }
-	    strncpy(nbName, hostname, 11);
-	    nbName[11] = 0;
+	    strncpy(nbName, hostname, MAX_NB_NAME_LENGTH);
+            nbName[MAX_NB_NAME_LENGTH-1] = 0;
+	    nbName[MAX_NB_NAME_LENGTH-strlen(regNbName)-2] = 0;
 	    if(dot = strchr(nbName,'.'))
 		*dot = 0;
-	    strcat(nbName,"-AFS");
+            strncat(nbName, "-", MAX_NB_NAME_LENGTH);
+	    strncat(nbName, regNbName, MAX_NB_NAME_LENGTH);
+            nbName[MAX_NB_NAME_LENGTH-1] = 0;
 	}
     }
 
