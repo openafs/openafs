@@ -42,7 +42,7 @@ extern "C" {
     };
 
 #define LANA_INVALID 0xff
-#define MAX_NB_NAME_LENGTH 17
+#define MAX_NB_NAME_LENGTH 16
 
 #define LANA_NETBIOS_NAME_SUFFIX 1
 #define LANA_NETBIOS_NAME_FULL 0
