@@ -5572,7 +5572,7 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
 				    (unsigned long)volumeinfo->volid);
 			}
 
-			Lp_SetRWValue(entry, entry.serverNumber[idx],
+			Lp_SetRWValue(&entry, entry.serverNumber[idx],
 				      entry.serverPartition[idx], 0L, 0L);
 			entry.nServers--;
 			modified++;
