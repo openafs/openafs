@@ -758,6 +758,30 @@ request_key(NULL, NULL, NULL);
     AC_DEFINE([LINUX_KEYRING_SUPPORT], 1, [define if your kernel has keyring support])
   fi])
 
+
+AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
+  AC_MSG_CHECKING([for exported key_type_keyring])
+  AC_CACHE_VAL([ac_cv_linux_exports_key_type_keyring], [
+    AC_TRY_KBUILD(
+[
+#include <linux/kernel.h>
+#include <linux/rwsem.h>
+#ifdef KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
+#include <linux/key.h>
+],
+[
+printk("%x\n", key_type_keyring);
+],
+      ac_cv_linux_exports_key_type_keyring=yes,
+      ac_cv_linux_exports_key_type_keyring=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_key_type_keyring)
+  if test "x$ac_cv_linux_exports_key_type_keyring" = "xyes"; then
+    AC_DEFINE([EXPORTS_KEY_TYPE_KEYRING], 1, [define if key_type_keyring is exported])
+  fi])
+
+
 AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
