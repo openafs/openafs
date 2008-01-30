@@ -223,7 +223,11 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 }
 
 #ifdef LINUX_KEYRING_SUPPORT
+#ifdef EXPORTS_KEY_TYPE_KEYRING
+static struct key_type *__key_type_keyring = &key_type_keyring;
+#else
 static struct key_type *__key_type_keyring;
+#endif
 
 static int
 install_session_keyring(struct task_struct *task, struct key *keyring)
@@ -623,6 +627,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 
 void osi_keyring_init(void)
 {
+#ifndef EXPORTS_KEY_TYPE_KEYRING
     struct task_struct *p;
 #ifdef EXPORTED_TASKLIST_LOCK
     if (&tasklist_lock)
@@ -646,6 +651,7 @@ void osi_keyring_init(void)
     else
 #endif
       rcu_read_unlock();
+#endif
 #endif
 
     register_key_type(&key_type_afs_pag);

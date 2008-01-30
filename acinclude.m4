@@ -592,8 +592,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 
-		 LINUX_KERNEL_COMPILE_WORKS
                  LINUX_KBUILD_USES_EXTRA_CFLAGS
+		 LINUX_KERNEL_COMPILE_WORKS
                  LINUX_HAVE_CURRENT_KERNEL_TIME
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
@@ -661,6 +661,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
+		 LINUX_EXPORTS_KEY_TYPE_KEYRING
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
 		 LINUX_INIT_WORK_HAS_DATA
@@ -1182,7 +1183,7 @@ AC_HEADER_DIRENT
 AC_CHECK_HEADERS(stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
 
