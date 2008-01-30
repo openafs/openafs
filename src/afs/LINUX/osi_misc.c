@@ -65,8 +65,6 @@ afs_osi_SetTime(osi_timeval_t * tvp)
 #endif
 }
 
-struct task_struct *rxk_ListenerTask;
-
 void
 osi_linux_mask(void)
 {
@@ -75,13 +73,6 @@ osi_linux_mask(void)
     RECALC_SIGPENDING(current);
     SIG_UNLOCK(current);
 }
-
-void
-osi_linux_rxkreg(void)
-{
-    rxk_ListenerTask = current;
-}
-
 
 #if defined(AFS_LINUX24_ENV)
 /* LOOKUP_POSITIVE is becoming the default */
