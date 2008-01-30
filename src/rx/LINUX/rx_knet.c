@@ -216,36 +216,16 @@ osi_StopListener(void)
 {
     struct task_struct *listener;
     extern int rxk_ListenerPid;
+    extern struct task_struct *rxk_ListenerTask;
 
-    while (rxk_ListenerPid) {
-#ifdef EXPORTED_TASKLIST_LOCK
-	if (&tasklist_lock)
-	   read_lock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
-	else
-#endif
-	   rcu_read_lock();
-#endif
-	listener = find_task_by_pid(rxk_ListenerPid);
-        if (listener) {
-	    flush_signals(listener);
-	    force_sig(SIGKILL, listener);
+    while (rxk_ListenerTask) {
+        if (rxk_ListenerTask) {
+	    flush_signals(rxk_ListenerTask);
+	    force_sig(SIGKILL, rxk_ListenerTask);
 	}
-#ifdef EXPORTED_TASKLIST_LOCK
-	if (&tasklist_lock)
-	    read_unlock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
-	else
-#endif
-	   rcu_read_unlock();
-#endif
-	if (!listener)
+	if (!rxk_ListenerTask)
 	    break;
-	afs_osi_Sleep(&rxk_ListenerPid);
+	afs_osi_Sleep(&rxk_ListenerTask);
     }
     sock_release(rx_socket);
     rx_socket = NULL;
