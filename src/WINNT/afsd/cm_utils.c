@@ -239,26 +239,27 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
 
     if (error < 0) 
         error = CM_ERROR_TIMEDOUT;
-    else if (error == 30) 
+    else if (error == EROFS) 
         error = CM_ERROR_READONLY;
-    else if (error == 13) 
+    else if (error == EACCES) 
         error = CM_ERROR_NOACCESS;
-    else if (error == 18) 
+    else if (error == EXDEV) 
         error = CM_ERROR_CROSSDEVLINK;
-    else if (error == 17) 
+    else if (error == EEXIST) 
         error = CM_ERROR_EXISTS;
-    else if (error == 20) 
+    else if (error == ENOTDIR) 
         error = CM_ERROR_NOTDIR;
-    else if (error == 2)	/* ENOENT */
+    else if (error == ENOENT)
         error = CM_ERROR_NOSUCHFILE;
-    else if (error == 11           /* EAGAIN, most servers */
+    else if (error == EAGAIN
              || error == 35 	   /* EAGAIN, Digital UNIX */
              || error == WSAEWOULDBLOCK)
         error = CM_ERROR_WOULDBLOCK;
     else if (error == VDISKFULL
-              || error == 28)   /* ENOSPC */ 
+              || error == ENOSPC)
         error = CM_ERROR_SPACE;
     else if (error == VOVERQUOTA
+              || error == EDQUOT
               || error == 49    /* EDQUOT on Solaris */
               || error == 88    /* EDQUOT on AIX */
               || error == 69    /* EDQUOT on Digital UNIX and HPUX */
@@ -267,7 +268,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_QUOTA;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
-    else if (error == 21)
+    else if (error == EISDIR)
         return CM_ERROR_ISDIR;
     return error;
 }
@@ -292,15 +293,16 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
 
     if (error < 0) 
         error = CM_ERROR_TIMEDOUT;
-    else if (error == 30) 
+    else if (error == EROFS) 
         error = CM_ERROR_READONLY;
-    else if (error == 20) 
+    else if (error == ENOTDIR) 
         error = CM_ERROR_NOTDIR;
-    else if (error == 13) 
+    else if (error == EACCES) 
         error = CM_ERROR_NOACCESS;
-    else if (error == 2) 
+    else if (error == ENOENT) 
         error = CM_ERROR_NOSUCHFILE;
-    else if (error == 17		/* AIX */
+    else if (error == ENOTEMPTY 
+              || error == 17		/* AIX */
               || error == 66		/* SunOS 4, Digital UNIX */
               || error == 93		/* Solaris 2, IRIX */
               || error == 247)	/* HP/UX */
