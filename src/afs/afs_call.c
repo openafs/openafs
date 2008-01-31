@@ -540,6 +540,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* RXK_LISTENER_ENV */
 	    afs_osi_Invisible();
 	    afs_RXCallBackServer();
+	    afs_osi_Visible();
 	}
 #ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
@@ -568,6 +569,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_RxkRegister();
 #endif /* !UKERNEL */
 	    rxk_Listener();
+	    afs_osi_Visible();
 	}
 #ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
@@ -587,6 +589,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_osi_Wakeup(&afs_initState);
 	afs_osi_Invisible();
 	afs_Daemon();
+	afs_osi_Visible();
 #ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
@@ -594,6 +597,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_START_CS) {
 	afs_osi_Invisible();
 	afs_CheckServerDaemon();
+	afs_osi_Visible();
 #ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
@@ -613,6 +617,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	else
 #endif /* AFS_AIX32_ENV */
 	    afs_BackgroundDaemon();
+	afs_osi_Visible();
 #ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
@@ -623,6 +628,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	/* start the bkg daemon */
 	afs_osi_Invisible();
 	afs_CacheTruncateDaemon();
+	afs_osi_Visible();
 #ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
@@ -634,6 +640,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 	afs_osi_Invisible();
 	afs_rxevent_daemon();
+	afs_osi_Visible();
 #ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);

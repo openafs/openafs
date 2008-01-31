@@ -123,6 +123,7 @@
 /* #define AFSOP_STOP_COMPLETE     215  defined in osi.h	      */
 /* #define AFSOP_STOP_RXK_LISTENER   217     defined in osi.h	      */
 #define AFSOP_STOP_AFSDB	218	/* Stop AFSDB handler */
+#define AFSOP_STOP_NETIF        219     /* Stop Netif poller */
 
 /* Main afs syscall entry; this number may vary per system (i.e. defined in afs/param.h) */
 #ifndef	AFS_SYSCALL

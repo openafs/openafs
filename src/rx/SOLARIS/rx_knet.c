@@ -592,6 +592,14 @@ osi_NetIfPoller()
     uint_t mtu;
     uint64_t flags;
 
+    if (afs_termState == AFSOP_STOP_NETIF) {
+	afs_warn("NetIfPoller... ");
+	rw_destroy(&afsifinfo_lock);
+	ddi_taskq_destroy(afs_taskq);
+	afs_termState = AFSOP_STOP_COMPLETE;
+	osi_rxWakeup(&afs_termState);
+	return;
+    }
     /* Get our permissions */
     cr = CRED();
 

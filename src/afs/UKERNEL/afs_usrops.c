@@ -1004,6 +1004,12 @@ afs_osi_Invisible(void)
     return;
 }
 
+void
+afs_osi_Visible(void)
+{
+    return;
+}
+
 int
 osi_GetTime(struct timeval *tv)
 {
