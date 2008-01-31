@@ -36,6 +36,12 @@ typedef struct cm_cell {
 #define CM_CELLFLAG_IN_NAMEHASH        0x10
 #define CM_CELLFLAG_IN_IDHASH          0x20
 
+typedef struct cm_cell_rock {
+    cm_cell_t * cellp;
+    afs_uint32  flags;
+} cm_cell_rock_t;
+
+
 #define CM_CELL_NAME_HASH(name)  (SDBMHash(name) % cm_data.cellHashTableSize)
 
 #define CM_CELL_ID_HASH(id)   ((unsigned long) id % cm_data.cellHashTableSize)
@@ -63,5 +69,7 @@ extern int cm_DumpCells(FILE *, char *, int);
 extern void cm_AddCellToNameHashTable(cm_cell_t * cellp);
 
 extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
+
+extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
 
 #endif /* __CELL_H_ENV_ */

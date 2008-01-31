@@ -28,11 +28,6 @@ osi_rwlock_t cm_cellLock;
  *
  * At the present time the return value is ignored by the caller.
  */
-typedef struct cm_cell_rock {
-    cm_cell_t * cellp;
-    afs_uint32  flags;
-} cm_cell_rock_t;
-
 long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
 {
     cm_server_t *tsp;
