@@ -471,6 +471,7 @@ extern struct afs_exporter *afs_nfsexporter;
 /* afs_osi.c */
 extern afs_lock_t afs_ftf;
 extern void afs_osi_Invisible(void);
+extern void afs_osi_Visible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
