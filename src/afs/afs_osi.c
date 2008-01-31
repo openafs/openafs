@@ -205,6 +205,19 @@ afs_osi_Invisible(void)
     AFS_STATCNT(osi_Invisible);
 }
 
+void
+afs_osi_Visible(void)
+{
+#if defined(AFS_SUN5_ENV)
+    curproc->p_flag &= ~SSYS;
+#elif defined(AFS_DARWIN80_ENV)
+#elif defined(AFS_DARWIN_ENV)
+    /* maybe call init_process instead? */
+    current_proc()->p_flag &= ~P_SYSTEM;
+#elif defined(AFS_XBSD_ENV)
+    curproc->p_flag &= ~P_SYSTEM;
+#endif
+}
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 /* set the real time */
