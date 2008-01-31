@@ -2580,11 +2580,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC09820FBL;	/* SMB use standard */
     }
     else if (code == CM_ERROR_QUOTA) {
-#ifdef COMMENT
         NTStatus = 0xC0000044L;	/* Quota exceeded */
-#else
-        NTStatus = 0xC000007FL;	/* Disk full */
-#endif
     }
     else if (code == CM_ERROR_SPACE) {
         NTStatus = 0xC000007FL;	/* Disk full */

@@ -18,24 +18,26 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 
 /* Define additional local codes beyond NT errno range. */
 
-#define AFS_NT_ERRNO_BASE  100
-
 /* Overloaded codes. */
 #ifndef EWOULDBLOCK
-#define EWOULDBLOCK        EAGAIN
+#define EWOULDBLOCK        WSAEWOULDBLOCK
 #endif
 
+#define ETIMEDOUT          WSAETIMEDOUT
+#define EDQUOT		   WSAEDQUOT
+#define ELOOP              WSAELOOP
+#define EOPNOTSUPP         WSAEOPNOTSUPP
+#define ENOTSOCK           WSAENOTSOCK
+#define ECONNREFUSED       WSAECONNREFUSED
+#define ESTALE		   WSAESTALE
+
+
 /* New codes */
-#define ELOOP              (AFS_NT_ERRNO_BASE + 1)
-#define EOPNOTSUPP         (AFS_NT_ERRNO_BASE + 2)
-#define EDQUOT		   (AFS_NT_ERRNO_BASE + 3)
-#define ENOTSOCK           (AFS_NT_ERRNO_BASE + 4)
-#define ETIMEDOUT          (AFS_NT_ERRNO_BASE + 5)
-#define ECONNREFUSED       (AFS_NT_ERRNO_BASE + 6)
-#define ESTALE		   (AFS_NT_ERRNO_BASE + 7)
-#define ENOTBLK		   (AFS_NT_ERRNO_BASE + 8)
-#define EOVERFLOW          (AFS_NT_ERRNO_BASE + 9)
-#define ENOMSG             (AFS_NT_ERRNO_BASE + 10)
-#define ETIME              (AFS_NT_ERRNO_BASE + 11)
+#define AFS_NT_ERRNO_BASE  WSABASEERR + 1000
+
+#define EOVERFLOW          (AFS_NT_ERRNO_BASE + 0)
+#define ENOMSG             (AFS_NT_ERRNO_BASE + 1)
+#define ETIME              (AFS_NT_ERRNO_BASE + 2)
+#define ENOTBLK		   (AFS_NT_ERRNO_BASE + 3)
 
 #endif /* OPENAFS_ERRMAP_NT_H  */
