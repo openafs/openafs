@@ -1592,8 +1592,6 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         return CM_ERROR_NOMORETOKENS;	/* mapped to EDOM */
 }
 
-extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
-
 long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     /* NT cache manager will read cell information from CellServDB each time
@@ -1606,6 +1604,8 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
      */  
   
     cm_cell_t *cp;
+    cm_cell_rock_t rock;
+
   
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
@@ -1617,12 +1617,14 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
         cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
         cp->vlServersp = NULL;
-        code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, cp);
+        rock.cellp = cp;
+        rock.flags = 0;
+        code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, &rock);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
-                code = cm_SearchCellByDNS(cp->name, cp->name, &ttl, cm_AddCellProc, cp);
+                code = cm_SearchCellByDNS(cp->name, cp->name, &ttl, cm_AddCellProc, &rock);
                 if ( code == 0 ) { /* got cell from DNS */
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
