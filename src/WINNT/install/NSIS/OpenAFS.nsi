@@ -561,10 +561,11 @@ Section "!AFS Client" secClient
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscred_en_us.dll" "$INSTDIR\Client\Program\afscred_en_us.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsplhlp.chm"
   
-  SetOutPath "$SYSDIR"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.exe"
+
 !ifdef AFSIFS
+  SetOutPath "$SYSDIR"
 !ifndef DEBUG
   !insertmacro ReplaceDLL "..\..\afsrdr\objfre_w2K_x86\i386\afsrdr.sys" "$SYSDIR\DRIVERS\afsrdr.sys" "$INSTDIR"
 !else
@@ -713,8 +714,8 @@ skipremove:
 
   ; Daemon entries
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$SYSDIR\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10
 
@@ -1168,9 +1169,10 @@ Section /o "Debug symbols" secDebug
   File "${AFS_DESTDIR}\etc\backup.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afscred.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afscpcc.pdb"
 
   SetOutPath "$SYSDIR"
-  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   
 DoServer:
    SectionGetFlags ${secServer} $R0
@@ -1853,14 +1855,14 @@ StartRemove:
   ;RMDIR /r "$INSTDIR\Server\usr\afs\logs"
   
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
-  Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
-  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
-  Delete /REBOOTOK "$SYSDIR\afscpcc.exe"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afs_cpa.cpl"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.dll"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.exe"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
-  Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
-  Delete /REBOOTOK "$SYSDIR\afslogon.pdb"
-  Delete /REBOOTOK "$SYSDIR\afscpcc.pdb"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afs_cpa.pdb"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.pdb"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.pdb"
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
@@ -1871,7 +1873,6 @@ StartRemove:
   RMDir "$INSTDIR\Documentation"
   ; Delete DOC short cut
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.exe"
-
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.pdb"
 
   Delete /REBOOTOK "$INSTDIR\SDK\Include\*"
