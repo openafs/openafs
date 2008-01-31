@@ -378,7 +378,6 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         tsp->refCount = 1;
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
         tsp->addr = *socketp;
-        tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
 
         cm_SetServerPrefs(tsp); 
 
@@ -387,8 +386,10 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         cm_allServersp = tsp;
         lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
-        if ( !(flags & CM_FLAG_NOPROBE) )
+        if ( !(flags & CM_FLAG_NOPROBE) ) {
+            tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
             cm_PingServer(tsp);	                /* Obtain Capabilities and check up/down state */
+        }
     }
     return tsp;
 }
