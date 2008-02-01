@@ -9,8 +9,7 @@ volserver - Initializes the Volume Server component of the fs process
 
 B<volserver> [B<-log>] S<<< [B<-p> <I<number of processes>>] >>>
     S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
-    [B<-enable_peer_stats>] [B<-enable_process_stats>] 
-    [B<-allow-dotted-principal>] [B<-help>]
+    [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
 
 =for html
 </div>

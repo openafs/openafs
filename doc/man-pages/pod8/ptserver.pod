@@ -9,7 +9,7 @@ ptserver - Initializes the Protection Server
 
 B<ptserver> S<<< [B<-database> <I<db path>>] >>> S<<< [B<-p> <I<number of processes>>] >>>
     [B<-rebuildDB>] [B<-enable_peer_stats>] [B<-enable_process_stats>]
-    [B<-allow-dotted-principal>] [B<-help>]
+    [B<-help>]
 
 =for html
 </div>

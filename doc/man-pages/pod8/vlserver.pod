@@ -8,8 +8,7 @@ vlserver - Initializes the Volume Location Server
 <div class="synopsis">
 
 B<vlserver> S<<< [B<-p> <I<lwp processes>>] >>> [B<-nojumbo>]
-    [B<-allow-dotted-principal>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
-    [B<-help>]
+    [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
 
 =for html
 </div>
