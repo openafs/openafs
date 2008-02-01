@@ -1086,7 +1086,10 @@ h_Enumerate(int (*proc) (), char *param)
 	if (!(held[count] = h_Held_r(host)))
 	    h_Hold_r(host);
     }
-    assert(count == hostCount);
+    if (count != hostCount) {
+	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
+    }
+    assert(count <= hostCount);
     H_UNLOCK;
     for (i = 0; i < count; i++) {
 	held[i] = (*proc) (list[i], held[i], param);
