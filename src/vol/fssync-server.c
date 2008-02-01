@@ -1255,6 +1255,7 @@ GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
 	    fdi++;
 	}
     *nfds = fdi;
+    ReleaseReadLock(&FSYNC_handler_lock);
 }
 #else
 static void
