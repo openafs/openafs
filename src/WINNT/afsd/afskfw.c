@@ -2624,7 +2624,7 @@ ViceIDToUsername(char *username,
                  struct ktc_token *atoken)
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
-    static char confname[512] = { 0 };
+    static char confdir[512] = { 0 };
 #ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
 #endif /* AFS_ID_TO_NAME */
@@ -2634,14 +2634,12 @@ ViceIDToUsername(char *username,
     afs_int32 id;
 #endif /* ALLOW_REGISTER */
 
-    if (confname[0] == '\0') {
-        strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
-        confname[sizeof(confname) - 2] = '\0';
-    }
+    if (confdir[0] == '\0')
+        cm_GetConfigDir(confdir, sizeof(confdir));
 
     strcpy(lastcell, aserver->cell);
 
-    if (!pr_Initialize (0, confname, aserver->cell)) {
+    if (!pr_Initialize (0, confdir, aserver->cell)) {
         char sname[PR_MAXNAMELEN];
         strncpy(sname, username, PR_MAXNAMELEN);
         sname[PR_MAXNAMELEN-1] = '\0';    
@@ -2684,7 +2682,7 @@ ViceIDToUsername(char *username,
             strncpy(aclient->cell, realm_of_user, MAXKTCREALMLEN - 1);
             if (status = ktc_SetToken(aserver, atoken, aclient, 0))
                 return status;
-            if (status = pr_Initialize(1L, confname, aserver->cell))
+            if (status = pr_Initialize(1L, confdir, aserver->cell))
                 return status;
             status = pr_CreateUser(username, &id);
 	    pr_End();

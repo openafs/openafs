@@ -7,13 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,27 +25,6 @@
 #include "cm_dns.h"
 #include <afs/afsint.h>
 #endif
-
-
-
-/* TODO: these should be pulled in from dirpath.h */
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-#define AFS_THISCELL "ThisCell"
-#endif
-#define AFS_CELLSERVDB_UNIX "CellServDB"
-#define AFS_CELLSERVDB_NT "afsdcell.ini"
-#ifndef AFSDIR_CLIENT_ETC_DIRPATH
-#define AFSDIR_CLIENT_ETC_DIRPATH "c:/afs"
-#endif
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
-#define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
-#ifdef DJGPP
-extern char cm_confDir[];
-extern int errno;
-#endif /* DJGPP */
-#else
-#define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
-#endif /* DJGPP || WIN95 */
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -152,44 +126,15 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     int foundCell = 0;
     long code;
     int tracking = 1, partial = 0;
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
-    char *afsconf_path;
-    DWORD dwSize;
-#endif
 
     if ( IsWindowsModule(cellNamep) )
 	return -3;
 
-    cm_GetCellServDB(wdir);
+    cm_GetCellServDB(wdir, sizeof(wdir));
     tfilep = fopen(wdir, "r");
 
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
-    if (!tfilep) {
-        /* If we are using DJGPP client, cellservdb will be in afsconf dir. */
-        /* If we are in Win95 here, we are linking with klog etc. and are
-        using DJGPP client even though DJGPP is not defined.  So we still
-        need to check AFSCONF for location. */
-        dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-        afsconf_path = malloc(dwSize);
-        dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-        if (!afsconf_path)
-            strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        else {
-            strcpy(wdir, afsconf_path);
-            free(afsconf_path);
-        }
-        strcat(wdir, "/");
-        strcat(wdir, AFS_CELLSERVDB);
-        /*fprintf(stderr, "opening cellservdb file %s\n", wdir);*/
-        tfilep = fopen(wdir, "r");
-        if (!tfilep) 
-	    return -2;
-    }
-#else
-    /* If we are NT or higher, we don't do DJGPP, So just fail */
-    if ( !tfilep )
+    if (!tfilep) 
         return -2;
-#endif
 
     bestp = fopen(wdir, "r");
     
@@ -273,7 +218,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             else inRightCell = 0;
         }
         else {
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
             valuep = strchr(lineBuffer, '#');
 	    if (valuep == NULL) {
 		fclose(tfilep);
@@ -289,9 +233,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') 
                 valuep[strlen(valuep) - 1] = '\0';
 
-#endif /* !DJGPP */
 	    if (inRightCell) {
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
                 thp = gethostbyname(valuep);
@@ -308,9 +250,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 			(*procp)(rockp, &vlSockAddr, valuep);
                     foundCell = 1;
 		}
-#else
-                thp = 0;
-#endif /* !DJGPP */
                 if (!thp) {
                     long ip_addr;
 		    int c1, c2, c3, c4;
@@ -379,149 +318,64 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #endif /* AFS_AFSDB_ENV */
 }
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 /* look up the CellServDBDir's name in the Registry 
  * or use the Client Dirpath value to produce a CellServDB 
  * filename
  */
-long cm_GetCellServDB(char *cellNamep)
+long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
 {
-#if !defined(DJGPP)
-	DWORD code, dummyLen;
-	HKEY parmKey;
     int tlen;
-
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-        goto dirpath;
-
-	dummyLen = 256;
-	code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
-				cellNamep, &dummyLen);
-	RegCloseKey (parmKey);
-
-  dirpath:
-	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
-        strcpy(cellNamep, AFSDIR_CLIENT_ETC_DIRPATH);
+    
+    cm_GetConfigDir(cellNamep, len);
 
     /* add trailing backslash, if required */
     tlen = (int)strlen(cellNamep);
-    if (cellNamep[tlen-1] != '\\') 
-        strcat(cellNamep, "\\");
-#else
-    strcpy(cellNamep, cm_confDir);
-    strcat(cellNamep,"/");
-#endif /* !DJGPP */
+    if (cellNamep[tlen-1] != '\\') {
+        strncat(cellNamep, "\\", len);
+        cellNamep[len-1] = '\0';
+    }
         
-    strcat(cellNamep, AFS_CELLSERVDB);
-	return 0;
+    strncat(cellNamep, AFS_CELLSERVDB, len);
+    cellNamep[len-1] = '\0';
+    return 0;
 }
 
 /* look up the root cell's name in the Registry */
 long cm_GetRootCellName(char *cellNamep)
 {
-	DWORD code, dummyLen;
-	HKEY parmKey;
+    DWORD code, dummyLen;
+    HKEY parmKey;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	dummyLen = 256;
-	code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
+    dummyLen = 256;
+    code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
 				cellNamep, &dummyLen);
-	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
-		return -1;
+    RegCloseKey (parmKey);
+    if (code != ERROR_SUCCESS || cellNamep[0] == 0)
+        return -1;
 
-	return 0;
+    return 0;
 }
-#else
-/* look up the root cell's name in the THISCELL file */
-long cm_GetRootCellName(char *cellNamep)
-{
-        FILE *thisCell;
-        char thisCellPath[256];
-        char *newline;
-        DWORD dwSize;
-
-#ifdef DJGPP
-        strcpy(thisCellPath, cm_confDir);
-#else
-        /* Win 95 */
-        char *afsconf_path;
-        dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-        afsconf_path = malloc(dwSize);
-        dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-        if (!afsconf_path)
-          strcpy(thisCellPath, AFSDIR_CLIENT_ETC_DIRPATH);
-        else {
-          strcpy(thisCellPath, afsconf_path);
-          free(afsconf_path);
-        }
-#endif
-        strcat(thisCellPath,"/");
-
-        strcat(thisCellPath, AFS_THISCELL);
-        thisCell = fopen(thisCellPath, "r");
-        if (thisCell == NULL)
-          return -1;
-
-        fgets(cellNamep, 256, thisCell);
-        fclose(thisCell);
-
-        newline = strrchr(cellNamep,'\n');
-        if (newline) *newline = '\0';
-        newline = strrchr(cellNamep,'\r');
-        if (newline) *newline = '\0';
-
-        return 0;
-}
-#endif /* !DJGPP */
 
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
     char wdir[256];
-    long tlen;
     FILE *tfilep;
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-    /* add trailing backslash, if required */
-    tlen = (long)(strlen(wdir));
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
-    DWORD dwSize;
-    char *afsconf_path;
-    
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
+    cm_GetConfigDir(wdir, sizeof(wdir));
 
-    if (!afsconf_path)
-	strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-	strcpy(wdir, afsconf_path);
-	free(afsconf_path);
-    }
-#endif /* !DJGPP */
-    strcat(wdir,"/");
-#endif /* DJGPP || WIN95 */
-
-    strcat(wdir, namep);
+    strncat(wdir, namep, sizeof(wdir));
+    wdir[sizeof(wdir)-1] = '\0';
         
     tfilep = fopen(wdir, rwp);
 
     return ((cm_configFile_t *) tfilep);        
 }	
 
-#ifndef DJGPP
 long cm_WriteConfigString(char *labelp, char *valuep)
 {
     DWORD code, dummyDisp;
@@ -541,167 +395,141 @@ long cm_WriteConfigString(char *labelp, char *valuep)
 
     return (long)0;
 }
-#endif /* !DJGPP */
 
-#ifndef DJGPP
 long cm_WriteConfigInt(char *labelp, long value)
 {
-	DWORD code, dummyDisp;
-	HKEY parmKey;
+    DWORD code, dummyDisp;
+    HKEY parmKey;
 
-	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-				0, "container", 0, KEY_SET_VALUE, NULL,
-				&parmKey, &dummyDisp);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                           0, "container", 0, KEY_SET_VALUE, NULL,
+                           &parmKey, &dummyDisp);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	code = RegSetValueEx(parmKey, labelp, 0, REG_DWORD,
-			     (LPBYTE)&value, sizeof(value));
-	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegSetValueEx(parmKey, labelp, 0, REG_DWORD,
+                          (LPBYTE)&value, sizeof(value));
+    RegCloseKey (parmKey);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	return 0;
+    return 0;
 }
-#endif /* !DJGPP */
 
 cm_configFile_t *cm_OpenCellFile(void)
 {
-        cm_configFile_t *cfp;
+    cm_configFile_t *cfp;
 
-	cfp = cm_CommonOpen("afsdcel2.ini", "w");
-	return cfp;
+    cfp = cm_CommonOpen(AFS_CELLSERVDB ".new", "w");
+    return cfp;
 }
 
 long cm_AppendPrunedCellList(cm_configFile_t *ofp, char *cellNamep)
 {
-	cm_configFile_t *tfilep;	/* input file */
-        char *tp;
-        char lineBuffer[256];
-        char *valuep;
-        int inRightCell;
-        int foundCell;
+    cm_configFile_t *tfilep;	/* input file */
+    char *tp;
+    char lineBuffer[256];
+    char *valuep;
+    int inRightCell;
+    int foundCell;
 
-        tfilep = cm_CommonOpen(AFS_CELLSERVDB, "r");
-        if (!tfilep) return -1;
+    tfilep = cm_CommonOpen(AFS_CELLSERVDB, "r");
+    if (!tfilep) 
+        return -1;
 
-	foundCell = 0;
+    foundCell = 0;
 
-	/* have we seen the cell line for the guy we're looking for? */
-	inRightCell = 0;
-	while (1) {
-	        tp = fgets(lineBuffer, sizeof(lineBuffer), (FILE *)tfilep);
-                if (tp == NULL) {
-			if (feof((FILE *)tfilep)) {
-				/* hit EOF */
-				fclose((FILE *)tfilep);
-				return 0;
-			}
-                }
+    /* have we seen the cell line for the guy we're looking for? */
+    inRightCell = 0;
+    while (1) {
+        tp = fgets(lineBuffer, sizeof(lineBuffer), (FILE *)tfilep);
+        if (tp == NULL) {
+            if (feof((FILE *)tfilep)) {
+                /* hit EOF */
+                fclose((FILE *)tfilep);
+                return 0;
+            }
+        }
+
+        /* turn trailing cr or lf into null */
+        tp = strchr(lineBuffer, '\r');
+        if (tp) *tp = 0;
+        tp = strchr(lineBuffer, '\n');
+        if (tp) *tp = 0;
                 
-                /* turn trailing cr or lf into null */
-                tp = strchr(lineBuffer, '\r');
-                if (tp) *tp = 0;
-                tp = strchr(lineBuffer, '\n');
-                if (tp) *tp = 0;
-                
-		/* skip blank lines */
-                if (lineBuffer[0] == 0) {
-			fprintf((FILE *)ofp, "%s\n", lineBuffer);
-                	continue;
-		}
+        /* skip blank lines */
+        if (lineBuffer[0] == 0) {
+            fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            continue;
+        }
 
-                if (lineBuffer[0] == '>') {
-			/* trim off at white space or '#' chars */
-                        tp = strchr(lineBuffer, ' ');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '\t');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '#');
-                        if (tp) *tp = 0;
+        if (lineBuffer[0] == '>') {
+            /* trim off at white space or '#' chars */
+            tp = strchr(lineBuffer, ' ');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '\t');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '#');
+            if (tp) *tp = 0;
 
-			/* now see if this is the right cell */
-                	if (strcmp(lineBuffer+1, cellNamep) == 0) {
-				/* found the cell we're looking for */
-	                        inRightCell = 1;
-			}
-                        else {
-                        	inRightCell = 0;
-                                fprintf((FILE *)ofp, "%s\n", lineBuffer);
-			}
-                }
-                else {
-                	valuep = strchr(lineBuffer, '#');
-			if (valuep == NULL) return -2;
-                        valuep++;	/* skip the "#" */
-			if (!inRightCell) {
-                                fprintf((FILE *)ofp, "%s\n", lineBuffer);
-                        }
-                }	/* a vldb line */
-        }		/* while loop processing all lines */
-}
+            /* now see if this is the right cell */
+            if (strcmp(lineBuffer+1, cellNamep) == 0) {
+                /* found the cell we're looking for */
+                inRightCell = 1;
+            }
+            else {
+                inRightCell = 0;
+                fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            }
+        }
+        else {
+            valuep = strchr(lineBuffer, '#');
+            if (valuep == NULL) return -2;
+            valuep++;	/* skip the "#" */
+            if (!inRightCell) {
+                fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            }
+        }	/* a vldb line */
+    }		/* while loop processing all lines */
+}       
 
 long cm_AppendNewCell(cm_configFile_t *filep, char *cellNamep)
 {
-	fprintf((FILE *)filep, ">%s\n", cellNamep);
-        return 0;
+    fprintf((FILE *)filep, ">%s\n", cellNamep);
+    return 0;
 }
 
 long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep)
 {
-	fprintf((FILE *)filep, "%s\n", linep);
-        return 0;
+    fprintf((FILE *)filep, "%s\n", linep);
+    return 0;
 }
 
 long cm_CloseCellFile(cm_configFile_t *filep)
 {
-    char wdir[256];
-    char sdir[256];
+    char wdir[260];
+    char sdir[260];
     long code;
     long closeCode;
-    int tlen;
-#ifdef AFS_WIN95_ENV
-    char *afsconf_path;
-    DWORD dwSize;
-#endif
-	closeCode = fclose((FILE *)filep);
+    closeCode = fclose((FILE *)filep);
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-	/* add trailing backslash, if required */
-    tlen = (int)strlen(wdir);
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-    if (!afsconf_path)
-        strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-        strcpy(wdir, afsconf_path);
-        free(afsconf_path);
-    }
-#endif /* !DJGPP */
-    strcat(wdir,"/");
-#endif /* DJGPP || WIN95 */
-
+    cm_GetConfigDir(wdir, sizeof(wdir));
     strcpy(sdir, wdir);
 
-	if (closeCode != 0) {
-		/* something went wrong, preserve original database */
-        strcat(wdir, "afsdcel2.ini");
+    if (closeCode != 0) {
+        /* something went wrong, preserve original database */
+        strncat(wdir, AFS_CELLSERVDB ".new", sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
         unlink(wdir);
         return closeCode;
     }
 
-    strcat(wdir, AFS_CELLSERVDB);
-    strcat(sdir, "afsdcel2.ini");	/* new file */
+    strncat(wdir, AFS_CELLSERVDB, sizeof(wdir));
+    wdir[sizeof(wdir)-1] = '\0';
+    strncat(sdir, AFS_CELLSERVDB ".new", sizeof(sdir));/* new file */
+    sdir[sizeof(sdir)-1] = '\0';
 
-    unlink(wdir);			/* delete old file */
+    unlink(sdir);			/* delete old file */
 
     code = rename(sdir, wdir);	/* do the rename */
 
@@ -711,36 +539,48 @@ long cm_CloseCellFile(cm_configFile_t *filep)
     return code;
 }   
 
-void cm_GetConfigDir(char *dir)
+void cm_GetConfigDir(char *dir, afs_uint32 len)
 {
-	char wdir[256];
+    char wdir[512];
     int tlen;
-#ifdef AFS_WIN95_ENV
     char *afsconf_path;
     DWORD dwSize;
-#endif
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-	/* add trailing backslash, if required */
-    tlen = (int)strlen(wdir);
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
     dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
     afsconf_path = malloc(dwSize);
     dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-    if (!afsconf_path)
-        strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-        strcpy(wdir, afsconf_path);
+    if (!afsconf_path) {
+        DWORD code, dummyLen;
+        HKEY parmKey;
+
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code != ERROR_SUCCESS)
+            goto dirpath;
+
+        dummyLen = sizeof(wdir);
+        code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
+                               wdir, &dummyLen);
+        RegCloseKey (parmKey);
+
+      dirpath:
+        if (code != ERROR_SUCCESS || wdir[0] == 0) {
+            strncpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(wdir));
+            wdir[sizeof(wdir)-1] = '\0';
+        }
+    } else {
+        strncpy(wdir, afsconf_path, sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
         free(afsconf_path);
     }
-#endif /* !DJGPP */
-    strcat(wdir,"\\");
-#endif /* DJGPP || WIN95 */
-    strcpy(dir, wdir);
+
+    /* add trailing backslash, if required */
+    tlen = (int)strlen(wdir);
+    if (wdir[tlen-1] != '\\') {
+        strncat(wdir, "\\", sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
+    }
+
+    strncpy(dir, wdir, len);
+    dir[len-1] ='\0';
 }

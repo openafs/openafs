@@ -1112,6 +1112,7 @@ BadName(char *aname, char *fname)
     afs_int32 tc, code, id;
     char *nm;
     char cell[MAXCELLCHARS];
+    char confDir[257];
 
     for ( nm = aname; tc = *nm; nm++) {
 	/* all must be '-' or digit to be bad */
@@ -1124,7 +1125,9 @@ BadName(char *aname, char *fname)
     if (code)
         return 0;
 
-    pr_Initialize(1, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+    cm_GetConfigDir(confDir, sizeof(confDir));
+
+    pr_Initialize(1, confDir, cell);
     code = pr_SNameToId(aname, &id);
     pr_End();
 
@@ -1569,9 +1572,12 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         blob.out = (char *) &owner;
 	if (0 == pioctl(ti->data, VIOCGETOWNER, &blob, 1)) {
 	    char oname[PR_MAXNAMELEN] = "(unknown)";
+            char confDir[257];
 
 	    /* Go to the PRDB and see if this all number username is valid */
-	    pr_Initialize(1, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+            cm_GetConfigDir(confDir, sizeof(confDir));
+
+            pr_Initialize(1, confDir, cell);
 	    pr_SIdToName(owner[0], oname);
 	    printf("Owner %s (%u) Group %u\n", oname, owner[0], owner[1]);
         }
@@ -3095,45 +3101,22 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-#ifdef WIN32
 static int
 GetCellName(char *cellNamep, struct afsconf_cell *infop)
 {
     strcpy(infop->name, cellNamep);
     return 0;
 }
-#else
-static int
-GetCellName(char *cellName, struct afsconf_cell *info)
-{
-    struct afsconf_dir *tdir;
-    int code;
-
-    tdir = afsconf_Open(AFSDIR_CLIENT_ETC_CLIENTNAME);
-    if (!tdir) {
-	fprintf(stderr,
-                "Could not process files in configuration directory (%s).\n",
-                 AFSDIR_CLIENT_ETC_CLIENTNAME);
-	return -1;
-    }
-
-    code = afsconf_GetCellInfo(tdir, cellName, AFSCONF_VLDBSERVICE, info);
-    if (code) {
-	fprintf(stderr,"fs: cell %s not in %s/CellServDB\n", cellName, 
-                AFSDIR_CLIENT_ETC_CLIENTNAME);
-	return code;
-    }
-
-    return 0;
-}
-#endif /* not WIN32 */
 
 static int
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
+    char confDir[257];
 
-    code = ugen_ClientInit(noAuthFlag, (char *)AFSDIR_CLIENT_ETC_DIRPATH, 
+    cm_GetConfigDir(confDir, sizeof(confDir));
+
+    code = ugen_ClientInit(noAuthFlag, confDir, 
 			   info->name, 0, &uclient, 
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
