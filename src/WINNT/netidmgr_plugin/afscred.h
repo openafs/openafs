@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005,2006 Secure Endpoints Inc.
+ * Copyright (c) 2005-2008 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -41,8 +41,8 @@
 
 #include<langres.h>
 
-#include <afs/cm_config.h>
 #include <afs/stds.h>
+#include <afs/cm_config.h>
 #include <afs/auth.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
