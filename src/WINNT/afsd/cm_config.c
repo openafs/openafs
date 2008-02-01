@@ -26,17 +26,6 @@
 #include <afs/afsint.h>
 #endif
 
-
-
-/* TODO: these should be pulled in from dirpath.h */
-#define AFS_THISCELL "ThisCell"
-#define AFS_CELLSERVDB_UNIX "CellServDB"
-#define AFS_CELLSERVDB_NT "afsdcell.ini"
-#ifndef AFSDIR_CLIENT_ETC_DIRPATH
-#define AFSDIR_CLIENT_ETC_DIRPATH "c:/afs"
-#endif
-#define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
-
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
     char *tp;
@@ -141,11 +130,10 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     if ( IsWindowsModule(cellNamep) )
 	return -3;
 
-    cm_GetCellServDB(wdir);
+    cm_GetCellServDB(wdir, sizeof(wdir));
     tfilep = fopen(wdir, "r");
 
-    /* If we are NT or higher, we don't do DJGPP, So just fail */
-    if ( !tfilep )
+    if (!tfilep) 
         return -2;
 
     bestp = fopen(wdir, "r");
@@ -334,69 +322,54 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
  * or use the Client Dirpath value to produce a CellServDB 
  * filename
  */
-long cm_GetCellServDB(char *cellNamep)
+long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
 {
-	DWORD code, dummyLen;
-	HKEY parmKey;
     int tlen;
-
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-        goto dirpath;
-
-	dummyLen = 256;
-	code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
-				cellNamep, &dummyLen);
-	RegCloseKey (parmKey);
-
-  dirpath:
-	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
-        strcpy(cellNamep, AFSDIR_CLIENT_ETC_DIRPATH);
+    
+    cm_GetConfigDir(cellNamep, len);
 
     /* add trailing backslash, if required */
     tlen = (int)strlen(cellNamep);
-    if (cellNamep[tlen-1] != '\\') 
-        strcat(cellNamep, "\\");
+    if (cellNamep[tlen-1] != '\\') {
+        strncat(cellNamep, "\\", len);
+        cellNamep[len-1] = '\0';
+    }
         
-    strcat(cellNamep, AFS_CELLSERVDB);
-	return 0;
+    strncat(cellNamep, AFS_CELLSERVDB, len);
+    cellNamep[len-1] = '\0';
+    return 0;
 }
 
 /* look up the root cell's name in the Registry */
 long cm_GetRootCellName(char *cellNamep)
 {
-	DWORD code, dummyLen;
-	HKEY parmKey;
+    DWORD code, dummyLen;
+    HKEY parmKey;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	dummyLen = 256;
-	code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
+    dummyLen = 256;
+    code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
 				cellNamep, &dummyLen);
-	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
-		return -1;
+    RegCloseKey (parmKey);
+    if (code != ERROR_SUCCESS || cellNamep[0] == 0)
+        return -1;
 
-	return 0;
+    return 0;
 }
 
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
     char wdir[256];
-    long tlen;
     FILE *tfilep;
 
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-    /* add trailing backslash, if required */
-    tlen = (long)(strlen(wdir));
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
+    cm_GetConfigDir(wdir, sizeof(wdir));
 
-    strcat(wdir, namep);
+    strncat(wdir, namep, sizeof(wdir));
+    wdir[sizeof(wdir)-1] = '\0';
         
     tfilep = fopen(wdir, rwp);
 
@@ -425,140 +398,138 @@ long cm_WriteConfigString(char *labelp, char *valuep)
 
 long cm_WriteConfigInt(char *labelp, long value)
 {
-	DWORD code, dummyDisp;
-	HKEY parmKey;
+    DWORD code, dummyDisp;
+    HKEY parmKey;
 
-	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-				0, "container", 0, KEY_SET_VALUE, NULL,
-				&parmKey, &dummyDisp);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                           0, "container", 0, KEY_SET_VALUE, NULL,
+                           &parmKey, &dummyDisp);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	code = RegSetValueEx(parmKey, labelp, 0, REG_DWORD,
-			     (LPBYTE)&value, sizeof(value));
-	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegSetValueEx(parmKey, labelp, 0, REG_DWORD,
+                          (LPBYTE)&value, sizeof(value));
+    RegCloseKey (parmKey);
+    if (code != ERROR_SUCCESS)
+        return -1;
 
-	return 0;
+    return 0;
 }
 
 cm_configFile_t *cm_OpenCellFile(void)
 {
-        cm_configFile_t *cfp;
+    cm_configFile_t *cfp;
 
-	cfp = cm_CommonOpen("afsdcel2.ini", "w");
-	return cfp;
+    cfp = cm_CommonOpen(AFS_CELLSERVDB ".new", "w");
+    return cfp;
 }
 
 long cm_AppendPrunedCellList(cm_configFile_t *ofp, char *cellNamep)
 {
-	cm_configFile_t *tfilep;	/* input file */
-        char *tp;
-        char lineBuffer[256];
-        char *valuep;
-        int inRightCell;
-        int foundCell;
+    cm_configFile_t *tfilep;	/* input file */
+    char *tp;
+    char lineBuffer[256];
+    char *valuep;
+    int inRightCell;
+    int foundCell;
 
-        tfilep = cm_CommonOpen(AFS_CELLSERVDB, "r");
-        if (!tfilep) return -1;
+    tfilep = cm_CommonOpen(AFS_CELLSERVDB, "r");
+    if (!tfilep) 
+        return -1;
 
-	foundCell = 0;
+    foundCell = 0;
 
-	/* have we seen the cell line for the guy we're looking for? */
-	inRightCell = 0;
-	while (1) {
-	        tp = fgets(lineBuffer, sizeof(lineBuffer), (FILE *)tfilep);
-                if (tp == NULL) {
-			if (feof((FILE *)tfilep)) {
-				/* hit EOF */
-				fclose((FILE *)tfilep);
-				return 0;
-			}
-                }
+    /* have we seen the cell line for the guy we're looking for? */
+    inRightCell = 0;
+    while (1) {
+        tp = fgets(lineBuffer, sizeof(lineBuffer), (FILE *)tfilep);
+        if (tp == NULL) {
+            if (feof((FILE *)tfilep)) {
+                /* hit EOF */
+                fclose((FILE *)tfilep);
+                return 0;
+            }
+        }
+
+        /* turn trailing cr or lf into null */
+        tp = strchr(lineBuffer, '\r');
+        if (tp) *tp = 0;
+        tp = strchr(lineBuffer, '\n');
+        if (tp) *tp = 0;
                 
-                /* turn trailing cr or lf into null */
-                tp = strchr(lineBuffer, '\r');
-                if (tp) *tp = 0;
-                tp = strchr(lineBuffer, '\n');
-                if (tp) *tp = 0;
-                
-		/* skip blank lines */
-                if (lineBuffer[0] == 0) {
-			fprintf((FILE *)ofp, "%s\n", lineBuffer);
-                	continue;
-		}
+        /* skip blank lines */
+        if (lineBuffer[0] == 0) {
+            fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            continue;
+        }
 
-                if (lineBuffer[0] == '>') {
-			/* trim off at white space or '#' chars */
-                        tp = strchr(lineBuffer, ' ');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '\t');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '#');
-                        if (tp) *tp = 0;
+        if (lineBuffer[0] == '>') {
+            /* trim off at white space or '#' chars */
+            tp = strchr(lineBuffer, ' ');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '\t');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '#');
+            if (tp) *tp = 0;
 
-			/* now see if this is the right cell */
-                	if (strcmp(lineBuffer+1, cellNamep) == 0) {
-				/* found the cell we're looking for */
-	                        inRightCell = 1;
-			}
-                        else {
-                        	inRightCell = 0;
-                                fprintf((FILE *)ofp, "%s\n", lineBuffer);
-			}
-                }
-                else {
-                	valuep = strchr(lineBuffer, '#');
-			if (valuep == NULL) return -2;
-                        valuep++;	/* skip the "#" */
-			if (!inRightCell) {
-                                fprintf((FILE *)ofp, "%s\n", lineBuffer);
-                        }
-                }	/* a vldb line */
-        }		/* while loop processing all lines */
-}
+            /* now see if this is the right cell */
+            if (strcmp(lineBuffer+1, cellNamep) == 0) {
+                /* found the cell we're looking for */
+                inRightCell = 1;
+            }
+            else {
+                inRightCell = 0;
+                fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            }
+        }
+        else {
+            valuep = strchr(lineBuffer, '#');
+            if (valuep == NULL) return -2;
+            valuep++;	/* skip the "#" */
+            if (!inRightCell) {
+                fprintf((FILE *)ofp, "%s\n", lineBuffer);
+            }
+        }	/* a vldb line */
+    }		/* while loop processing all lines */
+}       
 
 long cm_AppendNewCell(cm_configFile_t *filep, char *cellNamep)
 {
-	fprintf((FILE *)filep, ">%s\n", cellNamep);
-        return 0;
+    fprintf((FILE *)filep, ">%s\n", cellNamep);
+    return 0;
 }
 
 long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep)
 {
-	fprintf((FILE *)filep, "%s\n", linep);
-        return 0;
+    fprintf((FILE *)filep, "%s\n", linep);
+    return 0;
 }
 
 long cm_CloseCellFile(cm_configFile_t *filep)
 {
-    char wdir[256];
-    char sdir[256];
+    char wdir[260];
+    char sdir[260];
     long code;
     long closeCode;
-    int tlen;
     closeCode = fclose((FILE *)filep);
 
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-	/* add trailing backslash, if required */
-    tlen = (int)strlen(wdir);
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-
+    cm_GetConfigDir(wdir, sizeof(wdir));
     strcpy(sdir, wdir);
 
-	if (closeCode != 0) {
-		/* something went wrong, preserve original database */
-        strcat(wdir, "afsdcel2.ini");
+    if (closeCode != 0) {
+        /* something went wrong, preserve original database */
+        strncat(wdir, AFS_CELLSERVDB ".new", sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
         unlink(wdir);
         return closeCode;
     }
 
-    strcat(wdir, AFS_CELLSERVDB);
-    strcat(sdir, "afsdcel2.ini");	/* new file */
+    strncat(wdir, AFS_CELLSERVDB, sizeof(wdir));
+    wdir[sizeof(wdir)-1] = '\0';
+    strncat(sdir, AFS_CELLSERVDB ".new", sizeof(sdir));/* new file */
+    sdir[sizeof(sdir)-1] = '\0';
 
-    unlink(wdir);			/* delete old file */
+    unlink(sdir);			/* delete old file */
 
     code = rename(sdir, wdir);	/* do the rename */
 
@@ -568,19 +539,48 @@ long cm_CloseCellFile(cm_configFile_t *filep)
     return code;
 }   
 
-void cm_GetConfigDir(char *dir)
+void cm_GetConfigDir(char *dir, afs_uint32 len)
 {
-	char wdir[256];
+    char wdir[512];
     int tlen;
-#ifdef AFS_WIN95_ENV
     char *afsconf_path;
     DWORD dwSize;
-#endif
 
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        
-	/* add trailing backslash, if required */
+    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
+    afsconf_path = malloc(dwSize);
+    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
+    if (!afsconf_path) {
+        DWORD code, dummyLen;
+        HKEY parmKey;
+
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code != ERROR_SUCCESS)
+            goto dirpath;
+
+        dummyLen = sizeof(wdir);
+        code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
+                               wdir, &dummyLen);
+        RegCloseKey (parmKey);
+
+      dirpath:
+        if (code != ERROR_SUCCESS || wdir[0] == 0) {
+            strncpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(wdir));
+            wdir[sizeof(wdir)-1] = '\0';
+        }
+    } else {
+        strncpy(wdir, afsconf_path, sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
+        free(afsconf_path);
+    }
+
+    /* add trailing backslash, if required */
     tlen = (int)strlen(wdir);
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-    strcpy(dir, wdir);
+    if (wdir[tlen-1] != '\\') {
+        strncat(wdir, "\\", sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
+    }
+
+    strncpy(dir, wdir, len);
+    dir[len-1] ='\0';
 }

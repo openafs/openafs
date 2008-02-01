@@ -127,7 +127,7 @@ static cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
     return code ? NULL : cp;
 }
 
-/* load up a cell structure from the cell database, afsdcell.ini */
+/* load up a cell structure from the cell database, AFS_CELLSERVDB */
 cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
 {
     return cm_GetCell_Gen(namep, NULL, flags);

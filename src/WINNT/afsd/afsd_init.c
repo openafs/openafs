@@ -1268,7 +1268,7 @@ int afsd_InitCM(char **reasonP)
               code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
     if (code != 0 && !cm_freelanceEnabled) 
     {
-        *reasonP = "can't find root cell name in CellServDB";
+        *reasonP = "can't find root cell name in " AFS_CELLSERVDB;
         return -1;
     }   
     else if (cm_freelanceEnabled)
@@ -1280,7 +1280,7 @@ int afsd_InitCM(char **reasonP)
         afsi_log("cm_GetCell addr %x", PtrToUlong(cm_data.rootCellp));
         if (cm_data.rootCellp == NULL) 
         {
-            *reasonP = "can't find root cell in afsdcell.ini";
+            *reasonP = "can't find root cell in " AFS_CELLSERVDB;
             return -1;
         }
     }

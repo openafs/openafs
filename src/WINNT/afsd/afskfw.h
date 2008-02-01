@@ -37,6 +37,7 @@ extern "C" {
 #include <afs/stds.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#include <cm_config.h>
 #include <rxkad.h>
 
 #define MAXCELLCHARS   64

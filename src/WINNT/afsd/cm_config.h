@@ -48,9 +48,14 @@ extern long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep);
 
 extern long cm_CloseCellFile(cm_configFile_t *filep);
 
-extern long cm_GetCellServDB(char *cellNamep);
+extern long cm_GetCellServDB(char *cellNamep, afs_uint32 len);
 
-extern void cm_GetConfigDir(char *dir);
+extern void cm_GetConfigDir(char *dir, afs_uint32 len);
+
+/* TODO: these should be pulled in from dirpath.h */
+#define AFS_THISCELL "ThisCell"
+#define AFS_CELLSERVDB_UNIX "CellServDB"
+#define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
 
 #endif /* __CM_CONFIG_INTERFACES_ONLY__ */
 

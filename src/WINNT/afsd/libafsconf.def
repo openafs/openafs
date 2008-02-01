@@ -23,4 +23,4 @@ EXPORTS
         cm_GetConfigDir                 @16
         afs_uuid_create                 @17
         afs_uuid_equal                  @18
-  
+        cm_GetCellServDB                @19

@@ -463,7 +463,7 @@ long cm_InitLocalMountPoints() {
     char line[512];
     char*t, *t2;
     cm_localMountPoint_t* aLocalMountPoint;
-    char hdir[120];
+    char hdir[260];
     long code;
     char rootCellName[256];
     HKEY hkFreelance = 0, hkFreelanceSymlinks = 0;
@@ -668,7 +668,7 @@ long cm_InitLocalMountPoints() {
     /* What follows is the old code to read freelance mount points 
      * out of a text file modified to copy the data into the registry
      */
-    cm_GetConfigDir(hdir);
+    cm_GetConfigDir(hdir, sizeof(hdir));
     strcat(hdir, AFS_FREELANCE_INI);
     // open the ini file for reading
     fp = fopen(hdir, "r");
@@ -957,7 +957,7 @@ long cm_FreelanceSymlinkExists(char * filename, int prefix_ok)
 long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp)
 {
     FILE *fp;
-    char hfile[120];
+    char hfile[260];
     char line[512];
     char fullname[200];
     int n;
@@ -1052,7 +1052,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         RegCloseKey(hkFreelance);
     } else 
     {
-        cm_GetConfigDir(hfile);
+        cm_GetConfigDir(hfile, sizeof(hfile));
         strcat(hfile, AFS_FREELANCE_INI);
         fp = fopen(hfile, "r+");
         if (!fp)
@@ -1086,7 +1086,7 @@ long cm_FreelanceRemoveMount(char *toremove)
     char* cp;
     char line[512];
     char shortname[200];
-    char hfile[120], hfile2[120];
+    char hfile[260], hfile2[260];
     FILE *fp1, *fp2;
     int found=0;
     HKEY hkFreelance = 0;
@@ -1137,7 +1137,7 @@ long cm_FreelanceRemoveMount(char *toremove)
         RegCloseKey(hkFreelance);
     } else 
     {
-        cm_GetConfigDir(hfile);
+        cm_GetConfigDir(hfile, sizeof(hfile));
         strcat(hfile, AFS_FREELANCE_INI);
         strcpy(hfile2, hfile);
         strcat(hfile2, "2");
