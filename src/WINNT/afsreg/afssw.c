@@ -77,9 +77,41 @@ afssw_GetClientInstallDir(char **bufPP)   /* [out] data buffer */
 int
 afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
 {
-    return StringDataRead(AFSREG_CLT_OPENAFS_KEY,
+    char wdir[512];
+    int tlen;
+    char *path = NULL;
+    int rc;
+    DWORD cbPath;
+
+    cbPath = GetEnvironmentVariable("AFSCONF", NULL, 0);
+    if (cbPath) {
+        cbPath += 2;
+        path = malloc(cbPath);
+    }
+    if (path) {
+        GetEnvironmentVariable("AFSCONF", path, cbPath);
+        tlen = (int)strlen(path);
+        if (path[tlen-1] != '\\') {
+            strncat(path, "\\", cbPath);
+            path[cbPath-1] = '\0';
+        }
+        *bufPP = path;
+        return 0;
+    }
+
+    if (!StringDataRead(AFSREG_CLT_OPENAFS_KEY,
 			  AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE,
-			  bufPP);
+                         &path)) {
+        tlen = (int)strlen(path);
+        if (path[tlen-1] != '\\') {
+            strncat(path, "\\", cbPath);
+            path[cbPath-1] = '\0';
+        }
+        *bufPP = path;
+        return 0;
+    }
+
+    return afssw_GetClientInstallDir(bufPP);
 }
 
 
