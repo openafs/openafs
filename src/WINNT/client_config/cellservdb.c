@@ -15,14 +15,10 @@
 #include <memory.h>
 #include <malloc.h>
 #include "cellservdb.h"
+#include <afs/cm_config.h>
 
-#ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <winsock2.h>
-#else
-#include <sys/socket.h>
-#endif
-#include <WINNT\afsreg.h>
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -66,38 +62,7 @@ static void strzcpy (char *pszTarget, const char *pszSource, size_t cch)
 
 void CSDB_GetFileName (char *pszFilename)
 {
-#ifdef AFS_NT40_ENV
-   /* Find the appropriate CellServDB */
-    char * clientdir = 0;
-	DWORD code, dummyLen;
-	HKEY parmKey;
-    int tlen;
-
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-        goto dirpath;
-
-	dummyLen = MAX_CSDB_PATH;
-	code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
-				pszFilename, &dummyLen);
-	RegCloseKey (parmKey);
-
-  dirpath:
-	if (code != ERROR_SUCCESS || pszFilename[0] == 0) {
-        afssw_GetClientInstallDir(&clientdir);
-        if (clientdir) {
-            strncpy(pszFilename, clientdir, MAX_CSDB_PATH);
-            pszFilename[MAX_CSDB_PATH - 1] = '\0';
-        }
-    }
-    if (pszFilename[ strlen(pszFilename)-1 ] != '\\')
-      strcat (pszFilename, "\\");
-
-   strcat (pszFilename, "CellServDB");
-#else
-   strcpy (pszFilename, "/usr/vice/etc/CellServDB");
-#endif
+    cm_GetCellServDB(pszFilename, MAX_CSDB_PATH);
 }
 
 
@@ -191,11 +156,7 @@ BOOL CSDB_WriteFile (PCELLSERVDB pCellServDB)
          {
          for (pLine = pCellServDB->pFirst; pLine; pLine = pLine->pNext)
             {
-#ifdef AFS_NT40_ENV
             sprintf (szLine, "%s\r\n", pLine->szLine);
-#else
-            sprintf (szLine, "%s\n", pLine->szLine);
-#endif
             fwrite (szLine, 1, strlen(szLine), pFile);
             }
 
