@@ -1301,7 +1301,9 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
                     found = 1;
                     if (!cm_FreelanceMountPointExists(fullname, 0))
                         code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.", 1, &rock.fid);
-                    if ( stricmp(&namep[1], &fullname[1]) && !cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
+                    if ( stricmp(&namep[1], &fullname[1]) && 
+						!cm_FreelanceMountPointExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
+						!cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
                         code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
                 }
             } else {
@@ -1309,7 +1311,9 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
                     found = 1;
                     if (!cm_FreelanceMountPointExists(fullname, 0))
                         code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
-                    if ( stricmp(namep, fullname) && !cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
+                    if ( stricmp(namep, fullname) && 
+						!cm_FreelanceMountPointExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
+						!cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
                         code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
                 }
             }
