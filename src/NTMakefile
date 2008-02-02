@@ -402,7 +402,42 @@ tbutc:  tviced
      $(NTMAKE)
      $(CD) ..\..
 
-adminutil: tbutc
+talocale: tbutc
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+license: talocale
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_osi: license
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsd: client_osi
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+libadmin: afsd
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+adminutil: libadmin
      echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
@@ -443,41 +478,6 @@ bos: pts
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-
-talocale: bos
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-license: talocale
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-client_osi: license
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-afsd: client_osi
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-libadmin: afsd
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
 
 cfg: bos
      echo ***** $@

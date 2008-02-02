@@ -135,7 +135,7 @@ initDirPathArray(void)
     FilepathNormalize(ntServerInstallDirShort);
 
     /* get the afs client configuration directory (/usr/vice/etc equivalent) */
-    if (afssw_GetClientInstallDir(&buf)) {
+    if (afssw_GetClientCellServDBDir(&buf)) {
         /* failed */
         status = GetWindowsDirectory(ntClientConfigDirLong, AFSDIR_PATH_MAX);
         if (status == 0 || status > AFSDIR_PATH_MAX) {

@@ -55,7 +55,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsvosadmin.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib \
+        $(DESTDIR)\lib\libafsconf.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afscfgadmin.def

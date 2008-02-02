@@ -23,9 +23,6 @@ extern int
 afssw_GetClientCellServDBDir(char **bufPP);
 
 extern int
-afssw_GetClientCellDir(char **bufPP);
-
-extern int
 afssw_GetClientCellName(char **bufPP);
 
 extern int

@@ -318,9 +318,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #endif /* AFS_AFSDB_ENV */
 }
 
-/* look up the CellServDBDir's name in the Registry 
- * or use the Client Dirpath value to produce a CellServDB 
- * filename
+/* use cm_GetConfigDir() plus AFS_CELLSERVDB to 
+ * generate the fully qualified name of the CellServDB 
+ * file.
  */
 long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
 {
@@ -541,46 +541,13 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 
 void cm_GetConfigDir(char *dir, afs_uint32 len)
 {
-    char wdir[512];
-    int tlen;
-    char *afsconf_path;
-    DWORD dwSize;
+    char * dirp = NULL;
 
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-    if (!afsconf_path) {
-        DWORD code, dummyLen;
-        HKEY parmKey;
-
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, KEY_QUERY_VALUE, &parmKey);
-        if (code != ERROR_SUCCESS)
-            goto dirpath;
-
-        dummyLen = sizeof(wdir);
-        code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
-                               wdir, &dummyLen);
-        RegCloseKey (parmKey);
-
-      dirpath:
-        if (code != ERROR_SUCCESS || wdir[0] == 0) {
-            strncpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(wdir));
-            wdir[sizeof(wdir)-1] = '\0';
-        }
+    if (!afssw_GetClientCellServDBDir(&dirp)) {
+        strncpy(dir, dirp, len);
+        dir[len-1] = '\0';
+        free(dirp);
     } else {
-        strncpy(wdir, afsconf_path, sizeof(wdir));
-        wdir[sizeof(wdir)-1] = '\0';
-        free(afsconf_path);
+        dir[0] = '\0';
     }
-
-    /* add trailing backslash, if required */
-    tlen = (int)strlen(wdir);
-    if (wdir[tlen-1] != '\\') {
-        strncat(wdir, "\\", sizeof(wdir));
-        wdir[sizeof(wdir)-1] = '\0';
-    }
-
-    strncpy(dir, wdir, len);
-    dir[len-1] ='\0';
 }
