@@ -8774,9 +8774,31 @@ exit_thread:
     return;
 }
 
+static void
+smb_LanAdapterChangeThread(void *param)
+{
+    /* 
+     * Give the IPAddrDaemon thread a chance
+     * to block before we trigger.
+     */
+    Sleep(30000);
+    smb_LanAdapterChange(0);
+}
+
 void smb_SetLanAdapterChangeDetected(void)
 {
+    int lpid;
+    thread_t phandle;
+
     lock_ObtainMutex(&smb_StartedLock);
+
+    if (!powerStateSuspended) {
+        phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_LanAdapterChangeThread,
+                              NULL, 0, &lpid, "smb_LanAdapterChange");
+        osi_assertx(phandle != NULL, "smb_LanAdapterChangeThread thread creation failure");
+        thrd_CloseHandle(phandle);
+    }
+
     smb_LanAdapterChangeDetected = 1;
     lock_ReleaseMutex(&smb_StartedLock);
 }
@@ -9095,6 +9117,9 @@ void smb_RestartListeners(int locked)
 {
     if (!locked)
         lock_ObtainMutex(&smb_StartedLock);
+
+    if (powerStateSuspended)
+        afsi_log("smb_RestartListeners called while suspended");
 
     if (!powerStateSuspended && smb_ListenerState != SMB_LISTENER_UNINITIALIZED) {
 	if (smb_ListenerState == SMB_LISTENER_STOPPED) {
