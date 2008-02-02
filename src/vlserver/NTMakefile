@@ -89,7 +89,7 @@ VLSERVER_EXECLIBS = \
 
 	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
@@ -146,7 +146,7 @@ VLCLIENT_LIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 
 

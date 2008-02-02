@@ -68,7 +68,7 @@ UDBG_EXELIBS =\
 
 
 $(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  
-	$(EXECONLINK) iphlpapi.lib
+	$(EXECONLINK) iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)  
 

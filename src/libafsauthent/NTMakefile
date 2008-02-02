@@ -144,7 +144,7 @@ DLLLIBS =\
         $(DESTDIR)\lib\lanahelper.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
-	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib
+	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 

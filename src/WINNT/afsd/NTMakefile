@@ -189,7 +189,7 @@ CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsreg.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
-	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib
+	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
@@ -249,7 +249,8 @@ LOGON_DLLSDKLIBS =\
 	adsiid.lib \
 	activeds.lib \
 	user32.lib \
-        userenv.lib
+        userenv.lib \
+        shell32.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
@@ -329,25 +330,25 @@ EXELIBS2 = \
 
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # tokens.exe
 $(EXEDIR)\tokens.exe: $(OUT)\ctokens.obj $(OUT)\tokens.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # unlog.exe
 $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # afscpcc.exe
 $(EXEDIR)\afscpcc.exe: $(OUT)\afscpcc.obj $(OUT)\afscpcc.res $(LOGON_DLLLIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib userenv.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib userenv.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
@@ -367,7 +368,7 @@ AFSD_SDKLIBS =\
         secur32.lib \
         ole32.lib \
         oleaut32.lib \
-        iphlpapi.lib
+        iphlpapi.lib shell32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
@@ -394,19 +395,19 @@ $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_serv
 
 # fs.exe
 $(EXEDIR)\fs.exe: $(FSOBJS) $(OUT)\fs.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # cmdebug.exe
 $(EXEDIR)\cmdebug.exe: $(CMDBGOBJS) $(OUT)\cmdebug.res $(EXELIBS2)
-	$(EXECONLINK) $(EXELIBS2) dnsapi.lib mpr.lib iphlpapi.lib rpcrt4.lib
+	$(EXECONLINK) $(EXELIBS2) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 # symlink.exe
 $(EXEDIR)\symlink.exe: $(SLOBJS) $(OUT)\symlink.res  $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 

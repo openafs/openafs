@@ -92,7 +92,7 @@ EXELIBS =\
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 

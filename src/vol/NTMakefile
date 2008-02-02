@@ -83,7 +83,7 @@ SALVAGER_EXEOBJS =\
 	$(OUT)\salvager.res
 
 $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
@@ -98,7 +98,7 @@ FSSYNC_DEBUG_EXEOBJS =\
 	$(OUT)\fssync-debug.res
 
 $(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
@@ -107,7 +107,7 @@ $(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
 VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
 
 $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
@@ -116,7 +116,7 @@ $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS
 VOLBLESS = $(DESTDIR)\root.server\usr\afs\bin\vol-bless.exe
 
 $(VOLBLESS): $(OUT)\vol-bless.obj $(OUT)\physio.obj $(OUT)\vol-bless.res $(EXEC_LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 

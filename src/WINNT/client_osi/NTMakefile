@@ -46,7 +46,7 @@ EXEOBJS = \
 
 EXELIBS = \
 	rpcrt4.lib rpcns4.lib \
-	Ws2_32.lib \
+	Ws2_32.lib shell32.lib \
 	$(DESTDIR)\lib\libosi.lib
 
 ############################################################################
