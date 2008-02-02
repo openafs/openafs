@@ -11,6 +11,7 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#include <shlobj.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -80,7 +81,6 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
     char wdir[512];
     int tlen;
     char *path = NULL;
-    int rc;
     DWORD cbPath;
 
     cbPath = GetEnvironmentVariable("AFSCONF", NULL, 0);
@@ -109,6 +109,35 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
         }
         *bufPP = path;
         return 0;
+    }
+
+    /*
+     * Try to find the All Users\Application Data\OpenAFS\Client directory.
+     * If it exists and it contains a CellServDB file, return that. 
+     * Otherwise, return the Install Directory for backward compatibility.
+     */
+    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 
+                                    SHGFP_TYPE_CURRENT, wdir)))
+    {   HANDLE fh;
+
+        tlen = (int)strlen(wdir);
+        if (wdir[tlen-1] != '\\') {
+            strncat(wdir, "\\", sizeof(wdir));
+            wdir[sizeof(wdir)-1] = '\0';
+            tlen++;
+        }
+        strncat(wdir, "OpenAFS\\Client\\CellServDB", sizeof(wdir)); 
+        wdir[sizeof(wdir)-1] = '\0';
+
+        fh = CreateFile(wdir, GENERIC_READ, FILE_SHARE_READ, NULL, 
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (fh != INVALID_HANDLE_VALUE) {
+            CloseHandle(fh);
+            tlen += (int)strlen("OpenAFS\\Client\\");
+            wdir[tlen] = '\0';
+            *bufPP = strdup(wdir);
+            return 0;
+        }
     }
 
     return afssw_GetClientInstallDir(bufPP);

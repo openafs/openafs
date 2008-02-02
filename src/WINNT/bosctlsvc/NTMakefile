@@ -27,7 +27,8 @@ EXELIBS =\
 
 EXESDKLIBS=\
     ole32.lib \
-    oleaut32.lib
+    oleaut32.lib \
+    shell32.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) $(EXESDKLIBS)

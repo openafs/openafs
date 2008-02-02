@@ -116,7 +116,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 $(BUTCRES): butc.rc AFS_component_version_number.h
 
 $(BUTCEXE): $(BUTCOBJS) $(BUTCRES) $(BUTCLIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 

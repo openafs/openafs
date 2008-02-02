@@ -59,7 +59,7 @@ DLLLIBS =\
         $(DESTDIR)\lib\libafsconf.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afscfgadmin.def
+	$(DLLCONLINK) /DEF:afscfgadmin.def shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
