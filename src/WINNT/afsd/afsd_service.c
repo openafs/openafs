@@ -393,8 +393,9 @@ afsd_ServiceControlHandlerEx(
 		    /* This is the message delivered once all devices are up */
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC"); 
 		    powerStateSuspended = 0;
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners(0);
+		    if (osVersion.dwMajorVersion >= 6) {
+			smb_SetLanAdapterChangeDetected();
+                    }
                     dwRet = NO_ERROR;                       
                     break;                                  
                 default:                                                                          
