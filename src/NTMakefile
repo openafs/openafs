@@ -402,14 +402,7 @@ tbutc:  tviced
      $(NTMAKE)
      $(CD) ..\..
 
-libadmin: tbutc
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-adminutil: libadmin
+adminutil: tbutc
      echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
@@ -451,21 +444,7 @@ bos: pts
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-cfg: bos
-     echo ***** $@
-	$(DOCD) $(SRC)\libadmin\$@
-	$(CD) $(SRC)\libadmin\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-admintest: cfg
-     echo ***** $@
-	$(DOCD) $(SRC)\libadmin\test
-	$(CD) $(SRC)\libadmin\test
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-talocale: admintest
+talocale: bos
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
@@ -493,7 +472,28 @@ afsd: client_osi
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-afsadmsvr: afsd
+libadmin: afsd
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+cfg: bos
+     echo ***** $@
+	$(DOCD) $(SRC)\libadmin\$@
+	$(CD) $(SRC)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+admintest: cfg
+     echo ***** $@
+	$(DOCD) $(SRC)\libadmin\test
+	$(CD) $(SRC)\libadmin\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsadmsvr: admintest
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
