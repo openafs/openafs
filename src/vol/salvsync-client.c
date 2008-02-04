@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -70,7 +70,7 @@ extern pthread_mutex_t vol_salvsync_mutex;
 
 static SYNC_client_state salvsync_client_state = 
     { -1,                     /* file descriptor */
-      2041,                   /* port */
+      SALVSYNC_ENDPOINT_DECL, /* server endpoint */
       SALVSYNC_PROTO_VERSION, /* protocol version */
       5,                      /* connect retry limit */
       120,                    /* hard timeout */

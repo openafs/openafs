@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -71,6 +71,8 @@ int VolumeChanged; /* hack to make dir package happy */
 
 struct volop_state {
     afs_uint32 volume;
+    afs_uint32 vnode;
+    afs_uint32 unique;
     char partName[16];
 };
 
@@ -100,7 +102,7 @@ static int VolQuery(struct cmd_syndesc * as, void * rock);
 static int VolHdrQuery(struct cmd_syndesc * as, void * rock);
 static int VolOpQuery(struct cmd_syndesc * as, void * rock);
 static int StatsQuery(struct cmd_syndesc * as, void * rock);
-
+static int VnQuery(struct cmd_syndesc * as, void * rock);
 
 static void print_vol_stats_general(VolPkgStats * stats);
 static void print_vol_stats_viceP(struct DiskPartitionStats * stats);
@@ -189,6 +191,14 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vop");
+
+    ts = cmd_CreateSyntax("vnode", VnQuery, NULL, "get vnode structure (FSYNC_VOL_QUERY_VNODE opcode)");
+    cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
+    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
+    cmd_AddParm(ts, "-vnodeid", CMD_SINGLE, 0, "vnode id");
+    cmd_AddParm(ts, "-unique", CMD_SINGLE, 0, "uniquifier");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "paritition name");
+    COMMON_PARMS_DECL(ts);
 
     ts = cmd_CreateSyntax("stats", StatsQuery, NULL, "see 'stats help' for more information");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
@@ -301,20 +311,33 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
     VDisconnectFS();
 }
 
+
+#define ENUMTOSTRING(en)  #en
+#define ENUMCASE(en) \
+    case en: \
+        return ENUMTOSTRING(en); \
+        break
+
+#define FLAGTOSTRING(fl)  #fl
+#define FLAGCASE(bitstr, fl, str, count) \
+    do { \
+        if ((bitstr) & (fl)) { \
+            if (count) \
+                strlcat((str), " | ", sizeof(str)); \
+            strlcat((str), FLAGTOSTRING(fl), sizeof(str)); \
+            (count)++; \
+        } \
+    } while (0)
+
 static char *
 response_code_to_string(afs_int32 response)
 {
     switch (response) {
-    case SYNC_OK:
-	return "SYNC_OK";
-    case SYNC_DENIED:
-	return "SYNC_DENIED";
-    case SYNC_COM_ERROR:
-	return "SYNC_COM_ERROR";
-    case SYNC_BAD_COMMAND:
-	return "SYNC_BAD_COMMAND";
-    case SYNC_FAILED:
-	return "SYNC_FAILED";
+	ENUMCASE(SYNC_OK);
+	ENUMCASE(SYNC_DENIED);
+	ENUMCASE(SYNC_COM_ERROR);
+	ENUMCASE(SYNC_BAD_COMMAND);
+	ENUMCASE(SYNC_FAILED);
     default:
 	return "**UNKNOWN**";
     }
@@ -324,38 +347,26 @@ static char *
 command_code_to_string(afs_int32 command)
 {
     switch (command) {
-    case SYNC_COM_CHANNEL_CLOSE:
-	return "SYNC_COM_CHANNEL_CLOSE";
-    case FSYNC_VOL_ON:
-	return "FSYNC_VOL_ON";
-    case FSYNC_VOL_OFF:
-	return "FSYNC_VOL_OFF";
-    case FSYNC_VOL_LISTVOLUMES:
-	return "FSYNC_VOL_LISTVOLUMES";
-    case FSYNC_VOL_NEEDVOLUME:
-	return "FSYNC_VOL_NEEDVOLUME";
-    case FSYNC_VOL_MOVE:
-	return "FSYNC_VOL_MOVE";
-    case FSYNC_VOL_BREAKCBKS:
-	return "FSYNC_VOL_BREAKCBKS";
-    case FSYNC_VOL_DONE:
-	return "FSYNC_VOL_DONE";
-    case FSYNC_VOL_QUERY:
-	return "FSYNC_VOL_QUERY";
-    case FSYNC_VOL_QUERY_HDR:
-	return "FSYNC_VOL_QUERY_HDR";
-    case FSYNC_VOL_QUERY_VOP:
-	return "FSYNC_VOL_QUERY_VOP";
-    case FSYNC_VOL_STATS_GENERAL:
-	return "FSYNC_VOL_STATS_GENERAL";
-    case FSYNC_VOL_STATS_VICEP:
-	return "FSYNC_VOL_STATS_VICEP";
-    case FSYNC_VOL_STATS_HASH:
-	return "FSYNC_VOL_STATS_HASH";
-    case FSYNC_VOL_STATS_HDR:
-	return "FSYNC_VOL_STATS_HDR";
-    case FSYNC_VOL_STATS_VLRU:
-	return "FSYNC_VOL_STATS_VLRU";
+	ENUMCASE(SYNC_COM_CHANNEL_CLOSE);
+	ENUMCASE(FSYNC_VOL_ON);
+	ENUMCASE(FSYNC_VOL_OFF);
+	ENUMCASE(FSYNC_VOL_LISTVOLUMES);
+	ENUMCASE(FSYNC_VOL_NEEDVOLUME);
+	ENUMCASE(FSYNC_VOL_MOVE);
+	ENUMCASE(FSYNC_VOL_BREAKCBKS);
+	ENUMCASE(FSYNC_VOL_DONE);
+	ENUMCASE(FSYNC_VOL_QUERY);
+	ENUMCASE(FSYNC_VOL_QUERY_HDR);
+	ENUMCASE(FSYNC_VOL_QUERY_VOP);
+	ENUMCASE(FSYNC_VOL_STATS_GENERAL);
+	ENUMCASE(FSYNC_VOL_STATS_VICEP);
+	ENUMCASE(FSYNC_VOL_STATS_HASH);
+	ENUMCASE(FSYNC_VOL_STATS_HDR);
+	ENUMCASE(FSYNC_VOL_STATS_VLRU);
+	ENUMCASE(FSYNC_VOL_ATTACH);
+	ENUMCASE(FSYNC_VOL_FORCE_ERROR);
+	ENUMCASE(FSYNC_VOL_LEAVE_OFF);
+	ENUMCASE(FSYNC_VOL_QUERY_VNODE);
     default:
 	return "**UNKNOWN**";
     }
@@ -365,28 +376,20 @@ static char *
 reason_code_to_string(afs_int32 reason)
 {
     switch (reason) {
-    case SYNC_REASON_NONE:
-	return "SYNC_REASON_NONE";
-    case SYNC_REASON_MALFORMED_PACKET:
-	return "SYNC_REASON_MALFORMED_PACKET";
-    case FSYNC_WHATEVER:
-	return "FSYNC_WHATEVER";
-    case FSYNC_SALVAGE:
-	return "FSYNC_SALVAGE";
-    case FSYNC_MOVE:
-	return "FSYNC_MOVE";
-    case FSYNC_OPERATOR:
-	return "FSYNC_OPERATOR";
-    case FSYNC_EXCLUSIVE:
-	return "FSYNC_EXCLUSIVE";
-    case FSYNC_UNKNOWN_VOLID:
-	return "FSYNC_UNKNOWN_VOLID";
-    case FSYNC_HDR_NOT_ATTACHED:
-	return "FSYNC_HDR_NOT_ATTACHED";
-    case FSYNC_NO_PENDING_VOL_OP:
-	return "FSYNC_NO_PENDING_VOL_OP";
-    case FSYNC_VOL_PKG_ERROR:
-	return "FSYNC_VOL_PKG_ERROR";
+	ENUMCASE(SYNC_REASON_NONE);
+	ENUMCASE(SYNC_REASON_MALFORMED_PACKET);
+	ENUMCASE(SYNC_REASON_NOMEM);
+	ENUMCASE(SYNC_REASON_ENCODING_ERROR);
+	ENUMCASE(FSYNC_WHATEVER);
+	ENUMCASE(FSYNC_SALVAGE);
+	ENUMCASE(FSYNC_MOVE);
+	ENUMCASE(FSYNC_OPERATOR);
+	ENUMCASE(FSYNC_EXCLUSIVE);
+	ENUMCASE(FSYNC_UNKNOWN_VOLID);
+	ENUMCASE(FSYNC_HDR_NOT_ATTACHED);
+	ENUMCASE(FSYNC_NO_PENDING_VOL_OP);
+	ENUMCASE(FSYNC_VOL_PKG_ERROR);
+	ENUMCASE(FSYNC_UNKNOWN_VNID);
     default:
 	return "**UNKNOWN**";
     }
@@ -396,16 +399,11 @@ static char *
 program_type_to_string(afs_int32 type)
 {
     switch ((ProgramType)type) {
-    case fileServer:
-	return "fileServer";
-    case volumeUtility:
-	return "volumeUtility";
-    case salvager:
-	return "salvager";
-    case salvageServer:
-	return "salvageServer";
-    case debugUtility:
-      return "debugUtility";
+	ENUMCASE(fileServer);
+	ENUMCASE(volumeUtility);
+	ENUMCASE(salvager);
+	ENUMCASE(salvageServer);
+	ENUMCASE(debugUtility);
     default:
 	return "**UNKNOWN**";
     }
@@ -507,38 +505,27 @@ static char *
 vol_state_to_string(VolState state)
 {
     switch (state) {
-    case VOL_STATE_UNATTACHED:
-	return "VOL_STATE_UNATTACHED";
-    case VOL_STATE_PREATTACHED:
-	return "VOL_STATE_PREATTACHED";
-    case VOL_STATE_ATTACHING:
-	return "VOL_STATE_ATTACHING";
-    case VOL_STATE_ATTACHED:
-	return "VOL_STATE_ATTACHED";
-    case VOL_STATE_UPDATING:
-	return "VOL_STATE_UPDATING";
-    case VOL_STATE_GET_BITMAP:
-	return "VOL_STATE_GET_BITMAP";
-    case VOL_STATE_HDR_LOADING:
-	return "VOL_STATE_HDR_LOADING";
-    case VOL_STATE_HDR_ATTACHING:
-	return "VOL_STATE_HDR_ATTACHING";
-    case VOL_STATE_SHUTTING_DOWN:
-	return "VOL_STATE_SHUTTING_DOWN";
-    case VOL_STATE_GOING_OFFLINE:
-	return "VOL_STATE_GOING_OFFLINE";
-    case VOL_STATE_OFFLINING:
-	return "VOL_STATE_OFFLINING";
-    case VOL_STATE_DETACHING:
-	return "VOL_STATE_DETACHING";
-    case VOL_STATE_SALVSYNC_REQ:
-      return "VOL_STATE_SALVSYNC_REQ";
-    case VOL_STATE_SALVAGING:
-	return "VOL_STATE_SALVAGING";
-    case VOL_STATE_ERROR:
-	return "VOL_STATE_ERROR";
-    case VOL_STATE_FREED:
-	return "VOL_STATE_FREED";
+	ENUMCASE(VOL_STATE_UNATTACHED);
+	ENUMCASE(VOL_STATE_PREATTACHED);
+	ENUMCASE(VOL_STATE_ATTACHING);
+	ENUMCASE(VOL_STATE_ATTACHED);
+	ENUMCASE(VOL_STATE_UPDATING);
+	ENUMCASE(VOL_STATE_GET_BITMAP);
+	ENUMCASE(VOL_STATE_HDR_LOADING);
+	ENUMCASE(VOL_STATE_HDR_ATTACHING);
+	ENUMCASE(VOL_STATE_SHUTTING_DOWN);
+	ENUMCASE(VOL_STATE_GOING_OFFLINE);
+	ENUMCASE(VOL_STATE_OFFLINING);
+	ENUMCASE(VOL_STATE_DETACHING);
+	ENUMCASE(VOL_STATE_SALVSYNC_REQ);
+	ENUMCASE(VOL_STATE_SALVAGING);
+	ENUMCASE(VOL_STATE_ERROR);
+	ENUMCASE(VOL_STATE_VNODE_ALLOC);
+	ENUMCASE(VOL_STATE_VNODE_GET);
+	ENUMCASE(VOL_STATE_VNODE_CLOSE);
+	ENUMCASE(VOL_STATE_VNODE_RELEASE);
+	ENUMCASE(VOL_STATE_VLRU_ADD);
+	ENUMCASE(VOL_STATE_FREED);
     default:
 	return "**UNKNOWN**";
     }
@@ -551,64 +538,14 @@ vol_flags_to_string(afs_uint16 flags)
     int count = 0;
     str[0]='\0';
 
-    if (flags & VOL_HDR_ATTACHED) {
-	strlcat(str, "VOL_HDR_ATTACHED", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_HDR_LOADED) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_HDR_LOADED", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_HDR_IN_LRU) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_HDR_IN_LRU", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_IN_HASH) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_IN_HASH", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_ON_VBYP_LIST) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_ON_VBYP_LIST", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_IS_BUSY) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_IS_BUSY", sizeof(str));
-	count++;
-    }
-
-    if (flags & VOL_ON_VLRU) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_ON_VLRU", sizeof(str));
-    }
-
-    if (flags & VOL_HDR_DONTSALV) {
-	if (count) {
-	    strlcat(str, " | ", sizeof(str));
-	}
-	strlcat(str, "VOL_HDR_DONTSALV", sizeof(str));
-    }
+    FLAGCASE(flags, VOL_HDR_ATTACHED, str, count);
+    FLAGCASE(flags, VOL_HDR_LOADED, str, count);
+    FLAGCASE(flags, VOL_HDR_IN_LRU, str, count);
+    FLAGCASE(flags, VOL_IN_HASH, str, count);
+    FLAGCASE(flags, VOL_ON_VBYP_LIST, str, count);
+    FLAGCASE(flags, VOL_IS_BUSY, str, count);
+    FLAGCASE(flags, VOL_ON_VLRU, str, count);
+    FLAGCASE(flags, VOL_HDR_DONTSALV, str, count);
 
     return str;
 }
@@ -617,21 +554,49 @@ static char *
 vlru_idx_to_string(int idx)
 {
     switch (idx) {
-    case VLRU_QUEUE_NEW:
-	return "VLRU_QUEUE_NEW";
-    case VLRU_QUEUE_MID:
-	return "VLRU_QUEUE_MID";
-    case VLRU_QUEUE_OLD:
-	return "VLRU_QUEUE_OLD";
-    case VLRU_QUEUE_CANDIDATE:
-	return "VLRU_QUEUE_CANDIDATE";
-    case VLRU_QUEUE_HELD:
-	return "VLRU_QUEUE_HELD";
-    case VLRU_QUEUE_INVALID:
-	return "VLRU_QUEUE_INVALID";
+	ENUMCASE(VLRU_QUEUE_NEW);
+	ENUMCASE(VLRU_QUEUE_MID);
+	ENUMCASE(VLRU_QUEUE_OLD);
+	ENUMCASE(VLRU_QUEUE_CANDIDATE);
+	ENUMCASE(VLRU_QUEUE_HELD);
+	ENUMCASE(VLRU_QUEUE_INVALID);
     default:
 	return "**UNKNOWN**";
     }
+}
+
+
+static char *
+vn_state_to_string(VnState state)
+{
+    switch (state) {
+	ENUMCASE(VN_STATE_INVALID);
+	ENUMCASE(VN_STATE_RELEASING);
+	ENUMCASE(VN_STATE_CLOSING);
+	ENUMCASE(VN_STATE_ALLOC);
+	ENUMCASE(VN_STATE_ONLINE);
+	ENUMCASE(VN_STATE_LOAD);
+	ENUMCASE(VN_STATE_EXCLUSIVE);
+	ENUMCASE(VN_STATE_STORE);
+	ENUMCASE(VN_STATE_READ);
+	ENUMCASE(VN_STATE_ERROR);
+    default:
+	return "**UNKNOWN**";
+    }
+}
+
+static char *
+vn_flags_to_string(afs_uint32 flags)
+{
+    static char str[128];
+    int count = 0;
+    str[0]='\0';
+
+    FLAGCASE(flags, VN_ON_HASH, str, count);
+    FLAGCASE(flags, VN_ON_LRU, str, count);
+    FLAGCASE(flags, VN_ON_VVN, str, count);
+
+    return str;
 }
 #endif
 
@@ -737,6 +702,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\t\tlast_get         = %u\n", v.stats.last_get);
 	    printf("\t\tlast_promote     = %u\n", v.stats.last_promote);
 	    printf("\t\tlast_hdr_get     = %u\n", v.stats.last_hdr_get);
+	    printf("\t\tlast_hdr_load    = %u\n", v.stats.last_hdr_load);
 	    printf("\t\tlast_salvage     = %u\n", v.stats.last_salvage);
 	    printf("\t\tlast_salvage_req = %u\n", v.stats.last_salvage_req);
 	    printf("\t\tlast_vol_op      = %u\n", v.stats.last_vol_op);
@@ -890,6 +856,177 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 
     return 0;
 }
+
+static int
+vn_prolog(struct cmd_syndesc * as, struct state * state)
+{
+    register struct cmd_item *ti;
+    char pname[100], *temp;
+
+    state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
+    assert(state->vop != NULL);
+
+    if ((ti = as->parms[CUSTOM_PARMS_OFFSET].items)) {	/* -volumeid */
+	state->vop->volume = atoi(ti->data);
+    } else {
+	fprintf(stderr, "required argument -volumeid not given\n");
+    }
+
+    if ((ti = as->parms[CUSTOM_PARMS_OFFSET+1].items)) {	/* -vnodeid */
+	state->vop->vnode = atoi(ti->data);
+    } else {
+	fprintf(stderr, "required argument -vnodeid not given\n");
+    }
+
+    if ((ti = as->parms[CUSTOM_PARMS_OFFSET+2].items)) {	/* -unique */
+	state->vop->unique = atoi(ti->data);
+    } else {
+	state->vop->unique = 0;
+    }
+
+    if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET+3].items)) {	/* -partition */
+	strlcpy(state->vop->partName, ti->data, sizeof(state->vop->partName));
+    } else {
+	memset(state->vop->partName, 0, sizeof(state->vop->partName));
+    }
+
+    return 0;
+}
+
+static int
+do_vnqry(struct state * state, SYNC_response * res)
+{
+    afs_int32 code;
+    int command = FSYNC_VOL_QUERY_VNODE;
+    FSSYNC_VnQry_hdr qry;
+
+    qry.volume = state->vop->volume;
+    qry.vnode = state->vop->vnode;
+    qry.unique = state->vop->unique;
+    qry.spare = 0;
+    strlcpy(qry.partName, state->vop->partName, sizeof(qry.partName));
+
+    fprintf(stderr, "calling FSYNC_GenericOp with command code %d (%s)\n", 
+	    command, command_code_to_string(command));
+
+    code = FSYNC_GenericOp(&qry, sizeof(qry), command, FSYNC_OPERATOR, res);
+
+    switch (code) {
+    case SYNC_OK:
+    case SYNC_DENIED:
+	break;
+    default:
+	fprintf(stderr, "possible sync protocol error. return code was %d\n", code);
+    }
+
+    fprintf(stderr, "FSYNC_GenericOp returned %d (%s)\n", code, response_code_to_string(code));
+    fprintf(stderr, "protocol response code was %d (%s)\n", 
+	    res->hdr.response, response_code_to_string(res->hdr.response));
+    fprintf(stderr, "protocol reason code was %d (%s)\n", 
+	    res->hdr.reason, reason_code_to_string(res->hdr.reason));
+
+    VDisconnectFS();
+
+    return 0;
+}
+
+static int
+VnQuery(struct cmd_syndesc * as, void * rock)
+{
+    struct state state;
+    SYNC_PROTO_BUF_DECL(res_buf);
+    SYNC_response res;
+    Vnode v;
+    int hi, lo;
+
+    res.hdr.response_len = sizeof(res.hdr);
+    res.payload.buf = res_buf;
+    res.payload.len = SYNC_PROTO_MAX_LEN;
+
+    common_prolog(as, &state);
+    vn_prolog(as, &state);
+
+    do_vnqry(&state, &res);
+
+    if (res.hdr.response == SYNC_OK) {
+	memcpy(&v, res.payload.buf, sizeof(Volume));
+
+	printf("vnode = {\n");
+
+	printf("\tvid_hash = {\n");
+	printf("\t\tnext = 0x%lx\n", v.vid_hash.next);
+	printf("\t\tprev = 0x%lx\n", v.vid_hash.prev);
+	printf("\t}\n");
+
+	printf("\thashNext        = 0x%lx\n", v.hashNext);
+	printf("\tlruNext         = 0x%lx\n", v.lruNext);
+	printf("\tlruPrev         = 0x%lx\n", v.lruPrev);
+	printf("\thashIndex       = %hu\n", v.hashIndex);
+	printf("\tchanged_newTime = %u\n", (unsigned int) v.changed_newTime);
+	printf("\tchanged_oldTime = %u\n", (unsigned int) v.changed_oldTime);
+	printf("\tdelete          = %u\n", (unsigned int) v.delete);
+	printf("\tvnodeNumber     = %u\n", v.vnodeNumber);
+	printf("\tvolumePtr       = 0x%lx\n", v.volumePtr);
+	printf("\tnUsers          = %u\n", v.nUsers);
+	printf("\tcacheCheck      = %u\n", v.cacheCheck);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (!(res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS)) {
+	    printf("*** fssync-debug built to expect demand attach extensions.  server asserted\n");
+	    printf("*** that it was not compiled with demand attach turned on.  please recompile\n");
+	    printf("*** fssync-debug to match your server\n");
+	    goto done;
+	}
+
+	printf("\tnReaders        = %u\n", v.nReaders);
+	printf("\tvn_state_flags  = %s\n", vn_flags_to_string(v.vn_state_flags));
+	printf("\tvn_state        = %s\n", vn_state_to_string(v.vn_state));
+#else
+	if (res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS) {
+	    printf("*** server asserted demand attach extensions. fssync-debug not built to\n");
+	    printf("*** recognize those extensions. please recompile fssync-debug if you need\n");
+	    printf("*** to dump dafs extended state\n");
+	    goto done;
+	}
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
+	printf("\twriter          = %u\n", v.writer);
+	printf("\tvcp             = 0x%lx\n", v.vcp);
+	printf("\thandle          = 0x%lx\n", v.handle);
+
+	printf("\tdisk = {\n");
+	printf("\t\ttype              = %u\n", v.disk.type);
+	printf("\t\tcloned            = %u\n", v.disk.cloned);
+	printf("\t\tmodeBits          = %u\n", v.disk.modeBits);
+	printf("\t\tlinkCount         = %d\n", v.disk.linkCount);
+	printf("\t\tlength            = %u\n", v.disk.length);
+	printf("\t\tuniquifier        = %u\n", v.disk.uniquifier);
+	printf("\t\tdataVersion       = %u\n", v.disk.dataVersion);
+	printf("\t\tvn_ino_lo         = %u\n", v.disk.vn_ino_lo);
+	printf("\t\tunixModifyTime    = %u\n", v.disk.unixModifyTime);
+	printf("\t\tauthor            = %u\n", v.disk.author);
+	printf("\t\towner             = %u\n", v.disk.owner);
+	printf("\t\tparent            = %u\n", v.disk.parent);
+	printf("\t\tvnodeMagic        = %u\n", v.disk.vnodeMagic);
+
+	printf("\t\tlock = {\n");
+	printf("\t\t\tlockCount   = %d\n", v.disk.lock.lockCount);
+	printf("\t\t\tlockTime    = %d\n", v.disk.lock.lockTime);
+	printf("\t\t}\n");
+
+	printf("\t\tserverModifyTime  = %u\n", v.disk.serverModifyTime);
+	printf("\t\tgroup             = %d\n", v.disk.group);
+	printf("\t\tvn_ino_hi         = %d\n", v.disk.vn_ino_hi);
+	printf("\t\treserved6         = %u\n", v.disk.reserved6);
+	printf("\t}\n");
+
+	printf("}\n");
+    }
+
+ done:
+    return 0;
+}
+
 
 static int
 StatsQuery(struct cmd_syndesc * as, void * rock)

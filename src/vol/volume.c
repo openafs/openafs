@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2005-2008 Sine Nomine Associates
  */
 
 /* 1/1/89: NB:  this stuff is all going to be replaced.  Don't take it too seriously */
@@ -123,6 +123,7 @@ RCSID
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "volume_inline.h"
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
@@ -203,6 +204,10 @@ ProgramType programType;	/* The type of program using the package */
 
 /* extended volume package statistics */
 VolPkgStats VStats;
+
+#ifdef VOL_LOCK_DEBUG
+pthread_t vol_glock_holder = 0;
+#endif
 
 
 #define VOLUME_BITMAP_GROWSIZE	16	/* bytes, => 128vnodes */
@@ -356,15 +361,6 @@ static void VHashBeginExclusive_r(VolumeHashChainHead * head);
 static void VHashEndExclusive_r(VolumeHashChainHead * head);
 static void VHashWait_r(VolumeHashChainHead * head);
 
-/* Volume state machine */
-static void VCreateReservation_r(Volume * vp);
-static void VCancelReservation_r(Volume * vp);
-static void VWaitStateChange_r(Volume * vp);
-static void VWaitExclusiveState_r(Volume * vp);
-static int IsExclusiveState(VolState state);
-static int IsErrorState(VolState state);
-static int IsValidState(VolState state);
-
 /* shutdown */
 static int ShutdownVByPForPass_r(struct DiskPartition * dp, int pass);
 static int ShutdownVolumeWalk_r(struct DiskPartition * dp, int pass,
@@ -434,14 +430,11 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 
     programType = pt;
 
-#ifdef AFS_DEMAND_ATTACH_FS
     memset(&VStats, 0, sizeof(VStats));
     VStats.hdr_cache_size = 200;
-#endif
 
     VInitPartitionPackage();
     VInitVolumeHash();
-    VInitVnHashByVolume();
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == fileServer) {
 	VInitVLRU();
@@ -548,7 +541,7 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 	    }
 
 	    while(params.n_threads_complete < threads) {
-		pthread_cond_wait(&params.thread_done_cv,&vol_glock_mutex);
+		VOL_CV_WAIT(&params.thread_done_cv);
 	    }
 	    VOL_UNLOCK;
 
@@ -663,8 +656,7 @@ VAttachVolumesByPartition(struct DiskPartition *diskP, int * nAttached, int * nU
       Error error;
       Volume *vp;
 #ifdef AFS_DEMAND_ATTACH_FS
-      vp = VPreAttachVolumeByName(&error, diskP->name, dp->d_name,
-                                  V_VOLUPD);
+      vp = VPreAttachVolumeByName(&error, diskP->name, dp->d_name);
 #else /* AFS_DEMAND_ATTACH_FS */
       vp = VAttachVolumeByName(&error, diskP->name, dp->d_name,
 			       V_VOLUPD);
@@ -838,7 +830,7 @@ VShutdown_r(void)
 	
 	/* wait for all the workers to finish pass 3 and terminate */
 	while (params.pass < 4) {
-	    assert(pthread_cond_wait(&params.cv, &vol_glock_mutex) == 0);
+	    VOL_CV_WAIT(&params.cv);
 	}
 	
 	assert(pthread_attr_destroy(&attrs) == 0);
@@ -1200,7 +1192,7 @@ VShutdownThread(void * args)
 			pass, params->n_threads, params->n_parts);
 		    VOL_LOCK;
 		} else {
-		    assert(pthread_cond_wait(&params->cv, &vol_glock_mutex) == 0);
+		    VOL_CV_WAIT(&params->cv);
 		}
 	    }
 	    pass = params->pass;
@@ -1312,7 +1304,7 @@ ShutdownVolumeWalk_r(struct DiskPartition * dp, int pass,
 		break;
 	    }
 	case 2:
-	    if (IsExclusiveState(V_attachState(vp))) {
+	    if (VIsExclusiveState(V_attachState(vp))) {
 		break;
 	    }
 	case 3:
@@ -1346,7 +1338,7 @@ VShutdownVolume_r(Volume * vp)
     /* wait for other blocking ops to finish */
     VWaitExclusiveState_r(vp);
 
-    assert(IsValidState(V_attachState(vp)));
+    assert(VIsValidState(V_attachState(vp)));
     
     switch(V_attachState(vp)) {
     case VOL_STATE_SALVAGING:
@@ -1531,62 +1523,121 @@ DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh)
 /***************************************************/
 
 #ifdef AFS_DEMAND_ATTACH_FS
-/* pre-attach a volume given its path 
+/**
+ * pre-attach a volume given its path.
  *
- * a pre-attached volume will only have its partition
- * and hashid fields initialized
+ * @param[out] ec         outbound error code
+ * @param[in]  partition  partition path string
+ * @param[in]  name       volume id string
  *
- * at first call to VGetVolume, the volume will be
- * fully attached
+ * @return volume object pointer
+ *
+ * @note A pre-attached volume will only have its partition
+ *       and hashid fields initialized.  At first call to 
+ *       VGetVolume, the volume will be fully attached.
+ *
  */
 Volume *
-VPreAttachVolumeByName(Error * ec, char *partition, char *name, int mode)
+VPreAttachVolumeByName(Error * ec, char *partition, char *name)
 {
     Volume * vp;
     VOL_LOCK;
-    vp = VPreAttachVolumeByName_r(ec, partition, name, mode);
+    vp = VPreAttachVolumeByName_r(ec, partition, name);
     VOL_UNLOCK;
     return vp;
 }
 
+/**
+ * pre-attach a volume given its path.
+ *
+ * @param[out] ec         outbound error code
+ * @param[in]  partition  path to vice partition
+ * @param[in]  name       volume id string
+ *
+ * @return volume object pointer
+ *
+ * @pre VOL_LOCK held
+ *
+ * @internal volume package internal use only.
+ */
 Volume *
-VPreAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
+VPreAttachVolumeByName_r(Error * ec, char *partition, char *name)
 {
-    register Volume *vp = NULL;
-    int fd, n;
-    struct afs_stat status;
+    return VPreAttachVolumeById_r(ec, 
+				  partition,
+				  VolumeNumber(name));
+}
+
+/**
+ * pre-attach a volume given its path and numeric volume id.
+ *
+ * @param[out] ec          error code return
+ * @param[in]  partition   path to vice partition
+ * @param[in]  volumeId    numeric volume id
+ *
+ * @return volume object pointer
+ *
+ * @pre VOL_LOCK held
+ *
+ * @internal volume package internal use only.
+ */
+Volume *
+VPreAttachVolumeById_r(Error * ec, 
+		       char * partition,
+		       VolId volumeId)
+{
+    Volume *vp;
     struct DiskPartition *partp;
-    char path[64];
-    int isbusy = 0;
-    VolId volumeId;
+
     *ec = 0;
 
     assert(programType == fileServer);
 
     if (!(partp = VGetPartition_r(partition, 0))) {
 	*ec = VNOVOL;
-	Log("VPreAttachVolume:  Error getting partition (%s)\n", partition);
+	Log("VPreAttachVolumeById_r:  Error getting partition (%s)\n", partition);
 	return NULL;
     }
-
-    volumeId = VolumeNumber(name);
 
     vp = VLookupVolume_r(ec, volumeId, NULL);
     if (*ec) {
 	return NULL;
     }
 
-    return VPreAttachVolumeById_r(ec, partp, vp, volumeId);
+    return VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 }
 
-/* pre-attach a volume given its partition and volume id
+/**
+ * preattach a volume.
  *
- * if vp == NULL, then a new vp is created
- * if vp != NULL, then we assumed it is already on the hash chain
+ * @param[out] ec     outbound error code
+ * @param[in]  partp  pointer to partition object
+ * @param[in]  vp     pointer to volume object
+ * @param[in]  vid    volume id
+ *
+ * @return volume object pointer
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @warning Returned volume object pointer does not have to
+ *          equal the pointer passed in as argument vp.  There
+ *          are potential race conditions which can result in
+ *          the pointers having different values.  It is up to
+ *          the caller to make sure that references are handled
+ *          properly in this case.
+ *
+ * @note If there is already a volume object registered with
+ *       the same volume id, its pointer MUST be passed as 
+ *       argument vp.  Failure to do so will result in a silent
+ *       failure to preattach.
+ *
+ * @internal volume package internal use only.
  */
 Volume * 
-VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp, 
-		       Volume * vp, int vid)
+VPreAttachVolumeByVp_r(Error * ec, 
+		       struct DiskPartition * partp, 
+		       Volume * vp,
+		       VolId vid)
 {
     Volume *nvp = NULL;
 
@@ -1595,11 +1646,26 @@ VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp,
     /* check to see if pre-attach already happened */
     if (vp && 
 	(V_attachState(vp) != VOL_STATE_UNATTACHED) && 
-	!IsErrorState(V_attachState(vp))) {
+	!VIsErrorState(V_attachState(vp)) &&
+	((V_attachState(vp) != VOL_STATE_PREATTACHED) ||
+	 vp->pending_vol_op == NULL)) {
+	/*
+	 * pre-attach is a no-op in all but the following cases:
+	 *
+	 *   - volume is unattached
+	 *   - volume is in an error state
+	 *   - volume is pre-attached with a pending volume operation
+	 *     (e.g. vos move between two partitions on same server)
+	 */
 	goto done;
     } else if (vp) {
 	/* we're re-attaching a volume; clear out some old state */
 	memset(&vp->salvage, 0, sizeof(struct VolumeOnlineSalvage));
+
+	if (V_partition(vp) != partp) {
+	    /* XXX potential race */
+	    DeleteVolumeFromVByPList_r(vp);
+	}
     } else {
 	/* if we need to allocate a new Volume struct,
 	 * go ahead and drop the vol glock, otherwise
@@ -1611,6 +1677,7 @@ VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp,
 	vp = nvp = (Volume *) malloc(sizeof(Volume));
 	assert(vp != NULL);
 	memset(vp, 0, sizeof(Volume));
+	queue_Init(&vp->vnode_list);
 	assert(pthread_cond_init(&V_attachCV(vp), NULL) == 0);
     }
 
@@ -1648,7 +1715,7 @@ VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp,
     VChangeState_r(vp, VOL_STATE_PREATTACHED);
 
     if (LogLevel >= 5)
-	Log("VPreAttachVolumeById_r:  volume %u pre-attached\n", vp->hashid);
+	Log("VPreAttachVolumeByVp_r:  volume %u pre-attached\n", vp->hashid);
 
   done:
     if (*ec)
@@ -1766,7 +1833,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    (V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 	    (V_attachState(vp) == VOL_STATE_ERROR)) {
 	    svp = vp;
-	    vp = VPreAttachVolumeById_r(ec, partp, vp, volumeId);
+	    vp = VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 	    if (*ec) {
 		return NULL;
 	    }
@@ -1873,6 +1940,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
       assert(vp != NULL);
       vp->device = partp->device;
       vp->partition = partp;
+      queue_Init(&vp->vnode_list);
 #ifdef AFS_DEMAND_ATTACH_FS
       assert(pthread_cond_init(&V_attachCV(vp), NULL) == 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -1921,6 +1989,16 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     } else 
 #endif
     if (programType == fileServer && vp) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* 
+	 * we can get here in cases where we don't "own"
+	 * the volume (e.g. volume owned by a utility).
+	 * short circuit around potential disk header races.
+	 */
+	if (V_attachState(vp) != VOL_STATE_ATTACHED) {
+	    goto done;
+	}
+#endif
 	V_needsCallback(vp) = 0;
 #ifdef	notdef
 	if (VInit >= 2 && V_BreakVolumeCallbacks) {
@@ -1959,15 +2037,16 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    Log("VOnline:  volume %u (%s) attached and online\n", V_id(vp),
 		V_name(vp));
     }
+
   done:
     if (programType == volumeUtility) {
 	VUnlockPartition_r(partition);
     }
     if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-	if (vp) {
-	    V_attachState(vp) = VOL_STATE_ERROR;
-	    assert(pthread_cond_broadcast(&V_attachCV(vp)) == 0);
+	/* attach failed; make sure we're in error state */
+	if (vp && !VIsErrorState(V_attachState(vp))) {
+	    VChangeState_r(vp, VOL_STATE_ERROR);
 	}
 #endif /* AFS_DEMAND_ATTACH_FS */
 	return NULL;
@@ -2032,7 +2111,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     if (!vp || 
 	(V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 	(V_attachState(vp) == VOL_STATE_ERROR)) {
-	nvp = VPreAttachVolumeById_r(ec, partp, vp, volumeId);
+	nvp = VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 	if (*ec) {
 	    return NULL;
 	}
@@ -2094,7 +2173,15 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
      * with vol_glock_mutex held */
     vp = attach2(ec, volumeId, path, &iheader, partp, vp, isbusy, mode);
 
-    if (*ec || vp == NULL) {
+    /*
+     * the event that an error was encountered, or
+     * the volume was not brought to an attached state
+     * for any reason, skip to the end.  We cannot
+     * safely call VUpdateVolume unless we "own" it.
+     */
+    if (*ec || 
+	(vp == NULL) ||
+	(V_attachState(vp) != VOL_STATE_ATTACHED)) {
 	goto done;
     }
 
@@ -2134,7 +2221,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	reserve = 0;
     }
     if (*ec && (*ec != VOFFLINE) && (*ec != VSALVAGE)) {
-	if (vp && !IsErrorState(V_attachState(vp))) {
+	if (vp && !VIsErrorState(V_attachState(vp))) {
 	    VChangeState_r(vp, VOL_STATE_ERROR);
 	}
 	return NULL;
@@ -2169,9 +2256,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #endif
 
     VOL_LOCK;
-#ifdef AFS_DEMAND_ATTACH_FS
     IncUInt64(&VStats.attaches);
-#endif
     vp->cacheCheck = ++VolumeCacheCheck;
     /* just in case this ever rolls over */
     if (!vp->cacheCheck)
@@ -2244,6 +2329,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	}
 
 	V_attachFlags(vp) |= VOL_HDR_LOADED;
+	vp->stats.last_hdr_load = vp->stats.last_attach;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -2300,9 +2386,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     if (*ec && ((*ec != VOFFLINE) || (V_attachState(vp) != VOL_STATE_UNATTACHED))) {
         VOL_LOCK;
 	if (programType == fileServer) {
-	    VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
-	    *ec = VSALVAGING;
 	} else {
 	    Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
 	    FreeVolume(vp);
@@ -2329,9 +2414,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
         VOL_LOCK;
 #if defined(AFS_DEMAND_ATTACH_FS)
 	if (programType == fileServer) {
-	    VRequestSalvage_r(vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
-	    *ec = VSALVAGING;
 	} else {
 	    Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	    FreeVolume(vp);
@@ -2353,9 +2437,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 		VUpdateVolume_r(ec, vp, 0);
 	    }
 #if defined(AFS_DEMAND_ATTACH_FS)
-	    VRequestSalvage_r(vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
-	    *ec = VSALVAGING;
 #else /* AFS_DEMAND_ATTACH_FS */
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
 	    FreeVolume(vp);
@@ -2368,7 +2451,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	if (V_destroyMe(vp) == DESTROY_ME) {
 #if defined(AFS_DEMAND_ATTACH_FS)
 	    /* schedule a salvage so the volume goes away on disk */
-	    VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	    VChangeState_r(vp, VOL_STATE_ERROR);
 	    vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -2388,9 +2471,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    VGetBitmap_r(ec, vp, i);
 	    if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 		vp->nUsers = 0;
-		*ec = VSALVAGING;
 #else /* AFS_DEMAND_ATTACH_FS */
 		FreeVolume(vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -2415,7 +2497,12 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #ifdef AFS_DEMAND_ATTACH_FS
     AddVolumeToVByPList_r(vp);
     VLRU_Add_r(vp);
-    VChangeState_r(vp, VOL_STATE_ATTACHED);
+    if ((programType != fileServer) ||
+	V_inUse(vp)) {
+	VChangeState_r(vp, VOL_STATE_ATTACHED);
+    } else {
+	VChangeState_r(vp, VOL_STATE_UNATTACHED);
+    }
 #endif
     return vp;
 }
@@ -2510,6 +2597,19 @@ VHold(register Volume * vp)
 /* get and put volume routines                     */
 /***************************************************/
 
+/**
+ * put back a heavyweight reference to a volume object.
+ *
+ * @param[in] vp  volume object pointer
+ *
+ * @pre VOL_LOCK held
+ *
+ * @post heavyweight volume reference put back.
+ *       depending on state, volume may have been taken offline,
+ *       detached, salvaged, freed, etc.
+ *
+ * @internal volume package internal use only
+ */
 void
 VPutVolume_r(register Volume * vp)
 {
@@ -2583,10 +2683,11 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 #else
 #define VGET_CTR_INC(x)
 #endif
-
 #ifdef AFS_DEMAND_ATTACH_FS
     Volume *avp, * rvp = hint;
+#endif
 
+#ifdef AFS_DEMAND_ATTACH_FS
     if (rvp) {
 	VCreateReservation_r(rvp);
     }
@@ -2652,6 +2753,17 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	    vp = NULL;
 	    break;
 	}
+
+	/*
+	 * short circuit with VOFFLINE in the following circumstances:
+	 *
+	 *   VOL_STATE_UNATTACHED
+	 */
+       if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
+           *ec = VOFFLINE;
+           vp = NULL;
+           break;
+       }
 
 	/* allowable states:
 	 *   UNATTACHED
@@ -2729,8 +2841,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		    vp->hashid);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    if (programType == fileServer) {
-		VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
-		*ec = VSALVAGING;
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	    } else {
 		FreeVolume(vp);
 		vp = NULL;
@@ -2743,6 +2854,9 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	}
 
 #ifdef AFS_DEMAND_ATTACH_FS
+	/*
+	 * this test MUST happen after the volume header is loaded
+	 */
 	if (vp->pending_vol_op && !VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
 	    if (client_ec) {
 		/* see CheckVnode() in afsfileprocs.c for an explanation
@@ -2754,13 +2868,6 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		    *client_ec = VRESTARTING;
 		}
 	    }
-	    *ec = VOFFLINE;
-	    ReleaseVolumeHeader(vp->header);
-	    vp = NULL;
-	    break;
-	}
-
-	if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
 	    *ec = VOFFLINE;
 	    ReleaseVolumeHeader(vp->header);
 	    vp = NULL;
@@ -2786,7 +2893,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		    VWaitStateChange_r(vp);
 		}
 #elif defined(AFS_PTHREAD_ENV)
-		assert(pthread_cond_wait(&vol_put_volume_cond, &vol_glock_mutex) == 0);
+		VOL_CV_WAIT(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
 		LWP_WaitProcess(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -2846,6 +2953,8 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 void
 VTakeOffline_r(register Volume * vp)
 {
+    Error error;
+
     assert(vp->nUsers > 0);
     assert(programType == fileServer);
 
@@ -2855,7 +2964,7 @@ VTakeOffline_r(register Volume * vp)
     vp->goingOffline = 1;
     V_needsSalvaged(vp) = 1;
 
-    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, 0);
     VCancelReservation_r(vp);
 }
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -2878,32 +2987,62 @@ VTakeOffline(register Volume * vp)
     VOL_UNLOCK;
 }
 
-/* Force the volume offline, set the salvage flag.  No further references to
- * the volume through the volume package will be honored. */
-/* for demand attach, caller MUST hold ref count on vp */
+/**
+ * force a volume offline.
+ *
+ * @param[in] vp     volume object pointer
+ * @param[in] flags  flags (see note below)
+ *
+ * @note the flag VOL_FORCEOFF_NOUPDATE is a recursion control flag
+ *       used when VUpdateVolume_r needs to call VForceOffline_r
+ *       (which in turn would normally call VUpdateVolume_r)
+ *
+ * @see VUpdateVolume_r
+ *
+ * @pre VOL_LOCK must be held.
+ *      for DAFS, caller must hold ref.
+ *
+ * @note for DAFS, it _is safe_ to call this function from an
+ *       exclusive state
+ *
+ * @post needsSalvaged flag is set.
+ *       for DAFS, salvage is requested.
+ *       no further references to the volume through the volume 
+ *       package will be honored.
+ *       all file descriptor and vnode caches are invalidated.
+ *
+ * @warning this is a heavy-handed interface.  it results in
+ *          a volume going offline regardless of the current 
+ *          reference count state.
+ *
+ * @internal  volume package internal use only
+ */
 void
 VForceOffline_r(Volume * vp, int flags)
 {
     Error error;
-    if (!V_inUse(vp))
+    if (!V_inUse(vp)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	VChangeState_r(vp, VOL_STATE_ERROR);
+#endif
 	return;
+    }
+
     strcpy(V_offlineMessage(vp),
 	   "Forced offline due to internal error: volume needs to be salvaged");
     Log("Volume %u forced offline:  it needs salvaging!\n", V_id(vp));
+
     V_inUse(vp) = 0;
     vp->goingOffline = 0;
     V_needsSalvaged(vp) = 1;
     if (!(flags & VOL_FORCEOFF_NOUPDATE)) {
-	VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT | VOL_UPDATE_NOFORCEOFF);
+	VUpdateVolume_r(&error, vp, VOL_UPDATE_NOFORCEOFF);
     }
+
 #ifdef AFS_DEMAND_ATTACH_FS
-#ifdef SALVSYNC_BUILD_CLIENT
-    if (programType == fileServer) {
-	VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
-    }
-#endif
-    VChangeState_r(vp, VOL_STATE_ERROR);
+    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 #endif /* AFS_DEMAND_ATTACH_FS */
+
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
 #else /* AFS_PTHREAD_ENV */
@@ -2913,6 +3052,13 @@ VForceOffline_r(Volume * vp, int flags)
     VReleaseVolumeHandles_r(vp);
 }
 
+/**
+ * force a volume offline.
+ *
+ * @param[in] vp  volume object pointer
+ *
+ * @see VForceOffline_r
+ */
 void
 VForceOffline(Volume * vp)
 {
@@ -2979,12 +3125,17 @@ VDetachVolume_r(Error * ec, Volume * vp)
 {
     VolumeId volume;
     struct DiskPartition *tpartp;
-    int notifyServer, useDone;
+    int notifyServer, useDone = FSYNC_VOL_ON;
 
     *ec = 0;			/* always "succeeds" */
     if (programType == volumeUtility) {
 	notifyServer = vp->needsPutBack;
-	useDone = (V_destroyMe(vp) == DESTROY_ME);
+	if (V_destroyMe(vp) == DESTROY_ME)
+	    useDone = FSYNC_VOL_DONE;
+#ifdef AFS_DEMAND_ATTACH_FS
+	else if (!V_blessed(vp) || !V_inService(vp))
+	    useDone = FSYNC_VOL_LEAVE_OFF;
+#endif
     }
     tpartp = vp->partition;
     volume = V_id(vp);
@@ -3012,24 +3163,17 @@ VDetachVolume_r(Error * ec, Volume * vp)
 	 * would be two instances of the same volume, one of them bogus, 
 	 * which the file server would attempt to put on line 
 	 */
-	if (useDone) {
-	    /* don't put online */
-	    FSYNC_VolOp(volume, tpartp->name, FSYNC_VOL_DONE, 0, NULL);
-	} else {
-	    /* fs can use it again */
-	    FSYNC_VolOp(volume, tpartp->name, FSYNC_VOL_ON, 0, NULL);
-
-	    /* XXX this code path is only hit by volume utilities, thus
-	     * V_BreakVolumeCallbacks will always be NULL.  if we really
-	     * want to break callbacks in this path we need to use FSYNC_VolOp() */
+	FSYNC_VolOp(volume, tpartp->name, useDone, 0, NULL);
+	/* XXX this code path is only hit by volume utilities, thus
+	 * V_BreakVolumeCallbacks will always be NULL.  if we really
+	 * want to break callbacks in this path we need to use FSYNC_VolOp() */
 #ifdef notdef
-	    /* Dettaching it so break all callbacks on it */
-	    if (V_BreakVolumeCallbacks) {
-		Log("volume %u detached; breaking all call backs\n", volume);
-		(*V_BreakVolumeCallbacks) (volume);
-	    }
-#endif
+	/* Dettaching it so break all callbacks on it */
+	if (V_BreakVolumeCallbacks) {
+	    Log("volume %u detached; breaking all call backs\n", volume);
+	    (*V_BreakVolumeCallbacks) (volume);
 	}
+#endif
     }
 #endif /* FSSYNC_BUILD_CLIENT */
 }
@@ -3347,8 +3491,8 @@ VCheckOffline(register Volume * vp)
 	 *
 	 * VOL_STATE_GOING_OFFLINE
 	 * VOL_STATE_SHUTTING_DOWN
-	 * IsErrorState(V_attachState(vp))
-	 * IsExclusiveState(V_attachState(vp))
+	 * VIsErrorState(V_attachState(vp))
+	 * VIsExclusiveState(V_attachState(vp))
 	 */
 
 	VCreateReservation_r(vp);
@@ -3378,7 +3522,7 @@ VCheckOffline(register Volume * vp)
 
 	/* if nothing changed state to error or salvaging,
 	 * drop state to unattached */
-	if (!IsErrorState(V_attachState(vp))) {
+	if (!VIsErrorState(V_attachState(vp))) {
 	    VChangeState_r(vp, VOL_STATE_UNATTACHED);
 	}
 	VCancelReservation_r(vp);
@@ -3432,14 +3576,34 @@ VCheckOffline(register Volume * vp)
  * from free()ing the Volume struct during an async i/o op */
 
 /* register with the async volume op ref counter */
-static void
-VCreateReservation_r(Volume * vp)
-{
-    vp->nWaiters++;
-}
+/* VCreateReservation_r moved into inline code header because it 
+ * is now needed in vnode.c -- tkeiser 11/20/2007 
+ */
 
-/* unregister with the async volume op ref counter */
-static void
+/**
+ * decrement volume-package internal refcount.
+ *
+ * @param vp  volume object pointer
+ *
+ * @internal volume package internal use only
+ *
+ * @pre 
+ *    @arg VOL_LOCK is held
+ *    @arg lightweight refcount held
+ *
+ * @post volume waiters refcount is decremented; volume may
+ *       have been deallocated/shutdown/offlined/salvaged/
+ *       whatever during the process
+ *
+ * @warning once you have tossed your last reference (you can acquire
+ *          lightweight refs recursively) it is NOT SAFE to reference
+ *          a volume object pointer ever again
+ *
+ * @see VCreateReservation_r
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+void
 VCancelReservation_r(Volume * vp)
 {
     assert(--vp->nWaiters >= 0);
@@ -3477,6 +3641,21 @@ VCheckFree(Volume * vp)
 /***************************************************/
 
 #ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * register a volume operation on a given volume.
+ *
+ * @param[in] vp       volume object
+ * @param[in] vopinfo  volume operation info object
+ *
+ * @pre VOL_LOCK is held
+ *
+ * @post volume operation info object attached to volume object.
+ *       volume operation statistics updated.
+ *
+ * @note by "attached" we mean a copy of the passed in object is made
+ *
+ * @internal volume package internal use only
+ */
 int
 VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 {
@@ -3496,8 +3675,19 @@ VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
     return 0;
 }
 
+/**
+ * deregister the volume operation attached to this volume.
+ *
+ * @param[in] vp  volume object pointer
+ *
+ * @pre VOL_LOCK is held
+ *
+ * @post the volume operation info object is detached from the volume object
+ *
+ * @internal volume package internal use only
+ */
 int
-VDeregisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
+VDeregisterVolOp_r(Volume * vp)
 {
     if (vp->pending_vol_op) {
 	free(vp->pending_vol_op);
@@ -3507,6 +3697,24 @@ VDeregisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**
+ * determine whether it is safe to leave a volume online during
+ * the volume operation described by the vopinfo object.
+ *
+ * @param[in] vp        volume object
+ * @param[in] vopinfo   volume operation info object
+ *
+ * @return whether it is safe to leave volume online
+ *    @retval 0  it is NOT SAFE to leave the volume online
+ *    @retval 1  it is safe to leave the volume online during the operation
+ *
+ * @pre
+ *    @arg VOL_LOCK is held
+ *    @arg disk header attached to vp (heavyweight ref on vp will guarantee
+ *         this condition is met)
+ *
+ * @internal volume package internal use only
+ */
 int
 VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 {
@@ -3517,6 +3725,20 @@ VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 	       vopinfo->com.reason == V_DUMP))));
 }
 
+/**
+ * determine whether VBUSY should be set during this volume operation.
+ *
+ * @param[in] vp        volume object
+ * @param[in] vopinfo   volume operation info object
+ *
+ * @return whether VBUSY should be set
+ *   @retval 0  VBUSY does NOT need to be set
+ *   @retval 1  VBUSY SHOULD be set
+ *
+ * @pre VOL_LOCK is held
+ *
+ * @internal volume package internal use only
+ */
 int
 VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 {
@@ -3530,19 +3752,37 @@ VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 /* online salvager routines                        */
 /***************************************************/
 #if defined(AFS_DEMAND_ATTACH_FS)
-#define SALVAGE_PRIO_UPDATE_INTERVAL 3      /* number of seconds between prio updates */
-#define SALVAGE_COUNT_MAX 16                /* number of online salvages we
-					     * allow before moving the volume
-					     * into a permanent error state
+#define SALVAGE_PRIO_UPDATE_INTERVAL 3      /**< number of seconds between prio updates */
+#define SALVAGE_COUNT_MAX 16                /**< number of online salvages we
+					     *   allow before moving the volume
+					     *   into a permanent error state
 					     *
-					     * once this threshold is reached,
-					     * the operator will have to manually
-					     * issue a 'bos salvage' to bring
-					     * the volume back online
+					     *   once this threshold is reached,
+					     *   the operator will have to manually
+					     *   issue a 'bos salvage' to bring
+					     *   the volume back online
 					     */
 
-/* check to see if we should salvage this volume
- * returns 1 if salvage scheduled, 0 otherwise */
+/**
+ * check whether a salvage needs to be performed on this volume.
+ *
+ * @param[in] vp   pointer to volume object
+ *
+ * @return status code
+ *    @retval 0 no salvage scheduled
+ *    @retval 1 a salvage has been scheduled with the salvageserver
+ *
+ * @pre VOL_LOCK is held
+ *
+ * @post if salvage request flag is set and nUsers and nWaiters are zero,
+ *       then a salvage will be requested
+ *
+ * @note this is one of the event handlers called by VCancelReservation_r
+ *
+ * @see VCancelReservation_r
+ *
+ * @internal volume package internal use only.
+ */
 static int
 VCheckSalvage(register Volume * vp)
 {
@@ -3558,37 +3798,97 @@ VCheckSalvage(register Volume * vp)
     return ret;
 }
 
-/*
- * request that a salvage be performed once
- * ref counts reach zero
+/**
+ * request volume salvage.
+ *
+ * @param[out] ec      computed client error code
+ * @param[in]  vp      volume object pointer
+ * @param[in]  reason  reason code (passed to salvageserver via SALVSYNC)
+ * @param[in]  flags   see flags note below
+ *
+ * @note flags:
+ *       VOL_SALVAGE_INVALIDATE_HEADER causes volume header cache entry 
+ *                                     to be invalidated.
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post volume state is changed.
+ *       for fileserver, salvage will be requested once refcount reaches zero.
+ *
+ * @return operation status code
+ *   @retval 0  volume salvage will occur
+ *   @retval 1  volume salvage could not be scheduled
+ *
+ * @note DAFS fileserver only
+ *
+ * @note this call does not synchronously schedule a volume salvage.  rather,
+ *       it sets volume state so that when volume refcounts reach zero, a
+ *       volume salvage will occur.  by "refcounts", we mean both nUsers and 
+ *       nWaiters must be zero.
+ *
+ * @internal volume package internal use only.
  */
 int
-VRequestSalvage_r(Volume * vp, int reason, int flags)
+VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 {
-#ifdef SALVSYNC_BUILD_CLIENT
-    if (programType != fileServer)
+    int code = 0;
+    /*
+     * for DAFS volume utilities, transition to error state
+     * (at some point in the future, we should consider
+     *  making volser talk to salsrv)
+     */
+    if (programType != fileServer) {
+	VChangeState_r(vp, VOL_STATE_ERROR);
+	*ec = VSALVAGE;
 	return 1;
+    }
 
     if (!vp->salvage.requested) {
 	vp->salvage.requested = 1;
 	vp->salvage.reason = reason;
 	vp->stats.last_salvage = FT_ApproxTime();
 	if (flags & VOL_SALVAGE_INVALIDATE_HEADER) {
+	    /* XXX this should likely be changed to FreeVolumeHeader() */
 	    ReleaseVolumeHeader(vp->header);
 	}
 	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
 	    VChangeState_r(vp, VOL_STATE_SALVAGING);
+	    *ec = VSALVAGING;
 	} else {
 	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
 	    VChangeState_r(vp, VOL_STATE_ERROR);
+	    *ec = VSALVAGE;
+	    code = 1;
 	}
     }
-#endif /* SALVSYNC_BUILD_CLIENT */
-    return 0;
+    return code;
 }
 
-/*
- * update salvage priority
+/**
+ * update salvageserver scheduling priority for a volume.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @return operation status
+ *   @retval 0  success
+ *   @retval 1  request denied, or SALVSYNC communications failure
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post in-core salvage priority counter is incremented.  if at least
+ *       SALVAGE_PRIO_UPDATE_INTERVAL seconds have elapsed since the
+ *       last SALVSYNC_RAISEPRIO request, we contact the salvageserver
+ *       to update its priority queue.  if no salvage is scheduled,
+ *       this function is a no-op.
+ *
+ * @note DAFS fileserver only
+ *
+ * @note this should be called whenever a VGetVolume fails due to a 
+ *       pending salvage request
+ *
+ * @todo should set exclusive state and drop glock around salvsync call
+ *
+ * @internal volume package internal use only.
  */
 static int
 VUpdateSalvagePriority_r(Volume * vp)
@@ -3621,8 +3921,24 @@ VUpdateSalvagePriority_r(Volume * vp)
 }
 
 
-/*
- * schedule a salvage with the salvage server
+/**
+ * schedule a salvage with the salvage server.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @return operation status
+ *    @retval 0 salvage scheduled successfully
+ *    @retval 1 salvage not scheduled, or SALVSYNC com error
+ *
+ * @pre 
+ *    @arg VOL_LOCK is held.
+ *    @arg nUsers and nWaiters should be zero.
+ *
+ * @post salvageserver is sent a salvage request
+ *
+ * @note DAFS fileserver only
+ *
+ * @internal volume package internal use only.
  */
 static int
 VScheduleSalvage_r(Volume * vp)
@@ -3645,6 +3961,9 @@ VScheduleSalvage_r(Volume * vp)
 	 *
 	 * set the volume to an exclusive state and drop the lock
 	 * around the SALVSYNC call
+	 *
+	 * note that we do NOT acquire a reservation here -- doing so
+	 * could result in unbounded recursion
 	 */
 	strlcpy(partName, VPartitionPath(vp->partition), sizeof(partName));
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
@@ -3687,8 +4006,23 @@ VScheduleSalvage_r(Volume * vp)
     return ret;
 }
 
-/*
- * cancel a scheduled salvage operation
+/**
+ * ask salvageserver to cancel a scheduled salvage operation.
+ *
+ * @param[in] vp      pointer to volume object
+ * @param[in] reason  SALVSYNC protocol reason code
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval 1 request failed
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post salvageserver is sent a request to cancel the volume salvage
+ *
+ * @todo should set exclusive state and drop glock around salvsync call
+ *
+ * @internal volume package internal use only.
  */
 static int
 VCancelSalvage_r(Volume * vp, int reason)
@@ -3713,11 +4047,21 @@ VCancelSalvage_r(Volume * vp, int reason)
     return ret;
 }
 
-/* This must be called by any volume utility which needs to run while the
-   file server is also running.  This is separated from VInitVolumePackage so
-   that a utility can fork--and each of the children can independently
-   initialize communication with the file server */
+
 #ifdef SALVSYNC_BUILD_CLIENT
+/**
+ * connect to the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @post connection to salvageserver SYNC service established
+ *
+ * @see VConnectSALV_r
+ * @see VDisconnectSALV
+ * @see VReconnectSALV
+ */
 int
 VConnectSALV(void)
 {
@@ -3728,12 +4072,44 @@ VConnectSALV(void)
     return retVal;
 }
 
+/**
+ * connect to the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post connection to salvageserver SYNC service established
+ *
+ * @see VConnectSALV
+ * @see VDisconnectSALV_r
+ * @see VReconnectSALV_r
+ * @see SALVSYNC_clientInit
+ *
+ * @internal volume package internal use only.
+ */
 int
 VConnectSALV_r(void)
 {
     return SALVSYNC_clientInit();
 }
 
+/**
+ * disconnect from the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 success
+ *
+ * @pre client should have a live connection to the salvageserver
+ *
+ * @post connection to salvageserver SYNC service destroyed
+ *
+ * @see VDisconnectSALV_r
+ * @see VConnectSALV
+ * @see VReconnectSALV
+ */
 int
 VDisconnectSALV(void)
 {
@@ -3744,12 +4120,46 @@ VDisconnectSALV(void)
     return retVal;
 }
 
+/**
+ * disconnect from the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 success
+ *
+ * @pre 
+ *    @arg VOL_LOCK is held.
+ *    @arg client should have a live connection to the salvageserver.
+ *
+ * @post connection to salvageserver SYNC service destroyed
+ *
+ * @see VDisconnectSALV
+ * @see VConnectSALV_r
+ * @see VReconnectSALV_r
+ * @see SALVSYNC_clientFinis
+ *
+ * @internal volume package internal use only.
+ */
 int
 VDisconnectSALV_r(void)
 { 
     return SALVSYNC_clientFinis();
 }
 
+/**
+ * disconnect and then re-connect to the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre client should have a live connection to the salvageserver
+ *
+ * @post old connection is dropped, and a new one is established
+ *
+ * @see VConnectSALV
+ * @see VDisconnectSALV
+ * @see VReconnectSALV_r
+ */
 int
 VReconnectSALV(void)
 {
@@ -3760,6 +4170,26 @@ VReconnectSALV(void)
     return retVal;
 }
 
+/**
+ * disconnect and then re-connect to the salvageserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre 
+ *    @arg VOL_LOCK is held.
+ *    @arg client should have a live connection to the salvageserver.
+ *
+ * @post old connection is dropped, and a new one is established
+ *
+ * @see VConnectSALV_r
+ * @see VDisconnectSALV
+ * @see VReconnectSALV
+ * @see SALVSYNC_clientReconnect
+ *
+ * @internal volume package internal use only.
+ */
 int
 VReconnectSALV_r(void)
 {
@@ -3778,6 +4208,23 @@ VReconnectSALV_r(void)
    that a utility can fork--and each of the children can independently
    initialize communication with the file server */
 #ifdef FSSYNC_BUILD_CLIENT
+/**
+ * connect to the fileserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre 
+ *    @arg VInit must equal 2.
+ *    @arg Program Type must not be fileserver or salvager.
+ *
+ * @post connection to fileserver SYNC service established
+ *
+ * @see VConnectFS_r
+ * @see VDisconnectFS
+ * @see VChildProcReconnectFS
+ */
 int
 VConnectFS(void)
 {
@@ -3788,6 +4235,26 @@ VConnectFS(void)
     return retVal;
 }
 
+/**
+ * connect to the fileserver SYNC service.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre 
+ *    @arg VInit must equal 2.
+ *    @arg Program Type must not be fileserver or salvager.
+ *    @arg VOL_LOCK is held.
+ *
+ * @post connection to fileserver SYNC service established
+ *
+ * @see VConnectFS
+ * @see VDisconnectFS_r
+ * @see VChildProcReconnectFS_r
+ *
+ * @internal volume package internal use only.
+ */
 int
 VConnectFS_r(void)
 {
@@ -3801,6 +4268,22 @@ VConnectFS_r(void)
     return rc;
 }
 
+/**
+ * disconnect from the fileserver SYNC service.
+ *
+ * @pre 
+ *    @arg client should have a live connection to the fileserver.
+ *    @arg VOL_LOCK is held.
+ *    @arg Program Type must not be fileserver or salvager.
+ *
+ * @post connection to fileserver SYNC service destroyed
+ *
+ * @see VDisconnectFS
+ * @see VConnectFS_r
+ * @see VChildProcReconnectFS_r
+ *
+ * @internal volume package internal use only.
+ */
 void
 VDisconnectFS_r(void)
 {
@@ -3810,6 +4293,19 @@ VDisconnectFS_r(void)
     VInit = 2;
 }
 
+/**
+ * disconnect from the fileserver SYNC service.
+ *
+ * @pre
+ *    @arg client should have a live connection to the fileserver.
+ *    @arg Program Type must not be fileserver or salvager.
+ *
+ * @post connection to fileserver SYNC service destroyed
+ *
+ * @see VDisconnectFS_r
+ * @see VConnectFS
+ * @see VChildProcReconnectFS
+ */
 void
 VDisconnectFS(void)
 {
@@ -3818,12 +4314,48 @@ VDisconnectFS(void)
     VOL_UNLOCK;
 }
 
+/**
+ * connect to the fileserver SYNC service from a child process following a fork.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre
+ *    @arg VOL_LOCK is held.
+ *    @arg current FSYNC handle is shared with a parent process
+ *
+ * @post current FSYNC handle is discarded and a new connection to the
+ *       fileserver SYNC service is established
+ *
+ * @see VChildProcReconnectFS
+ * @see VConnectFS_r
+ * @see VDisconnectFS_r
+ *
+ * @internal volume package internal use only.
+ */
 int
 VChildProcReconnectFS_r(void)
 {
     return FSYNC_clientChildProcReconnect();
 }
 
+/**
+ * connect to the fileserver SYNC service from a child process following a fork.
+ *
+ * @return operation status
+ *    @retval 0 failure
+ *    @retval 1 success
+ *
+ * @pre current FSYNC handle is shared with a parent process
+ *
+ * @post current FSYNC handle is discarded and a new connection to the
+ *       fileserver SYNC service is established
+ *
+ * @see VChildProcReconnectFS_r
+ * @see VConnectFS
+ * @see VDisconnectFS
+ */
 int
 VChildProcReconnectFS(void)
 {
@@ -3892,9 +4424,9 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		    VOL_UNLOCK;
 		    sleep(2);
 		    VOL_LOCK;
-#else /* AFS_PTHREAD_ENV */
+#else /* !AFS_PTHREAD_ENV */
 		    IOMGR_Sleep(2);
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* !AFS_PTHREAD_ENV */
 		}
 	    }
 	}
@@ -3908,8 +4440,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		VGetBitmap_r(ec, vp, i);
 		if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		    VRequestSalvage_r(vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
-		    *ec = VSALVAGING;
+		    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 #else /* AFS_DEMAND_ATTACH_FS */
 		    DeleteVolumeFromHashTable(vp);
 		    vp->shuttingDown = 1;	/* Let who has it free it. */
@@ -4123,99 +4654,29 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
 
 
 /***************************************************/
-/* demand attach fs state machine routines         */
-/***************************************************/
-
-#ifdef AFS_DEMAND_ATTACH_FS
-/* wait for the volume to change states */
-static void
-VWaitStateChange_r(Volume * vp)
-{
-    VolState state_save = V_attachState(vp);
-
-    assert(vp->nWaiters || vp->nUsers);
-    do {
-	assert(pthread_cond_wait(&V_attachCV(vp), &vol_glock_mutex) == 0);
-    } while (V_attachState(vp) == state_save);
-    assert(V_attachState(vp) != VOL_STATE_FREED);
-}
-
-/* wait for blocking ops to end */
-static void
-VWaitExclusiveState_r(Volume * vp)
-{
-    assert(vp->nWaiters || vp->nUsers);
-    while (IsExclusiveState(V_attachState(vp))) {
-	assert(pthread_cond_wait(&V_attachCV(vp), &vol_glock_mutex) == 0);
-    }
-    assert(V_attachState(vp) != VOL_STATE_FREED);
-}
-
-/* change state, and notify other threads,
- * return previous state to caller */
-VolState
-VChangeState_r(Volume * vp, VolState new_state)
-{
-    VolState old_state = V_attachState(vp);
-
-    /* XXX profiling need to make sure these counters
-     * don't kill performance... */
-    VStats.state_levels[old_state]--;
-    VStats.state_levels[new_state]++;
-
-    V_attachState(vp) = new_state;
-    assert(pthread_cond_broadcast(&V_attachCV(vp)) == 0);
-    return old_state;
-}
-
-/* tells caller whether or not the current state requires
- * exclusive access without holding glock */
-static int
-IsExclusiveState(VolState state)
-{
-    switch (state) {
-    case VOL_STATE_UPDATING:
-    case VOL_STATE_ATTACHING:
-    case VOL_STATE_GET_BITMAP:
-    case VOL_STATE_HDR_LOADING:
-    case VOL_STATE_HDR_ATTACHING:
-    case VOL_STATE_OFFLINING:
-    case VOL_STATE_DETACHING:
-	return 1;
-    }
-    return 0;
-}
-
-/* tell caller whether V_attachState is an error condition */
-static int
-IsErrorState(VolState state)
-{
-    switch (state) {
-    case VOL_STATE_ERROR:
-    case VOL_STATE_SALVAGING:
-	return 1;
-    }
-    return 0;
-}
-
-/* tell caller whether V_attachState is valid */
-static int
-IsValidState(VolState state)
-{
-    if ((state >= 0) && 
-	(state < VOL_STATE_COUNT) &&
-	(state != VOL_STATE_FREED)) {
-	return 1;
-    }
-    return 0;
-}
-#endif /* AFS_DEMAND_ATTACH_FS */
-
-
-/***************************************************/
 /* Volume Path and Volume Number utility routines  */
 /***************************************************/
 
+/**
+ * find the first occurrence of a volume header file and return the path.
+ *
+ * @param[out] ec          outbound error code
+ * @param[in]  volumeId    volume id to find
+ * @param[out] partitionp  pointer to disk partition path string
+ * @param[out] namep       pointer to volume header file name string
+ *
+ * @post path to first occurrence of volume header is returned in partitionp
+ *       and namep, or ec is set accordingly.
+ *
+ * @warning this function is NOT re-entrant -- partitionp and namep point to
+ *          static data segments
+ *
+ * @note if a volume utility inadvertently leaves behind a stale volume header
+ *       on a vice partition, it is possible for callers to get the wrong one,
+ *       depending on the order of the disk partition linked list.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 {
@@ -4246,6 +4707,18 @@ GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     }
 }
 
+/**
+ * extract a volume number from a volume header filename string.
+ *
+ * @param[in] name  volume header filename string
+ *
+ * @return volume number
+ *
+ * @note the string must be of the form VFORMAT.  the only permissible
+ *       deviation is a leading '/' character.
+ *
+ * @see VFORMAT
+ */
 int
 VolumeNumber(char *name)
 {
@@ -4254,6 +4727,25 @@ VolumeNumber(char *name)
     return atoi(name + 1);
 }
 
+/**
+ * compute the volume header filename.
+ *
+ * @param[in] volumeId
+ *
+ * @return volume header filename
+ *
+ * @post volume header filename string is constructed
+ *
+ * @warning this function is NOT re-entrant -- the returned string is
+ *          stored in a static char array.  see VolumeExternalName_r
+ *          for a re-entrant equivalent.
+ *
+ * @see VolumeExternalName_r
+ *
+ * @deprecated due to the above re-entrancy warning, this interface should
+ *             be considered deprecated.  Please use VolumeExternalName_r
+ *             in its stead.
+ */
 char *
 VolumeExternalName(VolumeId volumeId)
 {
@@ -4262,6 +4754,22 @@ VolumeExternalName(VolumeId volumeId)
     return name;
 }
 
+/**
+ * compute the volume header filename.
+ *
+ * @param[in]     volumeId
+ * @param[inout]  name       array in which to store filename
+ * @param[in]     len        length of name array
+ *
+ * @return result code from afs_snprintf
+ *
+ * @see VolumeExternalName
+ * @see afs_snprintf
+ *
+ * @note re-entrant equivalent of VolumeExternalName
+ *
+ * @internal volume package internal use only.
+ */
 static int
 VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 {
@@ -4535,50 +5043,79 @@ VScanUpdateList(void)
  * candidates for soft detachment. this queue is
  * unsorted
  */
-#define VLRU_GENERATIONS  3   /* number of generations in VLRU */
-#define VLRU_QUEUES       5   /* total number of VLRU queues */
+#define VLRU_GENERATIONS  3   /**< number of generations in VLRU */
+#define VLRU_QUEUES       5   /**< total number of VLRU queues */
+
+/**
+ * definition of a VLRU queue.
+ */
 struct VLRU_q {
     volatile struct rx_queue q;
     volatile int len;
     volatile int busy;
     pthread_cond_t cv;
 };
+
+/**
+ * main VLRU data structure.
+ */
 struct VLRU {
-    struct VLRU_q q[VLRU_QUEUES];
+    struct VLRU_q q[VLRU_QUEUES];   /**< VLRU queues */
 
     /* VLRU config */
-    afs_uint32 promotion_interval[VLRU_GENERATIONS-1];  /* interval between promotions */
-    afs_uint32 scan_interval[VLRU_GENERATIONS+1];       /* interval between scans for candidates */
+    /** time interval (in seconds) between promotion passes for
+     *  each young generation queue. */
+    afs_uint32 promotion_interval[VLRU_GENERATIONS-1];
 
-    /* state */
-    int next_idx;
-    afs_uint32 last_promotion[VLRU_GENERATIONS-1];      /* timestamp of last promotion scan */
-    afs_uint32 last_scan[VLRU_GENERATIONS+1];           /* timestamp of last detach scan */
+    /** time interval (in seconds) between soft detach candidate
+     *  scans for each generation queue.
+     *
+     *  scan_interval[VLRU_QUEUE_CANDIDATE] defines how frequently
+     *  we perform a soft detach pass. */
+    afs_uint32 scan_interval[VLRU_GENERATIONS+1];
 
-    int scanner_state;                                  /* state of scanner thread */
-    pthread_cond_t cv;                                  /* state transition CV */
+    /* scheduler state */
+    int next_idx;                                       /**< next queue to receive attention */
+    afs_uint32 last_promotion[VLRU_GENERATIONS-1];      /**< timestamp of last promotion scan */
+    afs_uint32 last_scan[VLRU_GENERATIONS+1];           /**< timestamp of last detach scan */
+
+    int scanner_state;                                  /**< state of scanner thread */
+    pthread_cond_t cv;                                  /**< state transition CV */
 };
 
+/** global VLRU state */
 static struct VLRU volume_LRU;
 
-/* valid scanner states */
-#define VLRU_SCANNER_STATE_OFFLINE        0
-#define VLRU_SCANNER_STATE_ONLINE         1
-#define VLRU_SCANNER_STATE_SHUTTING_DOWN  2
-#define VLRU_SCANNER_STATE_PAUSING        3
-#define VLRU_SCANNER_STATE_PAUSED         4
+/**
+ * defined states for VLRU scanner thread.
+ */
+typedef enum {
+    VLRU_SCANNER_STATE_OFFLINE        = 0,    /**< vlru scanner thread is offline */
+    VLRU_SCANNER_STATE_ONLINE         = 1,    /**< vlru scanner thread is online */
+    VLRU_SCANNER_STATE_SHUTTING_DOWN  = 2,    /**< vlru scanner thread is shutting down */
+    VLRU_SCANNER_STATE_PAUSING        = 3,    /**< vlru scanner thread is getting ready to pause */
+    VLRU_SCANNER_STATE_PAUSED         = 4     /**< vlru scanner thread is paused */
+} vlru_thread_state_t;
 
 /* vlru disk data header stuff */
-#define VLRU_DISK_MAGIC      0x7a8b9cad
-#define VLRU_DISK_VERSION    1
+#define VLRU_DISK_MAGIC      0x7a8b9cad        /**< vlru disk entry magic number */
+#define VLRU_DISK_VERSION    1                 /**< vlru disk entry version number */
 
-/* vlru default expiration time (for eventual fs state serialization of vlru data) */
+/** vlru default expiration time (for eventual fs state serialization of vlru data) */
 #define VLRU_DUMP_EXPIRATION_TIME   (60*60*24*7)  /* expire vlru data after 1 week */
 
 
+/** minimum volume inactivity (in seconds) before a volume becomes eligible for
+ *  soft detachment. */
 static afs_uint32 VLRU_offline_thresh = VLRU_DEFAULT_OFFLINE_THRESH;
+
+/** time interval (in seconds) between VLRU scanner thread soft detach passes. */
 static afs_uint32 VLRU_offline_interval = VLRU_DEFAULT_OFFLINE_INTERVAL;
+
+/** maximum number of volumes to soft detach in a VLRU soft detach pass. */
 static afs_uint32 VLRU_offline_max = VLRU_DEFAULT_OFFLINE_MAX;
+
+/** VLRU control flag.  non-zero value implies VLRU subsystem is activated. */
 static afs_uint32 VLRU_enabled = 1;
 
 /* queue synchronization routines */
@@ -4586,15 +5123,28 @@ static void VLRU_BeginExclusive_r(struct VLRU_q * q);
 static void VLRU_EndExclusive_r(struct VLRU_q * q);
 static void VLRU_Wait_r(struct VLRU_q * q);
 
-/* set the VLRU parameters 
+/**
+ * set VLRU subsystem tunable parameters.
  *
- * valid options are:
- *  VLRU_SET_THRESH -- set the period of inactivity after
- *    which volumes are eligible for being detached
- *  VLRU_SET_INTERVAL -- the time interval between calls
- *    to the volume LRU "garbage collector"
- *  VLRU_SET_MAX -- the max number of volumes to deallocate
- *    in one GC pass
+ * @param[in] option  tunable option to modify
+ * @param[in] val     new value for tunable parameter
+ *
+ * @pre @c VInitVolumePackage has not yet been called.
+ *
+ * @post tunable parameter is modified
+ *
+ * @note DAFS only
+ *
+ * @note valid option parameters are:
+ *    @arg @c VLRU_SET_THRESH 
+ *         set the period of inactivity after which
+ *         volumes are eligible for soft detachment
+ *    @arg @c VLRU_SET_INTERVAL 
+ *         set the time interval between calls
+ *         to the volume LRU "garbage collector"
+ *    @arg @c VLRU_SET_MAX 
+ *         set the max number of volumes to deallocate
+ *         in one GC pass
  */
 void
 VLRU_SetOptions(int option, afs_uint32 val)
@@ -4611,7 +5161,18 @@ VLRU_SetOptions(int option, afs_uint32 val)
     VLRU_ComputeConstants();
 }
 
-/* compute the VLRU internal timing parameters based upon the user's inputs */
+/**
+ * compute VLRU internal timing parameters.
+ *
+ * @post VLRU scanner thread internal timing parameters are computed
+ *
+ * @note computes internal timing parameters based upon user-modifiable 
+ *       tunable parameters.
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VLRU_ComputeConstants(void)
 {
@@ -4633,7 +5194,17 @@ VLRU_ComputeConstants(void)
     }
 }
 
-/* initialize VLRU */
+/**
+ * initialize VLRU subsystem.
+ *
+ * @pre this function has not yet been called
+ *
+ * @post VLRU subsystem is initialized and VLRU scanner thread is starting
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VInitVLRU(void)
 {
@@ -4676,7 +5247,22 @@ VInitVLRU(void)
     }
 }
 
-/* initialize LRU support for a volume */
+/**
+ * initialize the VLRU-related fields of a newly allocated volume object.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre
+ *    @arg @c VOL_LOCK is held.
+ *    @arg volume object is not on a VLRU queue.
+ *
+ * @post VLRU fields are initialized to indicate that volume object is not
+ *       currently registered with the VLRU subsystem
+ *
+ * @note DAFS only
+ *
+ * @internal volume package interal use only.
+ */
 static void
 VLRU_Init_Node_r(volatile Volume * vp)
 {
@@ -4687,14 +5273,38 @@ VLRU_Init_Node_r(volatile Volume * vp)
     vp->vlru.idx = VLRU_QUEUE_INVALID;
 }
 
-/* add volume to VLRU 
- * now supports adding to queues other
- * than new for vlru state restore
- * caller MUST hold a ref count on vp */
+/**
+ * add a volume object to a VLRU queue.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre
+ *    @arg @c VOL_LOCK is held.
+ *    @arg caller MUST hold a lightweight ref on @p vp.
+ *    @arg caller MUST NOT hold exclusive ownership of the VLRU queue.
+ *
+ * @post the volume object is added to the appropriate VLRU queue
+ *
+ * @note if @c vp->vlru.idx contains the index of a valid VLRU queue,
+ *       then the volume is added to that queue.  Otherwise, the value
+ *       @c VLRU_QUEUE_NEW is stored into @c vp->vlru.idx and the
+ *       volume is added to the NEW generation queue.
+ *
+ * @note @c VOL_LOCK may be dropped internally
+ *
+ * @note Volume state is temporarily set to @c VOL_STATE_VLRU_ADD
+ *       during the add operation, and is restored to the previous
+ *       state prior to return.
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VLRU_Add_r(volatile Volume * vp)
 {
     int idx;
+    VolState state_save;
 
     if (!VLRU_enabled)
 	return;
@@ -4702,24 +5312,49 @@ VLRU_Add_r(volatile Volume * vp)
     if (queue_IsOnQueue(&vp->vlru))
 	return;
 
-    VLRU_Wait_r(&volume_LRU.q[VLRU_QUEUE_NEW]);
+    state_save = VChangeState_r(vp, VOL_STATE_VLRU_ADD);
+
+    idx = vp->vlru.idx;
+    if ((idx < 0) || (idx >= VLRU_QUEUE_INVALID)) {
+	idx = VLRU_QUEUE_NEW;
+    }
+
+    VLRU_Wait_r(&volume_LRU.q[idx]);
 
     /* repeat check since VLRU_Wait_r may have dropped
      * the glock */
     if (queue_IsNotOnQueue(&vp->vlru)) {
-	idx = vp->vlru.idx;
-	if ((idx < 0) || (idx >= VLRU_QUEUE_INVALID)) {
-	    idx = vp->vlru.idx = VLRU_QUEUE_NEW;
-	}
+	vp->vlru.idx = idx;
 	queue_Prepend(&volume_LRU.q[idx], &vp->vlru);
 	volume_LRU.q[idx].len++;
 	V_attachFlags(vp) |= VOL_ON_VLRU;
 	vp->stats.last_promote = FT_ApproxTime();
     }
+
+    VChangeState_r(vp, state_save);
 }
 
-/* delete volume from VLRU 
- * caller MUST hold a ref count on vp */
+/**
+ * delete a volume object from a VLRU queue.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre
+ *    @arg @c VOL_LOCK is held.
+ *    @arg caller MUST hold a lightweight ref on @p vp.
+ *    @arg caller MUST NOT hold exclusive ownership of the VLRU queue.
+ *
+ * @post volume object is removed from the VLRU queue
+ *
+ * @note @c VOL_LOCK may be dropped internally
+ *
+ * @note DAFS only
+ *
+ * @todo We should probably set volume state to something exlcusive 
+ *       (as @c VLRU_Add_r does) prior to dropping @c VOL_LOCK.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VLRU_Delete_r(volatile Volume * vp)
 {
@@ -4747,8 +5382,26 @@ VLRU_Delete_r(volatile Volume * vp)
     V_attachFlags(vp) &= ~(VOL_ON_VLRU);
 }
 
-/* signal that volume was just accessed.
- * caller MUST hold a ref count on vp */
+/**
+ * tell the VLRU subsystem that a volume was just accessed.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre
+ *    @arg @c VOL_LOCK is held
+ *    @arg caller MUST hold a lightweight ref on @p vp
+ *    @arg caller MUST NOT hold exclusive ownership of any VLRU queue
+ *
+ * @post volume VLRU access statistics are updated.  If the volume was on
+ *       the VLRU soft detach candidate queue, it is moved to the NEW
+ *       generation queue.
+ *
+ * @note @c VOL_LOCK may be dropped internally
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VLRU_UpdateAccess_r(volatile Volume * vp)
 {
@@ -4798,7 +5451,34 @@ VLRU_UpdateAccess_r(volatile Volume * vp)
     }
 }
 
-/* switch a volume between two VLRU queues */
+/**
+ * switch a volume between two VLRU queues.
+ *
+ * @param[in] vp       pointer to volume object
+ * @param[in] new_idx  index of VLRU queue onto which the volume will be moved
+ * @param[in] append   controls whether the volume will be appended or 
+ *                     prepended to the queue.  A nonzero value means it will
+ *                     be appended; zero means it will be prepended.
+ *
+ * @pre The new (and old, if applicable) queue(s) must either be owned 
+ *      exclusively by the calling thread for asynchronous manipulation,
+ *      or the queue(s) must be quiescent and VOL_LOCK must be held.
+ *      Please see VLRU_BeginExclusive_r, VLRU_EndExclusive_r and VLRU_Wait_r
+ *      for further details of the queue asynchronous processing mechanism.
+ *
+ * @post If the volume object was already on a VLRU queue, it is
+ *       removed from the queue.  Depending on the value of the append
+ *       parameter, the volume object is either appended or prepended
+ *       to the VLRU queue referenced by the new_idx parameter.
+ *
+ * @note DAFS only
+ *
+ * @see VLRU_BeginExclusive_r
+ * @see VLRU_EndExclusive_r
+ * @see VLRU_Wait_r
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VLRU_SwitchQueues(volatile Volume * vp, int new_idx, int append)
 {
@@ -4819,7 +5499,20 @@ VLRU_SwitchQueues(volatile Volume * vp, int new_idx, int append)
     vp->vlru.idx = new_idx;
 }
 
-/* VLRU GC thread */
+/**
+ * VLRU background thread.
+ *
+ * The VLRU Scanner Thread is responsible for periodically scanning through
+ * each VLRU queue looking for volumes which should be moved to another
+ * queue, or soft detached.
+ *
+ * @param[in] args  unused thread arguments parameter
+ *
+ * @return unused thread return value
+ *    @retval NULL always
+ *
+ * @internal volume package internal use only.
+ */
 static void *
 VLRU_ScannerThread(void * args)
 {
@@ -4858,7 +5551,7 @@ VLRU_ScannerThread(void * args)
 	    volume_LRU.scanner_state = VLRU_SCANNER_STATE_PAUSED;
 	    assert(pthread_cond_broadcast(&volume_LRU.cv) == 0);
 	    do {
-		assert(pthread_cond_wait(&volume_LRU.cv, &vol_glock_mutex) == 0);
+		VOL_CV_WAIT(&volume_LRU.cv);
 	    } while (volume_LRU.scanner_state == VLRU_SCANNER_STATE_PAUSED);
 	}
 
@@ -4938,7 +5631,31 @@ VLRU_ScannerThread(void * args)
     return NULL;
 }
 
-/* run the promotions */
+/**
+ * promote volumes from one VLRU generation to the next.
+ *
+ * This routine scans a VLRU generation looking for volumes which are
+ * eligible to be promoted to the next generation.  All volumes which
+ * meet the eligibility requirement are promoted.
+ *
+ * Promotion eligibility is based upon meeting both of the following
+ * requirements:
+ *
+ *    @arg The volume has been accessed since the last promotion:
+ *         @c (vp->stats.last_get >= vp->stats.last_promote)
+ *    @arg The last promotion occurred at least 
+ *         @c volume_LRU.promotion_interval[idx] seconds ago
+ *
+ * As a performance optimization, promotions are "globbed".  In other
+ * words, we promote arbitrarily large contiguous sublists of elements
+ * as one operation.  
+ *
+ * @param[in] idx  VLRU queue index to scan
+ *
+ * @note DAFS only
+ *
+ * @internal VLRU internal use only.
+ */
 static void
 VLRU_Promote_r(int idx)
 {
@@ -5240,7 +5957,7 @@ static void
 VLRU_Wait_r(struct VLRU_q * q)
 {
     while(q->busy) {
-	assert(pthread_cond_wait(&q->cv, &vol_glock_mutex) == 0);
+	VOL_CV_WAIT(&q->cv);
     }
 }
 
@@ -5263,7 +5980,7 @@ VSoftDetachVolume_r(volatile Volume * vp, afs_uint32 thresh)
     if (vp->nUsers || vp->nWaiters)
 	return 0;
 
-    if (IsExclusiveState(V_attachState(vp))) {
+    if (VIsExclusiveState(V_attachState(vp))) {
 	return 0;
     }
 
@@ -5337,9 +6054,26 @@ VSoftDetachVolume_r(volatile Volume * vp, afs_uint32 thresh)
 /* Volume Header Cache routines                    */
 /***************************************************/
 
+/** 
+ * volume header cache.
+ */
 struct volume_hdr_LRU_t volume_hdr_LRU;
 
-/* Allocate a bunch of headers; string them together */
+/**
+ * initialize the volume header cache.
+ *
+ * @param[in] howMany  number of header cache entries to preallocate
+ *
+ * @pre VOL_LOCK held.  Function has never been called before.
+ *
+ * @post howMany cache entries are allocated, initialized, and added 
+ *       to the LRU list.  Header cache statistics are initialized.
+ *
+ * @note only applicable to fileServer program type.  Should only be
+ *       called once during volume package initialization.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VInitVolumeHeaderCache(afs_uint32 howMany)
 {
@@ -5347,20 +6081,36 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
     if (programType != fileServer)
 	return;
     queue_Init(&volume_hdr_LRU);
-#ifdef AFS_DEMAND_ATTACH_FS
     volume_hdr_LRU.stats.free = 0;
     volume_hdr_LRU.stats.used = howMany;
     volume_hdr_LRU.stats.attached = 0;
-#endif
     hp = (struct volHeader *)(calloc(howMany, sizeof(struct volHeader)));
     while (howMany--)
 	ReleaseVolumeHeader(hp++);
 }
 
-#ifdef AFS_DEMAND_ATTACH_FS
-/* Get a volume header from the LRU list; update the old one if necessary */
-/* Returns 1 if there was already a header, which is removed from the LRU list */
-/* caller MUST has a ref count on vp */
+/**
+ * get a volume header and attach it to the volume object.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @return cache entry status
+ *    @retval 0  volume header was newly attached; cache data is invalid
+ *    @retval 1  volume header was previously attached; cache data is valid
+ *
+ * @pre VOL_LOCK held.  For DAFS, lightweight ref must be held on volume object.
+ *
+ * @post volume header attached to volume object.  if necessary, header cache 
+ *       entry on LRU is synchronized to disk.  Header is removed from LRU list.
+ *
+ * @note VOL_LOCK may be dropped
+ *
+ * @warning this interface does not load header data from disk.  it merely
+ *          attaches a header object to the volume object, and may sync the old
+ *          header cache data out to disk in the process.
+ *
+ * @internal volume package internal use only.
+ */
 static int
 GetVolumeHeader(register Volume * vp)
 {
@@ -5368,6 +6118,9 @@ GetVolumeHeader(register Volume * vp)
     register struct volHeader *hd;
     int old;
     static int everLogged = 0;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VolState vp_save, back_save;
 
     /* XXX debug 9/19/05 we've apparently got
      * a ref counting bug somewhere that's
@@ -5377,6 +6130,7 @@ GetVolumeHeader(register Volume * vp)
 	Log("nUsers == 0, but header not on LRU\n");
 	return 1;
     }
+#endif
 
     old = (vp->header != NULL);	/* old == volume already has a header */
 
@@ -5387,9 +6141,12 @@ GetVolumeHeader(register Volume * vp)
 	    assert(hd != NULL);
 	    vp->header = hd;
 	    hd->back = vp;
+#ifdef AFS_DEMAND_ATTACH_FS
 	    V_attachFlags(vp) |= VOL_HDR_ATTACHED;
+#endif
 	}
     } else {
+	/* for the fileserver, we keep a volume header cache */
 	if (old) {
 	    /* the header we previously dropped in the lru is
 	     * still available. pull it off the lru and return */
@@ -5414,126 +6171,85 @@ GetVolumeHeader(register Volume * vp)
 		volume_hdr_LRU.stats.free++;
 	    }
 	    if (hd->back) {
-		VolState vp_save, back_save;
 		/* this header used to belong to someone else. 
 		 * we'll need to check if the header needs to
 		 * be sync'd out to disk */
 
+#ifdef AFS_DEMAND_ATTACH_FS
 		/* if hd->back were in an exclusive state, then
 		 * its volHeader would not be on the LRU... */
-		assert(!IsExclusiveState(V_attachState(hd->back)));
+		assert(!VIsExclusiveState(V_attachState(hd->back)));
+#endif
 
 		if (hd->diskstuff.inUse) {
 		    /* volume was in use, so we'll need to sync
 		     * its header to disk */
+
+#ifdef AFS_DEMAND_ATTACH_FS
 		    back_save = VChangeState_r(hd->back, VOL_STATE_UPDATING);
 		    vp_save = VChangeState_r(vp, VOL_STATE_HDR_ATTACHING);
 		    VCreateReservation_r(hd->back);
 		    VOL_UNLOCK;
+#endif
 
 		    WriteVolumeHeader_r(&error, hd->back);
 		    /* Ignore errors; catch them later */
 
+#ifdef AFS_DEMAND_ATTACH_FS
 		    VOL_LOCK;
+#endif
 		}
 
-		V_attachFlags(hd->back) &= ~(VOL_HDR_ATTACHED | VOL_HDR_LOADED | VOL_HDR_IN_LRU);
 		hd->back->header = NULL;
+#ifdef AFS_DEMAND_ATTACH_FS
+		V_attachFlags(hd->back) &= ~(VOL_HDR_ATTACHED | VOL_HDR_LOADED | VOL_HDR_IN_LRU);
 
 		if (hd->diskstuff.inUse) {
 		    VChangeState_r(hd->back, back_save);
 		    VCancelReservation_r(hd->back);
 		    VChangeState_r(vp, vp_save);
 		}
+#endif
 	    } else {
 		volume_hdr_LRU.stats.attached++;
 	    }
 	    hd->back = vp;
 	    vp->header = hd;
+#ifdef AFS_DEMAND_ATTACH_FS
 	    V_attachFlags(vp) |= VOL_HDR_ATTACHED;
+#endif
 	}
 	volume_hdr_LRU.stats.free--;
 	volume_hdr_LRU.stats.used++;
     }
     IncUInt64(&VStats.hdr_gets);
+#ifdef AFS_DEMAND_ATTACH_FS
     IncUInt64(&vp->stats.hdr_gets);
     vp->stats.last_hdr_get = FT_ApproxTime();
+#endif
     return old;
 }
-#else /* AFS_DEMAND_ATTACH_FS */
-/* Get a volume header from the LRU list; update the old one if necessary */
-/* Returns 1 if there was already a header, which is removed from the LRU list */
-static int
-GetVolumeHeader(register Volume * vp)
-{
-    Error error;
-    register struct volHeader *hd;
-    int old;
-    static int everLogged = 0;
-
-    old = (vp->header != NULL);	/* old == volume already has a header */
-
-    if (programType != fileServer) {
-	/* for volume utilities, we allocate volHeaders as needed */
-	if (!vp->header) {
-	    hd = (struct volHeader *)calloc(1, sizeof(*vp->header));
-	    assert(hd != NULL);
-	    vp->header = hd;
-	    hd->back = vp;
-	}
-    } else {
-	/* for the fileserver, we keep a volume header cache */
-	if (old) {
-	    /* the header we previously dropped in the lru is
-	     * still available. pull it off the lru and return */
-	    hd = vp->header;
-	    queue_Remove(hd);
-	    assert(hd->back == vp);
-	} else {
-	    /* we need to grab a new element off the LRU */
-	    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
-		/* grab an element */
-		hd = queue_First(&volume_hdr_LRU, volHeader);
-		queue_Remove(hd);
-	    } else {
-		/* LRU is empty, so allocate a new volHeader 
-		 * this is probably indicative of a leak, so let the user know */
-		hd = (struct volHeader *)calloc(1, sizeof(struct volHeader));
-		assert(hd != NULL);
-		if (!everLogged) {
-		    Log("****Allocated more volume headers, probably leak****\n");
-		    everLogged = 1;
-		}
-	    }
-	    if (hd->back) {
-		/* this header used to belong to someone else. 
-		 * we'll need to check if the header needs to
-		 * be sync'd out to disk */
-
-		if (hd->diskstuff.inUse) {
-		    WriteVolumeHeader_r(&error, hd->back);
-		    /* Ignore errors; catch them later */
-		}
-		hd->back->header = NULL;
-	    }
-	    hd->back = vp;
-	    vp->header = hd;
-	}
-    }
-    return old;
-}
-#endif /* AFS_DEMAND_ATTACH_FS */
 
 
-/* make sure a volume header is attached to
- * vp, and has the correct data loaded from
- * disk. */
-#ifdef AFS_DEMAND_ATTACH_FS
-/* caller MUST hold a ref count on vp */
+/**
+ * make sure volume header is attached and contains valid cache data.
+ *
+ * @param[out] ec  outbound error code
+ * @param[in]  vp  pointer to volume object
+ *
+ * @pre VOL_LOCK held.  For DAFS, lightweight ref held on vp.
+ *
+ * @post header cache entry attached, and loaded with valid data, or
+ *       *ec is nonzero, and the header is released back into the LRU.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 LoadVolumeHeader(Error * ec, Volume * vp)
 {
+#ifdef AFS_DEMAND_ATTACH_FS
     VolState state_save;
+    afs_uint32 now;
     *ec = 0;
 
     if (vp->nUsers == 0 && !GetVolumeHeader(vp)) {
@@ -5545,21 +6261,16 @@ LoadVolumeHeader(Error * ec, Volume * vp)
 		   sizeof(V_disk(vp)), VOLUMEINFOMAGIC,
 		   VOLUMEINFOVERSION);
 	IncUInt64(&vp->stats.hdr_loads);
+	now = FT_ApproxTime();
 
 	VOL_LOCK;
-	if (!*ec)
+	if (!*ec) {
 	    V_attachFlags(vp) |= VOL_HDR_LOADED;
+	    vp->stats.last_hdr_load = now;
+	}
 	VChangeState_r(vp, state_save);
     }
-    if (*ec) {
-	/* maintain (nUsers==0) => header in LRU invariant */
-	ReleaseVolumeHeader(vp->header);
-    }
-}
 #else /* AFS_DEMAND_ATTACH_FS */
-static void
-LoadVolumeHeader(Error * ec, Volume * vp)
-{
     *ec = 0;
     if (vp->nUsers == 0 && !GetVolumeHeader(vp)) {
 	IncUInt64(&VStats.hdr_loads);
@@ -5568,14 +6279,29 @@ LoadVolumeHeader(Error * ec, Volume * vp)
 		   sizeof(V_disk(vp)), VOLUMEINFOMAGIC,
 		   VOLUMEINFOVERSION);
     }
+#endif /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	/* maintain (nUsers==0) => header in LRU invariant */
 	ReleaseVolumeHeader(vp->header);
     }
 }
-#endif /* AFS_DEMAND_ATTACH_FS */
 
-/* Put it at the top of the LRU chain */
+/**
+ * release a header cache entry back into the LRU list.
+ *
+ * @param[in] hd  pointer to volume header cache object
+ *
+ * @pre VOL_LOCK held.
+ *
+ * @post header cache object appended onto end of LRU list.
+ *
+ * @note only applicable to fileServer program type.
+ *
+ * @note used to place a header cache entry back into the
+ *       LRU pool without invalidating it as a cache entry.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 ReleaseVolumeHeader(register struct volHeader *hd)
 {
@@ -5588,15 +6314,29 @@ ReleaseVolumeHeader(register struct volHeader *hd)
     if (hd->back) {
 	V_attachFlags(hd->back) |= VOL_HDR_IN_LRU;
     }
+#endif
     volume_hdr_LRU.stats.free++;
     volume_hdr_LRU.stats.used--;
-#endif
 }
 
-/* for fileserver, return header to LRU, and
- * invalidate it as a cache entry.
+/**
+ * free/invalidate a volume header cache entry.
  *
- * for volume utilities, free the heap space */
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post For fileserver, header cache entry is returned to LRU, and it is
+ *       invalidated as a cache entry.  For volume utilities, the header
+ *       cache entry is freed.
+ *
+ * @note For fileserver, this should be utilized instead of ReleaseVolumeHeader
+ *       whenever it is necessary to invalidate the header cache entry.
+ *
+ * @see ReleaseVolumeHeader
+ *
+ * @internal volume package internal use only.
+ */
 static void
 FreeVolumeHeader(register Volume * vp)
 {
@@ -5611,8 +6351,8 @@ FreeVolumeHeader(register Volume * vp)
     }
 #ifdef AFS_DEMAND_ATTACH_FS
     V_attachFlags(vp) &= ~(VOL_HDR_ATTACHED | VOL_HDR_IN_LRU | VOL_HDR_LOADED);
-    volume_hdr_LRU.stats.attached--;
 #endif
+    volume_hdr_LRU.stats.attached--;
     vp->header = NULL;
 }
 
@@ -5621,6 +6361,19 @@ FreeVolumeHeader(register Volume * vp)
 /* Volume Hash Table routines                      */
 /***************************************************/
 
+/**
+ * set size of volume object hash table.
+ *
+ * @param[in] logsize   log(2) of desired hash table size
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval -1 failure
+ *
+ * @pre MUST be called prior to VInitVolumePackage
+ *
+ * @post Volume Hash Table will have 2^logsize buckets
+ */
 int 
 VSetVolHashSize(int logsize)
 {
@@ -5641,6 +6394,13 @@ VSetVolHashSize(int logsize)
     return 0;
 }
 
+/**
+ * initialize dynamic data structures for volume hash table.
+ *
+ * @post hash table is allocated, and fields are initialized.
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VInitVolumeHash(void)
 {
@@ -5658,7 +6418,22 @@ VInitVolumeHash(void)
     }
 }
 
-/* for demand-attach, caller MUST hold a ref count on vp */
+/**
+ * add a volume object to the hash table.
+ *
+ * @param[in] vp      pointer to volume object
+ * @param[in] hashid  hash of volume id
+ *
+ * @pre VOL_LOCK is held.  For DAFS, caller must hold a lightweight
+ *      reference on vp.
+ *
+ * @post volume is added to hash chain.
+ *
+ * @internal volume package internal use only.
+ *
+ * @note For DAFS, VOL_LOCK may be dropped in order to wait for an
+ *       asynchronous hash chain reordering to finish.
+ */
 static void
 AddVolumeToHashTable(register Volume * vp, int hashid)
 {
@@ -5683,7 +6458,21 @@ AddVolumeToHashTable(register Volume * vp, int hashid)
     vp->vnodeHashOffset = VolumeHashOffset_r();
 }
 
-/* for demand-attach, caller MUST hold a ref count on vp */
+/**
+ * delete a volume object from the hash table.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre VOL_LOCK is held.  For DAFS, caller must hold a lightweight
+ *      reference on vp.
+ *
+ * @post volume is removed from hash chain.
+ *
+ * @internal volume package internal use only.
+ *
+ * @note For DAFS, VOL_LOCK may be dropped in order to wait for an
+ *       asynchronous hash chain reordering to finish.
+ */
 static void
 DeleteVolumeFromHashTable(register Volume * vp)
 {
@@ -5709,14 +6498,37 @@ DeleteVolumeFromHashTable(register Volume * vp)
      * after the volume is removed from the hash */
 }
 
-/* - look up a volume id in the hash table
- * - occasionally rebalance hash chains
- * - update lookup statistics accordingly
+/**
+ * lookup a volume object in the hash table given a volume id.
+ *
+ * @param[out] ec        error code return
+ * @param[in]  volumeId  volume id
+ * @param[in]  hint      volume object which we believe could be the correct 
+                         mapping
+ *
+ * @return volume object pointer
+ *    @retval NULL  no such volume id is registered with the hash table.
+ *
+ * @pre VOL_LOCK is held.  For DAFS, caller must hold a lightweight 
+        ref on hint.
+ *
+ * @post volume object with the given id is returned.  volume object and 
+ *       hash chain access statistics are updated.  hash chain may have 
+ *       been reordered.
+ *
+ * @note For DAFS, VOL_LOCK may be dropped in order to wait for an 
+ *       asynchronous hash chain reordering operation to finish, or 
+ *       in order for us to perform an asynchronous chain reordering.
+ *
+ * @note Hash chain reorderings occur when the access count for the 
+ *       volume object being looked up exceeds the sum of the previous 
+ *       node's (the node ahead of it in the hash chain linked list) 
+ *       access count plus the constant VOLUME_HASH_REORDER_THRESHOLD.
+ *
+ * @note For DAFS, the hint parameter allows us to short-circuit if the 
+ *       cacheCheck fields match between the hash chain head and the 
+ *       hint volume object.
  */
-/* the hint parameter allows us to short-circuit on
- * DEMAND_ATTACH_FS if the cacheChecks match between
- * the hash chain head and hint
- * caller MUST hold a refcount on hint */
 Volume *
 VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint)
 {
@@ -5843,7 +6655,27 @@ VReorderHash_r(VolumeHashChainHead * head, Volume * pp, Volume * vp)
 /* demand-attach fs volume hash
  * asynchronous exclusive operations */
 
-/* take exclusive control over the hash chain */
+/**
+ * begin an asynchronous exclusive operation on a volume hash chain.
+ *
+ * @param[in] head   pointer to volume hash chain head object
+ *
+ * @pre VOL_LOCK held.  hash chain is quiescent.
+ *
+ * @post hash chain marked busy.
+ *
+ * @note this interface is used in conjunction with VHashEndExclusive_r and
+ *       VHashWait_r to perform asynchronous (wrt VOL_LOCK) operations on a
+ *       volume hash chain.  Its main use case is hash chain reordering, which
+ *       has the potential to be a highly latent operation.
+ *
+ * @see VHashEndExclusive_r
+ * @see VHashWait_r
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VHashBeginExclusive_r(VolumeHashChainHead * head)
 {
@@ -5851,7 +6683,23 @@ VHashBeginExclusive_r(VolumeHashChainHead * head)
     head->busy = 1;
 }
 
-/* relinquish exclusive control over the hash chain */
+/**
+ * relinquish exclusive ownership of a volume hash chain.
+ *
+ * @param[in] head   pointer to volume hash chain head object
+ *
+ * @pre VOL_LOCK held.  thread owns the hash chain exclusively.
+ *
+ * @post hash chain is marked quiescent.  threads awaiting use of
+ *       chain are awakened.
+ *
+ * @see VHashBeginExclusive_r
+ * @see VHashWait_r
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VHashEndExclusive_r(VolumeHashChainHead * head)
 {
@@ -5860,12 +6708,35 @@ VHashEndExclusive_r(VolumeHashChainHead * head)
     assert(pthread_cond_broadcast(&head->chain_busy_cv) == 0);
 }
 
-/* wait for another thread to finish its exclusive ops */
+/**
+ * wait for all asynchronous operations on a hash chain to complete.
+ *
+ * @param[in] head   pointer to volume hash chain head object
+ *
+ * @pre VOL_LOCK held.
+ *
+ * @post hash chain object is quiescent.
+ *
+ * @see VHashBeginExclusive_r
+ * @see VHashEndExclusive_r
+ *
+ * @note DAFS only
+ *
+ * @note This interface should be called before any attempt to
+ *       traverse the hash chain.  It is permissible for a thread
+ *       to gain exclusive access to the chain, and then perform
+ *       latent operations on the chain asynchronously wrt the 
+ *       VOL_LOCK.
+ *
+ * @warning if waiting is necessary, VOL_LOCK is dropped
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VHashWait_r(VolumeHashChainHead * head)
 {
     while (head->busy) {
-	assert(pthread_cond_wait(&head->chain_busy_cv, &vol_glock_mutex) == 0);
+	VOL_CV_WAIT(&head->chain_busy_cv);
     }
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -5884,6 +6755,28 @@ VHashWait_r(VolumeHashChainHead * head)
  */
 
 #ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * add a volume to its disk partition VByPList.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre either the disk partition VByPList is owned exclusively
+ *      by the calling thread, or the list is quiescent and
+ *      VOL_LOCK is held.
+ *
+ * @post volume is added to disk partition VByPList
+ *
+ * @note DAFS only
+ *
+ * @warning it is the caller's responsibility to ensure list
+ *          quiescence.
+ *
+ * @see VVByPListWait_r
+ * @see VVByPListBeginExclusive_r
+ * @see VVByPListEndExclusive_r
+ *
+ * @internal volume package internal use only.
+ */
 static void
 AddVolumeToVByPList_r(Volume * vp)
 {
@@ -5894,6 +6787,28 @@ AddVolumeToVByPList_r(Volume * vp)
     }
 }
 
+/**
+ * delete a volume from its disk partition VByPList.
+ *
+ * @param[in] vp  pointer to volume object
+ *
+ * @pre either the disk partition VByPList is owned exclusively
+ *      by the calling thread, or the list is quiescent and
+ *      VOL_LOCK is held.
+ *
+ * @post volume is removed from the disk partition VByPList
+ *
+ * @note DAFS only
+ *
+ * @warning it is the caller's responsibility to ensure list
+ *          quiescence.
+ *
+ * @see VVByPListWait_r
+ * @see VVByPListBeginExclusive_r
+ * @see VVByPListEndExclusive_r
+ *
+ * @internal volume package internal use only.
+ */
 static void
 DeleteVolumeFromVByPList_r(Volume * vp)
 {
@@ -5904,6 +6819,26 @@ DeleteVolumeFromVByPList_r(Volume * vp)
     }
 }
 
+/**
+ * begin an asynchronous exclusive operation on a VByPList.
+ *
+ * @param[in] dp   pointer to disk partition object
+ *
+ * @pre VOL_LOCK held.  VByPList is quiescent.
+ *
+ * @post VByPList marked busy.
+ *
+ * @note this interface is used in conjunction with VVByPListEndExclusive_r and
+ *       VVByPListWait_r to perform asynchronous (wrt VOL_LOCK) operations on a
+ *       VByPList.
+ *
+ * @see VVByPListEndExclusive_r
+ * @see VVByPListWait_r
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 /* take exclusive control over the list */
 static void
 VVByPListBeginExclusive_r(struct DiskPartition * dp)
@@ -5912,7 +6847,23 @@ VVByPListBeginExclusive_r(struct DiskPartition * dp)
     dp->vol_list.busy = 1;
 }
 
-/* relinquish exclusive control over the list */
+/**
+ * relinquish exclusive ownership of a VByPList.
+ *
+ * @param[in] dp   pointer to disk partition object
+ *
+ * @pre VOL_LOCK held.  thread owns the VByPList exclusively.
+ *
+ * @post VByPList is marked quiescent.  threads awaiting use of
+ *       the list are awakened.
+ *
+ * @see VVByPListBeginExclusive_r
+ * @see VVByPListWait_r
+ *
+ * @note DAFS only
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VVByPListEndExclusive_r(struct DiskPartition * dp)
 {
@@ -5921,12 +6872,35 @@ VVByPListEndExclusive_r(struct DiskPartition * dp)
     assert(pthread_cond_broadcast(&dp->vol_list.cv) == 0);
 }
 
-/* wait for another thread to finish its exclusive ops */
+/**
+ * wait for all asynchronous operations on a VByPList to complete.
+ *
+ * @param[in] dp  pointer to disk partition object
+ *
+ * @pre VOL_LOCK is held.
+ *
+ * @post disk partition's VByP list is quiescent
+ *
+ * @note DAFS only
+ *
+ * @note This interface should be called before any attempt to
+ *       traverse the VByPList.  It is permissible for a thread
+ *       to gain exclusive access to the list, and then perform
+ *       latent operations on the list asynchronously wrt the 
+ *       VOL_LOCK.
+ *
+ * @warning if waiting is necessary, VOL_LOCK is dropped
+ *
+ * @see VVByPListEndExclusive_r
+ * @see VVByPListBeginExclusive_r
+ *
+ * @internal volume package internal use only.
+ */
 static void
 VVByPListWait_r(struct DiskPartition * dp)
 {
     while (dp->vol_list.busy) {
-	assert(pthread_cond_wait(&dp->vol_list.cv, &vol_glock_mutex) == 0);
+	VOL_CV_WAIT(&dp->vol_list.cv);
     }
 }
 #endif /* AFS_DEMAND_ATTACH_FS */

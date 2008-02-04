@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -60,6 +60,7 @@ RCSID
 #include "volume.h"
 #include "partition.h"
 #include <rx/rx_queue.h>
+#include <afs/procmgmt.h>
 
 #if !defined(offsetof)
 #include <stddef.h>
@@ -80,10 +81,6 @@ RCSID
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
-
-#define MAX_BIND_TRIES	5	/* Number of times to retry socket bind */
-
-
 
 /* Forward declarations */
 static void * SALVSYNC_syncThread(void *);
@@ -146,7 +143,17 @@ extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 
-static int AcceptSd = -1;		/* Socket used by server for accepting connections */
+/**
+ * salvsync server socket handle.
+ */
+static SYNC_server_state_t salvsync_server_state = 
+    { -1,                       /* file descriptor */
+      SALVSYNC_ENDPOINT_DECL,   /* server endpoint */
+      SALVSYNC_PROTO_VERSION,   /* protocol version */
+      5,                        /* bind() retry limit */
+      100,                      /* listen() queue depth */
+      "SALVSYNC",               /* protocol name string */
+    };
 
 
 /**
@@ -291,54 +298,20 @@ SALVSYNC_salvInit(void)
     assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
-#ifdef USE_UNIX_SOCKETS
-static int
-getport(struct sockaddr_un *addr)
-{
-    int sd;
-    char tbuffer[AFSDIR_PATH_MAX]; 
-    
-    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               "fssync.sock", NULL);
-    
-    memset(addr, 0, sizeof(*addr));
-    addr->sun_family = AF_UNIX;
-    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
-    assert((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0);
-    return sd;
-}
-#else
-static int
-getport(struct sockaddr_in *addr)
-{
-    int sd;
-
-    memset(addr, 0, sizeof(*addr));
-    assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    addr->sin_len = sizeof(struct sockaddr_in);
-#endif
-    addr->sin_addr.s_addr = htonl(0x7f000001);
-    addr->sin_family = AF_INET;	/* was localhost->h_addrtype */
-    addr->sin_port = htons(2041);	/* XXXX htons not _really_ neccessary */
-
-    return sd;
-}
-#endif
 
 static fd_set SALVSYNC_readfds;
 
 static void *
 SALVSYNC_syncThread(void * args)
 {
-    struct sockaddr_in addr;
     int on = 1;
     int code;
     int numTries;
     int tid;
-#ifdef USE_UNIX_SOCKETS
-    char tbuffer[AFSDIR_PATH_MAX]; 
-#endif
+    SYNC_server_state_t * state = &salvsync_server_state;
+
+    SYNC_getAddr(&state->endpoint, &state->addr);
+    SYNC_cleanupSock(state);
 
 #ifndef AFS_NT40_ENV
     (void)signal(SIGPIPE, SIG_IGN);
@@ -351,31 +324,10 @@ SALVSYNC_syncThread(void * args)
     pthread_setspecific(rx_thread_id_key, (void *)tid);
     Log("Set thread id %d for SALVSYNC_syncThread\n", tid);
 
-#ifdef USE_UNIX_SOCKETS
-    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               "fssync.sock", NULL);
-    /* ignore errors */
-    remove(tbuffer);
-#endif /* USE_UNIX_SOCKETS */
-
-    AcceptSd = getport(&addr);
-    /* Reuseaddr needed because system inexplicably leaves crud lying around */
-    code =
-	setsockopt(AcceptSd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
-		   sizeof(on));
-    if (code)
-	Log("SALVSYNC_sync: setsockopt failed with (%d)\n", errno);
-
-    for (numTries = 0; numTries < MAX_BIND_TRIES; numTries++) {
-	if ((code =
-	     bind(AcceptSd, (struct sockaddr *)&addr, sizeof(addr))) == 0)
-	    break;
-	Log("SALVSYNC_sync: bind failed with (%d), will sleep and retry\n",
-	    errno);
-	sleep(5);
-    }
+    state->fd = SYNC_getSock(&state->endpoint);
+    code = SYNC_bindSock(state);
     assert(!code);
-    listen(AcceptSd, 100);
+
     InitHandler();
     AcceptOn();
 
@@ -514,6 +466,26 @@ SALVSYNC_com(int fd)
     }
 }
 
+/**
+ * request that a volume be salvaged.
+ *
+ * @param[in]  com  inbound command object
+ * @param[out] res  outbound response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_DENIED failed to enqueue request
+ *    @retval SYNC_FAILED malformed command packet
+ *
+ * @note this is a SALVSYNC protocol rpc handler
+ *
+ * @internal
+ *
+ * @post the volume is enqueued in the to-be-salvaged queue.  
+ *       if the volume was already in the salvage queue, its 
+ *       priority (and thus its location in the queue) are 
+ *       updated.
+ */
 static afs_int32
 SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
 {
@@ -551,6 +523,19 @@ SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
     case SALVSYNC_STATE_UNKNOWN:
 	memcpy(&clone->command.com, com->hdr, sizeof(SYNC_command_hdr));
 	memcpy(&clone->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
+
+	/* 
+	 * make sure volgroup parent partition path is kept coherent
+	 *
+	 * If we ever want to support non-COW clones on a machine holding
+	 * the RW site, please note that this code does not work under the
+	 * conditions where someone zaps a COW clone on partition X, and
+	 * subsequently creates a full clone on partition Y -- we'd need
+	 * an inverse to SALVSYNC_com_Link.
+	 *  -- tkeiser 11/28/2007
+	 */
+	strcpy(node->command.sop.partName, com->sop->partName);
+
 	if (AddToSalvageQueue(node)) {
 	    code = SYNC_DENIED;
 	}
@@ -572,6 +557,20 @@ SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
     return code;
 }
 
+/**
+ * cancel a pending salvage request.
+ *
+ * @param[in]  com  inbound command object
+ * @param[out] res  outbound response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_FAILED malformed command packet
+ *
+ * @note this is a SALVSYNC protocol rpc handler
+ *
+ * @internal
+ */
 static afs_int32
 SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res)
 {
@@ -603,6 +602,19 @@ SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res)
     return code;
 }
 
+/**
+ * cancel all pending salvage requests.
+ *
+ * @param[in]  com  incoming command object
+ * @param[out] res  outbound response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *
+ * @note this is a SALVSYNC protocol rpc handler
+ *
+ * @internal
+ */
 static afs_int32
 SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_response * res)
 {
@@ -620,6 +632,23 @@ SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_response * res)
 
 /**
  * link a queue node for a clone to its parent volume.
+ *
+ * @param[in]  com   inbound command object
+ * @param[out] res   outbound response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_FAILED malformed command packet
+ *    @retval SYNC_DENIED the request could not be completed
+ *
+ * @note this is a SALVSYNC protocol rpc handler
+ *
+ * @post the requested volume is marked as a child of another volume.
+ *       thus, future salvage requests for this volume will result in the
+ *       parent of the volume group being scheduled for salvage instead
+ *       of this clone.
+ *
+ * @internal
  */
 static afs_int32
 SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res)
@@ -664,6 +693,20 @@ SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res)
     return code;
 }
 
+/**
+ * query the status of a volume salvage request.
+ *
+ * @param[in]  com   inbound command object
+ * @param[out] res   outbound response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_FAILED malformed command packet
+ *
+ * @note this is a SALVSYNC protocol rpc handler
+ *
+ * @internal
+ */
 static afs_int32
 SALVSYNC_com_Query(SALVSYNC_command * com, SALVSYNC_response * res)
 {
@@ -710,8 +753,8 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	assert(AddHandler(AcceptSd, SALVSYNC_newconnection));
-	AcceptHandler = FindHandler(AcceptSd);
+	assert(AddHandler(salvsync_server_state.fd, SALVSYNC_newconnection));
+	AcceptHandler = FindHandler(salvsync_server_state.fd);
     }
 }
 
@@ -719,7 +762,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	assert(RemoveHandler(AcceptSd));
+	assert(RemoveHandler(salvsync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -827,6 +870,17 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
     ReleaseReadLock(&SALVSYNC_handler_lock);	/* just in case */
 }
 
+/**
+ * allocate a salvage queue node.
+ *
+ * @param[out] node_out  address in which to store new node pointer
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval 1 failed to allocate node
+ *
+ * @internal
+ */
 static int
 AllocNode(struct SalvageQueueNode ** node_out)
 {
@@ -848,6 +902,18 @@ AllocNode(struct SalvageQueueNode ** node_out)
     return code;
 }
 
+/**
+ * link a salvage queue node to its parent.
+ *
+ * @param[in] parent  pointer to queue node for parent of volume group
+ * @param[in] clone   pointer to queue node for a clone
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval 1 failure
+ *
+ * @internal
+ */
 static int
 LinkNode(struct SalvageQueueNode * parent,
 	 struct SalvageQueueNode * clone)
@@ -1093,7 +1159,7 @@ SALVSYNC_getWork(void)
      * if there are no disk partitions, just sit in this wait loop forever
      */
     while (!salvageQueue.total_len || !DiskPartitionList) {
-      assert(pthread_cond_wait(&salvageQueue.cv, &vol_glock_mutex) == 0);
+	VOL_CV_WAIT(&salvageQueue.cv);
     }
 
     /* 
@@ -1168,6 +1234,16 @@ SALVSYNC_getWork(void)
     return node;
 }
 
+/**
+ * update internal scheduler state to reflect completion of a work unit.
+ *
+ * @param[in]  node    salvage queue node object pointer
+ * @param[in]  result  worker process result code
+ *
+ * @post scheduler state is updated.
+ *
+ * @internal
+ */
 static void
 SALVSYNC_doneWork_r(struct SalvageQueueNode * node, int result)
 {
@@ -1194,25 +1270,86 @@ SALVSYNC_doneWork_r(struct SalvageQueueNode * node, int result)
     }
 }
 
-void 
-SALVSYNC_doneWork(struct SalvageQueueNode * node, int result)
+/**
+ * check whether worker child failed.
+ *
+ * @param[in] status  status bitfield return by wait()
+ *
+ * @return boolean failure code
+ *    @retval 0 child succeeded
+ *    @retval 1 child failed
+ *
+ * @internal
+ */
+static int
+ChildFailed(int status)
 {
-    VOL_LOCK;
-    SALVSYNC_doneWork_r(node, result);
-    VOL_UNLOCK;
+    return (WCOREDUMP(status) || 
+	    WIFSIGNALED(status) || 
+	    ((WEXITSTATUS(status) != 0) && 
+	     (WEXITSTATUS(status) != SALSRV_EXIT_VOLGROUP_LINK)));
 }
 
+
+/**
+ * notify salvsync scheduler of node completion, by child pid.
+ *
+ * @param[in]  pid     pid of worker child
+ * @param[in]  status  worker status bitfield from wait()
+ *
+ * @post scheduler state is updated.
+ *       if status code is a failure, fileserver notification was attempted
+ *
+ * @see SALVSYNC_doneWork_r
+ */
 void
-SALVSYNC_doneWorkByPid(int pid, int result)
+SALVSYNC_doneWorkByPid(int pid, int status)
 {
     struct SalvageQueueNode * node;
+    char partName[16];
+    afs_uint32 volids[VOLMAXTYPES+1];
+    unsigned int idx;
+
+    memset(volids, 0, sizeof(volids));
 
     VOL_LOCK;
     node = LookupPendingCommandByPid(pid);
     if (node != NULL) {
-	SALVSYNC_doneWork_r(node, result);
+	SALVSYNC_doneWork_r(node, status);
+
+	if (ChildFailed(status)) {
+	    /* populate volume id list for later processing outside the glock */
+	    volids[0] = node->command.sop.volume;
+	    strcpy(partName, node->command.sop.partName);
+	    if (node->type == SALVSYNC_VOLGROUP_PARENT) {
+		for (idx = 0; idx < VOLMAXTYPES; idx++) {
+		    if (node->volgroup.children[idx]) {
+			volids[idx+1] = node->volgroup.children[idx]->command.sop.volume;
+		    }
+		}
+	    }
+	}
     }
     VOL_UNLOCK;
+
+    /*
+     * if necessary, notify fileserver of
+     * failure to salvage volume group
+     * [we cannot guarantee that the child made the
+     *  appropriate notifications (e.g. SIGSEGV)]
+     *  -- tkeiser 11/28/2007
+     */
+    if (ChildFailed(status)) {
+	for (idx = 0; idx <= VOLMAXTYPES; idx++) {
+	    if (volids[idx]) {
+		FSYNC_VolOp(volids[idx],
+			    partName,
+			    FSYNC_VOL_FORCE_ERROR,
+			    FSYNC_WHATEVER,
+			    NULL);
+	    }
+	}
+    }
 }
 
 #endif /* AFS_DEMAND_ATTACH_FS */

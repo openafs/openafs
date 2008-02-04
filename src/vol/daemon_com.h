@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -22,8 +22,12 @@
 #define SYNC_COM_CODE_USER_BASE 65536
 #define SYNC_COM_CODE_DECL(code) (SYNC_COM_CODE_USER_BASE+(code))
 
-/* general command codes */
-#define SYNC_COM_CHANNEL_CLOSE 0
+/** 
+ * general command codes.
+ */
+enum SYNCOpCode {
+    SYNC_COM_CHANNEL_CLOSE    = 0,      /**< request sync channel shutdown */
+};
 
 
 /* SYNC protocol response codes
@@ -34,13 +38,16 @@
 #define SYNC_RES_CODE_USER_BASE 65536
 #define SYNC_RES_CODE_DECL(code) (SYNC_RES_CODE_USER_BASE+(code))
 
-/* general response codes */
-#define SYNC_OK                0   /* sync call returned ok */
-#define SYNC_DENIED            1   /* sync request denied by server */
-#define SYNC_COM_ERROR         2   /* sync protocol communicaions error */
-#define SYNC_BAD_COMMAND       3   /* sync command code not implemented by server */
-#define SYNC_FAILED            4   /* sync server-side procedure failed */
-
+/**
+ * general response codes.
+ */
+enum SYNCReasonCode {
+    SYNC_OK                   = 0,  /**< sync call returned ok */
+    SYNC_DENIED               = 1,  /**< sync request denied by server */
+    SYNC_COM_ERROR            = 2,  /**< sync protocol communicaions error */
+    SYNC_BAD_COMMAND          = 3,  /**< sync command code not implemented by server */
+    SYNC_FAILED               = 4,  /**< sync server-side procedure failed */
+};
 
 /* SYNC protocol reason codes
  *
@@ -54,6 +61,7 @@
 #define SYNC_REASON_NONE                 0
 #define SYNC_REASON_MALFORMED_PACKET     1
 #define SYNC_REASON_NOMEM                2
+#define SYNC_REASON_ENCODING_ERROR       3
 
 /* SYNC protocol flags
  *
@@ -76,16 +84,53 @@
     afs_int64 _##buf##_l[SYNC_PROTO_MAX_LEN/sizeof(afs_int64)]; \
     char * buf = (char *)(_##buf##_l)
 
+#ifdef USE_UNIX_SOCKETS
+#include <afs/afsutil.h>
+#include <sys/un.h>
+#define SYNC_SOCK_DOMAIN AF_UNIX
+typedef struct sockaddr_un SYNC_sockaddr_t;
+#else  /* USE_UNIX_SOCKETS */
+#define SYNC_SOCK_DOMAIN AF_INET
+typedef struct sockaddr_in SYNC_sockaddr_t;
+#endif /* USE_UNIX_SOCKETS */
 
-/* client-side state object */
-typedef struct SYNC_client_state {
-    int fd;
-    afs_uint16 port;
-    afs_uint32 proto_version;
-    int retry_limit;            /* max number of times for SYNC_ask to retry */
-    afs_int32 hard_timeout;     /* upper limit on time to keep trying */
+/**
+ * sync server endpoint address.
+ */
+typedef struct SYNC_endpoint {
+    int domain;     /**< socket domain */
+    afs_uint16 in;  /**< localhost ipv4 tcp port number */
+    char * un;      /**< unix domain socket filename (not a full path) */
+} SYNC_endpoint_t;
+
+#define SYNC_ENDPOINT_DECL(in_port, un_path) \
+    { SYNC_SOCK_DOMAIN, in_port, un_path }
+
+
+/**
+ * SYNC server state structure.
+ */
+typedef struct SYNC_server_state {
+    int fd;                     /**< listening socket descriptor */
+    SYNC_endpoint_t endpoint;   /**< server endpoint address */
+    afs_uint32 proto_version;   /**< our protocol version */
+    int bind_retry_limit;       /**< upper limit on times to retry socket bind() */
+    int listen_depth;           /**< socket listen queue depth */
     char * proto_name;          /**< sync protocol associated with this conn */
-    byte fatal_error;           /* fatal error on this client conn */
+    SYNC_sockaddr_t addr;       /**< server listen socket sockaddr */
+} SYNC_server_state_t;
+
+/**
+ * SYNC client state structure.
+ */
+typedef struct SYNC_client_state {
+    int fd;                     /**< client socket descriptor */
+    SYNC_endpoint_t endpoint;   /**< address of sync server */
+    afs_uint32 proto_version;   /**< our protocol version */
+    int retry_limit;            /**< max number of times for SYNC_ask to retry */
+    afs_int32 hard_timeout;     /**< upper limit on time to keep trying */
+    char * proto_name;          /**< sync protocol associated with this conn */
+    byte fatal_error;           /**< nonzer if fatal error on this client conn */
 } SYNC_client_state;
 
 /* wire types */
@@ -126,6 +171,9 @@ typedef struct SYNC_response {
     afs_int32 recv_len;
 } SYNC_response;
 
+/* general prototypes */
+extern int SYNC_getSock(SYNC_endpoint_t * endpoint);
+extern void SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr);
 
 /* client-side prototypes */
 extern afs_int32 SYNC_ask(SYNC_client_state *, SYNC_command * com, SYNC_response * res);
@@ -138,5 +186,7 @@ extern int SYNC_reconnect(SYNC_client_state *);           /* do a reconnect afte
 extern int SYNC_getCom(int fd, SYNC_command * com);
 extern int SYNC_putRes(int fd, SYNC_response * res);
 extern int SYNC_verifyProtocolString(char * buf, size_t len);
+extern void SYNC_cleanupSock(SYNC_server_state_t * state);
+extern int SYNC_bindSock(SYNC_server_state_t * state);
 
 #endif /* _AFS_VOL_DAEMON_COM_H */

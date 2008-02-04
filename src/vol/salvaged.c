@@ -160,6 +160,8 @@ static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 static void SalvageServer(void);
 static void SalvageClient(VolumeId vid, char * pname);
 
+static int ChildFailed(int status);
+
 static int Reap_Child(char * prog, int * pid, int * status);
 
 static void * SalvageLogCleanupThread(void *);
@@ -541,14 +543,16 @@ SalvageServer(void)
 	}
 	assert (slot < Parallel);
 
+    do_fork:
 	pid = Fork();
 	if (pid == 0) {
 	    VOL_UNLOCK;
 	    ret = DoSalvageVolume(node, slot);
 	    Exit(ret);
 	} else if (pid < 0) {
-	    VOL_UNLOCK;
-	    SALVSYNC_doneWork(node, 1);
+	    Log("failed to fork child worker process\n");
+	    sleep(1);
+	    goto do_fork;
 	} else {
 	    child_slot[slot] = pid;
 	    node->pid = pid;
@@ -618,6 +622,7 @@ SalvageChildReaperThread(void * args)
     int slot, pid, status, code, found;
     struct SalvageQueueNode *qp, *nqp;
     struct log_cleanup_node * cleanup;
+    SALVSYNC_command_info info;
 
     assert(pthread_mutex_lock(&worker_lock) == 0);
 
@@ -647,6 +652,8 @@ SalvageChildReaperThread(void * args)
 	child_slot[slot] = 0;
 	VOL_UNLOCK;
 
+	SALVSYNC_doneWorkByPid(pid, status);
+
 	assert(pthread_mutex_lock(&worker_lock) == 0);
 
 	if (cleanup) {
@@ -657,7 +664,6 @@ SalvageChildReaperThread(void * args)
 
 	/* ok, we've reaped a child */
 	current_workers--;
-	SALVSYNC_doneWorkByPid(pid, WEXITSTATUS(status));
 	assert(pthread_cond_broadcast(&worker_cv) == 0);
     }
 

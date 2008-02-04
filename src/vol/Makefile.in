@@ -22,8 +22,8 @@ LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 
 CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
 
-PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h \
-	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h
+PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h volume_inline.h voldefs.h partition.h \
+	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h vnode_inline.h
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-server.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o purge.o \
@@ -40,8 +40,10 @@ all: gi \
 	$(XFS_SIZE_CHECK) \
 	${TOP_INCDIR}/afs/nfs.h \
 	${TOP_INCDIR}/afs/vnode.h \
+	${TOP_INCDIR}/afs/vnode_inline.h \
 	${TOP_INCDIR}/afs/viceinode.h \
 	${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/volume_inline.h \
 	${TOP_INCDIR}/afs/voldefs.h \
 	${TOP_INCDIR}/afs/partition.h \
 	${TOP_INCDIR}/afs/fssync.h \
@@ -62,10 +64,16 @@ ${TOP_INCDIR}/afs/nfs.h: nfs.h
 ${TOP_INCDIR}/afs/vnode.h: vnode.h
 	${INSTALL_DATA} $? $@
 
+${TOP_INCDIR}/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL_DATA} $? $@
+
 ${TOP_INCDIR}/afs/viceinode.h: viceinode.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/volume.h: volume.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/volume_inline.h: volume_inline.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/voldefs.h: voldefs.h
@@ -109,8 +117,10 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_PROGRAM} volinfo ${DESTDIR}${afssrvsbindir}/volinfo
 	${INSTALL_DATA} nfs.h ${DESTDIR}${includedir}/afs/nfs.h
 	${INSTALL_DATA} vnode.h ${DESTDIR}${includedir}/afs/vnode.h
+	${INSTALL_DATA} vnode_inline.h ${DESTDIR}${includedir}/afs/vnode_inline.h
 	${INSTALL_DATA} viceinode.h ${DESTDIR}${includedir}/afs/viceinode.h
 	${INSTALL_DATA} volume.h ${DESTDIR}${includedir}/afs/volume.h
+	${INSTALL_DATA} volume_inline.h ${DESTDIR}${includedir}/afs/volume_inline.h
 	${INSTALL_DATA} voldefs.h ${DESTDIR}${includedir}/afs/voldefs.h
 	${INSTALL_DATA} partition.h ${DESTDIR}${includedir}/afs/partition.h
 	${INSTALL_DATA} fssync.h ${DESTDIR}${includedir}/afs/fssync.h
@@ -137,8 +147,10 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_PROGRAM} volinfo ${DEST}/root.server/usr/afs/bin/volinfo
 	${INSTALL_DATA} nfs.h ${DEST}/include/afs/nfs.h
 	${INSTALL_DATA} vnode.h ${DEST}/include/afs/vnode.h
+	${INSTALL_DATA} vnode_inline.h ${DEST}/include/afs/vnode_inline.h
 	${INSTALL_DATA} viceinode.h ${DEST}/include/afs/viceinode.h
 	${INSTALL_DATA} volume.h ${DEST}/include/afs/volume.h
+	${INSTALL_DATA} volume_inline.h ${DEST}/include/afs/volume_inline.h
 	${INSTALL_DATA} voldefs.h ${DEST}/include/afs/voldefs.h
 	${INSTALL_DATA} partition.h ${DEST}/include/afs/partition.h
 	${INSTALL_DATA} fssync.h ${DEST}/include/afs/fssync.h
