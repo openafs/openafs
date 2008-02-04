@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -140,6 +140,9 @@ struct SalvageQueueNode {
     int pid;
 };
 
+#define SALVSYNC_IN_PORT 2041
+#define SALVSYNC_UN_PATH "salvsync.sock"
+#define SALVSYNC_ENDPOINT_DECL    SYNC_ENDPOINT_DECL(SALVSYNC_IN_PORT, SALVSYNC_UN_PATH)
 
 /* Prototypes from salvsync.c */
 
@@ -156,7 +159,6 @@ extern afs_int32 SALVSYNC_LinkVolume(VolumeId parent, VolumeId clone,
 /* salvage server interfaces */
 extern void SALVSYNC_salvInit(void);
 extern struct SalvageQueueNode * SALVSYNC_getWork(void);
-extern void SALVSYNC_doneWork(struct SalvageQueueNode *, int result);
 extern void SALVSYNC_doneWorkByPid(int pid, int result);
 
 #endif /* AFS_DEMAND_ATTACH_FS */

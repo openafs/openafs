@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2006,2008 Sine Nomine Associates
  */
 
 /*
@@ -94,7 +94,7 @@ extern int LogLevel;
 
 static SYNC_client_state fssync_state = 
     { -1,                    /* file descriptor */
-      2040,                  /* port number */
+      FSSYNC_ENDPOINT_DECL,  /* server endpoint */
       FSYNC_PROTO_VERSION,   /* protocol version */
       5,                     /* connect retry limit */
       120,                   /* hard timeout */

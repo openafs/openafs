@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007-2008 Sine Nomine Associates
  */
 
 #include <afsconfig.h>
@@ -51,6 +53,7 @@ RCSID
 #endif
 #include <afs/vnode.h>
 #include <afs/volume.h>
+#include <afs/volume_inline.h>
 #include <afs/partition.h>
 #include "vol.h"
 #include <afs/daemon_com.h>
@@ -1039,7 +1042,6 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
     }
     VUpdateVolume(&error, vp);
     tt->vflags = aflags;
-    tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
@@ -1740,6 +1742,304 @@ GetNextVol(DIR * dirp, char *volname, afs_int32 * volid)
 
 }
 
+/**
+ * volint vol info structure type.
+ */
+typedef enum {
+    VOLINT_INFO_TYPE_BASE,  /**< volintInfo type */
+    VOLINT_INFO_TYPE_EXT    /**< volintXInfo type */
+} volint_info_type_t;
+
+/**
+ * handle to various on-wire vol info types.
+ */
+typedef struct {
+    volint_info_type_t volinfo_type;
+    union {
+	void * opaque;
+	volintInfo * base;
+	volintXInfo * ext;
+    } volinfo_ptr;
+} volint_info_handle_t;
+
+/**
+ * store value to a field at the appropriate location in on-wire structure.
+ */
+#define VOLINT_INFO_STORE(handle, name, val) \
+    do { \
+        if ((handle)->volinfo_type == VOLINT_INFO_TYPE_BASE) { \
+            (handle)->volinfo_ptr.base->name = (val); \
+        } else { \
+            (handle)->volinfo_ptr.ext->name = (val); \
+        } \
+    } while(0)
+
+/**
+ * get pointer to appropriate offset of field in on-wire structure.
+ */
+#define VOLINT_INFO_PTR(handle, name) \
+    (((handle)->volinfo_type == VOLINT_INFO_TYPE_BASE) ? \
+     &((handle)->volinfo_ptr.base->name) : \
+     &((handle)->volinfo_ptr.ext->name))
+
+/**
+ * fill in appropriate type of on-wire volume metadata structure.
+ *
+ * @param vp      pointer to volume object
+ * @param hdr     pointer to volume disk data object
+ * @param handle  pointer to wire format handle object
+ *
+ * @pre handle object must have a valid pointer and enumeration value
+ *
+ * @return operation status
+ *   @retval 0 success
+ *   @retval 1 failure
+ */
+static int
+FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
+{
+    unsigned int numStatBytes, now;
+
+    /*read in the relevant info */
+    strcpy(VOLINT_INFO_PTR(handle, name), hdr->name);
+    VOLINT_INFO_STORE(handle, status, VOK);	/*its ok */
+    VOLINT_INFO_STORE(handle, volid, hdr->id);
+    VOLINT_INFO_STORE(handle, type, hdr->type);	/*if ro volume */
+    VOLINT_INFO_STORE(handle, cloneID, hdr->cloneId);	/*if rw volume */
+    VOLINT_INFO_STORE(handle, backupID, hdr->backupId);
+    VOLINT_INFO_STORE(handle, parentID, hdr->parentId);
+    VOLINT_INFO_STORE(handle, copyDate, hdr->copyDate);
+    VOLINT_INFO_STORE(handle, size, hdr->diskused);
+    VOLINT_INFO_STORE(handle, maxquota, hdr->maxquota);
+    VOLINT_INFO_STORE(handle, filecount, hdr->filecount);
+    now = FT_ApproxTime();
+    if ((now - hdr->dayUseDate) > OneDay) {
+	VOLINT_INFO_STORE(handle, dayUse, 0);
+    } else {
+	VOLINT_INFO_STORE(handle, dayUse, hdr->dayUse);
+    }
+    VOLINT_INFO_STORE(handle, creationDate, hdr->creationDate);
+    VOLINT_INFO_STORE(handle, accessDate, hdr->accessDate);
+    VOLINT_INFO_STORE(handle, updateDate, hdr->updateDate);
+    VOLINT_INFO_STORE(handle, backupDate, hdr->backupDate);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /*
+     * for DAFS, we "lie" about volume state --
+     * instead of returning the raw state from the disk header,
+     * we compute state based upon the fileserver's internal
+     * in-core state enumeration value reported to us via fssync,
+     * along with the blessed and inService flags from the header.
+     *   -- tkeiser 11/27/2007
+     */
+    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+	VIsErrorState(V_attachState(vp)) ||
+	!hdr->inService ||
+	!hdr->blessed) {
+	VOLINT_INFO_STORE(handle, inUse, 0);
+    } else {
+	VOLINT_INFO_STORE(handle, inUse, 1);
+    }
+#else
+    VOLINT_INFO_STORE(handle, inUse, hdr->inUse);
+#endif
+
+
+    switch(handle->volinfo_type) {
+    case VOLINT_INFO_TYPE_BASE:
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* see comment above where we set inUse bit */
+	if (hdr->needsSalvaged || VIsErrorState(V_attachState(vp))) {
+	    handle->volinfo_ptr.base->needsSalvaged = 1;
+	} else {
+	    handle->volinfo_ptr.base->needsSalvaged = 0;
+	}
+#else
+	handle->volinfo_ptr.base->needsSalvaged = hdr->needsSalvaged;
+#endif
+	handle->volinfo_ptr.base->destroyMe = hdr->destroyMe;
+	handle->volinfo_ptr.base->spare0 = hdr->minquota;
+	handle->volinfo_ptr.base->spare1 = 
+	    (long)hdr->weekUse[0] +
+	    (long)hdr->weekUse[1] +
+	    (long)hdr->weekUse[2] +
+	    (long)hdr->weekUse[3] +
+	    (long)hdr->weekUse[4] +
+	    (long)hdr->weekUse[5] +
+	    (long)hdr->weekUse[6];
+	handle->volinfo_ptr.base->flags = 0;
+	handle->volinfo_ptr.base->spare2 = hdr->volUpdateCounter;
+	handle->volinfo_ptr.base->spare3 = 0;
+	break;
+
+
+    case VOLINT_INFO_TYPE_EXT:
+	numStatBytes =
+	    4 * ((2 * VOLINT_STATS_NUM_RWINFO_FIELDS) +
+		 (4 * VOLINT_STATS_NUM_TIME_FIELDS));
+
+	/*
+	 * Copy out the stat fields in a single operation.
+	 */
+	if ((now - hdr->dayUseDate) > OneDay) {
+	    memset((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),
+		   0, numStatBytes);
+	} else {
+	    memcpy((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),
+		   (char *)&(hdr->stat_reads[0]), 
+		   numStatBytes);
+	}
+	break;
+    }
+
+    return 0;
+}
+
+/**
+ * get struct Volume out of the fileserver.
+ *
+ * @param[in] volumeId  volumeId for which we want state information
+ * @param[out] vp       pointer to Volume object
+ *
+ * @return operation status
+ *   @retval 0 success
+ *   @retval nonzero failure
+ */
+static int
+GetVolObject(afs_uint32 volumeId, Volume * vp)
+{
+    int code;
+    SYNC_response res;
+
+    res.hdr.response_len = sizeof(res.hdr);
+    res.payload.buf = vp;
+    res.payload.len = sizeof(*vp);
+
+    code = FSYNC_VolOp(volumeId,
+		       "",
+		       FSYNC_VOL_QUERY,
+		       0,
+		       &res);
+
+    return code;
+}
+
+/**
+ * mode of volume list operation.
+ */
+typedef enum {
+    VOL_INFO_LIST_SINGLE,   /**< performing a single volume list op */
+    VOL_INFO_LIST_MULTIPLE  /**< performing a multi-volume list op */
+} vol_info_list_mode_t;
+
+/**
+ * abstract interface to populate wire-format volume metadata structures.
+ *
+ * @param[in]  partId    partition id
+ * @param[in]  volumeId  volume id
+ * @param[in]  pname     partition name
+ * @param[in]  volname   volume file name
+ * @param[in]  handle    handle to on-wire volume metadata object
+ * @param[in]  mode      listing mode
+ *
+ * @return operation status
+ *   @retval 0      success
+ *   @retval -2     DESTROY_ME flag is set
+ *   @retval -1     general failure; some data filled in
+ *   @retval -3     couldn't create vtrans; some data filled in
+ */
+static int
+GetVolInfo(afs_uint32 partId,
+	   afs_uint32 volumeId,
+	   char * pname, 
+	   char * volname, 
+	   volint_info_handle_t * handle,
+	   vol_info_list_mode_t mode)
+{
+    int code = -1;
+    afs_int32 error;
+    struct volser_trans *ttc = NULL;
+    struct Volume fs_tv, *tv = NULL;
+
+    ttc = NewTrans(volumeId, partId);
+    if (!ttc) {
+	code = -3;
+	VOLINT_INFO_STORE(handle, status, VBUSY);
+	VOLINT_INFO_STORE(handle, volid, volumeId);
+	goto drop;
+    }
+
+    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+    if (error) {
+	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n", 
+	    volumeId, pname, volname, error);
+	goto drop;
+    }
+
+    /*
+     * please note that destroyMe and needsSalvaged checks used to be ordered
+     * in the opposite manner for ListVolumes and XListVolumes.  I think it's
+     * more correct to check destroyMe before needsSalvaged.
+     *   -- tkeiser 11/28/2007
+     */
+
+    if (tv->header->diskstuff.destroyMe == DESTROY_ME) {
+	switch (mode) {
+	case VOL_INFO_LIST_MULTIPLE:
+	    code = -2;
+	    goto drop;
+
+	case VOL_INFO_LIST_SINGLE:
+	    Log("1 Volser: GetVolInfo: Volume %u (%s:%s) will be destroyed on next salvage\n", 
+		volumeId, pname, volname);
+
+	default:
+	    goto drop;
+	}
+    }
+
+    if (tv->header->diskstuff.needsSalvaged) {
+	/*this volume will be salvaged */
+	Log("1 Volser: GetVolInfo: Volume %u (%s:%s) needs to be salvaged\n", 
+	    volumeId, pname, volname);
+	goto drop;
+    }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (GetVolObject(volumeId, &fs_tv)) {
+	goto drop;
+    }
+#endif
+
+    /* ok, we have all the data we need; fill in the on-wire struct */
+    code = FillVolInfo(&fs_tv, &tv->header->diskstuff, handle);
+
+
+ drop:
+    if (code == -1) {
+	VOLINT_INFO_STORE(handle, status, 0);
+	strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	VOLINT_INFO_STORE(handle, volid, volumeId);
+    }
+    if (tv) {
+	VDetachVolume(&error, tv);
+	tv = NULL;
+	if (error) {
+	    VOLINT_INFO_STORE(handle, status, 0);
+	    strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	    Log("1 Volser: GetVolInfo: Could not detach volume %u (%s:%s)\n",
+		volumeId, pname, volname);
+	}
+    }
+    if (ttc) {
+	DeleteTrans(ttc, 1);
+	ttc = NULL;
+    }
+    return code;
+}
+
+
 /*return the header information about the <volid> */
 afs_int32
 SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32 
@@ -1757,15 +2057,15 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		     volumeId, volEntries *volumeInfo)
 {
     volintInfo *pntr;
-    register struct Volume *tv;
     struct DiskPartition *partP;
-    struct volser_trans *ttc;
     char pname[9], volname[20];
     afs_int32 error = 0;
     DIR *dirp;
     afs_int32 volid;
     int found = 0;
     unsigned int now;
+    int code;
+    volint_info_handle_t handle;
 
     volumeInfo->volEntries_val = (volintInfo *) malloc(sizeof(volintInfo));
     pntr = volumeInfo->volEntries_val;
@@ -1777,9 +2077,8 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
     dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
+
     strcpy(volname, "");
-    ttc = (struct volser_trans *)0;
-    tv = (Volume *) 0;		/* volume not attached */
 
     while (strcmp(volname, "EOD") && !found) {	/*while there are more volumes in the partition */
 
@@ -1790,103 +2089,30 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 
 	if (volid == volumeId) {	/*copy other things too */
 	    found = 1;
-#ifndef AFS_PTHREAD_ENV
-	    IOMGR_Poll();	/*make sure that the client doesnot time out */
-#endif
-	    ttc = NewTrans(volid, partid);
-	    if (!ttc) {
-		pntr->status = VBUSY;
-		pntr->volid = volid;
-		goto drop;
-	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-	    if (error) {
-		pntr->status = 0;	/*things are messed up */
-		strcpy(pntr->name, volname);
-		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Could not attach volume %u (%s:%s), error=%d\n", volid, pname, volname, error);
-		goto drop;
-	    }
-	    if (tv->header->diskstuff.destroyMe == DESTROY_ME) {
-		/*this volume will be salvaged */
-		pntr->status = 0;
-		strcpy(pntr->name, volname);
-		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u (%s) will be destroyed on next salvage\n", volid, volname);
-		goto drop;
-	    }
-
-	    if (tv->header->diskstuff.needsSalvaged) {
-		/*this volume will be salvaged */
-		pntr->status = 0;
-		strcpy(pntr->name, volname);
-		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u (%s) needs to be salvaged\n", volid, volname);
-		goto drop;
-	    }
-
-	    /*read in the relevant info */
-	    pntr->status = VOK;	/*its ok */
-	    pntr->volid = tv->header->diskstuff.id;
-	    strcpy(pntr->name, tv->header->diskstuff.name);
-	    pntr->type = tv->header->diskstuff.type;	/*if ro volume */
-	    pntr->cloneID = tv->header->diskstuff.cloneId;	/*if rw volume */
-	    pntr->backupID = tv->header->diskstuff.backupId;
-	    pntr->parentID = tv->header->diskstuff.parentId;
-	    pntr->copyDate = tv->header->diskstuff.copyDate;
-	    pntr->inUse = tv->header->diskstuff.inUse;
-	    pntr->size = tv->header->diskstuff.diskused;
-	    pntr->needsSalvaged = tv->header->diskstuff.needsSalvaged;
-	    pntr->destroyMe = tv->header->diskstuff.destroyMe;
-	    pntr->maxquota = tv->header->diskstuff.maxquota;
-	    pntr->filecount = tv->header->diskstuff.filecount;
-	    now = FT_ApproxTime();
-	    if (now - tv->header->diskstuff.dayUseDate > OneDay)
-		pntr->dayUse = 0;
-	    else
-		pntr->dayUse = tv->header->diskstuff.dayUse;
-	    pntr->creationDate = tv->header->diskstuff.creationDate;
-	    pntr->accessDate = tv->header->diskstuff.accessDate;
-	    pntr->updateDate = tv->header->diskstuff.updateDate;
-	    pntr->backupDate = tv->header->diskstuff.backupDate;
-	    pntr->spare0 = tv->header->diskstuff.minquota;
-	    pntr->spare1 =
-		(long)tv->header->diskstuff.weekUse[0] +
-		(long)tv->header->diskstuff.weekUse[1] +
-		(long)tv->header->diskstuff.weekUse[2] +
-		(long)tv->header->diskstuff.weekUse[3] +
-		(long)tv->header->diskstuff.weekUse[4] +
-		(long)tv->header->diskstuff.weekUse[5] +
-		(long)tv->header->diskstuff.weekUse[6];
-	    pntr->spare2 = V_volUpCounter(tv);
-	    pntr->flags = pntr->spare3 = (long)0;
-	    VDetachVolume(&error, tv);	/*free the volume */
-	    tv = (Volume *) 0;
-	    if (error) {
-		pntr->status = 0;	/*things are messed up */
-		strcpy(pntr->name, volname);
-		Log("1 Volser: ListVolumes: Could not detach volume %s\n",
-		    volname);
-		goto drop;
-	    }
+	    break;
 	}
+
 	GetNextVol(dirp, volname, &volid);
     }
-  drop:
-    if (tv) {
-	VDetachVolume(&error, tv);
-	tv = (Volume *) 0;
-    }
-    if (ttc) {
-	DeleteTrans(ttc, 1);
-	ttc = (struct volser_trans *)0;
+
+    if (found) {
+#ifndef AFS_PTHREAD_ENV
+	IOMGR_Poll();	/*make sure that the client does not time out */
+#endif
+
+	handle.volinfo_type = VOLINT_INFO_TYPE_BASE;
+	handle.volinfo_ptr.base = volumeInfo->volEntries_val;
+	
+	code = GetVolInfo(partid, 
+			  volid, 
+			  pname, 
+			  volname,
+			  &handle,
+			  VOL_INFO_LIST_SINGLE);
     }
 
     closedir(dirp);
-    if (found)
-	return 0;
-    else
-	return ENODEV;
+    return (found) ? 0 : ENODEV;
 }
 
 /*------------------------------------------------------------------------
@@ -1929,18 +2155,15 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 {				/*SAFSVolXListOneVolume */
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
-    register struct Volume *tv;	/*Volume ptr */
-    struct volser_trans *ttc;	/*Volume transaction ptr */
     struct DiskPartition *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     afs_int32 error;		/*Error code */
-    afs_int32 code;		/*Return code */
     DIR *dirp;			/*Partition directory ptr */
     afs_int32 currVolID;	/*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
-    struct VolumeDiskData *volDiskDataP;	/*Ptr to on-disk volume data */
-    int numStatBytes;		/*Num stat bytes to copy per volume */
     unsigned int now;
+    int code;
+    volint_info_handle_t handle;
 
     /*
      * Set up our pointers for action, marking our structure to hold exactly
@@ -1968,18 +2191,13 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     if (dirp == NULL)
 	return (VOLSERILLEGAL_PARTITION);
 
+    strcpy(volname, "");
+
     /*
      * Sweep through the partition directory, looking for the desired entry.
      * First, of course, figure out how many stat bytes to copy out of each
      * volume.
      */
-    numStatBytes =
-	4 * ((2 * VOLINT_STATS_NUM_RWINFO_FIELDS) +
-	     (4 * VOLINT_STATS_NUM_TIME_FIELDS));
-    strcpy(volname, "");
-    ttc = (struct volser_trans *)0;	/*No transaction yet */
-    tv = (Volume *) 0;		/*Volume not yet attached */
-
     while (strcmp(volname, "EOD") && !found) {
 	/*
 	 * If this is not a volume, move on to the next entry in the
@@ -1997,122 +2215,27 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	     * doesn't time out) and to set up a transaction on the volume.
 	     */
 	    found = 1;
-#ifndef AFS_PTHREAD_ENV
-	    IOMGR_Poll();
-#endif
-	    ttc = NewTrans(currVolID, a_partID);
-	    if (!ttc) {
-		/*
-		 * Couldn't get a transaction on this volume; let our caller
-		 * know it's busy.
-		 */
-		xInfoP->status = VBUSY;
-		xInfoP->volid = currVolID;
-		goto drop;
-	    }
-
-	    /*
-	     * Attach the volume, give up on the volume if we can't.
-	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-	    if (error) {
-		xInfoP->status = 0;	/*things are messed up */
-		strcpy(xInfoP->name, volname);
-		xInfoP->volid = currVolID;
-		Log("1 Volser: XListOneVolume: Could not attach volume %u\n",
-		    currVolID);
-		goto drop;
-	    }
-
-	    /*
-	     * Also bag out on this volume if it's been marked as needing a
-	     * salvage or to-be-destroyed.
-	     */
-	    volDiskDataP = &(tv->header->diskstuff);
-	    if (volDiskDataP->destroyMe == DESTROY_ME) {
-		xInfoP->status = 0;
-		strcpy(xInfoP->name, volname);
-		xInfoP->volid = currVolID;
-		Log("1 Volser: XListOneVolume: Volume %u will be destroyed on next salvage\n", currVolID);
-		goto drop;
-	    }
-
-	    if (volDiskDataP->needsSalvaged) {
-		xInfoP->status = 0;
-		strcpy(xInfoP->name, volname);
-		xInfoP->volid = currVolID;
-		Log("1 Volser: XListOneVolume: Volume %u needs to be salvaged\n", currVolID);
-		goto drop;
-	    }
-
-	    /*
-	     * Pull out the desired info and stuff it into the area we'll be
-	     * returning to our caller.
-	     */
-	    strcpy(xInfoP->name, volDiskDataP->name);
-	    xInfoP->volid = volDiskDataP->id;
-	    xInfoP->type = volDiskDataP->type;
-	    xInfoP->backupID = volDiskDataP->backupId;
-	    xInfoP->parentID = volDiskDataP->parentId;
-	    xInfoP->cloneID = volDiskDataP->cloneId;
-	    xInfoP->status = VOK;
-	    xInfoP->copyDate = volDiskDataP->copyDate;
-	    xInfoP->inUse = volDiskDataP->inUse;
-	    xInfoP->creationDate = volDiskDataP->creationDate;
-	    xInfoP->accessDate = volDiskDataP->accessDate;
-	    xInfoP->updateDate = volDiskDataP->updateDate;
-	    xInfoP->backupDate = volDiskDataP->backupDate;
-	    xInfoP->filecount = volDiskDataP->filecount;
-	    xInfoP->maxquota = volDiskDataP->maxquota;
-	    xInfoP->size = volDiskDataP->diskused;
-
-	    /*
-	     * Copy out the stat fields in a single operation.
-	     */
-	    now = FT_ApproxTime();
-	    if (now - volDiskDataP->dayUseDate > OneDay) {
-		xInfoP->dayUse = 0;
-		memset((char *)&(xInfoP->stat_reads[0]), 0, numStatBytes);
-	    } else {
-		xInfoP->dayUse = volDiskDataP->dayUse;
-		memcpy((char *)&(xInfoP->stat_reads[0]),
-		   (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
-	    }
-
-	    /*
-	     * We're done copying.  Detach the volume and iterate (at this
-	     * point, since we found our volume, we'll then drop out of the
-	     * loop).
-	     */
-	    VDetachVolume(&error, tv);
-	    tv = (Volume *) 0;
-	    if (error) {
-		xInfoP->status = 0;
-		strcpy(xInfoP->name, volname);
-		Log("1 Volser: XListOneVolumes Couldn't detach volume %s\n",
-		    volname);
-		goto drop;
-	    }
-
-	    /*
-	     * At this point, we're golden.
-	     */
-	    code = 0;
+	    break;
 	}			/*Found desired volume */
+
 	GetNextVol(dirp, volname, &currVolID);
     }
 
-    /*
-     * Drop the transaction we have for this volume.
-     */
-  drop:
-    if (tv) {
-	VDetachVolume(&error, tv);
-	tv = (Volume *) 0;
-    }
-    if (ttc) {
-	DeleteTrans(ttc, 1);
-	ttc = (struct volser_trans *)0;
+    if (found) {
+#ifndef AFS_PTHREAD_ENV
+	IOMGR_Poll();
+#endif
+
+	handle.volinfo_type = VOLINT_INFO_TYPE_EXT;
+	handle.volinfo_ptr.ext = a_volumeXInfoP->volXEntries_val;
+
+	code = GetVolInfo(a_partID,
+			  a_volID,
+			  pname,
+			  volname,
+			  &handle,
+			  VOL_INFO_LIST_SINGLE);
+
     }
 
     /*
@@ -2120,8 +2243,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * return the proper value.
      */
     closedir(dirp);
-    return (code);
-
+    return (found) ? 0 : ENODEV;
 }				/*SAFSVolXListOneVolume */
 
 /*returns all the volumes on partition partid. If flags = 1 then all the 
@@ -2142,15 +2264,15 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		   volEntries *volumeInfo)
 {
     volintInfo *pntr;
-    register struct Volume *tv;
     struct DiskPartition *partP;
-    struct volser_trans *ttc;
     afs_int32 allocSize = 1000;	/*to be changed to a larger figure */
     char pname[9], volname[20];
     afs_int32 error = 0;
     DIR *dirp;
     afs_int32 volid;
     unsigned int now;
+    int code;
+    volint_info_handle_t handle;
 
     volumeInfo->volEntries_val =
 	(volintInfo *) malloc(allocSize * sizeof(volintInfo));
@@ -2164,9 +2286,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
     strcpy(volname, "");
+
     while (strcmp(volname, "EOD")) {	/*while there are more partitions in the partition */
-	ttc = (struct volser_trans *)0;	/* new one for each pass */
-	tv = (Volume *) 0;	/* volume not attached */
 
 	if (!strcmp(volname, "")) {	/* its not a volume, fetch next file */
 	    GetNextVol(dirp, volname, &volid);
@@ -2175,77 +2296,21 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 
 	if (flags) {		/*copy other things too */
 #ifndef AFS_PTHREAD_ENV
-	    IOMGR_Poll();	/*make sure that the client doesnot time out */
+	    IOMGR_Poll();	/*make sure that the client does not time out */
 #endif
-	    ttc = NewTrans(volid, partid);
-	    if (!ttc) {
-		pntr->status = VBUSY;
-		pntr->volid = volid;
-		goto drop;
-	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-	    if (error) {
-		pntr->status = 0;	/*things are messed up */
-		strcpy(pntr->name, volname);
-		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Could not attach volume %u (%s) error=%d\n", volid, volname, error);
-		goto drop;
-	    }
-	    if (tv->header->diskstuff.needsSalvaged) {
-		/*this volume will be salvaged */
-		pntr->status = 0;
-		strcpy(pntr->name, volname);
-		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u (%s) needs to be salvaged\n", volid, volname);
-		goto drop;
-	    }
 
-	    if (tv->header->diskstuff.destroyMe == DESTROY_ME) {
-		/*this volume will be salvaged */
+	    handle.volinfo_type = VOLINT_INFO_TYPE_BASE;
+	    handle.volinfo_ptr.base = pntr;
+
+
+	    code = GetVolInfo(partid,
+			      volid,
+			      pname,
+			      volname,
+			      &handle,
+			      VOL_INFO_LIST_MULTIPLE);
+	    if (code == -2) { /* DESTROY_ME flag set */
 		goto drop2;
-	    }
-	    /*read in the relevant info */
-	    pntr->status = VOK;	/*its ok */
-	    pntr->volid = tv->header->diskstuff.id;
-	    strcpy(pntr->name, tv->header->diskstuff.name);
-	    pntr->type = tv->header->diskstuff.type;	/*if ro volume */
-	    pntr->cloneID = tv->header->diskstuff.cloneId;	/*if rw volume */
-	    pntr->backupID = tv->header->diskstuff.backupId;
-	    pntr->parentID = tv->header->diskstuff.parentId;
-	    pntr->copyDate = tv->header->diskstuff.copyDate;
-	    pntr->inUse = tv->header->diskstuff.inUse;
-	    pntr->size = tv->header->diskstuff.diskused;
-	    pntr->needsSalvaged = tv->header->diskstuff.needsSalvaged;
-	    pntr->maxquota = tv->header->diskstuff.maxquota;
-	    pntr->filecount = tv->header->diskstuff.filecount;
-	    now = FT_ApproxTime();
-	    if (now - tv->header->diskstuff.dayUseDate > OneDay)
-		pntr->dayUse = 0;
-	    else
-		pntr->dayUse = tv->header->diskstuff.dayUse;
-	    pntr->creationDate = tv->header->diskstuff.creationDate;
-	    pntr->accessDate = tv->header->diskstuff.accessDate;
-	    pntr->updateDate = tv->header->diskstuff.updateDate;
-	    pntr->backupDate = tv->header->diskstuff.backupDate;
-	    pntr->spare0 = tv->header->diskstuff.minquota;
-	    pntr->spare1 =
-		(long)tv->header->diskstuff.weekUse[0] +
-		(long)tv->header->diskstuff.weekUse[1] +
-		(long)tv->header->diskstuff.weekUse[2] +
-		(long)tv->header->diskstuff.weekUse[3] +
-		(long)tv->header->diskstuff.weekUse[4] +
-		(long)tv->header->diskstuff.weekUse[5] +
-		(long)tv->header->diskstuff.weekUse[6];
-	    pntr->spare2 = V_volUpCounter(tv);
-	    pntr->flags = pntr->spare3 = (long)0;
-	    VDetachVolume(&error, tv);	/*free the volume */
-	    tv = (Volume *) 0;
-	    if (error) {
-		pntr->status = 0;	/*things are messed up */
-		strcpy(pntr->name, volname);
-		Log("1 Volser: ListVolumes: Could not detach volume %s\n",
-		    volname);
-		goto drop;
 	    }
 	} else {
 	    pntr->volid = volid;
@@ -2253,10 +2318,6 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	}
 
       drop:
-	if (ttc) {
-	    DeleteTrans(ttc, 1);
-	    ttc = (struct volser_trans *)0;
-	}
 	pntr++;
 	volumeInfo->volEntries_len += 1;
 	if ((allocSize - volumeInfo->volEntries_len) < 5) {
@@ -2266,15 +2327,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		(volintInfo *) realloc((char *)volumeInfo->volEntries_val,
 				       allocSize * sizeof(volintInfo));
 	    if (pntr == NULL) {
-		if (tv) {
-		    VDetachVolume(&error, tv);
-		    tv = (Volume *) 0;
-		}
-		if (ttc) {
-		    DeleteTrans(ttc, 1);
-		    ttc = (struct volser_trans *)0;
-		}
-		closedir(dirp);
+		closedir(dirp);	
 		return VOLSERNO_MEMORY;
 	    }
 	    volumeInfo->volEntries_val = pntr;	/* point to new block */
@@ -2284,21 +2337,11 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	}
 
       drop2:
-	if (tv) {
-	    VDetachVolume(&error, tv);
-	    tv = (Volume *) 0;
-	}
-	if (ttc) {
-	    DeleteTrans(ttc, 1);
-	    ttc = (struct volser_trans *)0;
-	}
 	GetNextVol(dirp, volname, &volid);
 
     }
-    closedir(dirp);
-    if (ttc)
-	DeleteTrans(ttc, 1);
 
+    closedir(dirp);
     return 0;
 }
 
@@ -2346,17 +2389,15 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 {				/*SAFSVolXListVolumes */
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
-    register struct Volume *tv;	/*Volume ptr */
     struct DiskPartition *partP;	/*Ptr to partition */
-    struct volser_trans *ttc;	/*Volume transaction ptr */
     afs_int32 allocSize = 1000;	/*To be changed to a larger figure */
     char pname[9], volname[20];	/*Partition, volume names */
     afs_int32 error = 0;	/*Return code */
     DIR *dirp;			/*Partition directory ptr */
     afs_int32 volid;		/*Current volume ID */
-    struct VolumeDiskData *volDiskDataP;	/*Ptr to on-disk volume data */
-    int numStatBytes;		/*Num stat bytes to copy per volume */
     unsigned int now;
+    int code;
+    volint_info_handle_t handle;
 
     /*
      * Allocate a large array of extended volume info structures, then
@@ -2382,18 +2423,13 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return (VOLSERILLEGAL_PARTITION);
+    strcpy(volname, "");
 
     /*
      * Sweep through the partition directory, acting on each entry.  First,
      * of course, figure out how many stat bytes to copy out of each volume.
      */
-    numStatBytes =
-	4 * ((2 * VOLINT_STATS_NUM_RWINFO_FIELDS) +
-	     (4 * VOLINT_STATS_NUM_TIME_FIELDS));
-    strcpy(volname, "");
     while (strcmp(volname, "EOD")) {
-	ttc = (struct volser_trans *)0;	/*New one for each pass */
-	tv = (Volume *) 0;	/*Volume not yet attached */
 
 	/*
 	 * If this is not a volume, move on to the next entry in the
@@ -2412,106 +2448,27 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 #ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();
 #endif
-	    ttc = NewTrans(volid, a_partID);
-	    if (!ttc) {
-		/*
-		 * Couldn't get a transaction on this volume; let our caller
-		 * know it's busy.
-		 */
-		xInfoP->status = VBUSY;
-		xInfoP->volid = volid;
-		goto drop;
-	    }
 
-	    /*
-	     * Attach the volume, give up on this volume if we can't.
-	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-	    if (error) {
-		xInfoP->status = 0;	/*things are messed up */
-		strcpy(xInfoP->name, volname);
-		xInfoP->volid = volid;
-		Log("1 Volser: XListVolumes: Could not attach volume %u\n",
-		    volid);
-		goto drop;
-	    }
+	    handle.volinfo_type = VOLINT_INFO_TYPE_EXT;
+	    handle.volinfo_ptr.ext = xInfoP;
 
-	    /*
-	     * Also bag out on this volume if it's been marked as needing a
-	     * salvage or to-be-destroyed.
-	     */
-	    volDiskDataP = &(tv->header->diskstuff);
-	    if (volDiskDataP->needsSalvaged) {
-		xInfoP->status = 0;
-		strcpy(xInfoP->name, volname);
-		xInfoP->volid = volid;
-		Log("1 Volser: XListVolumes: Volume %u needs to be salvaged\n", volid);
-		goto drop;
-	    }
-
-	    if (volDiskDataP->destroyMe == DESTROY_ME)
+	    code = GetVolInfo(a_partID,
+			      volid,
+			      pname,
+			      volname,
+			      &handle,
+			      VOL_INFO_LIST_MULTIPLE);
+	    if (code == -2) { /* DESTROY_ME flag set */
 		goto drop2;
-
-	    /*
-	     * Pull out the desired info and stuff it into the area we'll be
-	     * returning to our caller.
-	     */
-	    strcpy(xInfoP->name, volDiskDataP->name);
-	    xInfoP->volid = volDiskDataP->id;
-	    xInfoP->type = volDiskDataP->type;
-	    xInfoP->backupID = volDiskDataP->backupId;
-	    xInfoP->parentID = volDiskDataP->parentId;
-	    xInfoP->cloneID = volDiskDataP->cloneId;
-	    xInfoP->status = VOK;
-	    xInfoP->copyDate = volDiskDataP->copyDate;
-	    xInfoP->inUse = volDiskDataP->inUse;
-	    xInfoP->creationDate = volDiskDataP->creationDate;
-	    xInfoP->accessDate = volDiskDataP->accessDate;
-	    xInfoP->updateDate = volDiskDataP->updateDate;
-	    xInfoP->backupDate = volDiskDataP->backupDate;
-	    now = FT_ApproxTime();
-	    if (now - volDiskDataP->dayUseDate > OneDay)
-		xInfoP->dayUse = 0;
-	    else
-		xInfoP->dayUse = volDiskDataP->dayUse;
-	    xInfoP->filecount = volDiskDataP->filecount;
-	    xInfoP->maxquota = volDiskDataP->maxquota;
-	    xInfoP->size = volDiskDataP->diskused;
-
-	    /*
-	     * Copy out the stat fields in a single operation.
-	     */
-	    memcpy((char *)&(xInfoP->stat_reads[0]),
-		   (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
-
-	    /*
-	     * We're done copying.  Detach the volume and iterate.
-	     */
-	    VDetachVolume(&error, tv);
-	    tv = (Volume *) 0;
-	    if (error) {
-		xInfoP->status = 0;
-		strcpy(xInfoP->name, volname);
-		Log("1 Volser: XListVolumes: Could not detach volume %s\n",
-		    volname);
-		goto drop;
 	    }
-	} /*Full contents desired */
-	else
+	} else {
 	    /*
 	     * Just volume IDs are needed.
 	     */
 	    xInfoP->volid = volid;
-
-      drop:
-	/*
-	 * Drop the transaction we have for this volume.
-	 */
-	if (ttc) {
-	    DeleteTrans(ttc, 1);
-	    ttc = (struct volser_trans *)0;
 	}
 
+      drop:
 	/*
 	 * Bump the pointer in the data area we're building, along with
 	 * the count of the number of entries it contains.
@@ -2530,14 +2487,6 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 		/*
 		 * Bummer, no memory. Bag it, tell our caller what went wrong.
 		 */
-		if (tv) {
-		    VDetachVolume(&error, tv);
-		    tv = (Volume *) 0;
-		}
-		if (ttc) {
-		    DeleteTrans(ttc, 1);
-		    ttc = (struct volser_trans *)0;
-		}
 		closedir(dirp);
 		return (VOLSERNO_MEMORY);
 	    }
@@ -2552,20 +2501,8 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 		a_volumeXInfoP->volXEntries_val +
 		a_volumeXInfoP->volXEntries_len;
 	}
-	/*Need more space */
+
       drop2:
-	/*
-	 * Detach our current volume and the transaction on it, then move on
-	 * to the next volume in the partition directory.
-	 */
-	if (tv) {
-	    VDetachVolume(&error, tv);
-	    tv = (Volume *) 0;
-	}
-	if (ttc) {
-	    DeleteTrans(ttc, 1);
-	    ttc = (struct volser_trans *)0;
-	}
 	GetNextVol(dirp, volname, &volid);
     }				/*Sweep through the partition directory */
 
@@ -2574,8 +2511,6 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * delete our transaction (if any), and go home happy.
      */
     closedir(dirp);
-    if (ttc)
-	DeleteTrans(ttc, 1);
     return (0);
 
 }				/*SAFSVolXListVolumes */

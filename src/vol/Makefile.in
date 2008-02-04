@@ -18,8 +18,8 @@ LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 
 CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
 
-PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h \
-	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h
+PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h volume_inline.h voldefs.h partition.h \
+	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h vnode_inline.h
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-server.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o purge.o \
@@ -38,8 +38,10 @@ all: gi \
 	$(FS_CONV_SOL26) \
 	${TOP_INCDIR}/afs/nfs.h \
 	${TOP_INCDIR}/afs/vnode.h \
+	${TOP_INCDIR}/afs/vnode_inline.h \
 	${TOP_INCDIR}/afs/viceinode.h \
 	${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/volume_inline.h \
 	${TOP_INCDIR}/afs/voldefs.h \
 	${TOP_INCDIR}/afs/partition.h \
 	${TOP_INCDIR}/afs/fssync.h \
@@ -62,8 +64,10 @@ install: \
 	$(install_FS_CONV_SOL26) \
 	${DESTDIR}${includedir}/afs/nfs.h \
 	${DESTDIR}${includedir}/afs/vnode.h \
+	${DESTDIR}${includedir}/afs/vnode_inline.h \
 	${DESTDIR}${includedir}/afs/viceinode.h \
 	${DESTDIR}${includedir}/afs/volume.h \
+	${DESTDIR}${includedir}/afs/volume_inline.h \
 	${DESTDIR}${includedir}/afs/voldefs.h \
 	${DESTDIR}${includedir}/afs/partition.h \
 	${DESTDIR}${includedir}/afs/fssync.h \
@@ -113,10 +117,16 @@ ${DEST}/include/afs/nfs.h: nfs.h
 ${DEST}/include/afs/vnode.h: vnode.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
 ${DEST}/include/afs/viceinode.h: viceinode.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/volume.h: volume.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/volume_inline.h: volume_inline.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/voldefs.h: voldefs.h
@@ -253,6 +263,12 @@ ${DESTDIR}${includedir}/afs/vnode.h: vnode.h
 ${TOP_INCDIR}/afs/vnode.h: vnode.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/viceinode.h: viceinode.h
 	${INSTALL} $? $@
 
@@ -263,6 +279,12 @@ ${DESTDIR}${includedir}/afs/volume.h: volume.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/volume.h: volume.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/volume_inline.h: volume_inline.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/volume_inline.h: volume_inline.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/voldefs.h: voldefs.h
@@ -330,8 +352,10 @@ dest: \
 	$(dest_FS_CONV_SOL26) \
 	${DEST}/include/afs/nfs.h \
 	${DEST}/include/afs/vnode.h \
+	${DEST}/include/afs/vnode_inline.h \
 	${DEST}/include/afs/viceinode.h \
 	${DEST}/include/afs/volume.h \
+	${DEST}/include/afs/volume_inline.h \
 	${DEST}/include/afs/voldefs.h \
 	${DEST}/include/afs/partition.h \
 	${DEST}/include/afs/fssync.h \

@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007-2008 Sine Nomine Associates
  */
 
 /*
@@ -13,6 +15,9 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
+
+#ifndef _AFS_VOL_VNODE_H
+#define _AFS_VOL_VNODE_H 1
 
 #define Date afs_uint32
 
@@ -117,6 +122,42 @@ typedef struct VnodeDiskObject {
 	(sizeof(VnodeDiskObject) == SIZEOF_SMALLDISKVNODE)
 #define SIZEOF_LARGEDISKVNODE	256
 
+
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * demand attach vnode state enumeration.
+ *
+ * @note values must be contiguous for VnIsValidState() to work
+ */
+typedef enum {
+    VN_STATE_INVALID            = 0,    /**< vnode does not contain valid cache data */
+    VN_STATE_RELEASING          = 1,    /**< vnode is busy releasing its ihandle ref */
+    VN_STATE_CLOSING            = 2,    /**< vnode is busy closing its ihandle ref */
+    VN_STATE_ALLOC              = 3,    /**< vnode is busy allocating disk entry */
+    VN_STATE_ONLINE             = 4,    /**< vnode is ready for use */
+    VN_STATE_LOAD               = 5,    /**< vnode is busy being loaded from disk */
+    VN_STATE_EXCLUSIVE          = 6,    /**< something external to the vnode package
+					 *   is operating exclusively on this vnode */
+    VN_STATE_STORE              = 7,    /**< vnode is busy being stored to disk */
+    VN_STATE_READ               = 8,    /**< a non-zero number of threads are executing
+					 *   code external to the vnode package which
+					 *   requires shared access */
+    VN_STATE_ERROR              = 10,   /**< vnode hard error state */
+    VN_STATE_COUNT
+} VnState;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+/**
+ * DAFS vnode state flags.
+ */
+enum VnFlags {
+    VN_ON_HASH            = 0x1,        /**< vnode is on hash table */
+    VN_ON_LRU             = 0x2,        /**< vnode is on lru list */
+    VN_ON_VVN             = 0x4,        /**< vnode is on volume vnode list */
+};
+
+
 typedef struct Vnode {
     struct rx_queue vid_hash;   /* for vnode by volume id hash */
     struct Vnode *hashNext;	/* Next vnode on hash conflict chain */
@@ -142,12 +183,20 @@ typedef struct Vnode {
     bit32 nUsers;		/* Number of lwp's who have done a VGetVnode */
     bit32 cacheCheck;		/* Must equal the value in the volume Header
 				 * for the cache entry to be valid */
+    bit32 vn_state_flags;       /**< vnode state flags */
+#ifdef AFS_DEMAND_ATTACH_FS
+    bit32 nReaders;             /**< number of read locks held */
+    VnState vn_state;           /**< vnode state */
+    pthread_cond_t vn_state_cv; /**< state change notification cv */
+#else /* !AFS_DEMAND_ATTACH_FS */
     struct Lock lock;		/* Internal lock */
+#endif /* !AFS_DEMAND_ATTACH_FS */
 #ifdef AFS_PTHREAD_ENV
     pthread_t writer;		/* thread holding write lock */
 #else				/* AFS_PTHREAD_ENV */
     PROCESS writer;		/* Process id having write lock */
 #endif				/* AFS_PTHREAD_ENV */
+    struct VnodeClassInfo * vcp; /**< our vnode class */
     IHandle_t *handle;
     VnodeDiskObject disk;	/* The actual disk data for the vnode */
 } Vnode;
@@ -155,6 +204,21 @@ typedef struct Vnode {
 #define SIZEOF_LARGEVNODE \
 	(sizeof(struct Vnode) - sizeof(VnodeDiskObject) + SIZEOF_LARGEDISKVNODE)
 #define SIZEOF_SMALLVNODE	(sizeof (struct Vnode))
+
+
+/*
+ * struct Vnode accessor abstraction
+ */
+#define Vn_refcount(vnp)      ((vnp)->nUsers)
+#define Vn_state(vnp)         ((vnp)->vn_state)
+#define Vn_stateFlags(vnp)    ((vnp)->vn_state_flags)
+#define Vn_stateCV(vnp)       ((vnp)->vn_state_cv)
+#define Vn_volume(vnp)        ((vnp)->volumePtr)
+#define Vn_cacheCheck(vnp)    ((vnp)->cacheCheck)
+#define Vn_class(vnp)         ((vnp)->vcp)
+#define Vn_readers(vnp)       ((vnp)->nReaders)
+#define Vn_id(vnp)            ((vnp)->vnodeNumber)
+
 
 #ifdef AFS_LARGEFILE_ENV
 #define VN_GET_LEN(N, V) FillInt64(N, (V)->disk.reserved6, (V)->disk.length)
@@ -217,4 +281,13 @@ extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
 extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
 /*extern VFreeVnode();*/
 extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp);
-extern void VInitVnHashByVolume(void);
+extern Vnode *VLookupVnode(struct Volume * vp, VnodeId vnodeId);
+
+extern void AddToVVnList(struct Volume * vp, Vnode * vnp);
+extern void DeleteFromVVnList(register Vnode * vnp);
+extern void AddToVnLRU(struct VnodeClassInfo * vcp, Vnode * vnp);
+extern void DeleteFromVnLRU(struct VnodeClassInfo * vcp, Vnode * vnp);
+extern void AddToVnHash(Vnode * vnp);
+extern void DeleteFromVnHash(Vnode * vnp);
+
+#endif /* _AFS_VOL_VNODE_H */

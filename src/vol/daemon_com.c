@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007, Sine Nomine Associates and others.
+ * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -75,24 +75,77 @@ int (*V_BreakVolumeCallbacks) ();
 
 #define MAX_BIND_TRIES	5	/* Number of times to retry socket bind */
 
+static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response * res);
+
+/* daemon com SYNC general interfaces */
+
+/**
+ * fill in sockaddr structure.
+ *
+ * @param[in]  endpoint pointer to sync endpoint object
+ * @param[out] addr     pointer to sockaddr structure
+ *
+ * @post sockaddr structure populated using information from
+ *       endpoint structure.
+ */
+void
+SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr)
+{
 #ifdef USE_UNIX_SOCKETS
-static getport(SYNC_client_state * state, struct sockaddr_un *addr);
-#else  /* USE_UNIX_SOCKETS */
-static getport(SYNC_client_state * state, struct sockaddr_in *addr);
+    char tbuffer[AFSDIR_PATH_MAX];
 #endif /* USE_UNIX_SOCKETS */
 
-static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response * res);
+    memset(addr, 0, sizeof(*addr));
+
+#ifdef USE_UNIX_SOCKETS
+    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
+               endpoint->un, NULL);
+    addr->sun_family = AF_UNIX;
+    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
+#else  /* !USE_UNIX_SOCKETS */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr->sin_len = sizeof(struct sockaddr_in);
+#endif
+    addr->sin_addr.s_addr = htonl(0x7f000001);
+    addr->sin_family = AF_INET;	/* was localhost->h_addrtype */
+    addr->sin_port = htons(endpoint->in);	/* XXXX htons not _really_ neccessary */
+#endif /* !USE_UNIX_SOCKETS */
+}
+
+/**
+ * get a socket descriptor of the appropriate domain.
+ *
+ * @param[in]  endpoint pointer to sync endpoint object
+ *
+ * @return socket descriptor
+ *
+ * @post socket of domain specified in endpoint structure is created and
+ *       returned to caller.
+ */
+int
+SYNC_getSock(SYNC_endpoint_t * endpoint)
+{
+    int sd;
+    assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
+    return sd;
+}
 
 /* daemon com SYNC client interface */
 
+/**
+ * open a client connection to a sync server
+ *
+ * @param[in] state  pointer to sync client handle
+ *
+ * @return operation status
+ *    @retval 1 success
+ *
+ * @note at present, this routine aborts rather than returning an error code
+ */
 int
 SYNC_connect(SYNC_client_state * state)
 {
-#ifdef USE_UNIX_SOCKETS
-    struct sockaddr_un addr;
-#else /* USE_UNIX_SOCKETS */
-    struct sockaddr_in addr;
-#endif /* USE_UNIX_SOCKETS */
+    SYNC_sockaddr_t addr;
     /* I can't believe the following is needed for localhost connections!! */
     static time_t backoff[] =
 	{ 3, 3, 3, 5, 5, 5, 7, 15, 16, 24, 32, 40, 48, 0 };
@@ -102,8 +155,10 @@ SYNC_connect(SYNC_client_state * state)
 	return 1;
     }
 
+    SYNC_getAddr(&state->endpoint, &addr);
+
     for (;;) {
-	state->fd = getport(state, &addr);
+	state->fd = SYNC_getSock(&state->endpoint);
 	if (connect(state->fd, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
 	    return 1;
 	if (!*timeout)
@@ -118,6 +173,14 @@ SYNC_connect(SYNC_client_state * state)
     return 0;
 }
 
+/**
+ * forcibly disconnect a sync client handle.
+ *
+ * @param[in] state  pointer to sync client handle
+ *
+ * @retval operation status
+ *    @retval 0 success
+ */
 int
 SYNC_disconnect(SYNC_client_state * state)
 {
@@ -130,6 +193,14 @@ SYNC_disconnect(SYNC_client_state * state)
     return 0;
 }
 
+/**
+ * gracefully disconnect a sync client handle.
+ *
+ * @param[in] state  pointer to sync client handle
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
 afs_int32
 SYNC_closeChannel(SYNC_client_state * state)
 {
@@ -161,6 +232,15 @@ SYNC_closeChannel(SYNC_client_state * state)
     return SYNC_OK;
 }
 
+/**
+ * forcibly break a client connection, and then create a new connection.
+ *
+ * @param[in] state  pointer to sync client handle
+ *
+ * @post old connection dropped; new connection established
+ *
+ * @return @see SYNC_connect()
+ */
 int
 SYNC_reconnect(SYNC_client_state * state)
 {
@@ -168,39 +248,23 @@ SYNC_reconnect(SYNC_client_state * state)
     return SYNC_connect(state);
 }
 
-/* private function to fill in the sockaddr struct for us */
-#ifdef USE_UNIX_SOCKETS
-static int
-getport(SYNC_client_state * state, struct sockaddr_un *addr)
-{
-    int sd;
-    char tbuffer[AFSDIR_PATH_MAX]; 
-
-    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               "fssync.sock", NULL);
-    memset(addr, 0, sizeof(*addr));
-    addr->sun_family = AF_UNIX;
-    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
-    assert((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0);
-    return sd;
-}
-#else  /* USE_UNIX_SOCKETS */
-static int
-getport(SYNC_client_state * state, struct sockaddr_in *addr)
-{
-    int sd;
-    memset(addr, 0, sizeof(*addr));
-    assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    addr->sin_len = sizeof(struct sockaddr_in);
-#endif
-    addr->sin_addr.s_addr = htonl(0x7f000001);
-    addr->sin_family = AF_INET;	/* was localhost->h_addrtype */
-    addr->sin_port = htons(state->port);	/* XXXX htons not _really_ neccessary */
-    return sd;
-}
-#endif /* USE_UNIX_SOCKETS */
-
+/**
+ * send a command to a sync server and wait for a response.
+ *
+ * @param[in]  state  pointer to sync client handle
+ * @param[in]  com    command object
+ * @param[out] res    response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_COM_ERROR communications error
+ *    @retval SYNC_BAD_COMMAND server did not recognize command code
+ *
+ * @note this routine merely handles error processing; SYNC_ask_internal()
+ *       handles the low-level details of communicating with the SYNC server.
+ *
+ * @see SYNC_ask_internal
+ */
 afs_int32
 SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 {
@@ -253,14 +317,27 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 
     if (code == SYNC_COM_ERROR) {
 	Log("SYNC_ask: fatal protocol error on circuit '%s'; disabling sync "
-	    "protocol to server running on port %d until next server restart\n", 
-	    state->proto_name, state->port);
+	    "protocol until next server restart\n", 
+	    state->proto_name);
 	state->fatal_error = 1;
     }
 
     return code;
 }
 
+/**
+ * send a command to a sync server and wait for a response.
+ *
+ * @param[in]  state  pointer to sync client handle
+ * @param[in]  com    command object
+ * @param[out] res    response object
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *    @retval SYNC_COM_ERROR communications error
+ *
+ * @internal
+ */
 static afs_int32
 SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 {
@@ -386,7 +463,16 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
  * daemon com SYNC server-side interfaces 
  */
 
-/* get a command */
+/**
+ * receive a command structure off a sync socket.
+ *
+ * @param[in] fd    socket descriptor
+ * @param[out] com  sync command object to be populated
+ *
+ * @return operation status
+ *    @retval SYNC_OK command received
+ *    @retval SYNC_COM_ERROR there was a socket communications error
+ */
 afs_int32
 SYNC_getCom(int fd, SYNC_command * com)
 {
@@ -450,7 +536,16 @@ SYNC_getCom(int fd, SYNC_command * com)
     return code;
 }
 
-/* put a response */
+/**
+ * write a response structure to a sync socket.
+ *
+ * @param[in] fd
+ * @param[in] res
+ *
+ * @return operation status
+ *    @retval SYNC_OK
+ *    @retval SYNC_COM_ERROR
+ */
 afs_int32
 SYNC_putRes(int fd, SYNC_response * res)
 {
@@ -507,4 +602,59 @@ SYNC_verifyProtocolString(char * buf, size_t len)
     s_len = afs_strnlen(buf, len);
 
     return (s_len == len) ? 1 : 0;
+}
+
+/**
+ * clean up old sockets.
+ *
+ * @param[in]  state  server state object
+ *
+ * @post unix domain sockets are cleaned up
+ */
+void
+SYNC_cleanupSock(SYNC_server_state_t * state)
+{
+#ifdef USE_UNIX_SOCKETS
+    remove(state->addr.sun_path);
+#endif
+}
+
+/**
+ * bind socket and set it to listen state.
+ *
+ * @param[in] state  server state object
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval nonzero failure
+ *
+ * @post socket bound and set to listen state
+ */
+int
+SYNC_bindSock(SYNC_server_state_t * state)
+{
+    int code;
+    int on = 1;
+    int numTries;
+
+    /* Reuseaddr needed because system inexplicably leaves crud lying around */
+    code =
+	setsockopt(state->fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
+		   sizeof(on));
+    if (code)
+	Log("SYNC_bindSock: setsockopt failed with (%d)\n", errno);
+
+    for (numTries = 0; numTries < state->bind_retry_limit; numTries++) {
+	code = bind(state->fd, 
+		    (struct sockaddr *)&state->addr, 
+		    sizeof(state->addr));
+	if (code == 0)
+	    break;
+	Log("SYNC_bindSock: bind failed with (%d), will sleep and retry\n",
+	    errno);
+	sleep(5);
+    }
+    listen(state->fd, state->listen_depth);
+
+    return code;
 }
