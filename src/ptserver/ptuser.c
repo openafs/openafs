@@ -91,11 +91,12 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	if (!tdir) {
 	    if (confDir && strcmp(confDir, ""))
 		fprintf(stderr,
-			"libprot: Could not open configuration directory: %s.\n",
-			confDir);
+			"%s: Could not open configuration directory: %s.\n",
+			whoami, confDir);
             else
 		fprintf(stderr,
-			"libprot: No configuration directory specified.\n");
+			"%s: No configuration directory specified.\n",
+			whoami);
 	    return -1;
 	}
         gottdir = 1;
@@ -173,16 +174,22 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
-    if ((secLevel == 2) && (afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
-	/* If secLevel is two assume we're on a file server and use
-	 * ClientAuthSecure if possible. */
-	code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-	if (code)
-	    fprintf(stderr,
-		    "libprot: clientauthsecure returns %d %s"
-		    " (so trying noauth)\n", code, afs_error_message(code));
-	if (code)
-	    scIndex = 0;	/* use noauth */
+    if (secLevel == 2) {
+	code = afsconf_GetLatestKey(tdir, 0, 0);
+	if (code) {
+	    afs_com_err(whoami, code, 
+			"(getting key from local KeyFile)\n");
+	    scIndex = 0; /* use noauth */
+	} else {
+	    /* If secLevel is two assume we're on a file server and use
+	     * ClientAuthSecure if possible. */
+	    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
+	    if (code) {
+		afs_com_err(whoami, code,
+			    "(calling client secure)\n");
+		scIndex = 0;	/* use noauth */
+	    }
+        }
 	if (scIndex != 2)
 	    /* if there was a problem, an unauthenticated conn is returned */
 	    sc[scIndex] = sc[2];
@@ -192,16 +199,17 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
 	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	if (code)
+	if (code) {
+	    afs_com_err(whoami, code, "(getting token)");
 	    scIndex = 0;
-	else {
+	} else {
 	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
 		/* this is a kerberos ticket, set scIndex accordingly */
 		scIndex = 2;
 	    else {
 		fprintf(stderr,
-			"libprot: funny kvno (%d) in ticket, proceeding\n",
-			ttoken.kvno);
+			"%s: funny kvno (%d) in ticket, proceeding\n",
+			whoami, ttoken.kvno);
 		scIndex = 2;
 	    }
 	    sc[2] =
@@ -216,8 +224,9 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     if ((scIndex == 0) && (sc[0] == 0))
 	sc[0] = rxnull_NewClientSecurityObject();
     if ((scIndex == 0) && (secLevel != 0))
-	afs_com_err(whoami, code,
-		"Could not get afs tokens, running unauthenticated.");
+	fprintf(stderr,
+		"%s: Could not get afs tokens, running unauthenticated\n",
+		whoami);
 
     memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
     for (i = 0; i < info.numServers; i++)

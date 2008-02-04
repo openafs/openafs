@@ -10,15 +10,15 @@ pts_creategroup - Creates an (empty) Protection Database group entry
 B<pts creategroup> S<<< B<-name> <I<group name>>+ >>>
     S<<< [B<-owner> <I<owner of the group>>] >>>
     S<<< [B<-id> <I<id (negated) for the group>>+] >>> S<<< [B<-cell> <I<cell name>>] >>>
-    [B<-noauth>] [B<-force>] [B<-help>]
+    [B<-noauth>] [B<-localauth>] [B<-force>] [B<-help>]
 
 B<pts createg> S<<< B<-na> <I<group name>>+ >>>  S<<< [B<-o> <I<owner of the group>>] >>>
     S<<< [B<-i> <I<id (negated) for the group>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts cg> S<<< B<-na> <I<group name>>+ >>> S<<< [B<-o> <I<owner of the group>>] >>>
     S<<< [B<-i> <I<id (negated) for the group>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 =for html
 </div>
@@ -153,6 +153,12 @@ L<pts(1)>.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-force>
 

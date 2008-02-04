@@ -7,9 +7,10 @@ pts_quit - Exit from pts interactive mode
 =for html
 <div class="synopsis">
 
-B<pts quit> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-force>]
+B<pts quit> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-localauth>] 
+    [B<-force>]
 
-B<pts q> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
+B<pts q> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-l>] [B<-f>]
 
 =for html
 </div>
@@ -43,6 +44,12 @@ L<pts(1)>.
 
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-noauth>
 
