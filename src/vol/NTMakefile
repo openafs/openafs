@@ -24,7 +24,9 @@ INCFILES =\
 	$(INCFILEDIR)\afs\partition.h \
 	$(INCFILEDIR)\afs\viceinode.h \
 	$(INCFILEDIR)\afs\vnode.h \
+        $(INCFILEDIR)\afs\vnode_inline.h \
 	$(INCFILEDIR)\afs\volume.h \
+        $(INCFILEDIR)\afs\volume_inline.h \
 	$(INCFILEDIR)\afs\voldefs.h \
 	$(INCFILEDIR)\afs\daemon_com.h
 
