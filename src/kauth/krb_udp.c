@@ -60,6 +60,9 @@ RCSID
 #define	KDC_GEN_ERR	20
 #endif
 
+#ifndef AFS_NT40_ENV
+#define closesocket close
+#endif
 
 int krb_udp_debug = 0;
 
@@ -897,11 +900,11 @@ SocketListener()
 	}
     }
     if (sock_kerb >= 0) {
-	close(sock_kerb);
+	closesocket(sock_kerb);
 	sock_kerb = -1;
     }
     if (sock_kerb5 >= 0) {
-	close(sock_kerb5);
+	closesocket(sock_kerb5);
 	sock_kerb5 = -1;
     }
     printf("UDP SocketListener exiting due to error\n");
