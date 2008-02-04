@@ -91,6 +91,12 @@ The value of the AFSCELL environment variable.
 
 The local F</usr/vice/etc/ThisCell> file.
 
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell.
+
 =back
 
 =item B<-force>
@@ -122,6 +128,29 @@ circumstances). In normal circumstances, the Protection Server allows only
 privileged users to issue commands that change the Protection Database,
 and refuses to perform such an action even if the B<-noauth> flag is
 provided.
+
+=item B<-localauth>
+
+Constructs a server ticket using the server encryption key with the
+highest key version number in the local F</usr/afs/etc/KeyFile> file. The
+B<pts> command interpreter presents the ticket, which never expires, to
+the BOS Server during mutual authentication.
+
+Use this flag only when issuing a command on a server machine; client
+machines do not usually have a F</usr/afs/etc/KeyFile> file.  The issuer
+of a command that includes this flag must be logged on to the server
+machine as the local superuser C<root>. The flag is useful for commands
+invoked by an unattended application program, such as a process controlled
+by the UNIX B<cron> utility. It is also useful if an administrator is
+unable to authenticate to AFS but is logged in as the local superuser
+C<root>.
+
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell. Also, do not combine the B<-localauth> and
+B<-noauth> flags.
 
 =back
 

@@ -8,10 +8,10 @@ pts_sleep - Pauses for a few seconds
 <div class="synopsis">
 
 B<pts sleep> S<<< [B<-delay>] <I<# of seconds>> >>>
-   S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-force>]
+   S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-localauth>] [B<-force>]
 
 B<pts sl> S<<< [B<-d>] <I<# of seconds>> >>> S<<< [B<-c>] <I<cell name>> >>>
-   [B<-n>] [B<-f>]
+   [B<-n>] [B<-l>] [B<-f>]
 
 =for html
 </div>
@@ -33,7 +33,7 @@ it is always available.
 
 =head1 OPTIONS
 
-Although they have no effect, B<pts quit> takes the following standard
+Although they have no effect, B<pts sleep> takes the following standard
 B<pts> options:
 
 =over 4
@@ -52,6 +52,12 @@ or other problems occur, rather than halting execution at the first error.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =back
 

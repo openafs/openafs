@@ -8,10 +8,10 @@ pts_source - Read pts commands from a file
 <div class="synopsis">
 
 B<pts source> S<<< [B<-file>] <I<file name>> >>> S<<< [B<-cell>] <I<cell name>> >>>
-   [B<-noauth>] [B<-force>]
+   [B<-noauth>] [B<-localauth>] [B<-force>]
 
 B<pts so> S<<< [B<-f>] <I<file name>> >>> S<<< [B<-c>] <I<cell name>> >>>
-   [B<-n>] [B<-f>]
+   [B<-n>] [B<-l>] [B<-f>]
 
 =for html
 </div>
@@ -55,6 +55,12 @@ if one of many operations fails.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =back
 

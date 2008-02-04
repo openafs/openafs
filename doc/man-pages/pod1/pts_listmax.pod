@@ -7,9 +7,10 @@ pts_listmax - Displays the max user id and max group id counters
 =for html
 <div class="synopsis">
 
-B<pts listmax> S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+B<pts listmax> S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] 
+    [B<-force>] [B<-help>]
 
-B<pts listm> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-f>] [B<-h>]
+B<pts listm> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-f>] [B<-h>]
 
 =for html
 </div>
@@ -43,6 +44,12 @@ L<pts(1)>.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-force>
 

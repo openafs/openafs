@@ -8,7 +8,7 @@ pts_interactive - Enters interactive mode
 <div class="synopsis">
 
 B<pts interactive> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>]
-    [B<-force>]
+    [B<-auth>] [B<-localauth>] [B<-force>]
 
 B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
 
@@ -19,6 +19,12 @@ B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
 
 The B<pts interactive> command allows the user to enter an interactive
 mode, useful for running bulk commands like creating new users or groups.
+
+B<pts interactive> uses the authentication state supplied on its command
+line to run all bulk commands. However, if a bulk command is supplied 
+with authentication options such as B<-cell>, B<-localauth>, B<-auth> 
+or B<-noauth> then it, and all subsequent bulk commands, will be run with
+those options.
 
 =head1 CAUTIONS
 
@@ -55,6 +61,12 @@ if one of many operations fails.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =back
 

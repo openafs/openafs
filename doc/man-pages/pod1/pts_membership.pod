@@ -8,16 +8,17 @@ pts_membership - Displays the membership list for a user or group
 <div class="synopsis">
 
 B<pts membership> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-localauth>] [B<-noauth>] 
+    [B<-force>] [B<-help>]
 
 B<pts m> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts groups> S<<< B<-na> <I<user or group name or id>>+ >>> [-c <I<cell name>>]
-    [B<-no>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts g> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 =for html
 </div>
@@ -58,6 +59,12 @@ L<pts(1)>.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-force>
 
