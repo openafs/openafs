@@ -8,13 +8,14 @@ pts_createuser - Creates a user or machine entry in the Protection Database
 <div class="synopsis">
 
 B<pts createuser> S<<< B<-name> <I<user name>>+ >>> S<<< [B<-id> <I<user id>>+] >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-force>] 
+    [B<-help>]
 
 B<pts createu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-f>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts cu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-f>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 =for html
 </div>
@@ -136,6 +137,12 @@ L<pts(1)>.
 
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see L<pts(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
+B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-force>
 

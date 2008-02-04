@@ -50,6 +50,12 @@ struct sourcestack {
     FILE *s_file;
 } *shead;
 
+struct authstate {
+    int sec;
+    const char *confdir;
+    char cell[MAXCELLCHARS];
+};
+
 int
 pts_Interactive(register struct cmd_syndesc *as)
 {
@@ -130,39 +136,78 @@ osi_audit()
 }
 
 int
-GetGlobals(register struct cmd_syndesc *as)
+GetGlobals(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
-    char *cell;
-    afs_int32 sec = 1;
+    struct authstate *state = (struct authstate *) arock;
+    afs_int32 code;
+    char *cell = NULL;
+    afs_int32 sec;
+    int changed = 0;
+    const char* confdir;
 
     whoami = as->a0name;
 
     if (!strcmp(as->name, "help"))
 	return 0;
-    if (as->parms[16].items)
-	cell = as->parms[16].items->data;
-    else
-	cell = 0;
-    if (as->parms[17].items)
-	sec = 0;
 
-    if (as->parms[18].items) {	/* testing? */
-	code = pr_Initialize(sec, AFSDIR_SERVER_ETC_DIRPATH, cell);
+    if (*state->cell) {
+	cell = state->cell;
+    }
+    sec = state->sec;
+
+    if (state->confdir == NULL) {
+	changed = 1;
+    }
+
+    if (as->parms[16].items) {
+	changed = 1;
+	cell = as->parms[16].items->data;
+    }
+    if (as->parms[17].items) { /* -noauth */
+	changed = 1;
+	sec = 0;
+    }
+    if (as->parms[20].items) { /* -localauth */
+	changed = 1;
+	sec = 2;
+    }
+    if (as->parms[21].items) { /* -auth */
+	changed = 1;
+	sec = 1;
+    }
+    if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
+	changed = 1;
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
     } else {
-	code = pr_Initialize(sec, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+	if (sec == 2)
+	    confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	else 
+	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    }
+    if (changed) {
+	CleanUp(as, arock);
+	code = pr_Initialize(sec, confdir, cell);
+    } else {
+	code = 0;
     }
     if (code) {
 	afs_com_err(whoami, code, "while initializing");
 	return code;
     }
+    state->sec = sec;
+    state->confdir = confdir;
+    if (cell && cell != state->cell)
+	strncpy(state->cell, cell, MAXCELLCHARS-1);
+
+    force = 0;
     if (as->parms[19].items)
 	force = 1;
+
     return code;
 }
 
 int
-CleanUp(register struct cmd_syndesc *as)
+CleanUp(register struct cmd_syndesc *as, void *arock)
 {
     if (as && !strcmp(as->name, "help"))
 	return 0;
@@ -704,7 +749,7 @@ ListEntries(struct cmd_syndesc *as)
 	    pr_ListEntries(flag, startindex, &nentries, &entriesp,
 			   &nextstartindex);
 	if (code) {
-	    afs_com_err(whoami, code, "; unable to list entries\n");
+	    afs_com_err(whoami, code, "; unable to list entries");
 	    if (entriesp)
 		free(entriesp);
 	    break;
@@ -972,6 +1017,10 @@ add_std_args(register struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-test", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, test_help);
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"Continue oper despite reasonable errors");
+    cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
+		"use local authentication");
+    cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
+		"use user's authentication (default)");
 }
 
 /*
@@ -996,6 +1045,7 @@ main(int argc, char **argv)
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
+    struct authstate state;
 
 #ifdef WIN32
     WSADATA WSAjunk;
@@ -1019,6 +1069,9 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    memset(&state, 0, sizeof(state));
+    state.sec = 1; /* default is auth */
 
     ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
 			  "create a new group");
@@ -1121,11 +1174,11 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-    cmd_SetBeforeProc(GetGlobals, 0);
+    cmd_SetBeforeProc(GetGlobals, &state);
 
     finished = 1;
     if (code = cmd_Dispatch(argc, argv)) {
-	CleanUp(0);
+	CleanUp(NULL, NULL);
 	exit(1);
     }
     source = stdin;
@@ -1160,7 +1213,7 @@ main(int argc, char **argv)
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
-    CleanUp(0);
+    CleanUp(NULL, NULL);
     exit(0);
 }
 

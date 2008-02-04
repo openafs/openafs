@@ -20,6 +20,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-busyat> <I<< redirect clients when queue > n >>>] >>>
     [B<-nobusy>] S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
     [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    [B<-allow-dotted-principal>]
     S<<< [B<-rxbind> <I<address to bind the Rx socket to>>] >>>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
@@ -357,7 +358,7 @@ By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
 user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
-between principal names may disable this check by starting the server
+between principal names may disabled this check by starting the server
 with this option.
 
 =item F<-m> <I<min percentage spare in partition>>
