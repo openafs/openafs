@@ -268,9 +268,9 @@ psprocdef(definition * defp)
 		(1 << DEF_INPARAM) | (1 << DEF_INOUTPARAM));
 	psproc1(defp, 1, "int", "End",
 		(1 << DEF_OUTPARAM) | (1 << DEF_INOUTPARAM));
-    } else {
-	psproc1(defp, 0, "int", "", 0xFFFFFFFF);
-    }
+    } 
+    if (!(!multi_flag && split_flag))
+        psproc1(defp, 0, "int", "", 0xFFFFFFFF);
 
     if (uflag && !kflag)
 	psproc1(defp, 2, "int", "ubik_", 0xFFFFFFFF);
