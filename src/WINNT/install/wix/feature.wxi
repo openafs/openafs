@@ -71,6 +71,8 @@
                 <ComponentRef Id="cpf_CellServDB" />
                 <ComponentRef Id="cmf_afs_cpa_CPL" />
 
+                <ComponentRef Id="cmf_afsadminutil_DLL" />
+                <ComponentRef Id="cmf_afsclientadmin_DLL" />
                 <ComponentRef Id="cmf_afsrpc_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
                 <ComponentRef Id="cmf_afspthread_DLL" />
@@ -119,8 +121,8 @@
             <Feature Id="feaServer" AllowAdvertise="no" Description="$(loc.StrAFSServerLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="130" Title="$(loc.StrAFSServerDesc)">
 
-				<ComponentRef Id="rcm_Server" />
-				<ComponentRef Id="cmp_CommonDir" />
+		<ComponentRef Id="rcm_Server" />
+		<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="cmf_afsserver_CPL" />
                 <ComponentRef Id="cmf_afsbosadmin_DLL" />
@@ -299,6 +301,8 @@
 		<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsadminutil_DLL" />
+                <ComponentRef Id="cmf_afsclientadmin_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
                 <ComponentRef Id="cmf_afspthread_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
