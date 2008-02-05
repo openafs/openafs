@@ -21,15 +21,18 @@
                     <CreateFolder />
                 </Component>
 
+                <Component Win64="$(var.Win64)" Id="cmf_afsclientadmin_DLL" Guid="$(var.cmf_afsclientadmin_DLL_guid)">
+                    <File Id="fileafsclientadmin_DLL" Name="afscliad.dll" LongName="afsclientadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsclientadmin.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afsadminutil_DLL" Guid="$(var.cmf_afsadminutil_DLL_guid)">
+                    <File Id="fileafsadminutil_DLL" Name="afsadmut.dll" LongName="afsadminutil.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsadminutil.dll"/>
+                </Component>
   <?ifndef BinsOnly?>
                 <Component Win64="$(var.Win64)" Id="cmf_afsbosadmin_DLL" Guid="$(var.cmf_afsbosadmin_DLL_guid)">
                     <File Id="fileafsbosadmin_DLL" Name="afsbosad.dll" LongName="afsbosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.dll"/>
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afscfgadmin_DLL" Guid="$(var.cmf_afscfgadmin_DLL_guid)">
                     <File Id="fileafscfgadmin_DLL" Name="afscfgad.dll" LongName="afscfgadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afscfgadmin.dll"/>
-                </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_afsclientadmin_DLL" Guid="$(var.cmf_afsclientadmin_DLL_guid)">
-                    <File Id="fileafsclientadmin_DLL" Name="afscliad.dll" LongName="afsclientadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsclientadmin.dll"/>
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afskasadmin_DLL" Guid="$(var.cmf_afskasadmin_DLL_guid)">
                     <File Id="fileafskasadmin_DLL" Name="afskasad.dll" LongName="afskasadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afskasadmin.dll"/>
@@ -39,9 +42,6 @@
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afsvosadmin_DLL" Guid="$(var.cmf_afsvosadmin_DLL_guid)">
                     <File Id="fileafsvosadmin_DLL" Name="afsvosad.dll" LongName="afsvosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsvosadmin.dll"/>
-                </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_afsadminutil_DLL" Guid="$(var.cmf_afsadminutil_DLL_guid)">
-                    <File Id="fileafsadminutil_DLL" Name="afsadmut.dll" LongName="afsadminutil.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsadminutil.dll"/>
                 </Component>
   <?endif?>
 
