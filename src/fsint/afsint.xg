@@ -689,11 +689,11 @@ StoreData64(
 ) split = 65538;
 
 GiveUpAllCallBacks(
-) = 65539;
+) multi = 65539;
 
 GetCapabilities(
   Capabilities *capabilities
-) = 65540;
+) multi = 65540;
 
 CallBackRxConnAddr(
   IN afs_int32 *addr

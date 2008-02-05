@@ -221,3 +221,8 @@ EXPORTS
         osi_AssertFailU				@226
 	DllMain					@227
         rx_SetSecurityConfiguration             @228
+;        RXAFSCB_ExecuteRequest                  @229
+        EndRXAFS_GetTime                        @230
+        StartRXAFS_GetTime                      @231
+        EndRXAFS_GetCapabilities                @232
+        StartRXAFS_GetCapabilities              @233
