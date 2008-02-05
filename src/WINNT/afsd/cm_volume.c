@@ -1022,6 +1022,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 serversp->status = srv_not_busy;
         }
 
+		lock_ReleaseMutex(&volp->mx);
         do {
             code = cm_ConnFromVolume(volp, volp->rw.ID, cm_rootUserp, &req, &connp);
             if (code) 
@@ -1035,6 +1036,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
+		lock_ObtainMutex(&volp->mx);
         if (code == 0 && volStat.Online) {
             cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_online);
             volp->rw.state = vl_online;
@@ -1055,6 +1057,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 serversp->status = srv_not_busy;
         }
 
+		lock_ReleaseMutex(&volp->mx);
         do {
             code = cm_ConnFromVolume(volp, volp->ro.ID, cm_rootUserp, &req, &connp);
             if (code) 
@@ -1068,6 +1071,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
+		lock_ObtainMutex(&volp->mx);
         if (code == 0 && volStat.Online) {
             cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_online);
             volp->ro.state = vl_online;
@@ -1088,6 +1092,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 serversp->status = srv_not_busy;
         }
 
+		lock_ReleaseMutex(&volp->mx);
         do {
             code = cm_ConnFromVolume(volp, volp->bk.ID, cm_rootUserp, &req, &connp);
             if (code) 
@@ -1101,6 +1106,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
+		lock_ObtainMutex(&volp->mx);
         if (code == 0 && volStat.Online) {
             cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_online);
             volp->bk.state = vl_online;
