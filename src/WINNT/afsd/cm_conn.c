@@ -534,7 +534,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
             if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
                 serverp->flags |= CM_SERVERFLAG_DOWN;
-                serverp->downTime = osi_Time();
+                serverp->downTime = time(NULL);
             }
         } else {
 	    reqp->flags |= CM_REQ_NEW_CONN_FORCED;

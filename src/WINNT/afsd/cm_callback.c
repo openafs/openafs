@@ -1058,7 +1058,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
     char *p = NULL;
 
     if (UuidToString((UUID *)serverUuid, &p) == RPC_S_OK) {
-        osi_Log1(afsd_logp, "SRXAFSCB_InitCallBackState3 %s ->",p);
+        osi_Log1(afsd_logp, "SRXAFSCB_InitCallBackState3 %s ->",osi_LogSaveString(afsd_logp,p));
         RpcStringFree(&p);
     } else
         osi_Log0(afsd_logp, "SRXAFSCB_InitCallBackState3 - no server Uuid ->");
@@ -1965,7 +1965,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
             lock_ObtainMutex(&tsp->mx);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 tsp->flags |= CM_SERVERFLAG_DOWN;
-                tsp->downTime = osi_Time();
+                tsp->downTime = time(NULL);
             }
             cm_ForceNewConnections(tsp);
 

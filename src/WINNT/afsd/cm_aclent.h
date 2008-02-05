@@ -26,7 +26,7 @@ typedef struct cm_aclent {
     struct cm_scache *backp;	/* back ptr to vnode */
     struct cm_user *userp;	/* user whose access is cached */
     afs_uint32 randomAccess;	/* watch for more rights in acl.h */
-    unsigned long tgtLifetime;	/* time this expires */
+    afs_uint32 tgtLifetime;	/* time this expires */
 } cm_aclent_t;
 
 extern osi_rwlock_t cm_aclLock;
