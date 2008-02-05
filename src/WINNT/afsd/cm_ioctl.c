@@ -220,10 +220,16 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
      *    \\netbios-name\submount\path\.
      *    \\netbios-name\submount\path\file
      */
-    TranslateExtendedChars(relativePath);
+
+	/* We do not perform path name translation on the ioctl path data 
+	 * because these paths were not translated by Windows through the
+	 * file system API.  Therefore, they are not OEM characters but 
+	 * whatever the display character set is.
+	 */
+    // TranslateExtendedChars(relativePath);
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
-    TranslateExtendedChars(ioctlp->inDatap);
+    // TranslateExtendedChars(ioctlp->inDatap);
 
 #ifdef AFSIFS
     /* we have passed the whole path, including the afs prefix.
