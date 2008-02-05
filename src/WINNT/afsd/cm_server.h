@@ -102,7 +102,7 @@ extern osi_rwlock_t cm_serverLock;
 
 extern void cm_InitServer(void);
 
-extern void cm_CheckServers(long flags, struct cm_cell *cellp);
+extern void cm_CheckServers(afs_uint32 flags, struct cm_cell *cellp);
 
 extern cm_server_t *cm_allServersp;
 

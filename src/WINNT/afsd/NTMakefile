@@ -401,13 +401,13 @@ AFSD_SDKLIBS =\
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afspthread.lib \
         $(LANAHELPERLIB)
 
