@@ -73,6 +73,7 @@
 
                 <ComponentRef Id="cmf_afsadminutil_DLL" />
                 <ComponentRef Id="cmf_afsclientadmin_DLL" />
+                <ComponentRef Id="cmf_afsvosadmin_DLL" />
                 <ComponentRef Id="cmf_afsrpc_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
                 <ComponentRef Id="cmf_afspthread_DLL" />
@@ -303,6 +304,7 @@
                 <ComponentRef Id="cmf_afsrpc_DLL" />
                 <ComponentRef Id="cmf_afsadminutil_DLL" />
                 <ComponentRef Id="cmf_afsclientadmin_DLL" />
+                <ComponentRef Id="cmf_afsvosadmin_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
                 <ComponentRef Id="cmf_afspthread_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
