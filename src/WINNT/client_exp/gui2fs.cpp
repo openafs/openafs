@@ -1998,7 +1998,7 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
     return TRUE;
 }
 
-UINT MakeSymbolicLink(const char *strName, const char *strDir)
+UINT MakeSymbolicLink(const char *strName, const char *strTarget)
 {
     struct ViceIoctl blob;
     char space[MAXSIZE];
@@ -2009,45 +2009,20 @@ UINT MakeSymbolicLink(const char *strName, const char *strDir)
     HOURGLASS hourglass;
     static char message[2048];
 
-    strcpy(path, strDir);
+    strcpy(path, strName);
     parent = Parent(path);
 
-    sprintf(message,"MakeSymbolicLink: path = %s parent = %s\n",path,parent);
+    sprintf(message,"MakeSymbolicLink: name = %s target = %s parent = %s\n",strName,strTarget, parent);
     OutputDebugString(message);
-
-    /*lets confirm its a good symlink*/
-    if (!IsPathInAfs(path)) {
-	const char * nbname = NetbiosName();
-	int len = strlen(nbname);
-
-	if (parent[0] == '\\' && parent[1] == '\\' &&
-	    parent[len+2] == '\\' &&
-	    parent[len+3] == '\0' &&
-	    !strnicmp(nbname,&parent[2],len))
-	{
-	    sprintf(path,"%sall\\%s", parent, &strDir[strlen(parent)]);
-	    parent = Parent(path);
-	    sprintf(message,"MakeSymbolicLink: new path = %s parent = %s\n",path,parent);
-	    OutputDebugString(message);
-
-	    if (!IsPathInAfs(parent)) {
-		ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_LNK_NOT_AFS_ERROR);
-		return TRUE;
-	    }
-	} else {
-	    ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_LNK_NOT_AFS_ERROR);
-	    return TRUE;
-	}
-    }
 
     if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
 	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
     }
 
-    LPTSTR lpsz = new TCHAR[strlen(strDir)+1];
+    LPTSTR lpsz = new TCHAR[strlen(strTarget)+1];
     _tcscpy(lpsz, strName);
-    strcpy(space, strDir);
+    strcpy(space, strTarget);
     blob.out_size = 0;
     blob.in_size = 1 + strlen(space);
     blob.in = space;
