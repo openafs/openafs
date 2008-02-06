@@ -1,3 +1,128 @@
+Since 1.5.30
+ * Add "cmdebug <host> -cellservdb" option and client service 
+   implementation permits querying the vldb server for each 
+   cell known to the cache manager.  The output is in a form
+   that permits it to be used as a CellServDB file.
+
+ * Add Symlinks->Show option to the AFS Explorer Shell Context
+   Menu
+
+ * Prevent buffer overrun in the cmd parser used by command
+   line tools such as fs, vos, pts, etc.
+
+ * The path ioctl operations have several issues:
+
+   (1) the specified path for "fs examine, whereis, whichcell, 
+       flush" and so always has the follow symlinks and mount 
+       points semantics.  This makes it impossible to determine 
+       what the FID of a symlink or mount point is.
+
+   (2) "fs examine" out is not the result of a single pioctl 
+        operation but is actually the combined output of half 
+        a dozen operations.  Path evaluation is an expensive 
+        operation.  It would be faster if the caller could
+        evaluate the FID first and then perform all of the 
+        rest of the operations by specifying the FID instead 
+        of the path.
+
+   (3) fs output reports all objects as files.  By adding a 
+       GetFileType pioctl more informative output can be provided 
+       that indicates what type of object the path evaluates to.
+
+   (4) the Windows fs command includes a number of commands that 
+       do nothing but exist only because the Unix cache manager 
+       supports them.
+
+   A new extendible data structure cm_ioctl_query_opts_t has been 
+   added which can be optionally specified with pioctls that do not
+   already require input data.  The first two fields of this structure 
+   are 'literal' and 'fid'.  The literal field is used to indicate
+   whether the last component of the path should be evaluated following 
+   symlinks and mount points.
+
+   The fid field permits a fid to be specified.
+
+ * A new GetFileType pioctl has been added. The type of objects are 
+   now output.
+
+ * A new "-literal" option is available for "fs examine, flush, whereis, 
+   and whichcell.
+
+ * Unimplemented fs commands have been removed.
+   
+ * There are circumstances where a volume object is being accessed and 
+   the volume is marked indicating that the volume location information 
+   is out of date but where it is also pointless and perhaps dangerous 
+   to block waiting for the rpc to complete.  One example is when 
+   processing the cmdebug requests.  If we know that we are not going 
+   to use the volume object to contact a server, then we can now set 
+   the CM_GETVOL_FLAG_NO_RESET flag.
+
+ * when moving up in the directory tree we search the recorded fid list 
+   to find a matching fid that we have already crossed.  we must also 
+   reset the fid count based upon what we discover.
+
+ * Cell names are published as share names.  As a result they are searched
+   for as part of the Dfs Referral evaluation.  If share "foo" can not be
+   reached, the CIFS client will fallback to searching for "fo" as well.
+
+   Since the freelance client automatically adds a symlink for prefixes
+   of the cell name, this results in both "foo" and "fo" being added to
+   the freelance root.afs volume.  This patch prevents that negative side
+   effect.
+
+ * when tracking Kerberos credential cache names be sure to include 
+   the cache type prefix.
+
+ * Microsoft has assigned OpenAFS a network type value
+
+ * The algorithms that were used to produce a Netbios name were broken.
+   The name that was produced when the hostname was too long was in fact
+   longer than the maximum permitted netbios name.
+
+   Also, the "NetbiosName" value was not used as a suffix when the loopback
+   adapter was not installed.  The hardcoded string "AFS" was used instead.
+
+ * avoid another deadlock during server probes initiated by the ipaddr 
+   change daemon thread.
+
+ * prevent the afs client service from crashing when fs newcell is 
+   executed
+
+ * In the NSIS installer, move afslogon.dll, afscpcc.exe and afs_cpa.cpl 
+   to \Program Files\OpenAFS\Client\Program in order to get them out
+   of the %windir% tree
+
+ * EDQUOT == WSAEDQUOT.   Define it in the right places so that in the 
+   end STATUS_OUT_OF_QUOTA can be returned to the application.
+
+ * Modify the search order for determining the location of CellServDB
+   and other client configuration files.
+
+   1. AFSCONF environment variable
+   2. registry setting
+   3. NEW - use All Users\AppData\OpenAFS\Client only if CellServDB exists
+   4. use Program Files\OpenAFS\Client
+
+ * More Vista Power Management tweaks
+
+ * Close a socket handle leak in the kauth routines
+
+ * Don't hold a cm_volume_t mutex across RPCs
+
+ * Convert downTimes to use clock time instead of relative times.
+   This permits correct comparisons with expiration times.
+
+ * Update the Wix installer to properly install the prerequisites 
+   for translate_et.exe
+
+ * Do not translate pioctl paths as they are not converted by the
+   file system stack.
+
+ * Implement multi_rx probes for checking whether servers are up
+   or down.  Turns probes into a constant time activity instead 
+   of one dependent upon the number of known servers.
+
 Since 1.5.29
  * Fix buffer refcount leak introduced in 1.5.29
 
