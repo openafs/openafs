@@ -123,6 +123,15 @@ Since 1.5.30
    or down.  Turns probes into a constant time activity instead 
    of one dependent upon the number of known servers.
 
+ * Treat VNOVOL errors the same as VOFFLINE.  Do not force an
+   update of the volume location data and retry.  VNOVOL means
+   that the volume could not be attached.  It doesn't mean that
+   the volume is not on this server.
+
+ * Modify the Explorer Shell AFS Context menu Symlink->Add to
+   not attempt to validate the target path.   There is no reliable
+   method of doing so.
+
 Since 1.5.29
  * Fix buffer refcount leak introduced in 1.5.29
 
