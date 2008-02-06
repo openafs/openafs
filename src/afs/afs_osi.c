@@ -280,9 +280,6 @@ afs_osi_UnmaskUserLoop()
 void
 afs_osi_RxkRegister(void)
 {
-#ifdef AFS_LINUX22_ENV
-    osi_linux_rxkreg();
-#endif
 }
 
 /* procedure for making our processes as invisible as we can */
