@@ -27,6 +27,9 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsadminutil_DLL" Guid="$(var.cmf_afsadminutil_DLL_guid)">
                     <File Id="fileafsadminutil_DLL" Name="afsadmut.dll" LongName="afsadminutil.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsadminutil.dll"/>
                 </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afsvosadmin_DLL" Guid="$(var.cmf_afsvosadmin_DLL_guid)">
+                    <File Id="fileafsvosadmin_DLL" Name="afsvosad.dll" LongName="afsvosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsvosadmin.dll"/>
+                </Component>
   <?ifndef BinsOnly?>
                 <Component Win64="$(var.Win64)" Id="cmf_afsbosadmin_DLL" Guid="$(var.cmf_afsbosadmin_DLL_guid)">
                     <File Id="fileafsbosadmin_DLL" Name="afsbosad.dll" LongName="afsbosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.dll"/>
@@ -39,9 +42,6 @@
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afsptsadmin_DLL" Guid="$(var.cmf_afsptsadmin_DLL_guid)">
                     <File Id="fileafsptsadmin_DLL" Name="afsptsad.dll" LongName="afsptsadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsptsadmin.dll"/>
-                </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_afsvosadmin_DLL" Guid="$(var.cmf_afsvosadmin_DLL_guid)">
-                    <File Id="fileafsvosadmin_DLL" Name="afsvosad.dll" LongName="afsvosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsvosadmin.dll"/>
                 </Component>
   <?endif?>
 
@@ -71,11 +71,8 @@
                 <Component Win64="$(var.Win64)" Id="cmp_ServerCommonDebug" Guid="$(var.cmp_ServerCommonDebug_guid)">
                     <File Id="fileafsbosadmin_PDB" Name="afsbosad.pdb" LongName="afsbosadmin.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.pdb"/>
                     <File Id="fileafscfgadmin_PDB" Name="afscfgad.pdb" LongName="afscfgadmin.pdb" DiskId="1" src="$(var.ServerDir)\afscfgadmin.pdb"/>
-                    <File Id="fileafsclientadmin_PDB" Name="afscliad.pdb" LongName="afsclientadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsclientadmin.pdb"/>
                     <File Id="fileafskasadmin_PDB" Name="afskasad.pdb" LongName="afskasadmin.pdb" DiskId="1" src="$(var.ServerDir)\afskasadmin.pdb"/>
                     <File Id="fileafsptsadmin_PDB" Name="afsptsad.pdb" LongName="afsptsadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsptsadmin.pdb"/>
-                    <File Id="fileafsvosadmin_PDB" Name="afsvosad.pdb" LongName="afsvosadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsvosadmin.pdb"/>
-                    <File Id="fileafsadminutil_PDB" Name="afsadmut.pdb" LongName="afsadminutil.pdb" DiskId="1" src="$(var.ServerDir)\afsadminutil.pdb"/>
                 </Component>
               <?endif?>
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
@@ -84,6 +81,9 @@
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
                     <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
                     <File Id="fileafsprocmgmt_PDB" Name="afsprcmg.pdb" LongName="afsprocmgmt.pdb" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.pdb"/>
+                    <File Id="fileafsvosadmin_PDB" Name="afsvosad.pdb" LongName="afsvosadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsvosadmin.pdb"/>
+                    <File Id="fileafsadminutil_PDB" Name="afsadmut.pdb" LongName="afsadminutil.pdb" DiskId="1" src="$(var.ServerDir)\afsadminutil.pdb"/>
+                    <File Id="fileafsclientadmin_PDB" Name="afscliad.pdb" LongName="afsclientadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsclientadmin.pdb"/>
                 </Component>
               <?ifndef BinsOnly ?>
                 <Component Win64="$(var.Win64)" Id="cmp_ClientCommonDebug" Guid="$(var.cmp_ClientCommonDebug_guid)">
