@@ -269,10 +269,9 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     int srvAddrCount = 0;
     struct srvAddr **addrs = NULL;
     cm_conn_t **conns = NULL;
-    int nconns = 0;
     struct rx_connection **rxconns = NULL;
     cm_req_t req;
-    afs_uint32 i, j;
+    afs_int32 i, j, nconns = 0;
     afs_int32 *conntimer, *results;
     Capabilities *caps = NULL;
     cm_server_t ** serversp, *tsp;
@@ -296,7 +295,9 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
 
     memset(caps, 0, j * sizeof(Capabilities));
 
-    if (!(flags & CM_FLAG_CHECKVLDBSERVERS)) {
+    if ((flags & CM_FLAG_CHECKFILESERVERS) || 
+        !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
+    {
         lock_ObtainWrite(&cm_serverLock);
         nconns = 0;
         for (nconns=0, tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -461,10 +462,12 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
          * that RXAFS_GetCapabilities is not supported.
          */
         for ( i=0, j=0; i<nconns; i++) {
-            if (results[i] == RXGEN_OPCODE && i != j) {
-                conns[j] = conns[i];
-                rxconns[j] = rxconns[i];
-                serversp[j] = serversp[i];
+            if (results[i] == RXGEN_OPCODE) {
+                if (i != j) {
+                    conns[j] = conns[i];
+                    rxconns[j] = rxconns[i];
+                    serversp[j] = serversp[i];
+                }
                 j++;
             }
         }
@@ -581,7 +584,9 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         }
     }
 
-    if (!(flags & CM_FLAG_CHECKFILESERVERS)) {
+    if ((flags & CM_FLAG_CHECKVLDBSERVERS) || 
+        !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
+    {
         lock_ObtainWrite(&cm_serverLock);
         nconns = 0;
         for (nconns=0, tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -616,7 +621,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             }
             lock_ObtainWrite(&cm_serverLock);
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
-            if (conntimer[nconns] = (isDown ? 1 : 0))
+            conntimer[nconns] = (isDown ? 1 : 0);
+            if (isDown)
                 rx_SetConnDeadTime(rxconns[nconns], 10);
 
             nconns++;
@@ -634,10 +640,6 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
 
         /* Process results of servers that support RXAFS_GetCapabilities */
         for (i=0; i<nconns; i++) {
-            /* Leave the servers that did not support GetCapabilities alone */
-            if (results[i] == RXGEN_OPCODE)
-                continue;
-
             if (conntimer[i])
                 rx_SetConnDeadTime(rxconns[i], ConnDeadtimeout);
             rx_PutConnection(rxconns[i]);
