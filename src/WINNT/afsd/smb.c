@@ -9085,7 +9085,7 @@ void smb_Init(osi_log_t *logp, int useV3,
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ClientWaiter,
                           NULL, 0, &lpid, "smb_ClientWaiter");
-    osi_assertx(phandle != NULL, , "smb_ClientWaiter thread creation failure");
+    osi_assertx(phandle != NULL, "smb_ClientWaiter thread creation failure");
     thrd_CloseHandle(phandle);
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ServerWaiter,
