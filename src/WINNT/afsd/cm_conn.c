@@ -456,7 +456,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp) {
                 /* REDIRECT */
-                if (errorCode == VNOVOL || errorCode == VMOVED) {
+                if (errorCode == VMOVED) {
                     tsrp->status = srv_deleted;
                     if (fidp) {
                         cm_ForceUpdateVolume(fidp, userp, reqp);
