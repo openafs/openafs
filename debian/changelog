@@ -3,8 +3,9 @@ openafs (1.4.6.dfsg1-3) unstable; urgency=low
   * Fix FTBFS caused by a change in dh_strip behavior.  It no longer
     creates empty files for already stripped binaries, so we should no
     longer remove them.  Thanks, Lucas Nussbaum.  (Closes: #464274)
+  * Include debugging symbols for libpam-openafs-kaserver in openafs-dbg.
 
- --
+ -- Russ Allbery <rra@debian.org>  Wed, 06 Feb 2008 10:49:16 -0800
 
 openafs (1.4.6.dfsg1-2) unstable; urgency=low
 
