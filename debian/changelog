@@ -4,8 +4,10 @@ openafs (1.4.6.dfsg1-3) unstable; urgency=low
     creates empty files for already stripped binaries, so we should no
     longer remove them.  Thanks, Lucas Nussbaum.  (Closes: #464274)
   * Include debugging symbols for libpam-openafs-kaserver in openafs-dbg.
+  * Do not stop daemons in run-level S.  This isn't a real run-level and
+    hence there's no reason to create the links.
 
- -- Russ Allbery <rra@debian.org>  Wed, 06 Feb 2008 10:49:16 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 06 Feb 2008 11:24:19 -0800
 
 openafs (1.4.6.dfsg1-2) unstable; urgency=low
 
