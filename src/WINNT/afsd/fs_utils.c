@@ -175,7 +175,7 @@ afs_int32 util_GetInt32 (char *as, afs_int32 *aval)
 
     /* compute the # itself */
     while(tc = *as) {
-	if (!ismeta(tc, base)) return -1;
+	if (!ismeta(base, tc)) return -1;
 	total *= base;
 	total += getmeta(tc);
 	as++;
