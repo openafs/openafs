@@ -278,9 +278,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
          * background daemon thread as they become available 
          */
         if (timeLeft > 7 && fidp) {
-            cm_volume_t *volp;
-            cm_vol_state_t *statep;
-
             thrd_Sleep(5000);
 
             code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
@@ -393,20 +390,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                             statep = &volp->ro;
                         else if (fidp->volume == volp->bk.ID)
                             statep = &volp->bk;
-
-                        cm_UpdateVolumeStatus(volp, statep->ID);
                     }
-            
-                    cm_PutVolume(volp);
                 }
                 break;
             }
         }
         lock_ReleaseWrite(&cm_serverLock);
         
-        if (statep)
+        if (statep) {
             cm_UpdateVolumeStatus(volp, statep->ID);
-        
+            cm_PutVolume(volp);
+        }
+
         if (free_svr_list) {
             cm_FreeServerList(&serversp, 0);
             *serverspp = serversp;
@@ -482,13 +477,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 free_svr_list = 1;
             }
         }
+        lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp) {
                 /* REDIRECT */
                 if (errorCode == VMOVED) {
                     tsrp->status = srv_deleted;
-                    if (fidp)
-                        cm_ForceUpdateVolume(fidp, userp, reqp);
                 } else {
                     tsrp->status = srv_offline;
                 }
@@ -504,13 +498,20 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                             statep = &volp->ro;
                         else if (fidp->volume == volp->bk.ID)
                             statep = &volp->bk;
-
-                        cm_UpdateVolumeStatus(volp, statep->ID);
                     }
-                    cm_PutVolume(volp);
                 }   
             }
         }   
+        lock_ReleaseWrite(&cm_serverLock);
+
+        if (fidp && errorCode == VMOVED)
+            cm_ForceUpdateVolume(fidp, userp, reqp);
+
+        if (statep) {
+            cm_UpdateVolumeStatus(volp, statep->ID);
+            cm_PutVolume(volp);
+        }
+
         if (free_svr_list) {
             cm_FreeServerList(&serversp, 0);
             *serverspp = serversp;
