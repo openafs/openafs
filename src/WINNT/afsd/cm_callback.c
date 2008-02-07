@@ -1928,8 +1928,8 @@ void cm_CheckCBExpiration(void)
                 lock_ReleaseMutex(&scp->mx);
                 cm_CallbackNotifyChange(scp);
 
-                cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
             }
         }
     }
