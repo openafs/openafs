@@ -393,6 +393,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                             statep = &volp->ro;
                         else if (fidp->volume == volp->bk.ID)
                             statep = &volp->bk;
+
+                        cm_UpdateVolumeStatus(volp, statep->ID);
                     }
             
                     cm_PutVolume(volp);
@@ -485,11 +487,28 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 /* REDIRECT */
                 if (errorCode == VMOVED) {
                     tsrp->status = srv_deleted;
-                    if (fidp) {
+                    if (fidp)
                         cm_ForceUpdateVolume(fidp, userp, reqp);
-                    }
-                } else 
+                } else {
                     tsrp->status = srv_offline;
+                }
+
+                if (fidp) { /* File Server query */
+                    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                             CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                             &volp);
+                    if (code == 0) {
+                        if (fidp->volume == volp->rw.ID)
+                            statep = &volp->rw;
+                        else if (fidp->volume == volp->ro.ID)
+                            statep = &volp->ro;
+                        else if (fidp->volume == volp->bk.ID)
+                            statep = &volp->bk;
+
+                        cm_UpdateVolumeStatus(volp, statep->ID);
+                    }
+                    cm_PutVolume(volp);
+                }   
             }
         }   
         if (free_svr_list) {
