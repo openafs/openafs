@@ -384,6 +384,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                     tsp->capabilities = 0;
                 }
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is up with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -421,6 +422,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 if (code != VRESTARTING)
                     cm_ForceNewConnections(tsp);
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -510,6 +512,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 tsp->downTime = 0;
                 tsp->capabilities = 0;
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is up with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -547,6 +550,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 if (code != VRESTARTING)
                     cm_ForceNewConnections(tsp);
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -661,6 +665,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 tsp->downTime = 0;
                 tsp->capabilities = 0;
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is up with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -698,6 +703,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 if (code != VRESTARTING)
                     cm_ForceNewConnections(tsp);
 
+                afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
