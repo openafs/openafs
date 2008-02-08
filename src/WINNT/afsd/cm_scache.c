@@ -879,7 +879,7 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     cm_fid_t    parent_fid;
     cm_scache_t * pscp = NULL;
 
-    lock_ObtainRead(&cm_scacheLock);
+    lock_ObtainWrite(&cm_scacheLock);
     parent_fid = scp->fid;
     parent_fid.vnode = scp->parentVnode;
     parent_fid.unique = scp->parentUnique;
@@ -894,7 +894,7 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
 	}
     }
 
-    lock_ReleaseRead(&cm_scacheLock);
+    lock_ReleaseWrite(&cm_scacheLock);
 
     return pscp;
 }
@@ -1731,6 +1731,7 @@ void cm_HoldSCacheNoLock(cm_scache_t *scp)
 #endif
 {
     osi_assertx(scp != NULL, "null cm_scache_t");
+    lock_AssertWrite(&cm_scacheLock);
     scp->refCount++;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, scp->refCount);
@@ -1761,6 +1762,7 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 #endif
 {
     osi_assertx(scp != NULL, "null cm_scache_t");
+    lock_AssertWrite(&cm_scacheLock);
     if (scp->refCount == 0)
 	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
     osi_assertx(scp->refCount-- >= 0, "cm_scache_t refCount 0");
