@@ -23,12 +23,6 @@
 #define _RX_
 
 #ifndef KDUMP_RX_LOCK
-/* Substitute VOID (char) for void, because some compilers are confused by void
- * in some situations */
-#ifndef AFS_NT40_ENV
-#define	VOID	char
-#endif
-
 #ifdef	KERNEL
 #include "rx_kmutex.h"
 #include "rx_kernel.h"
@@ -258,7 +252,7 @@ struct rx_connection {
     u_char securityIndex;	/* corresponds to the security class of the */
     /* securityObject for this conn */
     struct rx_securityClass *securityObject;	/* Security object for this connection */
-    VOID *securityData;		/* Private data for this conn's security class */
+    void *securityData;		/* Private data for this conn's security class */
     u_short securityHeaderSize;	/* Length of security module's packet header data */
     u_short securityMaxTrailerSize;	/* Length of security module's packet trailer data */
 
@@ -509,8 +503,8 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
-    void (*arrivalProc) (register struct rx_call * call, register VOID * mh, register int index);	/* Procedure to call when reply is received */
-    VOID *arrivalProcHandle;	/* Handle to pass to replyFunc */
+    void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
+    void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
     afs_uint32 startWait;	/* time server began waiting for input data/send quota */
@@ -757,7 +751,7 @@ struct rx_securityClass {
 	int (*op_Spare2) (void);
 	int (*op_Spare3) (void);
     } *ops;
-    VOID *privateData;
+    void *privateData;
     int refCount;
 };
 

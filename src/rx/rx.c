@@ -767,9 +767,7 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     conn->peer = rxi_FindPeer(shost, sport, 0, 1);
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
-    /* This doesn't work in all compilers with void (they're buggy), so fake it
-     * with VOID */
-    conn->securityData = (VOID *) 0;
+    conn->securityData = (void *) 0;
     conn->securityIndex = serviceSecurityIndex;
     rx_SetConnDeadTime(conn, rx_connDeadTime);
     conn->ackRate = RX_FAST_ACK_RATE;
@@ -1843,9 +1841,9 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 void
 rx_SetArrivalProc(register struct rx_call *call,
 		  register void (*proc) (register struct rx_call * call,
-					register VOID * mh,
+					register void * mh,
 					register int index),
-		  register VOID * handle, register int arg)
+		  register void * handle, register int arg)
 {
     call->arrivalProc = proc;
     call->arrivalProcHandle = handle;
