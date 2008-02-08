@@ -63,9 +63,9 @@ extern struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service,
 extern void rx_SetArrivalProc(register struct rx_call *call,
 			      register void (*proc) (register struct rx_call *
 						    call,
-						    register VOID * mh,
+						    register void * mh,
 						    register int index),
-			      register VOID * handle, register int arg);
+			      register void * handle, register int arg);
 extern afs_int32 rx_EndCall(register struct rx_call *call, afs_int32 rc);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
@@ -453,7 +453,7 @@ extern struct multi_handle *multi_Init(struct rx_connection **conns,
 				       register int nConns);
 extern int multi_Select(register struct multi_handle *mh);
 extern void multi_Ready(register struct rx_call *call,
-			register VOID *mh, register int index);
+			register void *mh, register int index);
 extern void multi_Finalize(register struct multi_handle *mh);
 extern void multi_Finalize_Ignore(register struct multi_handle *mh);
 
