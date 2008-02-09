@@ -2639,7 +2639,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     } 
     else if (code == CM_ERROR_BAD_LEVEL) {
 	NTStatus = 0xC0000148L;	/* Invalid Level */
-    } else {
+    } 
+    else if (code == CM_ERROR_RANGE_NOT_LOCKED) {
+	NTStatus = 0xC000007EL;	/* Range Not Locked */
+    } 
+    else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 

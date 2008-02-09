@@ -263,7 +263,8 @@ void Main_OnInitDialog (HWND hDlg)
     GetString (szUser, IDS_UNKNOWN);
 
     HKEY hk;
-    if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SW_VERSION_SUBKEY, &hk) == 0)
+    if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_SW_VERSION_SUBKEY, 0,
+                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
     {
         DWORD dwSize = sizeof(szVersion);
         DWORD dwType = REG_SZ;
@@ -463,14 +464,16 @@ void Main_OnCheckTerminate (void)
 {
     HKEY hk;
 
-    if (RegOpenKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
+    if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0,
+                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
     {
         DWORD dwSize = sizeof(g.fStartup);
         DWORD dwType = REG_DWORD;
         RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
         RegCloseKey (hk);
     }
-    else if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, &hk) == 0)
+    else if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, 0,
+                           (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
     {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;
@@ -803,7 +806,8 @@ void Terminate_OnOK (HWND hDlg)
    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
     HKEY hk;
-    if (RegCreateKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
+    if (RegCreateKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0, NULL, 0,
+                         (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, NULL, &hk, NULL) == 0)
     {
         DWORD dwSize = sizeof(g.fStartup);
         DWORD dwType = REG_DWORD;

@@ -158,7 +158,8 @@ void GetGatewayName (LPTSTR pszGateway)
 {
    *pszGateway = TEXT('\0');
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
+   if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
       {
       DWORD dwSize = MAX_PATH;
       DWORD dwType = REG_SZ;
@@ -240,7 +241,8 @@ BOOL IsServiceConfigured (void)
       {
       rc = TRUE;
       }
-   else if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
+   else if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0,
+                           (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
       {
       TCHAR szCell[ MAX_PATH ];
       DWORD dwSize = sizeof(szCell);
@@ -454,7 +456,8 @@ int GetDefaultCell (LPTSTR pszCell)
         int rc;
         HKEY hk;
 
-        if (RegOpenKey (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), &hk) == 0)
+        if (RegOpenKeyEx (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), 0,
+                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
         {
             DWORD dwSize = sizeof(szCellA);
             DWORD dwType = REG_SZ;

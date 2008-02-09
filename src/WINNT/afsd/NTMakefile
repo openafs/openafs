@@ -412,7 +412,7 @@ $(EXEDIR)\symlink.exe: $(SLOBJS) $(OUT)\symlink.res  $(EXELIBS)
 	$(EXEPREP)
 
 # afsshare.exe
-$(EXEDIR)\afsshare.exe: $(OUT)\afsshare.obj $(OUT)\afsshare.res
+$(EXEDIR)\afsshare.exe: $(OUT)\afsshare.obj $(OUT)\afsshare.res $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)

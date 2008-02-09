@@ -234,6 +234,9 @@ extern long
 RegDupKeyAlt(const char *sourceKey,
 	     const char *targetKey);
 
+extern int 
+IsWow64(void);
+
 #ifdef __cplusplus
 };
 #endif

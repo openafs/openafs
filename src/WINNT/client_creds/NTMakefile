@@ -66,6 +66,7 @@ EXELIBS = \
     	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
     	$(DESTDIR)\lib\afskfw.lib
 
 ############################################################################

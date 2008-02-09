@@ -79,7 +79,7 @@ CShellExt::CShellExt()
     m_bIsOverlayEnabled=FALSE;
     if (FAILED(hr))
 	m_pAlloc = NULL;
-    RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,0, KEY_QUERY_VALUE, &NPKey);
+    RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &NPKey);
     LSPsize=sizeof(ShellOption);
     code=RegQueryValueEx(NPKey, "ShellOption", NULL,
 			  &LSPtype, (LPBYTE)&ShellOption, &LSPsize);
