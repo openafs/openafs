@@ -29,6 +29,35 @@ static long CopyValues(HKEY srcKey, HKEY dupKey);
 static long CopySubkeys(const char *srcName, HKEY srcKey,
 			const char *dupName, HKEY dupKey);
 
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+int IsWow64(void)
+{
+    static int init = TRUE;
+    static int bIsWow64 = FALSE;
+
+    if (init) {
+        HMODULE hModule;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+
+        hModule = GetModuleHandle(TEXT("kernel32"));
+        if (hModule) {
+            fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hModule, "IsWow64Process");
+  
+            if (NULL != fnIsWow64Process)
+            {
+                if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
+                {
+                    // on error, assume FALSE.
+                    // in other words, do nothing.
+                }
+            }       
+            FreeLibrary(hModule);
+        }
+        init = FALSE;
+    }
+    return bIsWow64;
+}
+
 
 /* ----------------------- exported functions ----------------------- */
 
@@ -86,9 +115,9 @@ RegOpenKeyAlt(HKEY key,               /* [in] open key from which to start */
     if (create) {
 	status = RegCreateKeyEx(key, subKeyName,
 				(DWORD)0, "AFS", REG_OPTION_NON_VOLATILE,
-				mode, NULL, resultKeyP, &keyDisp);
+				(IsWow64()?KEY_WOW64_64KEY:0)|mode, NULL, resultKeyP, &keyDisp);
     } else {
-	status = RegOpenKeyEx(key, subKeyName, (DWORD)0, mode, resultKeyP);
+	status = RegOpenKeyEx(key, subKeyName, (DWORD)0, (IsWow64()?KEY_WOW64_64KEY:0)|mode, resultKeyP);
     }
 
     if (resultKeyDispP) {
@@ -240,7 +269,7 @@ RegDeleteKeyAlt(HKEY key,
 	/* determine if delete failed due to subkeys */
 	HKEY subKey;
 
-	status = RegOpenKeyEx(key, subKeyName, 0, KEY_ALL_ACCESS, &subKey);
+	status = RegOpenKeyEx(key, subKeyName, 0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_ALL_ACCESS, &subKey);
 	if (status == ERROR_SUCCESS) {
 	    char *keyEnum;
 

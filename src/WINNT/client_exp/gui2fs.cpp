@@ -1054,7 +1054,7 @@ const char * NetbiosName(void)
     DWORD enabled = 0;
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(buffer);
         code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
@@ -2177,5 +2177,4 @@ BOOL ListSymlink(CStringArray& files)
 
     return !error;
 }
-
 

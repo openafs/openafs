@@ -57,7 +57,8 @@ void LoadRemind (size_t iCreds)
    g.aCreds[ iCreds ].fRemind = TRUE;
 
    HKEY hk;
-   if (RegOpenKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", &hk) == 0)
+   if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", 0,
+                    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
       {
       DWORD dwValue = 1;
       DWORD dwSize = sizeof(dwValue);
@@ -72,7 +73,8 @@ void LoadRemind (size_t iCreds)
 void SaveRemind (size_t iCreds)
 {
    HKEY hk;
-   if (RegCreateKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", &hk) == 0)
+   if (RegCreateKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", 0, NULL, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, NULL, &hk, NULL) == 0)
       {
       DWORD dwValue = g.aCreds[ iCreds ].fRemind;
       RegSetValueEx (hk, g.aCreds[ iCreds ].szCell, NULL, REG_DWORD, (PBYTE)&dwValue, sizeof(DWORD));
@@ -128,4 +130,3 @@ HWND GetTabChild (HWND hTab)
 
    return NULL;
 }
-

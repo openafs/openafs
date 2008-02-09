@@ -114,7 +114,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
        TCHAR szParams[ 64 ] = TEXT(AFSCREDS_SHORTCUT_OPTIONS);
 
        code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                            0, KEY_QUERY_VALUE, &hk);
+                            0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk);
        if (code == ERROR_SUCCESS) {
            len = sizeof(szParams);
            type = REG_SZ;
@@ -124,7 +124,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
        }
        if (code != ERROR_SUCCESS) {
            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                                0, KEY_QUERY_VALUE, &hk);
+                                0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk);
            if (code == ERROR_SUCCESS) {
                len = sizeof(szParams);
                type = REG_SZ;

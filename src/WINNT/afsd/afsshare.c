@@ -32,7 +32,7 @@ main(int argc, char **argv) {
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
-                        KEY_READ|KEY_WRITE,
+                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_WRITE,
                         NULL,
                         &hkSubmounts,
                         NULL) == ERROR_SUCCESS) 
@@ -50,7 +50,7 @@ main(int argc, char **argv) {
                                 0,
                                 NULL,
                                 REG_OPTION_NON_VOLATILE,
-                                KEY_READ,
+                                (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ,
                                 NULL,
                                 &hkParameters,
                                 NULL) == ERROR_SUCCESS) 

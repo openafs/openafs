@@ -197,7 +197,8 @@ void fs_utils_InitMountRoot()
     char *pmount=mountRoot;
     DWORD len=sizeof(mountRoot)-1;
     printf("int mountroot \n");
-    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS) 
+    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, 
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS)
          || (RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
          || (len==sizeof(mountRoot)-1)
          ) 
@@ -215,4 +216,3 @@ void fs_utils_InitMountRoot()
     strcpy(cm_back_slash_mount_root+1,pmount);
     cm_back_slash_mount_root[0]='\\';
 }
-

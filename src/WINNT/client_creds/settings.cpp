@@ -15,6 +15,7 @@ extern "C" {
 #include <windows.h>
 #include <winerror.h>
 #include <WINNT/TaLocale.h>
+#include "afscreds.h"
 #include "settings.h"
 
 
@@ -88,7 +89,8 @@ BOOL StoreSettings (HKEY hkParent,
 void EraseSettings (HKEY hkParent, LPCTSTR pszBase, LPCTSTR pszValue)
 {
    HKEY hk;
-   if (RegOpenKey (hkParent, pszBase, &hk) == 0)
+   if (RegOpenKeyEx (hkParent, pszBase, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_SET_VALUE, &hk) == 0)
       {
       RegDeleteValue (hk, pszValue);
       RegCloseKey (hk);
@@ -105,7 +107,8 @@ BOOL GetBinaryRegValue (HKEY hk,
    BOOL rc = FALSE;
 
    HKEY hkFinal;
-   if (RegOpenKey (hk, pszBase, &hkFinal) == ERROR_SUCCESS)
+   if (RegOpenKeyEx (hk, pszBase, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hkFinal) == ERROR_SUCCESS)
       {
       DWORD dwType;
       DWORD dwSize = (DWORD)cbData;
@@ -127,7 +130,8 @@ size_t GetRegValueSize (HKEY hk,
    size_t cb = 0;
 
    HKEY hkFinal;
-   if (RegOpenKey (hk, pszBase, &hkFinal) == ERROR_SUCCESS)
+   if (RegOpenKeyEx (hk, pszBase, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hkFinal) == ERROR_SUCCESS)
       {
       DWORD dwType;
       DWORD dwSize = 0;
@@ -153,7 +157,8 @@ BOOL SetBinaryRegValue (HKEY hk,
    BOOL rc = FALSE;
 
    HKEY hkFinal;
-   if (RegCreateKey (hk, pszBase, &hkFinal) == ERROR_SUCCESS)
+   if (RegCreateKeyEx (hk, pszBase, 0, NULL, 0,
+                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, NULL, &hkFinal, NULL) == ERROR_SUCCESS)
       {
       DWORD dwSize = (DWORD)cbData;
 
@@ -173,7 +178,8 @@ BOOL SetBinaryRegValue (HKEY hk,
 BOOL RegDeltreeKey (HKEY hk, LPTSTR pszKey)
 {
    HKEY hkSub;
-   if (RegOpenKey (hk, pszKey, &hkSub) == 0)
+   if (RegOpenKeyEx (hk, pszKey, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, &hkSub) == 0)
       {
       TCHAR szFound[ MAX_PATH ];
       while (RegEnumKey (hkSub, 0, szFound, MAX_PATH) == 0)

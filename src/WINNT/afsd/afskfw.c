@@ -497,6 +497,34 @@ KFW_cleanup(void)
         FreeLibrary(hKrb5);
 }
 
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+static int IsWow64()
+{
+    static int init = TRUE;
+    static int bIsWow64 = FALSE;
+
+    if (init) {
+        HMODULE hModule;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+
+        hModule = GetModuleHandle(TEXT("kernel32"));
+        if (hModule) {
+            fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hModule, "IsWow64Process");
+  
+            if (NULL != fnIsWow64Process)
+            {
+                if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
+                {
+                    // on error, assume FALSE.
+                    // in other words, do nothing.
+                }
+            }
+            FreeLibrary(hModule);
+        }
+        init = FALSE;
+    }
+    return bIsWow64;
+}
 
 int
 KFW_accept_dotted_usernames(void)
@@ -506,7 +534,7 @@ KFW_accept_dotted_usernames(void)
     DWORD value = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(value);
         code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
@@ -515,7 +543,7 @@ KFW_accept_dotted_usernames(void)
     }
     if (code != ERROR_SUCCESS) {
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, KEY_QUERY_VALUE, &parmKey);
+                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(value);
             code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
@@ -535,7 +563,7 @@ KFW_use_krb524(void)
     DWORD use524 = 0;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(use524);
         code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
@@ -544,7 +572,7 @@ KFW_use_krb524(void)
     }
     if (code != ERROR_SUCCESS) {
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, KEY_QUERY_VALUE, &parmKey);
+                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(use524);
             code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
@@ -563,7 +591,7 @@ KFW_is_available(void)
     DWORD enableKFW = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
         code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
@@ -573,7 +601,7 @@ KFW_is_available(void)
     
     if (code != ERROR_SUCCESS) {
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, KEY_QUERY_VALUE, &parmKey);
+                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(enableKFW);
             code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,

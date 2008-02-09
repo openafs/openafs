@@ -17,8 +17,10 @@ extern "C" {
 #include <winsock2.h>
 #include "help.h"
 #include "shell_ext.h"
-#include "winreg.h"
-
+#include <winreg.h>
+extern "C" {
+#include "WINNT\afsreg.h"
+}
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -300,7 +302,7 @@ LRESULT DoValueDelete(HKEY hKey,PTCHAR pszSubKey,PTCHAR szValue=NULL)
     lResult = RegOpenKeyEx( hKey,
 			    pszSubKey,
 			    0,
-			    KEY_ALL_ACCESS,
+			    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_ALL_ACCESS,
 			    &thKey);
     if(NOERROR == lResult)
     {
@@ -343,4 +345,5 @@ STDAPI DllUnregisterServer(void)
     DoValueDelete(HKEY_LOCAL_MACHINE, szSubKey);
     return S_OK;
 }	
+
 

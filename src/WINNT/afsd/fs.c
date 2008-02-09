@@ -702,7 +702,7 @@ static DWORD IsFreelance(void)
     DWORD enabled = 0;
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(cm_freelanceEnabled);
         code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
@@ -721,7 +721,7 @@ static const char * NetbiosName(void)
     DWORD enabled = 0;
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(buffer);
         code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
@@ -4036,7 +4036,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
                         0, 
                         "AFS", 
                         REG_OPTION_NON_VOLATILE,
-                        KEY_WRITE,
+                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
                         NULL, 
                         &hkCSCPolicy,
                         NULL );
@@ -4084,7 +4084,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
                         0, 
                         "AFS", 
                         REG_OPTION_NON_VOLATILE,
-                        KEY_READ|KEY_QUERY_VALUE,
+                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_QUERY_VALUE,
                         NULL, 
                         &hkCSCPolicy,
                         NULL );

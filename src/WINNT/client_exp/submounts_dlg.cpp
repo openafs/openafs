@@ -50,7 +50,7 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
-                    KEY_READ,
+                    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ,
                     NULL, 
                     &hkSubmounts,
                     NULL );
@@ -171,7 +171,7 @@ BOOL CSubmountsDlg::FillSubmtList()
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
-                    KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                     NULL, 
                     &hkSubmounts,
                     NULL );
@@ -253,7 +253,7 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
-                    KEY_WRITE,
+                    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
                     NULL, 
                     &hkSubmounts,
                     NULL );
@@ -275,7 +275,7 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
-                    KEY_WRITE,
+                    (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
                     NULL, 
                     &hkSubmounts,
                     NULL );
