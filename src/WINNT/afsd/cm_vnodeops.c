@@ -1284,7 +1284,8 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
             else
                 return CM_ERROR_NOSUCHFILE;
         }
-        else {  /* nonexistent dir on freelance root, so add it */
+		else if (!strchr(namep, '#') && !strchr(namep, '%')) { 
+            /* nonexistent dir on freelance root, so add it */
             char fullname[200] = ".";
             int  found = 0;
 
@@ -4740,7 +4741,7 @@ long cm_Unlock(cm_scache_t *scp,
         lock_ReleaseRead(&cm_scacheLock);
 
         /* The lock didn't exist anyway. *shrug* */
-        return 0;
+        return CM_ERROR_RANGE_NOT_LOCKED;
     }
 
     lock_ReleaseRead(&cm_scacheLock);
