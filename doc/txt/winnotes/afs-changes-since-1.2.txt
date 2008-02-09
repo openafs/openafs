@@ -132,6 +132,18 @@ Since 1.5.30
    not attempt to validate the target path.   There is no reliable
    method of doing so.
 
+ * Improve performance of \\afs\<cell><mount-type><volume>\
+   access by eliminating extraneous attempts to search the 
+   CellServDB file and DNS AFSDB records.  Share names 
+   containing '%' or '#' are not valid cell names.
+
+ * Return STATUS_RANGE_NOT_LOCKED if the application attempts
+   to unlock a range that is not currently locked.
+
+ * Enable the 32-bit tools to read the 64-bit registry keys
+   when executing in the WOW64 environment.
+   
+
 Since 1.5.29
  * Fix buffer refcount leak introduced in 1.5.29
 
