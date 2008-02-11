@@ -3718,6 +3718,10 @@ SyncVldb(register struct cmd_syndesc *as, void *arock)
 	}
     }
 
+    if (as->parms[3].items) {
+	flags |= 2; /* don't update */
+    }
+
     if (as->parms[2].items) {
 	/* Synchronize an individual volume */
 	volname = as->parms[2].items->data;
@@ -3744,7 +3748,7 @@ SyncVldb(register struct cmd_syndesc *as, void *arock)
     if (tserver) {
 	fprintf(STDOUT, " with state of server %s", as->parms[0].items->data);
     }
-    if (flags) {
+    if (flags & 1) {
 	MapPartIdIntoName(pnum, part);
 	fprintf(STDOUT, " partition %s\n", part);
     }
@@ -3788,12 +3792,15 @@ SyncServer(register struct cmd_syndesc *as, void *arock)
         pnum = -1;
     }
 
+    if (as->parms[2].items) {
+	flags |= 2; /* don't update */
+    }
     code = UV_SyncServer(tserver, pnum, flags, 0 /*unused */ );
     if (code) {
 	PrintDiagnostics("syncserv", code);
 	exit(1);
     }
-    if (flags) {
+    if (flags & 1) {
 	MapPartIdIntoName(pnum, part);
 	fprintf(STDOUT, "Server %s partition %s synchronized with VLDB\n",
 		as->parms[0].items->data, part);
@@ -5865,12 +5872,14 @@ main(argc, argv)
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL, "report without updating");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("syncserv", SyncServer, NULL,
 			  "synchronize server with VLDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL, "report without updating");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("examine", ExamineVolume, NULL,

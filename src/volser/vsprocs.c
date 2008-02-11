@@ -5268,11 +5268,14 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
     afs_int32 code, error = 0;
     struct nvldbentry entry, storeEntry;
     char pname[10];
-    int pass = 0, islocked = 0, createentry, addvolume, modified, mod;
+    int pass = 0, islocked = 0, createentry, addvolume, modified, mod, doit = 1;
     afs_int32 rwvolid;
 
-    if (modentry)
+    if (modentry) {
+	if (*modentry == 1)
+	    doit = 0;
 	*modentry = 0;
+    }
     rwvolid =
 	((volumeinfo->type ==
 	  RWVOL) ? volumeinfo->volid : volumeinfo->parentID);
@@ -5628,7 +5631,7 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
     if (entry.volumeId[RWVOL] > *maxvolid)
 	*maxvolid = entry.volumeId[RWVOL];
 
-    if (modified) {
+    if (modified && doit) {
 	MapNetworkToHost(&entry, &storeEntry);
 
 	if (createentry) {
@@ -5663,7 +5666,7 @@ CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
 	}
     }
 
-    if (verbose) {
+    if (verbose && doit) {
 	fprintf(STDOUT, "-- status after --\n");
 	if (modified)
 	    EnumerateEntry(&entry);
@@ -5730,13 +5733,15 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
 
-    if (!aserver && flags) {
+    if (!aserver && (flags & 1)) {
 	/* fprintf(STDERR,"Partition option requires a server option\n"); */
 	ERROR_EXIT(EINVAL);
     }
 
     /* Turn verbose logging off and do our own verbose logging */
     tverbose = verbose;
+    if (flags & 2) 
+	tverbose = 1;
     verbose = 0;
 
     /* Read the VLDB entry */
@@ -5768,6 +5773,11 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
      * Equivalent to a syncserv.
      */
     if (!vcode) {
+	/* Tell CheckVldb not to update if appropriate */
+	if (flags & 2)
+	    mod = 1;
+	else
+	    mod = 0;
 	code = CheckVldb(&vldbentry, &mod);
 	if (code) {
 	    fprintf(STDERR, "Could not process VLDB entry for volume %s\n",
@@ -5781,7 +5791,7 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
     /* If aserver is given, we will search for the desired volume on it */
     if (aserver) {
 	/* Generate array of partitions on the server that we will check */
-	if (!flags) {
+	if (!(flags & 1)) {
 	    code = UV_ListPartitions(aserver, &PartList, &pcnt);
 	    if (code) {
 		fprintf(STDERR,
@@ -5807,6 +5817,10 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
 			ERROR_EXIT(code);
 		    }
 		} else {
+		    if (flags & 2)
+			mod = 1;
+		    else
+			mod = 0;
 		    /* Found one, sync it with VLDB entry */
 		    code =
 			CheckVolume(volumeInfo.volEntries_val, aserver,
@@ -5857,6 +5871,10 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
 			ERROR_EXIT(code);
 		    }
 		} else {
+		    if (flags & 2)
+			mod = 1;
+		    else
+			mod = 0;
 		    /* Found one, sync it with VLDB entry */
 		    code =
 			CheckVolume(volumeInfo.volEntries_val, aserver,
@@ -5877,7 +5895,7 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
 
     /* if (aserver) */
     /* If verbose output, print a summary of what changed */
-    if (tverbose) {
+    if (tverbose && !(flags & 2)) {
 	fprintf(STDOUT, "-- status after --\n");
 	code = VLDB_GetEntryByName(avolname, &vldbentry);
 	if (code && (code != VL_NOENT)) {
@@ -5959,7 +5977,7 @@ UV_SyncVldb(afs_int32 aserver, afs_int32 apart, int flags, int force)
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
     /* Generate array of partitions to check */
-    if (!flags) {
+    if (!(flags & 1)) {
 	code = UV_ListPartitions(aserver, &PartList, &pcnt);
 	if (code) {
 	    fprintf(STDERR,
@@ -6007,6 +6025,10 @@ UV_SyncVldb(afs_int32 aserver, afs_int32 apart, int flags, int force)
 		fflush(STDOUT);
 	    }
 
+	    if (flags & 2)
+		modified = 1;
+	    else
+		modified = 0;
 	    code = CheckVolume(vi, aserver, apart, &modified, &maxvolid);
 	    if (code) {
 		PrintError("", code);
@@ -6037,8 +6059,13 @@ UV_SyncVldb(afs_int32 aserver, afs_int32 apart, int flags, int force)
 
     }				/* thru all partitions */
 
-    VPRINT3("Total entries: %u, Failed to process %d, Changed %d\n", tentries,
-	    failures, modifications);
+    if (flags & 2) {
+	VPRINT3("Total entries: %u, Failed to process %d, Would change %d\n", 
+		tentries, failures, modifications);
+    } else {
+	VPRINT3("Total entries: %u, Failed to process %d, Changed %d\n", 
+		tentries, failures, modifications);
+    }
 
   error_exit:
     /* Now check if the maxvolid is larger than that stored in the VLDB */
@@ -6271,10 +6298,13 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
     afs_int32 code, error = 0;
     struct nvldbentry storeEntry;
     int islocked = 0, mod, modentry, delentry = 0;
-    int pass = 0;
+    int pass = 0, doit=1;
 
-    if (modified)
+    if (modified) {
+	if (*modified == 1) 
+	    doit = 0;
 	*modified = 0;
+    }
     if (verbose) {
 	fprintf(STDOUT, "_______________________________\n");
 	fprintf(STDOUT, "\n-- status before -- \n");
@@ -6321,7 +6351,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
     code = CheckVldbRWBK(entry, &mod);
     if (code)
 	ERROR_EXIT(code);
-    if (mod && (pass == 1))
+    if (mod && (pass == 1) && doit)
 	goto retry;
     if (mod)
 	modentry++;
@@ -6330,7 +6360,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
     code = CheckVldbRO(entry, &mod);
     if (code)
 	ERROR_EXIT(code);
-    if (mod && (pass == 1))
+    if (mod && (pass == 1) && doit)
 	goto retry;
     if (mod)
 	modentry++;
@@ -6338,12 +6368,12 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
     /* The VLDB entry has been updated. If it as been modified, then 
      * write the entry back out the the VLDB.
      */
-    if (modentry) {
+    if (modentry && doit) {
 	if (pass == 1)
 	    goto retry;
 
 	if (!(entry->flags & RW_EXISTS) && !(entry->flags & BACK_EXISTS)
-	    && !(entry->flags & RO_EXISTS)) {
+	    && !(entry->flags & RO_EXISTS) && doit) {
 	    /* The RW, BK, nor RO volumes do not exist. Delete the VLDB entry */
 	    code =
 		ubik_VL_DeleteEntry(cstruct, 0, entry->volumeId[RWVOL],
@@ -6373,7 +6403,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
 	islocked = 0;
     }
 
-    if (verbose) {
+    if (verbose && doit) {
 	fprintf(STDOUT, "-- status after --\n");
 	if (delentry)
 	    fprintf(STDOUT, "\n**entry deleted**\n");
@@ -6417,12 +6447,15 @@ UV_SyncServer(afs_int32 aserver, afs_int32 apart, int flags, int force)
     struct nvldbentry *vlentry;
     afs_int32 si, nsi, j;
 
+    if (flags & 2) 
+	verbose = 1;
+
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
     /* Set up attributes to search VLDB  */
     attributes.server = ntohl(aserver);
     attributes.Mask = VLLIST_SERVER;
-    if (flags) {
+    if ((flags & 1)) {
 	attributes.partition = apart;
 	attributes.Mask |= VLLIST_PARTITION;
     }
@@ -6453,6 +6486,11 @@ UV_SyncServer(afs_int32 aserver, afs_int32 apart, int flags, int force)
 
 	    VPRINT1("Processing VLDB entry %d ...\n", j + 1);
 
+	    /* Tell CheckVldb not to update if appropriate */
+	    if (flags & 2)
+		modified = 1;
+	    else
+		modified = 0;
 	    code = CheckVldb(vlentry, &modified);
 	    if (code) {
 		PrintError("", code);
@@ -6479,8 +6517,13 @@ UV_SyncServer(afs_int32 aserver, afs_int32 apart, int flags, int force)
 	}
     }
 
-    VPRINT3("Total entries: %u, Failed to process %d, Changed %d\n", tentries,
-	    failures, modifications);
+    if (flags & 2) {
+	VPRINT3("Total entries: %u, Failed to process %d, Would change %d\n",
+		tentries, failures, modifications);
+    } else {
+	VPRINT3("Total entries: %u, Failed to process %d, Changed %d\n", 
+		tentries, failures, modifications);
+    }
 
   error_exit:
     if (aconn)
