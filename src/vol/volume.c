@@ -1652,17 +1652,16 @@ VPreAttachVolumeByVp_r(Error * ec,
     /* check to see if pre-attach already happened */
     if (vp && 
 	(V_attachState(vp) != VOL_STATE_UNATTACHED) && 
-	!VIsErrorState(V_attachState(vp)) &&
-	((V_attachState(vp) != VOL_STATE_PREATTACHED) ||
-	 vp->pending_vol_op == NULL)) {
+	(V_attachState(vp) != VOL_STATE_PREATTACHED) &&
+	!VIsErrorState(V_attachState(vp))) {
 	/*
 	 * pre-attach is a no-op in all but the following cases:
 	 *
 	 *   - volume is unattached
 	 *   - volume is in an error state
-	 *   - volume is pre-attached with a pending volume operation
-	 *     (e.g. vos move between two partitions on same server)
+	 *   - volume is pre-attached
 	 */
+	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state\n", vid);
 	goto done;
     } else if (vp) {
 	/* we're re-attaching a volume; clear out some old state */
