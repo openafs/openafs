@@ -84,7 +84,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
-AFSPRODUCT_VER_PATCH=3001
+AFSPRODUCT_VER_PATCH=3100
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -217,6 +217,11 @@ afscdefs =\
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
 	-DAFS_LARGEFILE_ENV \
+	-D_USE_DECLSPECS_FOR_SAL=0 \
+	-D_USE_ATTRIBUTES_FOR_SAL=0 \
+	-D_ATL_SECURE_NO_DEPRECATE \
+	-D_AFX_DISABLE_DEPRECATED \
+	-D_AFX_SECURE_NO_WARNINGS \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
@@ -227,7 +232,7 @@ afscdefs =\
 # /GF   pool strings and place in read-only memory
 # /Gd   use cdecl calling convention by default
 # /Gy   enable function-level linking
-# /GX   enable C++ exceptions (assumes extern C funcs never throw exceptions)
+# /EHsc enable C++ exceptions (assumes extern C funcs never throw exceptions)
 # /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
 
 afscflags =\
@@ -237,7 +242,7 @@ afscflags =\
 	/Gy \
 	/Os
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 afscflags = $(afscflags) /EHsc /wd4996
 !ELSE
 afscflags = $(afscflags) /GX
@@ -246,7 +251,7 @@ afscflags = $(afscflags) /GX
 !IF ("$(AFSVER_CL)"!="1200")
 afscflags = $(afscflags) /GT /GS
 #/Wp64
-!IF ("$(AFSVER_CL)"!="1400")
+!IF ("$(AFSVER_CL)"!="1400" && "$(AFSVER_CL)"!="1500")
 afscflags = $(afscflags) /G7
 !ENDIF
 !ENDIF
@@ -278,7 +283,7 @@ afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 _VC_MANIFEST_BASENAME = __OAFW.Debug
 !ENDIF
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 _VC_MANIFEST_EMBED_EXE= \
 if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;1
 
@@ -301,6 +306,9 @@ AFSDEV_WARNLEVEL = 3
      "$(AFSDEV_WARNLEVEL)" != "4")
 !ERROR Must define AFSDEV_WARNLEVEL to be one of 0 through 4.
 !ENDIF
+!ENDIF
+!IF ("$(AFSDEV_WARNLEVEL)" == "4" && "$(AFSVER_CL)" == "1500")
+_AFSDEV_WARNLEVEL=3
 !ENDIF
 
 afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
@@ -356,10 +364,14 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 
 #################### Link optional build flags set ###########
 
-afslflags = $(afslflags) \
-	/FIXED:NO /VERBOSE:LIB /MACHINE:X64
+afslflags = $(afslflags) /FIXED:NO /VERBOSE:LIB 
+!IF ("$(AFSVER_CL)"=="1500")
+afslflags = $(afslflags) /MACHINE:AMD64
+!ELSE
+afslflags = $(afslflags) /MACHINE:X64
+!ENDIF
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 afslflags = $(afslflags) /MANIFEST
 !ENDIF
 

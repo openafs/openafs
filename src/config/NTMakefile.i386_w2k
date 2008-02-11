@@ -84,7 +84,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
-AFSPRODUCT_VER_PATCH=3001
+AFSPRODUCT_VER_PATCH=3100
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -245,7 +245,7 @@ afscflags =\
 	/Gy \
 	/Os
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 afscflags = $(afscflags) /EHsc /wd4996
 !ELSE
 afscflags = $(afscflags) /GX
@@ -254,7 +254,7 @@ afscflags = $(afscflags) /GX
 !IF ("$(AFSVER_CL)"!="1200")
 afscflags = $(afscflags) /GT /GS
 #/Wp64
-!IF ("$(AFSVER_CL)"!="1400")
+!IF ("$(AFSVER_CL)"!="1400" && "$(AFSVER_CL)"!="1500")
 afscflags = $(afscflags) /G7
 !ENDIF
 !ENDIF
@@ -288,7 +288,7 @@ afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 _VC_MANIFEST_BASENAME = __OAFW.Debug
 !ENDIF
 
-!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)" == "1310")
+!IF ("$(AFSVER_CL)"=="1500"|| "$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)" == "1310")
 _VC_MANIFEST_EMBED_EXE= \
 if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;1
 
@@ -373,7 +373,7 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 afslflags =\
 	/FIXED:NO /VERBOSE:LIB /MACHINE:I386
 
-!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1310")
+!IF ("$(AFSVER_CL)"=="1500" || "$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1310")
 afslflags = $(afslflags) /MANIFEST
 !ENDIF
 
