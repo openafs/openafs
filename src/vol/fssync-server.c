@@ -826,6 +826,7 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp) {
+	VChangeState_r(vp, VOL_STATE_UNATTACHED);
 	VDeregisterVolOp_r(vp);
     }
 #endif
