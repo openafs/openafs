@@ -57,7 +57,7 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 static int
 EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
               struct volume **avolpp, register struct vrequest *areq,
-	      afs_uint32 *acellidxp, afs_uint32 *avolnump)
+	      afs_uint32 *acellidxp, afs_uint32 *avolnump, afs_uint32 *avnoidp)
 {
     struct volume *tvp = 0;
     struct VenusFid tfid;
@@ -67,13 +67,21 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
-    afs_uint32 volid, cellidx;
+    afs_uint32 volid, cellidx, vnoid = 0;
 
     cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
+	cellnum = 0;
 	volnamep = cpos + 1;
 	*cpos = 0;
-	tcell = afs_GetCellByName(data, READ_LOCK);
+	for (x = data; *x >= '0' && *x <= '9'; x++)
+	    cellnum = (cellnum * 10) + (*x - '0');
+	if (cellnum && !*x)
+	    tcell = afs_GetCell(cellnum, READ_LOCK);
+	else {
+	    tcell = afs_GetCellByName(data, READ_LOCK);
+	               cellnum = 0;
+	}
 	*cpos = ':';
     } else if (cellnum) {
 	volnamep = data;
@@ -92,10 +100,22 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     }
     afs_PutCell(tcell, READ_LOCK);
 
+    cpos = afs_strrchr(volnamep, ':'); /* if vno present */
+    if (cpos) 
+	*cpos = 0;
     /* Look for an all-numeric volume ID */
     volid = 0;
     for (x = volnamep; *x >= '0' && *x <= '9'; x++)
 	volid = (volid * 10) + (*x - '0');
+    if (cpos) {
+	*cpos = ':';
+	vnoid = 0;
+	if (!*x) /* allow vno with numeric volid only */
+	    for (x = (cpos + 1); *x >= '0' && *x <= '9'; x++)
+		vnoid = (vnoid * 10) + (*x - '0');
+	if (*x)
+	    vnoid = 0;
+    }
 
     /*
      * If the volume ID was all-numeric, and they didn't ask for a
@@ -108,6 +128,8 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	    *acellidxp = cellidx;
 	if (avolnump)
 	    *avolnump = volid;
+	if (avnoidp)
+	    *avnoidp = vnoid;
 	return 0;
     }
 
@@ -221,6 +243,8 @@ done:
 	*acellidxp = cellidx;
     if (avolnump)
 	*avolnump = tvp->volume;
+    if (avnoidp)
+	*avnoidp = vnoid;
     if (avolpp)
 	*avolpp = tvp;
     else
@@ -233,6 +257,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	       struct volume **avolpp, register struct vrequest *areq)
 {
     afs_int32 code;
+    afs_uint32 avnoid;
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
@@ -246,15 +271,19 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 
     /* Determine which cell and volume the mointpoint goes to */
     code = EvalMountData(avc->linkData[0], avc->linkData + 1,
-                         avc->states, avc->fid.Cell, avolpp, areq, 0, 0);
+                         avc->states, avc->fid.Cell, avolpp, areq, 0, 0,
+			 &avnoid);
     if (code) return code;
+
+    if (!avnoid)
+	avnoid = 1;
 
     if (avc->mvid == 0)
 	avc->mvid =
 	    (struct VenusFid *)osi_AllocSmallSpace(sizeof(struct VenusFid));
     avc->mvid->Cell = (*avolpp)->cell;
     avc->mvid->Fid.Volume = (*avolpp)->volume;
-    avc->mvid->Fid.Vnode = 1;
+    avc->mvid->Fid.Vnode = avnoid;
     avc->mvid->Fid.Unique = 1;
     avc->states |= CMValid;
 
@@ -1334,9 +1363,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
      */
     if (afs_IsDynrootMount(adp)) {
 	struct VenusFid tfid;
-	afs_uint32 cellidx, volid;
+	afs_uint32 cellidx, volid, vnoid;
 
-	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid);
+	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid);
 	if (code)
 	    goto done;
 	afs_GetDynrootMountFid(&tfid);
