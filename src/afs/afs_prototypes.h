@@ -850,6 +850,9 @@ extern char *afs_strcpy(char *s1, char *s2);
 #ifndef afs_strchr
 extern char *afs_strchr(char *s, int c);
 #endif
+#ifndef afs_strrchr
+extern char *afs_strrchr(char *s, int c);
+#endif
 extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 				   char *postamble, int flag);

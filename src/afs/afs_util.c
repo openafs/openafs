@@ -136,6 +136,19 @@ afs_strchr(char *s, int c)
     return NULL;
 }
 #endif
+#ifndef afs_strrchr
+char *
+afs_strrchr(char *s, int c)
+{
+    char *p = NULL;
+    
+    do {
+	if (*s == c)
+	    p = (char*) s;
+    } while (*s++);
+    return p;
+}
+#endif
 
 char *
 afs_strdup(char *s)
