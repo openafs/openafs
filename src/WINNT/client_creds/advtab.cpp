@@ -295,18 +295,28 @@ void Advanced_OnOpenCPL (HWND hDlg)
 
 void Advanced_OnStartup (HWND hDlg)
 {
-   g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
+    BOOL bSuccess  = FALSE;
+    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
-   HKEY hk;
-   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, NULL, 0,
-                        (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, NULL, &hk, NULL) == 0)
-      {
-      DWORD dwSize = sizeof(g.fStartup);
-      DWORD dwType = REG_DWORD;
-      RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
-      RegCloseKey (hk);
-      }
+    HKEY hk;
+    if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, NULL, 0,
+                         (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE, NULL, &hk, NULL) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
+        RegCloseKey (hk);
 
-   Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
+        bSuccess = Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
+    }
+
+    if (!bSuccess) {
+        // Reset the state
+        g.fStartup = !g.fStartup;
+        CheckDlgButton(hDlg, IDC_STARTUP, g.fStartup);
+
+        // Report error to user
+        Message (MB_OK | MB_ICONHAND, IDS_STARTUP_CHANGE_TITLE, IDS_STARTUP_CHANGE_ERROR);
+    }
 }
 
