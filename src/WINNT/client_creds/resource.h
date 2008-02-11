@@ -59,6 +59,8 @@
 #define IDS_BADSUB_DESC                       49
 #define IDS_TITLE_95                          50
 #define IDS_CREDS_EXPIRED                     51
+#define IDS_STARTUP_CHANGE_TITLE              52
+#define IDS_STARTUP_CHANGE_ERROR              53
 
 #define IDI_MAIN                        100
 #define IDD_MAIN                        101

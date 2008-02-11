@@ -79,9 +79,10 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTST
 } 
 
 
-void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
+BOOL Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 {
    TCHAR szShortcut[ MAX_PATH + 10 ] = TEXT("");
+   BOOL bSuccess;
 
    HKEY hk;
    if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"), &hk) == 0)
@@ -133,11 +134,13 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
                RegCloseKey (hk);
            }
        }
-       Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", szParams);
+       bSuccess = Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", szParams);
    }
    else // (!g.fAutoStart)
    {
-      DeleteFile (szShortcut);
+      bSuccess = DeleteFile (szShortcut);
    }
+
+   return bSuccess;
 }
 

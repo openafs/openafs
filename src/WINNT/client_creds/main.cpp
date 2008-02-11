@@ -148,7 +148,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
             fUninstall = TRUE;
             break;
 
-		 case ':':
+         case ':':
              CopyAnsiToString(g.SmbName,pszCmdLineA);
 			 MapShareName(pszCmdLineA);
 			 break;
@@ -175,7 +175,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
    else if (fUninstall)
       Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup = FALSE);
 
-   if (fInstall)
+   if (fInstall || fUninstall)
       {
       HKEY hk;
       if (RegCreateKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0, NULL, 0,
