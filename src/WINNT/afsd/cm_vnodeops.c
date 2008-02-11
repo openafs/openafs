@@ -2687,6 +2687,16 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         return CM_ERROR_ATSYS;
     }
 
+#ifdef AFS_FREELANCE_CLIENT
+    /* Freelance root volume does not hold files */
+    if (cm_freelanceEnabled &&
+        dscp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        dscp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+    {
+        return CM_ERROR_NOACCESS;
+    }
+#endif /* AFS_FREELANCE_CLIENT */
+
     /* before starting the RPC, mark that we're changing the file data, so
      * that someone who does a chmod will know to wait until our call
      * completes.
@@ -2836,6 +2846,16 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     if (cm_ExpandSysName(namep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
+
+#ifdef AFS_FREELANCE_CLIENT
+    /* Freelance root volume does not hold subdirectories */
+    if (cm_freelanceEnabled &&
+        dscp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        dscp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+    {
+        return CM_ERROR_NOACCESS;
+    }
+#endif /* AFS_FREELANCE_CLIENT */
 
     /* before starting the RPC, mark that we're changing the directory
      * data, so that someone who does a chmod on the dir will wait until
