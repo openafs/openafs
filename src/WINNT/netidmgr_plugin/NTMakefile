@@ -59,7 +59,7 @@ afsincflags=-I$(DESTDIR)\include
 incflags=$(kfwincflags) $(afsincflags) -I.
 pldefines=-DUNICODE -D_UNICODE
 cdebug=$(cdebug) -Os -Zi
-cwarn=$(cwarn) /Wp64 /WX
+cwarn=$(cwarn) /Wp64
 
 plcflags=$(cdebug) $(cflags) $(incflags) $(pldefines) $(cwarn) $(cvarsdll)
 
