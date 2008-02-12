@@ -55,7 +55,8 @@ VCLIBS =\
 	ole32.lib \
 	mpr.lib \
 	userenv.lib \
-    	netapi32.lib 
+    	netapi32.lib \
+        secur32.lib 
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
