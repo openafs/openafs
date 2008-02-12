@@ -55,6 +55,7 @@ BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, UINT_PTR *pidCl
 
    for (DWORD dwTickStart = GetTickCount(); ; )
       {
+#ifdef notdef
       // First we'll enumerate the name services around here to see if
       // an admin server is already running.
       //
@@ -72,7 +73,7 @@ BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, UINT_PTR *pidCl
          else if (status != RPC_S_CALL_FAILED_DNE) // server rejected us!
             break;
          }
-
+#endif
       // Failing that, we'll try to bind to the well-known endpoint that the
       // admin server may have had to use. (if RpcNsBindingExport failed.)
       //

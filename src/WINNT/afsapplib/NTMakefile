@@ -76,7 +76,7 @@ DLLOBJS = \
 VCLIBS =\
 	comctl32.lib \
 	rpcrt4.lib \
-	rpcns4.lib \
+#	rpcns4.lib \
 
 DLLLIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAdmSvrClient.lib \

@@ -76,7 +76,7 @@ EXEOBJS = \
 VCLIBS =\
 	gdi32.lib \
 	user32.lib \
-	rpcns4.lib \
+#	rpcns4.lib \
 	rpcrt4.lib \
 	comctl32.lib \
 	gdi32.lib
