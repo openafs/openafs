@@ -19,6 +19,9 @@ extern "C" {
 
 #include "afscreds.h"
 
+#define SECURITY_WIN32 1
+#include <security.h>
+
 /*
  * DEFINITIONS ________________________________________________________________
  *
@@ -258,7 +261,7 @@ void Main_OnInitDialog (HWND hDlg)
 
     TCHAR szVersion[256];
     DWORD dwPatch = 0;
-    TCHAR szUser[256];
+    TCHAR szUser[1024];
     GetString (szVersion, IDS_UNKNOWN);
     GetString (szUser, IDS_UNKNOWN);
 
@@ -276,49 +279,9 @@ void Main_OnInitDialog (HWND hDlg)
         RegCloseKey (hk);
     }
 
-    /* We should probably be using GetUserNameEx() for this */
-    BOOL fFoundUserName = FALSE;
-    if (RegOpenKey (HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
-    {
-        DWORD dwSize = sizeof(szUser);
-        DWORD dwType = REG_SZ;
-        if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-            fFoundUserName = TRUE;
-        RegCloseKey (hk);
-    }
-    if (!fFoundUserName ) 
-    {
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Explorer"), &hk) == 0)
-        {
-            DWORD dwSize = sizeof(szUser);
-            DWORD dwType = REG_SZ;
-            if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-                fFoundUserName = TRUE;
-            RegCloseKey (hk);
-        }
-    }
-    if (!fFoundUserName ) 
-    {
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hk) == 0)
-        {
-            DWORD dwSize = sizeof(szUser);
-            DWORD dwType = REG_SZ;
-            if (RegQueryValueEx (hk, TEXT("DefaultUserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-                fFoundUserName = TRUE;
-            RegCloseKey (hk);
-        }
-    }   
-    if (!fFoundUserName)
-    {
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
-        {
-            DWORD dwSize = sizeof(szUser);
-            DWORD dwType = REG_SZ;
-            if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-                fFoundUserName = TRUE;
-            RegCloseKey (hk);
-        }
-    }
+    DWORD dwUserLen =  sizeof(szUser)/sizeof(TCHAR);
+    if (!GetUserNameEx(NameUserPrincipal, szUser, &dwUserLen))
+        GetUserNameEx(NameSamCompatible, szUser, &dwUserLen);
 
     TCHAR szSource[ cchRESOURCE ];
     TCHAR szTarget[ cchRESOURCE ];
