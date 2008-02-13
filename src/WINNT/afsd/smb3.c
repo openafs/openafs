@@ -1468,14 +1468,14 @@ typedef struct smb_rap_share_info_1 {
 } smb_rap_share_info_1_t;
 
 typedef struct smb_rap_share_info_2 {
-    char				shi2_netname[13];
-    char				shi2_pad;
+    char			shi2_netname[13];
+    char			shi2_pad;
     unsigned short		shi2_type;
-    DWORD				shi2_remark; /* char *shi2_remark; data offset */
+    DWORD			shi2_remark; /* char *shi2_remark; data offset */
     unsigned short		shi2_permissions;
     unsigned short		shi2_max_uses;
     unsigned short		shi2_current_uses;
-    DWORD				shi2_path;  /* char *shi2_path; data offset */
+    DWORD			shi2_path;  /* char *shi2_path; data offset */
     unsigned short		shi2_passwd[9];
     unsigned short		shi2_pad2;
 } smb_rap_share_info_2_t;
@@ -1689,6 +1689,11 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     DWORD allSubmount;
     LONG rv;
     long code = 0;
+    cm_scache_t *scp = NULL;
+    cm_user_t   *userp;
+    cm_req_t    req;
+
+    cm_InitReq(&req);
 
     tp = p->parmsp + 1; /* skip over function number (always 1) */
     (void) smb_ParseString( (char *) tp, (char **) &tp); /* skip over param descriptor */
@@ -1708,8 +1713,6 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     else
         return CM_ERROR_INVAL;
 
-    outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
-
     if(!stricmp(shareName,"all") || !strcmp(shareName,"*.")) {
         rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                           KEY_QUERY_VALUE, &hkParam);
@@ -1727,22 +1730,34 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
             shareFound = TRUE;
 
     } else {
-        rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY "\\Submounts", 0,
-                          KEY_QUERY_VALUE, &hkSubmount);
-        if (rv == ERROR_SUCCESS) {
-            rv = RegQueryValueEx(hkSubmount, shareName, NULL, NULL, NULL, NULL);
+        userp = smb_GetTran2User(vcp, p);
+        if (!userp) {
+            osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral unable to resolve user [%d]", p->uid);
+            return CM_ERROR_BADSMB;
+        }   
+        code = cm_NameI(cm_data.rootSCachep, shareName,
+                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
+                         userp, NULL, &req, &scp);
+        if (code == 0) {
+            cm_ReleaseSCache(scp);
+            shareFound = TRUE;
+        } else {
+            rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY "\\Submounts", 0,
+                              KEY_QUERY_VALUE, &hkSubmount);
             if (rv == ERROR_SUCCESS) {
-                shareFound = TRUE;
+                rv = RegQueryValueEx(hkSubmount, shareName, NULL, NULL, NULL, NULL);
+                if (rv == ERROR_SUCCESS) {
+                    shareFound = TRUE;
+                }
+                RegCloseKey(hkSubmount);
             }
-            RegCloseKey(hkSubmount);
         }
     }
 
-    if (!shareFound) {
-        smb_FreeTran2Packet(outp);
+    if (!shareFound)
         return CM_ERROR_BADSHARENAME;
-    }
 
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
     memset(outp->datap, 0, totalData);
 
     outp->parmsp[0] = 0;
@@ -2133,7 +2148,11 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+    if (lastNamep && 
+         (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+           stricmp(lastNamep, "\\srvsvc") == 0 ||
+           stricmp(lastNamep, "\\wkssvc") == 0 ||
+           stricmp(lastNamep, "ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -5469,7 +5488,11 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+    if (lastNamep && 
+         (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+           stricmp(lastNamep, "\\srvsvc") == 0 ||
+           stricmp(lastNamep, "\\wkssvc") == 0 ||
+           stricmp(lastNamep, "ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -6583,7 +6606,11 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log4(smb_logp,"... da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
     osi_Log3(smb_logp,"... share=[%x] flags=[%x] lastNamep=[%s]", shareAccess, flags, osi_LogSaveString(smb_logp,(lastNamep?lastNamep:"null")));
 
-    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+	if (lastNamep && 
+             (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+               stricmp(lastNamep, "\\srvsvc") == 0 ||
+               stricmp(lastNamep, "\\wkssvc") == 0 ||
+               stricmp(lastNamep, "ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
