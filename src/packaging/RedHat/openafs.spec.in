@@ -29,7 +29,7 @@
 %endif
 
 %if %{fedorakmod}
-%define kmodtool bash %{_sourcedir}/kmodtool
+%define kmodtool bash %{_sourcedir}/openafs-kmodtool
 
 %define kmod_name openafs
 %define kverrel %(%{kmodtool} verrel %{?kernvers} 2>/dev/null)
@@ -248,7 +248,7 @@ Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
-Source999: kmodtool
+Source999: openafs-kmodtool
 
 Patch0:  openafs-1.4.0-kmodule26.patch
 
