@@ -1282,8 +1282,9 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
             else
                 return CM_ERROR_NOSUCHFILE;
         }
-		else if (!strchr(namep, '#') && !strchr(namep, '%') &&
-                         strcmp(namep, "srvsvc") && strcmp(namep, "wkssvc")) { 
+        else if (!strchr(namep, '#') && !strchr(namep, '%') &&
+                 strcmp(namep, "srvsvc") && strcmp(namep, "wkssvc") &&
+                 strcmp(namep, "ipc$")) {
             /* nonexistent dir on freelance root, so add it */
             char fullname[200] = ".";
             int  found = 0;
@@ -1298,6 +1299,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
              * new value automatically.
              */
 
+            code = -1;
             if (namep[0] == '.') {
                 if (cm_GetCell_Gen(&namep[1], &fullname[1], CM_FLAG_CREATE)) {
                     found = 1;
