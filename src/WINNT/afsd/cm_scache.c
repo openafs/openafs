@@ -640,8 +640,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     long code;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
-    int special; // yj: boolean variable to test if file is on root.afs
-    int isRoot;
+    int special = 0; // yj: boolean variable to test if file is on root.afs
+    int isRoot = 0;
     extern cm_fid_t cm_rootFid;
         
     hash = CM_SCACHE_HASH(fidp);
