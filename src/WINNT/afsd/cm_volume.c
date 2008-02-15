@@ -213,6 +213,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     } else
 #endif
     {
+        if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
+            cm_UpdateCell(cellp, 0);
+
         /* now we have volume structure locked and held; make RPC to fill it */
 	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, volp->namep);
         do {
@@ -1013,7 +1016,15 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
 
     lock_ObtainMutex(&volp->mx);
 
+    if (volp->flags & CM_VOLUMEFLAG_RESET) {
+        cm_InitReq(&req);
+        code = cm_UpdateVolume(volp->cellp, cm_rootUserp, &req, volp);
+        if (code == 0)
+            volp->flags &= ~CM_VOLUMEFLAG_RESET;
+    }
+
     if (volp->rw.ID != 0 && (!volID || volID == volp->rw.ID) &&
+		volp->rw.serversp &&
          (volp->rw.state == vl_busy || volp->rw.state == vl_offline || volp->rw.state == vl_unknown)) {
         cm_InitReq(&req);
 
@@ -1049,6 +1060,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     }
 
     if (volp->ro.ID != 0 && (!volID || volID == volp->ro.ID) &&
+		volp->ro.serversp &&
          (volp->ro.state == vl_busy || volp->ro.state == vl_offline || volp->ro.state == vl_unknown)) {
         cm_InitReq(&req);
 
@@ -1084,6 +1096,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     }
 
     if (volp->bk.ID != 0 && (!volID || volID == volp->bk.ID) &&
+		volp->bk.serversp &&
          (volp->bk.state == vl_busy || volp->bk.state == vl_offline || volp->bk.state == vl_unknown)) {
         cm_InitReq(&req);
 

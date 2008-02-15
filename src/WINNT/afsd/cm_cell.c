@@ -71,7 +71,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
  * and check to make sure we have a valid set of volume servers
  * this function must be called with a Write Lock on cm_cellLock
  */
-static cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
+cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 {
     long code = 0;
     cm_cell_rock_t rock;
@@ -405,6 +405,7 @@ void cm_InitCell(int newFile, long maxCells)
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
                 lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex");
                 cellp->vlServersp = NULL;
+                cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
             }
         }
 
