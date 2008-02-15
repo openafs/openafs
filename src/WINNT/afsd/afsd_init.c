@@ -1016,6 +1016,15 @@ int afsd_InitCM(char **reasonP)
     if (rx_nojumbo)
         afsi_log("RX Jumbograms are disabled");
 
+    dummyLen = sizeof(rx_extraPackets);
+    code = RegQueryValueEx(parmKey, "RxExtraPackets", NULL, NULL,
+                           (BYTE *) &rx_extraPackets, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        rx_extraPackets = 120;
+    }
+    if (rx_extraPackets)
+        afsi_log("RX extraPackets is %d", rx_extraPackets);
+
     dummyLen = sizeof(rx_mtu);
     code = RegQueryValueEx(parmKey, "RxMaxMTU", NULL, NULL,
                            (BYTE *) &rx_mtu, &dummyLen);
