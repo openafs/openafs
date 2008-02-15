@@ -1010,7 +1010,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     lock_ObtainMutex(&volp->mx);
 
     if (volp->rw.ID != 0 && (!volID || volID == volp->rw.ID) &&
-         (volp->rw.state == vl_busy || volp->rw.state == vl_offline)) {
+         (volp->rw.state == vl_busy || volp->rw.state == vl_offline || volp->rw.state == vl_unknown)) {
         cm_InitReq(&req);
 
         for (serversp = volp->rw.serversp; serversp; serversp = serversp->next) {
@@ -1045,7 +1045,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     }
 
     if (volp->ro.ID != 0 && (!volID || volID == volp->ro.ID) &&
-         (volp->ro.state == vl_busy || volp->ro.state == vl_offline)) {
+         (volp->ro.state == vl_busy || volp->ro.state == vl_offline || volp->ro.state == vl_unknown)) {
         cm_InitReq(&req);
 
         for (serversp = volp->ro.serversp; serversp; serversp = serversp->next) {
@@ -1080,7 +1080,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     }
 
     if (volp->bk.ID != 0 && (!volID || volID == volp->bk.ID) &&
-         (volp->bk.state == vl_busy || volp->bk.state == vl_offline)) {
+         (volp->bk.state == vl_busy || volp->bk.state == vl_offline || volp->bk.state == vl_unknown)) {
         cm_InitReq(&req);
 
         for (serversp = volp->bk.serversp; serversp; serversp = serversp->next) {
