@@ -72,4 +72,6 @@ extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
 
 extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
 
+extern cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags);
+
 #endif /* __CELL_H_ENV_ */
