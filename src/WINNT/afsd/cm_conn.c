@@ -514,6 +514,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		lock_ObtainWrite(&cm_scacheLock);
 		cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
+                cm_LockMarkSCacheLost(scp);
 		scp->flags |= CM_SCACHEFLAG_DELETED;
 		lock_ReleaseMutex(&scp->mx);
 		cm_ReleaseSCache(scp);
