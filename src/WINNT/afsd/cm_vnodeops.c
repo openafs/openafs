@@ -1700,7 +1700,9 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         /* read the link data */
         lock_ReleaseMutex(&linkScp->mx);
         thyper.LowPart = thyper.HighPart = 0;
+        lock_ObtainRead(&linkScp->bufCreateLock);
         code = buf_Get(linkScp, &thyper, &bufp);
+        lock_ReleaseRead(&linkScp->bufCreateLock);
         lock_ObtainMutex(&linkScp->mx);
         if (code) 
             return code;
