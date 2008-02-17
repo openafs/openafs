@@ -694,7 +694,10 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             lock_ReleaseMutex(&scp->mx);
             mxheld = 0;
         }
+
+        lock_ObtainRead(&scp->bufCreateLock);
         code = buf_Get(scp, &offset, &bp);
+        lock_ReleaseRead(&scp->bufCreateLock);
         if (code)
             break;
 
@@ -1087,7 +1090,9 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) 
             break;
 
+        lock_ObtainRead(&scp->bufCreateLock);
         code = buf_Get(scp, &pageBase, &tbp);
+        lock_ReleaseRead(&scp->bufCreateLock);
         if (code) {
             //lock_ReleaseMutex(&cm_bufGetMutex);
             lock_ObtainMutex(&scp->mx);

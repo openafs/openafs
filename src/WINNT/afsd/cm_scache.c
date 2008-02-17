@@ -1657,31 +1657,41 @@ void cm_MergeStatus(cm_scache_t *dscp,
        	for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=nextBp)
 	{
             nextBp = bp->fileHashp;
+            /* 
+             * if the buffer belongs to this stat cache entry
+             * and the buffer mutex can be obtained, check the
+             * reference count and if it is zero, remove the buffer
+             * from the hash tables.  If there are references,
+             * the buffer might be updated to the current version
+             * so leave it in place.
+             */
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0 &&
+                 lock_TryMutex(&bp->mx)) {
+                if (bp->refCount == 0) {
+                    prevBp = bp->fileHashBackp;
+                    bp->fileHashBackp = bp->fileHashp = NULL;
+                    if (prevBp)
+                        prevBp->fileHashp = nextBp;
+                    else
+                        cm_data.buf_fileHashTablepp[i] = nextBp;
+                    if (nextBp)
+                        nextBp->fileHashBackp = prevBp;
 
-            if (cm_FidCmp(&scp->fid, &bp->fid) == 0) {
-                prevBp = bp->fileHashBackp;
-                bp->fileHashBackp = bp->fileHashp = NULL;
-                if (prevBp)
-                    prevBp->fileHashp = nextBp;
-                else
-                    cm_data.buf_fileHashTablepp[i] = nextBp;
-                if (nextBp)
-                    nextBp->fileHashBackp = prevBp;
+                    j = BUF_HASH(&bp->fid, &bp->offset);
+                    lbpp = &(cm_data.buf_scacheHashTablepp[j]);
+                    for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
+                        if (tbp == bp) 
+                            break;
+                    }
 
-                j = BUF_HASH(&bp->fid, &bp->offset);
-                lbpp = &(cm_data.buf_scacheHashTablepp[j]);
-                for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
-                    if (tbp == bp) 
-                        break;
+                    *lbpp = bp->hashp;	/* hash out */
+                    bp->hashp = NULL;
+
+                    bp->flags &= ~CM_BUF_INHASH;
                 }
-
-                *lbpp = bp->hashp;	/* hash out */
-                bp->hashp = NULL;
-
-                bp->flags &= ~CM_BUF_INHASH;
+                lock_ReleaseMutex(&bp->mx);
             }
 	}
-
         lock_ReleaseWrite(&buf_globalLock);
     }
     scp->dataVersion = dataVersion;
