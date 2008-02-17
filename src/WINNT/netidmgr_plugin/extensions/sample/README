@@ -1,0 +1,239 @@
+
+  OpenAFS Network Identity Provider Plug-in
+
+        OpenAFS Plug-in Extension Template
+
+------------------------------------------------------------------
+
+        CONTENTS
+
+        1.  INTRODUCTION
+        2.  COPYRIGHT AND LICENSE
+        3.  ROADMAP OF THE TEMPLATE
+        4.  BUILD REQUIREMENTS
+        5.  BUILDING
+        6.  RUNNING THE PLUG-IN
+        7.  KNOWN ISSUES
+        8.  SUPPORT / BUG REPORTS
+
+------------------------------------------------------------------
+
+1.      INTRODUCTION
+
+    This directory and subdirectories contain a plug-in template for
+    creating an extension for the OpenAFS Network Identity Manager
+    plug-in.  Currently, such extensions are limited to providing
+    additional authentication methods.
+
+    This version of the template adheres to the following version
+    constraints:
+
+        Network Identity Manager API version : 10 or later
+        OpenAFS Plug-in Version              :  1 or later
+
+    The source files in this template can be used to build the plug-in
+    DLL and the US English resource DLL for the plug-in.  In its
+    current form, the plug-in doesn't do much.  However, the source
+    code contains a number of stub functions that can be used to
+    implement your extension.
+
+    Note that this template is based on the credentials provider
+    template in the Network Identity Manager SDK, and has numerous
+    references to credentials providers that are not applicable to
+    this particular type of plug-in.
+
+------------------------------------------------------------------
+
+2.      COPYRIGHT AND LICENSE
+
+    Copyright (c) 2008 Secure Endpoints Inc.
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+------------------------------------------------------------------
+
+3.      ROADMAP OF THE TEMPLATE
+
+    The files and directories included in the template are described
+    below.  The files that you most likely want to change are
+    Makefile, afspext.c, version.rc and lang\en_us\langres.rc.
+
+    .\README
+
+        This file.
+
+    .\Makefile
+
+        The primary (and only) Makefile used by 'nmake' to build the
+        plug-in.  In addition to providing build directives, it also
+        contains a set of macros which defines the names and version
+        information that is used throughout the plug-in code.
+
+        Look for the 'Configuration Settings' section of the Makefile
+        for the macros.  If you are basing a plug-in on this template,
+        you will want to change these macros.  These macros will be
+        used to generate 'credacq_config.h', a header file included by
+        'credprov.h' so that the values of the macros can be used in C
+        code.
+
+    .\credprov.h
+
+        The main header file for all the C source files in the
+        plug-in.
+
+    .\main.c
+
+        Provides the entry points for the module.
+
+    .\plugin.c
+
+        Provides the message processing functions and support routines
+        for implementing the plug-in.  Note that some of the message
+        processing routines have been moved to other sources files
+        based on their use.
+
+    .\afspext.c
+
+        The message handler for AFS_MSG messages. The OpenAFS plug-in
+        uses these messages to communicate with its extensions.  This
+        is probably the only C source file you would want to modify
+        when implementing an extension plug-in for the OpenAFS
+        plug-in.
+
+    .\config_main.c
+
+        Dialog procedures and support code for providing the general
+        configuration panel for this plug-in.  Providing a
+        configuration panel isn't required for an extension plug-in.
+
+    .\version.rc
+
+        Version information for the plug-in as well as all the
+        language resource DLLs.
+
+    .\langres.h
+
+        Declarations for the language resources (see below).  In its
+        current form, it was generated via Visual Studio while editing
+        the language resouces file.
+
+    .\images\plugin.ico
+
+        A generic plug-in icon.
+
+    .\lang\en_us\langres.rc
+
+        US-English language resources.  This will be used to create
+        the language resource DLL.
+
+------------------------------------------------------------------
+
+4.      BUILD REQUIREMENTS
+
+    Microsoft(R) Platform SDK (Windows Server 2003 or later)
+
+        (http://www.microsoft.com/msdownload/platformsdk/sdkupdate/)
+
+    Microsoft(R) Visual C++ (Visual Studio 2003 or later)
+
+        Although not tested, the template should build using the
+        Microsoft Visual C++ toolkit.
+
+    MIT Kerberos for Windows (version 3.2 or later) SDK
+
+    OpenAFS for Windows 1.5.x SDK or source
+
+        The only file that is needed for building an extension plug-in
+        is afspext.h.
+
+------------------------------------------------------------------
+
+5.      BUILDING
+
+    The build process is fairly starightforward.  The source is set up
+    to build using 'nmake', a build tool distributed with the Platform
+    SDK as well as with Visual Studio.
+
+    1.  Open a command prompt with a suitable build environment.
+
+        From a plain command prompt, you can set up a debug build
+        environment targetting Windows XP (32-bit) with:
+
+        > "%PROGRAMFILES%\Microsoft Platform SDK\SetEnv.Cmd" /XP32 /DEBUG
+
+    2.  Set the environment variable KFWSDKDIR to point to the root of
+        the Kerberos for Windows 3.1 SDK.  (i.e. %KFWSDKDIR%\inc
+        should be the include directory of the SDK)
+
+        > SET KFWSDKDIR=%PROGRAMFILES%\MIT\Kerberos
+
+    3.  Set the environment variable AFSPLUGINDIR to the directory
+        that contains afspext.h.  This could either be in the OpenAFS
+        SDK include directory or in the source tree at
+        src\WINNT\netidmgr_plugin.
+
+        > SET AFSPLUGINDIR=...
+
+    4.  Start the build:
+
+        > NMAKE all
+
+        The build target 'all' builds the plug-in and the language
+        resources.  There is an additional build target 'clean' which
+        removes the temporary files and the binaries generated during
+        the build.
+
+        Assuming everything goes well, the plug-in binaries should be
+        created under a subdirectory under 'dest'.  The name of the
+        subdirectory reflects the target architecture and the build
+        type ('debug' or 'release').
+
+------------------------------------------------------------------
+
+6.      RUNNING THE PLUG-IN
+
+    Once the binaries for the plug-in have been built, you need to
+    register the plug-in with NetIDMgr by adding a registry value as
+    follows:
+
+    [HKEY_CURRENT_USER\Software\MIT\NetIDMgr\PluginManager\Modules\<Module name>]
+       "ImagePath"="<path>"
+
+    The <path> should be the full path to the plug-in DLL.
+
+    <Module name> is the name of the module that you built.  The
+    default value specified in the template is 'MyAFSExtModule'.  This
+    is the value of the macro 'MODULENAME' defined in the 'Makefile'.
+
+    Once this is done, you need to restart NetIDMgr so that it will
+    pick up the new plug-in.
+
+------------------------------------------------------------------
+
+7.      KNOWN ISSUES
+
+------------------------------------------------------------------
+
+8.      SUPPORT / BUG REPORTS
+
+    Problems should be sent to openafs@secure-endpoints.com
+
+------------------------------------------------------------------
