@@ -459,17 +459,19 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             break;
         }
 
-        /* Log server being offline for this volume */
-        sprintf(addr, "%d.%d.%d.%d", 
-                 ((serverp->addr.sin_addr.s_addr & 0xff)),
-                 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+        if (serverp && fidp) {
+            /* Log server being offline for this volume */
+            sprintf(addr, "%d.%d.%d.%d", 
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
 
-	osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
+            osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
 #ifndef DJGPP
-	LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
+            LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
 #endif
+        }
 
         /* Mark server offline for this volume */
         if (!serversp && fidp) {
@@ -479,6 +481,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 free_svr_list = 1;
             }
         }
+
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp) {
@@ -538,6 +541,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		lock_ObtainWrite(&cm_scacheLock);
 		cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
+                cm_LockMarkSCacheLost(scp);
 		scp->flags |= CM_SCACHEFLAG_DELETED;
 		lock_ReleaseMutex(&scp->mx);
 		cm_ReleaseSCache(scp);

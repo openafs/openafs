@@ -3959,9 +3959,6 @@ long cm_LockCheckWrite(cm_scache_t *scp,
 #endif
 }
 
-/* Forward dcl. */
-static void cm_LockMarkSCacheLost(cm_scache_t * scp);
-
 /* Called with cm_scacheLock write locked */
 static cm_file_lock_t * cm_GetFileLock(void) {
     cm_file_lock_t * l;
@@ -4907,7 +4904,7 @@ long cm_Unlock(cm_scache_t *scp,
 }
 
 /* called with scp->mx held */
-static void cm_LockMarkSCacheLost(cm_scache_t * scp)
+void cm_LockMarkSCacheLost(cm_scache_t * scp)
 {
     cm_file_lock_t *fileLock;
     osi_queue_t *q;
@@ -5031,7 +5028,7 @@ void cm_CheckLocks()
                 if (!IS_LOCK_ACTIVE(fileLock))
                     goto pre_syncopdone;
 
-                if (scp->serverLock != -1) {
+                if (scp->serverLock != -1 && !(scp->flags & CM_SCACHEFLAG_DELETED)) {
                     cm_fid_t cfid;
                     cm_user_t * userp;
 
@@ -5108,7 +5105,8 @@ void cm_CheckLocks()
                         }
                     }
 
-                    if (code == EINVAL || code == CM_ERROR_INVAL) {
+                    if (code == EINVAL || code == CM_ERROR_INVAL ||
+                        code == CM_ERROR_BADFD) {
                         cm_LockMarkSCacheLost(scp);
                     }
 
