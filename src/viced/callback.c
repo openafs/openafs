@@ -646,6 +646,14 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     return 0;
 }
 
+static int
+CompareCBA(const void *e1, const void *e2)
+{
+    const struct cbstruct *cba1 = (const struct cbstruct *)e1;
+    const struct cbstruct *cba2 = (const struct cbstruct *)e2;
+    return ((cba1->hp)->index - (cba2->hp)->index);
+}
+
 /* Take an array full of hosts, all held.  Break callbacks to them, and 
  * release the holds once you're done, except don't release xhost.  xhost 
  * may be NULL.  Currently only works for a single Fid in afidp array.
@@ -674,6 +682,9 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     int multi_to_cba_map[MAX_CB_HOSTS];
 
     assert(ncbas <= MAX_CB_HOSTS);
+
+    /* sort cba list to avoid makecall issues */
+    qsort(cba, ncbas, sizeof(struct cbstruct), CompareCBA);
 
     /* set up conns for multi-call */
     for (i = 0, j = 0; i < ncbas; i++) {
