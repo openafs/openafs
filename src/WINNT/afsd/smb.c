@@ -2636,8 +2636,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
         NTStatus = 0xC00000BEL; /* Bad Network Path */
     } 
-    else if (code == RXKADUNKNOWNKEY) {
-	NTStatus = 0xC0000322L; /* Bad Kerberos key */
+    else if (code >= ERROR_TABLE_BASE_RXK && code < ERROR_TABLE_BASE_RXK + 256) {
+	NTStatus = 0xC0000322L; /* No Kerberos key */
     } 
     else if (code == CM_ERROR_BAD_LEVEL) {
 	NTStatus = 0xC0000148L;	/* Invalid Level */
