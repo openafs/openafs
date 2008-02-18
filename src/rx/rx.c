@@ -7090,6 +7090,9 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
 			 int isServer)
 {
 
+    if (!(rxi_monitor_peerStats || rxi_monitor_processStats))
+        return;
+
     MUTEX_ENTER(&rx_rpc_stats);
     MUTEX_ENTER(&peer->peer_lock);
 
