@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2005, 2006, 2007 Secure Endpoints Inc.
+ * Copyright (c) 2004, 2005, 2006, 2007, 2008 Secure Endpoints Inc.
  * Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
  * 
@@ -686,6 +686,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     char * pname = NULL;
     const char * ccname = NULL;
     const char * cctype = NULL;
+    char * ccfullname = NULL;
     krb5_error_code code = 0;
     krb5_error_code cc_code = 0;
     krb5_cc_cursor cur;
@@ -708,10 +709,15 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     cctype = pkrb5_cc_get_type(ctx, cc);
     if (!cctype) goto cleanup;
 
+    ccfullname = malloc(strlen(ccname) + strlen(cctype) + 2);
+    if (!ccfullname) goto cleanup;
+	
+    sprintf(ccfullname, "%s:%s", cctype, ccname);
+
     // Search the existing list to see if we have a match 
     if ( next ) {
         for ( ; next ; next = next->next ) {
-            if ( !strcmp(next->principal,pname) && !strcmp(next->ccache_name, ccname) )
+            if ( !strcmp(next->principal,pname) && !strcmp(next->ccache_name, ccfullname) )
                 break;
         }
     } 
@@ -722,9 +728,8 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
         next->next = princ_cc_data;
         princ_cc_data = next;
         next->principal = _strdup(pname);
-        next->ccache_name = malloc(strlen(ccname) + strlen(cctype) + 2);
-        if (next->ccache_name) 
-            sprintf(next->ccache_name, "%s:%s", cctype, ccname);
+        next->ccache_name = ccfullname;
+        ccfullname = NULL;
         next->from_lsa = lsa;
         next->expired = 1;
         next->expiration_time = 0;
@@ -783,6 +788,8 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     flags = KRB5_TC_OPENCLOSE;  //turn on OPENCLOSE
     code = pkrb5_cc_set_flags(ctx, cc, flags);
 
+    if ( ccfullname)
+        free(ccfullname);
     if ( pname )
         pkrb5_free_unparsed_name(ctx,pname);
     if ( principal )
