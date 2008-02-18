@@ -1,3 +1,67 @@
+Since 1.5.31
+ * Do not attempt to search for a cell name that matches one
+   of the special share names "svrsvc", "wkssvc", "ipc$"
+
+ * Issue permission denied warnings from afscreds if attempts
+   to modify the startup shortcut or registry values fail.
+   This happens under Vista UAC.
+
+ * Do not return BAD_NETWORK_ERROR in response to attempts
+   to create directories or files in the Freelance root.afs 
+   volume.  Instead return ACCESS_DENIED.
+
+   BAD_NETWORK_ERROR was being sent because the Freelance cell 
+   has no vldb servers.  Short circuit the error by testing for 
+   freelance in CreateFile and MakeDir
+
+ * Treat srvsvc, wkssvc and ipc$ as pseudo files.  Permit them 
+   to be opened and closed without actually existing.  For now 
+   we treat them as equivalent to ioctls but this should 
+   eventually change.
+
+ * Fix RAP processing to not reject names that exist in the 
+   root.afs volume for GetInfo queries.
+
+ * In afscreds, use GetUserNameEx to obtain the username instead 
+   of searching the registry.  Try UserPrincipalName first and 
+   fallback to SamCompatible.
+
+ * Stop linking to rpcns4.dll which is no longer supported on 
+   Vista and 2008.  TaAfsAdmSvr is going to have to be 
+   redesigned.
+
+ * When processing dfs referral requests, if the sharename is 
+   a partial match and therefore will not be added automatically 
+   to the share list, make sure that we return an error.
+
+ * Avoid a crash when logging VNOVOL errors returned from 
+   cm_CheckOfflineVolume.
+
+ * When trace logging is disabled, do not permit osi_LogSaveString 
+   to perform the string copying.  By disabling the string 
+   copies, throughput of the service more than doubles.
+
+ * when checking offline volumes, update the cell vlserver info
+   if required and don't perform a check if there are no servers
+   in the list.
+
+ * Add volumes in the vl_unknown state to the list of objects to be
+   checked as offline or retried when an allbusy error is received
+   in cm_Analyze.
+
+ * Add support for configuring rx_ExtraPackets
+
+ * All calls to buf_Get() must be protected by a read lock on the
+   cm_scache_t bufCreateLock
+
+ * When a MergeStatus results in the invalidation of buffers, do
+   not remove buffers from the hash tables that have active references.
+
+ * Upon receiving a VNOVNODE error from a file server, be sure to
+   invalidate any file locks.  This prevents on-going attempts to
+   extend the locks and will cause subsequent attempts to access
+   the file to receive a invalid handle error.
+
 Since 1.5.30
  * Add "cmdebug <host> -cellservdb" option and client service 
    implementation permits querying the vldb server for each 
