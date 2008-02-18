@@ -1644,6 +1644,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
     }
 
     if (_stricmp(shareName, "IPC$") == 0 ||
+        _stricmp(shareName, "srvsvc") == 0 ||
+        _stricmp(shareName, "wkssvc") == 0 ||
         _stricmp(shareName, SMB_IOCTL_FILENAME_NOSLASH) == 0 ||
         _stricmp(shareName, "DESKTOP.INI") == 0
          ) {

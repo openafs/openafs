@@ -2152,7 +2152,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
          (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
            stricmp(lastNamep, "\\srvsvc") == 0 ||
            stricmp(lastNamep, "\\wkssvc") == 0 ||
-           stricmp(lastNamep, "ipc$") == 0)) {
+           stricmp(lastNamep, "\\ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
