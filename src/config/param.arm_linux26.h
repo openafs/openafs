@@ -23,6 +23,9 @@
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 137
+#ifndef __NR_afs_syscall
+#define __NR_afs_syscall 137
+#endif
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #define AFS_64BIT_ENV		1
