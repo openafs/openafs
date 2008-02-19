@@ -1,0 +1,47 @@
+=head1 NAME
+
+fs_minidump - Generate a minidump from the current afsd service
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs minidump> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<fs minidump> generates a mini dump file containing the current stack
+of the afsd_service.exe process.  This output can be very helpful when
+debugging the AFS Client Service when it is unresponsive to SMB/CIFS
+requests.
+
+=head1 CAUTIONS
+
+This command is only available in OpenAFS for Windows version 1.4 and later.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 SEE ALSO
+
+L<fs(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
