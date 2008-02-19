@@ -62,6 +62,12 @@ Since 1.5.31
    extend the locks and will cause subsequent attempts to access
    the file to receive a invalid handle error.
 
+ * Prevent smb_ReceiveTran2SearchDir from adding terminating NULs
+   to directory entry names.
+
+ * No longer discard tokens when RXKADBADTICKET error is received.
+   Instead return STATUS_NO_KERB_KEY error.
+
 Since 1.5.30
  * Add "cmdebug <host> -cellservdb" option and client service 
    implementation permits querying the vldb server for each 
