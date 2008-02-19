@@ -127,9 +127,9 @@ cm_NameEntries(char *namep, long *lenp)
 {
     long i;
         
-    i = (long)strlen(namep) + 1;
+    i = (long)strlen(namep);
     if (lenp) *lenp = i;
-    return 1 + ((i+15) >> 5);
+    return 1 + ((i+16) >> 5);
 }
 
 /* Create an entry in a file.  Dir is a file representation, while
