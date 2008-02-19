@@ -30,5 +30,7 @@
 #define SYS_NAME_ID		SYS_NAME_ID_arm_linux26
 #define AFSLITTLE_ENDIAN	1
 #define AFS_SYSCALL 		137
-
+#ifndef __NR_afs_syscall
+#define __NR_afs_syscall 137
+#endif
 #endif /* AFS_PARAM_H */
