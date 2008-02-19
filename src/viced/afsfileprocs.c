@@ -1285,6 +1285,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	if (IsEmpty(&childdir) != 0)
 	    return (EEXIST);
 	DZap(&childdir);
+	FidZap(&childdir);
 	(*targetptr)->delete = 1;
     } else if ((--(*targetptr)->disk.linkCount) == 0)
 	(*targetptr)->delete = 1;
