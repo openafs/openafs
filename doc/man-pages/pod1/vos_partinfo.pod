@@ -25,6 +25,17 @@ size on either all of the partitions on the indicated file server machine
 that file server machine. The Volume Location Database (VLDB) is not
 consulted.
 
+=head1 CAUTIONS
+
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+B<vos partinfo> or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
+
 =head1 OPTIONS
 
 =over 4

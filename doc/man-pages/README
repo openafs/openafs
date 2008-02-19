@@ -204,7 +204,6 @@ Known Problems
        copyauth
        fs cscpolicy
        fs memdump
-       fs minidump
        fs monitor
        fs rxstatpeer
        fs rxstatproc

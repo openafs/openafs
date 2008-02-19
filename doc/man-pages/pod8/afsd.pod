@@ -627,7 +627,11 @@ Bind the Rx socket (one interface only).
 
 =item B<-rxpck> <I<value for rx_extraPackets>>
 
-Set rx_extraPackets to this value.
+Set rx_extraPackets to this value. This sets the number of extra Rx
+packet structures that are available to handle Rx connections. This
+value should be increased if the "rxdebug 127.0.0.1 -port 7001
+-rxstats" command shows no free Rx packets. Increasing this value may
+improve OpenAFS client performance in some circumstances.
 
 =item B<-settime>
 
