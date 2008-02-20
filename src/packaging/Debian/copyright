@@ -11,12 +11,37 @@ Upstream Maintainers:
     openafs-gatekeepers@openafs.org
 
 The upstream source has been repackaged to remove the src/packaging/MacOS
-directory, which contained a file (afssettings.m) that was covered under
-the Apple Public Source License 2.0.  This license is not considered
-DFSG-free.  Since the repackaging was needed anyway, the WINNT directory
-was also dropped, reducing the size of the upstream tarball by 8MB.
+and src/platform/DARWIN directories and the files src/afs/sysctl.h and
+src/util/fstab.c.  These directories and files are only used for building
+on MacOS X and contained content covered by the Apple Public Source
+License 2.0.  This license is not considered DFSG-free.  Since the
+repackaging was needed anyway, the WINNT directory was also dropped,
+reducing the size of the upstream tarball by 8MB.
+
+The upstream openafs-src and openafs-doc tarballs have been combined into
+one source tarball.
+
+The openafs-doc package contains the OpenAFS documentation as distributed
+by the OpenAFS project, which does not include the original source.  These
+documents were originally created using TeX internally by Transarc, the
+original authors of AFS.  By the time that AFS was released as free
+software by IBM after acquiring Transarc, the original source could no
+longer be found.  It has apparently been lost over the years.
+
+Although these HTML and PDF files would not normally be considered source,
+they're all that's available until they can be rewritten and updated in
+some better format.  They have been released under the IBM Public License
+Version 1.0 (included below), the same license as the rest of OpenAFS.
+
+Normally, this documentation could not be included in Debian without being
+accompanied by the original TeX source and build tools under DFSG#2, but
+under the circumstances, these files essentially are the source, as
+they're all that anyone has.
 
 Copyright:
+
+   Copyright 2000, International Business Machines Corporation and others.
+   All Rights Reserved.
 
    IBM Public License Version 1.0
    
@@ -134,7 +159,7 @@ Copyright:
    Each Contributor must include the following in a conspicuous location
    in the Program:
    
-   Copyright © {date here}, International Business Machines Corporation
+   Copyright Â© {date here}, International Business Machines Corporation
        and others. All Rights Reserved.
        
    In addition, each Contributor must identify itself as the originator
@@ -254,7 +279,7 @@ Copyright:
 
 Kerberos 5 ticket support in rxkad is subject to the following copyright:
 /*
- * Copyright (c) 1995, 1996, 1997, 2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 2002 Kungliga Tekniska HÃ¶gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -341,3 +366,34 @@ Some portions of Rx are subject to the following license:
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+
+ka-forwarder was taken from the AFS/Kerberos 5 Migration Kit, to which it
+was donated by Jeffrey T. Hutzelman.  It is covered under the following
+license:
+/*
+ * Copyright (c) 1993 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ *
+ * Carnegie Mellon requests users of this software to return to
+ *
+ *  Software Distribution Coordinator  or  Software_Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ *
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+
+src/afs/LINUX/osi_flush.s included code under IBM Public License with
+permission of the author, Paul MacKerras.

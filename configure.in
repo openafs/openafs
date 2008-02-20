@@ -83,6 +83,7 @@ src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
+src/packaging/Debian/rules \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
 src/packaging/MacOS/buildpkg.sh \

@@ -1,9 +1,0 @@
-This directory contains patches relative to the upstream OpenAFS source.
-It is not used automatically as part of the build process and is not
-guaranteed to be completely up-to-date; it is intended as documentation of
-significant divergences, a place to store patches that should be sent
-upstream, and a place to document the current status of patches.
-
-Simple Debian-specific changes that aren't of interest to upstream will
-not be included here, such as updating config.{guess,sub} or changing
-paths to fit with the FHS.

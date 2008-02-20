@@ -1,0 +1,252 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs 1.4.2-4\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2007-01-19 11:07-0800\n"
+"PO-Revision-Date: 2007-01-08 20:44+0800\n"
+"Last-Translator: Chun Tian (binghe) <binghe.lisp@gmail.com>\n"
+"Language-Team: Internationalization <debian-i18n@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "DB server host names for your home cell:"
+msgstr "您起始单元的数据库服务器主机名："
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid ""
+"AFS uses the file /etc/openafs/CellServDB to hold the list of servers that "
+"should be contacted to find parts of a cell.  The cell you claim this "
+"workstation belongs to is not in that file.  Enter the host names of the "
+"database servers separated by spaces. IMPORTANT: If you are creating a new "
+"cell and this machine is to be a database server in that cell, only enter "
+"this machine's name; add the other servers later after they are functioning. "
+"Also, do not enable the AFS client to start at boot on this server until the "
+"cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
+"client to enable the client."
+msgstr ""
+"AFS 使用 /etc/openafs/CellServDB 文件来存放那些在寻找一个单元 (cell) 各部分服"
+"务器用来联系的服务器列表. 当前工作站您声称其所在的单元并不在这个文件里. 请以"
+"空格分隔输入该单元数据库服务器的主机名. 重要提示: 如果您正在创建一个新单元并"
+"且该机将做为此单元的数据库服务器, 那么只输入这台机器的主机名即可; 其他服务器"
+"当他们可用时再加入进来. 并且, 直到该单元配置完成之前不要令 AFS 客户端在这台服"
+"务器引导时启动. 当您一切就绪以后可以编辑 /etc/openafs/afs.conf 来打开客户端."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS cell this workstation belongs to:"
+msgstr "这台工作站所属的 AFS 单元:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid ""
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
+msgstr ""
+"AFS 文件空间按单元和管理域来组织. 每一台工作站属于一个单元. 单元名是通常是该"
+"站点的 DNS 域名."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "Size of AFS cache in kB:"
+msgstr "以 kB 计的 AFS 缓存大小:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid ""
+"AFS uses an area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
+msgstr ""
+"AFS 使用磁盘的一块区域来缓存远程文件来加速访问. 缓存将被挂载到 /var/cache/"
+"openafs. 很重要的一点是不能让该缓存把它所在的分区填满. 通常, 人们发现用独立的"
+"分区做 AFS 缓存很有用."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Run Openafs client now and at boot?"
+msgstr "现在就启动 OpenAFS 客户端并且开机启动吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid ""
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
+msgstr ""
+"通常, 多数安装了 openafs-client 包的用户期望 AFS 在开机后自动挂载. 尽管如此, "
+"如果您正在计划设置一个新单元或者在笔记本电脑上, 您可能不希望它开机自动启动. "
+"如果您选择了开机不启动 AFS, 可以在您需要它启动的时候运行 /etc/init.d/openafs-"
+"client force-start"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "Look up AFS cells in DNS?"
+msgstr "要通过 DNS 查询 AFS 单元吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid ""
+"In order to contact an AFS cell, you need the IP addresses of the cell's "
+"database servers.  Normally, this information is read from /etc/openafs/"
+"CellServDB.  However, if Openafs cannot find a cell in that file, it can use "
+"DNS to look for AFSDB records that contain the information."
+msgstr ""
+"为了联系一个 AFS 单元, 您需要该单元的数据库服务器 IP 地址. 正常情况下, 这一信"
+"息从 /etc/openafs/CellServDB 读取. 尽管如此, 如果 OpenAFS 无法在这个文件里找"
+"到一个单元, 它可以用 DNS 查询包含这一信息的 AFSDB 记录."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "要加密和 AFS 文件服务器之间的认证通信吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid ""
+"AFS provides a weak form of encryption that can optionally be used between a "
+"client and the fileservers.  While this encryption is weaker than DES and "
+"thus is not sufficient for highly confidential data, it does provide some "
+"confidentiality and is likely to make the job of a casual attacker "
+"significantly more difficult."
+msgstr ""
+"AFS 提供一种可选的弱加密形式用在客户端和文件服务器之间. 虽然这种加密比 DES 还"
+"弱一些, 从而不能适用于那些高度机密数据, 但它确实提供了一定的保密性, 可以令那"
+"些偶然的攻击明显地变得困难."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "Dynamically generate the contents of /afs?"
+msgstr "动态生成 /afs 的内容吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"/afs generally contains an entry for each cell that a client can talk to. "
+"Traditionally, these entries were generated by servers in the client's home "
+"cell.  However, OpenAFS clients can generate the contents of /afs "
+"dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr ""
+"/afs 里通常含有客户端能访问到的每一个单元的入口. 这些入口传统上是由客户端所在"
+"单元的服务器生成.  尽管如此, OpenAFS 客户端也可以根据 /etc/openafs/"
+"CellServDB 和 DNS 的内容来动态生成 /afs 的内容."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"If you generate /afs dynamically, you may need to create /etc/openafs/"
+"CellAlias to include aliases for common cells.  (The syntax of this file is "
+"one line per alias, with the cell name, a space, and then the alias for that "
+"cell.)"
+msgstr ""
+"如果您动态生成 /afs, 您可能需要创建 /etc/openafs/CellAlias 来包含通用单元的别"
+"名.  (这个文件的语法是每个别名一行, 由单元名, 一个空格, 和该单元的别名组成.)"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr "使用 fskestat 来避免对 /afs 列目录时挂起吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid ""
+"Because AFS is a global file space, operations on the /afs directory can "
+"generate significant network traffic.  If some AFS cells are unavailable "
+"then looking at /afs using ls or a graphical file browser may hang your "
+"machine for minutes.  AFS has an option to simulate answers to these "
+"operations locally to avoid these hangs.  You want this option under most "
+"circumstances."
+msgstr ""
+"因为 AFS 是一个公共文件空间, 所以对 /afs 目录的操作能产生明显的网络流量.  如"
+"果某些 AFS 单元无法访问, 那么当使用 ls 或者图形界面文件浏览器列 /afs 目录时可"
+"能会令您的主机挂起几分钟. AFS 有一个选项可以将这些操作模拟成本机操作从而避免"
+"这类挂起.  大多数情况下您都需要这一选项."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "Cell this server serves files for:"
+msgstr "这台文件服务器所在的单元:"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid ""
+"AFS fileservers belong to a cell.  They have the key for that cell's "
+"Kerberos service and serve volumes into that cell.  Normally, this cell is "
+"the same cell as the workstation's client belongs to."
+msgstr ""
+"AFS 文件服务器属于一个单元.  它们有该单元的 Kerberos 服务密钥并且为该单元提供"
+"卷服务. 正常情况下, 这个单元跟工作站上的客户端属于的那个单元是同一个."
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "Upgrading will move files to new locations; continue?"
+msgstr "升级将移动文件到新的位置; 继续吗?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid ""
+"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, "
+"files in /etc/openafs/server-local have been distributed to other "
+"locations.  The BosConfig file is now located in /etc/openafs and the other "
+"files are located in /var/lib/openafs.  If you continue with this upgrade, "
+"these files will be moved.  You should use the bos restart command to reload "
+"your servers.  Any configuration changes made before you do so will be lost."
+msgstr ""
+"在 OpenAFS 1.1 和 OpenAFS 1.2 之间, 一些文件的位置移动了.  特别是, /etc/"
+"openafs/server-local 里的文件已经被分发到其他位置了.  BosConfig 文件现在位"
+"于 /etc/openafs 目录里而其他文件位于 /var/lib/openafs.  如果您继续进行升级, "
+"这些文件将会被移动.  您应该用 bos restart 命令重加载您的服务器.  在您操作之前"
+"的任何配置改动将丢失."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:3001
+msgid "OpenAFS file server probably does not work!"
+msgstr "OpenAFS 文件服务器可能不会工作!"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:3001
+msgid ""
+"You are running the OpenAFS file server package on an alpha.  This probably "
+"doesn't work; the DES code is flaky on the alpha, along with the threaded "
+"file server.  Likely, the fileserver will simply fail to start, but if it "
+"does load, data corruption may result.  You have been warned."
+msgstr ""
+"您正在一台 alpha 机上运行 OpenAFS 文件服务器包.  这可能不会工作; alpha 下的随"
+"线程文件服务器带的 DES 代码很奇怪. 文件服务器很可能简单地直接启动失败, 但如果"
+"它确实起来了, 数据错乱也有可能发生. 您将被警告这点."

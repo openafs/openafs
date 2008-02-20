@@ -13,10 +13,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.4rc1-1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-18 12:47-0700\n"
-"PO-Revision-Date: 2005-08-19 08:01+0200\n"
+"Project-Id-Version: openafs 1.4.1-3\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2006-06-07 12:06-0700\n"
+"PO-Revision-Date: 2006-06-07 21:47+0200\n"
 "Last-Translator: Martin Sin <martin.sin@seznam.cz>\n"
 "Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -26,8 +26,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-msgid "What hosts are DB servers for your home cell?"
-msgstr "Které počítače jsou DB servery pro vaši domovskou buňku?"
+msgid "DB server host names for your home cell:"
+msgstr "Jména počítačů s DB serverem vaší domovské buňky:"
 
 #. Type: string
 #. Description
@@ -56,8 +56,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
-msgid "What AFS cell does this workstation belong to?"
-msgstr "Ke které buňce AFS bude tento počítač náležet?"
+msgid "AFS cell this workstation belongs to:"
+msgstr "Buňka AFS, ke které náleží tento počítač:"
 
 #. Type: string
 #. Description
@@ -74,8 +74,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kB)?"
-msgstr "Jak velká je vaše cache AFS (v kB)?"
+msgid "Size of AFS cache in kB:"
+msgstr "Velikost cache AFS v kB:"
 
 #. Type: string
 #. Description
@@ -101,17 +101,15 @@ msgstr "Spustit klienta Openafs nyní a při zavádění počítače?"
 #. Description
 #: ../openafs-client.templates:34
 msgid ""
-"Should the Openafs filesystem be started and mounted at boot? Normally, most "
-"users who install the openafs-client package expect to run it at boot.  "
-"However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time.  If you choose not to start AFS at "
-"boot, run /etc/init.d/openafs-client force-start to start the client when "
-"you wish to run it."
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
 msgstr ""
-"Má být souborový systém Openafs spuštěn a připojen při startu počítače? "
-"Většina uživatelů, kteří instalují balíček openafs-client, očekává, že se "
-"AFS spustí hned při startu počítače. Samozřejmě, pokud plánujete nastavení "
-"nové buňky, nebo pokud používáte laptop, pak byste zřejmě AFS při startu "
+"Běžně většina uživatelů balíčku openafs-client očekává, že bude AFS "
+"připojeno automaticky při startu počítače. Samozřejmě, pokud plánujete "
+"nastavení nové buňky, nebo používáte laptop, pak byste zřejmě AFS při startu "
 "spouštět nechtěli. Zvolíte-li možnost nespouštět AFS při startu počítače, "
 "můžete klienta spustit ručně příkazem /etc/init.d/openafs-client force-start."
 
@@ -190,7 +188,6 @@ msgstr ""
 "jeden řádek na alias, který se skládá ze jména buňky, mezery a pak následuje "
 "alias pro tuto buňku.)"
 
-
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:79
@@ -218,8 +215,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-msgid "What cell does this server serve files for?"
-msgstr "Kterým buňkám má tento server poskytovat soubory?"
+msgid "Cell this server serves files for:"
+msgstr "Buňka, které bude tento server poskytovat soubory:"
 
 #. Type: string
 #. Description
@@ -277,3 +274,6 @@ msgstr ""
 "fungovat; DES kód se ve spojení s vlákny na souborovém serveru chová "
 "podivně. Souborový server nejpravděpodobněji vůbec nespustí nespustí, ale "
 "pokud naběhne, může dojít ke ztrátě dat. Byli jste varováni."
+
+#~ msgid "How large is your AFS cache (kB)?"
+#~ msgstr "Jak velká je vaše cache AFS (v kB)?"

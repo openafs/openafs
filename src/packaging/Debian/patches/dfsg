@@ -1,0 +1,73 @@
+Patch upstream Makefiles to remove references to files that had to be
+removed from the source package for DFSG freeness reasons.  Not suitable
+upstream for obvious reasons.
+
+--- openafs.orig/src/afs/Makefile.in
++++ openafs/src/afs/Makefile.in
+@@ -13,7 +13,7 @@
+ all: depinstall
+ 
+ depinstall: ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h \
+-	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h ${TOP_INCDIR}/afs/sysctl.h
++	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h
+ 	case ${SYS_NAME} in \
+ 		pmax_ul43 | pmax_ul43a) \
+ 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
+@@ -43,7 +43,7 @@
+ 			gencat afszcm.cat afs_trace.msf ;; \
+ 	esac
+ 
+-install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h ${DESTDIR}${includedir}/afs/sysctl.h
++install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h
+ 	case ${SYS_NAME} in \
+ 		pmax_ul43 | pmax_ul43a) \
+ 			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
+@@ -131,7 +131,7 @@
+ 	${INSTALL} $? $@
+ 
+ 
+-dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h ${DEST}/include/afs/sysctl.h
++dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h
+ 	case ${SYS_NAME} in \
+ 		pmax_ul43 | pmax_ul43a) \
+ 			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
+--- openafs.orig/src/tviced/Makefile.in
++++ openafs/src/tviced/Makefile.in
+@@ -38,8 +38,7 @@
+ DIROBJS=buffer.o dir.o salvage.o
+ 
+ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
+-	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
+-	 fstab.o
++	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o
+ 
+ FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+ 
+--- openafs.orig/src/util/Makefile.in
++++ openafs/src/util/Makefile.in
+@@ -12,7 +12,7 @@
+ 
+ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
+ 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
+-	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
++	 dirpath.o fileutil.o netutils.o flipbase64.o \
+ 	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o \
+ 	 daemon.o rxkstats.o ${REGEX_OBJ}
+ 
+@@ -392,4 +392,4 @@
+ 	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
+ 	    hputil.c kreltime.c isathing.c get_krbrlm.c uuid.c serverLog.c \
+ 	    dirpath.c fileutil.c netutils.c flipbase64.c \
+-	    afs_atomlist.c afs_lhash.c snprintf.c fstab.c
++	    afs_atomlist.c afs_lhash.c snprintf.c
+--- openafs.orig/configure.in
++++ openafs/configure.in
+@@ -82,8 +82,6 @@
+ src/mpp/Makefile \
+ src/null/Makefile \
+ src/package/Makefile \
+-src/packaging/MacOS/OpenAFS.Info.plist \
+-src/packaging/MacOS/OpenAFS.info \
+ src/packaging/RedHat/openafs.spec \
+ src/pam/Makefile \
+ src/pinstall/Makefile \
