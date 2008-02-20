@@ -500,6 +500,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
+    afs_int32 epoch, pass;
 #endif
 
     /* send the file back to the requester */
@@ -540,10 +541,13 @@ SDISK_SendFile(rxcall, file, length, avers)
     offset = 0;
 #ifdef OLD_URECOVERY
     (*dbase->truncate) (dbase, file, 0);	/* truncate first */
-    tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     tversion.counter = 0;
-    (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
 #else
+    epoch =
+#endif
+    tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
+    (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
+#ifndef OLD_URECOVERY
     flen = length;
     afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
@@ -556,10 +560,16 @@ SDISK_SendFile(rxcall, file, length, avers)
 	close(fd);
 	goto failed;
     }
+#else
+    pass = 0;
 #endif
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
+#if !defined(OLD_URECOVERY) && defined(AFS_PTHREAD_ENV)
+	if (pass % 4 == 0)
+	    IOMGR_Poll();
+#endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
@@ -572,6 +582,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 	code = (*dbase->write) (dbase, file, tbuffer, offset, tlen);
 #else
 	code = write(fd, tbuffer, tlen);
+	pass++;
 #endif
 	if (code != tlen) {
 	    DBRELE(dbase);
@@ -621,6 +632,9 @@ SDISK_SendFile(rxcall, file, length, avers)
     if (code) {
 #ifndef OLD_URECOVERY
 	unlink(pbuffer);
+	/* Failed to sync. Allow reads again for now. */
+	tversion.epoch = epoch;
+	(*dbase->setlabel) (dbase, file, &tversion);
 #endif
 	ubik_print
 	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
