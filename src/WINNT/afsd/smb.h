@@ -563,7 +563,7 @@ extern smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags);
 
 extern void smb_HoldTIDNoLock(smb_tid_t *tidp);
 
-extern void smb_ReleaseTID(smb_tid_t *tidp);
+extern void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked);
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 

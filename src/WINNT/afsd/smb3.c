@@ -1063,7 +1063,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	if (!shareFound) {
 	    if (uidp)
 		smb_ReleaseUID(uidp);
-            smb_ReleaseTID(tidp);
+            smb_ReleaseTID(tidp, FALSE);
             return CM_ERROR_BADSHARENAME;
 	}
 
@@ -1100,7 +1100,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     if (ipc) 
         tidp->flags |= SMB_TIDFLAG_IPC;
     lock_ReleaseMutex(&tidp->mx);
-    smb_ReleaseTID(tidp);
+    smb_ReleaseTID(tidp, FALSE);
 
     ((smb_t *)outp)->tid = newTid;
     ((smb_t *)inp)->tid = newTid;
@@ -4663,6 +4663,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     smb_FreeTran2Packet(outp);
     if (dep)
         free(dep);
+    if (scp)
     cm_ReleaseSCache(scp);
     cm_ReleaseSCache(targetscp);
     cm_ReleaseUser(userp);
