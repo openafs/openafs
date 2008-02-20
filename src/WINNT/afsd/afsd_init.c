@@ -1050,6 +1050,17 @@ int afsd_InitCM(char **reasonP)
     if (rx_enable_process_stats)
         afsi_log("RX Process Statistics gathering is enabled");
 
+    dummyLen = sizeof(dwValue);
+    dwValue = 0;
+    code = RegQueryValueEx(parmKey, "RxEnableHotThread", NULL, NULL,
+                            (BYTE *) &dwValue, &dummyLen);
+     if (code == ERROR_SUCCESS && dwValue != 0) {
+         rx_EnableHotThread();
+         afsi_log("RX Hot Thread is enabled");
+     }
+     else
+         afsi_log("RX Hot Thread is disabled");
+
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "CallBackPort", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
