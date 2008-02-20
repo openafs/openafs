@@ -213,7 +213,7 @@ rxi_ReScheduleEvents(void)
 /* Loop to listen on a socket. Return setting *newcallp if this
  * thread should become a server thread.  */
 static void
-rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
+rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 {
     unsigned int host;
     u_short port;
@@ -259,7 +259,7 @@ static void *
 rx_ListenerProc(void *argp)
 {
     int threadID;
-    int sock = (int)argp;
+    osi_socket sock = (osi_socket)argp;
     struct rx_call *newcall;
 
     while (1) {
@@ -282,7 +282,7 @@ rx_ListenerProc(void *argp)
 void
 rx_ServerProc(void)
 {
-    int sock;
+    osi_socket sock;
     int threadID;
     struct rx_call *newcall = NULL;
 
