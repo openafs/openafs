@@ -5,30 +5,36 @@
 #
 # Not all architectures are listed, only those that OpenAFS supports.
 
-case `dpkg --print-installation-architecture` in
+case `dpkg --print-architecture` in
 alpha)
-    echo alpha_linux_24
+    echo alpha_linux_26
     ;;
 amd64)
-    echo amd64_linux24
+    echo amd64_linux26
+    ;;
+armel)
+    echo arm_linux26
     ;;
 hppa)
     echo parisc_linux24
     ;;
 i[3456]86)
-    echo i386_linux24
+    echo i386_linux26
     ;;
 ia64)
-    echo ia64_linux24
+    echo ia64_linux26
     ;;
 powerpc)
-    echo ppc_linux24
+    echo ppc_linux26
     ;;
 ppc64)
-    echo ppc64_linux24
+    echo ppc64_linux26
     ;;
 s390)
-    echo s390_linux24
+    echo s390_linux26
+    ;;
+s390x)
+    echo s390x_linux26
     ;;
 sparc|sparc64)
     echo sparc_linux24

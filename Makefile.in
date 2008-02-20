@@ -63,6 +63,10 @@ dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
+dpkg: dest
+	ln -fs ${srcdir}/src/packaging/Debian debian
+	dpkg-buildpackage -rfakeroot -us -uc
+
 packages: dest
 	@case ${SYS_NAME} in \
 	*_darwin_* ) \

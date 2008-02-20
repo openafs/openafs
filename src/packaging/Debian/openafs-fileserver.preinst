@@ -1,9 +1,0 @@
-#!/bin/sh
-set -e
-
-if [ upgrade = $1 ] ; then
-    	. /usr/share/debconf/confmodule
-fi
-#DEBHELPER#
-
-exit 0

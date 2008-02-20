@@ -45,6 +45,21 @@ Documentation
   secure than the one in the OpenAFS documentation, but the OpenAFS
   documentation provides useful background.
 
+Build Options
+
+  The OpenAFS servers have been built with --enable-supergroups, which
+  permits nesting of PTS groups.  Be aware that the PT database created by
+  these packages is not compatible with servers not built with
+  --enable-supergroups if nested PTS groups are used.  In other words, if
+  you need the openafs-dbserver package to interoperate with ptservers
+  that aren't built with this option, don't use this capability.
+
+  bosserver is built with --enable-bos-new-config.  If
+  /etc/openafs/BosConfig.new exists when bosserver starts, it will be
+  renamed to /etc/openafs/BosConfig before the configuration file is
+  read.  This allows queuing of changes to the configuration that will
+  take effect at the next restart.
+
 Changes Relative to Stock OpenAFS
 
   Long-time AFS users may be confused by the directory layout.  The files
@@ -60,6 +75,14 @@ Changes Relative to Stock OpenAFS
   To distinguish between an SMP and a non-SMP kernel module package, use
   --append_to_version; see README.modules for more information.
 
+  The OpenAFS servers have been patched to support listing up to four
+  realms in /etc/openafs/server/krb.conf.  Any realms listed in that file
+  (all on one line, space-separated) will be treated as local for
+  authorization decisions (in other words, the relam will be stripped off
+  and the unqualified principal name checked against AFS ACLs, UserList,
+  PTS groups, and so forth).  The default OpenAFS server only supports
+  listing one realm in this file.
+
   The AFS up utility is installed as afs-up, since the standard name is
   rather generic.
 
@@ -73,6 +96,42 @@ Changes Relative to Stock OpenAFS
 
   The OpenAFS PAM modules have been built with pthreads rather than the
   standard LWP AFS libraries for compatibility with a threaded sshd.
+
+Debugging and Bug Reporting
+
+  The current OpenAFS installation process installs fileserver and
+  volserver unstripped, since backtraces and other debugging information
+  for those binaries are necessary to track down file server problems.
+  For the Debian packages, the fileserver and volserver binaries in the
+  openafs-fileserver package are stripped, but the debugging information
+  is available in the openafs-dbg package, which can be installed
+  separately.  If it is installed, gdb will find that debugging
+  information automatically.
+
+  Eventually the openafs-dbg package will contain debugging information
+  for all OpenAFS binaries.  This is pending upstream changes to the stock
+  OpenAFS installation rules.
+
+  When reporting a bug in the OpenAFS client, please include your exact
+  kernel version and architecture (reportbug will do this for you).  Also,
+  if the client caused a kernel oops or BUG, be sure to include the
+  complete kernel output, including the lines before the oops.  That's
+  where the OpenAFS error message, if any, will be.
+
+  When reporting a bug in the OpenAFS file server, please include
+  backtrace information from a core dump, if any.  If the file server is
+  deadlocked, you can capture a core dump using the gcore script that
+  comes with the gdb package.  The file server is threaded, so use the
+  command "thread apply all backtrace" in gdb to get a complete backtrace.
+  It's also often useful to have the output of rxdebug <server> 7000 at
+  the time of the problem and the FileLog from the file server.  You can
+  increase the logging level of the file server with kill -TSTP (and reset
+  it to 0 with kill -HUP).
+
+  You can report any bug in OpenAFS against the Debian package with
+  reportbug and the OpenAFS package maintainers will forward the bug
+  upstream as necessary.  If you do want to report a bug directly
+  upstream, see http://www.openafs.org/ for bug reporting instructions.
 
 PAM Authentication
 
@@ -123,4 +182,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Tue Dec 27 15:53:28 2005
+ -- Russ Allbery <rra@debian.org>, Mon, 17 Dec 2007 18:29:42 -0800

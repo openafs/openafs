@@ -1,0 +1,27 @@
+fstrace uses the NLS functions to do message translation and needs a
+message catalog installed.  The default paths are rather broken.  Patch
+the source to look for it in /usr/share/openafs instead.  Not suitable
+upstream with the hard-coded paths, but something more sophisticated
+would be appropriate.
+
+--- openafs.orig/src/venus/fstrace.c
++++ openafs/src/venus/fstrace.c
+@@ -1471,7 +1471,7 @@
+  */
+ 
+ #ifndef RPC_NLS_FORMAT
+-#define RPC_NLS_FORMAT "%s.cat"
++#define RPC_NLS_FORMAT "/usr/share/openafs/%s.cat"
+ #endif
+ 
+ dce1_error_inq_text(status_to_convert, error_text, status)
+@@ -1488,7 +1488,8 @@
+     char component_name[4];
+     char *facility_name;
+     char filename_prefix[7];
+-    char nls_filename[11];
++    /* strlen("/usr/share/openafs/") + 6 + strlen(".cat") + 1 */
++    char nls_filename[19 + 6 + 4 + 1];
+     char alt_filename[80];
+     char *message;
+ #if defined(AFS_64BITPOINTER_ENV)

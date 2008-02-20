@@ -10,4 +10,3 @@
   appropriate kdump and the kernel module package would need to install
   the kdump executable, maybe in /usr/lib/openafs, named after the kernel
   image installed.
-

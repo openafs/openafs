@@ -1,0 +1,34 @@
+Allocate vnodes rather than using the stack, which fixes file server
+problems on SPARC.  Upstream delta:
+
+STABLE14-volprocs-alloc-vnode-instead-of-using-stack-20071126
+
+Debian Bug#448380
+
+--- openafs.orig/src/volser/volprocs.c
++++ openafs/src/volser/volprocs.c
+@@ -210,14 +210,14 @@
+     struct acl_accessList *ACL;
+     ViceFid did;
+     Inode inodeNumber, nearInode;
+-    char buf[SIZEOF_LARGEDISKVNODE];
+-    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
++    struct VnodeDiskObject *vnode;
+     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
+     IHandle_t *h;
+     FdHandle_t *fdP;
+     int code;
+     afs_fsize_t length;
+ 
++    vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
+     memset(vnode, 0, SIZEOF_LARGEDISKVNODE);
+ 
+     V_pref(vp, nearInode);
+@@ -282,6 +282,7 @@
+     VNDISK_GET_LEN(length, vnode);
+     V_diskused(vp) = nBlocks(length);
+ 
++    free(vnode);
+     return 1;
+ }
+ 

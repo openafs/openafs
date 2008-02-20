@@ -1,14 +1,31 @@
-Upstream uses libafs as the module name, mostly for historic reasons.  It
-also uses a different module name depending on whether the module is built
-for SMP systems, something that Debian deals with by creating separate
-packages.  This patch changes the name of the module to openafs and
-removes the separate name for the SMP version.
+Build the kernel module as openafs.ko instead of libafs.ko.  This should
+really be done upstream as well, but it poses backwards compatibility
+problems and it's always been called libafs on other platforms, so it's
+controversial.
 
-Probably not acceptable upstream.
-
---- openafs-1.3.87.orig/src/libafs/MakefileProto.LINUX.in
-+++ openafs-1.3.87/src/libafs/MakefileProto.LINUX.in
-@@ -216,8 +216,8 @@
+--- openafs.orig/src/config/linux-version
++++ openafs/src/config/linux-version
+@@ -38,7 +38,7 @@
+ CAN_BUILD=""
+ 
+ for VERS in $LINUX_VERS ; do
+-	dir=$LINUX_SRCDIR$VERS
++	dir=$LINUX_SRCDIR
+ 	if [ ! -d $dir ] ; then
+ 	    dir=$LINUX_SRCDIR
+ 	    if [ ! -d $dir ] ; then
+@@ -47,7 +47,7 @@
+ 		continue
+       	    fi
+ 	fi
+-	header=$LINUX_SRCDIR$VERS/include/linux/version.h
++	header=$LINUX_SRCDIR/include/linux/version.h
+ 	if [ ! -f $header ] ; then
+ 	    header=$LINUX_SRCDIR/include/linux/version.h
+ 	    if [ ! -f $header ] ; then
+--- openafs.orig/src/libafs/MakefileProto.LINUX.in
++++ openafs/src/libafs/MakefileProto.LINUX.in
+@@ -222,8 +222,8 @@
  
  # Below this line are targets when in the COMMON directory:
  # For Linux there is no kernel NFS server.
@@ -19,7 +36,7 @@ Probably not acceptable upstream.
  LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
  LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
  
-@@ -226,10 +226,8 @@
+@@ -232,10 +232,8 @@
  INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
  INST_LIBAFS_BM = ${DESTDIR}${afskerneldir}/${LIBAFS_BM}
  
@@ -32,7 +49,7 @@ Probably not acceptable upstream.
  
  
  libafs:	$(LIBAFS) 
-@@ -245,11 +243,11 @@
+@@ -251,11 +249,11 @@
  	echo BM Build Complete
  
  <linux26 linux_26 umlinux26>

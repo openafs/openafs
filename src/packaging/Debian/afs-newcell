@@ -12,6 +12,12 @@ use Socket qw(inet_ntoa);
 use vars qw($admin $server $requirements_met $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
 
+# The default file server options are poor.  Until they've been updated, use
+# the following from Harald Barth; it should be an improvement for most
+# people.
+my $fs_options = '-p 23 -busyat 600 -rxpck 400 -s 1200 -l 1200 -cb 65535'
+    . ' -b 240 -vc 1200';
+
 =head1  NAME
 
 afs-newcell - Set up initial database server for AFS cell
@@ -223,7 +229,7 @@ unwind("bos delete $server vlserver -localauth");
 
 # Create a file server as well.
 run("bos create $server fs fs"
-    . " -cmd /usr/lib/openafs/fileserver"
+    . " -cmd '/usr/lib/openafs/fileserver $fs_options'"
     . " -cmd /usr/lib/openafs/volserver"
     . " -cmd /usr/lib/openafs/salvager -localauth");
 unwind("bos delete $server fs -localauth");
