@@ -160,7 +160,7 @@ void cm_CheckTokenCache(time_t now)
     /* 
      * For every vcp, get the user and check his tokens 
      */
-    lock_ObtainWrite(&smb_rctLock);
+    lock_ObtainRead(&smb_rctLock);
     for (vcp=smb_allVCsp; vcp; vcp=vcp->nextp) {
         for (usersp=vcp->usersp; usersp; usersp=usersp->nextp) {
             if (usersp->unp) {
@@ -192,7 +192,7 @@ void cm_CheckTokenCache(time_t now)
             }
         }
     }
-    lock_ReleaseWrite(&smb_rctLock);
+    lock_ReleaseRead(&smb_rctLock);
 }
 
 #ifdef USE_ROOT_TOKENS

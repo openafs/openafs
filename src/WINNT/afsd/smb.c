@@ -807,7 +807,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 {
     smb_vc_t *vcp;
 
-	lock_ObtainWrite(&smb_globalLock);	/* for numVCs */
+    lock_ObtainWrite(&smb_globalLock);	/* for numVCs */
     lock_ObtainWrite(&smb_rctLock);
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
 	if (vcp->magic != SMB_VC_MAGIC)
@@ -883,7 +883,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
-	lock_ReleaseWrite(&smb_globalLock);
+    lock_ReleaseWrite(&smb_globalLock);
     return vcp;
 }
 
@@ -908,35 +908,35 @@ void smb_ReleaseVCInternal(smb_vc_t *vcp)
     vcp->refCount--;
 
     if (vcp->refCount == 0) {
-      if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
-	/* remove VCP from smb_deadVCsp */
-	for (vcpp = &smb_deadVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
-	  if (*vcpp == vcp) {
-	    *vcpp = vcp->nextp;
-	    break;
-	  }
-	} 
-	lock_FinalizeMutex(&vcp->mx);
-	memset(vcp,0,sizeof(smb_vc_t));
-	free(vcp);
-      } else {
-	for (avcp = smb_allVCsp; avcp; avcp = avcp->nextp) {
-	  if (avcp == vcp)
-	    break;
-	}
-	osi_Log3(smb_logp,"VCP not dead and %sin smb_allVCsp vcp %x ref %d",
-		 avcp?"not ":"",vcp, vcp->refCount);
+        if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
+            /* remove VCP from smb_deadVCsp */
+            for (vcpp = &smb_deadVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
+                if (*vcpp == vcp) {
+                    *vcpp = vcp->nextp;
+                    break;
+                }
+            } 
+            lock_FinalizeMutex(&vcp->mx);
+            memset(vcp,0,sizeof(smb_vc_t));
+            free(vcp);
+        } else {
+            for (avcp = smb_allVCsp; avcp; avcp = avcp->nextp) {
+                if (avcp == vcp)
+                    break;
+            }
+            osi_Log3(smb_logp,"VCP not dead and %sin smb_allVCsp vcp %x ref %d",
+                      avcp?"not ":"",vcp, vcp->refCount);
 #ifdef DEBUG
-	GenerateMiniDump(NULL);
+            GenerateMiniDump(NULL);
 #endif
-	/* This is a wrong.  However, I suspect that there is an undercount
-	 * and I don't want to release 1.4.1 in a state that will allow
-	 * smb_vc_t objects to be deallocated while still in the
-	 * smb_allVCsp list.  The list is supposed to keep a reference
-	 * to the smb_vc_t.  Put it back.
-	 */
-	vcp->refCount++;
-      }
+            /* This is a wrong.  However, I suspect that there is an undercount
+             * and I don't want to release 1.4.1 in a state that will allow
+             * smb_vc_t objects to be deallocated while still in the
+             * smb_allVCsp list.  The list is supposed to keep a reference
+             * to the smb_vc_t.  Put it back.
+             */
+            vcp->refCount++;
+        }
     }
 }
 
@@ -1035,11 +1035,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	osi_Log2(smb_logp, "  Cleanup TID %d (tidp=0x%x)", tid, tidpIter);
 
 	smb_HoldTIDNoLock(tidpIter);
-	lock_ReleaseWrite(&smb_rctLock);
-
-	smb_ReleaseTID(tidpIter);
-
-	lock_ObtainWrite(&smb_rctLock);
+	smb_ReleaseTID(tidpIter, TRUE);
 	tidpNext = vcp->tidsp;
     }
 
@@ -1076,9 +1072,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
     for (tidp = vcp->tidsp; tidp; tidp = tidp->nextp) {
 	if (tidp->refCount == 0 && tidp->delete) {
 	    tidp->refCount++;
-	    lock_ReleaseWrite(&smb_rctLock);
-	    smb_ReleaseTID(tidp);
-	    lock_ObtainWrite(&smb_rctLock);
+	    smb_ReleaseTID(tidp, TRUE);
 	    goto retry;
 	}
 
@@ -1107,14 +1101,15 @@ void smb_HoldTIDNoLock(smb_tid_t *tidp)
     tidp->refCount++;
 }
 
-void smb_ReleaseTID(smb_tid_t *tidp)
+void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked)
 {
     smb_tid_t *tp;
     smb_tid_t **ltpp;
     cm_user_t *userp;
 
     userp = NULL;
-    lock_ObtainWrite(&smb_rctLock);
+    if (!locked)
+        lock_ObtainWrite(&smb_rctLock);
     osi_assertx(tidp->refCount-- > 0, "smb_tid_t refCount 0");
     if (tidp->refCount == 0 && (tidp->delete)) {
         ltpp = &tidp->vcp->tidsp;
@@ -1130,7 +1125,8 @@ void smb_ReleaseTID(smb_tid_t *tidp)
         smb_ReleaseVCNoLock(tidp->vcp);
         tidp->vcp = NULL;
     }
-    lock_ReleaseWrite(&smb_rctLock);
+    if (!locked)
+        lock_ReleaseWrite(&smb_rctLock);
     if (userp)
         cm_ReleaseUser(userp);
 }	        
@@ -1242,10 +1238,8 @@ void smb_ReleaseUsername(smb_username_t *unp)
 	free(unp);
     }		
     lock_ReleaseWrite(&smb_rctLock);
-
-    if (userp) {
+    if (userp)
         cm_ReleaseUser(userp);
-    }	
 }	
 
 void smb_HoldUIDNoLock(smb_user_t *uidp)
@@ -1341,7 +1335,7 @@ long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** treepath)
             /* tidp->pathname would be NULL, but that's fine */
         }
         *treepath = tidp->pathname;
-	smb_ReleaseTID(tidp);
+	smb_ReleaseTID(tidp, FALSE);
     }
     return code;
 }
@@ -2951,6 +2945,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
             lock_ReleaseMutex(&smb_RawBufLock);
         }
 
+        lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         return rc;
     }
@@ -3347,11 +3342,8 @@ void smb_Daemon(void *parmp)
 		free(unp->name);
 		free(unp->machine);
 		free(unp);
-		if (userp) {
-		    lock_ReleaseWrite(&smb_rctLock);
+		if (userp)
 		    cm_ReleaseUser(userp);
-		    lock_ObtainWrite(&smb_rctLock);
-		}
 	    } else {
 		unpp = &(*unpp)->nextp;
 	    }
@@ -3552,14 +3544,14 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     if (uidp)
         smb_ReleaseUID(uidp);
     if (!shareFound) {
-        smb_ReleaseTID(tidp);
+        smb_ReleaseTID(tidp, FALSE);
         return CM_ERROR_BADSHARENAME;
     }
     lock_ObtainMutex(&tidp->mx);
     tidp->userp = userp;
     tidp->pathname = sharePath;
     lock_ReleaseMutex(&tidp->mx);
-    smb_ReleaseTID(tidp);
+    smb_ReleaseTID(tidp, FALSE);
 
     smb_SetSMBParm(rsp, 0, SMB_PACKETSIZE);
     smb_SetSMBParm(rsp, 1, newTid);
@@ -4782,8 +4774,8 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
     if (tidp) {
 	lock_ObtainWrite(&smb_rctLock);
         tidp->delete = 1;
+        smb_ReleaseTID(tidp, TRUE);
         lock_ReleaseWrite(&smb_rctLock);
-        smb_ReleaseTID(tidp);
     }
 
     return 0;
@@ -9226,9 +9218,7 @@ void smb_Shutdown(void)
             if (tidp->userp) {
                 cm_user_t *userp = tidp->userp;
                 tidp->userp = NULL;
-                lock_ReleaseWrite(&smb_rctLock);
                 cm_ReleaseUser(userp);
-                lock_ObtainWrite(&smb_rctLock);
             }
         }
     }
