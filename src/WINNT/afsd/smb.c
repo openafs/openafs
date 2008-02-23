@@ -4406,9 +4406,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                 bufferp = NULL;
             }	
             lock_ReleaseMutex(&scp->mx);
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
             lock_ObtainMutex(&dsp->mx);
 
             /* now, if we're doing a star match, do bulk fetching of all of 
@@ -4541,10 +4539,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
             {
                 /* We have already done the cm_TryBulkStat above */
-                fid.cell = scp->fid.cell;
-                fid.volume = scp->fid.volume;
-                fid.vnode = ntohl(dep->fid.vnode);
-                fid.unique = ntohl(dep->fid.unique);
+                cm_SetFid(&fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
                 fileType = cm_FindFileType(&fid);
                 osi_Log2(smb_logp, "smb_ReceiveCoreSearchDir: file %s "
                          "has filetype %d", osi_LogSaveString(smb_logp, dep->name),
@@ -4582,10 +4577,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             curPatchp = malloc(sizeof(*curPatchp));
             osi_QAdd((osi_queue_t **) &dirListPatchesp, &curPatchp->q);
             curPatchp->dptr = op;
-            curPatchp->fid.cell = scp->fid.cell;
-            curPatchp->fid.volume = scp->fid.volume;
-            curPatchp->fid.vnode = ntohl(dep->fid.vnode);
-            curPatchp->fid.unique = ntohl(dep->fid.unique);
+            cm_SetFid(&curPatchp->fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
 
             /* do hidden attribute here since name won't be around when applying
              * dir list patches
@@ -6396,9 +6388,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
             }
             lock_ReleaseMutex(&scp->mx);
 
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
 
             lock_ObtainMutex(&scp->mx);
             if (code) goto done;
@@ -6458,7 +6448,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         buf_Release(bufferp);
 
     if (code == 0 && sequential)
-        cm_ConsiderPrefetch(scp, &lastByte, userp, &req);
+        cm_ConsiderPrefetch(scp, &lastByte, *readp, userp, &req);
 
     cm_ReleaseSCache(scp);
 
@@ -6476,18 +6466,18 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 	cm_user_t *userp, long *writtenp, int dosflag)
 #endif /* !DJGPP */
 {
-    osi_hyper_t offset;
+    osi_hyper_t offset = *offsetp;
     long code = 0;
     long written = 0;
     cm_scache_t *scp;
     osi_hyper_t fileLength;	/* file's length at start of write */
     osi_hyper_t minLength;	/* don't read past this */
     afs_uint32 nbytes;		/* # of bytes to transfer this iteration */
-    cm_buf_t *bufferp;
+    cm_buf_t *bufferp = NULL;
     osi_hyper_t thyper;		/* hyper tmp variable */
     osi_hyper_t bufferOffset;
     afs_uint32 bufIndex;		/* index in buffer where our data is */
-    int doWriteBack;
+    int doWriteBack = 0;
     osi_hyper_t writeBackOffset;/* offset of region to write back when
                                  * I/O is done */
     DWORD filter = 0;
@@ -6499,10 +6489,6 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     *writtenp = 0;
 
     cm_InitReq(&req);
-
-    bufferp = NULL;
-    doWriteBack = 0;
-    offset = *offsetp;
 
     lock_ObtainMutex(&fidp->mx);
     /* make sure we have a writable FD */
@@ -6550,13 +6536,20 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     /* now, if the new position (thyper) and the old (offset) are in
      * different storeback windows, remember to store back the previous
      * storeback window when we're done with the write.
+     *
+     * the purpose of this logic is to slow down the CIFS client 
+     * in order to avoid the client disconnecting during the CLOSE
+     * operation if there are too many dirty buffers left to write
+     * than can be accomplished during 45 seconds.  This used to be
+     * based upon cm_chunkSize but we desire cm_chunkSize to be large
+     * so that we can read larger amounts of data at a time.
      */
-    if ((thyper.LowPart & (-cm_chunkSize)) !=
-         (offset.LowPart & (-cm_chunkSize))) {
+    if ((thyper.LowPart & ~(cm_data.buf_blockSize-1)) !=
+         (offset.LowPart & ~(cm_data.buf_blockSize-1))) {
         /* they're different */
         doWriteBack = 1;
         writeBackOffset.HighPart = offset.HighPart;
-        writeBackOffset.LowPart = offset.LowPart & (-cm_chunkSize);
+        writeBackOffset.LowPart = offset.LowPart & ~(cm_data.buf_blockSize-1);
     }
         
     *writtenp = count;
@@ -6587,9 +6580,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
             }	
             lock_ReleaseMutex(&scp->mx);
 
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
 
             lock_ObtainMutex(&bufferp->mx);
             lock_ObtainMutex(&scp->mx);
@@ -6711,6 +6702,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
     if (code == 0 && doWriteBack) {
         long code2;
+
         lock_ObtainMutex(&scp->mx);
         osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
                   fidp->fid);
@@ -6719,7 +6711,8 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
                   fidp->fid, code2);
         lock_ReleaseMutex(&scp->mx);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
-                            writeBackOffset.HighPart, cm_chunkSize, 0, userp);
+                            writeBackOffset.HighPart, 
+                            *writtenp & ~(cm_data.blockSize-1), 0, userp);
 	/* cm_SyncOpDone is called at the completion of cm_BkgStore */
     }
 
@@ -7731,29 +7724,32 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
         if (dp->procp) {
             /* we have a recognized operation */
+            char * opName = myCrt_Dispatch(inp->inCom);
 
             if (inp->inCom == 0x1d)
                 /* Raw Write */
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
             else {
-                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",opName,vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
                 osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
-                smb_LogPacket(inp);
+                    smb_LogPacket(inp);
 #endif /* LOG_PACKET */
             }   
 
+            newTime = GetTickCount();
+            osi_Log2(smb_logp, "Dispatch %s duration %d ms", opName, newTime - oldTime);
+
             if (oldGen != sessionGen) {
-                newTime = GetTickCount();
 #ifndef DJGPP
 		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_WRONG_SESSION, 
 			 newTime - oldTime, ncbp->ncb_length);
 #endif /* !DJGPP */
-		osi_Log2(smb_logp, "Pkt straddled session startup, "
-                          "took %d ms, ncb length %d", newTime - oldTime, ncbp->ncb_length);
+		osi_Log3(smb_logp, "Request %s straddled session startup, "
+                          "took %d ms, ncb length %d", opName, newTime - oldTime, ncbp->ncb_length);
             }
         }
         else {

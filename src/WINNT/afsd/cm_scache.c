@@ -180,6 +180,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->fid.volume = 0;
     scp->fid.unique = 0;
     scp->fid.cell = 0;
+    scp->fid.hash = 0;
 
     /* remove from dnlc */
     cm_dnlcPurgedp(scp);
@@ -337,10 +338,21 @@ cm_scache_t *cm_GetNewSCache(void)
     return scp;
 }       
 
+void cm_SetFid(cm_fid_t *fidp, afs_uint32 cell, afs_uint32 volume, afs_uint32 vnode, afs_uint32 unique)
+{
+    fidp->cell = cell;
+    fidp->volume = volume;
+    fidp->vnode = vnode;
+    fidp->unique = unique;
+    fidp->hash = ((cell & 0xF) << 28) | ((volume & 0x3F) << 22) | ((vnode & 0x7FF) << 11) | (unique & 0x7FF);
+}
+
 /* like strcmp, only for fids */
 int cm_FidCmp(cm_fid_t *ap, cm_fid_t *bp)
 {
-    if (ap->vnode != bp->vnode) 
+    if (ap->hash != bp->hash)
+        return 1;
+    if (ap->vnode != bp->vnode)
         return 1;
     if (ap->volume != bp->volume) 
         return 1;
@@ -880,9 +892,7 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     cm_scache_t * pscp = NULL;
 
     lock_ObtainWrite(&cm_scacheLock);
-    parent_fid = scp->fid;
-    parent_fid.vnode = scp->parentVnode;
-    parent_fid.unique = scp->parentUnique;
+    cm_SetFid(&parent_fid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
 
     if (cm_FidCmp(&scp->fid, &parent_fid)) {
 	i = CM_SCACHE_HASH(&parent_fid);
@@ -902,6 +912,10 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
 void cm_SyncOpAddToWaitQueue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
 {
     cm_scache_waiter_t * w;
+
+    /* Do not use the queue for asynchronous store operations */
+    if (flags == CM_SCACHESYNC_ASYNCSTORE)
+        return;
 
     lock_ObtainWrite(&cm_scacheLock);
     if (cm_allFreeWaiters == NULL) {
@@ -928,6 +942,10 @@ int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
 {
     cm_scache_waiter_t * w;
     int this_is_me;
+
+    /* Do not use the queue for asynchronous store operations */
+    if (flags == CM_SCACHESYNC_ASYNCSTORE)
+        return 1;
 
     osi_Log0(afsd_logp, "cm_SyncOpCheckContinue checking for continuation");
 

@@ -357,10 +357,10 @@ void cm_InitFakeRootDir() {
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
-    fidp->cell = AFS_FAKE_ROOT_CELL_ID;            /* root cell */
-    fidp->volume = AFS_FAKE_ROOT_VOL_ID;           /* root.afs ? */
-    fidp->vnode = 0x1;
-    fidp->unique = 0x1;
+    cm_SetFid(fidp, 
+              AFS_FAKE_ROOT_CELL_ID,            /* root cell */
+              AFS_FAKE_ROOT_VOL_ID,            /* root.afs ? */
+              1, 1);
     return 0;
 }
   
@@ -395,10 +395,7 @@ int cm_reInitLocalMountPoints() {
 
     osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-    aFid.cell = AFS_FAKE_ROOT_CELL_ID;
-    aFid.volume=AFS_FAKE_ROOT_VOL_ID;
-    aFid.unique=0x1;
-    aFid.vnode=0x2;
+    cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, 1, 2);
 
     lock_ObtainWrite(&cm_scacheLock);
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
@@ -434,7 +431,7 @@ int cm_reInitLocalMountPoints() {
                 }
             }
         }
-        aFid.vnode = aFid.vnode + 1;
+        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, aFid.vnode + 1, 2);
     }
     lock_ReleaseWrite(&cm_scacheLock);
     osi_Log0(afsd_logp,"\tall old scp cleared!");
@@ -1106,10 +1103,8 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
     /* cm_reInitLocalMountPoints(); */
-    if (fidp) {
-        fidp->unique = 1;
-        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
-    }
+    if (fidp)
+        cm_SetFid(fidp, fidp->cell, fidp->volume, cm_noLocalMountPoints + 1, 1);
     cm_noteLocalMountPointChange();
     return 0;
 }
@@ -1322,10 +1317,8 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
     /* cm_reInitLocalMountPoints(); */
-    if (fidp) {
-        fidp->unique = 1;
-        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
-    }
+    if (fidp)
+        cm_SetFid(fidp, fidp->cell, fidp->volume, cm_noLocalMountPoints + 1, 1);
     cm_noteLocalMountPointChange();
     return 0;
 }

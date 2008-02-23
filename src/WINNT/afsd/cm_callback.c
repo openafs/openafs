@@ -143,10 +143,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
         cm_fid_t tfid;
         cm_scache_t *dscp;
 
-        tfid.cell = scp->fid.cell;
-        tfid.volume = scp->fid.volume;
-        tfid.vnode = scp->parentVnode;
-        tfid.unique = scp->parentUnique;
+        cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         dscp = cm_FindSCache(&tfid);
 #ifndef AFSIFS
         if ( dscp &&

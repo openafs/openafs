@@ -496,9 +496,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         return code;
 
     thyper.HighPart = 0; thyper.LowPart = 0;
-    lock_ObtainRead(&scp->bufCreateLock);
     code = buf_Get(scp, &thyper, &bufferp);
-    lock_ReleaseRead(&scp->bufCreateLock);
     if (code)
         return code;
 
@@ -732,9 +730,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 bufferp = NULL;
             }
 
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
             if (code) {
                 /* if buf_Get() fails we do not have a buffer object to lock */
                 bufferp = NULL;
@@ -977,10 +973,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     /* otherwise, we have to read it in */
     lock_ReleaseMutex(&scp->mx);
 
-    lock_ObtainRead(&scp->bufCreateLock);
     thyper.LowPart = thyper.HighPart = 0;
     code = buf_Get(scp, &thyper, &bufp);
-    lock_ReleaseRead(&scp->bufCreateLock);
 
     lock_ObtainMutex(&scp->mx);
     if (code)
@@ -1123,6 +1117,8 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     lock_ObtainMutex(&scp->mx);
         
     if (code == 0) {
+        afs_uint32 cell, volume, vnode, unique;
+
         /* save the parent of the volume root for this is the 
          * place where the volume is mounted and we must remember 
          * this in the volume structure rather than just in the 
@@ -1133,7 +1129,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         volp->dotdotFid = dscp->fid;
         lock_ReleaseMutex(&volp->mx);
 
-        scp->mountRootFid.cell = cellp->cellID;
+        cell = cellp->cellID;
         
         /* if the mt pt originates in a .backup volume (not a .readonly)
          * and FollowBackupPath is active, and if there is a .backup
@@ -1158,15 +1154,14 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
             targetType = ROVOL;
         }
         if (targetType == ROVOL)
-            scp->mountRootFid.volume = volp->ro.ID;
+            volume = volp->ro.ID;
         else if (targetType == BACKVOL)
-            scp->mountRootFid.volume = volp->bk.ID;
+            volume = volp->bk.ID;
         else
-            scp->mountRootFid.volume = volp->rw.ID;
+            volume = volp->rw.ID;
 
         /* the rest of the fid is a magic number */
-        scp->mountRootFid.vnode = 1;
-        scp->mountRootFid.unique = 1;
+        cm_SetFid(&scp->mountRootFid, cell, volume, 1, 1);
         scp->mountRootGen = cm_data.mountRootGen;
 
         tfid = scp->mountRootFid;
@@ -1431,6 +1426,7 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
     cm_cell_t *   cellp = NULL;
     cm_volume_t * volp = NULL;
     cm_fid_t      fid;
+    afs_uint32    volume;
     int           volType;
     int           mountType = RWVOL;
 
@@ -1497,18 +1493,15 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
     if (code != 0)
         goto _exit_cleanup;
 
-    fid.cell = cellp->cellID;
-
     if (volType == BACKVOL)
-        fid.volume = volp->bk.ID;
+        volume = volp->bk.ID;
     else if (volType == ROVOL ||
              (volType == RWVOL && mountType == ROVOL && volp->ro.ID != 0))
-        fid.volume = volp->ro.ID;
+        volume = volp->ro.ID;
     else
-        fid.volume = volp->rw.ID;
+        volume = volp->rw.ID;
 
-    fid.vnode = 1;
-    fid.unique = 1;
+    cm_SetFid(&fid, cellp->cellID, volume, 1, 1);
 
     code = cm_GetSCache(&fid, outpScpp, userp, reqp);
 
@@ -1700,9 +1693,7 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         /* read the link data */
         lock_ReleaseMutex(&linkScp->mx);
         thyper.LowPart = thyper.HighPart = 0;
-        lock_ObtainRead(&linkScp->bufCreateLock);
         code = buf_Get(linkScp, &thyper, &bufp);
-        lock_ReleaseRead(&linkScp->bufCreateLock);
         lock_ObtainMutex(&linkScp->mx);
         if (code) 
             return code;
@@ -2261,10 +2252,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     if (strcmp(dep->name, ".") == 0 || strcmp(dep->name, "..") == 0)
         return 0;
 
-    tfid.cell = scp->fid.cell;
-    tfid.volume = scp->fid.volume;
-    tfid.vnode = ntohl(dep->fid.vnode);
-    tfid.unique = ntohl(dep->fid.unique);
+    cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     tscp = cm_FindSCache(&tfid);
     if (tscp) {
         if (lock_TryMutex(&tscp->mx)) {
@@ -2406,10 +2394,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
         /* otherwise, we should do the merges */
         for (i = 0; i<filesThisCall; i++) {
             j = filex + i;
-            tfid.cell = dscp->fid.cell;
-            tfid.volume = bb.fids[j].Volume;
-            tfid.vnode = bb.fids[j].Vnode;
-            tfid.unique = bb.fids[j].Unique;
+            cm_SetFid(&tfid, dscp->fid.cell, bb.fids[j].Volume, bb.fids[j].Vnode, bb.fids[j].Unique);
             code = cm_GetSCache(&tfid, &scp, userp, reqp);
             if (code != 0) 
                 continue;
@@ -2767,10 +2752,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * info.
      */
     if (code == 0) {
-        newFid.cell = dscp->fid.cell;
-        newFid.volume = dscp->fid.volume;
-        newFid.vnode = newAFSFid.Vnode;
-        newFid.unique = newAFSFid.Unique;
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
@@ -2806,9 +2788,7 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    lock_ObtainWrite(&scp->bufCreateLock);
     code = buf_CleanVnode(scp, userp, reqp);
-    lock_ReleaseWrite(&scp->bufCreateLock);
     if (code == 0) {
         lock_ObtainMutex(&scp->mx);
 
@@ -2927,10 +2907,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * info.
      */
     if (code == 0) {
-        newFid.cell = dscp->fid.cell;
-        newFid.volume = dscp->fid.volume;
-        newFid.vnode = newAFSFid.Vnode;
-        newFid.unique = newAFSFid.Unique;
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
@@ -3115,10 +3092,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&dirop)) {
-            newFid.cell = dscp->fid.cell;
-            newFid.volume = dscp->fid.volume;
-            newFid.vnode = newAFSFid.Vnode;
-            newFid.unique = newAFSFid.Unique;
+            cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
 
             cm_DirCreateEntry(&dirop, namep, &newFid);
 #ifdef USE_BPLUS
@@ -3134,10 +3108,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
      * info.
      */
     if (code == 0) {
-        newFid.cell = dscp->fid.cell;
-        newFid.volume = dscp->fid.volume;
-        newFid.vnode = newAFSFid.Vnode;
-        newFid.unique = newAFSFid.Unique;
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);

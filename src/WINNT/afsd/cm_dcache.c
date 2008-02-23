@@ -697,9 +697,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             mxheld = 0;
         }
 
-        lock_ObtainRead(&scp->bufCreateLock);
         code = buf_Get(scp, &offset, &bp);
-        lock_ReleaseRead(&scp->bufCreateLock);
         if (code)
             break;
 
@@ -737,7 +735,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
 /* a read was issued to offsetp, and we have to determine whether we should
  * do a prefetch of the next chunk.
  */
-void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
+void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 count,
                          cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
@@ -750,7 +748,7 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
     readBase.LowPart += (cm_chunkSize-1);
     readBase.LowPart &= (-cm_chunkSize);
 
-    readLength = ConvertLongToLargeInteger(cm_chunkSize);
+    readLength = ConvertLongToLargeInteger(count);
 
     lock_ObtainMutex(&scp->mx);
     if ((scp->flags & CM_SCACHEFLAG_PREFETCHING)
@@ -1092,9 +1090,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) 
             break;
 
-        lock_ObtainRead(&scp->bufCreateLock);
         code = buf_Get(scp, &pageBase, &tbp);
-        lock_ReleaseRead(&scp->bufCreateLock);
         if (code) {
             //lock_ReleaseMutex(&cm_bufGetMutex);
             lock_ObtainMutex(&scp->mx);

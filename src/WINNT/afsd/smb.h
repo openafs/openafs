@@ -223,10 +223,10 @@ typedef struct myncb {
 typedef struct smb_vc {
     struct smb_vc *nextp;		/* not used */
     afs_uint32 magic;			/* a magic value to detect bad entries */
-    unsigned long refCount;		/* the reference count */
-    long flags;			        /* the flags, if any; locked by mx */
+    afs_int32 refCount;		        /* the reference count */
+    afs_uint32 flags;		        /* the flags, if any; locked by mx */
     osi_mutex_t mx;			/* the mutex */
-    long vcID;			        /* VC id */
+    afs_uint32 vcID;		        /* VC id */
     unsigned short lsn;		        /* the NCB LSN associated with this */
     unsigned short uidCounter;	        /* session ID counter */
     unsigned short tidCounter;	        /* tree ID counter */
@@ -259,7 +259,7 @@ typedef struct smb_vc {
 /* one per user session */
 typedef struct smb_user {
     struct smb_user *nextp;		/* next sibling */
-    unsigned long refCount;		/* ref count */
+    afs_int32 refCount;		        /* ref count */
     afs_uint32 flags;		        /* flags; locked by mx */
     osi_mutex_t mx;
     unsigned short userID;		/* the session identifier */
@@ -272,7 +272,7 @@ typedef struct smb_user {
 
 typedef struct smb_username {
     struct smb_username *nextp;		/* next sibling */
-    unsigned long refCount;		/* ref count */
+    afs_int32 refCount;		        /* ref count */
     long flags;			        /* flags; locked by mx */
     osi_mutex_t mx;
     struct cm_user *userp;		/* CM user structure */
@@ -303,7 +303,7 @@ typedef struct smb_username {
 /* one per tree-connect */
 typedef struct smb_tid {
     struct smb_tid *nextp;		/* next sibling */
-    unsigned long refCount;
+    afs_int32 refCount;
     afs_uint32 flags;			/* protected by mx */
     osi_mutex_t mx;			/* for non-tree-related stuff */
     unsigned short tid;		        /* the tid */
@@ -319,7 +319,7 @@ typedef struct smb_tid {
 /* one per process ID */
 typedef struct smb_pid {
     struct smb_pid *nextp;		/* next sibling */
-    unsigned long refCount;
+    afs_int32 refCount;
     long flags;
     osi_mutex_t mx;			/* for non-tree-related stuff */
     unsigned short pid;		        /* the pid */
@@ -360,7 +360,7 @@ typedef struct smb_ioctl {
 /* one per file ID; these are really file descriptors */
 typedef struct smb_fid {
     osi_queue_t q;
-    unsigned long refCount;
+    afs_int32 refCount;
     afs_uint32 flags;			/* protected by mx */
     osi_mutex_t mx;			/* for non-tree-related stuff */
     unsigned short fid;		        /* the file ID */
@@ -452,7 +452,7 @@ typedef struct smb_fid {
 typedef struct smb_dirSearch {
     osi_queue_t q;			/* queue of all outstanding cookies */
     osi_mutex_t mx;			/* just in case the caller screws up */
-    unsigned long refCount;		/* reference count */
+    afs_int32 refCount;		        /* reference count */
     long cookie;			/* value returned to the caller */
     struct cm_scache *scp;		/* vnode of the dir we're searching */
     time_t lastTime;			/* last time we used this (osi_Time) */

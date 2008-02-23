@@ -84,9 +84,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             }
             lock_ReleaseMutex(&scp->mx);
 
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
 
             lock_ObtainMutex(&scp->mx);
             if (code) goto done;
@@ -142,7 +140,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         buf_Release(bufferp);
 
     if (code == 0 && sequential)
-        cm_ConsiderPrefetch(scp, &lastByte, userp, &req);
+        cm_ConsiderPrefetch(scp, &lastByte, *readp, userp, &req);
 
     return code;
 }       
@@ -161,7 +159,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     osi_hyper_t bufferOffset;
     afs_uint32 bufIndex;	/* index in buffer where our data is */
     int doWriteBack;
-    osi_hyper_t writeBackOffset;	/* offset of region to write back when
+    osi_hyper_t writeBackOffset;/* offset of region to write back when
     * I/O is done */
     DWORD filter = 0;
     cm_req_t req;
@@ -247,9 +245,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             }	
             lock_ReleaseMutex(&scp->mx);
 
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
 
             lock_ObtainMutex(&bufferp->mx);
             lock_ObtainMutex(&scp->mx);

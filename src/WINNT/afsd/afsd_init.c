@@ -1056,7 +1056,7 @@ int afsd_InitCM(char **reasonP)
     dwValue = 0;
     code = RegQueryValueEx(parmKey, "RxEnableHotThread", NULL, NULL,
                             (BYTE *) &dwValue, &dummyLen);
-     if (code == ERROR_SUCCESS && dwValue != 0) {
+     if (code != ERROR_SUCCESS || dwValue != 0) {
          rx_EnableHotThread();
          afsi_log("RX Hot Thread is enabled");
      }
@@ -1355,10 +1355,7 @@ int afsd_InitDaemons(char **reasonP)
 
     /* compute the root fid */
     if (!cm_freelanceEnabled) {
-        cm_data.rootFid.cell = cm_data.rootCellp->cellID;
-        cm_data.rootFid.volume = cm_GetROVolumeID(cm_data.rootVolumep);
-        cm_data.rootFid.vnode = 1;
-        cm_data.rootFid.unique = 1;
+        cm_SetFid(&cm_data.rootFid, cm_data.rootCellp->cellID, cm_GetROVolumeID(cm_data.rootVolumep), 1, 1);
     }
     else
         cm_FakeRootFid(&cm_data.rootFid);

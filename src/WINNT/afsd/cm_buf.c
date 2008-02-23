@@ -750,9 +750,9 @@ void buf_Recycle(cm_buf_t *bp)
  */
 long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 {
-    cm_buf_t *bp;		/* buffer we're dealing with */
+    cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
-    long i;			/* temp */
+    afs_uint32 i;	/* temp */
     cm_req_t req;
 
     cm_InitReq(&req);	/* just in case */
@@ -763,6 +763,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
     while(1) {
       retry:
+        lock_ObtainRead(&scp->bufCreateLock);
         lock_ObtainWrite(&buf_globalLock);
         /* check to see if we lost the race */
         if (scp) {
@@ -781,6 +782,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 	if (!cm_data.buf_freeListEndp)
 	{
 	    lock_ReleaseWrite(&buf_globalLock);
+            lock_ReleaseRead(&scp->bufCreateLock);
 	    osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List is empty - sleeping 200ms");
 	    Sleep(200);
 	    goto retry;
@@ -913,6 +915,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             bp->refCount = 1;
                         
             lock_ReleaseWrite(&buf_globalLock);
+            lock_ReleaseRead(&scp->bufCreateLock);
             *bufpp = bp;
 
 #ifdef TESTING
@@ -921,6 +924,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             return 0;
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
+        lock_ReleaseRead(&scp->bufCreateLock);
 	osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List has no buffers with a zero refcount - sleeping 100ms");
 	Sleep(100);		/* give some time for a buffer to be freed */
     }	/* while loop over everything */
@@ -1557,7 +1561,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion)
 {
     cm_buf_t * bp;
-    unsigned int i;
+    afs_uint32 i;
     int found = 0;
 
     lock_AssertMutex(&scp->mx);
@@ -1588,7 +1592,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
     long wasDirty = 0;
     cm_buf_t *bp;		/* buffer we're hacking on */
     cm_buf_t *nbp;		/* next one */
-    long i;
+    afs_uint32 i;
 
     i = BUF_FILEHASH(&scp->fid);
 

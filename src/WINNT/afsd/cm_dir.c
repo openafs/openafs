@@ -1559,10 +1559,7 @@ cm_DirGetPage(cm_dirOp_t * op,
             goto _has_buffer;
         }
 
-        lock_ObtainRead(&op->scp->bufCreateLock);
         code = buf_Get(op->scp, &bufferOffset, &bufferp);
-        lock_ReleaseRead(&op->scp->bufCreateLock);
-
         if (code) {
             osi_Log1(afsd_logp, "    buf_Get returned code 0x%x", code);
             bufferp = NULL;

@@ -10,7 +10,8 @@
 #ifndef CM_MEMMAP_H
 #define CM_MEMMAP_H 1
 
-#define CM_CONFIG_DATA_MAGIC            ('A' | 'F'<<8 | 'S'<<16 | 'D'<<24)
+#define CM_CONFIG_DATA_VERSION  1
+#define CM_CONFIG_DATA_MAGIC            ('A' | 'F'<<8 | 'S'<<16 | CM_CONFIG_DATA_VERSION<<24)
 
 typedef struct cm_config_data {
     afs_uint32          size;

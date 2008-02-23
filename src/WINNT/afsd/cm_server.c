@@ -343,14 +343,15 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         }
         lock_ReleaseWrite(&cm_serverLock);
 
-        /* Perform the multi call */
-        start = time(NULL);
-        multi_Rx(rxconns,nconns)
-        {
-            multi_RXAFS_GetCapabilities(&caps[multi_i]);
-            results[multi_i]=multi_error;
-        } multi_End;
-
+        if (nconns) {
+            /* Perform the multi call */
+            start = time(NULL);
+            multi_Rx(rxconns,nconns)
+            {
+                multi_RXAFS_GetCapabilities(&caps[multi_i]);
+                results[multi_i]=multi_error;
+            } multi_End;
+        }
 
         /* Process results of servers that support RXAFS_GetCapabilities */
         for (i=0; i<nconns; i++) {
@@ -479,18 +480,19 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         }
         nconns = j;
 
-        /* Perform the multi call */
-        start = time(NULL);
-        multi_Rx(rxconns,nconns)
-        {
-            secs = usecs = 0;
-            multi_RXAFS_GetTime(&secs, &usecs);
-            end = time(NULL);
-            results[multi_i]=multi_error;
-            if ((start == end) && !multi_error)
-                deltas[multi_i] = end - secs;
-        } multi_End;
-
+        if (nconns) {
+            /* Perform the multi call */
+            start = time(NULL);
+            multi_Rx(rxconns,nconns)
+            {
+                secs = usecs = 0;
+                multi_RXAFS_GetTime(&secs, &usecs);
+                end = time(NULL);
+                results[multi_i]=multi_error;
+                if ((start == end) && !multi_error)
+                    deltas[multi_i] = end - secs;
+            } multi_End;
+        }
 
         /* Process Results of servers that only support RXAFS_GetTime */
         for (i=0; i<nconns; i++) {
@@ -637,14 +639,15 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         }
         lock_ReleaseWrite(&cm_serverLock);
 
-        /* Perform the multi call */
-        start = time(NULL);
-        multi_Rx(rxconns,nconns)
-        {
-            multi_VL_ProbeServer();
-            results[multi_i]=multi_error;
-        } multi_End;
-
+        if (nconns) {
+            /* Perform the multi call */
+            start = time(NULL);
+            multi_Rx(rxconns,nconns)
+            {
+                multi_VL_ProbeServer();
+                results[multi_i]=multi_error;
+            } multi_End;
+        }
 
         /* Process results of servers that support RXAFS_GetCapabilities */
         for (i=0; i<nconns; i++) {

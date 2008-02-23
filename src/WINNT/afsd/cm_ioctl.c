@@ -71,14 +71,12 @@ long cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    lock_ObtainWrite(&scp->bufCreateLock);
     code = buf_CleanVnode(scp, userp, reqp);
         
     lock_ObtainMutex(&scp->mx);
     cm_DiscardSCache(scp);
     lock_ReleaseMutex(&scp->mx);
 
-    lock_ReleaseWrite(&scp->bufCreateLock);
     osi_Log2(afsd_logp,"cm_CleanFile scp 0x%x returns error: [%x]",scp, code);
     return code;
 }
@@ -94,7 +92,6 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     }
 #endif
 
-    lock_ObtainWrite(&scp->bufCreateLock);
     code = buf_FlushCleanPages(scp, userp, reqp);
         
     lock_ObtainMutex(&scp->mx);
@@ -102,7 +99,6 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     lock_ReleaseMutex(&scp->mx);
 
-    lock_ReleaseWrite(&scp->bufCreateLock);
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
 }

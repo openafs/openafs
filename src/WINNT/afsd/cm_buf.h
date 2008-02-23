@@ -32,17 +32,12 @@
 extern int buf_cacheType;
 
 /* force it to be signed so that mod comes out positive or 0 */
-#define BUF_HASH(fidp,offsetp) ((((fidp)->vnode+((fidp)->unique << 5)	\
-				+(fidp)->volume+(fidp)->cell		\
-				+((offsetp)->LowPart / cm_data.buf_blockSize))	\
-				  & 0x7fffffff)				\
+#define BUF_HASH(fidp,offsetp) ((((fidp)->hash \
+				+(offsetp)->LowPart) / cm_data.buf_blockSize)	\
 				   % cm_data.buf_hashSize)
 
 /* another hash fn */
-#define BUF_FILEHASH(fidp) ((((fidp)->vnode+((fidp)->unique << 5)	\
-				+(fidp)->volume+(fidp)->cell)		\
-				  & 0x7fffffff)				\
-				   % cm_data.buf_hashSize)
+#define BUF_FILEHASH(fidp) ((fidp)->hash % cm_data.buf_hashSize)
 
 /* backup over pointer to the buffer */
 #define BUF_OVERTOBUF(op) ((cm_buf_t *)(((char *)op) - ((long)(&((cm_buf_t *)0)->over))))
@@ -67,12 +62,12 @@ typedef struct cm_buf {
 				 */
     struct cm_buf *dirtyp;	/* next in the dirty list */
     osi_mutex_t mx;		/* mutex protecting structure except refcount */
-    unsigned long refCount;	/* reference count (buf_globalLock) */
+    afs_int32 refCount;	        /* reference count (buf_globalLock) */
     long idCounter;		/* counter for softrefs; bumped at each recycle */
     long dirtyCounter;	        /* bumped at each dirty->clean transition */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
-    long flags;		        /* flags we're using */
+    afs_uint32 flags;		/* flags we're using */
     char *datap;		/* data in this buffer */
     unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */

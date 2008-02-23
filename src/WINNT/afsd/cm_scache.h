@@ -17,11 +17,13 @@
 #define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
 typedef struct cm_fid {
-	unsigned long cell;
-        unsigned long volume;
-        unsigned long vnode;
-        unsigned long unique;
+    afs_uint32 cell;
+    afs_uint32 volume;
+    afs_uint32 vnode;
+    afs_uint32 unique;
+    afs_uint32 hash;
 } cm_fid_t;
+
 
 /* Key used for byte range locking.  Each unique key identifies a
    unique client per cm_scache_t for the purpose of locking. */
@@ -99,7 +101,7 @@ typedef struct cm_scache {
                                          * write-locked to prevent buffers from
 					 * being created during a truncate op, etc.
 					 */
-    afs_uint32 refCount;		/* reference count; cm_scacheLock */
+    afs_int32 refCount;		        /* reference count; cm_scacheLock */
     osi_queueData_t *bufReadsp;		/* queue of buffers being read */
     osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
@@ -346,6 +348,8 @@ extern long cm_GetSCache(cm_fid_t *, cm_scache_t **, struct cm_user *,
 extern cm_scache_t *cm_GetNewSCache(void);
 
 extern int cm_FidCmp(cm_fid_t *, cm_fid_t *);
+
+extern void cm_SetFid(cm_fid_t *, afs_uint32 cell, afs_uint32 volume, afs_uint32 vnode, afs_uint32 unique);
 
 extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
 	struct cm_req *, afs_uint32, afs_uint32);
