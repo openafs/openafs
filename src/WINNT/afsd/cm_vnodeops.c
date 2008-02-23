@@ -1117,7 +1117,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     lock_ObtainMutex(&scp->mx);
         
     if (code == 0) {
-        afs_uint32 cell, volume, vnode, unique;
+        afs_uint32 cell, volume;
 
         /* save the parent of the volume root for this is the 
          * place where the volume is mounted and we must remember 

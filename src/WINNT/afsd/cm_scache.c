@@ -348,7 +348,7 @@ void cm_SetFid(cm_fid_t *fidp, afs_uint32 cell, afs_uint32 volume, afs_uint32 vn
 }
 
 /* like strcmp, only for fids */
-int cm_FidCmp(cm_fid_t *ap, cm_fid_t *bp)
+__inline int cm_FidCmp(cm_fid_t *ap, cm_fid_t *bp)
 {
     if (ap->hash != bp->hash)
         return 1;
@@ -1757,13 +1757,15 @@ void cm_HoldSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
 #else
 void cm_HoldSCacheNoLock(cm_scache_t *scp)
 #endif
-{
+{     
+    afs_int32 refCount;
+
     osi_assertx(scp != NULL, "null cm_scache_t");
-    lock_AssertWrite(&cm_scacheLock);
-    scp->refCount++;
+    lock_AssertAny(&cm_scacheLock);
+    refCount = InterlockedIncrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
-    osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, scp->refCount);
-    afsi_log("%s:%d cm_HoldSCacheNoLock scp 0x%p, ref %d", file, line, scp, scp->refCount);
+    osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, refCount);
+    afsi_log("%s:%d cm_HoldSCacheNoLock scp 0x%p, ref %d", file, line, scp, refCount);
 #endif
 }
 
@@ -1773,14 +1775,16 @@ void cm_HoldSCacheDbg(cm_scache_t *scp, char * file, long line)
 void cm_HoldSCache(cm_scache_t *scp)
 #endif
 {
+    afs_int32 refCount;
+
     osi_assertx(scp != NULL, "null cm_scache_t");
-    lock_ObtainWrite(&cm_scacheLock);
-    scp->refCount++;
+    lock_ObtainRead(&cm_scacheLock);
+    refCount = InterlockedIncrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
-    osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%p ref %d",scp, scp->refCount);
-    afsi_log("%s:%d cm_HoldSCache scp 0x%p ref %d", file, line, scp, scp->refCount);
+    osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%p ref %d",scp, refCount);
+    afsi_log("%s:%d cm_HoldSCache scp 0x%p ref %d", file, line, scp, refCount);
 #endif
-    lock_ReleaseWrite(&cm_scacheLock);
+    lock_ReleaseRead(&cm_scacheLock);
 }
 
 #ifdef DEBUG_REFCOUNT
@@ -1789,14 +1793,18 @@ void cm_ReleaseSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
 void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 #endif
 {
+    afs_int32 refCount;
     osi_assertx(scp != NULL, "null cm_scache_t");
-    lock_AssertWrite(&cm_scacheLock);
-    if (scp->refCount == 0)
-	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
-    osi_assertx(scp->refCount-- >= 0, "cm_scache_t refCount 0");
+    lock_AssertAny(&cm_scacheLock);
+    refCount = InterlockedDecrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
-    osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp,scp->refCount);
-    afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, scp->refCount);
+    if (refCount < 0)
+	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
+#endif
+    osi_assertx(refCount >= 0, "cm_scache_t refCount 0");
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp, refCount);
+    afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, refCount);
 #endif
 }
 
@@ -1805,18 +1813,22 @@ void cm_ReleaseSCacheDbg(cm_scache_t *scp, char * file, long line)
 #else
 void cm_ReleaseSCache(cm_scache_t *scp)
 #endif
-{
+{     
+    afs_int32 refCount;
+
     osi_assertx(scp != NULL, "null cm_scache_t");
-    lock_ObtainWrite(&cm_scacheLock);
-    if (scp->refCount == 0)
-	osi_Log1(afsd_logp,"cm_ReleaseSCache about to panic scp 0x%x",scp);
-    osi_assertx(scp->refCount != 0, "cm_scache_t refCount 0");
-    scp->refCount--;
+    lock_ObtainRead(&cm_scacheLock);
+    refCount = InterlockedDecrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
-    osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp,scp->refCount);
-    afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, scp->refCount);
+    if (refCount < 0)
+	osi_Log1(afsd_logp,"cm_ReleaseSCache about to panic scp 0x%x",scp);
 #endif
-    lock_ReleaseWrite(&cm_scacheLock);
+    osi_assertx(refCount >= 0, "cm_scache_t refCount 0");
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp, refCount);
+    afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, refCount);
+#endif
+    lock_ReleaseRead(&cm_scacheLock);
 }
 
 /* just look for the scp entry to get filetype */
