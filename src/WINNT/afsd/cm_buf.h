@@ -141,7 +141,7 @@ extern void buf_Hold(cm_buf_t *);
 
 extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
 
-extern void buf_ReleaseLocked(cm_buf_t *);
+extern void buf_ReleaseLocked(cm_buf_t *, afs_uint32);
 
 extern void buf_HoldLocked(cm_buf_t *);
 

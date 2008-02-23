@@ -343,7 +343,7 @@ extern long cm_GetSCache(cm_fid_t *, cm_scache_t **, struct cm_user *,
 
 extern cm_scache_t *cm_GetNewSCache(void);
 
-extern int cm_FidCmp(cm_fid_t *, cm_fid_t *);
+extern __inline int cm_FidCmp(cm_fid_t *, cm_fid_t *);
 
 extern void cm_SetFid(cm_fid_t *, afs_uint32 cell, afs_uint32 volume, afs_uint32 vnode, afs_uint32 unique);
 
