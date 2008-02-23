@@ -400,7 +400,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 	    (*ldpp) = (cm_lock_data_t *)malloc(sizeof(cm_lock_data_t));
 	    if (!*ldpp) {
 		code = ENOMEM;
-		goto _done;
+		goto _syncopdone;
 	    }
 
 	    (*ldpp)->key = key;
@@ -434,6 +434,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         goto _done;
     }
 
+  _syncopdone:
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
 
  _done:
