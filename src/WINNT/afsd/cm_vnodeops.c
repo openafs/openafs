@@ -439,12 +439,14 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
  _done:
     lock_ReleaseMutex(&scp->mx);
 
+    osi_Log3(afsd_logp,"cm_CheckNTOpen scp 0x%p ldp 0x%p code 0x%x", scp, *ldpp, code);
     return code;
 }
 
 extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
 			       cm_lock_data_t ** ldpp)
 {
+    osi_Log2(afsd_logp,"cm_CheckNTOpenDone scp 0x%p ldp 0x%p", scp, *ldpp);
     if (*ldpp) {
 	lock_ObtainMutex(&scp->mx);
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 

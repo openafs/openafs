@@ -776,6 +776,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 		 */
                 bp->refCount--;
                 lock_ReleaseWrite(&buf_globalLock);
+                lock_ReleaseRead(&scp->bufCreateLock);
                 return CM_BUF_EXISTS;
             }
         }
@@ -841,6 +842,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                  */
                 buf_HoldLocked(bp);
                 lock_ReleaseWrite(&buf_globalLock);
+                lock_ReleaseRead(&scp->bufCreateLock);
 
                 /* grab required lock and clean; this only
                  * starts the I/O.  By the time we're back,
