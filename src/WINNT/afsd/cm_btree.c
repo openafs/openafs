@@ -1667,10 +1667,7 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 
     lock_AssertWrite(&op->scp->dirlock);
 
-    data.fid.cell = cfid->cell;
-    data.fid.volume = cfid->volume;
-    data.fid.vnode = cfid->vnode;
-    data.fid.unique = cfid->unique;
+    cm_SetFid(&data.fid, cfid->cell, cfid->volume, cfid->vnode, cfid->unique);
     data.longname = NULL;
 
     QueryPerformanceCounter(&start);
@@ -1857,10 +1854,7 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     dataT  data;
     char   shortName[13];
 
-    data.fid.cell = scp->fid.cell;
-    data.fid.volume = scp->fid.volume;
-    data.fid.vnode = ntohl(dep->fid.vnode);
-    data.fid.unique = ntohl(dep->fid.unique);
+    cm_SetFid(&data.fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     data.longname = NULL;
 
     /* the Write lock is held in cm_BPlusDirBuildTree() */

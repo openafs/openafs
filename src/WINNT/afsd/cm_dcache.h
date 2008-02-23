@@ -50,7 +50,8 @@ extern afs_int32 cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs
 	struct cm_user *userp);
 
 extern void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
-	cm_user_t *userp, cm_req_t *reqp);
+                                afs_uint32 count, 
+                                cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_ValidateDCache(void);
 

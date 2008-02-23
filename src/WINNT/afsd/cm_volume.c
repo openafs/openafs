@@ -751,6 +751,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	    volp->dotdotFid.volume = 0;
 	    volp->dotdotFid.unique = 0;
 	    volp->dotdotFid.vnode = 0;
+            volp->dotdotFid.hash = 0;
 	} else {
 	    volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
 	    memset(volp, 0, sizeof(cm_volume_t));
@@ -1565,10 +1566,7 @@ cm_VolumeRenewROCallbacks(void)
             cm_fid_t      fid;
             cm_scache_t * scp;
 
-            fid.cell = volp->cellp->cellID;
-            fid.volume = volp->ro.ID;
-            fid.vnode = 1;
-            fid.unique = 1;
+            cm_SetFid(&fid, volp->cellp->cellID, volp->ro.ID, 1, 1);
 
             cm_InitReq(&req);
 

@@ -50,10 +50,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         aclScp = scp;
         cm_HoldSCache(scp);
     } else {
-        tfid.cell = scp->fid.cell;
-        tfid.volume = scp->fid.volume;
-        tfid.vnode = scp->parentVnode;
-        tfid.unique = scp->parentUnique;
+        cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         aclScp = cm_FindSCache(&tfid);
         if (!aclScp) 
             return 0;
@@ -171,10 +168,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 	    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     } else {
         /* not a dir, use parent dir's acl */
-        tfid.cell = scp->fid.cell;
-        tfid.volume = scp->fid.volume;
-        tfid.vnode = scp->parentVnode;
-        tfid.unique = scp->parentUnique;
+        cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         lock_ReleaseMutex(&scp->mx);
         code = cm_GetSCache(&tfid, &aclScp, userp, reqp);
         if (code) {

@@ -4602,10 +4602,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
             curPatchp->flags = 0;
         }
 
-        curPatchp->fid.cell = targetscp->fid.cell;
-        curPatchp->fid.volume = targetscp->fid.volume;
-        curPatchp->fid.vnode = targetscp->fid.vnode;
-        curPatchp->fid.unique = targetscp->fid.unique;
+        cm_SetFid(&curPatchp->fid, targetscp->fid.cell, targetscp->fid.volume, targetscp->fid.vnode, targetscp->fid.unique);
 
         /* temp */
         dep = (cm_dirEntry_t *)malloc(sizeof(cm_dirEntry_t)+strlen(maskp));
@@ -5027,9 +5024,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 bufferp = NULL;
             }       
             lock_ReleaseMutex(&scp->mx);
-            lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ReleaseRead(&scp->bufCreateLock);
             lock_ObtainMutex(&dsp->mx);
 
             /* now, if we're doing a star match, do bulk fetching
@@ -5169,10 +5164,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
             {
                 /* We have already done the cm_TryBulkStat above */
-                fid.cell = scp->fid.cell;
-                fid.volume = scp->fid.volume;
-                fid.vnode = ntohl(dep->fid.vnode);
-                fid.unique = ntohl(dep->fid.unique);
+                cm_SetFid(&fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
                 fileType = cm_FindFileType(&fid);
                 /* osi_Log2(smb_logp, "smb_ReceiveTran2SearchDir: file %s "
                  * "has filetype %d", dep->name, fileType);
@@ -5289,10 +5281,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 else    
                     curPatchp->flags = 0;
 
-                curPatchp->fid.cell = scp->fid.cell;
-                curPatchp->fid.volume = scp->fid.volume;
-                curPatchp->fid.vnode = ntohl(dep->fid.vnode);
-                curPatchp->fid.unique = ntohl(dep->fid.unique);
+                cm_SetFid(&curPatchp->fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
 
                 /* temp */
                 curPatchp->dep = dep;
