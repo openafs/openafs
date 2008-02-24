@@ -166,6 +166,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		     | CM_SCACHEFLAG_EACCESS);
     scp->serverModTime = 0;
     scp->dataVersion = 0;
+    scp->bufDataVersionLow = 0;
     scp->bulkStatProgress = hzero;
     scp->waitCount = 0;
     scp->waitQueueT = NULL;
@@ -768,6 +769,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->parentVnode=0x1;
         scp->group=0;
         scp->dataVersion=cm_data.fakeDirVersion;
+        scp->bufDataVersionLow=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
 #if not_too_dangerous
 	lock_ReleaseMutex(&scp->mx);
@@ -1544,6 +1546,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->unixModeBits = 0;
 	scp->anyAccess = 0;
 	scp->dataVersion = 0;
+        scp->bufDataVersionLow = 0;
 
 	if (dscp) {
             scp->parentVnode = dscp->fid.vnode;
@@ -1654,9 +1657,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         cm_AddACLCache(scp, userp, statusp->CallerAccess);
     }
 
-    if ((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion == 1) {
-        buf_ForceDataVersion(scp, scp->dataVersion, dataVersion);
-    } else if (scp->dataVersion != 0 && 
+    if (scp->dataVersion != 0 &&
         (!(flags & CM_MERGEFLAG_DIROP) && dataVersion != scp->dataVersion ||
          (flags & CM_MERGEFLAG_DIROP) && dataVersion - scp->dataVersion > 1)) {
         /* 
@@ -1714,6 +1715,17 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	}
         lock_ReleaseWrite(&buf_globalLock);
     }
+
+    /* We maintain a range of buffer dataVersion values which are considered 
+     * valid.  This avoids the need to update the dataVersion on each buffer
+     * object during an uncontested storeData operation.  As a result this 
+     * merge status no longer has performance characteristics derived from
+     * the size of the file.
+     */
+    if (((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion > 1) || 
+         (!(flags & CM_MERGEFLAG_STOREDATA) && scp->dataVersion != dataVersion))
+        scp->bufDataVersionLow = dataVersion;
+    
     scp->dataVersion = dataVersion;
 }
 
