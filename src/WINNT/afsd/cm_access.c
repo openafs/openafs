@@ -38,6 +38,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     cm_fid_t tfid;
     int didLock;
     long trights;
+    int release = 0;    /* Used to avoid a call to cm_HoldSCache in the directory case */
 
 #if 0
     if (scp->flags & CM_SCACHEFLAG_EACCESS) {
@@ -47,8 +48,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 #endif
     didLock = 0;
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
-        aclScp = scp;
-        cm_HoldSCache(scp);
+        aclScp = scp;   /* not held, not released */
     } else {
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         aclScp = cm_FindSCache(&tfid);
@@ -71,6 +71,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
             }
             didLock = 1;
         }
+        release = 1;
     }
 
     lock_AssertMutex(&aclScp->mx);
@@ -135,7 +136,8 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
   done:
     if (didLock) 
         lock_ReleaseMutex(&aclScp->mx);
-    cm_ReleaseSCache(aclScp);
+    if (release)
+        cm_ReleaseSCache(aclScp);
     return code;
 }
 
