@@ -1686,7 +1686,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
              */
             if (cm_FidCmp(&scp->fid, &bp->fid) == 0 &&
                  lock_TryMutex(&bp->mx)) {
-                if (bp->refCount == 0) {
+                if (bp->refCount == 0 && 
+                    !(bp->flags & CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)) {
                     prevBp = bp->fileHashBackp;
                     bp->fileHashBackp = bp->fileHashp = NULL;
                     if (prevBp)
