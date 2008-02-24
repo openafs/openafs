@@ -119,6 +119,7 @@ typedef struct cm_scache {
     afs_uint32 unixModeBits;		/* unix protection mode bits */
     afs_uint32 linkCount;		/* link count */
     afs_uint64 dataVersion;		/* data version */
+    afs_uint64 bufDataVersionLow;       /* range of valid cm_buf_t dataVersions */
     afs_uint32 owner; 			/* file owner */
     afs_uint32 group;			/* file owning group */
     cm_user_t *creator;			/* user, if new file */

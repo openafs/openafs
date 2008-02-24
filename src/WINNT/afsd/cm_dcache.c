@@ -503,7 +503,7 @@ int cm_HaveBuffer(cm_scache_t *scp, cm_buf_t *bufp, int isBufLocked)
         return 0;
     if ((bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED)) == (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED))
         return 1;
-    if (bufp->dataVersion == scp->dataVersion)
+    if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow)
         return 1;
     if (!isBufLocked) {
         code = lock_TryMutex(&bufp->mx);
@@ -1159,7 +1159,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         lock_ObtainMutex(&scp->mx);
 
         /* don't bother fetching over data that is already current */
-        if (tbp->dataVersion == scp->dataVersion) {
+        if (tbp->dataVersion <= scp->dataVersion && tbp->dataVersion >= scp->bufDataVersionLow) {
             /* we don't need this buffer, since it is current */
             lock_ReleaseMutex(&scp->mx);
             lock_ReleaseMutex(&tbp->mx);
@@ -1353,7 +1353,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         osi_Log1(afsd_logp,"GetBuffer returns cm_data.rootSCachep=%x",cm_data.rootSCachep);
 #endif
 
-    if (cm_HaveCallback(scp) && bufp->dataVersion == scp->dataVersion) {
+    if (cm_HaveCallback(scp) && bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow) {
         /* We already have this buffer don't do extra work */
         return 0;
     }
@@ -1374,7 +1374,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
      * We can lose a race condition and end up with biod.length zero, in
      * which case we just retry.
      */
-    if (bufp->dataVersion == scp->dataVersion || biod.length == 0) {
+    if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow || biod.length == 0) {
         if ((bufp->dataVersion == -1 || bufp->dataVersion < scp->dataVersion) && 
              LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength)) 
         {
