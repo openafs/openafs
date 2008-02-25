@@ -1485,7 +1485,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	cb_conn=NULL;
 	H_LOCK;
 	if ((code == RXGEN_OPCODE) || 
-	    (afs_uuid_equal(&interf.uuid, &nulluuid))) {
+	    ((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
@@ -1617,7 +1617,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    cb_conn=NULL;
 	    H_LOCK;
 	    if ((code == RXGEN_OPCODE) || 
-		afs_uuid_equal(&interf.uuid, &nulluuid)) {
+		((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
 		if (!identP)
 		    identP =
 			(struct Identity *)malloc(sizeof(struct Identity));
