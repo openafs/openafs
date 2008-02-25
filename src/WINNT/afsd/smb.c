@@ -69,6 +69,8 @@ osi_mutex_t  smb_StartedLock;
 unsigned char smb_LANadapter = LANA_INVALID;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 int  smb_LanAdapterChangeDetected = 0;
+afs_uint32    smb_AsyncStore = 1;
+afs_uint32    smb_AsyncStoreSize = CM_CONFIGDEFAULT_ASYNCSTORESIZE;
 
 BOOL isGateway = FALSE;
 
@@ -6478,8 +6480,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     osi_hyper_t bufferOffset;
     afs_uint32 bufIndex;		/* index in buffer where our data is */
     int doWriteBack = 0;
-    osi_hyper_t writeBackOffset;/* offset of region to write back when
-                                 * I/O is done */
+    osi_hyper_t writeBackOffset;/* offset of region to write back when I/O is done */
     DWORD filter = 0;
     cm_req_t req;
 
@@ -6544,14 +6545,15 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
      * based upon cm_chunkSize but we desire cm_chunkSize to be large
      * so that we can read larger amounts of data at a time.
      */
-    if ((thyper.LowPart & ~(cm_data.buf_blockSize-1)) !=
+    if (smb_AsyncStore && 
+         (thyper.LowPart & ~(cm_data.buf_blockSize-1)) !=
          (offset.LowPart & ~(cm_data.buf_blockSize-1))) {
         /* they're different */
         doWriteBack = 1;
         writeBackOffset.HighPart = offset.HighPart;
-        writeBackOffset.LowPart = offset.LowPart & ~(cm_data.buf_blockSize-1);
+        writeBackOffset.LowPart = offset.LowPart & ~(smb_AsyncStoreSize-1);
     }
-        
+
     *writtenp = count;
 
     /* now, copy the data one buffer at a time, until we've filled the
@@ -6700,20 +6702,26 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     }       
     lock_ReleaseMutex(&fidp->mx);
 
-    if (code == 0 && doWriteBack) {
-        long code2;
+    if (code == 0) {
+        if (smb_AsyncStore) {
+            if (doWriteBack) {
+                long code2;
 
-        lock_ObtainMutex(&scp->mx);
-        osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
-                  fidp->fid);
-        code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
-        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
-                  fidp->fid, code2);
-        lock_ReleaseMutex(&scp->mx);
-        cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
-                            writeBackOffset.HighPart, 
-                            *writtenp & ~(cm_data.blockSize-1), 0, userp);
-	/* cm_SyncOpDone is called at the completion of cm_BkgStore */
+                lock_ObtainMutex(&scp->mx);
+                osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
+                          fidp->fid);
+                code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
+                osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
+                          fidp->fid, code2);
+                lock_ReleaseMutex(&scp->mx);
+                cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
+                                    writeBackOffset.HighPart, 
+                                    *writtenp & ~(cm_data.blockSize-1), 0, userp);
+                /* cm_SyncOpDone is called at the completion of cm_BkgStore */
+            }
+        } else {
+            cm_BufWrite(scp, offsetp, *writtenp, 0, userp, &req);
+        }
     }
 
     cm_ReleaseSCache(scp);
