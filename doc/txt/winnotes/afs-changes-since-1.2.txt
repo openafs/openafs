@@ -1,3 +1,86 @@
+Since 1.5.32
+ * The Rx library used a 32-bit type for sockets which was
+   truncating the socket value on 64-bit Windows.  This 
+   was not an issue in general but became an issue when 
+   Rx "hot thread" support was enabled.
+
+ * Enable "Rx hot thread" support which ensures that while
+   a received message is being processed that a new thread
+   is allocated to receive the next message to arrive.
+
+ * Increased parallel access to smb_rctLock protected 
+   resources.  Reduce the number of times that the 
+   lock is dropped and re-obtained.
+
+ * Increased parallel access to cm_scache_t and cm_buf_t
+   resources by replacing the previous global write lock
+   protected reference counting mechanism with one built
+   upon the use of InterlockedIncrement and InterlockedDecrement.
+
+ * Implement a hash for cm_fid_t to reduce comparison costs
+   and inline the cm_FidCmp() function.
+
+ * Redefine the BUF_HASH and BUF_FILEHASH in terms of the cm_fid_t 
+   hash which has a better distribution
+
+ * Modify cm_ConsiderPrefetch to evaluate the amount of data in 
+   the most recent read request instead of the next chunkSize.  
+   cm_chunkSize can be dozens or hundreds of buffers.  As a result
+   too much time is spent performing the evaluation.
+
+ * Fix the usage of cm_scache_t bufCreateLock.  The purpose of this 
+   lock is to prevent the creation of new buffers while a truncation 
+   is being performed.  All references to bufCreateLock have been 
+   removed except in two places:
+   i.  a write-lock surrounding the function that calls buf_Truncate()
+   ii. a read-lock within buf_GetNewLocked() that actually allocates 
+       new buffers
+
+ * Modify the CM_CONFIG_DATA_MAGIC value to include a 
+   CM_CONFIG_DATA_VERSION number which value be used to force the 
+   replacement of the cache file contents when incompatible changes 
+   are made between releases.
+
+ * CM_SCACHESYNC_ASYNCSTORE should not be ordered by 
+   cm_SyncOpCheckContinue
+
+ * Avoid calls to multi_Rx if nconns == 0
+
+ * Modify smb_WriteData to perform background writes based upon the 
+   crossing of 'smb_AsyncStoreSize' boundaries instead of cm_chunkSize 
+   boundaries.  This will slow down writes from the SMB interface but 
+   will avoid the risk of the CIFS client disconnecting from the AFS 
+   client SMB server.  The default value for 'smb_AsyncStoreSize'
+   is 32K.  
+
+ * SMB AsyncStore functionality is on by default but can be 
+   disabled using the registry value:
+
+     HKLM\SOFTWARE\OpenAFS\Client DWORD "EnableSMBAsyncStore"
+
+   smb_AsyncStoreSize can be adjusted with 
+
+     HKLM\SOFTWARE\OpenAFS\Client DWORD "SMBAsyncStoreSize"
+
+   The value must be a multiple of the buffer block size 
+   and cannot be larger than the chunk size.
+
+ * Do not leak a read lock on the bufCreateLock
+
+ * Do not forget to call cm_SyncOpDone if cm_SyncOp succeeded
+   in cm_CheckNTOpen()
+
+ * In MergeStatus, only remove clean buffers from the hash table.
+
+ * Avoid the need to update the data version number on each buffer 
+   associated with a scache when MergeStatus is called after a 
+   StoreData by maintaining a range of valid data versions as part 
+   of the cm_scache_t object.
+
+ * Profiling shows large numbers of blocked calls in cm_HoldSCache
+   from cm_HaveAccess...   We can safely avoid the call so do so.
+
+ * 
 Since 1.5.31
  * Do not attempt to search for a cell name that matches one
    of the special share names "svrsvc", "wkssvc", "ipc$"
