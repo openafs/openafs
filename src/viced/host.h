@@ -229,8 +229,8 @@ extern void ShutDownAndCore(int dopanic);
 
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
-extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
-			       int *heldp);
+extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
+		      int *heldp, struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (), char *param);
 extern void h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param);
