@@ -252,7 +252,8 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
                 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, name);
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, 
+                 osi_LogSaveString(afsd_logp,name));
         do {
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
             if (code) 
@@ -274,10 +275,10 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
 	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
-		      volp->cellp->name, name, code);
+		      volp->cellp->name, osi_LogSaveString(afsd_logp,name), code);
 	else
 	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
-		      volp->cellp->name, name);
+		      volp->cellp->name, osi_LogSaveString(afsd_logp,name));
     }
 
     if (code == 0) {
