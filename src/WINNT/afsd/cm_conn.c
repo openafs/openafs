@@ -29,7 +29,8 @@ unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
 
-afs_int32 cryptall = 0;
+afs_uint32 cryptall = 0;
+afs_uint32 cm_anonvldb = 0;
 
 void cm_PutConn(cm_conn_t *connp)
 {
@@ -871,6 +872,9 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     cm_ucell_t *ucellp;
 
     *connpp = NULL;
+
+    if (cm_anonvldb && serverp->type == CM_SERVER_VLDB)
+        userp = cm_rootUserp;
 
     lock_ObtainMutex(&userp->mx);
     lock_ObtainWrite(&cm_connLock);

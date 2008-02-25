@@ -40,7 +40,8 @@
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
-extern afs_int32 cryptall;
+extern afs_uint32 cryptall;
+extern afs_uint32 cm_anonvldb;
 extern int cm_enableServerLocks;
 extern int cm_followBackupPath;
 extern int cm_deleteReadOnly;
@@ -940,6 +941,11 @@ int afsd_InitCM(char **reasonP)
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_ON);
     else
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
+
+    dummyLen = sizeof(cryptall);
+    code = RegQueryValueEx(parmKey, "ForceAnonVLDB", NULL, NULL,
+                            (BYTE *) &cm_anonvldb, &dummyLen);
+    afsi_log("CM ForceAnonVLDB is %s", cm_anonvldb ? "on" : "off");
 
 #ifdef AFS_AFSDB_ENV
     dummyLen = sizeof(cm_dnsEnabled);
