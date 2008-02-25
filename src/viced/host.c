@@ -742,11 +742,11 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 void
 h_flushhostcps(register afs_uint32 hostaddr, register afs_uint16 hport)
 {
-    register struct host *host;
+    struct host *host;
     int held = 0;
 
     H_LOCK;
-    host = h_Lookup_r(hostaddr, hport, &held);
+    h_Lookup_r(hostaddr, hport, &held, &host);
     if (host) {
 	host->hcpsfailed = 1;
 	if (!held)
@@ -841,8 +841,8 @@ h_SetupCallbackConn_r(struct host * host)
 /* hostaddr and hport are in network order */
 /* Note: host should be released by caller if 0 == *heldp and non-null */
 /* hostaddr and hport are in network order */
-struct host *
-h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp)
+int
+h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp, struct host **hostp)
 {
     afs_int32 now;
     struct host *host = NULL;
@@ -856,6 +856,11 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp)
 	assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && chain->addr == haddr
 	    && chain->port == hport) {
+	    if ((host->hostFlags & HWHO_INPROGRESS) && 
+		h_threadquota(host->lock.num_waiting)) {
+		*hostp = 0;
+		return VBUSY;
+	    }
 	    *heldp = h_Held_r(host);
 	    if (!*heldp)
 		h_Hold_r(host);
@@ -883,8 +888,8 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp)
 	}
 	host = NULL;
     }
-    return host;
-
+    *hostp = host;
+    return 0;
 }				/*h_Lookup */
 
 /* Lookup a host given its UUID. */
@@ -1447,7 +1452,8 @@ h_GetHost_r(struct rx_connection *tcon)
     caps.Capabilities_len = 0;
 
     code = 0;
-    host = h_Lookup_r(haddr, hport, &held);
+    if (h_Lookup_r(haddr, hport, &held, &host))
+	return 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     if (host && !identP && !(host->Console & 1)) {
 	/* This is a new connection, and we already have a host
@@ -1462,7 +1468,6 @@ h_GetHost_r(struct rx_connection *tcon)
 	}
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR)) {
-	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    /* Another thread is doing initialization */
 	    h_Unlock_r(host);
 	    if (!held)
@@ -1473,6 +1478,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     ntohs(host->port)));
 	    goto retry;
 	}
+	host->hostFlags |= HWHO_INPROGRESS;
 	host->hostFlags &= ~ALTADDR;
 	cb_conn = host->callback_rxcon;
 	rx_GetConnection(cb_conn);
@@ -1561,7 +1567,6 @@ h_GetHost_r(struct rx_connection *tcon)
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	    h_Lock_r(host);
-	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1595,7 +1600,6 @@ h_GetHost_r(struct rx_connection *tcon)
 	    /* The host in the cache is not the host for this connection */
             h_Lock_r(host);
 	    host->hostFlags |= HOSTDELETED;
-	    host->hostFlags &= ~HWHO_INPROGRESS;
 	    h_Unlock_r(host);
 	    if (!held)
 		h_Release_r(host);
@@ -1608,6 +1612,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    int pident = 0;
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
+	    host->hostFlags |= HWHO_INPROGRESS;
 	    H_UNLOCK;
 	    code =
 		RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
