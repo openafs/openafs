@@ -1385,6 +1385,30 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
                                 (BYTE *) &dwValue, &dummyLen);
         if (code == ERROR_SUCCESS)
             smb_StoreAnsiFilenames = dwValue ? 1 : 0;
+        afsi_log("StoreAnsiFilenames = %d", smb_StoreAnsiFilenames);
+
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "EnableSMBAsyncStore", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            smb_AsyncStore = dwValue ? 1 : 0;
+        afsi_log("EnableSMBAsyncStore = %d", smb_AsyncStore);
+
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "SMBAsyncStoreSize", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS) {
+            /* Should check for >= blocksize && <= chunksize && round down to multiple of blocksize */
+            if (dwValue > cm_chunkSize)
+                smb_AsyncStoreSize = cm_chunkSize;
+            else if (dwValue <  cm_data.buf_blockSize)
+                smb_AsyncStoreSize = cm_data.buf_blockSize;
+            else
+                smb_AsyncStoreSize = (dwValue & ~(cm_data.buf_blockSize-1));
+        } else 
+            smb_AsyncStoreSize = CM_CONFIGDEFAULT_ASYNCSTORESIZE;
+        afsi_log("SMBAsyncStoreSize = %d", smb_AsyncStoreSize);
+        
         RegCloseKey (parmKey);
     }
 

@@ -656,6 +656,8 @@ extern int smb_maxMpxRequests; /* max # of mpx requests */
 extern int smb_StoreAnsiFilenames;
 extern int smb_hideDotFiles;
 extern unsigned int smb_IsDotFile(char *lastComp);
+extern afs_uint32 smb_AsyncStore;
+extern afs_uint32 smb_AsyncStoreSize;
 
 /* the following are used for smb auth */
 extern int smb_authType; /* Type of SMB authentication to be used. One from below. */
