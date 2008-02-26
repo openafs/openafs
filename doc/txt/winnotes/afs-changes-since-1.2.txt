@@ -51,7 +51,7 @@ Since 1.5.32
    boundaries.  This will slow down writes from the SMB interface but 
    will avoid the risk of the CIFS client disconnecting from the AFS 
    client SMB server.  The default value for 'smb_AsyncStoreSize'
-   is 32K.  
+   is 128K.  
 
  * SMB AsyncStore functionality is on by default but can be 
    disabled using the registry value:
@@ -80,7 +80,11 @@ Since 1.5.32
  * Profiling shows large numbers of blocked calls in cm_HoldSCache
    from cm_HaveAccess...   We can safely avoid the call so do so.
 
- * 
+ * Add "ForceAnonVLDB" service parameters registry value.  Default
+   is 0.  Set to 1 to force the use of anonymous connections to
+   the VLDB servers.  This is useful when using krb5 tokens and the
+   VLDB servers have not been updated.
+
 Since 1.5.31
  * Do not attempt to search for a cell name that matches one
    of the special share names "svrsvc", "wkssvc", "ipc$"
