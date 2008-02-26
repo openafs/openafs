@@ -1441,12 +1441,17 @@ h_GetHost_r(struct rx_connection *tcon)
     char hoststr[16], hoststr2[16];
     Capabilities caps;
     struct rx_connection *cb_conn = NULL;
+    struct rx_connection *cb_in = NULL;
 
     caps.Capabilities_val = NULL;
 
     haddr = rxr_HostOf(tcon);
     hport = rxr_PortOf(tcon);
   retry:
+    if (cb_in) {
+        rx_DestroyConnection(cb_in);
+        cb_in = NULL;
+    }
     if (caps.Capabilities_val)
 	free(caps.Capabilities_val);
     caps.Capabilities_val = NULL;
@@ -1481,13 +1486,45 @@ h_GetHost_r(struct rx_connection *tcon)
 	}
 	host->hostFlags |= HWHO_INPROGRESS;
 	host->hostFlags &= ~ALTADDR;
+
+        /* We received a new connection from an IP address/port
+         * that is associated with 'host' but the address/port of
+         * the callback connection does not have to match it.
+         * If there is a match, we can use the existing callback
+         * connection to verify the UUID.  If they do not match
+         * we need to use a new callback connection to verify the
+         * UUID of the incoming caller and perhaps use the old 
+         * callback connection to verify that the old address/port
+         * is still valid.
+         */
+	
 	cb_conn = host->callback_rxcon;
 	rx_GetConnection(cb_conn);
 	H_UNLOCK;
-	code =
-	    RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
-	if (code == RXGEN_OPCODE)
-	    code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+        if (haddr == host->host && hport == host->port) {
+            /* The existing callback connection matches the 
+             * incoming connection so just use it.
+             */
+	    code =
+		RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
+	    if (code == RXGEN_OPCODE)
+		code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+	} else {
+            /* We do not have a match.  Create a new connection
+             * for the new addr/port and use multi_Rx to probe
+             * both of them simultaneously.
+             */
+	    if (!sc)
+                sc = rxnull_NewClientSecurityObject();
+            cb_in = rx_NewConnection(haddr, hport, 1, sc, 0);
+            rx_SetConnDeadTime(cb_in, 50);
+            rx_SetConnHardDeadTime(cb_in, AFS_HARDDEADTIME);
+	    
+            code =
+                RXAFSCB_TellMeAboutYourself(cb_in, &interf, &caps);
+	    if (code == RXGEN_OPCODE)
+                code = RXAFSCB_WhoAreYou(cb_in, &interf);
+	}
 	rx_PutConnection(cb_conn);
 	cb_conn=NULL;
 	H_LOCK;
@@ -1500,23 +1537,39 @@ h_GetHost_r(struct rx_connection *tcon)
 	    }
 	    identP->valid = 0;
 	    rx_SetSpecific(tcon, rxcon_ident_key, identP);
-	    /* The host on this connection was unable to respond to 
-	     * the WhoAreYou. We will treat this as a new connection
-	     * from the existing host. The worst that can happen is
-	     * that we maintain some extra callback state information */
-	    if (host->interface) {
-		ViceLog(0,
-			("Host %x (%s:%d) used to support WhoAreYou, deleting.\n",
-			 host, 
-                         afs_inet_ntoa_r(host->host, hoststr),
-			 ntohs(host->port)));
-		host->hostFlags |= HOSTDELETED;
-		host->hostFlags &= ~HWHO_INPROGRESS;
-		h_Unlock_r(host);
+	    if (cb_in == NULL) {
+		/* The host on this connection was unable to respond to 
+		 * the WhoAreYou. We will treat this as a new connection
+		 * from the existing host. The worst that can happen is
+		 * that we maintain some extra callback state information */
+		if (host->interface) {
+		    ViceLog(0,
+			    ("Host %x (%s:%d) used to support WhoAreYou, deleting.\n",
+			     host, 
+			     afs_inet_ntoa_r(host->host, hoststr),
+			     ntohs(host->port)));
+		    host->hostFlags |= HOSTDELETED;
+		    host->hostFlags &= ~HWHO_INPROGRESS;
+		    h_Unlock_r(host);
+		    if (!held)
+			h_Release_r(host);
+		    host = NULL;
+		    goto retry;
+		}
+	    } else {
+		/* The incoming connection does not support WhoAreYou but
+		 * the original one might have.  Use removeAddress_r() to
+                 * remove this addr/port from the host that was found.
+                 * If there are no more addresses left for the host it 
+                 * will be deleted.  Then we retry.
+                 */
+                removeAddress_r(host, haddr, hport);
+                host->hostFlags &= ~HWHO_INPROGRESS;
+                h_Unlock_r(host);
 		if (!held)
-		    h_Release_r(host);
-		host = NULL;
-		goto retry;
+                    h_Release_r(host);
+                host = NULL;
+                goto retry;
 	    }
 	} else if (code == 0) {
 	    interfValid = 1;
@@ -1533,24 +1586,102 @@ h_GetHost_r(struct rx_connection *tcon)
 	     * then this is not the same host as before. */
 	    if (!host->interface
 		|| !afs_uuid_equal(&interf.uuid, &host->interface->uuid)) {
-                ViceLog(25,
-                         ("Uuid doesn't match host %x (%s:%d).\n",
-                           host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
-
-                removeAddress_r(host, host->host, host->port);
+		if (cb_in) {
+                    ViceLog(25,
+			    ("Uuid doesn't match connection (%s:%d).\n",
+			     afs_inet_ntoa_r(haddr, hoststr), ntohs(hport)));
+		    
+                    removeAddress_r(host, haddr, hport);
+		} else {
+		    ViceLog(25,
+			    ("Uuid doesn't match host %x (%s:%d).\n",
+			     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+		    
+		    removeAddress_r(host, host->host, host->port);
+		}
 		host->hostFlags &= ~HWHO_INPROGRESS;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
 		host = NULL;
 		goto retry;
+	    } else if (cb_in) {
+		/* the UUID matched the client at the incoming addr/port 
+                 * but this is not the address of the active callback 
+                 * connection.  Try that connection and see if the client
+                 * is still there and if the reported UUID is the same.
+                 */
+                int code2;
+                afsUUID uuid = host->interface->uuid;
+                cb_conn = host->callback_rxcon;
+                rx_GetConnection(cb_conn);
+                rx_SetConnDeadTime(cb_conn, 2);
+                rx_SetConnHardDeadTime(cb_conn, AFS_HARDDEADTIME);
+                H_UNLOCK;
+                code2 = RXAFSCB_ProbeUuid(cb_conn, &uuid);
+                H_LOCK;
+                rx_SetConnDeadTime(cb_conn, 50);
+                rx_SetConnHardDeadTime(cb_conn, AFS_HARDDEADTIME);
+                rx_PutConnection(cb_conn);
+                cb_conn=NULL;
+                if (code2) {
+                    /* The primary address is either not responding or
+                     * is not the client we are looking for.  Need to
+                     * remove the primary address and add swap in the new 
+                     * callback connection, and destroy the old one.
+                     */
+                    struct rx_connection *rxconn;
+                    ViceLog(0,("CB: ProbeUuid for host %x (%s:%d) failed %d\n",
+			       host, 
+			       afs_inet_ntoa_r(host->host, hoststr),
+			       ntohs(host->port),code2));
+		    
+                    removeInterfaceAddr_r(host, host->host, host->port);
+                    addInterfaceAddr_r(host, haddr, hport);
+                    host->host = haddr;
+                    host->port = hport;
+                    rxconn = host->callback_rxcon;
+                    host->callback_rxcon = cb_in;
+                    cb_in = NULL;
+		    
+                    if (rxconn) {
+                        struct client *client;
+                        /*
+                         * If rx_DestroyConnection calls h_FreeConnection we will
+			 * deadlock on the host_glock_mutex. Work around the problem
+                         * by unhooking the client from the connection before
+                         * destroying the connection.
+                         */
+                        client = rx_GetSpecific(rxconn, rxcon_client_key);
+                        rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
+                        rx_DestroyConnection(rxconn);
+		    }
+		}
 	    }
 	} else {
-	    ViceLog(0,
-		    ("CB: WhoAreYou failed for host %x (%s:%d), error %d\n",
-                     host, afs_inet_ntoa_r(host->host, hoststr),
-		     ntohs(host->port), code));
-	    host->hostFlags |= VENUSDOWN;
+            if (cb_in) {
+                /* A callback to the incoming connection address is failing.  
+                 * Assume that the addr/port is no longer associated with the host
+                 * returned by h_Lookup_r.
+                 */
+                ViceLog(0,
+			("CB: WhoAreYou failed for connection (%s:%d) , error %d\n",
+			 afs_inet_ntoa_r(haddr, hoststr), ntohs(hport), code));
+                removeAddress_r(host, haddr, hport);
+                host->hostFlags &= ~HWHO_INPROGRESS;
+                h_Unlock_r(host);
+                if (!held)
+                    h_Release_r(host);
+                host = NULL;
+                rx_DestroyConnection(cb_in);
+                return 0;
+	    } else {
+		ViceLog(0,
+			("CB: WhoAreYou failed for host %x (%s:%d), error %d\n",
+			 host, afs_inet_ntoa_r(host->host, hoststr),
+			 ntohs(host->port), code));
+		host->hostFlags |= VENUSDOWN;
+	    }
 	}
 	if (caps.Capabilities_val
 	    && (caps.Capabilities_val[0] & CLIENT_CAPABILITY_ERRORTRANS))
