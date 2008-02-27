@@ -35,6 +35,7 @@ typedef struct osi_lockOps {
 	void (*FinalizeMutexProc)(struct osi_mutex *);
 	void (*FinalizeRWLockProc)(struct osi_rwlock *);
         void (*ConvertWToRProc)(struct osi_rwlock *);
+        void (*ConvertRToWProc)(struct osi_rwlock *);
         int (*GetRWLockState)(struct osi_rwlock *);
         int (*GetMutexState)(struct osi_mutex *);
 } osi_lockOps_t;

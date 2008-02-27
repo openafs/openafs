@@ -4738,10 +4738,8 @@ long cm_Unlock(cm_scache_t *scp,
         return CM_ERROR_RANGE_NOT_LOCKED;
     }
 
-    lock_ReleaseRead(&cm_scacheLock);
-
     /* discard lock record */
-    lock_ObtainWrite(&cm_scacheLock);
+    lock_ConvertRToW(&cm_scacheLock);
     if (scp->fileLocksT == q)
         scp->fileLocksT = osi_QPrev(q);
     osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, q);

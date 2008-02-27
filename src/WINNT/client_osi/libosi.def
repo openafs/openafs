@@ -70,3 +70,4 @@ EXPORTS
 	osi_LogEvent		@63
         osi_HexifyString        @64
         osi_QRemoveHT           @65
+	lock_ConvertRToW	@66

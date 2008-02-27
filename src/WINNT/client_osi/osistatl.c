@@ -206,6 +206,56 @@ static void lock_ConvertWToRStat(osi_rwlock_t *lockp)
 	}
 }
 
+static void lock_ConvertRToWStat(osi_rwlock_t *lockp)
+{
+	osi_activeInfo_t *ap;
+	osi_rwlockStat_t *realp;
+        CRITICAL_SECTION *csp;
+
+	realp = (osi_rwlockStat_t *)lockp->d.privateDatap;
+
+	/* otherwise we're the fast base type */
+	csp = &osi_statAtomicCS[lockp->atomicIndex];
+        EnterCriticalSection(csp);
+
+	osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
+	ap = osi_FindActiveInfo(&realp->qi);
+	osi_assert(ap !=NULL);
+	osi_RemoveActiveInfo(&realp->qi, ap);
+        realp->readLockedCount++;
+        realp->readLockedTime = LargeIntegerAdd(realp->readLockedTime, ap->startTime);
+        osi_FreeActiveInfo(ap);
+        
+        if (--lockp->readers == 0) {
+            /* and obtain the write lock */
+            lockp->readers--;
+            lockp->flags |= OSI_LOCKFLAG_EXCL;
+        } else {
+            lockp->waiters++;
+            ap = osi_QueueActiveInfo(&realp->qi,
+                                     OSI_ACTIVEFLAGS_WRITER | OSI_ACTIVEFLAGS_WAITER);
+            osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
+            lockp->waiters--;
+            osi_assert((lockp->flags & OSI_LOCKFLAG_EXCL) && lockp->readers == 0);
+
+            /*  we have some timer info about the last sleep operation
+             * that we should merge in under the spin lock.
+             */
+
+            /* remove from queue and turn time to incremental time */
+            osi_RemoveActiveInfo(&realp->qi, ap);
+		
+            /* add in increment to statistics */
+            realp->writeBlockedCount++;
+            realp->writeBlockedTime = LargeIntegerAdd(realp->writeBlockedTime,
+                                                   ap->startTime);
+            osi_FreeActiveInfo(ap);
+        }
+
+        osi_QueueActiveInfo(&realp->qi, OSI_ACTIVEFLAGS_WRITER);
+        LeaveCriticalSection(csp);
+}
+
 static void lock_ReleaseWriteStat(osi_rwlock_t *lockp)
 {
 	osi_activeInfo_t *ap;
@@ -444,7 +494,7 @@ static int lock_TryMutexStat(struct osi_mutex *lockp) {
 	return i;
 }
 
-static void osi_SleepRStat(long sleepVal, struct osi_rwlock *lockp)
+static void osi_SleepRStat(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 {
 	osi_rwlockStat_t *realp;
 	osi_activeInfo_t *ap;
@@ -474,7 +524,7 @@ static void osi_SleepRStat(long sleepVal, struct osi_rwlock *lockp)
 	osi_SleepSpin(sleepVal, csp);
 }
 
-static void osi_SleepWStat(long sleepVal, struct osi_rwlock *lockp)
+static void osi_SleepWStat(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 {
 	osi_activeInfo_t *ap;
 	osi_rwlockStat_t *realp;
@@ -505,7 +555,7 @@ static void osi_SleepWStat(long sleepVal, struct osi_rwlock *lockp)
 	osi_SleepSpin(sleepVal, csp);
 }
 
-static void osi_SleepMStat(long sleepVal, struct osi_mutex *lockp)
+static void osi_SleepMStat(LONG_PTR sleepVal, struct osi_mutex *lockp)
 {
 	osi_mutexStat_t *realp;
 	osi_activeInfo_t *ap;
@@ -740,6 +790,7 @@ static osi_lockOps_t osi_statOps = {
 	lock_FinalizeMutexStat,
 	lock_FinalizeRWLockStat,
         lock_ConvertWToRStat,
+        lock_ConvertRToWStat,
 	lock_GetRWLockStateStat,
         lock_GetMutexStateStat
 };
@@ -798,7 +849,7 @@ long osi_StatFDGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *parmsp)
 
 		memset((void *) parmsp, 0, sizeof(*parmsp));
 		backMutexp = mp->qi.backp;
-		parmsp->idata[0] = backMutexp;
+		parmsp->idata[0] = (LONG_PTR)backMutexp;
 		parmsp->idata[1] = (backMutexp->flags & OSI_LOCKFLAG_EXCL)? 1 : 0;
 		/* reader count [2] is 0 */
 		parmsp->idata[3] = (backMutexp->waiters > 0)? 1 : 0;
@@ -816,7 +867,7 @@ long osi_StatFDGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *parmsp)
 
 		memset((void *) parmsp, 0, sizeof(*parmsp));
                 backRWLockp = rwp->qi.backp;
-		parmsp->idata[0] = backRWLockp;
+		parmsp->idata[0] = (LONG_PTR)backRWLockp;
 		parmsp->idata[1] = (backRWLockp->flags & OSI_LOCKFLAG_EXCL)? 1 : 0;
 		parmsp->idata[2] = backRWLockp->readers;
 		parmsp->idata[3] = (backRWLockp->waiters > 0)? 1 : 0;
