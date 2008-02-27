@@ -24,9 +24,9 @@ typedef struct nc {
 } cm_nc_t;
 
 typedef struct {
-    unsigned int enters, lookups, misses, removes;
-    unsigned int purgeds, purgevs, purgevols, purges;
-    unsigned int cycles, lookuprace;
+    afs_int32 enters, lookups, misses, removes;
+    afs_int32 purgeds, purgevs, purgevols, purges;
+    afs_int32 cycles, lookuprace;
 } cm_dnlcstats_t;
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) {    \
