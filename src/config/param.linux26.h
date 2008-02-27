@@ -91,9 +91,11 @@
 
 #endif /* !defined(UKERNEL) */
 
+#ifndef AFS_ARM_LINUX24_ENV
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 #define USE_UCONTEXT
+#endif
 #endif
 #endif
 
