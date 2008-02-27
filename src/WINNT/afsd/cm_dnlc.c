@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <osi.h>
 #include "afsd.h"
+#include <WINNT/afsreg.h>
 
 osi_rwlock_t cm_dnlcLock;
 
@@ -113,6 +114,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
     unsigned int key, skey, new=0;
     char *ts = aname;
     int safety;
+    int writeLocked = 0;
 
     if (!cm_useDnlc)
 	return ;
@@ -129,9 +131,9 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	return ;
     skey = key & (NHSIZE -1);
 
-    lock_ObtainWrite(&cm_dnlcLock);
-    dnlcstats.enters++;
-  
+    InterlockedIncrement(&dnlcstats.enters);
+    lock_ObtainRead(&cm_dnlcLock);
+  retry:
     for (tnc = cm_data.nameHash[skey], safety=0; tnc; tnc = tnc->next, safety++ )
 	if ((tnc->dirp == adp) && (!strcmp(tnc->name, aname)))
 	    break;				/* preexisting entry */
@@ -142,8 +144,11 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	}
 	else if (safety > NCSIZE) 
 	{
-	    dnlcstats.cycles++;
-	    lock_ReleaseWrite(&cm_dnlcLock);
+	    InterlockedIncrement(&dnlcstats.cycles);
+            if (writeLocked)
+                lock_ReleaseWrite(&cm_dnlcLock);
+            else
+                lock_ReleaseRead(&cm_dnlcLock);
 
 	    if ( cm_debugDnlc )
                 osi_Log0(afsd_logp, "DNLC cycle");
@@ -153,6 +158,12 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	
     if ( !tnc )
     {
+        if ( !writeLocked ) {
+            lock_ReleaseRead(&cm_dnlcLock);
+            lock_ObtainWrite(&cm_dnlcLock);
+            writeLocked = 1;
+            goto retry;
+        }
 	new = 1;	/* entry does not exist, we are creating a new entry*/
 	tnc = GetMeAnEntry();
     }
@@ -167,7 +178,10 @@ cm_dnlcEnter ( cm_scache_t *adp,
 		InsertEntry(tnc);
 
     }
-    lock_ReleaseWrite(&cm_dnlcLock);
+    if (writeLocked)
+        lock_ReleaseWrite(&cm_dnlcLock);
+    else
+        lock_ReleaseRead(&cm_dnlcLock);
 
     if ( !tnc)
 	cm_dnlcPurge();
@@ -188,18 +202,23 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
   
     if (!cm_useDnlc)
 	return NULL;
+
     if ( cm_debugDnlc ) 
 	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %s", 
 		adp, osi_LogSaveString(afsd_logp,aname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
-    if (ts - aname >= CM_AFSNCNAMESIZE) 
+
+    if (ts - aname >= CM_AFSNCNAMESIZE) {
+        InterlockedIncrement(&dnlcstats.lookups);
+        InterlockedIncrement(&dnlcstats.misses);
 	return NULL;
+    }
 
     skey = key & (NHSIZE -1);
 
     lock_ObtainRead(&cm_dnlcLock);
-    dnlcstats.lookups++;	     /* Is a dnlcread lock sufficient? */
+    InterlockedIncrement(&dnlcstats.lookups);
 
     ts = 0;
     tnc_begin = cm_data.nameHash[skey];
@@ -258,7 +277,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	}
 	else if (tnc->next == tnc_begin || safety > NCSIZE) 
 	{
-	    dnlcstats.cycles++;
+	    InterlockedIncrement(&dnlcstats.cycles);
 	    lock_ReleaseRead(&cm_dnlcLock);
 
 	    if ( cm_debugDnlc ) 
@@ -276,7 +295,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
     }
 
     if (!tvc) 
-        dnlcstats.misses++; 	/* Is a dnlcread lock sufficient? */
+        InterlockedIncrement(&dnlcstats.misses);
     else 
     {
         sp->found = 1;
@@ -341,7 +360,7 @@ cm_dnlcRemove (cm_scache_t *adp, char *aname)
 
     skey = key & (NHSIZE -1);
     lock_ObtainWrite(&cm_dnlcLock);
-    dnlcstats.removes++;
+    InterlockedIncrement(&dnlcstats.removes);
 
     for (tnc = cm_data.nameHash[skey], safety=0; tnc; safety++) 
     {
@@ -365,7 +384,7 @@ cm_dnlcRemove (cm_scache_t *adp, char *aname)
 	    tnc = tnc->next;
 	if ( safety > NCSIZE )
 	{
-	    dnlcstats.cycles++;
+	    InterlockedIncrement(&dnlcstats.cycles);
 	    lock_ReleaseWrite(&cm_dnlcLock);
 
 	    if ( cm_debugDnlc ) 
@@ -397,7 +416,7 @@ cm_dnlcPurgedp (cm_scache_t *adp)
 	osi_Log1(afsd_logp, "cm_dnlcPurgedp dir %x", adp);
 
     lock_ObtainWrite(&cm_dnlcLock);
-    dnlcstats.purgeds++;
+    InterlockedIncrement(&dnlcstats.purgeds);
 
     for (i=0; i<NCSIZE && !err; i++) 
     {
@@ -434,7 +453,7 @@ cm_dnlcPurgevp (cm_scache_t *avc)
 	osi_Log1(afsd_logp, "cm_dnlcPurgevp scache %x", avc);
 
     lock_ObtainWrite(&cm_dnlcLock);
-    dnlcstats.purgevs++;
+    InterlockedIncrement(&dnlcstats.purgevs);
 
     for (i=0; i<NCSIZE && !err ; i++) 
     {
@@ -469,7 +488,7 @@ void cm_dnlcPurge(void)
 	osi_Log0(afsd_logp, "cm_dnlcPurge");
 
     lock_ObtainWrite(&cm_dnlcLock);
-    dnlcstats.purges++;
+    InterlockedIncrement(&dnlcstats.purges);
     
     cm_data.ncfreelist = (cm_nc_t *) 0;
     memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
@@ -493,7 +512,7 @@ cm_dnlcPurgeVol(AFSFid *fidp)
     if (!cm_useDnlc)
         return ;
 
-    dnlcstats.purgevols++;
+    InterlockedIncrement(&dnlcstats.purgevols);
     cm_dnlcPurge();
 }
 
@@ -627,6 +646,29 @@ void
 cm_dnlcInit(int newFile)
 {
     int i;
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD dwValue;
+    DWORD code;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "UseDNLC", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            cm_useDnlc = dwValue ? 1 : 0;
+        afsi_log("CM UseDNLC = %d", cm_useDnlc);
+
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "DebugDNLC", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            cm_debugDnlc = dwValue ? 1 : 0;
+        afsi_log("CM DebugDNLC = %d", cm_debugDnlc);
+        RegCloseKey (parmKey);
+    }
 
     if (!cm_useDnlc)
         return ;
