@@ -19,6 +19,7 @@
 
 /* atomicity-providing critical sections */
 CRITICAL_SECTION osi_baseAtomicCS[OSI_MUTEXHASHSIZE];
+static long     atomicIndexCounter = 0;
 
 void osi_BaseInit(void)
 {
@@ -177,6 +178,38 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
 		/* and finally release the big lock */
 		LeaveCriticalSection(csp);
 	}
+}
+
+void lock_ConvertRToW(osi_rwlock_t *lockp)
+{
+	long i;
+        CRITICAL_SECTION *csp;
+
+	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
+		(osi_lockOps[i]->ConvertRToWProc)(lockp);
+		return;
+	}
+
+	/* otherwise we're the fast base type */
+	csp = &osi_baseAtomicCS[lockp->atomicIndex];
+        EnterCriticalSection(csp);
+
+	osi_assertx(!(lockp->flags & OSI_LOCKFLAG_EXCL), "write lock held");
+        osi_assertx(lockp->readers > 0, "read lock not held");
+	
+        if (--lockp->readers == 0) {
+            /* convert read lock to write lock */
+            lockp->flags |= OSI_LOCKFLAG_EXCL;
+        } else {
+            lockp->waiters++;
+            osi_TWait(&lockp->d.turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
+            lockp->waiters--;
+            osi_assert(lockp->readers == 0 && (lockp->flags & OSI_LOCKFLAG_EXCL));
+	}
+
+        lockp->tid = thrd_Current();
+        LeaveCriticalSection(csp);
 }
 
 void lock_ObtainMutex(struct osi_mutex *lockp)
@@ -443,7 +476,7 @@ void lock_InitializeMutex(osi_mutex_t *mp, char *namep)
 	mp->type = 0;
 	mp->flags = 0;
         mp->tid = 0;
-	mp->atomicIndex = osi_MUTEXHASH(mp);
+	mp->atomicIndex = (unsigned short)(InterlockedIncrement(&atomicIndexCounter) % OSI_MUTEXHASHSIZE);
         osi_TInit(&mp->d.turn);
 	return;
 }
@@ -463,7 +496,7 @@ void lock_InitializeRWLock(osi_rwlock_t *mp, char *namep)
 	 */
 	mp->type = 0;
 	mp->flags = 0;
-	mp->atomicIndex = osi_MUTEXHASH(mp);
+        mp->atomicIndex = (unsigned short)(InterlockedIncrement(&atomicIndexCounter) % OSI_MUTEXHASHSIZE);
 	mp->readers = 0;
         mp->tid = 0;
         osi_TInit(&mp->d.turn);

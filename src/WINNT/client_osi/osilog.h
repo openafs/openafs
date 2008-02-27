@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
  *
  * (C) COPYRIGHT IBM CORPORATION 1987, 1988
@@ -86,12 +86,12 @@ extern void osi_LogEvent(char *a,char *b,char *c,...);
 extern char *osi_HexifyString(char *s);
 
 /* define macros */
-#define osi_Log0(l,f)		osi_LogAdd((l), (f), 0, 0, 0, 0)
-#define osi_Log1(l,f,a)		osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0)
-#define osi_Log2(l,f,a,b)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0)
-#define osi_Log3(l,f,a,b,c)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0)
-#define osi_Log4(l,f,a,b,c,d)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d))
-#define osi_Log5(l,f,a,b,c,d,e)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
+#define osi_Log0(l,f)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), 0, 0, 0, 0)
+#define osi_Log1(l,f,a)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0)
+#define osi_Log2(l,f,a,b)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0)
+#define osi_Log3(l,f,a,b,c)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0)
+#define osi_Log4(l,f,a,b,c,d)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d))
+#define osi_Log5(l,f,a,b,c,d,e)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
 
 #ifdef DEBUG_VERBOSE
 #define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\

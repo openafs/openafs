@@ -1032,8 +1032,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                         lock_ReleaseMutex(&scp->mx);
                         mxheld = 0;
                     }
-                    lock_ReleaseRead(&scp->dirlock);
-                    lock_ObtainWrite(&scp->dirlock);
+                    lock_ConvertRToW(&scp->dirlock);
                     haveWrite = 1;
                 }
                 if (!mxheld) {

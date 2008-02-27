@@ -109,6 +109,8 @@ extern void osi_Init (void);
 
 extern void lock_ConvertWToR(struct osi_rwlock *);
 
+extern void lock_ConvertRToW(struct osi_rwlock *);
+
 /* and stat functions */
 
 extern int lock_GetRWLockState(struct osi_rwlock *);

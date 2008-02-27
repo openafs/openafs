@@ -130,10 +130,8 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
          * double check that the refCount is actually zero
          * before we remove the buffer from the LRU queue.
          */
-        if (!writeLocked) {
-            lock_ReleaseRead(&buf_globalLock);
-            lock_ObtainWrite(&buf_globalLock);
-        }
+        if (!writeLocked)
+            lock_ConvertRToW(&buf_globalLock);
 
         if (bp->refCount == 0 &&
             !(bp->flags & CM_BUF_INLRU)) {
@@ -145,10 +143,8 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
             bp->flags |= CM_BUF_INLRU;
         }
 
-        if (!writeLocked) {
-            lock_ReleaseWrite(&buf_globalLock);
-            lock_ObtainRead(&buf_globalLock);
-        }
+        if (!writeLocked)
+            lock_ConvertWToR(&buf_globalLock);
     }
 }       
 

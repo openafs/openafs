@@ -159,8 +159,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
     if ( !tnc )
     {
         if ( !writeLocked ) {
-            lock_ReleaseRead(&cm_dnlcLock);
-            lock_ObtainWrite(&cm_dnlcLock);
+            lock_ConvertRToW(&cm_dnlcLock);
             writeLocked = 1;
             goto retry;
         }
