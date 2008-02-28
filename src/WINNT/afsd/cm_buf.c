@@ -1498,19 +1498,21 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             if (code && code != CM_ERROR_BADFD) 
                 goto skip;
 
-	    /* if the scp's FID is bad its because we received VNOVNODE 
-	     * when attempting to FetchStatus before the write.  This
-	     * page therefore contains data that can no longer be stored.
-	     */
-	    lock_ObtainMutex(&bp->mx);
-	    bp->flags &= ~CM_BUF_DIRTY;
-	    bp->flags |= CM_BUF_ERROR;
-	    bp->error = code;
-            bp->dirty_offset = 0;
-            bp->dirty_length = 0;
-            bp->dataVersion = -1;	/* known bad */
-            bp->dirtyCounter++;
-	    lock_ReleaseMutex(&bp->mx);
+            if (code == CM_ERROR_BADFD) {
+                /* if the scp's FID is bad its because we received VNOVNODE 
+                 * when attempting to FetchStatus before the write.  This
+                 * page therefore contains data that can no longer be stored.
+                 */
+                lock_ObtainMutex(&bp->mx);
+                bp->flags &= ~CM_BUF_DIRTY;
+                bp->flags |= CM_BUF_ERROR;
+                bp->error = CM_ERROR_BADFD;
+                bp->dirty_offset = 0;
+                bp->dirty_length = 0;
+                bp->dataVersion = -1;	/* known bad */
+                bp->dirtyCounter++;
+                lock_ReleaseMutex(&bp->mx);
+            }
 
             /* actually, we only know that buffer is clean if ref
              * count is 1, since we don't have buffer itself locked.
@@ -1528,7 +1530,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 lock_ReleaseWrite(&buf_globalLock);
             }
 
-	    if (code != CM_ERROR_BADFD)
+	    if (code == 0)
 		(*cm_buf_opsp->Unstabilizep)(scp, userp);
         }
 
