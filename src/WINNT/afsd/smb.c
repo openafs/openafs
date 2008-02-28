@@ -78,9 +78,9 @@ smb_dispatch_t smb_dispatchTable[SMB_NOPCODES];
 smb_packet_t *smb_packetFreeListp;
 smb_ncb_t *smb_ncbFreeListp;
 
-int smb_NumServerThreads;
+afs_uint32 smb_NumServerThreads;
 
-int numNCBs, numSessions, numVCs;
+afs_uint32 numNCBs, numSessions, numVCs;
 
 int smb_maxVCPerServer;
 int smb_maxMpxRequests;
@@ -214,7 +214,7 @@ void smb_UpdateServerPriority()
 	time_t now = osi_Time();
 
 	/* Give one priority boost for each 15 seconds */
-	SetThreadPriority(GetCurrentThread(), (now - *tp) / 15);
+	SetThreadPriority(GetCurrentThread(), (int)((now - *tp) / 15));
     }
 }
 
@@ -1664,7 +1664,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         snprintf(pathstr, sizeof(pathstr)/sizeof(char),
                  "/" CM_PREFIX_VOL "%s", shareName);
         pathstr[sizeof(pathstr)/sizeof(char) - 1] = '\0';
-        len = strlen(pathstr) + 1;
+        len = (DWORD)(strlen(pathstr) + 1);
 
         *pathNamep = malloc(len);
         if (*pathNamep) {
@@ -2641,7 +2641,12 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_RANGE_NOT_LOCKED) {
 	NTStatus = 0xC000007EL;	/* Range Not Locked */
     } 
-    else {
+    else if (code == CM_ERROR_NOSUCHDEVICE) {
+        NTStatus = 0xC000000EL; /* No Such Device */
+    }
+    else if (code == CM_ERROR_LOCK_NOT_GRANTED) {
+        NTStatus = 0xC0000055L; /* Lock Not Granted */
+    } else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 
@@ -3396,6 +3401,11 @@ void smb_WaitingLocksDaemon()
                 if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
                     continue;
 
+                if (wl->state == SMB_WAITINGLOCKSTATE_CANCELLED) {
+                    code = CM_ERROR_LOCK_NOT_GRANTED;
+                    break;
+                }
+
                 osi_assertx(wl->state != SMB_WAITINGLOCKSTATE_ERROR, "!SMB_WAITINGLOCKSTATE_ERROR");
                 
                 /* wl->state is either _DONE or _WAITING.  _ERROR
@@ -3414,8 +3424,8 @@ void smb_WaitingLocksDaemon()
             if (code == CM_ERROR_WOULDBLOCK) {
 
                 /* no progress */
-                if (wlRequest->timeRemaining != 0xffffffff
-                     && (wlRequest->timeRemaining -= 1000) < 0)
+                if (wlRequest->msTimeout != 0xffffffff
+                     && ((osi_Time() - wlRequest->start_t) * 1000 > wlRequest->msTimeout))
                     goto endWait;
 
                 continue;
@@ -3439,9 +3449,10 @@ void smb_WaitingLocksDaemon()
 
                 for (wl = wlRequest->locks; wl; wl = wlNext) {
                     wlNext = (smb_waitingLock_t *) osi_QNext(&wl->q);
-                    
-                    cm_Unlock(scp, wlRequest->lockType, wl->LOffset, 
-                              wl->LLength, wl->key, NULL, &req);
+                
+                    if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
+                        cm_Unlock(scp, wlRequest->lockType, wl->LOffset, 
+                                  wl->LLength, wl->key, NULL, &req);
 
                     osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
 
@@ -6019,7 +6030,7 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 /*
  * smb_ReadData -- common code for Read, Read And X, and Raw Read
  */
-long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char *op,
 	cm_user_t *userp, long *readp)
 {
     osi_hyper_t offset;
@@ -6030,7 +6041,8 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     osi_hyper_t thyper;
     osi_hyper_t lastByte;
     osi_hyper_t bufferOffset;
-    long bufIndex, nbytes;
+    long bufIndex;
+    afs_uint32 nbytes;
     int chunk;
     int sequential = (fidp->flags & SMB_FID_SEQUENTIAL);
     cm_req_t req;
@@ -6170,7 +6182,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 /*
  * smb_WriteData -- common code for Write and Raw Write
  */
-long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char *op,
 	cm_user_t *userp, long *writtenp)
 {
     osi_hyper_t offset = *offsetp;
@@ -8018,7 +8030,7 @@ void InitNCBslot(int idx)
 {
     struct smb_packet *bufp;
     EVENT_HANDLE retHandle;
-    int i;
+    afs_uint32 i;
     char eventName[MAX_PATH];
 
     osi_assertx( idx < (sizeof(NCBs) / sizeof(NCBs[0])), "invalid index" );
@@ -8050,7 +8062,7 @@ void smb_Listener(void *parmp)
     long code = 0;
     long len;
     long i;
-    int  session, thread;
+    afs_uint32  session, thread;
     smb_vc_t *vcp = NULL;
     int flags = 0;
     char rname[NCBNAMSZ+1];
@@ -9120,7 +9132,7 @@ void smb_Shutdown(void)
 {
     NCB *ncbp;
     long code = 0;
-    int i;
+    afs_uint32 i;
     smb_vc_t *vcp;
 
     /*fprintf(stderr, "Entering smb_Shutdown\n");*/

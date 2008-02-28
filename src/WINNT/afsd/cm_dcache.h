@@ -57,4 +57,7 @@ extern long cm_ValidateDCache(void);
 
 extern long cm_ShutdownDCache(void);
 
+extern long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
+                 cm_user_t *userp, cm_req_t *reqp);
+
 #endif /*  __CM_DCACHE_ENV__ */
