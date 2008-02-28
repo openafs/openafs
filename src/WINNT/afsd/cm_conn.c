@@ -213,7 +213,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 #endif
 	    
     /* leave 5 seconds margin for sleep */
-    timeLeft = HardDeadtimeout - timeUsed;
+    if (reqp->flags & CM_REQ_NORETRY)
+        timeLeft = 0;
+    else
+        timeLeft = HardDeadtimeout - timeUsed;
 
     /* get a pointer to the cell */
     if (errorCode) {
@@ -232,7 +235,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     if (errorCode == CM_ERROR_TIMEDOUT) {
-        if (timeLeft > 5 ) {
+        if ( timeLeft > 5 ) {
             thrd_Sleep(3000);
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
@@ -242,7 +245,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode == UAEWOULDBLOCK || errorCode == EWOULDBLOCK ||
               errorCode == UAEAGAIN || errorCode == EAGAIN) {
 	osi_Log0(afsd_logp, "cm_Analyze passed EWOULDBLOCK or EAGAIN.");
-        if (timeLeft > 5 ) {
+        if ( timeLeft > 5 ) {
             thrd_Sleep(1000);
             retry = 1;
         }

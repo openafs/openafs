@@ -75,10 +75,10 @@ afs_uint32 smb_IsExecutableFileName(const char *name)
     if ( smb_ExecutableExtensions == NULL || name == NULL)
         return 0;
 
-    len = strlen(name);
+    len = (int)strlen(name);
 
     for ( i=0; smb_ExecutableExtensions[i]; i++) {
-        j = len - strlen(smb_ExecutableExtensions[i]);
+        j = len - (int)strlen(smb_ExecutableExtensions[i]);
         if (_stricmp(smb_ExecutableExtensions[i], &name[j]) == 0)
             return 1;
     }
@@ -2889,7 +2889,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         goto done;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
-	len = strlen(lastComp);
+	len = (unsigned int)strlen(lastComp);
 	qpi.u.QPfileNameInfo.fileNameLength = (len + 1) * 2;
         mbstowcs((unsigned short *)qpi.u.QPfileNameInfo.fileName, lastComp, len + 1);
 
@@ -2967,7 +2967,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPfileAllInfo.currentByteOffset.LowPart = 0;
 	qpi.u.QPfileAllInfo.mode = 0;
 	qpi.u.QPfileAllInfo.alignmentRequirement = 0;
-	len = strlen(lastComp);
+	len = (unsigned int)strlen(lastComp);
 	qpi.u.QPfileAllInfo.fileNameLength = (len + 1) * 2;
         mbstowcs((unsigned short *)qpi.u.QPfileAllInfo.fileName, lastComp, len + 1);
     }
@@ -3633,8 +3633,8 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     osi_Log2(smb_logp,"ReceiveTran2GetDfsReferral [%d][%s]", 
              maxReferralLevel, osi_LogSaveString(smb_logp, requestFileName));
 
-    nbnLen = strlen(cm_NetbiosName);
-    reqLen = strlen(requestFileName);
+    nbnLen = (int)strlen(cm_NetbiosName);
+    reqLen = (int)strlen(requestFileName);
 
     if (reqLen > nbnLen + 2 && requestFileName[0] == '\\' &&
         !_strnicmp(cm_NetbiosName,&requestFileName[1],nbnLen) &&
@@ -3711,10 +3711,10 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 /* scp should now be the DfsLink we are looking for */
                 if (scp) {
                     /* figure out how much of the input path was used */
-                    reqLen = nbnLen+2 + strlen(pathName) + 1 + strlen(lastComponent);
+                    reqLen = (int)(nbnLen+2 + strlen(pathName) + 1 + strlen(lastComponent));
 
                     strcpy(referralPath, &scp->mountPointStringp[strlen("msdfs:")]);
-                    refLen = strlen(referralPath);
+                    refLen = (int)strlen(referralPath);
                     found = 1;
                 }
             } else {
@@ -3798,7 +3798,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     return 0;
 #else /* DFS_SUPPORT */
     osi_Log0(smb_logp,"ReceiveTran2GetDfsReferral - NOT_SUPPORTED"); 
-    return CM_ERROR_BADOP;
+    return CM_ERROR_NOSUCHDEVICE;
 #endif /* DFS_SUPPORT */
 }
 
@@ -4536,7 +4536,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         ohbytes += 4;           /* EASIZE */
 
     /* add header to name & term. null */
-    onbytes = strlen(maskp);
+    onbytes = (int)strlen(maskp);
     orbytes = ohbytes + onbytes + 1;
 
     /* now, we round up the record to a 4 byte alignment, and we make
@@ -5789,7 +5789,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_scache_t *scp;
     unsigned char LockType;
     unsigned short NumberOfUnlocks, NumberOfLocks;
-    long Timeout;
+    afs_uint32 Timeout;
     char *op;
     char *op_locks;
     LARGE_INTEGER LOffset, LLength;
@@ -5856,24 +5856,44 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LockType |= LOCKING_ANDX_SHARED_LOCK;
     }
 
-    if ((LockType & LOCKING_ANDX_CANCEL_LOCK) ||
-        (LockType & LOCKING_ANDX_CHANGE_LOCKTYPE)) {
-
-        /* We don't support these requests.  Apparently, we can safely
-           not deal with them too. */
-        osi_Log1(smb_logp, "smb_ReceiveV3Locking received unsupported request [%s]",
-                 ((LockType & LOCKING_ANDX_CANCEL_LOCK)?
-                  "LOCKING_ANDX_CANCEL_LOCK":
-                  "LOCKING_ANDX_CHANGE_LOCKTYPE")); 
-        /* No need to call osi_LogSaveString since these are string
-           constants.*/
-
+    if (LockType & LOCKING_ANDX_CHANGE_LOCKTYPE) {
+        /* AFS does not support atomic changes of lock types from read or write and vice-versa */
+        osi_Log0(smb_logp, "smb_ReceiveV3Locking received unsupported request [LOCKING_ANDX_CHANGE_LOCKTYPE]"); 
         code = CM_ERROR_BADOP;
         goto done;
 
     }
 
     op = smb_GetSMBData(inp, NULL);
+
+    if (LockType & LOCKING_ANDX_CANCEL_LOCK) {
+        /* Cancel outstanding lock requests */
+        smb_waitingLock_t * wl;
+
+        for (i=0; i<NumberOfLocks; i++) {
+            smb_GetLockParams(LockType, &op, &pid, &LOffset, &LLength);
+
+            key = cm_GenerateKey(vcp->vcID, pid, fidp->fid);
+
+            lock_ObtainWrite(&smb_globalLock);
+            for (wlRequest = smb_allWaitingLocks; wlRequest; wlRequest = (smb_waitingLockRequest_t *) osi_QNext(&wlRequest->q))
+            {
+                for (wl = wlRequest->locks; wl; wl = (smb_waitingLock_t *) osi_QNext(&wl->q)) {
+                    if (wl->key == key && LargeIntegerEqualTo(wl->LOffset, LOffset) && 
+                        LargeIntegerEqualTo(wl->LLength, LLength)) {
+                        wl->state = SMB_WAITINGLOCKSTATE_CANCELLED;
+                        goto found_lock_request;
+                    }
+                }
+            }
+          found_lock_request:
+            lock_ReleaseWrite(&smb_globalLock);
+        }
+        code = 0;
+        smb_SetSMBDataLength(outp, 0);
+        goto done;
+    }
+
 
     for (i=0; i<NumberOfUnlocks; i++) {
         smb_GetLockParams(LockType, &op, &pid, &LOffset, &LLength);
@@ -5925,7 +5945,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 wlRequest->inp = smb_CopyPacket(inp);
                 wlRequest->outp = smb_CopyPacket(outp);
                 wlRequest->lockType = LockType;
-                wlRequest->timeRemaining = Timeout;
+                wlRequest->msTimeout = Timeout;
+                wlRequest->start_t = osi_Time();
                 wlRequest->locks = NULL;
 
                 /* The waiting lock request needs to have enough
@@ -6325,8 +6346,6 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         written = 0;
     }
 
- done_writing:
-    
     /* slots 0 and 1 are reserved for request chaining and will be
        filled in when we return. */
     smb_SetSMBParm(outp, 2, total_written);
@@ -7213,7 +7232,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.LowPart = SMB_FID_QLOCK_LENGTH;
 
         /* If we are not opening the file for writing, then we don't
-           try to get an exclusive lock.  Noone else should be able to
+           try to get an exclusive lock.  No one else should be able to
            get an exclusive lock on the file anyway, although someone
            else can get a shared lock. */
         if ((fidflags & SMB_FID_SHARE_READ) ||
@@ -8268,6 +8287,12 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	break;
     case 6:
         return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
+    case 7:
+        osi_Log0(smb_logp, "SMB NT Transact Query Quota - not implemented");
+        break;
+    case 8:
+        osi_Log0(smb_logp, "SMB NT Transact Set Quota - not implemented");
+        break;
     }
     return CM_ERROR_INVAL;
 }

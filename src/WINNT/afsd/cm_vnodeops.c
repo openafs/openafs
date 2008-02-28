@@ -3965,6 +3965,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     cm_conn_t * connp;
     struct rx_connection * callp;
     AFSVolSync volSync;
+    afs_uint32 reqflags = reqp->flags;
 
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
@@ -3973,6 +3974,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
 
     osi_Log2(afsd_logp, "CALL SetLock scp 0x%p for lock %d", scp, lockType);
 
+    reqp->flags |= CM_REQ_NORETRY;
     lock_ReleaseMutex(&scp->mx);
 
     do {
@@ -3996,7 +3998,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     }
 
     lock_ObtainMutex(&scp->mx);
-
+    reqp->flags = reqflags;
     return code;
 }
 

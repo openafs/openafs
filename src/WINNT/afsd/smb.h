@@ -495,9 +495,10 @@ typedef struct smb_waitingLock {
     int              state;
 } smb_waitingLock_t;
 
-#define SMB_WAITINGLOCKSTATE_WAITING 0
-#define SMB_WAITINGLOCKSTATE_DONE    1
-#define SMB_WAITINGLOCKSTATE_ERROR   2
+#define SMB_WAITINGLOCKSTATE_WAITING   0
+#define SMB_WAITINGLOCKSTATE_DONE      1
+#define SMB_WAITINGLOCKSTATE_ERROR     2
+#define SMB_WAITINGLOCKSTATE_CANCELLED 3
 
 /* waiting lock request */
 typedef struct smb_waitingLockRequest {
@@ -507,7 +508,8 @@ typedef struct smb_waitingLockRequest {
     smb_packet_t *inp;
     smb_packet_t *outp;
     int           lockType;
-    time_t        timeRemaining;
+    time_t        start_t;              /* osi_Time */
+    afs_uint32    msTimeout;            /* msecs, 0xFFFFFFFF = wait forever */
     smb_waitingLock_t * locks;
 } smb_waitingLockRequest_t;
 
@@ -729,18 +731,18 @@ extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int 
 extern int smb_SUser(cm_user_t *userp);
 
 #ifndef DJGPP
-long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char *op,
 	cm_user_t *userp, long *writtenp);
 #else /* DJGPP */
-long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char *op,
 	cm_user_t *userp, long *writtenp, int dosflag);
 #endif /* !DJGPP */
 
 #ifndef DJGPP
-extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
+extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count,
 	char *op, cm_user_t *userp, long *readp);
 #else /* DJGPP */
-extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
+extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count,
 	char *op, cm_user_t *userp, long *readp, int dosflag);
 #endif /* !DJGPP */
 

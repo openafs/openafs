@@ -90,6 +90,8 @@
 #define CM_ERROR_BPLUS_NOMATCH          (CM_ERROR_BASE+55)
 #define CM_ERROR_EAS_NOT_SUPPORTED      (CM_ERROR_BASE+56)
 #define CM_ERROR_RANGE_NOT_LOCKED       (CM_ERROR_BASE+57)
+#define CM_ERROR_NOSUCHDEVICE           (CM_ERROR_BASE+58)
+#define CM_ERROR_LOCK_NOT_GRANTED       (CM_ERROR_BASE+59)
 
 /* Used by cm_FollowMountPoint and cm_GetVolumeByName */
 #define RWVOL	0
