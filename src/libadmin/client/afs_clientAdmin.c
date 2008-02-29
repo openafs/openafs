@@ -24,6 +24,7 @@ RCSID
 #include <afs/afssyscalls.h>
 #include <winsock2.h>
 #include <afs/fs_utils.h>
+#define close(x) closesocket(x)
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
