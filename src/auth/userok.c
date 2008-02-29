@@ -51,9 +51,11 @@ int
 afsconf_CheckAuth(register struct afsconf_dir *adir, 
 		  register struct rx_call *acall)
 {
+    int rc;
     LOCK_GLOBAL_MUTEX;
-    return ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
+    rc = ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
     UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }
 #endif /* !defined(UKERNEL) */
 
