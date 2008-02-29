@@ -669,9 +669,6 @@ cm_dnlcInit(int newFile)
         RegCloseKey (parmKey);
     }
 
-    if (!cm_useDnlc)
-        return ;
-
     if ( cm_debugDnlc )
 	osi_Log0(afsd_logp,"cm_dnlcInit");
 
