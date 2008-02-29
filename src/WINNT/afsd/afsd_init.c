@@ -1397,7 +1397,7 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
         code = RegQueryValueEx(parmKey, "EnableSMBAsyncStore", NULL, NULL,
                                 (BYTE *) &dwValue, &dummyLen);
         if (code == ERROR_SUCCESS)
-            smb_AsyncStore = dwValue ? 1 : 0;
+            smb_AsyncStore = dwValue == 2 ? 2 : (dwValue ? 1 : 0);
         afsi_log("EnableSMBAsyncStore = %d", smb_AsyncStore);
 
         dummyLen = sizeof(DWORD);

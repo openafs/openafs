@@ -1577,7 +1577,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
             if (volp)
                 cm_PutVolume(volp);
         }
-        osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %I64d, RPC dv %I64d",
+        osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %d, RPC dv %d",
                   scp, scp->dataVersion, dataVersion);
         /* we have a number of data fetch/store operations running
          * concurrently, and we can tell which one executed last at the
@@ -1722,7 +1722,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * the size of the file.
      */
     if (((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion > 1) || 
-         (!(flags & CM_MERGEFLAG_STOREDATA) && scp->dataVersion != dataVersion))
+         (!(flags & CM_MERGEFLAG_STOREDATA) && scp->dataVersion != dataVersion) ||
+         scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
     
     scp->dataVersion = dataVersion;

@@ -44,6 +44,8 @@ extern int buf_cacheType;
 
 #define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 
+#define CM_BUF_VERSION_BAD 0xFFFFFFFFFFFFFFFF
+
 /* represents a single buffer */
 typedef struct cm_buf {
     osi_queue_t q;		/* queue of all zero-refcount buffers */

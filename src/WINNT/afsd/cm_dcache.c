@@ -567,7 +567,7 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, osi_hyper_t *
         /* We cheat slightly by not locking the bp mutex. */
         if (bp) {
             if ((bp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING)) == 0
-                 && bp->dataVersion != scp->dataVersion)
+                 && (bp->dataVersion < scp->bufDataVersionLow || bp->dataVersion > scp->dataVersion))
                 stop = 1;
             buf_Release(bp);
 	    bp = NULL;
@@ -1375,16 +1375,25 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
      * which case we just retry.
      */
     if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow || biod.length == 0) {
-        if ((bufp->dataVersion == -1 || bufp->dataVersion < scp->dataVersion) && 
+        if ((bufp->dataVersion == CM_BUF_VERSION_BAD || bufp->dataVersion < scp->bufDataVersionLow) && 
              LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength)) 
         {
-            osi_Log3(afsd_logp, "Bad DVs %I64d, %I64d or length 0x%x",
-                      bufp->dataVersion, scp->dataVersion, biod.length);
+            osi_Log4(afsd_logp, "Bad DVs 0x%x != (0x%x -> 0x%x) or length 0x%x",
+                     bufp->dataVersion, scp->bufDataVersionLow, scp->dataVersion, biod.length);
 
-            if (bufp->dataVersion == -1)
+            if (bufp->dataVersion == CM_BUF_VERSION_BAD)
                 memset(bufp->datap, 0, cm_data.buf_blockSize);
             bufp->dataVersion = scp->dataVersion;
         }
+        lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseBIOD(&biod, 0, 0);
+        lock_ObtainMutex(&scp->mx);
+        return 0;
+    } else if ((bufp->dataVersion == CM_BUF_VERSION_BAD || bufp->dataVersion < scp->bufDataVersionLow)
+                && (scp->mask & CM_SCACHEMASK_TRUNCPOS) &&
+                LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->truncPos)) {
+        memset(bufp->datap, 0, cm_data.buf_blockSize);
+        bufp->dataVersion = scp->dataVersion;
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseBIOD(&biod, 0, 0);
         lock_ObtainMutex(&scp->mx);
@@ -1399,10 +1408,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         require_64bit_ops = 1;
     }
 
-#ifdef DISKCACHE95
-    DPRINTF("cm_GetBuffer: fetching data scpDV=%I64d bufDV=%I64d scp=%x bp=%x dcp=%x\n",
-            scp->dataVersion, bufp->dataVersion, scp, bufp, bufp->dcp);
-#endif /* DISKCACHE95 */
+    osi_Log2(afsd_logp, "cm_GetBuffer: fetching data scp %p bufp %p", scp, bufp);
+    osi_Log3(afsd_logp, "cm_GetBuffer: fetching data scpDV 0x%x scpDVLow 0x%x bufDV 0x%x",
+             scp->dataVersion, scp->bufDataVersionLow, bufp->dataVersion);
 
 #ifdef AFS_FREELANCE_CLIENT
 
