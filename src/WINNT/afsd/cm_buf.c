@@ -200,11 +200,10 @@ void buf_IncrSyncer(long parm)
 
         /* now go through our percentage of the buffers */
         for (bpp = &cm_data.buf_dirtyListp; bp = *bpp; ) {
-
 	    /* all dirty buffers are held when they are added to the
 	     * dirty list.  No need for an additional hold.
 	     */
-
+            lock_ObtainMutex(&bp->mx);
 	    if (bp->flags & CM_BUF_DIRTY) {
 		/* start cleaning the buffer; don't touch log pages since
  		 * the log code counts on knowing exactly who is writing
@@ -212,33 +211,27 @@ void buf_IncrSyncer(long parm)
 		 */
 		cm_InitReq(&req);
 		req.flags |= CM_REQ_NORETRY;
-		wasDirty |= buf_CleanAsync(bp, &req);
+		wasDirty |= buf_CleanAsyncLocked(bp, &req);
 	    }
 
 	    /* the buffer may or may not have been dirty
 	     * and if dirty may or may not have been cleaned
 	     * successfully.  check the dirty flag again.  
 	     */
-	    if (!(bp->flags & CM_BUF_DIRTY)) {
-		lock_ObtainMutex(&bp->mx);
-		if (!(bp->flags & CM_BUF_DIRTY)) {
-		    /* remove the buffer from the dirty list */
-		    lock_ObtainWrite(&buf_globalLock);
-		    *bpp = bp->dirtyp;
-		    bp->dirtyp = NULL;
-		    if (cm_data.buf_dirtyListp == NULL)
-			cm_data.buf_dirtyListEndp = NULL;
-		    buf_ReleaseLocked(bp, TRUE);
-		    lock_ReleaseWrite(&buf_globalLock);
-		} else {
-		    /* advance the pointer so we don't loop forever */
-		    bpp = &bp->dirtyp;
-		}
-		lock_ReleaseMutex(&bp->mx);
-	    } else {
-		/* advance the pointer so we don't loop forever */
-		bpp = &bp->dirtyp;
-	    }
+            if (!(bp->flags & CM_BUF_DIRTY)) {
+                /* remove the buffer from the dirty list */
+                lock_ObtainWrite(&buf_globalLock);
+                *bpp = bp->dirtyp;
+                bp->dirtyp = NULL;
+                if (cm_data.buf_dirtyListp == NULL)
+                    cm_data.buf_dirtyListEndp = NULL;
+                buf_ReleaseLocked(bp, TRUE);
+                lock_ReleaseWrite(&buf_globalLock);
+            } else {
+                /* advance the pointer so we don't loop forever */
+                bpp = &bp->dirtyp;
+            }
+            lock_ReleaseMutex(&bp->mx);
         }	/* for loop over a bunch of buffers */
     }		/* whole daemon's while loop */
 }
@@ -653,7 +646,16 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 
             offset = bp->offset;
             LargeIntegerAdd(offset, ConvertLongToLargeInteger(bp->dirty_offset));
-	    code = (*cm_buf_opsp->Writep)(scp, &offset, bp->dirty_length, 0, bp->userp, reqp);
+	    code = (*cm_buf_opsp->Writep)(scp, &offset, 
+#if 1
+                                           /* we might as well try to write all of the contiguous 
+                                            * dirty buffers in one RPC 
+                                            */
+                                           cm_chunkSize,
+#else
+                                          bp->dirty_length, 
+#endif
+                                          0, bp->userp, reqp);
 	    osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
 
 	    cm_ReleaseSCache(scp);
@@ -674,7 +676,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
             bp->dirty_offset = 0;
             bp->dirty_length = 0;
 	    bp->error = code;
-	    bp->dataVersion = -1; /* bad */
+	    bp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 	    bp->dirtyCounter++;
 	}
 
@@ -910,7 +912,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
             /* clean up junk flags */
             bp->flags &= ~(CM_BUF_EOF | CM_BUF_ERROR);
-            bp->dataVersion = -1;	/* unknown so far */
+            bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
 
             /* now hash in as our new buffer, and give it the
              * appropriate label, if requested.
@@ -1468,7 +1470,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                 bufp->flags &= ~CM_BUF_DIRTY;
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
-                bufp->dataVersion = -1;	/* known bad */
+                bufp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bufp->dirtyCounter++;
             }
             else {
@@ -1559,7 +1561,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->error = CM_ERROR_BADFD;
                 bp->dirty_offset = 0;
                 bp->dirty_length = 0;
-                bp->dataVersion = -1;	/* known bad */
+                bp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bp->dirtyCounter++;
                 lock_ReleaseMutex(&bp->mx);
             }
@@ -1851,7 +1853,7 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
             bp->dirty_length = 0;
 	    bp->flags |= CM_BUF_ERROR;
 	    bp->error = VNOVNODE;
-	    bp->dataVersion = -1; /* bad */
+	    bp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 	    bp->dirtyCounter++;
 	    if (bp->flags & CM_BUF_WAITING) {
 		osi_Log2(buf_logp, "BUF CleanDirtyBuffers Waking [scp 0x%x] bp 0x%x", scp, bp);

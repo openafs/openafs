@@ -6011,7 +6011,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->flags & SMB_FID_OPENWRITE) {
+    if ((fidp->flags & SMB_FID_OPENWRITE) && smb_AsyncStore != 2) {
 	cm_scache_t * scp = fidp->scp;
 	cm_HoldSCache(scp);
 	lock_ReleaseMutex(&fidp->mx);
@@ -6146,9 +6146,11 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
             CompensateForSmbClientLastWriteTimeBugs(&dosTime);
             smb_UnixTimeFromDosUTime(&fidp->scp->clientModTime, dosTime);
         }
-	lock_ReleaseMutex(&fidp->mx);
-        code = cm_FSync(scp, userp, &req);
-	lock_ObtainMutex(&fidp->mx);
+        if (smb_AsyncStore != 2) {
+            lock_ReleaseMutex(&fidp->mx);
+            code = cm_FSync(scp, userp, &req);
+            lock_ObtainMutex(&fidp->mx);
+        }
     }
     else 
         code = 0;
@@ -6557,7 +6559,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
      * based upon cm_chunkSize but we desire cm_chunkSize to be large
      * so that we can read larger amounts of data at a time.
      */
-    if (smb_AsyncStore && 
+    if (smb_AsyncStore == 1 && 
          (thyper.LowPart & ~(cm_data.buf_blockSize-1)) !=
          (offset.LowPart & ~(cm_data.buf_blockSize-1))) {
         /* they're different */
@@ -6636,7 +6638,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                                                                                ConvertLongToLargeInteger(count)),
                                                                minLength))) {
                     if (count < cm_data.buf_blockSize
-                         && bufferp->dataVersion == -1)
+                         && bufferp->dataVersion == CM_BUF_VERSION_BAD)
                         memset(bufferp->datap, 0,
                                 cm_data.buf_blockSize);
                     bufferp->dataVersion = scp->dataVersion;
@@ -6715,7 +6717,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
     lock_ReleaseMutex(&fidp->mx);
 
     if (code == 0) {
-        if (smb_AsyncStore) {
+        if (smb_AsyncStore > 0) {
             if (doWriteBack) {
                 long code2;
 
