@@ -1087,6 +1087,12 @@ else
   NO_STRIP_BIN=
 fi
 
+if test "x$enable_warnings" = "xyes"; then
+  if test "x$GCC" = "xyes"; then
+    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition"
+  fi
+fi
+
 INSTALL_PROGRAM="${INSTALL_PROGRAM} ${NO_STRIP_BIN}"
 
 AC_SUBST(CCXPG2)
