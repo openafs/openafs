@@ -1091,6 +1091,12 @@ else
   NO_STRIP_KRB=-ns
 fi
 
+if test "x$enable_warnings" = "xyes"; then
+  if test "x$GCC" = "xyes"; then
+    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition"
+  fi
+fi
+
 AC_SUBST(CCXPG2)
 AC_SUBST(CCOBJ)
 AC_SUBST(AFSD_LIBS)
