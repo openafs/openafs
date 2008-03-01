@@ -1165,15 +1165,17 @@ long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
 }       
 
 /* wait for a buffer's cleaning to finish */
-void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp)
+void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp, afs_uint32 locked)
 {
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
-    lock_ObtainMutex(&bp->mx);
+    if (!locked)
+        lock_ObtainMutex(&bp->mx);
     if (bp->flags & CM_BUF_WRITING) {
         buf_WaitIO(scp, bp);
     }
-    lock_ReleaseMutex(&bp->mx);
+    if (!locked)
+        lock_ReleaseMutex(&bp->mx);
 }       
 
 /* set the dirty flag on a buffer, and set associated write-ahead log,
@@ -1279,7 +1281,7 @@ long buf_CleanAndReset(void)
 		req.flags |= CM_REQ_NORETRY;
 
 		buf_CleanAsync(bp, &req);
-		buf_CleanWait(NULL, bp);
+		buf_CleanWait(NULL, bp, FALSE);
 
                 /* relock and release buffer */
                 lock_ObtainRead(&buf_globalLock);
@@ -1602,17 +1604,15 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
     for (; bp; bp = nbp) {
         /* clean buffer synchronously */
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
+            lock_ObtainMutex(&bp->mx);
             if (userp) {
                 cm_HoldUser(userp);
-                lock_ObtainMutex(&bp->mx);
                 if (bp->userp) 
                     cm_ReleaseUser(bp->userp);
                 bp->userp = userp;
-                lock_ReleaseMutex(&bp->mx);
             }   
-            wasDirty = buf_CleanAsync(bp, reqp);
-	    buf_CleanWait(scp, bp);
-            lock_ObtainMutex(&bp->mx);
+            wasDirty = buf_CleanAsyncLocked(bp, reqp);
+	    buf_CleanWait(scp, bp, TRUE);
             if (bp->flags & CM_BUF_ERROR) {
 		code = bp->error;
                 if (code == 0) 
