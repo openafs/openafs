@@ -161,7 +161,7 @@ extern long buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *);
 
 extern long buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
-extern void buf_CleanWait(cm_scache_t *, cm_buf_t *);
+extern void buf_CleanWait(cm_scache_t *, cm_buf_t *, afs_uint32 locked);
 
 extern void buf_SetDirty(cm_buf_t *, afs_uint32 offset, afs_uint32 length);
 
