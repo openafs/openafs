@@ -99,17 +99,22 @@ AddEventSource()
 		break;
 	    }
 
+#if 0
 	    // Set the name of the message file
 	    // Get "ImagePath" from TransarcAFSDaemon service
 	    memset(szBuf, '\0', MAX_PATH);
 	    dwData = MAX_PATH;
 	    GetServicePath(szBuf, &dwData);
-
+#else
+            // Windows takes the specified name and searchs the PATH environment variable
+            // It never appears to even try the fully qualified name.
+            strcpy(szBuf, "afsd_service.exe");
+#endif
 	    // Add the name to the EventMessageFile subkey. 
 	    if ( RegSetValueEx( hKey,			// subkey handle 
 				AFSREG_APPLOG_MSGFILE_VALUE,	// value name 
 				0,			// must be zero 
-				REG_EXPAND_SZ,		// value type 
+				REG_SZ,		        // value type 
 				(LPBYTE) szBuf,		// pointer to value data 
 				(DWORD)strlen(szBuf) + 1))	// length of value data
 	    {	
