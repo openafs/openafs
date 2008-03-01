@@ -1655,18 +1655,20 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
         /* clean buffer synchronously */
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
             lock_ObtainMutex(&bp->mx);
-            if (userp) {
-                cm_HoldUser(userp);
-                if (bp->userp) 
-                    cm_ReleaseUser(bp->userp);
-                bp->userp = userp;
-            }   
-            wasDirty = buf_CleanAsyncLocked(bp, reqp);
-	    buf_CleanWait(scp, bp, TRUE);
-            if (bp->flags & CM_BUF_ERROR) {
-		code = bp->error;
-                if (code == 0) 
-                    code = -1;
+            if (bp->flags & CM_BUF_DIRTY) {
+                if (userp) {
+                    cm_HoldUser(userp);
+                    if (bp->userp) 
+                        cm_ReleaseUser(bp->userp);
+                    bp->userp = userp;
+                }   
+                wasDirty = buf_CleanAsyncLocked(bp, reqp);
+                buf_CleanWait(scp, bp, TRUE);
+                if (bp->flags & CM_BUF_ERROR) {
+                    code = bp->error;
+                    if (code == 0) 
+                        code = -1;
+                }
             }
             lock_ReleaseMutex(&bp->mx);
         }
