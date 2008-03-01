@@ -23,7 +23,8 @@
 extern void afsi_log(char *pattern, ...);
 
 int cm_noLocalMountPoints;
-int cm_fakeDirSize;
+char * cm_FakeRootDir = NULL;
+int cm_fakeDirSize = 0;
 int cm_fakeDirCallback=0;
 int cm_fakeGettingCallback=0;
 cm_localMountPoint_t* cm_localMountPoints;
@@ -231,8 +232,12 @@ void cm_InitFakeRootDir() {
     }
 
     dirSize = (curPage+1) *  CM_DIR_PAGESIZE;
-    cm_FakeRootDir = malloc(dirSize);
-    cm_fakeDirSize = dirSize;
+    if (cm_fakeDirSize != dirSize) {
+        if (cm_FakeRootDir)
+            free(cm_FakeRootDir);
+        cm_FakeRootDir = malloc(dirSize);
+        cm_fakeDirSize = dirSize;
+    }
 
     // yj: when we get here, we've figured out how much memory we need and 
     // allocated the appropriate space for it. we now prceed to fill
@@ -446,11 +451,6 @@ int cm_reInitLocalMountPoints() {
     osi_Log0(afsd_logp,"Creating new localmountpoints...  ");
     cm_InitLocalMountPoints();
     osi_Log0(afsd_logp,"\tcreated new set of localmountpoints!");
-
-    // now we have to free the memory allocated in cm_initfakerootdir
-    osi_Log0(afsd_logp,"Removing old fakedir...  ");
-    free(cm_FakeRootDir);
-    osi_Log0(afsd_logp,"\t\told fakedir removed!");
 
     // then we re-create that dir
     osi_Log0(afsd_logp,"Creating new fakedir...  ");

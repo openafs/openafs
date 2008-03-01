@@ -62,9 +62,6 @@ char cm_mountRoot[1024];
 DWORD cm_mountRootLen;
 int cm_logChunkSize;
 int cm_chunkSize;
-#ifdef AFS_FREELANCE_CLIENT
-char *cm_FakeRootDir;
-#endif /* freelance */
 
 int smb_UseV3 = 1;
 
