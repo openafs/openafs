@@ -6265,8 +6265,8 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
      * so that we can read larger amounts of data at a time.
      */
     if (smb_AsyncStore == 1 && 
-         (thyper.LowPart & ~(cm_data.buf_blockSize-1)) !=
-         (offset.LowPart & ~(cm_data.buf_blockSize-1))) {
+         (thyper.LowPart & ~(smb_AsyncStoreSize-1)) !=
+         (offset.LowPart & ~(smb_AsyncStoreSize-1))) {
         /* they're different */
         doWriteBack = 1;
         writeBackOffset.HighPart = offset.HighPart;
@@ -6430,7 +6430,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                 lock_ReleaseMutex(&scp->mx);
                 cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                                     writeBackOffset.HighPart, 
-                                    *writtenp & ~(cm_data.blockSize-1), 0, userp);
+                                    *writtenp & ~(smb_AsyncStoreSize-1), 0, userp);
                 /* cm_SyncOpDone is called at the completion of cm_BkgStore */
             }
         } else {
