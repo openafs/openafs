@@ -6430,7 +6430,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                 lock_ReleaseMutex(&scp->mx);
                 cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                                     writeBackOffset.HighPart, 
-                                    *writtenp & ~(smb_AsyncStoreSize-1), 0, userp);
+                                    smb_AsyncStoreSize, 0, userp);
                 /* cm_SyncOpDone is called at the completion of cm_BkgStore */
             }
         } else {
