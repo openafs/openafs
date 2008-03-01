@@ -99,12 +99,10 @@ extern cm_localMountPoint_t* cm_localMountPoints;	// array of fake mountpoints
 extern int cm_fakeDirSize;				// size (in bytes) of fake root.afs directory
 
 extern int cm_fakeDirCallback;				// state of the fake root.afs directory. indicates
-													// if it needs to be refreshed
+                                                        // if it needs to be refreshed
 
 extern int cm_fakeGettingCallback;			// 1 if currently updating the fake root.afs directory,
-													// 0 otherwise
-
-extern int cm_fakeDirVersion;				// the version number of the root.afs directory. used 
+							// 0 otherwise
 #endif /* AFS_FREELANCE_CLIENT */
 
 extern int cm_dnsEnabled;

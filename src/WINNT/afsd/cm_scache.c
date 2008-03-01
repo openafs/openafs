@@ -1521,8 +1521,6 @@ void cm_MergeStatus(cm_scache_t *dscp,
         statusp->SyncCounter = 0;
         statusp->dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
         statusp->errorCode = 0;
-
-        buf_ForceDataVersion(scp, scp->dataVersion, cm_data.fakeDirVersion);
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
