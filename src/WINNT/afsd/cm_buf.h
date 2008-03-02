@@ -23,9 +23,6 @@
 /* default buffer size */
 #define CM_BUF_BLOCKSIZE CM_CONFIGDEFAULT_BLOCKSIZE
 
-/* default hash size */
-#define CM_BUF_HASHSIZE	1024
-
 /* cache type */
 #define CM_BUF_CACHETYPE_FILE 1
 #define CM_BUF_CACHETYPE_VIRTUAL 2
@@ -38,9 +35,6 @@ extern int buf_cacheType;
 
 /* another hash fn */
 #define BUF_FILEHASH(fidp) ((fidp)->hash % cm_data.buf_hashSize)
-
-/* backup over pointer to the buffer */
-#define BUF_OVERTOBUF(op) ((cm_buf_t *)(((char *)op) - ((long)(&((cm_buf_t *)0)->over))))
 
 #define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 
@@ -65,13 +59,12 @@ typedef struct cm_buf {
     struct cm_buf *dirtyp;	/* next in the dirty list */
     osi_mutex_t mx;		/* mutex protecting structure except refcount */
     afs_int32 refCount;	        /* reference count (buf_globalLock) */
-    long idCounter;		/* counter for softrefs; bumped at each recycle */
-    long dirtyCounter;	        /* bumped at each dirty->clean transition */
+    afs_uint32 dirtyCounter;	/* bumped at each dirty->clean transition */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
     afs_uint32 flags;		/* flags we're using */
     char *datap;		/* data in this buffer */
-    unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
+    afs_uint32 error;	        /* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
         
     /* fields added for the CM; locked by scp->mx */
@@ -104,21 +97,15 @@ typedef struct cm_buf {
 /* waiting is done based on scp->flags.  Removing bits from cmFlags
    should be followed by waking the scp. */
 
-/* represents soft reference which is OK to lose on a recycle */
-typedef struct cm_softRef {
-    cm_buf_t *bufp;	/* buffer (may get reused) */
-    long counter;		/* counter of changes to identity */
-} cm_softRef_t;
-
 #define CM_BUF_READING	1	/* now reading buffer from the disk */
 #define CM_BUF_WRITING	2	/* now writing buffer to the disk */
 #define CM_BUF_INHASH	4	/* in the hash table */
-#define CM_BUF_DIRTY		8	/* buffer is dirty */
-#define CM_BUF_INLRU		0x10	/* in lru queue */
-#define CM_BUF_ERROR		0x20	/* something went wrong on delayed write */
+#define CM_BUF_DIRTY	8	/* buffer is dirty */
+#define CM_BUF_INLRU	0x10	/* in lru queue */
+#define CM_BUF_ERROR	0x20	/* something went wrong on delayed write */
 #define CM_BUF_WAITING	0x40	/* someone's waiting for a flag to change */
-#define CM_BUF_EVWAIT	0x80	/* someone's waiting for the buffer event */
-#define CM_BUF_EOF		0x100	/* read 0 bytes; used for detecting EOF */
+
+#define CM_BUF_EOF	0x100	/* read 0 bytes; used for detecting EOF */
 
 typedef struct cm_buf_ops {
     long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,

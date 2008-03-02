@@ -773,12 +773,6 @@ void buf_Recycle(cm_buf_t *bp)
         bp->flags &= ~CM_BUF_INHASH;
     }
 
-    /* bump the soft reference counter now, to invalidate softRefs; no
-     * wakeup is required since people don't sleep waiting for this
-     * counter to change.
-     */
-    bp->idCounter++;
-
     /* make the fid unrecognizable */
     memset(&bp->fid, 0, sizeof(cm_fid_t));
 }       
