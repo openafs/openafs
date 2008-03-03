@@ -33,7 +33,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
 
     bufferp = NULL;
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -82,11 +82,11 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 buf_Release(bufferp);
                 bufferp = NULL;
             }
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
 
             code = buf_Get(scp, &thyper, &bufferp);
 
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if (code) goto done;
             bufferOffset = thyper;
 
@@ -134,7 +134,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     } /* while 1 */
 
   done:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     //lock_ReleaseMutex(&fidp->mx);
     if (bufferp) 
         buf_Release(bufferp);
@@ -169,7 +169,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     bufferp = NULL;
     doWriteBack = 0;
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -243,12 +243,12 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 buf_Release(bufferp);
                 bufferp = NULL;
             }	
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
 
             code = buf_Get(scp, &thyper, &bufferp);
 
             lock_ObtainMutex(&bufferp->mx);
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if (code) 
                 goto done;
 
@@ -298,9 +298,9 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 lock_ReleaseMutex(&bufferp->mx);
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                      &req);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 lock_ObtainMutex(&bufferp->mx);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 if (code) 
                     break;
             }
@@ -349,16 +349,16 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     } /* while 1 */
 
   done:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     if (bufferp) {
         lock_ReleaseMutex(&bufferp->mx);
         buf_Release(bufferp);
     }
 
     if (code == 0 && doWriteBack) {
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
     }   

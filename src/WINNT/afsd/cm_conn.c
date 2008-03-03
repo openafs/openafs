@@ -541,20 +541,20 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		    pscp = cm_FindSCacheParent(scp);
 
 
-		lock_ObtainMutex(&scp->mx);
+		lock_ObtainWrite(&scp->rw);
 		lock_ObtainWrite(&cm_scacheLock);
 		cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
                 cm_LockMarkSCacheLost(scp);
 		scp->flags |= CM_SCACHEFLAG_DELETED;
-		lock_ReleaseMutex(&scp->mx);
+		lock_ReleaseWrite(&scp->rw);
 		cm_ReleaseSCache(scp);
 
  		if (pscp) {
 		    if (cm_HaveCallback(pscp)) {
- 			lock_ObtainMutex(&pscp->mx);
+ 			lock_ObtainWrite(&pscp->rw);
  			cm_DiscardSCache(pscp);
- 			lock_ReleaseMutex(&pscp->mx);
+ 			lock_ReleaseWrite(&pscp->rw);
  		    }
  		    cm_ReleaseSCache(pscp);
  		}

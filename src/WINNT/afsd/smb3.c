@@ -2421,9 +2421,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     /* save a pointer to the vnode */
     osi_Log2(smb_logp,"smb_ReceiveTran2Open fidp 0x%p scp 0x%p", fidp, scp);
     fidp->scp = scp;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     
     /* and the user */
     fidp->userp = userp;
@@ -2447,7 +2447,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     /* copy out remainder of the parms */
     parmSlot = 0;
     outp->parmsp[parmSlot++] = fidp->fid;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainRead(&scp->rw);
     if (extraInfo) {
         outp->parmsp[parmSlot++] = smb_Attributes(scp);
         smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
@@ -2469,7 +2469,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         outp->parmsp[parmSlot++] = 0; 
         outp->parmsp[parmSlot++] = 0; 
     }   
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseRead(&scp->rw);
     outp->totalData = 0;		/* total # of data bytes */
     outp->totalParms = parmSlot * 2;	/* shorts are two bytes */
 
@@ -2863,7 +2863,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 #endif /* DFS_SUPPORT */
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     scp_mx_held = 1;
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -2871,6 +2871,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         
+    lock_ConvertWToR(&scp->rw);
+
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
      */
@@ -2929,7 +2931,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileStandardInfo.reserved = 0;
 
     	if (fidp) {
-	    lock_ReleaseMutex(&scp->mx);
+	    lock_ReleaseRead(&scp->rw);
 	    scp_mx_held = 0;
 	    lock_ObtainMutex(&fidp->mx);
 	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
@@ -2975,7 +2977,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* send and free the packets */
   done:
     if (scp_mx_held)
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseRead(&scp->rw);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     if (code == 0) {
@@ -3149,19 +3151,19 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         /* lock the vnode with a callback; we need the current status
          * to determine what the new status is, in some cases.
          */
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
         if (code) {
-	    lock_ReleaseMutex(&scp->mx);
+	    lock_ReleaseWrite(&scp->rw);
             goto done;
         }
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseWrite(&scp->rw);
 	lock_ObtainMutex(&fidp->mx);
-	lock_ObtainMutex(&scp->mx);
+	lock_ObtainRead(&scp->rw);
 
         /* prepare for setattr call */
         attr.mask = CM_ATTRMASK_LENGTH;
@@ -3188,7 +3190,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                 attr.unixModeBits = scp->unixModeBits | 0222;
             }
         }
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseRead(&scp->rw);
 	lock_ReleaseMutex(&fidp->mx);
 
         /* call setattr */
@@ -3230,6 +3232,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_scache_t *scp;
     smb_tran2QFileInfo_t qfi;
     long code = 0;
+    int  readlock = 0;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -3288,13 +3291,16 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     osi_Log2(smb_logp,"smb_ReleaseTran2QFileInfo fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         goto done;
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    lock_ConvertWToR(&scp->rw);
+    readlock = 1;
 
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
@@ -3325,9 +3331,9 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         unsigned long len;
         char *name;
 
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseRead(&scp->rw);
 	lock_ObtainMutex(&fidp->mx);
-	lock_ObtainMutex(&scp->mx);
+	lock_ObtainRead(&scp->rw);
         if (fidp->NTopen_wholepathp)
             name = fidp->NTopen_wholepathp;
         else
@@ -3341,7 +3347,10 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     /* send and free the packets */
   done:
-    lock_ReleaseMutex(&scp->mx);
+    if (readlock)
+        lock_ReleaseRead(&scp->rw);
+    else
+        lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
@@ -3443,20 +3452,20 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	/* lock the vnode with a callback; we need the current status
          * to determine what the new status is, in some cases.
          */
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
         if (code) {
-	    lock_ReleaseMutex(&scp->mx);
+	    lock_ReleaseWrite(&scp->rw);
             goto done;
 	}
 
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseWrite(&scp->rw);
 	lock_ObtainMutex(&fidp->mx);
-	lock_ObtainMutex(&scp->mx);
+	lock_ObtainRead(&scp->rw);
 
         /* prepare for setattr call */
         attr.mask = 0;
@@ -3488,7 +3497,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                 attr.unixModeBits = scp->unixModeBits | 0222;
             }
         }
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseRead(&scp->rw);
 	lock_ReleaseMutex(&fidp->mx);
 
         /* call setattr */
@@ -3843,10 +3852,10 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
     if (code == 0 && !(rights & PRSFS_READ))
         mustFake = 1;
     else if (code == -1) {
-        lock_ObtainMutex(&dscp->mx);
+        lock_ObtainWrite(&dscp->rw);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        lock_ReleaseMutex(&dscp->mx);
+        lock_ReleaseWrite(&dscp->rw);
         if (code == CM_ERROR_NOACCESS) {
             mustFake = 1;
             code = 0;
@@ -3866,12 +3875,12 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
         if (code) 
             continue;
 
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         if (mustFake == 0)
             code = cm_SyncOp(scp, NULL, userp, reqp, 0,
                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (mustFake || code) { 
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
 
             dptr = patchp->dptr;
 
@@ -3985,7 +3994,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
         /* now watch for a symlink */
         code = 0;
         while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             snprintf(path, AFSPATHMAX, "%s\\%s", relPathp ? relPathp : "", patchp->dep->name);
             reqp->relPathp = path;
             reqp->tidPathp = tidPathp;
@@ -4001,8 +4010,10 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
         }
+
+        lock_ConvertWToR(&scp->rw);
 
         dptr = patchp->dptr;
 
@@ -4105,7 +4116,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
             *dptr++ = (attr >> 8) & 0xff;
         }
 
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseRead(&scp->rw);
         cm_ReleaseSCache(scp);
     }
         
@@ -4924,13 +4935,13 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * and so we do another hold now.
              */
             cm_HoldSCache(scp);
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
                  LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
                 scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
                 dsp->flags |= SMB_DIRSEARCH_BULKST;
             }
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
         } 
     }
     lock_ReleaseMutex(&dsp->mx);
@@ -4943,11 +4954,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     /* get the directory size */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         smb_FreeTran2Packet(outp);
@@ -5029,7 +5040,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 buf_Release(bufferp);
                 bufferp = NULL;
             }       
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             code = buf_Get(scp, &thyper, &bufferp);
             lock_ObtainMutex(&dsp->mx);
 
@@ -5039,7 +5050,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             if (starPattern) {
                 code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, infoLevel, userp, &req);
                 
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
@@ -5052,7 +5063,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                         code = cm_TryBulkStat(scp, &thyper, userp, &req);
                 }
             } else {
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
             }
             lock_ReleaseMutex(&dsp->mx);
             if (code) {
@@ -5333,7 +5344,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     /* release the mutex */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     if (bufferp) {
         buf_Release(bufferp);
 	bufferp = NULL;
@@ -5698,9 +5709,9 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     osi_Log2(smb_logp,"smb_ReceiveV3OpenX fidp 0x%p scp 0x%p", fidp, scp);
     /* also the user */
     fidp->userp = userp;
@@ -5726,7 +5737,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* copy out remainder of the parms */
     parmSlot = 2;
     smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainRead(&scp->rw);
     if (extraInfo) {
         smb_SetSMBParm(outp, parmSlot, smb_Attributes(scp)); parmSlot++;
         smb_DosUTimeFromUnixTime(&dosTime, scp->clientModTime);
@@ -5744,7 +5755,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBParm(outp, parmSlot, scp->fid.vnode & 0xffff); parmSlot++;
     smb_SetSMBParm(outp, parmSlot, scp->fid.volume & 0xffff); parmSlot++;
     smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseRead(&scp->rw);
     smb_SetSMBDataLength(outp, 0);
 
     osi_Log1(smb_logp, "SMB OpenX opening fid %d", fidp->fid);
@@ -5833,7 +5844,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUserFromVCP(vcp, inp);
 
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK
 			 | CM_SCACHESYNC_GETSTATUS
@@ -6066,7 +6077,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
 
   doneSync:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
@@ -6083,6 +6094,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     afs_uint32 searchTime;
     cm_user_t *userp;
     cm_req_t req;
+    int readlock = 0;
 
     cm_InitReq(&req);
 
@@ -6114,13 +6126,15 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         
         
     /* otherwise, stat the file */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
 	goto done;
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    lock_ConvertWToR(&scp->rw);
 
     /* decode times.  We need a search time, but the response to this
      * call provides the date first, not the time, as returned in the
@@ -6148,7 +6162,10 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     code = 0;
 
   done:
-    lock_ReleaseMutex(&scp->mx);
+    if (readlock) 
+        lock_ReleaseRead(&scp->rw);
+    else
+        lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
@@ -6304,9 +6321,9 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.LowPart = count;
 
         scp = fidp->scp;
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_LockCheckWrite(scp, LOffset, LLength, key);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         if (code)
             goto done;
@@ -6427,9 +6444,9 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.LowPart = count;
 
         scp = fidp->scp;
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_LockCheckRead(scp, LOffset, LLength, key);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
     }
 
     if (code) {
@@ -7244,9 +7261,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         key = cm_GenerateKey(vcp->vcID, SMB_FID_QLOCK_PID, fidp->fid);
         
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, &req, NULL);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         if (code) {
 	    if (ldp)
@@ -7270,9 +7287,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;    /* Hold transfered to fidp->scp and no longer needed */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     osi_Log2(smb_logp,"smb_ReceiveNTCreateX fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
@@ -7305,7 +7322,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* out parms */
     parmSlot = 2;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainRead(&scp->rw);
     smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
     smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
     smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
@@ -7333,7 +7350,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
     }
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseRead(&scp->rw);
 
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
               osi_LogSaveString(smb_logp, realPathp));
@@ -7912,9 +7929,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
         key = cm_GenerateKey(vcp->vcID, SMB_FID_QLOCK_PID, fidp->fid);
         
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, &req, NULL);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         if (code) {
 	    if (ldp)
@@ -7936,9 +7953,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     osi_Log2(smb_logp,"smb_ReceiveNTTranCreate fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
@@ -7995,7 +8012,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         smb_SetSMBParmByte(outp, parmSlot, 0);	/* Setup Count */
         smb_SetSMBDataLength(outp, 70);
 
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainRead(&scp->rw);
         outData = smb_GetSMBData(outp, NULL);
         outData++;			/* round to get to parmOffset */
         *outData = 0; outData++;	/* oplock */
@@ -8017,7 +8034,6 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         outData += 2;	/* is a dir? */
-        lock_ReleaseMutex(&scp->mx);
     } else {
         /* out parms */
         parmOffset = 8*4 + 39;
@@ -8045,7 +8061,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         smb_SetSMBParmByte(outp, parmSlot, 0);	/* Setup Count */
         smb_SetSMBDataLength(outp, 105);
         
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainRead(&scp->rw);
         outData = smb_GetSMBData(outp, NULL);
         outData++;			/* round to get to parmOffset */
         *outData = 0; outData++;	/* oplock */
@@ -8070,10 +8086,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         memset(outData,0,24); outData += 24; /* Volume ID and file ID */
         *((ULONG *)outData) = 0x001f01ffL; outData += 4; /* Maxmimal access rights */
         *((ULONG *)outData) = 0; outData += 4; /* Guest Access rights */
-        lock_ReleaseMutex(&scp->mx);
     }
 
-    lock_ObtainMutex(&scp->mx);
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
          LargeIntegerGreaterThanZero(fidp->scp->length) && 
          !(scp->flags & CM_SCACHEFLAG_PREFETCHING)) {
@@ -8081,7 +8095,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
     }
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseRead(&scp->rw);
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
@@ -8164,12 +8178,12 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
     if (filter & FILE_NOTIFY_CHANGE_STREAM_WRITE)
 	osi_Log0(smb_logp, "      Notify Change Stream Write");
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     if (watchtree)
         scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
     else
         scp->flags |= CM_SCACHEFLAG_WATCHED;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     smb_ReleaseFID(fidp);
 
     outp->flags |= SMB_PACKETFLAG_NOSEND;
@@ -8417,12 +8431,12 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             lastWatch->nextp = nextWatch;
 
         /* Turn off WATCHED flag in dscp */
-        lock_ObtainMutex(&dscp->mx);
+        lock_ObtainWrite(&dscp->rw);
         if (wtree)
             dscp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;
         else
             dscp->flags &= ~CM_SCACHEFLAG_WATCHED;
-        lock_ReleaseMutex(&dscp->mx);
+        lock_ReleaseWrite(&dscp->rw);
 
         /* Convert to response packet */
         ((smb_t *) watch)->reb = SMB_FLAGS_SERVER_TO_CLIENT;
@@ -8567,12 +8581,12 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
                 scp = fidp->scp;
 		osi_Log2(smb_logp,"smb_ReceiveNTCancel fidp 0x%p scp 0x%p", fidp, scp);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 if (watchtree)
                     scp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;
                 else
                     scp->flags &= ~CM_SCACHEFLAG_WATCHED;
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 smb_ReleaseFID(fidp);
             } else {
                 osi_Log2(smb_logp,"NTCancel unable to resolve fid [%d] in vcp[%x]", fid,vcp);

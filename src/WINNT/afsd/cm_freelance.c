@@ -415,9 +415,9 @@ int cm_reInitLocalMountPoints() {
                 // mark the scp to be reused
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 cm_DiscardSCache(scp);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
@@ -428,9 +428,9 @@ int cm_reInitLocalMountPoints() {
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
-			lock_ObtainMutex(&scp->mx);
+			lock_ObtainWrite(&scp->rw);
                         scp->flags &= ~CM_SCACHEFLAG_INHASH;
-			lock_ReleaseMutex(&scp->mx);
+			lock_ReleaseWrite(&scp->rw);
                         break;
                     }
                 }

@@ -73,9 +73,9 @@ long cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     code = buf_CleanVnode(scp, userp, reqp);
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     osi_Log2(afsd_logp,"cm_CleanFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -94,10 +94,10 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     code = buf_FlushCleanPages(scp, userp, reqp);
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -164,9 +164,9 @@ void cm_ResetACLCache(cm_user_t *userp)
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             cm_InvalidateACLUser(scp, userp);
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
@@ -754,9 +754,9 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
         code = cm_MapRPCError(code, &req);
 
         /* invalidate cache info, since we just trashed the ACL cache */
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
     }
     cm_ReleaseSCache(scp);
 
@@ -1278,11 +1278,11 @@ long cm_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ReleaseSCache(dscp);
     if (code) return code;
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     /* now check that this is a real mount point */
     if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         return CM_ERROR_INVAL;
     }
@@ -1294,7 +1294,7 @@ long cm_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
     }
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
     return code;
@@ -1322,25 +1322,25 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         goto done2;
     }
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         goto done2;
     }
 
     /* now check that this is a real mount point */
     if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
         goto done1;
     }
 
     /* time to make the RPC, so drop the lock */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
     /* easier to do it this way */
@@ -1351,9 +1351,9 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           dscp, cp, NULL, TRUE);
 
   done1:
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
   done2:
     cm_ReleaseSCache(dscp);
@@ -2187,7 +2187,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code)
         goto done3;
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code)
@@ -2202,7 +2202,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 	
     /* time to make the RPC, so drop the lock */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
         
     /* easier to do it this way */
     code = cm_Unlink(dscp, cp, userp, &req);
@@ -2212,12 +2212,12 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           | FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
   done1:
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
   done2:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
   done3:

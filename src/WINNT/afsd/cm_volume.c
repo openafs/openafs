@@ -983,9 +983,9 @@ void cm_RefreshVolumes(void)
              && !(scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID)
 #endif
              ) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             scp->mountPointStringp[0] = '\0';
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
         }
     }
 
@@ -1577,9 +1577,9 @@ cm_VolumeRenewROCallbacks(void)
 
             lock_ReleaseRead(&cm_volumeLock);
             if (cm_GetSCache(&fid, &scp, cm_rootUserp, &req) == 0) {
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 cm_GetCallback(scp, cm_rootUserp, &req, 1);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 cm_ReleaseSCache(scp);
             }
             lock_ObtainRead(&cm_volumeLock);

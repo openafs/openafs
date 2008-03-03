@@ -209,9 +209,9 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
             osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             cm_DiscardSCache(scp);
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
 
             cm_CallbackNotifyChange(scp);
             
@@ -257,11 +257,11 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
 
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 cm_DiscardSCache(scp);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
 
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
@@ -484,7 +484,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
             for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 discarded = 0;
                 if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
                     /* we have a callback, now decide if we should clear it */
@@ -495,7 +495,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                         discarded = 1;
                     }
                 }
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 if (discarded)
                     cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
@@ -761,9 +761,9 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     cep->netFid.Vnode = scp->fid.vnode;
     cep->netFid.Unique = scp->fid.unique;
     cep->lock.waitStates = 0;
-    cep->lock.exclLocked = scp->mx.flags;
+    cep->lock.exclLocked = scp->rw.flags;
     cep->lock.readersReading = 0;
-    cep->lock.numWaiting = scp->mx.waiters;
+    cep->lock.numWaiting = scp->rw.waiters;
     cep->lock.pid_last_reader = 0;
     cep->lock.pid_writer = 0;
     cep->lock.src_indicator = 0;
@@ -873,9 +873,9 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
     cep->netFid.Vnode = scp->fid.vnode;
     cep->netFid.Unique = scp->fid.unique;
     cep->lock.waitStates = 0;
-    cep->lock.exclLocked = scp->mx.flags;
+    cep->lock.exclLocked = scp->rw.flags;
     cep->lock.readersReading = 0;
-    cep->lock.numWaiting = scp->mx.waiters;
+    cep->lock.numWaiting = scp->rw.waiters;
     cep->lock.pid_last_reader = 0;
     cep->lock.pid_writer = 0;
     cep->lock.src_indicator = 0;
@@ -1559,9 +1559,9 @@ int cm_HaveCallback(cm_scache_t *scp)
         } else if (fdc==2 && !fgc) { 	// we're in good shape
             if (cm_getLocalMountPointChange()) {	// check for changes
                 cm_clearLocalMountPointChange(); // clear the changefile
-                lock_ReleaseMutex(&scp->mx);      // this is re-locked in reInitLocalMountPoints
+                lock_ReleaseWrite(&scp->rw);      // this is re-locked in reInitLocalMountPoints
                 cm_reInitLocalMountPoints();	// start reinit
-                lock_ObtainMutex(&scp->mx);      // now get the lock back 
+                lock_ObtainWrite(&scp->rw);      // now get the lock back 
                 return 0;
             }
             return 1;			// no change
@@ -1618,7 +1618,7 @@ void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
 /* Called at the end of a callback-granting call, to remove the callback
  * info from the scache entry, if necessary.
  *
- * Called with scp locked, so we can discard the callbacks easily with
+ * Called with scp write locked, so we can discard the callbacks easily with
  * this locking hierarchy.
  */
 void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
@@ -1713,9 +1713,9 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 
     if ( discardScp ) {
         cm_DiscardSCache(scp);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_CallbackNotifyChange(scp);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
     } 
 
     if ( serverp ) {
@@ -1804,7 +1804,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	}
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 		
         /* now make the RPC */
         osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u", 
@@ -1829,7 +1829,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         if (code == 0) {
             cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
@@ -1924,9 +1924,9 @@ void cm_CheckCBExpiration(void)
                 
                 osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 cm_DiscardSCache(scp);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 cm_CallbackNotifyChange(scp);
 
                 lock_ObtainWrite(&cm_scacheLock);

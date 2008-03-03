@@ -320,7 +320,7 @@ cm_scache_t *cm_GetNewSCache(void)
                 "invalid cm_scache_t address");
     memset(scp, 0, sizeof(cm_scache_t));
     scp->magic = CM_SCACHE_MAGIC;
-    lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
+    lock_InitializeRWLock(&scp->rw, "cm_scache_t rw");
     lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
 #ifdef USE_BPLUS
     lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
@@ -376,7 +376,7 @@ void cm_fakeSCacheInit(int newFile)
         cm_data.fakeSCache.linkCount = 1;
         cm_data.fakeSCache.refCount = 1;
     }
-    lock_InitializeMutex(&cm_data.fakeSCache.mx, "cm_scache_t mutex");
+    lock_InitializeRWLock(&cm_data.fakeSCache.rw, "cm_scache_t rw");
 }
 
 long
@@ -533,9 +533,9 @@ cm_ShutdownSCache(void)
     for ( scp = cm_data.allSCachesp; scp;
           scp = scp->allNextp ) {
         if (scp->randomACLp) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             cm_FreeAllACLEnts(scp);
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
         }
 
         if (scp->cbServerp) {
@@ -552,7 +552,7 @@ cm_ShutdownSCache(void)
         scp->dirDataVersion = -1;
         lock_FinalizeRWLock(&scp->dirlock);
 #endif
-        lock_FinalizeMutex(&scp->mx);
+        lock_FinalizeRWLock(&scp->rw);
         lock_FinalizeRWLock(&scp->bufCreateLock);
     }
     lock_ReleaseWrite(&cm_scacheLock);
@@ -579,7 +579,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
 
             for ( scp = cm_data.allSCachesp; scp;
                   scp = scp->allNextp ) {
-                lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
+                lock_InitializeRWLock(&scp->rw, "cm_scache_t rw");
                 lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
 #ifdef USE_BPLUS
                 lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
@@ -741,7 +741,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	 * assume that no one else is using the one this is returned.
 	 */
 	lock_ReleaseWrite(&cm_scacheLock);
-	lock_ObtainMutex(&scp->mx);
+	lock_ObtainWrite(&scp->rw);
 	lock_ObtainWrite(&cm_scacheLock);
 #endif
         scp->fid = *fidp;
@@ -772,7 +772,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->bufDataVersionLow=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
 #if not_too_dangerous
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseWrite(&scp->rw);
 #endif
 	*outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
@@ -838,7 +838,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
      * assume that no one else is using the one this is returned.
      */
     lock_ReleaseWrite(&cm_scacheLock);
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     lock_ObtainWrite(&cm_scacheLock);
 #endif
     scp->fid = *fidp;
@@ -864,7 +864,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     scp->refCount = 1;
     osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
 #if not_too_dangerous
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 #endif
 
     /* XXX - The following fields in the cm_scache are 
@@ -1233,9 +1233,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
 		    lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetCallback(scp, userp, reqp, (flags & CM_SCACHESYNC_FORCECB)?1:0);
                 if (bufLocked) {
-                    lock_ReleaseMutex(&scp->mx);
+                    lock_ReleaseWrite(&scp->rw);
                     lock_ObtainMutex(&bufp->mx);
-                    lock_ObtainMutex(&scp->mx);
+                    lock_ObtainWrite(&scp->rw);
                 }
                 if (code) 
                     return code;
@@ -1260,9 +1260,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 if (bufLocked) lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetAccessRights(scp, userp, reqp);
                 if (bufLocked) {
-                    lock_ReleaseMutex(&scp->mx);
+                    lock_ReleaseWrite(&scp->rw);
                     lock_ObtainMutex(&bufp->mx);
-                    lock_ObtainMutex(&scp->mx);
+                    lock_ObtainWrite(&scp->rw);
                 }
                 if (code) 
                     return code;
@@ -1303,10 +1303,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         do {
             if (bufLocked) 
                 lock_ReleaseMutex(&bufp->mx);
-            osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
+            osi_SleepW((LONG_PTR) &scp->flags, &scp->rw);
             if (bufLocked) 
                 lock_ObtainMutex(&bufp->mx);
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
         } while (!cm_SyncOpCheckContinue(scp, flags, bufp));
 
 	smb_UpdateServerPriority();
@@ -1394,7 +1394,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
     osi_queueData_t *qdp;
     cm_buf_t *tbufp;
 
-    lock_AssertMutex(&scp->mx);
+    lock_AssertWrite(&scp->rw);
 
     /* now, update the recorded state for RPC-type calls */
     if (flags & CM_SCACHESYNC_FETCHSTATUS)
@@ -1739,7 +1739,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
  */
 void cm_DiscardSCache(cm_scache_t *scp)
 {
-    lock_AssertMutex(&scp->mx);
+    lock_AssertWrite(&scp->rw);
     if (scp->cbServerp) {
         cm_PutServer(scp->cbServerp);
 	scp->cbServerp = NULL;

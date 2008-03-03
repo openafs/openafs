@@ -298,11 +298,7 @@ ifs_CopyInfo(cm_scache_t *scp, ULONG *attribs, LARGE_INTEGER *size,
 void ifs_InternalClose(cm_scache_t **scpp)
 {
     osi_assert(scpp && *scpp);
-
-    lock_ObtainMutex(&((*scpp)->mx));
     cm_ReleaseSCache(*scpp);
-
-    lock_ReleaseMutex(&((*scpp)->mx));
     *scpp = NULL;
 }
 
@@ -509,9 +505,9 @@ long uc_check_access(ULONG fid, ULONG access, ULONG *granted)
 	afs_acc |= PRSFS_DELETE;
 
     /* check ACL with server */
-    lock_ObtainMutex(&(scp->mx));
+    lock_ObtainWrite(&scp->rw);
     ifs_CheckAcl(scp, afs_acc, &afs_gr);
-    lock_ReleaseMutex(&(scp->mx));
+    lock_ReleaseWrite(&scp->rw);
 
     *granted = 0;
     if (afs_gr & PRSFS_READ)
@@ -620,17 +616,17 @@ long uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *crea
 
     /* stat file; don't want callback */
     cm_InitReq(&req);
-    lock_ObtainMutex(&(scp->mx));
+    lock_ObtainWrite(&(scp->rw));
     cm_HoldUser(userp);
     code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_GETSTATUS);
     cm_ReleaseUser(userp);
 
     if (code)
-	lock_ReleaseMutex(&(scp->mx));
+	lock_ReleaseWrite(&(scp->rw));
     MAP_RETURN(code);
 
     code = ifs_CopyInfo(scp, attribs, size, creation, access, change, written);
-    lock_ReleaseMutex(&(scp->mx));
+    lock_ReleaseWrite(&(scp->rw));
     MAP_RETURN(code);
 
     return 0;
@@ -662,16 +658,16 @@ long uc_trunc(ULONG fid, LARGE_INTEGER size)
      */
 
     cm_InitReq(&req);
-    lock_ObtainMutex(&(scp->mx));
+    lock_ObtainWrite(&(scp->rw));
 
     code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_GETSTATUS);
 
     if (code)
-	lock_ReleaseMutex(&(scp->mx));
+	lock_ReleaseWrite(&(scp->rw));
     MAP_RETURN(code);
 
     oldLen = scp->length;
-    lock_ReleaseMutex(&(scp->mx));
+    lock_ReleaseWrite(&(scp->rw));
 
     code = cm_SetLength(scp, &size, userp, &req);
     MAP_RETURN(code);
@@ -860,9 +856,9 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
     }
 
     {
-	lock_ObtainMutex(&child_scp->mx);
+	lock_ObtainWrite(&child_scp->rw);
 	code = cm_SyncOp(child_scp, NULL, userp, &req, 0, CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-	lock_ReleaseMutex(&child_scp->mx);
+	lock_ReleaseWrite(&child_scp->rw);
     }
 
     if (code)	/* perhaps blank fields we do not know, and continue.  bad filents should not prevent readdirs. */
@@ -870,7 +866,7 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
 
     info->cookie = *offset;
 
-    lock_ObtainMutex(&(child_scp->mx));
+    lock_ObtainWrite(&(child_scp->rw));
     code = ifs_CopyInfo(child_scp, &info->attribs, &info->size, &info->creation, &info->access, &info->change, &info->write);
 #if 0
 	/* make files we do not have write access to read-only */
@@ -879,7 +875,7 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
     if (gr & FILE_READ_DATA && !(gr & FILE_WRITE_DATA))
     	info->attribs |= FILE_ATTRIBUTE_READONLY;
 #endif
-    lock_ReleaseMutex(&(child_scp->mx));
+    lock_ReleaseWrite(&(child_scp->rw));
     ifs_InternalClose(&child_scp);
     MAP_RETURN(code);
 
@@ -960,9 +956,7 @@ long uc_close(ULONG fid)
 
     SCPL_LOCK;	/* perhaps this should be earlier */
 
-    lock_ObtainMutex(&(scp->mx));
     cm_ReleaseSCache(scp);
-    lock_ReleaseMutex(&(scp->mx));
  
     prev = NULL, curr = scp_list_head;
 
