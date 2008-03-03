@@ -38,7 +38,7 @@ typedef struct cm_file_lock {
     osi_queue_t q;              /* list of all locks [protected by
                                    cm_scacheLock] */
     osi_queue_t fileq;		/* per-file list of locks [protected
-                                   by scp->mx]*/
+                                   by scp->rw]*/
     
     cm_user_t *userp;           /* The user to which this lock belongs
                                    to [immutable; held] */
@@ -89,10 +89,10 @@ typedef struct cm_scache {
     struct cm_scache *nextp;		/* next in hash; cm_scacheLock */
     struct cm_scache *allNextp;         /* next in all scache list; cm_scacheLock */
     cm_fid_t fid;
-    afs_uint32 flags;			/* flags; locked by mx */
+    afs_uint32 flags;			/* flags; locked by rw */
 
     /* synchronization stuff */
-    osi_mutex_t mx;			/* mutex for this structure */
+    osi_rwlock_t rw;			/* rwlock for this structure */
     osi_rwlock_t bufCreateLock;		/* read-locked during buffer creation;
                                          * write-locked to prevent buffers from
 					 * being created during a truncate op, etc.
@@ -153,7 +153,7 @@ typedef struct cm_scache {
     afs_int32    serverLock;    /* current lock we have acquired on
                                  * this file.  One of (-1), LockRead
                                  * or LockWrite. [protected by
-                                 * scp->mx].  In the future, this
+                                 * scp->rw].  In the future, this
                                  * should be replaced by a queue of
                                  * cm_server_lock_t objects which keep
                                  * track of lock type, the user for

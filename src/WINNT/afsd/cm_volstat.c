@@ -311,11 +311,11 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     if (code)
         goto done;
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL,cm_rootUserp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         goto done;
     }
@@ -326,7 +326,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     *volID  = scp->fid.volume;
     *pstatus = cm_GetVolumeStatus(scp->volp, scp->fid.volume);
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
   done:
@@ -355,11 +355,11 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     if (code)
         goto done;
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, cm_rootUserp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         goto done;
     }
@@ -382,7 +382,7 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
         goto done;
     }
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
   done:

@@ -55,7 +55,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         if (!aclScp) 
             return 0;
         if (aclScp != scp) {
-            code = lock_TryMutex(&aclScp->mx);
+            code = lock_TryRead(&aclScp->rw);
             if (code == 0) {
                 /* can't get lock safely and easily */
                 cm_ReleaseSCache(aclScp);
@@ -65,7 +65,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 	    /* check that we have a callback, too */
             if (!cm_HaveCallback(aclScp)) {
                 /* can't use it */
-                lock_ReleaseMutex(&aclScp->mx);
+                lock_ReleaseRead(&aclScp->rw);
                 cm_ReleaseSCache(aclScp);
                 return 0;
             }
@@ -74,7 +74,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         release = 1;
     }
 
-    lock_AssertMutex(&aclScp->mx);
+    lock_AssertAny(&aclScp->rw);
         
     /* now if rights is a subset of the public rights, we're done.
      * Otherwise, if we an explicit acl entry, we're also in good shape,
@@ -135,7 +135,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 
   done:
     if (didLock) 
-        lock_ReleaseMutex(&aclScp->mx);
+        lock_ReleaseRead(&aclScp->rw);
     if (release)
         cm_ReleaseSCache(aclScp);
     return code;
@@ -171,23 +171,23 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     } else {
         /* not a dir, use parent dir's acl */
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         code = cm_GetSCache(&tfid, &aclScp, userp, reqp);
         if (code) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
 	    goto _done;
         }       
                 
         osi_Log2(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
-	lock_ObtainMutex(&aclScp->mx);
+	lock_ObtainWrite(&aclScp->rw);
 	code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (!code)
 	    cm_SyncOpDone(aclScp, NULL, 
 			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-	lock_ReleaseMutex(&aclScp->mx);
+	lock_ReleaseWrite(&aclScp->rw);
         cm_ReleaseSCache(aclScp);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
     }
 
   _done:

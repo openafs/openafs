@@ -514,12 +514,12 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 		 release = 1;
         }
         if ( scp ) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainRead(&scp->rw);
             if (scp->flags & CM_SCACHEFLAG_WAITING) {
                 osi_Log1(buf_logp, "buf_WaitIO waking scp 0x%p", scp);
                 osi_Wakeup((LONG_PTR)&scp->flags);
             }
-	    lock_ReleaseMutex(&scp->mx);
+	    lock_ReleaseRead(&scp->rw);
         }
     }
         
@@ -1386,7 +1386,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              LargeIntegerLessThan(*sizep, bufEnd)) {
             buf_WaitIO(scp, bufp);
         }
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
 	
         /* make sure we have a callback (so we have the right value for
          * the length), and wait for it to be safe to do a truncate.
@@ -1439,7 +1439,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 		       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
 		       | CM_SCACHESYNC_SETSIZE | CM_SCACHESYNC_BUFLOCKED);
 
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         lock_ReleaseMutex(&bufp->mx);
     
 	if (!code) {
@@ -1551,14 +1551,14 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }       
 
-/* Must be called with scp->mx held */
+/* Must be called with scp->rw held */
 long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion)
 {
     cm_buf_t * bp;
     afs_uint32 i;
     int found = 0;
 
-    lock_AssertMutex(&scp->mx);
+    lock_AssertAny(&scp->rw);
 
     i = BUF_FILEHASH(&scp->fid);
 

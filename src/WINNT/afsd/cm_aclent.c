@@ -39,7 +39,7 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
             /* 
              * Remove the entry from the vnode's list 
              */
-            lock_AssertMutex(&aclp->backp->mx);
+            lock_AssertWrite(&aclp->backp->rw);
             laclpp = &aclp->backp->randomACLp;
             for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
                 if (taclp == aclp) 
@@ -127,13 +127,13 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
     if (aclp->backp && scp != aclp->backp) {
         ascp = aclp->backp;
         lock_ReleaseWrite(&cm_aclLock);
-        lock_ObtainMutex(&ascp->mx);
+        lock_ObtainWrite(&ascp->rw);
         lock_ObtainWrite(&cm_aclLock);
     }
     CleanupACLEnt(aclp);
 
     if (ascp)
-        lock_ReleaseMutex(&ascp->mx);
+        lock_ReleaseWrite(&ascp->rw);
     return aclp;
 }
 

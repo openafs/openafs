@@ -260,7 +260,7 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
     if (openMode == 1 || openMode == 2 || trunc) 
 	rights |= PRSFS_WRITE;
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
@@ -324,7 +324,7 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 
  _done:
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     return code;
 }
@@ -356,7 +356,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (desiredAccess & AFS_ACCESS_WRITE)
         rights |= PRSFS_WRITE;
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
@@ -438,7 +438,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
 
  _done:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     osi_Log3(afsd_logp,"cm_CheckNTOpen scp 0x%p ldp 0x%p code 0x%x", scp, *ldpp, code);
     return code;
@@ -449,10 +449,10 @@ extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *req
 {
     osi_Log2(afsd_logp,"cm_CheckNTOpenDone scp 0x%p ldp 0x%p", scp, *ldpp);
     if (*ldpp) {
-	lock_ObtainMutex(&scp->mx);
+	lock_ObtainWrite(&scp->rw);
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 
 		  (*ldpp)->key, userp, reqp);
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseWrite(&scp->rw);
 	free(*ldpp);
 	*ldpp = NULL;
     }
@@ -481,13 +481,14 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
     unsigned short *hashTable;
     unsigned int i, idx;
     int BeyondPage = 0, HaveDot = 0, HaveDotDot = 0;
+    int releaseLock = 0;
 
     /* First check permissions */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_DELETE,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     if (code)
         return code;
 
@@ -502,14 +503,15 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         return code;
 
     lock_ObtainMutex(&bufferp->mx);
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
+    releaseLock = 1;
     while (1) {
         code = cm_SyncOp(scp, bufferp, userp, reqp, 0,
                           CM_SCACHESYNC_NEEDCALLBACK
                           | CM_SCACHESYNC_READ
                           | CM_SCACHESYNC_BUFLOCKED);
         if (code)
-            break;
+            goto done;
 
         if (cm_HaveBuffer(scp, bufferp, 1))
             break;
@@ -517,13 +519,16 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         /* otherwise, load the buffer and try again */
         lock_ReleaseMutex(&bufferp->mx);
         code = cm_GetBuffer(scp, bufferp, NULL, userp, reqp);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         lock_ObtainMutex(&bufferp->mx);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
 	cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
         if (code)
-            break;
+            goto done;
     }
+
+    lock_ReleaseWrite(&scp->rw);
+    releaseLock = 0;
 
     /* We try to determine emptiness without looking beyond the first page,
      * and without assuming "." and ".." are present and are on the first
@@ -556,7 +561,8 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
   done:   
     lock_ReleaseMutex(&bufferp->mx);
     buf_Release(bufferp);
-    lock_ReleaseMutex(&scp->mx);
+    if (releaseLock)
+        lock_ReleaseWrite(&scp->rw);
     return code;
 }       
 
@@ -589,10 +595,10 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
     int numDirChunks;	/* # of 32 byte dir chunks in this entry */
         
     /* get the directory size */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     if (code)
         return code;
         
@@ -743,7 +749,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	       routine is used in place of smb_ReceiveCoreSearchDir.  our
 	       other option is to modify smb_ReceiveCoreSearchDir itself, 
 	       but this seems to be the proper use for cm_ApplyDir. */
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0
                  && (scp->bulkStatProgress.QuadPart <= thyper.QuadPart))
             {
@@ -752,7 +758,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
                 scp->bulkStatProgress = thyper;
             }
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
 #endif
 
             lock_ObtainMutex(&bufferp->mx);
@@ -760,20 +766,20 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 
             /* now get the data in the cache */
             while (1) {
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
                 code = cm_SyncOp(scp, bufferp, userp, reqp,
                                   PRSFS_LOOKUP,
                                   CM_SCACHESYNC_NEEDCALLBACK
                                   | CM_SCACHESYNC_READ
                                   | CM_SCACHESYNC_BUFLOCKED);
                 if (code) {
-                    lock_ReleaseMutex(&scp->mx);
+                    lock_ReleaseWrite(&scp->rw);
                     break;
                 }
 		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
                                 
                 if (cm_HaveBuffer(scp, bufferp, 1)) {
-                    lock_ReleaseMutex(&scp->mx);
+                    lock_ReleaseWrite(&scp->rw);
                     break;
                 }
 
@@ -781,7 +787,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 lock_ReleaseMutex(&bufferp->mx);
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                     reqp);
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
                 lock_ObtainMutex(&bufferp->mx);
                 if (code) 
                     break;
@@ -959,7 +965,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 }       
 
 /* read the contents of a mount point into the appropriate string.
- * called with locked scp, and returns with locked scp.
+ * called with write locked scp, and returns with locked scp.
  */
 long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
@@ -972,12 +978,12 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         return 0;
         
     /* otherwise, we have to read it in */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     thyper.LowPart = thyper.HighPart = 0;
     code = buf_Get(scp, &thyper, &bufp);
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     if (code)
         return code;
 
@@ -1031,7 +1037,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 
 /* called with a locked scp and chases the mount point, yielding outScpp.
- * scp remains locked, just for simplicity of describing the interface.
+ * scp remains write locked, just for simplicity of describing the interface.
  */
 long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
                          cm_req_t *reqp, cm_scache_t **outScpp)
@@ -1051,9 +1057,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     if (scp->mountRootFid.cell != 0 && scp->mountRootGen >= cm_data.mountRootGen) {
         tfid = scp->mountRootFid;
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         code = cm_GetSCache(&tfid, outScpp, userp, reqp);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
         return code;
     }
 
@@ -1073,9 +1079,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         strncpy(cellNamep, mpNamep+1, cp - mpNamep - 1);
         strcpy(volNamep, cp+1);
         /* now look up the cell */
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
     }
     else {
         /* normal mt pt */
@@ -1107,7 +1113,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     }
 
     /* now we need to get the volume */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     if (cm_VolNameIsID(volNamep)) {
         code = cm_GetVolumeByID(cellp, atoi(volNamep), userp, reqp, 
                                 CM_GETVOL_FLAG_CREATE, &volp);
@@ -1115,7 +1121,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 
                                   CM_GETVOL_FLAG_CREATE, &volp);
     }
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
         
     if (code == 0) {
         afs_uint32 cell, volume;
@@ -1166,9 +1172,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         scp->mountRootGen = cm_data.mountRootGen;
 
         tfid = scp->mountRootFid;
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         code = cm_GetSCache(&tfid, outScpp, userp, reqp);
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
     }
 
   done:
@@ -1339,11 +1345,11 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     }       
     /* tscp is now held */
 
-    lock_ObtainMutex(&tscp->mx);
+    lock_ObtainWrite(&tscp->rw);
     code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
     if (code) { 
-        lock_ReleaseMutex(&tscp->mx);
+        lock_ReleaseWrite(&tscp->rw);
         cm_ReleaseSCache(tscp);
         return code;
     }
@@ -1359,7 +1365,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         if (code == 0)
             code = cm_FollowMountPoint(tscp, dscp, userp, reqp,
                                         &mountedScp);
-        lock_ReleaseMutex(&tscp->mx);
+        lock_ReleaseWrite(&tscp->rw);
         cm_ReleaseSCache(tscp);
         if (code) {
             return code;
@@ -1367,7 +1373,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         tscp = mountedScp;
     }
     else {
-        lock_ReleaseMutex(&tscp->mx);
+        lock_ReleaseWrite(&tscp->rw);
     }
 
     /* copy back pointer */
@@ -1376,10 +1382,10 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     /* insert scache in dnlc */
     if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
         /* lock the directory entry to prevent racing callback revokes */
-        lock_ObtainMutex(&dscp->mx);
+        lock_ObtainRead(&dscp->rw);
         if ( dscp->cbServerp != NULL && dscp->cbExpires > 0 )
             cm_dnlcEnter(dscp, namep, tscp);
-        lock_ReleaseMutex(&dscp->mx);
+        lock_ReleaseRead(&dscp->rw);
     }
 
     /* and return */
@@ -1617,10 +1623,10 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     /* make sure we don't screw up the dir status during the merge */
     code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
 
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     sflags = CM_SCACHESYNC_STOREDATA;
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, sflags);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code) {
         cm_EndDirOp(&dirop);
         return code;
@@ -1654,7 +1660,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_dnlcRemove(dscp, namep);
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) {
@@ -1666,7 +1672,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 	 */
 	dscp->cbServerp = NULL;
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0 && cm_CheckDirOpForSingleChange(&dirop)) {
         cm_DirDeleteEntry(&dirop, namep);
@@ -1679,8 +1685,8 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
-/* called with a locked vnode, and fills in the link info.
- * returns this the vnode still locked.
+/* called with a write locked vnode, and fills in the link info.
+ * returns this the vnode still write locked.
  */
 long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
 {
@@ -1689,13 +1695,13 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
     long temp;
     osi_hyper_t thyper;
 
-    lock_AssertMutex(&linkScp->mx);
+    lock_AssertWrite(&linkScp->rw);
     if (!linkScp->mountPointStringp[0]) {
         /* read the link data */
-        lock_ReleaseMutex(&linkScp->mx);
+        lock_ReleaseWrite(&linkScp->rw);
         thyper.LowPart = thyper.HighPart = 0;
         code = buf_Get(linkScp, &thyper, &bufp);
-        lock_ObtainMutex(&linkScp->mx);
+        lock_ObtainWrite(&linkScp->rw);
         if (code) 
             return code;
         while (1) {
@@ -1759,7 +1765,7 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
     *newRootScpp = NULL;
     *newSpaceBufferp = NULL;
 
-    lock_ObtainMutex(&linkScp->mx);
+    lock_ObtainWrite(&linkScp->rw);
     code = cm_HandleLink(linkScp, userp, reqp);
     if (code)
         goto done;
@@ -1839,7 +1845,7 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
     }
 
   done:
-    lock_ReleaseMutex(&linkScp->mx);
+    lock_ReleaseWrite(&linkScp->rw);
     return code;
 }
 #ifdef DEBUG_REFCOUNT
@@ -2001,12 +2007,12 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                 /* now, if tscp is a symlink, we should follow
                  * it and assemble the path again.
                  */
-                lock_ObtainMutex(&tscp->mx);
+                lock_ObtainWrite(&tscp->rw);
                 code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_GETSTATUS
                                   | CM_SCACHESYNC_NEEDCALLBACK);
                 if (code) {
-                    lock_ReleaseMutex(&tscp->mx);
+                    lock_ReleaseWrite(&tscp->rw);
                     cm_ReleaseSCache(tscp);
                     tscp = NULL;
                     if (dirScp) {
@@ -2019,7 +2025,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 
                 if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
                     /* this is a symlink; assemble a new buffer */
-                    lock_ReleaseMutex(&tscp->mx);
+                    lock_ReleaseWrite(&tscp->rw);
                     if (symlinkCount++ >= MAX_SYMLINK_COUNT) {
                         cm_ReleaseSCache(tscp);
                         tscp = NULL;
@@ -2098,7 +2104,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     }
                 } else {
                     /* not a symlink, we may be done */
-                    lock_ReleaseMutex(&tscp->mx);
+                    lock_ReleaseWrite(&tscp->rw);
                     if (tc == 0) {
                         if (phase == 1) {
                             phase = 2;
@@ -2256,18 +2262,18 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     tscp = cm_FindSCache(&tfid);
     if (tscp) {
-        if (lock_TryMutex(&tscp->mx)) {
+        if (lock_TryWrite(&tscp->rw)) {
             /* we have an entry that we can look at */
             if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
                 /* we have a callback on it.  Don't bother
                  * fetching this stat entry, since we're happy
                  * with the info we have.
                  */
-                lock_ReleaseMutex(&tscp->mx);
+                lock_ReleaseWrite(&tscp->rw);
                 cm_ReleaseSCache(tscp);
                 return 0;
             }
-            lock_ReleaseMutex(&tscp->mx);
+            lock_ReleaseWrite(&tscp->rw);
         }	/* got lock */
         cm_ReleaseSCache(tscp);
     }	/* found entry */
@@ -2293,7 +2299,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     return 0;
 }       
 
-/* called with a locked scp and a pointer to a buffer.  Make bulk stat
+/* called with a write locked scp and a pointer to a buffer.  Make bulk stat
  * calls on all undeleted files in the page of the directory specified.
  */
 afs_int32
@@ -2326,13 +2332,13 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     memset(&bb, 0, sizeof(bb));
     bb.bufOffset = *offsetp;
 
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     /* first, assemble the file IDs we need to stat */
     code = cm_ApplyDir(dscp, cm_TryBulkProc, (void *) &bb, offsetp, userp, reqp, NULL);
 
     /* if we failed, bail out early */
     if (code && code != CM_ERROR_STOPNOW) {
-        lock_ObtainMutex(&dscp->mx);
+        lock_ObtainWrite(&dscp->rw);
         return code;
     }
 
@@ -2403,7 +2409,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
             /* otherwise, if this entry has no callback info, 
              * merge in this.
              */
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             /* now, we have to be extra paranoid on merging in this
              * information, since we didn't use cm_SyncOp before
              * starting the fetch to make sure that no bad races
@@ -2424,7 +2430,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                                             CM_CALLBACK_MAINTAINCOUNT);
                 cm_MergeStatus(dscp, scp, &bb.stats[j], &volSync, userp, 0);
             }       
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
         } /* all files in the response */
         /* now tell it to drop the count,
@@ -2433,7 +2439,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
 
         filex += filesThisCall;
     }	/* while there are still more files to process */
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
 
     /* If we did the InlineBulk RPC pull out the return code and log it */
     if (inlinebulk) {
@@ -2500,7 +2506,7 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     lock_ObtainWrite(&scp->bufCreateLock);
 
     /* verify that this is a file, not a dir or a symlink */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
@@ -2518,9 +2524,9 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     else
         shrinking = 0;
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
-    /* can't hold scp->mx lock here, since we may wait for a storeback to
+    /* can't hold scp->rw lock here, since we may wait for a storeback to
      * finish if the buffer package is cleaning a buffer by storing it to
      * the server.
      */
@@ -2528,7 +2534,7 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
         buf_Truncate(scp, userp, reqp, sizep);
 
     /* now ensure that file length is short enough, and update truncPos */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     /* make sure we have a callback (so we have the right value for the
      * length), and wait for it to be safe to do a truncate.
@@ -2579,7 +2585,7 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
 		   | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
 
   done:
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     lock_ReleaseWrite(&scp->bufCreateLock);
 
     return code;
@@ -2601,13 +2607,14 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     if (attrp->mask & CM_ATTRMASK_LENGTH)
         return cm_SetLength(scp, &attrp->length, userp, reqp);
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     /* otherwise, we have to make an RPC to get the status */
     code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STORESTATUS);
     if (code) {
-	lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseWrite(&scp->rw);
         return code;
     }
+    lock_ConvertWToR(&scp->rw);
 
     /* make the attr structure */
     cm_StatusFromAttr(&afsInStatus, scp, attrp);
@@ -2615,7 +2622,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
-	lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseRead(&scp->rw);
 
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
@@ -2638,7 +2645,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     else
         osi_Log0(afsd_logp, "CALL StoreStatus SUCCESS");
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
     if (code == 0)
         cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp,
@@ -2649,7 +2656,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
      */
     if (afsInStatus.Mask & AFS_SETMODE) 
 	cm_FreeAllACLEnts(scp);
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
     return code;
 }       
 
@@ -2694,9 +2701,9 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * completes.
      */
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
     } else {
@@ -2740,12 +2747,12 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     /* now try to create the file's entry, too, but be careful to 
      * make sure that we don't merge in old info.  Since we weren't locking
@@ -2756,7 +2763,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
@@ -2765,7 +2772,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
                                             &newFileCallback, 0);
                 didEnd = 1;     
             }       
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             *scpp = scp;
         }
     }
@@ -2791,7 +2798,7 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     code = buf_CleanVnode(scp, userp, reqp);
     if (code == 0) {
-        lock_ObtainMutex(&scp->mx);
+        lock_ObtainWrite(&scp->rw);
 
         if (scp->mask & (CM_SCACHEMASK_TRUNCPOS
                           | CM_SCACHEMASK_CLIENTMODTIME
@@ -2803,7 +2810,7 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 	    scp->flags &= ~(CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE);
 	}
 
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
     }
     return code;
 }
@@ -2849,9 +2856,9 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
      * our call completes.
      */
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code == 0) {
         cm_StartCallbackGrantingCall(NULL, &cbReq);
     } else {
@@ -2895,12 +2902,12 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     /* now try to create the new dir's entry, too, but be careful to 
      * make sure that we don't merge in old info.  Since we weren't locking
@@ -2911,7 +2918,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
                                 userp, 0);
@@ -2919,7 +2926,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
                                             &newDirCallback, 0);
                 didEnd = 1;             
             }
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
         }
     }
@@ -2959,9 +2966,9 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     }
 
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code != 0)
         cm_EndDirOp(&dirop);
 
@@ -3002,12 +3009,12 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&dirop)) {
@@ -3043,9 +3050,9 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
      * call completes.
      */
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code != 0)
         cm_EndDirOp(&dirop);
     if (code) {
@@ -3084,12 +3091,12 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&dirop)) {
@@ -3112,12 +3119,12 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
-            lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
                                 userp, 0);
             }       
-            lock_ReleaseMutex(&scp->mx);
+            lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
         }
     }
@@ -3143,9 +3150,9 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
      * call completes.
      */
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
     if (code) {
         cm_EndDirOp(&dirop);
         return code;
@@ -3181,13 +3188,13 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
         lock_ObtainWrite(&dirop.scp->dirlock);
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&dscp->mx);
+    lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, namep); 
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
-    lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&dirop)) {
@@ -3206,7 +3213,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
 long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp)
 {
     /* grab mutex on contents */
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     /* reset the prefetch info */
     scp->prefetch.base.LowPart = 0;		/* base */
@@ -3215,7 +3222,7 @@ long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp)
     scp->prefetch.end.HighPart = 0;
 
     /* release mutex on contents */
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     /* we're done */
     return 0;
@@ -3251,12 +3258,12 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
         oneDir = 1;
         cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
-        lock_ObtainMutex(&oldDscp->mx);
+        lock_ObtainWrite(&oldDscp->rw);
         cm_dnlcRemove(oldDscp, oldNamep);
         cm_dnlcRemove(oldDscp, newNamep);
         code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                           CM_SCACHESYNC_STOREDATA);
-        lock_ReleaseMutex(&oldDscp->mx);
+        lock_ReleaseWrite(&oldDscp->rw);
         if (code != 0) {
             cm_EndDirOp(&oldDirOp);
         }
@@ -3277,28 +3284,28 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
         if (oldDscp->fid.vnode < newDscp->fid.vnode) {
             cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
-            lock_ObtainMutex(&oldDscp->mx);
+            lock_ObtainWrite(&oldDscp->rw);
             cm_dnlcRemove(oldDscp, oldNamep);
             code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
-            lock_ReleaseMutex(&oldDscp->mx);
+            lock_ReleaseWrite(&oldDscp->rw);
             if (code != 0)
                 cm_EndDirOp(&oldDirOp);
             if (code == 0) {
                 cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
-                lock_ObtainMutex(&newDscp->mx);
+                lock_ObtainWrite(&newDscp->rw);
                 cm_dnlcRemove(newDscp, newNamep);
                 code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
-                lock_ReleaseMutex(&newDscp->mx);
+                lock_ReleaseWrite(&newDscp->rw);
                 if (code) {
                     cm_EndDirOp(&newDirOp);
 
                     /* cleanup first one */
-                    lock_ObtainMutex(&oldDscp->mx);
+                    lock_ObtainWrite(&oldDscp->rw);
                     cm_SyncOpDone(oldDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
-                    lock_ReleaseMutex(&oldDscp->mx);
+                    lock_ReleaseWrite(&oldDscp->rw);
                     cm_EndDirOp(&oldDirOp);
                 }       
             }
@@ -3306,28 +3313,28 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         else {
             /* lock the new vnode entry first */
             cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
-            lock_ObtainMutex(&newDscp->mx);
+            lock_ObtainWrite(&newDscp->rw);
             cm_dnlcRemove(newDscp, newNamep);
             code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
-            lock_ReleaseMutex(&newDscp->mx);
+            lock_ReleaseWrite(&newDscp->rw);
             if (code != 0)
                 cm_EndDirOp(&newDirOp);
             if (code == 0) {
                 cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
-                lock_ObtainMutex(&oldDscp->mx);
+                lock_ObtainWrite(&oldDscp->rw);
                 cm_dnlcRemove(oldDscp, oldNamep);
                 code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
-                lock_ReleaseMutex(&oldDscp->mx);
+                lock_ReleaseWrite(&oldDscp->rw);
                 if (code != 0)
                     cm_EndDirOp(&oldDirOp);
                 if (code) {
                     /* cleanup first one */
-                    lock_ObtainMutex(&newDscp->mx);
+                    lock_ObtainWrite(&newDscp->rw);
                     cm_SyncOpDone(newDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
-                    lock_ReleaseMutex(&newDscp->mx);
+                    lock_ReleaseWrite(&newDscp->rw);
                     cm_EndDirOp(&newDirOp);
                 }       
             }
@@ -3375,13 +3382,13 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         lock_ObtainWrite(&oldDirOp.scp->dirlock);
         oldDirOp.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainMutex(&oldDscp->mx);
+    lock_ObtainWrite(&oldDscp->rw);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
 
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                         userp, CM_MERGEFLAG_DIROP);
-    lock_ReleaseMutex(&oldDscp->mx);
+    lock_ReleaseWrite(&oldDscp->rw);
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
@@ -3419,12 +3426,12 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
             lock_ObtainWrite(&newDirOp.scp->dirlock);
             newDirOp.lockType = CM_DIRLOCK_WRITE;
         }
-        lock_ObtainMutex(&newDscp->mx);
+        lock_ObtainWrite(&newDscp->rw);
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         if (code == 0)
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, CM_MERGEFLAG_DIROP);
-        lock_ReleaseMutex(&newDscp->mx);
+        lock_ReleaseWrite(&newDscp->rw);
 
         if (code == 0) {
             /* we only make the local change if we successfully made
@@ -3774,7 +3781,7 @@ static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
     }
 }
 
-/* Called with scp->mx held.  Returns 0 if all is clear to read the
+/* Called with scp->rw held.  Returns 0 if all is clear to read the
    specified range by the client identified by key.
  */
 long cm_LockCheckRead(cm_scache_t *scp, 
@@ -3858,7 +3865,7 @@ long cm_LockCheckRead(cm_scache_t *scp,
 #endif
 }
 
-/* Called with scp->mx held.  Returns 0 if all is clear to write the
+/* Called with scp->rw held.  Returns 0 if all is clear to write the
    specified range by the client identified by key.
  */
 long cm_LockCheckWrite(cm_scache_t *scp,
@@ -3953,7 +3960,7 @@ static void cm_PutFileLock(cm_file_lock_t *l) {
     osi_QAdd(&cm_freeFileLocks, &l->q);
 }
 
-/* called with scp->mx held.  May release it during processing, but
+/* called with scp->rw held.  May release it during processing, but
    leaves it held on exit. */
 long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
                    cm_req_t * reqp) {
@@ -3973,7 +3980,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     osi_Log2(afsd_logp, "CALL SetLock scp 0x%p for lock %d", scp, lockType);
 
     reqp->flags |= CM_REQ_NORETRY;
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     do {
         code = cm_ConnFromFID(&cfid, userp, reqp, &connp);
@@ -3995,12 +4002,12 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
         osi_Log0(afsd_logp, "CALL SetLock SUCCESS");
     }
 
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
     reqp->flags = reqflags;
     return code;
 }
 
-/* called with scp->mx held.  Releases it during processing */
+/* called with scp->rw held.  Releases it during processing */
 long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
                        cm_req_t * reqp) {
     long code = 0;
@@ -4015,7 +4022,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     tfid.Unique = scp->fid.unique;
     cfid = scp->fid;
 
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
     osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
@@ -4038,12 +4045,12 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
         osi_Log0(afsd_logp,
                  "CALL ReleaseLock SUCCESS");
         
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     return code;
 }
 
-/* called with scp->mx held.  May release it during processing, but
+/* called with scp->rw held.  May release it during processing, but
    will exit with lock held.
 
    This will return:
@@ -4129,7 +4136,7 @@ long cm_LockCheckPerms(cm_scache_t * scp,
     return code;
 }
 
-/* called with scp->mx held */
+/* called with scp->rw held */
 long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
              LARGE_INTEGER LOffset, LARGE_INTEGER LLength,
              cm_key_t key,
@@ -4496,7 +4503,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
 static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags);
 
-/* Called with scp->mx held */
+/* Called with scp->rw held */
 long cm_UnlockByKey(cm_scache_t * scp,
 		    cm_key_t key,
 		    int flags,
@@ -4875,7 +4882,7 @@ long cm_Unlock(cm_scache_t *scp,
     return code;
 }
 
-/* called with scp->mx held */
+/* called with scp->rw held */
 void cm_LockMarkSCacheLost(cm_scache_t * scp)
 {
     cm_file_lock_t *fileLock;
@@ -4978,7 +4985,7 @@ void cm_CheckLocks()
                 osi_Log1(afsd_logp, "cm_CheckLocks Updating scp 0x%x", scp);
 
                 lock_ReleaseWrite(&cm_scacheLock);
-                lock_ObtainMutex(&scp->mx);
+                lock_ObtainWrite(&scp->rw);
 
                 /* did the lock change while we weren't holding the lock? */
                 if (!IS_LOCK_ACTIVE(fileLock))
@@ -4995,7 +5002,7 @@ void cm_CheckLocks()
                     goto post_syncopdone;
                 }
 
-                /* cm_SyncOp releases scp->mx during which the lock
+                /* cm_SyncOp releases scp->rw during which the lock
                    may get released. */
                 if (!IS_LOCK_ACTIVE(fileLock))
                     goto pre_syncopdone;
@@ -5015,7 +5022,7 @@ void cm_CheckLocks()
                              scp,
                              (int) scp->serverLock);
 
-                    lock_ReleaseMutex(&scp->mx);
+                    lock_ReleaseWrite(&scp->rw);
 
                     do {
                         code = cm_ConnFromFID(&cfid, userp,
@@ -5036,7 +5043,7 @@ void cm_CheckLocks()
 
                     code = cm_MapRPCError(code, &req);
 
-                    lock_ObtainMutex(&scp->mx);
+                    lock_ObtainWrite(&scp->rw);
 
                     if (code) {
                         osi_Log1(afsd_logp, "CALL ExtendLock FAILURE, code 0x%x", code);
@@ -5096,7 +5103,7 @@ void cm_CheckLocks()
                 cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
 
             post_syncopdone:
-                lock_ReleaseMutex(&scp->mx);
+                lock_ReleaseWrite(&scp->rw);
 
                 lock_ObtainWrite(&cm_scacheLock);
 
@@ -5123,7 +5130,7 @@ void cm_CheckLocks()
     osi_Log1(afsd_logp, "cm_CheckLocks completes lock check cycle %d", cm_lockRefreshCycle);
 }
 
-/* NOT called with scp->mx held. */
+/* NOT called with scp->rw held. */
 long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 {
     long code = 0;
@@ -5176,7 +5183,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     osi_assertx(scp != NULL, "null cm_scache_t");
 
     lock_ReleaseRead(&cm_scacheLock);
-    lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&scp->rw);
 
     code = cm_LockCheckPerms(scp, oldFileLock->lockType,
                              oldFileLock->userp,
@@ -5188,7 +5195,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         }
         code = 0;
     } else if (code) {
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
         return code;
     }
 
@@ -5211,7 +5218,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         }
 
         lock_ReleaseWrite(&cm_scacheLock);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         return 0;
     }
@@ -5255,7 +5262,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     if (code != 0) {
         lock_ReleaseWrite(&cm_scacheLock);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         goto handleCode;
     }
@@ -5304,7 +5311,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         }
 
         lock_ReleaseWrite(&cm_scacheLock);
-        lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseWrite(&scp->rw);
 
         return 0;
 
@@ -5407,7 +5414,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, &oldFileLock->fileq);
 	lock_ReleaseWrite(&cm_scacheLock);
     }
-    lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseWrite(&scp->rw);
 
   updateLock:
     lock_ObtainWrite(&cm_scacheLock);
@@ -5463,11 +5470,11 @@ void cm_ReleaseAllLocks(void)
     {
 	for ( scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp ) {
 	    while (scp->fileLocksH != NULL) {
-		lock_ObtainMutex(&scp->mx);
+		lock_ObtainWrite(&scp->rw);
 		lock_ObtainWrite(&cm_scacheLock);
 		if (!scp->fileLocksH) {
 		    lock_ReleaseWrite(&cm_scacheLock);
-		    lock_ReleaseMutex(&scp->mx);
+		    lock_ReleaseWrite(&scp->rw);
 		    break;
 		}
 		fileLock = (cm_file_lock_t *)((char *) scp->fileLocksH - offsetof(cm_file_lock_t, fileq));
@@ -5479,7 +5486,7 @@ void cm_ReleaseAllLocks(void)
 		cm_UnlockByKey(scp, key, 0, userp, &req);
 		cm_ReleaseSCache(scp);
 		cm_ReleaseUser(userp);
-		lock_ReleaseMutex(&scp->mx);
+		lock_ReleaseWrite(&scp->rw);
 	    }
 	}
     }
