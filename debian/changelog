@@ -1,3 +1,9 @@
+openafs (1.4.6.dfsg1-4) UNRELEASED; urgency=low
+
+  * Update doc-base control file sections for the new categorization.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
+
 openafs (1.4.6.dfsg1-3) unstable; urgency=low
 
   * Fix FTBFS caused by a change in dh_strip behavior.  It no longer

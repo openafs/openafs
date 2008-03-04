@@ -3,7 +3,7 @@ Title: AFS User's Guide
 Author: IBM
 Abstract: Introduction and documentation of AFS for the end-user.  This is
  the best document for people who will be using but not administering AFS.
-Section: Apps/Net
+Section: File Management
 
 Format: HTML
 Index: /usr/share/doc/openafs-doc/html/UserGuide/auusg000.htm
