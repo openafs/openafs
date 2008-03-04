@@ -151,8 +151,7 @@ start_client() {
 }
 
 # Kill all processes that are accessing AFS.  Not enabled by default, and
-# normally called via kill_all_afs.  Warns and does nothing if lsof is not
-# installed.
+# normally called via kill_all_afs.
 kill_afs() {
     signal=$1
     pids=`/usr/bin/lsof -Fp /afs | sed 's/p//'`
@@ -165,6 +164,8 @@ kill_afs() {
 # Repeatedly call kill_afs for a series of signals to give AFS-using processes
 # a hope of shutting down cleanly if the system is shutting down.  Not enabled
 # by default.  Enable this in /etc/openafs/afs.conf.
+#
+# Warns and does nothing if lsof is not installed.
 kill_all_afs() {
     runlevel=`runlevel | sed 's/^. //'`
     if [ "$runlevel" -eq 0 ] || [ "$runlevel" -eq 6 ] ; then
