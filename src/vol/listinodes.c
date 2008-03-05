@@ -1652,7 +1652,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     char *name;
     int fd, err, forcep, len, j, code;
     struct dirent *dp;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     IHandle_t *ih, *ih2;

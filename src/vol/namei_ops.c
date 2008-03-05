@@ -1564,7 +1564,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     DIR *dirp;
     Inode ino;
     struct dirent *dp;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     char volname[20];

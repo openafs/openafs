@@ -186,7 +186,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     register struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
 
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -578,7 +578,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
     char childLog[AFSDIR_PATH_MAX];
     int ret;
-    struct DiskPartition * partP;
+    struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
     canfork = 0;

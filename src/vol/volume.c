@@ -176,7 +176,7 @@ extern void *calloc(), *realloc();
 /* Forward declarations */
 static Volume *attach2(Error * ec, VolId vid, char *path,
 		       register struct VolumeHeader *header,
-		       struct DiskPartition *partp, Volume * vp, 
+		       struct DiskPartition64 *partp, Volume * vp, 
 		       int isbusy, int mode);
 static void ReallyFreeVolume(Volume * vp);
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -284,7 +284,7 @@ ffs(x)
 #ifdef AFS_PTHREAD_ENV
 typedef struct diskpartition_queue_t {
     struct rx_queue queue;
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
 } diskpartition_queue_t;
 typedef struct vinitvolumepackage_thread_t {
     struct rx_queue queue;
@@ -294,7 +294,7 @@ typedef struct vinitvolumepackage_thread_t {
 static void * VInitVolumePackageThread(void * args);
 #endif /* AFS_PTHREAD_ENV */
 
-static int VAttachVolumesByPartition(struct DiskPartition *diskP, 
+static int VAttachVolumesByPartition(struct DiskPartition64 *diskP, 
 				     int * nAttached, int * nUnattached);
 
 
@@ -351,9 +351,9 @@ static int VCheckFree(Volume * vp);
 /* VByP List */
 static void AddVolumeToVByPList_r(Volume * vp);
 static void DeleteVolumeFromVByPList_r(Volume * vp);
-static void VVByPListBeginExclusive_r(struct DiskPartition * dp);
-static void VVByPListEndExclusive_r(struct DiskPartition * dp);
-static void VVByPListWait_r(struct DiskPartition * dp);
+static void VVByPListBeginExclusive_r(struct DiskPartition64 * dp);
+static void VVByPListEndExclusive_r(struct DiskPartition64 * dp);
+static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
 static int VCheckSalvage(register Volume * vp);
@@ -368,8 +368,8 @@ static void VHashEndExclusive_r(VolumeHashChainHead * head);
 static void VHashWait_r(VolumeHashChainHead * head);
 
 /* shutdown */
-static int ShutdownVByPForPass_r(struct DiskPartition * dp, int pass);
-static int ShutdownVolumeWalk_r(struct DiskPartition * dp, int pass,
+static int ShutdownVByPForPass_r(struct DiskPartition64 * dp, int pass);
+static int ShutdownVolumeWalk_r(struct DiskPartition64 * dp, int pass,
 				struct rx_queue ** idx);
 static void ShutdownController(vshutdown_thread_t * params);
 static void ShutdownCreateSchedule(vshutdown_thread_t * params);
@@ -503,7 +503,7 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 	return -1;
 
     if (programType == fileServer) {
-	struct DiskPartition *diskP;
+	struct DiskPartition64 *diskP;
 #ifdef AFS_PTHREAD_ENV
 	struct vinitvolumepackage_thread_t params;
 	struct diskpartition_queue_t * dpq;
@@ -608,7 +608,7 @@ VInitVolumePackageThread(void * args) {
 
     DIR *dirp;
     struct dirent *dp;
-    struct DiskPartition *diskP;
+    struct DiskPartition64 *diskP;
     struct vinitvolumepackage_thread_t * params;
     struct diskpartition_queue_t * dpq;
 
@@ -642,7 +642,7 @@ VInitVolumePackageThread(void * args) {
  * attach all volumes on a given disk partition
  */
 static int
-VAttachVolumesByPartition(struct DiskPartition *diskP, int * nAttached, int * nUnattached)
+VAttachVolumesByPartition(struct DiskPartition64 *diskP, int * nAttached, int * nUnattached)
 {
   DIR * dirp;
   struct dirent * dp;
@@ -753,7 +753,7 @@ VShutdown_r(void)
     register Volume *vp, *np;
     register afs_int32 code;
 #ifdef AFS_DEMAND_ATTACH_FS
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
     struct diskpartition_queue_t * dpq;
     vshutdown_thread_t params;
     pthread_t tid;
@@ -904,7 +904,7 @@ static void
 ShutdownController(vshutdown_thread_t * params)
 {
     /* XXX debug */
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
     Device id;
     vshutdown_thread_t shadow;
 
@@ -949,7 +949,7 @@ ShutdownController(vshutdown_thread_t * params)
 static void
 ShutdownCreateSchedule(vshutdown_thread_t * params)
 {
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
     int sum, thr_workload, thr_left;
     int part_residue[VOLMAXPARTS+1];
     Device id;
@@ -1071,7 +1071,7 @@ VShutdownThread(void * args)
     Volume * vp;
     vshutdown_thread_t * params;
     int part, code, found, pass, schedule_version_save, count;
-    struct DiskPartition *diskP;
+    struct DiskPartition64 *diskP;
     struct diskpartition_queue_t * dpq;
     Device id;
 
@@ -1220,7 +1220,7 @@ VShutdownThread(void * args)
  * note that this function will not allow mp-fast
  * shutdown of a partition */
 int
-VShutdownByPartition_r(struct DiskPartition * dp)
+VShutdownByPartition_r(struct DiskPartition64 * dp)
 {
     int pass, retVal;
     int pass_stats[4];
@@ -1271,7 +1271,7 @@ VShutdownByPartition_r(struct DiskPartition * dp)
  * traversal
  */
 static int
-ShutdownVByPForPass_r(struct DiskPartition * dp, int pass)
+ShutdownVByPForPass_r(struct DiskPartition64 * dp, int pass)
 {
     struct rx_queue * q = queue_First(&dp->vol_list, rx_queue);
     register int i = 0;
@@ -1286,7 +1286,7 @@ ShutdownVByPForPass_r(struct DiskPartition * dp, int pass)
  * returns 1 if a volume was shutdown in this pass,
  * 0 otherwise */
 static int
-ShutdownVolumeWalk_r(struct DiskPartition * dp, int pass,
+ShutdownVolumeWalk_r(struct DiskPartition64 * dp, int pass,
 		     struct rx_queue ** idx)
 {
     struct rx_queue *qp, *nqp;
@@ -1593,7 +1593,7 @@ VPreAttachVolumeById_r(Error * ec,
 		       VolId volumeId)
 {
     Volume *vp;
-    struct DiskPartition *partp;
+    struct DiskPartition64 *partp;
 
     *ec = 0;
 
@@ -1641,7 +1641,7 @@ VPreAttachVolumeById_r(Error * ec,
  */
 Volume * 
 VPreAttachVolumeByVp_r(Error * ec, 
-		       struct DiskPartition * partp, 
+		       struct DiskPartition64 * partp, 
 		       Volume * vp,
 		       VolId vid)
 {
@@ -1752,7 +1752,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
-    struct DiskPartition *partp;
+    struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
     VolId volumeId;
@@ -2075,7 +2075,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
-    struct DiskPartition *partp;
+    struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
     VolId volumeId;
@@ -2242,7 +2242,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
  */
 private Volume * 
 attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * header,
-	struct DiskPartition * partp, register Volume * vp, int isbusy, int mode)
+	struct DiskPartition64 * partp, register Volume * vp, int isbusy, int mode)
 {
     vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
     IH_INIT(vp->vnodeIndex[vLarge].handle, partp->device, header->parent,
@@ -3129,7 +3129,7 @@ void
 VDetachVolume_r(Error * ec, Volume * vp)
 {
     VolumeId volume;
-    struct DiskPartition *tpartp;
+    struct DiskPartition64 *tpartp;
     int notifyServer, useDone = FSYNC_VOL_ON;
 
     *ec = 0;			/* always "succeeds" */
@@ -4688,7 +4688,7 @@ GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];
     int found = 0;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
 
     *ec = 0;
     name[0] = '/';
@@ -6846,7 +6846,7 @@ DeleteVolumeFromVByPList_r(Volume * vp)
  */
 /* take exclusive control over the list */
 static void
-VVByPListBeginExclusive_r(struct DiskPartition * dp)
+VVByPListBeginExclusive_r(struct DiskPartition64 * dp)
 {
     assert(dp->vol_list.busy == 0);
     dp->vol_list.busy = 1;
@@ -6870,7 +6870,7 @@ VVByPListBeginExclusive_r(struct DiskPartition * dp)
  * @internal volume package internal use only.
  */
 static void
-VVByPListEndExclusive_r(struct DiskPartition * dp)
+VVByPListEndExclusive_r(struct DiskPartition64 * dp)
 {
     assert(dp->vol_list.busy);
     dp->vol_list.busy = 0;
@@ -6902,7 +6902,7 @@ VVByPListEndExclusive_r(struct DiskPartition * dp)
  * @internal volume package internal use only.
  */
 static void
-VVByPListWait_r(struct DiskPartition * dp)
+VVByPListWait_r(struct DiskPartition64 * dp)
 {
     while (dp->vol_list.busy) {
 	VOL_CV_WAIT(&dp->vol_list.cv);
@@ -7153,7 +7153,7 @@ VPrintExtendedCacheStats_r(int flags)
 
     /* print extended disk related statistics */
     {
-	struct DiskPartition * diskP;
+	struct DiskPartition64 * diskP;
 	afs_uint32 vol_count[VOLMAXPARTS+1];
 	byte part_exists[VOLMAXPARTS+1];
 	Device id;

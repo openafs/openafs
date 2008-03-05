@@ -77,7 +77,7 @@ struct iod {
     struct rx_call *call;	/* call to which to write, might be an array */
     int device;			/* dump device ID for volume */
     int parentId;		/* dump parent ID for volume */
-    struct DiskPartition *dumpPartition;	/* Dump partition. */
+    struct DiskPartition64 *dumpPartition;	/* Dump partition. */
     struct rx_call **calls;	/* array of pointers to calls */
     int ncalls;			/* how many calls/codes in array */
     int *codes;			/* one return code for each call */
@@ -988,6 +988,10 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
+	    if (DoLogging) {
+		Log("RestoreVolume ProcessIndex: Set up %d inodes for volume %d\n",
+		    nVnodes, V_id(vp));
+	    }
 	    Buf = (afs_int32 *) malloc(nVnodes * sizeof(afs_int32));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
@@ -1006,6 +1010,9 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 		    cnt++;
 		}
 		offset += vcp->diskSize;
+	    }
+	    if (DoLogging) {
+		Log("RestoreVolume ProcessIndex: found %d inodes\n", cnt);
 	    }
 	    *Bufp = Buf;
 	    *sizep = nVnodes;
@@ -1147,6 +1154,10 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 
 	if (!ReadInt32(iodp, &vnode->uniquifier))
 	    return VOLSERREAD_DUMPERROR;
+
+	if (DoLogging) {
+	    Log("ReadVnodes: setup %d/%d\n", vnodeNumber, vnode->uniquifier);
+	}
 	while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
 	    haveStuff = 1;
 	    switch (tag) {

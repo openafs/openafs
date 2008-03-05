@@ -101,7 +101,7 @@ VolSetIdsTypes(), VolSetDate(), VolSetFlags();
 int 
 VPFullUnlock()
 {
-    register struct DiskPartition *tp;
+    register struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
 	if (tp->lock_fd != -1) {
 	    close(tp->lock_fd);	/* releases flock held on this partition */
@@ -287,6 +287,27 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
 		     *partition)
 {
     afs_int32 code;
+    struct diskPartition64 *dp = (struct diskPartition64 *)
+	malloc(sizeof(struct diskPartition64));
+
+    code = VolPartitionInfo(acid, pname, dp);
+    if (!code) {
+	strncpy(partition->name, dp->name, 32);
+	strncpy(partition->devName, dp->devName, 32);
+	partition->lock_fd = dp->lock_fd;
+	partition->free=RoundInt64ToInt32(dp->free);
+	partition->minFree=RoundInt64ToInt32(dp->minFree);
+    }
+    free(dp);
+    osi_auditU(acid, VS_ParInfEvent, code, AUD_STR, pname, AUD_END);
+    return code;
+}
+
+afs_int32
+SAFSVolPartitionInfo64(struct rx_call *acid, char *pname, struct diskPartition64 
+		     *partition)
+{
+    afs_int32 code;
 
     code = VolPartitionInfo(acid, pname, partition);
     osi_auditU(acid, VS_ParInfEvent, code, AUD_STR, pname, AUD_END);
@@ -294,10 +315,10 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
 }
 
 afs_int32
-VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition 
+VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64 
 		 *partition)
 {
-    register struct DiskPartition *dp;
+    register struct DiskPartition64 *dp;
 
 /*
     if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
@@ -841,7 +862,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     DeleteTrans(ttc, 1);
 
     {
-	struct DiskPartition *tpartp = originalvp->partition;
+	struct DiskPartition64 *tpartp = originalvp->partition;
 	FSYNC_VolOp(cloneId, tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
     }
     return 0;
@@ -1671,7 +1692,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     struct stat rbuf, pbuf;
     char namehead[9];
     struct partList partList;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
     int i, j = 0, k;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
@@ -2058,7 +2079,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		     volumeId, volEntries *volumeInfo)
 {
     volintInfo *pntr;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     char pname[9], volname[20];
     afs_int32 error = 0;
     DIR *dirp;
@@ -2156,7 +2177,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 {				/*SAFSVolXListOneVolume */
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
-    struct DiskPartition *partP;	/*Ptr to partition */
+    struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     afs_int32 error;		/*Error code */
     DIR *dirp;			/*Partition directory ptr */
@@ -2265,7 +2286,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		   volEntries *volumeInfo)
 {
     volintInfo *pntr;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     afs_int32 allocSize = 1000;	/*to be changed to a larger figure */
     char pname[9], volname[20];
     afs_int32 error = 0;
@@ -2390,7 +2411,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 {				/*SAFSVolXListVolumes */
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
-    struct DiskPartition *partP;	/*Ptr to partition */
+    struct DiskPartition64 *partP;	/*Ptr to partition */
     afs_int32 allocSize = 1000;	/*To be changed to a larger figure */
     char pname[9], volname[20];	/*Partition, volume names */
     afs_int32 error = 0;	/*Return code */
@@ -2706,7 +2727,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     DIR *dirp;
     register struct volser_trans *ttc;
     char pname[16], volname[20];
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     afs_int32 ret = ENODEV;
     afs_int32 volid;
 

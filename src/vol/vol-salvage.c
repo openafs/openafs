@@ -269,7 +269,7 @@ char *fileSysPath;		/* The path of the mounted partition currently
 char *fileSysPathName;		/* NT needs this to make name pretty in log. */
 IHandle_t *VGLinkH;		/* Link handle for current volume group. */
 int VGLinkH_cnt;		/* # of references to lnk handle. */
-struct DiskPartition *fileSysPartition;	/* Partition  being salvaged */
+struct DiskPartition64 *fileSysPartition;	/* Partition  being salvaged */
 #ifndef AFS_NT40_ENV
 char *fileSysDeviceName;	/* The block device where the file system
 				 * being salvaged was mounted */
@@ -439,7 +439,7 @@ CheckIfBigFilesFS(char *mountPoint, char *devName)
 #define HDSTR "\\Device\\Harddisk"
 #define HDLEN  (sizeof(HDSTR)-1)	/* Length of "\Device\Harddisk" */
 int
-SameDisk(struct DiskPartition *p1, struct DiskPartition *p2)
+SameDisk(struct DiskPartition64 *p1, struct DiskPartition64 *p2)
 {
 #define RES_LEN 256
     char res[RES_LEN];
@@ -480,10 +480,10 @@ SameDisk(struct DiskPartition *p1, struct DiskPartition *p2)
  * PartsPerDisk are on the same disk.
  */
 void
-SalvageFileSysParallel(struct DiskPartition *partP)
+SalvageFileSysParallel(struct DiskPartition64 *partP)
 {
     struct job {
-	struct DiskPartition *partP;
+	struct DiskPartition64 *partP;
 	int pid;		/* Pid for this job */
 	int jobnumb;		/* Log file job number */
 	struct job *nextjob;	/* Next partition on disk to salvage */
@@ -671,7 +671,7 @@ SalvageFileSysParallel(struct DiskPartition *partP)
 
 
 void
-SalvageFileSys(struct DiskPartition *partP, VolumeId singleVolumeNumber)
+SalvageFileSys(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     if (!canfork || debug || Fork() == 0) {
 	SalvageFileSys1(partP, singleVolumeNumber);
@@ -703,7 +703,7 @@ get_DevName(char *pbuffer, char *wpath)
 }
 
 void
-SalvageFileSys1(struct DiskPartition *partP, VolumeId singleVolumeNumber)
+SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
     char inodeListPath[256];

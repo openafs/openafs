@@ -63,7 +63,7 @@ static void PurgeHeader(Volume * vp);
 void
 VPurgeVolume(Error * ec, Volume * vp)
 {
-    struct DiskPartition *tpartp = vp->partition;
+    struct DiskPartition64 *tpartp = vp->partition;
     char purgePath[MAXPATHLEN];
 
     /* N.B.  it's important here to use the partition pointed to by the

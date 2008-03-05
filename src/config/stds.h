@@ -44,6 +44,11 @@ pragma Off(Prototype_override_warnings);
 #error We require size of long and pointers to be equal
 #endif */
 
+#define MAX_AFS_INT32 0x7FFFFFFF
+#define MAX_AFS_UINT32 0xFFFFFFFF
+#define MAX_AFS_INT64 0x7FFFFFFFFFFFFFFFL
+#define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
+
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV
@@ -73,9 +78,11 @@ typedef unsigned long long afs_uint64;
 #define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
-#define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
+#define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
 #define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
-#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
+#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & MAX_AFS_UINT32;
+#define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
+#define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a;
 #else /* AFS_64BIT_ENV */
 typedef long afs_int32;
 typedef unsigned long afs_uint32;
@@ -111,6 +118,8 @@ typedef struct u_Int64 afs_uint64;
 #define Int64ToInt32(a)    (a).low
 #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
 #define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
+#define RoundInt64ToInt32(a)    (a.high > 0) ? MAX_AFS_UINT32 : a.low;
+#define RoundInt64ToInt31(a)    (a.high > 0) ? MAX_AFS_INT32 : a.low;
 #endif /* AFS_64BIT_ENV */
 
 /* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */

@@ -581,7 +581,7 @@ typedef struct Volume {
     VolumeId hashid;		/* Volume number -- for hash table lookup */
     struct volHeader *header;	/* Cached disk data */
     Device device;		/* Unix device for the volume */
-    struct DiskPartition
+    struct DiskPartition64
      *partition;		/* Information about the Unix partition */
     struct vnodeIndex {
 	IHandle_t *handle;	/* Unix inode holding this index */
@@ -758,8 +758,8 @@ extern void VSetDiskUsage(void);
 extern void VPrintCacheStats(void);
 extern void VReleaseVnodeFiles_r(Volume * vp);
 extern void VCloseVnodeFiles_r(Volume * vp);
-extern struct DiskPartition *VGetPartition(char *name, int abortp);
-extern struct DiskPartition *VGetPartition_r(char *name, int abortp);
+extern struct DiskPartition64 *VGetPartition(char *name, int abortp);
+extern struct DiskPartition64 *VGetPartition_r(char *name, int abortp);
 extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
 			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
@@ -773,10 +773,10 @@ extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition, 
 				      VolId volumeId);
-extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition * partp, 
+extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp, 
 				      Volume * vp, VolId volume_id);
 extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
-extern int VShutdownByPartition_r(struct DiskPartition * dp);
+extern int VShutdownByPartition_r(struct DiskPartition64 * dp);
 extern int VShutdownVolume_r(Volume * vp);
 extern int VConnectSALV(void);
 extern int VConnectSALV_r(void);
