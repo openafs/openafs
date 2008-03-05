@@ -25,6 +25,7 @@ RCSID
 #include <fsprobe.h>		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 #include <afs/cellconfig.h>
+#include <afs/afsint.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
 
@@ -242,7 +243,9 @@ fsprobe_LWP()
     struct fsprobe_ConnectionInfo *curr_conn;	/*Current connection */
     struct ProbeViceStatistics *curr_stats;	/*Current stats region */
     int *curr_probeOK;		/*Current probeOK field */
-
+    ViceStatistics64 stats64;      /*Current stats region */
+    stats64.ViceStatistics64_val = (afs_uint64 *)malloc(STATS64_VERSION *
+							sizeof(afs_uint64));
     while (1) {			/*Service loop */
 	/*
 	 * Iterate through the server connections, gathering data.
@@ -274,8 +277,19 @@ fsprobe_LWP()
 			    "[%s] Connection valid, calling RXAFS_GetStatistics\n",
 			    rn);
 		*curr_probeOK =
-		    RXAFS_GetStatistics(curr_conn->rxconn, curr_stats);
-
+		    RXAFS_GetStatistics64(curr_conn->rxconn, STATS64_VERSION, &stats64);
+		if (*curr_probeOK == RXGEN_OPCODE)
+		    *curr_probeOK =
+			RXAFS_GetStatistics(curr_conn->rxconn, curr_stats);
+		else if (*curr_probeOK == 0) {
+		    curr_stats->CurrentTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_CURRENTTIME]);
+		    curr_stats->BootTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_BOOTTIME]);
+		    curr_stats->StartTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_STARTTIME]);
+		    curr_stats->CurrentConnections = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_CURRENTCONNECTIONS]);
+		    curr_stats->TotalFetchs = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_TOTALFETCHES]);
+		    curr_stats->TotalStores = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_TOTALSTORES]);
+		    curr_stats->WorkStations = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_WORKSTATIONS]);
+		}
 	    }
 
 	    /*Valid Rx connection */
@@ -289,6 +303,8 @@ fsprobe_LWP()
 		int i, code;
 		char pname[10];
 		struct diskPartition partition;
+		struct diskPartition64 *partition64p =
+		    (struct diskPartition64 *)malloc(sizeof(struct diskPartition64));
 
 		if (fsprobe_debug)
 		    fprintf(stderr,
@@ -299,22 +315,36 @@ fsprobe_LWP()
 			MapPartIdIntoName(curr_conn->partList.partId[i],
 					  pname);
 			code =
-			    AFSVolPartitionInfo(curr_conn->rxVolconn, pname,
-						&partition);
+			    AFSVolPartitionInfo64(curr_conn->rxVolconn, pname,
+						  partition64p);
+
+			if (!code) {
+			    curr_stats->Disk[i].BlocksAvailable =
+				RoundInt64ToInt31(partition64p->free);
+			    curr_stats->Disk[i].TotalBlocks =
+				RoundInt64ToInt31(partition64p->minFree);
+			    strcpy(curr_stats->Disk[i].Name, pname);
+			}
+			if (code == RXGEN_OPCODE) {
+			    code = 
+				AFSVolPartitionInfo(curr_conn->rxVolconn, 
+						    pname, &partition);
+			    if (!code) {
+				curr_stats->Disk[i].BlocksAvailable =
+				    partition.free;
+				curr_stats->Disk[i].TotalBlocks =
+				    partition.minFree;
+				strcpy(curr_stats->Disk[i].Name, pname);
+			    }
+			}
 			if (code) {
 			    fprintf(stderr,
 				    "Could not get information on server %s partition %s\n",
 				    curr_conn->hostName, pname);
-			} else {
-			    curr_stats->Disk[i].BlocksAvailable =
-				partition.free;
-			    curr_stats->Disk[i].TotalBlocks =
-				partition.minFree;
-			    strcpy(curr_stats->Disk[i].Name, pname);
 			}
 		    }
-
 		}
+		free(partition64p);
 	    }
 
 
@@ -358,7 +388,7 @@ fsprobe_LWP()
 	if (code)
 	    fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn, code);
     }				/*Service loop */
-
+    free(stats64.ViceStatistics64_val);
 }				/*fsprobe_LWP */
 
 /*list all the partitions on <aserver> */

@@ -50,6 +50,7 @@ statindex 16
 #define     VOLCONVERTRO        65536
 #define     VOLGETSIZE          65537
 #define     VOLDUMPV2           65538
+#define     VOLDISKPART64       65539
 
 /* Bits for flags for DumpV2 */
 %#define     VOLDUMPV2_OMITDIRS 1
@@ -206,6 +207,16 @@ struct diskPartition {
 	int	totalUsable;
 	int 	free;
 	int 	minFree;
+
+};
+
+struct diskPartition64 {
+    char	name[256];	/* Mounted partition name */
+    char	devName[256];	
+    int	        lock_fd;
+    afs_int64	totalUsable;
+    afs_int64 	free;
+    afs_int64 	minFree;
 
 };
 
@@ -419,3 +430,7 @@ proc DumpV2(
   IN afs_int32 flags
 ) split = VOLDUMPV2;
 
+proc PartitionInfo64(
+    IN string name<>,
+    OUT struct diskPartition64 *partition
+) = VOLDISKPART64;

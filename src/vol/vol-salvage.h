@@ -156,7 +156,7 @@ extern char *fileSysPath;	/* The path of the mounted partition currently
 extern char *fileSysPathName;	/* NT needs this to make name pretty in log. */
 extern IHandle_t *VGLinkH;	/* Link handle for current volume group. */
 extern int VGLinkH_cnt;	        /* # of references to lnk handle. */
-extern struct DiskPartition *fileSysPartition;	/* Partition  being salvaged */
+extern struct DiskPartition64 *fileSysPartition;	/* Partition  being salvaged */
 #ifndef AFS_NT40_ENV
 extern char *fileSysDeviceName;	/* The block device where the file system
 				 * being salvaged was mounted */
@@ -251,9 +251,9 @@ extern void RemoveTheForce(char *path);
 extern void SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
 		       IHandle_t * alinkH, int i, struct DirSummary *rootdir,
 		       int *rootdirfound);
-extern void SalvageFileSysParallel(struct DiskPartition *partP);
-extern void SalvageFileSys(struct DiskPartition *partP, VolumeId singleVolumeNumber);
-extern void SalvageFileSys1(struct DiskPartition *partP,
+extern void SalvageFileSysParallel(struct DiskPartition64 *partP);
+extern void SalvageFileSys(struct DiskPartition64 *partP, VolumeId singleVolumeNumber);
+extern void SalvageFileSys1(struct DiskPartition64 *partP,
 			    VolumeId singleVolumeNumber);
 extern int SalvageHeader(register struct stuff *sp, struct InodeSummary *isp,
 			 int check, int *deleteMe);

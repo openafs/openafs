@@ -592,16 +592,28 @@ UV_NukeVolume(afs_int32 server, afs_int32 partid, afs_int32 volid)
 
 /* like df. Return usage of <pname> on <server> in <partition> */
 int
-UV_PartitionInfo(afs_int32 server, char *pname,
-		 struct diskPartition *partition)
+UV_PartitionInfo64(afs_int32 server, char *pname,
+		   struct diskPartition64 *partition)
 {
     register struct rx_connection *aconn;
-    afs_int32 code;
+    afs_int32 code = 0;
 
-    code = 0;
     aconn = (struct rx_connection *)0;
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
-    code = AFSVolPartitionInfo(aconn, pname, partition);
+    code = AFSVolPartitionInfo64(aconn, pname, partition);
+    if (code == RXGEN_OPCODE) {
+	struct diskPartition *dpp = 
+	    (struct diskPartition *)malloc(sizeof(struct diskPartition));
+	code = AFSVolPartitionInfo(aconn, pname, dpp);
+	if (!code) {
+	    strncpy(partition->name, dpp->name, 32);
+	    strncpy(partition->devName, dpp->devName, 32);
+	    partition->lock_fd = dpp->lock_fd;
+	    partition->free = dpp->free;
+	    partition->minFree = dpp->minFree;
+	}
+	free(dpp);
+    } 
     if (code) {
 	fprintf(STDERR, "Could not get information on partition %s\n", pname);
 	PrintError("", code);

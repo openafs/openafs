@@ -175,7 +175,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
-    struct DiskPartition *partition = rwvp->partition;
     Device device = rwvp->device;
 
     /* Open the RW volume's index file and seek to beginning */

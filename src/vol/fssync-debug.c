@@ -105,7 +105,7 @@ static int StatsQuery(struct cmd_syndesc * as, void * rock);
 static int VnQuery(struct cmd_syndesc * as, void * rock);
 
 static void print_vol_stats_general(VolPkgStats * stats);
-static void print_vol_stats_viceP(struct DiskPartitionStats * stats);
+static void print_vol_stats_viceP(struct DiskPartitionStats64 * stats);
 static void print_vol_stats_hash(struct VolumeHashChainStats * stats);
 #ifdef AFS_DEMAND_ATTACH_FS
 static void print_vol_stats_hdr(struct volume_hdr_LRU_stats * stats);
@@ -1045,7 +1045,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
 #ifdef AFS_DEMAND_ATTACH_FS
 	struct volume_hdr_LRU_stats * hdr_stats;
 #endif
-	struct DiskPartitionStats * vicep_stats;
+	struct DiskPartitionStats64 * vicep_stats;
     } sres;
 
     sres.ptr = res_buf;
@@ -1222,13 +1222,13 @@ print_vol_stats_general(VolPkgStats * stats)
 }
 
 static void
-print_vol_stats_viceP(struct DiskPartitionStats * stats)
+print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 {
-    printf("DiskPartitionStats = {\n");
-    printf("\tfree = %d\n", stats->free);
-    printf("\tminFree = %d\n", stats->minFree);
-    printf("\ttotalUsable = %d\n", stats->totalUsable);
-    printf("\tf_files = %d\n", stats->f_files);
+    printf("DiskPartitionStats64 = {\n");
+    printf("\tfree = %lld\n", stats->free);
+    printf("\tminFree = %lld\n", stats->minFree);
+    printf("\ttotalUsable = %lld\n", stats->totalUsable);
+    printf("\tf_files = %lld\n", stats->f_files);
 #ifdef AFS_DEMAND_ATTACH_FS
     printf("\tvol_list_len = %d\n", stats->vol_list_len);
 #endif

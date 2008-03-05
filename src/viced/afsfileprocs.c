@@ -1850,8 +1850,8 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->MinQuota = V_minquota(volptr);
     status->MaxQuota = V_maxquota(volptr);
     status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
+    status->PartBlocksAvail = RoundInt64ToInt32(volptr->partition->free);
+    status->PartMaxBlocks = RoundInt64ToInt32(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
@@ -5451,13 +5451,13 @@ SetAFSStats(struct AFSStatistics *stats)
 void
 SetVolumeStats(struct AFSStatistics *stats)
 {
-    struct DiskPartition *part;
+    struct DiskPartition64 *part;
     int i = 0;
 
     for (part = DiskPartitionList; part && i < AFS_MSTATDISKS;
 	 part = part->next) {
-	stats->Disks[i].TotalBlocks = part->totalUsable;
-	stats->Disks[i].BlocksAvailable = part->free;
+	stats->Disks[i].TotalBlocks = RoundInt64ToInt32(part->totalUsable);
+	stats->Disks[i].BlocksAvailable = RoundInt64ToInt32(part->free);
 	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
 	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
 	i++;
@@ -5504,6 +5504,117 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     SetSystemStats((struct AFSStatistics *)Statistics);
 
   Bad_GetStatistics:
+    code = CallPostamble(tcon, code, thost);
+
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
+#if FS_STATS_DETAILED
+    TM_GetTimeOfDay(&opStopTime, 0);
+    if (code == 0) {
+	FS_LOCK;
+	(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+	FS_UNLOCK;
+    }
+#endif /* FS_STATS_DETAILED */
+
+    osi_auditU(acall, GetStatisticsEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
+    return code;
+}				/*SRXAFS_GetStatistics */
+
+
+afs_int32
+SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatistics64 *Statistics)
+{
+    extern afs_int32 StartTime, CurrentConnections;
+    int seconds;
+    afs_int32 code;
+    struct rx_connection *tcon = rx_ConnectionOf(acall);
+    struct host *thost;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
+    struct timeval time;
+#if FS_STATS_DETAILED
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
+
+    /*
+     * Set our stats pointer, remember when the RPC operation started, and
+     * tally the operation.
+     */
+    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETSTATISTICS]);
+    FS_LOCK;
+    (opP->numOps)++;
+    FS_UNLOCK;
+    TM_GetTimeOfDay(&opStartTime, 0);
+#endif /* FS_STATS_DETAILED */
+
+    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+	goto Bad_GetStatistics64;
+
+    ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
+    Statistics->ViceStatistics64_val = 
+	malloc(statsVersion*sizeof(afs_int64));
+    Statistics->ViceStatistics64_len = statsVersion;
+    FS_LOCK;
+    AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
+    Statistics->ViceStatistics64_val[STATS64_STARTTIME] = StartTime;
+    Statistics->ViceStatistics64_val[STATS64_CURRENTCONNECTIONS] =
+	CurrentConnections;
+    Statistics->ViceStatistics64_val[STATS64_TOTALVICECALLS] = 
+	AFSCallStats.TotalCalls;
+    Statistics->ViceStatistics64_val[STATS64_TOTALFETCHES] =
+       AFSCallStats.FetchData + AFSCallStats.FetchACL +
+       AFSCallStats.FetchStatus;
+    Statistics->ViceStatistics64_val[STATS64_FETCHDATAS] = 
+	AFSCallStats.FetchData;
+    Statistics->ViceStatistics64_val[STATS64_FETCHEDBYTES] = 
+	AFSCallStats.TotalFetchedBytes;
+    seconds = AFSCallStats.AccumFetchTime / 1000;
+    if (seconds <= 0)
+        seconds = 1;
+    Statistics->ViceStatistics64_val[STATS64_FETCHDATARATE] = 
+	AFSCallStats.TotalFetchedBytes / seconds;
+    Statistics->ViceStatistics64_val[STATS64_TOTALSTORES] =
+        AFSCallStats.StoreData + AFSCallStats.StoreACL +
+        AFSCallStats.StoreStatus;
+    Statistics->ViceStatistics64_val[STATS64_STOREDATAS] = 
+	AFSCallStats.StoreData;
+    Statistics->ViceStatistics64_val[STATS64_STOREDBYTES] = 
+	AFSCallStats.TotalStoredBytes;
+    seconds = AFSCallStats.AccumStoreTime / 1000;
+    if (seconds <= 0)
+        seconds = 1;
+    Statistics->ViceStatistics64_val[STATS64_STOREDATARATE] = 
+	AFSCallStats.TotalStoredBytes / seconds;
+#ifdef AFS_NT40_ENV
+    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = -1;
+#else
+    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = 
+	(afs_int32) ((long)sbrk(0) >> 10);
+#endif
+    FS_UNLOCK;
+    h_GetWorkStats((int *)&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
+                   (int *)&(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]), 
+		   (int *)0,
+                   (afs_int32) (FT_ApproxTime()) - (15 * 60));
+
+
+
+    /* this works on all system types */
+    TM_GetTimeOfDay(&time, 0);
+    Statistics->ViceStatistics64_val[STATS64_CURRENTTIME] = time.tv_sec;
+
+  Bad_GetStatistics64:
     code = CallPostamble(tcon, code, thost);
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);

@@ -1078,8 +1078,8 @@ static afs_int32
 FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
-    struct DiskPartition * dp;
-    struct DiskPartitionStats * stats;
+    struct DiskPartition64 * dp;
+    struct DiskPartitionStats64 * stats;
 
     if (SYNC_verifyProtocolString(scom->sop->args.partName, sizeof(scom->sop->args.partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1091,14 +1091,14 @@ FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res)
     if (!dp) {
 	code = SYNC_FAILED;
     } else {
-	stats = (struct DiskPartitionStats *) res->payload.buf;
+	stats = (struct DiskPartitionStats64 *) res->payload.buf;
 	stats->free = dp->free;
 	stats->totalUsable = dp->totalUsable;
 	stats->minFree = dp->minFree;
 	stats->f_files = dp->f_files;
 	stats->vol_list_len = dp->vol_list.len;
 	
-	res->hdr.response_len += sizeof(struct DiskPartitionStats);
+	res->hdr.response_len += sizeof(struct DiskPartitionStats64);
     }
 
  done:

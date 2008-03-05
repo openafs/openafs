@@ -619,7 +619,7 @@ static afs_int32
 SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_response * res)
 {
     struct SalvageQueueNode * np, *nnp;
-    struct DiskPartition * dp;
+    struct DiskPartition64 * dp;
 
     for (dp = DiskPartitionList ; dp ; dp = dp->next) {
 	for (queue_Scan(&salvageQueue.part[dp->index], np, nnp, SalvageQueueNode)) {
@@ -1148,7 +1148,7 @@ struct SalvageQueueNode *
 SALVSYNC_getWork(void)
 {
     int i, ret;
-    struct DiskPartition * dp = NULL, * fdp;
+    struct DiskPartition64 * dp = NULL, * fdp;
     static afs_int32 next_part_sched = 0;
     struct SalvageQueueNode *node = NULL, *np;
 

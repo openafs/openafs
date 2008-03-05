@@ -90,10 +90,10 @@ int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
 
 /* Forward Declarations */
-void HandleVolume(struct DiskPartition *partP, char *name, char *filename);
-Volume *AttachVolume(struct DiskPartition *dp, char *volname,
+void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename);
+Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     register struct VolumeHeader *header);
-static void DoMyVolDump(Volume * vp, struct DiskPartition *dp,
+static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 			char *dumpfile);
 
 #ifndef AFS_NT40_ENV
@@ -118,7 +118,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 
 
 Volume *
-AttachVolume(struct DiskPartition * dp, char *volname,
+AttachVolume(struct DiskPartition64 * dp, char *volname,
 	     register struct VolumeHeader * header)
 {
     register Volume *vp;
@@ -173,7 +173,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     int volumeId = 0;
     char *partName = 0;
     char *fileName = NULL;
-    struct DiskPartition *partP = NULL;
+    struct DiskPartition64 *partP = NULL;
     char name1[128];
     char tmpPartName[20];
 
@@ -237,7 +237,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 }
 
 void
-HandleVolume(struct DiskPartition *dp, char *name, char *filename)
+HandleVolume(struct DiskPartition64 *dp, char *name, char *filename)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
@@ -833,7 +833,7 @@ DumpPartial(int dumpfd, register Volume * vp, afs_int32 fromtime,
 
 
 static void
-DoMyVolDump(Volume * vp, struct DiskPartition *dp, char *dumpfile)
+DoMyVolDump(Volume * vp, struct DiskPartition64 *dp, char *dumpfile)
 {
     int code = 0;
     int fromtime = 0;

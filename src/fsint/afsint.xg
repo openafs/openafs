@@ -698,3 +698,80 @@ GetCapabilities(
 CallBackRxConnAddr(
   IN afs_int32 *addr
 ) = 65541;
+
+%#define STATS64_CURRENTTIME 0
+%#define STATS64_BOOTTIME 1
+%#define STATS64_STARTTIME 2
+%#define STATS64_CURRENTCONNECTIONS 3
+%#define STATS64_TOTALFETCHES 4
+%#define STATS64_FETCHDATAS 5
+%#define STATS64_FETCHEDBYTES 6
+%#define STATS64_FETCHDATARATE 7
+%#define STATS64_TOTALSTORES 8
+%#define STATS64_STOREDATAS 9
+%#define STATS64_STOREDBYTES 10
+%#define STATS64_STOREDATARATE 11
+%#define STATS64_TOTALVICECALLS 12
+%#define STATS64_WORKSTATIONS 13
+%#define STATS64_ACTIVEWORKSTATIONS 14
+%#define STATS64_PROCESSSIZE 15
+
+const STATS64_VERSION = 16;
+typedef afs_uint64 ViceStatistics64<STATS64_VERSION>;
+
+/* the "version" is a number representing the number of 
+   array elements to return, from 0 to N-1 */
+
+GetStatistics64(
+    IN afs_int32 statsVersion,
+    OUT ViceStatistics64 *Statistics
+) = 65542;
+
+/* rx osd. put here now to hold version numbers.
+ServerPath(
+  IN  AFSFid *Fid,
+  afs_int32 writing,
+  OUT FilePath *NameiInfo,
+  AFSFetchStatus *OutStatus,
+  AFSCallBack *CallBack
+) = 65551;
+
+PerfTest(
+  IN  afs_int32 type,
+  afs_int64 bytes,
+  afs_int32 bufsize
+) split = 65552;
+
+GetOSDlocation(
+  IN AFSFid *Fid,
+  afs_uint64 offset,
+  afs_uint64 length,
+  afs_int32 flag,
+  afsUUID uuid,
+  OUT AFSFetchStatus *OutStatus,
+  AFSCallBack *CallBack,
+  struct osd_file *osd
+) = 65557;
+
+InverseLookup(
+  IN AFSFid *Fid,
+  afs_uint32 parent,
+  OUT struct afs_filename *file,
+  afs_uint32 *nextparent
+) = 65558;
+
+CheckOSDconns() = 65559;
+
+OsdPolicy(IN AFSFid *Fid,
+  afs_uint64 length,
+  OUT afs_uint32 *protocol
+) = 65560;
+
+SetOsdFileReady(
+  IN AFSFid *Fid
+) = 65561;
+
+GetOsdMetadata(
+  IN AFSFid *Fid
+) split = 65562;
+*/

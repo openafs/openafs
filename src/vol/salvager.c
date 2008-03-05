@@ -142,7 +142,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     register struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
