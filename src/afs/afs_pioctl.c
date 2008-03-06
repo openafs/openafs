@@ -1409,6 +1409,9 @@ DECL_PIOCTL(PSetTokens)
 	afs_osi_Free(tu->stp, tu->stLen);
     }
     tu->stp = (char *)afs_osi_Alloc(stLen);
+    if (tu->stp == NULL) {
+	return ENOMEM;
+    }
     tu->stLen = stLen;
     memcpy(tu->stp, stp, stLen);
     tu->ct = clear;
