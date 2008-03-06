@@ -1408,7 +1408,7 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
     if (outp == NULL) 
         return 1;
 
-    if (index >= MAXNUMSYSNAMES)
+    if (index >= cm_sysNameCount)
         return -1;
 
     /* otherwise generate the properly expanded @sys name */
@@ -1775,8 +1775,10 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
      * being a little conservative here.
      */
     if (strlen(linkScp->mountPointStringp) + strlen(pathSuffixp) + 2
-         >= CM_UTILS_SPACESIZE)
-        return CM_ERROR_TOOBIG;
+		>= CM_UTILS_SPACESIZE) {
+        code = CM_ERROR_TOOBIG;
+		goto done;
+	}
 
     tsp = cm_GetSpace();
     linkp = linkScp->mountPointStringp;

@@ -630,10 +630,25 @@ cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_u
 	osi_Log4(afsd_logp, "Finished BKG store scp 0x%p, offset 0x%x:%08x, code 0x%x", scp, p2, p1, code);
     }
 
-    lock_ObtainWrite(&scp->rw);
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
-    lock_ReleaseWrite(&scp->rw);
-
+    /* 
+     * Keep the following list synchronized with the
+     * error code list in cm_BkgDaemon 
+     */
+    switch ( code ) {
+    case CM_ERROR_TIMEDOUT: /* or server restarting */
+    case CM_ERROR_RETRY:
+    case CM_ERROR_WOULDBLOCK:
+    case CM_ERROR_ALLBUSY:
+    case CM_ERROR_ALLDOWN:
+    case CM_ERROR_ALLOFFLINE:
+    case CM_ERROR_PARTIALWRITE:
+        break;  /* cm_BkgDaemon will re-insert the request in the queue */
+    case 0:
+    default:
+        lock_ObtainWrite(&scp->rw);
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
+        lock_ReleaseWrite(&scp->rw);
+    }
     return code;
 }
 

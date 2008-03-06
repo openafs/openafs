@@ -105,7 +105,8 @@ void cm_BkgDaemon(void * parm)
         /* we found a request */
         for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
-	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
+	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp) && 
+                !(rp->scp->flags & CM_SCACHEFLAG_DATASTORING))
 		break;
 	}
 	if (rp == NULL) {
@@ -137,6 +138,10 @@ void cm_BkgDaemon(void * parm)
 
         lock_ObtainWrite(&cm_daemonLock);
 
+        /* 
+        * Keep the following list synchronized with the
+        * error code list in cm_BkgStore
+        */
 	switch ( code ) {
 	case 0: /* success */
 	    osi_Log1(afsd_logp,"cm_BkgDaemon SUCCESS: request 0x%p", rp);
