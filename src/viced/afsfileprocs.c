@@ -469,6 +469,14 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 	extern int VInit;
 
 	while (1) {
+	    int restarting = 
+#ifdef AFS_DEMAND_ATTACH_FS
+		VSALVAGE
+#else
+		VRESTARTING
+#endif
+		;
+
 	    errorCode = 0;
 	    *volptr = VGetVolume(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
@@ -531,7 +539,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			afs_perfstats.fs_nBusies++;
 			FS_UNLOCK;
 		    }
-		    return (busyonrst ? VBUSY : VRESTARTING);
+		    return (busyonrst ? VBUSY : restarting);
 		} else {
 		    struct timeval now;
 		    TM_GetTimeOfDay(&now, 0);
@@ -541,9 +549,9 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			    afs_perfstats.fs_nBusies++;
 			    FS_UNLOCK;
 			}
-			return (busyonrst ? VBUSY : VRESTARTING);
+			return (busyonrst ? VBUSY : restarting);
 		    } else {
-			return (VRESTARTING);
+			return (restarting);
 		    }
 		}
 	    }
