@@ -1228,6 +1228,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     ndp->ni_dvp = AFSTOV(adp);
 #endif /* AFS_OSF_ENV */
 
+    if (afs_fakestat_enable && adp->mvstat == 1) {
+       if (strcmp(aname, ".directory") == 0)
+           tryEvalOnly = 1;
+    }
+
 #if defined(AFS_DARWIN_ENV)
     /* Workaround for MacOSX Finder, which tries to look for
      * .DS_Store and Contents under every directory.
