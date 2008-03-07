@@ -744,7 +744,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 #endif
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
-	cm_GetVolume(scp->volp);	/* grab an additional reference */
+        if (scp->volp)
+	    cm_GetVolume(scp->volp);	/* grab an additional reference */
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
         scp->dotdotFid.unique=1;

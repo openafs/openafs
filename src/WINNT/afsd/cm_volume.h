@@ -36,7 +36,7 @@ typedef struct cm_volume {
     struct cm_fid dotdotFid;	        /* parent of volume root */
     osi_mutex_t mx;
     afs_uint32 flags;			/* by mx */
-    afs_uint32 refCount;		/* by cm_volumeLock */
+    afs_int32 refCount;		        /* by Interlocked operations */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
 } cm_volume_t;
 
@@ -121,4 +121,6 @@ extern void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, en
 extern enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 
 extern void cm_VolumeRenewROCallbacks(void);
+
+extern osi_rwlock_t cm_volumeLock;
 #endif /*  __CM_VOLUME_H_ENV__ */
