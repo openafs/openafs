@@ -553,11 +553,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 
 void cm_GetVolume(cm_volume_t *volp)
 {
-    if (volp) {
-	lock_ObtainWrite(&cm_volumeLock);
-	volp->refCount++;
-	lock_ReleaseWrite(&cm_volumeLock);
-    }
+    InterlockedIncrement(&volp->refCount);
 }
 
 
@@ -782,12 +778,12 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     }
     else {
         lock_ReleaseRead(&cm_volumeLock);
-        if (volp) {
-            cm_GetVolume(volp);
-            lock_ObtainMutex(&volp->mx);
-        } else {
+        
+        if (!volp)
             return CM_ERROR_NOSUCHVOLUME;
-        }
+
+        cm_GetVolume(volp);
+        lock_ObtainMutex(&volp->mx);
     }
 
     /* if we get here we are holding the mutex */
@@ -803,15 +799,15 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         code = CM_ERROR_NOSUCHVOLUME;
 
     if (code == 0) {
-		*outVolpp = volp;
+        *outVolpp = volp;
 		
-		if (!(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
-	        lock_ObtainWrite(&cm_volumeLock);
-			cm_AdjustVolumeLRU(volp);
-			lock_ReleaseWrite(&cm_volumeLock);
-		}
+        if (!(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
+            lock_ObtainWrite(&cm_volumeLock);
+            cm_AdjustVolumeLRU(volp);
+            lock_ReleaseWrite(&cm_volumeLock);
+        }
     } else
-		cm_PutVolume(volp);
+        cm_PutVolume(volp);
 
     return code;
 }	
@@ -869,7 +865,6 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 #ifdef SEARCH_ALL_VOLUMES
     osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
-
     lock_ReleaseRead(&cm_volumeLock);
 
     /* hold the volume if we found it */
@@ -927,9 +922,8 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
 
 void cm_PutVolume(cm_volume_t *volp)
 {
-    lock_ObtainWrite(&cm_volumeLock);
-    osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
-    lock_ReleaseWrite(&cm_volumeLock);
+    afs_int32 refCount = InterlockedDecrement(&volp->refCount);
+    osi_assertx(refCount >= 0, "cm_volume_t refCount underflow has occurred");
 }
 
 /* return the read-only volume, if there is one, or the read-write volume if

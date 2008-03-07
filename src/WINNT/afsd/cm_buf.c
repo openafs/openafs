@@ -1188,7 +1188,7 @@ long buf_CountFreeList(void)
          * has been invalidate (by having its DV stomped upon), then
          * count it as free, since it isn't really being utilized.
          */
-        if (!(bufp->flags & CM_BUF_INHASH) || bufp->dataVersion <= 0)
+        if (!(bufp->flags & CM_BUF_INHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
             count++;
     }       
     lock_ReleaseRead(&buf_globalLock);
