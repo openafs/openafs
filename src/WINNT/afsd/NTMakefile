@@ -64,6 +64,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_buf.h \
 	$(INCFILEDIR)\cm_freelance.h \
         $(INCFILEDIR)\cm_memmap.h \
+	$(INCFILEDIR)\cm_performance.h \
         $(INCFILEDIR)\afsd_eventlog.h \
         $(INCFILEDIR)\afsd_eventmessages.h \
         $(INCFILEDIR)\afskfw.h \
@@ -125,6 +126,7 @@ AFSDOBJS=\
 	$(OUT)\cm_dnlc.obj \
 	$(OUT)\cm_rpc.obj \
         $(OUT)\cm_memmap.obj \
+        $(OUT)\cm_performance.obj \
 	$(OUT)\afsrpc_s.obj \
 !IFDEF OSICRASH
 	$(OUT)\afsdcrash.obj \
