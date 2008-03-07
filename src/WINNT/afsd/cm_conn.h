@@ -24,9 +24,9 @@ typedef struct cm_conn {
         struct rx_connection *callp;	/* locked by mx */
         struct cm_user *userp;		/* locked by mx; a held reference */
         osi_mutex_t mx;			/* mutex for some of these fields */
-        unsigned long refCount;		/* locked by cm_connLock */
+        afs_int32 refCount;		/* Interlocked */
 	int ucgen;			/* ucellp's generation number */
-        long flags;			/* locked by mx */
+        afs_uint32 flags;		/* locked by mx */
 	int cryptlevel;			/* encrytion status */
 } cm_conn_t;
 
@@ -42,7 +42,9 @@ typedef struct cm_req {
 	int rpcError;			/* RPC error code */
 	int volumeError;		/* volume error code */
 	int accessError;		/* access error code */
-	int flags;
+        struct cm_server * tokenErrorServp;  /* server that reported a token error other than expired */
+        int tokenError;
+	afs_uint32 flags;
         char * tidPathp;
         char * relPathp;
 } cm_req_t;
