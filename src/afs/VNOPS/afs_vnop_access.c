@@ -199,7 +199,16 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
-    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (afs_fakestat_enable && avc->mvstat == 1) {
+	code = afs_TryEvalFakeStat(&avc, &fakestate, &treq);
+        if (code == 0 && avc->mvstat == 1) {
+	    afs_PutFakeStat(&fakestate);
+	    return 0;
+        }
+    } else {
+	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    }
+
     if (code) {
 	afs_PutFakeStat(&fakestate);
 	return code;
