@@ -18,6 +18,7 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/unified_afs.h>
+#include <afs/vlserver.h>
 #include <WINNT/afsreg.h>
 
 osi_rwlock_t cm_connLock;
@@ -34,9 +35,8 @@ afs_uint32 cm_anonvldb = 0;
 
 void cm_PutConn(cm_conn_t *connp)
 {
-	lock_ObtainWrite(&cm_connLock);
-	osi_assertx(connp->refCount-- > 0, "cm_conn_t refcount 0");
-	lock_ReleaseWrite(&cm_connLock);
+    afs_int32 refCount = InterlockedDecrement(&connp->refCount);
+    osi_assertx(refCount >= 0, "cm_conn_t refcount underflow");
 }
 
 void cm_InitConn(void)
@@ -589,6 +589,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             if ( timeLeft > 2 )
                 retry = 1;
         }
+    } else if (errorCode >= ERROR_TABLE_BASE_RXK && errorCode < ERROR_TABLE_BASE_RXK + 256) {
+        reqp->tokenErrorServp = serverp;
+        reqp->tokenError = errorCode;
+        retry = 1;
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
 	cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
@@ -637,6 +641,38 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    case VICETOKENDEAD     : s = "VICETOKENDEAD";      break;
             case WSAEWOULDBLOCK    : s = "WSAEWOULDBLOCK";     break;
             case UAEWOULDBLOCK     : s = "UAEWOULDBLOCK";      break;
+            case VL_IDEXIST        : s = "VL_IDEXIST";         break;
+            case VL_IO             : s = "VL_IO";              break;
+            case VL_NAMEEXIST      : s = "VL_NAMEEXIST";       break;
+            case VL_CREATEFAIL     : s = "VL_CREATEFAIL";      break;
+            case VL_NOENT          : s = "VL_NOENT";           break;
+            case VL_EMPTY          : s = "VL_EMPTY";           break;
+            case VL_ENTDELETED     : s = "VL_ENTDELETED";      break;
+            case VL_BADNAME        : s = "VL_BADNAME";         break;
+            case VL_BADINDEX       : s = "VL_BADINDEX";        break;
+            case VL_BADVOLTYPE     : s = "VL_BADVOLTYPE";      break;
+            case VL_BADSERVER      : s = "VL_BADSERVER";       break;
+            case VL_BADPARTITION   : s = "VL_BADPARTITION";    break;
+            case VL_REPSFULL       : s = "VL_REPSFULL";        break;
+            case VL_NOREPSERVER    : s = "VL_NOREPSERVER";     break;
+            case VL_DUPREPSERVER   : s = "VL_DUPREPSERVER";    break;
+            case VL_RWNOTFOUND     : s = "VL_RWNOTFOUND";      break;
+            case VL_BADREFCOUNT    : s = "VL_BADREFCOUNT";     break;
+            case VL_SIZEEXCEEDED   : s = "VL_SIZEEXCEEDED";    break;
+            case VL_BADENTRY       : s = "VL_BADENTRY";        break;
+            case VL_BADVOLIDBUMP   : s = "VL_BADVOLIDBUMP";    break;
+            case VL_IDALREADYHASHED: s = "VL_IDALREADYHASHED"; break;
+            case VL_ENTRYLOCKED    : s = "VL_ENTRYLOCKED";     break;
+            case VL_BADVOLOPER     : s = "VL_BADVOLOPER";      break;
+            case VL_BADRELLOCKTYPE : s = "VL_BADRELLOCKTYPE";  break;
+            case VL_RERELEASE      : s = "VL_RERELEASE";       break;
+            case VL_BADSERVERFLAG  : s = "VL_BADSERVERFLAG";   break;
+            case VL_PERM           : s = "VL_PERM";            break;
+            case VL_NOMEM          : s = "VL_NOMEM";           break;
+            case VL_BADVERSION     : s = "VL_BADVERSION";      break;
+            case VL_INDEXERANGE    : s = "VL_INDEXERANGE";     break;
+            case VL_MULTIPADDR     : s = "VL_MULTIPADDR";      break;
+            case VL_BADMASK        : s = "VL_BADMASK";         break;
 	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			
 	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break; 			
 	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break; 		
@@ -733,11 +769,22 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     timeLeft =  ConnDeadtimeout - timeUsed - 5;
     hardTimeLeft = HardDeadtimeout - timeUsed - 5;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
+        if (reqp->tokenErrorServp) {
+            /* 
+             * search the list until we find the server
+             * that failed last time.  When we find it
+             * clear the error, skip it and try the one
+             * in the list.
+             */
+            if (tsp == reqp->tokenErrorServp)
+                reqp->tokenErrorServp = NULL;
+            continue;
+        }
         cm_GetServerNoLock(tsp);
-        lock_ReleaseWrite(&cm_serverLock);
+        lock_ReleaseRead(&cm_serverLock);
         if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
 	    allDown = 0;
             if (tsrp->status == srv_deleted) {
@@ -773,14 +820,14 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                     firstError = code;
             }
         }
-        lock_ObtainWrite(&cm_serverLock);
+        lock_ObtainRead(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }   
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 
     if (firstError == 0) {
         if (allDown) 
-            firstError = CM_ERROR_ALLDOWN;
+            firstError = (reqp->tokenError ? reqp->tokenError : CM_ERROR_ALLDOWN);
         else if (allBusy) 
             firstError = CM_ERROR_ALLBUSY;
 	else if (allOffline || (someBusy && someOffline))
@@ -880,7 +927,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         userp = cm_rootUserp;
 
     lock_ObtainMutex(&userp->mx);
-    lock_ObtainWrite(&cm_connLock);
+    lock_ObtainRead(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
         if (tcp->userp == userp) 
             break;
@@ -889,6 +936,15 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     /* find ucell structure */
     ucellp = cm_GetUCell(userp, serverp->cellp);
     if (!tcp) {
+        lock_ConvertRToW(&cm_connLock);
+        for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
+            if (tcp->userp == userp) 
+                break;
+        }
+        if (tcp) {
+            lock_ReleaseWrite(&cm_connLock);
+            goto haveconn;
+        }
         cm_GetServer(serverp);
         tcp = malloc(sizeof(*tcp));
         memset(tcp, 0, sizeof(*tcp));
@@ -903,7 +959,13 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         cm_NewRXConnection(tcp, ucellp, serverp);
         tcp->refCount = 1;
         lock_ReleaseMutex(&tcp->mx);
+        lock_ReleaseWrite(&cm_connLock);
     } else {
+        lock_ReleaseRead(&cm_connLock);
+      haveconn:
+        InterlockedIncrement(&tcp->refCount);
+
+        lock_ObtainMutex(&tcp->mx);
         if ((tcp->flags & CM_CONN_FLAG_FORCE_NEW) ||
             (tcp->ucgen < ucellp->gen) ||
             (tcp->cryptlevel != (cryptall ? (ucellp->flags & CM_UCELLFLAG_RXKAD ? rxkad_crypt : rxkad_clear) : rxkad_clear)))
@@ -912,15 +974,12 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to token update");
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
-            lock_ObtainMutex(&tcp->mx);
 	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
             rx_DestroyConnection(tcp->callp);
             cm_NewRXConnection(tcp, ucellp, serverp);
-            lock_ReleaseMutex(&tcp->mx);
         }
-        tcp->refCount++;
+        lock_ReleaseMutex(&tcp->mx);
     }
-    lock_ReleaseWrite(&cm_connLock);
     lock_ReleaseMutex(&userp->mx);
 
     /* return this pointer to our caller */
@@ -945,10 +1004,9 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
     if (code)
         return 0;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        cm_GetServerNoLock(tsp);
         if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
 	    allDown = 0;
             if (tsrp->status == srv_busy) {
@@ -962,9 +1020,8 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
                 allBusy = 0;
             }
         }
-        cm_PutServerNoLock(tsp);
     }   
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
     cm_FreeServerList(serverspp, 0);
 
     if (allDown)
