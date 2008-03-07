@@ -37,13 +37,13 @@ cm_ForceNewConnectionsAllServers(void)
 {
     cm_server_t *tsp;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
 	cm_ForceNewConnections(tsp);
         cm_PutServerNoLock(tsp);
     }
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 void 
@@ -211,10 +211,10 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     int isDown;
     int isFS;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
-        lock_ReleaseWrite(&cm_serverLock);
+        lock_ReleaseRead(&cm_serverLock);
 
         /* now process the server */
         lock_ObtainMutex(&tsp->mx);
@@ -249,10 +249,10 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
          */
         cm_GCConnections(tsp);
 
-        lock_ObtainWrite(&cm_serverLock);
+        lock_ObtainRead(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 }       
 #else /* MULTI_CHECKSERVERS */
 void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
@@ -302,7 +302,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     if ((flags & CM_FLAG_CHECKFILESERVERS) || 
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
-        lock_ObtainWrite(&cm_serverLock);
+        lock_ObtainRead(&cm_serverLock);
         nconns = 0;
         for (nconns=0, tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
             if (tsp->type != CM_SERVER_FILE || 
@@ -311,7 +311,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 continue;
 
             cm_GetServerNoLock(tsp);
-            lock_ReleaseWrite(&cm_serverLock);
+            lock_ReleaseRead(&cm_serverLock);
 
             lock_ObtainMutex(&tsp->mx);
             isDown = tsp->flags & CM_SERVERFLAG_DOWN;
@@ -320,7 +320,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 !((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                    (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
                 lock_ReleaseMutex(&tsp->mx);
-                lock_ObtainWrite(&cm_serverLock);
+                lock_ObtainRead(&cm_serverLock);
+                cm_PutServerNoLock(tsp);
                 continue;
             }
 
@@ -330,18 +331,18 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             serversp[nconns] = tsp;
             code = cm_ConnByServer(tsp, cm_rootUserp, &conns[nconns]);
             if (code) {
-	            lock_ObtainWrite(&cm_serverLock);
+                lock_ObtainRead(&cm_serverLock);
                 cm_PutServerNoLock(tsp);
                 continue;
             }
-            lock_ObtainWrite(&cm_serverLock);
-			rxconns[nconns] = cm_GetRxConn(conns[nconns]);
+            lock_ObtainRead(&cm_serverLock);
+            rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             if (conntimer[nconns] = (isDown ? 1 : 0))
                 rx_SetConnDeadTime(rxconns[nconns], 10);
 
             nconns++;
         }
-        lock_ReleaseWrite(&cm_serverLock);
+        lock_ReleaseRead(&cm_serverLock);
 
         if (nconns) {
             /* Perform the multi call */
@@ -597,7 +598,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     if ((flags & CM_FLAG_CHECKVLDBSERVERS) || 
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
-        lock_ObtainWrite(&cm_serverLock);
+        lock_ObtainRead(&cm_serverLock);
         nconns = 0;
         for (nconns=0, tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
             if (tsp->type != CM_SERVER_VLDB ||
@@ -606,7 +607,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 continue;
 
             cm_GetServerNoLock(tsp);
-            lock_ReleaseWrite(&cm_serverLock);
+            lock_ReleaseRead(&cm_serverLock);
 
             lock_ObtainMutex(&tsp->mx);
             isDown = tsp->flags & CM_SERVERFLAG_DOWN;
@@ -615,7 +616,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                 !((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                    (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
                 lock_ReleaseMutex(&tsp->mx);
-                lock_ObtainWrite(&cm_serverLock);
+                lock_ObtainRead(&cm_serverLock);
+                cm_PutServerNoLock(tsp);
                 continue;
             }
 
@@ -625,11 +627,11 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             serversp[nconns] = tsp;
             code = cm_ConnByServer(tsp, cm_rootUserp, &conns[nconns]);
             if (code) {
-	            lock_ObtainWrite(&cm_serverLock);
+                lock_ObtainRead(&cm_serverLock);
                 cm_PutServerNoLock(tsp);
                 continue;
             }
-            lock_ObtainWrite(&cm_serverLock);
+            lock_ObtainRead(&cm_serverLock);
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             conntimer[nconns] = (isDown ? 1 : 0);
             if (isDown)
@@ -637,7 +639,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
 
             nconns++;
         }
-        lock_ReleaseWrite(&cm_serverLock);
+        lock_ReleaseRead(&cm_serverLock);
 
         if (nconns) {
             /* Perform the multi call */
@@ -769,26 +771,29 @@ void cm_InitServer(void)
 
 void cm_GetServer(cm_server_t *serverp)
 {
-    lock_ObtainWrite(&cm_serverLock);
-    serverp->refCount++;
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
+    InterlockedIncrement(&serverp->refCount);
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 void cm_GetServerNoLock(cm_server_t *serverp)
 {
-    serverp->refCount++;
+    InterlockedIncrement(&serverp->refCount);
 }
 
 void cm_PutServer(cm_server_t *serverp)
 {
-    lock_ObtainWrite(&cm_serverLock);
-    osi_assertx(serverp->refCount-- > 0, "cm_server_t refCount 0");
-    lock_ReleaseWrite(&cm_serverLock);
+    afs_int32 refCount;
+    lock_ObtainRead(&cm_serverLock);
+    refCount = InterlockedDecrement(&serverp->refCount);
+    osi_assertx(refCount >= 0, "cm_server_t refCount underflow");
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 void cm_PutServerNoLock(cm_server_t *serverp)
 {
-    osi_assertx(serverp->refCount-- > 0, "cm_server_t refCount 0");
+    afs_int32 refCount = InterlockedDecrement(&serverp->refCount);
+    osi_assertx(refCount >= 0, "cm_server_t refCount underflow");
 }
 
 void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit)
@@ -932,7 +937,7 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
 
     osi_assertx(addrp->sin_family == AF_INET, "unexpected socket value");
         
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
         if (tsp->type == type &&
             tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr) 
@@ -944,7 +949,7 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
         cm_GetServerNoLock(tsp);
 
     /* drop big table lock */
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 	
     /* return what we found */
     return tsp;
@@ -1026,7 +1031,7 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
     int first = 1;
     cm_serverRef_t *tsrp;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         if (first)
             first = 0;
@@ -1035,13 +1040,13 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
         sum ^= (LONG_PTR) tsrp->server;
     }
 
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
     return sum;
 }
 
 /*
 ** Insert a server into the server list keeping the list sorted in 
-** asending order of ipRank. 
+** ascending order of ipRank. 
 ** 
 ** The refCount of the cm_serverRef_t is increased
 */

@@ -36,7 +36,7 @@ typedef struct cm_server {
     afs_int32 waitCount;		/* by mx */
     afs_int32 capabilities;		/* by mx */
     struct cm_cell *cellp;		/* cell containing this server */
-    unsigned long refCount;		/* locked by cm_serverLock */
+    afs_int32 refCount;		        /* Interlocked with cm_serverLock */
     osi_mutex_t mx;
     unsigned short ipRank;		/* server priority */
     cm_server_vols_t *  vols;           /* by mx */
@@ -49,7 +49,7 @@ typedef struct cm_serverRef {
     struct cm_serverRef *next;      /* locked by cm_serverLock */
     struct cm_server *server;       /* locked by cm_serverLock */
     enum repstate status;           /* locked by cm_serverLock */
-    unsigned long refCount;         /* locked by cm_serverLock */
+    afs_int32 refCount;             /* locked by cm_serverLock */
     afs_uint32 volID;               /* locked by cm_serverLock */
 } cm_serverRef_t;
 
