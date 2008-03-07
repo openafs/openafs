@@ -34,6 +34,7 @@ long cm_daemonCheckVolCBInterval = 0;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
+long cm_daemonPerformanceTuningInterval = 0;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -273,60 +274,70 @@ cm_DaemonCheckInit(void)
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckDownInterval = dummy;
     afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckUpInterval = dummy;
     afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckVolInterval = dummy;
     afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckCBInterval = dummy;
     afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckVolCBInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckVolCBInterval = dummy;
     afsi_log("daemonCheckVolCBInterval is %d", cm_daemonCheckVolCBInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckLockInterval = dummy;
     afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonTokenCheckInterval = dummy;
     afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckOfflineVolInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
-    if (code == ERROR_SUCCESS)
+    if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckOfflineVolInterval = dummy;
     afsi_log("daemonCheckOfflineVolInterval is %d", cm_daemonCheckOfflineVolInterval);
     
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonPerformanceTuningInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonPerformanceTuningInterval = dummy;
+    afsi_log("daemonPerformanceTuningInterval is %d", cm_daemonPerformanceTuningInterval);
+    
     RegCloseKey(parmKey);
+
+    if (cm_daemonPerformanceTuningInterval)
+        cm_PerformanceTuningInit();
 }
 
 /* periodic check daemon */
@@ -341,6 +352,7 @@ void cm_Daemon(long parm)
     time_t lastUpServerCheck;
     time_t lastTokenCacheCheck;
     time_t lastBusyVolCheck;
+    time_t lastPerformanceCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -389,6 +401,8 @@ void cm_Daemon(long parm)
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
     lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
+    if (cm_daemonPerformanceTuningInterval)
+        lastPerformanceCheck = now - cm_daemonPerformanceTuningInterval/2 * (rand() % cm_daemonPerformanceTuningInterval);
 
     while (daemon_ShutdownFlag == 0) {
 	/* check to see if the listener threads halted due to network 
@@ -539,7 +553,18 @@ void cm_Daemon(long parm)
         if (daemon_ShutdownFlag == 1) {
             break;
         }
-	thrd_Sleep(10000);		/* sleep 10 seconds */
+
+        if (cm_daemonPerformanceTuningInterval &&
+            now > lastPerformanceCheck + cm_daemonPerformanceTuningInterval &&
+             daemon_ShutdownFlag == 0) {
+            lastPerformanceCheck = now;
+            cm_PerformanceTuningCheck();
+            if (daemon_ShutdownFlag == 1)
+                break;
+	    now = osi_Time();
+        }
+        
+        thrd_Sleep(10000);		/* sleep 10 seconds */
     }
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
 }       
