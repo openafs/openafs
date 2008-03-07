@@ -463,6 +463,8 @@ cm_ValidateSCache(void)
 
     for ( i=0; i < cm_data.scacheHashTableSize; i++ ) {
         for ( scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp ) {
+            afs_uint32 hash;
+            hash = CM_SCACHE_HASH(&scp->fid);
             if (scp->magic != CM_SCACHE_MAGIC) {
                 afsi_log("cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC");
                 fprintf(stderr, "cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC\n");
@@ -482,6 +484,11 @@ cm_ValidateSCache(void)
                 afsi_log("cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC");
                 fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
                 return -12;
+            }
+            if (hash != i) {
+                afsi_log("cm_ValidateSCache failure: scp hash != hash index");
+                fprintf(stderr, "cm_ValidateSCache failure: scp hash != hash index\n");
+                return -13;
             }
         }
     }
