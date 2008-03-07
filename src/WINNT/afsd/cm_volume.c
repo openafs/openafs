@@ -528,6 +528,34 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
         roNewstate = roServers_alldown ? vl_alldown : vl_online;
         bkNewstate = bkServers_alldown ? vl_alldown : vl_online;
+    } else if (code == CM_ERROR_NOSUCHVOLUME || code == VL_NOENT) {
+        /* this volume does not exist - we should discard it */
+        if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
+            cm_RemoveVolumeFromNameHashTable(volp);
+        if (volp->rw.flags & CM_VOLUMEFLAG_IN_HASH)
+            cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
+        if (volp->ro.flags & CM_VOLUMEFLAG_IN_HASH)
+            cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
+        if (volp->bk.flags & CM_VOLUMEFLAG_IN_HASH)
+            cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
+
+        /* Move to the end so it will be recycled first */
+        cm_MoveVolumeToLRULast(volp);
+
+        if (volp->rw.ID)
+            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_alldown);
+        if (volp->ro.ID)
+            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_alldown);
+        if (volp->bk.ID)
+            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
+
+        volp->rw.ID = volp->ro.ID = volp->bk.ID = 0;
+        volp->dotdotFid.cell = 0;
+        volp->dotdotFid.volume = 0;
+        volp->dotdotFid.unique = 0;
+        volp->dotdotFid.vnode = 0;
+        volp->dotdotFid.hash = 0;
+        volp->namep[0] ='\0';
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
     }
@@ -551,6 +579,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     return code;
 }
 
+/* Requires read or write lock on cm_volumeLock */
 void cm_GetVolume(cm_volume_t *volp)
 {
     InterlockedIncrement(&volp->refCount);
@@ -609,12 +638,12 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
 
-    lock_ReleaseRead(&cm_volumeLock);
-
     /* hold the volume if we found it */
     if (volp) 
         cm_GetVolume(volp);
         
+    lock_ReleaseRead(&cm_volumeLock);
+
     /* return it held */
     if (volp) {
         lock_ObtainMutex(&volp->mx);
@@ -777,12 +806,13 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         lock_ReleaseWrite(&cm_volumeLock);
     }
     else {
+        if (volp)
+            cm_GetVolume(volp);
         lock_ReleaseRead(&cm_volumeLock);
         
         if (!volp)
             return CM_ERROR_NOSUCHVOLUME;
 
-        cm_GetVolume(volp);
         lock_ObtainMutex(&volp->mx);
     }
 
@@ -865,11 +895,11 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 #ifdef SEARCH_ALL_VOLUMES
     osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
-    lock_ReleaseRead(&cm_volumeLock);
-
     /* hold the volume if we found it */
     if (volp) 
 	cm_GetVolume(volp);
+
+    lock_ReleaseRead(&cm_volumeLock);
 
     /* update it */
     cm_data.mountRootGen = time(NULL);
@@ -947,23 +977,25 @@ void cm_RefreshVolumes(void)
 {
     cm_volume_t *volp;
     cm_scache_t *scp;
+    afs_int32 refCount;
 
     cm_data.mountRootGen = time(NULL);
 
     /* force a re-loading of volume data from the vldb */
-    lock_ObtainWrite(&cm_volumeLock);
+    lock_ObtainRead(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-	volp->refCount++;
-	lock_ReleaseWrite(&cm_volumeLock);
+	InterlockedIncrement(&volp->refCount);
+	lock_ReleaseRead(&cm_volumeLock);
 
 	lock_ObtainMutex(&volp->mx);
 	volp->flags |= CM_VOLUMEFLAG_RESET;
 	lock_ReleaseMutex(&volp->mx);
 	
-        lock_ObtainWrite(&cm_volumeLock);
-	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
+        lock_ObtainRead(&cm_volumeLock);
+        refCount = InterlockedDecrement(&volp->refCount);
+	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
     }
-    lock_ReleaseWrite(&cm_volumeLock);
+    lock_ReleaseRead(&cm_volumeLock);
 
     /* force mount points to be re-evaluated so that 
      * if the volume location has changed we will pick 
@@ -1136,18 +1168,20 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
 void cm_CheckOfflineVolumes(void)
 {
     cm_volume_t *volp;
+    afs_int32 refCount;
 
-    lock_ObtainWrite(&cm_volumeLock);
+    lock_ObtainRead(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-	volp->refCount++;
-	lock_ReleaseWrite(&cm_volumeLock);
-
-        cm_CheckOfflineVolume(volp, 0);
-
-	lock_ObtainWrite(&cm_volumeLock);
-	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
+        if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
+            InterlockedIncrement(&volp->refCount);
+            lock_ReleaseRead(&cm_volumeLock);
+            cm_CheckOfflineVolume(volp, 0);
+            lock_ObtainRead(&cm_volumeLock);
+            refCount = InterlockedDecrement(&volp->refCount);
+            osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
+        }
     }
-    lock_ReleaseWrite(&cm_volumeLock);
+    lock_ReleaseRead(&cm_volumeLock);
 }
 
 
@@ -1237,14 +1271,15 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 {	
     int 		code;
     cm_volume_t*	volp;
+    afs_int32 refCount;
 
     /* find volumes which might have RO copy on server*/
-    lock_ObtainWrite(&cm_volumeLock);
+    lock_ObtainRead(&cm_volumeLock);
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
 	code = 1 ;	/* assume that list is unchanged */
-	volp->refCount++;
-	lock_ReleaseWrite(&cm_volumeLock);
+	InterlockedIncrement(&volp->refCount);
+	lock_ReleaseRead(&cm_volumeLock);
 	lock_ObtainMutex(&volp->mx);
 
 	if ((tsp->cellp==volp->cellp) && (volp->ro.serversp))
@@ -1255,10 +1290,11 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 	    cm_RandomizeServer(&volp->ro.serversp);
 
 	lock_ReleaseMutex(&volp->mx);
-	lock_ObtainWrite(&cm_volumeLock);
-	osi_assertx(volp->refCount-- > 0, "cm_volume_t refCount 0");
+	lock_ObtainRead(&cm_volumeLock);
+        refCount = InterlockedDecrement(&volp->refCount);
+	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
     }
-    lock_ReleaseWrite(&cm_volumeLock);
+    lock_ReleaseRead(&cm_volumeLock);
 }	
 
 /* dump all volumes that have reference count > 0 to a file. 
@@ -1483,6 +1519,22 @@ void cm_AdjustVolumeLRU(cm_volume_t *volp)
     if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAdd((osi_queue_t **) &cm_data.volumeLRUFirstp, &volp->q);
+    volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
+    if (!cm_data.volumeLRULastp) 
+        cm_data.volumeLRULastp = volp;
+}
+
+/* must be called with cm_volumeLock write-locked! */
+void cm_MoveVolumeToLRULast(cm_volume_t *volp)
+{
+    if (volp == cm_data.volumeLRULastp)
+        return;
+
+    if (volp == cm_data.volumeLRUFirstp)
+        cm_data.volumeLRUFirstp = (cm_volume_t *) osi_QNext(&volp->q);
+    if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
+        osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
+    osi_QAddT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
     if (!cm_data.volumeLRULastp) 
         cm_data.volumeLRULastp = volp;

@@ -108,6 +108,8 @@ extern void cm_AddVolumeToIDHashTable(cm_volume_t * volp, afs_uint32 volType);
 
 extern void cm_AdjustVolumeLRU(cm_volume_t *volp);
 
+extern void cm_MoveVolumeToLRULast(cm_volume_t *volp);
+
 extern void cm_RemoveVolumeFromLRU(cm_volume_t *volp);
 
 extern void cm_CheckOfflineVolumes(void);
