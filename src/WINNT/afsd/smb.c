@@ -6335,12 +6335,26 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char 
     int sequential = (fidp->flags & SMB_FID_SEQUENTIAL);
     cm_req_t req;
 
+    osi_Log3(smb_logp, "smb_ReadData fid %d, off 0x%x, size 0x%x",
+              fidp->fid, offsetp->LowPart, count);
+
+    *readp = 0;
+
+    lock_ObtainMutex(&fidp->mx);
+    /* make sure we have a readable FD */
+    if (!(fidp->flags & SMB_FID_OPENREAD_LISTDIR)) {
+	osi_Log2(smb_logp, "smb_ReadData fid %d not OPENREAD_LISTDIR flags 0x%x",
+		  fidp->fid, fidp->flags);
+	lock_ReleaseMutex(&fidp->mx);
+        code = CM_ERROR_BADFDOP;
+        goto done2;
+    }
+    
     cm_InitReq(&req);
 
     bufferp = NULL;
     offset = *offsetp;
 
-    lock_ObtainMutex(&fidp->mx);
     scp = fidp->scp;
     cm_HoldSCache(scp);
     lock_ObtainWrite(&scp->rw);
@@ -6469,6 +6483,9 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char 
 
     cm_ReleaseSCache(scp);
 
+  done2:
+    osi_Log3(smb_logp, "smb_ReadData fid %d returns 0x%x read %d bytes",
+              fidp->fid, code, *readp);
     return code;
 }
 
@@ -6486,7 +6503,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
     osi_hyper_t offset = *offsetp;
     long code = 0;
     long written = 0;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     osi_hyper_t fileLength;	/* file's length at start of write */
     osi_hyper_t minLength;	/* don't read past this */
     afs_uint32 nbytes;		/* # of bytes to transfer this iteration */
@@ -6504,8 +6521,6 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
     *writtenp = 0;
 
-    cm_InitReq(&req);
-
     lock_ObtainMutex(&fidp->mx);
     /* make sure we have a writable FD */
     if (!(fidp->flags & SMB_FID_OPENWRITE)) {
@@ -6513,9 +6528,11 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 		  fidp->fid, fidp->flags);
 	lock_ReleaseMutex(&fidp->mx);
         code = CM_ERROR_BADFDOP;
-        goto done;
+        goto done2;
     }
     
+    cm_InitReq(&req);
+
     scp = fidp->scp;
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
@@ -6741,6 +6758,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
     cm_ReleaseSCache(scp);
 
+  done2:
     osi_Log3(smb_logp, "smb_WriteData fid %d returns 0x%x written %d bytes",
               fidp->fid, code, *writtenp);
     return code;
