@@ -554,8 +554,8 @@ int afsd_InitCM(char **reasonP)
     long logChunkSize;
     DWORD stats;
     DWORD dwValue;
-    DWORD rx_enable_peer_stats = 0;
-    DWORD rx_enable_process_stats = 0;
+    DWORD rx_enable_peer_stats;
+    DWORD rx_enable_process_stats;
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
@@ -1039,19 +1039,23 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "RxEnablePeerStats", NULL, NULL,
                            (BYTE *) &rx_enable_peer_stats, &dummyLen);
     if (code != ERROR_SUCCESS) {
-        rx_enable_peer_stats = 0;
+        rx_enable_peer_stats = 1;
     }
     if (rx_enable_peer_stats)
         afsi_log("RX Peer Statistics gathering is enabled");
+    else
+        afsi_log("RX Peer Statistics gathering is disabled");
 
     dummyLen = sizeof(rx_enable_process_stats);
     code = RegQueryValueEx(parmKey, "RxEnableProcessStats", NULL, NULL,
                            (BYTE *) &rx_enable_process_stats, &dummyLen);
     if (code != ERROR_SUCCESS) {
-        rx_enable_process_stats = 0;
+        rx_enable_process_stats = 1;
     }
     if (rx_enable_process_stats)
         afsi_log("RX Process Statistics gathering is enabled");
+    else
+        afsi_log("RX Process Statistics gathering is disabled");
 
     dummyLen = sizeof(dwValue);
     dwValue = 0;
