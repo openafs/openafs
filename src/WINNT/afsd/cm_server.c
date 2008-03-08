@@ -27,6 +27,7 @@
 #include <rx/rx.h>
 
 osi_rwlock_t cm_serverLock;
+osi_rwlock_t cm_syscfgLock;
 
 cm_server_t *cm_allServersp;
 afs_uint32   cm_numFileServers = 0;
@@ -765,8 +766,24 @@ void cm_InitServer(void)
         
     if (osi_Once(&once)) {
         lock_InitializeRWLock(&cm_serverLock, "cm_serverLock");
+        lock_InitializeRWLock(&cm_syscfgLock, "cm_syscfgLock");
         osi_EndOnce(&once);
     }
+}
+
+/* Protected by cm_syscfgLock (rw) */
+int cm_noIPAddr;         /* number of client network interfaces */
+int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+int cm_LanAdapterChangeDetected = 1;
+
+void cm_SetLanAdapterChangeDetected(void)
+{
+    lock_ObtainWrite(&cm_syscfgLock);
+    cm_LanAdapterChangeDetected = 1;
+    lock_ReleaseWrite(&cm_syscfgLock);
 }
 
 void cm_GetServer(cm_server_t *serverp)
@@ -822,19 +839,23 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     unsigned long	myAddr, myNet, mySubnet;/* in host byte order */
     unsigned long	netMask;
     int 		i;
-
-    int cm_noIPAddr;         /* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
     long code;
+    int writeLock = 0;
 
-    /* get network related info */
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-			    cm_IPAddr, cm_SubnetMask,
-			    cm_NetMtu, cm_NetFlags);
+    lock_ObtainRead(&cm_syscfgLock);
+    if (cm_LanAdapterChangeDetected) {
+        lock_ConvertRToW(&cm_syscfgLock);
+        writeLock = 1;
+        if (cm_LanAdapterChangeDetected) {
+            /* get network related info */
+            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+            code = syscfg_GetIFInfo(&cm_noIPAddr,
+                                     cm_IPAddr, cm_SubnetMask,
+                                     cm_NetMtu, cm_NetFlags);
+            cm_LanAdapterChangeDetected = 0;
+        }
+        lock_ConvertWToR(&cm_syscfgLock);
+    }
 
     serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
     serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
@@ -873,6 +894,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 	/* random between 0..15*/
 	serverp->ipRank += min(serverp->ipRank, rand() % 0x000f);
     } /* and of for loop */
+    lock_ReleaseRead(&cm_syscfgLock);
 }
 
 cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp, afs_uint32 flags) {
