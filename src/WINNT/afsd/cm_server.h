@@ -96,6 +96,8 @@ extern cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type);
 
 extern osi_rwlock_t cm_serverLock;
 
+extern osi_rwlock_t cm_syscfgLock;
+
 extern void cm_InitServer(void);
 
 extern void cm_CheckServers(afs_uint32 flags, struct cm_cell *cellp);
@@ -124,4 +126,13 @@ extern void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no);
 
 extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 
+extern void cm_SetLanAdapterChangeDetected(void);
+
+/* Protected by cm_syscfgLock (rw) */
+extern int cm_noIPAddr;         /* number of client network interfaces */
+extern int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+extern int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+extern int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+extern int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+extern int cm_LanAdapterChangeDetected;
 #endif /*  __CM_SERVER_H_ENV__ */

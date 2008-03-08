@@ -575,13 +575,13 @@ SRXAFSCB_Probe(struct rx_call *callp)
 
 extern osi_rwlock_t cm_aclLock;
 extern osi_rwlock_t buf_globalLock;
-extern osi_rwlock_t cm_callbackLock;
 extern osi_rwlock_t cm_cellLock;
 extern osi_rwlock_t cm_connLock;
 extern osi_rwlock_t cm_daemonLock;
 extern osi_rwlock_t cm_dnlcLock;
 extern osi_rwlock_t cm_scacheLock;
 extern osi_rwlock_t cm_serverLock;
+extern osi_rwlock_t cm_syscfgLock;
 extern osi_rwlock_t cm_userLock;
 extern osi_rwlock_t cm_utilsLock;
 extern osi_rwlock_t cm_volumeLock;
@@ -607,6 +607,7 @@ static struct _ltable {
     {"buf_globalLock",   (char*)&buf_globalLock,        LOCKTYPE_RW},
     {"cm_serverLock",    (char*)&cm_serverLock,         LOCKTYPE_RW},
     {"cm_callbackLock",  (char*)&cm_callbackLock,       LOCKTYPE_RW},
+    {"cm_syscfgLock",    (char*)&cm_syscfgLock,         LOCKTYPE_RW},
     {"cm_aclLock",       (char*)&cm_aclLock,            LOCKTYPE_RW},
     {"cm_cellLock",      (char*)&cm_cellLock,           LOCKTYPE_RW},
     {"cm_connLock",      (char*)&cm_connLock,           LOCKTYPE_RW},
@@ -956,11 +957,6 @@ int
 SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
 {
     int i;
-    int cm_noIPAddr;         /* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
     long code;
     struct rx_connection *connp;
     struct rx_peer *peerp;
@@ -972,17 +968,25 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
         port = rx_PortOf(peerp);
     }
 
-    /* get network related info */
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-                             cm_IPAddr, cm_SubnetMask,
-                             cm_NetMtu, cm_NetFlags);
-
-    /* return all network interface addresses */
     osi_Log2(afsd_logp, "SRXAFSCB_WhoAreYou from host 0x%x port %d",
               ntohl(host),
               ntohs(port));
 
+    lock_ObtainRead(&cm_syscfgLock);
+    if (cm_LanAdapterChangeDetected) {
+        lock_ConvertRToW(&cm_syscfgLock);
+        if (cm_LanAdapterChangeDetected) {
+            /* get network related info */
+            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+            code = syscfg_GetIFInfo(&cm_noIPAddr,
+                                     cm_IPAddr, cm_SubnetMask,
+                                     cm_NetMtu, cm_NetFlags);
+            cm_LanAdapterChangeDetected = 0;
+        }
+        lock_ConvertWToR(&cm_syscfgLock);
+    }
+
+    /* return all network interface addresses */
     addr->numberOfInterfaces = cm_noIPAddr;
     addr->uuid = cm_data.Uuid;
     for ( i=0; i < cm_noIPAddr; i++ ) {
@@ -991,6 +995,8 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
         addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
             cm_NetMtu[i] : rx_mtu;
     }
+
+    lock_ReleaseRead(&cm_syscfgLock);
 
     return 0;
 }
@@ -1117,11 +1123,6 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     int i;
     afs_int32 *dataBuffP;
     afs_int32 dataBytes;
-    int cm_noIPAddr;         /* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
     long code;
     struct rx_connection *connp;
     struct rx_peer *peerp;
@@ -1133,15 +1134,23 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
         port = rx_PortOf(peerp);
     }
 
-    /* get network related info */
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-                             cm_IPAddr, cm_SubnetMask,
-                             cm_NetMtu, cm_NetFlags);
-
     osi_Log2(afsd_logp, "SRXAFSCB_TellMeAboutYourself from host 0x%x port %d",
               ntohl(host),
               ntohs(port));
+
+    lock_ObtainRead(&cm_syscfgLock);
+    if (cm_LanAdapterChangeDetected) {
+        lock_ConvertRToW(&cm_syscfgLock);
+        if (cm_LanAdapterChangeDetected) {
+            /* get network related info */
+            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+            code = syscfg_GetIFInfo(&cm_noIPAddr,
+                                     cm_IPAddr, cm_SubnetMask,
+                                     cm_NetMtu, cm_NetFlags);
+            cm_LanAdapterChangeDetected = 0;
+        }
+        lock_ConvertWToR(&cm_syscfgLock);
+    }
 
     /* return all network interface addresses */
     addr->numberOfInterfaces = cm_noIPAddr;
@@ -1152,6 +1161,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
         addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
             cm_NetMtu[i] : rx_mtu;
     }
+    lock_ReleaseRead(&cm_syscfgLock);
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) osi_Alloc(dataBytes);
