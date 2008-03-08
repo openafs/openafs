@@ -103,8 +103,10 @@ void cm_PerformanceAddSCache(cm_scache_t *scp)
         statp->fileLength = scp->length;
         statp->fileType   = scp->fileType;
         statp->flags = CM_FIDSTATS_FLAG_HAVE_SCACHE;
+        lock_ConvertRToW(&scp->rw);
         if (cm_HaveCallback(scp))
             statp->flags |= CM_FIDSTATS_FLAG_CALLBACK;
+        lock_ConvertWToR(&scp->rw);
         if (scp->flags & CM_SCACHEFLAG_RO)
             statp->flags |= CM_FIDSTATS_FLAG_RO;
         if (scp->flags & CM_SCACHEFLAG_PURERO)
@@ -160,7 +162,9 @@ void cm_PerformanceTuningInit(void)
         for (scp=cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) { 
             if (scp->fid.cell == 0)
                 continue;
+            lock_ReleaseRead(&cm_scacheLock);
             cm_PerformanceAddSCache(scp);
+            lock_ObtainRead(&cm_scacheLock);
         }
     }
     lock_ReleaseRead(&cm_scacheLock);
@@ -296,8 +300,11 @@ void cm_PerformanceTuningCheck(void)
                     break;
                 }
             }
-            if (!statp)
+            if (!statp) {
+                lock_ReleaseRead(&cm_scacheLock);
                 cm_PerformanceAddSCache(scp);
+                lock_ObtainRead(&cm_scacheLock);
+            }
         }
     }
     lock_ReleaseRead(&cm_scacheLock);
