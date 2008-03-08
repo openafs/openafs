@@ -634,16 +634,17 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
 	return NULL;
     }
 
-    lock_ObtainWrite(&cm_scacheLock);
+    lock_ObtainRead(&cm_scacheLock);
     for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
             cm_HoldSCacheNoLock(scp);
+            lock_ConvertRToW(&cm_scacheLock);
             cm_AdjustScacheLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             return scp;
         }
     }
-    lock_ReleaseWrite(&cm_scacheLock);
+    lock_ReleaseRead(&cm_scacheLock);
     return NULL;
 }
 
@@ -1664,8 +1665,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
     }
 
     if (scp->dataVersion != 0 &&
-        (!(flags & CM_MERGEFLAG_DIROP) && dataVersion != scp->dataVersion ||
-         (flags & CM_MERGEFLAG_DIROP) && dataVersion - scp->dataVersion > 1)) {
+        (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion != scp->dataVersion ||
+         (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion - scp->dataVersion > 1)) {
         /* 
          * We now know that all of the data buffers that we have associated
          * with this scp are invalid.  Subsequent operations will go faster
@@ -1673,6 +1674,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
          *
          * We do not remove directory buffers if the dataVersion delta is 1 because
          * those version numbers will be updated as part of the directory operation.
+         *
+         * We do not remove storedata buffers because they will still be valid.
          */
         int i, j;
         cm_buf_t **lbpp;
