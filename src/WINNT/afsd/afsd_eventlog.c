@@ -64,12 +64,16 @@ static BOOL
 AddEventSource()
 {
     HKEY	hKey = NULL, hLogKey; 
-    UCHAR	szBuf[MAX_PATH]; 
+    UCHAR	szBuf[MAX_PATH] = "afsd_service.exe"; 
     DWORD	dwData, dwDisposition; 
-    BOOL	bRet = TRUE;
+    static BOOL	bRet = TRUE;
+    static BOOL bOnce = TRUE;
+
+    if (!bOnce)
+        return bRet;
 
     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_APPLOG_SUBKEY, 0,
-                       KEY_QUERY_VALUE, &hLogKey ) )
+                       KEY_SET_VALUE, &hLogKey ) )
     {	        		
         // nope - create it		
         if ( RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_APPLOG_SUBKEY, 0,
@@ -86,7 +90,7 @@ AddEventSource()
     // Application key in the EventLog registry key.  If not,
     // create it.
     if ( RegOpenKeyEx( hLogKey, AFSREG_CLT_APPLOG_SUBKEY, 0,
-                       KEY_QUERY_VALUE, &hKey ) )
+                       KEY_SET_VALUE, &hKey ) )
     {	        		
         // nope - create it		
         if ( RegCreateKeyEx(hLogKey, AFSREG_CLT_APPLOG_SUBKEY, 0,
@@ -99,17 +103,6 @@ AddEventSource()
         }
     }
 
-#if 0
-    // Set the name of the message file
-    // Get "ImagePath" from TransarcAFSDaemon service
-    memset(szBuf, '\0', MAX_PATH);
-    dwData = MAX_PATH;
-    GetServicePath(szBuf, &dwData);
-#else   
-    // Windows takes the specified name and searchs the PATH environment variable
-    // It never appears to even try the fully qualified name.
-    strcpy(szBuf, "afsd_service.exe");
-#endif  
     // Add the name to the EventMessageFile subkey. 
     if ( RegSetValueEx( hKey,			// subkey handle 
                         AFSREG_APPLOG_MSGFILE_VALUE,	// value name 
