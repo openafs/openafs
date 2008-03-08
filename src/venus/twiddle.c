@@ -36,7 +36,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <strings.h>
-
+#include <afs/com_err.h>
 
 #define	MAXSIZE	2048
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
