@@ -6242,6 +6242,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned short fd;
     unsigned pid;
     smb_fid_t *fidp;
+    smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
     char *op;
@@ -6306,7 +6307,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LARGE_INTEGER LLength;
         cm_scache_t * scp;
 
-        pid = ((smb_t *) inp)->pid;
+        pid = smbp->pid;
         key = cm_GenerateKey(vcp->vcID, pid, fd);
 
         LOffset.HighPart = offset.HighPart;
@@ -6376,6 +6377,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned short fd;
     unsigned pid;
     smb_fid_t *fidp;
+    smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
     cm_key_t key;
@@ -6422,7 +6424,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_NOSUCHFILE;
     }
 
-    pid = ((smb_t *) inp)->pid;
+    pid = smbp->pid;
     key = cm_GenerateKey(vcp->vcID, pid, fd);
     {
         LARGE_INTEGER LOffset, LLength;
@@ -6734,7 +6736,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidflags = 0;
     if (desiredAccess & DELETE)
         fidflags |= SMB_FID_OPENDELETE;
-    if (desiredAccess & AFS_ACCESS_READ)
+    if (desiredAccess & (AFS_ACCESS_READ|AFS_ACCESS_EXECUTE))
         fidflags |= SMB_FID_OPENREAD_LISTDIR;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
@@ -7538,7 +7540,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     fidflags = 0;
     if (desiredAccess & DELETE)
         fidflags |= SMB_FID_OPENDELETE;
-    if (desiredAccess & AFS_ACCESS_READ)
+    if (desiredAccess & (AFS_ACCESS_READ|AFS_ACCESS_EXECUTE))
         fidflags |= SMB_FID_OPENREAD_LISTDIR;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;

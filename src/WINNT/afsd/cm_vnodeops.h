@@ -170,6 +170,7 @@ extern long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc,
 #define AFS_ACCESS_READ (FILE_GENERIC_READ & ~SYNCHRONIZE)
 #define AFS_ACCESS_WRITE ((FILE_GENERIC_WRITE & ~(READ_CONTROL | SYNCHRONIZE)) \
 				& ~FILE_WRITE_ATTRIBUTES)
+#define AFS_ACCESS_EXECUTE (FILE_GENERIC_EXECUTE & ~SYNCHRONIZE)
 
 typedef struct cm_lock_data {
     cm_key_t key;

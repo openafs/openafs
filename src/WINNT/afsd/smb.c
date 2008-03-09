@@ -2858,6 +2858,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     unsigned short fd;
     unsigned pid;
     smb_fid_t *fidp;
+    smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp = NULL;
     NCB *ncbp;
@@ -2908,7 +2909,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     }
 
 
-    pid = ((smb_t *) inp)->pid;
+    pid = smbp->pid;
     {
         LARGE_INTEGER LOffset, LLength;
         cm_key_t key;
@@ -6473,6 +6474,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long written = 0, total_written = 0;
     unsigned pid;
     smb_fid_t *fidp;
+    smb_t* smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
     cm_attr_t truncAttr;	/* attribute struct used for truncating file */
@@ -6520,7 +6522,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LARGE_INTEGER LOffset;
         LARGE_INTEGER LLength;
 
-        pid = ((smb_t *) inp)->pid;
+        pid = smbp->pid;
         key = cm_GenerateKey(vcp->vcID, pid, fd);
 
         LOffset.HighPart = offset.HighPart;
@@ -6674,6 +6676,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     long totalCount;
     unsigned short fd;
     smb_fid_t *fidp;
+    smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
     char *op;
@@ -6739,7 +6742,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         LARGE_INTEGER LOffset;
         LARGE_INTEGER LLength;
 
-        pid = ((smb_t *) inp)->pid;
+        pid = smbp->pid;
         key = cm_GenerateKey(vcp->vcID, pid, fd);
 
         LOffset.HighPart = offset.HighPart;
@@ -6851,6 +6854,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned short fd;
     unsigned pid;
     smb_fid_t *fidp;
+    smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
     char *op;
@@ -6887,7 +6891,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LARGE_INTEGER LOffset, LLength;
         cm_key_t key;
 
-        pid = ((smb_t *) inp)->pid;
+        pid = smbp->pid;
         key = cm_GenerateKey(vcp->vcID, pid, fd);
 
         LOffset.HighPart = 0;
