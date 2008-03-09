@@ -33,6 +33,7 @@ RCSID
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <afs/com_err.h>
 #include "ptint.h"
 #include "ptserver.h"
 #include "pterror.h"
