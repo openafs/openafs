@@ -348,7 +348,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 
     rights = 0;
 
-    if (desiredAccess & AFS_ACCESS_READ)
+    if (desiredAccess & (AFS_ACCESS_READ|AFS_ACCESS_EXECUTE))
         rights |= (scp->fileType == CM_SCACHETYPE_DIRECTORY ? PRSFS_LOOKUP : PRSFS_READ);
 
     /* We used to require PRSFS_WRITE if createDisp was 4
