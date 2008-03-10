@@ -684,6 +684,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
+		 LINUX_HAVE_IGET
+		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -912,6 +914,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
 		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
+		 fi
+		 if test "x$ac_cv_linux_have_iget" = "xyes" ; then
+		  AC_DEFINE(HAVE_IGET, 1, [define if your kernel has iget])
+		 fi
+		 if test "x$ac_cv_linux_struct_nameidata_has_path" = "xyes" ; then
+		  AC_DEFINE(STRUCT_NAMEIDATA_HAS_PATH, 1, [define if your struct nameidata has path])
 		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
