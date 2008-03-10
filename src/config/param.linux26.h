@@ -43,6 +43,7 @@
 #ifndef MAX
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #endif
+
 #endif /* KERNEL */
 
 #ifndef KERNEL
@@ -97,6 +98,10 @@
 #define USE_UCONTEXT
 #endif
 #endif
+#endif
+
+#ifndef HAVE_IGET
+#define AFS_CACHE_VNODE_PATH 1
 #endif
 
 #include <afs/afs_sysnames.h>
