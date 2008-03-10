@@ -52,10 +52,17 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 #endif
 
     if (!code) {
+#if defined(STRUCT_NAMEIDATA_HAS_PATH)
+	*dpp = dget(nd.path.dentry);
+        if (mnt)
+	    *mnt = mntget(nd.path.mnt);
+	path_put(&nd.path);
+#else
 	*dpp = dget(nd.dentry);
         if (mnt)
            *mnt = mntget(nd.mnt);
 	path_release(&nd);
+#endif
     }
     return code;
 }

@@ -28,6 +28,10 @@
 #define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 
+#ifndef HAVE_IGET
+#define AFS_CACHE_VNODE_PATH 1
+#endif
+
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 
 #ifdef CONFIG_SMP

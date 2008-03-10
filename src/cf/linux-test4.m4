@@ -957,3 +957,27 @@ sysctl_check_table(NULL);],
  ac_cv_linux_sysctl_table_checking=yes)])
 AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
 
+AC_DEFUN([LINUX_HAVE_IGET], [
+  AC_MSG_CHECKING([for linux iget()])
+  AC_CACHE_VAL([ac_cv_linux_have_iget], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[iget(NULL, NULL);],
+      ac_cv_linux_have_iget=yes,
+      ac_cv_linux_have_iget=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_have_iget)])
+
+AC_DEFUN([LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH], [
+  AC_MSG_CHECKING([for path in struct nameidata])
+  AC_CACHE_VAL([ac_cv_linux_struct_nameidata_has_path], [
+    AC_TRY_KBUILD(
+[#include <linux/namei.h>],
+[struct nameidata _nd;
+printk("%x\n", _nd.path);],
+      ac_cv_linux_struct_nameidata_has_path=yes,
+      ac_cv_linux_struct_nameidata_has_path=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_nameidata_has_path)])
+
