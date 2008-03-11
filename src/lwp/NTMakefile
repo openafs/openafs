@@ -31,9 +31,9 @@ INCFILES = \
 	$(DESTDIR)\include\preempt.h \
 	$(DESTDIR)\include\timer.h
 
+install_headers: $(INCFILES)
 
-
-install: $(LIBFILE) $(INCFILES)
+install: install_headers $(LIBFILE) 
 
 install9x: install
 

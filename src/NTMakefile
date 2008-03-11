@@ -60,7 +60,14 @@ afsreg_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-util: procmgmt_headers afsreg_headers
+lwp_headers:
+     echo ***** $@
+	$(DOCD) $(SRC)\lwp
+	$(CD) $(SRC)\lwp
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+util: procmgmt_headers afsreg_headers lwp_headers
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
