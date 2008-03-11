@@ -45,7 +45,7 @@ RCSID
 #include <afs/budb.h>
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
-
+#include "bucoord_prototypes.h"
 
 int localauth, interact;
 char tcell[64];
@@ -243,8 +243,6 @@ backupInit()
     static int initd = 0;	/* ever called? */
     PROCESS watcherPid;
     PROCESS pid;		/* LWP process ID */
-
-    extern statusWatcher();
 
     /* Initialization */
     initialize_CMD_error_table();

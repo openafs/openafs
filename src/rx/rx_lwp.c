@@ -75,7 +75,7 @@ rxi_Wakeup(void *addr)
 }
 
 PROCESS rx_listenerPid = 0;	/* LWP process id of socket listener process */
-static int rx_ListenerProc(void *dummy);
+static void* rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -119,14 +119,14 @@ rxi_InitializeThreadSupport(void)
 }
 
 void
-rxi_StartServerProc(void (*proc) (void), int stacksize)
+rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 {
     PROCESS scratchPid;
     static int number = 0;
     char name[32];
 
     sprintf(name, "srv_%d", ++number);
-    LWP_CreateProcess((int (*)(void *))proc, stacksize, RX_PROCESS_PRIORITY, (void *)0,
+    LWP_CreateProcess(proc, stacksize, RX_PROCESS_PRIORITY, NULL,
 		      "rx_ServerProc", &scratchPid);
     if (registerProgram)
 	(*registerProgram) (scratchPid, name);
@@ -320,7 +320,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static int
+static void *
 rx_ListenerProc(void *dummy)
 {
     int threadID;
@@ -343,13 +343,14 @@ rx_ListenerProc(void *dummy)
 	/* assert(sock != OSI_NULLSOCKET); */
     }
     /* not reached */
+    return NULL;
 }
 
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void * unused)
 {
     osi_socket sock;
     int threadID;
@@ -376,6 +377,7 @@ rx_ServerProc(void)
 	/* assert(newcall != NULL); */
     }
     /* not reached */
+    return NULL;
 }
 
 /*

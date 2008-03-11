@@ -14,7 +14,7 @@
  *	Implementation of the gator curses window facility.
  *
  *------------------------------------------------------------------------*/
-#define	IGNORE_STDS_H
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -39,6 +39,8 @@ RCSID
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <lwp.h>
 
 #include "gtxcurseswin.h"	/*Interface definition */
 #include "gtxobjects.h"

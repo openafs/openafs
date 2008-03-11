@@ -34,7 +34,7 @@ PRE_InitPreempt(struct timeval *slice)
 }
 
 int
-PRE_EndPreempt()
+PRE_EndPreempt(void)
 {
     return LWP_SUCCESS;
 }

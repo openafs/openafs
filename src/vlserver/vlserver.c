@@ -60,7 +60,7 @@ afs_uint32 HostAddress[MAXSERVERID + 1];
 extern int afsconf_CheckAuth();
 extern int afsconf_ServerAuth();
 
-static CheckSignal();
+static void *CheckSignal(void*);
 int LogLevel = 0;
 int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
@@ -77,8 +77,8 @@ CheckSignal_Signal()
     IOMGR_SoftSig(CheckSignal, 0);
 }
 
-static
-CheckSignal()
+static void *
+CheckSignal(void *unused)
 {
     register int i, errorcode;
     struct ubik_trans *trans;
@@ -94,7 +94,7 @@ CheckSignal()
     for (i = 0; i < HASHSIZE; i++) {
 	HashIdDump(trans, i);
     }
-    return (ubik_EndTrans(trans));
+    return ((void *)ubik_EndTrans(trans));
 }				/*CheckSignal */
 
 

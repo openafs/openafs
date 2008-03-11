@@ -104,8 +104,8 @@ char udptgsServerPrincipal[256];
 
 int fiveminutes = 300;
 
-static
-FiveMinuteCheckLWP()
+static void *
+FiveMinuteCheckLWP(void *unused)
 {
 
     printf("start 5 min check lwp\n");
@@ -115,6 +115,7 @@ FiveMinuteCheckLWP()
 	/* close the log so it can be removed */
 	ReOpenLog(AFSDIR_SERVER_KALOG_FILEPATH);	/* no trunc, just append */
     }
+    return NULL;
 }
 
 
@@ -825,8 +826,8 @@ process_udp_request(ksoc, pkt)
     return;
 }
 
-static void
-SocketListener()
+static void *
+SocketListener(void *unused)
 {
     fd_set rfds;
     struct timeval tv;
@@ -908,6 +909,8 @@ SocketListener()
 	sock_kerb5 = -1;
     }
     printf("UDP SocketListener exiting due to error\n");
+
+    return NULL;
 }
 
 #if MAIN

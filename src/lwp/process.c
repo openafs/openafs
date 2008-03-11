@@ -31,7 +31,7 @@ extern char PRE_Block;		/* used in lwp.c and process.s */
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 
 afs_int32
-savecontext(char (*ep) (), struct lwp_context *savearea, char *newsp)
+savecontext(void (*ep) (void *dummy), struct lwp_context *savearea, char *newsp)
 {
 #if defined(AFS_LINUX20_ENV)
     /* getcontext does not export stack info */
@@ -69,8 +69,7 @@ savecontext(char (*ep) (), struct lwp_context *savearea, char *newsp)
 }
 
 void
-returnto(savearea)
-     struct lwp_context *savearea;
+returnto(struct lwp_context *savearea)
 {
     PRE_Block = 0;
 
@@ -173,7 +172,7 @@ static int ptr_mangle(int p)
 
 afs_int32
 savecontext(ep, savearea, sp)
-     char (*ep) ();
+     void (*ep) ();
      struct lwp_context *savearea;
      char *sp;
 {
@@ -233,7 +232,7 @@ savecontext(ep, savearea, sp)
     return 0;
 }
 
-afs_int32
+void
 returnto(struct lwp_context * savearea)
 {
 #if	defined(DEBUG)
@@ -249,7 +248,7 @@ returnto(struct lwp_context * savearea)
 #endif
     PRE_Block = 0;
     longjmp(savearea->setjmp_buffer, 2);
-    return 0;
+    return;
 }
 
 #endif

@@ -108,7 +108,7 @@ server_entry(void *argp)
  * Start an Rx server process.
  */
 void
-rxi_StartServerProc(void (*proc) (void), int stacksize)
+rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 {
     pthread_t thread;
     pthread_attr_t tattr;
@@ -279,8 +279,8 @@ rx_ListenerProc(void *argp)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void * dummy)
 {
     osi_socket sock;
     int threadID;

@@ -41,6 +41,7 @@ RCSID
 #include <sys/stat.h>
 #include "afsutil.h"
 #include "fileutil.h"
+#include <lwp.h>
 #if defined(AFS_PTHREAD_ENV)
 #include <assert.h>
 #include <pthread.h>
@@ -165,9 +166,10 @@ FSLog(const char *format, ...)
     va_end(args);
 }				/*FSLog */
 
-static int
-DebugOn(int loglevel)
+static void*
+DebugOn(void *param)
 {
+    int loglevel = (int)param;
     if (loglevel == 0) {
 	ViceLog(0, ("Reset Debug levels to 0\n"));
     } else {
@@ -181,8 +183,6 @@ DebugOn(int loglevel)
 void
 SetDebug_Signal(int signo)
 {
-/*    extern int IOMGR_SoftSig();*/
-
     if (LogLevel > 0) {
 	LogLevel *= 5;
 
@@ -202,9 +202,9 @@ SetDebug_Signal(int signo)
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn(LogLevel);
+    DebugOn((void *) LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, SetDebug_Signal);	/* on some platforms, this
@@ -220,9 +220,9 @@ ResetDebug_Signal(int signo)
     if (printLocks > 0)
 	--printLocks;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn(LogLevel);
+    DebugOn((void *) LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, ResetDebug_Signal);	/* on some platforms,

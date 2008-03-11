@@ -238,8 +238,8 @@ xstat_fs_Cleanup(int a_releaseMem)
  *	Nothing interesting.
  *------------------------------------------------------------------------*/
 
-static void
-xstat_fs_LWP()
+static void *
+xstat_fs_LWP(void *unused)
 {
     static char rn[] = "xstat_fs_LWP";	/*Routine name */
     register afs_int32 code;	/*Results of calls */
@@ -388,6 +388,7 @@ xstat_fs_LWP()
 			code);
 	}			/*Continuous execution */
     }				/*Service loop */
+    return NULL;
 }
 
 /*------------------------------------------------------------------------

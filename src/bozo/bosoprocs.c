@@ -1655,9 +1655,10 @@ SBOZO_SetRestrictedMode(acall, arestmode)
 }
 #endif
 
-void
-bozo_ShutdownAndExit(int asignal)
+void *
+bozo_ShutdownAndExit(void *param)
 {
+    int asignal = (int) param;
     int code;
 
     bozo_Log

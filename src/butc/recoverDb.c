@@ -692,9 +692,11 @@ getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname, af
  *	
  */
 
-int
-ScanDumps(struct scanTapeIf *ptr)
+void *
+ScanDumps(void *param)
 {
+    struct scanTapeIf *ptr = (struct scanTapeIf *)param;
+    
     struct butm_tapeInfo curTapeInfo;
     struct tapeScanInfo tapeScanInfo;
     afs_uint32 taskId;
@@ -751,7 +753,7 @@ ScanDumps(struct scanTapeIf *ptr)
     free(ptr);
     setStatus(taskId, TASK_DONE);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 

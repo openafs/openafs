@@ -1009,7 +1009,7 @@ afs_RXCallBackServer(void)
     /*
      * Donate this process to Rx.
      */
-    rx_ServerProc();
+    rx_ServerProc(NULL);
     return (0);
 
 }				/*afs_RXCallBackServer */

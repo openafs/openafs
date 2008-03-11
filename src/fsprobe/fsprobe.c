@@ -232,8 +232,8 @@ fsprobe_Cleanup(a_releaseMem)
  * Side Effects:
  *	As advertised.
  *------------------------------------------------------------------------*/
-static void
-fsprobe_LWP()
+static void *
+fsprobe_LWP(void *unused)
 {				/*fsprobe_LWP */
 
     static char rn[] = "fsprobe_LWP";	/*Routine name */
@@ -389,6 +389,8 @@ fsprobe_LWP()
 	    fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn, code);
     }				/*Service loop */
     free(stats64.ViceStatistics64_val);
+
+    return NULL;
 }				/*fsprobe_LWP */
 
 /*list all the partitions on <aserver> */

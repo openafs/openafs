@@ -491,8 +491,8 @@ DeleteProc(register struct bnode_proc *abproc)
 }
 
 /* bnode lwp executes this code repeatedly */
-static int
-bproc()
+static void *
+bproc(void *unused)
 {
     register afs_int32 code;
     register struct bnode *tb;
@@ -641,6 +641,7 @@ bproc()
 	    }
 	}
     }
+    return NULL;
 }
 
 static afs_int32
@@ -763,9 +764,11 @@ hdl_notifier(struct bnode_proc *tp)
 
 /* Called by IOMGR at low priority on IOMGR's stack shortly after a SIGCHLD
  * occurs.  Wakes up bproc do redo things */
-int
-bnode_SoftInt(int asignal)
+void *
+bnode_SoftInt(void *param)
 {
+    /* int asignal = (int) param; */
+
     IOMGR_Cancel(bproc_pid);
     return 0;
 }
@@ -776,12 +779,10 @@ bnode_SoftInt(int asignal)
 void
 bnode_Int(int asignal)
 {
-    extern void bozo_ShutdownAndExit();
-
     if (asignal == SIGQUIT) {
-	IOMGR_SoftSig(bozo_ShutdownAndExit, (char *)asignal);
+	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *) asignal);
     } else {
-	IOMGR_SoftSig(bnode_SoftInt, (char *)asignal);
+	IOMGR_SoftSig(bnode_SoftInt, (void *) asignal);
     }
 }
 
