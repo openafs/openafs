@@ -134,8 +134,8 @@ rxk_Listener(void)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void *unused)
 {
     osi_socket sock;
     int threadID;

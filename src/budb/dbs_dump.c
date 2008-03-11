@@ -44,6 +44,7 @@ RCSID
 #include "globals.h"
 #include "afs/audit.h"
 
+void *dumpWatcher(void *);
 
 /* dump ubik database - interface routines */
 
@@ -63,9 +64,10 @@ badEntry(dbAddr)
  *	decode the arguments passed via LWP and dump the database.
  */
 
-setupDbDump(writeFid)
-     int writeFid;
+void *
+setupDbDump(void *param)
 {
+    int writeFid = (int)param;
     afs_int32 code = 0;
 
     code = InitRPC(&dumpSyncPtr->ut, LOCKREAD, 1);
@@ -85,7 +87,7 @@ setupDbDump(writeFid)
   error_exit:
     if (dumpSyncPtr->ut)
 	ubik_EndTrans(dumpSyncPtr->ut);
-    return (code);
+    return (void *)(code);
 }
 
 
@@ -116,7 +118,6 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
     PROCESS dumperPid, watcherPid;
     int readSize;
     afs_int32 code = 0;
-    extern dumpWatcher();
 
     if (callPermitted(call) == 0)
 	ERROR(BUDB_NOTPERMITTED);
@@ -288,7 +289,8 @@ RestoreDbHeader(call, header)
  *	transactions can proceed.
  */
 
-dumpWatcher()
+void *
+dumpWatcher(void *unused)
 {
     afs_int32 code;
 

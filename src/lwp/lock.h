@@ -68,6 +68,7 @@ struct Lock {
 extern void Afs_Lock_Obtain(struct Lock *lock, int how);
 extern void Afs_Lock_ReleaseR(struct Lock *lock);
 extern void Afs_Lock_ReleaseW(struct Lock *lock);
+extern void Afs_Lock_WakeupR(struct Lock *lock);
 void Lock_Init(struct Lock *lock);
 void Lock_Destroy(struct Lock *lock);
 

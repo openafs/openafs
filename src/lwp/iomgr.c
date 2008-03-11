@@ -107,7 +107,7 @@ typedef unsigned char bool;
 #define NSIG 8*sizeof(sigset_t)
 #endif
 
-static int SignalSignals();
+static int SignalSignals(void);
 
 /********************************\
 * 				 *
@@ -163,8 +163,8 @@ static int sigDelivered[NSIG];		/* True for signals delivered so far.
 					   to write it */
 /* software 'signals' */
 #define NSOFTSIG		4
-static int (*sigProc[NSOFTSIG])();
-static char *sigRock[NSOFTSIG];
+static void *(*sigProc[NSOFTSIG])(void *);
+static void *sigRock[NSOFTSIG];
 
 
 static struct IoRequest *iorFreeList = 0;
@@ -232,7 +232,7 @@ fd_set *IOMGR_AllocFDSet(void)
 
 #define FreeRequest(x) ((x)->next = iorFreeList, iorFreeList = (x))
 
-static struct IoRequest *NewRequest()
+static struct IoRequest *NewRequest(void)
 {
     struct IoRequest *request;
 
@@ -415,7 +415,7 @@ static int FDSetEmpty(int nfds, fd_set *fds)
 static fd_set IOMGR_readfds, IOMGR_writefds, IOMGR_exceptfds;
 static int IOMGR_nfds = 0;
 
-static int IOMGR(void *dummy)
+static void *IOMGR(void *dummy)
 {
     for (;;) {
 	int code;
@@ -669,7 +669,7 @@ static int IOMGR(void *dummy)
 	}
 	LWP_DispatchProcess();
     }
-    return -1; /* keeps compilers happy. */
+    return (void *)-1; /* keeps compilers happy. */
 }
 
 /************************\
@@ -726,8 +726,7 @@ static void SignalTimeout(int code, struct timeval *timeout)
 *  signalling routines, above).			      *
 *						      *
 \*****************************************************/
-static void SigHandler (signo)
-    int signo;
+static void SigHandler (int signo)
 {
     if (badsig(signo) || (sigsHandled & mysigmask(signo)) == 0)
 	return;		/* can't happen. */
@@ -744,7 +743,7 @@ static int SignalSignals (void)
 {
     bool gotone = FALSE;
     register int i;
-    register int (*p)();
+    register void *(*p)(void *);
     afs_int32 stackSize;
 
     anySigsDelivered = FALSE;
@@ -753,9 +752,9 @@ static int SignalSignals (void)
     stackSize = (AFS_LWP_MINSTACKSIZE < lwp_MaxStackSeen? lwp_MaxStackSeen : AFS_LWP_MINSTACKSIZE);
     for (i=0; i < NSOFTSIG; i++) {
 	PROCESS pid;
-	if (p=sigProc[i]) /* This yields!!! */
+	if ((p=sigProc[i])) /* This yields!!! */
 	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, 
-			       (void *) sigRock[i], "SignalHandler", &pid);
+			       sigRock[i], "SignalHandler", &pid);
 	sigProc[i] = 0;
     }
 
@@ -779,9 +778,8 @@ static int SignalSignals (void)
 /* Keep IOMGR process id */
 static PROCESS IOMGR_Id = NULL;
 
-int IOMGR_SoftSig(aproc, arock)
-int (*aproc)();
-char *arock; {
+int IOMGR_SoftSig(void *(*aproc)(void *), void *arock)
+{
     register int i;
     for (i=0;i<NSOFTSIG;i++) {
 	if (sigProc[i] == 0) {
@@ -802,7 +800,6 @@ unsigned char allOnes[100];
 
 int IOMGR_Initialize(void)
 {
-    extern int TM_Init();
     PROCESS pid;
 
     /* If lready initialized, just return */
@@ -829,7 +826,7 @@ int IOMGR_Initialize(void)
 			     "IO MANAGER", &IOMGR_Id);
 }
 
-int IOMGR_Finalize()
+int IOMGR_Finalize(void)
 {
     int status;
 
@@ -917,10 +914,8 @@ int IOMGR_Poll(void) {
     return 0;
 }
 
-int IOMGR_Select(fds, readfds, writefds, exceptfds, timeout)
-     int fds;
-     fd_set *readfds, *writefds, *exceptfds;
-     struct timeval *timeout;
+int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds, 
+		 fd_set *exceptfds, struct timeval *timeout)
 {
     register struct IoRequest *request;
     int result;
@@ -941,7 +936,9 @@ int IOMGR_Select(fds, readfds, writefds, exceptfds, timeout)
 #ifdef DEBUG
 	    if (lwp_debug != 0) puts("[Polling SELECT]");
 #endif /* DEBUG */
+#if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_NT40_ENV)
 again:
+#endif
 	    code = select(fds, readfds, writefds, exceptfds, timeout);
 #if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_AIX32_ENV)
 	    /*

@@ -122,7 +122,7 @@ pinstall: config
 procmgmt: pinstall
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt des
+util: procmgmt des lwp_depinstall
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad

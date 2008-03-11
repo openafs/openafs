@@ -365,7 +365,7 @@ extern osi_socket *rxk_NewSocket(short aport);
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 			  int *port);
 #ifdef UKERNEL
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 #endif
 extern void osi_AssertFailK(const char *expr, const char *file, int line);
 extern void rxk_ListenerProc(void);
@@ -419,7 +419,6 @@ extern void afs_rxevent_daemon(void);
 
 
 /* rx_lwp.c */
-extern void rx_ServerProc(void);
 extern void rxi_Sleep(void *addr);
 extern void rxi_Delay(int seconds);
 extern void rxi_InitializeThreadSupport(void);
@@ -429,9 +428,9 @@ extern void rxi_StopListener(void);
 extern void rxi_ReScheduleEvents(void);
 #endif
 extern void rxi_InitializeThreadSupport(void);
-extern void rxi_StartServerProc(void (*proc) (void), int stacksize);
+extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);
 extern void rxi_StartListener(void);
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 extern int rxi_Listen(osi_socket sock);
 extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
@@ -531,11 +530,11 @@ extern int rxi_AdjustDgramPackets(int frags, int mtu);
 /* rx_pthread.c */
 extern void rxi_Delay(int sec);
 extern void rxi_InitializeThreadSupport(void);
-extern void rxi_StartServerProc(void (*proc) (void), int stacksize);
+extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);
 #ifndef rxi_ReScheduleEvents
 extern void rxi_ReScheduleEvents(void);
 #endif
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 extern void rxi_StartListener(void);
 extern int rxi_Listen(osi_socket sock);
 extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);

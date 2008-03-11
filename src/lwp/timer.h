@@ -30,13 +30,14 @@ extern int TM_eql(struct timeval *t1, struct timeval *t2);
 #ifndef _TIMER_IMPL_
 #define Tm_Insert(list, elem) openafs_insque(list, elem)
 #define TM_Remove(list, elem) openafs_remque(elem)
-extern int TM_Rescan();
-void TM_Insert();
-extern struct TM_Elem *TM_GetExpired();
-extern struct TM_Elem *TM_GetEarliest();
+extern int TM_Rescan(struct TM_Elem *tlist);
+void TM_Insert(struct TM_Elem *tlistPtr, struct TM_Elem *elem);
+extern struct TM_Elem *TM_GetExpired(struct TM_Elem *tlist);
+extern struct TM_Elem *TM_GetEarliest(struct TM_Elem *tlist);
 #endif
 
-extern int TM_Final();
+extern int TM_Init(register struct TM_Elem **list);
+extern int TM_Final(register struct TM_Elem **list);
 
 #define FOR_ALL_ELTS(var, list, body)\
 	{\

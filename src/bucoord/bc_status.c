@@ -104,8 +104,8 @@ nextItem(linkPtr)
 
 char *cmdLine;
 
-int
-cmdDispatch()
+void *
+cmdDispatch(void *unused)
 {
 #define	MAXV	100
     char **targv[MAXV];		/*Ptr to parsed argv stuff */
@@ -119,7 +119,7 @@ cmdDispatch()
     code = cmd_ParseLine(internalCmdLine, targv, &targc, MAXV);
     if (code) {
 	printf("Couldn't parse line: '%s'", afs_error_message(code));
-	return (1);
+	return (void *)(1);
     }
     free(internalCmdLine);
 
@@ -129,10 +129,11 @@ cmdDispatch()
      */
     doDispatch(targc, targv, 1);
     cmd_FreeArgv(targv);
-    return(0);
+    return(void *)(0);
 }
 
-statusWatcher()
+void *
+statusWatcher(void *unused)
 {
     struct rx_connection *tconn = (struct rc_connection *)0;
     statusP curPollPtr = 0;
@@ -394,6 +395,7 @@ statusWatcher()
 	    curPollPtr = 0;
 	}			/*done */
     }				/*w */
+    return NULL;
 }
 
 /* bc_jobNumber

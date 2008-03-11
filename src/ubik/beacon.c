@@ -305,7 +305,8 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
  * we're sync site or we want to be the sync site.  It runs in its very own light-weight
  * process.
  */
-ubeacon_Interact()
+void *
+ubeacon_Interact(void *dummy)
 {
     register afs_int32 code;
     struct timeval tt;
