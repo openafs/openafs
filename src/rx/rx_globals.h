@@ -22,6 +22,7 @@
 #ifndef GLOBALSINIT
 #define GLOBALSINIT(x)
 #if defined(AFS_NT40_ENV)
+#define RX_STATS_INTERLOCKED 1
 #if defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllimport) extern
 #else
