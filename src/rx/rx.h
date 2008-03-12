@@ -1055,13 +1055,17 @@ typedef struct rx_interface_stat {
 #define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
 #define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
     do { \
-        InterlockedAdd(&object1, addend); \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
         InterlockedIncrement(&object2); \
+        MUTEX_EXIT(&mutex); \
     } while (0)
 #define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
     do { \
-        InterlockedAdd(&object1, addend); \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
         InterlockedDecrement(&object2); \
+        MUTEX_EXIT(&mutex); \
     } while (0)
 #else
 #define rx_MutexIncrement(object, mutex) \
