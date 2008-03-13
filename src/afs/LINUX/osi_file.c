@@ -41,6 +41,11 @@ osi_UFSOpen(afs_int32 ainode)
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
     struct file *filp = NULL;
+#if defined(AFS_CACHE_VNODE_PATH)
+    int code;
+    int dummy;
+    char fname[1024];
+#endif
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
