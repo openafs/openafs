@@ -886,7 +886,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
             return CM_ERROR_READONLY;
         }
 
-        code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, 
+        code = cm_FindVolumeByID(cellp, scp->fid.volume, userp, &req, 
                                  CM_GETVOL_FLAG_CREATE, &tvp);
         if (code) {
             cm_ReleaseSCache(scp);
@@ -1212,7 +1212,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     } else 
 #endif
     {
-        code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
+        code = cm_FindVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
         if (code) 
             return code;
 	
@@ -3111,7 +3111,7 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (!cellp)
             return CM_ERROR_NOSUCHCELL;
 
-        code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
+        code = cm_FindVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
         if (code) 
             return code;
 	
@@ -3207,11 +3207,11 @@ long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (n)
             testp->fid.volume = n;
         else
-            code = cm_GetVolumeByName(cellp, testp->volname, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+            code = cm_FindVolumeByName(cellp, testp->volname, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
     }
 
     if (testp->fid.volume > 0)
-        code = cm_GetVolumeByID(cellp, testp->fid.volume, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+        code = cm_FindVolumeByID(cellp, testp->fid.volume, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
 
     if (code)
         return code;

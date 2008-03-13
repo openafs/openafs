@@ -121,7 +121,7 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     if (!cellp) 
         return CM_ERROR_NOSUCHCELL;
 
-    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
+    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
     if (code) 
         return code;
     
@@ -273,7 +273,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if (timeLeft > 7 && fidp) {
             thrd_Sleep(5000);
 
-            code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                     CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                     &volp);
             if (code == 0) {
@@ -305,7 +305,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             thrd_Sleep(5000);
 
             if (fidp) { /* File Server query */
-                code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                         CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                         &volp);
                 if (code == 0) {
@@ -375,7 +375,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             if (tsrp->server == serverp && tsrp->status == srv_not_busy) {
                 tsrp->status = srv_busy;
                 if (fidp) { /* File Server query */
-                    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
                     if (code == 0) {
@@ -470,7 +470,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 }
 
                 if (fidp) { /* File Server query */
-                    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
                     if (code == 0) {

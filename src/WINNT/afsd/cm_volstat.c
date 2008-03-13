@@ -298,6 +298,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     afs_uint32  code = 0;
     cm_req_t    req;
     cm_scache_t *scp;
+    cm_volume_t *volp;
 
     if (cellID == NULL || volID == NULL)
         return CM_ERROR_INVAL;
@@ -324,7 +325,12 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
 
     *cellID = scp->fid.cell;
     *volID  = scp->fid.volume;
-    *pstatus = cm_GetVolumeStatus(scp->volp, scp->fid.volume);
+    volp = cm_GetVolumeByFID(&scp->fid);
+    if (volp) {
+        *pstatus = cm_GetVolumeStatus(volp, scp->fid.volume);
+        cm_PutVolume(volp);
+    } else
+        *pstatus = vl_unknown;
 
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);

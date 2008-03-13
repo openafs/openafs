@@ -52,11 +52,11 @@ typedef struct cm_volumeRef {
 
 extern void cm_InitVolume(int newFile, long maxVols);
 
-extern long cm_GetVolumeByName(struct cm_cell *cellp, char *volNamep, 
+extern long cm_FindVolumeByName(struct cm_cell *cellp, char *volNamep, 
                                struct cm_user *userp, struct cm_req *reqp, 
                                afs_uint32 flags, cm_volume_t **outVolpp);
 
-extern long cm_GetVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
+extern long cm_FindVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
                              cm_user_t *userp, cm_req_t *reqp, 
                              afs_uint32 flags, cm_volume_t **outVolpp);
 
@@ -76,6 +76,8 @@ extern long cm_GetVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
 extern afs_uint32 SDBMHash(const char *);
 
 extern void cm_GetVolume(cm_volume_t *volp);
+
+extern cm_volume_t *cm_GetVolumeByFID(cm_fid_t *);
 
 extern void cm_PutVolume(cm_volume_t *volp);
 

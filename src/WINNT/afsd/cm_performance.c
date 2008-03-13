@@ -124,7 +124,7 @@ void cm_PerformanceAddSCache(cm_scache_t *scp)
         
         cellp = cm_FindCellByID(statp->fid.cell, 0);
         if (cellp) {
-            if (!cm_GetVolumeByID(cellp, statp->fid.volume, cm_rootUserp, &req, 0, &volp)) {
+            if (!cm_FindVolumeByID(cellp, statp->fid.volume, cm_rootUserp, &req, 0, &volp)) {
                 statp->flags |= CM_FIDSTATS_HAVE_VOLUME;
                 cm_PutVolume(volp);
             }

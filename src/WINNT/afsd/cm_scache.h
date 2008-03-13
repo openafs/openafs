@@ -186,9 +186,6 @@ typedef struct cm_scache {
                                    have CM_FILELOCK_FLAG_CLIENTONLY
                                    set. */
 	
-    /* volume info */
-    struct cm_volume *volp;		/* volume info; held reference */
-
     /* bulk stat progress */
     osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 

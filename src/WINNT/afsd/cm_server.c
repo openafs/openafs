@@ -138,7 +138,7 @@ cm_PingServer(cm_server_t *tsp)
                         cm_InitReq(&req);
 
                         lock_ReleaseMutex(&tsp->mx);
-                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                        code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                         lock_ObtainMutex(&tsp->mx);
                         if (code == 0) {
@@ -175,7 +175,7 @@ cm_PingServer(cm_server_t *tsp)
                         cm_InitReq(&req);
 
                         lock_ReleaseMutex(&tsp->mx);
-                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                        code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                         lock_ObtainMutex(&tsp->mx);
                         if (code == 0) {
@@ -401,7 +401,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {
@@ -439,7 +439,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {
@@ -530,7 +530,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {
@@ -568,7 +568,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {
@@ -685,7 +685,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {
@@ -723,7 +723,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                                 cm_InitReq(&req);
 
                                 lock_ReleaseMutex(&tsp->mx);
-                                code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                          &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
                                 lock_ObtainMutex(&tsp->mx);
                                 if (code == 0) {

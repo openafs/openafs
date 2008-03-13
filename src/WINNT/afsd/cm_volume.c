@@ -581,8 +581,45 @@ void cm_GetVolume(cm_volume_t *volp)
     InterlockedIncrement(&volp->refCount);
 }
 
+cm_volume_t *cm_GetVolumeByFID(cm_fid_t *fidp)
+{
+    cm_volume_t *volp;
+    afs_uint32 hash;
 
-long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
+    lock_ObtainRead(&cm_volumeLock);
+    hash = CM_VOLUME_ID_HASH(fidp->volume);
+    /* The volumeID can be any one of the three types.  So we must
+     * search the hash table for all three types until we find it.
+     * We will search in the order of RO, RW, BK.
+     */
+    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->ro.nextp) {
+        if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->ro.ID )
+            break;
+    }
+    if (!volp) {
+        /* try RW volumes */
+        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->rw.nextp) {
+            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->rw.ID )
+                break;
+        }
+    }
+    if (!volp) {
+        /* try BK volumes */
+        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->bk.nextp) {
+            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->bk.ID )
+                break;
+        }
+    }
+
+    /* hold the volume if we found it */
+    if (volp) 
+        cm_GetVolume(volp);
+        
+    lock_ReleaseRead(&cm_volumeLock);
+    return volp;
+}
+
+long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
                       cm_req_t *reqp, afs_uint32 flags, cm_volume_t **outVolpp)
 {
     cm_volume_t *volp;
@@ -667,13 +704,13 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
         
     /* otherwise, we didn't find it so consult the VLDB */
     sprintf(volNameString, "%u", volumeID);
-    code = cm_GetVolumeByName(cellp, volNameString, userp, reqp,
+    code = cm_FindVolumeByName(cellp, volNameString, userp, reqp,
 			      flags, outVolpp);
     return code;
 }
 
 
-long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
+long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 			struct cm_user *userp, struct cm_req *reqp,
 			afs_uint32 flags, cm_volume_t **outVolpp)
 {
@@ -1313,19 +1350,10 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
-        cm_scache_t *scp;
-        int scprefs = 0;
-
-        for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
-        {
-            if (scp->volp == volp)
-                scprefs++;
-        }   
-
-        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u scpRefs=%u\r\n", 
+        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x dotdotFid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
                  cookie, volp, volp->cellp->name, volp->namep, volp->rw.ID, volp->ro.ID, volp->bk.ID, volp->flags, 
                  volp->dotdotFid.cell, volp->dotdotFid.volume, volp->dotdotFid.vnode, volp->dotdotFid.unique,
-                 volp->refCount, scprefs);
+                 volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
