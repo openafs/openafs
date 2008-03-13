@@ -100,9 +100,9 @@ extern char PRE_Block;		/* from preempt.c */
 } while (0)
 #endif
 
-static void *Dispatcher(void *);
-static void *Create_Process_Part2(void *);
-static void *Exit_LWP(void *);
+static void Dispatcher(void);
+static void Create_Process_Part2(void);
+static void Exit_LWP(void);
 static afs_int32 Initialize_Stack(char *stackptr, int stacksize);
 static int Stack_Used(register char *stackptr, int stacksize);
 
@@ -786,14 +786,14 @@ Abort_LWP(char *msg)
     Dump_Processes();
 #endif
     if (LWPANCHOR.outersp == NULL)
-	Exit_LWP(NULL);
+	Exit_LWP();
     else
 	savecontext(Exit_LWP, &tempcontext, LWPANCHOR.outersp);
     return;
 }
 
-static void *
-Create_Process_Part2(void *unused)
+static void
+Create_Process_Part2(void)
 {				/* creates a context for the new process */
     PROCESS temp;
 
@@ -802,7 +802,7 @@ Create_Process_Part2(void *unused)
     savecontext(Dispatcher, &temp->context, NULL);
     (*temp->ep) (temp->parm);
     LWP_DestroyProcess(temp);
-    return 0;
+    return;
 }
 
 static int
@@ -881,8 +881,8 @@ purge_dead_pcbs(void)
 
 int LWP_TraceProcesses = 0;
 
-static void *
-Dispatcher(void *unused)
+static void
+Dispatcher(void)
 {				/* Lightweight process dispatcher */
     register int i;
 #ifdef DEBUG
@@ -976,7 +976,7 @@ Dispatcher(void *unused)
 
     returnto(&lwp_cpptr->context);
     
-    return 0; /* not reachable */
+    return; /* not reachable */
 }
 
 /* Complain of a stack overflow to stderr without using stdio. */
@@ -1009,8 +1009,8 @@ Dispose_of_Dead_PCB(PROCESS cur)
 */
 }
 
-static void *
-Exit_LWP(void *unused)
+static void
+Exit_LWP(void)
 {
     abort();
 }

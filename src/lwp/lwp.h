@@ -386,7 +386,7 @@ extern int LWP_QWait(void);
 extern int LWP_QSignal(register PROCESS pid);
 #endif
 
-extern afs_int32 savecontext(void *(*ep)(void *), 
+extern afs_int32 savecontext(void (*ep)(void), 
 			     struct lwp_context *savearea, char *sp);
 extern void returnto(struct lwp_context *savearea);
 
