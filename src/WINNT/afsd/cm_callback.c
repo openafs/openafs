@@ -266,11 +266,13 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
-
-                if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
-                    scp->volp->cbExpiresRO = 0;
+                if (scp->flags & CM_SCACHEFLAG_PURERO) {
+                    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+                    if (volp) {
+                        volp->cbExpiresRO = 0;
+                        cm_PutVolume(volp);
+                    }
                 }
-                
             }
         }	/* search one hash bucket */
     }	/* search all hash buckets */
@@ -492,8 +494,14 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
 
-                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO) && scp->volp && scp->volp->cbExpiresRO != 0)
-                    scp->volp->cbExpiresRO = 0;
+                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO)) {
+                    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+                    if (volp) {
+                        if (volp->cbExpiresRO != 0)
+                            volp->cbExpiresRO = 0;
+                        cm_PutVolume(volp);
+                    }
+                }
 
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
@@ -744,9 +752,13 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     cep->Length = scp->length.LowPart;
     cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
-    if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
-        cep->cbExpires = scp->volp->cbExpiresRO;
-    else
+    if (scp->flags & CM_SCACHEFLAG_PURERO) {
+        cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+        if (volp) {
+            cep->cbExpires = volp->cbExpiresRO;
+            cm_PutVolume(volp);
+        }
+    } else
         cep->cbExpires = scp->cbExpires;
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
@@ -855,9 +867,13 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
 #endif
     cep->DataVersion = (afs_uint32)(scp->dataVersion & 0xFFFFFFFF);
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);
-    if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
-        cep->cbExpires = scp->volp->cbExpiresRO;
-    else
+    if (scp->flags & CM_SCACHEFLAG_PURERO) {
+        cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+        if (volp) {
+            cep->cbExpires = volp->cbExpiresRO;
+            cm_PutVolume(volp);
+        }
+    } else
         cep->cbExpires = scp->cbExpires;
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
@@ -1490,17 +1506,22 @@ int cm_HaveCallback(cm_scache_t *scp)
     if (scp->cbServerp != NULL) {
 	return 1;
     } else if (cm_OfflineROIsValid) {
-        switch (cm_GetVolumeStatus(scp->volp, scp->fid.volume)) {
-        case vl_offline:
-        case vl_alldown:
-        case vl_unknown:
-            return 1;
-        default:
-            return 0;
+        cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+        if (volp) {
+            switch (cm_GetVolumeStatus(volp, scp->fid.volume)) {
+            case vl_offline:
+            case vl_alldown:
+            case vl_unknown:
+                cm_PutVolume(volp);
+                return 1;
+            default:
+                cm_PutVolume(volp);
+                return 0;
+            }
         }
-    } else {
-        return 0;
+        return 1;
     }
+    return 0;
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
@@ -1574,8 +1595,13 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                     serverp = cbrp->serverp;
             }
             scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
-            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp)
-                scp->volp->cbExpiresRO = scp->cbExpires;
+            if (scp->flags & CM_SCACHEFLAG_PURERO) {
+                cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
+                if (volp) {
+                    volp->cbExpiresRO = scp->cbExpires;
+                    cm_PutVolume(volp);
+                }
+            }
         } else {
             if (freeFlag)
                 serverp = cbrp->serverp;
@@ -1613,10 +1639,14 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
             discardScp = 1;
-
-            if ((scp->flags & CM_SCACHEFLAG_PURERO) && scp->volp && 
-                (revp->flags & (CM_RACINGFLAG_CANCELVOL | CM_RACINGFLAG_CANCELALL)))
-                scp->volp->cbExpiresRO = 0;
+            if ((scp->flags & CM_SCACHEFLAG_PURERO) && 
+                 (revp->flags & (CM_RACINGFLAG_CANCELVOL | CM_RACINGFLAG_CANCELALL))) {
+                cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+                if (volp) {
+                    volp->cbExpiresRO = 0;
+                    cm_PutVolume(volp);
+                }
+            }
         }
         if (freeFlag) 
             free(revp);
@@ -1779,7 +1809,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
 {
     cm_vol_state_t *statep;
-    cm_volume_t * volp = scp->volp;
+    cm_volume_t * volp;
     afs_uint32 volID = scp->fid.volume;
     cm_serverRef_t *tsrp;
     int found;
@@ -1789,6 +1819,7 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
     if (scp->cbServerp == NULL)
         return 1;
 
+    volp = cm_GetVolumeByFID(&scp->fid);
     if (volp->rw.ID == volID) {
         statep = &volp->rw;
     } else if (volp->ro.ID == volID) {
@@ -1796,7 +1827,7 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
     } else if (volp->bk.ID == volID) {
         statep = &volp->bk;
     }
-
+    cm_PutVolume(volp);
     if (statep->state == vl_online)
         return 1;
 
@@ -1828,11 +1859,14 @@ void cm_CheckCBExpiration(void)
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
             downTime = 0;
-            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
-                if (scp->volp->cbExpiresRO > scp->cbExpires && scp->cbExpires > 0)
-                    scp->cbExpires = scp->volp->cbExpiresRO;
+            if (scp->flags & CM_SCACHEFLAG_PURERO) {
+                cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+                if (volp) {
+                    if (volp->cbExpiresRO > scp->cbExpires && scp->cbExpires > 0)
+                        scp->cbExpires = volp->cbExpiresRO;
+                    cm_PutVolume(volp);
+                }
             }
-
             if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
                  (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
             {
@@ -1895,7 +1929,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
 
                         cm_InitReq(&req);
 
-                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                        code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                  &req, CM_GETVOL_FLAG_NO_LRU_UPDATE | CM_GETVOL_FLAG_NO_RESET, &volp);
                         if (code == 0) {    
                             cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);

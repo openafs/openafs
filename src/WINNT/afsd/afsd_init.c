@@ -555,6 +555,7 @@ int afsd_InitCM(char **reasonP)
     DWORD blockSize;
     long logChunkSize;
     DWORD stats;
+    DWORD volumes;
     DWORD dwValue;
     DWORD rx_enable_peer_stats;
     DWORD rx_enable_process_stats;
@@ -773,10 +774,20 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "Stats", NULL, NULL,
                             (BYTE *) &stats, &dummyLen);
     if (code == ERROR_SUCCESS)
-        afsi_log("Status cache size %d", stats);
+        afsi_log("Status cache entries: %d", stats);
     else {
         stats = CM_CONFIGDEFAULT_STATS;
-        afsi_log("Default status cache size %d", stats);
+        afsi_log("Default status cache entries: %d", stats);
+    }
+
+    dummyLen = sizeof(volumes);
+    code = RegQueryValueEx(parmKey, "Volumess", NULL, NULL,
+                            (BYTE *) &volumes, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Volumes cache entries: %d", volumes);
+    else {
+        volumes = CM_CONFIGDEFAULT_STATS / 3;
+        afsi_log("Default volume cache entries: %d", volumes);
     }
 
     dummyLen = sizeof(ltt);
@@ -1200,7 +1211,7 @@ int afsd_InitCM(char **reasonP)
     cm_initParams.nChunkFiles = 0;
     cm_initParams.nStatCaches = stats;
     cm_initParams.nDataCaches = (afs_uint32)(cacheBlocks > 0xFFFFFFFF ? 0xFFFFFFFF : cacheBlocks);
-    cm_initParams.nVolumeCaches = stats/2;
+    cm_initParams.nVolumeCaches = volumes;
     cm_initParams.firstChunkSize = cm_chunkSize;
     cm_initParams.otherChunkSize = cm_chunkSize;
     cm_initParams.cacheSize = cacheSize;
@@ -1349,9 +1360,9 @@ int afsd_InitDaemons(char **reasonP)
 
         osi_Log0(afsd_logp, "Loading Root Volume from cell");
 	do {
-	    code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
+	    code = cm_FindVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
 				       &req, CM_GETVOL_FLAG_CREATE, &cm_data.rootVolumep);
-	    afsi_log("cm_GetVolumeByName code %x root vol %x", code,
+	    afsi_log("cm_FindVolumeByName code %x root vol %x", code,
 		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
 	} while (code && --attempts);
         if (code != 0) {

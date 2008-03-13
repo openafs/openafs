@@ -1117,10 +1117,10 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     /* now we need to get the volume */
     lock_ReleaseWrite(&scp->rw);
     if (cm_VolNameIsID(volNamep)) {
-        code = cm_GetVolumeByID(cellp, atoi(volNamep), userp, reqp, 
+        code = cm_FindVolumeByID(cellp, atoi(volNamep), userp, reqp, 
                                 CM_GETVOL_FLAG_CREATE, &volp);
     } else {
-        code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 
+        code = cm_FindVolumeByName(cellp, volNamep, userp, reqp, 
                                   CM_GETVOL_FLAG_CREATE, &volp);
     }
     lock_ObtainWrite(&scp->rw);
@@ -1492,10 +1492,10 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
         volType = RWVOL;
 
     if (cm_VolNameIsID(volumeName)) {
-        code = cm_GetVolumeByID(cellp, atoi(volumeName), userp, reqp,
+        code = cm_FindVolumeByID(cellp, atoi(volumeName), userp, reqp,
                                 CM_GETVOL_FLAG_CREATE, &volp);
     } else {
-        code = cm_GetVolumeByName(cellp, volumeName, userp, reqp,
+        code = cm_FindVolumeByName(cellp, volumeName, userp, reqp,
                                   CM_GETVOL_FLAG_CREATE, &volp);
     }
 

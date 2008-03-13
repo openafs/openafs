@@ -93,7 +93,7 @@
 #define CM_ERROR_NOSUCHDEVICE           (CM_ERROR_BASE+58)
 #define CM_ERROR_LOCK_NOT_GRANTED       (CM_ERROR_BASE+59)
 
-/* Used by cm_FollowMountPoint and cm_GetVolumeByName */
+/* Used by cm_FollowMountPoint and cm_FindVolumeByName */
 #define RWVOL	0
 #define ROVOL	1
 #define BACKVOL	2

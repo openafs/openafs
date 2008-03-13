@@ -191,12 +191,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      * tried to store this to server but failed */
     scp->mask = 0;
 
-    /* drop held volume ref */
-    if (scp->volp) {
-	cm_PutVolume(scp->volp);
-	scp->volp = NULL;
-    }
-
     /* discard symlink info */
     scp->mountPointStringp[0] = '\0';
     memset(&scp->mountRootFid, 0, sizeof(cm_fid_t));
@@ -410,11 +404,6 @@ cm_ValidateSCache(void)
             fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
             return -3;
         }
-        if (scp->volp && scp->volp->magic != CM_VOLUME_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
-            return -4;
-        }
         if (i > cm_data.currentSCaches ) {
             afsi_log("cm_ValidateSCache failure: LRU First queue loops");
             fprintf(stderr, "cm_ValidateSCache failure: LUR First queue loops\n");
@@ -443,11 +432,6 @@ cm_ValidateSCache(void)
             afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
             fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
             return -7;
-        }
-        if (scp->volp && scp->volp->magic != CM_VOLUME_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
-            return -8;
         }
         if (i > cm_data.currentSCaches ) {
             afsi_log("cm_ValidateSCache failure: LRU Last queue loops");
@@ -479,11 +463,6 @@ cm_ValidateSCache(void)
                 afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
                 fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
                 return -11;
-            }
-            if (scp->volp && scp->volp->magic != CM_VOLUME_MAGIC) {
-                afsi_log("cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC");
-                fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
-                return -12;
             }
             if (hash != i) {
                 afsi_log("cm_ValidateSCache failure: scp hash != hash index");
@@ -519,9 +498,12 @@ cm_SuspendSCache(void)
     lock_ObtainWrite(&cm_scacheLock);
     for ( scp = cm_data.allSCachesp; scp; scp = scp->allNextp ) {
         if (scp->cbServerp) {
-            if (scp->flags & CM_SCACHEFLAG_PURERO && scp->volp) {
-                if (scp->volp->cbExpiresRO == scp->cbExpires) {
-                    scp->volp->cbExpiresRO = now+1;
+            if (scp->flags & CM_SCACHEFLAG_PURERO) {
+                cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+                if (volp) {
+                    if (volp->cbExpiresRO == scp->cbExpires)
+                        volp->cbExpiresRO = now+1;
+                    cm_PutVolume(volp);
                 }
             }
             scp->cbExpires = now+1;
@@ -753,9 +735,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	lock_ObtainWrite(&cm_scacheLock);
 #endif
         scp->fid = *fidp;
-        scp->volp = cm_data.rootSCachep->volp;
-        if (scp->volp)
-	    cm_GetVolume(scp->volp);	/* grab an additional reference */
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
         scp->dotdotFid.unique=1;
@@ -801,7 +780,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         if (!cellp) 
             return CM_ERROR_NOSUCHCELL;
 
-        code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
+        code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
         if (code) 
             return code;
         lock_ObtainWrite(&cm_scacheLock);
@@ -817,7 +796,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	    osi_Log1(afsd_logp,"cm_GetSCache (3) outScpp 0x%p", scp);
 #endif
             cm_HoldSCacheNoLock(scp);
-            osi_assertx(scp->volp == volp, "cm_scache_t volume has unexpected value");
             cm_AdjustScacheLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             if (volp)
@@ -851,8 +829,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     lock_ObtainWrite(&cm_scacheLock);
 #endif
     scp->fid = *fidp;
-    scp->volp = volp;	/* a held reference */
-
     if (!cm_freelanceEnabled || !isRoot) {
         /* if this scache entry represents a volume root then we need 
          * to copy the dotdotFipd from the volume structure where the 
@@ -867,6 +843,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         else if (volp->bk.ID == fidp->volume)
 	    scp->flags |= CM_SCACHEFLAG_RO;
     }
+    if (volp)
+        cm_PutVolume(volp);
     scp->nextp = cm_data.scacheHashTablep[hash];
     cm_data.scacheHashTablep[hash] = scp;
     scp->flags |= CM_SCACHEFLAG_INHASH;
@@ -1578,7 +1556,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         if (scp->cbServerp) {
             struct cm_volume *volp = NULL;
 
-            cm_GetVolumeByID(cellp, scp->fid.volume, userp,
+            cm_FindVolumeByID(cellp, scp->fid.volume, userp,
                               (cm_req_t *) NULL, CM_GETVOL_FLAG_CREATE, &volp);
             osi_Log2(afsd_logp, "old data from server %x volume %s",
                       scp->cbServerp->addr.sin_addr.s_addr,
@@ -1895,9 +1873,9 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p type=%d dv=%I64d len=0x%I64x mp='%s' flags=0x%x cb=0x%x refCount=%u\r\n", 
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x mp='%s' flags=0x%x cb=0x%x refCount=%u\r\n", 
                 cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                scp->volp, scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, scp->flags,
+                scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, scp->flags,
                 (unsigned long)scp->cbExpires, scp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
