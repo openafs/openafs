@@ -3095,7 +3095,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	MUTEX_ENTER(&rx_freePktQ_lock);
 	rxi_NeedMorePackets = TRUE;
 	MUTEX_EXIT(&rx_freePktQ_lock);
-        rx_MutexIncrement(rx_stats.nPacketBuffersOnRead, rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.noPacketBuffersOnRead, rx_stats_mutex);
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %x dropped on receipt - quota problems", np));
