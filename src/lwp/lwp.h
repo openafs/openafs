@@ -223,7 +223,7 @@ struct lwp_pcb {		/* process control block */
     char blockflag;		/* if (blockflag), process blocked */
     char eventlistsize;		/* size of eventlist array */
     char padding;		/* force 32-bit alignment */
-    char **eventlist;		/* ptr to array of eventids */
+    void **eventlist;		/* ptr to array of eventids */
     int eventcnt;		/* no. of events currently in eventlist array */
     int wakevent;		/* index of eventid causing wakeup */
     int waitcnt;		/* min number of events awaited */
@@ -232,7 +232,7 @@ struct lwp_pcb {		/* process control block */
     char *stack;		/* ptr to process stack */
     int stacksize;		/* size of stack */
     int stackcheck;		/* first word of stack for overflow checking */
-    int (*ep) ();		/* initial entry point */
+    void *(*ep)(void *);	/* initial entry point */
     char *parm;			/* initial parm for process */
     struct lwp_context
       context;			/* saved context for next dispatch */
@@ -348,7 +348,7 @@ extern void IOMGR_Sleep(int seconds);
 extern int IOMGR_Cancel(PROCESS pid);
 extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
-extern int IOMGR_SoftSig(int (*aproc) (), char *arock);
+extern int IOMGR_SoftSig(void *(*aproc) (void *), void *arock);
 
 
 /* fasttime.c */
@@ -374,14 +374,21 @@ extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
 #else
 extern int LWP_CurrentProcess(PROCESS * pid);
-extern int LWP_INTERNALSIGNAL(char *event, int yield);
+extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
-extern int LWP_CreateProcess(int (*ep) (), int stacksize, int priority,
+extern int LWP_CreateProcess(void *(*ep)(void *), int stacksize, int priority,
 			     void *parm, char *name, PROCESS * pid);
 extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_WaitProcess(char *event);
+extern int LWP_DispatchProcess(void);
+extern int LWP_WaitProcess(void *event);
 extern PROCESS LWP_ThreadId(void);
+extern int LWP_QWait(void);
+extern int LWP_QSignal(register PROCESS pid);
 #endif
+
+extern afs_int32 savecontext(void *(*ep)(void *), 
+			     struct lwp_context *savearea, char *sp);
+extern void returnto(struct lwp_context *savearea);
 
 #ifdef AFS_LINUX24_ENV
 /* max time we are allowed to spend in a select call on Linux to avoid 

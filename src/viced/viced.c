@@ -106,10 +106,10 @@ extern int BreakVolumeCallBacksLater();
 extern int LogLevel, etext;
 extern afs_int32 BlocksSpare, PctSpare;
 
-void ShutDown(void);
+void *ShutDown(void *);
 static void ClearXStatValues(), NewParms(), PrintCounters();
 static void ResetCheckDescriptors(void), ResetCheckSignal(void);
-static void CheckSignal(void);
+static void *CheckSignal(void *);
 extern int GetKeysFromToken();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
@@ -214,8 +214,8 @@ static void FlagMsg();
  */
 
 /* DEBUG HACK */
-static void
-CheckDescriptors()
+static void *
+CheckDescriptors(void *unused)
 {
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
@@ -231,6 +231,7 @@ CheckDescriptors()
     fflush(stdout);
     ResetCheckDescriptors();
 #endif
+    return 0;
 }				/*CheckDescriptors */
 
 
@@ -238,19 +239,19 @@ CheckDescriptors()
 void
 CheckSignal_Signal(x)
 {
-    CheckSignal();
+    CheckSignal(NULL);
 }
 
 void
 ShutDown_Signal(x)
 {
-    ShutDown();
+    ShutDown(NULL);
 }
 
 void
 CheckDescriptors_Signal(x)
 {
-    CheckDescriptors();
+    CheckDescriptors(NULL);
 }
 #else /* AFS_PTHREAD_ENV */
 void
@@ -404,8 +405,8 @@ setThreadId(char *s)
 }
 
 /* This LWP does things roughly every 5 minutes */
-static void
-FiveMinuteCheckLWP()
+static void *
+FiveMinuteCheckLWP(void *unused)
 {
     static int msg = 0;
     char tbuffer[32];
@@ -445,6 +446,7 @@ FiveMinuteCheckLWP()
 	    }
 	}
     }
+    return NULL;
 }				/*FiveMinuteCheckLWP */
 
 
@@ -452,8 +454,8 @@ FiveMinuteCheckLWP()
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
-static void
-HostCheckLWP()
+static void *
+HostCheckLWP(void *unused)
 {
     ViceLog(1, ("Starting Host check process\n"));
     setThreadId("HostCheckLWP");
@@ -466,14 +468,15 @@ HostCheckLWP()
 	ViceLog(2, ("Checking for dead venii & clients\n"));
 	h_CheckHosts();
     }
+    return NULL;
 }				/*HostCheckLWP */
 
 /* This LWP does fsync checks every 5 minutes:  it should not be used for
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
-static
-FsyncCheckLWP()
+static void *
+FsyncCheckLWP(void *unused)
 {
     afs_int32 code;
 #ifdef AFS_PTHREAD_ENV
@@ -505,6 +508,7 @@ FsyncCheckLWP()
 	    code = BreakLaterCallBacks();
 	} while (code != 0);
     }
+    return NULL;
 }
 
 /*------------------------------------------------------------------------
@@ -619,8 +623,8 @@ PrintCounters()
 
 
 
-static void
-CheckSignal()
+static void *
+CheckSignal(void *unused)
 {
     if (FS_registered > 0) {
 	/*
@@ -634,7 +638,7 @@ CheckSignal()
     DumpCallBackState();
     PrintCounters();
     ResetCheckSignal();
-
+    return NULL;
 }				/*CheckSignal */
 
 void
@@ -695,10 +699,11 @@ ShutDownAndCore(int dopanic)
 
 }				/*ShutDown */
 
-void
-ShutDown(void)
+void *
+ShutDown(void *unused)
 {				/* backward compatibility */
     ShutDownAndCore(DONTPANIC);
+    return NULL;
 }
 
 
@@ -1967,25 +1972,25 @@ main(int argc, char *argv[])
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)FiveMinuteCheckLWP,
+	   (&serverPid, &tattr, FiveMinuteCheckLWP,
 	    &fiveminutes) == 0);
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
+	   (&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)FsyncCheckLWP, &fiveminutes) == 0);
+	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
 #else /* AFS_PTHREAD_ENV */
     ViceLog(5, ("Starting LWP\n"));
     assert(LWP_CreateProcess
 	   (FiveMinuteCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FiveMinuteChecks",
+	    &fiveminutes, "FiveMinuteChecks",
 	    &serverPid) == LWP_SUCCESS);
 
     assert(LWP_CreateProcess
 	   (HostCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
+	    &fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
     assert(LWP_CreateProcess
 	   (FsyncCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
+	    &fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
     TM_GetTimeOfDay(&tp, 0);

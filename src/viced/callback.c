@@ -304,9 +304,6 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 #define FreeCB(cb) iFreeCB((struct CallBack *)cb, &cbstuff.nCBs)
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
 
-/* Other protos - move out sometime */
-extern void ShutDown();
-
 #define VHASH 512		/* Power of 2 */
 static afs_uint32 HashTable[VHASH];	/* File entry hash table */
 #define VHash(volume, unique) (((volume)+(unique))&(VHASH-1))

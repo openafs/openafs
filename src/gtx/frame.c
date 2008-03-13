@@ -7,7 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define	IGNORE_STDS_H
 #include <afsconfig.h>
 #include <afs/param.h>
 

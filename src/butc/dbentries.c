@@ -316,8 +316,8 @@ waitDbWatcher()
 #define MAXVOLUMESTOADD 100
 int addvolumes = 1;
 
-void
-dbWatcher()
+void *
+dbWatcher(void *unused)
 {
     dlqlinkP entryPtr;
     struct budb_dumpEntry *dumpPtr;
@@ -485,4 +485,5 @@ dbWatcher()
 	IOMGR_Sleep(2);
 #endif
     }
+    return NULL;
 }

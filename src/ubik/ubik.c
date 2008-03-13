@@ -193,7 +193,6 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 
     struct rx_service *tservice;
     extern int VOTE_ExecuteRequest(), DISK_ExecuteRequest();
-    extern void rx_ServerProc();
     extern int rx_stackSize;
 
     initialize_U_error_table();

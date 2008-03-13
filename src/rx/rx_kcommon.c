@@ -273,8 +273,8 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server
  * processes never become listener threads */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void *unused)
 {
     int threadID;
 

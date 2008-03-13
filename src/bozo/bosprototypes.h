@@ -13,4 +13,7 @@
 /* bosserver.c */
 void bozo_Log(char *format, ... );
 
+/* bosoprocs.c */
+void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
+
 #endif

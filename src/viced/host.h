@@ -230,6 +230,8 @@ extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 por
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 
+extern void *ShutDown(void *);
+
 struct Interface *MultiVerifyInterface_r();
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */

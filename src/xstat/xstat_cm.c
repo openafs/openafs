@@ -198,8 +198,8 @@ xstat_cm_Cleanup(int a_releaseMem)
  * Side Effects:
  *	As advertised.
  *------------------------------------------------------------------------*/
-static void
-xstat_cm_LWP()
+static void *
+xstat_cm_LWP(void *unused)
 {
     static char rn[] = "xstat_cm_LWP";	/*Routine name */
     register afs_int32 code;	/*Results of calls */
@@ -349,6 +349,7 @@ xstat_cm_LWP()
 			code);
 	}			/*Continuous execution */
     }				/*Service loop */
+    return NULL;
 }
 
 

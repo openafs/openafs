@@ -57,6 +57,7 @@ RCSID
 #include "afs/butx.h"
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
+#include "butc_prototypes.h"
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
@@ -67,7 +68,6 @@ RCSID
 
 struct ubik_client *cstruct;
 extern void TC_ExecuteRequest();
-extern int dbWatcher();
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[256];

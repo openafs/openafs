@@ -514,8 +514,8 @@ bdrestart(register struct bnode *abnode, char *arock)
 
 #define	BOZO_MINSKIP 3600	/* minimum to advance clock */
 /* lwp to handle system restarts */
-static int
-BozoDaemon()
+static void *
+BozoDaemon(void *unused)
 {
     register afs_int32 now;
 
@@ -550,6 +550,7 @@ BozoDaemon()
 	    bnode_ApplyInstance(bdrestart, 0);
 	}
     }
+    return NULL;
 }
 
 #ifdef AFS_AIX32_ENV
