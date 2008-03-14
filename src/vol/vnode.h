@@ -155,6 +155,7 @@ enum VnFlags {
     VN_ON_HASH            = 0x1,        /**< vnode is on hash table */
     VN_ON_LRU             = 0x2,        /**< vnode is on lru list */
     VN_ON_VVN             = 0x4,        /**< vnode is on volume vnode list */
+    VN_FLAGS_END
 };
 
 

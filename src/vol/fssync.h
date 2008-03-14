@@ -50,6 +50,7 @@ enum FSYNCOpCode {
     FSYNC_VOL_FORCE_ERROR     = SYNC_COM_CODE_DECL(16), /**< force volume into error state */
     FSYNC_VOL_LEAVE_OFF       = SYNC_COM_CODE_DECL(17), /**< end vol op, but leave volume offline */
     FSYNC_VOL_QUERY_VNODE     = SYNC_COM_CODE_DECL(18), /**< query vnode state */
+    FSYNC_OP_CODE_END
 };
 
 /**
@@ -66,6 +67,7 @@ enum FSYNCReasonCode {
     FSYNC_NO_PENDING_VOL_OP   = SYNC_REASON_CODE_DECL(7), /**< no volume operation pending */
     FSYNC_VOL_PKG_ERROR       = SYNC_REASON_CODE_DECL(8), /**< error in the volume package */
     FSYNC_UNKNOWN_VNID        = SYNC_REASON_CODE_DECL(9), /**< vnode id not known by fileserver */
+    FSYNC_REASON_CODE_END
 };
 
 /* FSYNC response codes */
