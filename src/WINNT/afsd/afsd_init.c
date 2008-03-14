@@ -779,7 +779,7 @@ int afsd_InitCM(char **reasonP)
     }
 
     dummyLen = sizeof(volumes);
-    code = RegQueryValueEx(parmKey, "Volumess", NULL, NULL,
+    code = RegQueryValueEx(parmKey, "Volumes", NULL, NULL,
                             (BYTE *) &volumes, &dummyLen);
     if (code == ERROR_SUCCESS)
         afsi_log("Volumes cache entries: %d", volumes);
@@ -1232,7 +1232,7 @@ int afsd_InitCM(char **reasonP)
         
     cm_InitCallback();
 
-    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks, blockSize);
+    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, volumes, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
         *reasonP = "error initializing cache file";
