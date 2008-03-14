@@ -536,8 +536,8 @@ This option is only supported by the demand-attach file server.
 
 =item B<-vlruinterval <I<seconds>>
 
-The number of seconds between VLRU candidate queue scan default is 120  s.
-The second                                                              s.
+The number of seconds between VLRU candidate queue scan.  The default is
+120 seconds.
 
 This option is only supported by the demand-attach file server.
 
