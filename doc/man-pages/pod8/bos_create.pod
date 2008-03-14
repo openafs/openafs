@@ -45,14 +45,21 @@ fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
 
 Names the process to define and start. Any name is acceptable, but for the
 sake of simplicity it is best to use the last element of the process's
-binary file pathname, and to use the same name on every server
-machine. The conventional names, as used in all AFS documentation, are:
+binary file pathname (or the instance type for B<fs> and B<dafs>), and to
+use the same name on every server machine. The conventional names, as used
+in all AFS documentation, are:
 
 =over 4
 
 =item buserver
 
 The Backup Server process.
+
+=item dafs
+
+The process that combines the Demand Attach File Server, Volume Server, 
+Salvageserver and Salvager processes (B<fileserver>, B<volserver>, 
+B<salvageserver>, and B<salvager>).
 
 =item fs
 
@@ -69,7 +76,7 @@ The Protection Server process.
 
 =item runntp
 
-The controller process for the Network Time Protocol Daemon.
+The controller process for the Network Time Protocol Daemon (obsolete).
 
 =item upclientbin
 
@@ -113,11 +120,11 @@ command.
 
 =item dafs
 
-Use this value only for the dafs process, which combines the
-File Server, Volume Server, Salvageserver, and Salvager processes in
-order to operate as a Demand Attach File Server.  If one of the
-component processes terminates, the BOS Server shuts down
-and restarts the process in the appropriate order.
+Use this value only for the dafs process, which combines the File Server,
+Volume Server, Salvageserver, and Salvager processes in order to operate
+as a Demand Attach File Server.  If one of the component processes
+terminates, the BOS Server shuts down and restarts the process in the
+appropriate order.
 
 =item fs
 
@@ -129,9 +136,9 @@ appropriate order.
 =item simple
 
 Use this value for all processes listed as acceptable values to the
-B<-instance> argument, except for the B<fs> process.  There are no
-interdependencies between simple processes, so the BOS Server can stop and
-start them independently as necessary.
+B<-instance> argument, except for the B<fs> and B<dafs> processes.  
+There are no interdependencies between simple processes, so the 
+BOS Server can stop and start them independently as necessary.
 
 =back
 
@@ -258,6 +265,13 @@ C<fs4.abc.com>. Type the command on a single line.
                 -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
                 /usr/afs/bin/salvager
 
+The following command creates the dafs process dafs on the machine
+C<fs4.abc.com>. Type the command on a single line.
+
+   % bos create -server fs4.abc.com -instance dafs -type dafs \
+                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
+                /usr/afs/bin/salvageserver /usr/afs/bin/salvager
+
 The following command creates a cron process called C<userbackup> on the
 machine C<fs5.abc.com>, so that the BOS Server issues the indicated B<vos
 backupsys> command each day at 3:00 a.m. (the command creates a backup
@@ -383,6 +397,7 @@ L<fileserver(8)>,
 L<kaserver(8)>,
 L<ptserver(8)>,
 L<salvager(8)>,
+L<salvageserver(8)>,
 L<upclient(8)>,
 L<upserver(8)>,
 L<vlserver(8)>,
