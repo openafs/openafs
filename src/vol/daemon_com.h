@@ -27,6 +27,7 @@
  */
 enum SYNCOpCode {
     SYNC_COM_CHANNEL_CLOSE    = 0,      /**< request sync channel shutdown */
+    SYNC_OP_CODE_END
 };
 
 
@@ -47,6 +48,7 @@ enum SYNCReasonCode {
     SYNC_COM_ERROR            = 2,  /**< sync protocol communicaions error */
     SYNC_BAD_COMMAND          = 3,  /**< sync command code not implemented by server */
     SYNC_FAILED               = 4,  /**< sync server-side procedure failed */
+    SYNC_REASON_CODE_END
 };
 
 /* SYNC protocol reason codes

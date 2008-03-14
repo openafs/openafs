@@ -15,7 +15,7 @@
 #ifdef AFS_HPUX_ENV
 #define static_inline static __inline
 #elif defined(AFS_AIX_ENV)
-#define static_inline inline
+#define static_inline static
 #else
 #define static_inline static inline
 #endif
