@@ -1820,6 +1820,9 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
         return 1;
 
     volp = cm_GetVolumeByFID(&scp->fid);
+    if (!volp)
+        return 1;
+
     if (volp->rw.ID == volID) {
         statep = &volp->rw;
     } else if (volp->ro.ID == volID) {
