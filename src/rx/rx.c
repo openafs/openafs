@@ -2958,7 +2958,7 @@ rxi_CheckReachEvent(struct rxevent *event, struct rx_connection *conn,
 		    struct rx_call *acall)
 {
     struct rx_call *call = acall;
-    struct clock when;
+    struct clock when, now;
     int i, waiting;
 
     MUTEX_ENTER(&conn->conn_data_lock);
@@ -2997,13 +2997,15 @@ rxi_CheckReachEvent(struct rxevent *event, struct rx_connection *conn,
 	    if (call != acall)
 		MUTEX_EXIT(&call->lock);
 
-	    clock_GetTime(&when);
+	    clock_GetTime(&now);
+	    when = now;
 	    when.sec += RX_CHECKREACH_TIMEOUT;
 	    MUTEX_ENTER(&conn->conn_data_lock);
 	    if (!conn->checkReachEvent) {
 		conn->refCount++;
 		conn->checkReachEvent =
-		    rxevent_Post(&when, rxi_CheckReachEvent, conn, NULL);
+		    rxevent_PostNow(&when, &now, rxi_CheckReachEvent, conn, 
+				    NULL);
 	    }
 	    MUTEX_EXIT(&conn->conn_data_lock);
 	}
@@ -3080,7 +3082,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
     afs_uint32 seq, serial, flags;
     int isFirst;
     struct rx_packet *tnp;
-    struct clock when;
+    struct clock when, now;
     rx_MutexIncrement(rx_stats.dataPacketsRead, rx_stats_mutex);
 
 #ifdef KERNEL
@@ -3097,7 +3099,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	dpf(("packet %x dropped on receipt - quota problems", np));
 	if (rxi_doreclaim)
 	    rxi_ClearReceiveQueue(call);
-	clock_GetTime(&when);
+	clock_GetTime(&now);
+	when = now;
 	clock_Add(&when, &rx_softAckDelay);
 	if (!call->delayedAckEvent
 	    || clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
@@ -3105,7 +3108,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 			   RX_CALL_REFCOUNT_DELAY);
 	    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 	    call->delayedAckEvent =
-		rxevent_Post(&when, rxi_SendDelayedAck, call, 0);
+		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	}
 	/* we've damaged this call already, might as well do it in. */
 	return np;
@@ -3377,7 +3380,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 	np = rxi_SendAck(call, np, serial, RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
-	clock_GetTime(&when);
+	clock_GetTime(&now);
+	when = now;
 	if (haveLast && !(flags & RX_CLIENT_INITIATED)) {
 	    clock_Add(&when, &rx_lastAckDelay);
 	} else {
@@ -3389,7 +3393,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 			   RX_CALL_REFCOUNT_DELAY);
 	    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 	    call->delayedAckEvent =
-		rxevent_Post(&when, rxi_SendDelayedAck, call, 0);
+		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	}
     } else if (call->flags & RX_CALL_RECEIVE_DONE) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
@@ -4265,7 +4269,7 @@ rxi_SendCallAbort(register struct rx_call *call, struct rx_packet *packet,
 		  int istack, int force)
 {
     afs_int32 error;
-    struct clock when;
+    struct clock when, now;
 
     if (!call->error)
 	return packet;
@@ -4291,11 +4295,12 @@ rxi_SendCallAbort(register struct rx_call *call, struct rx_packet *packet,
 	    rxi_SendSpecial(call, call->conn, packet, RX_PACKET_TYPE_ABORT,
 			    (char *)&error, sizeof(error), istack);
     } else if (!call->delayedAbortEvent) {
-	clock_GetTime(&when);
+	clock_GetTime(&now);
+	when = now;
 	clock_Addmsec(&when, rxi_callAbortDelay);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ABORT);
 	call->delayedAbortEvent =
-	    rxevent_Post(&when, rxi_SendDelayedCallAbort, call, 0);
+	    rxevent_PostNow(&when, &now, rxi_SendDelayedCallAbort, call, 0);
     }
     return packet;
 }
@@ -4314,7 +4319,7 @@ rxi_SendConnectionAbort(register struct rx_connection *conn,
 			struct rx_packet *packet, int istack, int force)
 {
     afs_int32 error;
-    struct clock when;
+    struct clock when, now;
 
     if (!conn->error)
 	return packet;
@@ -4337,10 +4342,11 @@ rxi_SendConnectionAbort(register struct rx_connection *conn,
 			    sizeof(error), istack);
 	MUTEX_ENTER(&conn->conn_data_lock);
     } else if (!conn->delayedAbortEvent) {
-	clock_GetTime(&when);
+	clock_GetTime(&now);
+	when = now;
 	clock_Addmsec(&when, rxi_connAbortDelay);
 	conn->delayedAbortEvent =
-	    rxevent_Post(&when, rxi_SendDelayedConnAbort, conn, 0);
+	    rxevent_PostNow(&when, &now, rxi_SendDelayedConnAbort, conn, 0);
     }
     return packet;
 }
@@ -5026,7 +5032,7 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
     struct rx_packet *p;
     register struct rx_packet *nxp;	/* Next pointer for queue_Scan */
     struct rx_peer *peer = call->conn->peer;
-    struct clock now, retryTime;
+    struct clock now, usenow, retryTime;
     int haveEvent;
     int nXmitPackets;
     int maxXmitPackets;
@@ -5096,13 +5102,15 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	 * in this burst.  Note, if we back off, it's reasonable to
 	 * back off all of the packets in the same manner, even if
 	 * some of them have been retransmitted more times than more
-	 * recent additions */
-	clock_GetTime(&now);
-	retryTime = now;	/* initialize before use */
+	 * recent additions.
+	 * Do a dance to avoid blocking after setting now. */
+	clock_Zero(&retryTime);
 	MUTEX_ENTER(&peer->peer_lock);
 	clock_Add(&retryTime, &peer->timeout);
 	MUTEX_EXIT(&peer->peer_lock);
-
+	clock_GetTime(&now);
+	clock_Add(&retryTime, &now);
+	usenow = now;
 	/* Send (or resend) any packets that need it, subject to
 	 * window restrictions and congestion burst control
 	 * restrictions.  Ask for an ack on the last packet sent in
@@ -5152,6 +5160,8 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 			osi_Panic("rxi_Start: xmit queue clobbered");
 		    }
 		    if (p->flags & RX_PKTFLAG_ACKED) {
+			/* Since we may block, don't trust this */
+			usenow.sec = usenow.usec = 0;
                         rx_MutexIncrement(rx_stats.ignoreAckedPacket, rx_stats_mutex);
 			continue;	/* Ignore this packet if it has been acknowledged */
 		    }
@@ -5293,12 +5303,13 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 #ifdef RX_ENABLE_LOCKS
 			CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
 			call->resendEvent =
-			    rxevent_Post2(&retryTime, rxi_StartUnlocked,
-					 (void *)call, 0, istack);
+			    rxevent_PostNow2(&retryTime, &usenow, 
+					     rxi_StartUnlocked,
+					     (void *)call, 0, istack);
 #else /* RX_ENABLE_LOCKS */
 			call->resendEvent =
-			    rxevent_Post2(&retryTime, rxi_Start, (void *)call,
-					 0, istack);
+			    rxevent_PostNow2(&retryTime, &usenow, rxi_Start, 
+					     (void *)call, 0, istack);
 #endif /* RX_ENABLE_LOCKS */
 		    }
 		}
@@ -5495,12 +5506,13 @@ void
 rxi_ScheduleKeepAliveEvent(register struct rx_call *call)
 {
     if (!call->keepAliveEvent) {
-	struct clock when;
-	clock_GetTime(&when);
+	struct clock when, now;
+	clock_GetTime(&now);
+	when = now;
 	when.sec += call->conn->secondsUntilPing;
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
 	call->keepAliveEvent =
-	    rxevent_Post(&when, rxi_KeepAliveEvent, call, 0);
+	    rxevent_PostNow(&when, &now, rxi_KeepAliveEvent, call, 0);
     }
 }
 
@@ -5576,7 +5588,7 @@ rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
     conn->challengeEvent = NULL;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
-	struct clock when;
+	struct clock when, now;
 
 	if (tries <= 0) {
 	    /* We've failed to authenticate for too long.
@@ -5609,10 +5621,11 @@ rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
 			    RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
 	    rxi_FreePacket(packet);
 	}
-	clock_GetTime(&when);
+	clock_GetTime(&now);
+	when = now;
 	when.sec += RX_CHALLENGE_TIMEOUT;
 	conn->challengeEvent =
-	    rxevent_Post2(&when, rxi_ChallengeEvent, conn, 0,
+	    rxevent_PostNow2(&when, &now, rxi_ChallengeEvent, conn, 0,
 			 (tries - 1));
     }
 }
@@ -5734,7 +5747,7 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 void
 rxi_ReapConnections(void)
 {
-    struct clock now;
+    struct clock now, when;
     clock_GetTime(&now);
 
     /* Find server connection structures that haven't been used for
@@ -5883,8 +5896,9 @@ rxi_ReapConnections(void)
     }
     MUTEX_EXIT(&rx_freePktQ_lock);
 
-    now.sec += RX_REAP_TIME;	/* Check every RX_REAP_TIME seconds */
-    rxevent_Post(&now, rxi_ReapConnections, 0, 0);
+    when = now;
+    when.sec += RX_REAP_TIME;	/* Check every RX_REAP_TIME seconds */
+    rxevent_Post(&when, rxi_ReapConnections, 0, 0);
 }
 
 

@@ -304,6 +304,11 @@ extern struct rxevent *rxevent_Post(struct clock *when, void (*func) (),
 				    void *arg, void *arg1);
 extern struct rxevent *rxevent_Post2(struct clock *when, void (*func) (),
 				    void *arg, void *arg1, int arg2);
+extern struct rxevent *rxevent_PostNow(struct clock *when, struct clock *now,
+				       void (*func) (), void *arg, void *arg1);
+extern struct rxevent *rxevent_PostNow2(struct clock *when, struct clock *now,
+					void (*func) (), void *arg, 
+					void *arg1, int arg2);
 #endif
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
