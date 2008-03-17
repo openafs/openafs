@@ -444,7 +444,11 @@ osi_FreeSocket(register osi_socket *asocket)
 
     /* Was sockfs_sounbind(so, 0); sockfs_sockfree(so); That's wrong */
     vp = SOTOV(so);
+ #ifdef AFS_SUN511_ENV
+    VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED(), NULL);
+ #else
     VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED());
+ #endif
     VN_RELE(vp);
 
     return 0;
