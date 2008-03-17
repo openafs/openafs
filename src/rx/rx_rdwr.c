@@ -190,8 +190,9 @@ rxi_ReadProc(register struct rx_call *call, register char *buf,
 					       RX_CALL_REFCOUNT_DELAY);
 				rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 			    } else {
-				struct clock when;
-				clock_GetTime(&when);
+				struct clock when, now;
+				clock_GetTime(&now);
+				when = now;
 				/* Delay to consolidate ack packets */
 				clock_Add(&when, &rx_hardAckDelay);
 				if (!call->delayedAckEvent
@@ -202,7 +203,7 @@ rxi_ReadProc(register struct rx_call *call, register char *buf,
 						   RX_CALL_REFCOUNT_DELAY);
 				    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 				    call->delayedAckEvent =
-					rxevent_Post(&when,
+				      rxevent_PostNow(&when, &now,
 						     rxi_SendDelayedAck, call,
 						     0);
 				}
@@ -523,8 +524,9 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 	    rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
 	    didHardAck = 1;
 	} else {
-	    struct clock when;
-	    clock_GetTime(&when);
+	    struct clock when, now;
+	    clock_GetTime(&now);
+	    when = now;
 	    /* Delay to consolidate ack packets */
 	    clock_Add(&when, &rx_hardAckDelay);
 	    if (!call->delayedAckEvent
@@ -533,7 +535,7 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 			       RX_CALL_REFCOUNT_DELAY);
 		CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 		call->delayedAckEvent =
-		    rxevent_Post(&when, rxi_SendDelayedAck, call, 0);
+		    rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	    }
 	}
     }
