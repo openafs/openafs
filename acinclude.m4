@@ -361,6 +361,9 @@ else
 		hppa*-hp-hpux11.11)
 			AFS_SYSNAME="hp_ux11i"
 			;;
+		hppa*-hp-hpux11.23)
+			AFS_SYSNAME="hp_ux1123"
+			;;
 		ia64-hp-hpux11.22)
 			AFS_SYSNAME="ia64_hpux1122"
 			;;
