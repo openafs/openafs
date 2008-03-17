@@ -1812,7 +1812,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    /* if it's already attached, see if we can return it */
 	    if (V_attachState(vp) == VOL_STATE_ATTACHED) {
 		VGetVolumeByVp_r(ec, vp);
-		if (V_inUse(vp)) {
+		if (V_inUse(vp) == fileServer) {
 		    VCancelReservation_r(vp);
 		    return vp;
 		}
@@ -1882,7 +1882,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 #else /* AFS_DEMAND_ATTACH_FS */
 	vp = VGetVolume_r(ec, volumeId);
 	if (vp) {
-	    if (V_inUse(vp))
+	    if (V_inUse(vp) == fileServer)
 		return vp;
 	    if (vp->specialStatus == VBUSY)
 		isbusy = 1;
@@ -1956,6 +1956,11 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     vp = attach2(ec, volumeId, path, &iheader, partp, vp, isbusy, mode);
 
     if (programType == volumeUtility && vp) {
+	if ((mode == V_VOLUPD) || (VolumeWriteable(vp) && (mode == V_CLONE))) {
+	    /* mark volume header as in use so that volser crashes lead to a
+	     * salvage attempt */
+	    VUpdateVolume_r(ec, vp, 0);
+	}
 #ifdef AFS_DEMAND_ATTACH_FS
 	/* for dafs, we should tell the fileserver, except for V_PEEK
          * where we know it is not necessary */
@@ -2099,7 +2104,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     /* if it's already attached, see if we can return it */
     if (V_attachState(vp) == VOL_STATE_ATTACHED) {
 	VGetVolumeByVp_r(ec, vp);
-	if (V_inUse(vp)) {
+	if (V_inUse(vp) == fileServer) {
 	    return vp;
 	} else {
 	    if (vp->specialStatus == VBUSY)
@@ -2493,9 +2498,12 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	if (vp->specialStatus)
 	    vp->specialStatus = 0;
 	if (V_blessed(vp) && V_inService(vp) && !V_needsSalvaged(vp)) {
-	    V_inUse(vp) = 1;
+	    V_inUse(vp) = fileServer;
 	    V_offlineMessage(vp)[0] = '\0';
 	}
+    } else {
+	V_inUse(vp) = programType;
+	V_checkoutMode(vp) = mode;
     }
 
     AddVolumeToHashTable(vp, V_id(vp));
@@ -2503,7 +2511,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     AddVolumeToVByPList_r(vp);
     VLRU_Add_r(vp);
     if ((programType != fileServer) ||
-	V_inUse(vp)) {
+	(V_inUse(vp) == fileServer)) {
 	VChangeState_r(vp, VOL_STATE_ATTACHED);
     } else {
 	VChangeState_r(vp, VOL_STATE_UNATTACHED);
@@ -3435,12 +3443,25 @@ static int
 VCheckDetach(register Volume * vp)
 {
     int ret = 0;
+    Error ec = 0;
 
     if (vp->nUsers || vp->nWaiters)
 	return ret;
 
     if (vp->shuttingDown) {
 	ret = 1;
+	if ((programType != fileServer) &&
+	    (V_inUse(vp) == programType) &&
+	    ((V_checkoutMode(vp) == V_VOLUPD) ||
+	     ((V_checkoutMode(vp) == V_CLONE) &&
+	      (VolumeWriteable(vp))))) {
+	    V_inUse(vp) = 0;
+	    VUpdateVolume_r(&ec, vp, VOL_UPDATE_NOFORCEOFF);
+	    if (ec) {
+		Log("VCheckDetach: failed to clear inUse failed during detachment of volid %u\n",
+		    vp->hashid);
+	    }
+	}
 	VReleaseVolumeHandles_r(vp);
 	VCheckSalvage(vp);
 	ReallyFreeVolume(vp);
@@ -3455,12 +3476,25 @@ static int
 VCheckDetach(register Volume * vp)
 {
     int ret = 0;
+    Error ec = 0;
 
     if (vp->nUsers)
 	return ret;
 
     if (vp->shuttingDown) {
 	ret = 1;
+	if ((programType != fileServer) &&
+	    (V_inUse(vp) == programType) &&
+	    ((V_checkoutMode(vp) == V_VOLUPD) ||
+	     ((V_checkoutMode(vp) == V_CLONE) &&
+	      (VolumeWriteable(vp))))) {
+	    V_inUse(vp) = 0;
+	    VUpdateVolume_r(&ec, vp, VOL_UPDATE_NOFORCEOFF);
+	    if (ec) {
+		Log("VCheckDetach: failed to clear inUse failed during detachment of volid %u\n",
+		    vp->hashid);
+	    }
+	}
 	VReleaseVolumeHandles_r(vp);
 	ReallyFreeVolume(vp);
 	if (programType == fileServer) {

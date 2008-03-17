@@ -1863,7 +1863,11 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
 	VOLINT_INFO_STORE(handle, inUse, 1);
     }
 #else
-    VOLINT_INFO_STORE(handle, inUse, hdr->inUse);
+    if (hdr->inUse == fileServer) {
+	VOLINT_INFO_STORE(handle, inUse, 1);
+    } else {
+	VOLINT_INFO_STORE(handle, inUse, 0);
+    }
 #endif
 
 
