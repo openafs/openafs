@@ -35,6 +35,7 @@
 #define AFS_STATS(arg)
 #define XSTATS_DECLS
 #define XSTATS_START_TIME(arg)
+#define XSTATS_START_CMTIME(arg)
 #define XSTATS_END_TIME
 
 #else /* AFS_NOSTATS */
