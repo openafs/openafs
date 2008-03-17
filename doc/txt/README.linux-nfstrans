@@ -1,0 +1,268 @@
+## Introduction
+
+This version works on Linux 2.6, and provides the following features:
+
+- Basic AFS/NFS translator functionality, similar to other platforms
+- Ability to distinguish PAG's assigned within each NFS client
+- A new 'afspag' kernel module, which provides PAG management on
+  NFS client systems, and forwards AFS system calls to the translator
+  system via the remote AFS system call (rmtsys) protocol.
+- Support for transparent migration of an NFS client from one translator
+  server to another, without loss of credentials or sysnames.
+- The ability to force the translator to discard all credentials
+  belonging to a specified NFS client host.
+
+
+The patch applies to OpenAFS 1.4.1, and has been tested against the
+kernel-2.6.9-22.0.2.EL kernel binaries as provided by the CentOS project
+(essentially these are rebuilds from source of Red Hat Enterprise Linux).
+This patch is not expected to apply cleanly to newer versions of OpenAFS,
+due to conflicting changes in parts of the kernel module source.  To apply
+this patch, use 'patch -p0'.
+
+It has been integrated into OpenAFS 1.5.x.
+
+## New in Version 1.4
+
+- There was no version 1.3
+- Define a "sysname generation number" which changes any time the sysname
+  list is changed for the translator or any client.  This number is used
+  as the nanoseconds part of the mtime of directories, which forces NFS
+  clients to reevaluate directory lookups any time the sysname changes.
+- Fixed several bugs related to sysname handling
+- Fixed a bug preventing 'fs exportafs' from changing the flag which
+  controlls whether callbacks are made to NFS clients to obtain tokens
+  and sysname lists.
+- Starting in this version, when the PAG manager starts up, it makes a
+  call to the translator to discard any tokens belonging to that client.
+  This fixes a problem where newly-created PAG's on the client would
+  inherit tokens owned by an unrelated process from an earlier boot.
+- Enabled the PAG manager to forward non-V-series pioctl's.
+- Forward ported to OpenAFS 1.4.1 final
+- Added a file, /proc/fs/openafs/unixusers, which reports information
+  about "unixuser" structures, which are used to record tokens and to
+  bind translator-side PAG's to NFS client data and sysname lists.
+
+
+## Finding the RPC server authtab
+
+In order to correctly detect NFS clients and distinguish between them,
+the translator must insert itself into the RPC authentication process.
+This requires knowing the address of the RPC server authentication dispatch
+table, which is not exported from standard kernels.  To address this, the
+kernel must be patched such that net/sunrpc/svcauth.c exports the 'authtab'
+symbol, or this symbol's address must be provided when the OpenAFS kernel
+module is loaded, using the option "authtab_addr=0xXXXXXXXX" where XXXXXXXX
+is the address of the authtab symbol as obtained from /proc/kallsyms.  The
+latter may be accomplished by adding the following three lines to the
+openafs-client init script in place of 'modprobe openafs':
+
+    modprobe sunrpc
+    authtab=`awk '/[ \t]authtab[ \t]/ { print $1 }' < /proc/kallsyms`
+    modprobe openafs ${authtab:+authtab_addr=0x$authtab}
+
+
+## Exporting the NFS filesystem
+
+In order for the translator to work correctly, /afs must be exported with
+specific options.  Specifically, the 'no_subtree_check' option is needed
+in order to prevent the common NFS server code from performing unwanted
+access checks, and an fsid option must be provided to set the filesystem
+identifier to be used in NFS filehandles.  Note that for live migration
+to work, a consistent filesystem id must be used on all translator systems.
+The export may be accomplised with a line in /etc/exports:
+
+    /afs (rw,no_subtree_check,fsid=42)
+
+Or with a command:
+
+    exportfs -o rw,no_subtree_check,fsid=42 :/afs
+
+The AFS/NFS translator code is enabled by default; no additional command
+is required to activate it.  However, the 'fs exportafs nfs' command can
+be used to disable or re-enable the translator and to set options.  Note
+that support for client-assigned PAG's is not enabled by default, and
+must be enabled with the following command:
+
+    fs exportafs nfs -clipags on
+
+Support for making callbacks to obtain credentials and sysnames from
+newly-discovered NFS clients is also not enabled by default, because this
+would result in long timeouts on requests from NFS clients which do not
+support this feature.  To enable this feature, use the following command:
+
+    fs exportafs nfs -pagcb on
+
+
+## Client-Side PAG Management
+
+Management of PAG's on individual NFS clients is provided by the kernel
+module afspag.ko, which is automatically built alongside the libafs.ko
+module on Linux 2.6 systems.  This component is not currently supported
+on any other platform.
+
+To activate the client PAG manager, simply load the module; no additional
+parameters or commands are required.  Once the module is loaded, PAG's
+may be acquired using the setpag() call, exactly as on systems running the
+full cache manager.  Both the traditional system call and new-style ioctl
+entry points are supported.
+
+In addition, the PAG manager can forward pioctl() calls to an AFS/NFS
+translator system via the remote AFS system call service (rmtsys).  To
+enable this feature, the kernel module must be loaded with a parameter
+specifying the location of the translator system:
+
+    insmod afspag.ko nfs_server_addr=0xAABBCCDD
+
+In this example, 0xAABBCCDD is the IP address of the translator system,
+in network byte order.  For example, if the translator has the IP address
+192.168.42.100, the nfs_server_addr parameter should be set to 0xc0a82a64.
+
+The PAG manager can be shut down using 'afsd -shutdown' (ironically, this
+is the only circumstance in which that command is useful).  Once the
+shutdown is complete, the kernel module can be removed using rmmod.
+
+
+## Remote System Calls
+
+The NFS translator supports the ability of NFS clients to perform various
+AFS-specific operations via the remote system call interface (rmtsys).
+To enable this feature, afsd must be run with the -rmtsys switch.  OpenAFS
+client utilities will use this feature automatically if the AFSSERVER
+environment variable is set to the address or hostname of the translator
+system, or if the file ~/.AFSSERVER or /.AFSSERVER exists and contains the 
+translator's address or hostname.
+
+On systems running the client PAG manager (afspag.ko), AFS system calls
+made via the traditional methods will be automatically forwarded to the
+NFS translator system, if the PAG manager is configured to do so.  This
+feature must be enabled, as described above.
+
+
+## Credential Caching
+
+The client PAG manager maintains a cache of credentials belonging to each
+PAG.  When an application makes a system call to set or remove AFS tokens,
+the PAG manager updates its cache in addition to forwarding the request
+to the NFS server.
+
+When the translator hears from a previously-unknown client, it makes a
+callback to the client to retrieve a copy of any cached credentials.
+This means that credentials belonging to an NFS client are not lost if
+the translator is rebooted, or if the client's location on the network
+changes such that it is talking to a different translator.
+
+This feature is automatically supported by the PAG manager if it has
+been configured to forward system calls to an NFS translator.  However,
+requests will be honored only if they come from port 7001 on the NFS
+translator host.  In addition, this feature must be enabld on the NFS
+translator system as described above.
+
+
+## System Name List
+
+When the NFS translator hears from a new NFS client whose system name
+list it does not know, it can make a callback to the client to discover
+the correct system name list.  This ability is enabled automatically
+with credential caching and retrieval is enabled as described above.
+
+The PAG manager maintains a system-wide sysname list, which is used to
+satisfy callback requests from the NFS translator.  This list is set
+intially to contain only the compiled-in default sysname, but can be
+changed by the superuser using the VIOC_AFS_SYSNAME pioctl or the
+'fs sysname' command.  Any changes are automatically propagated to the
+NFS translator.
+
+
+## Dynamic Mount Points
+
+This patch introduces a special directory ".:mount", which can be found 
+directly below the AFS root directory.  This directory always appears to
+be empty, but any name of the form "cell:volume" will resolve to a mount
+point for the specified volume.  The resulting mount points are always
+RW-path mount points, and so will resolve to an RW volume even if the
+specified name refers to a replicated volume.  However, the ".readonly"
+and ".backup" suffixes can be used to refer to volumes of those types,
+and a numeric volume ID will always be used as-is.
+
+This feature is required to enable the NFS translator to reconstruct a
+reachable path for any valid filehandle presented by an NFS client.
+Specifically, when the path reconstruction algorithm is walking upward
+from a client-provided filehandle and encounters the root directory of
+a volume which is no longer in the cache (and thus has no known mount
+point), it will complete the path to the AFS root using the dynamic
+mount directory.
+
+This feature is available whenever the dynamic AFS root is enabled.
+On Linux systems, it is also available even when dynroot is not enabled,
+to support the NFS translator.  It is presently not possible to disable
+this feature, though that ability may be added in the future.  It would
+be difficult to make this feature unavailble to users and still make the
+Linux NFS translator work, since the point of the check being performed
+by the NFS server is to ensure the requested file would be reachable by
+the client.
+
+
+## Security
+
+The security of the NFS translator depends heavily on the underlying
+network.  Proper configuration is required to prevent unauthorized
+access to files, theft of credentials, or other forms of attack.
+
+NFS, remote syscall, and PAG callback traffic between an NFS client host
+and translator may contain sensitive file data and/or credentials, and
+should be protected from snooping by unprivileged users or other hosts.
+
+Both the NFS translator and remote system call service authorize requests
+in part based on the IP address of the requesting client.  To prevent an
+attacker from making requests on behalf of another host, the network must
+be configured such that it is impossible for one client to spoof the IP
+address of another.
+
+In addition, both the NFS translator and remote system call service
+associate requests with specific users based on user and group ID data
+contained within the request.  In order to prevent users on the same client
+from making filesystem access requests as each other, the NFS server must
+be configured to accept requests only from privileged ports.  In order to
+prevent users from making AFS system calls on each other's behalf, possibly
+including retrieving credentials, the network must be configured such that
+requests to the remote system call service (port 7009) are accepted only
+from port 7001 on NFS clients.
+
+When a client is migrated away from a translator, any credentials held
+on behalf of that client must be discarded before that client's IP address
+can safely be reused.  The VIOC_NFS_NUKE_CREDS pioctl and 'fs nukenfscreds'
+command are provided for this purpose.  Both take a single argument, which
+is the IP address of the NFS client whose credentials should be discarded.
+
+
+## Known Issues
+
+  + Because NFS clients do not maintain active references on every inode
+    they are using, it is possible that portions of the directory tree
+    in use by an NFS client will expire from the translator's AFS and
+    Linux dentry cache's.  When this happens, the NFS server attempts to
+    reconstruct the missing portion of the directory tree, but may fail
+    if the client does not have sufficient access (for example, if his
+    tokens have expired).  In these cases, a "stale NFS filehandle" error
+    will be generated.  This behavior is similar to that found on other
+    translator platforms, but is triggered under a slightly different set
+    of circumstances due to differences in the architecture of the Linux
+    NFS server.
+
+  + Due to limitations of the rmtsys protocol, some pioctl calls require
+    large (several KB) transfers between the client and rmtsys server.
+    Correcting this issues would require extensions to the rmtsys protocol
+    outside the scope of this project.
+
+  + The rmtsys interface requires that AFS be mounted in the same place
+    on both the NFS client and translator system, or at least that the
+    translator be able to correctly resolve absolute paths provided by
+    the client.
+
+  + If a client is migrated or an NFS translator host is unexpectedly
+    rebooted while AFS filesystem access is in progress, there may be
+    a short delay before the client recovers.  This is because the NFS
+    client must time out any request it made to the old server before
+    it can retransmit the request, which will then be handled by the
+    new server.  The same applies to remote system call requests.
