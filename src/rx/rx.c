@@ -3837,9 +3837,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    call->nNacks = nNacked;
 	}
     } else {
-	if (newAckCount) {
-	    call->nAcks++;
-	}
+	call->nAcks += newAckCount;
 	call->nNacks = 0;
     }
 
