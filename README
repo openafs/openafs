@@ -34,11 +34,12 @@ A. Creating the proper directory structure.
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
          i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
-         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60
+         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61
+         (client does not work)
       i386_linux22, i386_linux24, i386_linux26
       i386_umlinux22, i386_umlinux24
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36, i386_obsd37, i386_obsd38
+         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
@@ -65,11 +66,6 @@ A. Creating the proper directory structure.
       For some systems you need also provide the path in which your kernel
       headers for your configured kernel can be found.  See the
       system-specific Notes sections below for details.
-
-      Be prepared to provide the switches --enable-obsolete and
-      --enable-insecure if you require the use of any bundled but obsolete
-      or insecure software included with OpenAFS. See README.OBSOLETE and
-      README.SECURITY for more details.
 
       There is an option to control whether or not binaries are stripped
       of their symbol table information.  All binaries, except for the
@@ -117,6 +113,13 @@ A. Creating the proper directory structure.
     afsbosconfig  $(afslocaldir)/BosConfig   $(afsconfdir)/BosConfig
     afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
 
+
+    The Demand Attach Fileserver (DAFS), is built by providing the
+    --enable_demand_attach_fs argument to configure.  Note that the
+    bosserver must be built with DAFS in order to be able to create
+    the dafs instance, which will be used in place of the fs instance.  In
+    addition, the fileserver, volserver, salvager, salvage, and salvageserver
+    binaries must be built for DAFS.
 
 B  Building
 
@@ -183,24 +186,21 @@ E  HP-UX 11.0 Notes
 
 F  OpenBSD Notes
 
-   We recommend you build with the following options to configure:
-     --enable-namei-fileserver
-     --enable-largefile-fileserver
-     --enable-supergroups
-     --with-krb5
+   If you need to run regen.sh to make the configure script, you should
+   first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
    in /usr/src/sys.
 
-   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
-   should make a package for the client.  Use pkg_add to install.  The
-   package will install using transarc-paths, regardless of how you
-   configured.  The package builder does not work on OpenBSD 3.5 and later
-   due to the incompatible re-write of pkg_create.
+   If you want to build src/aklog, add the following options to your
+   configure.  Note that you shouldn't need aklog because heimdal afslog
+   does (almost) the same thing.
+     --with-krb5 KRB5CFLAGS=-I/usr/include/kerberosV KRB5LIBS=-lcrypto
 
-   There is no server package, but I am told that "make install" will put
-   server binaries in /usr/afs.
+   src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing the
+   client.  There is no server package, but I am told that "make install"
+   will put server binaries in /usr/afs.
 
    Your kernel may panic when you try to shutdown after running the OpenAFS
    client.  To prevent this, change the "dangling vnode" panic in
@@ -210,11 +210,9 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client is very new and untested.  Do not trust it for
-   production work.
-
-   We recommend you build with --enable-namei-fileserver and
-   --enable-largefile-fileserver options.
+   The FreeBSD client does not currently work.  The remaining problems
+   mostly have to do with locking, vnode refcounting, and packaging.  The
+   server should work.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
@@ -224,12 +222,7 @@ G  FreeBSD Notes
    include file.  Use the --with-bsd-kernel-build= configure option if your
    kernel build is not GENERIC in the standard place.
 
-   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
-   should make a package for the client.  Use pkg_add to install.  The
-   package will install using transarc-paths, regardless of how you
-   configured.  The builder uses an old version of the /usr/vice/etc/rc file
-   that probably won't work.  You might be able to replace it with something
-   like "kldload libafs.ko; /usr/vice/etc/afsd".
-
    There is no server package, but I am told that "make install" will put
    server binaries in /usr/afs.
+
+   You can't run arla and OpenAFS at the same time.
