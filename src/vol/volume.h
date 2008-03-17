@@ -113,11 +113,16 @@ extern pthread_t vol_glock_holder;
 #define VTRANS_UNLOCK
 #endif /* AFS_PTHREAD_ENV */
 
-typedef enum { fileServer,       /* the fileserver process */
-	       volumeUtility,    /* volserver, or a single volume salvager (non-dafs) */
-	       salvager,         /* standalone whole-partition salvager */
-	       salvageServer,    /* dafs online salvager */
-	       debugUtility      /* fssync-debug or similar utility */
+/**
+ * volume package program type enumeration.
+ */
+typedef enum {
+    fileServer          = 1,    /**< the fileserver process */
+    volumeUtility       = 2,    /**< volserver, or a 
+				 *   single volume salvager (non-dafs) */
+    salvager            = 3,    /**< standalone whole-partition salvager */
+    salvageServer       = 4,    /**< dafs online salvager */
+    debugUtility        = 5     /**< fssync-debug or similar utility */
 } ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
@@ -615,6 +620,7 @@ typedef struct Volume {
     byte specialStatus;		/* An error code to return on VGetVolume: the
 				 * volume is unavailable for the reason quoted,
 				 * currently VBUSY or VMOVED */
+    afs_uint32 checkoutMode;    /* for volume utilities, mode number for current checkout */
     afs_uint32 updateTime;	/* Time that this volume was put on the updated
 				 * volume list--the list of volumes that will be
 				 * salvaged should the file server crash */
@@ -649,6 +655,7 @@ struct volHeader {
 #define V_vnodeIndex(vp)	((vp)->vnodeIndex)
 #define V_nextVnodeUnique(vp)	((vp)->nextVnodeUnique)
 #define V_linkHandle(vp)	((vp)->linkHandle)
+#define V_checkoutMode(vp)      ((vp)->checkoutMode)
 #ifdef AFS_DEMAND_ATTACH_FS
 #define V_attachState(vp)       ((vp)->attach_state)
 #define V_attachFlags(vp)       ((vp)->attach_flags)

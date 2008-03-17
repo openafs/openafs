@@ -759,7 +759,11 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	
 	printf("\tid               = %u\n", v.id);
 	printf("\tname             = '%s'\n", v.name);
-	printf("\tinUse            = %d\n", v.inUse);
+	if (v.inUse != 0) {
+	    printf("\tinUse            = %d (%s)\n", v.inUse, program_type_to_string(v.inUse));
+	} else {
+	    printf("\tinUse            = %d (no)\n", v.inUse);
+	}
 	printf("\tinService        = %d\n", v.inService);
 	printf("\tblessed          = %d\n", v.blessed);
 	printf("\tneedsSalvaged    = %d\n", v.needsSalvaged);

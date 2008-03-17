@@ -1633,7 +1633,7 @@ QuickCheck(register struct InodeSummary *isp, int nVols)
 	    && volHeader.stamp.magic == VOLUMEINFOMAGIC
 	    && volHeader.dontSalvage == DONT_SALVAGE
 	    && volHeader.needsSalvaged == 0 && volHeader.destroyMe == 0) {
-	    if (volHeader.inUse == 1) {
+	    if (volHeader.inUse != 0) {
 		volHeader.inUse = 0;
 		volHeader.inService = 1;
 		if (!Testing) {
