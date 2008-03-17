@@ -86,7 +86,11 @@ VnodeToIno(vnode_t * vp)
     struct vattr vattr;
 
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     if (code) {
 	osi_Panic("VnodeToIno");
     }
@@ -101,7 +105,11 @@ VnodeToDev(vnode_t * vp)
 
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_Panic("VnodeToDev");
@@ -122,7 +130,11 @@ VnodeToSize(vnode_t * vp)
     MObtainWriteLock(&afs_xosi, 578);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_Panic("VnodeToSize");
@@ -224,7 +236,11 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     /* Ufs doesn't seem to care about the flags so we pass 0 for now */
     tvattr.va_mask = AT_ALL;
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV 
+    code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;

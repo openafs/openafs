@@ -982,8 +982,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #if defined(AFS_SUN510_ENV)
     if (vp && !IsAfsVnode(vp)) {
 	struct vnode *realvp;
-	
-	if (VOP_REALVP(vp, &realvp) == 0) {
+	if
+#ifdef AFS_SUN511_ENV
+          (VOP_REALVP(vp, &realvp, NULL) == 0) 
+#else
+	  (VOP_REALVP(vp, &realvp) == 0) 
+#endif
+{
 	    struct vnode *oldvp = vp;
 	    
 	    VN_HOLD(realvp);
