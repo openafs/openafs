@@ -90,6 +90,7 @@ struct xfreelist {
 static struct xfreelist *xfreemallocs = 0, *xsp = 0;
 
 struct clock rxevent_nextRaiseEvents;	/* Time of next call to raise events */
+struct clock rxevent_lastEvent;        /* backwards time detection */
 int rxevent_raiseScheduled;	/* true if raise events is scheduled */
 
 #ifdef RX_ENABLE_LOCKS
@@ -117,6 +118,28 @@ pthread_mutex_t rx_event_mutex;
 #endif /* AFS_PTHREAD_ENV */
 
 
+int
+rxevent_adjTimes(struct clock *adjTime)
+{
+    /* backwards clock correction */
+    int nAdjusted = 0;
+    struct rxepoch *qep, *nqep;
+    struct rxevent *qev, *nqev;
+    
+    for (queue_Scan(&rxepoch_queue, qep, nqep, rxepoch)) {
+	for (queue_Scan(&qep->events, qev, nqev, rxevent)) {
+	    if (clock_Gt(&qev->eventTime, adjTime)) {
+		clock_Sub(&qev->eventTime, adjTime); 
+		nAdjusted++;
+	    }
+	}
+	if (qep->epochSec > adjTime->sec) {
+	    qep->epochSec -= adjTime->sec;
+	}
+    }
+    return nAdjusted;
+}
+
 /* Pass in the number of events to allocate at a time */
 int rxevent_initialized = 0;
 void
@@ -139,6 +162,7 @@ rxevent_Init(int nEvents, void (*scheduler) (void))
     rxevent_ScheduledEarlierEvent = scheduler;
     rxevent_initialized = 1;
     clock_Zero(&rxevent_nextRaiseEvents);
+    clock_Zero(&rxevent_lastEvent);
     rxevent_raiseScheduled = 0;
     UNLOCK_EV_INIT;
 }
@@ -181,17 +205,9 @@ rxepoch_Allocate(struct clock *when)
  * "when" argument specifies when "func" should be called, in clock (clock.h)
  * units. */
 
-#if 0
-struct rxevent *
-rxevent_Post(struct clock *when,
-	     void (*func) (struct rxevent * event,
-			   struct rx_connection * conn,
-			   struct rx_call * acall), void *arg, void *arg1)
-#else
 static struct rxevent *
-_rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1,
-	      int arg2, int newargs)
-#endif
+_rxevent_Post(struct clock *when, struct clock *now, void (*func) (), 
+	      void *arg, void *arg1, int arg2, int newargs)
 {
     register struct rxevent *ev, *evqe, *evqpr;
     register struct rxepoch *ep, *epqe, *epqpr;
@@ -200,15 +216,23 @@ _rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1,
     MUTEX_ENTER(&rxevent_lock);
 #ifdef RXDEBUG
     if (rx_Log_event) {
-	struct clock now;
-	clock_GetTime(&now);
+	struct clock now1;
+	clock_GetTime(&now1);
 	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lp, %lp, %lp, %d)\n",
-		(int)now.sec, (int)now.usec, (int)when->sec, (int)when->usec,
+		(int)now1.sec, (int)now1.usec, (int)when->sec, (int)when->usec,
 		func, arg,
 		arg1, arg2);
     }
 #endif
-
+    /* If a time was provided, check for consistency */
+    if (now->sec) {
+	if (clock_Gt(&rxevent_lastEvent, now)) {
+	    struct clock adjTime = rxevent_lastEvent;
+	    clock_Sub(&adjTime, now);
+	    rxevent_adjTimes(&adjTime);
+	}
+	rxevent_lastEvent = *now;
+    }
     /* Get a pointer to the epoch for this event, if none is found then
      * create a new epoch and insert it into the sorted list */
     for (ep = NULL, queue_ScanBackwards(&rxepoch_queue, epqe, epqpr, rxepoch)) {
@@ -297,14 +321,32 @@ _rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1,
 struct rxevent *
 rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
 {
-    return _rxevent_Post(when, func, arg, arg1, 0, 0);
+    struct clock now;
+    clock_Zero(&now);
+    return _rxevent_Post(when, &now, func, arg, arg1, 0, 0);
 }
 
 struct rxevent *
 rxevent_Post2(struct clock *when, void (*func) (), void *arg, void *arg1,
 	      int arg2)
 {
-    return _rxevent_Post(when, func, arg, arg1, arg2, 1);
+    struct clock now;
+    clock_Zero(&now);
+    return _rxevent_Post(when, &now, func, arg, arg1, arg2, 1);
+}
+
+struct rxevent *
+rxevent_PostNow(struct clock *when, struct clock *now, void (*func) (), 
+		void *arg, void *arg1)
+{
+    return _rxevent_Post(when, now, func, arg, arg1, 0, 0);
+}
+
+struct rxevent *
+rxevent_PostNow2(struct clock *when, struct clock *now, void (*func) (), 
+		 void *arg, void *arg1, int arg2)
+{
+    return _rxevent_Post(when, now, func, arg, arg1, arg2, 1);
 }
 
 /* Cancel an event by moving it from the event queue to the free list.
@@ -378,7 +420,6 @@ rxevent_RaiseEvents(struct clock *next)
     register struct rxepoch *ep;
     register struct rxevent *ev;
     volatile struct clock now;
-
     MUTEX_ENTER(&rxevent_lock);
 
     /* Events are sorted by time, so only scan until an event is found that has
@@ -394,17 +435,27 @@ rxevent_RaiseEvents(struct clock *next)
 	    continue;
 	}
 	do {
+	reraise:
 	    ev = queue_First(&ep->events, rxevent);
 	    if (clock_Lt(&now, &ev->eventTime)) {
 		clock_GetTime(&now);
-		if (clock_Lt(&now, &ev->eventTime)) {
-		    *next = rxevent_nextRaiseEvents = ev->eventTime;
-		    rxevent_raiseScheduled = 1;
-		    clock_Sub(next, &now);
-		    MUTEX_EXIT(&rxevent_lock);
-		    return 1;
+		if (clock_Gt(&rxevent_lastEvent, &now)) {
+		    struct clock adjTime = rxevent_lastEvent;
+		    int adjusted;
+		    clock_Sub(&adjTime, &now);
+		    adjusted = rxevent_adjTimes(&adjTime);
+		    rxevent_lastEvent = now;
+		    if (adjusted > 0)
+			goto reraise;
 		}
-	    }
+		if (clock_Lt(&now, &ev->eventTime)) {
+                    *next = rxevent_nextRaiseEvents = ev->eventTime;
+                    rxevent_raiseScheduled = 1;
+                    clock_Sub(next, &now);
+                    MUTEX_EXIT(&rxevent_lock);
+                    return 1;
+                }
+            }
 	    queue_Remove(ev);
 	    rxevent_nPosted--;
 	    MUTEX_EXIT(&rxevent_lock);
