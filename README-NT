@@ -12,16 +12,6 @@ As of the OpenAFS 1.3 release series, Windows platforms released
 prior to Windows 2000 are no longer supported.	As of the OpenAFS 1.5
 series, the Windows 9x components are being removed from the source tree.
 
-NOTE 2:
-In this release, in addition to the production quality CIFS-AFS 
-gateway based client service there also exists an experimental
-implementation of an Installable File System (IFS).  To build the IFS 
-version, follow the directions below, but note that only the NSIS 
-installer script has been updated to support it.  Also, the IFS kernel 
-module must be built separately, using the IFS/DDK build environment.
-The IFS implementation does not contain a Network Provider interface
-to register an AFS service name.
-
 ***********   Windows 2000/XP/2003 Build Process ****************
 
 Building OpenAFS for Windows requires configuring a Windows
@@ -193,11 +183,6 @@ These files come from the following Microsoft DDKs/SDKs:
    netcfgn.h, netcfgx.h:
         Windows XP/2003 DDK - inc/wxp/
 
-If you are interested in experimenting with the IFS you must purchase from
-Microsoft a copy of the Windows 2003 SP1 IFS Kit.
-
-  http://www.microsoft.com/whdc/devtools/ifskit/default.mspx
-
 
 STEP D. Configure NTBUILD.BAT.
 
@@ -284,15 +269,6 @@ STEP F. Begin the build
 
     (c) Execute the NTBUILD.BAT file with the parameter "free"
 
-    For a release build (IFS version):
-
-    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
-        Visual Studio environment you installed.
-
-    (b) Execute the SETENV.BAT file with the parameters "/2000 /RETAIL"
-
-    (c) Execute the NTBUILD.BAT file with the parameter "free ifs"
-
     For a debug build (SMB version):
 
     (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
@@ -301,15 +277,6 @@ STEP F. Begin the build
     (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
 
     (c) Execute the NTBUILD.BAT file with the parameter "checked"
-
-    For a debug build (IFS version):
-
-    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
-        Visual Studio environment you installed.
-
-    (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
-
-    (c) Execute the NTBUILD.BAT file with the parameter "checked ifs"
 
 (4) Clean the work area:
 
@@ -323,9 +290,6 @@ While the build is running you will see many compile warnings. This
 behavior is normal; the build process is successful as long as the build
 process doesn't terminate with an error ("nmake.exe return code 0x2")
 and it displays 'Build Finished Successfully'.
-
-(6) [IFS only] Open a DDK/IFS Build Environment command window, change 
-    to the src\WINNT\afsrdr directory, and execute the "build" command.
 
 
 STEP G. Install NSIS 2.30 (optional).

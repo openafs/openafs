@@ -34,9 +34,6 @@ static SERVICE_STATUS		ServiceStatus;
 static SERVICE_STATUS_HANDLE	StatusHandle;
 
 HANDLE hAFSDMainThread = NULL;
-#ifdef AFSIFS
-HANDLE hAFSDWorkerThread[WORKER_THREADS];
-#endif
 
 HANDLE WaitToTerminate;
 
@@ -58,9 +55,6 @@ extern int powerStateSuspended = 0;
  */
 static void afsd_notifier(char *msgp, char *filep, long line)
 {
-#ifdef AFSIFS
-    int i;
-#endif
     if (!msgp)
         msgp = "unspecified assert";
 
@@ -96,11 +90,6 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 #endif
 
     SetEvent(WaitToTerminate);
-#ifdef AFSIFS
-    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-    for (i = 0; i < WORKER_THREADS; i++)
-        CloseHandle(hAFSDWorkerThread[i]);
-#endif
 
 #ifdef JUMP
     if (GetCurrentThreadId() == MainThreadId)
@@ -425,9 +414,7 @@ afsd_ServiceControlHandlerEx(
 #define MAX_DRIVES  23
 static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
 {
-#ifndef AFSIFS
     char szAfsPath[_MAX_PATH];
-#endif
     char szDriveToMapTo[5];
     DWORD dwResult;
     char szKeyName[256];
@@ -456,7 +443,6 @@ static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
             }
         }
 
-#ifndef AFSIFS
         for (dwRetry = 0 ; dwRetry < MAX_RETRIES; dwRetry++)
         {
             NETRESOURCE nr;
@@ -483,10 +469,6 @@ static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
             /* Disconnect any previous mappings */
             dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         }
-#else
-	/* FIXFIX: implement */
-	afsi_log("GlobalAutoMap of %s to %s not implemented", szDriveToMapTo, szSubMount);
-#endif
     }        
 
     RegCloseKey(hKey);
@@ -515,14 +497,12 @@ static void MountGlobalDrives()
 
 static void DismountGlobalDrives()
 {
-#ifndef AFSIFS
     char szAfsPath[_MAX_PATH];
     char szDriveToMapTo[5];
     DWORD dwDriveSize;
     DWORD dwSubMountSize;
     char szSubMount[256];
     DWORD dwType;
-#endif
     DWORD dwResult;
     char szKeyName[256];
     HKEY hKey;
@@ -547,9 +527,6 @@ static void DismountGlobalDrives()
     if (dwResult != ERROR_SUCCESS)
         return;
 
-#ifdef AFSIFS    
-    /* FIXFIX: implement */
-#else
     while (dwIndex < MAX_DRIVES) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
@@ -569,7 +546,6 @@ static void DismountGlobalDrives()
         
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
     }        
-#endif
 
     RegCloseKey(hKey);
 }
@@ -1117,9 +1093,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     HMODULE hHookDll;
     HMODULE hAdvApi32;
-#ifdef AFSIFS
-    int cnt;
-#endif
 
 #ifdef _DEBUG
     afsd_DbgBreakAllocInit();
@@ -1321,21 +1294,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 /* the following ifdef chooses the mode of operation for the service.  to enable
  * a runtime flag (instead of compile-time), pioctl() would need to dynamically
  * determine the mode, in order to use the correct ioctl special-file path. */
-#ifndef AFSIFS
         code = afsd_InitSMB(&reason, MessageBox);
         if (code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
             osi_panic(reason, __FILE__, __LINE__);
         }
-#else
-        code = ifs_Init(&reason);
-        if (code != 0) {
-            afsi_log("ifs_Init failed: %s (code = %d)", reason, code);
-            osi_panic(reason, __FILE__, __LINE__);
-        }     
-        for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-            hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
-#endif  
 
         /* allow an exit to be called post smb initialization */
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -1407,13 +1370,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 
-#ifndef AFSIFS
     WaitForSingleObject(WaitToTerminate, INFINITE);
-#else
-    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-    for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-        CloseHandle(hAFSDWorkerThread[cnt]);
-#endif
 
     ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
     ServiceStatus.dwWin32ExitCode = NO_ERROR;
@@ -1463,10 +1420,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     rx_Finalize();                       
     afsi_log("rx finalization complete");
                                          
-#ifndef AFSIFS
     smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
-#endif
                                          
     RpcShutdown();                       
 
@@ -1565,9 +1520,6 @@ main(int argc, char * argv[])
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
             getchar();  
             SetEvent(WaitToTerminate);
-#ifdef AFSIFS
-	    dc_release_hooks();
-#endif
         }
     }
 

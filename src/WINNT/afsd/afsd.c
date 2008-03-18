@@ -6,30 +6,6 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-/* AFSIFS Portions copyright (c) 2005
- * the regents of the university of michigan
- * all rights reserved
- * 
- * permission is granted to use, copy, create derivative works and
- * redistribute this software and such derivative works for any purpose,
- * so long as the name of the university of michigan is not used in
- * any advertising or publicity pertaining to the use or distribution
- * of this software without specific, written prior authorization.  if
- * the above copyright notice or any other identification of the
- * university of michigan is included in any copy of any portion of
- * this software, then the disclaimer below must also be included.
- * 
- * this software is provided as is, without representation from the
- * university of michigan as to its fitness for any purpose, and without
- * warranty by the university of michigan of any kind, either express 
- * or implied, including without limitation the implied warranties of
- * merchantability and fitness for a particular purpose.  the regents
- * of the university of michigan shall not be liable for any damages,   
- * including special, indirect, incidental, or consequential damages, 
- * with respect to any claim arising out or in connection with the use
- * of the software, even if it has been or is hereafter advised of the
- * possibility of such damages.
- */
 
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -134,14 +110,6 @@ int WINAPI WinMain(
         DispatchMessage(&msg);
     }
 
-#ifdef AFSIFS
-    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-    for (i = 0; i < WORKER_THREADS; i++)
-        CloseHandle(hAFSDWorkerThread[i]);
-    //CloseHandle(hAFSDMainThread);
-    RpcMgmtStopServerListening(NULL);
-#endif
-
     return (msg.wParam);
 }
 
@@ -223,22 +191,10 @@ BOOL InitInstance(
 	if (code != 0)
 		osi_panic(reason, __FILE__, __LINE__);
 
-#ifndef AFSIFS
         code = afsd_InitSMB(&reason, MessageBox);
-#else
-	code = ifs_Init(&reason);
-#endif
 
 	if (code != 0)
             osi_panic(reason, __FILE__, __LINE__);
-
-#ifdef AFSIFS
-	DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
-        if ( GetLastError() == ERROR_ALREADY_EXISTS )
-            afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
-	for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-            hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
-#endif
 
 	ShowWindow(hWnd, SW_SHOWMINNOACTIVE);
 	UpdateWindow(hWnd);
@@ -276,9 +232,6 @@ LONG APIENTRY MainWndProc(
 		break;
 
 	    case WM_DESTROY:
-#ifdef AFSIFS
-		SetEvent(DoTerminate);
-#endif
 		RpcMgmtStopServerListening(NULL);
 		PostQuitMessage(0);
 		break;
