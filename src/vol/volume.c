@@ -7002,10 +7002,110 @@ DoubleToPrintable(double x, char * buf, int len)
     return buf;
 }
 
+struct VLRUExtStatsEntry {
+    VolumeId volid;
+};
+
+struct VLRUExtStats {
+    afs_uint32 len;
+    afs_uint32 used;
+    struct {
+	afs_uint32 start;
+	afs_uint32 len;
+    } queue_info[VLRU_QUEUE_INVALID];
+    struct VLRUExtStatsEntry * vec;
+};
+
+/** 
+ * add a 256-entry fudge factor onto the vector in case state changes
+ * out from under us.
+ */
+#define VLRU_EXT_STATS_VEC_LEN_FUDGE   256
+
+/**
+ * collect extended statistics for the VLRU subsystem.
+ *
+ * @param[out] stats  pointer to stats structure to be populated
+ * @param[in] nvols   number of volumes currently known to exist
+ *
+ * @pre VOL_LOCK held
+ *
+ * @post stats->vec allocated and populated
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval 1 failure
+ */
+static int
+VVLRUExtStats_r(struct VLRUExtStats * stats, afs_uint32 nvols)
+{
+    afs_uint32 cur, idx, len;
+    struct rx_queue * qp, * nqp;
+    Volume * vp;
+    struct VLRUExtStatsEntry * vec;
+
+    len = nvols + VLRU_EXT_STATS_VEC_LEN_FUDGE;
+    vec = stats->vec = calloc(len,
+			      sizeof(struct VLRUExtStatsEntry));
+    if (vec == NULL) {
+	return 1;
+    }
+
+    cur = 0;
+    for (idx = VLRU_QUEUE_NEW; idx < VLRU_QUEUE_INVALID; idx++) {
+	VLRU_Wait_r(&volume_LRU.q[idx]);
+	VLRU_BeginExclusive_r(&volume_LRU.q[idx]);
+	VOL_UNLOCK;
+
+	stats->queue_info[idx].start = cur;
+
+	for (queue_Scan(&volume_LRU.q[idx], qp, nqp, rx_queue)) {
+	    if (cur == len) {
+		/* out of space in vec */
+		break;
+	    }
+	    vp = (Volume *)((char *)qp - offsetof(Volume, vlru));
+	    vec[cur].volid = vp->hashid;
+	    cur++;
+	}
+
+	stats->queue_info[idx].len = cur - stats->queue_info[idx].start;
+
+	VOL_LOCK;
+	VLRU_EndExclusive_r(&volume_LRU.q[idx]);
+    }
+
+    stats->len = len;
+    stats->used = cur;
+    return 0;
+}
+
+#define ENUMTOSTRING(en)  #en
+#define ENUMCASE(en) \
+    case en: \
+        return ENUMTOSTRING(en); \
+        break
+
+static char *
+vlru_idx_to_string(int idx)
+{
+    switch (idx) {
+	ENUMCASE(VLRU_QUEUE_NEW);
+	ENUMCASE(VLRU_QUEUE_MID);
+	ENUMCASE(VLRU_QUEUE_OLD);
+	ENUMCASE(VLRU_QUEUE_CANDIDATE);
+	ENUMCASE(VLRU_QUEUE_HELD);
+	ENUMCASE(VLRU_QUEUE_INVALID);
+    default:
+	return "**UNKNOWN**";
+    }
+}
+
 void
 VPrintExtendedCacheStats_r(int flags)
 {
     int i, j;
+    afs_uint32 vol_sum = 0;
     struct stats {
 	double min;
 	double max;
@@ -7017,6 +7117,7 @@ VPrintExtendedCacheStats_r(int flags)
     char pr_buf[4][32];
     VolumeHashChainHead *head;
     Volume *vp, *np;
+    struct VLRUExtStats vlru_stats;
 
     /* zero out stats */
     memset(&looks, 0, sizeof(struct stats));
@@ -7044,6 +7145,7 @@ VPrintExtendedCacheStats_r(int flags)
 	    gets.sum     += ch_gets.sum;
 	    reorders.sum += ch_reorders.sum;
 	    len.sum      += (double)head->len;
+	    vol_sum      += head->len;
 	    
 	    if (i == 0) {
 		len.min      = (double) head->len;
@@ -7207,6 +7309,8 @@ VPrintExtendedCacheStats_r(int flags)
 	VOL_UNLOCK;
 	for (i = 0; i <= VOLMAXPARTS; i++) {
 	    if (part_exists[i]) {
+		/* XXX while this is currently safe, it is a violation
+		 *     of the VGetPartitionById_r interface contract. */
 		diskP = VGetPartitionById_r(i, 0);
 		if (diskP) {
 		    Log("Partition %s has %d online volumes\n", 
@@ -7217,6 +7321,43 @@ VPrintExtendedCacheStats_r(int flags)
 	VOL_LOCK;
     }
 
+    /* print extended VLRU statistics */
+    if (VVLRUExtStats_r(&vlru_stats, vol_sum) == 0) {
+	afs_uint32 idx, cur, lpos;
+	VOL_UNLOCK;
+	VolumeId line[5];
+
+	Log("VLRU State Dump:\n\n");
+
+	for (idx = VLRU_QUEUE_NEW; idx < VLRU_QUEUE_INVALID; idx++) {
+	    Log("\t%s:\n", vlru_idx_to_string(idx));
+
+	    lpos = 0;
+	    for (cur = vlru_stats.queue_info[idx].start;
+		 cur < vlru_stats.queue_info[idx].len;
+		 cur++) {
+		line[lpos++] = vlru_stats.vec[cur].volid;
+		if (lpos==5) {
+		    Log("\t\t%u, %u, %u, %u, %u,\n",
+			line[0], line[1], line[2], line[3], line[4]);
+		    lpos = 0;
+		}
+	    }
+
+	    if (lpos) {
+		while (lpos < 5) {
+		    line[lpos++] = 0;
+		}
+		Log("\t\t%u, %u, %u, %u, %u\n",
+		    line[0], line[1], line[2], line[3], line[4]);
+	    }
+	    Log("\n");
+	}
+
+	free(vlru_stats.vec);
+
+	VOL_LOCK;
+    }
 }
 
 void
