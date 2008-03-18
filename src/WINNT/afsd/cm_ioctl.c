@@ -195,10 +195,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **scpp, afs_uint32 flags)
 {
     long code;
-#ifndef AFSIFS
     cm_scache_t *substRootp = NULL;
     cm_scache_t *iscp = NULL;
-#endif
     char * relativePath;
     char * lastComponent = NULL;
     afs_uint32 follow = (flags & CM_PARSE_FLAG_LITERAL ? CM_FLAG_NOMOUNTCHASE : CM_FLAG_FOLLOW);
@@ -226,21 +224,6 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
     // TranslateExtendedChars(ioctlp->inDatap);
-
-#ifdef AFSIFS
-    /* we have passed the whole path, including the afs prefix.
-       when the pioctl call is made, we perform an ioctl to afsrdr
-       and it returns the correct (full) path.  therefore, there is
-       no drive letter, and the path is absolute. */
-    code = cm_NameI(cm_data.rootSCachep, relativePath,
-                     CM_FLAG_CASEFOLD,
-                     userp, "", reqp, scpp);
-
-    if (code) {
-	osi_Log1(afsd_logp,"cm_ParseIoctlPath code 0x%x", code);
-	return code;
-    }
-#else /* AFSIFS */
 
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
@@ -379,7 +362,6 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             return code;
 	}
     }
-#endif /* AFSIFS */
 
     if (substRootp)
 	cm_ReleaseSCache(substRootp);
@@ -2298,9 +2280,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     afs_uuid_t uuid;
     int flags;
     char sessionKey[8];
-#ifndef AFSIFS
     char *smbname;
-#endif
     int release_userp = 0;
     char * wdir = NULL;
 
@@ -2348,7 +2328,6 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         uname = tp;
         tp += strlen(tp) + 1;
 
-#ifndef AFSIFS	/* no SMB username, so we cannot logon based on this */
         if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = tp;
@@ -2360,7 +2339,6 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
             osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
                      osi_LogSaveString(smb_logp, uname));
         }
-#endif
 
 		/* uuid */
         memcpy(&uuid, tp, sizeof(uuid));
@@ -2371,13 +2349,11 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
     }
 
-#ifndef AFSIFS
     if (flags & PIOCTL_LOGON) {
         userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
 				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
 	release_userp = 1;
     }
-#endif /* AFSIFS */
 
     /* store the token */
     lock_ObtainMutex(&userp->mx);

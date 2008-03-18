@@ -126,14 +126,10 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
 
     /* for directories, this sends a change notification on the dir itself */
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
-#ifndef AFSIFS
         if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(0,
                              FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
                              scp, NULL, NULL, TRUE);
-#else
-        dc_break_callback(FID_HASH_FN(&scp->fid));
-#endif
     } else {
 	/* and for files, this sends a change notification on the file's parent dir */
         cm_fid_t tfid;
@@ -141,16 +137,11 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
 
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         dscp = cm_FindSCache(&tfid);
-#ifndef AFSIFS
         if ( dscp &&
              dscp->flags & CM_SCACHEFLAG_ANYWATCH )
             smb_NotifyChange( 0,
                               FILE_NOTIFY_GENERIC_FILE_FILTER,
                               dscp, NULL, NULL, TRUE);
-#else
-        if (dscp)
-            dc_break_callback(FID_HASH_FN(&dscp->fid));
-#endif
         if (dscp) 
             cm_ReleaseSCache(dscp);
     }
