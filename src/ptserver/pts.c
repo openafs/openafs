@@ -59,6 +59,7 @@ struct authstate {
 int
 pts_Interactive(struct cmd_syndesc *as, void *arock)
 {
+    source = stdin;
     finished = 0;
     return 0;
 }
@@ -1177,12 +1178,12 @@ main(int argc, char **argv)
     cmd_SetBeforeProc(GetGlobals, &state);
 
     finished = 1;
-    source = stdin;
+    source = NULL;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
-    while (!finished) {
+    while (source && !finished) {
 	if (isatty(fileno(source)))
 	    fprintf(stderr, "pts> ");
 	if (!fgets(line, sizeof line, source)) {
