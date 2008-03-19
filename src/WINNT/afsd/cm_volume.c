@@ -546,11 +546,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
 
         volp->rw.ID = volp->ro.ID = volp->bk.ID = 0;
-        volp->dotdotFid.cell = 0;
-        volp->dotdotFid.volume = 0;
-        volp->dotdotFid.unique = 0;
-        volp->dotdotFid.vnode = 0;
-        volp->dotdotFid.hash = 0;
+        cm_SetFid(&volp->rw.dotdotFid, 0, 0, 0, 0);
+        cm_SetFid(&volp->ro.dotdotFid, 0, 0, 0, 0);
+        cm_SetFid(&volp->bk.dotdotFid, 0, 0, 0, 0);
         volp->namep[0] ='\0';
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
@@ -810,11 +808,9 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
                 cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_unknown);
 
             volp->rw.ID = volp->ro.ID = volp->bk.ID = 0;
-	    volp->dotdotFid.cell = 0;
-	    volp->dotdotFid.volume = 0;
-	    volp->dotdotFid.unique = 0;
-	    volp->dotdotFid.vnode = 0;
-            volp->dotdotFid.hash = 0;
+            cm_SetFid(&volp->rw.dotdotFid, 0, 0, 0, 0);
+            cm_SetFid(&volp->ro.dotdotFid, 0, 0, 0, 0);
+            cm_SetFid(&volp->bk.dotdotFid, 0, 0, 0, 0);
 	} else {
 	    volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
 	    memset(volp, 0, sizeof(cm_volume_t));
@@ -1350,9 +1346,8 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
-        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x dotdotFid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
+        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x refCount=%u\r\n", 
                  cookie, volp, volp->cellp->name, volp->namep, volp->rw.ID, volp->ro.ID, volp->bk.ID, volp->flags, 
-                 volp->dotdotFid.cell, volp->dotdotFid.volume, volp->dotdotFid.vnode, volp->dotdotFid.unique,
                  volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
