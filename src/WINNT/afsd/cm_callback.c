@@ -27,7 +27,6 @@
 
 #include <WINNT/syscfg.h>
 #include <WINNT/afsreg.h>
-#include <../afsrdr/kif.h>
 
 /*extern void afsi_log(char *pattern, ...);*/
 

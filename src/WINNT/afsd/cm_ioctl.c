@@ -44,7 +44,6 @@
 #include "cm_rpc.h"
 #include <strsafe.h>
 #include <winioctl.h>
-#include <..\afsrdr\kif.h>
 #include <rx\rx.h>
 
 #ifdef _DEBUG
