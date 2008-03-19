@@ -602,6 +602,7 @@ BEGIN
     IDS_ALL_SERVERS_RUNNING "All servers are running."
     IDS_CHECK_VOLUMES_OK    "All volumeID/name mappings checked."
     IDS_CHECK_VOLUMES_ERROR "Error checking volumeID/name mappings:  %o"
+    IDS_INVALID_ACL_DATA    "Internal Error: Invalid ACL data was received."
 END
 
 STRINGTABLE DISCARDABLE 

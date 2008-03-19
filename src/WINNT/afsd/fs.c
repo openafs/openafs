@@ -535,24 +535,36 @@ EmptyAcl(char *astr)
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     tp->dfs = 0;
-    sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell);
+    if (astr == NULL || sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell) <= 0) {
+        tp->dfs = 0;
+        tp->cell[0] = '\0';
+    }
     return tp;
 }
 
 static struct Acl *
 ParseAcl (char *astr)
 {
-    int nplus, nminus, i, trights;
+    int nplus, nminus, i, trights, ret;
     char tname[MAXNAME];
-    struct AclEntry *first, *last, *tl;
+    struct AclEntry *first, *next, *last, *tl;
     struct Acl *ta;
 
-    ta = (struct Acl *) malloc (sizeof (struct Acl));
-    assert(ta);
-    ta->dfs = 0;
-    sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+    ta = EmptyAcl(NULL);
+    if (astr == NULL || strlen(astr) == 0)
+        return ta;
+
+    ret = sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+    if (ret <= 0) {
+        free(ta);
+        return NULL;
+    }
     astr = SkipLine(astr);
-    sscanf(astr, "%d", &ta->nminus);
+    ret = sscanf(astr, "%d", &ta->nminus);
+    if (ret <= 0) {
+        free(ta);
+        return NULL;
+    }
     astr = SkipLine(astr);
 
     nplus = ta->nplus;
@@ -561,10 +573,13 @@ ParseAcl (char *astr)
     last = 0;
     first = 0;
     for(i=0;i<nplus;i++) {
-        sscanf(astr, "%100s %d", tname, &trights);
+        ret = sscanf(astr, "%100s %d", tname, &trights); 
+        if (ret <= 0)
+            goto nplus_err;
         astr = SkipLine(astr);
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        assert(tl);
+        if (tl == NULL)
+            goto nplus_err;
         if (!first) 
             first = tl;
         strcpy(tl->name, tname);
@@ -579,10 +594,13 @@ ParseAcl (char *astr)
     last = 0;
     first = 0;
     for(i=0;i<nminus;i++) {
-        sscanf(astr, "%100s %d", tname, &trights);
+        ret = sscanf(astr, "%100s %d", tname, &trights);
+        if (ret <= 0)
+            goto nminus_err;
         astr = SkipLine(astr);
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        assert(tl);
+        if (tl == NULL)
+            goto nminus_err;
         if (!first) 
             first = tl;
         strcpy(tl->name, tname);
@@ -594,7 +612,23 @@ ParseAcl (char *astr)
     }
     ta->minuslist = first;
 
+  exit:
     return ta;
+
+  nminus_err:
+    for (;first; first = next) {
+        next = first->next;
+        free(first);
+    }   
+    first = ta->pluslist;
+
+  nplus_err:
+    for (;first; first = next) {
+        next = first->next;
+        free(first);
+    }   
+    free(ta);
+    return NULL;
 }
 
 static int
@@ -904,6 +938,13 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
         if (ta)
             ZapAcl(ta);
 	ta = ParseAcl(space);
+        if (!ta) {
+            fprintf(stderr,
+                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                     ti->data);
+            error = 1;
+            continue;
+        }
 	if (!plusp && ta->dfs) {
 	    fprintf(stderr,
 		    "fs: %s: you may not use the -negative switch with DFS acl's.\n%s",
@@ -918,6 +959,13 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
             ta = EmptyAcl(space);
 	else 
             ta = ParseAcl(space);
+        if (!ta) {
+            fprintf(stderr,
+                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                     ti->data);
+            error = 1;
+            continue;
+        }
 	CleanAcl(ta, ti->data);
 	for(ui=as->parms[1].items; ui; ui=ui->next->next) {
 	    enum rtype rtype;
@@ -1027,6 +1075,12 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
     fa = ParseAcl(space);
+    if (!fa) {
+        fprintf(stderr,
+                 "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                 as->parms[0].items->data);
+        return 1;
+    }
     CleanAcl(fa, as->parms[0].items->data);
     for (ti=as->parms[1].items; ti;ti=ti->next) {
 	blob.out_size = MAXSIZE;
@@ -1044,6 +1098,13 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
             ta = EmptyAcl(space);
 	else 
             ta = ParseAcl(space);
+        if (!ta) {
+            fprintf(stderr,
+                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                     ti->data);
+            error = 1;
+            continue;
+        }
 	CleanAcl(ta, ti->data);
 	if (ta->dfs != fa->dfs) {
 	    fprintf(stderr, 
@@ -1206,7 +1267,13 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
         if (ta)
             ZapAcl(ta);
 	ta = ParseAcl(space);
-
+        if (!ta) {
+            fprintf(stderr,
+                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                     ti->data);
+            error = 1;
+            continue;
+        }
 	if (ta->dfs) {
 	    fprintf(stderr,
 		    "%s: cleanacl is not supported for DFS access lists.\n",
@@ -1292,6 +1359,13 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
 	ta = ParseAcl(space);
+        if (!ta) {
+            fprintf(stderr,
+                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
+                     ti->data);
+            error = 1;
+            continue;
+        }
 	switch (ta->dfs) {
 	  case 0:
 	    printf("Access list for %s is\n", ti->data);
