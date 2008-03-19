@@ -74,6 +74,7 @@
 #define IDS_ALL_SERVERS_RUNNING                65
 #define IDS_CHECK_VOLUMES_OK                   66
 #define IDS_CHECK_VOLUMES_ERROR                67
+#define IDS_INVALID_ACL_DATA                   68
 
 #define IDS_ACL_ENTRY_NAME_IN_USE              80
 #define IDS_REALLY_DEL_MOUNT_POINTS            81
