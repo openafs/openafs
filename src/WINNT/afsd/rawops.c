@@ -10,8 +10,6 @@
 #include <osi.h>
 #include "afsd.h"
 
-#include "afsdifs.h"
-
 #define CM_BUF_SIZE		4096
 long buf_bufferSize = CM_BUF_SIZE;
 
