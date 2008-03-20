@@ -622,14 +622,13 @@ GetMachineSid(PBYTE SidBuffer, DWORD SidSize)
 }
 
 int
-cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD maxVols, DWORD chunkSize, 
-                    afs_uint64 cacheBlocks, afs_uint32 blockSize)
+cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD maxVols, DWORD maxCells,
+                    DWORD chunkSize, afs_uint64 cacheBlocks, afs_uint32 blockSize)
 {
     HANDLE hf = INVALID_HANDLE_VALUE, hm;
     PSECURITY_ATTRIBUTES psa;
     int newFile = 1;
     afs_uint64 mappingSize;
-    DWORD maxCells = stats/4;
     DWORD volumeSerialNumber = 0;
     DWORD sidStringSize = 0;
     DWORD rc;
