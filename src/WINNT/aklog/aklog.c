@@ -398,6 +398,7 @@ int BeginsWithDir(char *str, int colon)
 int des_pcbc_init()
 {
     abort();
+    return 0;   /* avoid warning */
 }
 
 #ifdef HAVE_KRB4
@@ -430,6 +431,11 @@ static int get_v5cred(krb5_context context,
     krb5_error_code r;
     static krb5_principal client_principal = 0;
 
+    if (client_principal) {
+        krb5_free_principal(context, client_principal);
+        client_principal = 0;
+    }
+
     memset((char *)&increds, 0, sizeof(increds));
 
     if ((r = krb5_build_principal(context, &increds.server,
@@ -440,10 +446,16 @@ static int get_v5cred(krb5_context context,
         return((int)r);
     }
 
-    if (!_krb425_ccache)
-        krb5_cc_default(context, &_krb425_ccache);
-    if (!client_principal)
-        krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+    if (!_krb425_ccache) {
+        if ((r = krb5_cc_default(context, &_krb425_ccache)))
+            return ((int)r);
+    }
+    if (!client_principal) {
+        if ((r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal))) {
+            krb5_cc_close(context, _krb425_ccache);
+            return ((int)r);
+        }
+    }
 
     increds.client = client_principal;
     increds.times.endtime = 0;
@@ -451,12 +463,16 @@ static int get_v5cred(krb5_context context,
     increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
-    if (r)
+    if (r) {
+        krb5_cc_close(context, _krb425_ccache);
         return((int)r);
-
+    }
     /* This requires krb524d to be running with the KDC */
     if (c != NULL)
         r = krb5_524_convert_creds(context, *creds, c);
+
+    krb5_cc_close(context, _krb425_ccache);
+
     return((int)r);
 }
 
