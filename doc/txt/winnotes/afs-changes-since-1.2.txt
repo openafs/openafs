@@ -108,6 +108,10 @@ Since 1.5.33
    wrong if invalid input was provided.  Added error checking and 
    data validation.  Hopefully this will address the problem.
 
+ * Windows Error Reporting has shown crashes in aklog as a result
+   of krb5_cc_get_default() failures not being handled.  They are
+   now handled.
+
 Since 1.5.32
  * The Rx library used a 32-bit type for sockets which was
    truncating the socket value on 64-bit Windows.  This 
