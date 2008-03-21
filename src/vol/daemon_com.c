@@ -77,6 +77,18 @@ int (*V_BreakVolumeCallbacks) ();
 
 static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response * res);
 
+
+/*
+ * On AIX, connect() and bind() require use of SUN_LEN() macro;
+ * sizeof(struct sockaddr_un) will not suffice.
+ */
+#if defined(AFS_AIX_ENV) && defined(USE_UNIX_SOCKETS)
+#define AFS_SOCKADDR_LEN(sa)  SUN_LEN(sa)
+#else
+#define AFS_SOCKADDR_LEN(sa)  sizeof(*sa)
+#endif
+
+
 /* daemon com SYNC general interfaces */
 
 /**
@@ -159,7 +171,7 @@ SYNC_connect(SYNC_client_state * state)
 
     for (;;) {
 	state->fd = SYNC_getSock(&state->endpoint);
-	if (connect(state->fd, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
+	if (connect(state->fd, (struct sockaddr *)&addr, AFS_SOCKADDR_LEN(&addr)) >= 0)
 	    return 1;
 	if (!*timeout)
 	    break;
@@ -647,7 +659,7 @@ SYNC_bindSock(SYNC_server_state_t * state)
     for (numTries = 0; numTries < state->bind_retry_limit; numTries++) {
 	code = bind(state->fd, 
 		    (struct sockaddr *)&state->addr, 
-		    sizeof(state->addr));
+		    AFS_SOCKADDR_LEN(&state->addr));
 	if (code == 0)
 	    break;
 	Log("SYNC_bindSock: bind failed with (%d), will sleep and retry\n",
