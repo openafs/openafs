@@ -1,3 +1,113 @@
+Since 1.5.33
+ * Optimize the DNLC by applying Interlocked incrementing for 
+   statistics gathering and enabling greater use of read 
+   locks instead of write locks
+
+ * Further optimize osi_Log operations when logging is disabled 
+   by removing the need for the function call overhead.
+
+ * Add a new lock operation, Convert Read to Write, and apply 
+   it throughout the cache manager.  This function provides a 
+   fast transition from a read lock to a write lock when the 
+   caller is the only reader.
+
+ * Fix a timeout problem when opening files or request locks 
+   when the file in question is already write-locked by another 
+   machine.
+
+ * Fix a deadlock that can occur if "fs flushall" is executed 
+   while applications are writing to AFS.
+
+ * The cache manager would re-read data from the file server 
+   after file truncation when obtaining buffers to write to the
+   same file until the first StoreData RPC completes.
+
+ * Fixes error handling in cm_NTCheckDelete()
+
+ * Replaces cm_scache_t mutex with a read-write lock permitting 
+   additional parallel access.
+
+ * Prevent an cm_scache_t reference undercount when evaluating 
+   symlinks containing @sys when none of the active sysnames 
+   match any of the available targets.
+
+ * Prevent the leak of a cm_scache_t rwlock if associated symlink 
+   is too long.
+
+ * Set RxMaxMTU registry value to 0 which is the equivalent of 
+   it not being set at all.
+
+ * Reduce contention between BkgDaemon threads
+
+ * Prevent CM_SCACHEFLAG_ASYNCSTORE from being reset on a write 
+   failure
+
+ * Convert reference counts on cm_volume_t, cm_conn_t, cm_server_t 
+   objects to use the faster Interlocked operations which avoid 
+   the need to hold write locks.
+
+ * Permit rxkad errors other than RXKADEXPIRED to be treated as a 
+   non-fatal error that forces a retry against another service 
+   (if available.)
+
+ * Fix a crash in smb_WriteData that would occur if an application 
+   opened the file as read-only and then sent a write request anyway.  
+   (RT 88731)
+
+ * Respond to VL_NOENT errors by removing cm_volume_t object and
+   setting it to be the first object to be recycled.  This is not 
+   only a more efficient use of resources but it also prevents 
+   repeated attempts to query the VLDB server for the volume from 
+   the CheckOfflineVolumes routine.
+
+ * Change the defaults for RxEnablePeerStats and RxEnableProcessStats 
+   back to "on".
+
+ * A first cut at a cache manager statistics monitor that can be used 
+   to determine the necessary cache parameters to support the 
+   application working set.
+
+   Off by default, the performance package can be activated by setting 
+   "daemonPerformanceTuningInterval" in the service Parameters key.  
+   As with the other daemon interval values the unit is in seconds.
+
+   At service start and each succeeding interval the cache manager 
+   will write statistics to %TEMP%\afsd_performance.txt showing the 
+   relative usage of cm_scache_t, cm_volume_t and cm_buf_t objects.  
+   The FID statistics keep track of all FIDs seen by the cache manager 
+   during the service session whether or not they are backed by any 
+   live object in the cache.
+
+   These statistics are not stored in the cache file.
+
+ * Fix windows event logging broken in 1.5.33.
+
+ * Eliminate multiple calls to syscfg_GetIFInfo() which is used to 
+   populate the IP address list for WhoAreYou/TellMeAboutYourself RPCs
+   as well as when computing the server preference list.
+
+ * When merging status after a StoreData operation prevent data 
+   buffers from being discarded that we would prefer to keep.  
+   (Bug introduced in 1.5.33.)
+
+ * Modify installers the set RxMaxMTU to 0.
+
+ * In the AFS Configuration Panel on the Advanced->Miscellaneous 
+   dialog, the Background Daemons and Service Threads fields were 
+   swapped.
+
+ * Increase default number of Background Daemons to 4.
+
+ * Remove cm_volume_t reference from the cm_scache_t object.  Permit 
+   cm_volume_t objects to be recycled.
+
+ * Windows Error Reporting has shown a number of previously unseen 
+   stack corruption errors in the Explorer Shell extension.  The 
+   minidump appeared to indicate the problem was in ParseAcl().  
+   Reviewing the function it appears that numerous things could go 
+   wrong if invalid input was provided.  Added error checking and 
+   data validation.  Hopefully this will address the problem.
+
 Since 1.5.32
  * The Rx library used a 32-bit type for sockets which was
    truncating the socket value on 64-bit Windows.  This 
