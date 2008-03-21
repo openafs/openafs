@@ -162,6 +162,17 @@ extern int LogLevel;
  */
 struct Lock FSYNC_handler_lock;
 
+
+/*
+ * On AIX, connect() and bind() require use of SUN_LEN() macro;
+ * sizeof(struct sockaddr_un) will not suffice.
+ */
+#if defined(AFS_AIX_ENV) && defined(USE_UNIX_SOCKETS)
+#define AFS_SOCKADDR_LEN(sa)  SUN_LEN(sa)
+#else
+#define AFS_SOCKADDR_LEN(sa)  sizeof(*sa)
+#endif
+
 int
 FSYNC_clientInit(int f)
 {
@@ -177,7 +188,7 @@ FSYNC_clientInit(int f)
 
     for (;;) {
 	FS_sd = getport(&addr);
-	if (connect(FS_sd, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
+	if (connect(FS_sd, (struct sockaddr *)&addr, AFS_SOCKADDR_LEN(&addr)) >= 0)
 	    return 1;
 	if (!f) {
 	    FSYNC_clientFinis();
@@ -367,7 +378,7 @@ FSYNC_sync()
 
     for (numTries = 0; numTries < MAX_BIND_TRIES; numTries++) {
 	if ((code =
-	     bind(AcceptSd, (struct sockaddr *)&addr, sizeof(addr))) == 0)
+	     bind(AcceptSd, (struct sockaddr *)&addr, AFS_SOCKADDR_LEN(&addr))) == 0)
 	    break;
 #ifdef USE_UNIX_SOCKETS
 	code = errno;
