@@ -25,8 +25,6 @@
 #include <crtdbg.h>
 #endif
 
-#include "afsdifs.h"
-
 HANDLE main_inst;
 HWND main_wnd;
 char main_statusText[100];

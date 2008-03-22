@@ -23,7 +23,6 @@
 #ifdef _DEBUG
 #include <crtdbg.h>
 #endif
-#include "afsdifs.h"
 
 //#define REGISTER_POWER_NOTIFICATIONS 1
 #include "afsd_flushvol.h"
