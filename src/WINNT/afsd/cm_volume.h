@@ -15,8 +15,9 @@
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
 
 typedef struct cm_vol_state {
-    afs_uint32      ID;                 /* by mx */
     struct cm_volume *nextp;            /* volumeIDHashTable; by cm_volumeLock */
+    afs_uint32      ID;                 /* by mx */
+    struct cm_fid dotdotFid;	        /* parent of volume root */
     cm_serverRef_t *serversp;           /* by mx */
     enum volstatus  state;              /* by mx */
     afs_uint32      flags;              /* by mx */
@@ -33,7 +34,6 @@ typedef struct cm_volume {
     struct cm_vol_state rw;	        /* by cm_volumeLock */
     struct cm_vol_state ro;		/* by cm_volumeLock */
     struct cm_vol_state bk;		/* by cm_volumeLock */
-    struct cm_fid dotdotFid;	        /* parent of volume root */
     osi_mutex_t mx;
     afs_uint32 flags;			/* by mx */
     afs_int32 refCount;		        /* by Interlocked operations */

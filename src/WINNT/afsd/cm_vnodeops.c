@@ -1109,16 +1109,6 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     if (code == 0) {
         afs_uint32 cell, volume;
 
-        /* save the parent of the volume root for this is the 
-         * place where the volume is mounted and we must remember 
-         * this in the volume structure rather than just in the 
-         * scache entry lest the scache entry gets recycled 
-         * (defect 11489)
-         */
-        lock_ObtainMutex(&volp->mx);
-        volp->dotdotFid = dscp->fid;
-        lock_ReleaseMutex(&volp->mx);
-
         cell = cellp->cellID;
         
         /* if the mt pt originates in a .backup volume (not a .readonly)
@@ -1143,12 +1133,22 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
                  volp->ro.ID != 0) {
             targetType = ROVOL;
         }
-        if (targetType == ROVOL)
+        if (targetType == ROVOL) {
             volume = volp->ro.ID;
-        else if (targetType == BACKVOL)
+            lock_ObtainMutex(&volp->mx);
+            volp->ro.dotdotFid = dscp->fid;
+            lock_ReleaseMutex(&volp->mx);
+        } else if (targetType == BACKVOL) {
             volume = volp->bk.ID;
-        else
+            lock_ObtainMutex(&volp->mx);
+            volp->bk.dotdotFid = dscp->fid;
+            lock_ReleaseMutex(&volp->mx);
+        } else {
             volume = volp->rw.ID;
+            lock_ObtainMutex(&volp->mx);
+            volp->rw.dotdotFid = dscp->fid;
+            lock_ReleaseMutex(&volp->mx);
+        }
 
         /* the rest of the fid is a magic number */
         cm_SetFid(&scp->mountRootFid, cell, volume, 1, 1);
