@@ -43,7 +43,6 @@ RCSID
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
 #include <lanahelper.h>
-#include <../WINNT/afsrdr/kif.h>
 
 #include <loadfuncs-krb5.h>
 #include <krb5.h>
