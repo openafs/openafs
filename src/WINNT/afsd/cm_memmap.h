@@ -116,5 +116,5 @@ PSECURITY_ATTRIBUTES CreateCacheFileSA();
 VOID  FreeCacheFileSA(PSECURITY_ATTRIBUTES psa);
 int   cm_ShutdownMappedMemory(void);
 int   cm_ValidateMappedMemory(char * cachePath);
-int   cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD maxVols, DWORD chunkSize, afs_uint64 cacheBlocks, afs_uint32 blockSize);
+int   cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, afs_uint64 cacheBlocks, afs_uint32 blockSize);
 #endif /* CM_MEMMAP_H */

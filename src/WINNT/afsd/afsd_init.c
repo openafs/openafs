@@ -554,6 +554,7 @@ int afsd_InitCM(char **reasonP)
     long logChunkSize;
     DWORD stats;
     DWORD volumes;
+    DWORD cells;
     DWORD dwValue;
     DWORD rx_enable_peer_stats;
     DWORD rx_enable_process_stats;
@@ -786,6 +787,16 @@ int afsd_InitCM(char **reasonP)
     else {
         volumes = CM_CONFIGDEFAULT_STATS / 3;
         afsi_log("Default volume cache entries: %d", volumes);
+    }
+
+    dummyLen = sizeof(cells);
+    code = RegQueryValueEx(parmKey, "Cells", NULL, NULL,
+                            (BYTE *) &cells, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Cell cache entries: %d", cells);
+    else {
+        cells = CM_CONFIGDEFAULT_CELLS;
+        afsi_log("Default cell cache entries: %d", cells);
     }
 
     dummyLen = sizeof(ltt);
@@ -1232,7 +1243,7 @@ int afsd_InitCM(char **reasonP)
         
     cm_InitCallback();
 
-    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, volumes, cm_chunkSize, cacheBlocks, blockSize);
+    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, volumes, cells, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
         *reasonP = "error initializing cache file";
