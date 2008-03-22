@@ -557,18 +557,45 @@ struct Acl *EmptyAcl(const CString& strCellName)
     return tp;
 }
 
-struct Acl *ParseAcl(char *astr)
+struct Acl *EmptyAcl(char *astr)
 {
-    int nplus, nminus, i, trights;
+    register struct Acl *tp;
+    int junk;
+
+    tp = (struct Acl *)malloc(sizeof (struct Acl));
+    tp->nplus = tp->nminus = 0;
+    tp->pluslist = tp->minuslist = 0;
+    tp->dfs = 0;
+    if (astr == NULL || sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell) <= 0) {
+        tp->dfs = 0;
+        tp->cell[0] = '\0';
+    }
+    return tp;
+}
+
+struct Acl *
+ParseAcl (char *astr)
+{
+    int nplus, nminus, i, trights, ret;
     char tname[MAXNAME];
-    struct AclEntry *first, *last, *tl;
+    struct AclEntry *first, *next, *last, *tl;
     struct Acl *ta;
 
-    ta = (struct Acl *) malloc (sizeof (struct Acl));
-    ta->dfs = 0;
-    sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+    ta = EmptyAcl(NULL);
+    if (astr == NULL || strlen(astr) == 0)
+        return ta;
+
+    ret = sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+    if (ret <= 0) {
+        free(ta);
+        return NULL;
+    }
     astr = SkipLine(astr);
-    sscanf(astr, "%d", &ta->nminus);
+    ret = sscanf(astr, "%d", &ta->nminus);
+    if (ret <= 0) {
+        free(ta);
+        return NULL;
+    }
     astr = SkipLine(astr);
 
     nplus = ta->nplus;
@@ -576,39 +603,63 @@ struct Acl *ParseAcl(char *astr)
 
     last = 0;
     first = 0;
-    for(i = 0; i < nplus; i++) {
-        sscanf(astr, "%100s %d", tname, &trights);
+    for(i=0;i<nplus;i++) {
+        ret = sscanf(astr, "%100s %d", tname, &trights); 
+        if (ret <= 0)
+            goto nplus_err;
         astr = SkipLine(astr);
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (!first)
-			first = tl;
+        if (tl == NULL)
+            goto nplus_err;
+        if (!first) 
+            first = tl;
         strcpy(tl->name, tname);
         tl->rights = trights;
         tl->next = 0;
-        if (last)
-			last->next = tl;
+        if (last) 
+            last->next = tl;
         last = tl;
     }
     ta->pluslist = first;
 
     last = 0;
     first = 0;
-    for(i=0; i < nminus; i++) {
-        sscanf(astr, "%100s %d", tname, &trights);
+    for(i=0;i<nminus;i++) {
+        ret = sscanf(astr, "%100s %d", tname, &trights);
+        if (ret <= 0)
+            goto nminus_err;
         astr = SkipLine(astr);
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
+        if (tl == NULL)
+            goto nminus_err;
         if (!first) 
-			first = tl;
+            first = tl;
         strcpy(tl->name, tname);
         tl->rights = trights;
         tl->next = 0;
         if (last) 
-			last->next = tl;
+            last->next = tl;
         last = tl;
     }
     ta->minuslist = first;
 
+  exit:
     return ta;
+
+  nminus_err:
+    for (;first; first = next) {
+        next = first->next;
+        free(first);
+    }   
+    first = ta->pluslist;
+
+  nplus_err:
+    for (;first; first = next) {
+        next = first->next;
+        free(first);
+    }   
+    free(ta);
+    return NULL;
 }
 
 /* clean up an access control list of its bad entries; return 1 if we made
@@ -681,6 +732,10 @@ void CleanACL(CStringArray& names)
         }
 
         ta = ParseAcl(space);
+        if (ta == NULL) {
+            ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
+            continue;
+        }
         if (ta->dfs) {
             ShowMessageBox(IDS_CLEANACL_NOT_SUPPORTED, MB_ICONERROR, IDS_CLEANACL_NOT_SUPPORTED, names[i]);
             continue;
@@ -731,6 +786,10 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     }
 
     ta = ParseAcl(space);
+    if (ta == NULL) {
+        ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
+        return FALSE;
+    }
     if (ta->dfs) {
         ShowMessageBox(IDS_DFSACL_ERROR, MB_ICONERROR, IDS_DFSACL_ERROR);
         return FALSE;
@@ -926,6 +985,11 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
         pToAcl = EmptyAcl(space);
     else 
         pToAcl = ParseAcl(space);
+
+    if (pToAcl == NULL) {
+        ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
+        return FALSE;
+    }
 
     CleanAcl(pToAcl);
 
