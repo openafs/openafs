@@ -194,7 +194,17 @@ static linked_list authedcells;	/* List of cells already logged to */
 
 static int usev5 = TRUE;   /* use kerberos 5? */
 static int use524 = FALSE;  /* use krb524? */
+static krb5_context context = 0;
 static krb5_ccache _krb425_ccache;
+
+void akexit(int exit_code)
+{
+    if (_krb425_ccache)
+        krb5_cc_close(context, _krb425_ccache);
+    if (context)
+        krb5_free_context(context);
+    exit(exit_code);
+}
 
 long GetLocalCell(struct afsconf_dir **pconfigdir, char *local_cell)
 {
@@ -202,7 +212,7 @@ long GetLocalCell(struct afsconf_dir **pconfigdir, char *local_cell)
     {
         fprintf(stderr, "%s: can't get afs configuration (afsconf_Open(%s))\n",
                  progname, AFSDIR_CLIENT_ETC_DIRPATH);
-        exit(AKLOG_AFS);
+        akexit(AKLOG_AFS);
     }
 
     return afsconf_GetLocalCell(*pconfigdir, local_cell, MAXCELLCHARS);
@@ -464,14 +474,11 @@ static int get_v5cred(krb5_context context,
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
     if (r) {
-        krb5_cc_close(context, _krb425_ccache);
         return((int)r);
     }
     /* This requires krb524d to be running with the KDC */
     if (c != NULL)
         r = krb5_524_convert_creds(context, *creds, c);
-
-    krb5_cc_close(context, _krb425_ccache);
 
     return((int)r);
 }
@@ -582,7 +589,7 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
     if (GetLocalCell(&configdir, local_cell))
     {
         fprintf(stderr, "%s: can't determine local cell.\n", progname);
-        exit(AKLOG_AFS);
+        akexit(AKLOG_AFS);
     }
 
     if ((cell == NULL) || (cell[0] == 0))
@@ -1062,7 +1069,7 @@ static char *next_path(char *origpath)
             if (++symlinkcount > MAXSYMLINKS)
             {
                 fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
-                exit(AKLOG_BADPATH);
+                akexit(AKLOG_BADPATH);
             }
             memset(tmpbuf, 0, sizeof(tmpbuf));
             if (elast_comp)
@@ -1132,7 +1139,7 @@ static int auth_to_path(krb5_context context, char *path)
             fprintf(stderr, "Unable to find current working directory:\n");
             fprintf(stderr, "%s\n", pathtocheck);
             fprintf(stderr, "Try an absolute pathname.\n");
-            exit(AKLOG_BADPATH);
+            akexit(AKLOG_BADPATH);
         }
         else
         {
@@ -1233,7 +1240,7 @@ static void usage(void)
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
-    exit(AKLOG_USAGE);
+    akexit(AKLOG_USAGE);
 }
 
 void
@@ -1249,7 +1256,7 @@ validate_krb5_availability(void)
         FreeLibrary(h);
     else {
         fprintf(stderr, "Kerberos for Windows library %s is not available.\n", KRB5LIB);
-        exit(AKLOG_KFW_NOT_INSTALLED);
+        akexit(AKLOG_KFW_NOT_INSTALLED);
     }
 }
 
@@ -1262,11 +1269,11 @@ validate_krb4_availability(void)
         FreeLibrary(h);
     else {
         fprintf(stderr, "Kerberos for Windows library krbv4w32.dll is not available.\n");
-        exit(AKLOG_KFW_NOT_INSTALLED);
+        akexit(AKLOG_KFW_NOT_INSTALLED);
     }
 #else
     fprintf(stderr, "Kerberos v4 is not available in this build of aklog.\n");
-    exit(AKLOG_USAGE);
+    akexit(AKLOG_USAGE);
 #endif
 }
 
@@ -1292,8 +1299,6 @@ int main(int argc, char *argv[])
     linked_list cells;		/* List of cells to log to */
     linked_list paths;		/* List of paths to log to */
     ll_node *cur_node;
-
-    krb5_context context = 0;
 
     memset(&cellinfo, 0, sizeof(cellinfo));
 
@@ -1392,14 +1397,14 @@ int main(int argc, char *argv[])
                 else
                 {
                     fprintf(stderr, "%s: failure copying cellinfo.\n", progname);
-                    exit(AKLOG_MISC);
+                    akexit(AKLOG_MISC);
                 }
             }
             else
             {
                 fprintf(stderr, "%s: failure adding cell to cells list.\n",
                          progname);
-                exit(AKLOG_MISC);
+                akexit(AKLOG_MISC);
             }
             memset(&cellinfo, 0, sizeof(cellinfo));
             cmode = FALSE;
@@ -1418,14 +1423,14 @@ int main(int argc, char *argv[])
                 {
                     fprintf(stderr, "%s: failure copying path name.\n",
                              progname);
-                    exit(AKLOG_MISC);
+                    akexit(AKLOG_MISC);
                 }
             }
             else
             {
                 fprintf(stderr, "%s: failure adding path to paths list.\n",
                          progname);
-                exit(AKLOG_MISC);
+                akexit(AKLOG_MISC);
             }
             pmode = FALSE;
             memset(path, 0, sizeof(path));
@@ -1471,8 +1476,5 @@ int main(int argc, char *argv[])
             status = AKLOG_SOMETHINGSWRONG;
     }       
 
-    if(usev5)
-        krb5_free_context(context);
-
-    exit(status);
+    akexit(status);
 }       
