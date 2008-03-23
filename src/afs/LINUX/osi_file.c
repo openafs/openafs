@@ -20,7 +20,9 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
-
+#if !defined(HAVE_IGET)
+#include "h/exportfs.h"
+#endif
 
 int afs_osicred_initialized = 0;
 struct AFS_UCRED afs_osi_cred;
@@ -40,10 +42,8 @@ osi_UFSOpen(afs_int32 ainode)
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
     struct file *filp = NULL;
-#if defined(AFS_CACHE_VNODE_PATH)
-    int code;
-    int dummy;
-    char fname[1024];
+#if !defined(HAVE_IGET)
+    struct fid fid;
 #endif
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
@@ -62,39 +62,15 @@ osi_UFSOpen(afs_int32 ainode)
 		  sizeof(struct osi_file));
     }
     memset(afile, 0, sizeof(struct osi_file));
-#ifdef AFS_CACHE_VNODE_PATH
-    if (ainode < 0) {
-      switch (ainode) {
-      case AFS_CACHE_CELLS_INODE:
-	snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
-	break;
-      case AFS_CACHE_ITEMS_INODE:
-	snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CacheItems");
-	break;
-      case AFS_CACHE_VOLUME_INODE:
-	snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "VolumeItems");
-	break;
-      default:
-	osi_Panic("Invalid negative inode");
-      }
-    } else {
-      dummy = ainode / afs_numfilesperdir;
-      snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode);
-    }
-
-    code = osi_lookupname(fname, AFS_UIOSYS, 0, &dp);
-    if (code) {
-	osi_Panic("Failed cache file lookup: %s in UFSOpen\n", fname);
-    }
-    tip = dp->d_inode;
-#else
+#if defined(HAVE_IGET)
     tip = iget(afs_cacheSBp, (u_long) ainode);
-    if (!tip)
-	osi_Panic("Can't get inode %d\n", ainode);
-
-    dp = d_alloc_anon(tip);
+#else
+    fid.i32.ino = ainode;
+    fid.i32.gen = 0;
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &fid, sizeof(fid), FILEID_INO32_GEN);
     if (!dp) 
            osi_Panic("Can't get dentry for inode %d\n", ainode);          
+    tip = dp->d_inode;
 #endif
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
