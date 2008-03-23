@@ -14,7 +14,7 @@ RELDIR=vlserver
 ############################################################################
 # Definitions for installing header files
 
-INCFILEDIR = $(DESTDIR)\include\afs 
+INCFILEDIR = $(DESTDIR)\include
 
 INCFILES = \
 	$(INCFILEDIR)\afs\vl_opcodes.h \
