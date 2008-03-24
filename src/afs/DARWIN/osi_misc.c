@@ -102,10 +102,15 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
    user_addr_t iovaddr;
    user_size_t iovsize;
 
-   /* XXX 64 bit userspaace? */
-   res = uio_create(uio_iovcnt(auio), uio_offset(auio),
-                    uio_isuserspace(auio) ? UIO_USERSPACE32 : UIO_SYSSPACE32,
-                    uio_rw(auio));
+   if (proc_is64bit(current_proc())) {
+       res = uio_create(uio_iovcnt(auio), uio_offset(auio),
+			uio_isuserspace(auio) ? UIO_USERSPACE64 : UIO_SYSSPACE32,
+			uio_rw(auio));
+   } else {
+       res = uio_create(uio_iovcnt(auio), uio_offset(auio),
+			uio_isuserspace(auio) ? UIO_USERSPACE32 : UIO_SYSSPACE32,
+			uio_rw(auio));
+   }
 
    for (i = 0;i < uio_iovcnt(auio) && size > 0;i++) {
        if (uio_getiov(auio, i, &iovaddr, &iovsize))
