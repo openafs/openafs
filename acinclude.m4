@@ -884,7 +884,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
-		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
