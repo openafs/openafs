@@ -1,0 +1,62 @@
+Update the up man page to say afs-up instead, matching our renaming of
+the command.  We also have to copy up.pod to afs-up.pod to get the right
+man page headers, but quilt can't do that easily, so we do that in
+debian/rules.
+
+Not suitable upstream unless they rename the up command as well.
+
+Debian Bug#459635
+
+--- openafs.orig/doc/man-pages/pod1/up.pod
++++ openafs/doc/man-pages/pod1/up.pod
+@@ -1,13 +1,13 @@
+ =head1 NAME
+ 
+-up - Recursively copy directories, preserving AFS metadata
++afs-up - Recursively copy directories, preserving AFS metadata
+ 
+ =head1 SYNOPSIS
+ 
+ =for html
+ <div class="synopsis">
+ 
+-B<up> [B<-v>] [B<-1>] [B<-f>] [B<-r>] [B<-x>] [B<-m>]
++B<afs-up> [B<-v>] [B<-1>] [B<-f>] [B<-r>] [B<-x>] [B<-m>]
+     <I<source directory>> <I<destination directory>>
+ 
+ =for html
+@@ -15,7 +15,7 @@
+ 
+ =head1 DESCRIPTION
+ 
+-The B<up> command recursively copies the files and subdirectories in a
++The B<afs-up> command recursively copies the files and subdirectories in a
+ specified source directory to a specified destination directory.  The
+ command interpreter changes the destination directory and the files and
+ subdirectories in it in the following ways:
+@@ -56,14 +56,14 @@
+ 
+ =back
+ 
+-The up command is idempotent, meaning that if its execution is interrupted
++The B<afs-up> command is idempotent, meaning that if its execution is interrupted
+ by a network, server machine, or process outage, then a subsequent reissue
+ of the same command continues from the interruption point, rather than
+ starting over at the beginning. This saves time and reduces network
+ traffic in comparison to the UNIX commands that provide similar
+ functionality.
+ 
+-The B<up> command returns a status code of C<0> (zero) only if it
++The B<afs-up> command returns a status code of C<0> (zero) only if it
+ succeeds. Otherwise, it returns a status code of C<1> (one).
+ 
+ This command does not use the syntax conventions of the AFS command
+@@ -124,7 +124,7 @@
+ The following command copies the contents of the directory F<dir1> to
+ directory F<dir2>:
+ 
+-   % up dir1 dir2
++   % afs-up dir1 dir2
+ 
+ =head1 PRIVILEGE REQUIRED
+ 

@@ -74,6 +74,7 @@ configure: configure-stamp
 configure-stamp: $(QUILT_STAMPFN)
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
+	cp doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
 	    sh configure \
@@ -105,7 +106,8 @@ clean: unpatch
 	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean aclocal.m4 configure configure-libafs doc/man-pages/man1/*.1 \
 	    doc/man-pages/man5/*.5 doc/man-pages/man8/*.8 \
-	    src/kauth/ka-forwarder src/packaging/RedHat/openafs.spec
+	    src/kauth/ka-forwarder src/packaging/RedHat/openafs.spec \
+	    doc/man-pages/pod1/afs-up.pod
 
 install: install-stamp
 install-stamp: DH_OPTIONS=

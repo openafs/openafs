@@ -33,6 +33,7 @@ src/afs/afszcm.cat                      usr/share/openafs
 debian/CellServDB                       usr/share/openafs
 
 debian/tmp/usr/share/man/man1/afs.1                   usr/share/man/man1
+debian/tmp/usr/share/man/man1/afs-up.1                usr/share/man/man1
 debian/tmp/usr/share/man/man1/afsmonitor.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/cmdebug.1               usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs.1                    usr/share/man/man1
@@ -100,7 +101,6 @@ debian/tmp/usr/share/man/man1/tokens.1                usr/share/man/man1
 debian/tmp/usr/share/man/man1/translate_et.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/udebug.1                usr/share/man/man1
 debian/tmp/usr/share/man/man1/unlog.1                 usr/share/man/man1
-debian/tmp/usr/share/man/man1/up.1                    usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos.1                   usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_addsite.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_apropos.1           usr/share/man/man1
