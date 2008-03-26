@@ -8,7 +8,11 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
     - Better fileserver host tracking.
     - Ubik fixes preventing database truncation on unreliable links.
   * Update doc-base control file sections for the new categorization.
-  * Remove all modified generated files on debian/rules clean.
+  * debian/rules and debian/module/rules improvements:
+    - Remove all modified generated files on debian/rules clean.
+    - Depend on $(QUILT_STAMPFN) instead of patch.
+    - Use touch $@ to create stamp files.
+    - Use a stamp file for the module's install target.
 
  -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
 

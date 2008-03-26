@@ -71,7 +71,7 @@ get-orig-source:
 	gzip -9 openafs_$(DEBVERS).orig.tar
 
 configure: configure-stamp
-configure-stamp: patch
+configure-stamp: $(QUILT_STAMPFN)
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
 	sh regen.sh
@@ -85,8 +85,8 @@ configure-stamp: patch
 	    --enable-bos-new-config \
 	    --enable-debug --enable-lwp-debug \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
-	chmod a+x src/libafs/make_kbuild_makefile.pl         
-	touch configure-stamp
+	chmod a+x src/libafs/make_kbuild_makefile.pl
+	touch $@
 
 build: build-arch build-indep
 build-arch: configure-stamp build-stamp
@@ -96,7 +96,7 @@ build-stamp:
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
 	chmod +x debian/afs-rootvol debian/afs-newcell
-	touch build-stamp
+	touch $@
 
 clean: unpatch
 	dh_testdir
@@ -146,7 +146,7 @@ install-stamp: build-stamp
 	    afs-newcell ) \
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
 
-	touch install-stamp
+	touch $@
 
 # Rules for building the openafs-modules-source package.
 binary-source:
