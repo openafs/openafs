@@ -1,6 +1,12 @@
 openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
 
-  * New upstream release candidate.
+  * New upstream release candidate:
+    - Initial support for 2.6.25 kernels.
+    - Better 2.6.24 kernel support.  (Closes: #463962)
+    - Better cleanup on module unload.  (Closes: #417917)
+    - Potential deadlock fixed in the fileserver.
+    - Better fileserver host tracking.
+    - Ubik fixes preventing database truncation on unreliable links.
   * Update doc-base control file sections for the new categorization.
 
  -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
