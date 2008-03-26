@@ -582,18 +582,24 @@ afs_linux_flush(struct file *fp)
 #endif
 {
     struct vrequest treq;
-    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
-    cred_t *credp = crref();
+    struct vcache *vcp;
+    cred_t *credp;
     int code;
 
     AFS_GLOCK();
+
+    if (fp->f_flags | O_RDONLY)     /* readers dont flush */
+	return 0;
+
+    credp = crref();
+    vcp = VTOAFS(FILE_INODE(fp));
 
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
 
     ObtainSharedLock(&vcp->lock, 535);
-    if (vcp->execsOrWriters > 0) {
+    if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
 	UpgradeSToWLock(&vcp->lock, 536);
 	code = afs_StoreAllSegments(vcp, &treq, AFS_SYNC | AFS_LASTSTORE);
 	ConvertWToSLock(&vcp->lock);
