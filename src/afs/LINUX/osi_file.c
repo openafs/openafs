@@ -65,6 +65,10 @@ osi_UFSOpen(afs_int32 ainode)
     memset(afile, 0, sizeof(struct osi_file));
 #if defined(HAVE_IGET)
     tip = iget(afs_cacheSBp, (u_long) ainode);
+    if (!tip)
+	osi_Panic("Can't get inode %d\n", ainode);
+
+    dp = d_alloc_anon(tip);
 #else
     fid.i32.ino = ainode;
     fid.i32.gen = 0;
