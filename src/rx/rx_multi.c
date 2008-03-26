@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_multi.c,v 1.8.2.1 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_multi.c,v 1.8.2.2 2008/02/08 21:25:14 shadow Exp $");
 
 #ifdef	KERNEL
 #include "afs/sysincludes.h"
@@ -55,7 +55,7 @@ multi_Init(struct rx_connection **conns, register int nConns)
     for (i = 0; i < nConns; i++) {
 	register struct rx_call *call;
 	call = mh->calls[i] = rx_NewCall(conns[i]);
-	rx_SetArrivalProc(call, multi_Ready, (VOID *) mh, i);
+	rx_SetArrivalProc(call, multi_Ready, (void *) mh, i);
     }
     return mh;
 }
@@ -95,7 +95,7 @@ multi_Select(register struct multi_handle *mh)
 
 /* Called by Rx when the first reply packet of a call is received, or the call is aborted. */
 void
-multi_Ready(register struct rx_call *call, register VOID *amh,
+multi_Ready(register struct rx_call *call, register void *amh,
 	    register int index)
 {
     register struct multi_handle *mh = (struct multi_handle *)amh;

@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos addhost - Adds a database server machine to the CellServDB file
+bos_addhost - Adds a database server machine to the CellServDB file
 
 =head1 SYNOPSIS
 

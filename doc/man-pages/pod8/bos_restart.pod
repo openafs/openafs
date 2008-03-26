@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos restart - Restarts a server process
+bos_restart - Restarts a server process
 
 =head1 SYNOPSIS
 

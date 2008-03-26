@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs copyacl - Copies an ACL from a directory to one or more other directories
+fs_copyacl - Copies an ACL from a directory to one or more other directories
 
 =head1 SYNOPSIS
 

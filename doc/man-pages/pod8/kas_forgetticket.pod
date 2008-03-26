@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas forgetticket - Discards all tickets for the issuer
+kas_forgetticket - Discards all tickets for the issuer
 
 =head1 SYNOPSIS
 

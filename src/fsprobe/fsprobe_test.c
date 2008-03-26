@@ -17,16 +17,9 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/fsprobe/fsprobe_test.c,v 1.8.2.1 2006/03/09 06:41:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/fsprobe/fsprobe_test.c,v 1.8.2.2 2007/10/30 15:23:53 shadow Exp $");
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <fsprobe.h>		/*Interface for fsprobe module */
 
 /*

@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setcrypt - Enables of disables the encryption of AFS file transfers
+fs_setcrypt - Enables of disables the encryption of AFS file transfers
 
 =head1 SYNOPSIS
 
@@ -94,5 +94,6 @@ L<http://surfvi.com/~ota/fcrypt-paper.txt>.
 
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.

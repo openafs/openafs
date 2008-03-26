@@ -23,19 +23,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bos_util.c,v 1.4 2003/07/15 23:14:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bos_util.c,v 1.4.2.1 2007/10/30 15:23:50 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>

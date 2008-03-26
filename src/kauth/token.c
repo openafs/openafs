@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/token.c,v 1.9.2.1 2004/08/25 07:09:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/token.c,v 1.9.2.2 2007/10/30 15:23:54 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -44,13 +44,7 @@ RCSID
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 /* netinet/in.h and cellconfig.h  are needed together */
 #include <afs/cellconfig.h>
     /* these are needed together */

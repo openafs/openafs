@@ -15,6 +15,7 @@
 #define _POSIX_PTHREAD_SEMANTICS
 #include <afs/param.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <stdio.h>
 #ifndef  AFS_NT40_ENV
 #include <signal.h>

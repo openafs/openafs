@@ -4,8 +4,9 @@
 #
 # chkconfig: 2345 50 50
 # description: OpenAFS is a distributed filesystem.
+# Should-Start: dkms
 #
-# $Revision: 1.1.2.3 $
+# $Revision: 1.1.2.5 $
 
 [ -f /etc/init.d/functions ] && . /etc/init.d/functions
 [ -f /etc/sysconfig/openafs ] && . /etc/sysconfig/openafs
@@ -16,11 +17,6 @@ start() {
         cat /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist > \
                /usr/vice/etc/CellServDB
         chmod 644 /usr/vice/etc/CellServDB
-        echo
-        echo -n $"Updating SuidCells: "
-        cat /usr/vice/etc/SuidCells.local /usr/vice/etc/SuidCells.dist > \
-               /usr/vice/etc/SuidCells
-        chmod 644 /usr/vice/etc/SuidCells
         echo
 	echo -n $"Starting openafs-client: "
 	if [ -e /var/lock/subsys/openafs-client ] ; then

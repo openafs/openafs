@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_SLEEP 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH PTS_SLEEP 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,13 +188,13 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts sleep \- Pauses for a few seconds
+pts_sleep \- Pauses for a few seconds
 .SH "SYNOPSIS"
 \fBpts sleep\fR <<\ [\fB\-delay\fR]\ <\fI#\ of\ seconds\fR >>>
-   <<\ [\fB\-cell\fR]\ <\fIcell\ name\fR >>> [\fB\-noauth\fR] [\fB\-force\fR]
+   <<\ [\fB\-cell\fR]\ <\fIcell\ name\fR >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-force\fR]
 .PP
 \fBpts sl\fR <<\ [\fB\-d\fR]\ <\fI#\ of\ seconds\fR >>> <<\ [\fB\-c\fR]\ <\fIcell\ name\fR >>>
-   [\fB\-n\fR] [\fB\-f\fR]
+   [\fB\-n\fR] [\fB\-l\fR] [\fB\-f\fR]
 .SH "DESCRIPTION"
 The \fBpts sleep\fR pauses for a specified number of seconds. The command can
 be run from the command line or interactively, although from the command
@@ -207,7 +207,7 @@ only available on Unix or Linux and when OpenAFS was compiled with the
 supergroups option (disabled by default).  As of OpenAFS 1.4.5 and 1.5.23,
 it is always available.
 .SH "OPTIONS"
-Although they have no effect, \fBpts quit\fR takes the following standard
+Although they have no effect, \fBpts sleep\fR takes the following standard
 \fBpts\fR options:
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. For more details, see
@@ -218,6 +218,10 @@ or other problems occur, rather than halting execution at the first error.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .SH "OUTPUT"
 This command produces no output.
 .SH "EXAMPLES"
@@ -235,12 +239,13 @@ the \fIpts_interactive(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 .PP
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
 
 .rn }` ''
 .IX Title "PTS_SLEEP 1"
-.IX Name "pts sleep - Pauses for a few seconds"
+.IX Name "pts_sleep - Pauses for a few seconds"
 
 .IX Header "NAME"
 
@@ -257,6 +262,8 @@ man page was written by Jason Edgecombe for OpenAFS.
 .IX Item "\fB\-force\fR"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Header "OUTPUT"
 

@@ -62,7 +62,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.8.2.3 2006/06/29 23:25:49 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.8.2.5 2008/01/23 04:22:51 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -81,13 +81,7 @@ RCSID
 #else
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <des.h>
@@ -201,7 +195,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (char *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, char *session_key, afs_int32 * host,
-		  afs_int32 * start, afs_int32 * end)
+		  afs_int32 * start, afs_int32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
@@ -318,13 +312,15 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	goto bad_ticket;
     }
 
-    /* 
-     * If the first part of the name_string contains a dot, punt since
-     * then we can't see the diffrence between the kerberos 5
-     * principals foo.root and foo/root later in the fileserver.
-     */
-    if (strchr(decr_part.cname.name_string.val[0], '.') != NULL)
-	goto bad_ticket;
+    if (!disableCheckdot) {
+        /* 
+         * If the first part of the name_string contains a dot, punt since
+         * then we can't see the diffrence between the kerberos 5
+         * principals foo.root and foo/root later in the fileserver.
+         */
+        if (strchr(decr_part.cname.name_string.val[0], '.') != NULL)
+	    goto bad_ticket;
+    }
 
     /* Verify that decr_part.key is of right type */
     switch (decr_part.key.keytype) {

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/cfg/cfginternal.c,v 1.6 2004/04/02 06:54:05 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/cfg/cfginternal.c,v 1.6.2.1 2007/11/26 21:21:53 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -480,8 +480,8 @@ cfgutil_HostAddressFetchAll(const char *hostName, int *addrCount,
 {
     int rc = 1;
     afs_status_t tst = 0;
-    int aCount;
-    afs_int32 *aList;
+    int aCount = 0;
+    afs_int32 *aList = NULL;
 
 #ifdef AFS_NT40_ENV
     /* Note: gethostbyname() allocs hostent on a per-thread basis */

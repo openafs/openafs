@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6.2.2 2007/08/20 17:29:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6.2.3 2007/10/30 15:23:54 shadow Exp $");
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -58,13 +58,7 @@ RCSID
 #else
 #include <sys/file.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/types.h>
 #include <rx/xdr.h>
 #include <errno.h>

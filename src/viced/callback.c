@@ -83,24 +83,18 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.18.2.2 2007/12/13 20:57:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.27 2008/03/11 17:40:55 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
 #include <time.h>		/* ANSI standard location for time stuff */
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
 #else
 #include <sys/time.h>
 #include <sys/file.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/assert.h>
 
@@ -309,9 +303,6 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 #define GetFE() ((struct FileEntry *)iGetFE(&cbstuff.nFEs))
 #define FreeCB(cb) iFreeCB((struct CallBack *)cb, &cbstuff.nCBs)
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
-
-/* Other protos - move out sometime */
-extern void ShutDown();
 
 #define VHASH 512		/* Power of 2 */
 static afs_uint32 HashTable[VHASH];	/* File entry hash table */
@@ -646,6 +637,8 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     struct CallBack *newcb = 0;
     int safety;
 
+    cbstuff.AddCallBacks++;
+
     host->Console |= 2;
 
     /* allocate these guys first, since we can't call the allocator with
@@ -753,6 +746,14 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     return 0;
 }
 
+static int
+CompareCBA(const void *e1, const void *e2)
+{
+    const struct cbstruct *cba1 = (const struct cbstruct *)e1;
+    const struct cbstruct *cba2 = (const struct cbstruct *)e2;
+    return ((cba1->hp)->index - (cba2->hp)->index);
+}
+
 /* Take an array full of hosts, all held.  Break callbacks to them, and 
  * release the holds once you're done, except don't release xhost.  xhost 
  * may be NULL.  Currently only works for a single Fid in afidp array.
@@ -781,6 +782,9 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     int multi_to_cba_map[MAX_CB_HOSTS];
 
     assert(ncbas <= MAX_CB_HOSTS);
+
+    /* sort cba list to avoid makecall issues */
+    qsort(cba, ncbas, sizeof(struct cbstruct), CompareCBA);
 
     /* set up conns for multi-call */
     for (i = 0, j = 0; i < ncbas; i++) {
@@ -969,9 +973,9 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     register afs_uint32 *pcb;
     char hoststr[16];
 
+    H_LOCK;
     cbstuff.DeleteCallBacks++;
 
-    H_LOCK;
     h_Lock_r(host);
     fe = FindFE(fid);
     if (!fe) {
@@ -1438,6 +1442,7 @@ BreakLaterCallBacks(void)
 			 fe->volid));
 		fid.Volume = fe->volid;
 		*feip = fe->fnext;
+		fe->status &= ~FE_LATER;
 		/* Works since volid is deeper than the largest pointer */
 		tmpfe = (struct object *)fe;
 		tmpfe->next = (struct object *)myfe;
@@ -1798,11 +1803,14 @@ PrintCallBackStats(void)
 int
 DumpCallBackState(void)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
 
-    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, O_WRONLY | O_CREAT | O_TRUNC,
-	      0666);
+    oflag = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(AFSDIR_SERVER_CBKDUMP_FILEPATH, oflag, 0666);
     if (fd < 0) {
 	ViceLog(0,
 		("Couldn't create callback dump file %s\n",
@@ -1836,11 +1844,15 @@ DumpCallBackState(void)
 time_t
 ReadDump(char *file)
 {
-    int fd;
+    int fd, oflag;
     afs_uint32 magic, freelisthead;
-    time_t now;
+    afs_uint32 now;
 
-    fd = open(file, O_RDONLY);
+    oflag = O_RDONLY;
+#ifdef AFS_NT40_ENV
+    oflag |= O_BINARY;
+#endif
+    fd = open(file, oflag);
     if (fd < 0) {
 	fprintf(stderr, "Couldn't read dump file %s\n", file);
 	exit(1);
@@ -1994,6 +2006,7 @@ main(int argc, char **argv)
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
+    return 0;
 }
 
 int
@@ -2005,6 +2018,7 @@ PrintCB(register struct CallBack *cb, afs_uint32 now)
     printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
 	   expires - now, ctime(&expires));
+    return 0;
 }
 
 #endif

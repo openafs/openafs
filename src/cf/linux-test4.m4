@@ -719,11 +719,28 @@ extern int vfs_statfs(struct dentry *, struct kstatfs *);
       ac_cv_linux_statfs_takes_dentry=no)])
   AC_MSG_RESULT($ac_cv_linux_statfs_takes_dentry)])
 
+
+AC_DEFUN([LINUX_KEY_TYPE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/key-type.h existance])
+  AC_CACHE_VAL([ac_cv_linux_key_type_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/key-type.h>],
+[return;],
+      ac_cv_linux_key_type_h_exists=yes,
+      ac_cv_linux_key_type_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_key_type_h_exists)
+  if test "x$ac_cv_linux_key_type_h_exists" = "xyes"; then
+    AC_DEFINE([KEY_TYPE_H_EXISTS], 1, [define if linux/key-type.h exists])
+  fi])
+
 AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
   AC_MSG_CHECKING([for linux kernel keyring support])
   AC_CACHE_VAL([ac_cv_linux_keyring_support], [
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
+#ifdef KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
 #include <linux/key.h>
 #include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS
@@ -893,4 +910,74 @@ _fop.sendfile(NULL, NULL, 0, 0, NULL);],
       ac_cv_linux_fs_struct_fop_has_sendfile=yes,
       ac_cv_linux_fs_struct_fop_has_sendfile=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
+  AC_MSG_CHECKING([for splice_write and splice_read in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_splice], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.splice_write(NULL, NULL, NULL, 0, 0);
+_fop.splice_read(NULL, NULL, NULL, 0, 0);],
+      ac_cv_linux_fs_struct_fop_has_splice=yes,
+      ac_cv_linux_fs_struct_fop_has_splice=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
+
+AC_DEFUN([LINUX_HAVE_CURRENT_KERNEL_TIME], [
+  AC_MSG_CHECKING([for current_kernel_time()])
+  AC_CACHE_VAL([ac_cv_linux_have_current_kernel_time], [
+    AC_TRY_KBUILD(
+[#include <linux/time.h>],
+[struct timespec s = current_kernel_time();],
+      ac_cv_linux_have_current_kernel_time=yes,
+      ac_cv_linux_have_current_kernel_time=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_current_kernel_time)])
+
+AC_DEFUN([LINUX_KMEM_CACHE_INIT], [
+  AC_MSG_CHECKING([for new kmem_cache init function parameters])
+  AC_CACHE_VAL([ac_cv_linux_kmem_cache_init], [
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[extern struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
+                        unsigned long,
+                        void (*)(struct kmem_cache *, void *));
+return;],
+      ac_cv_linux_kmem_cache_init=yes,
+      ac_cv_linux_kmem_cache_init=no)])
+  AC_MSG_RESULT($ac_cv_linux_kmem_cache_init)])
+
+AC_DEFUN([LINUX_SYSCTL_TABLE_CHECKING], [
+  AC_MSG_CHECKING([for sysctl table checking])
+  AC_CACHE_VAL([ac_cv_linux_sysctl_table_checking], [
+    AC_TRY_KBUILD(
+[#include <linux/sysctl.h>],
+[ extern int sysctl_check_table(int) __attribute__((weak));
+sysctl_check_table(NULL);],
+ ac_cv_linux_sysctl_table_checking=no,
+ ac_cv_linux_sysctl_table_checking=yes)])
+AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
+
+AC_DEFUN([LINUX_HAVE_IGET], [
+  AC_MSG_CHECKING([for linux iget()])
+  AC_CACHE_VAL([ac_cv_linux_have_iget], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[iget(NULL, NULL);],
+      ac_cv_linux_have_iget=yes,
+      ac_cv_linux_have_iget=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_have_iget)])
+
+AC_DEFUN([LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH], [
+  AC_MSG_CHECKING([for path in struct nameidata])
+  AC_CACHE_VAL([ac_cv_linux_struct_nameidata_has_path], [
+    AC_TRY_KBUILD(
+[#include <linux/namei.h>],
+[struct nameidata _nd;
+printk("%x\n", _nd.path);],
+      ac_cv_linux_struct_nameidata_has_path=yes,
+      ac_cv_linux_struct_nameidata_has_path=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_nameidata_has_path)])
 

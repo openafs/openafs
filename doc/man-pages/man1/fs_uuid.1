@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_UUID 1 "OpenAFS" "23/Oct/2007" "AFS Command Reference"
+.TH FS_UUID 1 "OpenAFS" "25/Dec/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,31 +188,31 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-fs uuid \- Prints the uuid of the client or generates a new one
+fs_uuid \- Prints the uuid of the client or generates a new one
 .SH "SYNOPSIS"
 \fBfs uuid\fR [\fB\-generate\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
-\fBfs uuid\fR prints the current uuid of an OpenAFS client. It can
-optionally force the generation of a new uuid, if needed. The client
-uuid is used by the \fBfileserver\fR to differentiate clients with the
-same IP address.
+\fBfs uuid\fR prints the current UUID of an OpenAFS client.  It can
+optionally force the generation of a new UUID, if needed.  The client UUID
+is used by the \fBfileserver\fR to differentiate clients with the same IP
+address.
 .SH "CAUTIONS"
-The \fBfs uuid\fR command is only available in OpenAFS versions after
-1.4.5 and 1.5.8. The behavior differs slightly between versions. In
-OpenAFS 1.4.5 and later, the \fB\-generate\fR option is required and the
-uuid for the client machine is never printed. OpenAFS versions 1.5.8
-and later will print the uuid.
+The \fBfs uuid\fR command is only available in OpenAFS versions after 1.4.5
+and 1.5.8.  The behavior differs slightly between versions.  In OpenAFS
+1.4.5 and later, the \fB\-generate\fR option is required and the UUID for the
+client machine is never printed.  OpenAFS versions 1.5.8 and later will
+print the UUID.
 .SH "OPTIONS"
 .Ip "\fB\-generate\fR" 4
-Generates a new uuid for the cache manager. This is useful if two
-clients share the same uuid. \fB\-generate\fR is optional in OpenAFS
-versions 1.5.8 and later, but it is required in OpenAFS versions 1.4.5
-and later.
+Generates a new \s-1UUID\s0 for the cache manager.  This is useful if two clients
+share the same \s-1UUID\s0 (if systems were cloned incorrectly, for example).
+\fB\-generate\fR is optional in OpenAFS versions 1.5.8 and later, but it is
+required in OpenAFS versions 1.4.5 and later.
 .Ip "\fB\-help\fR" 4
-Prints the online help for this command. All other valid options are
+Prints the online help for this command.  All other valid options are
 ignored.
 .SH "OUTPUT"
-\fBfs uuid\fR prints out the current uuid for the client or the new uuid
+\fBfs uuid\fR prints out the current UUID for the client or the new UUID
 if the \fB\-generate\fR option is passed to it.
 .SH "EXAMPLES"
 There are only two ways to invoke \fBfs uuid\fR under 1.5.8 and later:
@@ -238,12 +238,13 @@ the \fIfs(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 .PP
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
 
 .rn }` ''
 .IX Title "FS_UUID 1"
-.IX Name "fs uuid - Prints the uuid of the client or generates a new one"
+.IX Name "fs_uuid - Prints the uuid of the client or generates a new one"
 
 .IX Header "NAME"
 

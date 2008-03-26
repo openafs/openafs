@@ -225,7 +225,7 @@ struct VLCallBack {
  */
 
 ProbeServer(
-) = VLPROBE;
+) multi = VLPROBE;
 
 /*
  * VL_GetEntryByName was renamed to VL_GetEntryByNameO to avoid

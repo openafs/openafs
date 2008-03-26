@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos syncvldb - Verifies VLDB entries for volumes residing at specified site
+vos_syncvldb - Verifies VLDB entries for volumes residing at specified site
 
 =head1 SYNOPSIS
 

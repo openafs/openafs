@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas delete - Deletes an entry from the Authentication Database
+kas_delete - Deletes an entry from the Authentication Database
 
 =head1 SYNOPSIS
 

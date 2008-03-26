@@ -11,16 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_pam_msg.c,v 1.6 2003/07/15 23:15:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_pam_msg.c,v 1.6.2.1 2007/10/30 15:23:59 shadow Exp $");
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 #include <security/pam_appl.h>
 #include "afs_pam_msg.h"

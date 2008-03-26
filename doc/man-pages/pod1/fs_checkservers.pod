@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs checkservers - Displays the status of server machines
+fs_checkservers - Displays the status of server machines
 
 =head1 SYNOPSIS
 

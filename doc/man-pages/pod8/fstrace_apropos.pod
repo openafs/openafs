@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace apropos - Displays each help entry containing a keyword string
+fstrace_apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 

@@ -4,6 +4,8 @@
 # Copyright (c) 2003-2007 Ville Skyttä <ville.skytta@iki.fi>,
 #                         Thorsten Leemhuis <fedora@leemhuis.info>
 #
+# Modified by Simon Wilkinson for OpenAFS
+
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -74,10 +76,12 @@ Summary:          ${kmod_name} kernel module(s)
 Group:            System Environment/Kernel
 Provides:         kernel-modules = ${verrel}${variant}
 Provides:         ${kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:         openafs-kernel = %{PACKAGE_VERSION}
 Requires:         ${kdep}
 Requires:         ${kmod_name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
 Requires(post):   /sbin/depmod
 Requires(postun): /sbin/depmod
+Release:          %{pkgrel}.%(echo ${verrel} | tr - _)
 BuildRequires:    kernel${dashvariant}-devel-%{_target_cpu} = ${verrel}
 %description   -n kmod-${kmod_name}${dashvariant}
 This package provides the ${kmod_name} kernel modules built for the Linux

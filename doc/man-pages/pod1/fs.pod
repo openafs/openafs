@@ -27,6 +27,7 @@ L<B<fs setcell>|fs_setcell(1)>,
 L<B<fs setcrypt>|fs_setcrypt(1)>,
 L<B<fs setserverprefs>|fs_setserverprefs(1)>,
 L<B<fs sysname>|fs_sysname(1)>,
+L<B<fs uuid>|fs_uuid(1)>,
 and L<B<fs wscell>|fs_wscell(1)>.
 
 =item *

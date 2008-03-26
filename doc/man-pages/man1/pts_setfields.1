@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_SETFIELDS 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PTS_SETFIELDS 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,17 +188,18 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts setfields \- Sets privacy flags or quota for a Protection Database entry
+pts_setfields \- Sets privacy flags or quota for a Protection Database entry
 .SH "SYNOPSIS"
 \fBpts setfields\fR <<\ \fB\-nameorid\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>>
     <<\ [\fB\-access\fR\ <\fIset\ privacy\ flags\fR] >>>
     <<\ [\fB\-groupquota\fR\ <\fIset\ limit\ on\ group\ creation\fR] >>>
-    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR]
+    [\fB\-force\fR] [\fB\-help\fR]
 .PP
 \fBpts setf\fR <<\ \fB\-na\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>>
     <<\ [\fB\-a\fR\ <\fIset\ privacy\ flags\fR] >>>
     <<\ [\fB\-g\fR\ <\fIset\ limit\ on\ group\ creation\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts setfields\fR command sets the group-creation quota, the privacy
 flags, or both, associated with each user, machine, or group entry
@@ -307,6 +308,10 @@ the \fIpts(1)\fR manpage.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
@@ -352,7 +357,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PTS_SETFIELDS 1"
-.IX Name "pts setfields - Sets privacy flags or quota for a Protection Database entry"
+.IX Name "pts_setfields - Sets privacy flags or quota for a Protection Database entry"
 
 .IX Header "NAME"
 
@@ -407,6 +412,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
 

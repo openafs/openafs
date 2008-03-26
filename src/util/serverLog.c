@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22.2.11 2006/06/07 04:27:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22.2.14 2008/03/10 22:35:36 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -37,16 +37,11 @@ RCSID
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/stat.h>
 #include "afsutil.h"
 #include "fileutil.h"
+#include <lwp.h>
 #if defined(AFS_PTHREAD_ENV)
 #include <assert.h>
 #include <pthread.h>
@@ -75,7 +70,7 @@ dummyThreadNum(void)
 {
     return -1;
 }
-static int (*threadNumProgram) () = dummyThreadNum;
+static int (*threadNumProgram) (void) = dummyThreadNum;
 
 static int serverLogFD = -1;
 
@@ -93,7 +88,7 @@ int printLocks = 0;
 static char ourName[MAXPATHLEN];
 
 void
-SetLogThreadNumProgram(int (*func) () )
+SetLogThreadNumProgram(int (*func) (void) )
 {
     threadNumProgram = func;
 }
@@ -171,9 +166,10 @@ FSLog(const char *format, ...)
     va_end(args);
 }				/*FSLog */
 
-static int
-DebugOn(int loglevel)
+static void*
+DebugOn(void *param)
 {
+    int loglevel = (int)param;
     if (loglevel == 0) {
 	ViceLog(0, ("Reset Debug levels to 0\n"));
     } else {
@@ -187,8 +183,6 @@ DebugOn(int loglevel)
 void
 SetDebug_Signal(int signo)
 {
-/*    extern int IOMGR_SoftSig();*/
-
     if (LogLevel > 0) {
 	LogLevel *= 5;
 
@@ -208,9 +202,9 @@ SetDebug_Signal(int signo)
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn(LogLevel);
+    DebugOn((void *) LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, SetDebug_Signal);	/* on some platforms, this
@@ -226,9 +220,9 @@ ResetDebug_Signal(int signo)
     if (printLocks > 0)
 	--printLocks;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn(LogLevel);
+    DebugOn((void *) LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, ResetDebug_Signal);	/* on some platforms,
@@ -339,9 +333,6 @@ int
 ReOpenLog(const char *fileName)
 {
     int isfifo = 0;
-#if !defined(AFS_PTHREAD_ENV)
-    int tempfd;
-#endif
 #if !defined(AFS_NT40_ENV)
     struct stat statbuf;
 #endif

@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23.2.1 2007/04/10 18:43:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23.2.5 2008/03/10 22:35:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -30,13 +30,7 @@ RCSID
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsutil.h>
 #include <time.h>
 #include <afs/com_err.h>
@@ -66,6 +60,9 @@ RCSID
 #define	KDC_GEN_ERR	20
 #endif
 
+#ifndef AFS_NT40_ENV
+#define closesocket close
+#endif
 
 int krb_udp_debug = 0;
 
@@ -107,8 +104,8 @@ char udptgsServerPrincipal[256];
 
 int fiveminutes = 300;
 
-static
-FiveMinuteCheckLWP()
+static void *
+FiveMinuteCheckLWP(void *unused)
 {
 
     printf("start 5 min check lwp\n");
@@ -118,6 +115,7 @@ FiveMinuteCheckLWP()
 	/* close the log so it can be removed */
 	ReOpenLog(AFSDIR_SERVER_KALOG_FILEPATH);	/* no trunc, just append */
     }
+    return NULL;
 }
 
 
@@ -823,8 +821,8 @@ process_udp_request(ksoc, pkt)
     return;
 }
 
-static
-SocketListener()
+static void *
+SocketListener(void *unused)
 {
     fd_set rfds;
     struct timeval tv;
@@ -898,14 +896,16 @@ SocketListener()
 	}
     }
     if (sock_kerb >= 0) {
-	close(sock_kerb);
+	closesocket(sock_kerb);
 	sock_kerb = -1;
     }
     if (sock_kerb5 >= 0) {
-	close(sock_kerb5);
+	closesocket(sock_kerb5);
 	sock_kerb5 = -1;
     }
     printf("UDP SocketListener exiting due to error\n");
+
+    return NULL;
 }
 
 #if MAIN

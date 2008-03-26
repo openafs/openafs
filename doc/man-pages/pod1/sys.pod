@@ -60,9 +60,9 @@ None
 L<fs_sysname(1)>,
 L<livesys(1)>
 
-I<IBM AFS Quick Beginnings>
+I<OpenAFS Quick Beginnings>
 
-I<IBM AFS Administration Guide>
+I<OpenAFS Administration Guide>
 
 =head1 COPYRIGHT
 

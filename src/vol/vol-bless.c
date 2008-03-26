@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-bless.c,v 1.1.2.1 2004/12/07 06:06:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-bless.c,v 1.1.2.2 2007/10/31 04:13:51 shadow Exp $");
 
 #include <stdio.h>
 
@@ -28,7 +28,7 @@ RCSID
 int VolumeChanged; /* to keep physio happy */
 
 static int
-handleit(struct cmd_syndesc *as, char *arock)
+handleit(struct cmd_syndesc *as, void *arock)
 {
     Volume *vp;
     Error ec;
@@ -73,7 +73,7 @@ main(int argc, char **argv)
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax(NULL, handleit, 0, "Manipulate volume blessed bit");
+    ts = cmd_CreateSyntax(NULL, handleit, NULL, "Manipulate volume blessed bit");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "Volume id");
     cmd_AddParm(ts, "-bless", CMD_FLAG, CMD_OPTIONAL, "Set blessed bit");
     cmd_AddParm(ts, "-unbless", CMD_FLAG, CMD_OPTIONAL, "Clear blessed bit");

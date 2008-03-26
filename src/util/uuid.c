@@ -50,7 +50,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.16.2.1 2005/12/24 01:09:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.16.2.2 2007/10/30 15:24:09 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -60,6 +60,7 @@ RCSID
 #else /* KERNEL */
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <process.h>
@@ -73,13 +74,6 @@ RCSID
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #include <net/if.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

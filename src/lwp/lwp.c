@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.8 2007/06/06 17:23:24 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.13 2008/03/13 13:42:31 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,13 +39,7 @@ int setlim(int limcon, uchar_t hard, int limit);
 extern char *getenv();
 #include <time.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #if	!defined(USE_PTHREADS) && !defined(USE_SOLARIS_THREADS)
 
@@ -53,10 +47,12 @@ extern char *getenv();
 extern void *malloc(int size);
 extern void *realloc(void *ptr, int size);
 #endif
+#ifndef AFS_ARM_LINUX20_ENV
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 extern int PRE_Block;		/* from preempt.c */
 #else
 extern char PRE_Block;		/* from preempt.c */
+#endif
 #endif
 
 #define ON		1
@@ -104,20 +100,23 @@ extern char PRE_Block;		/* from preempt.c */
 } while (0)
 #endif
 
-static int Dispatcher();
-static int Create_Process_Part2();
-static int Exit_LWP();
-static afs_int32 Initialize_Stack();
-static int Stack_Used();
-char (*RC_to_ASCII());
+static void Dispatcher(void);
+static void Create_Process_Part2(void);
+static void Exit_LWP(void);
+static afs_int32 Initialize_Stack(char *stackptr, int stacksize);
+static int Stack_Used(register char *stackptr, int stacksize);
 
-static void Abort_LWP();
-static void Overflow_Complain();
-static void Initialize_PCB();
-static void Dispose_of_Dead_PCB();
-static void Free_PCB();
-static int Internal_Signal();
-static purge_dead_pcbs();
+static void Abort_LWP(char *msg);
+static void Overflow_Complain(void);
+static void Initialize_PCB(PROCESS temp, int priority, char *stack,
+			   int stacksize, void *(*ep)(void *), void *parm, 
+			   char *name);
+static void Dispose_of_Dead_PCB(PROCESS cur);
+static void Free_PCB(PROCESS pid);
+static int Internal_Signal(void *event);
+static int purge_dead_pcbs(void);
+static int LWP_MwaitProcess(int wcount, void *evlist[]);
+	
 
 #define MAX_PRIORITIES	(LWP_MAX_PRIORITY+1)
 
@@ -125,7 +124,9 @@ struct QUEUE {
     PROCESS head;
     int count;
 } runnable[MAX_PRIORITIES], blocked, qwaiting;
-/* Invariant for runnable queues: The head of each queue points to the currently running process if it is in that queue, or it points to the next process in that queue that should run. */
+/* Invariant for runnable queues: The head of each queue points to the 
+ * currently running process if it is in that queue, or it points to the 
+ * next process in that queue that should run. */
 
 /* Offset of stack field within pcb -- used by stack checking stuff */
 int stack_offset;
@@ -266,7 +267,7 @@ reserveFromStack(register afs_int32 size)
 #endif
 
 int
-LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
+LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 		  char *name, PROCESS * pid)
 {
     PROCESS temp, temp2;
@@ -373,11 +374,13 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackmemory, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
+#ifndef AFS_ARM_LINUX20_ENV
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
 	/* Gross hack: beware! */
 	PRE_Block = 1;
+#endif
 	lwp_cpptr = temp;
 #if defined(AFS_PARISC_LINUX24_ENV)
 	savecontext(Create_Process_Part2, &temp2->context,
@@ -421,7 +424,7 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 
 #ifdef	AFS_AIX32_ENV
 int
-LWP_CreateProcess2(int (*ep) (), int stacksize, int priority, void *parm,
+LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm,
 		   char *name, PROCESS * pid)
 {
     PROCESS temp, temp2;
@@ -466,11 +469,13 @@ LWP_CreateProcess2(int (*ep) (), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackptr, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
+#ifndef AFS_ARM_LINUX20_ENV
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
 	/* Gross hack: beware! */
 	PRE_Block = 1;
+#endif
 	lwp_cpptr = temp;
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + stacksize - sizeof(void *));
@@ -650,7 +655,7 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 }
 
 int
-LWP_INTERNALSIGNAL(char *event, int yield)
+LWP_INTERNALSIGNAL(void *event, int yield)
 {				/* signal the occurence of an event */
     Debug(2, ("Entered LWP_SignalProcess"));
     if (lwp_init) {
@@ -689,9 +694,9 @@ LWP_TerminateProcessSupport(void)
 }
 
 int
-LWP_WaitProcess(char *event)
+LWP_WaitProcess(void *event)
 {				/* wait on a single event */
-    char *tempev[2];
+    void *tempev[2];
 
     Debug(2, ("Entered Wait_Process"));
     if (event == NULL)
@@ -702,7 +707,7 @@ LWP_WaitProcess(char *event)
 }
 
 int
-LWP_MwaitProcess(int wcount, char *evlist[])
+LWP_MwaitProcess(int wcount, void *evlist[])
 {				/* wait on m of n events */
     register int ecount, i;
 
@@ -730,8 +735,8 @@ LWP_MwaitProcess(int wcount, char *evlist[])
 	if (ecount > lwp_cpptr->eventlistsize) {
 
 	    lwp_cpptr->eventlist =
-		(char **)realloc(lwp_cpptr->eventlist,
-				 ecount * sizeof(char *));
+		(void **)realloc(lwp_cpptr->eventlist,
+				 ecount * sizeof(void *));
 	    lwp_cpptr->eventlistsize = ecount;
 	}
 	for (i = 0; i < ecount; i++)
@@ -787,7 +792,7 @@ Abort_LWP(char *msg)
     return;
 }
 
-static int
+static void
 Create_Process_Part2(void)
 {				/* creates a context for the new process */
     PROCESS temp;
@@ -797,7 +802,7 @@ Create_Process_Part2(void)
     savecontext(Dispatcher, &temp->context, NULL);
     (*temp->ep) (temp->parm);
     LWP_DestroyProcess(temp);
-    return 0;
+    return;
 }
 
 static int
@@ -876,7 +881,7 @@ purge_dead_pcbs(void)
 
 int LWP_TraceProcesses = 0;
 
-static int
+static void
 Dispatcher(void)
 {				/* Lightweight process dispatcher */
     register int i;
@@ -928,7 +933,8 @@ Dispatcher(void)
 	printf("stackcheck = %u: stack = %u \n", lwp_cpptr->stackcheck,
 	       *(int *)lwp_cpptr->stack);
 	printf("topstack = 0x%x: stackptr = 0x%x: stacksize = 0x%x\n",
-	       lwp_cpptr->context.topstack, lwp_cpptr->stack,
+	       (unsigned int)lwp_cpptr->context.topstack, 
+	       (unsigned int)lwp_cpptr->stack,
 	       lwp_cpptr->stacksize);
 
 	switch (lwp_overflowAction) {
@@ -962,11 +968,15 @@ Dispatcher(void)
 	printf("Dispatch %d [PCB at 0x%x] \"%s\"\n", ++dispatch_count,
 	       runnable[i].head, runnable[i].head->name);
 #endif
+#ifndef AFS_ARM_LINUX20_ENV
     if (PRE_Block != 1)
 	Abort_LWP("PRE_Block not 1");
+#endif
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
+    
+    return; /* not reachable */
 }
 
 /* Complain of a stack overflow to stderr without using stdio. */
@@ -999,7 +1009,7 @@ Dispose_of_Dead_PCB(PROCESS cur)
 */
 }
 
-static int
+static void
 Exit_LWP(void)
 {
     abort();
@@ -1024,7 +1034,7 @@ Free_PCB(PROCESS pid)
 
 static void
 Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
-	       int (*ep) (), void *parm, char *name)
+	       void *(*ep) (void *), void *parm, char *name)
 {
     register int i = 0;
 
@@ -1034,7 +1044,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	    i++;
     temp->name[31] = '\0';
     temp->status = READY;
-    temp->eventlist = (char **)malloc(EVINITSIZE * sizeof(char *));
+    temp->eventlist = (void **)malloc(EVINITSIZE * sizeof(void *));
     temp->eventlistsize = EVINITSIZE;
     temp->eventcnt = 0;
     temp->wakevent = 0;
@@ -1062,7 +1072,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 }
 
 static int
-Internal_Signal(register char *event)
+Internal_Signal(register void *event)
 {
     int rc = LWP_ENOWAIT;
     register int i;
@@ -1252,13 +1262,13 @@ plim(char *name, afs_int32 lc, uchar_t hard)
 
 #ifdef	AFS_SUN5_ENV
 int
-LWP_NoYieldSignal(char *event)
+LWP_NoYieldSignal(void *event)
 {
     return (LWP_INTERNALSIGNAL(event, 0));
 }
 
 int
-LWP_SignalProcess(char *event)
+LWP_SignalProcess(void *event)
 {
     return (LWP_INTERNALSIGNAL(event, 1));
 }
@@ -1283,7 +1293,7 @@ pthread_key_t lwp_process_key;	/* Key associating lwp pid with thread */
 
 typedef struct event {
     struct event *next;		/* next in hash chain */
-    char *event;		/* lwp event: an address */
+    void *event;		/* lwp event: an address */
     int refcount;		/* Is it in use? */
     pthread_cond_t cond;	/* Currently associated condition variable */
     int seq;			/* Sequence number: this is incremented
@@ -1508,7 +1518,7 @@ LWP_TerminateProcessSupport(void)
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address) */
 static event_t *
-getevent(char *event)
+getevent(void *event)
 {
     event_t *evp, *newp;
     int hashcode;
@@ -1542,7 +1552,7 @@ getevent(char *event)
 #define relevent(evp) ((evp)->refcount--)
 
 int
-LWP_WaitProcess(char *event)
+LWP_WaitProcess(void *event)
 {				/* wait on a single event */
     struct event *ev;
     int seq;
@@ -1566,7 +1576,7 @@ LWP_MwaitProcess(int wcount, char *evlist[])
 }
 
 int
-LWP_NoYieldSignal(char *event)
+LWP_NoYieldSignal(void *event)
 {
     struct event *ev;
     debugf(("%s: no yield signal (%x)\n", lwp_process_string(), event));
@@ -1582,7 +1592,7 @@ LWP_NoYieldSignal(char *event)
 }
 
 int
-LWP_SignalProcess(char *event)
+LWP_SignalProcess(void *event)
 {
     struct event *ev;
     debugf(("%s: signal process (%x)\n", lwp_process_string(), event));

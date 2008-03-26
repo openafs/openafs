@@ -1,6 +1,6 @@
 =head1 NAME
 
-pts help - Displays help for pts commands
+pts_help - Displays help for pts commands
 
 =head1 SYNOPSIS
 

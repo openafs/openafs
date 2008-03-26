@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8.2.1 2006/03/09 06:42:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8.2.3 2007/12/10 22:46:07 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -26,13 +26,7 @@ RCSID
 #include <lwp.h>
 #include <lock.h>
 #include <errno.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #define	UBIK_INTERNALS 1
 #include "ubik.h"
@@ -84,15 +78,8 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     }
 
     /* not found, open it and try to enter in cache */
-    strcpy(pbuffer, adbase->pathName);
-    strcat(pbuffer, ".DB");
-    if (afid < 0) {
-	i = -afid;
-	strcat(pbuffer, "SYS");
-    } else
-	i = afid;
-    sprintf(temp, "%d", i);
-    strcat(pbuffer, temp);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName, 
+		 (afid<0)?"SYS":"", (afid<0)?-afid:afid);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
 	/* try opening read-only */

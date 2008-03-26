@@ -33,12 +33,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vldb_check.c,v 1.11.2.1 2006/12/16 06:26:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vldb_check.c,v 1.11.2.5 2007/12/11 20:45:29 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
@@ -47,14 +48,6 @@ RCSID
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include "vlserver.h"
@@ -265,6 +258,7 @@ readheader(struct vlheader *headerp)
     if (headerp->vital_header.headersize != sizeof(*headerp))
 	printf("Header reports its size as %d (should be %d)\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
+    return;
 }
 
 void
@@ -321,6 +315,7 @@ readMH(afs_int32 addr, struct extentaddr *mhblockP)
 	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++)
 	    e->ex_addrs[j] = ntohl(e->ex_addrs[j]);
     }
+    return;
 }
 
 void
@@ -399,6 +394,7 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 	    }
 	}
     }
+    return;
 }
 
 void
@@ -693,6 +689,7 @@ FollowNameHash(struct vlheader *header)
 	    ("%d entries in name hash, longest is %d, shortest is %d, average length is %f\n",
 	     count, longest, shortest, ((float)count / (float)HASHSIZE));
     }
+    return;
 }
 
 /*
@@ -768,6 +765,7 @@ FollowIdHash(struct vlheader *header)
 		 ((float)count / (float)HASHSIZE));
 	}
     }
+    return;
 }
 
 /*
@@ -812,6 +810,7 @@ FollowFreeChain(struct vlheader *header)
     }
     if (verbose)
 	printf("%d entries on free chain\n", count);
+    return;
 }
 
 /*
@@ -1022,7 +1021,7 @@ CheckIpAddrs(struct vlheader *header)
 	printf("%d simple entries, %d multihomed entries, Total = %d\n",
 	       regentries, mhentries, mhentries + regentries);
     }
-
+    return;
 }
 
 void 
@@ -1034,7 +1033,7 @@ FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp,
 }
 
 int
-WorkerBee(struct cmd_syndesc *as, char *arock)
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
     afs_int32 maxentries, type, tmp;

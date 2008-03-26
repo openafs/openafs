@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs help - Displays help for fs commands
+fs_help - Displays help for fs commands
 
 =head1 SYNOPSIS
 

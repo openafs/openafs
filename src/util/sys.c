@@ -11,14 +11,14 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/sys.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/sys.c,v 1.6.2.1 2007/10/31 04:26:29 shadow Exp $");
 
 #include <stdio.h>
 
 #include "AFS_component_version_number.c"
 
 int
-main()
+main(int argc, char **argv)
 {
     printf("%s\n", SYS_NAME);
     return 0;

@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.43.2.1 2007/12/13 20:59:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.47 2008/02/19 14:33:44 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,14 +46,7 @@ RCSID
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef AFS_LINUX20_ENV
 #include <net/if.h>
@@ -347,7 +340,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	    hpr_End(uclient);
 	code = hpr_Initialize(&uclient);
 
-	assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	if (!code)
+	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
 #else
 	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
@@ -1326,6 +1320,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	if (IsEmpty(&childdir) != 0)
 	    return (EEXIST);
 	DZap(&childdir);
+	FidZap(&childdir);
 	(*targetptr)->delete = 1;
     } else if ((--(*targetptr)->disk.linkCount) == 0)
 	(*targetptr)->delete = 1;

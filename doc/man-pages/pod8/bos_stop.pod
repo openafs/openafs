@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos stop - Stops a process after changing its status flag
+bos_stop - Stops a process after changing its status flag
 
 =head1 SYNOPSIS
 

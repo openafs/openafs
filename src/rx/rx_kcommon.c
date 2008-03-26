@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.15 2007/02/09 00:20:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.18 2008/03/10 22:35:36 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -273,8 +273,8 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server
  * processes never become listener threads */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void *unused)
 {
     int threadID;
 
@@ -1093,7 +1093,11 @@ afs_rxevent_daemon(void)
 #ifdef RXK_LISTENER_ENV
 	    afs_termState = AFSOP_STOP_RXK_LISTENER;
 #else
+#ifdef AFS_SUN510_ENV
+	    afs_termState = AFSOP_STOP_NETIF;
+#else
 	    afs_termState = AFSOP_STOP_COMPLETE;
+#endif
 #endif
 	    osi_rxWakeup(&afs_termState);
 	    return;
@@ -1206,6 +1210,9 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
  * OS's socket receive routine returns as a result of a signal.
  */
 int rxk_ListenerPid;		/* Used to signal process to wakeup at shutdown */
+#ifdef AFS_LINUX20_ENV
+struct task_struct *rxk_ListenerTask;
+#endif
 
 #ifdef AFS_SUN5_ENV
 /*
@@ -1235,6 +1242,7 @@ rxk_Listener(void)
 
 #ifdef AFS_LINUX20_ENV
     rxk_ListenerPid = current->pid;
+    rxk_ListenerTask = current;
 #endif
 #ifdef AFS_SUN5_ENV
     rxk_ListenerPid = 1;	/* No PID, just a flag that we're alive */
@@ -1267,11 +1275,19 @@ rxk_Listener(void)
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
     if (afs_termState == AFSOP_STOP_RXK_LISTENER) {
+#ifdef AFS_SUN510_ENV
+	afs_termState = AFSOP_STOP_NETIF;
+#else
 	afs_termState = AFSOP_STOP_COMPLETE;
+#endif
 	osi_rxWakeup(&afs_termState);
     }
     rxk_ListenerPid = 0;
-#if defined(AFS_LINUX22_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_LINUX20_ENV
+    rxk_ListenerTask = 0;
+    osi_rxWakeup(&rxk_ListenerTask);
+#endif
+#if defined(AFS_SUN5_ENV)
     osi_rxWakeup(&rxk_ListenerPid);
 #endif
 #ifdef AFS_SUN5_ENV

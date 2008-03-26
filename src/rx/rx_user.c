@@ -13,11 +13,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_user.c,v 1.18.2.4 2005/04/03 18:18:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_user.c,v 1.18.2.5 2007/10/30 15:24:04 shadow Exp $");
 
 # include <sys/types.h>
 # include <errno.h>
 # include <signal.h>
+# include <string.h>
 #ifdef AFS_NT40_ENV
 # include <WINNT/syscfg.h>
 #else
@@ -36,13 +37,6 @@ RCSID
 #endif
 #include <afs/afs_args.h>
 #include <afs/afsutil.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef	IPPORT_USERRESERVED
 /* If in.h doesn't define this, define it anyway.  Unfortunately, defining

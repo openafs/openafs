@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs listacl - Displays ACLs
+fs_listacl - Displays ACLs
 
 =head1 SYNOPSIS
 

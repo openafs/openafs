@@ -17,21 +17,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/lightobject.c,v 1.6 2003/07/15 23:15:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/lightobject.c,v 1.6.2.1 2007/10/30 15:23:53 shadow Exp $");
 
 #include "gtxlightobj.h"	/*Interface for this module */
 #include <stdio.h>		/*Standard I/O stuff */
 #include <errno.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
-
 
 /*Externally-advertised array of light onode operations*/
 struct onodeops gator_light_ops = {

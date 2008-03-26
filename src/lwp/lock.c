@@ -26,7 +26,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/lock.c,v 1.5 2003/07/15 23:15:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/lwp/lock.c,v 1.5.2.1 2008/03/10 22:35:35 shadow Exp $");
 
 #ifdef AFS_PTHREAD_ENV
 #include <afs/assert.h>
@@ -197,9 +197,7 @@ Afs_Lock_ReleaseW(struct Lock *lock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessR(addr, alock)
-     register char *addr;
-     register struct Lock *alock;
+LWP_WaitProcessR(register void *addr, register struct Lock *alock)
 {
     ReleaseReadLock(alock);
     LWP_WaitProcess(addr);
@@ -207,9 +205,7 @@ LWP_WaitProcessR(addr, alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessW(addr, alock)
-     register char *addr;
-     register struct Lock *alock;
+LWP_WaitProcessW(register void *addr, register struct Lock *alock)
 {
     ReleaseWriteLock(alock);
     LWP_WaitProcess(addr);
@@ -217,9 +213,7 @@ LWP_WaitProcessW(addr, alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessS(addr, alock)
-     register char *addr;
-     register struct Lock *alock;
+LWP_WaitProcessS(register void *addr, register struct Lock *alock)
 {
     ReleaseSharedLock(alock);
     LWP_WaitProcess(addr);

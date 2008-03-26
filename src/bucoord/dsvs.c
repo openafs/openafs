@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dsvs.c,v 1.9.2.2 2007/01/05 03:34:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dsvs.c,v 1.9.2.3 2007/11/26 21:21:50 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -44,6 +44,8 @@ struct ubik_client *cstructp;	/*Ptr to Ubik client structure */
 extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf,
 					     char *name);
 
+static FreeVolumeEntryList();
+static FreeVolumeEntry();
 
 /* Code to maintain dump schedule and volume set abstractions.
  * A volume set looks like this:

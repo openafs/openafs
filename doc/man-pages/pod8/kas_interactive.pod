@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas interactive - Enters interactive mode
+kas_interactive - Enters interactive mode
 
 =head1 SYNOPSIS
 

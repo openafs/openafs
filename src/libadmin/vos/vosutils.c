@@ -11,19 +11,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.10.2.3 2007/07/16 00:00:38 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.10.2.4 2007/10/30 15:23:58 shadow Exp $");
 
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"
 #include <afs/afs_AdminErrors.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 /*
  * VLDB entry conversion routines.

@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.6.2.1 2007/11/26 21:21:54 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -69,7 +69,7 @@ main(int argc, char *argv[])
     struct rx_debugConn conn;
     afs_uint32 supportedStats;
     afs_uint32 supportedValues;
-    int allconns;
+    int allconns = 1;
     int i;
 
     ParseArgs(argc, argv, &srvrName, &srvrPort);

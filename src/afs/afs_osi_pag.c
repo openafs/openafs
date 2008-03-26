@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.10 2007/02/09 00:32:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.11 2008/01/04 18:40:30 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -145,6 +145,7 @@ getpag(void)
  */
 
 static int afs_pag_sleepcnt = 0;
+static int afs_pag_timewarn = 0;
 
 static int
 afs_pag_sleep(struct AFS_UCRED **acred)
@@ -154,6 +155,13 @@ afs_pag_sleep(struct AFS_UCRED **acred)
     if (!afs_suser(acred)) {
 	if(osi_Time() - pag_epoch < pagCounter) {
 	    rv = 1;
+	}
+	if (rv && (osi_Time() < pag_epoch)) {
+	    if (!afs_pag_timewarn) {
+		afs_pag_timewarn = 1;
+		printf("clock went backwards, not PAG throttling");
+	    }
+	    rv = 0;
 	}
     }
 

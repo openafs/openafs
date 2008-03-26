@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos prune - Removes obsolete files from /usr/afs/bin and /usr/afs/logs
+bos_prune - Removes obsolete files from /usr/afs/bin and /usr/afs/logs
 
 =head1 SYNOPSIS
 

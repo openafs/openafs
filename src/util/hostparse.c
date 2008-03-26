@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/hostparse.c,v 1.13 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/hostparse.c,v 1.13.2.1 2007/10/30 15:24:09 shadow Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
@@ -34,13 +34,7 @@ RCSID
 #include <netdb.h>
 #include <ctype.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <errno.h>
 #include "afsutil.h"
 #endif /* UKERNEL */

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH PTS 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -246,6 +246,12 @@ name of the local cell by reading the following in order:
 The value of the \s-1AFSCELL\s0 environment variable.
 .Ip "\(bu" 8
 The local \fI/usr/vice/etc/ThisCell\fR file.
+.Sp
+Do not combine the \fB\-cell\fR and \fB\-localauth\fR options. A command on which
+the \fB\-localauth\fR flag is included always runs in the local cell (as
+defined in the server machine's local \fI/usr/afs/etc/ThisCell\fR file),
+whereas a command on which the \fB\-cell\fR argument is included runs in the
+specified foreign cell.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution immediately.
@@ -270,6 +276,27 @@ circumstances). In normal circumstances, the Protection Server allows only
 privileged users to issue commands that change the Protection Database,
 and refuses to perform such an action even if the \fB\-noauth\fR flag is
 provided.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using the server encryption key with the
+highest key version number in the local \fI/usr/afs/etc/KeyFile\fR file. The
+\fBpts\fR command interpreter presents the ticket, which never expires, to
+the \s-1BOS\s0 Server during mutual authentication.
+.Sp
+Use this flag only when issuing a command on a server machine; client
+machines do not usually have a \fI/usr/afs/etc/KeyFile\fR file.  The issuer
+of a command that includes this flag must be logged on to the server
+machine as the local superuser \f(CWroot\fR. The flag is useful for commands
+invoked by an unattended application program, such as a process controlled
+by the \s-1UNIX\s0 \fBcron\fR utility. It is also useful if an administrator is
+unable to authenticate to \s-1AFS\s0 but is logged in as the local superuser
+\f(CWroot\fR.
+.Sp
+Do not combine the \fB\-cell\fR and \fB\-localauth\fR options. A command on which
+the \fB\-localauth\fR flag is included always runs in the local cell (as
+defined in the server machine's local \fI/usr/afs/etc/ThisCell\fR file),
+whereas a command on which the \fB\-cell\fR argument is included runs in the
+specified foreign cell. Also, do not combine the \fB\-localauth\fR and
+\fB\-noauth\fR flags.
 .SH "PRIVILEGE REQUIRED"
 Members of the system:administrators group can issue all \fBpts\fR commands
 on any entry in the Protection Database.
@@ -341,6 +368,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-help\fR"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Header "PRIVILEGE REQUIRED"
 

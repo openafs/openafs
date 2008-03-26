@@ -11,9 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.3 2007/04/10 18:43:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.6 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <conio.h>
@@ -546,6 +547,7 @@ callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
  *     Regardless of error, the closecallout routine will be called
  *     (unless a tape is not mounted in the first place).
  */
+void
 unmountTape(taskId, tapeInfoPtr)
      afs_int32 taskId;
      struct butm_tapeInfo *tapeInfoPtr;
@@ -1741,9 +1743,10 @@ restoreVolume(taskId, restoreInfo, rparamsPtr)
  *	created as a LWP by the server stub, <newNode> is a pointer to all
  *	the parameters Restorer needs
  */
-Restorer(newNode)
-     struct dumpNode *newNode;
-{
+void *
+Restorer(void *param) {
+    struct dumpNode *newNode = (struct dumpNode *) param;
+
     afs_int32 code = 0, tcode;
     afs_uint32 taskId;
     char *newVolName;
@@ -1922,6 +1925,7 @@ Restorer(newNode)
 
 /* this is just scaffolding, creates new tape label with name <tapeName> */
 
+void
 GetNewLabel(tapeInfoPtr, pName, AFSName, tapeLabel)
      struct butm_tapeInfo *tapeInfoPtr;
      char *pName, *AFSName;
@@ -2223,9 +2227,11 @@ updateTapeLabel(labelIfPtr, tapeInfoPtr, newLabelPtr)
  *	specified by <label>
  */
 
-Labeller(labelIfPtr)
-     struct labelTapeIf *labelIfPtr;
+void *
+Labeller(void *param)
 {
+    struct labelTapeIf *labelIfPtr = (struct labelTapeIf *)param;
+
     struct tc_tapeLabel *label = &labelIfPtr->label;
 
     struct butm_tapeLabel newTapeLabel;
@@ -2283,6 +2289,7 @@ Labeller(labelIfPtr)
  *	print out the tape label.
  */
 
+void
 PrintTapeLabel(labelptr)
      struct butm_tapeLabel *labelptr;
 {

@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.1 2007/07/06 11:38:31 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.2 2007/10/30 15:23:50 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -22,13 +22,7 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <lock.h>

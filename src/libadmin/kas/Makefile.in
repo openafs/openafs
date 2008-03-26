@@ -12,7 +12,7 @@ CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../../kauth -I${srcdir}/../../kauth
 CCRULE = ${CC} ${CFLAGS} -c $?
 
-KAUTH= ${srcdir}/../../kauth/
+KAUTH= ${srcdir}/../../kauth
 
 ADMINOBJS = afs_kasAdmin.o
 

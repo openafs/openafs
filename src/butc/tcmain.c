@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcmain.c,v 1.14.2.6 2006/07/01 05:04:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcmain.c,v 1.14.2.8 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,6 +57,7 @@ RCSID
 #include "afs/butx.h"
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
+#include "butc_prototypes.h"
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
@@ -67,7 +68,6 @@ RCSID
 
 struct ubik_client *cstruct;
 extern void TC_ExecuteRequest();
-extern int dbWatcher();
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[256];
@@ -830,7 +830,7 @@ GetConfigParams(char *filename, afs_int32 port)
 }
 
 static int
-WorkerBee(struct cmd_syndesc *as, char *arock)
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);

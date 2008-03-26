@@ -1,21 +1,14 @@
-/* $Id: ubik.c,v 1.7.2.1 2006/03/09 06:41:54 shadow Exp $ */
+/* $Id: ubik.c,v 1.7.2.2 2007/10/30 15:24:03 shadow Exp $ */
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ubik.c,v 1.7.2.1 2006/03/09 06:41:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ubik.c,v 1.7.2.2 2007/10/30 15:24:03 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <lock.h>
 #define UBIK_INTERNALS

@@ -1,5 +1,5 @@
 /* 
- * $Id: aklog_main.c,v 1.1.2.20 2007/10/10 17:47:58 shadow Exp $
+ * $Id: aklog_main.c,v 1.1.2.23 2008/01/05 04:48:40 shadow Exp $
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
@@ -36,7 +36,7 @@
 
 #if !defined(lint) && !defined(SABER)
 static char *rcsid =
-	"$Id: aklog_main.c,v 1.1.2.20 2007/10/10 17:47:58 shadow Exp $";
+	"$Id: aklog_main.c,v 1.1.2.23 2008/01/05 04:48:40 shadow Exp $";
 #endif /* lint || SABER */
 
 #include <afsconfig.h>
@@ -199,7 +199,7 @@ static int get_user_realm(krb5_context, char *);
 #error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
 #endif
 
-#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART)
+#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT) 
 krb5_error_code
 krb5_encrypt_tkt_part(krb5_context context,
 		      const krb5_keyblock *key,
@@ -660,6 +660,33 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	status = get_credv5(context, name, primary_instance, realm_of_cell,
 			    &v5cred);
 
+#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_DECODE_TICKET)
+	if (status == 0 && strcmp(realm_of_cell, "") == 0) {
+	    krb5_error_code code;
+	    krb5_ticket *ticket;
+
+	    code = krb5_decode_ticket(&v5cred->ticket, &ticket);
+
+	    if (code != 0) {
+		fprintf(stderr,
+			"%s: Couldn't decode ticket to determine realm for "
+			"cell %s.\n",
+			progname, cell_to_use);
+	    } else {
+		int len = realm_len(context, ticket->server);
+		/* This really shouldn't happen. */
+		if (len > REALM_SZ-1)
+		    len = REALM_SZ-1;
+
+		strncpy(realm_of_cell, realm_data(context, ticket->server), 
+			len);
+		realm_of_cell[len] = 0;
+
+		krb5_free_ticket(context, ticket);
+	    }
+	}
+#endif
+
 	if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) &&
 	    !realm_of_cell[0]) {
 	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, TRUE);
@@ -929,11 +956,14 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    printf("Setting tokens. %s / %s @ %s \n",
 		    aclient.name, aclient.instance, aclient.cell );
 	}
+#ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
 	 * this routine, it will not add the token. It is not clear what 
-	 * is going on here! So we will do the following operation
+	 * is going on here! So we will do the following operation.
+	 * On AIX 5, it causes the parent program to die, so we won't.
 	 */
 	write(2,"",0); /* dummy write */
+#endif
 #ifndef WINDOWS
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
 	    fprintf(stderr, 
@@ -1690,7 +1720,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 						int *paddress,
 						krb5_creds** out_creds /* out */ )
 {
-#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET))
+#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
     krb5_error_code code;
     krb5_keytab kt = 0;
     krb5_kt_cursor cursor[1];

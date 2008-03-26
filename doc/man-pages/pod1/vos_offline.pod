@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos offline - Takes a volume offline
+vos_offline - Takes a volume offline
 
 =head1 SYNOPSIS
 

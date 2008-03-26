@@ -36,19 +36,28 @@ SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
 if [ -x /usr/sbin/kextstat ]; then KMODSTAT=/usr/sbin/kextstat; fi
 if [ -x /usr/sbin/kmodstat ]; then KMODSTAT=/usr/sbin/kmodstat; fi
 
+if [ -f $CONFIG/afs.conf ]; then
+    . $CONFIG/afs.conf
+fi
+
+# Check this file second so that if users have altered the file, it will
+# override the default options
+if [ -f $AFSDOPT ]; then
+    OPTIONS=`cat $AFSDOPT`
+fi
 
 StartService()
 {
     echo "Starting OpenAFS"
 
-    if [ -f $AFSDOPT ]; then
-	OPTIONS=`cat $AFSDOPT`
+    if [ -z "$OPTIONS" ] || [ "$OPTIONS" = "AUTOMATIC" ] ; then
+	AFSD_OPTIONS="$VERBOSE"
     else
-	OPTIONS="$MEDIUM -fakestat"
+	AFSD_OPTIONS="$OPTIONS $VERBOSE"
     fi
 
     if [ "${NETWORKUP}" = "-NO-" ]; then
-        echo $OPTIONS | grep -e '-dynroot' || exit
+        echo $AFSD_OPTIONS | grep -e '-dynroot' || exit
     fi
 
 # Need the commands ps, awk, kill, sleep
@@ -76,7 +85,7 @@ StartService()
     if [ -x /usr/afs/bin/bosserver ]; then
 	echo "Starting AFS Server processes"
 	/usr/afs/bin/bosserver
-	OPTIONS="$OPTIONS -nosettime"
+	AFSD_OPTIONS="$AFSD_OPTIONS -nosettime"
 	sleep 30
     fi
 
@@ -107,7 +116,13 @@ StartService()
     done
 
     echo "Starting afsd"
-    $AFSD $OPTIONS
+    $AFSD $AFSD_OPTIONS
+
+#
+# From /var/db/openafs/etc/config/afs.conf, call a post-init function or
+# command if it's been defined
+#
+    $AFS_POST_INIT
 
 #
 # Call afssettings (if it exists) to set customizable parameters
@@ -115,6 +130,14 @@ StartService()
     if [ -x $CONFIG/afssettings ]; then
 	sleep 2
 	$CONFIG/afssettings
+    fi
+
+#
+# From /var/db/openafs/etc/config/afs.conf, set a sysname list if one was
+# configured.
+#
+    if [ -n "$AFS_SYSNAME" ] ; then
+	fs sysname $AFS_SYSNAME
     fi
 
 #
@@ -150,6 +173,12 @@ StartService()
 StopService()
 {
     echo "Stopping AFS"
+
+#
+# If a pre-shutdown function was defined in /var/db/openafs/etc/config/afs.conf
+# was defined, then run it
+#
+    $AFS_PRE_SHUTDOWN
 
     if $KMODSTAT | perl -e 'exit not grep /openafs/, <>' ; then
 	echo "Unmounting /afs"

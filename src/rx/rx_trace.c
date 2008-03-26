@@ -11,16 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_trace.c,v 1.11 2003/07/15 23:16:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_trace.c,v 1.11.2.2 2007/11/26 21:21:55 shadow Exp $");
 
 #ifdef RXDEBUG
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
@@ -188,6 +182,7 @@ main(argc, argv)
 	printf(" %3u %7u %7u      %x.%x\n", ip.qlen, ip.servicetime,
 	       ip.waittime, ip.cid, ip.call);
     }
+    return 0;
 }
 
 #endif /* DUMPTRACE */

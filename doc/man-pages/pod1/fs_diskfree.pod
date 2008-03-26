@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs diskfree - Shows data about the partition housing a directory or file
+fs_diskfree - Shows data about the partition housing a directory or file
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos help - Displays help for bos commands
+bos_help - Displays help for bos commands
 
 =head1 SYNOPSIS
 

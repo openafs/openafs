@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/read_tape.c,v 1.7 2003/07/15 23:14:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/read_tape.c,v 1.7.2.3 2007/11/26 21:21:51 shadow Exp $");
 
 #include <afs/cmd.h>
 #include <lock.h>
@@ -21,6 +21,7 @@ RCSID
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #include <afs/usd.h>
@@ -81,6 +82,7 @@ readblock(buffer)
     return 0;
 }
 
+void
 printLabel(tapeLabelPtr)
      struct tapeLabel *tapeLabelPtr;
 {
@@ -129,6 +131,7 @@ printLabel(tapeLabelPtr)
     }
 }
 
+void
 printHeader(headerPtr, isvolheader)
      struct volumeHeader *headerPtr;
      afs_int32 *isvolheader;
@@ -381,9 +384,8 @@ writeData(data, size)
     return 0;
 }
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *tapedev;
     struct tapeLabel *label;

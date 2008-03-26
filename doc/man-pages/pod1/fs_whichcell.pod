@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs whichcell - Returns the cell to which a file or directory belongs
+fs_whichcell - Returns the cell to which a file or directory belongs
 
 =head1 SYNOPSIS
 

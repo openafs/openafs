@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_INTERACTIVE 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH PTS_INTERACTIVE 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,15 +188,21 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts interactive \- Enters interactive mode
+pts_interactive \- Enters interactive mode
 .SH "SYNOPSIS"
 \fBpts interactive\fR <<\ [\fB\-cell\fR]\ <\fIcell\ name\fR >>> [\fB\-noauth\fR]
-    [\fB\-force\fR]
+    [\fB\-auth\fR] [\fB\-localauth\fR] [\fB\-force\fR]
 .PP
 \fBpts in\fR <<\ [\fB\-c\fR]\ <\fIcell\ name\fR >>> [\fB\-n\fR] [\fB\-f\fR]
 .SH "DESCRIPTION"
 The \fBpts interactive\fR command allows the user to enter an interactive
 mode, useful for running bulk commands like creating new users or groups.
+.PP
+\fBpts interactive\fR uses the authentication state supplied on its command
+line to run all bulk commands. However, if a bulk command is supplied 
+with authentication options such as \fB\-cell\fR, \fB\-localauth\fR, \fB\-auth\fR 
+or \fB\-noauth\fR then it, and all subsequent bulk commands, will be run with
+those options.
 .SH "CAUTIONS"
 Prior to OpenAFS 1.4.5 and OpenAFS 1.5.23, the \fBpts interactive\fR command
 was only available on Unix or Linux and when OpenAFS was compiled with the
@@ -221,6 +227,10 @@ if one of many operations fails.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .SH "OUTPUT"
 The output is the same as if each individual command were run from the
 command line.
@@ -271,12 +281,13 @@ the \fIptserver(8)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 .PP
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
 
 .rn }` ''
 .IX Title "PTS_INTERACTIVE 1"
-.IX Name "pts interactive - Enters interactive mode"
+.IX Name "pts_interactive - Enters interactive mode"
 
 .IX Header "NAME"
 
@@ -293,6 +304,8 @@ man page was written by Jason Edgecombe for OpenAFS.
 .IX Item "\fB\-force\fR"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Header "OUTPUT"
 

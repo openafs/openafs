@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos listkeys - Displays the server encryption keys from the KeyFile file
+bos_listkeys - Displays the server encryption keys from the KeyFile file
 
 =head1 SYNOPSIS
 

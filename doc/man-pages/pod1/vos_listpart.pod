@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos listpart - Displays all AFS partitions on a file server machine
+vos_listpart - Displays all AFS partitions on a file server machine
 
 =head1 SYNOPSIS
 

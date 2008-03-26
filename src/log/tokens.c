@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/log/tokens.c,v 1.6.2.2 2006/03/15 18:29:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/log/tokens.c,v 1.6.2.3 2007/10/30 15:23:58 shadow Exp $");
 
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV
@@ -25,14 +25,7 @@ RCSID
 #include <time.h>		/*time(), ctime() */
 #include <pwd.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 
 #define VIRTUE
 #define VICE

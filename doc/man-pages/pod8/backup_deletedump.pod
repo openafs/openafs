@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup deletedump - Deletes one or more dump records from the Backup Database
+backup_deletedump - Deletes one or more dump records from the Backup Database
 
 =head1 SYNOPSIS
 

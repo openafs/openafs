@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos removekey - Removes a server encryption key from the KeyFile file
+bos_removekey - Removes a server encryption key from the KeyFile file
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos remove - Removes a volume from a site
+vos_remove - Removes a volume from a site
 
 =head1 SYNOPSIS
 

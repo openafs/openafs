@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos addkey - Adds a new server encryption key to the KeyFile file
+bos_addkey - Adds a new server encryption key to the KeyFile file
 
 =head1 SYNOPSIS
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/physio.c,v 1.11 2003/12/09 23:07:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/physio.c,v 1.11.2.1 2007/10/30 15:24:12 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -21,13 +21,7 @@ RCSID
 #include <netinet/in.h>
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef	AFS_SUN5_ENV
 #include <sys/fcntl.h>
 #endif

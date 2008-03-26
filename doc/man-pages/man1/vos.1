@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH VOS 1 "OpenAFS" "19/Jan/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -253,6 +253,15 @@ Commands to lock and unlock \s-1VLDB\s0 entries: \fBvos lock\fR, \fBvos unlock\f
 A command to report Volume Server status: \fBvos status\fR.
 .Ip "\(bu" 4
 Commands to obtain help: \fBvos apropos\fR and \fBvos help\fR.
+.SH "CAUTIONS"
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
 .SH "OPTIONS"
 The following arguments and flags are available on many commands in the
 \fBbos\fR suite. The reference page for each command also lists them, but
@@ -368,7 +377,8 @@ the \fIvos_apropos(1)\fR manpage,
 the \fIvos_backup(1)\fR manpage,
 the \fIvos_backupsys(1)\fR manpage,
 the \fIvos_changeaddr(1)\fR manpage,
-the \fIvos_changeloc(1)\fR manpage,
+the \fIvos_convertROtoRW(1)\fR manpage,
+the \fIvos_copy(1)\fR manpage,
 the \fIvos_create(1)\fR manpage,
 the \fIvos_delentry(1)\fR manpage,
 the \fIvos_dump(1)\fR manpage,
@@ -429,6 +439,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\(bu"
 
 .IX Item "\(bu"
+
+.IX Header "CAUTIONS"
 
 .IX Header "OPTIONS"
 

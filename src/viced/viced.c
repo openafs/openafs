@@ -20,11 +20,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.19.2.1 2007/12/13 21:00:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.27 2008/03/11 17:40:55 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <sys/stat.h>
@@ -38,14 +39,6 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>		/* sysconf() */
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #ifndef ITIMER_REAL
 #include <sys/time.h>
@@ -113,10 +106,10 @@ extern int BreakVolumeCallBacksLater();
 extern int LogLevel, etext;
 extern afs_int32 BlocksSpare, PctSpare;
 
-void ShutDown(void);
+void *ShutDown(void *);
 static void ClearXStatValues(), NewParms(), PrintCounters();
 static void ResetCheckDescriptors(void), ResetCheckSignal(void);
-static void CheckSignal(void);
+static void *CheckSignal(void *);
 extern int GetKeysFromToken();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
@@ -166,6 +159,7 @@ int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
 int rxBind = 0;		/* don't bind */
+int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */ 
 int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						 * already implied */
@@ -220,8 +214,8 @@ static void FlagMsg();
  */
 
 /* DEBUG HACK */
-static void
-CheckDescriptors()
+static void *
+CheckDescriptors(void *unused)
 {
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
@@ -237,6 +231,7 @@ CheckDescriptors()
     fflush(stdout);
     ResetCheckDescriptors();
 #endif
+    return 0;
 }				/*CheckDescriptors */
 
 
@@ -244,19 +239,19 @@ CheckDescriptors()
 void
 CheckSignal_Signal(x)
 {
-    CheckSignal();
+    CheckSignal(NULL);
 }
 
 void
 ShutDown_Signal(x)
 {
-    ShutDown();
+    ShutDown(NULL);
 }
 
 void
 CheckDescriptors_Signal(x)
 {
-    CheckDescriptors();
+    CheckDescriptors(NULL);
 }
 #else /* AFS_PTHREAD_ENV */
 void
@@ -410,8 +405,8 @@ setThreadId(char *s)
 }
 
 /* This LWP does things roughly every 5 minutes */
-static void
-FiveMinuteCheckLWP()
+static void *
+FiveMinuteCheckLWP(void *unused)
 {
     static int msg = 0;
     char tbuffer[32];
@@ -451,6 +446,7 @@ FiveMinuteCheckLWP()
 	    }
 	}
     }
+    return NULL;
 }				/*FiveMinuteCheckLWP */
 
 
@@ -458,8 +454,8 @@ FiveMinuteCheckLWP()
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
-static void
-HostCheckLWP()
+static void *
+HostCheckLWP(void *unused)
 {
     ViceLog(1, ("Starting Host check process\n"));
     setThreadId("HostCheckLWP");
@@ -472,14 +468,15 @@ HostCheckLWP()
 	ViceLog(2, ("Checking for dead venii & clients\n"));
 	h_CheckHosts();
     }
+    return NULL;
 }				/*HostCheckLWP */
 
 /* This LWP does fsync checks every 5 minutes:  it should not be used for
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
-static
-FsyncCheckLWP()
+static void *
+FsyncCheckLWP(void *unused)
 {
     afs_int32 code;
 #ifdef AFS_PTHREAD_ENV
@@ -488,11 +485,6 @@ FsyncCheckLWP()
     ViceLog(1, ("Starting fsync check process\n"));
 
     setThreadId("FsyncCheckLWP");
-
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
-    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
-#endif
 
     while (1) {
 	FSYNC_LOCK;
@@ -516,6 +508,7 @@ FsyncCheckLWP()
 	    code = BreakLaterCallBacks();
 	} while (code != 0);
     }
+    return NULL;
 }
 
 /*------------------------------------------------------------------------
@@ -630,8 +623,8 @@ PrintCounters()
 
 
 
-static void
-CheckSignal()
+static void *
+CheckSignal(void *unused)
 {
     if (FS_registered > 0) {
 	/*
@@ -645,7 +638,7 @@ CheckSignal()
     DumpCallBackState();
     PrintCounters();
     ResetCheckSignal();
-
+    return NULL;
 }				/*CheckSignal */
 
 void
@@ -706,10 +699,11 @@ ShutDownAndCore(int dopanic)
 
 }				/*ShutDown */
 
-void
-ShutDown(void)
+void *
+ShutDown(void *unused)
 {				/* backward compatibility */
     ShutDownAndCore(DONTPANIC);
+    return NULL;
 }
 
 
@@ -745,6 +739,7 @@ FlagMsg()
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
     strcat(buffer, "[-rxmaxmtu <bytes>] ");
     strcat(buffer, "[-rxbind (bind the Rx socket to one address)] ");
+    strcat(buffer, "[-allow-dotted-principals (disable the rxkad principal name dot check)] ");
 #if AFS_PTHREAD_ENV
     strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
 #endif
@@ -1063,6 +1058,8 @@ ParseArgs(int argc, char *argv[])
 	    rxJumbograms = 0;
 	} else if (!strcmp(argv[i], "-rxbind")) {
 	    rxBind = 1;
+	} else if (!strcmp(argv[i], "-allow-dotted-principals")) {
+	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -1826,12 +1823,16 @@ main(int argc, char *argv[])
     rx_SetBusyThreshold(busy_threshold, VBUSY);
     rx_SetCallAbortThreshold(abort_threshold);
     rx_SetConnAbortThreshold(abort_threshold);
+#ifdef AFS_XBSD_ENV
+    stackSize = 128 * 1024;
+#else
     stackSize = lwps * 4000;
     if (stackSize < 32000)
 	stackSize = 32000;
     else if (stackSize > 44000)
 	stackSize = 44000;
-#if    defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV)
+#endif
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV) || defined(AFS_XBSD_ENV)
     rx_SetStackSize(1, stackSize);
 #endif
     if (udpBufSize)
@@ -1865,6 +1866,11 @@ main(int argc, char *argv[])
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));
 	exit(-1);
+    }
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
     }
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
@@ -1916,6 +1922,11 @@ main(int argc, char *argv[])
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
 
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
+    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
+#endif
+
     rx_StartServer(0);		/* now start handling requests */
 
     /* we ensure that there is enough space in the vnode buffer to satisfy
@@ -1961,25 +1972,25 @@ main(int argc, char *argv[])
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)FiveMinuteCheckLWP,
+	   (&serverPid, &tattr, FiveMinuteCheckLWP,
 	    &fiveminutes) == 0);
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
+	   (&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
     assert(pthread_create
-	   (&serverPid, &tattr, (void *)FsyncCheckLWP, &fiveminutes) == 0);
+	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
 #else /* AFS_PTHREAD_ENV */
     ViceLog(5, ("Starting LWP\n"));
     assert(LWP_CreateProcess
 	   (FiveMinuteCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FiveMinuteChecks",
+	    &fiveminutes, "FiveMinuteChecks",
 	    &serverPid) == LWP_SUCCESS);
 
     assert(LWP_CreateProcess
 	   (HostCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
+	    &fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
     assert(LWP_CreateProcess
 	   (FsyncCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
+	    &fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
     TM_GetTimeOfDay(&tp, 0);
@@ -2039,4 +2050,5 @@ main(int argc, char *argv[])
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
+    return 0;
 }

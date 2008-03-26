@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup volrestore - Restores one or more volumes
+backup_volrestore - Restores one or more volumes
 
 =head1 SYNOPSIS
 

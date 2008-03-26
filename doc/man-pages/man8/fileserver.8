@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH fileserver 8 "OpenAFS" "11/Jun/2007" "AFS Command Reference"
+.TH fileserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -190,19 +190,20 @@
 .SH "NAME"
 fileserver \- Initializes the File Server component of the fs process
 .SH "SYNOPSIS"
-\fBfileserver\fR <<\ [\fB\-auditlog\fR\ <\fIlog\ path\fR] >>>
+\fBfileserver\fR <<\ [\fB\-auditlog\fR\ <\fIpath\ to\ log\ file\fR] >>>
     <<\ [\fB\-d\fR\ <\fIdebug\ level\fR] >>>
     <<\ [\fB\-p\fR\ <\fInumber\ of\ processes\fR] >>>
     <<\ [\fB\-spare\fR\ <\fInumber\ of\ spare\ blocks\fR] >>>
     <<\ [\fB\-pctspare\fR\ <\fIpercentage\ spare\fR] >>> <<\ [\fB\-b\fR\ <\fIbuffers\fR] >>>
-    <<\ [\fB\-l\fR\ <\fIlarge\ vnodes\fR] >>> <<\ [\fB\-s\fR\ <\fIsmall\ nodes\fR] >>>
+    <<\ [\fB\-l\fR\ <\fIlarge\ vnodes\fR] >>> <<\ [\fB\-s\fR\ <\fIsmall\ vnodes\fR] >>>
     <<\ [\fB\-vc\fR\ <\fIvolume\ cachesize\fR] >>> <<\ [\fB\-w\fR\ <\fIcall\ back\ wait\ interval\fR] >>>
     <<\ [\fB\-cb\fR\ <\fInumber\ of\ call\ backs\fR] >>> [\fB\-banner\fR] [\fB\-novbc\fR]
     <<\ [\fB\-implicit\fR\ <\fIadmin\ mode\ bits:\ rlidwka\fR] >>> [\fB\-readonly\fR]
     <<\ [\fB\-hr\fR\ <\fInumber\ of\ hours\ between\ refreshing\ the\ host\ cps\fR] >>>
-    [\fB\-busyat\fR <\fI< redirect clients when queue \fR n >>>]
+    <<\ [\fB\-busyat\fR\ <\fI<\ redirect\ clients\ when\ queue\ \fR\ n\ >>] >>>
     [\fB\-nobusy\fR] <<\ [\fB\-rxpck\fR\ <\fInumber\ of\ rx\ extra\ packets\fR] >>>
     [\fB\-rxdbg\fR] [\fB\-rxdbge\fR] <<\ [\fB\-rxmaxmtu\fR\ <\fIbytes\fR] >>>
+    [\fB\-allow-dotted-principal\fR]
     <<\ [\fB\-rxbind\fR\ <\fIaddress\ to\ bind\ the\ Rx\ socket\ to\fR] >>>
     <<\ [\fB\-vattachpar\fR\ <\fInumber\ of\ volume\ attach\ threads\fR] >>>
     <<\ [\fB\-m\fR\ <\fImin\ percentage\ spare\ in\ partition\fR] >>>
@@ -211,7 +212,6 @@ fileserver \- Initializes the File Server component of the fs process
     <<\ [\fB\-udpsize\fR\ <\fIsize\ of\ socket\ buffer\ in\ bytes\fR] >>>
     <<\ [\fB\-sendsize\fR\ <\fIsize\ of\ send\ buffer\ in\ bytes\fR] >>>
     <<\ [\fB\-abortthreshold\fR\ <\fIabort\ threshold\fR] >>>
-    <<\ [\fB\-auditlog\fR\ <\fIpath\ to\ log\ file\fR] >>>
     [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
 The \fBfileserver\fR command initializes the File Server component of the
@@ -226,9 +226,9 @@ file server machine as the local superuser \f(CWroot\fR.
 .PP
 The File Server creates the \fI/usr/afs/logs/FileLog\fR log file as it
 initializes, if the file does not already exist. It does not write a
-detailed trace by default, but use the \fB\-d\fR option to increase the amount
-of detail. Use the \fBbos getlog\fR command to display the contents of the
-log file.
+detailed trace by default, but the \fB\-d\fR option may be used to
+increase the amount of detail. Use the \fBbos getlog\fR command to
+display the contents of the log file.
 .PP
 The command's arguments enable the administrator to control many aspects
 of the File Server's performance, as detailed in the \fIOPTIONS\fR manpage.  By default
@@ -242,7 +242,7 @@ machine sizes.
 .Ip "\(bu" 4
 The maximum number of lightweight processes (LWPs) the File Server uses to
 handle requests for data; corresponds to the \fB\-p\fR argument. The File
-Server always uses a minimum of 32 \s-1KB\s0 for these processes.
+Server always uses a minimum of 32 \s-1KB\s0 of memory for these processes.
 .Ip "\(bu" 4
 The maximum number of directory blocks the File Server caches in memory;
 corresponds to the \fB\-b\fR argument. Each cached directory block (buffer)
@@ -321,6 +321,16 @@ the Protection Server every two hours to recompute host CPSs, implying
 that it can take that long for changed group memberships to become
 effective. To change this frequency, use the \fB\-hr\fR argument.
 .PP
+The File Server stores volumes in partitions. A partition is a
+filesystem or directory on the server machine that is named \f(CW/vicepX\fR
+or \f(CW/vicepXX\fR where \s-1XX\s0 is \*(L"a\*(R" through \*(L"z\*(R" or \*(L"aa\*(R" though \*(L"zz\*(R". The
+File Server expects that the /vicepXX directories are each on a
+dedicated filesystem. The File Server will only use a /vicepXX if it's
+a mountpoint for another filesystem, unless the file
+\f(CW/vicepXX/AlwaysAttach\fR exists. The data in the partition is a
+special format that can only be access using OpenAFS commands or an
+OpenAFS client.
+.PP
 The File Server generates the following message when a partition is nearly
 full:
 .PP
@@ -330,12 +340,12 @@ full:
 This command does not use the syntax conventions of the \s-1AFS\s0 command
 suites. Provide the command name and all option names in full.
 .SH "CAUTIONS"
-Do not use the \fB\-k\fR and \-w arguments, which are intended for use by the
-AFS Development group only. Changing them from their default values can
-result in unpredictable File Server behavior.  In any case, on many
-operating systems the File Server uses native threads rather than the LWP
-threads, so using the \fB\-k\fR argument to set the number of LWP threads has
-no effect.
+Do not use the \fB\-k\fR and \fB\-w\fR arguments, which are intended for use
+by the OpenAFS developers only. Changing them from their default
+values can result in unpredictable File Server behavior.  In any case,
+on many operating systems the File Server uses native threads rather
+than the LWP threads, so using the \fB\-k\fR argument to set the number of
+LWP threads has no effect.
 .PP
 Do not specify both the \fB\-spare\fR and \fB\-pctspare\fR arguments. Doing so
 causes the File Server to exit, leaving an error message in the
@@ -344,6 +354,27 @@ causes the File Server to exit, leaving an error message in the
 Options that are available only on some system types, such as the \fB\-m\fR
 and \fB\-lock\fR options, appear in the output generated by the \fB\-help\fR
 option only on the relevant system type.
+.PP
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
+.PP
+The maximum number of directory entries is 64,000 if all of the
+entries have names that are 15 characters or less in length. A name
+that is 15 characters long requires the use of only one block in the
+directory. Additional sequential blocks are required to store entries
+with names that are longer than 15 characters. Each additional block
+provides an additional length of 32 characters for the name of the
+entry.
+.PP
+In real world use, the maximum number of objects in an AFS directory
+is usually between 16,000 and 25,000, depending on the average name
+length.
 .SH "OPTIONS"
 .Ip "\fB\-auditlog\fR <\fIlog path\fR>" 4
 Set and enable auditing.
@@ -433,6 +464,13 @@ Writes a trace of the File Server's operations on Rx packets to the file
 .Ip "\fI\-rxdbge\fR" 4
 Writes a trace of the File Server's operations on Rx events (such as
 retransmissions) to the file \fI/usr/afs/logs/rx_dbg\fR.
+.Ip "\fB\-allow-dotted-principal\fR" 4
+By default, the \s-1RXKAD\s0 security layer will disallow access by Kerberos
+principals with a dot in the first component of their name. This is to avoid
+the confusion where principals user/admin and user.admin are both mapped to the
+user.admin \s-1PTS\s0 entry. Sites whose Kerberos realms don't have these collisions 
+between principal names may disabled this check by starting the server
+with this option.
 .Ip "\fI\-m\fR <\fImin percentage spare in partition\fR>" 4
 Specifies the percentage of each \s-1AFS\s0 server partition that the \s-1AIX\s0 version
 of the File Server creates as a reserve. Specify an integer value between
@@ -474,6 +512,22 @@ storage. A separate record is kept for each type of \s-1RPC\s0 (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring \s-1API\s0.
+.Ip "\fB\-abortthreshold\fR <\fIabort threshold\fR>" 4
+Sets the abort threshold, which is triggered when an \s-1AFS\s0 client sends
+a number of FetchStatus requests in a row and all of them fail due to
+access control or some other error. When the abort threshold is
+reached, the file server starts to slow down the responses to the
+problem client in order to reduce the load on the file server.
+.Sp
+The throttling behaviour can cause issues especially for some versions
+of the Windows OpenAFS client. When using Windows Explorer to navigate
+the \s-1AFS\s0 directory tree, directories with only \*(L"look\*(R" access for the
+current user may load more slowly because of the throttling. This is
+because the Windows OpenAFS client sends FetchStatus calls one at a
+time instead of in bulk like the Unix Open \s-1AFS\s0 client.
+.Sp
+Setting the threshold to 0 disables the throttling behavior. This
+option is available in OpenAFS versions 1.4.1 and later.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -488,9 +542,176 @@ line:
 \&                -cmd "/usr/afs/bin/fileserver -pctspare 10 \e
 \&                -L" /usr/afs/bin/volserver /usr/afs/bin/salvager
 .Ve
+.SH "TROUBLESHOOTING"
+Sending process signals to the File Server Process can change its
+behavior in the following ways:
+.PP
+.Vb 2
+\&  Process          Signal       OS     Result
+\&  ---------------------------------------------------------------------
+.Ve
+.Vb 2
+\&  File Server      XCPU        Unix    Prints a list of client IP
+\&                                       Addresses.
+.Ve
+.Vb 2
+\&  File Server      USR2      Windows   Prints a list of client IP
+\&                                       Addresses.
+.Ve
+.Vb 2
+\&  File Server      POLL        HPUX    Prints a list of client IP
+\&                                       Addresses.
+.Ve
+.Vb 4
+\&  Any server       TSTP        Any     Increases Debug level by a power
+\&                                       of 5 -- 1,5,25,125, etc.
+\&                                       This has the same effect as the
+\&                                       -d XXX command-line option.
+.Ve
+.Vb 1
+\&  Any Server       HUP         Any     Resets Debug level to 0
+.Ve
+.Vb 2
+\&  File Server      TERM        Any     Run minor instrumentation over
+\&                                       the list of descriptors.
+.Ve
+.Vb 1
+\&  Other Servers    TERM        Any     Causes the process to quit.
+.Ve
+.Vb 2
+\&  File Server      QUIT        Any     Causes the File Server to Quit.
+\&                                       Bos Server knows this.
+.Ve
+The basic metric of whether an AFS file server is doing well is the number
+of connections waiting for a thread,
+which can be found by running the following command:
+.PP
+.Vb 1
+\&   % rxdebug <server> | grep waiting_for | wc -l
+.Ve
+Each line returned by \f(CWrxdebug\fR that contains the text \*(L"waiting_for\*(R"
+represents a connection that's waiting for a file server thread.
+.PP
+If the blocked connection count is ever above 0, the server is having
+problems replying to clients in a timely fashion.  If it gets above 10,
+roughly, there will be noticable slowness by the user.  The total number of
+connections is a mostly irrelevant number that goes essentially
+monotonically for as long as the server has been running and then goes back
+down to zero when it's restarted.
+.PP
+The most common cause of blocked connections rising on a server is some
+process somewhere performing an abnormal number of accesses to that server
+and its volumes.  If multiple servers have a blocked connection count, the
+most likely explanation is that there is a volume replicated between those
+servers that is absorbing an abnormally high access rate.
+.PP
+To get an access count on all the volumes on a server, run:
+.PP
+.Vb 1
+\&   % vos listvol <server> -long
+.Ve
+and save the output in a file.  The results will look like a bunch of \fBvos
+examine\fR output for each volume on the server.  Look for lines like:
+.PP
+.Vb 1
+\&   40065 accesses in the past day (i.e., vnode references)
+.Ve
+and look for volumes with an abnormally high number of accesses.  Anything
+over 10,000 is fairly high, but some volumes like root.cell and other
+volumes close to the root of the cell will have that many hits routinely.
+Anything over 100,000 is generally abnormally high.  The count resets about
+once a day.
+.PP
+Another approach that can be used to narrow the possibilities for a
+replicated volume, when multiple servers are having trouble, is to find all
+replicated volumes for that server.  Run:
+.PP
+.Vb 1
+\&   % vos listvldb -server <server>
+.Ve
+where <server> is one of the servers having problems to refresh the VLDB
+cache, and then run:
+.PP
+.Vb 1
+\&   % vos listvldb -server <server> -part <partition>
+.Ve
+to get a list of all volumes on that server and partition, including every
+other server with replicas.
+.PP
+Once the volume causing the problem has been identified, the best way to
+deal with the problem is to move that volume to another server with a low
+load or to stop any runaway programs that are accessing that volume
+unnecessarily.  Often the volume will be enough information to tell what's
+going on.
+.PP
+If you still need additional information about who's hitting that server,
+sometimes you can guess at that information from the failed callbacks in the
+\fIFileLog\fR log in \fI/var/log/afs\fR on the server, or from the output of:
+.PP
+.Vb 1
+\&   % /usr/afsws/etc/rxdebug <server> -rxstats
+.Ve
+but the best way is to turn on debugging output from the file server.
+(Warning: This generates a lot of output into FileLog on the AFS server.)
+To do this, log on to the AFS server, find the PID of the fileserver
+process, and do:
+.PP
+.Vb 1
+\&    kill -TSTP <pid>
+.Ve
+where <pid> is the PID of the file server process.  This will raise the
+debugging level so that you'll start seeing what people are actually doing
+on the server.  You can do this up to three more times to get even more
+output if needed.  To reset the debugging level back to normal, use (The
+following command will NOT terminate the file server):
+.PP
+.Vb 1
+\&    kill -HUP <pid>
+.Ve
+The debugging setting on the File Server should be reset back to normal when
+debugging is no longer needed.  Otherwise, the AFS server may well fill its
+disks with debugging output.
+.PP
+The lines of the debugging output that are most useful for debugging load
+problems are:
+.PP
+.Vb 2
+\&    SAFS_FetchStatus,  Fid = 2003828163.77154.82248, Host 171.64.15.76
+\&    SRXAFS_FetchData, Fid = 2003828163.77154.82248
+.Ve
+(The example above is partly truncated to highlight the interesting
+information).  The Fid identifies the volume and inode within the volume;
+the volume is the first long number.  So, for example, this was:
+.PP
+.Vb 8
+\&   % vos examine 2003828163
+\&   pubsw.matlab61                   2003828163 RW    1040060 K  On-line
+\&       afssvr5.Stanford.EDU /vicepa 
+\&       RWrite 2003828163 ROnly 2003828164 Backup 2003828165 
+\&       MaxQuota    3000000 K 
+\&       Creation    Mon Aug  6 16:40:55 2001
+\&       Last Update Tue Jul 30 19:00:25 2002
+\&       86181 accesses in the past day (i.e., vnode references)
+.Ve
+.Vb 5
+\&       RWrite: 2003828163    ROnly: 2003828164    Backup: 2003828165
+\&       number of sites -> 3
+\&          server afssvr5.Stanford.EDU partition /vicepa RW Site 
+\&          server afssvr11.Stanford.EDU partition /vicepd RO Site 
+\&          server afssvr5.Stanford.EDU partition /vicepa RO Site 
+.Ve
+and from the Host information one can tell what system is accessing that
+volume.
+.PP
+Note that the output of the \fIvos_examine(1)\fR manpage also includes the access count, so
+once the problem has been identified, vos examine can be used to see if the
+access count is still increasing.  Also remember that you can run vos
+examine on the read-only replica (e.g., pubsw.matlab61.readonly) to see the
+access counts on the read-only replica on all of the servers that it's
+located on.
 .SH "PRIVILEGE REQUIRED"
 The issuer must be logged in as the superuser \f(CWroot\fR on a file server
-machine to issue the command at a command shell prompt. It is conventional
+machine to issue the command at a command shell prompt.  It is conventional
 instead to create and start the process by issuing the \fBbos create\fR
 command.
 .SH "SEE ALSO"
@@ -500,7 +721,8 @@ the \fIbos_create(8)\fR manpage,
 the \fIbos_getlog(8)\fR manpage,
 the \fIfs_setacl(1)\fR manpage,
 the \fIsalvager(8)\fR manpage,
-the \fIvolserver(8)\fR manpage
+the \fIvolserver(8)\fR manpage,
+the \fIvos_examine(1)\fR manpage
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP
@@ -578,6 +800,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "\fI\-rxdbge\fR"
 
+.IX Item "\fB\-allow-dotted-principal\fR"
+
 .IX Item "\fI\-m\fR <\fImin percentage spare in partition\fR>"
 
 .IX Item "\fB\-lock\fR"
@@ -596,9 +820,13 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "\fB\-enable_process_stats\fR"
 
+.IX Item "\fB\-abortthreshold\fR <\fIabort threshold\fR>"
+
 .IX Item "\fB\-help\fR"
 
 .IX Header "EXAMPLES"
+
+.IX Header "TROUBLESHOOTING"
 
 .IX Header "PRIVILEGE REQUIRED"
 

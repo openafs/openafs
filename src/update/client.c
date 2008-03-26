@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.1 2007/04/10 18:43:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.2 2007/10/30 15:24:08 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -36,13 +36,7 @@ RCSID
 #include <sys/time.h>
 #include <dirent.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

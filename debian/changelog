@@ -1,5 +1,6 @@
-openafs (1.4.6.dfsg1-4) UNRELEASED; urgency=low
+openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
 
+  * New upstream release candidate.
   * Update doc-base control file sections for the new categorization.
 
  -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800

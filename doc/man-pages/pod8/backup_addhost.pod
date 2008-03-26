@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup addhost - Adds a Tape Coordinator entry to the Backup Database
+backup_addhost - Adds a Tape Coordinator entry to the Backup Database
 
 =head1 SYNOPSIS
 

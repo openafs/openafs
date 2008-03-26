@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos create - Defines a new process in the BosConfig file and starts it
+bos_create - Defines a new process in the BosConfig file and starts it
 
 =head1 SYNOPSIS
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.1 2005/04/03 18:15:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.3 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -24,6 +24,7 @@ RCSID
 #include <netdb.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -1116,9 +1117,10 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
     return (code);
 }
 
-int
-Dumper(struct dumpNode *nodePtr)
+void *
+Dumper(void *param)
 {
+    struct dumpNode *nodePtr = (struct dumpNode *)param;
     struct dumpRock dparams;
     struct butm_tapeInfo tapeInfo;
     int pass;
@@ -1368,7 +1370,7 @@ Dumper(struct dumpNode *nodePtr)
 
     FreeNode(taskId);		/* free the dump node */
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 #define BELLTIME 60		/* 60 seconds before a bell rings */
@@ -2029,9 +2031,11 @@ InitToServer(afs_int32 taskId, struct butx_transactionInfo * butxInfoP,
 /* DeleteDump
  *
  */
-int
-DeleteDump(struct deleteDumpIf *ptr)
+void *
+DeleteDump(void *param)
 {
+    struct deleteDumpIf *ptr = (struct deleteDumpIf *)param;
+
     afs_int32 taskId;
     afs_int32 rc, code = 0;
     afs_uint32 dumpid;

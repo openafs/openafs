@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/usd/usd_file.c,v 1.14 2004/03/03 22:41:05 rees Exp $");
+    ("$Header: /cvs/openafs/src/usd/usd_file.c,v 1.14.2.1 2007/10/30 15:24:08 shadow Exp $");
 
 #include <errno.h>
 #include <fcntl.h>
@@ -31,13 +31,7 @@ RCSID
 #include <sys/mtio.h>
 #endif /* AFS_AIX_ENV */
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include <afs/debug.h>

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.26 2007/10/15 12:42:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.28 2007/11/23 13:45:04 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -295,7 +295,11 @@ static void
 #if defined(HAVE_KMEM_CACHE_T)
 init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
 #else
+#if defined(KMEM_CACHE_INIT)
+init_once(struct kmem_cache * cachep, void * foo)
+#else
 init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
+#endif
 #endif
 {
     struct vcache *vcp = (struct vcache *) foo;
@@ -531,8 +535,11 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_size = vp->va_size;
 #if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
+    ip->i_atime.tv_nsec = 0;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+    ip->i_mtime.tv_nsec = 0;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
+    ip->i_ctime.tv_nsec = 0;
 #else
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;

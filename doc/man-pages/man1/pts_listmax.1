@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_LISTMAX 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PTS_LISTMAX 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,11 +188,12 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts listmax \- Displays the max user id and max group id counters
+pts_listmax \- Displays the max user id and max group id counters
 .SH "SYNOPSIS"
-\fBpts listmax\fR <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+\fBpts listmax\fR <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] 
+    [\fB\-force\fR] [\fB\-help\fR]
 .PP
-\fBpts listm\fR <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-f\fR] [\fB\-h\fR]
+\fBpts listm\fR <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts listmax\fR command displays the values of the \f(CWmax user id\fR and
 \f(CWmax group id\fR counters, which the Protection Server uses to track the
@@ -214,6 +215,10 @@ the \fIpts(1)\fR manpage.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
@@ -247,7 +252,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PTS_LISTMAX 1"
-.IX Name "pts listmax - Displays the max user id and max group id counters"
+.IX Name "pts_listmax - Displays the max user id and max group id counters"
 
 .IX Header "NAME"
 
@@ -260,6 +265,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
 

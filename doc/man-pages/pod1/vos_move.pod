@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos move - Moves a read/write volume to another site
+vos_move - Moves a read/write volume to another site
 
 =head1 SYNOPSIS
 
@@ -12,14 +12,14 @@ B<vos move> S<<< B<-id> <I<volume name or ID>> >>>
     S<<< B<-frompartition> <I<partition name on source>> >>>
     S<<< B<-toserver> <I<machine name on destination>> >>>
     S<<< B<-topartition> <I<partition name on destination>> >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
-    [B<-help>]
+    [B<-live>] S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>]
+    [B<-localauth>] [B<-verbose>] [B<-help>]
 
 B<vos m> S<<< B<-i> <I<volume name or ID>> >>>
     S<<< B<-froms> <I<machine name on source>> >>>
     S<<< B<-fromp> <I<partition name on source>> >>>
     S<<< B<-tos> <I<machine name on destination>> >>>
-    S<<< B<-top> <I<partition name on destination>> >>>
+    S<<< B<-top> <I<partition name on destination>> >>> [B<-li>]
     S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
 =for html
@@ -86,6 +86,15 @@ confirmation of the kill signal:
 To confirm termination of the operation, press Ctrl-C a second time; press
 any other key to continue the operation.
 
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+B<vos partinfo> or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
+
 =head1 OPTIONS
 
 =over 4
@@ -119,6 +128,14 @@ an unambiguous abbreviation). For details, see L<vos(1)>.
 Names the partition to which to move the volume. Provide the full
 partition name (for, example, B</vicepa>) or one of the abbreviated forms
 described in L<vos(1)>.
+
+=item B<-live>
+
+Avoids making a temporary copy of the volume during the move. This is
+useful if the partition is full, but the administrator needs to move
+volumes to a another partition or server to free up disk space. The
+caveat is that the volume is locked during the entire operation
+instead of the short time that is needed to make the temporary clone.
 
 =item B<-cell> <I<cell name>>
 
@@ -174,6 +191,7 @@ superuser C<root>.
 L<vos(1)>,
 L<vos_addsite(1)>,
 L<vos_backup(1)>,
+L<vos_copy(1)>,
 L<vos_release(1)>,
 L<vos_listvol(1)>,
 L<vos_remove(1)>

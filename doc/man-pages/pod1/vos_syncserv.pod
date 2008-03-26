@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos syncserv - Verifies VLDB entries that mention a specified site
+vos_syncserv - Verifies VLDB entries that mention a specified site
 
 =head1 SYNOPSIS
 

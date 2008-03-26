@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas list - Displays all entries in the Authentication Database
+kas_list - Displays all entries in the Authentication Database
 
 =head1 SYNOPSIS
 

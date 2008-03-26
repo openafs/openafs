@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.10.2.3 2006/01/26 20:55:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.10.2.4 2008/03/10 22:35:36 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -134,8 +134,8 @@ rxk_Listener(void)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void *unused)
 {
     osi_socket sock;
     int threadID;

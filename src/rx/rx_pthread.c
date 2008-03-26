@@ -19,11 +19,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.17.2.7 2006/07/03 01:16:36 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.17.2.9 2008/03/10 22:35:36 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>
 # include <sys/file.h>
@@ -107,7 +108,7 @@ server_entry(void *argp)
  * Start an Rx server process.
  */
 void
-rxi_StartServerProc(void (*proc) (void), int stacksize)
+rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 {
     pthread_t thread;
     pthread_attr_t tattr;
@@ -267,8 +268,8 @@ rx_ListenerProc(void *argp)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void
-rx_ServerProc(void)
+void *
+rx_ServerProc(void * dummy)
 {
     int sock;
     int threadID;

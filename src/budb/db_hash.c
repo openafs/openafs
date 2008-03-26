@@ -11,20 +11,14 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/db_hash.c,v 1.8 2003/11/23 04:53:31 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/budb/db_hash.c,v 1.8.2.1 2007/10/30 15:23:50 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <ubik.h>

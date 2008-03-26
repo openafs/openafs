@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/writeconfig.c,v 1.10.2.1 2004/08/25 07:09:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/writeconfig.c,v 1.10.2.3 2007/11/01 16:09:43 shadow Exp $");
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
@@ -28,19 +28,14 @@ RCSID
 #endif
 #include <stdio.h>
 #include <errno.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"
 
@@ -49,8 +44,7 @@ RCSID
 */
 
 static int
-VerifyEntries(aci)
-     register struct afsconf_cell *aci;
+VerifyEntries(register struct afsconf_cell *aci)
 {
     register int i;
     register struct hostent *th;
@@ -91,10 +85,8 @@ VerifyEntries(aci)
    */
 
 int
-afsconf_SetCellInfo(adir, apath, acellInfo)
-     struct afsconf_dir *adir;
-     char *apath;
-     struct afsconf_cell *acellInfo;
+afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath, 
+		    struct afsconf_cell *acellInfo)
 {
     afs_int32 code;
 
@@ -103,11 +95,9 @@ afsconf_SetCellInfo(adir, apath, acellInfo)
 }
 
 int
-afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
-     struct afsconf_dir *adir;
-     char *apath;
-     struct afsconf_cell *acellInfo;
-     char clones[];
+afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, 
+			    const char *apath, 
+			    struct afsconf_cell *acellInfo, char clones[])
 {
     register afs_int32 code;
     register int fd;

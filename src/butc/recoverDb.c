@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.4 2006/07/01 05:04:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.7 2008/03/10 22:35:34 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -24,6 +24,7 @@ RCSID
 #include <strings.h>
 #endif
 #include <sys/types.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -50,6 +51,8 @@ struct tapeScanInfo {
 
 extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
+
+static readDump();
 
 /* PrintDumpLabel
  *	print out the tape (dump) label.
@@ -689,9 +692,11 @@ getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname, af
  *	
  */
 
-int
-ScanDumps(struct scanTapeIf *ptr)
+void *
+ScanDumps(void *param)
 {
+    struct scanTapeIf *ptr = (struct scanTapeIf *)param;
+    
     struct butm_tapeInfo curTapeInfo;
     struct tapeScanInfo tapeScanInfo;
     afs_uint32 taskId;
@@ -748,7 +753,7 @@ ScanDumps(struct scanTapeIf *ptr)
     free(ptr);
     setStatus(taskId, TASK_DONE);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 

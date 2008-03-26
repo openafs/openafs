@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos setrestart - Sets when the BOS Server restarts processes
+bos_setrestart - Sets when the BOS Server restarts processes
 
 =head1 SYNOPSIS
 

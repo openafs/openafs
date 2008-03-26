@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/log/kseal.c,v 1.7.2.1 2005/07/11 19:46:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/log/kseal.c,v 1.7.2.2 2007/10/30 15:23:58 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -19,13 +19,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>

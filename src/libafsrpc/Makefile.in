@@ -272,7 +272,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.7 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.9 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -354,7 +354,7 @@ fasttime.o: ${LWP}/fasttime.c
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
 	     sun4x_5* | sunx86_5*) \
-		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* | *_darwin_* ) \
@@ -366,7 +366,7 @@ syscall.o: ${SYS}/syscall.s
 	 *bsd* ) \
 		touch syscall.o ;; \
 	 *) \
-		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
@@ -380,8 +380,8 @@ rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
-	${CCRULE} ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
 
 afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c

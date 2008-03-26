@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas stringtokey - Converts a character string into an octal key
+kas_stringtokey - Converts a character string into an octal key
 
 =head1 SYNOPSIS
 

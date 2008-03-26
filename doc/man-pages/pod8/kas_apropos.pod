@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas apropos - Displays each help entry containing a keyword string
+kas_apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 

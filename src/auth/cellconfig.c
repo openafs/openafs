@@ -11,13 +11,15 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.14 2006/12/30 16:56:39 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.19 2007/11/02 18:26:38 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "des/des.h"
+#include "rx/rxkad.h"
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -47,16 +49,12 @@ RCSID
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <rx/rxkad.h>
+#include <rx/rx.h>
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
 #include "cellconfig.h"
@@ -311,7 +309,10 @@ IsClientConfigDirectory(const char *path)
 static int
 afsconf_Check(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
+#ifdef AFS_NT40_ENV
+    char *p;
+#endif
     struct stat tstat;
     register afs_int32 code;
 
@@ -357,9 +358,11 @@ afsconf_Check(register struct afsconf_dir *adir)
 static int
 afsconf_Touch(register struct afsconf_dir *adir)
 {
-    char tbuffer[256], *p;
+    char tbuffer[256];
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
+#else
+    char *p;
 #endif
 
     adir->timeRead = 0;		/* just in case */
@@ -781,8 +784,8 @@ ParseCellLine(register char *aline, register char *aname,
 /* call aproc(entry, arock, adir) for all cells.  Proc must return 0, or we'll stop early and return the code it returns */
 int
 afsconf_CellApply(struct afsconf_dir *adir,
-		  int (*aproc) (struct afsconf_cell * cell, char *arock,
-				struct afsconf_dir * dir), char *arock)
+		  int (*aproc) (struct afsconf_cell * cell, void *arock,
+				struct afsconf_dir * dir), void *arock)
 {
     register struct afsconf_entry *tde;
     register afs_int32 code;
@@ -804,8 +807,8 @@ afsconf_CellApply(struct afsconf_dir *adir,
 int
 afsconf_CellAliasApply(struct afsconf_dir *adir,
 		       int (*aproc) (struct afsconf_cellalias * alias,
-				     char *arock, struct afsconf_dir * dir),
-		       char *arock)
+				     void *arock, struct afsconf_dir * dir),
+		       void *arock)
 {
     register struct afsconf_aliasentry *tde;
     register afs_int32 code;
@@ -1282,7 +1285,8 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 
 /* get latest key */
 afs_int32
-afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
+afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, 
+		     struct ktc_encryptionKey *akey)
 {
     register int i;
     int maxa;
@@ -1323,8 +1327,9 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
 
 /* get a particular key */
 int
-afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, char *akey)
+afsconf_GetKey(void *rock, afs_int32 avno, struct ktc_encryptionKey *akey)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) rock;
     register int i, maxa;
     register struct afsconf_key *tk;
     register afs_int32 code;

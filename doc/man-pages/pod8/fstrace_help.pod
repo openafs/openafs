@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace help - Displays help for fstrace commands
+fstrace_help - Displays help for fstrace commands
 
 =head1 SYNOPSIS
 

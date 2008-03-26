@@ -11,9 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.9 2007/06/28 02:13:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.14 2008/03/10 22:35:37 shadow Exp $");
 
 #include <sys/types.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <time.h>
 #include <fcntl.h>
@@ -23,13 +24,6 @@ RCSID
 #include <sys/time.h>
 #include <sys/file.h>
 #include <netinet/in.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -96,6 +90,7 @@ int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
 int rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -148,8 +143,8 @@ TryUnlock()
 }
 
 /* background daemon for timing out transactions */
-static void
-BKGLoop()
+static void*
+BKGLoop(void *unused)
 {
     struct timeval tv;
     int loop = 0;
@@ -170,12 +165,14 @@ BKGLoop()
 	    ReOpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 	}
     }
+
+    return NULL;
 }
 
 /* Background daemon for sleeping so the volserver does not become I/O bound */
 afs_int32 TTsleep, TTrun;
-static void
-BKGSleep()
+static void *
+BKGSleep(void *unused)
 {
     struct volser_trans *tt;
 
@@ -203,6 +200,7 @@ BKGSleep()
 	        VTRANS_UNLOCK;
 	}
     }
+    return NULL;
 }
 
 #ifndef AFS_NT40_ENV
@@ -295,6 +293,8 @@ main(int argc, char **argv)
 	    goto usage;
 	} else if (strcmp(argv[code], "-rxbind") == 0) {
 	    rxBind = 1;
+	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
+	    rxkadDisableDotCheck = 1;
 	} else if (strcmp(argv[code], "-p") == 0) {
 	    lwps = atoi(argv[++code]);
 	    if (lwps > MAXLWP) {
@@ -386,7 +386,7 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -394,7 +394,7 @@ main(int argc, char **argv)
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -518,11 +518,19 @@ main(int argc, char **argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(service, lwps);
-#ifdef AFS_SGI_ENV
-    rx_SetStackSize(service, 49152);
+#if defined(AFS_XBSD_ENV)
+    rx_SetStackSize(service, (128 * 1024));
+#elif defined(AFS_SGI_ENV)
+    rx_SetStackSize(service, (48 * 1024));
 #else
-    rx_SetStackSize(service, 32768);
+    rx_SetStackSize(service, (32 * 1024));
 #endif
+
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
+    }
 
     service =
 	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects, 3,
@@ -546,4 +554,5 @@ main(int argc, char **argv)
 
     osi_audit(VS_FinishEvent, (-1), AUD_END);
     Abort("StartServer returned?");
+    return 0; /* not reached */
 }

@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup addvolset - Creates a new (empty) volume set
+backup_addvolset - Creates a new (empty) volume set
 
 =head1 SYNOPSIS
 

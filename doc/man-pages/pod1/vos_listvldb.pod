@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos listvldb - Displays a volume's VLDB entry
+vos_listvldb - Displays a volume's VLDB entry
 
 =head1 SYNOPSIS
 

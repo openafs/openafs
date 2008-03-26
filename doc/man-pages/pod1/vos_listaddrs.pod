@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos listaddrs - Displays all VLDB server entries
+vos_listaddrs - Displays all VLDB server entries
 
 =head1 SYNOPSIS
 

@@ -17,23 +17,17 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/physio.c,v 1.14 2003/12/08 01:45:34 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/viced/physio.c,v 1.14.2.1 2007/10/30 15:24:11 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #else
 #include <sys/file.h>
 #include <sys/time.h>
 #include <unistd.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 #include <afs/nfs.h>
 #include <afs/assert.h>

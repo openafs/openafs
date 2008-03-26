@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_LISTOWNED 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PTS_LISTOWNED 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,13 +188,13 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts listowned \- Show the Protection Database groups owned by a user or group
+pts_listowned \- Show the Protection Database groups owned by a user or group
 .SH "SYNOPSIS"
 \fBpts listowned\fR <<\ \fB\-nameorid\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>>
-    [\-cell <\fIcell name\fR>] [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+    [\-cell <\fIcell name\fR>] [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-force\fR] [\fB\-help\fR]
 .PP
 \fBpts listo\fR <<\ \fB\-na\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>>
-    [\-c <\fIcell name\fR>] [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+    [\-c <\fIcell name\fR>] [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts listowned\fR command lists the groups owned by each user or group
 specified by the \fB\-nameorid\fR argument.
@@ -219,6 +219,10 @@ the \fIpts(1)\fR manpage.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
@@ -288,7 +292,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PTS_LISTOWNED 1"
-.IX Name "pts listowned - Show the Protection Database groups owned by a user or group"
+.IX Name "pts_listowned - Show the Protection Database groups owned by a user or group"
 
 .IX Header "NAME"
 
@@ -303,6 +307,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
 

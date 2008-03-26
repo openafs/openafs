@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs lsmount - Reports the volume for which a directory is the mount point.
+fs_lsmount - Reports the volume for which a directory is the mount point.
 
 =head1 SYNOPSIS
 

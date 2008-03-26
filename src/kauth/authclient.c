@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/authclient.c,v 1.14.2.6 2006/09/21 11:39:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/authclient.c,v 1.14.2.8 2007/11/26 20:41:54 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -46,13 +46,7 @@ RCSID
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
@@ -559,15 +553,15 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 
     version = 2;
     code =
-	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance, start,
-			 end, &arequest, &oanswer);
+	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
+			 start, end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
 	code =
 	    ubik_Call(KAA_Authenticate, conn, 0, name, instance, start, end,
-		      &arequest, &oanswer);
+		      &arequest, &oanswer, 0, 0);
 	if (code == RXGEN_OPCODE) {
 	    extern int KAA_Authenticate_old();
 	    oanswer.MaxSeqLen = sizeof(answer_old);

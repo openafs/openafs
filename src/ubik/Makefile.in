@@ -37,45 +37,45 @@ udebug: udebug.o libubik.a
 	${CC} ${CFLAGS} -o udebug udebug.o libubik.a $(LIBS)
 
 ubik_int.cs.c: ubik_int.xg
-	${RXGEN} -x -C -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -x -A -C -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.ss.c: ubik_int.xg
-	${RXGEN} -x -S -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -x -A -S -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.xdr.c: ubik_int.xg
-	${RXGEN} -x -c -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -x -A -c -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.h: ubik_int.xg
-	${RXGEN} -x -h -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -x -A -h -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.cs.c: ubik_int.h
 ubik_int.ss.c: ubik_int.h
 ubik_int.xdr.c: ubik_int.h
 
 Kubik_int.cs.c: ubik_int.xg Kubik_int.h
-	${RXGEN} -x -k -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
+	${RXGEN} -x -k -A -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
  
 Kubik_int.xdr.c: ubik_int.xg
-	${RXGEN} -x -k -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
+	${RXGEN} -x -k -A -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
  
 Kubik_int.h: ubik_int.xg
-	${RXGEN} -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
+	${RXGEN} -x -k -A -h -o Kubik_int.h ${srcdir}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c utst_int.xdr.c
 utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
 utst_int.xdr.o: utst_int.xdr.c utst_int.h
 
 utst_int.cs.c: utst_int.xg
-	${RXGEN} -C -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -C -o $@ ${srcdir}/utst_int.xg
 
 utst_int.ss.c: utst_int.xg
-	${RXGEN} -S -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/utst_int.xg
 
 utst_int.xdr.c: utst_int.xg
-	${RXGEN} -c -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/utst_int.xg
 
 utst_int.h: utst_int.xg
-	${RXGEN} -h -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -h -o $@ ${srcdir}/utst_int.xg
 
 utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h

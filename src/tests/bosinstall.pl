@@ -13,7 +13,7 @@ $host = `hostname`;
 
 open(FOO, ">foo.sh"); 
 print FOO "#!/bin/sh\n";
-print FOO "touch /usr/tmp/garbage\n";
+print FOO "touch /tmp/garbage\n";
 print FOO "exit 0\n";
 close FOO;
 chmod 0755, "foo.sh";

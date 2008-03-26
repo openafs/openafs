@@ -17,17 +17,11 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.4 2005/07/28 21:11:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.6 2007/12/28 22:16:51 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
@@ -74,6 +68,8 @@ struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 private int moveHash(register Vnode * vnp, bit32 newHash);
 void StickOnLruChain_r(register Vnode * vnp,
 		       register struct VnodeClassInfo *vcp);
+
+extern int LogLevel;
 
 #define BAD_IGET	-1000
 

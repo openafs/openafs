@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.7 2007/08/09 14:59:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.10 2007/12/13 18:54:09 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -40,6 +40,7 @@ RCSID
 #include <unistd.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
@@ -49,16 +50,14 @@ RCSID
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#endif
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -128,10 +127,16 @@ static struct flock fileUlock = { F_UNLCK, 0, 0, 0, 0 };
 /* the following routines aren't static anymore on behalf of the kerberos IV
  * compatibility library built in subtree krb.
  */
-int afs_tf_init(), afs_tf_get_pname(), afs_tf_get_pinst(), afs_tf_get_cred();
-int afs_tf_save_cred(), afs_tf_close(), afs_tf_create();
-int afs_tf_dest_tkt();
-static void ktc_LocalCell();
+int afs_tf_init(char *, int);
+int afs_tf_get_pname(char *);
+int afs_tf_get_pinst(char *);
+int afs_tf_get_cred(struct ktc_principal *, struct ktc_token *);
+int afs_tf_save_cred(struct ktc_principal *, struct ktc_token *, 
+		     struct ktc_principal *);
+int afs_tf_close(void);
+int afs_tf_create(char *, char *);
+int afs_tf_dest_tkt(void);
+static void ktc_LocalCell(void);
 #endif /* AFS_KERBEROS_ENV */
 
 #ifdef AFS_DUX40_ENV
@@ -251,11 +256,10 @@ static struct {
  * now. */
 
 static int
-NewSetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+NewSetToken(struct ktc_principal *aserver, 
+	    struct ktc_token *atoken, 
+	    struct ktc_principal *aclient, 
+            afs_int32 flags)
 {
     TRY_KERNEL(KTC_SETTOKEN_OP, aserver, aclient, atoken,
 	       sizeof(struct ktc_token));
@@ -267,10 +271,8 @@ NewSetToken(aserver, atoken, aclient, flags)
 (3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
 
 static int
-OldSetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver, *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+OldSetToken(struct ktc_principal *aserver, struct ktc_token *atoken, 
+	    struct ktc_principal *aclient, afs_int32 flags)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -414,12 +416,11 @@ OldSetToken(aserver, atoken, aclient, flags)
     return 0;
 }
 
-
-ktc_SetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+int
+ktc_SetToken(struct ktc_principal *aserver,
+    struct ktc_token *atoken,
+    struct ktc_principal *aclient,
+    afs_int32 flags)
 {
     int ncode, ocode;
 
@@ -487,10 +488,9 @@ ktc_SetToken(aserver, atoken, aclient, flags)
 /* get token, given server we need and token buffer.  aclient will eventually
  * be set to our identity to the server.
  */
-ktc_GetToken(aserver, atoken, atokenLen, aclient)
-     struct ktc_principal *aserver, *aclient;
-     int atokenLen;
-     struct ktc_token *atoken;
+int
+ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken, 
+	     int atokenLen, struct ktc_principal *aclient)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -502,7 +502,9 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
     afs_int32 temp;
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
+#ifdef AFS_KERBEROS_ENV
     char found = 0;
+#endif
 
     LOCK_GLOBAL_MUTEX;
 #ifndef NO_AFS_CLIENT
@@ -540,8 +542,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 		    found = 1;
 	    } else {
 		char tmpstring[MAXHOSTCHARS];
-		afs_tf_get_pname(&tmpstring);
-		afs_tf_get_pinst(&tmpstring);
+		afs_tf_get_pname(tmpstring);
+		afs_tf_get_pinst(tmpstring);
 		found = 1;
 	    }
 	}
@@ -671,8 +673,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
  * NOT IMPLEMENTED YET!
  */
 #ifndef NO_AFS_CLIENT
-ktc_ForgetToken(aserver)
-     struct ktc_principal *aserver;
+int
+ktc_ForgetToken(struct ktc_principal *aserver)
 {
     int rc;
 
@@ -689,9 +691,10 @@ ktc_ForgetToken(aserver)
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
  * success.  */
 
-ktc_ListTokens(aprevIndex, aindex, aserver)
-     int aprevIndex, *aindex;
-     struct ktc_principal *aserver;
+int
+ktc_ListTokens(int aprevIndex,
+    int *aindex,
+    struct ktc_principal *aserver)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -841,7 +844,7 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 /* discard all tokens from this user's cache */
 
 static int
-NewForgetAll()
+NewForgetAll(void)
 {
 #ifndef NO_AFS_CLIENT
     TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
@@ -850,7 +853,7 @@ NewForgetAll()
 }
 
 static int
-OldForgetAll()
+OldForgetAll(void)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
@@ -872,7 +875,7 @@ OldForgetAll()
 }
 
 int
-ktc_ForgetAllTokens()
+ktc_ForgetAllTokens(void)
 {
     int ncode, ocode;
 
@@ -900,7 +903,8 @@ ktc_ForgetAllTokens()
 /* ktc_OldPioctl - returns a boolean true if the kernel supports only the old
  * pioctl interface for delivering AFS tickets to the cache manager. */
 
-ktc_OldPioctl()
+int
+ktc_OldPioctl(void)
 {
     int rc;
     LOCK_GLOBAL_MUTEX;
@@ -950,12 +954,13 @@ ktc_OldPioctl()
  *	c. In tf_close, be sure it gets reinitialized to a negative
  *	   number. 
  */
-static fd = -1;
-static curpos;			/* Position in tfbfr */
-static lastpos;			/* End of tfbfr */
+static int fd = -1;
+static int curpos;			/* Position in tfbfr */
+static int lastpos;			/* End of tfbfr */
 static char tfbfr[BUFSIZ];	/* Buffer for ticket data */
 
-static tf_gets(), tf_read();
+static int tf_gets(char *, int);
+static int tf_read(char *, int);
 
 /*
  * This file contains routines for manipulating the ticket cache file.
@@ -1020,8 +1025,8 @@ static tf_gets(), tf_read();
  * TKT_FIL_LCK  - couldn't lock the file, even after a retry
  */
 
-afs_tf_init(tf_name, rw)
-     char *tf_name;
+int
+afs_tf_init(char *tf_name, int rw)
 {
     int wflag;
     int me;
@@ -1114,8 +1119,8 @@ afs_tf_init(tf_name, rw)
  * was longer than MAXKTCNAMELEN, TKT_FIL_FMT is returned. 
  */
 
-afs_tf_get_pname(p)
-     char *p;
+int
+afs_tf_get_pname(char *p)
 {
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1135,8 +1140,8 @@ afs_tf_get_pname(p)
  * instance may be null. 
  */
 
-afs_tf_get_pinst(inst)
-     char *inst;
+int
+afs_tf_get_pinst(char *inst)
 {
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1157,9 +1162,8 @@ afs_tf_get_pinst(inst)
  * EOF          - end of file encountered
  */
 
-afs_tf_get_cred(principal, token)
-     struct ktc_principal *principal;
-     struct ktc_token *token;
+int
+afs_tf_get_cred(struct ktc_principal *principal, struct ktc_token *token)
 {
     int k_errno;
     int kvno, lifetime;
@@ -1217,7 +1221,8 @@ afs_tf_get_cred(principal, token)
  * The return value is not defined.
  */
 
-afs_tf_close()
+int
+afs_tf_close(void)
 {
     if (!(fd < 0)) {
 #if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)
@@ -1229,6 +1234,7 @@ afs_tf_close()
 	fd = -1;		/* see declaration of fd above */
     }
     memset(tfbfr, 0, sizeof(tfbfr));
+    return 0;
 }
 
 /*
@@ -1249,11 +1255,10 @@ afs_tf_close()
  *		file is seriously ill.
  */
 
-static
-tf_gets(s, n)
-     register char *s;
+static int
+tf_gets(register char *s, int n)
 {
-    register count;
+    register int count;
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1285,12 +1290,10 @@ tf_gets(s, n)
  * 0		on end of file or read error
  */
 
-static
-tf_read(s, n)
-     register char *s;
-     register n;
+static int
+tf_read(register char *s, register int n)
 {
-    register count;
+    register int count;
 
     for (count = n; count > 0; --count) {
 	if (curpos >= sizeof(tfbfr)) {
@@ -1305,8 +1308,6 @@ tf_read(s, n)
     return n;
 }
 
-char *tkt_string();
-
 /*
  * afs_tf_save_cred() appends an incoming ticket to the end of the ticket
  * file.  You must call afs_tf_init() before calling afs_tf_save_cred().
@@ -1318,10 +1319,10 @@ char *tkt_string();
  * called previously, and KFAILURE for anything else that went wrong.
  */
 
-afs_tf_save_cred(aserver, atoken, aclient)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;	/* Token */
+int
+afs_tf_save_cred(struct ktc_principal *aserver, 
+		 struct ktc_token *atoken, 
+		 struct ktc_principal *aclient)
 {
     char realm[MAXKTCREALMLEN + 1];
     char junk[MAXKTCNAMELEN];
@@ -1420,8 +1421,6 @@ afs_tf_save_cred(aserver, atoken, aclient)
  * <mit-copyright.h>.
  */
 
-char *getenv();
-
 /*
  * This routine is used to generate the name of the file that holds
  * the user's cache of server tickets and associated session keys.
@@ -1451,7 +1450,7 @@ ktc_tkt_string_uid(afs_uint32 uid)
 
     LOCK_GLOBAL_MUTEX;
     if (!*krb_ticket_string) {
-	if (env = getenv("KRBTKFILE")) {
+	if ((env = getenv("KRBTKFILE"))) {
 	    (void)strncpy(krb_ticket_string, env,
 			  sizeof(krb_ticket_string) - 1);
 	    krb_ticket_string[sizeof(krb_ticket_string) - 1] = '\0';
@@ -1494,9 +1493,8 @@ ktc_set_tkt_string(char * val)
  * success, or KFAILURE if something goes wrong.
  */
 
-afs_tf_create(pname, pinst)
-     char *pname;
-     char *pinst;
+int
+afs_tf_create(char *pname, char *pinst)
 {
     int tktfile;
     int me, metoo;
@@ -1573,7 +1571,8 @@ afs_tf_create(pname, pinst)
  * failure.
  */
 
-afs_tf_dest_tkt()
+int
+afs_tf_dest_tkt(void)
 {
     char *file = ktc_tkt_string();
     int i, fd;
@@ -1613,8 +1612,14 @@ afs_tf_dest_tkt()
 }
 
 static afs_uint32
-curpag()
+curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+	code = 0;
+    return code;
+#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -1638,10 +1643,11 @@ curpag()
 	    return -1;
     }
     return -1;
+#endif
 }
 
-
-ktc_newpag()
+int
+ktc_newpag(void)
 {
     extern char **environ;
 
@@ -1660,7 +1666,7 @@ ktc_newpag()
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
     } else {
-	sprintf(fname, "%sp%ld", prefix, pag);
+	sprintf(fname, "%sp%ld", prefix, (long int) pag);
     }
     ktc_set_tkt_string(fname);
 
@@ -1668,7 +1674,7 @@ ktc_newpag()
 	numenv++;
     newenv = (char **)malloc((numenv + 2) * sizeof(char *));
 
-    for (senv = environ, denv = newenv; *senv; *senv++) {
+    for (senv = environ, denv = newenv; *senv; senv++) {
 	if (strncmp(*senv, "KRBTKFILE=", 10) != 0)
 	    *denv++ = *senv;
     }
@@ -1679,6 +1685,7 @@ ktc_newpag()
     *++denv = 0;
     environ = newenv;
     UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /*
@@ -1686,7 +1693,7 @@ ktc_newpag()
  * find out what the local cell is.
  */
 static void
-ktc_LocalCell()
+ktc_LocalCell(void)
 {
     int code;
     struct afsconf_dir *conf;

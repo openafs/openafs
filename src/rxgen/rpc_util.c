@@ -36,16 +36,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_util.c,v 1.9 2003/07/15 23:16:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxgen/rpc_util.c,v 1.9.2.1 2007/10/30 15:24:05 shadow Exp $");
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

@@ -17,17 +17,15 @@
 #include <afs/param.h>
 #include <sys/wait.h>
 #include <limits.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.2.4 2006/10/10 03:23:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.2.6 2007/12/13 18:54:08 shadow Exp $");
 
 #include "afs_util.h"
 
@@ -180,6 +178,12 @@ do_klog(const char *user, const char *password, const char *lifetime,
 static afs_int32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+        code = 0;
+    return code;
+#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -203,6 +207,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 /* Returns the AFS pag number, if any, otherwise return -1 */

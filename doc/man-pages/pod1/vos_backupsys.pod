@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos backupsys - Creates a backup volume for several read/write volumes
+vos_backupsys - Creates a backup volume for several read/write volumes
 
 =head1 SYNOPSIS
 

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_MOVE 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH VOS_MOVE 1 "OpenAFS" "19/Jan/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,21 +188,21 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-vos move \- Moves a read/write volume to another site
+vos_move \- Moves a read/write volume to another site
 .SH "SYNOPSIS"
 \fBvos move\fR <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>>
     <<\ \fB\-fromserver\fR\ <\fImachine\ name\ on\ source\fR >>>
     <<\ \fB\-frompartition\fR\ <\fIpartition\ name\ on\ source\fR >>>
     <<\ \fB\-toserver\fR\ <\fImachine\ name\ on\ destination\fR >>>
     <<\ \fB\-topartition\fR\ <\fIpartition\ name\ on\ destination\fR >>>
-    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR]
-    [\fB\-help\fR]
+    [\fB\-live\fR] <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR]
+    [\fB\-localauth\fR] [\fB\-verbose\fR] [\fB\-help\fR]
 .PP
 \fBvos m\fR <<\ \fB\-i\fR\ <\fIvolume\ name\ or\ ID\fR >>>
     <<\ \fB\-froms\fR\ <\fImachine\ name\ on\ source\fR >>>
     <<\ \fB\-fromp\fR\ <\fIpartition\ name\ on\ source\fR >>>
     <<\ \fB\-tos\fR\ <\fImachine\ name\ on\ destination\fR >>>
-    <<\ \fB\-top\fR\ <\fIpartition\ name\ on\ destination\fR >>>
+    <<\ \fB\-top\fR\ <\fIpartition\ name\ on\ destination\fR >>> [\fB\-li\fR]
     <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBvos move\fR command moves the indicated read/write volume from its
@@ -254,6 +254,15 @@ confirmation of the kill signal:
 .Ve
 To confirm termination of the operation, press Ctrl-C a second time; press
 any other key to continue the operation.
+.PP
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
 .SH "OPTIONS"
 .Ip "\fB\-id\fR <\fIvolume name or \s-1ID\s0\fR>" 4
 Specifies either the complete name or volume \s-1ID\s0 number of a read/write
@@ -275,6 +284,12 @@ an unambiguous abbreviation). For details, see the \fIvos(1)\fR manpage.
 Names the partition to which to move the volume. Provide the full
 partition name (for, example, \fB/vicepa\fR) or one of the abbreviated forms
 described in the \fIvos(1)\fR manpage.
+.Ip "\fB\-live\fR" 4
+Avoids making a temporary copy of the volume during the move. This is
+useful if the partition is full, but the administrator needs to move
+volumes to a another partition or server to free up disk space. The
+caveat is that the volume is locked during the entire operation
+instead of the short time that is needed to make the temporary clone.
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
@@ -314,6 +329,7 @@ superuser \f(CWroot\fR.
 the \fIvos(1)\fR manpage,
 the \fIvos_addsite(1)\fR manpage,
 the \fIvos_backup(1)\fR manpage,
+the \fIvos_copy(1)\fR manpage,
 the \fIvos_release(1)\fR manpage,
 the \fIvos_listvol(1)\fR manpage,
 the \fIvos_remove(1)\fR manpage
@@ -326,7 +342,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "VOS_MOVE 1"
-.IX Name "vos move - Moves a read/write volume to another site"
+.IX Name "vos_move - Moves a read/write volume to another site"
 
 .IX Header "NAME"
 
@@ -353,6 +369,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-toserver\fR <\fIserver name\fR>"
 
 .IX Item "\fB\-topartition\fR <\fIpartition name\fR>"
+
+.IX Item "\fB\-live\fR"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 

@@ -47,7 +47,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rec.c,v 1.6 2003/07/15 23:16:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_rec.c,v 1.6.2.2 2008/02/04 04:07:18 jaltman Exp $");
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -59,13 +59,7 @@ RCSID
 #include <netinet/in.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 
 /*  * A record is composed of one or more record fragments.
@@ -114,7 +108,7 @@ static bool_t xdrrec_putbytes(XDR * xdrs, register caddr_t addr,
 			      register u_int len);
 static u_int xdrrec_getpos(register XDR * xdrs);
 static bool_t xdrrec_setpos(register XDR * xdrs, u_int pos);
-static afs_int32 *xdrrec_inline(register XDR * xdrs, int len);
+static afs_int32 *xdrrec_inline(register XDR * xdrs, u_int len);
 static void xdrrec_destroy(register XDR * xdrs);
 static bool_t flush_out(register RECSTREAM * rstrm, bool_t eor);
 static bool_t fill_input_buf(register RECSTREAM * rstrm);
@@ -341,7 +335,7 @@ xdrrec_setpos(register XDR * xdrs, u_int pos)
 }
 
 static afs_int32 *
-xdrrec_inline(register XDR * xdrs, int len)
+xdrrec_inline(register XDR * xdrs, u_int len)
 {
     register RECSTREAM *rstrm = (RECSTREAM *) xdrs->x_private;
     afs_int32 *buf = NULL;

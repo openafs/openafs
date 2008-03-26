@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.10.2.1 2004/10/18 07:12:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.10.2.2 2007/10/30 15:24:09 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -20,13 +20,7 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 #include "afsutil.h"
 

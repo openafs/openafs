@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.2 2007/10/05 02:54:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.4 2008/03/17 15:28:56 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -444,7 +444,11 @@ osi_FreeSocket(register osi_socket *asocket)
 
     /* Was sockfs_sounbind(so, 0); sockfs_sockfree(so); That's wrong */
     vp = SOTOV(so);
+ #ifdef AFS_SUN511_ENV
+    VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED(), NULL);
+ #else
     VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED());
+ #endif
     VN_RELE(vp);
 
     return 0;
@@ -592,6 +596,14 @@ osi_NetIfPoller()
     uint_t mtu;
     uint64_t flags;
 
+    if (afs_termState == AFSOP_STOP_NETIF) {
+	afs_warn("NetIfPoller... ");
+	rw_destroy(&afsifinfo_lock);
+	ddi_taskq_destroy(afs_taskq);
+	afs_termState = AFSOP_STOP_COMPLETE;
+	osi_rxWakeup(&afs_termState);
+	return;
+    }
     /* Get our permissions */
     cr = CRED();
 

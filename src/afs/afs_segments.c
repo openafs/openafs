@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.5 2005/02/21 01:15:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.6 2007/12/04 21:12:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -92,6 +92,10 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 		afs_int32 l1, l2;
 		l1 = avc->m.Length;
 		l2 = tlen;
+		if ((avc->m.Length > 0x7fffffff) ||
+		    (tlen > 0x7fffffff) ||
+		    ((0x7fffffff - tlen) < avc->m.Length))
+		    return EFBIG;
 		code =
 		    StartRXAFS_StoreData(tcall,
 					 (struct AFSFid *)&avc->fid.Fid,

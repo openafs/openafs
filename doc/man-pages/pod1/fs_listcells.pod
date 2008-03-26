@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs listcells - Displays the database server machines known to the Cache Manager
+fs_listcells - Displays the database server machines known to the Cache Manager
 
 =head1 SYNOPSIS
 

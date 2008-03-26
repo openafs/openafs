@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos removeuser - Removes a privileged user from the UserList file
+bos_removeuser - Removes a privileged user from the UserList file
 
 =head1 SYNOPSIS
 

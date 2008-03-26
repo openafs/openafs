@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kautils.c,v 1.9 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kautils.c,v 1.9.2.1 2007/10/30 15:23:54 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -22,13 +22,7 @@ RCSID
 #include <netinet/in.h>
 #include <sys/file.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>

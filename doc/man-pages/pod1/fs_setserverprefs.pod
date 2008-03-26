@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setserverprefs - Sets the preference ranks for file servers or VL servers
+fs_setserverprefs - Sets the preference ranks for file servers or VL servers
 
 =head1 SYNOPSIS
 

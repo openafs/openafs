@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/utils.c,v 1.10 2004/06/23 14:27:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/utils.c,v 1.10.2.1 2007/10/30 15:24:08 shadow Exp $");
 
 #include <afs/stds.h>
 #include <rx/rxkad.h>
@@ -22,13 +22,7 @@ RCSID
 #include <WINNT/afssw.h>
 #endif
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

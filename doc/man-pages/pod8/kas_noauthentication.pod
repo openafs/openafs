@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas noauthentication - Discards an authenticated identity in interactive mode
+kas_noauthentication - Discards an authenticated identity in interactive mode
 
 =head1 SYNOPSIS
 

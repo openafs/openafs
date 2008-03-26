@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup savedb - Creates a saved copy of the Backup Database
+backup_savedb - Creates a saved copy of the Backup Database
 
 =head1 SYNOPSIS
 

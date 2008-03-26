@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.5 2006/12/21 23:15:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.8 2008/03/10 22:35:33 shadow Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -28,14 +28,7 @@ RCSID
 #include <time.h>
 #endif
 #include <sys/stat.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <lwp.h>
@@ -43,6 +36,7 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include "bnode.h"
+#include "bosprototypes.h"
 
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 /* All known versions of AIX lack WCOREDUMP but this works */
@@ -497,8 +491,8 @@ DeleteProc(register struct bnode_proc *abproc)
 }
 
 /* bnode lwp executes this code repeatedly */
-static int
-bproc()
+static void *
+bproc(void *unused)
 {
     register afs_int32 code;
     register struct bnode *tb;
@@ -647,6 +641,7 @@ bproc()
 	    }
 	}
     }
+    return NULL;
 }
 
 static afs_int32
@@ -769,9 +764,11 @@ hdl_notifier(struct bnode_proc *tp)
 
 /* Called by IOMGR at low priority on IOMGR's stack shortly after a SIGCHLD
  * occurs.  Wakes up bproc do redo things */
-int
-bnode_SoftInt(int asignal)
+void *
+bnode_SoftInt(void *param)
 {
+    /* int asignal = (int) param; */
+
     IOMGR_Cancel(bproc_pid);
     return 0;
 }
@@ -782,12 +779,10 @@ bnode_SoftInt(int asignal)
 void
 bnode_Int(int asignal)
 {
-    extern void bozo_ShutdownAndExit();
-
     if (asignal == SIGQUIT) {
-	IOMGR_SoftSig(bozo_ShutdownAndExit, (char *)asignal);
+	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *) asignal);
     } else {
-	IOMGR_SoftSig(bnode_SoftInt, (char *)asignal);
+	IOMGR_SoftSig(bnode_SoftInt, (void *) asignal);
     }
 }
 

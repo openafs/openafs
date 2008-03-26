@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup interactive - Enters interactive mode
+backup_interactive - Enters interactive mode
 
 =head1 SYNOPSIS
 

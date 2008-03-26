@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.11 2006/11/09 23:26:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.15 2008/03/23 00:54:01 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include "h/module.h" /* early to avoid printf->printk mapping */
@@ -20,7 +20,9 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
-
+#if !defined(HAVE_IGET)
+#include "h/exportfs.h"
+#endif
 
 int afs_osicred_initialized = 0;
 struct AFS_UCRED afs_osi_cred;
@@ -40,6 +42,9 @@ osi_UFSOpen(afs_int32 ainode)
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
     struct file *filp = NULL;
+#if !defined(HAVE_IGET)
+    struct fid fid;
+#endif
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
@@ -57,14 +62,17 @@ osi_UFSOpen(afs_int32 ainode)
 		  sizeof(struct osi_file));
     }
     memset(afile, 0, sizeof(struct osi_file));
+#if defined(HAVE_IGET)
     tip = iget(afs_cacheSBp, (u_long) ainode);
-    if (!tip)
-	osi_Panic("Can't get inode %d\n", ainode);
-    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
-
-    dp = d_alloc_anon(tip);
+#else
+    fid.i32.ino = ainode;
+    fid.i32.gen = 0;
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &fid, sizeof(fid), FILEID_INO32_GEN);
     if (!dp) 
            osi_Panic("Can't get dentry for inode %d\n", ainode);          
+    tip = dp->d_inode;
+#endif
+    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
     if (IS_ERR(filp))
@@ -348,8 +356,6 @@ afs_osi_MapStrategy(int (*aproc) (struct buf * bp), register struct buf *bp)
 void
 shutdown_osifile(void)
 {
-    extern int afs_cold_shutdown;
-
     AFS_STATCNT(shutdown_osifile);
     if (afs_cold_shutdown) {
 	afs_osicred_initialized = 0;

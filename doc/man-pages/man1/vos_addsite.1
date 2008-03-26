@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_ADDSITE 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH VOS_ADDSITE 1 "OpenAFS" "20/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,17 +188,18 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-vos addsite \- Adds a read-only site definition to a volume's VLDB entry
+vos_addsite \- Adds a read-only site definition to a volume's VLDB entry
 .SH "SYNOPSIS"
 \fBvos addsite\fR <<\ \fB\-server\fR\ <\fImachine\ name\ for\ new\ site\fR >>>
     <<\ \fB\-partition\fR\ <\fIpartition\ name\ for\ new\ site\fR >>>
-    <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR] [\fB\-help\fR]
+    <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ \fB\-valid\fR\ <\fIold\ volume\ id\fR >>>
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR]
+    [\fB\-verbose\fR] [\fB\-help\fR]
 .PP
 \fBvos ad\fR <<\ \fB\-s\fR\ <\fImachine\ name\ for\ new\ site\fR >>>
     <<\ \fB\-p\fR\ <\fIpartition\ name\ for\ new\ site\fR >>>
-    <<\ \fB\-i\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
+    <<\ \fB\-i\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ \fB\-valid\fR\ <\fIold\ volume\ id\fR >>>
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBvos addsite\fR command defines a new read-only site (partition on a
 file server machine, specified by the \fB\-server\fR and \fB\-partition\fR
@@ -234,6 +235,13 @@ the \fIvos(1)\fR manpage.
 .Ip "\fB\-id\fR <\fIvolume name or \s-1ID\s0\fR>" 4
 Specifies either the complete name or volume \s-1ID\s0 number of the read/write
 source volume.
+.Ip "\fB\-valid\fR <\fIvolume \s-1ID\s0\fR>" 4
+Specifies the volume \s-1ID\s0 number of the existing release-equivalent
+volume that is not already marked as a replica. This is useful when an
+existing read-only volume is dumped and restored with the \fB\-readonly\fR
+flag at the new site. This option is available in OpenAFS clients
+1.4.7 or later and 1.5.31 and later. This option can be used with
+OpenAFS server versions later than 1.4.1 or 1.5.0.
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
@@ -278,7 +286,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "VOS_ADDSITE 1"
-.IX Name "vos addsite - Adds a read-only site definition to a volume's VLDB entry"
+.IX Name "vos_addsite - Adds a read-only site definition to a volume's VLDB entry"
 
 .IX Header "NAME"
 
@@ -295,6 +303,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-partition\fR <\fIpartition name\fR>"
 
 .IX Item "\fB\-id\fR <\fIvolume name or \s-1ID\s0\fR>"
+
+.IX Item "\fB\-valid\fR <\fIvolume \s-1ID\s0\fR>"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
