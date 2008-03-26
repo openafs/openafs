@@ -7,7 +7,7 @@ some documentation.
 
 --- openafs.orig/src/bozo/bosoprocs.c
 +++ openafs/src/bozo/bosoprocs.c
-@@ -1324,12 +1324,12 @@
+@@ -1317,12 +1317,12 @@
  
  struct bozo_bosEntryStats bozo_bosEntryStats[] = {
      {NULL, 1, 1, 0755, 02},	/* AFSDIR_SERVER_AFS_DIRPATH    */

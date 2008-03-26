@@ -1,14 +1,14 @@
 --- openafs.orig/src/bozo/bnode.c
 +++ openafs/src/bozo/bnode.c
-@@ -28,6 +28,7 @@
- #include <time.h>
- #endif
- #include <sys/stat.h>
+@@ -16,6 +16,7 @@
+ #include <stddef.h>
+ #include <stdlib.h>
+ #include <stdio.h>
 +#include <dirent.h>
- 
- #ifdef HAVE_STRING_H
- #include <string.h>
-@@ -105,13 +106,45 @@
+ #include <errno.h>
+ #include <sys/types.h>
+ #ifdef AFS_NT40_ENV
+@@ -99,13 +100,45 @@
      char tbuffer[256];
      struct stat tstat;
      register afs_int32 code;
@@ -54,7 +54,7 @@
      if (code)
  	return;
  
-@@ -124,7 +157,12 @@
+@@ -118,7 +151,12 @@
  	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
      strcpy(tbuffer, FileName);
  #endif

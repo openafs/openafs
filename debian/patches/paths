@@ -5,7 +5,7 @@ database path.
 
 --- openafs.orig/src/ptserver/pt_util.c
 +++ openafs/src/ptserver/pt_util.c
-@@ -136,7 +136,7 @@
+@@ -137,7 +137,7 @@
      struct prentry uentry, gentry;
      struct ubik_hdr *uh;
      char *dfile = 0;

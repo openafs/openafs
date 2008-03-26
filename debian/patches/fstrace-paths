@@ -6,7 +6,7 @@ would be appropriate.
 
 --- openafs.orig/src/venus/fstrace.c
 +++ openafs/src/venus/fstrace.c
-@@ -1471,7 +1471,7 @@
+@@ -1466,7 +1466,7 @@
   */
  
  #ifndef RPC_NLS_FORMAT
@@ -15,7 +15,7 @@ would be appropriate.
  #endif
  
  dce1_error_inq_text(status_to_convert, error_text, status)
-@@ -1488,7 +1488,8 @@
+@@ -1483,7 +1483,8 @@
      char component_name[4];
      char *facility_name;
      char filename_prefix[7];
