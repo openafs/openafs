@@ -17,19 +17,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/textcb.c,v 1.7 2003/07/15 23:15:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/textcb.c,v 1.7.2.1 2007/10/30 15:23:53 shadow Exp $");
 
 #include "gtxtextcb.h"		/*Module interface */
 #include <stdio.h>		/*Standard I/O stuff */
 #include <errno.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 static int gator_textcb_debug;	/*Is debugging output turned on? */

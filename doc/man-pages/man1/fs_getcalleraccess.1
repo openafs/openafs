@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_GETCALLERACCESS 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH FS_GETCALLERACCESS 1 "OpenAFS" "25/Dec/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,7 +188,7 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-fs getcalleraccess \- Show the current user's access to a file or directory
+fs_getcalleraccess \- Show the current user's access to a file or directory
 .SH "SYNOPSIS"
 \fBfs getcalleraccess\fR <<\ [\fB\-path\fR\ <\fIpath\fR+] >>> [\fB\-help\fR]
 .PP
@@ -231,12 +231,13 @@ the \fIfs_setacl(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 .PP
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
 
 .rn }` ''
 .IX Title "FS_GETCALLERACCESS 1"
-.IX Name "fs getcalleraccess - Show the current user's access to a file or directory"
+.IX Name "fs_getcalleraccess - Show the current user's access to a file or directory"
 
 .IX Header "NAME"
 

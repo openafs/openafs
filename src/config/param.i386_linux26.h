@@ -28,6 +28,7 @@
 #define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 
+
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 
 #ifdef CONFIG_SMP

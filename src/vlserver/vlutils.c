@@ -11,21 +11,14 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlutils.c,v 1.9 2003/12/07 22:49:42 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlutils.c,v 1.9.2.1 2007/10/30 15:24:11 shadow Exp $");
 
 #include <sys/types.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <lock.h>

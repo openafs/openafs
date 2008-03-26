@@ -101,14 +101,14 @@ struct afsconf_servPair {
 extern struct afsconf_dir *afsconf_Open(register const char *adir);
 extern int afsconf_CellApply(struct afsconf_dir *adir,
 			     int (*aproc) (struct afsconf_cell * cell,
-					   char *arock,
+					   void *arock,
 					   struct afsconf_dir * dir),
-			     char *arock);
+			     void *arock);
 extern int afsconf_CellAliasApply(struct afsconf_dir *adir,
 				  int (*aproc) (struct afsconf_cellalias *
-						alias, char *arock,
+						alias, void *arock,
 						struct afsconf_dir * dir),
-				  char *arock);
+				  void *arock);
 extern int afsconf_GetExtendedCellInfo(struct afsconf_dir *adir,
 				       char *acellName, char *aservice,
 				       struct afsconf_cell *acellInfo,
@@ -125,9 +125,10 @@ extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
 extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
-				      afs_int32 * avno, char *akey);
-extern int afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno,
-			  char *akey);
+				      afs_int32 * avno, 
+				      struct ktc_encryptionKey *akey);
+extern int afsconf_GetKey(void *rock, afs_int32 avno,
+			  struct ktc_encryptionKey *akey);
 extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno,
 			  char akey[8], afs_int32 overwrite);
 extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);

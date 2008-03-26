@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vfsops.c,v 1.13.2.1 2004/08/25 07:09:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vfsops.c,v 1.13.2.2 2007/12/13 19:18:53 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -207,7 +207,6 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
      int flags;
      cred_t *cr;
 {
-    extern int afs_afs_cold_shutdown;
     struct vcache *tvc;
     vnode_t *vp, *rootvp = NULL;
     register struct afs_q *tq;

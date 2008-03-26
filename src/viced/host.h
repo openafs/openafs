@@ -205,8 +205,8 @@ extern int h_Lock_r(register struct host *host);
 extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
-extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
-			       int *heldp);
+extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
+			       int *heldp, struct host **hostp);
 extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
 			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
@@ -229,6 +229,8 @@ extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port);
+
+extern void *ShutDown(void *);
 
 struct Interface *MultiVerifyInterface_r();
 

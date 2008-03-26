@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_groups.c,v 1.7 2003/07/15 23:14:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_groups.c,v 1.7.2.1 2007/11/26 21:21:47 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -26,6 +26,7 @@ int
 afs_xsetgroups()
 {
     usr_assert(0);
+    return 0;
 }
 
 static int

@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs setclientaddrs - Sets the client interfaces to register with the File Server
+fs_setclientaddrs - Sets the client interfaces to register with the File Server
 
 =head1 SYNOPSIS
 

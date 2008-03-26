@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup volinfo - Displays a volume's dump history from the Backup Database
+backup_volinfo - Displays a volume's dump history from the Backup Database
 
 =head1 SYNOPSIS
 

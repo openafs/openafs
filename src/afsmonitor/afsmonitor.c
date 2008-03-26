@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.18.2.3 2006/03/09 06:41:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.18.2.4 2007/10/31 04:13:32 shadow Exp $");
 
 #include <stdio.h>
 #include <math.h>
@@ -3880,8 +3880,7 @@ afsmon_execute()
  *----------------------------------------------------------------------*/
 
 int
-afsmonInit(as)
-     struct cmd_syndesc *as;
+afsmonInit(struct cmd_syndesc *as, void *arock)
 {				/* afsmonInit() */
 
     static char rn[] = "afsmonInit";	/* Routine name */
@@ -4185,7 +4184,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", afsmonInit, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", afsmonInit, NULL, "initialize the program");
     cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL,
 		"configuration file");
     cmd_AddParm(ts, "-frequency", CMD_SINGLE, CMD_OPTIONAL,

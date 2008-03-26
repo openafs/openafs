@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos rename - Renames a volume
+vos_rename - Renames a volume
 
 =head1 SYNOPSIS
 

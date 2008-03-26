@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH CMDEBUG 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH CMDEBUG 1 "OpenAFS" "14/Jan/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -191,37 +191,51 @@
 cmdebug \- Reports the status of a host Cache Manager
 .SH "SYNOPSIS"
 \fBcmdebug\fR <<\ \fB\-servers\fR\ <\fImachine\fR >>> <<\ [\fB\-port\fR\ <\fIIP\ port\fR] >>>
-    [\fB\-long\fR] [\fB\-refcounts\fR] [\fB\-callbacks\fR] [\fB\-addrs\fR] [\fB\-cache\fR]
+    [\fB\-long\fR] [\fB\-refcounts\fR] [\fB\-callbacks\fR] [\fB\-ctime\fR] [\fB\-addrs\fR]
+    [\fB\-cache\fR] [\fB\-cellservdb\fR] [\fB\-help\fR]
 .PP
-\fBcmdebug\fR <<\ \fB\-s\fR\ <\fImachine\fR >>> <<\ [\fB\-p\fR\ <\fIIP\ port\fR] >>> [\fB\-l\fR] [\fB\-r\fR] [\fB\-c\fR]
-    [\fB\-a\fR] [\fB\-h\fR]
+\fBcmdebug\fR <<\ \fB\-s\fR\ <\fImachine\fR >>> <<\ [\fB\-p\fR\ <\fIIP\ port\fR] >>> [\fB\-l\fR] [\fB\-r\fR] [\fB\-cal\fR]
+    [\fB\-ct\fR] [\fB\-a\fR] [\fB\-cac\fR] \fB\-ce\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
-The \fBcmdebug\fR command displays information about the Cache Manager and
-client cache status on an AFS client machine.  By default, it displays all
-locked cache entries, but other information can be requested via various
-options.
+The \fBcmdebug\fR command displays information about the Cache Manager
+and client cache status on a local or remote AFS client machine.  By
+default, it displays all locked cache entries, but other information
+can be requested via various options.
+.SH "CAUTIONS"
+The \fB\-ctime\fR option is only available with OpenAFS version 1.4.7 and
+later or version 1.5.28 or later.  This option can be used to gather
+information from any version of the Unix OpenAFS client, but can only
+query Windows clients running OpenAFS version 1.5.28 or later.
+.PP
+The \fB\-cellservdb\fR option is only available with OpenAFS version 1.4.7
+and later or version 1.5.31 or later.  This option can be used to gather
+information from any version of the Unix OpenAFS client, but can only
+query Windows clients running OpenAFS version 1.5.31 or later.
 .SH "OPTIONS"
 .Ip "\fB\-servers\fR <\fImachine\fR>" 4
 Names the client machine for which to display Cache Manager status.
 Provide the machine's \s-1IP\s0 address in dotted decimal format, its fully
-qualified host name (for example, \fBfs1.abc.com\fR), or the shortest
+qualified host name (for example, \fBfs1.example.com\fR), or the shortest
 abbreviated form of its host name that distinguishes it from other
 machines. Successful use of an abbreviated form depends on the
-availability of a name resolution service (such as the Domain Name Service
-or a local host table) at the time the command is issued.
+availability of a name resolution service (such as the Domain Name
+Service or a local host table) at the time the command is issued.
 .Ip "\fB\-port\fR <\fI\s-1IP\s0 port\fR>" 4
 Identifies the port on which to contact the Cache Manager.  By default,
 the standard port 7001 is used, so this option is very rarely needed.
 .Ip "\fB\-long\fR" 4
 Reports on all lock statuses and all cache entries, rather than only
 locked cache entries.  Do not use this option with \fB\-refcounts\fR,
-\fB\-callbacks\fR, \fB\-addrs\fR, or \fB\-cache\fR.
+\fB\-callbacks\fR, \fB\-addrs\fR, \fB\-cache\fR, or \fB\-cellservdb\fR.
 .Ip "\fB\-refcounts\fR" 4
 Reports only those cache entries with non-zero reference counts.  Do not
 use this option with \fB\-long\fR, \fB\-callbacks\fR, \fB\-addrs\fR, or \fB\-cache\fR.
 .Ip "\fB\-callbacks\fR" 4
 Reports only those cache entries with callbacks.  Do not use this option
 with \fB\-long\fR, \fB\-refcounts\fR, \fB\-addrs\fR, or \fB\-cache\fR.
+.Ip "\fB\-ctime\fR" 4
+Causes entry expiration times to be shown in human-readable format. Do
+not use this option with \fB\-addrs\fR or \fB\-cache\fR.
 .Ip "\fB\-addrs\fR" 4
 Rather than showing any cache entries, displays the interfaces the Cache
 Manager answers on, including their netmasks and MTUs.  This is useful for
@@ -233,6 +247,13 @@ Rather than showing any cache entries, displays the cache configuration
 for the client machine.  The information displayed is essentially the
 information that can be configured via parameters to \fBafsd\fR.  Do not use
 this option with \fB\-long\fR, \fB\-refcounts\fR, \fB\-callbacks\fR, or \fB\-addrs\fR.
+.Ip "\fB\-cellservdb\fR" 4
+Lists all known volume location database records in a
+CellServDB\-compatible format. This includes all records in memory,
+including those from the CellServDB file, \s-1AFSDB\s0 \s-1DNS\s0 records, and the
+\fBfs newcell\fR command. This option could be used to see if a client
+has the latest copy of the CellServDB file. Do not use this option
+with \fB\-long\fR, \fB\-refcounts\fR, \fB\-callbacks\fR, or \fB\-cache\fR.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -242,20 +263,22 @@ Displays all of the locked cache entries on \f(CWclient1\fR:
 .Vb 1
 \&    % cmdebug client1
 .Ve
-Displays the cache configuration for \f(CWclient1.abc.com\fR:
+Displays the cache configuration for \f(CWclient1.example.com\fR:
 .PP
 .Vb 1
-\&    % cmdebug client1.abc.com -cache
+\&    % cmdebug client1.example.com -cache
 .Ve
-Displays all cache entries for \f(CWclient2.abc.com\fR:
+Displays all cache entries for \f(CWclient2.example.com\fR:
 .PP
 .Vb 1
-\&    % cmdebug client2.abc.com -long
+\&    % cmdebug client2.example.com -long
 .Ve
 .SH "PRIVILEGE REQUIRED"
 None
 .SH "SEE ALSO"
-the \fIafsd(8)\fR manpage
+the \fIafsd(8)\fR manpage,
+the \fICellServDB(5)\fR manpage,
+the \fIfs_newcell(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2005 Russ Allbery <rra@stanford.edu>
 .PP
@@ -272,6 +295,8 @@ man page was written by Russ Allbery for OpenAFS.
 
 .IX Header "DESCRIPTION"
 
+.IX Header "CAUTIONS"
+
 .IX Header "OPTIONS"
 
 .IX Item "\fB\-servers\fR <\fImachine\fR>"
@@ -284,9 +309,13 @@ man page was written by Russ Allbery for OpenAFS.
 
 .IX Item "\fB\-callbacks\fR"
 
+.IX Item "\fB\-ctime\fR"
+
 .IX Item "\fB\-addrs\fR"
 
 .IX Item "\fB\-cache\fR"
+
+.IX Item "\fB\-cellservdb\fR"
 
 .IX Item "\fB\-help\fR"
 

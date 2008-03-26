@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos exec - Executes a command on a remote server machine
+bos_exec - Executes a command on a remote server machine
 
 =head1 SYNOPSIS
 

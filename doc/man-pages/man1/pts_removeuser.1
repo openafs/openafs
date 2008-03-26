@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_REMOVEUSER 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PTS_REMOVEUSER 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,13 +188,14 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts removeuser \- Removes a user from a Protection Database group
+pts_removeuser \- Removes a user from a Protection Database group
 .SH "SYNOPSIS"
 \fBpts removeuser\fR <<\ \fB\-user\fR\ <\fIuser\ name\fR+ >>> <<\ \fB\-group\fR\ <\fIgroup\ name\fR+ >>>
-    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-force\fR] 
+    [\fB\-help\fR]
 .PP
 \fBpts rem\fR <<\ \fB\-u\fR\ <\fIuser\ name\fR+ >>> <<\ \fB\-g\fR\ <\fIgroup\ name\fR+ >>>
-    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-f\fR] [\fB\-h\fR]
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts removeuser\fR command removes each user or machine named by the
 \fB\-user\fR argument from each group named by the \fB\-group\fR argument.
@@ -220,6 +221,10 @@ the \fIpts(1)\fR manpage.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the 
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
@@ -267,7 +272,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PTS_REMOVEUSER 1"
-.IX Name "pts removeuser - Removes a user from a Protection Database group"
+.IX Name "pts_removeuser - Removes a user from a Protection Database group"
 
 .IX Header "NAME"
 
@@ -286,6 +291,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
 

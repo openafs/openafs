@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/test/stress.c,v 1.9.2.1 2007/04/10 18:43:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/test/stress.c,v 1.9.2.2 2007/10/31 04:13:47 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -104,9 +104,7 @@ StringToAuth(authname)
 #define aKEYFILE 26
 
 static int
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     long code;
     int startServer = (as->parms[aSERVER].items != 0);
@@ -310,7 +308,7 @@ main(argc, argv)
 	exit(1);
     }
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "run Rx authentication stress test");
     cmd_AddParm(ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
     cmd_AddParm(ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");

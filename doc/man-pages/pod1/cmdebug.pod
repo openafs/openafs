@@ -8,20 +8,33 @@ cmdebug - Reports the status of a host Cache Manager
 <div class="synopsis">
 
 B<cmdebug> S<<< B<-servers> <I<machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
-    [B<-long>] [B<-refcounts>] [B<-callbacks>] [B<-addrs>] [B<-cache>]
+    [B<-long>] [B<-refcounts>] [B<-callbacks>] [B<-ctime>] [B<-addrs>]
+    [B<-cache>] [B<-cellservdb>] [B<-help>]
 
-B<cmdebug> S<<< B<-s> <I<machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l>] [B<-r>] [B<-c>]
-    [B<-a>] [B<-h>]
+B<cmdebug> S<<< B<-s> <I<machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l>] [B<-r>] [B<-cal>]
+    [B<-ct>] [B<-a>] [B<-cac>] B<-ce>] [B<-h>]
 
 =for html
 </div>
 
 =head1 DESCRIPTION
 
-The B<cmdebug> command displays information about the Cache Manager and
-client cache status on an AFS client machine.  By default, it displays all
-locked cache entries, but other information can be requested via various
-options.
+The B<cmdebug> command displays information about the Cache Manager
+and client cache status on a local or remote AFS client machine.  By
+default, it displays all locked cache entries, but other information
+can be requested via various options.
+
+=head1 CAUTIONS
+
+The B<-ctime> option is only available with OpenAFS version 1.4.7 and
+later or version 1.5.28 or later.  This option can be used to gather
+information from any version of the Unix OpenAFS client, but can only
+query Windows clients running OpenAFS version 1.5.28 or later.
+
+The B<-cellservdb> option is only available with OpenAFS version 1.4.7
+and later or version 1.5.31 or later.  This option can be used to gather
+information from any version of the Unix OpenAFS client, but can only
+query Windows clients running OpenAFS version 1.5.31 or later.
 
 =head1 OPTIONS
 
@@ -31,11 +44,11 @@ options.
 
 Names the client machine for which to display Cache Manager status.
 Provide the machine's IP address in dotted decimal format, its fully
-qualified host name (for example, B<fs1.abc.com>), or the shortest
+qualified host name (for example, B<fs1.example.com>), or the shortest
 abbreviated form of its host name that distinguishes it from other
 machines. Successful use of an abbreviated form depends on the
-availability of a name resolution service (such as the Domain Name Service
-or a local host table) at the time the command is issued.
+availability of a name resolution service (such as the Domain Name
+Service or a local host table) at the time the command is issued.
 
 =item B<-port> <I<IP port>>
 
@@ -46,7 +59,7 @@ the standard port 7001 is used, so this option is very rarely needed.
 
 Reports on all lock statuses and all cache entries, rather than only
 locked cache entries.  Do not use this option with B<-refcounts>,
-B<-callbacks>, B<-addrs>, or B<-cache>.
+B<-callbacks>, B<-addrs>, B<-cache>, or B<-cellservdb>.
 
 =item B<-refcounts>
 
@@ -57,6 +70,11 @@ use this option with B<-long>, B<-callbacks>, B<-addrs>, or B<-cache>.
 
 Reports only those cache entries with callbacks.  Do not use this option
 with B<-long>, B<-refcounts>, B<-addrs>, or B<-cache>.
+
+=item B<-ctime>
+
+Causes entry expiration times to be shown in human-readable format. Do
+not use this option with B<-addrs> or B<-cache>.
 
 =item B<-addrs>
 
@@ -73,6 +91,15 @@ for the client machine.  The information displayed is essentially the
 information that can be configured via parameters to B<afsd>.  Do not use
 this option with B<-long>, B<-refcounts>, B<-callbacks>, or B<-addrs>.
 
+=item B<-cellservdb>
+
+Lists all known volume location database records in a
+CellServDB-compatible format. This includes all records in memory,
+including those from the CellServDB file, AFSDB DNS records, and the
+B<fs newcell> command. This option could be used to see if a client
+has the latest copy of the CellServDB file. Do not use this option
+with B<-long>, B<-refcounts>, B<-callbacks>, or B<-cache>.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -86,13 +113,13 @@ Displays all of the locked cache entries on C<client1>:
 
     % cmdebug client1
 
-Displays the cache configuration for C<client1.abc.com>:
+Displays the cache configuration for C<client1.example.com>:
 
-    % cmdebug client1.abc.com -cache
+    % cmdebug client1.example.com -cache
 
-Displays all cache entries for C<client2.abc.com>:
+Displays all cache entries for C<client2.example.com>:
 
-    % cmdebug client2.abc.com -long
+    % cmdebug client2.example.com -long
 
 =head1 PRIVILEGE REQUIRED
 
@@ -100,7 +127,9 @@ None
 
 =head1 SEE ALSO
 
-L<afsd(8)>
+L<afsd(8)>,
+L<CellServDB(5)>,
+L<fs_newcell(1)>
 
 =head1 COPYRIGHT
 

@@ -30,7 +30,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/log/unlog.c,v 1.6.2.1 2005/07/11 19:46:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/log/unlog.c,v 1.6.2.4 2007/11/26 21:21:54 shadow Exp $");
 
 #include <stdio.h>
 #include <potpourri.h>
@@ -38,14 +38,7 @@ RCSID
 #include <signal.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -71,7 +64,7 @@ struct tokenInfo {
 
 
 int 
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
 #define	MAXCELLS 20		/* XXX */
     struct cmd_item *itp;
@@ -122,7 +115,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "Release Kerberos authentication");
     cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
@@ -266,6 +259,7 @@ unlog_NormalizeCellNames(char **list, int size)
 	*list = newCellName;
     }
     afsconf_Close(conf);
+    return 0;
 }
 
 /*
@@ -290,4 +284,5 @@ unlog_VerifyUnlog(char **cellList, int cellListSize, struct tokenInfo *tokenList
 	    fprintf(stderr, "unlog: Warning - no tokens held for cell %s\n",
 		    cellList[index]);
     }
+    return 0;
 }

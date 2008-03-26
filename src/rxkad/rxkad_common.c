@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.10 2006/05/23 16:31:02 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.11 2007/10/30 15:24:05 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -50,6 +50,7 @@ RCSID
 #else /* KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
+#include <string.h>
 #include <time.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -61,13 +62,6 @@ RCSID
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <afs/afsutil.h>
 #endif /* KERNEL */
 

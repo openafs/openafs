@@ -15,19 +15,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/scout/scout.c,v 1.9.2.1 2006/03/09 06:42:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/scout/scout.c,v 1.9.2.4 2007/11/26 21:21:55 shadow Exp $");
 
 #undef	IN
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #undef IN
 #include <gtxwindows.h>		/*Generic window package */
 #include <gtxobjects.h>		/*Object definitions */
@@ -2216,10 +2210,7 @@ static void scout_AdoptThresholds(a_thresh_item)
  *	Initializes this program.
  *------------------------------------------------------------------------*/
 
-static int scoutInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+static int scoutInit(struct cmd_syndesc *as, void *arock)
 {				/*scoutInit */
 
     static char rn[] = "scoutInit";	/*Routine name */
@@ -2355,7 +2346,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", scoutInit, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", scoutInit, NULL, "initialize the program");
     cmd_AddParm(ts, "-server", CMD_LIST, CMD_REQUIRED,
 		"FileServer name(s) to monitor");
     cmd_AddParm(ts, "-basename", CMD_SINGLE, CMD_OPTIONAL,
@@ -2387,4 +2378,5 @@ main(argc, argv)
     } else
 	scout_CleanExit(0);
 
+    return 0; /* not reachable */
 }				/*main */

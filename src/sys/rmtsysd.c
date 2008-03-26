@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/rmtsysd.c,v 1.7 2003/07/15 23:16:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/rmtsysd.c,v 1.7.2.1 2007/11/26 21:21:55 shadow Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -78,4 +78,5 @@ main(int argc, char *argv[])
      * at some point... */
     rx_SetMaxProcs(service, 2);
     rx_StartServer(1);		/* Donate this process to the server process pool */
+    return 0;
 }

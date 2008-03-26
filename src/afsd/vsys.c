@@ -12,19 +12,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/vsys.c,v 1.6 2003/07/15 23:14:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/vsys.c,v 1.6.2.1 2007/10/30 15:23:45 shadow Exp $");
 
 #include <afs/afs_args.h>
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosoprocs.c,v 1.19.2.1 2006/12/21 23:15:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosoprocs.c,v 1.19.2.4 2008/03/10 22:35:34 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -37,18 +37,11 @@ RCSID
 #include <afs/fileutil.h>
 #include <afs/ktime.h>
 #include <afs/audit.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "bnode.h"
 #include "bosint.h"
-
+#include "bosprototypes.h"
 
 extern struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 
@@ -1662,9 +1655,10 @@ SBOZO_SetRestrictedMode(acall, arestmode)
 }
 #endif
 
-void
-bozo_ShutdownAndExit(int asignal)
+void *
+bozo_ShutdownAndExit(void *param)
 {
+    int asignal = (int) param;
     int code;
 
     bozo_Log

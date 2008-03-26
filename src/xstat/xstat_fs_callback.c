@@ -30,18 +30,11 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_callback.c,v 1.13.2.1 2006/03/06 03:16:41 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/xstat/xstat_fs_callback.c,v 1.13.2.2 2007/10/30 15:24:16 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>		/*Standard I/O stuff */
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/afscbint.h>	/*Callback interface defs */
 

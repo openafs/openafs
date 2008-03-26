@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_misc.c,v 1.12.2.1 2004/08/25 07:09:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_misc.c,v 1.12.2.3 2008/01/31 00:27:40 jaltman Exp $");
 
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
@@ -30,13 +30,7 @@ RCSID
 #include "rx.h"
 #endif /* AFS_PTHREAD_ENV */
 #include <stdlib.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -59,7 +53,7 @@ hton_syserr_conv(register afs_int32 code)
 
     if (code == ENOSPC)
 	err = VDISKFULL;
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#ifdef EDQUOT
     /* EDQUOT doesn't exist on solaris */
     else if (code == EDQUOT)
 	err = VOVERQUOTA;
@@ -82,7 +76,7 @@ ntoh_syserr_conv(int code)
     if (code == VDISKFULL)
 	err = ENOSPC;
     else if (code == VOVERQUOTA)
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#ifndef EDQUOT
 	err = ENOSPC;
 #else
 	err = EDQUOT;

@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13 2003/11/29 22:08:14 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13.2.1 2007/10/30 15:23:59 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -35,13 +35,7 @@ RCSID
 #include <sys/time.h>
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "lwp.h"
 
 #define LWP_KEYSTROKE_DELAY   250	/* 250ms. Must be < 1000 */

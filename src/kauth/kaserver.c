@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.6 2007/04/10 18:43:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.8 2008/03/10 22:35:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -26,13 +26,7 @@ RCSID
 #include "kalog.h"		/* for OpenLog() */
 #include <time.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -497,6 +491,6 @@ main(argc, argv)
     }
 
     ViceLog(0, ("Starting to process AuthServer requests\n"));
-    rx_ServerProc();		/* donate this LWP */
+    rx_ServerProc(NULL);		/* donate this LWP */
     return 0;
 }

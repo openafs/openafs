@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.11 2005/12/24 00:21:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.12 2007/12/08 18:00:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -227,7 +227,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		code = afs_dir_Delete(tdc2, aname2);
 	    }
 	    if (code == 0) {
+		ObtainWriteLock(&afs_xdcache, 292);
 		code = afs_dir_Create(tdc2, aname2, &fileFid.Fid);
+		ReleaseWriteLock(&afs_xdcache);
 	    }
 	    if (code != 0) {
 		ZapDCE(tdc1);

@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup help - Displays help for backup commands
+backup_help - Displays help for backup commands
 
 =head1 SYNOPSIS
 

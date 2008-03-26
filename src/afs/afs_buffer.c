@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.6 2006/01/24 17:41:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.7 2007/12/13 19:18:47 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -534,7 +534,6 @@ shutdown_bufferpackage(void)
     register struct buffer *tp;
 #endif
     int i;
-    extern int afs_cold_shutdown;
 
     AFS_STATCNT(shutdown_bufferpackage);
     /* Free all allocated Buffers and associated buffer pages */

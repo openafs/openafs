@@ -11,10 +11,15 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pagsh.c,v 1.9.2.4 2007/07/10 20:30:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/pagsh.c,v 1.9.2.8 2007/12/13 21:23:42 shadow Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#include <sys/pag.h>
+#include <errno.h>
+#endif
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,9 +27,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 #include <pwd.h>
 #ifdef AFS_KERBEROS_ENV
 #include <sys/types.h>
@@ -86,6 +89,12 @@ main(int argc, char *argv[])
 static afs_uint32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    int code = getpagvalue("afs");
+    if (code < 0 && errno == EINVAL)
+	code = 0;
+    return code;
+#else
     afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -109,6 +118,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 int
@@ -157,6 +167,7 @@ ktc_newpag(void)
     strcat(*denv, fname5);
     *++denv = 0;
     environ = newenv;
+    return 0;
 }
 
 #endif

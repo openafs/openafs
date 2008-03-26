@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup jobs - Lists pending and running operations in interactive mode
+backup_jobs - Lists pending and running operations in interactive mode
 
 =head1 SYNOPSIS
 

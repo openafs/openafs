@@ -58,7 +58,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.23 2007/10/23 14:31:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.25 2007/10/31 22:32:17 shadow Exp $");
 
 #define VFS 1
 
@@ -1387,8 +1387,8 @@ SweepAFSCache(vFilesFound)
     return doSweepAFSCache(vFilesFound, cacheBaseDir, -2, maxDir);
 }
 
-static
-ConfigCell(struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
+static int
+ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 {
     int isHomeCell;
     int i, code;
@@ -1420,7 +1420,7 @@ ConfigCell(struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
 
 static
 ConfigCellAlias(struct afsconf_cellalias *aca,
-		char *arock, struct afsconf_dir *adir)
+		void *arock, struct afsconf_dir *adir)
 {
     /* push the alias into the kernel */
     call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
@@ -1513,7 +1513,7 @@ AfsdbLookupHandler()
 #endif
 #endif
 
-mainproc(struct cmd_syndesc *as, char *arock)
+mainproc(struct cmd_syndesc *as, void *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */

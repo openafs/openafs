@@ -11,10 +11,11 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/dirutils.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/dirutils.c,v 1.5.2.1 2007/10/30 15:24:10 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
 #include <dirent.h>
 #include <afs/partition.h>
 

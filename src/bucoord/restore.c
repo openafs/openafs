@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/restore.c,v 1.8.2.8 2007/10/16 16:56:48 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/restore.c,v 1.8.2.9 2007/11/26 21:21:50 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -131,6 +131,7 @@ extractTapeSeq(tapename)
     return (atol(sptr));
 }
 
+void
 viceName(value)
      long value;
 {

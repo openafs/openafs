@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dbentries.c,v 1.8.2.1 2006/07/01 05:04:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/dbentries.c,v 1.8.2.5 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -24,6 +24,7 @@ RCSID
 #include <netdb.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -309,13 +310,14 @@ waitDbWatcher()
     if (message) {
 	printf("Updating database - done\n");
     }
+    return;
 }
 
 #define MAXVOLUMESTOADD 100
 int addvolumes = 1;
 
-void
-dbWatcher()
+void *
+dbWatcher(void *unused)
 {
     dlqlinkP entryPtr;
     struct budb_dumpEntry *dumpPtr;
@@ -483,4 +485,5 @@ dbWatcher()
 	IOMGR_Sleep(2);
 #endif
     }
+    return NULL;
 }

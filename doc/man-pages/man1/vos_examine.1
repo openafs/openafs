@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_EXAMINE 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH VOS_EXAMINE 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,7 +188,7 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-vos examine \- Shows volume header and VLDB entry information for a volume
+vos_examine \- Shows volume header and VLDB entry information for a volume
 .SH "SYNOPSIS"
 \fBvos examine\fR <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>> [\fB\-extended\fR]
     <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR]
@@ -209,6 +209,15 @@ specified by the \fB\-id\fR argument.
 .PP
 To display the volume header only, use the \fBvos listvol\fR command. To
 display information from the VLDB only, use the \fBvos listvldb\fR command.
+.SH "CAUTIONS"
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
 .SH "OPTIONS"
 .Ip "\fB\-id\fR <\fIvolume name or \s-1ID\s0\fR>" 4
 Specifies either the complete name or volume \s-1ID\s0 number of the volume,
@@ -444,13 +453,15 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "VOS_EXAMINE 1"
-.IX Name "vos examine - Shows volume header and VLDB entry information for a volume"
+.IX Name "vos_examine - Shows volume header and VLDB entry information for a volume"
 
 .IX Header "NAME"
 
 .IX Header "SYNOPSIS"
 
 .IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
 
 .IX Header "OPTIONS"
 

@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9 2003/11/23 04:53:35 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9.2.1 2007/10/30 15:23:53 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <io.h>
@@ -25,13 +25,7 @@ RCSID
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/rxkad.h>
 #include "ubik_int.h"
 #include "kauth.h"

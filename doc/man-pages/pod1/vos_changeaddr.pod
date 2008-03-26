@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos changeaddr - Changes or removes a file server machine's entry in the VLDB
+vos_changeaddr - Changes or removes a file server machine's entry in the VLDB
 
 =head1 SYNOPSIS
 

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.10 2005/07/11 19:29:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.12 2008/03/10 19:05:28 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -52,10 +52,17 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 #endif
 
     if (!code) {
+#if defined(STRUCT_NAMEIDATA_HAS_PATH)
+	*dpp = dget(nd.path.dentry);
+        if (mnt)
+	    *mnt = mntget(nd.path.mnt);
+	path_put(&nd.path);
+#else
 	*dpp = dget(nd.dentry);
         if (mnt)
            *mnt = mntget(nd.mnt);
 	path_release(&nd);
+#endif
     }
     return code;
 }
@@ -348,8 +355,6 @@ osi_linux_free_inode_pages(void)
     }
 }
 
-struct task_struct *rxk_ListenerTask;
-
 void
 osi_linux_mask(void)
 {
@@ -357,10 +362,4 @@ osi_linux_mask(void)
     sigfillset(&current->blocked);
     RECALC_SIGPENDING(current);
     SIG_UNLOCK(current);
-}
-
-void
-osi_linux_rxkreg(void)
-{
-    rxk_ListenerTask = current;
 }

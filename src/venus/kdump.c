@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.7 2007/03/20 19:24:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.8 2007/10/31 04:13:50 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -556,9 +556,6 @@ void print_cmstats();
 
 
 
-#ifndef AFS_KDUMP_LIB
-extern struct cmd_syndesc *cmd_CreateSyntax();
-#endif
 int opencore();
 
 #if	defined(AFS_HPUX_ENV) && defined(__LP64__)
@@ -828,10 +825,8 @@ symsrch(s)
 
 
 #ifndef AFS_KDUMP_LIB
-static
-cmdproc(as, arock)
-     register struct cmd_syndesc *as;
-     afs_int32 arock;
+static int
+cmdproc(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code = 0;
 
@@ -957,7 +952,7 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, 0,
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL,
 			  "Read internal cache manager structs");
     cmd_AddParm(ts, "-kobj", CMD_SINGLE, CMD_OPTIONAL,
 		"kernel object (default /vmunix)");

@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos release - Updates read-only volumes to match the read/write source volume
+vos_release - Updates read-only volumes to match the read/write source volume
 
 =head1 SYNOPSIS
 

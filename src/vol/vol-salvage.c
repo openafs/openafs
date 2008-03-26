@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.13 2007/09/07 04:05:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.14 2007/11/26 21:21:57 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -844,6 +844,7 @@ main(int argc, char **argv)
 #endif /* FAST_RESTART */
     err = cmd_Dispatch(argc, argv);
     Exit(err);
+    return 0; /* not reached */
 }
 
 /* Get the salvage lock if not already held. Hold until process exits. */

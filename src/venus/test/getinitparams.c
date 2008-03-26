@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/test/getinitparams.c,v 1.5 2003/07/15 23:17:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/test/getinitparams.c,v 1.5.2.1 2007/10/31 04:13:50 shadow Exp $");
 
 #include <afs/param.h>
 #include <stdio.h>
@@ -34,7 +34,7 @@ RCSID
 
 
 int
-GetInitParamsCmd(struct cmd_syndesc *as)
+GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cm_initparams cm_initParams;
     struct ViceIoctl blob;

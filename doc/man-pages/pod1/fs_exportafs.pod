@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs exportafs - Configures export of AFS to clients of other file systems
+fs_exportafs - Configures export of AFS to clients of other file systems
 
 =head1 SYNOPSIS
 

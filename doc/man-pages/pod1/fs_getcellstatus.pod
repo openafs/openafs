@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs getcellstatus - Reports whether setuid programs are honored in a cell
+fs_getcellstatus - Reports whether setuid programs are honored in a cell
 
 =head1 SYNOPSIS
 

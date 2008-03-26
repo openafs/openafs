@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup setexp - Sets the expiration date for existing dump levels.
+backup_setexp - Sets the expiration date for existing dump levels.
 
 =head1 SYNOPSIS
 

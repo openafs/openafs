@@ -14,13 +14,16 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18.2.3 2007/01/02 07:36:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18.2.6 2008/03/17 15:28:55 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics stuff */
 #include "h/modctl.h"
 #include "h/syscall.h"
+#if defined(AFS_SUN511_ENV)
+#include <sys/vfs_opreg.h>
+#endif
 #include <sys/kobj.h>
 
 
@@ -100,6 +103,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
     register afs_int32 code = 0;
     struct vrequest treq;
     register struct vcache *tvp = 0;
+    struct vcache *gvp;
     struct proc *proc = ttoproc(curthread);
     struct vnode *vp = afsp->vfs_vnodecovered;
     int locked = 0;
@@ -115,6 +119,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 
     AFS_STATCNT(afs_root);
 
+again:
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
@@ -125,8 +130,9 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 	}
 
 	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
+	    gvp = afs_globalVp;
 	    afs_globalVp = NULL;
+	    afs_PutVCache(gvp);
 	}
 
 	if (!(code = afs_InitReq(&treq, proc->p_cred))
@@ -134,6 +140,12 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
+		if (afs_globalVp) {
+		    /* someone else got there before us! */
+		    afs_PutVCache(tvp);
+		    tvp = 0;
+		    goto again;
+		}
 		afs_globalVp = tvp;
 	    } else
 		code = ENOENT;
@@ -245,7 +257,21 @@ afs_swapvp(struct vfs *afsp, struct vnode **avpp, char *nm)
 }
 
 
-#ifdef AFS_SUN510_ENV
+#if defined(AFS_SUN511_ENV)
+/* The following list must always be NULL-terminated */
+static const fs_operation_def_t afs_vfsops_template[] = {
+    VFSNAME_MOUNT,		{ .vfs_mount = afs_mount },
+    VFSNAME_UNMOUNT,		{ .vfs_unmount = afs_unmount },
+    VFSNAME_ROOT,		{ .vfs_root = afs_root },
+    VFSNAME_STATVFS,		{ .vfs_statvfs = afs_statvfs },
+    VFSNAME_SYNC,		{ .vfs_sync = afs_sync },
+    VFSNAME_VGET,		{ .vfs_vget = afs_vget },
+    VFSNAME_MOUNTROOT,  	{ .vfs_mountroot = afs_mountroot },
+    VFSNAME_FREEVFS,		{ .vfs_freevfs = fs_freevfs },
+    NULL,			NULL
+};
+struct vfsops *afs_vfsopsp;
+#elif defined(AFS_SUN510_ENV)
 /* The following list must always be NULL-terminated */
 const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_MOUNT,		afs_mount,
@@ -256,7 +282,7 @@ const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_VGET,		afs_vget,
     VFSNAME_MOUNTROOT,  	afs_mountroot,
     VFSNAME_FREEVFS,		fs_freevfs,
-    NULL,                     NULL
+    NULL,			NULL
 };
 struct vfsops *afs_vfsopsp;
 #else
@@ -391,12 +417,22 @@ afsinit(struct vfssw *vfsswp, int fstype)
 }
 
 #ifdef AFS_SUN510_ENV
+#ifdef AFS_SUN511_ENV
+static struct vfsdef_v4 afs_vfsdef = {
+    VFSDEF_VERSION,
+    "afs",
+    afsinit,
+    0,
+    NULL
+};
+#else
 static struct vfsdef_v3 afs_vfsdef = {
     VFSDEF_VERSION,
     "afs",
     afsinit,
     0
 };
+#endif
 #else
 static struct vfssw afs_vfw = {
     "afs",

@@ -16,15 +16,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-win.c,v 1.10 2003/07/15 23:14:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-win.c,v 1.10.2.2 2007/11/26 21:21:48 shadow Exp $");
 
 #include <stdio.h>
 #include <signal.h>
 #include <math.h>
 #include <cmd.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 #undef IN
 #include <time.h>
 
@@ -567,6 +565,7 @@ afsmonExit_gtx()
     }
 
     afsmon_Exit(0);
+    return 0; /* not reached */
 }
 
 
@@ -1581,7 +1580,7 @@ display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
 	    }
 	}
     }
-
+    return 0;
 }				/* display_Server_label */
 
 

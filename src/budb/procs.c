@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/procs.c,v 1.14 2003/12/07 22:49:19 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/budb/procs.c,v 1.14.2.1 2007/10/30 15:23:50 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -29,14 +29,7 @@ RCSID
 #include <sys/resource.h>
 #endif
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <afs/bubasics.h>

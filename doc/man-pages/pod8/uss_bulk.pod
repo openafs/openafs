@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss bulk - Executes multiple uss commands listed in a file
+uss_bulk - Executes multiple uss commands listed in a file
 
 =head1 SYNOPSIS
 

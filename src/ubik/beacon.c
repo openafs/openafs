@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/beacon.c,v 1.19.2.3 2004/10/18 17:44:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/beacon.c,v 1.19.2.6 2008/03/10 22:35:36 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -26,13 +26,7 @@ RCSID
 #endif
 #include <errno.h>
 #include <lock.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_multi.h>
@@ -83,6 +77,7 @@ static verifyInterfaceAddress();
  */
 
 /* procedure called from debug rpc call to get this module's state for debugging */
+void
 ubeacon_Debug(aparm)
      register struct ubik_debug *aparm;
 {
@@ -310,7 +305,8 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
  * we're sync site or we want to be the sync site.  It runs in its very own light-weight
  * process.
  */
-ubeacon_Interact()
+void *
+ubeacon_Interact(void *dummy)
 {
     register afs_int32 code;
     struct timeval tt;

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kadatabase.c,v 1.10.2.1 2004/08/25 07:09:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kadatabase.c,v 1.10.2.3 2007/11/26 21:21:52 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -19,14 +19,7 @@ RCSID
 #else
 #include <netinet/in.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-#include <lock.h>
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -114,6 +107,7 @@ static afs_int32 keyCacheVersion = 0;
 static afs_int32 maxKeyLifetime;
 static int dbfixup = 0;
 
+void
 init_kadatabase(initFlags)
      int initFlags;		/* same as init_kaprocs (see which) */
 {

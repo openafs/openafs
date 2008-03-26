@@ -20,7 +20,7 @@
 #include <security/pam_modules.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_setcred.c,v 1.13.2.1 2005/05/30 03:37:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_setcred.c,v 1.13.2.2 2007/12/10 18:29:41 shadow Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>
@@ -62,7 +62,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int auth_ok = 0;
     char *lh;
     char *user = NULL;
-    long password_expires = -1;
+    int password_expires = -1;
     char *reason = NULL;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */

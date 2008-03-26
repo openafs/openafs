@@ -1,6 +1,6 @@
 =head1 NAME
 
-vos remsite - Removes a read-only site definition from a VLDB entry
+vos_remsite - Removes a read-only site definition from a VLDB entry
 
 =head1 SYNOPSIS
 

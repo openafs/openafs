@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas examine - Displays information from an Authentication Database entry
+kas_examine - Displays information from an Authentication Database entry
 
 =head1 SYNOPSIS
 

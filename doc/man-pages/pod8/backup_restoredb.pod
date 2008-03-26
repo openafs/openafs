@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup restoredb - Restores a saved copy of the Backup Database
+backup_restoredb - Restores a saved copy of the Backup Database
 
 =head1 SYNOPSIS
 

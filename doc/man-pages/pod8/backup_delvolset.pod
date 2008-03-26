@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup delvolset - Deletes one or more volume sets from the Backup Database
+backup_delvolset - Deletes one or more volume sets from the Backup Database
 
 =head1 SYNOPSIS
 

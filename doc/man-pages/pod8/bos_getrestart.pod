@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos getrestart - Displays the automatic restart times for server processes
+bos_getrestart - Displays the automatic restart times for server processes
 
 =head1 SYNOPSIS
 

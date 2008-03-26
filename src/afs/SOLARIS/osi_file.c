@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_file.c,v 1.13.2.1 2006/11/09 23:26:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_file.c,v 1.13.2.3 2008/03/17 15:28:55 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -86,7 +86,11 @@ VnodeToIno(vnode_t * vp)
     struct vattr vattr;
 
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     if (code) {
 	osi_Panic("VnodeToIno");
     }
@@ -101,7 +105,11 @@ VnodeToDev(vnode_t * vp)
 
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_Panic("VnodeToDev");
@@ -122,7 +130,11 @@ VnodeToSize(vnode_t * vp)
     MObtainWriteLock(&afs_xosi, 578);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV
+    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_Panic("VnodeToSize");
@@ -224,7 +236,11 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     /* Ufs doesn't seem to care about the flags so we pass 0 for now */
     tvattr.va_mask = AT_ALL;
     AFS_GUNLOCK();
+#ifdef AFS_SUN511_ENV 
+    code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, NULL);
+#else
     code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;
@@ -398,8 +414,6 @@ afs_osi_MapStrategy(int (*aproc) (), register struct buf *bp)
 void
 shutdown_osifile(void)
 {
-    extern int afs_cold_shutdown;
-
     AFS_STATCNT(shutdown_osifile);
     if (afs_cold_shutdown) {
 	afs_osicred_initialized = 0;

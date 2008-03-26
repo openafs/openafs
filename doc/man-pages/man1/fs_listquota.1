@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_LISTQUOTA 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH FS_LISTQUOTA 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,7 +188,7 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-fs listquota \- Displays quota information for a volume
+fs_listquota \- Displays quota information for a volume
 .SH "SYNOPSIS"
 \fBfs listquota\fR <<\ [\fB\-path\fR\ <\fIdir/file\ path\fR+] >>> [\fB\-help\fR]
 .PP
@@ -205,6 +205,15 @@ To display more information about the host partition, use the \fBfs
 examine\fR command.
 .PP
 To set volume quota, use the \fBfs setquota\fR or \fBfs setvol\fR command.
+.SH "CAUTIONS"
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
+and the maximum size of a /vicepX partition on a fileserver is also 2
+terabytes. The fileserver will not report an error when it has access
+to a partition larger than 2 terabytes, but it will probably fail if
+the administrator attempts to use more than 2 terabytes of space. In
+addition, there are reports of erroneous disk usage numbers when
+\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
+partitions larger than 2 terabytes.
 .SH "OPTIONS"
 .Ip "\fB\-path\fR <\fIdir/file path\fR>+" 4
 Names a file or directory that resides in the volume about which to
@@ -261,13 +270,15 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "FS_LISTQUOTA 1"
-.IX Name "fs listquota - Displays quota information for a volume"
+.IX Name "fs_listquota - Displays quota information for a volume"
 
 .IX Header "NAME"
 
 .IX Header "SYNOPSIS"
 
 .IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
 
 .IX Header "OPTIONS"
 

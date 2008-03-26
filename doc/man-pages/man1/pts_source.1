@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_SOURCE 1 "OpenAFS" "17/Aug/2007" "AFS Command Reference"
+.TH PTS_SOURCE 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,13 +188,13 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts source \- Read pts commands from a file
+pts_source \- Read pts commands from a file
 .SH "SYNOPSIS"
 \fBpts source\fR <<\ [\fB\-file\fR]\ <\fIfile\ name\fR >>> <<\ [\fB\-cell\fR]\ <\fIcell\ name\fR >>>
-   [\fB\-noauth\fR] [\fB\-force\fR]
+   [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-force\fR]
 .PP
 \fBpts so\fR <<\ [\fB\-f\fR]\ <\fIfile\ name\fR >>> <<\ [\fB\-c\fR]\ <\fIcell\ name\fR >>>
-   [\fB\-n\fR] [\fB\-f\fR]
+   [\fB\-n\fR] [\fB\-l\fR] [\fB\-f\fR]
 .SH "DESCRIPTION"
 The \fBpts source\fR runs commands from a file as if they were typed in \fBpts
 interactive\fR mode. The command can be run from the command line or
@@ -219,6 +219,10 @@ if one of many operations fails.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the
+\fB\-cell\fR or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .SH "OUTPUT"
 This command shows the output of each comand in the file as if it were
 run normally.
@@ -242,12 +246,13 @@ the \fIpts_sleep(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
 .PP
-This documentation is covered by the IBM Public License Version 1.0. This
-man page was written by Jason Edgecombe for OpenAFS.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
 
 .rn }` ''
 .IX Title "PTS_SOURCE 1"
-.IX Name "pts source - Read pts commands from a file"
+.IX Name "pts_source - Read pts commands from a file"
 
 .IX Header "NAME"
 
@@ -266,6 +271,8 @@ man page was written by Jason Edgecombe for OpenAFS.
 .IX Item "\fB\-force\fR"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Header "OUTPUT"
 

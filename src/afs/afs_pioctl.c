@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.28 2007/08/22 02:15:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.31 2008/03/17 16:53:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -982,8 +982,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #if defined(AFS_SUN510_ENV)
     if (vp && !IsAfsVnode(vp)) {
 	struct vnode *realvp;
-	
-	if (VOP_REALVP(vp, &realvp) == 0) {
+	if
+#ifdef AFS_SUN511_ENV
+          (VOP_REALVP(vp, &realvp, NULL) == 0) 
+#else
+	  (VOP_REALVP(vp, &realvp) == 0) 
+#endif
+{
 	    struct vnode *oldvp = vp;
 	    
 	    VN_HOLD(realvp);
@@ -2773,7 +2778,8 @@ DECL_PIOCTL(PGetVnodeXStatus2)
 DECL_PIOCTL(PSetSysName)
 {
     char *cp, *cp2 = NULL, inname[MAXSYSNAME], outname[MAXSYSNAME];
-    int setsysname, foundname = 0;
+    afs_int32 setsysname;
+    int foundname = 0;
     register struct afs_exporter *exporter;
     register struct unixuser *au;
     register afs_int32 pag, error;
@@ -2790,7 +2796,7 @@ DECL_PIOCTL(PSetSysName)
 #endif
     }
     memset(inname, 0, MAXSYSNAME);
-    memcpy((char *)&setsysname, ain, sizeof(afs_int32));
+    memcpy(&setsysname, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (setsysname) {
 

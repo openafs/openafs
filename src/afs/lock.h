@@ -102,9 +102,15 @@ extern tid_t thread_self();
 #define MyPidxx2Pid(x) ((afs_int32)(x))
 #else /* AFS_AIX41_ENV */
 #if defined(AFS_HPUX101_ENV)
+#if defined(AFS_HPUX1111_ENV)
+typedef struct kthread * afs_lock_tracker_t;
+#define MyPidxx (u.u_kthreadp)
+#define MyPidxx2Pid(x) (x ? kt_tid(x) : 0)
+#else
 typedef struct proc * afs_lock_tracker_t;
 #define MyPidxx (u.u_procp)
 #define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
+#endif
 #else
 #if defined(AFS_SGI64_ENV)
 #if defined(AFS_SGI65_ENV)

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcudbprocs.c,v 1.14.2.2 2006/07/31 17:07:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcudbprocs.c,v 1.14.2.5 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -28,6 +28,7 @@ RCSID
 #include <rx/rx.h>
 #include <afs/afsint.h>
 #include <stdio.h>
+#include <string.h>
 #include <afs/procmgmt.h>
 #include <afs/assert.h>
 #include <afs/prs_fs.h>
@@ -52,6 +53,11 @@ RCSID
 extern int dump_namecheck;
 extern int autoQuery;
 
+static void initTapeBuffering();
+static writeDbDump();
+static restoreDbEntries();
+
+void * KeepAlive(void *);
 /* CreateDBDump
  *      create a dump entry for a saved database 
  */
@@ -409,8 +415,6 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
     extern struct tapeConfig globalTapeConfig;
     extern struct udbHandleS udbHandle;
 
-    extern int KeepAlive();
-
     blockSize = BUTM_BLKSIZE;
     writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
     if (!writeBlock)
@@ -620,10 +624,10 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
  *	dump backup database to tape
  */
 
-afs_int32
-saveDbToTape(saveDbIfPtr)
-     struct saveDbIf *saveDbIfPtr;
+void *
+saveDbToTape(void *param)
 {
+    struct saveDbIf *saveDbIfPtr = (struct saveDbIf *)param;
     afs_int32 code = 0;
     afs_int32 i;
     int wroteLabel;
@@ -905,7 +909,7 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
 }
 
 static afs_int32 nbytes = 0;	/* # bytes left in buffer */
-static
+static void
 initTapeBuffering()
 {
     nbytes = 0;
@@ -1014,10 +1018,10 @@ restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
  *	restore the backup database from tape.
  */
 
-afs_int32
-restoreDbFromTape(taskId)
-     afs_uint32 taskId;
+void *
+restoreDbFromTape(void *param)
 {
+    afs_uint32 taskId = (void *)param;
     afs_int32 code = 0;
     afs_int32 i;
     struct butm_tapeInfo tapeInfo;
@@ -1103,7 +1107,7 @@ restoreDbFromTape(taskId)
     LeaveDeviceQueue(deviceLatch);
     setStatus(taskId, TASK_DONE);
 
-    return (code);
+    return (void *)(code);
 }
 
 /* KeepAlive
@@ -1115,8 +1119,8 @@ restoreDbFromTape(taskId)
  *      
  *      Use the same udbHandle as writeDbDump so we go to the same server.
  */
-int
-KeepAlive()
+void *
+KeepAlive(void *unused)
 {
     charListT charList;
     afs_int32 code;

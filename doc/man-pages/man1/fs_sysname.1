@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_SYSNAME 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH FS_SYSNAME 1 "OpenAFS" "29/Nov/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,16 +188,16 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-fs sysname \- Reports or sets the CPU/operating system type
+fs_sysname \- Reports or sets the CPU/operating system type
 .SH "SYNOPSIS"
-\fBfs sysname\fR <<\ [\fB\-newsys\fR\ <\fInew\ sysname\fR] >>> [\fB\-help\fR]
+\fBfs sysname\fR <<\ [\fB\-newsys\fR\ <\fInew\ sysname\fR]+ >>> [\fB\-help\fR]
 .PP
-\fBfs sy\fR <<\ [\fB\-n\fR\ <\fInew\ sysname\fR] >>> [\fB\-h\fR]
+\fBfs sy\fR <<\ [\fB\-n\fR\ <\fInew\ sysname\fR]+ >>> [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBfs sysname\fR command sets or displays the local machine's
 CPU/operating system type as recorded in kernel memory. The Cache Manager
 substitutes the string for the \fI@sys\fR variable which can occur in AFS
-pathnames; the \fIIBM AFS Quick Beginnings\fR and \fIIBM AFS Administration
+pathnames; the \fIOpenAFS Quick Beginnings\fR and \fIOpenAFS Administration
 Guide\fR explain how using \fI@sys\fR can simplify cell configuration. It is
 best to use it sparingly, however, because it can make the effect of
 changing directories unpredictable.
@@ -215,10 +215,14 @@ the NFS client -- perhaps by using the UNIX \fBsu\fR command -- he or she
 must verify that the correct string is set for the new identity also.
 .SH "OPTIONS"
 .Ip "\fB\-newsys\fR <\fInew sysname\fR>" 4
-Sets the \s-1CPU/\s0operating system indicator string for the local machine. If
-this argument is omitted, the output displays the current setting
-instead. \s-1AFS\s0 uses a standardized set of strings; consult the \fI\s-1IBM\s0 \s-1AFS\s0
-Quick Beginnings\fR or \fI\s-1AFS\s0 Release Notes\fR.
+Sets the \s-1CPU/\s0operating system indicator string for the local machine. This
+option may be used multiple times in the same invocation, which sets \fI@sys\fR
+to an array of values. When \fI@sys\fR contains an array of values, the first
+value that matches a path is used.
+.Sp
+If this argument is omitted, the output displays the current setting
+instead. \s-1AFS\s0 uses a standardized set of strings; consult the \fIOpenAFS Quick
+Beginnings\fR or \fIOpenAFS Release Notes\fR.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -228,6 +232,11 @@ system type in the following format:
 .PP
 .Vb 1
 \&   Current sysname is '<system_type>'
+.Ve
+When the \fB\-newsys\fR argument is included, the output is the following:
+.PP
+.Vb 1
+\&   fs: new sysname list set.
 .Ve
 .SH "EXAMPLES"
 The following example shows the output produced on a Sun SPARCStation
@@ -243,6 +252,18 @@ The following command defines a machine to be a IBM RS/6000 running AIX
 .Vb 1
 \&   % fs sysname -newsys rs_aix42
 .Ve
+The following command defines a machine to be Mac OS X PPC and a
+custom type \*(L'foo\*(R'. The second command queries the new sysname:
+.PP
+.Vb 4
+\&   % fs sysname -newsys ppc_darwin_80 -newsys foo
+\&   fs: new sysname list set.
+\&   % fs sysname
+\&   Current sysname list is 'ppc_darwin_80' 'foo'
+.Ve
+If \fI@sys\fR is \f(CWppc_darwin_80 foo\fR, then \f(CWcd @sys\fR will try to change
+to the \f(CWppc_darwin_80\fR directory. If the \f(CWppc_darwin_80\fR directory
+doesn't exist, then the \f(CWfoo\fR directory is tried.
 .SH "PRIVILEGE REQUIRED"
 To display the current setting, no privilege is required. To include the
 \fB\-newsys\fR argument on an AFS client machine, the issuer must be logged in
@@ -251,9 +272,14 @@ as the local superuser \f(CWroot\fR.
 the \fIfs_exportafs(1)\fR manpage,
 the \fIsys(1)\fR manpage
 .PP
-\fIIBM AFS Quick Beginnings\fR
+\fIOpenAFS Quick Beginnings\fR
+the section on \fI/www.openafs.org/pages/doc/QuickStartUnix/auqbg000.htm\fR in the \fIhttp:\fR manpage
 .PP
-\fIIBM AFS Administration Guide\fR
+\fIOpenAFS Administration Guide\fR
+the section on \fI/www.openafs.org/pages/doc/AdminGuide/auagd000.htm\fR in the \fIhttp:\fR manpage
+.PP
+For the list of assigned standard sysname values, see
+the section on \fI/grand.central.org/numbers/systypes.html\fR in the \fIhttp:\fR manpage
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP
@@ -263,7 +289,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "FS_SYSNAME 1"
-.IX Name "fs sysname - Reports or sets the CPU/operating system type"
+.IX Name "fs_sysname - Reports or sets the CPU/operating system type"
 
 .IX Header "NAME"
 

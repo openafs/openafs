@@ -183,6 +183,25 @@ additional information as described in L<OPTIONS>. The output is intended
 for debugging purposes and is meaningful to someone familiar with the
 implementation of Rx.
 
+=head1 EXAMPLES
+
+The following command shows Rx statistics on the server 192.168.1.100:
+
+   % rxdebug  192.168.1.100
+   Trying 192.168.1.100 (port 7000):
+   Free packets: 265, packet reclaims: 0, calls: 0, used FDs: 34
+   not waiting for packets.
+   0 calls waiting for a thread
+   11 threads are idle
+   Done.
+
+The following command shows the OpenAFS version running on the server
+192.168.1.100:
+
+   % rxdebug  192.168.1.100 -version
+   Trying 192.168.1.100 (port 7000):
+   AFS version:  OpenAFS 1.4.2fc2 built  2006-08-31 
+
 =head1 PRIVILEGE REQUIRED
 
 None.

@@ -23,12 +23,6 @@
 #define _RX_
 
 #ifndef KDUMP_RX_LOCK
-/* Substitute VOID (char) for void, because some compilers are confused by void
- * in some situations */
-#ifndef AFS_NT40_ENV
-#define	VOID	char
-#endif
-
 #ifdef	KERNEL
 #include "rx_kmutex.h"
 #include "rx_kernel.h"
@@ -46,6 +40,7 @@
 #else /* KERNEL */
 # include <sys/types.h>
 # include <stdio.h>
+# include <string.h>
 #ifdef AFS_PTHREAD_ENV
 # include "rx_pthread.h"
 #else
@@ -257,7 +252,7 @@ struct rx_connection {
     u_char securityIndex;	/* corresponds to the security class of the */
     /* securityObject for this conn */
     struct rx_securityClass *securityObject;	/* Security object for this connection */
-    VOID *securityData;		/* Private data for this conn's security class */
+    void *securityData;		/* Private data for this conn's security class */
     u_short securityHeaderSize;	/* Length of security module's packet header data */
     u_short securityMaxTrailerSize;	/* Length of security module's packet trailer data */
 
@@ -508,8 +503,8 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
-    void (*arrivalProc) (register struct rx_call * call, register VOID * mh, register int index);	/* Procedure to call when reply is received */
-    VOID *arrivalProcHandle;	/* Handle to pass to replyFunc */
+    void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
+    void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
     afs_uint32 startWait;	/* time server began waiting for input data/send quota */
@@ -693,6 +688,21 @@ struct rx_securityObjectStats {
     afs_int32 sparel[8];
 };
 
+/* Configuration settings */
+
+/* Enum for storing configuration variables which can be set via the 
+ * SetConfiguration method in the rx_securityClass, below
+ */
+
+typedef enum {
+     RXS_CONFIG_FLAGS /* afs_uint32 set of bitwise flags */
+} rx_securityConfigVariables;
+
+/* For the RXS_CONFIG_FLAGS, the following bit values are defined */
+
+/* Disable the principal name contains dot check in rxkad */
+#define RXS_CONFIG_FLAGS_DISABLE_DOTCHECK	0x01
+
 /* XXXX (rewrite this description) A security class object contains a set of
  * procedures and some private data to implement a security model for rx
  * connections.  These routines are called by rx as appropriate.  Rx knows
@@ -733,11 +743,15 @@ struct rx_securityClass {
 	int (*op_GetStats) (struct rx_securityClass * aobj,
 			    struct rx_connection * aconn,
 			    struct rx_securityObjectStats * astats);
-	int (*op_Spare1) (void);
+	int (*op_SetConfiguration) (struct rx_securityClass * aobj,
+				    struct rx_connection * aconn,
+				    rx_securityConfigVariables atype,
+				    void * avalue,
+				    void ** acurrentValue);
 	int (*op_Spare2) (void);
 	int (*op_Spare3) (void);
     } *ops;
-    VOID *privateData;
+    void *privateData;
     int refCount;
 };
 
@@ -755,7 +769,7 @@ struct rx_securityClass {
 #define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
 #define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
-
+#define RXS_SetConfiguration(obj, conn, type, value, currentValue) RXS_OP(obj, SetConfiguration,(obj,conn,type,value,currentValue))
 
 
 /* Structure for keeping rx statistics.  Note that this structure is returned

@@ -1,6 +1,6 @@
 =head1 NAME
 
-kas create - Creates an entry in the Authentication Database
+kas_create - Creates an entry in the Authentication Database
 
 =head1 SYNOPSIS
 

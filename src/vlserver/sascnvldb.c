@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/sascnvldb.c,v 1.7 2003/07/15 23:17:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/sascnvldb.c,v 1.7.2.1 2007/10/31 04:13:51 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -21,6 +21,7 @@ RCSID
 #include "cnvldb.h"		/* CHANGEME! */
 #include <netinet/in.h>
 #include <afs/venus.h>
+#include <afs/cmd.h>
 
 #ifdef notdef
 #include <afs/vice.h>
@@ -37,7 +38,6 @@ RCSID
 #define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 
 
-extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
 static char space[MAXSIZE];
@@ -149,9 +149,8 @@ QuickPrintStatus(status, name)
 }
 
 
-static
-ListQuotaCmd(as)
-     register struct cmd_syndesc *as;
+static int
+ListQuotaCmd(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct ViceIoctl blob;

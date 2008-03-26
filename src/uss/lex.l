@@ -11,16 +11,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/uss/lex.l,v 1.1 2003/06/19 16:55:10 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/uss/lex.l,v 1.1.2.3 2007/12/10 18:24:15 shadow Exp $");
 
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "y.tab.h"
 #include "uss_common.h"
@@ -30,6 +24,7 @@ int line=1;
 #else
 #define dprint(x)
 #endif
+void Replace(char *in, char *out);
 %}
 
 /* definitions */
@@ -76,6 +71,7 @@ EOL	[\n]
  * and replaces the second with a null.
  */
 
+void
 Replace(in, out)
     char *in, *out;
 

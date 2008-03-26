@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.5 2005/10/05 05:58:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.8 2007/11/26 21:21:56 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -27,13 +27,7 @@ RCSID
 #undef abs
 #include <stdlib.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <afs/stds.h>
 #include <afs/cmd.h>
@@ -87,6 +81,7 @@ struct logInfo {
 } *allInfo = 0;
 
 char dumpFileName[256] = "";
+void
 RegisterIclDumpFileName(name)
      char *name;
 {
@@ -258,7 +253,7 @@ CheckTypes(bufferp, typesp, typeCount)
 #if defined(AFS_SGI61_ENV) && !defined(AFS_SGI62_ENV)
 #define uint64_t long long
 #endif
-static
+static void
 DisplayRecord(outFilep, alp, rsize)
      FILE *outFilep;
      register afs_int32 *alp;
@@ -2709,10 +2704,8 @@ GetBulkLogInfo()
 }
 
 
-static
-DoDump(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoDump(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     afs_int32 tcode;
@@ -2788,7 +2781,7 @@ SetUpDump()
     struct cmd_syndesc *dumpSyntax;
 
     dumpSyntax =
-	cmd_CreateSyntax("dump", DoDump, (char *)NULL, "dump AFS trace logs");
+	cmd_CreateSyntax("dump", DoDump, NULL, "dump AFS trace logs");
     (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
     (void)cmd_AddParm(dumpSyntax, "-follow", CMD_SINGLE, CMD_OPTIONAL,
 		      "log_name");
@@ -2798,10 +2791,8 @@ SetUpDump()
 		      "seconds_between_reads");
 }
 
-static
-DoShowLog(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoShowLog(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -2864,17 +2855,15 @@ SetUpShowLog()
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lslog", DoShowLog, (char *)NULL,
+	cmd_CreateSyntax("lslog", DoShowLog, NULL,
 			 "list available logs");
     (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
     (void)cmd_AddParm(showSyntax, "-log", CMD_LIST, CMD_OPTIONAL, "log_name");
     (void)cmd_AddParm(showSyntax, "-long", CMD_FLAG, CMD_OPTIONAL, "");
 }
 
-static
-DoShowSet(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoShowSet(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -2922,15 +2911,13 @@ SetUpShowSet()
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lsset", DoShowSet, (char *)NULL,
+	cmd_CreateSyntax("lsset", DoShowSet, NULL,
 			 "list available event sets");
     (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
 }
 
-static
-DoClear(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoClear(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -2981,7 +2968,7 @@ SetUpClear()
     struct cmd_syndesc *clearSyntax;
 
     clearSyntax =
-	cmd_CreateSyntax("clear", DoClear, (char *)NULL,
+	cmd_CreateSyntax("clear", DoClear, NULL,
 			 "clear logs by logname or by event set");
     (void)cmd_AddParm(clearSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "set_name");
@@ -2989,10 +2976,8 @@ SetUpClear()
 		      "log_name");
 }
 
-static
-DoSet(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoSet(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -3070,7 +3055,7 @@ SetUpSet()
     struct cmd_syndesc *setSyntax;
 
     setSyntax =
-	cmd_CreateSyntax("setset", DoSet, (char *)NULL,
+	cmd_CreateSyntax("setset", DoSet, NULL,
 			 "set state of event sets");
     (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
     (void)cmd_AddParm(setSyntax, "-active", CMD_FLAG, CMD_OPTIONAL, "");
@@ -3078,10 +3063,8 @@ SetUpSet()
     (void)cmd_AddParm(setSyntax, "-dormant", CMD_FLAG, CMD_OPTIONAL, "");
 }
 
-static
-DoResize(as, arock)
-     register struct cmd_syndesc *as;
-     char *arock;
+static int
+DoResize(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -3129,7 +3112,7 @@ SetUpResize()
     struct cmd_syndesc *setsizeSyntax;
 
     setsizeSyntax =
-	cmd_CreateSyntax("setlog", DoResize, (char *)NULL,
+	cmd_CreateSyntax("setlog", DoResize, NULL,
 			 "set the size of a log");
     (void)cmd_AddParm(setsizeSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
 		      "log_name");

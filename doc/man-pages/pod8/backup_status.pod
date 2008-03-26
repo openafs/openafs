@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup status - Reports a Tape Coordinator's status
+backup_status - Reports a Tape Coordinator's status
 
 =head1 SYNOPSIS
 

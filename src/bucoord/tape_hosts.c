@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/tape_hosts.c,v 1.7.2.3 2007/04/10 18:43:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/tape_hosts.c,v 1.7.2.4 2007/10/31 04:13:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -49,10 +49,8 @@ extern char *whoami;
  *	Add a host to the tape hosts
  */
 
-afs_int32
-bc_AddHostCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_AddHostCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     udbClientTextP ctPtr;
@@ -107,10 +105,8 @@ bc_AddHostCmd(as, arock)
     return (code);
 }
 
-afs_int32
-bc_DeleteHostCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_DeleteHostCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     afs_int32 port = 0;
@@ -174,10 +170,8 @@ bc_DeleteHostCmd(as, arock)
  *	ignored
  */
 
-afs_int32
-bc_ListHostsCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+bc_ListHostsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     register struct bc_hostEntry *tentry;

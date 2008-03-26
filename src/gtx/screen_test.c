@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/screen_test.c,v 1.7 2003/07/15 23:15:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/screen_test.c,v 1.7.2.1 2007/10/31 04:13:38 shadow Exp $");
 
 #include "gtxwindows.h"		/*Generalized window interface */
 #include "gtxcurseswin.h"	/*Curses window interface */
@@ -224,10 +224,7 @@ test_this_package(pkg)
  *--------------------------------------------------------------------------------*/
 
 static int
-screen_testInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+screen_testInit(struct cmd_syndesc *as, void *arock)
 {				/*screen_testInit */
 
     static char rn[] = "screen_testInit";	/*Routine name */
@@ -280,7 +277,7 @@ main(argc, argv)
      * There really aren't any opcodes here, but we do want to interpret switches
      * from the command line.  So, all we need do is set up the initcmd ``opcode''.
      */
-    ts = cmd_CreateSyntax("initcmd", screen_testInit, 0,
+    ts = cmd_CreateSyntax("initcmd", screen_testInit, NULL,
 			  "Initialize, interpret command line");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

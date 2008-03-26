@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs cleanacl - Remove obsolete entries from an ACL
+fs_cleanacl - Remove obsolete entries from an ACL
 
 =head1 SYNOPSIS
 

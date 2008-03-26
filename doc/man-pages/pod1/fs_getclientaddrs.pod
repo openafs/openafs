@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs getclientaddrs - Displays the client interfaces to register
+fs_getclientaddrs - Displays the client interfaces to register
 
 =head1 SYNOPSIS
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.4 2007/08/11 23:54:04 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.7 2008/03/18 15:59:07 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -50,9 +50,16 @@ struct sourcestack {
     FILE *s_file;
 } *shead;
 
+struct authstate {
+    int sec;
+    const char *confdir;
+    char cell[MAXCELLCHARS];
+};
+
 int
 pts_Interactive(register struct cmd_syndesc *as)
 {
+    source = stdin;
     finished = 0;
     return 0;
 }
@@ -130,39 +137,78 @@ osi_audit()
 }
 
 int
-GetGlobals(register struct cmd_syndesc *as)
+GetGlobals(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
-    char *cell;
-    afs_int32 sec = 1;
+    struct authstate *state = (struct authstate *) arock;
+    afs_int32 code;
+    char *cell = NULL;
+    afs_int32 sec;
+    int changed = 0;
+    const char* confdir;
 
     whoami = as->a0name;
 
     if (!strcmp(as->name, "help"))
 	return 0;
-    if (as->parms[16].items)
-	cell = as->parms[16].items->data;
-    else
-	cell = 0;
-    if (as->parms[17].items)
-	sec = 0;
 
-    if (as->parms[18].items) {	/* testing? */
-	code = pr_Initialize(sec, AFSDIR_SERVER_ETC_DIRPATH, cell);
+    if (*state->cell) {
+	cell = state->cell;
+    }
+    sec = state->sec;
+
+    if (state->confdir == NULL) {
+	changed = 1;
+    }
+
+    if (as->parms[16].items) {
+	changed = 1;
+	cell = as->parms[16].items->data;
+    }
+    if (as->parms[17].items) { /* -noauth */
+	changed = 1;
+	sec = 0;
+    }
+    if (as->parms[20].items) { /* -localauth */
+	changed = 1;
+	sec = 2;
+    }
+    if (as->parms[21].items) { /* -auth */
+	changed = 1;
+	sec = 1;
+    }
+    if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
+	changed = 1;
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
     } else {
-	code = pr_Initialize(sec, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+	if (sec == 2)
+	    confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	else 
+	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    }
+    if (changed) {
+	CleanUp(as, arock);
+	code = pr_Initialize(sec, confdir, cell);
+    } else {
+	code = 0;
     }
     if (code) {
 	afs_com_err(whoami, code, "while initializing");
 	return code;
     }
+    state->sec = sec;
+    state->confdir = confdir;
+    if (cell && cell != state->cell)
+	strncpy(state->cell, cell, MAXCELLCHARS-1);
+
+    force = 0;
     if (as->parms[19].items)
 	force = 1;
+
     return code;
 }
 
 int
-CleanUp(register struct cmd_syndesc *as)
+CleanUp(register struct cmd_syndesc *as, void *arock)
 {
     if (as && !strcmp(as->name, "help"))
 	return 0;
@@ -704,7 +750,7 @@ ListEntries(struct cmd_syndesc *as)
 	    pr_ListEntries(flag, startindex, &nentries, &entriesp,
 			   &nextstartindex);
 	if (code) {
-	    afs_com_err(whoami, code, "; unable to list entries\n");
+	    afs_com_err(whoami, code, "; unable to list entries");
 	    if (entriesp)
 		free(entriesp);
 	    break;
@@ -972,6 +1018,10 @@ add_std_args(register struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-test", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, test_help);
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"Continue oper despite reasonable errors");
+    cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
+		"use local authentication");
+    cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
+		"use user's authentication (default)");
 }
 
 /*
@@ -996,6 +1046,7 @@ main(int argc, char **argv)
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
+    struct authstate state;
 
 #ifdef WIN32
     WSADATA WSAjunk;
@@ -1020,7 +1071,10 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax("creategroup", CreateGroup, 0,
+    memset(&state, 0, sizeof(state));
+    state.sec = 1; /* default is auth */
+
+    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
 			  "create a new group");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_OPTIONAL, "owner of the group");
@@ -1029,60 +1083,60 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "cg");
 
-    ts = cmd_CreateSyntax("createuser", CreateUser, 0, "create a new user");
+    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, "create a new user");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "cu");
 
-    ts = cmd_CreateSyntax("adduser", AddToGroup, 0, "add a user to a group");
+    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, 0,
+    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL,
 			  "remove a user from a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("membership", ListMembership, 0,
+    ts = cmd_CreateSyntax("membership", ListMembership, NULL,
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 
-    ts = cmd_CreateSyntax("delete", Delete, 0,
+    ts = cmd_CreateSyntax("delete", Delete, NULL,
 			  "delete a user or group from database");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("examine", CheckEntry, 0, "examine an entry");
+    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, "examine an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "check");
 
-    ts = cmd_CreateSyntax("chown", ChownGroup, 0,
+    ts = cmd_CreateSyntax("chown", ChownGroup, NULL,
 			  "change ownership of a group");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "new owner");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("rename", ChangeName, 0, "rename user or group");
+    ts = cmd_CreateSyntax("rename", ChangeName, NULL, "rename user or group");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, 0, "old name");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "new name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "chname");
 
-    ts = cmd_CreateSyntax("listmax", ListMax, 0, "list max id");
+    ts = cmd_CreateSyntax("listmax", ListMax, NULL, "list max id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setmax", SetMax, 0, "set max id");
+    ts = cmd_CreateSyntax("setmax", SetMax, NULL, "set max id");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_OPTIONAL, "group max");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_OPTIONAL, "user max");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setfields", SetFields, 0,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
 			  "set fields for an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-access", CMD_SINGLE, CMD_OPTIONAL, "set privacy flags");
@@ -1094,42 +1148,42 @@ main(int argc, char **argv)
 #endif
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listowned", ListOwned, 0,
+    ts = cmd_CreateSyntax("listowned", ListOwned, NULL,
 			  "list groups owned by an entry or zero id gets orphaned groups");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listentries", ListEntries, 0,
+    ts = cmd_CreateSyntax("listentries", ListEntries, NULL,
 			  "list users/groups in the protection database");
     cmd_AddParm(ts, "-users", CMD_FLAG, CMD_OPTIONAL, "list user entries");
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", pts_Interactive, 0,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", pts_Quit, 0, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", pts_Source, 0, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, NULL, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", pts_Sleep, 0, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-    cmd_SetBeforeProc(GetGlobals, 0);
+    cmd_SetBeforeProc(GetGlobals, &state);
 
     finished = 1;
+    source = NULL;
     if (code = cmd_Dispatch(argc, argv)) {
-	CleanUp(0);
+	CleanUp(NULL, NULL);
 	exit(1);
     }
-    source = stdin;
-    while (!finished) {
+    while (source && !finished) {
 	if (isatty(fileno(source)))
 	    fprintf(stderr, "pts> ");
 	if (!fgets(line, sizeof line, source)) {
@@ -1160,7 +1214,7 @@ main(int argc, char **argv)
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
-    CleanUp(0);
+    CleanUp(NULL, NULL);
     exit(0);
 }
 

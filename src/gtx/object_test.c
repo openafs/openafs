@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/object_test.c,v 1.7 2003/07/15 23:15:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/object_test.c,v 1.7.2.1 2007/10/31 04:13:38 shadow Exp $");
 
 #include "gtxscreenobj.h"	/*Gator screen object interface */
 #include "gtxtextobj.h"		/*Gator text object interface */
@@ -386,10 +386,7 @@ test_objects(pkg)
  *------------------------------------------------------------------------*/
 
 static int
-object_testInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+object_testInit(struct cmd_syndesc *as, void *arock)
 {				/*object_testInit */
 
     static char rn[] = "object_testInit";	/*Routine name */
@@ -442,7 +439,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", object_testInit, 0,
+    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL,
 			  "Initialize the program");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

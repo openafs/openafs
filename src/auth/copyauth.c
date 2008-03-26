@@ -11,16 +11,9 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/copyauth.c,v 1.6 2003/07/15 23:14:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/copyauth.c,v 1.6.2.2 2007/11/01 16:09:43 shadow Exp $");
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <sys/types.h>
 #include "auth.h"
 #ifdef AFS_NT40_ENV
@@ -35,9 +28,8 @@ RCSID
 
 char whoami[256];
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     char localName[64];
     register afs_int32 code;

@@ -91,6 +91,9 @@
 /* define if you have connect */
 #undef HAVE_CONNECT
 
+/* define if current_kernel_time() exists */
+#undef HAVE_CURRENT_KERNEL_TIME
+
 /* Define to 1 if you have the `daemon' function. */
 #undef HAVE_DAEMON
 
@@ -125,6 +128,9 @@
 /* Define to 1 if you have the `getprogname' function. */
 #undef HAVE_GETPROGNAME
 
+/* define if your kernel has iget */
+#undef HAVE_IGET
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -158,11 +164,23 @@
 /* Define to 1 if you have the `krb5_524_convert_creds' function. */
 #undef HAVE_KRB5_524_CONVERT_CREDS
 
+/* define if krb5_cc_register exists */
+#undef HAVE_KRB5_CC_REGISTER
+
 /* define if krb5_creds has keyblock */
 #undef HAVE_KRB5_CREDS_KEYBLOCK
 
 /* define if krb5_creds has session */
 #undef HAVE_KRB5_CREDS_SESSION
+
+/* Define to 1 if you have the `krb5_c_encrypt' function. */
+#undef HAVE_KRB5_C_ENCRYPT
+
+/* Define to 1 if you have the `krb5_c_encrypt_length' function. */
+#undef HAVE_KRB5_C_ENCRYPT_LENGTH
+
+/* Define to 1 if you have the `krb5_decode_ticket' function. */
+#undef HAVE_KRB5_DECODE_TICKET
 
 /* Define to 1 if you have the `krb5_principal_get_comp_string' function. */
 #undef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
@@ -193,6 +211,9 @@
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <poll.h> header file. */
+#undef HAVE_POLL_H
 
 /* define if you have POSIX regex library */
 #undef HAVE_POSIX_REGEX
@@ -352,6 +373,9 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
+/* Define to 1 if you have the `vsyslog' function. */
+#undef HAVE_VSYSLOG
+
 /* Define to 1 if you have the <windows.h> header file. */
 #undef HAVE_WINDOWS_H
 
@@ -378,6 +402,12 @@
 
 /* define if key_alloc takes a struct task * */
 #undef KEY_ALLOC_NEEDS_STRUCT_TASK
+
+/* define if key-type.h exists */
+#undef KEY_TYPE_H_EXISTS
+
+/* define for new kmem_cache init function parameters */
+#undef KMEM_CACHE_INIT
 
 /* define if kmem_cache_create takes a destructor argument */
 #undef KMEM_CACHE_TAKES_DTOR
@@ -450,6 +480,9 @@
 /* define if your struct file_operations has sendfile */
 #undef STRUCT_FILE_OPERATIONS_HAS_SENDFILE
 
+/* define if your struct file_operations has splice_write and splice_read */
+#undef STRUCT_FILE_OPERATIONS_HAS_SPLICE
+
 /* define if struct fs has fs_rolled */
 #undef STRUCT_FS_HAS_FS_ROLLED
 
@@ -485,6 +518,9 @@
 
 /* define if your struct inode has truncate_sem */
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+
+/* define if your struct nameidata has path */
+#undef STRUCT_NAMEIDATA_HAS_PATH
 
 /* define if you struct sockaddr sa_len */
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
@@ -527,6 +563,9 @@
 
 /* define if you want to have support for nested pts groups */
 #undef SUPERGROUPS
+
+/* define if your kernel has sysctl table checking */
+#undef SYSCTL_TABLE_CHECKING
 
 /* define if your kernel has a usable symlink cache API */
 #undef USABLE_KERNEL_PAGE_SYMLINK_CACHE

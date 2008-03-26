@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dump.c,v 1.12.2.3 2007/04/10 18:43:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dump.c,v 1.12.2.5 2008/03/10 22:35:34 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -178,6 +178,7 @@ bc_Dumper(aindex)
  *	free the list of volumes used for dumps
  */
 
+void
 freeDumpTaskVolumeList(vdptr)
      struct bc_volumeDump *vdptr;
 {
@@ -198,9 +199,10 @@ freeDumpTaskVolumeList(vdptr)
  *     The other half of the dump/restore create process call. In bc_StartDmpRst, 
  *     we allocated a dumpTask entry. Here we do the task and then free the entry.
  */
-bc_DmpRstStart(aindex)
-     afs_int32 aindex;
+void *
+bc_DmpRstStart(void *param)
 {
+    afs_int32 aindex = (afs_int32) param;
     register struct bc_dumpTask *tdump;
     register afs_int32 code;
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.11 2003/12/07 22:49:29 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.11.2.1 2007/10/30 15:23:54 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -32,14 +32,7 @@ RCSID
 #else
 #include <unistd.h>
 #endif
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 typedef struct bos_server {
     int begin_magic;

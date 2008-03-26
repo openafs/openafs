@@ -12,9 +12,10 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dlq.c,v 1.9.2.1 2007/01/05 03:34:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dlq.c,v 1.9.2.2 2007/11/26 21:21:50 shadow Exp $");
 
 #include "bc.h"
 #include <afs/bubasics.h>

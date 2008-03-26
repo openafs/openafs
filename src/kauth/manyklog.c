@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/manyklog.c,v 1.7.2.1 2007/04/10 18:43:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/manyklog.c,v 1.7.2.2 2007/10/31 04:13:39 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -63,7 +63,7 @@ RCSID
 #define KLOGEXIT(code) assert(!code || code >= KAMINERROR); \
                        rx_Finalize(); \
                        (!code ? exit(0) : exit((code)-KAMINERROR+1))
-int CommandProc();
+static int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
@@ -97,7 +97,7 @@ main(argc, argv)
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -152,9 +152,8 @@ getpipepass()
     return gpbuf;
 }
 
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];

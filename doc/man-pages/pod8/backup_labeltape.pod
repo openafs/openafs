@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup labeltape - Creates the magnetic label on a tape
+backup_labeltape - Creates the magnetic label on a tape
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup dump - Creates a dump (dumps a volume set at a particular dump level)
+backup_dump - Creates a dump (dumps a volume set at a particular dump level)
 
 =head1 SYNOPSIS
 

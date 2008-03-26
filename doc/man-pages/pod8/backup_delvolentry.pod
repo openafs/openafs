@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup delvolentry - Deletes a volume entry from a volume set
+backup_delvolentry - Deletes a volume entry from a volume set
 
 =head1 SYNOPSIS
 

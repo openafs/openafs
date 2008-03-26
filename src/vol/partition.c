@@ -21,9 +21,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.4.2.1 2007/12/13 21:01:58 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.6 2007/11/29 21:40:09 shadow Exp $");
 
 #include <ctype.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <winbase.h>
@@ -104,14 +105,6 @@ RCSID
 #include <stdio.h>
 #include <sys/file.h>
 #include <mntent.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #endif
 
 #include <rx/xdr.h>

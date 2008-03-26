@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vnodeops.c,v 1.18.2.2 2006/06/23 14:21:12 rees Exp $
+ * $Id: osi_vnodeops.c,v 1.18.2.5 2008/01/08 17:06:59 rees Exp $
  */
 
 /*
@@ -99,7 +99,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.18.2.2 2006/06/23 14:21:12 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.18.2.5 2008/01/08 17:06:59 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -920,6 +920,12 @@ afs_nbsd_reclaim(void *v)
 #endif
 }
 
+#ifdef AFS_OBSD42_ENV
+#define VP_INTERLOCK NULL
+#else
+#define VP_INTERLOCK (&vp->v_interlock)
+#endif
+
 int
 afs_nbsd_lock(void *v)
 {
@@ -933,8 +939,7 @@ afs_nbsd_lock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_lock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
-		   ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, VP_INTERLOCK, ap->a_p);
 }
 
 int
@@ -950,8 +955,7 @@ afs_nbsd_unlock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_unlock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
-		   ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, VP_INTERLOCK, ap->a_p);
 }
 
 int
@@ -968,7 +972,7 @@ afs_nbsd_bmap(void *v)
 
     AFS_STATCNT(afs_bmap);
     if (ap->a_bnp)
-	ap->a_bnp = (daddr_t *) (ap->a_bn * (8192 / DEV_BSIZE));
+	*ap->a_bnp = ap->a_bn * btodb(8192);
     if (ap->a_vpp)
 	*ap->a_vpp = (vcp) ? AFSTOV(vcp) : NULL;
     return 0;
@@ -994,15 +998,14 @@ afs_nbsd_strategy(void *v)
     tuio.afsio_iovcnt = 1;
     tuio.afsio_seg = AFS_UIOSYS;
     tuio.afsio_resid = len;
-    tiovec[0].iov_base = abp->b_un.b_addr;
+    tiovec[0].iov_base = abp->b_data;
     tiovec[0].iov_len = len;
 
     AFS_GLOCK();
     if ((abp->b_flags & B_READ) == B_READ) {
 	code = afs_rdwr(tvc, &tuio, UIO_READ, 0, credp);
 	if (code == 0 && tuio.afsio_resid > 0)
-	    bzero(abp->b_un.b_addr + len - tuio.afsio_resid,
-		  tuio.afsio_resid);
+	    bzero(abp->b_data + len - tuio.afsio_resid, tuio.afsio_resid);
     } else
 	code = afs_rdwr(tvc, &tuio, UIO_WRITE, 0, credp);
     AFS_GUNLOCK();

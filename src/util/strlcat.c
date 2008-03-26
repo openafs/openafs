@@ -18,11 +18,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/strlcat.c,v 1.2 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/strlcat.c,v 1.2.2.1 2007/10/31 04:26:29 shadow Exp $");
 
 #ifndef HAVE_STRLCAT
 
 #include <sys/types.h>
+#include <string.h>
 
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the

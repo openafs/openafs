@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos adduser - Adds a privileged user to the UserList file
+bos_adduser - Adds a privileged user to the UserList file
 
 =head1 SYNOPSIS
 

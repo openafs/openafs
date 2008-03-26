@@ -52,7 +52,7 @@ extern int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart,
 			    afs_int32 tovolid, char tovolname[], int flags,
 			    afs_int32(*WriteData) (), char *rock);
 extern int UV_LockRelease(afs_int32 volid);
-extern int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid);
+extern int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid, afs_int32 valid);
 extern int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid);
 extern int UV_ChangeLocation(afs_int32 server, afs_int32 part,
 			     afs_int32 volid);

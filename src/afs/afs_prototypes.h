@@ -195,7 +195,12 @@ extern void afs_InitCBQueue(int doLockInit);
 extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
+extern afs_int32 afs_cellindex;
 extern afs_rwlock_t afs_xcell;
+#ifdef AFS_AFSDB_ENV
+extern afs_rwlock_t afsdb_client_lock;
+extern afs_rwlock_t afsdb_req_lock;
+#endif
 extern struct afs_q CellLRU;           
 
 extern void afs_CellInit(void);
@@ -466,6 +471,7 @@ extern struct afs_exporter *afs_nfsexporter;
 /* afs_osi.c */
 extern afs_lock_t afs_ftf;
 extern void afs_osi_Invisible(void);
+extern void afs_osi_Visible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
@@ -554,7 +560,6 @@ extern void osi_linux_free_inode_pages(void);
 #endif
 extern void osi_linux_mask(void);
 extern void osi_linux_unmask(void);
-extern void osi_linux_rxkreg(void);
 extern int setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
 		  int change_parent);
 #endif

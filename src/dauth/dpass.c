@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dauth/Attic/dpass.c,v 1.7.2.1 2006/10/22 02:08:33 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/dauth/Attic/dpass.c,v 1.7.2.2 2007/11/26 21:21:52 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -136,6 +136,7 @@ CommandProc(as, arock)
 #define s(n) ((k(n) << 8) | k(n+1))
     printf("\nThe new DCE password is: %0.4x-%0.4x-%0.4x-%0.4x\n", s(0), s(2),
 	   s(4), s(6));
+    return 0;
 }
 
 main(argc, argv)

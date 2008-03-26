@@ -11,12 +11,13 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.6 2006/06/20 20:35:01 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.11 2008/03/10 22:35:37 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -35,14 +36,6 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -67,12 +60,13 @@ afs_uint32 HostAddress[MAXSERVERID + 1];
 extern int afsconf_CheckAuth();
 extern int afsconf_ServerAuth();
 
-static CheckSignal();
+static void *CheckSignal(void*);
 int LogLevel = 0;
 int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
+int rxkadDisableDotCheck = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -83,8 +77,8 @@ CheckSignal_Signal()
     IOMGR_SoftSig(CheckSignal, 0);
 }
 
-static
-CheckSignal()
+static void *
+CheckSignal(void *unused)
 {
     register int i, errorcode;
     struct ubik_trans *trans;
@@ -100,7 +94,7 @@ CheckSignal()
     for (i = 0; i < HASHSIZE; i++) {
 	HashIdDump(trans, i);
     }
-    return (ubik_EndTrans(trans));
+    return ((void *)ubik_EndTrans(trans));
 }				/*CheckSignal */
 
 
@@ -186,7 +180,8 @@ main(argc, argv)
 
 	} else if (strcmp(argv[index], "-rxbind") == 0) {
 	    rxBind = 1;
-
+	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
+	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
 	    if ((index + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -195,7 +190,7 @@ main(argc, argv)
 	    rxMaxMTU = atoi(argv[++i]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
@@ -253,14 +248,14 @@ main(argc, argv)
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -393,6 +388,12 @@ main(argc, argv)
 	lwps = 4;
     rx_SetMaxProcs(tservice, lwps);
 
+    if (rxkadDisableDotCheck) {
+        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+                                    NULL);
+    }
+
     tservice =
 	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
 		      RXSTATS_ExecuteRequest);
@@ -416,4 +417,6 @@ main(argc, argv)
     rx_SetRxStatUserOk(vldb_rxstat_userok);
 
     rx_StartServer(1);		/* Why waste this idle process?? */
+
+    return 0; /* not reachable */
 }

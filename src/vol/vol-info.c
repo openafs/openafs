@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.3 2005/05/08 06:10:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.4 2007/10/31 04:13:51 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -217,7 +217,7 @@ AttachVolume(struct DiskPartition * dp, char *volname,
 
 
 static int
-handleit(struct cmd_syndesc *as)
+handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
@@ -622,7 +622,7 @@ main(int argc, char **argv)
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax(NULL, handleit, 0, "Dump volume's internal state");
+    ts = cmd_CreateSyntax(NULL, handleit, NULL, "Dump volume's internal state");
     cmd_AddParm(ts, "-online", CMD_FLAG, CMD_OPTIONAL,
 		"Get info from running fileserver");
     cmd_AddParm(ts, "-vnode", CMD_FLAG, CMD_OPTIONAL, "Dump vnode info");

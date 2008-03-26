@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/server.c,v 1.14.2.5 2007/04/10 18:43:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/server.c,v 1.14.2.9 2008/03/10 22:35:34 shadow Exp $");
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -24,15 +24,7 @@ RCSID
 #include <sys/time.h>
 #include <netdb.h>
 #endif
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>
@@ -61,6 +53,8 @@ RCSID
 
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
+
+int argHandler(struct cmd_syndesc *, void *);
 
 char lcell[MAXKTCREALMLEN];
 afs_int32 myHost = 0;
@@ -131,8 +125,7 @@ convert_cell_to_ubik(cellinfo, myHost, serverList)
  *      If it were, this routine would never have been called.
  */
 static int
-MyBeforeProc(as)
-     register struct cmd_syndesc *as;
+MyBeforeProc(register struct cmd_syndesc *as, void *arock)
 {
     helpOption = 0;
     return 0;
@@ -142,11 +135,10 @@ MyBeforeProc(as)
  *	initialize all the supported commands and their arguments
  */
 
+void
 initializeArgHandler()
 {
     struct cmd_syndesc *cptr;
-
-    int argHandler();
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
@@ -179,9 +171,7 @@ initializeArgHandler()
 }
 
 int
-argHandler(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+argHandler(struct cmd_syndesc *as, void *arock)
 {
 
     /* globalConfPtr provides the handle for the configuration information */
@@ -595,14 +585,14 @@ main(argc, argv)
     currentTime = time(0);
     LogError(0, "Ready to process requests at %s\n", ctime(&currentTime));
 
-    rx_ServerProc();		/* donate this LWP */
+    rx_ServerProc(NULL);		/* donate this LWP */
 
   error_exit:
     osi_audit(BUDB_FinishEvent, code, AUD_END);
     return (code);
 }
 
-
+void
 consistencyCheckDb()
 {
     /* do consistency checks on structure sizes */

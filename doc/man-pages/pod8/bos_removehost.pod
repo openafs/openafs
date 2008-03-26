@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos removehost - Removes a database server machine from the CellServDB file
+bos_removehost - Removes a database server machine from the CellServDB file
 
 =head1 SYNOPSIS
 

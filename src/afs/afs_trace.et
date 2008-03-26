@@ -172,5 +172,6 @@ error_table 2 ZCM
 	ec	CM_TRACE_LOCKWAIT,"%s line %d: Waiting for lock 0x%lx level %d"
 	ec	CM_TRACE_WRITEFAILED, "osi_Write failed len %ld resid %ld err %ld"
 	ec	CM_TRACE_ADJUSTSIZE2, "AdjustSize dc = 0x%lx, chunkBytes = 0x%x used = %ld, diff = %ld"
+	ec 	CM_TRACE_AFSDB, "AFSDB lookup %s returned %d"
 end
 

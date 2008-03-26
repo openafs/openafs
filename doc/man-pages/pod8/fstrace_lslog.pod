@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace lslog - Displays information about a log
+fstrace_lslog - Displays information about a log
 
 =head1 SYNOPSIS
 

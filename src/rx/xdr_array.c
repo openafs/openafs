@@ -31,7 +31,7 @@
 #include "rx.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9.2.3 2006/08/13 20:19:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9.2.4 2007/10/30 15:24:04 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -58,6 +58,7 @@ RCSID
 #endif /* AFS_LINUX20_ENV */
 #else
 #include <stdio.h>
+#include <string.h>
 #endif
 #include "xdr.h"
 

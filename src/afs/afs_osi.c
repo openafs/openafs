@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.12 2007/04/03 18:57:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.15 2008/02/06 01:43:44 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -280,9 +280,6 @@ afs_osi_UnmaskUserLoop()
 void
 afs_osi_RxkRegister(void)
 {
-#ifdef AFS_LINUX22_ENV
-    osi_linux_rxkreg();
-#endif
 }
 
 /* procedure for making our processes as invisible as we can */
@@ -308,8 +305,21 @@ afs_osi_Invisible(void)
     AFS_STATCNT(osi_Invisible);
 }
 
+void
+afs_osi_Visible(void)
+{
+#if defined(AFS_SUN5_ENV)
+    curproc->p_flag &= ~SSYS;
+#elif defined(AFS_DARWIN80_ENV)
+#elif defined(AFS_DARWIN_ENV)
+    /* maybe call init_process instead? */
+    current_proc()->p_flag &= ~P_SYSTEM;
+#elif defined(AFS_XBSD_ENV)
+    curproc->p_flag &= ~P_SYSTEM;
+#endif
+}
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 /* set the real time */
 void
 afs_osi_SetTime(osi_timeval_t * atv)

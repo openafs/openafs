@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.6 2007/04/10 18:43:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.11 2008/03/08 01:15:36 shadow Exp $");
 
 
 #include <sys/types.h>
@@ -26,13 +26,7 @@ RCSID
 #include <netdb.h>
 #endif
 #include <stdio.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -42,8 +36,11 @@ RCSID
 #include <lock.h>
 #include <afs/afs_args.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 
 extern struct hostent *hostutil_GetHostByName();
+
+static int print_ctime = 0;
 
 static int
 PrintCacheConfig(struct rx_connection *aconn)
@@ -85,6 +82,7 @@ PrintCacheConfig(struct rx_connection *aconn)
     } else {
 	printf("cmdebug: unsupported server version %d\n", srv_ver);
     }
+    return 0;
 }
 
 #ifndef CAPABILITY_BITS
@@ -309,8 +307,13 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	}
 	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
-	printf("    callback %08x\texpires %u\n", centry.callback,
-	       centry.cbExpires);
+        if (print_ctime) {
+            time_t t = centry.cbExpires;
+            printf("    callback %08x\texpires %s\n", centry.callback,
+                    ctime(&t));
+        } else
+            printf("    callback %08x\texpires %u\n", centry.callback,
+                   centry.cbExpires);
 	printf("    %d opens\t%d writers\n", centry.opens, centry.writers);
 
 	/* now display states */
@@ -411,8 +414,13 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #endif
-	printf("    callback %08x\texpires %u\n", centry.callback,
-	       centry.cbExpires);
+        if (print_ctime) {
+            time_t t = centry.cbExpires;
+            printf("    callback %08x\texpires %s\n", centry.callback,
+                    ctime(&t));
+        } else
+            printf("    callback %08x\texpires %u\n", centry.callback,
+                   centry.cbExpires);
 	printf("    %d opens\t%d writers\n", centry.opens, centry.writers);
 
 	/* now display states */
@@ -466,8 +474,60 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
 	return PrintCacheEntries32(aconn, aint32);
 }
 
+static int
+PrintCellServDBEntry(struct rx_connection *aconn, afs_int32 cellnum)
+{
+    static struct cell_cache *cache;
+    int code;
+    char *cellname;
+    serverList sl;
+    unsigned int n;
+    int rc = 0;
+
+    cellname = NULL;
+    sl.serverList_len = 0;
+    sl.serverList_val = NULL;
+    code = RXAFSCB_GetCellServDB(aconn, cellnum, &cellname, &sl);
+    if (code)
+	return 0;
+
+    if ( !cellname || !cellname[0] )
+        goto done;
+
+    rc = 1;
+    printf(">%-23s#%s\n", cellname, cellname);
+
+    if (sl.serverList_val) {
+        for ( n=0; n<sl.serverList_len; n++) {
+            struct hostent *host;
+            afs_uint32      addr = ntohl(sl.serverList_val[n]);
+
+            host = gethostbyaddr((const char *)&addr, sizeof(afs_uint32), AF_INET);
+            printf("%-28s#%s\n", afs_inet_ntoa(addr), 
+                    host ? host->h_name : "");
+        }
+    }
+
+  done:
+    if (cellname)
+        free(cellname);
+
+    if (sl.serverList_val)
+	free(sl.serverList_val);
+
+    return rc;
+}
+
+static void
+PrintCellServDB(struct rx_connection *aconn) 
+{
+    afs_int32 index;
+
+    for ( index = 0 ; PrintCellServDBEntry(aconn, index); index++ );
+}
+
 int
-CommandProc(struct cmd_syndesc *as, char *arock)
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *conn;
     register char *hostName;
@@ -495,16 +555,27 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	       hostName);
 	exit(1);
     }
-    if (as->parms[5].items) {
+
+    if (as->parms[6].items) {
 	/* -addrs */
 	PrintInterfaces(conn);
 	return 0;
     }
-    if (as->parms[6].items) {
+    if (as->parms[7].items) {
 	/* -cache */
 	PrintCacheConfig(conn);
 	return 0;
     }
+
+    if (as->parms[8].items) {
+	/* -cellservdb */
+	PrintCellServDB(conn);
+	return 0;
+    }
+
+    if (as->parms[5].items)
+        print_ctime = 1;
+
     if (as->parms[2].items)
         /* -long */
 	int32p = 1;
@@ -557,7 +628,7 @@ main(int argc, char **argv)
 
     rx_Init(0);
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe unik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "query afs cache manager");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
@@ -565,10 +636,16 @@ main(int argc, char **argv)
                  "print only cache entries with positive reference counts");
     cmd_AddParm(ts, "-callbacks", CMD_FLAG, CMD_OPTIONAL, 
                  "print only cache entries with callbacks");
+    cmd_AddParm(ts, "-ctime", CMD_FLAG, CMD_OPTIONAL, 
+                "print human readable expiration time");
+
+    
     cmd_AddParm(ts, "-addrs", CMD_FLAG, CMD_OPTIONAL,
 		"print only host interfaces");
     cmd_AddParm(ts, "-cache", CMD_FLAG, CMD_OPTIONAL,
 		"print only cache configuration");
+    cmd_AddParm(ts, "-cellservdb", CMD_FLAG, CMD_OPTIONAL, 
+                "print only cellservdb info");
 
     cmd_Dispatch(argc, argv);
     exit(0);

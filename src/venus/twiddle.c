@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/twiddle.c,v 1.7.2.1 2007/04/10 18:43:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/twiddle.c,v 1.7.2.3 2008/03/08 01:15:37 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <sys/ioctl.h>
@@ -32,11 +32,11 @@ RCSID
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
 #include <afs/auth.h>>
-#include <errno.h
+#include <errno.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <strings.h>
-
+#include <afs/com_err.h>
 
 #define	MAXSIZE	2048
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
@@ -47,13 +47,11 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 
-extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
-static
-Twiddle(as)
-     struct cmd_syndesc *as;
+static int
+Twiddle(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -154,7 +152,7 @@ main(argc, argv)
     /* try to find volume location information */
 
 
-    ts = cmd_CreateSyntax(NULL, Twiddle, 0, "adjust rx parms");
+    ts = cmd_CreateSyntax(NULL, Twiddle, NULL, "adjust rx parms");
     cmd_AddParm(ts, "-initReceiveWindow ", CMD_SINGLE, CMD_OPTIONAL, "16");
     cmd_AddParm(ts, "-maxReceiveWindow ", CMD_SINGLE, CMD_OPTIONAL, "16");
     cmd_AddParm(ts, "-initSendWindow ", CMD_SINGLE, CMD_OPTIONAL, "8");

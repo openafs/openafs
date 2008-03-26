@@ -11,25 +11,21 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/cmd/test/itest.c,v 1.7.2.1 2007/04/10 18:43:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/cmd/test/itest.c,v 1.7.2.2 2007/10/31 04:13:38 shadow Exp $");
 
 #include "cmd.h"
 #include <stdio.h>
 #include <com_err.h>
 
-static
-cproc1(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+cproc1(struct cmd_syndesc *as, void *arock)
 {
     printf("in the apple command\n");
     return 0;
 }
 
-static
-cproc2(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+cproc2(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     printf("in the pear command\n");
@@ -44,17 +40,14 @@ cproc2(as, arock)
     return 0;
 }
 
-static void
-cproc3(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+static int
+cproc3(struct cmd_syndesc *as, void *arock)
 {
     exit(0);
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     char tline[1000];

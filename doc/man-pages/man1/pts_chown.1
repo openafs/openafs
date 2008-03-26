@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_CHOWN 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PTS_CHOWN 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,13 +188,13 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pts chown \- Changes the owner of a Protection Database entry
+pts_chown \- Changes the owner of a Protection Database entry
 .SH "SYNOPSIS"
 \fBpts chown\fR <<\ \fB\-name\fR\ <\fIgroup\ name\fR >>> <<\ \fB\-owner\fR\ <\fInew\ owner\fR >>>
-    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-force\fR] [\fB\-help\fR]
 .PP
 \fBpts cho\fR <<\ \fB\-na\fR\ <\fIgroup\ name\fR >>> <<\ \fB\-o\fR\ <\fInew\ owner\fR >>>
-    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts chown\fR command designates the user or group named by the
 \fB\-owner\fR argument as the owner of the group named by the \fB\-name\fR
@@ -226,6 +226,10 @@ the \fIpts(1)\fR manpage.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity anonymous to the issuer. For more
 details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. Do not combine this flag with the \fB\-cell\fR 
+or \fB\-noauth\fR options. For more details, see the \fIpts(1)\fR manpage.
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
@@ -262,7 +266,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PTS_CHOWN 1"
-.IX Name "pts chown - Changes the owner of a Protection Database entry"
+.IX Name "pts_chown - Changes the owner of a Protection Database entry"
 
 .IX Header "NAME"
 
@@ -281,6 +285,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
 

@@ -30,6 +30,7 @@
 #include <kautils.h>
 #include <cellconfig.h>
 #include <afs_AdminClientErrors.h>
+#include <rx/rxkad.h>
 
 /**
  * Static function used to initialize the client library and the 
@@ -71,6 +72,7 @@ Java_org_openafs_jafs_Token_getToken
   const char *password;
   void *tokenHandle;
   int rc;
+  int err;
 
   // convert java strings
   if( jcellName != NULL ) { 
@@ -101,8 +103,11 @@ Java_org_openafs_jafs_Token_getToken
       password = NULL;
   }
 
-  if ( !(afsclient_TokenGetNew( cellName, userName, password, &tokenHandle, 
-				&ast) ) ) {
+  err = (password==NULL || userName==NULL)
+    ? afsclient_TokenGetExisting( cellName, &tokenHandle, &ast)
+    : afsclient_TokenGetNew( cellName, userName, password, &tokenHandle, &ast);
+
+  if ( !err ) {
     // release converted strings
       if( cellName != NULL ) {
 	  (*env)->ReleaseStringUTFChars(env, jcellName, cellName);

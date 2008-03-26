@@ -1,7 +1,7 @@
-# Openafs Spec $Revision: 1.1.2.6 $
+# Openafs Spec $Revision: 1.1.2.18 $
 
-%define afsvers 1.4.5pre1
-%define pkgvers 1.4.5pre1
+%define afsvers @VERSION@
+%define pkgvers @VERSION@
 # for beta/rc releases make pkgrel 0.X.<tag>
 # for real releases make pkgrel 1 (or more for extra releases)
 #%define pkgrel 0.1.rc1
@@ -11,7 +11,8 @@
 %define osvers 1
 %endif
 
-%{!?fedorakmod: %define fedorakmod 0}
+%{!?fedorakmod: %define fedorakmod 1}
+%{!?build_dkmspkg: %define build_dkmspkg 1}
 
 # Determine presence of rpmbuild command line --define arguments used for
 # option specification
@@ -20,7 +21,7 @@
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 
 # Determine the version of the kernel to build against
-# - automatically select the latest kernel with sources from /lib/modules
+# - automatically select running kernel if there are sources in /lib/modules
 # - note that this can be overridden on the command line
 #
 %if !%{kernvers_on_cmdline}
@@ -28,25 +29,15 @@
 %endif
 
 %if %{fedorakmod}
-%define kmodtool bash %{_sourcedir}/kmodtool
+%define kmodtool bash %{_sourcedir}/openafs-kmodtool
 
 %define kmod_name openafs
 %define kverrel %(%{kmodtool} verrel %{?kernvers} 2>/dev/null)
 
 %define upvar ""
-%ifarch i686
-%define paevar PAE
-%endif
-%ifarch ppc
-%define smpvar smp
-%endif
-%ifarch i686 x86_64
-%define xenvar xen
-%define kdumpvar kdump
-%endif
-%{!?kvariants: %define kvariants %{?upvar} %{?smpvar} %{?paevar} %{?xenvar} %{?kdumpvar}}
+%{!?kvariants: %define kvariants %{?upvar}}
 
-%define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}
+%{!?ksrcdir: %define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}}
 
 %else # Legacy kernel build stuff 
 
@@ -80,6 +71,8 @@
 # End legacy kernel build stuff
 %endif 
 
+%define dkms_version %{osvers}.%{pkgrel}
+
 # Set 'debugspec' to 1 if you want to debug the spec file.  This will
 # not remove the installed tree as part of the %clean operation
 %if %{?debugspec:0}%{!?debugspec:1}
@@ -89,6 +82,12 @@
 # Set 'krb5support' to 1 if you want to build the openafs-krb5 package
 # to distribute aklog and asetkey
 %define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
+
+%if %{krb5support}
+%if %{?krb5config:0}%{!?krb5config:1}
+%define krb5config /usr/kerberos/bin/krb5-config
+%endif
+%endif
 
 # Set 'bootkernelsupport' to 1 if you want to build the
 # kernel module for Red Hat BOOT Kernels on x86.
@@ -227,13 +226,13 @@ Release: %{osvers}.%{pkgrel}
 License: IBM Public License
 URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-Packager: Derek Atkins <warlord@MIT.EDU>
+Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
-%if %{build_userspace}
-BuildRequires: autoconf
+%if %{krb5support}
+BuildRequires: krb5-devel
 %endif
-ExclusiveArch: %{ix86} x86_64 ia64
+ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
@@ -243,9 +242,13 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2007-10-25 
+
 Source30: openafs-kernel-version.sh
+Source996: openafs-kvers-is.sh
+Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
-Source999: kmodtool
+Source999: openafs-kmodtool
 
 Patch0:  openafs-1.4.0-kmodule26.patch
 
@@ -291,7 +294,16 @@ what gets built:
                                   will be installed.  You probably don't
                                   need to change this ever.
 
- --define "fedorakmod 1"	  Build 'Fedora' style kernel modules
+ --define "fedorakmod 0"	  Disable the building of 'Fedora' style kernel 
+				  modules, and use the old format.
+
+ --define "kvariants <variants>"  When building Fedora style kernel modules,
+                                  this defines the set of kernel variants
+                                  to build.
+                                  <variants> is a space seperated list which
+                                  may contain one or more of
+                                  '' (for the generic kernel), smp, PAE, xen
+                                  or kdump 
 
 To a kernel module for your running kernel, just run:
   rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{osvers}.%{pkgrel}.src.rpm
@@ -338,6 +350,29 @@ administrative management.
 
 This package provides basic server support to host files in an AFS
 Cell.
+
+%if %{build_dkmspkg}
+%package -n dkms-%{name}
+Summary:        DKMS-ready kernel source for AFS distributed filesystem
+Group:          Development/Kernel
+Provides:       openafs-kernel = %{PACKAGE_VERSION}
+%if %{fedorakmod}
+Provides: %{name}-kmod = %{PACKAGE_VERSION}
+%endif
+Requires(pre):  dkms
+Requires(pre):  flex
+Requires(post): dkms
+Requires:	%{name}-kmod-common = %{version}
+
+%description -n dkms-%{name}
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides the source code to allow DKMS to build an
+AFS kernel module.
+%endif
 
 %if %{build_authlibs}
 %package authlibs
@@ -455,7 +490,7 @@ you are using KAserver instead of Krb5.
 Summary: OpenAFS programs to use with krb5
 Requires: openafs = %{PACKAGE_VERSION}
 Group: Networking/Filesystems
-BuildRequires: krb5-devel, autoconf, automake
+BuildRequires: krb5-devel
 
 %description krb5
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -638,37 +673,6 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 # Patch openafs to build a kernel module named "openafs" instead of "libafs"
 %patch0 -p1 -b .kmod26
 
-%if %{build_userspace}
-# Save some time -- install these if we're building userspace
-
-# Install the Krb5 Migration Kit
-tar -xzf src/packaging/RedHat/openafs-krb5-2.0.tar.gz
-
-#
-# patch afs-krb5 migration kit to work with openafs-1.3 and krb5-1.3;
-# add some features and fix bugs
-#
-
-# krb524 is no longer in a separate library as of krb5-1.3; handle this
-patch -p0 -b -z .krb524 < src/packaging/RedHat/afs-krb5-2.0-krb524.patch
-
-# make sure NETLIBS gets added to the proper programs (seems to be 
-# needed only for Solaris)
-patch -p0 -b -z .libsocket < src/packaging/RedHat/afs-krb5-2.0-libsocket.patch
-
-# find an existing libcom_err and use that
-patch -p0 -b -z .com_err < src/packaging/RedHat/afs-krb5-2.0-com_err.patch
-
-# make afs-krb5 work with recent OpenAFS; includes and prototypes
-patch -p0 -b -z .openafs13 < src/packaging/RedHat/afs-krb5-2.0-openafs1.3.patch
-
-# nothing in afs-krb5 actually uses res_search
-patch -p0 -b -z .res_search < src/packaging/RedHat/afs-krb5-2.0-res_search.patch
-
-(cd afs-krb5/src && autoreconf) || exit 1
-
-%endif
-
 ##############################################################################
 #
 # building
@@ -809,6 +813,22 @@ config_opts="--enable-redhat-buildsys \
 
 # Configure AFS
 
+# If we're using Fedora kmods, work out which is the best kernel module to 
+# use for the userland configuration step. If no variants have been specified,
+# then use the standard kernel. If variants are specified, use the standard kernel
+# if it's listed, otherwise pick the first listed kernel.
+ksrc=""
+%if %{fedorakmod} 
+  for kvariant in %{kvariants} ; do
+    if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
+      ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+    fi
+  done
+%endif
+if [ -z "$ksrc" ] ; then
+ksrc=%{ksrcdir}
+fi
+
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
 ./configure --with-afs-sysname=${sysname} \
@@ -816,11 +836,12 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --libdir=%{_libdir} \
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
+       --disable-strip-binaries \
 %if %{build_modules}
-       --with-linux-kernel-headers=%{ksrcdir} \
+       --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf \
+	--with-krb5-conf=%{krb5config} \
 %endif
        $config_opts \
        || exit 1
@@ -832,49 +853,41 @@ make only_libafs_tree || exit 1
 
 %if %{fedorakmod} && %{build_modules}
 for kvariant in %{kvariants} ; do
-  cp -R libafs_tree _kmod_build_${kvariant}
-  pushd _kmod_build_${kvariant}
-  ./configure --with-afs-sysname=${sysname} \
+  if [ -n "${kvariant}" ] ; then
+    cp -R libafs_tree _kmod_build_${kvariant}
+    pushd _kmod_build_${kvariant}
+    ./configure --with-afs-sysname=${sysname} \
   	--prefix=%{_prefix} \
 	--libdir=%{_libdir} \
 	--bindir=%{_bindir} \
 	--sbindir=%{_sbindir} \
 	--with-linux-kernel-headers=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} \
 %if %{krb5support}
-	--with-krb5-conf \
+	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
 %endif
 	$config_opts \
 	|| exit 1
-  popd
+    popd
+  fi
 done
 %endif
 
 %if %{build_userspace}
 # Build the user-space AFS stuff
 make dest_nolibafs || exit 1
-
-%if %{krb5support}
-# Now build ka-forwarder
-(cd afs-krb5/src &&
-	./configure --prefix=%{_prefix} --with-krb5=%{_prefix}/kerberos \
-               --libdir=%{_libdir} \
-               --bindir=%{_bindir} \
-               --sbindir=%{_sbindir} \
-               --with-afs=`pwd`/../../${sysname}/dest/ && \
-	make all PROGS="ka-forwarder" && \
-	install -c -s ka-forwarder `pwd`/../../${sysname}/dest/etc ) \
-	|| exit 1
-%endif
-
 %endif
 
 %if %{build_modules}
 %if %{fedorakmod}
 for kvariant in %{kvariants}
 do
-  pushd _kmod_build_$kvariant;
-  make all MPS=SP
-  popd
+  if [ -n "${kvariant}" ] ; then
+    pushd _kmod_build_$kvariant;
+    make all MPS=SP
+    popd
+  else
+    make dest_only_libafs MPS=SP
+  fi
 done
 
 %else
@@ -987,8 +1000,30 @@ ln -sf pam_afs.krb.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so
 # Populate /usr/vice/etc
 uve=$RPM_BUILD_ROOT%{_prefix}/vice/etc
 install -p -m 644 src/packaging/RedHat/openafs-ThisCell $uve/ThisCell
-install -p -m 644 src/afsd/CellServDB $uve/CellServDB.dist
+install -p -m 644 %{SOURCE20} $uve/CellServDB.dist
 install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $uve/cacheinfo
+
+#
+# install dkms source
+#
+install -d -m 755 $RPM_BUILD_ROOT%{_prefix}/src
+cp -a libafs_tree $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}
+
+cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
+
+PACKAGE_VERSION="%{dkms_version}"
+
+# Items below here should not have to change with each driver version
+PACKAGE_NAME="%{name}"
+MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; ./configure --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/openafs.ko ."
+CLEAN="make -C src/libafs clean"
+
+BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
+DEST_MODULE_LOCATION[0]="/kernel/3rdparty/\$PACKAGE_NAME/"
+
+AUTOINSTALL=yes
+
+EOF
 
 #
 # install kernel-source
@@ -1030,7 +1065,8 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man8/asetkey.*
 
 # remove unused man pages
 for x in afs_ftpd afs_inetd afs_login afs_rcp afs_rlogind afs_rsh \
-    dkload knfs package runntp; do
+    dkload knfs package runntp symlink symlink_list symlink_make \
+    symlink_remove; do
 	rm -f $RPM_BUILD_ROOT%{_mandir}/man1/${x}.1
 done
 
@@ -1050,7 +1086,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^uss' \
+	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
@@ -1146,14 +1182,11 @@ for f in pam_afs.krb.so.1 pam_afs.so.1 ; do
   rm -f $RPM_BUILD_ROOT%{_libdir}/$f
 done
 
-# Remove empty files from the krb5 migration
-for f in afs2k5db fakeka ; do
-  rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
-done
-
 %if !%{build_authlibs}
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so.*
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so.*
 %endif
 
 %endif
@@ -1162,13 +1195,15 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
 %if %{fedorakmod}
 for kvariant in %{kvariants}
 do
-    pushd _kmod_build_$kvariant
-    srcdir=src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
-    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  if [ -n "$kvariant" ] ; then
+    srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+  else
+    srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
+  fi
 
-    mkdir -p ${dstdir}
-    install -m 744 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
-    popd
+  dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  mkdir -p ${dstdir}
+  install -m 755 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
 done
 %else
 # Install the kernel modules
@@ -1188,9 +1223,7 @@ do
 
     mkdir -p ${dstdir}
 
-    # Mark kernel modules as executable; otherwise they won't get stripped 
-    # by /usr/lib/rpm/brp-strip
-    install -m 744 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
+    install -m 755 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
 done
 %endif
 %endif
@@ -1277,6 +1310,15 @@ if [ $1 = 0 ] ; then
         chkconfig --del openafs-server
 fi
 
+%if %{build_dkmspkg}
+%post -n dkms-%{name}
+dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+
+%preun -n dkms-%{name}
+dkms remove -m %{namee} -v %{dkms_version} --rpm_safe_upgrade --all ||:
+%endif
 %endif
 
 %if %{build_modules}
@@ -1323,7 +1365,6 @@ fi
 %endif
 %endif
 %endif
-
 
 ##############################################################################
 ###
@@ -1474,6 +1515,12 @@ fi
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.*
 
+%if %{build_dkmspkg}
+%files -n dkms-%{name}
+%defattr(-,root,root)
+%{_prefix}/src/%{name}-%{dkms_version}
+%endif
+
 %files kernel-source
 %defattr(-,root,root)
 %{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
@@ -1495,7 +1542,6 @@ fi
 %defattr(-,root,root)
 %{_bindir}/aklog
 %{_sbindir}/asetkey
-%{_sbindir}/ka-forwarder
 %{_mandir}/man1/aklog.*
 %{_mandir}/man8/asetkey.*
 %endif
@@ -1532,7 +1578,7 @@ fi
 %if %{hugemem_package}
 %files kernel-hugemem
 %defattr(-,root,root)
-%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/kernel/fs/openafs/openafs.*
+%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/fs/openafs/openafs.*
 %endif
 %endif
 
@@ -1544,6 +1590,14 @@ fi
 ###
 ##############################################################################
 %changelog
+* Wed Dec 12 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
+- Make the RPM mockable
+
+* Tue Oct 29 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
+- Update to match the shipped 1.4.5 RPMS
+- Fix the kvariant stuff to only configure the 'standard' case once
+- Add openafs-kvers.sh back in
+
 * Wed Oct 10 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5pre1-1
 - Use Fedora style kmods, which allows us to install multiple kernel types
 

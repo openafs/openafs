@@ -60,9 +60,9 @@ extern struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service,
 extern void rx_SetArrivalProc(register struct rx_call *call,
 			      register void (*proc) (register struct rx_call *
 						    call,
-						    register VOID * mh,
+						    register void * mh,
 						    register int index),
-			      register VOID * handle, register int arg);
+			      register void * handle, register int arg);
 extern afs_int32 rx_EndCall(register struct rx_call *call, afs_int32 rc);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
@@ -301,6 +301,11 @@ extern struct rxevent *rxevent_Post(struct clock *when, void (*func) (),
 				    void *arg, void *arg1);
 extern struct rxevent *rxevent_Post2(struct clock *when, void (*func) (),
 				    void *arg, void *arg1, int arg2);
+extern struct rxevent *rxevent_PostNow(struct clock *when, struct clock *now,
+				       void (*func) (), void *arg, void *arg1);
+extern struct rxevent *rxevent_PostNow2(struct clock *when, struct clock *now,
+					void (*func) (), void *arg, 
+					void *arg1, int arg2);
 #endif
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
@@ -362,7 +367,7 @@ extern osi_socket *rxk_NewSocket(short aport);
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 			  int *port);
 #ifdef UKERNEL
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 #endif
 extern void osi_AssertFailK(const char *expr, const char *file, int line);
 extern void rxk_ListenerProc(void);
@@ -416,7 +421,6 @@ extern void afs_rxevent_daemon(void);
 
 
 /* rx_lwp.c */
-extern void rx_ServerProc(void);
 extern void rxi_Sleep(void *addr);
 extern void rxi_Delay(int seconds);
 extern void rxi_InitializeThreadSupport(void);
@@ -426,9 +430,9 @@ extern void rxi_StopListener(void);
 extern void rxi_ReScheduleEvents(void);
 #endif
 extern void rxi_InitializeThreadSupport(void);
-extern void rxi_StartServerProc(void (*proc) (void), int stacksize);
+extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);
 extern void rxi_StartListener(void);
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 extern int rxi_Listen(osi_socket sock);
 extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
@@ -450,7 +454,7 @@ extern struct multi_handle *multi_Init(struct rx_connection **conns,
 				       register int nConns);
 extern int multi_Select(register struct multi_handle *mh);
 extern void multi_Ready(register struct rx_call *call,
-			register VOID *mh, register int index);
+			register void *mh, register int index);
 extern void multi_Finalize(register struct multi_handle *mh);
 extern void multi_Finalize_Ignore(register struct multi_handle *mh);
 
@@ -528,11 +532,11 @@ extern int rxi_AdjustDgramPackets(int frags, int mtu);
 /* rx_pthread.c */
 extern void rxi_Delay(int sec);
 extern void rxi_InitializeThreadSupport(void);
-extern void rxi_StartServerProc(void (*proc) (void), int stacksize);
+extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);
 #ifndef rxi_ReScheduleEvents
 extern void rxi_ReScheduleEvents(void);
 #endif
-extern void rx_ServerProc(void);
+extern void *rx_ServerProc(void *);
 extern void rxi_StartListener(void);
 extern int rxi_Listen(osi_socket sock);
 extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);

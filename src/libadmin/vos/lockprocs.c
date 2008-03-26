@@ -11,16 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/lockprocs.c,v 1.9 2003/07/15 23:15:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/lockprocs.c,v 1.9.2.1 2007/10/30 15:23:58 shadow Exp $");
 
 #include "lockprocs.h"
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).

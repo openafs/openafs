@@ -7,25 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define	IGNORE_STDS_H
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/frame.c,v 1.7 2003/07/15 23:15:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/frame.c,v 1.7.2.3 2008/03/10 22:35:35 shadow Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>
 #endif
 #include <lwp.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <stdlib.h>
 
 #include "gtxobjects.h"
@@ -324,6 +317,7 @@ gtxframe_DisplayString(aframe, amsgLine)
     if (aframe->messageLine)
 	free(aframe->messageLine);
     aframe->messageLine = gtx_CopyString(amsgLine);
+    return 0;
 }
 
 /* Called by input processor to try to clear the dude */

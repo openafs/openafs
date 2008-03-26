@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.2 2007/03/22 16:01:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.3 2007/10/30 15:24:12 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
@@ -29,6 +29,7 @@ RCSID
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -61,14 +62,6 @@ RCSID
 #endif
 #include <afs/vnode.h>
 #include <afs/volume.h>
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 #include "volser.h"
 

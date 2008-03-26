@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.57 2007/10/15 12:42:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.60 2007/11/27 19:32:43 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -643,6 +643,10 @@ struct file_operations afs_file_fops = {
 #if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
   .sendfile =   generic_file_sendfile,
 #endif
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
+  .splice_write = generic_file_splice_write,
+  .splice_read = generic_file_splice_read,
+#endif
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
   .lock =	afs_linux_lock,
@@ -878,6 +882,15 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     AFS_GLOCK();
     (void) afs_InactiveVCache(vcp, NULL);
     AFS_GUNLOCK();
+#ifdef DCACHE_NFSFS_RENAMED
+#ifdef AFS_LINUX26_ENV
+    spin_lock(&dp->d_lock);
+#endif
+    dp->d_flags &= ~DCACHE_NFSFS_RENAMED;   
+#ifdef AFS_LINUX26_ENV
+    spin_unlock(&dp->d_lock);
+#endif
+#endif
 
     iput(ip);
 }
@@ -939,6 +952,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
+	insert_inode_hash(ip);
 	dp->d_op = &afs_dentry_operations;
 	dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
 	d_instantiate(dp, ip);
@@ -984,6 +998,8 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
+	if (hlist_unhashed(&ip->i_hash))
+	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
     dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
@@ -1095,6 +1111,15 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
             }
             tvc->uncred = credp;
 	    tvc->states |= CUnlinked;
+#ifdef DCACHE_NFSFS_RENAMED
+#ifdef AFS_LINUX26_ENV
+	    spin_lock(&dp->d_lock);
+#endif
+	    dp->d_flags |= DCACHE_NFSFS_RENAMED;   
+#ifdef AFS_LINUX26_ENV
+	    spin_unlock(&dp->d_lock);
+#endif
+#endif
 	} else {
 	    osi_FreeSmallSpace(__name);	
 	}
@@ -1822,5 +1847,4 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 #endif
     }
 
-    /* insert_inode_hash(ip);	-- this would make iget() work (if we used it) */
 }

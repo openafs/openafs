@@ -1,11 +1,11 @@
 #!/bin/sh
 FS=${FS:-${objdir}/../appl/fs/fs}
 ${FS} sa . system:anyuser all || exit 1
-${objdir}/write-rand /usr/tmp/$$ 262144 || exit 1
-${objdir}/afscp -i -b 56k /usr/tmp/$$ `pwd`/$$ || exit 1
-diff /usr/tmp/$$ `pwd`/$$ || exit 1
-${objdir}/afscp -i -b 32k /usr/tmp/$$ `pwd`/$$ || exit 1
-diff /usr/tmp/$$ `pwd`/$$ || exit 1
+${objdir}/write-rand /tmp/$$ 262144 || exit 1
+${objdir}/afscp -i -b 56k /tmp/$$ `pwd`/$$ || exit 1
+diff /tmp/$$ `pwd`/$$ || exit 1
+${objdir}/afscp -i -b 32k /tmp/$$ `pwd`/$$ || exit 1
+diff /tmp/$$ `pwd`/$$ || exit 1
 exit 0
 
 

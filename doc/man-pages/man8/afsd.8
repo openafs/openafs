@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH afsd 8 "OpenAFS" "5/Aug/2007" "AFS Command Reference"
+.TH afsd 8 "OpenAFS" "9/Mar/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -476,12 +476,14 @@ Be sure to set the UDP timeouts on the firewall to be at least twenty
 minutes for the best callback performance.
 .SH "OPTIONS"
 .Ip "\fB\-afsdb\fR" 4
-Enable afsdb support. This will use \s-1DNS\s0 to lookup the \s-1AFSDB\s0 record and use
-that for the database servers for each cell instead of the values in the
-\fICellServDB\fR file. This has the advantage of only needing to update one
-\s-1DNS\s0 record to reconfigure the \s-1AFS\s0 clients for a new database server as
-opposed to touching all of the clients, and also allows one to access a
-cell without preconfiguring its database servers in \fICellServDB\fR.
+Enable afsdb support. This will use \s-1DNS\s0 to lookup the \s-1AFSDB\s0 record and
+use that for the database servers for each cell instead of the values
+in the \fICellServDB\fR file. This has the advantage of only needing to
+update one \s-1DNS\s0 record to reconfigure the \s-1AFS\s0 clients for a new
+database server as opposed to touching all of the clients, and also
+allows one to access a cell without preconfiguring its database
+servers in \fICellServDB\fR. The format of \s-1AFSDB\s0 records is defined in
+\s-1RFC\s0 1183.
 .Ip "\fB\-backuptree\fR" 4
 Prefer backup volumes for mountpoints in backup volumes. This option means
 that the \s-1AFS\s0 client will prefer to resolve mount points to backup volumes
@@ -654,7 +656,11 @@ overrides the default of the \f(CWroot.afs\fR volume. This option is ignored if
 .Ip "\fB\-rxbind\fR" 4
 Bind the Rx socket (one interface only).
 .Ip "\fB\-rxpck\fR <\fIvalue for rx_extraPackets\fR>" 4
-Set rx_extraPackets to this value.
+Set rx_extraPackets to this value. This sets the number of extra Rx
+packet structures that are available to handle Rx connections. This
+value should be increased if the \*(L"rxdebug 127.0.0.1 \-port 7001
+\-rxstats\*(R" command shows no free Rx packets. Increasing this value may
+improve OpenAFS client performance in some circumstances.
 .Ip "\fB\-settime\fR" 4
 Enable native \s-1AFS\s0 time synchronization. This option is the opposite of
 \fB\-nosettime\fR and cannot be used with the \fB\-nosettime\fR option.
@@ -709,6 +715,8 @@ the \fIfs_newcell(1)\fR manpage,
 the \fIafs_cache(5)\fR manpage,
 the \fICellServDB(5)\fR manpage,
 the \fIcacheinfo(5)\fR manpage
+.PP
+RFC 1183 the section on \fI/www.faqs.org/rfcs/rfc1183.html\fR in the \fIhttp:\fR manpage
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP

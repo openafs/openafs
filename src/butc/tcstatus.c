@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcstatus.c,v 1.6 2003/07/15 23:14:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcstatus.c,v 1.6.2.1 2007/10/30 15:23:50 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -24,6 +24,7 @@ RCSID
 #include <strings.h>
 #endif
 #include <stdio.h>
+#include <string.h>
 #include <afs/com_err.h>
 #include <lock.h>
 #include <afs/bubasics.h>

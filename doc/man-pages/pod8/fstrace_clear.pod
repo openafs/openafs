@@ -1,6 +1,6 @@
 =head1 NAME
 
-fstrace clear - Clears the trace log
+fstrace_clear - Clears the trace log
 
 =head1 SYNOPSIS
 

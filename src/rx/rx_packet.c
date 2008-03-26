@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.33 2007/06/23 06:27:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.34 2007/10/30 15:24:04 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -88,13 +88,7 @@ RCSID
 #include "rx_globals.h"
 #include <lwp.h>
 #include <assert.h>
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

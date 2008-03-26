@@ -1,6 +1,6 @@
 =head1 NAME
 
-backup readlabel - Reads and displays a tape's label
+backup_readlabel - Reads and displays a tape's label
 
 =head1 SYNOPSIS
 

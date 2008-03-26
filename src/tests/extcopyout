@@ -2,10 +2,10 @@
 FS=${FS:-${objdir}/../appl/fs/fs}
 ${FS} sa . system:anyuser all || exit 1
 ${objdir}/write-rand $$ 262144 || exit 1
-${objdir}/afscp -o -b 56k `pwd`/$$ /usr/tmp/$$ || exit 1
-diff /usr/tmp/$$ `pwd`/$$ || exit 1
-${objdir}/afscp -o -b 32k `pwd`/$$ /usr/tmp/$$ || exit 1
-diff /usr/tmp/$$ `pwd`/$$ || exit 1
+${objdir}/afscp -o -b 56k `pwd`/$$ /tmp/$$ || exit 1
+diff /tmp/$$ `pwd`/$$ || exit 1
+${objdir}/afscp -o -b 32k `pwd`/$$ /tmp/$$ || exit 1
+diff /tmp/$$ `pwd`/$$ || exit 1
 exit 0
 
 
