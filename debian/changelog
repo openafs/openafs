@@ -8,6 +8,7 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
     - Better fileserver host tracking.
     - Ubik fixes preventing database truncation on unreliable links.
   * Update doc-base control file sections for the new categorization.
+  * Remove all modified generated files on debian/rules clean.
 
  -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
 
