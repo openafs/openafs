@@ -9,6 +9,10 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
     - Ubik fixes preventing database truncation on unreliable links.
   * Install the up man page as afs-up, matching our renaming, and update
     its text accordingly.  (Closes: #459635)
+  * Move openafs-client later in the shutdown sequence on new
+    installations so that it stops after autofs and add an X-Stop-After
+    LSB header to achieve the same more reliably with dependency-based
+    boots.  (Closes: #472545)
   * Update doc-base control file sections for the new categorization.
   * debian/rules and debian/module/rules improvements:
     - Remove all modified generated files on debian/rules clean.
