@@ -19,6 +19,8 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
     - Depend on $(QUILT_STAMPFN) instead of patch.
     - Use touch $@ to create stamp files.
     - Use a stamp file for the module's install target.
+  * Uncomment and fix the watch rules for pre-releases and always scan for
+    both regular releases and prereleases.
 
  -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
 
