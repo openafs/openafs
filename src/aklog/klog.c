@@ -50,10 +50,6 @@
 #define USING_HEIMDAL 1
 #endif
 
-#ifndef USING_HEIMDAL
-extern krb5_cc_ops krb5_mcc_ops;
-#endif
-
 #include "assert.h"
 
 
@@ -604,11 +600,6 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 		what = "getting default ccache";
 		code = krb5_cc_default(k5context, &cc);
 	    } else {
-#ifdef HAVE_KRB5_CC_REGISTER
-		what = "krb5_cc_register";
-		code = krb5_cc_register(k5context, &krb5_mcc_ops, FALSE);
-		if (code && code != KRB5_CC_TYPE_EXISTS) goto Failed;
-#endif
 		what = "krb5_cc_resolve";
 		code = krb5_cc_resolve(k5context, "MEMORY:core", &cc);
 		if (code) goto Failed;
