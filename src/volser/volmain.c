@@ -84,7 +84,7 @@ struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
 int debuglevel = 0; 
-#define MAXLWP 16
+#define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
