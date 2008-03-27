@@ -132,8 +132,6 @@ install-stamp: build-stamp
 	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
 	mv debian/openafs-client/usr/bin/up \
 	    debian/openafs-client/usr/bin/afs-up
-	mv debian/openafs-client/usr/share/man/man1/up.1 \
-	    debian/openafs-client/usr/share/man/man1/afs-up.1
 
 	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
