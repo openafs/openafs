@@ -7,6 +7,7 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
     - Potential deadlock fixed in the fileserver.
     - Better fileserver host tracking.
     - Ubik fixes preventing database truncation on unreliable links.
+  * Add upstream delta to fix oops on startup with pre-2.6.25 kernels.
   * Install the up man page as afs-up, matching our renaming, and update
     its text accordingly.  (Closes: #459635)
   * Move openafs-client later in the shutdown sequence on new
@@ -22,7 +23,7 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
   * Uncomment and fix the watch rules for pre-releases and always scan for
     both regular releases and prereleases.
 
- -- Russ Allbery <rra@debian.org>  Mon, 03 Mar 2008 18:49:17 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 26 Mar 2008 17:36:17 -0700
 
 openafs (1.4.6.dfsg1-3) unstable; urgency=low
 
