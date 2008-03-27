@@ -1,4 +1,4 @@
-openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.7~pre1.dfsg1-1) unstable; urgency=low
 
   * New upstream release candidate:
     - Initial support for 2.6.25 kernels.
@@ -23,7 +23,7 @@ openafs (1.4.7~pre1.dfsg1-1) UNRELEASED; urgency=low
   * Uncomment and fix the watch rules for pre-releases and always scan for
     both regular releases and prereleases.
 
- -- Russ Allbery <rra@debian.org>  Wed, 26 Mar 2008 17:36:17 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 26 Mar 2008 19:21:24 -0700
 
 openafs (1.4.6.dfsg1-3) unstable; urgency=low
 
