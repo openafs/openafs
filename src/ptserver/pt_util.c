@@ -196,8 +196,9 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 	fprintf(stderr, "pt_util: %s: Bad UBIK_MAGIC. Is %x should be %x\n",
 		pfile, ntohl(uh->magic), UBIK_MAGIC);
     memcpy(&uv, &uh->version, sizeof(struct ubik_version));
-    if (wflag && uv.epoch == 0 && uv.counter == 0) {
-	uv.epoch = 2;		/* a ubik version of 0 or 1 has special meaning */
+
+    if (wflag && ntohl(uv.epoch) == 0 && ntohl(uv.counter) == 0) {
+	uv.epoch = htonl(2); /* a ubik version of 0 or 1 has special meaning */
 	memcpy(&uh->version, &uv, sizeof(struct ubik_version));
 	lseek(dbase_fd, 0, SEEK_SET);
 	if (write(dbase_fd, buffer, HDRSIZE) < 0) {
@@ -206,6 +207,11 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 	    exit(1);
 	}
     }
+
+    /* Now that any writeback is done, swap these */
+    uv.epoch = ntohl(uv.epoch);
+    uv.counter = ntohl(uv.counter);
+
     fprintf(stderr, "Ubik Version is: %d.%d\n", uv.epoch, uv.counter);
     if (read(dbase_fd, &prh, sizeof(struct prheader)) < 0) {
 	fprintf(stderr, "pt_util: error reading %s: %s\n", pfile,
@@ -329,6 +335,10 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 	exit(1);
     }
     uh = (struct ubik_hdr *)buffer;
+
+    uh->version.epoch = ntohl(uh->version.epoch);
+    uh->version.counter = ntohl(uh->version.counter);
+
     if ((uh->version.epoch != uv.epoch)
 	|| (uh->version.counter != uv.counter)) {
 	fprintf(stderr,
