@@ -271,7 +271,6 @@ void cm_InitFakeRootDir() {
     curChunk = 13;
 
     // stick the first 2 entries "." and ".." in
-    fakeEntry.fid.unique = htonl(1);
     fakeEntry.fid.vnode = htonl(1);
     strcpy(fakeEntry.name, ".");
     currentPos = cm_FakeRootDir + curPage * CM_DIR_PAGESIZE + curChunk * CM_DIR_CHUNKSIZE;
@@ -400,18 +399,14 @@ int cm_reInitLocalMountPoints() {
 
     osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-    cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, 1, 2);
+    cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, 1, 1);
 
     lock_ObtainWrite(&cm_scacheLock);
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
     for (i=0; i<cm_noLocalMountPoints; i++) {
         hash = CM_SCACHE_HASH(&aFid);
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
-            if (scp->fid.volume == aFid.volume &&
-                 scp->fid.vnode == aFid.vnode &&
-                 scp->fid.unique == aFid.unique 
-                 ) {
-
+            if (cm_FidCmp(&scp->fid, &aFid) == 0) {
                 // mark the scp to be reused
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
@@ -436,7 +431,7 @@ int cm_reInitLocalMountPoints() {
                 }
             }
         }
-        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, aFid.vnode + 1, 2);
+        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, aFid.vnode + 1, 1);
     }
     lock_ReleaseWrite(&cm_scacheLock);
     osi_Log0(afsd_logp,"\tall old scp cleared!");
@@ -1104,7 +1099,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
 
     /* cm_reInitLocalMountPoints(); */
     if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, cm_noLocalMountPoints + 1, 1);
+        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
     cm_noteLocalMountPointChange();
     return 0;
 }
@@ -1163,6 +1158,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 
             if (!strcmp(shortname, toremove)) {
                 RegDeleteValue( hkFreelance, szValueName );
+                found = 1;
                 break;
             }
         }
@@ -1205,16 +1201,18 @@ long cm_FreelanceRemoveMount(char *toremove)
 
         fclose(fp1);
         fclose(fp2);
-        if (!found)
-            return CM_ERROR_NOSUCHFILE;
-
-        unlink(hfile);
-        rename(hfile2, hfile);
+        if (found) {
+            unlink(hfile);
+            rename(hfile2, hfile);
+        }
     }
     
     lock_ReleaseMutex(&cm_Freelance_Lock);
-    cm_noteLocalMountPointChange();
-    return 0;
+    if (found) {
+        cm_noteLocalMountPointChange();
+        return 0;
+    } else
+        return CM_ERROR_NOSUCHFILE;
 }
 
 long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
@@ -1318,7 +1316,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
     /* cm_reInitLocalMountPoints(); */
     if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, cm_noLocalMountPoints + 1, 1);
+        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
     cm_noteLocalMountPointChange();
     return 0;
 }
@@ -1372,6 +1370,7 @@ long cm_FreelanceRemoveSymlink(char *toremove)
 
             if (!strcmp(shortname, toremove)) {
                 RegDeleteValue( hkFreelanceSymlinks, szValueName );
+                found = 1;
                 break;
             }
         }
@@ -1380,7 +1379,10 @@ long cm_FreelanceRemoveSymlink(char *toremove)
 #endif
     
     lock_ReleaseMutex(&cm_Freelance_Lock);
-    cm_noteLocalMountPointChange();
-    return 0;
+    if (found) {
+        cm_noteLocalMountPointChange();
+        return 0;
+    } else
+        return CM_ERROR_NOSUCHFILE;
 }
 #endif /* AFS_FREELANCE_CLIENT */
