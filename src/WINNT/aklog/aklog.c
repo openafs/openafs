@@ -239,9 +239,6 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     static char confname[512] = { 0 };
     char username_copy[BUFSIZ];
     afs_int32 viceId;			/* AFS uid of user */
-#ifdef ALLOW_REGISTER
-    afs_int32 id;
-#endif /* ALLOW_REGISTER */
 
     if (confname[0] == '\0') {
         strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
@@ -297,7 +294,6 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                 printf("doing first-time registration of %s "
                         "at %s\n", username, cell_to_use);
             }
-            id = 0;
             strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
             aclient->name[MAXKTCNAMELEN - 1] = '\0';
             strcpy(aclient->instance, "");
@@ -331,7 +327,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             /* copy the name because pr_CreateUser lowercases the realm */
             strncpy(username_copy, username, BUFSIZ);
 
-            *status = pr_CreateUser(username, &id);
+            *status = pr_CreateUser(username, &viceId);
 
             /* and restore the name to the original state */
             strncpy(username, username_copy, BUFSIZ);
