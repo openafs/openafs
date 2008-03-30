@@ -14,12 +14,12 @@ RELDIR=vlserver
 ############################################################################
 # Definitions for installing header files
 
-INCFILEDIR = $(DESTDIR)\include
+INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES = \
-	$(INCFILEDIR)\afs\vl_opcodes.h \
-	$(INCFILEDIR)\afs\vlserver.h \
-	$(INCFILEDIR)\afs\vldbint.h
+	$(INCFILEDIR)\vl_opcodes.h \
+	$(INCFILEDIR)\vlserver.h \
+	$(INCFILEDIR)\vldbint.h
 
 ############################################################################
 # build afsvldb.lib
@@ -87,7 +87,6 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\cm_dns.obj
 
-	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -115,7 +114,7 @@ vldbint.xdr.c: vldbint.xg vldbint.h
 
 vldbint.h: vldbint.xg
 	$(RXGEN) -u -x -h -o $@ vldbint.xg
-	$(COPY) vldbint.h $(DESTDIR)\include\afs\vldbint.h
+	$(COPY) vldbint.h $(INCFILEDIR)\vldbint.h
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET
@@ -124,7 +123,7 @@ vldbint.h: vldbint.xg
 vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 	$(DEL) vlserver.h vl_errors.c
 	$(COMPILE_ET) vl_errors  -h vlserver
-	$(COPY) vlserver.h $(INCFILEDIR)\afs\vlserver.h
+	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
 
 ############################################################################
 # build local vldb_check
