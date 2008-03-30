@@ -195,7 +195,7 @@ static linked_list authedcells;	/* List of cells already logged to */
 static int usev5 = TRUE;   /* use kerberos 5? */
 static int use524 = FALSE;  /* use krb524? */
 static krb5_context context = 0;
-static krb5_ccache _krb425_ccache;
+static krb5_ccache _krb425_ccache = 0;
 
 void akexit(int exit_code)
 {
@@ -611,13 +611,19 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
 static int get_v5_user_realm(krb5_context context,char *realm)
 {
     static krb5_principal client_principal = 0;
+    krb5_error_code code;
     int i;
 
-    if (!_krb425_ccache)
-        krb5_cc_default(context, &_krb425_ccache);
-    if (!client_principal)
-        krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
-
+    if (!_krb425_ccache) {
+        code = krb5_cc_default(context, &_krb425_ccache);
+        if (code)
+            return(code);
+    }
+    if (!client_principal) {
+        code = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+        if (code)
+            return(code);
+    }
     i = krb5_princ_realm(context, client_principal)->length;
     if (i < REALM_SZ-1) i = REALM_SZ-1;
     strncpy(realm,krb5_princ_realm(context, client_principal)->data,i);
@@ -637,7 +643,7 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
         if (len > destlen - 1)
             len = destlen - 1;
 
-        strncpy(dest, len, krb5_princ_realm(context, ticket->server)->data);
+        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
         dest[len] = '\0';
 
         krb5_free_ticket(context, ticket);
@@ -1466,13 +1472,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (usev5)
+    if (usev5) {
         validate_krb5_availability();
-    else 
+        if (krb5_init_context(&context))
+            return(AKLOG_KERBEROS);
+    } else 
         validate_krb4_availability();
 
-    if(usev5)
-        krb5_init_context(&context);
 
     /* If nothing was given, log to the local cell. */
     if ((cells.nelements + paths.nelements) == 0)
