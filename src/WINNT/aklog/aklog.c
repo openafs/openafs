@@ -14,7 +14,7 @@
  */
 
 /*
- * Copyright (c) 2007 Secure Endpoints Inc.
+ * Copyright (c) 2007-2008 Secure Endpoints Inc.
  *
  * All rights reserved.
  *
@@ -625,6 +625,25 @@ static int get_v5_user_realm(krb5_context context,char *realm)
     return(KSUCCESS);
 }
 
+static void
+copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_creds *v5cred) {
+    krb5_error_code code;
+    krb5_ticket *ticket;
+    size_t len;
+
+    code = krb5_decode_ticket(&v5cred->ticket, &ticket);
+    if (code == 0) {
+        len = krb5_princ_realm(context, ticket->server)->length;
+        if (len > destlen - 1)
+            len = destlen - 1;
+
+        strncpy(dest, len, krb5_princ_realm(context, ticket->server)->data);
+        dest[len] = '\0';
+
+        krb5_free_ticket(context, ticket);
+    }
+}
+
 /*
 * Log to a cell.  If the cell has already been logged to, return without
 * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -702,6 +721,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         int retry = 1;
 	int realm_fallback = 0;
 
+        if ((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
+            fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
+                     progname, status);
+            return(AKLOG_KERBEROS);
+        }
+
         if ( strchr(name,'.') != NULL ) {
             fprintf(stderr, "%s: Can't support principal names including a dot.\n",
                     progname);
@@ -709,51 +734,61 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         }
 
       try_v5:
-	if (realm && realm[0])
-	    strcpy(realm_of_cell, realm);
-	else
-	    strcpy(realm_of_cell,
-		    afs_realm_of_cell5(context, &ak_cellconfig, realm_fallback));
-
-	if (dflag)
-            printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
-        status = get_v5cred(context, name, instance, realm_of_cell, 
+	if (realm && realm[0]) {
+            if (dflag)
+                printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm);
+            status = get_v5cred(context, name, instance, realm, 
 #ifdef HAVE_KRB4
                             use524 ? &c : NULL, 
 #else
                             NULL,
 #endif
                             &v5cred);
+            strcpy(realm_of_cell, realm);
+        } else {
+	    strcpy(realm_of_cell,
+		    afs_realm_of_cell5(context, &ak_cellconfig, realm_fallback));
 
-        if (status == 0 && strcmp(realm_of_cell, "") == 0) {
-            krb5_error_code code;
-            krb5_ticket *ticket;
+            if (retry == 1 && realm_fallback == 0) {
+                /* Only try the realm_of_user once */
+                status = -1;
+                if (dflag)
+                    printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_user);
+                status = get_v5cred(context, name, instance, realm_of_user, 
+#ifdef HAVE_KRB4
+                                     use524 ? &c : NULL, 
+#else
+                                     NULL,
+#endif
+                                     &v5cred);
+                if (status == 0) {
+                    /* we have determined that the client realm 
+                     * is a valid cell realm
+                     */
+                    strcpy(realm_of_cell, realm_of_user);
+                }
+            }
 
-            code = krb5_decode_ticket(&v5cred->ticket, &ticket);
-
-            if (code != 0) {
-                fprintf(stderr,
-                         "%s: Couldn't decode ticket to determine realm for "
-                         "cell %s.\n",
-                         progname, cell_to_use);
-            } else {
-                int len = krb5_princ_realm(context, ticket->server)->length;
-                /* This really shouldn't happen. */
-                if (len > REALM_SZ-1)
-                    len = REALM_SZ-1;
-
-                strncpy(realm_of_cell, krb5_princ_realm(context, ticket->server)->data, len);
-                realm_of_cell[len] = 0;
-
-                krb5_free_ticket(context, ticket);
+            if (status != 0 && (!retry || retry && strcmp(realm_of_user,realm_of_cell))) {
+                if (dflag)
+                    printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
+                status = get_v5cred(context, name, instance, realm_of_cell, 
+#ifdef HAVE_KRB4
+                                     use524 ? &c : NULL, 
+#else
+                                     NULL,
+#endif
+                                     &v5cred);
+                if (!status && !strlen(realm_of_cell)) 
+                    copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), v5cred);
             }
         }
 
-	if (status == KRB5_ERR_HOST_REALM_UNKNOWN) {
+	if (!realm_fallback && status == KRB5_ERR_HOST_REALM_UNKNOWN) {
 	    realm_fallback = 1;
 	    goto try_v5;
 	} else if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
-	    if (!realm_of_cell[0]) {
+	    if (!realm_fallback && !realm_of_cell[0]) {
 		realm_fallback = 1;
 		goto try_v5;
 	    }
@@ -766,7 +801,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                                 NULL,
 #endif
                                 &v5cred);
+            if (!status && !strlen(realm_of_cell)) 
+                copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), v5cred);
 	}
+     
         if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
             retry = 0;
 	    realm_fallback = 0;
@@ -890,13 +928,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     }       
     else    
     {
-        if (usev5) {
-            if((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
-                fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
-                         progname, status);
-                return(AKLOG_KERBEROS);
-            }
-        } else {
+        if (!usev5) {
 #ifdef HAVE_KRB4
             if ((status = krb_get_tf_realm(TKT_FILE, realm_of_user)) != KSUCCESS)
             {
@@ -909,12 +941,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 #endif
         }
 
-        /* For Khimaira we want to always append the realm to the name */
-        if (1 /* strcmp(realm_of_user, realm_of_cell) */)
-        {
-            strcat(username, "@");
-            strcat(username, realm_of_user);
-        }
+        /* For Network Identity Manager append the realm to the name */
+        strcat(username, "@");
+        strcat(username, realm_of_user);
 
         ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, 
 #ifdef HAVE_KRB4
