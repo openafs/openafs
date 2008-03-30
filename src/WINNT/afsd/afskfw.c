@@ -667,11 +667,11 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
         {
             if (cache && *cache != NULL) {
                 pkrb5_cc_close(*ctx, *cache);
-				*cache = NULL;
-			}
+                *cache = NULL;
+            }
 	
             pkrb5_free_context(*ctx);
-			*ctx = NULL;
+            *ctx = NULL;
         }
     }
 
@@ -2746,7 +2746,7 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
         if (len > destlen - 1)
             len = destlen - 1;
 
-        strncpy(dest, len, krb5_princ_realm(context, ticket->server)->data);
+        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
         dest[len] = '\0';
 
         pkrb5_free_ticket(context, ticket);
