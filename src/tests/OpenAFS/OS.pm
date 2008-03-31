@@ -13,30 +13,24 @@ my $path = $OpenAFS::Dirpath::openafsdirpath;
 # and commands.
 #
 sub create {
+  my $class = _get_class($path->{'ostype'});
+  $class->new(@_);
+}
+
+#
+# Create the OS object.
+#
+sub new {
+  my $class = shift;
   my $self = {
     'debug'=>0,
     'ostype'=>$path->{'ostype'},
     @_,
   };
 
-  my $class = _get_class($self->{'ostype'});
   $self = bless($self, $class);
+  $self->{'syscnf'} = "$path->{'initdir'}/test-afs-rc.conf";
   $self->{'commands'} = $self->get_commands();
-
-  # Put the paths to the cache and afsd into the path
-  # table. Assume legacy paths if the the viceetcdir is set to
-  # the Transarc path.
-  if ($path->{'viceetcdir'} eq '/usr/vice/etc') {
-    # set in the makefile dest targets
-    $path->{'cachedir'} = "/usr/vice"     unless $path->{'cachedir'};  
-    $path->{'afsddir'}  = "/usr/vice/etc" unless $path->{'afsddir'};
-  }
-  else {
-    # set in the makefile install targets
-    $path->{'cachedir'} = "$path->{'localstatedir'}/openafs" unless $path->{'cachedir'};
-    $path->{'afsddir'}  = "$path->{'afssrvsbindir'}"         unless $path->{'afsddir'};
-  }  
-
   return $self;
 }
 
@@ -156,6 +150,16 @@ sub find_pids {
   return @pids;
 }
 
+#
+# Returns the number of pids found for a program name.
+#
+sub number_running {
+  my $self = shift;
+  my $program = shift;
+  my @pids = $self->find_pids($program);
+  return scalar @pids;
+}
+
 #--------------------------------------------------------------
 package OpenAFS::OS::Linux;
 use warnings;
@@ -169,12 +173,11 @@ our @ISA = qw(OpenAFS::OS::Unix);
 #
 sub get_commands {
   my $self = shift;
-  my $syscnf = "$path->{'initdir'}/testclient.conf";
 
   my $commands = {
-    'client-start'         => "SYSCNF=$syscnf $path->{'initdir'}/afs.rc start",
-    'client-stop'          => "SYSCNF=$syscnf $path->{'initdir'}/afs.rc stop",
-    'client-restart'       => "SYSCNF=$syscnf $path->{'initdir'}/afs.rc restart",
+    'client-start'         => "SYSCNF=$self->{'syscnf'} $path->{'initdir'}/afs.rc start",
+    'client-stop'          => "SYSCNF=$self->{'syscnf'} $path->{'initdir'}/afs.rc stop",
+    'client-restart'       => "SYSCNF=$self->{'syscnf'} $path->{'initdir'}/afs.rc restart",
     'client-forcestop'     => sub { $self->client_forcestop() },
     'fileserver-start'     => sub { $self->fileserver_start() },
     'fileserver-stop'      => sub { $self->fileserver_stop() },
@@ -201,12 +204,11 @@ sub configure_client {
   };
   
   my $debug = $self->{'debug'};
-  my $syscnf = "$path->{'initdir'}/testclient.conf";
 
-  open (SYSCNF, "> $syscnf") or
-    die "error: Cannot open afs.rc configuration file $syscnf, $!\n";
+  open (SYSCNF, "> $self->{'syscnf'}") or
+    die "error: Cannot open afs.rc configuration file $self->{'syscnf'}, $!\n";
 
-  print "debug: creating afs.rc configuration file $syscnf\n" if $debug; 
+  print "debug: creating afs.rc configuration file $self->{'syscnf'}\n" if $debug; 
   print SYSCNF <<"_SYSCNF_";
 AFS_CLIENT=on
 AFS_SERVER=off
@@ -216,7 +218,7 @@ CACHESIZE=$config->{'cachesize'}
 OPTIONS="-confdir $path->{'viceetcdir'}"
 WAIT_FOR_SALVAGE=no
 AFSDIR=/afs
-CACHEDIR=$path->{'cachedir'}/cache
+CACHEDIR=$path->{'cachedir'}
 CACHEINFO=$path->{'viceetcdir'}/cacheinfo
 VERBOSE=
 AFS_POST_INIT=
@@ -228,7 +230,7 @@ MODLOADDIR=$path->{'afskerneldir'}
 _SYSCNF_
   close SYSCNF;
   if ($debug) {
-    if (open(SYSCNF, "< $syscnf")) {
+    if (open(SYSCNF, "< $self->{'syscnf'}")) {
       while (<SYSCNF>) {
         chomp; print "debug:  $_\n";
       }
@@ -237,10 +239,10 @@ _SYSCNF_
   }
 
   # Create a cache directory if none.
-  unless ( -d "$path->{'cachedir'}/cache" ) {
-    print "debug: making cache directory: $path->{'cachedir'}/cache\n" if $debug;
-    system("mkdir -p $path->{'cachedir'}/cache");
-    system("chmod 0700 $path->{'cachedir'}/cache"); 
+  unless ( -d "$path->{'cachedir'}" ) {
+    print "debug: making cache directory: $path->{'cachedir'}\n" if $debug;
+    system("mkdir -p $path->{'cachedir'}");
+    system("chmod 0700 $path->{'cachedir'}"); 
   }
 
   # Create the local /afs directory on which the afs filespace will be mounted. 
