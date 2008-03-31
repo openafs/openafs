@@ -8,10 +8,13 @@ if test -f dirpath.conf; then
   . dirpath.conf
 else
   echo "error: Missing dirpath.conf file, try make dirpath.conf"
+  exit 1
 fi
 
-if test -f run-test.conf; then
-  . run-test.conf
+if test -f run-tests.conf; then
+  . run-tests.conf
+else
+  echo "warning: Missing run-tests.conf, using default values."
 fi  
 
 
@@ -372,6 +375,12 @@ objdir=`cd $objdir; pwd`
 export srcdir
 export objdir
 
+# login
+if [ "$KERBEROS_TYPE" != "kaserver" ] ; then
+  kinit -k -t $KERBEROS_KEYTAB $ADMIN || exit 1;
+  $afswsbindir/aklog -d -c $CELLNAME || exit 1;
+fi
+
 echo "-------------------------------------------------"
 echo "$PACKAGE-$VERSION"
 echo "hosttype $host"
@@ -400,6 +409,10 @@ for a in $RUNTESTS; do
     b="${SHELL} ${SHELLVERBOSE} ${srcdir}/$a"
   else
     b="${objdir}/$a"
+  fi
+  if test "`echo $a | cut -c1`" = "#" ; then  # tests to skip
+    echo "Skipping $a"
+    continue
   fi
   echo "Running $a"
   test "X$VERBOSE" != "X" && echo "Running test $a ($b)."
