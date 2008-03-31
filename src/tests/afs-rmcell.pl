@@ -65,10 +65,12 @@ unless ($partition_id=~/^(([a-z])|([a-h][a-z])|([i][a-v]))$/) {
 
 unless ($batch) {
   my $rl = new Term::ReadLine('afs-rmcell');
-  print "\n*** WARNING!! WARNING!! WARNING!! *** \n";
-  print "You are about to permanently DESTROY the OpenAFS configuration, database, and volumes on this machine!\n\n";
-  my $answer = $rl->readline("Do you really want to destroy the AFS cell data? (y/n) [n] ");
-  unless ($answer=~/^y/i ) {
+  print "\n***  WARNING !!   WARNING !!   WARNING !!  *** \n\n";
+  print "You are about to permanently DESTROY the OpenAFS\n";
+  print "configuration, databases, and volumes on this machine!\n";
+  my $answer = $rl->readline("Do you really want to destroy the AFS cell? (destroy/no) [no] ");
+  unless ($answer eq "destroy" ) {
+    print "info: must answer 'destroy' to continue.\n" if $answer!~/^n/i;
     print "info: Aborted.\n";
     exit 0;
   }
@@ -87,6 +89,8 @@ $os->remove("$path->{'afsdbdir'}/prdb.DB0");
 $os->remove("$path->{'afsdbdir'}/prdb.DBSYS1");
 $os->remove("$path->{'afsdbdir'}/vldb.DB0");
 $os->remove("$path->{'afsdbdir'}/vldb.DBSYS1");
+$os->remove("$path->{'afsdbdir'}/kaserver.DB0");
+$os->remove("$path->{'afsdbdir'}/kaserver.DBSYS1");
 $os->remove("$path->{'afsbosconfigdir'}/BosConfig");
 $os->remove("$path->{'afslogsdir'}/*");
 $os->remove("$path->{'afslocaldir'}/*");
@@ -95,6 +99,8 @@ $os->remove("$path->{'afsconfdir'}/ThisCell");
 $os->remove("$path->{'afsconfdir'}/CellServDB");
 $os->remove("$path->{'afsconfdir'}/KeyFile");
 $os->remove("$path->{'afsconfdir'}/krb.conf");
+$os->remove("$path->{'afsddir'}/ThisCell");
+$os->remove("$path->{'afsddir'}/CellServDB");
 $os->remove("/vicep$partition_id/AFSIDat ");
 $os->remove("/vicep$partition_id/V*.vol");
 $os->remove("/vicep$partition_id/Lock");

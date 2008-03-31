@@ -7,6 +7,18 @@ use OpenAFS::Dirpath;
 use OpenAFS::ConfigUtils;
 
 my $path = $OpenAFS::Dirpath::openafsdirpath;
+my $classes = {
+  'mit'      => 'OpenAFS::Auth::MIT',
+  #'heimdal' => 'OpenAFS::Auth::Heimdal',
+  'kaserver' => 'OpenAFS::Auth::Kaserver',
+};
+
+my $bos       = "$path->{'afssrvbindir'}/bos";
+my $aklog     = "$path->{'afswsbindir'}/aklog";
+my $tokens    = "$path->{'afswsbindir'}/tokens";
+my $asetkey   = "$path->{'afssrvbindir'}/asetkey";
+my $kas       = "$path->{'afssrvsbindir'}/kas";
+my $klog      = "$path->{'afswsbindir'}/klog";
 
 #
 # Create an auth type for the specified Kerberos implementation.
@@ -27,24 +39,36 @@ my $path = $OpenAFS::Dirpath::openafsdirpath;
 #  $auth->authorize('admin');
 #
 sub create {
+  my $parms = {@_};
+  my $type = 'mit';
+
+  if (defined $parms->{'type'}) {
+    $type = $parms->{'type'};
+  }
+  $type =~ tr/A-Z/a-z/;
+  my $class = $classes->{$type};
+  unless($class) {
+    die "Unsupported kerberos type: $type\n";
+  }
+  return $class->new(@_);
+}
+
+#
+# Create an auth instance.
+#
+sub new {
+  my $class = shift;
   my $self = {
      # default values
      'type' => 'MIT',
-     'keytab' =>  "$path->{'afsconfdir'}/krb5.keytab",
      'cell' => '',
      'realm' => '', 
+     'admin' => 'admin',
      'debug' => '0',
      # user specified values
      @_,
   };
 
-  # check for supported kerberos type.
-  my $type = $self->{'type'};
-  $self->{'type'} = _check_kerberos_type($type) or 
-    die "Unsupported kerberos type: $type\n";
-
-  # create the sub-class for the kerberos type.
-  my $class = "OpenAFS::Auth::$self->{'type'}";
   $self = bless($self, $class);
 
   # attempt get default values.
@@ -73,19 +97,6 @@ sub create {
     }
   }
   return $self;
-}
-
-#
-# Check for supported kerberos type, and allow for case insensitivity.
-#
-sub _check_kerberos_type {
-  my $type = shift;
-  foreach my $supported ('MIT', 'Heimdal', 'Kaserver') {
-     if ($type =~ /^$supported$/i) {
-        return $supported;
-     }
-  }
-  return undef;
 }
 
 #
@@ -149,6 +160,19 @@ sub debug {
   return $self->{'debug'};
 }
 
+#
+# check_program($prog) - verify the program is installed.
+#
+sub check_program {
+  my $self = shift;
+  my $program = shift;
+  unless ( -f $program ) {
+     die "error: Missing program: $program\n";
+  }
+  unless ( -x $program ) {
+     die "error: Not executable: $program\n";
+  }
+}
 
 #------------------------------------------------------------------------------------
 # MIT Kerberos authorization commands.
@@ -159,20 +183,17 @@ use OpenAFS::Dirpath;
 use OpenAFS::ConfigUtils;
 our @ISA = ("OpenAFS::Auth");
 
+
 #
 # Sanity checks before we get started.
 #
 sub _sanity_check {
   my $self = shift;
-  unless (defined $path->{'afssrvbindir'}) {
-    die "error: \$path->{'afssrvbindir'} is not defined.\n";
-  }
-  unless (-f "$path->{'afssrvbindir'}/aklog") {
-    die "error: $path->{'afssrvbindir'}/aklog not found.\n";
-  }
-  unless (-x "$path->{'afssrvbindir'}/aklog") {
-    die "error: $path->{'afssrvbindir'}/aklog not executable.\n";
-  }
+
+  $self->check_program($aklog);
+  $self->check_program($tokens);
+  $self->check_program($asetkey);
+
   unless ($self->{'realm'}) {
     die "error: Missing realm parameter Auth::create().\n";
   }
@@ -182,43 +203,19 @@ sub _sanity_check {
   unless ( -f $self->{'keytab'} ) {
     die "error: Kerberos keytab file not found: $self->{'keytab'}\n";
   }
-  unless ( -f $self->{'keytab'} ) {
-    die "error: Keytab file not found: $self->{'keytab'}\n";
-  }
+
+  print "debug: Verifying the keytab and admin name, $self->{'admin'}.\n" if $self->debug;
+  run("kinit -k -t $self->{'keytab'} $self->{'admin'}");
+
+  print "debug: Getting the afs principal and kvno from the keytab.\n" if $self->debug;
+  $self->_prepare_make_keyfile();
 }
 
 #
-# Create the KeyFile from the Kerberos keytab file. The keytab file
-# should be created using the Kerberos kadmin command (or with the kadmin.local command
-# as root on the KDC). See the OpenAFS asetkey man page for details.
-# 
-sub make_keyfile {
+# Read the keytab to find the kvno of the afs principal.
+#
+sub _prepare_make_keyfile {
   my $self = shift;
-
-  # asetkey annoyance. The current asetkey implementation requires the ThisCell and CellServDB files
-  # to be present but they really are not needed to create the KeyFile. This check is done here
-  # rather than in the _sanity_checks() because the ThisCell/CellServerDB are created later in 
-  # the process of creating the new cell.
-  unless ( -f "$path->{'afsconfdir'}/ThisCell" ) {
-    die "error: OpenAFS configuration file is required, $path->{'afsconfdir'}/ThisCell\n";
-  }
-  unless ( -f "$path->{'afsconfdir'}/CellServDB" ) {
-    die "error: OpenAFS configuration file is required, $path->{'afsconfdir'}/CellServDB\n";
-  }
-
-  unless ( -f "$path->{'afssrvbindir'}/asetkey" ) {
-    die "error: $path->{'afssrvbindir'}/asetkey is missing.\nWas OpenAFS built with Kerberos support?\n";
-  }
-  unless ( -x "$path->{'afssrvbindir'}/asetkey" ) {
-    die "error: Do not have execute permissions on $path->{'afssrvbindir'}/asetkey\n";
-  }
-  unless ( -d $path->{'afsconfdir'} ) {
-    die "error: OpenAFS configuration directory '$path->{'afsconfdir'}' is missing.\n";
-  }
-  unless ( -w $path->{'afsconfdir'} ) {
-    die "error: Write access to the OpenAFS configuration directory '$path->{'afsconfdir'}' is required.\n";
-  }
-
 
   # Run klist to get the kvno of the afs key. Search for afs/cellname@REALM
   # then afs@REALM. klist must be in the path.
@@ -262,9 +259,37 @@ sub make_keyfile {
     die "error: Could not find an afs key matching 'afs/$cell\@$realm' or ".
       "'afs/$cell' in keytab $self->{'keytab'}\n";
   }
+  
+  $self->{'afs_principal'} = $afs_principal;
+  $self->{'afs_kvno'}      = $afs_kvno;
+}
 
-  # Run asetkey on the keytab to create the KeyFile. asetkey must be in the PATH.
-  run("$path->{'afssrvbindir'}/asetkey add $afs_kvno $self->{'keytab'} $afs_principal");
+#
+# Create the KeyFile from the Kerberos keytab file. The keytab file
+# should be created using the Kerberos kadmin command (or with the kadmin.local command
+# as root on the KDC). See the OpenAFS asetkey man page for details.
+#
+sub make_keyfile {
+  my $self = shift;
+  
+  # The current asetkey implementation requires the ThisCell and CellServDB files
+  # to be present but they really are not needed to create the KeyFile. A check is done here
+  # rather than in the _sanity_checks() because the ThisCell/CellServerDB are created later in 
+  # the process of creating the new cell.
+  unless ( -d $path->{'afsconfdir'} ) {
+    die "error: OpenAFS configuration directory '$path->{'afsconfdir'}' is missing.\n";
+  }
+  unless ( -w $path->{'afsconfdir'} ) {
+    die "error: Write access to the OpenAFS configuration directory '$path->{'afsconfdir'}' is required.\n";
+  }
+  unless ( -f "$path->{'afsconfdir'}/ThisCell" ) {
+    die "error: OpenAFS configuration file is required, $path->{'afsconfdir'}/ThisCell\n";
+  }
+  unless ( -f "$path->{'afsconfdir'}/CellServDB" ) {
+    die "error: OpenAFS configuration file is required, $path->{'afsconfdir'}/CellServDB\n";
+  }
+
+  run("$asetkey add $self->{'afs_kvno'} $self->{'keytab'} $self->{'afs_principal'}");
 }
 
 #
@@ -272,13 +297,13 @@ sub make_keyfile {
 #
 sub authorize {
   my $self = shift;
-  my $principal = shift || 'admin';
+  my $principal = shift || $self->{'admin'};
   my $opt_aklog = "";
   $opt_aklog .= " -d" if $self->debug;
 
   run("kinit -k -t $self->{'keytab'} $principal");
-  run("$path->{'afssrvbindir'}/aklog $opt_aklog");
-  run("$path->{'afssrvbindir'}/tokens");
+  run("$aklog $opt_aklog");
+  run("$tokens");
 }
 
 
@@ -305,6 +330,11 @@ sub _sanity_check {
   }
 }
 
+sub make_keyfile {
+  my $self = shift;
+  die "not implemented.";
+}
+
 #
 # Get kerberos ticket and AFS token for the user.
 #
@@ -321,14 +351,26 @@ use OpenAFS::Dirpath;
 use OpenAFS::ConfigUtils;
 our @ISA = ("OpenAFS::Auth");
 
+
 #
 # Various checks during initialization.
 #
 sub _sanity_check {
   my $self = shift;
+  $self->check_program($kas);
+  $self->check_program($klog);
+  $self->check_program($tokens);
   unless ($self->{'realm'}) {
     die "Missing realm parameter Auth::create().\n";
   }
+}
+
+sub make_keyfile {
+  my $self = shift;
+  run("$kas create afs -noauth");
+  run("$kas create admin -noauth");
+  run("$kas setfields admin -flags admin -noauth");
+  run("$bos addkey localhost -kvno 0 -noauth");
 }
 
 #
@@ -337,7 +379,8 @@ sub _sanity_check {
 sub authorize {
   my $self = shift;
   my $principal = shift || 'admin';
-  run("echo \"Proceeding w/o authentication\"|klog -pipe ${principal}\@$self->{'realm'}");
+  #run("echo \"Proceeding w/o authentication\"|klog -pipe ${principal}\@$self->{'realm'}");
+  run("klog $principal\@$self->{'realm'}");
 }
 
 1;
