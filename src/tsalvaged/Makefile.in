@@ -188,6 +188,6 @@ dest: salvageserver fssync-debug salvsync-debug
 		${DEST}/root.server/usr/afs/bin/salvsync-debug
 
 clean:
-	$(RM) -f *.o salvageserver core AFS_component_version_number.c
+	$(RM) -f *.o salvageserver core AFS_component_version_number.c fssync-debug salvsync-debug
 
 include ../config/Makefile.version
