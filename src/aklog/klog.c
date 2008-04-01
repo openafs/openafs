@@ -24,9 +24,7 @@
 
 #include <stdio.h>
 #include <pwd.h>
-#if 0
 #include <afs/com_err.h>
-#endif
 #include <afs/auth.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
@@ -45,7 +43,7 @@
 #endif
 
 #include "assert.h"
-
+#include "skipwrap.h"
 
 /* This code borrowed heavily from the previous version of log.  Here is the
    intro comment for that program: */
@@ -343,8 +341,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     krb5_principal princ = 0;
     char *cell, *pname, **hrealms, *service;
     char service_temp[MAXKTCREALMLEN + 20];
-    char realm[MAXKTCREALMLEN];
-    char lrealm[MAXKTCREALMLEN];	/* uppercase copy of local cellname */
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
     krb5_get_init_creds_opt gic_opts[1];
@@ -359,7 +355,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     time_t lifetime;		/* requested ticket lifetime */
     krb5_prompter_fct pf = NULL;
     char *pass = 0;
-    char *pa = 0;
+    void *pa = 0;
     struct kp_arg klog_arg[1];
 
     char passwd[BUFSIZ];
@@ -369,10 +365,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     static int Pipe = 0;	/* reading from a pipe */
     static int Silent = 0;	/* Don't want error messages */
 
-    int local;			/* explicit cell is same a local one */
     int writeTicketFile = 0;	/* write ticket file to /tmp */
-
-    char *reason;		/* string describing errors */
 
     service = 0;
     memset(incred, 0, sizeof *incred);
@@ -427,7 +420,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	authtype |= env_afs_rxk5_default();
 #endif
 
-    cell = as->parms[aCELL].items ? cell = as->parms[aCELL].items->data : 0;
+    cell = as->parms[aCELL].items ? as->parms[aCELL].items->data : 0;
     if ((code = afsconf_GetCellInfo(tdir, cell, "afsprot", cellconfig))) {
 	if (cell)
 	    afs_com_err(rn, code, "Can't get cell information for '%s'", cell);

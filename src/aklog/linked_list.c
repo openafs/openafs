@@ -7,9 +7,9 @@
  * For distribution and copying rights, see the file "mit-copyright.h"
  */
 
-#if !defined(lint) && !defined(SABER)
-static char *rcsid_list_c = "$Id$";
-#endif /* lint || SABER */
+#include <afsconfig.h>
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,11 +46,7 @@ void ll_init(linked_list *list)
     }
 
     /* This sets everything to zero, which is what we want. */
-#ifdef WINDOWS
-	memset(list, 0, sizeof(linked_list));
-#else
     bzero((char *)list, sizeof(linked_list));
-#endif /* WINDOWS */
 }
 
 ll_node *ll_add_node(linked_list *list, ll_end which_end)
@@ -164,10 +160,10 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
       case ll_s_add:
 	/* Add a string to the list. */
 	if (!ll_string(list, ll_s_check, string)) {
-	    if (cur_node = ll_add_node(list, ll_tail)) {
+	    if ((cur_node = ll_add_node(list, ll_tail))) {
 		char *new_string;
-		if (new_string = (char *)calloc(strlen(string) + 1, 
-						sizeof(char))) {
+		if ((new_string = (char *)calloc(strlen(string) + 1, 
+						sizeof(char)))) {
 		    strcpy(new_string, string);
 		    ll_add_data(cur_node, new_string);
 		}

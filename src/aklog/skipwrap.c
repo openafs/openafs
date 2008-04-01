@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <aklog.h>
 #include <krb5.h>
+#include "skipwrap.h"
 
 /* evil hack */
 #define SEQUENCE 16
