@@ -10,10 +10,6 @@
 #ifndef __LINKED_LIST_H__
 #define __LINKED_LIST_H__
 
-#if !defined(lint) && !defined(SABER)
-static char *rcsid_linked_list_h = "$Id$";
-#endif /* lint || SABER */
-
 #define LL_SUCCESS 0
 #define LL_FAILURE -1
 

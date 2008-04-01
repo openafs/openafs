@@ -8,10 +8,6 @@
 #ifndef __AKLOG_H__
 #define __AKLOG_H__
 
-#if !defined(lint) && !defined(SABER)
-static char *rcsid_aklog_h = "$Id$";
-#endif /* lint || SABER */
-
 #include <krb5.h>
 #include "linked_list.h"
 #include <afsconfig.h>
