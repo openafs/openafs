@@ -85,11 +85,6 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-#ifdef osi_Assert
-#undef osi_Assert
-#endif
-#define osi_Assert(e) (void)(e)
-
 extern int LogLevel;
 
 static SYNC_client_state fssync_state = 

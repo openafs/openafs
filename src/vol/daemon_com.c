@@ -63,11 +63,6 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-#ifdef osi_Assert
-#undef osi_Assert
-#endif
-#define osi_Assert(e) (void)(e)
-
 int (*V_BreakVolumeCallbacks) ();
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that

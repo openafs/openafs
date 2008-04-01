@@ -53,12 +53,6 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-#ifdef osi_Assert
-#undef osi_Assert
-#endif
-#define osi_Assert(e) (void)(e)
-
-
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
  * SALVSYNC is a feature specific to the demand attach fileserver
