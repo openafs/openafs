@@ -270,6 +270,7 @@ SALVSYNC_salvInit(void)
     pthread_attr_t tattr;
 
     /* initialize the queues */
+    Lock_Init(&SALVSYNC_handler_lock);
     assert(pthread_cond_init(&salvageQueue.cv, NULL) == 0);
     for (i = 0; i <= VOLMAXPARTS; i++) {
 	queue_Init(&salvageQueue.part[i]);
