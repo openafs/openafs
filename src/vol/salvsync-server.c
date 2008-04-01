@@ -317,13 +317,6 @@ SALVSYNC_syncThread(void * args)
     (void)signal(SIGPIPE, SIG_IGN);
 #endif
 
-    /* set our 'thread-id' so that the host hold table works */
-    MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
-    tid = ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_stats_mutex);
-    pthread_setspecific(rx_thread_id_key, (void *)tid);
-    Log("Set thread id %d for SALVSYNC_syncThread\n", tid);
-
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
     assert(!code);
