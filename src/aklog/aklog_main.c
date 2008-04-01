@@ -1830,8 +1830,8 @@ static krb5_error_code get_credv5(krb5_context context,
     static krb5_principal client_principal = 0;
 
     if (dflag) {
-	printf("Getting tickets: %s%s%s@%s\n", name, inst[0] ? "/" : "",
-	       inst, realm);
+	printf("Getting tickets: %s%s%s@%s\n", name, (inst && inst[0])
+	       ? "/" : "", inst ? inst : "", realm);
     }
     
     memset((char *)&increds, 0, sizeof(increds));
