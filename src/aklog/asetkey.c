@@ -108,7 +108,7 @@ main(int argc, char *argv[])
 
 	code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
 	if (code) {
-	    fprintf(stderr, "%s: failed to set key, code %d.\n", argv[0], code);
+	    fprintf(stderr, "%s: failed to set key, code %ld.\n", argv[0], code);
 	    exit(1);
 	}
 	krb5_free_principal(context, principal);
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
 	kvno = atoi(argv[2]);
 	code = afsconf_DeleteKey(tdir, kvno);
 	if (code) {
-	    fprintf(stderr, "%s: failed to delete key %d, (code %d)\n",
+	    fprintf(stderr, "%s: failed to delete key %ld, (code %ld)\n",
 		    argv[0], kvno, code);
 	    exit(1);
 	}
@@ -135,7 +135,7 @@ main(int argc, char *argv[])
 	
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {
-	    fprintf(stderr, "%s: failed to get keys, code %d\n", argv[0], code);
+	    fprintf(stderr, "%s: failed to get keys, code %ld\n", argv[0], code);
 	    exit(1);
 	}
 	for(i=0;i<tkeys.nkeys;i++) {
