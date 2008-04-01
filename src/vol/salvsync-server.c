@@ -74,11 +74,6 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-#ifdef osi_Assert
-#undef osi_Assert
-#endif
-#define osi_Assert(e) (void)(e)
-
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
 
