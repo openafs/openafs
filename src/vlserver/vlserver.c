@@ -85,7 +85,7 @@ CheckSignal(void *unused)
 
     if (errorcode =
 	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE))
-	return errorcode;
+	return (void *)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
 	HashNDump(trans, i);
