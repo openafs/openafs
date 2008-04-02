@@ -9,7 +9,7 @@
 srcdir=@srcdir@/../budb
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $<
+CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
 
 RX=../rx
 UTIL=../util
