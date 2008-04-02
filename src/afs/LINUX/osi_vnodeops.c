@@ -570,8 +570,10 @@ afs_linux_flush(struct file *fp)
 
     AFS_GLOCK();
 
-    if (fp->f_flags | O_RDONLY)     /* readers dont flush */
+    if (fp->f_flags | O_RDONLY) {     /* readers dont flush */
+	AFS_GUNLOCK();
 	return 0;
+    }
 
     credp = crref();
     vcp = VTOAFS(FILE_INODE(fp));
