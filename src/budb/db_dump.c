@@ -73,13 +73,23 @@ canWrite(fid)
     while (dumpSyncPtr->ds_bytes > 0) {
 	if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	    dumpSyncPtr->ds_readerStatus = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+#else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	    if (code)
 		LogError(code, "canWrite: Signal delivery failed\n");
+#endif
 	}
 	dumpSyncPtr->ds_writerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_mutex_lock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	assert(pthread_cond_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	assert(pthread_mutex_unlock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+#else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
+#endif
 	ObtainWriteLock(&dumpSyncPtr->ds_lock);
     }
     return (1);
@@ -103,9 +113,13 @@ haveWritten(nbytes)
     dumpSyncPtr->ds_bytes += nbytes;
     if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_readerStatus = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+#else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	if (code)
 	    LogError(code, "haveWritten: Signal delivery failed\n");
+#endif
     }
     ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 }
@@ -127,7 +141,13 @@ doneWriting(error)
 	LogDebug(4, "doneWriting: waiting for Reader\n");
 	dumpSyncPtr->ds_writerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_mutex_lock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	assert(pthread_cond_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	assert(pthread_mutex_unlock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+#else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
+#endif
 	ObtainWriteLock(&dumpSyncPtr->ds_lock);
     }
 
@@ -139,9 +159,13 @@ doneWriting(error)
     else
 	dumpSyncPtr->ds_writerStatus = DS_DONE;
     dumpSyncPtr->ds_readerStatus = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+#else
     code = LWP_NoYieldSignal(&dumpSyncPtr->ds_readerStatus);
     if (code)
 	LogError(code, "doneWriting: Signal delivery failed\n");
+#endif
     ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 }
 

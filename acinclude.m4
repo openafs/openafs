@@ -91,6 +91,9 @@ AC_ARG_ENABLE(optimize-pam,
 AC_ARG_ENABLE(warnings,
 [  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)],, enable_warnings="no"
 )
+AC_ARG_ENABLE(pthreaded-ubik,
+[  --enable-pthreaded-ubik		enable installation of pthreaded ubik applications (defaults to disabled)],, enable_pthreaded_ubik="no"
+)
 
 
 enable_login="no"
@@ -1307,9 +1310,14 @@ if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
 
+if test "x$enable_pthreaded_ubik" = "xyes"; then
+ENABLE_PTHREADED_UBIK=yes
+fi
+
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
+AC_SUBST(ENABLE_PTHREADED_UBIK)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(HOST_CPU)

@@ -32,6 +32,8 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
+#include <lwp.h>   /* temporary hack by klm */
+
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
 /*  This system is organized in a hierarchical set of related modules.  Modules
@@ -187,7 +189,17 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 {
     register struct ubik_dbase *tdb;
     register afs_int32 code;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+    pthread_t rxServerThread;        /* pthread variables */
+    pthread_t ubeacon_InteractThread;
+    pthread_t urecovery_InteractThread;
+    pthread_attr_t rxServer_tattr;
+    pthread_attr_t ubeacon_Interact_tattr;
+    pthread_attr_t urecovery_Interact_tattr;
+#else
     PROCESS junk;
+#endif
+
     afs_int32 secIndex;
     struct rx_securityClass *secClass;
 
@@ -220,6 +232,13 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
 
     /* initialize RX */
+
+    /* the following call is idempotent so when/if it got called earlier,
+     * by whatever called us, it doesn't really matter -- klm */
+    code = rx_Init(myPort);
+    if (code < 0)
+	return code;
+
     ubik_callPortal = myPort;
     /* try to get an additional security object */
     ubik_sc[0] = rxnull_NewServerSecurityObject();
@@ -235,9 +254,18 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     }
     /* for backwards compat this should keep working as it does now 
        and not host bind */
+#if 0
+    /* This really needs to be up above, where I have put it.  It works
+     * here when we're non-pthreaded, but the code above, when using
+     * pthreads may (and almost certainly does) end up calling on a
+     * pthread resource which gets initialized by rx_Init.  The end
+     * result is that an assert fails and the program dies. -- klm
+     */
     code = rx_Init(myPort);
     if (code < 0)
 	return code;
+#endif
+
     tservice =
 	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, 3,
 		      VOTE_ExecuteRequest);
@@ -262,8 +290,17 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
      * UpdateInterfaceAddr RPC that occurs in ubeacon_InitServerList. This avoids
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+/* do assert stuff */
+    assert(pthread_attr_init(&rxServer_tattr) == 0);
+    assert(pthread_attr_setdetachstate(&rxServer_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    assert(pthread_attr_setstacksize(&rxServer_tattr, rx_stackSize) == 0); */
+
+    assert(pthread_create(&rxServerThread, &rxServer_tattr, (void *)rx_ServerProc, NULL) == 0);
+#else
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
-		      (void *)0, "rx_ServerProc", &junk);
+              (void *)0, "rx_ServerProc", &junk);
+#endif
 
     /* do basic initialization */
     code = uvote_Init();
@@ -280,15 +317,41 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 	return code;
 
     /* now start up async processes */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+/* do assert stuff */
+    assert(pthread_attr_init(&ubeacon_Interact_tattr) == 0);
+    assert(pthread_attr_setdetachstate(&ubeacon_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    assert(pthread_attr_setstacksize(&ubeacon_Interact_tattr, 16384) == 0); */
+    /*  need another attr set here for priority???  - klm */
+
+    assert(pthread_create(&ubeacon_InteractThread, &ubeacon_Interact_tattr,
+           (void *)ubeacon_Interact, NULL) == 0);
+#else
     code = LWP_CreateProcess(ubeacon_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "beacon",
 			     &junk);
     if (code)
 	return code;
+#endif
+
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+/* do assert stuff */
+    assert(pthread_attr_init(&urecovery_Interact_tattr) == 0);
+    assert(pthread_attr_setdetachstate(&urecovery_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    assert(pthread_attr_setstacksize(&urecovery_Interact_tattr, 16384) == 0); */
+    /*  need another attr set here for priority???  - klm */
+
+    assert(pthread_create(&urecovery_InteractThread, &urecovery_Interact_tattr,
+           (void *)urecovery_Interact, NULL) == 0);
+
+    return 0;  /* is this correct?  - klm */
+#else  
     code = LWP_CreateProcess(urecovery_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "recovery",
 			     &junk);
     return code;
+#endif
+
 }
 
 int
@@ -364,7 +427,11 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 #endif
 		return UNOQUORUM;	/* a white lie */
 	    }
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    sleep(2);
+#else
 	    IOMGR_Sleep(2);
+#endif
 	    DBHOLD(dbase);
 	}
 #endif /* UBIK_PAUSE */
@@ -382,7 +449,13 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 	/* if we're writing already, wait */
 	while (dbase->flags & DBWRITING) {
 	    DBRELE(dbase);
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    assert(pthread_mutex_lock(&dbase->flags_mutex) == 0);
+	    assert(pthread_cond_wait(&dbase->flags_cond, &dbase->flags_mutex) == 0);
+	    assert(pthread_mutex_unlock(&dbase->flags_mutex) == 0);
+#else
 	    LWP_WaitProcess(&dbase->flags);
+#endif
 	    DBHOLD(dbase);
 	}
 	if (!ubeacon_AmSyncSite()) {
@@ -571,7 +644,11 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
 		code = 1;
 		tv.tv_sec = 1;	/* try again after a while (ha ha) */
 		tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+		select(0, 0, 0, 0, &tv);
+#else
 		IOMGR_Select(0, 0, 0, 0, &tv);	/* poll, should we wait on something? */
+#endif
 		break;
 	    }
 	}
@@ -875,7 +952,13 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
 	/* wait until version # changes, and then return */
 	if (vcmp(*aversion, adatabase->version) != 0)
 	    return 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_mutex_lock(&adatabase->version_mutex) == 0);
+	assert(pthread_cond_wait(&adatabase->version_cond,&adatabase->version_mutex) == 0);
+	assert(pthread_mutex_unlock(&adatabase->version_mutex) == 0);
+#else
 	LWP_WaitProcess(&adatabase->version);	/* same vers, just wait */
+#endif
     }
 }
 

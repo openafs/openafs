@@ -110,7 +110,11 @@ AwaitInitialization()
 	    start = time(0);
 	else if (time(0) - start > 5)
 	    return UNOQUORUM;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	sleep(1);
+#else
 	IOMGR_Sleep(1);
+#endif
     }
     return 0;
 }
@@ -200,7 +204,11 @@ InitRPC(ut, lock, this_op)
 		Log("Waiting for quorum election\n");
 	    if (wait < 15.0)
 		wait *= 1.1;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    sleep((int)wait);
+#else
 	    IOMGR_Sleep((int)wait);
+#endif
 	}
     }
     if (code)
@@ -1469,7 +1477,11 @@ CreateDump(call, dump)
 	    }
 
 	    /* dump id is in use - wait a while */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    sleep(1);
+#else
 	    IOMGR_Sleep(1);
+#endif
 	}			/*w */
     } else {
 	/* dump id supplied (e.g. for database restore) */

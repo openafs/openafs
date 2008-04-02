@@ -1,0 +1,416 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@/../ptserver
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $<
+
+RX=../rx
+UTIL=../util
+
+RXOBJS= rx_pthread.o rxkad_errs.o
+
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o pthread_glock.o
+
+INCLS=${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/lock.h  \
+	${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${srcdir}/ptserver.h \
+	${srcdir}/ptclient.h \
+	${srcdir}/ptuser.h \
+	ptint.h \
+	pterror.h \
+	${srcdir}/map.h \
+	${srcdir}/ptprototypes.h
+
+LINCLS=${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h  \
+	${TOP_INCDIR}/rx/rxkad.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${srcdir}/ptclient.h \
+	${srcdir}/ptuser.h \
+	ptint.h \
+	pterror.h
+
+LIBS=${RXOBJS} ${UTILOBJS}\
+	${TOP_LIBDIR}/libubik_pthread.a \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/librxstat.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	${LDFLAGS} ${MT_LIBS}
+
+
+all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
+	depinstall readgroup readpwd testpt
+
+depinstall: \
+	ptint.cs.c ptint.xdr.c \
+	${TOP_INCDIR}/afs/prclient.h \
+	${TOP_INCDIR}/afs/prerror.h \
+	${TOP_INCDIR}/afs/print.h \
+	${TOP_INCDIR}/afs/prserver.h \
+	${TOP_INCDIR}/afs/ptclient.h \
+	${TOP_INCDIR}/afs/ptuser.h \
+	${TOP_INCDIR}/afs/pterror.h \
+	${TOP_INCDIR}/afs/ptint.h \
+	${TOP_INCDIR}/afs/ptserver.h
+
+#
+# Build targets
+#
+
+rx_pthread.o: ${RX}/rx_pthread.c
+	${CCRULE}
+
+rxkad_errs.o: ../rxkad/rxkad_errs.c
+	${CCRULE}
+
+#
+# get the pthreaded util stuff compiled here.  we do this instead of
+# using the non-pthreaded libutil.a.  There probably should be a
+# pthreaded version of this library, as we are doing with ubik itself, but...
+#
+
+assert.o: ${UTIL}/assert.c
+	${CCRULE}
+
+uuid.o: ${UTIL}/uuid.c
+	${CCRULE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${CCRULE}
+
+fileutil.o: ${UTIL}/fileutil.c
+	${CCRULE}
+
+volparse.o: ${UTIL}/volparse.c
+	${CCRULE}
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${CCRULE}
+
+netutils.o: ${UTIL}/netutils.c
+	${CCRULE}
+
+dirpath.o: ${UTIL}/dirpath.c
+	${CCRULE}
+
+softsig.o: ${UTIL}/softsig.c
+	${CCRULE}
+
+hostparse.o: ${UTIL}/hostparse.c
+	${CCRULE}
+
+snprintf.o: ${UTIL}/snprintf.c
+	${CCRULE}
+
+pthread_glock.o: ${UTIL}/pthread_glock.c
+	${CCRULE}
+
+
+#ptserver.o: ${srcdir}/ptserver.c ${INCLS} AFS_component_version_number.c
+#	${CCRULE}
+
+ptserver.o: ${srcdir}/ptserver.c
+	${CCRULE}
+
+ptutils.o: ${srcdir}/ptutils.c
+	${CCRULE}
+
+ptprocs.o: ${srcdir}/ptprocs.c
+	${CCRULE}
+
+utils.o: ${srcdir}/utils.c
+	${CCRULE}
+
+map.o: ${srcdir}/map.c
+	${CCRULE}
+
+ptint.ss.o: ptint.ss.c
+	${CCRULE}
+
+ptint.cs.o: ptint.cs.c
+	${CCRULE}
+
+ptint.xdr.o: ptint.xdr.c
+	${CCRULE}
+
+ptint.cs.c: ${srcdir}/ptint.xg
+	${RXGEN} -x -C -u -o $@ ${srcdir}/ptint.xg
+
+ptint.ss.c: ${srcdir}/ptint.xg
+	${RXGEN} -x -S -o $@ ${srcdir}/ptint.xg
+
+ptint.xdr.c: ${srcdir}/ptint.xg
+	${RXGEN} -x -c -o $@ ${srcdir}/ptint.xg
+
+ptint.h: ${srcdir}/ptint.xg
+	${RXGEN} -x -h -u -o $@ ${srcdir}/ptint.xg
+
+ptint.cs.c: ptint.h
+ptint.ss.c: ptint.h
+ptint.xdr.c: ptint.h
+
+Kptint.cs.c: ${srcdir}/ptint.xg Kptint.h
+	${RXGEN} -x -k -C -o Kptint.cs.c ${srcdir}/ptint.xg
+ 
+Kptint.xdr.c: ${srcdir}/ptint.xg
+	${RXGEN} -x -k -c -o Kptint.xdr.c ${srcdir}/ptint.xg
+ 
+Kptint.h: ${srcdir}/ptint.xg
+	${RXGEN} -x -k -h -o Kptint.h ${srcdir}/ptint.xg
+
+display.o: ${srcdir}/display.c
+	${CCRULE}
+
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
+	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+
+db_verify.o: ${srcdir}/db_verify.c
+	${CCRULE}
+
+db_verify: db_verify.o pterror.o display.o $(LIBS)
+	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
+
+ptclient: ptclient.o display.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS}
+
+ptclient.o: ${srcdir}/ptclient.c
+	${CCRULE}
+
+ptuser.o: ${srcdir}/ptuser.c
+	${CCRULE}
+
+pterror.h pterror.c: ${srcdir}/pterror.et
+	$(RM) -f pterror.h pterror.c
+	${COMPILE_ET} -p ${srcdir} pterror
+
+libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
+	$(RM) -f $@
+	$(AR) crv $@ ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
+	$(CC) ${CFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS}
+
+pts.o: ${srcdir}/pts.c
+	${CCRULE}
+
+readgroup: readgroup.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o readgroup readgroup.o libprot.a ${LIBS} ${XLIBS}
+
+readgroup.o: ${srcdir}/readgroup.c
+	${CCRULE}
+
+readpwd: readpwd.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o readpwd readpwd.o libprot.a ${LIBS} ${XLIBS}
+
+readpwd.o: ${srcdir}/readpwd.c
+	${CCRULE}
+
+testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
+	case "$(SYS_NAME)" in \
+	*_darwin_12 ) \
+		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ;; \
+	* ) \
+		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ;; \
+	esac
+
+testpt.o: ${srcdir}/testpt.c
+	${CCRULE}
+
+pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
+
+pt_util.o: ${srcdir}/pt_util.c
+	${CCRULE}
+
+ubik.o: ${srcdir}/ubik.c
+	${CCRULE}
+
+prerror.h: pterror.h
+	${INSTALL} $? $@
+	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_PT' >> $@
+
+#
+# Installation targets
+#
+install: \
+	${DESTDIR}${afssrvlibexecdir}/ptserver \
+	${DESTDIR}${afssrvbindir}/pts \
+	${DESTDIR}${bindir}/pts \
+	${DESTDIR}${afssrvsbindir}/pt_util \
+	${DESTDIR}${afssrvsbindir}/prdb_check \
+	${DESTDIR}${libdir}/afs/libprot.a \
+	${DESTDIR}${includedir}/afs/prclient.h \
+	${DESTDIR}${includedir}/afs/prerror.h \
+	${DESTDIR}${includedir}/afs/print.h \
+	${DESTDIR}${includedir}/afs/prserver.h \
+	${DESTDIR}${includedir}/afs/ptclient.h \
+	${DESTDIR}${includedir}/afs/ptuser.h \
+	${DESTDIR}${includedir}/afs/pterror.h \
+	${DESTDIR}${includedir}/afs/ptint.h \
+	${DESTDIR}${includedir}/afs/ptserver.h
+
+${DEST}/root.server/usr/afs/bin/ptserver: ptserver
+	${INSTALL} $? $@
+
+${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/pt_util: pt_util
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libprot.a: libprot.a
+	${INSTALL} $? $@
+
+${DEST}/etc/prdb_check: db_verify
+	${INSTALL} -f $? $@
+
+${DEST}/include/afs/prclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/prerror.h: pterror.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/print.h: ptint.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/prserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ptserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ptint.h: ptint.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/pterror.h: pterror.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ptclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ptuser.h: ${srcdir}/ptuser.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
+	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
+	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
+
+include ../config/Makefile.version
+${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvbindir}/pts: pts
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/pts: pts
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvsbindir}/pt_util: pt_util
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
+	${INSTALL} -f $? $@
+
+${DESTDIR}${libdir}/afs/libprot.a: libprot.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libprot.a: libprot.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/prclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/prclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/prerror.h: pterror.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/prerror.h: pterror.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/print.h: ptint.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/print.h: ptint.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/prserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/prserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/ptclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/ptuser.h: ${srcdir}/ptuser.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ptclient.h: ${srcdir}/ptclient.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ptuser.h: ${srcdir}/ptuser.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/pterror.h: pterror.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/pterror.h: pterror.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/ptint.h: ptint.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ptint.h: ptint.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/ptserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ptserver.h: ${srcdir}/ptserver.h
+	${INSTALL} $? $@
+
+
+dest: \
+	${DEST}/root.server/usr/afs/bin/ptserver \
+	${DEST}/root.server/usr/afs/bin/pts \
+	${DEST}/bin/pts \
+	${DEST}/root.server/usr/afs/bin/pt_util \
+	${DEST}/etc/prdb_check \
+	${DEST}/lib/afs/libprot.a \
+	${DEST}/include/afs/prclient.h \
+	${DEST}/include/afs/prerror.h \
+	${DEST}/include/afs/print.h \
+	${DEST}/include/afs/prserver.h \
+	${DEST}/include/afs/ptclient.h \
+	${DEST}/include/afs/ptuser.h \
+	${DEST}/include/afs/pterror.h \
+	${DEST}/include/afs/ptint.h \
+	${DEST}/include/afs/ptserver.h
+

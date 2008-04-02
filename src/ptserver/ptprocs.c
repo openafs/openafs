@@ -647,8 +647,12 @@ nameToID(call, aname, aid)
 		   AUD_END);
 	ViceLog(125, ("PTS_NameToID: code %d aname %s aid %d", code,
 		      aname->namelist_val[i], aid->idlist_val[i]));
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
     aid->idlist_len = aname->namelist_len;
 
@@ -725,8 +729,12 @@ idToName(call, aid, aname)
 		  AUD_STR, aname->namelist_val[i], AUD_END);
 	ViceLog(125, ("PTS_idToName: code %d aid %d aname %s", code,
 		      aid->idlist_val[i], aname->namelist_val[i]));
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
     aname->namelist_len = aid->idlist_len;
 
@@ -821,8 +829,10 @@ Delete(call, aid, cid)
 	    if (code)
 		ABORT_WITH(tt, code);
 	    tentry.count--;	/* maintain count */
+#ifndef AFS_PTHREAD_ENV
 	    if ((i & 3) == 0)
 		IOMGR_Poll();
+#endif
 	}
 	tentry.next = centry.next;	/* thread out this block */
 	code = FreeBlock(tt, nptr);	/* free continuation block */
@@ -836,7 +846,9 @@ Delete(call, aid, cid)
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
+#endif
 	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	if (code)
 	    return code;
@@ -877,8 +889,10 @@ Delete(call, aid, cid)
 		if (code)
 		    ABORT_WITH(tt, code);
 		tentryg->countsg--;	/* maintain count */
+#ifndef AFS_PTHREAD_ENV
 		if ((i & 3) == 0)
 		    IOMGR_Poll();
+#endif
 	    }
 	    tentryg->nextsg = centry.next;	/* thread out this block */
 	    code = FreeBlock(tt, nptr);	/* free continuation block */
@@ -892,7 +906,9 @@ Delete(call, aid, cid)
 	    code = ubik_EndTrans(tt);
 	    if (code)
 		return code;
+#ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();	/* just to keep the connection alive */
+#endif
 
 	    code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	    if (code)
@@ -933,8 +949,10 @@ Delete(call, aid, cid)
 	    if (code)
 		ABORT_WITH(tt, code);
 	    count++;
+#ifndef AFS_PTHREAD_ENV
 	    if ((count & 3) == 0)
 		IOMGR_Poll();
+#endif
 	}
 	if (count < 50)
 	    continue;
@@ -946,7 +964,9 @@ Delete(call, aid, cid)
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
+#endif
 	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	if (code)
 	    return code;
@@ -1662,7 +1682,9 @@ listEntries(call, flag, startindex, bulkentries, nextstartindex, cid)
 	    goto done;
 
 	if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();
+#endif
 	    pollcount = 0;
 	}
 

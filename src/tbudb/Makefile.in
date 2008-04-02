@@ -1,0 +1,243 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+# */
+
+srcdir=@srcdir@/../budb
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $<
+
+RX=../rx
+UTIL=../util
+
+RXOBJS= rx_pthread.o rxkad_errs.o
+
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o pthread_glock.o
+
+
+INCLS=\
+	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/rx/rxkad.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/com_err.h \
+	${TOP_INCDIR}/afs/bubasics.h \
+	budb.h budb_client.h ${srcdir}/database.h
+
+# library ordering defined by top level makefile
+LIBS=${RXOBJS} ${UTILOBJS} \
+	${TOP_LIBDIR}/libbubasics.a \
+	${TOP_LIBDIR}/libubik_pthread.a \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	${LDFLAGS} ${MT_LIBS}
+
+COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
+
+SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
+	procs.o server.o budb_errs.o
+
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
+
+#
+# budb_errs.o actually depends on neither budb_client.h nor budb_errs.h
+# but generating either of them will rebuild budb_errs.c
+#
+budb_errs.o: budb_errs.c budb_client.h budb_errs.h
+
+budb_errs.c budb_client.h: ${srcdir}/budb_errs.et ${srcdir}/budb_client.p.h
+	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir} budb_errs -h budb_client
+
+budb_errs.h: ${srcdir}/budb_errs.et
+	${COMPILE_ET} -p ${srcdir} budb_errs
+
+#
+# Build targets
+#
+
+rx_pthread.o: ${RX}/rx_pthread.c
+	${CCRULE}
+
+rxkad_errs.o: ../rxkad/rxkad_errs.c
+	${CCRULE}
+
+# get the pthreaded util stuff compiled here.  we do this instead of
+# using the non-pthreaded libutil.a.  There probably should be a
+# pthreaded version of this library, as we are doing with ubik itself, but...
+#
+
+assert.o: ${UTIL}/assert.c
+	${CCRULE}
+
+uuid.o: ${UTIL}/uuid.c
+	${CCRULE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${CCRULE}
+
+fileutil.o: ${UTIL}/fileutil.c
+	${CCRULE}
+
+volparse.o: ${UTIL}/volparse.c
+	${CCRULE}
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${CCRULE}
+
+netutils.o: ${UTIL}/netutils.c
+	${CCRULE}
+
+dirpath.o: ${UTIL}/dirpath.c
+	${CCRULE}
+
+softsig.o: ${UTIL}/softsig.c
+	${CCRULE}
+
+hostparse.o: ${UTIL}/hostparse.c
+	${CCRULE}
+
+snprintf.o: ${UTIL}/snprintf.c
+	${CCRULE}
+
+pthread_glock.o: ${UTIL}/pthread_glock.c
+	${CCRULE}
+
+
+database.o: ${srcdir}/database.c budb_errs.h ${srcdir}/globals.h ${INCLS}
+	${CCRULE}
+
+db_alloc.o: ${srcdir}/db_alloc.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+db_dump.o: ${srcdir}/db_dump.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+dbs_dump.o: ${srcdir}/dbs_dump.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+db_lock.o:  ${srcdir}/db_lock.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+db_text.o:  ${srcdir}/db_text.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+db_hash.o: ${srcdir}/db_hash.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+ol_verify.o:	${srcdir}/ol_verify.c budb_errs.h ${INCLS}
+	${CCRULE}
+
+procs.o: ${srcdir}/procs.c budb_errs.h ${srcdir}/globals.h ${INCLS}
+	${CCRULE}
+
+struct_ops.o: ${srcdir}/struct_ops.c budb_errs.h
+	${CCRULE}
+
+server.o: ${srcdir}/server.c budb_errs.h ${INCLS} AFS_component_version_number.c
+	${CCRULE}
+
+
+budb_server: $(SERVER_OBJS) ${LIBS}
+	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
+
+budb.cs.c: ${srcdir}/budb.rg
+	${RXGEN} -u -C -o $@ ${srcdir}/budb.rg
+
+budb.ss.c: ${srcdir}/budb.rg
+	${RXGEN} -S -o $@ ${srcdir}/budb.rg
+
+budb.xdr.c: ${srcdir}/budb.rg
+	${RXGEN} -c -o $@ ${srcdir}/budb.rg
+
+budb.h: ${srcdir}/budb.rg
+	${RXGEN} -u -h -o $@ ${srcdir}/budb.rg
+
+budb.cs.c: budb.h
+budb.xdr.c: budb.h
+budb.ss.c: budb.h
+
+libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+#
+# Install targets
+#
+install: \
+	${DESTDIR}${libdir}/afs/libbudb.a \
+	${DESTDIR}${includedir}/afs/budb.h \
+	${DESTDIR}${includedir}/afs/budb_errs.h \
+	${DESTDIR}${includedir}/afs/budb_client.h \
+	${DESTDIR}${afssrvlibexecdir}/buserver
+
+${DEST}/lib/afs/libbudb.a: libbudb.a
+	${INSTALL} $? $@
+
+${DEST}/include/afs/budb.h: budb.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/budb_errs.h: budb_errs.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/budb_client.h: budb_client.h
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/buserver: budb_server
+	${INSTALL} -f $? $@
+
+#
+# Misc targets
+#
+clean:
+	$(RM) -f *.o *~ budb_errs.[ch] budb.h budb_client.h *.a *.xdr.c \
+		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
+
+include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libbudb.a: libbudb.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbudb.a: libbudb.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb.h: budb.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb.h: budb.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb_errs.h: budb_errs.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb_client.h: budb_client.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb_client.h: budb_client.h
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
+	${INSTALL} -f $? $@
+
+dest: \
+	${DEST}/lib/afs/libbudb.a \
+	${DEST}/include/afs/budb.h \
+	${DEST}/include/afs/budb_errs.h \
+	${DEST}/include/afs/budb_client.h \
+	${DEST}/root.server/usr/afs/bin/buserver
+

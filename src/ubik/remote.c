@@ -566,7 +566,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
-#if !defined(OLD_URECOVERY) && defined(AFS_PTHREAD_ENV)
+#if !defined(OLD_URECOVERY) && !defined(AFS_PTHREAD_ENV)
 	if (pass % 4 == 0)
 	    IOMGR_Poll();
 #endif
@@ -626,7 +626,11 @@ SDISK_SendFile(rxcall, file, length, avers)
 #endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));
     udisk_Invalidate(dbase, file);	/* new dbase, flush disk buffers */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+    assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
+#else
     LWP_NoYieldSignal(&dbase->version);
+#endif
     DBRELE(dbase);
   failed:
     if (code) {

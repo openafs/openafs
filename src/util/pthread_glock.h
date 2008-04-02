@@ -42,6 +42,8 @@ extern int pthread_recursive_mutex_unlock(pthread_recursive_mutex_p);
 
 #else
 
+#include <syslog.h>
+
 #define LOCK_GLOBAL_MUTEX
 #define UNLOCK_GLOBAL_MUTEX
 

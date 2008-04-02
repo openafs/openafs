@@ -116,7 +116,8 @@ DESOBJS =\
 CRYPT_OBJ = crypt.o
 
 LWPOBJS = \
-	fasttime.o
+	fasttime.o \
+	lock.o
 
 LIBOBJS = \
 	${RXOBJS} \
@@ -352,6 +353,9 @@ base64.o: ${UTIL}/base64.c
 
 fasttime.o: ${LWP}/fasttime.c
 	${CCRULE} ${LWP}/fasttime.c
+
+lock.o: ${LWP}/lock.c
+	${CCRULE} ${LWP}/lock.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
