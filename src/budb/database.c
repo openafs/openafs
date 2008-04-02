@@ -89,7 +89,9 @@ dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;
@@ -121,7 +123,9 @@ dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;
@@ -154,7 +158,9 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;

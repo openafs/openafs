@@ -70,6 +70,10 @@ char dbDir[AFSDIR_PATH_MAX], cellConfDir[AFSDIR_PATH_MAX];
 int debugging = 0;
 
 int rxBind = 0;
+int lwps   = 3;
+
+#define MINLWP  3
+#define MAXLWP 16
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -167,6 +171,12 @@ initializeArgHandler()
     cmd_AddParm(cptr, "-auditlog", CMD_SINGLE, CMD_OPTIONAL,
 		"audit log path");
 
+    cmd_AddParm(cptr, "-p", CMD_SINGLE, CMD_OPTIONAL,
+		"number of processes");
+
+    cmd_AddParm(cptr, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+		"bind the Rx socket (primary interface only)");
+
 }
 
 int
@@ -246,6 +256,26 @@ argHandler(struct cmd_syndesc *as, void *arock)
 		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else
 	    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+    }
+
+    /* user provided the number of threads    */
+    if (as->parms[8].items != 0) {
+	lwps = atoi(as->parms[8].items->data);
+	if (lwps > MAXLWP) {
+	    printf ("Warning: '-p %d' is too big; using %d instead\n",
+		lwps, MAXLWP);
+	    lwps = MAXLWP;
+	}
+	if (lwps < MINLWP) {
+	    printf ("Warning: '-p %d' is too small; using %d instead\n",
+		lwps, MINLWP);
+	    lwps = MINLWP;
+	}
+    }
+
+    /* user provided rxbind option    */
+    if (as->parms[9].items != 0) {
+	rxBind = 1;
     }
 
     return 0;
@@ -562,7 +592,7 @@ main(argc, argv)
 	BUDB_EXIT(3);
     }
     rx_SetMinProcs(tservice, 1);
-    rx_SetMaxProcs(tservice, 3);
+    rx_SetMaxProcs(tservice, lwps);
     rx_SetStackSize(tservice, 10000);
 
     /* allow super users to manage RX statistics */

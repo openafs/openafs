@@ -32,6 +32,7 @@ src/bu_utils/Makefile \
 src/bubasics/Makefile \
 src/bucoord/Makefile \
 src/budb/Makefile \
+src/tbudb/Makefile \
 src/butc/Makefile \
 src/butm/Makefile \
 src/cmd/Makefile \
@@ -96,6 +97,7 @@ src/platform/${MKAFS_OSTYPE}/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
+src/tptserver/Makefile \
 src/rx/Makefile \
 src/rx/bulk.example/Makefile \
 src/rx/bulktest/Makefile \
@@ -121,6 +123,7 @@ src/tsm41/Makefile \
 src/tviced/Makefile \
 src/tvolser/Makefile \
 src/ubik/Makefile \
+src/tubik/Makefile \
 src/update/Makefile \
 src/usd/Makefile \
 src/usd/test/Makefile \
@@ -132,6 +135,7 @@ src/venus/test/Makefile \
 src/vfsck/Makefile \
 src/viced/Makefile \
 src/vlserver/Makefile \
+src/tvlserver/Makefile \
 src/vol/Makefile \
 src/vol/test/Makefile \
 src/volser/Makefile \

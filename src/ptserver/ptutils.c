@@ -1300,8 +1300,12 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 		return code;
 #endif
 	}
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
 
     if (add) {			/* this is for a CPS, so tack on appropriate stuff */
@@ -1316,8 +1320,10 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 		return code;
 	}
     }
+#ifndef AFS_PTHREAD_ENV
     if (alist->prlist_len > 100)
 	IOMGR_Poll();
+#endif
     qsort(alist->prlist_val, alist->prlist_len, sizeof(afs_int32), IDCmp);
     return PRSUCCESS;
 }
@@ -1376,8 +1382,12 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 #endif
 	}
 	nptr = centry.next;
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
 
     for (i = 0; i < PRSIZE; i++) {
@@ -1407,8 +1417,12 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 		    break;
 	    }
 	    nptr = centry.next;
-	    if (count++ > 50)
-		IOMGR_Poll(), count = 0;
+	    if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+		IOMGR_Poll();
+#endif
+		count = 0;
+	    }
 	}
     }
     if (add) {			/* this is for a CPS, so tack on appropriate stuff */
@@ -1423,8 +1437,10 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 		return code;
 	}
     }
+#ifndef AFS_PTHREAD_ENV
     if (alist->prlist_len > 100)
 	IOMGR_Poll();
+#endif
     qsort(alist->prlist_val, alist->prlist_len, sizeof(afs_int32), IDCmp);
     return PRSUCCESS;
 }
@@ -1529,8 +1545,12 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 		return code;
 	}
 	nptr = centry.next;
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
 #if DEBUG_SG_MAP
     fprintf(stderr, "] for gid %d, done [flag=%s]\n", gid,
@@ -1589,12 +1609,18 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 		return code;
 	}
 	nptr = centry.next;
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
 
+#ifndef AFS_PTHREAD_ENV
     if (alist->prlist_len > 100)
 	IOMGR_Poll();
+#endif
     qsort((char *)alist->prlist_val, (int)alist->prlist_len,
 	  sizeof(afs_int32), IDCmp);
     return PRSUCCESS;
@@ -1623,11 +1649,17 @@ GetOwnedChain(struct ubik_trans *ut, afs_int32 *next, prlist *alist)
 	}
 	if (code)
 	    return code;
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
+#ifndef AFS_PTHREAD_ENV
     if (alist->prlist_len > 100)
 	IOMGR_Poll();
+#endif
     qsort(alist->prlist_val, alist->prlist_len, sizeof(afs_int32), IDCmp);
     return PRSUCCESS;
 }

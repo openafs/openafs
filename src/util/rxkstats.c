@@ -4,6 +4,8 @@
 #include <des.h>
 #include <des/stats.h>
 
-#ifndef AFS_PTHREAD_ENV 
+#ifndef AFS_PTHREAD_ENV
 struct rxkad_stats rxkad_stats = { { 0 } }; 
+#else
+rxkad_stats_t rxkad_stats = { { 0 } };
 #endif

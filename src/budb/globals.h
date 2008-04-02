@@ -61,10 +61,18 @@ struct dumpSyncS {
     struct Lock ds_lock;	/* for this struct. */
     afs_int32 statusFlags;	/* 0, or 1 for dump in progress */
     int pipeFid[2];		/* pipe between threads */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+    pthread_mutex_t ds_writerStatus_mutex;
+    pthread_mutex_t ds_readerStatus_mutex;
+    pthread_cond_t ds_writerStatus_cond;
+    pthread_cond_t ds_readerStatus_cond;
+    pthread_t dumperPid;
+#else
+    PROCESS dumperPid;		/* pid of dumper lwp */
+#endif
     char ds_writerStatus;
     char ds_readerStatus;
 
-    PROCESS dumperPid;		/* pid of dumper lwp */
     struct ubik_trans *ut;	/* dump db transaction */
     afs_int32 ds_bytes;		/* no. of bytes buffered */
     time_t timeToLive;		/* time. After this, kill the dump */

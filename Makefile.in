@@ -15,6 +15,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 WITH_OBSOLETE=@WITH_OBSOLETE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -187,10 +188,34 @@ auth: cmd comerr comerr des lwp rx sys rxkad audit auth_depinstall
 ubik: cmd comerr auth ubik_depinstall
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
+tubik: ubik libafsrpc
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} tubik ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT ubik for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} tubik  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT ubik for ${SYS_NAME} ;; \
+	esac
+
 ubiktests: ubik
 
 ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
+
+tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} tptserver ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT ptserver for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} tptserver  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT ptserver for ${SYS_NAME} ;; \
+	esac
 
 kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
@@ -238,10 +263,23 @@ tsalvaged: vol libafsrpc libafsauthent cmd util
 vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
-viced: cmd comerr vlserver audit
+tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent tvlserver_depinstall
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT tvlserver for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} tvlserver  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT tvlserver for ${SYS_NAME} ;; \
+	esac
+
+
+viced: cmd comerr vlserver tvlserver audit
 	${COMPILE_PART1} viced ${COMPILE_PART2}
 
-tviced: cmd comerr viced vlserver libafsrpc libafsauthent
+tviced: cmd comerr viced vlserver tvlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
@@ -390,6 +428,9 @@ ubik_depinstall: pinstall comerr rxgen
 vlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
 
+tvlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
+	${COMPILE_PART1} tvlserver ${COMPILE_DEPINSTALL}
+
 auth_depinstall: pinstall comerr
 	${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
 
@@ -427,11 +468,11 @@ ${DEST}/bin/dedebug: dedebug
 libafs_setup: config export
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 
-libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
@@ -451,7 +492,7 @@ UKERNELDIR= \
 libuafs_setup: config export
 	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
-libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
+libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
 		rxstat_depinstall lwp_depinstall sys_depinstall des
@@ -497,6 +538,18 @@ tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 
 budb: cmd comerr bubasics uss
 	${COMPILE_PART1} budb ${COMPILE_PART2}
+
+tbudb: budb
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT budb for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} tbudb  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT budb for ${SYS_NAME} ;; \
+	esac
 
 bucoord: cmd comerr bubasics budb volser
 	${COMPILE_PART1} bucoord ${COMPILE_PART2}
@@ -589,15 +642,15 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
-finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
+finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
+	ptserver tptserver scout bu_utils ubik tubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
-finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
+finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log package \
+	ptserver tptserver scout bu_utils ubik tubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
@@ -645,13 +698,16 @@ clean2:
 	-${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
 	-${COMPILE_PART1} auth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ubik ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tubik ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ptserver ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tptserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} kauth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} dauth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libacl ${COMPILE_CLEAN}
 	-${COMPILE_PART1} dir ${COMPILE_CLEAN}
 	-${COMPILE_PART1} vol ${COMPILE_CLEAN}
 	-${COMPILE_PART1} vlserver ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tvlserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
@@ -683,6 +739,7 @@ clean2:
 	-${COMPILE_PART1} butc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tbutc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} budb ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tbudb ${COMPILE_CLEAN}
 	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
 	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
@@ -736,6 +793,7 @@ distclean: clean
 	src/bubasics/Makefile \
 	src/bucoord/Makefile \
 	src/budb/Makefile \
+	src/tbudb/Makefile \
 	src/butc/Makefile \
 	src/butm/Makefile \
 	src/cmd/test/Makefile \
@@ -798,6 +856,7 @@ distclean: clean
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \
 	src/ptserver/Makefile \
+	src/tptserver/Makefile \
 	src/rx/Makefile \
 	src/rx/bulk.example/Makefile \
 	src/rx/bulktest/Makefile \
@@ -823,6 +882,7 @@ distclean: clean
 	src/tviced/Makefile \
 	src/tvolser/Makefile \
 	src/ubik/Makefile \
+	src/tubik/Makefile \
 	src/update/Makefile \
 	src/usd/test/Makefile \
 	src/usd/Makefile \
@@ -834,6 +894,7 @@ distclean: clean
 	src/vfsck/Makefile \
 	src/viced/Makefile \
 	src/vlserver/Makefile \
+	src/tvlserver/Makefile \
 	src/vol/Makefile \
 	src/vol/test/Makefile \
 	src/volser/Makefile \

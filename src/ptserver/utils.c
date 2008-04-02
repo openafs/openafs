@@ -901,7 +901,9 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 	if (gid == AUTHUSERID && aid != ANONYMOUSID)
 	    return 1;
 	if (gid < 0) {
+#ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();
+#endif
 	    if (IsAMemberOfSG(at, aid, gid, depth - 1))
 		return 1;
 	}
@@ -924,7 +926,9 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 		if (gid == AUTHUSERID && aid != ANONYMOUSID)
 		    return 1;
 		if (gid < 0) {
+#ifndef AFS_PTHREAD_ENV
 		    IOMGR_Poll();
+#endif
 		    if (IsAMemberOfSG(at, aid, gid, depth - 1))
 			return 1;
 		}

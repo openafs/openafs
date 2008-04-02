@@ -798,8 +798,11 @@ udisk_commit(struct ubik_trans *atrans)
 	}
 
 	dbase->version.counter++;	/* bump commit count */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
+#else
 	LWP_NoYieldSignal(&dbase->version);
-
+#endif
 	code = udisk_LogEnd(dbase, &dbase->version);
 	if (code) {
 	    dbase->version.counter--;
@@ -915,6 +918,10 @@ udisk_end(struct ubik_trans *atrans)
     free(atrans);
 
     /* Wakeup any writers waiting in BeginTrans() */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&dbase->flags_cond) == 0);
+#else
     LWP_NoYieldSignal(&dbase->flags);
+#endif
     return 0;
 }

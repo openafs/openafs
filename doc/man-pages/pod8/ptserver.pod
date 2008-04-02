@@ -7,9 +7,9 @@ ptserver - Initializes the Protection Server
 =for html
 <div class="synopsis">
 
-B<ptserver> S<<< [B<-database> <I<db path>>] >>> S<<< [B<-p> <I<number of processes>>] >>>
+B<ptserver> S<<< [B<-database> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>>
     [B<-rebuildDB>] [B<-enable_peer_stats>] [B<-enable_process_stats>]
-    [B<-allow-dotted-principal>] [B<-help>]
+    [B<-allow-dotted-principal>] [B<-rxbind>] [B<-help>]
 
 =for html
 </div>
@@ -63,10 +63,11 @@ filename to which the C<.DB0> and C<.DBSYS1> extensions are appended. For
 example, the appropriate value for the default database files is
 F</usr/afs/db/prdb>.
 
-=item B<-p> <I<number of processes>>
+=item B<-p> <I<number of threads>>
 
-Sets the number of server lightweight processes (LWPs) to run.  Provide a
-positive integer from the range C<3> to C<16>. The default value is C<3>.
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide a positive integer from the range C<3> to C<16>. The default
+value is C<3>.
 
 =item B<-rebuildDB>
 
@@ -98,6 +99,11 @@ the confusion where principals user/admin and user.admin are both mapped to the
 user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
 between principal names may disable this check by starting the server
 with this option.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
 
 =item B<-help>
 

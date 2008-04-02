@@ -1094,9 +1094,10 @@ verifyMapBits()
 
 	/* check each entry */
 	for (entryIndex = 0; entryIndex < blockMap[blockIndex]->nEntries; entryIndex++) {	/*f */
+#ifndef AFS_PTHREAD_ENV
 	    if ((entryIndex % 1024) == 0)
 		IOMGR_Poll();
-
+#endif
 	    bits = blockMap[blockIndex]->entries[entryIndex];
 
 	    for (i = 0; i < NMAPCs; i++)

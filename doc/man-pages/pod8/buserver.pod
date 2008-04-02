@@ -9,8 +9,9 @@ buserver - Initializes the Backup Server
 
 B<buserver> S<<< [B<-database> <I<database directory>>] >>>
     S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
-    [B<-noauth>] [B<-smallht>] [-servers <I<list of ubik database servers>>+]
-    [B<-enable_peer_stats>]  [-enable_process_stats] [B<-help>]
+    [B<-noauth>] [B<-smallht>] [B<-servers> <I<list of ubik database servers>>+]
+    [B<-enable_peer_stats>]  [B<-enable_process_stats>] [B<-rxbind>]
+    [B<-p> <I<number of threads>>] [B<-help>]
 
 =for html
 </div>
@@ -114,6 +115,16 @@ storage. A separate record is kept for each type of RPC (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
+
+=item B<-p> <I<number of threads>>
+
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide a positive integer from the range 3 to 16. The default value is 3.
 
 =item B<-help>
 

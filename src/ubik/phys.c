@@ -23,7 +23,14 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include <sys/stat.h>
+
+/* #if defined (AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV) */
+#if 0   /* temporary hack - klm */
+/* nothing */
+#else
 #include <lwp.h>
+#endif
+
 #include <lock.h>
 #include <errno.h>
 #include <string.h>

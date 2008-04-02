@@ -74,7 +74,11 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 static void
 CheckSignal_Signal()
 {
+#if defined(AFS_PTHREAD_ENV)
+    CheckSignal(0);
+#else
     IOMGR_SoftSig(CheckSignal, 0);
+#endif
 }
 
 static void *
