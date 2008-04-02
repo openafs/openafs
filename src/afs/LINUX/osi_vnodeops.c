@@ -588,7 +588,7 @@ afs_linux_flush(struct file *fp)
 
     AFS_GLOCK();
 
-    if (fp->f_flags | O_RDONLY) {     /* readers dont flush */
+    if ((fp->f_flags & O_ACCMODE) == O_RDONLY) { /* readers dont flush */
 	AFS_GUNLOCK();
 	return 0;
     }
