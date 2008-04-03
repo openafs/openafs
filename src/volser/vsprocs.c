@@ -55,7 +55,7 @@ RCSID
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <setjmp.h>
 
-#include <volser_prototypes.h>
+#include "volser_prototypes.h"
 
 struct ubik_client *cstruct;
 int verbose = 0;
