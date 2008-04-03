@@ -6,13 +6,14 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 # */
 
-srcdir=@srcdir@/../budb
+srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
 
 RX=../rx
 UTIL=../util
+BUDB=../budb
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
@@ -32,7 +33,7 @@ INCLS=\
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/com_err.h \
 	${TOP_INCDIR}/afs/bubasics.h \
-	budb.h budb_client.h ${srcdir}/database.h
+	budb.h budb_client.h ${BUDB}/database.h
 
 # library ordering defined by top level makefile
 LIBS=${RXOBJS} ${UTILOBJS} \
@@ -43,14 +44,14 @@ LIBS=${RXOBJS} ${UTILOBJS} \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	${LDFLAGS} ${MT_LIBS}
+	${MT_LIBS}
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server ${INCLS}
 
 #
 # budb_errs.o actually depends on neither budb_client.h nor budb_errs.h
@@ -58,11 +59,11 @@ all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_err
 #
 budb_errs.o: budb_errs.c budb_client.h budb_errs.h
 
-budb_errs.c budb_client.h: ${srcdir}/budb_errs.et ${srcdir}/budb_client.p.h
-	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir} budb_errs -h budb_client
+budb_errs.c budb_client.h: ${BUDB}/budb_errs.et ${BUDB}/budb_client.p.h
+	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${BUDB} budb_errs -h budb_client
 
-budb_errs.h: ${srcdir}/budb_errs.et
-	${COMPILE_ET} -p ${srcdir} budb_errs
+budb_errs.h: ${BUDB}/budb_errs.et
+	${COMPILE_ET} -p ${BUDB} budb_errs
 
 #
 # Build targets
@@ -116,54 +117,54 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 	${CCRULE}
 
 
-database.o: ${srcdir}/database.c budb_errs.h ${srcdir}/globals.h ${INCLS}
+database.o: ${BUDB}/database.c
 	${CCRULE}
 
-db_alloc.o: ${srcdir}/db_alloc.c budb_errs.h ${INCLS}
+db_alloc.o: ${BUDB}/db_alloc.c
 	${CCRULE}
 
-db_dump.o: ${srcdir}/db_dump.c budb_errs.h ${INCLS}
+db_dump.o: ${BUDB}/db_dump.c
 	${CCRULE}
 
-dbs_dump.o: ${srcdir}/dbs_dump.c budb_errs.h ${INCLS}
+dbs_dump.o: ${BUDB}/dbs_dump.c
 	${CCRULE}
 
-db_lock.o:  ${srcdir}/db_lock.c budb_errs.h ${INCLS}
+db_lock.o:  ${BUDB}/db_lock.c
 	${CCRULE}
 
-db_text.o:  ${srcdir}/db_text.c budb_errs.h ${INCLS}
+db_text.o:  ${BUDB}/db_text.c
 	${CCRULE}
 
-db_hash.o: ${srcdir}/db_hash.c budb_errs.h ${INCLS}
+db_hash.o: ${BUDB}/db_hash.c
 	${CCRULE}
 
-ol_verify.o:	${srcdir}/ol_verify.c budb_errs.h ${INCLS}
+ol_verify.o: ${BUDB}/ol_verify.c
 	${CCRULE}
 
-procs.o: ${srcdir}/procs.c budb_errs.h ${srcdir}/globals.h ${INCLS}
+procs.o: ${BUDB}/procs.c
 	${CCRULE}
 
-struct_ops.o: ${srcdir}/struct_ops.c budb_errs.h
+struct_ops.o: ${BUDB}/struct_ops.c
 	${CCRULE}
 
-server.o: ${srcdir}/server.c budb_errs.h ${INCLS} AFS_component_version_number.c
+server.o: ${BUDB}/server.c
 	${CCRULE}
 
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
-budb.cs.c: ${srcdir}/budb.rg
-	${RXGEN} -u -C -o $@ ${srcdir}/budb.rg
+budb.cs.c: ${BUDB}/budb.rg
+	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg
 
-budb.ss.c: ${srcdir}/budb.rg
-	${RXGEN} -S -o $@ ${srcdir}/budb.rg
+budb.ss.c: ${BUDB}/budb.rg
+	${RXGEN} -S -o $@ ${BUDB}/budb.rg
 
-budb.xdr.c: ${srcdir}/budb.rg
-	${RXGEN} -c -o $@ ${srcdir}/budb.rg
+budb.xdr.c: ${BUDB}/budb.rg
+	${RXGEN} -c -o $@ ${BUDB}/budb.rg
 
-budb.h: ${srcdir}/budb.rg
-	${RXGEN} -u -h -o $@ ${srcdir}/budb.rg
+budb.h: ${BUDB}/budb.rg
+	${RXGEN} -u -h -o $@ ${BUDB}/budb.rg
 
 budb.cs.c: budb.h
 budb.xdr.c: budb.h
@@ -178,23 +179,7 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 # Install targets
 #
 install: \
-	${DESTDIR}${libdir}/afs/libbudb.a \
-	${DESTDIR}${includedir}/afs/budb.h \
-	${DESTDIR}${includedir}/afs/budb_errs.h \
-	${DESTDIR}${includedir}/afs/budb_client.h \
 	${DESTDIR}${afssrvlibexecdir}/buserver
-
-${DEST}/lib/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/buserver: budb_server
 	${INSTALL} -f $? $@
@@ -207,37 +192,9 @@ clean:
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
 ${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
 	${INSTALL} -f $? $@
 
 dest: \
-	${DEST}/lib/afs/libbudb.a \
-	${DEST}/include/afs/budb.h \
-	${DEST}/include/afs/budb_errs.h \
-	${DEST}/include/afs/budb_client.h \
 	${DEST}/root.server/usr/afs/bin/buserver
 
