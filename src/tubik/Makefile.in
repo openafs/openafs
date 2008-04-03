@@ -151,13 +151,13 @@ utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h
 utst_int.xdr.c: utst_int.h
 
-utst_server.o: ${srcdir}/utst_server.c ${INCLS}
+utst_server.o: ${srcdir}/utst_server.c
 	${CCRULE}
 
-utst_client.o: ${srcdir}/utst_client.c ${INCLS}
+utst_client.o: ${srcdir}/utst_client.c
 	${CCRULE}
 
-udebug.o: ${srcdir}/udebug.c ${INCLS} AFS_component_version_number.c
+udebug.o: ${srcdir}/udebug.c
 	${CCRULE}
 
 #	${CC} ${CFLAGS} -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs -c ${srcdir}/udebug.c
@@ -169,60 +169,60 @@ uerrors.c ubik.h: ${srcdir}/uerrors.et ${srcdir}/ubik.p.h
 	$(RM) -f ubik.h uerrors.c
 	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
 
-libubik_pthread.a: ${LIBOBJS} AFS_component_version_number.o
+libubik_pthread.a: ${INCLS} ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
-disk.o: ${srcdir}/disk.c ${INCLS}
+disk.o: ${srcdir}/disk.c
 	${CCRULE}
 
-uinit.o: ${srcdir}/uinit.c ${INCLS}
+uinit.o: ${srcdir}/uinit.c
 	${CCRULE}
 
-remote.o: ${srcdir}/remote.c ${INCLS}
+remote.o: ${srcdir}/remote.c
 	${CCRULE}
 
-beacon.o: ${srcdir}/beacon.c ${INCLS}
+beacon.o: ${srcdir}/beacon.c
 	${CCRULE}
 
-lock.o: ${srcdir}/lock.c ${INCLS}
+lock.o: ${srcdir}/lock.c
 	${CCRULE}
 
-recovery.o: ${srcdir}/recovery.c ${INCLS}
+recovery.o: ${srcdir}/recovery.c
 	${CCRULE}
 
-ubik.o: ${srcdir}/ubik.c ${INCLS}
+ubik.o: ${srcdir}/ubik.c
 	${CCRULE}
 
-phys.o: ${srcdir}/phys.c ${INCLS}
+phys.o: ${srcdir}/phys.c
 	${CCRULE}
 
-vote.o: ${srcdir}/vote.c ${INCLS}
+vote.o: ${srcdir}/vote.c
 	${CCRULE}
 
-ubikcmd.o: ${srcdir}/ubikcmd.c ${INCLS}
+ubikcmd.o: ${srcdir}/ubikcmd.c
 	${CCRULE}
 
-ubikclient.o: ${srcdir}/ubikclient.c ${INCLS}
+ubikclient.o: ${srcdir}/ubikclient.c
 	${CCRULE}
 
-ubik_int.ss.o: ubik_int.ss.c ${INCLS}
+ubik_int.ss.o: ubik_int.ss.c
 	${CCRULE}
 
-ubik_int.cs.o: ubik_int.cs.c ${INCLS}
+ubik_int.cs.o: ubik_int.cs.c
 	${CCRULE}
 
-ubik_int.xdr.o: ubik_int.xdr.c ${INCLS}
+ubik_int.xdr.o: ubik_int.xdr.c
 	${CCRULE}
 
-utst_int.ss.o: utst_int.ss.c ${INCLS} utst_int.h
+utst_int.ss.o: utst_int.ss.c 
 	${CCRULE}
 
-utst_int.cs.o: utst_int.cs.c ${INCLS} utst_int.h
+utst_int.cs.o: utst_int.cs.c
 	${CCRULE}
 
-utst_int.xdr.o: utst_int.xdr.c ${INCLS} utst_int.h 
+utst_int.xdr.o: utst_int.xdr.c
 	${CCRULE}
 
 #
