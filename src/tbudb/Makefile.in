@@ -42,9 +42,7 @@ LIBS=${RXOBJS} ${UTILOBJS} \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/libafsutil.a \
-	${MT_LIBS}
+	${TOP_LIBDIR}/libafsutil.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
