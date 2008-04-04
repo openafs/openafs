@@ -237,8 +237,6 @@ test: all
 
 install: \
 	${DESTDIR}${libdir}/libubik_pthread.a \
-	${DESTDIR}${includedir}/ubik.h \
-	${DESTDIR}${includedir}/ubik_int.h \
 	${DESTDIR}${bindir}/udebug \
 	${DESTDIR}${afssrvbindir}/udebug
 
@@ -290,8 +288,6 @@ ${DESTDIR}${afssrvbindir}/udebug: udebug
 
 dest: \
 	${DEST}/lib/libubik_pthread.a \
-	${DEST}/include/ubik.h \
-	${DEST}/include/ubik_int.h \
 	${DEST}/bin/udebug \
 	${DEST}/root.server/usr/afs/bin/udebug
 
