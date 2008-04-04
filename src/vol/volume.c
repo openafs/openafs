@@ -188,8 +188,6 @@ static void DeleteVolumeFromHashTable(register Volume * vp);
 static int VHold(Volume * vp);
 static int VHold_r(Volume * vp);
 static void VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class);
-static void GetVolumePath(Error * ec, VolId volumeId, char **partitionp,
-			  char **namep);
 static void VReleaseVolumeHandles_r(Volume * vp);
 static void VCloseVolumeHandles_r(Volume * vp);
 static void LoadVolumeHeader(Error * ec, Volume * vp);
@@ -2533,7 +2531,7 @@ Volume *
 VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
 {
     char *part, *name;
-    GetVolumePath(ec, volumeId, &part, &name);
+    VGetVolumePath(ec, volumeId, &part, &name);
     if (*ec) {
 	register Volume *vp;
 	Error error;
@@ -4708,10 +4706,9 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
  *       on a vice partition, it is possible for callers to get the wrong one,
  *       depending on the order of the disk partition linked list.
  *
- * @internal volume package internal use only.
  */
-static void
-GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
+void
+VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 {
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];
