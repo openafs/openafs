@@ -44,11 +44,6 @@ pthread_recursive_mutex_lock(pthread_recursive_mutex_t * mut)
 {
     int rc = 0;
 
-/*
- *    FSLog("Entered pthread_recursive_mutex_lock, thread id is %d\n",
- *		pthread_self());
- */
-
     (glock_init || pthread_once(&glock_init_once, glock_init_func));
 
     if (mut->locked) {
@@ -71,12 +66,6 @@ int
 pthread_recursive_mutex_unlock(pthread_recursive_mutex_t * mut)
 {
     int rc = 0;
-
-/*
- *    FSLog("Entered pthread_recursive_mutex_unlock, thread id is %d\n",
- *		pthread_self());
- *
- */
 
     (glock_init || pthread_once(&glock_init_once, glock_init_func));
 
