@@ -901,8 +901,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
         sp->ExactFound = 1;
 
     if (!sp->caseFold || matchName == shortName) {
-        sp->fid.vnode = ntohl(dep->fid.vnode);
-        sp->fid.unique = ntohl(dep->fid.unique);
+        cm_SetFid(&sp->fid, sp->fid.cell, sp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
         return CM_ERROR_STOPNOW;
     }
 
@@ -917,8 +916,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     match = strcmp(matchName, sp->searchNamep);
     if (match == 0) {
         sp->ExactFound = 1;
-        sp->fid.vnode = ntohl(dep->fid.vnode);
-        sp->fid.unique = ntohl(dep->fid.unique);
+        cm_SetFid(&sp->fid, sp->fid.cell, sp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
         return CM_ERROR_STOPNOW;
     }
 
@@ -944,8 +942,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     sp->NCfound = 1;
 
   inexact:
-    sp->fid.vnode = ntohl(dep->fid.vnode);
-    sp->fid.unique = ntohl(dep->fid.unique);
+    cm_SetFid(&sp->fid, sp->fid.cell, sp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     return 0;
 }       
 
@@ -1273,7 +1270,8 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         }
         else if (!strchr(namep, '#') && !strchr(namep, '%') &&
                  strcmp(namep, "srvsvc") && strcmp(namep, "wkssvc") &&
-                 strcmp(namep, "ipc$")) {
+                 strcmp(namep, "ipc$")) 
+        {
             /* nonexistent dir on freelance root, so add it */
             char fullname[200] = ".";
             int  found = 0;
@@ -1317,13 +1315,18 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
                     return CM_ERROR_NOSUCHFILE;
             }
             tscp = NULL;   /* to force call of cm_GetSCache */
+        } else {
+            if (flags & CM_FLAG_CHECKPATH)
+                return CM_ERROR_NOSUCHPATH;
+            else
+                return CM_ERROR_NOSUCHFILE;
         }
     }
 
   haveFid:       
     if ( !tscp )    /* we did not find it in the dnlc */
     {
-        dnlcHit = 0;	
+        dnlcHit = 0; 
         code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
         if (code) 
             return code;

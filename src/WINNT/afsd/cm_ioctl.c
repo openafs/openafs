@@ -587,7 +587,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     AFSFetchStatus fileStatus;
     AFSVolSync volSync;
     long code;
-    AFSFid fid;
+    AFSFid afid;
     int tlen;
     cm_req_t req;
     struct rx_connection * callp;
@@ -601,9 +601,11 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -618,9 +620,9 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     } else
 #endif
     {
-        fid.Volume = scp->fid.volume;
-        fid.Vnode = scp->fid.vnode;
-        fid.Unique = scp->fid.unique;
+        afid.Volume = scp->fid.volume;
+        afid.Vnode = scp->fid.vnode;
+        afid.Unique = scp->fid.unique;
         do {
             acl.AFSOpaque_val = ioctlp->outDatap;
             acl.AFSOpaque_len = 0;
@@ -628,7 +630,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
             if (code) continue;
 
             callp = cm_GetRxConn(connp);
-            code = RXAFS_FetchACL(callp, &fid, &acl, &fileStatus, &volSync);
+            code = RXAFS_FetchACL(callp, &afid, &acl, &fileStatus, &volSync);
             rx_PutConnection(callp);
 
         } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
@@ -661,8 +663,11 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -791,8 +796,11 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -829,8 +837,11 @@ long cm_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -976,8 +987,11 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1089,8 +1103,11 @@ long cm_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1127,8 +1144,11 @@ long cm_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1171,8 +1191,11 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -3112,8 +3135,11 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        code = cm_GetSCache(&optionsp->fid, &scp, userp, &req);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
