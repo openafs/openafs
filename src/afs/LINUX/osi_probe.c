@@ -45,6 +45,7 @@
 
 /* Code to find the Linux syscall table */
 
+#if defined(EXPORTED_INIT_MM)
 #ifdef OSI_PROBE_STANDALONE
 #define OSI_PROBE_DEBUG
 #endif
@@ -1481,3 +1482,9 @@ module_init(osi_probe_init);
 module_exit(osi_probe_exit);
 #endif
 #endif
+#else
+void *osi_find_syscall_table(int which)
+{
+    return 0;
+}
+#endif /* EXPORTED_INIT_MM */
