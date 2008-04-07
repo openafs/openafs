@@ -5,7 +5,7 @@
 # for beta/rc releases make pkgrel 0.X.<tag>
 # for real releases make pkgrel 1 (or more for extra releases)
 #%define pkgrel 0.1.rc1
-%define pkgrel 1
+%define pkgrel @LINUX_VERSION@
 
 %if %{?osvers:0}%{!?osvers:1}
 %define osvers 1
