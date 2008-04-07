@@ -1996,18 +1996,19 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
         code = cm_FreelanceAddMount(leaf, fullCell, volume, 
                                     *ioctlp->inDatap == '%', NULL);
-	cm_ReleaseSCache(dscp);
-        return code;
-    }
+    } else 
 #endif
-    /* create the symlink with mode 644.  The lack of X bits tells
-     * us that it is a mount point.
-     */
-    tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
-    tattr.unixModeBits = 0644;
-    tattr.clientModTime = time(NULL);
+    {
+        /* create the symlink with mode 644.  The lack of X bits tells
+         * us that it is a mount point.
+         */
+        tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
+        tattr.unixModeBits = 0644;
+        tattr.clientModTime = time(NULL);
 
-    code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
+        code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
+    }
+    
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                          FILE_NOTIFY_CHANGE_DIR_NAME,
@@ -2055,16 +2056,16 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
         code = cm_FreelanceAddSymlink(leaf, cp, NULL);
-	cm_ReleaseSCache(dscp);
-        return code;
-    }
+    } else
 #endif
+    {
+        /* Create symlink with mode 0755. */
+        tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
+        tattr.unixModeBits = 0755;
 
-    /* Create symlink with mode 0755. */
-    tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
-    tattr.unixModeBits = 0755;
+        code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
+    }
 
-    code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                           FILE_NOTIFY_CHANGE_FILE_NAME
