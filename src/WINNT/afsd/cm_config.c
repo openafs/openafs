@@ -192,8 +192,10 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	    /* now see if this is the right cell */
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
 		/* found the cell we're looking for */
-		if (newCellNamep)
+		if (newCellNamep) {
 		    strcpy(newCellNamep, lineBuffer+1);
+                    strlwr(newCellNamep);
+                }
                 inRightCell = 1;
 		tracking = 0;
 #ifdef CELLSERV_DEBUG                
@@ -209,8 +211,10 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    fclose(bestp);
 		    return -5;
 		}
-		if (newCellNamep)
+		if (newCellNamep) {
 		    strcpy(newCellNamep, lineBuffer+1);
+                    strlwr(newCellNamep);
+                }
 		inRightCell = 0;
 		tracking = 0;
 		partial = 1;
@@ -302,12 +306,14 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
         for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
-           vlSockAddr.sin_family = AF_INET;
-           /* sin_port supplied by connection code */
-           if (procp)
-          (*procp)(rockp, &vlSockAddr, cellHostNames[i]);
-           if(newCellNamep)
-          strcpy(newCellNamep,cellNamep);
+            vlSockAddr.sin_family = AF_INET;
+            /* sin_port supplied by connection code */
+            if (procp)
+                (*procp)(rockp, &vlSockAddr, cellHostNames[i]);
+            if (newCellNamep) {
+                strcpy(newCellNamep,cellNamep);
+                strlwr(newCellNamep);
+            }
         }
         return 0;   /* found cell */
     }
