@@ -637,7 +637,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 #endif
 {
     long hash;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     long code;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
@@ -649,6 +649,15 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     osi_assertx(fidp->cell != 0, "unassigned cell value");
 
+#ifdef AFS_FREELANCE_CLIENT
+    special = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+               fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
+               !(fidp->vnode==0x1 && fidp->unique==0x1));
+    isRoot = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+              fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
+              fidp->vnode==0x1 && fidp->unique==0x1);
+#endif
+
     // yj: check if we have the scp, if so, we don't need
     // to do anything else
     lock_ObtainWrite(&cm_scacheLock);
@@ -657,6 +666,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 #ifdef DEBUG_REFCOUNT
 	    afsi_log("%s:%d cm_GetSCache (1) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
 	    osi_Log1(afsd_logp,"cm_GetSCache (1) outScpp 0x%p", scp);
+#endif
+#ifdef AFS_FREELANCE_CLIENT
+            if (cm_freelanceEnabled && special && 
+                cm_data.fakeDirVersion != scp->dataVersion)
+                break;
 #endif
             cm_HoldSCacheNoLock(scp);
             *outScpp = scp;
@@ -675,12 +689,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     // because we have to fill in the status stuff 'coz we
     // don't want trybulkstat to fill it in for us
 #ifdef AFS_FREELANCE_CLIENT
-    special = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
-               fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
-               !(fidp->vnode==0x1 && fidp->unique==0x1));
-    isRoot = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
-              fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
-              fidp->vnode==0x1 && fidp->unique==0x1);
     if (cm_freelanceEnabled && isRoot) {
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and isRoot");
         /* freelance: if we are trying to get the root scp for the first
@@ -694,6 +702,14 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         afs_uint32 fileType;
 
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
+
+        if (cm_getLocalMountPointChange()) {	// check for changes
+            cm_clearLocalMountPointChange();    // clear the changefile
+		    lock_ReleaseWrite(&cm_scacheLock);
+            cm_reInitLocalMountPoints();	// start reinit
+			lock_ObtainWrite(&cm_scacheLock);
+        }
+
         lock_ObtainMutex(&cm_Freelance_Lock);
         if (fidp->vnode >= 2 && fidp->vnode - 2 < cm_noLocalMountPoints) {
             strncpy(mp,(cm_localMountPoints+fidp->vnode-2)->mountPointStringp, MOUNTPOINTLEN);
@@ -708,7 +724,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         }
         lock_ReleaseMutex(&cm_Freelance_Lock);
 
-        scp = cm_GetNewSCache();
+        if (scp == NULL) 
+            scp = cm_GetNewSCache();
+
 	if (scp == NULL) {
 	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
             lock_ReleaseWrite(&cm_scacheLock);
