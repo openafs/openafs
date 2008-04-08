@@ -17,7 +17,7 @@ my $resultbase="/tmp/result/";
 my $stashbase="/disk/scratch/repository/";
 my $mockcommand = "/usr/bin/mock";
 my $buildall = 0;
-
+my $ignorerelease = 1;
 my @newrpms;
 
 my %platconf = ( "fedora-5-i386" => { osver => "fc5",
@@ -97,11 +97,18 @@ my %badkernels = (
 	"2.6.21-2950.fc8" => { "xen" => 1} # Missing build ID
 );
 
+my $help;
+my $ok = GetOptions("resultdir=s" => \$resultbase,
+		    "help" => \$help);
+
 my @platforms = @ARGV;
 my $srpm = pop @platforms;
 
-if (!$srpm || $#platforms==-1) {
-  print "Usage: $0 <platform> [<platform> [<platform> ...] ]  <srpm>\n";
+if (!$ok || $help || !$srpm || $#platforms==-1) {
+  print "Usage: $0 [options] <platform> [<platform> [...]]  <srpm>\n";
+  print "    Options are : \n";
+  print "         --resultdir <dir>    Location to place output RPMS\n";
+  print "\n";
   print "    Platform may be:\n";
   foreach ("all", sort(keys(%platconf))) { print "        ".$_."\n"; };
   exit(1);
@@ -175,6 +182,9 @@ foreach my $platform (@platforms) {
 	  next if ($variant eq "xen0"); # Fedora 5 has some bad xen0 kernel-devels
 	  next if ($variant eq "smp");
       }
+      if ($platform=~/fedora-8/) {
+	  next if ($variant =~/debug$/); # Fedora 8 debug kernels are bad
+      }
       print "$arch : $variant : $version\n";
       $modulelist{$arch} ={} if !$modulelist{$arch};
       $modulelist{$arch}{$version} = {} if !$modulelist{$arch}{$version};
@@ -241,10 +251,18 @@ foreach my $platform (@platforms) {
           if (!-f $resultdir."/kmod-openafs-".$dvariant.
 		  $oafsversion."-".$oafsrelease.".".$kversion.".".
 		  $arch.".rpm") {
-	    push @tobuild, $variant;
-	    print $resultdir."/kmod-openafs-".$dvariant.
-                  $oafsversion."-".$oafsrelease.".".$kversion.".".
-                  $arch.".rpm is missing\n";
+	    my @done = glob ($resultdir."/kmod-openafs-".$dvariant.
+			     $oafsversion."-*.".$kversion.".".$arch.".rpm");
+
+	    if ($ignorerelease && $#done>=0) {
+	      print "Kernel module for $kversion already exists for an".
+	            "older release. Skipping building it this time.\n";
+	    } else {
+	      push @tobuild, $variant;
+	      print $resultdir."/kmod-openafs-".$dvariant.
+                    $oafsversion."-".$oafsrelease.".".$kversion.".".
+                    $arch.".rpm is missing\n";
+	    }
           }
         }
       }
@@ -289,7 +307,7 @@ foreach my $platform (@platforms) {
     if (defined($dirh)) {
       my $file;
       while (defined($file = $dirh->read)) {
-        if ( $file=~/^kernel-devel/ &&
+        if ( $file=~/^kernel.*devel/ &&
               -f $yumcachedir.$file && ! -f $rpmstashdir.$file) {
           print "Stashing $file for later use\n";
           system("cp ".$yumcachedir.$file." ".$rpmstashdir.$file) == 0
