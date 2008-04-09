@@ -291,6 +291,8 @@ rx_ServerProc(void *unused)
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
+
+    return NULL;
 }
 #endif /* !UKERNEL */
 

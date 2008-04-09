@@ -806,6 +806,7 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECSENTDB;
 	}
     }
+    return NULL;
 }
 
 /*

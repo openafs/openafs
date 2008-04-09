@@ -455,6 +455,7 @@ ubeacon_Interact(void *dummy)
 	}
 
     }				/* while loop */
+    return NULL;
 }
 
 /* 

@@ -745,7 +745,7 @@ saveDbToTape(void *param)
 
     free(saveDbIfPtr);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 struct rstTapeInfo {
