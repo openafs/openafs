@@ -1223,9 +1223,7 @@ DoControl:
 DoCommon:
   SetOutPath "$INSTDIR\Common"
 !IFDEF CL_1400
-   File "${SYSTEMDIR}\msvcr80d.pdb"
-   File "${SYSTEMDIR}\msvcp80d.pdb"
-   File "${SYSTEMDIR}\mfc80d.pdb"
+  ; Do nothing
 !ELSE
 !IFDEF CL_1310
    File "${SYSTEMDIR}\msvcr71d.pdb"
@@ -1705,12 +1703,10 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
 !IFDEF DEBUG
 !IFDEF CL_1400
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.pdb"
+   SetOutPath "$INSTDIR\bin"
+   File "${AFS_WININSTALL_DIR}\vcruntime.msi"
+   nsExec::Exec 'msiexec /x "$INSTDIR\bin\vcruntime.msi" /passive'
+   Delete "$INSTDIR\bin\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
@@ -1739,18 +1735,7 @@ StartRemove:
 !ENDIF
 !ELSE
 !IFDEF CL_1400
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80KOR.DLL"
+   ; Do nothing
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
@@ -1895,12 +1880,7 @@ StartRemove:
 
 !IFDEF DEBUG  
 !IFDEF CL_1400
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.pdb"
+   ; Do nothing
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
@@ -1929,18 +1909,7 @@ StartRemove:
 !ENDIF
 !ELSE
 !IFDEF CL_1400
-   Delete /REBOOTOK "$INSTDIR\bin\mfc80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp80.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC80KOR.DLL"
+   ; Do nothing
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
@@ -2765,18 +2734,9 @@ Function AFSLangFiles
 
 !IFDEF DEBUG
 !IFDEF CL_1400
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr80d.dll" "$INSTDIR\Common\msvcr80d.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp80d.dll" "$INSTDIR\Common\msvcp80d.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc80d.dll" "$INSTDIR\Common\mfc80d.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHS.DLL" "$INSTDIR\Common\MFC80CHS.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHT.DLL" "$INSTDIR\Common\MFC80CHT.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80DEU.DLL" "$INSTDIR\Common\MFC80DEU.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ENU.DLL" "$INSTDIR\Common\MFC80ENU.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ESP.DLL" "$INSTDIR\Common\MFC80ESP.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80FRA.DLL" "$INSTDIR\Common\MFC80FRA.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ITA.DLL" "$INSTDIR\Common\MFC80ITA.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80JPN.DLL" "$INSTDIR\Common\MFC80JPN.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80KOR.DLL" "$INSTDIR\Common\MFC80KOR.DLL" "$INSTDIR"
+   File "${AFS_WININSTALL_DIR}\vcruntime.msi"
+   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
    !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71d.dll" "$INSTDIR\Common\msvcr71d.dll" "$INSTDIR"
@@ -2814,18 +2774,9 @@ Function AFSLangFiles
 !ENDIF
 !ELSE
 !IFDEF CL_1400
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc80.dll" "$INSTDIR\Common\mfc80.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr80.dll" "$INSTDIR\Common\msvcr80.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp80.dll" "$INSTDIR\Common\msvcp80.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHS.DLL" "$INSTDIR\Common\MFC80CHS.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHT.DLL" "$INSTDIR\Common\MFC80CHT.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80DEU.DLL" "$INSTDIR\Common\MFC80DEU.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ENU.DLL" "$INSTDIR\Common\MFC80ENU.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ESP.DLL" "$INSTDIR\Common\MFC80ESP.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80FRA.DLL" "$INSTDIR\Common\MFC80FRA.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ITA.DLL" "$INSTDIR\Common\MFC80ITA.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80JPN.DLL" "$INSTDIR\Common\MFC80JPN.DLL" "$INSTDIR"
-   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80KOR.DLL" "$INSTDIR\Common\MFC80KOR.DLL" "$INSTDIR"
+  File "${AFS_WININSTALL_DIR}\${VCREDISTNAME}"
+  nsExec::Exec '"$INSTDIR\Common\${VCREDISTNAME}" /Q'
+  Delete "$INSTDIR\Common\${VCREDISTNAME}"
 !ELSE
 !IFDEF CL_1310
    !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71.dll" "$INSTDIR\Common\mfc71.dll" "$INSTDIR"
