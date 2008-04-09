@@ -37,11 +37,28 @@ $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
 
+!IF ("$(AFSDEV_BUILDTYPE)"=="FREE")
+!IF ("$(CPU)" == "i386")
+ARCH=x86
+!ELSE IF ("$(CPU)" == "amd64")
+ARCH=x64
+!ELSE
+ARCH=$(CPU)
+!ENDIF
+!ELSE
+!IF ("$(CPU)" == "i386")
+ARCH=Intel
+!ELSE IF ("$(CPU)" == "amd64")
+ARCH=x64
+!ELSE
+ARCH=$(CPU)
+!ENDIF
+!ENDIF
+
 prebuild:
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 !IF ("$(AFSVER_CL)"=="1400")
-   $(COPY) %SystemRoot%\System32\Msvcr80.dll $(EXEDIR)
-   $(COPY) %SystemRoot%\System32\MFC80.DLL $(EXEDIR)
+   $(COPY) "%VSINSTALLDIR%\SDK\v2.0\BootStrapper\Packages\vcredist_$(ARCH)\vcredist_$(ARCH).exe" $(EXEDIR)
 !ELSE IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71.dll $(EXEDIR)
    $(COPY) %SystemRoot%\System32\MFC71.DLL $(EXEDIR)
@@ -57,10 +74,7 @@ prebuild:
 !ENDIF
 !ELSE # NOT FREE - CHECKED
 !IF ("$(AFSVER_CL)"=="1400")
-   $(COPY) %SystemRoot%\System32\Msvcr80d.dll $(EXEDIR)
-   $(COPY) %SystemRoot%\System32\Msvcr80d.pdb $(EXEDIR)
-   $(COPY) %SystemRoot%\System32\MFC80D.DLL $(EXEDIR)
-   $(COPY) %SystemRoot%\System32\MFC80D.pdb $(EXEDIR)
+# Do nothing.
 !ELSE IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71d.dll $(EXEDIR)
    $(COPY) %SystemRoot%\System32\Msvcr71d.pdb $(EXEDIR)
@@ -93,6 +107,7 @@ prebuild:
    echo. >>$(OUT)\nsi-includes.nsi                                       
 !if ("$(AFSVER_CL)" == "1400")
    echo !define CL_1400 1 >> $(OUT)\nsi-includes.nsi
+   echo !define VCREDISTNAME vcredist_$(ARCH).exe >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1310")
    echo !define CL_1310 1 >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1300")
@@ -105,10 +120,25 @@ prebuild:
    echo !define DEBUG 1 >>$(OUT)\nsi-includes.nsi
 !endif
 
+!if ("$(AFSVER_CL)"=="1400") && ("$(AFSDEV_BUILDTYPE)"!="FREE")
+MSVCMSI=$(EXEDIR)\vcruntime.msi
+
+$(MSVCMSI): $(OUT)\vcruntime.wixobj
+	light -out $@ $**
+
+$(OUT)\vcruntime.wixobj: vcruntime.wxs
+	candle -out $@ $** -dPlatform=$(ARCH) -dConfig=Debug
+
+!else
+MSVCMSI=
+!endif
+
+runtime: $(MSVCMSI)
+
 build: prebuild
    "$(NSISDIR)\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
 
-install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe build
+install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe runtime build
 
 clean::
    $(DEL) $(OUT)\Service.obj
@@ -125,4 +155,7 @@ clean::
 #   $(DEL) $(EXEDIR)\Msvcr71.dll
 #   $(DEL) $(EXEDIR)\MFC42.DLL
 #   $(DEL) OpenAFSforWindows.exe
-
+!if ("$(AFSVER_CL)"=="1400") && ("$(AFSDEV_BUILDTYPE)"!="FREE")
+   $(DEL) $(OUT)\vcruntime.wixobj
+   $(DEL) $(MSVCMSI)
+!endif
