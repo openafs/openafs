@@ -1920,7 +1920,7 @@ Restorer(void *param) {
 
     FreeNode(taskId);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 /* this is just scaffolding, creates new tape label with name <tapeName> */
@@ -2282,7 +2282,7 @@ Labeller(void *param)
 
     free(labelIfPtr);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 /* PrintTapeLabel
