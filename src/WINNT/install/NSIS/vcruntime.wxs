@@ -1,0 +1,89 @@
+<?xml version="1.0" ?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
+
+  <?ifndef Config?>
+    <?define Config=Debug?>
+  <?endif?>
+
+    <Product
+       Id="????????-????-????-????-????????????"
+       Codepage="1252"
+       Language="1033"
+       Manufacturer="Microsoft Corporation"
+       Name="Visual C++ 8.0 $(var.Config) ($(var.Platform)) Runtime"
+       UpgradeCode="1184DE9F-813A-4DB3-8533-BB7D4E51D695"
+       Version="0.1.0.0"
+       >
+      <Package
+         Id="????????-????-????-????-????????????"
+         AdminImage="no"
+         Comments="Copyright (C) Microsoft Corporation, All rights reserved."
+         Compressed="yes"
+         Description="Visual C++ 8.0 $(var.Config) ($(var.Platform)) WinSXS MSM"
+         InstallerVersion="300"
+         Keywords="Installer,VC,$(var.Config),Runtime"
+         Manufacturer="Microsoft Corporation"
+         Platforms="$(var.Platform)"
+         ShortNames="no"
+         SummaryCodepage="1252"
+         />
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+	<?ifdef env.CommonProgramFiles6432?>
+	  <?define CPF="$(env.CommonProgramFiles(x86)"?>
+	<?else?>
+	  <?define CPF="$(env.CommonProgramFiles)"?>
+	<?endif?>
+
+	<?if $(var.Platform) = "x64" ?>
+	  <?if $(var.Config) = "Retail" ?>
+	    <Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_CRT_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+ 	  <?else?>
+	    <Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugCRT_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugCRT_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugMFC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugMFC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+	    <Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+	  <?endif?>
+        <?else?>
+	  <?if $(var.Config) = "Retail" ?>
+	    <Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86.msm"/>
+	    <Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_CRT_x86.msm"/>
+	    <Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFC_x86.msm"/>
+	    <Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFC_x86.msm"/>
+	    <Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86.msm"/>
+	    <Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86.msm"/>
+	  <?else?>
+	    <Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugCRT_x86.msm"/>
+	    <Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugCRT_x86.msm"/>
+	    <Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugMFC_x86.msm"/>
+	    <Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugMFC_x86.msm"/>
+	    <Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86.msm"/>
+	    <Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86.msm"/>
+	  <?endif?>
+	<?endif?>
+      </Directory>
+
+      <Feature Id="FeatureAll" AllowAdvertise="no" Absent="disallow"
+               Description="Install VC ++ 8.0 Runtime" Display="expand" InstallDefault="local" Level="3"
+               Title="All">
+	<MergeRef Id="MSVCRT8MEM"/>
+	<MergeRef Id="MSVCRT8POL"/>
+	<MergeRef Id="MSVCRT8MFC"/>
+	<MergeRef Id="MSVCRT8PFC"/>
+	<MergeRef Id="MSVCRT8MFL"/>
+	<MergeRef Id="MSVCRT8PFL"/>
+      </Feature>  
+
+      <Media Id="1" Cabinet="disk1.cab" CompressionLevel="high" EmbedCab="yes" />
+
+      <Property Id="INSTALLLEVEL" Value="3" />
+
+    </Product>
+</Wix>
