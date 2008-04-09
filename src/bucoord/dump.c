@@ -225,7 +225,7 @@ bc_DmpRstStart(void *param)
 	free(tdump->portOffset);
     tdump->flags &= ~BC_DI_INUSE;
 
-    return code;
+    return (void *)code;
 }
 
 /* bc_StartDmpRst
