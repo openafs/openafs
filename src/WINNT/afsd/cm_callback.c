@@ -1466,12 +1466,6 @@ int cm_HaveCallback(cm_scache_t *scp)
 
     if (cm_freelanceEnabled && 
          scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
-        /* if it's something on /afs */
-        if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1)) {
-            /* if it's not root.afs */
-	    return 1;
-        }
-
         lock_ObtainMutex(&cm_Freelance_Lock);
         fdc = cm_fakeDirCallback;
         fgc = cm_fakeGettingCallback;
