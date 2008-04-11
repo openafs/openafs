@@ -141,10 +141,6 @@ void cm_InitFreelance() {
 
     lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
 
-    // make sure we sync the data version to the cached root scache_t                  
-    if (cm_data.rootSCachep && cm_data.rootSCachep->fid.cell == AFS_FAKE_ROOT_CELL_ID) 
-        cm_data.fakeDirVersion = cm_data.rootSCachep->dataVersion;                          
-                                                                                      
     // yj: first we make a call to cm_initLocalMountPoints
     // to read all the local mount points from the registry
     cm_InitLocalMountPoints();
@@ -392,7 +388,7 @@ int cm_reInitLocalMountPoints() {
     for (i=0; i<cm_noLocalMountPoints; i++) {
         hash = CM_SCACHE_HASH(&aFid);
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
-            if (cm_FidCmp(&scp->fid, &aFid) == 0) {
+            if (scp != cm_data.rootSCachep && cm_FidCmp(&scp->fid, &aFid) == 0) {
                 // mark the scp to be reused
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
