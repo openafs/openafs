@@ -51,7 +51,7 @@ static int newVLDB = 1;
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.9 2008/03/21 16:59:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.10 2008/04/01 20:05:47 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -101,11 +101,6 @@ RCSID
 #endif
 
 /*@printflike@*/ extern void Log(const char *format, ...);
-
-#ifdef osi_Assert
-#undef osi_Assert
-#endif
-#define osi_Assert(e) (void)(e)
 
 int (*V_BreakVolumeCallbacks) ();
 

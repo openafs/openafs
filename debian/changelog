@@ -1,3 +1,11 @@
+openafs (1.4.7~pre3.dfsg1-1) unstable; urgency=low
+
+  * New upstream release candidate:
+    - Better support for 2.6.25 kernels.
+    - Fixes for flushing in the cache manager.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 20:54:36 -0700
+
 openafs (1.4.7~pre1.dfsg1-1) unstable; urgency=low
 
   * New upstream release candidate:

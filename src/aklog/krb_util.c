@@ -9,10 +9,9 @@
  * <mit-copyright.h>.
  */
 
-#ifndef lint
-static char rcsid_send_to_kdc_c[] =
-"$Id: krb_util.c,v 1.1.2.5 2007/02/10 13:56:54 jaltman Exp $";
-#endif /* lint */
+#include <afsconfig.h>
+RCSID
+    ("$Header: /cvs/openafs/src/aklog/krb_util.c,v 1.1.2.6 2008/04/01 17:44:52 shadow Exp $");
 
 #if 0
 #include <kerberosIV/mit-copyright.h>
@@ -25,18 +24,10 @@ static char rcsid_send_to_kdc_c[] =
 #define MAX_HSTNM 100
 #endif
 
-#ifdef WINDOWS
-
-#include "aklog.h"		/* for struct afsconf_cell */
-
-#else /* !WINDOWS */
-
-#include <afs/param.h>
 #include <afs/cellconfig.h>
 
-#endif /* WINDOWS */
-
 #include <string.h>
+#include <ctype.h>
 
 #define S_AD_SZ sizeof(struct sockaddr_in)
 
@@ -61,8 +52,8 @@ char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, i
 		*p = toupper(*p);
 	}
     } else {
-	if (retval = krb5_get_host_realm(context,
-					 cellconfig->hostName[0], &hrealms))
+	if ((retval = krb5_get_host_realm(context,
+					 cellconfig->hostName[0], &hrealms)))
 	    return 0; 
 	if(!hrealms[0]) return 0;
 	strcpy(krbrlm, hrealms[0]);

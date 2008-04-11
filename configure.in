@@ -1,9 +1,11 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.4.7pre1)
+AM_INIT_AUTOMAKE(openafs,1.4.7pre3)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.4.7fc1
+MACOS_VERSION=1.4.7fc3
+LINUX_VERSION=0.pre3
 
 AC_SUBST(MACOS_VERSION)
+AC_SUBST(LINUX_VERSION)
 
 AC_PROG_CC
 AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp],,[$PATH:/])

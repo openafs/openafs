@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.60 2007/11/27 19:32:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.63 2008/04/02 18:27:13 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -564,18 +564,26 @@ afs_linux_flush(struct file *fp)
 #endif
 {
     struct vrequest treq;
-    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
-    cred_t *credp = crref();
+    struct vcache *vcp;
+    cred_t *credp;
     int code;
 
     AFS_GLOCK();
+
+    if ((fp->f_flags & O_ACCMODE) == O_RDONLY) { /* readers dont flush */
+	AFS_GUNLOCK();
+	return 0;
+    }
+
+    credp = crref();
+    vcp = VTOAFS(FILE_INODE(fp));
 
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
 
     ObtainSharedLock(&vcp->lock, 535);
-    if (vcp->execsOrWriters > 0) {
+    if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
 	UpgradeSToWLock(&vcp->lock, 536);
 	code = afs_StoreAllSegments(vcp, &treq, AFS_SYNC | AFS_LASTSTORE);
 	ConvertWToSLock(&vcp->lock);

@@ -49,6 +49,9 @@
 /* define if sys/param.h defines the endiness */
 #undef ENDIANESS_IN_SYS_PARAM_H
 
+/* define if your kernel exports init_mm */
+#undef EXPORTED_INIT_MM
+
 /* define if your linux kernel exports sys_chdir */
 #undef EXPORTED_SYS_CHDIR
 
@@ -476,6 +479,9 @@
 
 /* define if your struct address_space has page_lock */
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+
+/* define if your struct file_operations has flock */
+#undef STRUCT_FILE_OPERATIONS_HAS_FLOCK
 
 /* define if your struct file_operations has sendfile */
 #undef STRUCT_FILE_OPERATIONS_HAS_SENDFILE

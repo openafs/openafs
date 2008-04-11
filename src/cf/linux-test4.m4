@@ -72,10 +72,9 @@ AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
   AC_MSG_CHECKING([for exported init_mm])
   AC_CACHE_VAL([ac_cv_linux_exports_init_mm], [
     AC_TRY_KBUILD(
-[#include <linux/modversions.h>],
-[#ifndef __ver_init_mm
-#error init_mm not exported
-#endif],
+[extern struct mm_struct init_mm;],
+[void *address = &init_mm;
+printk("%p\n", address);],
       ac_cv_linux_exports_init_mm=yes,
       ac_cv_linux_exports_init_mm=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_init_mm)])
