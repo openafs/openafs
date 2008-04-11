@@ -213,7 +213,6 @@ Known Problems
        vldb_convert
        vos clone
        vos setfields
-       vos shadow
        vsys
 
    * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative

@@ -657,6 +657,7 @@ AMTAR
 am__tar
 am__untar
 MACOS_VERSION
+LINUX_VERSION
 CC
 CFLAGS
 LDFLAGS
@@ -720,7 +721,6 @@ LIB_AFSDB
 LINUX_KERNEL_PATH
 BSD_KERNEL_PATH
 BSD_KERNEL_BUILD
-LINUX_VERSION
 MKAFS_OSTYPE
 TOP_OBJDIR
 TOP_SRCDIR
@@ -2174,7 +2174,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs
- VERSION=1.4.7pre1
+ VERSION=1.4.7pre3
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2322,7 +2322,9 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.7fc1
+MACOS_VERSION=1.4.7fc3
+LINUX_VERSION=0.pre3
+
 
 
 
@@ -15426,6 +15428,125 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_struct_nameidata_has_path" >&5
 echo "${ECHO_T}$ac_cv_linux_struct_nameidata_has_path" >&6; }
 
+  { echo "$as_me:$LINENO: checking for exported init_mm" >&5
+echo $ECHO_N "checking for exported init_mm... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_exports_init_mm+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+extern struct mm_struct init_mm;
+
+void conftest(void)
+{
+void *address = &init_mm;
+printk("%p\n", address);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_exports_init_mm=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_exports_init_mm=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+extern struct mm_struct init_mm;
+int
+main ()
+{
+void *address = &init_mm;
+printk("%p\n", address);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_exports_init_mm=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_exports_init_mm=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_init_mm" >&5
+echo "${ECHO_T}$ac_cv_linux_exports_init_mm" >&6; }
+
   { echo "$as_me:$LINENO: checking for exported sys_chdir" >&5
 echo $ECHO_N "checking for exported sys_chdir... $ECHO_C" >&6; }
   if test "${ac_cv_linux_exports_sys_chdir+set}" = set; then
@@ -16059,127 +16180,6 @@ echo "$as_me: WARNING: Cannot determine sys_call_table status. assuming it isn't
 		     ac_cv_linux_exports_ia32_sys_call_table=yes
 		   fi
                  else
-
-  { echo "$as_me:$LINENO: checking for exported init_mm" >&5
-echo $ECHO_N "checking for exported init_mm... $ECHO_C" >&6; }
-  if test "${ac_cv_linux_exports_init_mm+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-
-  if test $AFS_SYSKVERS -ge 26 ; then
-      rm -fr conftest.dir
-  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
-    CFLAGS_PREFIX='EXTRA_'
-  fi
-  if mkdir conftest.dir &&
-    cat >conftest.dir/Makefile <<_ACEOF &&
-${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
-
-obj-m += conftest.o
-_ACEOF
-    cat >conftest.dir/conftest.c <<\_ACEOF &&
-/* confdefs.h */
-_ACEOF
-    cat confdefs.h >>conftest.dir/conftest.c &&
-    cat >>conftest.dir/conftest.c <<\_ACEOF &&
-/* end confdefs.h */
-#include <linux/module.h>
-#include <linux/modversions.h>
-
-void conftest(void)
-{
-#ifndef __ver_init_mm
-#error init_mm not exported
-#endif
-}
-
-MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
-_ACEOF
-    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
-    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
-    then ac_cv_linux_exports_init_mm=yes
-    else
-      sed '/^ *+/d' conftest.err >&5
-      echo "$as_me: failed using Makefile:" >&5
-      sed 's/^/| /' conftest.dir/Makefile >&5
-      echo "$as_me: and program was:" >&5
-      sed 's/^/| /' conftest.dir/conftest.c >&5
-      ac_cv_linux_exports_init_mm=no
-  fi; rm -fr conftest.err conftest.dir
-  else
-
-  ac_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-#include <linux/kernel.h>
-#include <linux/modversions.h>
-int
-main ()
-{
-#ifndef __ver_init_mm
-#error init_mm not exported
-#endif
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_linux_exports_init_mm=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_linux_exports_init_mm=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  CPPFLAGS="$ac_save_CPPFLAGS"
-  fi
-fi
-
-  { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_init_mm" >&5
-echo "${ECHO_T}$ac_cv_linux_exports_init_mm" >&6; }
 
   { echo "$as_me:$LINENO: checking for exported kallsyms_address_to_symbol" >&5
 echo $ECHO_N "checking for exported kallsyms_address_to_symbol... $ECHO_C" >&6; }
@@ -17092,7 +17092,11 @@ _ACEOF
 
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
-		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
+
+cat >>confdefs.h <<\_ACEOF
+#define STRUCT_FILE_OPERATIONS_HAS_FLOCK 1
+_ACEOF
+
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
 
@@ -17133,6 +17137,13 @@ _ACEOF
 
 cat >>confdefs.h <<\_ACEOF
 #define STRUCT_NAMEIDATA_HAS_PATH 1
+_ACEOF
+
+		 fi
+		 if test "x$ac_cv_linux_exports_init_mm" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define EXPORTED_INIT_MM 1
 _ACEOF
 
 		 fi
@@ -25550,6 +25561,7 @@ AMTAR!$AMTAR$ac_delim
 am__tar!$am__tar$ac_delim
 am__untar!$am__untar$ac_delim
 MACOS_VERSION!$MACOS_VERSION$ac_delim
+LINUX_VERSION!$LINUX_VERSION$ac_delim
 CC!$CC$ac_delim
 CFLAGS!$CFLAGS$ac_delim
 LDFLAGS!$LDFLAGS$ac_delim
@@ -25587,7 +25599,6 @@ LEX_OUTPUT_ROOT!$LEX_OUTPUT_ROOT$ac_delim
 HEADER_RT!$HEADER_RT$ac_delim
 P5PLUS_KOPTS!$P5PLUS_KOPTS$ac_delim
 LINUX_GCC_KOPTS!$LINUX_GCC_KOPTS$ac_delim
-RHCONFIG_SP!$RHCONFIG_SP$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -25629,6 +25640,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+RHCONFIG_SP!$RHCONFIG_SP$ac_delim
 RHCONFIG_MP!$RHCONFIG_MP$ac_delim
 MPS!$MPS$ac_delim
 PTHREAD_LIBS!$PTHREAD_LIBS$ac_delim
@@ -25654,7 +25666,6 @@ LIB_AFSDB!$LIB_AFSDB$ac_delim
 LINUX_KERNEL_PATH!$LINUX_KERNEL_PATH$ac_delim
 BSD_KERNEL_PATH!$BSD_KERNEL_PATH$ac_delim
 BSD_KERNEL_BUILD!$BSD_KERNEL_BUILD$ac_delim
-LINUX_VERSION!$LINUX_VERSION$ac_delim
 MKAFS_OSTYPE!$MKAFS_OSTYPE$ac_delim
 TOP_OBJDIR!$TOP_OBJDIR$ac_delim
 TOP_SRCDIR!$TOP_SRCDIR$ac_delim

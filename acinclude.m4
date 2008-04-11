@@ -672,6 +672,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_HAVE_IGET
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
+	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -684,7 +685,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		     ac_cv_linux_exports_ia32_sys_call_table=yes
 		   fi
                  else
-                   LINUX_EXPORTS_INIT_MM
                    LINUX_EXPORTS_KALLSYMS_ADDRESS
                    LINUX_EXPORTS_KALLSYMS_SYMBOL
                    LINUX_EXPORTS_SYS_CALL_TABLE
@@ -884,7 +884,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
-		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
@@ -903,6 +903,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_struct_nameidata_has_path" = "xyes" ; then
 		  AC_DEFINE(STRUCT_NAMEIDATA_HAS_PATH, 1, [define if your struct nameidata has path])
+		 fi
+		 if test "x$ac_cv_linux_exports_init_mm" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_INIT_MM, 1, [define if your kernel exports init_mm])
 		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])

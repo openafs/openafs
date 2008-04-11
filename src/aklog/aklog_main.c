@@ -1,5 +1,5 @@
 /* 
- * $Id: aklog_main.c,v 1.1.2.23 2008/01/05 04:48:40 shadow Exp $
+ * $Id: aklog_main.c,v 1.1.2.26 2008/04/01 18:15:53 shadow Exp $
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
@@ -34,12 +34,9 @@
  * such damages.                                                
  */
 
-#if !defined(lint) && !defined(SABER)
-static char *rcsid =
-	"$Id: aklog_main.c,v 1.1.2.23 2008/01/05 04:48:40 shadow Exp $";
-#endif /* lint || SABER */
-
 #include <afsconfig.h>
+RCSID
+     ("$Header: /cvs/openafs/src/aklog/aklog_main.c,v 1.1.2.26 2008/04/01 18:15:53 shadow Exp $");
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -58,7 +55,6 @@ static char *rcsid =
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifndef WINDOWS
 #include <sys/param.h>
 #include <sys/errno.h>
 #include <netdb.h>
@@ -66,18 +62,10 @@ static char *rcsid =
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pwd.h>
-#endif /* WINDOWS */
 
 #include <afs/stds.h>
 #include <krb5.h>
 
-#ifdef WINDOWS
-
-#include <afs/auth.h>
-#include <rx/rxkad.h>
-#include <afs/dirpath.h>
-
-#else /* !WINDOWS */
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
 #endif
@@ -93,7 +81,6 @@ static char *rcsid =
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
 #include <afs/dirpath.h>
-#endif /* WINDOWS */
 
 #include "aklog.h"
 #include "linked_list.h"
@@ -112,6 +99,7 @@ static char *rcsid =
 #define AFS_TRY_FULL_PRINC 1
 #endif /* AFS_TRY_FULL_PRINC */
 
+#define AKLOG_TRYAGAIN -1
 #define AKLOG_SUCCESS 0
 #define AKLOG_USAGE 1
 #define AKLOG_SOMETHINGSWRONG 2
@@ -153,16 +141,6 @@ static char linkedcell[MAXCELLCHARS+1];
 static char linkedcell2[MAXCELLCHARS+1];
 static krb5_ccache  _krb425_ccache = NULL;
 
-#ifdef WINDOWS
-
-/* libafsconf.dll */
-extern long cm_GetRootCellName();
-extern long cm_SearchCellFile();
-
-static long cm_SearchCellFile_CallBack();
-
-#else /* !WINDOWS */
-
 /*
  * Why doesn't AFS provide these prototypes?
  */
@@ -178,6 +156,10 @@ static int isdir(char *, unsigned char *);
 static krb5_error_code get_credv5(krb5_context context, char *, char *,
 				  char *, krb5_creds **);
 static int get_user_realm(krb5_context, char *);
+
+#define TRYAGAIN(x) (x == AKLOG_TRYAGAIN || \
+		     x == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || \
+		     x == KRB5KRB_ERR_GENERIC)
 
 #if defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
 
@@ -300,7 +282,6 @@ Done:
 
 #define deref_entry_enctype(entry)			\
     deref_keyblock_enctype(&deref_entry_keyblock(entry))
-#endif /* WINDOWS */
 
 /*
  * Provide a replacement for strerror if we don't have it
@@ -343,6 +324,17 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 }
 
 
+static char *copy_string(char *string)    
+{
+    char *new_string;
+
+    if ((new_string = (char *)calloc(strlen(string) + 1, sizeof(char))))
+	(void) strcpy(new_string, string);
+
+    return (new_string);
+}
+
+
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
 {
     int status = AKLOG_SUCCESS;
@@ -350,8 +342,6 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
 
     memset(local_cell, 0, sizeof(local_cell));
     memset((char *)cellconfig, 0, sizeof(*cellconfig));
-
-#ifndef WINDOWS
 
     if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	fprintf(stderr, 
@@ -379,100 +369,8 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
 
     (void) afsconf_Close(configdir);
 
-#else /* WINDOWS */
-    /*
-     * We'll try to mimic the GetCellInfo call here and fill in as much
-     * of the afsconf_cell structure as we can.
-     */
-    if (cm_GetRootCellName(local_cell)) {
-	fprintf(stderr, "%s: can't get local cellname\n", progname);
-	exit(AKLOG_AFS);
-    }
-
-    if ((cell == NULL) || (cell[0] == 0))
-	cell = local_cell;
-
-    strcpy(cellconfig->name, cell);
-
-    /* No way of figuring this out as far as I can tell */
-    linkedcell[0] = '\0';
-
-    /* Initialize server info */
-    cellconfig->numServers = 0;
-    cellconfig->hostName[0][0] = "\0";
-
-    /*
-     * Get servers of cell. cm_SearchCellFile_CallBack() gets call with
-     * each server.
-     */
-    status = (int) cm_SearchCellFile(cell, NULL, &cm_SearchCellFile_CallBack,
-				     cellconfig /* rock */);
-
-    switch(status) {
-    case 0:
-	break;
-
-    case -1:
-	fprintf(stderr, "%s: GetWindowsDirectory() failed.\n", progname);
-	break;
-
-    case -2:
-	fprintf(stderr, "%s: Couldn't open afsdcells.ini for reading\n",
-		progname);
-	break;
-
-    case -3:
-	fprintf(stderr, "%s: Couldn't find any servers for cell %s\n",
-		progname, cell);
-	break;
-
-    case -4:
-	fprintf(stderr, "%s: Badly formatted line in afsdcells.ini (does not begin with a \">\" or contain \"#\"\n",
-		progname);
-	break;
-
-    default:
-	fprintf(stderr, "%s cm_SearchCellFile returned unknown error %d\n",
-		status);
-    }
-
-    if (status) {
-	exit(AKLOG_AFS);
-    }
-
-    status = AKLOG_SUCCESS;
-
-    
-#endif /* WINDOWS */
-
     return(status);
 }
-
-
-#ifdef WINDOWS
-/*
- * Callback function for cm_SearchCellFile() in get_cellconfig() above.
- * This function gets called once for each server that is found for the cell.
- */
-static long
-cm_SearchCellFile_CallBack(void *rock /* cellconfig */,
-			   struct sockaddr_in *addr, /* Not used */
-			   char *server)
-{
-    struct afsconf_cell *cellconfig = rock;
-
-
-    /*
-     * Save server name and increment count of servers
-     */
-    strcpy(cellconfig->hostName[cellconfig->numServers++], server);
-    
-    return (long) 0;
-}
-
-    
-#endif /* WINDOWS */
-
 
 /* 
  * Log to a cell.  If the cell has already been logged to, return without
@@ -485,39 +383,26 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     char username[BUFSIZ];	/* To hold client username structure */
     afs_int32 viceId;		/* AFS uid of user */
 
-    char name[ANAME_SZ];	/* Name of afs key */
-    char primary_instance[INST_SZ];	/* Instance of afs key */
-    char secondary_instance[INST_SZ];	/* Backup instance to try */
-    int try_secondary = 0;		/* Flag to indicate if we try second */
     char realm_of_user[REALM_SZ]; /* Kerberos realm of user */
-    char realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
+    char *realm_from_princ = 0 ;  /* Calculated realm data */
+    char *realm_of_cell = 0;	  /* Pointer to realm we're using */	
+    int retry;			  /* round, and round we go ... */
+    
     char local_cell[MAXCELLCHARS+1];
     char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
     static char lastcell[MAXCELLCHARS+1] = { 0 };
-#ifndef WINDOWS
     static char confname[512] = { 0 };
-#endif
     krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
 
-#ifdef ALLOW_REGISTER
-    afs_int32 id;
-#endif /* ALLOW_REGISTER */
-
-    memset(name, 0, sizeof(name));
-    memset(primary_instance, 0, sizeof(primary_instance));
-    memset(secondary_instance, 0, sizeof(secondary_instance));
     memset(realm_of_user, 0, sizeof(realm_of_user));
-    memset(realm_of_cell, 0, sizeof(realm_of_cell));
 
-#ifndef WINDOWS
     if (confname[0] == '\0') {
 	strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
 	confname[sizeof(confname) - 2] = '\0';
     }
-#endif /* WINDOWS */
 
     /* NULL or empty cell returns information on local cell */
     if ((status = get_cellconfig(cell, &ak_cellconfig,
@@ -568,100 +453,128 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		   cell_to_use, ak_cellconfig.hostName[0]);
 	}
 
-	/*
-	 * Find out which realm we're supposed to authenticate to.  If one
-	 * is not included, use the kerberos realm found in the credentials
-	 * cache.
-	 */
+	if ((status = get_user_realm(context, realm_of_user))) {
+	    fprintf(stderr, "%s: Couldn't determine realm of user:)",
+		    progname);
+	    afs_com_err(progname, status, " while getting realm");
+	    return(AKLOG_KERBEROS);
+	}
 
-	if (realm && realm[0]) {
-	    strcpy(realm_of_cell, realm);
+	retry = 1;
+	
+	while(retry) {
+	    
+	    /* Cell on command line - use that one */
+	    if (realm && realm[0]) {
+		realm_of_cell = realm;
+		status = AKLOG_TRYAGAIN;
+		if (dflag) {
+		    printf("We were told to authenticate to realm %s.\n", 
+			   realm);
+		}
+	    } else {
+		/* Initially, try using afs/cell@USERREALM */
+		if (dflag) {
+		    printf("Trying to authenticate to user's realm %s.\n",
+			   realm_of_user);
+		}
+		
+		realm_of_cell = realm_of_user;
+		status = get_credv5(context, AFSKEY, cell_to_use, 
+				    realm_of_cell, &v5cred);
+	    
+		/* If that failed, try to determine the realm from the name of 
+		 * one of the DB servers */
+		if (TRYAGAIN(status)) {
+		    realm_of_cell = afs_realm_of_cell(context, &ak_cellconfig, 
+				    		      FALSE);
+		    if (!realm_of_cell) {
+			fprintf(stderr, 
+				"%s: Couldn't figure out realm for cell %s.\n",
+				progname, cell_to_use);
+		    	exit(AKLOG_MISC);
+	    	    }
+
+		    if (dflag) {
+			if (realm_of_cell[0])
+			    printf("We've deduced that we need to authenticate"
+				   " to realm %s.\n", realm_of_cell);
+		    else
+			printf("We've deduced that we need to authenticate "
+			       "using referrals.\n");
+		    }
+		}
+	    }
+	
+	    if (TRYAGAIN(status)) {
+		/* If we've got the full-princ-first option, or we're in a
+		 * different realm from the cell - use the cell name as the
+		 * instance */
+		if (AFS_TRY_FULL_PRINC || 
+		    strcasecmp(cell_to_use, realm_of_cell)!=0) {
+		    status = get_credv5(context, AFSKEY, cell_to_use, 
+				        realm_of_cell, &v5cred);
+
+		    /* If we failed & we've got an empty realm, then try 
+		     * calling afs_realm_for_cell again. */
+		    if (TRYAGAIN(status) && !realm_of_cell[0]) {
+			/* This time, get the realm by taking the domain 
+			 * component of the db server and make it upper case */
+		    	realm_of_cell = afs_realm_of_cell(context, 
+							  &ak_cellconfig, TRUE);
+			if (!realm_of_cell) {
+			    fprintf(stderr,
+				    "%s: Couldn't figure out realm for cell "
+				    "%s.\n", progname, cell_to_use);
+			    exit(AKLOG_MISC);
+			}
+			printf("We've deduced that we need to authenticate to"
+			       " realm %s.\n", realm_of_cell);
+		    }
+		    status = get_credv5(context, AFSKEY, cell_to_use, 
+				        realm_of_cell, &v5cred);
+	    	}
+	   
+		/* If the realm and cell name match, then try without an 
+		 * instance, but only if realm is non-empty */
+	        
+		if (TRYAGAIN(status) && 
+		    strcasecmp(cell_to_use, realm_of_cell) == 0) {
+		    status = get_credv5(context, AFSKEY, NULL, 
+				        realm_of_cell, &v5cred);
+    		    if (!AFS_TRY_FULL_PRINC && TRYAGAIN(status)) {
+		        status = get_credv5(context, AFSKEY, cell_to_use,
+				            realm_of_cell, &v5cred);
+		    }
+		}
+	    }
+
+	    /* Try to find a service principal for this cell.
+	     * Some broken MIT libraries return KRB5KRB_AP_ERR_MSG_TYPE upon 
+	     * the first attempt, so we try twice to be sure */
+
+	    if (status == KRB5KRB_AP_ERR_MSG_TYPE && retry == 1)
+		retry++;
+	    else
+		retry = 0;
+	} 
+	
+	if (status != 0) {
 	    if (dflag) {
-		printf("We were told to authenticate to realm %s.\n", realm);
+		printf("Kerberos error code returned by get_cred : %d\n",
+		       status);
 	    }
+	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
+		    progname, cell_to_use);
+	    afs_com_err(progname, status, "while getting AFS tickets");
+	    return(AKLOG_KERBEROS);
 	}
-	else {
-	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, FALSE);
-
-	    if (!afs_realm) {
-		fprintf(stderr, 
-			"%s: Couldn't figure out realm for cell %s.\n",
-			progname, cell_to_use);
-		exit(AKLOG_MISC);
-	    }
-
-	    strcpy(realm_of_cell, afs_realm);
-
-	    if (dflag) {
-		if (realm_of_cell[0])
-		    printf("We've deduced that we need to authenticate to"
-			   " realm %s.\n", realm_of_cell);
-		else
-		    printf("We've deduced that we need to authenticate "
-			   "using referrals.\n");
-	    }
-	}
-
-	/* We use the afs.<cellname> convention here... 
-	 *
-	 * Doug Engert's original code had principals of the form:
-	 *
-	 * "afsx/cell@realm"
-	 *
-	 * in the KDC, so the name wouldn't conflict with DFS.  Since we're
-	 * not using DFS, I changed it just to look for the following
-	 * principals:
-	 *
-	 * afs/<cell>@<realm>
-	 * afs@<realm>
-	 *
-	 * Because people are transitioning from afs@realm to afs/cell,
-	 * we configure things so that if the first one isn't found, we
-	 * try the second one.  You can select which one you prefer with
-	 * a configure option.
+	
+	/* If we've got a valid ticket, and we still don't know the realm name
+	 * try to figure it out from the contents of the ticket
 	 */
-
-	strcpy(name, AFSKEY);
-
-	if (AFS_TRY_FULL_PRINC || strcasecmp(cell_to_use, realm_of_cell) != 0) {
-	    strncpy(primary_instance, cell_to_use, sizeof(primary_instance));
-	    primary_instance[sizeof(primary_instance)-1] = '\0';
-	    if (strcasecmp(cell_to_use, realm_of_cell) == 0) {
-		try_secondary = 1;
-		secondary_instance[0] = '\0';
-	    }
-	} else {
-	    primary_instance[0] = '\0';
-	    try_secondary = 1;
-	    strncpy(secondary_instance, cell_to_use,
-		    sizeof(secondary_instance));
-	    secondary_instance[sizeof(secondary_instance)-1] = '\0';
-	}
-
-	/* 
-	 * Extract the session key from the ticket file and hand-frob an
-	 * afs style authenticator.
-	 */
-
-	/*
-	 * Try to obtain AFS tickets.  Because there are two valid service
-	 * names, we will try both, but trying the more specific first.
-	 *
-	 *	afs/<cell>@<realm> i.e. allow for single name with "."
-	 * 	afs@<realm>
-	 */
-
-	if (dflag) {
-	    printf("Getting tickets: %s%s%s@%s\n", name,
-		   primary_instance[0] ? "/" : "", 
-		   primary_instance, realm_of_cell);
-	}
-
-	status = get_credv5(context, name, primary_instance, realm_of_cell,
-			    &v5cred);
-
 #if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_DECODE_TICKET)
-	if (status == 0 && strcmp(realm_of_cell, "") == 0) {
+	if (strcmp(realm_of_cell, "") == 0) {
 	    krb5_error_code code;
 	    krb5_ticket *ticket;
 
@@ -671,75 +584,24 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		fprintf(stderr,
 			"%s: Couldn't decode ticket to determine realm for "
 			"cell %s.\n",
-			progname, cell_to_use);
+		    	progname, cell_to_use);
 	    } else {
 		int len = realm_len(context, ticket->server);
 		/* This really shouldn't happen. */
 		if (len > REALM_SZ-1)
 		    len = REALM_SZ-1;
 
-		strncpy(realm_of_cell, realm_data(context, ticket->server), 
+		realm_from_princ = (char *) malloc(sizeof(char) * (len+1));
+		
+		strncpy(realm_from_princ, realm_data(context, ticket->server), 
 			len);
-		realm_of_cell[len] = 0;
-
+		realm_from_princ[len] = 0;
+		realm_of_cell = realm_from_princ;
+		
 		krb5_free_ticket(context, ticket);
 	    }
 	}
 #endif
-
-	if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) &&
-	    !realm_of_cell[0]) {
-	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, TRUE);
-
-	    if (!afs_realm) {
-		fprintf(stderr, 
-			"%s: Couldn't figure out realm for cell %s.\n",
-			progname, cell_to_use);
-		exit(AKLOG_MISC);
-	    }
-
-	    strcpy(realm_of_cell, afs_realm);
-
-	    if (strcasecmp(cell_to_use, realm_of_cell) == 0) {
-		try_secondary = 1;
-		secondary_instance[0] = '\0';
-	    }
-
-	    if (dflag) {
-		printf("We've deduced that we need to authenticate to"
-			" realm %s.\n", realm_of_cell);
-		printf("Getting tickets: %s%s%s@%s\n", name,
-			primary_instance[0] ? "/" : "", 
-			primary_instance, realm_of_cell);
-	    }
-
-	    status = get_credv5(context, name, primary_instance, realm_of_cell,
-				 &v5cred);
-
-	}
-	if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) {
-	    if (try_secondary) {
-		if (dflag) {
-		    printf("Principal not found, trying alternate "
-			   "service name: %s%s%s@%s\n", name,
-			    secondary_instance[0] ? "/" : "",
-			    secondary_instance, realm_of_cell);
-		}
-		status = get_credv5(context, name, secondary_instance,
-				    realm_of_cell, &v5cred);
-	    }
-	}
-
-	if (status) {
-	    if (dflag) {
-		printf("Kerberos error code returned by get_cred: %d\n",
-			status);
-	    }
-	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
-		    progname, cell_to_use);
-		afs_com_err(progname, status, "while getting AFS tickets");
-	    return(AKLOG_KERBEROS);
-	}
 
 	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
 	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
@@ -836,22 +698,13 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	noprdb = 1;
 #endif
 
-#ifndef WINDOWS
 	if (noprdb) {
-#endif
 	    if (dflag) {
 		printf("Not resolving name %s to id (-noprdb set)\n",
 			username);
 	    }
-#ifndef WINDOWS
 	}
 	else {
-	    if ((status = get_user_realm(context, realm_of_user))) {
-		fprintf(stderr, "%s: Couldn't determine realm of user:)",
-			progname);
-		afs_com_err(progname, status, " while getting realm");
-		return(AKLOG_KERBEROS);
-	    }
 	    if (strcmp(realm_of_user, realm_of_cell)) {
 		strcat(username, "@");
 		strcat(username, realm_of_user);
@@ -890,19 +743,13 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		 */
 
 #ifdef ALLOW_REGISTER
-	if (status == 0) {
-	    if (viceId != ANONYMOUSID) {
-#else /* ALLOW_REGISTER */
-	    if ((status == 0) && (viceId != ANONYMOUSID))
-#endif /* ALLOW_REGISTER */
-		sprintf (username, "AFS ID %d", (int) viceId);
-#ifdef ALLOW_REGISTER
-	    } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
+	    if ((status == 0) && (viceId == ANONYMOUSID) &&
+	 	(strcmp(realm_of_user, realm_of_cell) != 0)) {
 		if (dflag) {
 		    printf("doing first-time registration of %s "
 			    "at %s\n", username, cell_to_use);
 		}
-		id = 0;
+		viceId = 0;
 		strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 		strcpy(aclient.instance, "");
 		strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
@@ -923,22 +770,23 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		    printf("Error %d\n", status);
 		}
 
-		if ((status = pr_CreateUser(username, &id))) {
+		if ((status = pr_CreateUser(username, &viceId))) {
 		    fprintf(stderr, "%s: %s so unable to create remote PTS "
 			    "user %s in cell %s (status: %d).\n", progname,
 			    afs_error_message(status), username, cell_to_use,
 			    status);
+		    viceId = ANONYMOUSID;
 		} else {
 		    printf("created cross-cell entry for %s (Id %d) at %s\n",
-			   username, id, cell_to_use);
-		    sprintf(username, "AFS ID %d", (int) id);
+			   username, viceId, cell_to_use);
 		}
 	    }
-	}
 #endif /* ALLOW_REGISTER */
 
+	    if ((status == 0) && (viceId != ANONYMOUSID)) {
+		sprintf(username, "AFS ID %d", (int) viceId);
+	    }
 	}
-#endif /* !WINDOWS */
 
 	if (dflag) {
 	    fprintf(stdout, "Set username to %s\n", username);
@@ -964,38 +812,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 */
 	write(2,"",0); /* dummy write */
 #endif
-#ifndef WINDOWS
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
 	    fprintf(stderr, 
 		    "%s: unable to obtain tokens for cell %s (status: %d).\n",
 		    progname, cell_to_use, status);
 	    status = AKLOG_TOKEN;
 	}
-#else /* WINDOWS */
-	/* Note switched 2nd and 3rd args */
-	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
-	    switch(status) {
-	    case KTC_INVAL:
-		fprintf(stderr, "%s: Bad ticket length", progname);
-		break;
-	    case KTC_PIOCTLFAIL:
-		fprintf(stderr, "%s: Unknown error contacting AFS service",
-			progname);
-		break;
-	    case KTC_NOCELL:
-		fprintf(stderr, "%s: Cell name (%s) not recognized by AFS service",
-			progname, realm_of_cell);
-		break;
-	    case KTC_NOCM:
-		fprintf(stderr, "%s: AFS service is unavailable", progname);
-		break;
-	    default:
-		fprintf(stderr, "%s: Undocumented error (%d) contacting AFS service", progname, status);
-		break;	
-	    }
-	    status = AKLOG_TOKEN;	    
-	}
-#endif /* !WINDOWS */
     }
     else
 	if (dflag) {
@@ -1004,8 +826,6 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	
     return(status);
 }
-
-#ifndef WINDOWS /* struct ViceIoctl missing */
 
 static int get_afs_mountpoint(char *file, char *mountpoint, int size)
 {
@@ -1103,8 +923,8 @@ static char *next_path(char *origpath)
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if (link = (readlink(pathtocheck, linkbuf, 
-				    sizeof(linkbuf)) > 0)) {
+	if ((link = (readlink(pathtocheck, linkbuf, 
+				    sizeof(linkbuf)) > 0))) {
 	    if (++symlinkcount > MAXSYMLINKS) {
 		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
 		exit(AKLOG_BADPATH);
@@ -1148,8 +968,6 @@ static char *next_path(char *origpath)
     return(pathtocheck);
 }
 
-#endif /* WINDOWS */
-
 #if 0
 /*****************************************/
 int dee_gettokens()
@@ -1179,8 +997,6 @@ int dee_gettokens()
 }
 /*****************************************/
 #endif
-
-#ifndef WINDOWS /* struct ViceIoctl missing */
 
 static void add_hosts(char *file)
 {
@@ -1240,10 +1056,6 @@ static void add_hosts(char *file)
 	}
     }
 }
-
-#endif /* WINDOWS */
-
-#ifndef WINDOWS /* next_path(), get_afs_mountpoint() */
 
 /*
  * This routine descends through a path to a directory, logging to 
@@ -1332,8 +1144,6 @@ static int auth_to_path(krb5_context context, char *path)
     return(status);
 }
 
-#endif /* WINDOWS */
-
 
 /* Print usage message and exit */
 static void usage(void)
@@ -1410,9 +1220,7 @@ void aklog(int argc, char *argv[])
 	progname = argv[0];
 
     krb5_init_context(&context);
-#ifndef WINDOWS
-	initialize_ktc_error_table ();
-#endif
+    initialize_ktc_error_table ();
 
     /* Initialize list of cells to which we have authenticated */
     (void)ll_init(&authedcells);
@@ -1461,32 +1269,20 @@ void aklog(int argc, char *argv[])
 		usage();
 	else if (((strcmp(argv[i], "-path") == 0) ||
 		  (strcmp(argv[i], "-p") == 0)) && !cmode)
-#ifndef WINDOWS
 	    if (++i < argc) {
 		pmode++;
 		strcpy(path, argv[i]);
 	    }
 	    else
 		usage();
-#else /* WINDOWS */
-	{
-	    fprintf(stderr, "%s: path mode not supported.\n", progname);
-	    exit(AKLOG_MISC);
-	}
-#endif /* WINDOWS */
 	    
 	else if (argv[i][0] == '-')
 	    usage();
 	else if (!pmode && !cmode) {
 	    if (strchr(argv[i], DIR) || (strcmp(argv[i], ".") == 0) ||
 		(strcmp(argv[i], "..") == 0)) {
-#ifndef WINDOWS
 		pmode++;
 		strcpy(path, argv[i]);
-#else /* WINDOWS */
-		fprintf(stderr, "%s: path mode not supported.\n", progname);
-		exit(AKLOG_MISC);
-#endif /* WINDOWS */
 	    }
 	    else { 
 		cmode++;
@@ -1527,12 +1323,11 @@ void aklog(int argc, char *argv[])
 	    memset(cell, 0, sizeof(cell));
 	    memset(realm, 0, sizeof(realm));
 	}
-#ifndef WINDOWS
 	else if (pmode) {
 	    /* Add this path to list of paths */
 	    if ((cur_node = ll_add_node(&paths, ll_tail))) {
-		char *new_path;
-		if ((new_path = strdup(path)))
+		char *new_path; 
+		if ((new_path = copy_string(path)))
 		    ll_add_data(cur_node, new_path);
 		else {
 		    fprintf(stderr, "%s: failure copying path name.\n",
@@ -1548,7 +1343,6 @@ void aklog(int argc, char *argv[])
 	    pmode = FALSE;
 	    memset(path, 0, sizeof(path));
 	}
-#endif /* WINDOWS */
     }
 
     /*
@@ -1600,7 +1394,6 @@ void aklog(int argc, char *argv[])
 				status = auth_to_cell(context, linkedcell2, NULL);
 		}
 
-#ifndef WINDOWS
 		/*
 		 * Local hack - if the person has a file in their home
 		 * directory called ".xlog", read that for a list of
@@ -1641,7 +1434,6 @@ void aklog(int argc, char *argv[])
 			}
 		    }
 		}
-#endif /* WINDOWS */
 	}
     else {
 	/* Log to all cells in the cells list first */
@@ -1663,13 +1455,11 @@ void aklog(int argc, char *argv[])
 		}
 	}
 	
-#ifndef WINDOWS
 	/* Then, log to all paths in the paths list */
 	for (cur_node = paths.first; cur_node; cur_node = cur_node->next) {
 	    if ((status = auth_to_path(context, cur_node->data)))
 		somethingswrong++;
 	}
-#endif /* WINDOWS */
 	
 	/* 
 	 * If only one thing was logged to, we'll return the status 
@@ -1764,9 +1554,9 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
     code = krb5_kt_resolve(context, keytab, &kt);
     if (code) {
         if (keytab)
-            com_err(progname, code, "while resolving keytab %s", keytab);
+            afs_com_err(progname, code, "while resolving keytab %s", keytab);
         else
-            com_err(progname, code, "while resolving default keytab");
+            afs_com_err(progname, code, "while resolving default keytab");
         goto cleanup;
     }
 
@@ -1785,7 +1575,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 	    }
         }
         if (code) {
-	    com_err(progname, code,"while scanning keytab entries");
+	    afs_com_err(progname, code,"while scanning keytab entries");
 	    goto cleanup;
         }
     } else {
@@ -1793,7 +1583,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         int best = -1;
         memset(new, 0, sizeof *new);
         if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
-            com_err(progname, code, "while starting keytab scan");
+            afs_com_err(progname, code, "while starting keytab scan");
             goto cleanup;
         }
         while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
@@ -1809,12 +1599,12 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
             } else krb5_free_keytab_entry_contents(context, new);
         }
         if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
-            com_err(progname, i, "while ending keytab scan");
+            afs_com_err(progname, i, "while ending keytab scan");
             code = i;
             goto cleanup;
         }
         if (best < 0) {
-            com_err(progname, code, "while scanning keytab");
+            afs_com_err(progname, code, "while scanning keytab");
             goto cleanup;
         }
         deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
@@ -1825,7 +1615,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 #if USING_HEIMDAL
     if ((code = krb5_generate_random_keyblock(context,
 					      deref_keyblock_enctype(session_key), session_key))) {
-        com_err(progname, code, "while making session key");
+        afs_com_err(progname, code, "while making session key");
         goto cleanup;
     }
     enc_tkt_reply->flags.initial = 1;
@@ -1848,7 +1638,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 #else
     if ((code = krb5_c_make_random_key(context,
 				       deref_keyblock_enctype(session_key), session_key))) {
-        com_err(progname, code, "while making session key");
+        afs_com_err(progname, code, "while making session key");
         goto cleanup;
     }
     enc_tkt_reply->magic = KV5M_ENC_TKT_PART;
@@ -1911,12 +1701,12 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         ASN1_MALLOC_ENCODE(EncTicketPart, buf, buf_size,
 			   enc_tkt_reply, &buf_len, code);
         if(code) {
-            com_err(progname, code, "while encoding ticket");
+            afs_com_err(progname, code, "while encoding ticket");
             goto cleanup;
         }
 
         if(buf_len != buf_size) {
-            com_err(progname, code,
+            afs_com_err(progname, code,
 		    "%d != %d while encoding ticket (internal ASN.1 encoder error",
 		    buf_len, buf_size);
             goto cleanup;
@@ -1934,7 +1724,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         if (buf) free(buf);
         if (crypto) krb5_crypto_destroy(context, crypto);
         if(code) {
-            com_err(progname, code, "while %s", what);
+            afs_com_err(progname, code, "while %s", what);
             goto cleanup;
         }
     } /* crypto block */
@@ -1946,7 +1736,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
     ticket_reply->server = service_principal;
     ticket_reply->enc_part2 = enc_tkt_reply;
     if ((code = krb5_encrypt_tkt_part(context, &deref_entry_keyblock(entry), ticket_reply))) {
-        com_err(progname, code, "while making ticket");
+        afs_com_err(progname, code, "while making ticket");
         goto cleanup;
     }
     ticket_reply->enc_part.kvno = entry->vno;
@@ -1956,17 +1746,17 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 
     if ((code = krb5_copy_principal(context, service_principal,
 				    &creds->server))) {
-        com_err(progname, code, "while copying service principal");
+        afs_com_err(progname, code, "while copying service principal");
         goto cleanup;
     }
     if ((code = krb5_copy_principal(context, client_principal,
 				    &creds->client))) {
-        com_err(progname, code, "while copying client principal");
+        afs_com_err(progname, code, "while copying client principal");
         goto cleanup;
     }
     if ((code = krb5_copy_keyblock_contents(context, session_key,
 					    &deref_session_key(creds)))) {
-        com_err(progname, code, "while copying session key");
+        afs_com_err(progname, code, "while copying session key");
         goto cleanup;
     }
 
@@ -1984,7 +1774,7 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
         ;
     else if ((code = krb5_copy_addresses(context,
 					 deref_enc_tkt_addrs(enc_tkt_reply), &creds->addresses))) {
-        com_err(progname, code, "while copying addresses");
+        afs_com_err(progname, code, "while copying addresses");
         goto cleanup;
     }
 
@@ -1994,13 +1784,13 @@ static krb5_error_code get_credv5_akimpersonate(krb5_context context,
 	ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length,
 			   ticket_reply, &creds_tkt_len, code);
 	if(code) {
-	    com_err(progname, code, "while encoding ticket");
+	    afs_com_err(progname, code, "while encoding ticket");
 	    goto cleanup;
 	}
     }
 #else
     if ((code = encode_krb5_ticket(ticket_reply, &temp))) {
-	com_err(progname, code, "while encoding ticket");
+	afs_com_err(progname, code, "while encoding ticket");
 	goto cleanup;
     }
     creds->ticket = *temp;
@@ -2038,6 +1828,11 @@ static krb5_error_code get_credv5(krb5_context context,
     krb5_creds increds;
     krb5_error_code r;
     static krb5_principal client_principal = 0;
+
+    if (dflag) {
+	printf("Getting tickets: %s%s%s@%s\n", name, (inst && inst[0])
+	       ? "/" : "", inst ? inst : "", realm);
+    }
     
     memset((char *)&increds, 0, sizeof(increds));
 /* ANL - instance may be ptr to a null string. Pass null then */

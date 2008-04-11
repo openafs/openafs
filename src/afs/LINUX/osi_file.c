@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.15 2008/03/23 00:54:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.16 2008/03/26 04:10:52 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include "h/module.h" /* early to avoid printf->printk mapping */
@@ -64,6 +64,10 @@ osi_UFSOpen(afs_int32 ainode)
     memset(afile, 0, sizeof(struct osi_file));
 #if defined(HAVE_IGET)
     tip = iget(afs_cacheSBp, (u_long) ainode);
+    if (!tip)
+	osi_Panic("Can't get inode %d\n", ainode);
+
+    dp = d_alloc_anon(tip);
 #else
     fid.i32.ino = ainode;
     fid.i32.gen = 0;

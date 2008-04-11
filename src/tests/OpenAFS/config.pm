@@ -94,12 +94,10 @@ what you want...
 
 =cut
 
-@CmdPath = (split(/:/, $ENV{PATH}),
+@CmdPath = (
             $OpenAFS::Dirpath::openafsdirpath->{'afssrvbindir'},        # For servers
-	    '/usr/local/bin',      # Many sites put AFS in /usr/local
-	    '/usr/local/etc',
-	    '/usr/afsws/bin',      # For people who use Transarc's
-	    '/usr/afsws/etc');     # silly reccommendations
+            $OpenAFS::Dirpath::openafsdirpath->{'afswsbindir'},
+        );
 
 =item $err_table_dir - Error table directory
 
