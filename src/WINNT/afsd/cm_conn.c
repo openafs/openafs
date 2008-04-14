@@ -277,13 +277,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                                     CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                     &volp);
             if (code == 0) {
-                if (fidp->volume == volp->rw.ID)
-                    statep = &volp->rw;
-                else if (fidp->volume == volp->ro.ID)
-                    statep = &volp->ro;
-                else if (fidp->volume == volp->bk.ID)
-                    statep = &volp->bk;
-
+                statep = cm_VolumeStateByID(volp, fidp->volume);
                 if (statep->state != vl_offline && statep->state != vl_unknown) {
                     retry = 1;
                 } else {
@@ -309,13 +303,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                                         CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                         &volp);
                 if (code == 0) {
-                    if (fidp->volume == volp->rw.ID)
-                        statep = &volp->rw;
-                    else if (fidp->volume == volp->ro.ID)
-                        statep = &volp->ro;
-                    else if (fidp->volume == volp->bk.ID)
-                        statep = &volp->bk;
-
+                    statep = cm_VolumeStateByID(volp, fidp->volume);
                     if (statep->state != vl_offline && 
                         statep->state != vl_busy &&
                         statep->state != vl_unknown) {
@@ -378,14 +366,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
-                    if (code == 0) {
-                        if (fidp->volume == volp->rw.ID)
-                            statep = &volp->rw;
-                        else if (fidp->volume == volp->ro.ID)
-                            statep = &volp->ro;
-                        else if (fidp->volume == volp->bk.ID)
-                            statep = &volp->bk;
-                    }
+                    if (code == 0)
+                        statep = cm_VolumeStateByID(volp, fidp->volume);
                 }
                 break;
             }
@@ -473,14 +455,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
-                    if (code == 0) {
-                        if (fidp->volume == volp->rw.ID)
-                            statep = &volp->rw;
-                        else if (fidp->volume == volp->ro.ID)
-                            statep = &volp->ro;
-                        else if (fidp->volume == volp->bk.ID)
-                            statep = &volp->bk;
-                    }
+                    if (code == 0)
+                        cm_VolumeStateByID(volp, fidp->volume);
                 }   
             }
         }   
@@ -512,7 +488,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 		if (scp->fileType != CM_SCACHETYPE_DIRECTORY)
 		    pscp = cm_FindSCacheParent(scp);
-
 
 		lock_ObtainWrite(&scp->rw);
 		lock_ObtainWrite(&cm_scacheLock);
