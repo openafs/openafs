@@ -37,8 +37,8 @@ RCSID
 #include "volser.h"
 #include "lockdata.h"
 
-#include <vsutils_prototypes.h>
-#include <lockprocs_prototypes.h>
+#include "vsutils_prototypes.h"
+#include "lockprocs_prototypes.h"
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
