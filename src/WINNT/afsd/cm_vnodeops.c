@@ -1105,6 +1105,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         
     if (code == 0) {
         afs_uint32 cell, volume;
+        cm_vol_state_t *statep;
 
         cell = cellp->cellID;
         
@@ -1114,9 +1115,9 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
          * instead of the read-write.
          */
         if (cm_followBackupPath && 
-            volp->bk.ID != 0 &&
+            volp->vol[BACKVOL].ID != 0 &&
             (dscp->flags & (CM_SCACHEFLAG_RO|CM_SCACHEFLAG_PURERO)) == CM_SCACHEFLAG_RO &&
-            (targetType == RWVOL || targetType == ROVOL && volp->ro.ID == 0)
+            (targetType == RWVOL || targetType == ROVOL && volp->vol[ROVOL].ID == 0)
             ) {
             targetType = BACKVOL;
         } 
@@ -1127,25 +1128,15 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
          */
         else if (mtType == '#' && targetType == RWVOL && 
                  (scp->flags & CM_SCACHEFLAG_PURERO) && 
-                 volp->ro.ID != 0) {
+                 volp->vol[ROVOL].ID != 0) {
             targetType = ROVOL;
         }
-        if (targetType == ROVOL) {
-            volume = volp->ro.ID;
-            lock_ObtainMutex(&volp->mx);
-            volp->ro.dotdotFid = dscp->fid;
-            lock_ReleaseMutex(&volp->mx);
-        } else if (targetType == BACKVOL) {
-            volume = volp->bk.ID;
-            lock_ObtainMutex(&volp->mx);
-            volp->bk.dotdotFid = dscp->fid;
-            lock_ReleaseMutex(&volp->mx);
-        } else {
-            volume = volp->rw.ID;
-            lock_ObtainMutex(&volp->mx);
-            volp->rw.dotdotFid = dscp->fid;
-            lock_ReleaseMutex(&volp->mx);
-        }
+
+        lock_ObtainWrite(&volp->rw);
+        statep = cm_VolumeStateByType(volp, targetType);
+        volume = statep->ID;
+        statep->dotdotFid = dscp->fid;
+        lock_ReleaseWrite(&volp->rw);
 
         /* the rest of the fid is a magic number */
         cm_SetFid(&scp->mountRootFid, cell, volume, 1, 1);
@@ -1487,12 +1478,12 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
         goto _exit_cleanup;
 
     if (volType == BACKVOL)
-        volume = volp->bk.ID;
+        volume = volp->vol[BACKVOL].ID;
     else if (volType == ROVOL ||
-             (volType == RWVOL && mountType == ROVOL && volp->ro.ID != 0))
-        volume = volp->ro.ID;
+             (volType == RWVOL && mountType == ROVOL && volp->vol[ROVOL].ID != 0))
+        volume = volp->vol[ROVOL].ID;
     else
-        volume = volp->rw.ID;
+        volume = volp->vol[RWVOL].ID;
 
     cm_SetFid(&fid, cellp->cellID, volume, 1, 1);
 
@@ -4877,11 +4868,6 @@ void cm_LockMarkSCacheLost(cm_scache_t * scp)
     osi_queue_t *q;
 
     osi_Log1(afsd_logp, "cm_LockMarkSCacheLost scp 0x%x", scp);
-
-#ifdef DEBUG
-    /* With the current code, we can't lose a lock on a RO scp */
-    osi_assertx(!(scp->flags & CM_SCACHEFLAG_RO), "CM_SCACHEFLAG_RO unexpected");
-#endif
 
     /* cm_scacheLock needed because we are modifying fileLock->flags */
     lock_ObtainWrite(&cm_scacheLock);

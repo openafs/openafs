@@ -66,15 +66,13 @@ cm_ShutdownVolume(void)
     cm_volume_t * volp;
 
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-
-        if (volp->rw.ID)
-            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_alldown);
-        if (volp->ro.ID)
-            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_alldown);
-        if (volp->bk.ID)
-            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
+        afs_uint32 volType;
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            if (volp->vol[volType].ID)
+                cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_alldown);
+        }
         volp->cbExpiresRO = 0;
-        lock_FinalizeMutex(&volp->mx);
+        lock_FinalizeRWLock(&volp->rw);
     }
 
     return 0;
@@ -100,20 +98,16 @@ void cm_InitVolume(int newFile, long maxVols)
             cm_volume_t * volp;
 
             for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-                lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
+                afs_uint32 volType;
+
+                lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
                 volp->flags |= CM_VOLUMEFLAG_RESET;
-                volp->rw.state = vl_unknown;
-                volp->rw.serversp = NULL;
-                volp->ro.state = vl_unknown;
-                volp->ro.serversp = NULL;
-                volp->bk.state = vl_unknown;
-                volp->bk.serversp = NULL;
-                if (volp->rw.ID)
-                    cm_VolumeStatusNotification(volp, volp->rw.ID, vl_alldown, volp->rw.state);
-                if (volp->ro.ID)
-                    cm_VolumeStatusNotification(volp, volp->ro.ID, vl_alldown, volp->ro.state);
-                if (volp->bk.ID)
-                    cm_VolumeStatusNotification(volp, volp->bk.ID, vl_alldown, volp->bk.state);
+                for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+                    volp->vol[volType].state = vl_unknown;
+                    volp->vol[volType].serversp = NULL;
+                    if (volp->vol[volType].ID)
+                        cm_VolumeStatusNotification(volp, volp->vol[volType].ID, vl_alldown, volp->vol[volType].state);
+                }
                 volp->cbExpiresRO = 0;
             }
         }
@@ -138,7 +132,7 @@ cm_VolNameIsID(char *aname)
 
 
 /*
- * Update a volume.  Caller holds volume's lock (volp->mx).
+ * Update a volume.  Caller holds a write lock on the volume (volp->rw).
  *
  *
  *  shadow / openafs / jhutz@CS.CMU.EDU {ANDREW.CMU.EDU}  01:38    (JHutz)
@@ -164,7 +158,7 @@ cm_VolNameIsID(char *aname)
  *    RXGEN_OPCODE.
  */
 #define MULTIHOMED 1
-long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
+long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 		     cm_volume_t *volp)
 {
     cm_conn_t *connp;
@@ -188,17 +182,16 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 #ifdef AFS_FREELANCE_CLIENT
     int freelance = 0;
 #endif
+    afs_uint32 volType;
 
     /* clear out old bindings */
-    if (volp->rw.serversp)
-        cm_FreeServerList(&volp->rw.serversp, CM_FREESERVERLIST_DELETE);
-    if (volp->ro.serversp)
-        cm_FreeServerList(&volp->ro.serversp, CM_FREESERVERLIST_DELETE);
-    if (volp->bk.serversp)
-        cm_FreeServerList(&volp->bk.serversp, CM_FREESERVERLIST_DELETE);
+    for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+        if (volp->vol[volType].serversp)
+            cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
+    }
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->rw.ID == AFS_FAKE_ROOT_VOL_ID ) 
+    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
 	freelance = 1;
         memset(&vldbEntry, 0, sizeof(vldbEntry));
@@ -209,6 +202,17 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     } else
 #endif
     {
+        while (volp->flags & CM_VOLUMEFLAG_UPDATING_VL) {
+            osi_SleepW((LONG_PTR) &volp->flags, &volp->rw);
+            lock_ObtainWrite(&volp->rw);
+
+            if (!(volp->flags & CM_VOLUMEFLAG_RESET))
+                return 0;
+        }
+
+        volp->flags |= CM_VOLUMEFLAG_UPDATING_VL;
+        lock_ReleaseWrite(&volp->rw);
+
         if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
             cm_UpdateCell(cellp, 0);
 
@@ -246,7 +250,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
      * doesn't exist we will not care about the .backup that might be left behind
      * since there should be no method to access it.  
      */
-    if (code == CM_ERROR_NOSUCHVOLUME && volp->rw.ID == 0 && strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
+    if (code == CM_ERROR_NOSUCHVOLUME && volp->vol[RWVOL].ID == 0 && strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
         char name[VL_MAXNAMELEN];
 
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
@@ -280,7 +284,8 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
 		      volp->cellp->name, osi_LogSaveString(afsd_logp,name));
     }
-
+    
+    lock_ObtainWrite(&volp->rw);
     if (code == 0) {
         afs_int32 flags;
         afs_int32 nServers;
@@ -404,40 +409,40 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         }
 
         if (flags & VLF_RWEXISTS) {
-            if (volp->rw.ID != rwID) {
-                if (volp->rw.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[RWVOL].ID != rwID) {
+                if (volp->vol[RWVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
-                volp->rw.ID = rwID;
+                volp->vol[RWVOL].ID = rwID;
                 cm_AddVolumeToIDHashTable(volp, RWVOL);
             }
         } else {
-            if (volp->rw.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[RWVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
-            volp->rw.ID = 0;
+            volp->vol[RWVOL].ID = 0;
         }
         if (flags & VLF_ROEXISTS) {
-            if (volp->ro.ID != roID) {
-                if (volp->ro.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[ROVOL].ID != roID) {
+                if (volp->vol[ROVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
-                volp->ro.ID = roID;
+                volp->vol[ROVOL].ID = roID;
                 cm_AddVolumeToIDHashTable(volp, ROVOL);
             }
         } else {
-            if (volp->ro.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[ROVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
-            volp->ro.ID = 0;
+            volp->vol[ROVOL].ID = 0;
         }
         if (flags & VLF_BACKEXISTS) {
-            if (volp->bk.ID != bkID) {
-                if (volp->bk.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[BACKVOL].ID != bkID) {
+                if (volp->vol[BACKVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
-                volp->bk.ID = bkID;
+                volp->vol[BACKVOL].ID = bkID;
                 cm_AddVolumeToIDHashTable(volp, BACKVOL);
             }
         } else {
-            if (volp->bk.flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[BACKVOL].flags & CM_VOLUMEFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
-            volp->bk.ID = 0;
+            volp->vol[BACKVOL].ID = 0;
         }
         lock_ReleaseWrite(&cm_volumeLock);
         for (i=0; i<nServers; i++) {
@@ -468,7 +473,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
              */
             if ((tflags & VLSF_RWVOL) && (flags & VLF_RWEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, rwID);
-                cm_InsertServerList(&volp->rw.serversp, tsrp);
+                cm_InsertServerList(&volp->vol[RWVOL].serversp, tsrp);
 
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
@@ -479,7 +484,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             }
             if ((tflags & VLSF_ROVOL) && (flags & VLF_ROEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, roID);
-                cm_InsertServerList(&volp->ro.serversp, tsrp);
+                cm_InsertServerList(&volp->vol[ROVOL].serversp, tsrp);
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
                 lock_ReleaseWrite(&cm_serverLock);
@@ -495,7 +500,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
              */
             if ((tflags & VLSF_RWVOL) && (flags & VLF_BACKEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, bkID);
-                cm_InsertServerList(&volp->bk.serversp, tsrp);
+                cm_InsertServerList(&volp->vol[BACKVOL].serversp, tsrp);
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
                 lock_ReleaseWrite(&cm_serverLock);
@@ -518,7 +523,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
          * lists are length 1.
          */
         if (ROcount > 1) {
-            cm_RandomizeServer(&volp->ro.serversp);
+            cm_RandomizeServer(&volp->vol[ROVOL].serversp);
         }
 
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
@@ -528,47 +533,42 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         /* this volume does not exist - we should discard it */
         if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
             cm_RemoveVolumeFromNameHashTable(volp);
-        if (volp->rw.flags & CM_VOLUMEFLAG_IN_HASH)
-            cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
-        if (volp->ro.flags & CM_VOLUMEFLAG_IN_HASH)
-            cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
-        if (volp->bk.flags & CM_VOLUMEFLAG_IN_HASH)
-            cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            if (volp->vol[volType].flags & CM_VOLUMEFLAG_IN_HASH)
+                cm_RemoveVolumeFromIDHashTable(volp, volType);
+            if (volp->vol[volType].ID) {
+                cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_alldown);
+                volp->vol[volType].ID = 0;
+            }
+            cm_SetFid(&volp->vol[volType].dotdotFid, 0, 0, 0, 0);
+        }
 
         /* Move to the end so it will be recycled first */
         cm_MoveVolumeToLRULast(volp);
 
-        if (volp->rw.ID)
-            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_alldown);
-        if (volp->ro.ID)
-            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_alldown);
-        if (volp->bk.ID)
-            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_alldown);
-
-        volp->rw.ID = volp->ro.ID = volp->bk.ID = 0;
-        cm_SetFid(&volp->rw.dotdotFid, 0, 0, 0, 0);
-        cm_SetFid(&volp->ro.dotdotFid, 0, 0, 0, 0);
-        cm_SetFid(&volp->bk.dotdotFid, 0, 0, 0, 0);
         volp->namep[0] ='\0';
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
     }
 
-    if (volp->rw.state != rwNewstate) {
-        if (volp->rw.ID)
-            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, rwNewstate);
-        volp->rw.state = rwNewstate;
+    if (volp->vol[RWVOL].state != rwNewstate) {
+        if (volp->vol[RWVOL].ID)
+            cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, rwNewstate);
+        volp->vol[RWVOL].state = rwNewstate;
     }
-    if (volp->ro.state != roNewstate) {
-        if (volp->ro.ID)
-            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, roNewstate);
-        volp->ro.state = roNewstate;
+    if (volp->vol[ROVOL].state != roNewstate) {
+        if (volp->vol[ROVOL].ID)
+            cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, roNewstate);
+        volp->vol[ROVOL].state = roNewstate;
     }
-    if (volp->bk.state != bkNewstate) {
-        if (volp->bk.ID)
-            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, bkNewstate);
-        volp->bk.state = bkNewstate;
+    if (volp->vol[BACKVOL].state != bkNewstate) {
+        if (volp->vol[BACKVOL].ID)
+            cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, bkNewstate);
+        volp->vol[BACKVOL].state = bkNewstate;
     }
+
+    volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
+    osi_Wakeup((LONG_PTR) &volp->flags);
 
     return code;
 }
@@ -590,21 +590,21 @@ cm_volume_t *cm_GetVolumeByFID(cm_fid_t *fidp)
      * search the hash table for all three types until we find it.
      * We will search in the order of RO, RW, BK.
      */
-    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->ro.nextp) {
-        if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->ro.ID )
+    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->vol[ROVOL].nextp) {
+        if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->vol[ROVOL].ID )
             break;
     }
     if (!volp) {
         /* try RW volumes */
-        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->rw.nextp) {
-            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->rw.ID )
+        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->vol[RWVOL].nextp) {
+            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->vol[RWVOL].ID )
                 break;
         }
     }
     if (!volp) {
         /* try BK volumes */
-        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->bk.nextp) {
-            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->bk.ID )
+        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->vol[BACKVOL].nextp) {
+            if ( fidp->cell == volp->cellp->cellID && fidp->volume == volp->vol[BACKVOL].ID )
                 break;
         }
     }
@@ -632,9 +632,9 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
 #ifdef SEARCH_ALL_VOLUMES
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
 	if (cellp == volp->cellp &&
-	     ((unsigned) volumeID == volp->rw.ID ||
-	       (unsigned) volumeID == volp->ro.ID ||
-	       (unsigned) volumeID == volp->bk.ID))
+	     ((unsigned) volumeID == volp->vol[RWVOL].ID ||
+	       (unsigned) volumeID == volp->vol[ROVOL].ID ||
+	       (unsigned) volumeID == volp->vol[BACKVOL].ID))
 	    break;
     }	
 
@@ -646,21 +646,21 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
      * search the hash table for all three types until we find it.
      * We will search in the order of RO, RW, BK.
      */
-    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->ro.nextp) {
-        if ( cellp == volp->cellp && volumeID == volp->ro.ID )
+    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->vol[ROVOL].nextp) {
+        if ( cellp == volp->cellp && volumeID == volp->vol[ROVOL].ID )
             break;
     }
     if (!volp) {
         /* try RW volumes */
-        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->rw.nextp) {
-            if ( cellp == volp->cellp && volumeID == volp->rw.ID )
+        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->vol[RWVOL].nextp) {
+            if ( cellp == volp->cellp && volumeID == volp->vol[RWVOL].ID )
                 break;
         }
     }
     if (!volp) {
         /* try BK volumes */
-        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->bk.nextp) {
-            if ( cellp == volp->cellp && volumeID == volp->bk.ID )
+        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->vol[BACKVOL].nextp) {
+            if ( cellp == volp->cellp && volumeID == volp->vol[BACKVOL].ID )
                 break;
         }
     }
@@ -677,15 +677,15 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
 
     /* return it held */
     if (volp) {
-        lock_ObtainMutex(&volp->mx);
+        lock_ObtainWrite(&volp->rw);
         
         code = 0;
         if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
-            code = cm_UpdateVolume(cellp, userp, reqp, volp);
+            code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
             if (code == 0)
                 volp->flags &= ~CM_VOLUMEFLAG_RESET;
         }
-        lock_ReleaseMutex(&volp->mx);
+        lock_ReleaseWrite(&volp->rw);
         if (code == 0) {
             *outVolpp = volp;
 
@@ -757,10 +757,10 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 #endif
 
     if (!volp && (flags & CM_GETVOL_FLAG_CREATE)) {
+        afs_uint32 volType;
         /* otherwise, get from VLDB */
 
 	if ( cm_data.currentVolumes >= cm_data.maxVolumes ) {
-
 #ifdef RECYCLE_FROM_ALL_VOLUMES_LIST
 	    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
 		if ( volp->refCount == 0 ) {
@@ -783,7 +783,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 		osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
 
             lock_ReleaseRead(&cm_volumeLock);
-            lock_ObtainMutex(&volp->mx);
+            lock_ObtainWrite(&volp->rw);
             lock_ObtainWrite(&cm_volumeLock);
 
             osi_Log2(afsd_logp, "Recycling Volume %s:%s",
@@ -793,33 +793,24 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
                 cm_RemoveVolumeFromLRU(volp);
             if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
                 cm_RemoveVolumeFromNameHashTable(volp);
-            if (volp->rw.flags & CM_VOLUMEFLAG_IN_HASH)
-                cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
-            if (volp->ro.flags & CM_VOLUMEFLAG_IN_HASH)
-                cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
-            if (volp->bk.flags & CM_VOLUMEFLAG_IN_HASH)
-                cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
 
-            if (volp->rw.ID)
-                cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_unknown);
-            if (volp->ro.ID)
-                cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_unknown);
-            if (volp->bk.ID)
-                cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_unknown);
-
-            volp->rw.ID = volp->ro.ID = volp->bk.ID = 0;
-            cm_SetFid(&volp->rw.dotdotFid, 0, 0, 0, 0);
-            cm_SetFid(&volp->ro.dotdotFid, 0, 0, 0, 0);
-            cm_SetFid(&volp->bk.dotdotFid, 0, 0, 0, 0);
+            for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+                if (volp->vol[volType].flags & CM_VOLUMEFLAG_IN_HASH)
+                    cm_RemoveVolumeFromIDHashTable(volp, volType);
+                if (volp->vol[volType].ID)
+                    cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_unknown);
+                volp->vol[volType].ID = 0;
+                cm_SetFid(&volp->vol[volType].dotdotFid, 0, 0, 0, 0);
+            }
 	} else {
 	    volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
 	    memset(volp, 0, sizeof(cm_volume_t));
 	    volp->magic = CM_VOLUME_MAGIC;
 	    volp->allNextp = cm_data.allVolumesp;
 	    cm_data.allVolumesp = volp;
-	    lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
+	    lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
             lock_ReleaseRead(&cm_volumeLock);
-            lock_ObtainMutex(&volp->mx);
+            lock_ObtainWrite(&volp->rw);
             lock_ObtainWrite(&cm_volumeLock);
         }
 	volp->cellp = cellp;
@@ -827,9 +818,12 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	volp->namep[VL_MAXNAMELEN-1] = '\0';
         volp->refCount = 1;	/* starts off held */
 	volp->flags = CM_VOLUMEFLAG_RESET;
-        volp->rw.state = volp->ro.state = volp->bk.state = vl_unknown;
-        volp->rw.nextp = volp->ro.nextp = volp->bk.nextp = NULL;
-        volp->rw.flags = volp->ro.flags = volp->bk.flags = 0;
+    
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            volp->vol[volType].state = vl_unknown;
+            volp->vol[volType].nextp = NULL;
+            volp->vol[volType].flags = 0;
+        }
         volp->cbExpiresRO = 0;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
@@ -842,19 +836,19 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         if (!volp)
             return CM_ERROR_NOSUCHVOLUME;
 
-        lock_ObtainMutex(&volp->mx);
+        lock_ObtainWrite(&volp->rw);
     }
 
     /* if we get here we are holding the mutex */
     if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
-        code = cm_UpdateVolume(cellp, userp, reqp, volp);
+        code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
         if (code == 0)
             volp->flags &= ~CM_VOLUMEFLAG_RESET;
     }	
-    lock_ReleaseMutex(&volp->mx);
+    lock_ReleaseWrite(&volp->rw);
 
-    if (code == 0 && (type == BACKVOL && volp->bk.ID == 0 ||
-                      type == ROVOL && volp->ro.ID == 0))
+    if (code == 0 && (type == BACKVOL && volp->vol[BACKVOL].ID == 0 ||
+                      type == ROVOL && volp->vol[ROVOL].ID == 0))
         code = CM_ERROR_NOSUCHVOLUME;
 
     if (code == 0) {
@@ -890,9 +884,9 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 #ifdef SEARCH_ALL_VOLUMES
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
 	if (cellp == volp->cellp &&
-	     (fidp->volume == volp->rw.ID ||
-	       fidp->volume == volp->ro.ID ||
-	       fidp->volume == volp->bk.ID))
+	     (fidp->volume == volp->vol[RWVOL].ID ||
+	       fidp->volume == volp->vol[ROVOL].ID ||
+	       fidp->volume == volp->vol[BACKVOL].ID))
 	    break;
     }	
 #endif /* SEARCH_ALL_VOLUMES */
@@ -902,21 +896,21 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
      * search the hash table for all three types until we find it.
      * We will search in the order of RO, RW, BK.
      */
-    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->ro.nextp) {
-        if ( cellp == volp->cellp && fidp->volume == volp->ro.ID )
+    for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = volp->vol[ROVOL].nextp) {
+        if ( cellp == volp->cellp && fidp->volume == volp->vol[ROVOL].ID )
             break;
     }
     if (!volp) {
         /* try RW volumes */
-        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->rw.nextp) {
-            if ( cellp == volp->cellp && fidp->volume == volp->rw.ID )
+        for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = volp->vol[RWVOL].nextp) {
+            if ( cellp == volp->cellp && fidp->volume == volp->vol[RWVOL].ID )
                 break;
         }
     }
     if (!volp) {
         /* try BK volumes */
-        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->bk.nextp) {
-            if ( cellp == volp->cellp && fidp->volume == volp->bk.ID )
+        for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = volp->vol[BACKVOL].nextp) {
+            if ( cellp == volp->cellp && fidp->volume == volp->vol[BACKVOL].ID )
                 break;
         }
     }
@@ -932,7 +926,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 
     /* update it */
     cm_data.mountRootGen = time(NULL);
-    lock_ObtainMutex(&volp->mx);
+    lock_ObtainWrite(&volp->rw);
     volp->flags |= CM_VOLUMEFLAG_RESET;
 #ifdef COMMENT
     /* Mark the volume to be updated but don't update it now.
@@ -945,11 +939,11 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
      * accessed by Name or ID the UpdateVolume call will
      * occur.
      */
-    code = cm_UpdateVolume(cellp, userp, reqp, volp);
+    code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
     if (code == 0)
 	volp->flags &= ~CM_VOLUMEFLAG_RESET;
 #endif
-    lock_ReleaseMutex(&volp->mx);
+    lock_ReleaseWrite(&volp->rw);
 
     cm_PutVolume(volp);
 }
@@ -962,12 +956,12 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
 
     lock_ObtainWrite(&cm_serverLock);
 
-    if (volume == volp->rw.ID)
-        serverspp = &volp->rw.serversp;
-    else if (volume == volp->ro.ID)
-        serverspp = &volp->ro.serversp;
-    else if (volume == volp->bk.ID)
-        serverspp = &volp->bk.serversp;
+    if (volume == volp->vol[RWVOL].ID)
+        serverspp = &volp->vol[RWVOL].serversp;
+    else if (volume == volp->vol[ROVOL].ID)
+        serverspp = &volp->vol[ROVOL].serversp;
+    else if (volume == volp->vol[BACKVOL].ID)
+        serverspp = &volp->vol[BACKVOL].serversp;
     else 
         osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
         
@@ -992,12 +986,12 @@ long cm_GetROVolumeID(cm_volume_t *volp)
 {
     long id;
 
-    lock_ObtainMutex(&volp->mx);
-    if (volp->ro.ID && volp->ro.serversp)
-	id = volp->ro.ID;
+    lock_ObtainRead(&volp->rw);
+    if (volp->vol[ROVOL].ID && volp->vol[ROVOL].serversp)
+	id = volp->vol[ROVOL].ID;
     else
-	id = volp->rw.ID;
-    lock_ReleaseMutex(&volp->mx);
+	id = volp->vol[RWVOL].ID;
+    lock_ReleaseRead(&volp->rw);
 
     return id;
 }
@@ -1016,9 +1010,9 @@ void cm_RefreshVolumes(void)
 	InterlockedIncrement(&volp->refCount);
 	lock_ReleaseRead(&cm_volumeLock);
 
-	lock_ObtainMutex(&volp->mx);
+	lock_ObtainWrite(&volp->rw);
 	volp->flags |= CM_VOLUMEFLAG_RESET;
-	lock_ReleaseMutex(&volp->mx);
+	lock_ReleaseWrite(&volp->rw);
 	
         lock_ObtainRead(&cm_volumeLock);
         refCount = InterlockedDecrement(&volp->refCount);
@@ -1071,124 +1065,124 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     OfflineMsg = offLineMsg;
     MOTD = motd;
 
-    lock_ObtainMutex(&volp->mx);
+    lock_ObtainWrite(&volp->rw);
 
     if (volp->flags & CM_VOLUMEFLAG_RESET) {
         cm_InitReq(&req);
-        code = cm_UpdateVolume(volp->cellp, cm_rootUserp, &req, volp);
+        code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
         if (code == 0)
             volp->flags &= ~CM_VOLUMEFLAG_RESET;
     }
 
-    if (volp->rw.ID != 0 && (!volID || volID == volp->rw.ID) &&
-		volp->rw.serversp &&
-         (volp->rw.state == vl_busy || volp->rw.state == vl_offline || volp->rw.state == vl_unknown)) {
+    if (volp->vol[RWVOL].ID != 0 && (!volID || volID == volp->vol[RWVOL].ID) &&
+         volp->vol[RWVOL].serversp &&
+         (volp->vol[RWVOL].state == vl_busy || volp->vol[RWVOL].state == vl_offline || volp->vol[RWVOL].state == vl_unknown)) {
         cm_InitReq(&req);
 
-        for (serversp = volp->rw.serversp; serversp; serversp = serversp->next) {
+        for (serversp = volp->vol[RWVOL].serversp; serversp; serversp = serversp->next) {
             if (serversp->status == srv_busy || serversp->status == srv_offline)
                 serversp->status = srv_not_busy;
         }
 
-        lock_ReleaseMutex(&volp->mx);
+        lock_ReleaseWrite(&volp->rw);
         do {
-            code = cm_ConnFromVolume(volp, volp->rw.ID, cm_rootUserp, &req, &connp);
+            code = cm_ConnFromVolume(volp, volp->vol[RWVOL].ID, cm_rootUserp, &req, &connp);
             if (code) 
                 continue;
 
             callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->rw.ID,
+            code = RXAFS_GetVolumeStatus(callp, volp->vol[RWVOL].ID,
                                           &volStat, &Name, &OfflineMsg, &MOTD);
             rx_PutConnection(callp);        
 
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
-        lock_ObtainMutex(&volp->mx);
+        lock_ObtainWrite(&volp->rw);
         if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_online);
-            volp->rw.state = vl_online;
+            cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_online);
+            volp->vol[RWVOL].state = vl_online;
             online = 1;
         } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_unknown);
-            volp->rw.state = vl_unknown;
+            cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_unknown);
+            volp->vol[RWVOL].state = vl_unknown;
             online = 1;
         }
     }
 
-    if (volp->ro.ID != 0 && (!volID || volID == volp->ro.ID) &&
-		volp->ro.serversp &&
-         (volp->ro.state == vl_busy || volp->ro.state == vl_offline || volp->ro.state == vl_unknown)) {
+    if (volp->vol[ROVOL].ID != 0 && (!volID || volID == volp->vol[ROVOL].ID) &&
+         volp->vol[ROVOL].serversp &&
+         (volp->vol[ROVOL].state == vl_busy || volp->vol[ROVOL].state == vl_offline || volp->vol[ROVOL].state == vl_unknown)) {
         cm_InitReq(&req);
 
-        for (serversp = volp->ro.serversp; serversp; serversp = serversp->next) {
+        for (serversp = volp->vol[ROVOL].serversp; serversp; serversp = serversp->next) {
             if (serversp->status == srv_busy || serversp->status == srv_offline)
                 serversp->status = srv_not_busy;
         }
 
-        lock_ReleaseMutex(&volp->mx);
+        lock_ReleaseWrite(&volp->rw);
         do {
-            code = cm_ConnFromVolume(volp, volp->ro.ID, cm_rootUserp, &req, &connp);
+            code = cm_ConnFromVolume(volp, volp->vol[ROVOL].ID, cm_rootUserp, &req, &connp);
             if (code) 
                 continue;
 
             callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->ro.ID,
+            code = RXAFS_GetVolumeStatus(callp, volp->vol[ROVOL].ID,
                                           &volStat, &Name, &OfflineMsg, &MOTD);
             rx_PutConnection(callp);        
 
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
-        lock_ObtainMutex(&volp->mx);
+        lock_ObtainWrite(&volp->rw);
         if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_online);
-            volp->ro.state = vl_online;
+            cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_online);
+            volp->vol[ROVOL].state = vl_online;
             online = 1;
         } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_unknown);
-            volp->ro.state = vl_unknown;
+            cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_unknown);
+            volp->vol[ROVOL].state = vl_unknown;
             online = 1;
         }
     }
 
-    if (volp->bk.ID != 0 && (!volID || volID == volp->bk.ID) &&
-		volp->bk.serversp &&
-         (volp->bk.state == vl_busy || volp->bk.state == vl_offline || volp->bk.state == vl_unknown)) {
+    if (volp->vol[BACKVOL].ID != 0 && (!volID || volID == volp->vol[BACKVOL].ID) &&
+         volp->vol[BACKVOL].serversp &&
+         (volp->vol[BACKVOL].state == vl_busy || volp->vol[BACKVOL].state == vl_offline || volp->vol[BACKVOL].state == vl_unknown)) {
         cm_InitReq(&req);
 
-        for (serversp = volp->bk.serversp; serversp; serversp = serversp->next) {
+        for (serversp = volp->vol[BACKVOL].serversp; serversp; serversp = serversp->next) {
             if (serversp->status == srv_busy || serversp->status == srv_offline)
                 serversp->status = srv_not_busy;
         }
 
-        lock_ReleaseMutex(&volp->mx);
+        lock_ReleaseWrite(&volp->rw);
         do {
-            code = cm_ConnFromVolume(volp, volp->bk.ID, cm_rootUserp, &req, &connp);
+            code = cm_ConnFromVolume(volp, volp->vol[BACKVOL].ID, cm_rootUserp, &req, &connp);
             if (code) 
                 continue;
 
             callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->bk.ID,
+            code = RXAFS_GetVolumeStatus(callp, volp->vol[BACKVOL].ID,
                                           &volStat, &Name, &OfflineMsg, &MOTD);
             rx_PutConnection(callp);        
 
         } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
 
-        lock_ObtainMutex(&volp->mx);
+        lock_ObtainWrite(&volp->rw);
         if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_online);
-            volp->bk.state = vl_online;
+            cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_online);
+            volp->vol[BACKVOL].state = vl_online;
             online = 1;
         } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_unknown);
-            volp->bk.state = vl_unknown;
+            cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_unknown);
+            volp->vol[BACKVOL].state = vl_unknown;
             online = 1;
         }
     }
 
-    lock_ReleaseMutex(&volp->mx);
+    lock_ReleaseWrite(&volp->rw);
     return online;
 }
 
@@ -1269,12 +1263,12 @@ void
 cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
 {
 
-    if (volp->rw.ID == volID) {
-        cm_UpdateVolumeStatusInt(volp, &volp->rw);
-    } else if (volp->ro.ID == volID) {
-        cm_UpdateVolumeStatusInt(volp, &volp->ro);
-    } else if (volp->bk.ID == volID) {
-        cm_UpdateVolumeStatusInt(volp, &volp->bk);
+    if (volp->vol[RWVOL].ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->vol[RWVOL]);
+    } else if (volp->vol[ROVOL].ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->vol[ROVOL]);
+    } else if (volp->vol[BACKVOL].ID == volID) {
+        cm_UpdateVolumeStatusInt(volp, &volp->vol[BACKVOL]);
     } else {
         /*
          * If we are called with volID == 0 then something has gone wrong.
@@ -1283,12 +1277,11 @@ cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
          * just update all of them that are known to exist.  Better to be 
          * correct than fast.
          */
-        if (volp->rw.ID != 0)
-            cm_UpdateVolumeStatusInt(volp, &volp->rw);
-        if (volp->ro.ID != 0)
-            cm_UpdateVolumeStatusInt(volp, &volp->ro);
-        if (volp->bk.ID != 0)
-            cm_UpdateVolumeStatusInt(volp, &volp->bk);
+        afs_uint32 volType;
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            if (volp->vol[volType].ID != 0)
+                cm_UpdateVolumeStatusInt(volp, &volp->vol[volType]);
+        }
     }
 }
 
@@ -1309,16 +1302,16 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 	code = 1 ;	/* assume that list is unchanged */
 	InterlockedIncrement(&volp->refCount);
 	lock_ReleaseRead(&cm_volumeLock);
-	lock_ObtainMutex(&volp->mx);
+	lock_ObtainWrite(&volp->rw);
 
-	if ((tsp->cellp==volp->cellp) && (volp->ro.serversp))
-	    code =cm_ChangeRankServer(&volp->ro.serversp, tsp);
+	if ((tsp->cellp==volp->cellp) && (volp->vol[ROVOL].serversp))
+	    code =cm_ChangeRankServer(&volp->vol[ROVOL].serversp, tsp);
 
 	/* this volume list was changed */
 	if ( !code )
-	    cm_RandomizeServer(&volp->ro.serversp);
+	    cm_RandomizeServer(&volp->vol[ROVOL].serversp);
 
-	lock_ReleaseMutex(&volp->mx);
+	lock_ReleaseWrite(&volp->rw);
 	lock_ObtainRead(&cm_volumeLock);
         refCount = InterlockedDecrement(&volp->refCount);
 	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
@@ -1347,7 +1340,7 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
         sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x refCount=%u\r\n", 
-                 cookie, volp, volp->cellp->name, volp->namep, volp->rw.ID, volp->ro.ID, volp->bk.ID, volp->flags, 
+                 cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID, volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags, 
                  volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
@@ -1427,19 +1420,7 @@ void cm_AddVolumeToIDHashTable(cm_volume_t *volp, afs_uint32 volType)
     int i;
     struct cm_vol_state * statep;
 
-    switch (volType) {
-    case RWVOL:
-        statep = &volp->rw;
-        break;
-    case ROVOL:                                
-        statep = &volp->ro;
-        break;
-    case BACKVOL:
-        statep = &volp->bk;
-        break;
-    default:
-        return;
-    }
+    statep = cm_VolumeStateByType(volp, volType);
 
     if (statep->flags & CM_VOLUMEFLAG_IN_HASH)
         return;
@@ -1472,19 +1453,7 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
     struct cm_vol_state * statep;
     int i;
 	
-    switch (volType) {
-    case RWVOL:
-        statep = &volp->rw;
-        break;
-    case ROVOL:                                
-        statep = &volp->ro;
-        break;
-    case BACKVOL:
-        statep = &volp->bk;
-        break;
-    default:
-        return;
-    }
+    statep = cm_VolumeStateByType(volp, volType);
 
     if (statep->flags & CM_VOLUMEFLAG_IN_HASH) {
 	/* hash it out first */
@@ -1503,6 +1472,8 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
             lvolpp = &cm_data.volumeBKIDHashTablep[i];
             tvolp = cm_data.volumeBKIDHashTablep[i];
             break;
+        default:
+            osi_assertx(0, "invalid volume type");
         }
 	do {
 	    if (tvolp == volp) {
@@ -1512,20 +1483,8 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 		break;
 	    }
 
-            switch (volType) {
-            case RWVOL:
-                lvolpp = &tvolp->rw.nextp;
-                tvolp = tvolp->rw.nextp;
-                break;
-            case ROVOL:                                
-                lvolpp = &tvolp->ro.nextp;
-                tvolp = tvolp->ro.nextp;
-                break;
-            case BACKVOL:
-                lvolpp = &tvolp->bk.nextp;
-                tvolp = tvolp->bk.nextp;
-                break;
-            }
+            lvolpp = &tvolp->vol[volType].nextp;
+            tvolp = tvolp->vol[volType].nextp;
 	} while(tvolp);
     }
 }
@@ -1591,11 +1550,11 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
     char volstr[CELL_MAXNAMELEN + VL_MAXNAMELEN]="";
     char *ext = "";
 
-    if (volID == volp->rw.ID)
+    if (volID == volp->vol[RWVOL].ID)
         ext = "";
-    else if (volID == volp->ro.ID)
+    else if (volID == volp->vol[ROVOL].ID)
         ext = ".readonly";
-    else if (volID == volp->bk.ID)
+    else if (volID == volp->vol[BACKVOL].ID)
         ext = ".backup";
     else
         ext = ".nomatch";
@@ -1609,15 +1568,11 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
 
 enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
 {
-    if (volp->rw.ID == volID) {
-        return volp->rw.state;
-    } else if (volp->ro.ID == volID) {
-        return volp->ro.state;
-    } else if (volp->bk.ID == volID) {
-        return volp->bk.state;
-    } else {
+    cm_vol_state_t * statep = cm_VolumeStateByID(volp, volID);
+    if (statep)
+        return statep->state;
+    else
         return vl_unknown;
-    }
 }
 
 /* Renew .readonly volume callbacks that are more than
@@ -1636,7 +1591,7 @@ cm_VolumeRenewROCallbacks(void)
             cm_fid_t      fid;
             cm_scache_t * scp;
 
-            cm_SetFid(&fid, volp->cellp->cellID, volp->ro.ID, 1, 1);
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[ROVOL].ID, 1, 1);
 
             cm_InitReq(&req);
 
@@ -1652,3 +1607,41 @@ cm_VolumeRenewROCallbacks(void)
     }
     lock_ReleaseRead(&cm_volumeLock);
 }
+
+cm_vol_state_t * 
+cm_VolumeStateByType(cm_volume_t *volp, afs_uint32 volType)
+{
+    return &volp->vol[volType];
+}
+
+cm_vol_state_t * 
+cm_VolumeStateByID(cm_volume_t *volp, afs_uint32 id)
+{
+    cm_vol_state_t * statep = NULL;
+
+    if (id == volp->vol[RWVOL].ID)
+        statep = &volp->vol[RWVOL];
+    else if (id == volp->vol[ROVOL].ID)
+        statep = &volp->vol[ROVOL];
+    else if (id == volp->vol[BACKVOL].ID)
+        statep = &volp->vol[BACKVOL];
+
+    return(statep);
+}
+
+cm_vol_state_t * 
+cm_VolumeStateByName(cm_volume_t *volp, char *volname)
+{
+    size_t len = strlen(volname);
+    cm_vol_state_t *statep;
+
+    if (stricmp(".readonly", &volname[len-9]) == 0)
+        statep = &volp->vol[ROVOL];
+    else if (stricmp(".backup", &volname[len-7]) == 0)
+        statep = &volp->vol[BACKVOL];
+    else 
+        statep = &volp->vol[RWVOL];
+
+    return statep;
+}
+

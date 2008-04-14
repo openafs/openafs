@@ -14,14 +14,21 @@
 
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
 
+/* 
+ *
+ */
+
 typedef struct cm_vol_state {
     struct cm_volume *nextp;            /* volumeIDHashTable; by cm_volumeLock */
-    afs_uint32      ID;                 /* by mx */
+    afs_uint32      ID;                 /* by rw */
     struct cm_fid dotdotFid;	        /* parent of volume root */
-    cm_serverRef_t *serversp;           /* by mx */
-    enum volstatus  state;              /* by mx */
-    afs_uint32      flags;              /* by mx */
+    cm_serverRef_t *serversp;           /* by cm_serverLock */
+    enum volstatus  state;              /* by rw */
+    afs_uint32      flags;              /* by rw */
 } cm_vol_state_t;
+
+/* RWVOL, ROVOL, BACKVOL are defined in cm.h */
+#define NUM_VOL_TYPES 3
 
 typedef struct cm_volume {
     osi_queue_t q;                      /* LRU queue; cm_volumeLock */
@@ -31,11 +38,9 @@ typedef struct cm_volume {
     cm_cell_t *cellp;		        /* never changes */
     char namep[VL_MAXNAMELEN];		/* name of the normal volume - assigned during allocation; */
                                         /* by cm_volumeLock */
-    struct cm_vol_state rw;	        /* by cm_volumeLock */
-    struct cm_vol_state ro;		/* by cm_volumeLock */
-    struct cm_vol_state bk;		/* by cm_volumeLock */
-    osi_mutex_t mx;
-    afs_uint32 flags;			/* by mx */
+    struct cm_vol_state vol[NUM_VOL_TYPES]; /* by cm_volumeLock */
+    osi_rwlock_t rw;
+    afs_uint32 flags;			/* by rw */
     afs_int32 refCount;		        /* by Interlocked operations */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
 } cm_volume_t;
@@ -43,6 +48,7 @@ typedef struct cm_volume {
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */
 #define CM_VOLUMEFLAG_IN_HASH      2
 #define CM_VOLUMEFLAG_IN_LRU_QUEUE 4
+#define CM_VOLUMEFLAG_UPDATING_VL  8
 
 
 typedef struct cm_volumeRef {
@@ -125,6 +131,12 @@ extern void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, en
 extern enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 
 extern void cm_VolumeRenewROCallbacks(void);
+
+extern cm_vol_state_t * cm_VolumeStateByType(cm_volume_t *volp, afs_uint32 type);
+
+extern cm_vol_state_t * cm_VolumeStateByID(cm_volume_t *volp, afs_uint32 id);
+
+extern cm_vol_state_t * cm_VolumeStateByName(cm_volume_t *volp, char *volname);
 
 extern osi_rwlock_t cm_volumeLock;
 #endif /*  __CM_VOLUME_H_ENV__ */
