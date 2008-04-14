@@ -846,17 +846,17 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
          * to copy the dotdotFipd from the volume structure where the 
          * "master" copy is stored (defect 11489)
          */
-        if (volp->ro.ID == fidp->volume) {
+        if (volp->vol[ROVOL].ID == fidp->volume) {
 	    scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
-                scp->dotdotFid = volp->ro.dotdotFid;
-        } else if (volp->bk.ID == fidp->volume) {
+                scp->dotdotFid = cm_VolumeStateByType(volp, ROVOL)->dotdotFid;
+        } else if (volp->vol[BACKVOL].ID == fidp->volume) {
 	    scp->flags |= CM_SCACHEFLAG_RO;
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
-                scp->dotdotFid = volp->bk.dotdotFid;
+                scp->dotdotFid = cm_VolumeStateByType(volp, BACKVOL)->dotdotFid;
         } else {
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
-                scp->dotdotFid = volp->rw.dotdotFid;
+                scp->dotdotFid = cm_VolumeStateByType(volp, RWVOL)->dotdotFid;
         }
     }
     if (volp)

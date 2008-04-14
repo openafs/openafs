@@ -171,8 +171,8 @@ void cm_PerformanceTuningInit(void)
 
     lock_ObtainRead(&cm_volumeLock);
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-        if (volp->rw.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->rw.ID, 1, 1);
+        if (volp->vol[RWVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[RWVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -189,8 +189,8 @@ void cm_PerformanceTuningInit(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-        if (volp->ro.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->ro.ID, 1, 1);
+        if (volp->vol[ROVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[ROVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -207,8 +207,8 @@ void cm_PerformanceTuningInit(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-        if (volp->bk.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->bk.ID, 1, 1);
+        if (volp->vol[BACKVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[BACKVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -311,8 +311,8 @@ void cm_PerformanceTuningCheck(void)
 
     lock_ObtainRead(&cm_volumeLock);
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-        if (volp->rw.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->rw.ID, 1, 1);
+        if (volp->vol[RWVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[RWVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -329,8 +329,8 @@ void cm_PerformanceTuningCheck(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-        if (volp->ro.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->ro.ID, 1, 1);
+        if (volp->vol[ROVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[ROVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -347,8 +347,8 @@ void cm_PerformanceTuningCheck(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-        if (volp->bk.ID) {
-            cm_SetFid(&fid, volp->cellp->cellID, volp->bk.ID, 1, 1);
+        if (volp->vol[BACKVOL].ID) {
+            cm_SetFid(&fid, volp->cellp->cellID, volp->vol[BACKVOL].ID, 1, 1);
             hash = fid.hash % fidStatsHashTableSize;
 
             for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {

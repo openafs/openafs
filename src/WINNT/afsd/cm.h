@@ -94,6 +94,7 @@
 #define CM_ERROR_LOCK_NOT_GRANTED       (CM_ERROR_BASE+59)
 
 /* Used by cm_FollowMountPoint and cm_FindVolumeByName */
+/* And as an index in cm_volume_t */
 #define RWVOL	0
 #define ROVOL	1
 #define BACKVOL	2

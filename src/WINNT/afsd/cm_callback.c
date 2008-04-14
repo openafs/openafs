@@ -1807,13 +1807,7 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
     if (!volp)
         return 1;
 
-    if (volp->rw.ID == volID) {
-        statep = &volp->rw;
-    } else if (volp->ro.ID == volID) {
-        statep = &volp->ro;
-    } else if (volp->bk.ID == volID) {
-        statep = &volp->bk;
-    }
+    statep = cm_VolumeStateByID(volp, volID);
     cm_PutVolume(volp);
     if (statep->state == vl_online)
         return 1;

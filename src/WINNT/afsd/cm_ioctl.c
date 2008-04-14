@@ -1240,7 +1240,6 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	
         cp = ioctlp->outDatap;
         
-        lock_ObtainMutex(&tvp->mx);
         tsrpp = cm_GetVolServers(tvp, volume);
         lock_ObtainRead(&cm_serverLock);
         for (current = *tsrpp; current; current = current->next) {
@@ -1250,7 +1249,6 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         lock_ReleaseRead(&cm_serverLock);
         cm_FreeServerList(tsrpp, 0);
-        lock_ReleaseMutex(&tvp->mx);
 
         /* still room for terminating NULL, add it on */
         volume = 0;	/* reuse vbl */
@@ -3174,13 +3172,7 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (code) 
             return code;
 	
-        if (volume == tvp->rw.ID)
-            statep = &tvp->rw;
-        else if (volume == tvp->ro.ID)
-            statep = &tvp->ro;
-        else
-            statep = &tvp->bk;
-
+        statep = cm_VolumeStateByID(tvp, volume);
         switch (statep->state) {
         case vl_online:
         case vl_unknown:
@@ -3275,23 +3267,10 @@ long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code)
         return code;
 	
-    if (testp->fid.volume) {
-        if (testp->fid.volume == volp->rw.ID)
-            statep = &volp->rw;
-        else if (testp->fid.volume == volp->ro.ID)
-            statep = &volp->ro;
-        else
-            statep = &volp->bk;
-    } else {
-        len = strlen(testp->volname);
-
-        if (stricmp(".readonly", &testp->volname[len-9]) == 0)
-            statep = &volp->ro;
-        else if (stricmp(".backup", &testp->volname[len-7]) == 0)
-            statep = &volp->bk;
-        else 
-            statep = &volp->rw;
-    }
+    if (testp->fid.volume)
+        statep = cm_VolumeStateByID(volp, testp->fid.volume);
+    else
+        statep = cm_VolumeStateByName(volp, testp->volname);
 
     if (statep) {
         statep->state = testp->state;
