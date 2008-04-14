@@ -46,7 +46,7 @@ RCSID
 #include "volint.h"
 #include "lockdata.h"
 
-#include <vsutils_prototypes.h>
+#include "vsutils_prototypes.h"
 
 struct ubik_client *cstruct;
 static rxkad_level vsu_rxkad_level = rxkad_clear;
