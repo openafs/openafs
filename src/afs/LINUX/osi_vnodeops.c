@@ -803,8 +803,14 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	if (vcp == afs_globalVp)
 	    goto good_dentry;
 
-	if (*dp->d_name.name != '/' && vcp->mvstat == 2)	/* root vnode */
-	    check_bad_parent(dp);	/* check and correct mvid */
+	if (vcp->mvstat == 1) {         /* mount point */
+	    if (vcp->mvid && (vcp->states & CMValid)) {
+		/* a mount point, not yet replaced by its directory */
+		goto bad_dentry;
+	    }
+	} else
+	    if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
+		check_bad_parent(dp);	/* check and correct mvid */
 
 #ifdef notdef
 	/* If the last looker changes, we should make sure the current
