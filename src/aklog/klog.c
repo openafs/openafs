@@ -303,26 +303,24 @@ klog_prompter(krb5_context context,
 {
     krb5_error_code code;
     int i, type;
-#ifndef USING_HEIMDAL
+#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
     krb5_prompt_type *types;
 #endif
     struct kp_arg *kparg = (struct kp_arg *) a;
     code = krb5_prompter_posix(context, a, name, banner, num_prompts, prompts);
     if (code) return code;
-#ifndef USING_HEIMDAL
+#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
     if ((types = krb5_get_prompt_types(context)))
 #endif
     for (i = 0; i < num_prompts; ++i) {
-#ifdef USING_HEIMDAL
-	type = prompts[i].type;
-#else
+#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
 	type = types[i];
+#else
+	type = prompts[i].type;
 #endif
 #if 0
-	printf ("i%d t%d <%.*s>\n", i,
-type,
-prompts[i].reply->length,
-prompts[i].reply->data);
+	printf ("i%d t%d <%.*s>\n", i, type, prompts[i].reply->length,
+		prompts[i].reply->data);
 #endif
 	switch(type) {
 	case KRB5_PROMPT_TYPE_PASSWORD:
