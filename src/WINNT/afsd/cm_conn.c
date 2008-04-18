@@ -133,7 +133,9 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     
     *serversppp = cm_GetVolServers(volp, fidp->volume);
 
+    lock_ObtainRead(&cm_volumeLock);
     cm_PutVolume(volp);
+    lock_ReleaseRead(&cm_volumeLock);
     return 0;
 }
 
@@ -272,7 +274,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode == CM_ERROR_ALLDOWN) {
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLDOWN.");
 	/* Servers marked DOWN will be restored by the background daemon
-	 * thread as they become available.
+	 * thread as they become available.  The volume status is 
+         * updated as the server state changes.
 	 */
     }
 
@@ -281,43 +284,45 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         /* Volume instances marked offline will be restored by the 
          * background daemon thread as they become available 
          */
-        if (timeLeft > 7 && fidp) {
-            thrd_Sleep(5000);
-
+        if (fidp) {
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                    CM_GETVOL_FLAG_NO_LRU_UPDATE, 
-                                    &volp);
+                                      CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                      &volp);
             if (code == 0) {
-                statep = cm_VolumeStateByID(volp, fidp->volume);
-                if (statep->state != vl_offline && statep->state != vl_unknown) {
-                    retry = 1;
-                } else {
-                    if (cm_CheckOfflineVolume(volp, statep->ID))
+                if (timeLeft > 7) {
+                    thrd_Sleep(5000);
+
+                    /* cm_CheckOfflineVolume() resets the serverRef state */
+                    if (cm_CheckOfflineVolume(volp, fidp->volume))
                         retry = 1;
+                } else {
+                    cm_UpdateVolumeStatus(volp, fidp->volume);
                 }
-            
+                lock_ObtainRead(&cm_volumeLock);
                 cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
             }
-        }
+        } 
     }
     else if (errorCode == CM_ERROR_ALLBUSY) {
         /* Volumes that are busy cannot be determined to be non-busy 
          * without actually attempting to access them.
          */
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY.");
-        if (timeLeft > 7) {
 
-            thrd_Sleep(5000);
-
-            if (fidp) { /* File Server query */
-                code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                        CM_GETVOL_FLAG_NO_LRU_UPDATE, 
-                                        &volp);
-                if (code == 0) {
+        if (fidp) { /* File Server query */
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                     CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                     &volp);
+            if (code == 0) {
+                if (timeLeft > 7) {
+                    thrd_Sleep(5000);
+                    
                     statep = cm_VolumeStateByID(volp, fidp->volume);
                     if (statep->state != vl_offline && 
-                        statep->state != vl_busy &&
-                        statep->state != vl_unknown) {
+                         statep->state != vl_busy &&
+                         statep->state != vl_unknown) {
                         retry = 1;
                     } else {
                         if (!serversp) {
@@ -331,7 +336,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
                             if (tsrp->status == srv_busy) {
                                 tsrp->status = srv_not_busy;
-                            }
+                            }       
                         }
                         lock_ReleaseWrite(&cm_serverLock);
                         if (free_svr_list) {
@@ -339,13 +344,22 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                             *serverspp = serversp;
                         }
 
-                        cm_UpdateVolumeStatus(volp, statep->ID);
+                        cm_UpdateVolumeStatus(volp, fidp->volume);
                         retry = 1;
                     }
-            
-                    cm_PutVolume(volp);
+                } else {
+                    cm_UpdateVolumeStatus(volp, fidp->volume);
                 }
-            } else {    /* VL Server query */
+
+                lock_ObtainRead(&cm_volumeLock);
+                cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
+            }
+        } else {    /* VL Server query */
+            if (timeLeft > 7) {
+                thrd_Sleep(5000);
+
                 if (serversp) {
                     lock_ObtainWrite(&cm_serverLock);
                     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
@@ -387,7 +401,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         
         if (statep) {
             cm_UpdateVolumeStatus(volp, statep->ID);
+            lock_ObtainRead(&cm_volumeLock);
             cm_PutVolume(volp);
+            lock_ReleaseRead(&cm_volumeLock);
+            volp = NULL;
         }
 
         if (free_svr_list) {
@@ -494,7 +511,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (statep) {
             cm_UpdateVolumeStatus(volp, statep->ID);
+            lock_ObtainRead(&cm_volumeLock);
             cm_PutVolume(volp);
+            lock_ReleaseRead(&cm_volumeLock);
+            volp = NULL;
         }
 
         if (free_svr_list) {
