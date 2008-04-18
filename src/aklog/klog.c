@@ -313,8 +313,16 @@ klog_prompter(krb5_context context,
     if ((types = krb5_get_prompt_types(context)))
 #endif
     for (i = 0; i < num_prompts; ++i) {
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
+#if !defined(USING_HEIMDAL) 
+#if defined(HAVE_KRB5_GET_PROMPT_TYPES)
 	type = types[i];
+#elif defined(HAVE_KRB5_PROMPT_TYPE)	
+	type = prompts[i].type;
+#else
+	/* AIX 5.3 krb5_get_prompt_types is missing. Um... */
+	type = ((i == 1)&&(num_prompts == 2)) ? 
+	  KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN : KRB5_PROMPT_TYPE_PASSWORD;
+#endif
 #else
 	type = prompts[i].type;
 #endif
