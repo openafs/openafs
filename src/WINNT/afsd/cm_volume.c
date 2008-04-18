@@ -694,9 +694,11 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
                 cm_AdjustVolumeLRU(volp);
                 lock_ReleaseWrite(&cm_volumeLock);
             }
-        } else
+        } else {
+            lock_ObtainRead(&cm_volumeLock);
             cm_PutVolume(volp);
-
+            lock_ReleaseRead(&cm_volumeLock);
+        }
         return code;
     }
         
@@ -859,9 +861,11 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
             cm_AdjustVolumeLRU(volp);
             lock_ReleaseWrite(&cm_volumeLock);
         }
-    } else
+    } else {
+        lock_ObtainRead(&cm_volumeLock);
         cm_PutVolume(volp);
-
+        lock_ReleaseRead(&cm_volumeLock);
+    }
     return code;
 }	
 
@@ -924,6 +928,9 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 
     lock_ReleaseRead(&cm_volumeLock);
 
+    if (!volp)
+        return;
+
     /* update it */
     cm_data.mountRootGen = time(NULL);
     lock_ObtainWrite(&volp->rw);
@@ -945,7 +952,9 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 #endif
     lock_ReleaseWrite(&volp->rw);
 
+    lock_ObtainRead(&cm_volumeLock);
     cm_PutVolume(volp);
+    lock_ReleaseRead(&cm_volumeLock);
 }
 
 /* find the appropriate servers from a volume */
@@ -1075,110 +1084,122 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     }
 
     if (volp->vol[RWVOL].ID != 0 && (!volID || volID == volp->vol[RWVOL].ID) &&
-         volp->vol[RWVOL].serversp &&
-         (volp->vol[RWVOL].state == vl_busy || volp->vol[RWVOL].state == vl_offline || volp->vol[RWVOL].state == vl_unknown)) {
-        cm_InitReq(&req);
-
+         volp->vol[RWVOL].serversp) {
+       
         for (serversp = volp->vol[RWVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline)
+            if (serversp->status == srv_busy || serversp->status == srv_offline) {
                 serversp->status = srv_not_busy;
+                online = 1;
+            }
         }
 
-        lock_ReleaseWrite(&volp->rw);
-        do {
-            code = cm_ConnFromVolume(volp, volp->vol[RWVOL].ID, cm_rootUserp, &req, &connp);
-            if (code) 
-                continue;
+        if (volp->vol[RWVOL].state == vl_busy || volp->vol[RWVOL].state == vl_offline || volp->vol[RWVOL].state == vl_unknown) {
+            cm_InitReq(&req);
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->vol[RWVOL].ID,
-                                          &volStat, &Name, &OfflineMsg, &MOTD);
-            rx_PutConnection(callp);        
+            lock_ReleaseWrite(&volp->rw);
+            do {
+                code = cm_ConnFromVolume(volp, volp->vol[RWVOL].ID, cm_rootUserp, &req, &connp);
+                if (code) 
+                    continue;
 
-        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-        code = cm_MapRPCError(code, &req);
+                callp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(callp, volp->vol[RWVOL].ID,
+                                             &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(callp);            
 
-        lock_ObtainWrite(&volp->rw);
-        if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_online);
-            volp->vol[RWVOL].state = vl_online;
-            online = 1;
-        } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_unknown);
-            volp->vol[RWVOL].state = vl_unknown;
-            online = 1;
+            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, &req);
+
+            lock_ObtainWrite(&volp->rw);
+            if (code == 0 && volStat.Online) {
+                cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_online);
+                volp->vol[RWVOL].state = vl_online;
+                online = 1;
+            } else if (code == CM_ERROR_NOACCESS) {
+                cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_unknown);
+                volp->vol[RWVOL].state = vl_unknown;
+                online = 1;
+            }
         }
     }
 
     if (volp->vol[ROVOL].ID != 0 && (!volID || volID == volp->vol[ROVOL].ID) &&
-         volp->vol[ROVOL].serversp &&
-         (volp->vol[ROVOL].state == vl_busy || volp->vol[ROVOL].state == vl_offline || volp->vol[ROVOL].state == vl_unknown)) {
-        cm_InitReq(&req);
+         volp->vol[ROVOL].serversp) {
 
         for (serversp = volp->vol[ROVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline)
+            if (serversp->status == srv_busy || serversp->status == srv_offline) {
                 serversp->status = srv_not_busy;
+                online = 1;
+            }
         }
 
-        lock_ReleaseWrite(&volp->rw);
-        do {
-            code = cm_ConnFromVolume(volp, volp->vol[ROVOL].ID, cm_rootUserp, &req, &connp);
-            if (code) 
-                continue;
+        if (volp->vol[ROVOL].state == vl_busy || volp->vol[ROVOL].state == vl_offline || volp->vol[ROVOL].state == vl_unknown) {
+            cm_InitReq(&req);
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->vol[ROVOL].ID,
-                                          &volStat, &Name, &OfflineMsg, &MOTD);
-            rx_PutConnection(callp);        
+            lock_ReleaseWrite(&volp->rw);
+            do {
+                code = cm_ConnFromVolume(volp, volp->vol[ROVOL].ID, cm_rootUserp, &req, &connp);
+                if (code) 
+                    continue;
 
-        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-        code = cm_MapRPCError(code, &req);
+                callp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(callp, volp->vol[ROVOL].ID,
+                                              &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(callp);        
 
-        lock_ObtainWrite(&volp->rw);
-        if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_online);
-            volp->vol[ROVOL].state = vl_online;
-            online = 1;
-        } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_unknown);
-            volp->vol[ROVOL].state = vl_unknown;
-            online = 1;
+            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, &req);
+
+            lock_ObtainWrite(&volp->rw);
+            if (code == 0 && volStat.Online) {
+                cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_online);
+                volp->vol[ROVOL].state = vl_online;
+                online = 1;
+            } else if (code == CM_ERROR_NOACCESS) {
+                cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_unknown);
+                volp->vol[ROVOL].state = vl_unknown;
+                online = 1;
+            }
         }
     }
 
     if (volp->vol[BACKVOL].ID != 0 && (!volID || volID == volp->vol[BACKVOL].ID) &&
-         volp->vol[BACKVOL].serversp &&
-         (volp->vol[BACKVOL].state == vl_busy || volp->vol[BACKVOL].state == vl_offline || volp->vol[BACKVOL].state == vl_unknown)) {
-        cm_InitReq(&req);
-
+         volp->vol[BACKVOL].serversp) {
+        
         for (serversp = volp->vol[BACKVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline)
+            if (serversp->status == srv_busy || serversp->status == srv_offline) {
                 serversp->status = srv_not_busy;
+                online = 1;
+            }
         }
 
-        lock_ReleaseWrite(&volp->rw);
-        do {
-            code = cm_ConnFromVolume(volp, volp->vol[BACKVOL].ID, cm_rootUserp, &req, &connp);
-            if (code) 
-                continue;
+        if (volp->vol[BACKVOL].state == vl_busy || volp->vol[BACKVOL].state == vl_offline || volp->vol[BACKVOL].state == vl_unknown) {
+            cm_InitReq(&req);
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_GetVolumeStatus(callp, volp->vol[BACKVOL].ID,
-                                          &volStat, &Name, &OfflineMsg, &MOTD);
-            rx_PutConnection(callp);        
+            lock_ReleaseWrite(&volp->rw);
+            do {
+                code = cm_ConnFromVolume(volp, volp->vol[BACKVOL].ID, cm_rootUserp, &req, &connp);
+                if (code) 
+                    continue;
 
-        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-        code = cm_MapRPCError(code, &req);
+                callp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(callp, volp->vol[BACKVOL].ID,
+                                              &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(callp);        
 
-        lock_ObtainWrite(&volp->rw);
-        if (code == 0 && volStat.Online) {
-            cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_online);
-            volp->vol[BACKVOL].state = vl_online;
-            online = 1;
-        } else if (code == CM_ERROR_NOACCESS) {
-            cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_unknown);
-            volp->vol[BACKVOL].state = vl_unknown;
-            online = 1;
+            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, &req);
+
+            lock_ObtainWrite(&volp->rw);
+            if (code == 0 && volStat.Online) {
+                cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_online);
+                volp->vol[BACKVOL].state = vl_online;
+                online = 1;
+            } else if (code == CM_ERROR_NOACCESS) {
+                cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_unknown);
+                volp->vol[BACKVOL].state = vl_unknown;
+                online = 1;
+            }
         }
     }
 
