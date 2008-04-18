@@ -1020,7 +1020,7 @@ restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
 void *
 restoreDbFromTape(void *param)
 {
-    afs_uint32 taskId = (void *)param;
+    afs_uint32 taskId = (afs_uint32) param;
     afs_int32 code = 0;
     afs_int32 i;
     struct butm_tapeInfo tapeInfo;
