@@ -50,12 +50,14 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     crset(*cr);
 
+#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
     if (change_parent) {
 	old_info = current->parent->group_info;
 	get_group_info(group_info);
 	current->parent->group_info = group_info;
 	put_group_info(old_info);
     }
+#endif
 
     return (0);
 }
@@ -625,32 +627,40 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void osi_keyring_init(void)
 {
     struct task_struct *p;
+
+    /* If we can't lock the tasklist, either with its explicit lock,
+     * or by using the RCU lock, then we can't safely work out the 
+     * type of a keyring. So, we have to rely on the weak reference. 
+     * If that's not available, then keyring based PAGs won't work.
+     */
     
+#if defined(EXPORTED_TASKLIST_LOCK) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
     if (__key_type_keyring == NULL) {
-#ifdef EXPORTED_TASKLIST_LOCK
+# ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_lock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-# ifdef EXPORTED_TASKLIST_LOCK
- 	else
 # endif
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+#  ifdef EXPORTED_TASKLIST_LOCK
+ 	else
+#  endif
 	    rcu_read_lock();
-#endif
+# endif
 	p = find_task_by_pid(1);
 	if (p && p->user->session_keyring)
 	    __key_type_keyring = p->user->session_keyring->type;
-#ifdef EXPORTED_TASKLIST_LOCK
+# ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-# ifdef EXPORTED_TASKLIST_LOCK
-	else
 # endif
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+#  ifdef EXPORTED_TASKLIST_LOCK
+	else
+#  endif
 	    rcu_read_unlock();
-#endif
+# endif
     }
+#endif
 
     register_key_type(&key_type_afs_pag);
 }

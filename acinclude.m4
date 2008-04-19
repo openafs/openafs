@@ -677,6 +677,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
                  LINUX_EXPORTS_SYS_WAIT4
+		 LINUX_EXPORTS_RCU_READ_LOCK
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
