@@ -1,3 +1,46 @@
+Since 1.5.34
+ * Fix a bug preventing the re-initialization of the Freelance 
+   root.cell contents when a change is made.
+
+ * Properly return CM_ERROR_NOSUCHFILE when removing a symlink 
+   or mountpoint that does not exist.
+
+ * aklog, afscreds, integrated logon, and the NIM AFS credential 
+   provider will all attempt to first acquire an afs service ticket 
+   using the service principal: afs/<cell>@<CLIENT_REALM>.  This 
+   permits the proper detection of the cell realm when multiple 
+   realms are local realms for the cell.
+
+ * Fix fs commands that re-use file identifiers instead of forcing 
+   a path evaluation each time.  This was broken in 1.5.33 when 
+   hashes were added to the cm_fid_t structure.
+
+ * Fix symlink and mountpoint removal and then recreation when 
+   applied to the fake Freelance root.afs volume.
+
+ * Fix SMB change notifications for the Freelance root.afs volume 
+   when creating or removing symlinks and mount points.
+
+ * Force DNS AFSDB cell name lookups to lower case if the DNS 
+   response is not all lower case.
+
+ * 32-bit installers are now built with Visual Studio 2005
+
+ * All vos.exe commands now support the "-noresolve" option which 
+   forces the display of IP addresses instead of DNS hostnames.
+
+ * No longer hold the cm_volume_t mutex across VL_xxx RPCs.  This 
+   permits operations that do not require up to date volume 
+   location data to continue while waiting for the RPC to complete.  
+   Multiple threads waiting for a volume location update on the 
+   same volume set no longer trigger multiple calls VL_xxx RPCs.
+
+ * Volume server references could be marked offline and never 
+   reset to the not_busy state.  
+
+ * Further optimizations to cm_Analyze() retry logic for 
+   CM_ERROR_OFFLINE and CM_ERROR_ALLBUSY error handling.
+
 Since 1.5.33
  * Optimize the DNLC by applying Interlocked incrementing for 
    statistics gathering and enabling greater use of read 
