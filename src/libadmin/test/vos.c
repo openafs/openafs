@@ -15,6 +15,9 @@
 #include <afs/param.h>
 #ifndef AFS_NT40_ENV
 #include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <afs/afsutil.h>
 #endif
 
 RCSID
