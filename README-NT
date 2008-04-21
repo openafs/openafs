@@ -5,14 +5,15 @@ directory or on-line at http://www.openafs.org/dl/license10.html
 The document now provides a step by step procedure that takes the user 
 from a basic Windows 2000/XP/2003 workstation to an OpenAFS development 
 environment.   Details are provided so that a 'beginning' windows 
-developer can build an OpenAFS installable package for Windows 2000/XP/2003.
+developer can build an OpenAFS installable package for Windows 
+2000/XP/2003/Vista/2008.
 
 NOTE 1:
 As of the OpenAFS 1.3 release series, Windows platforms released
 prior to Windows 2000 are no longer supported.	As of the OpenAFS 1.5
 series, the Windows 9x components are being removed from the source tree.
 
-***********   Windows 2000/XP/2003 Build Process ****************
+***********   Windows 2000/XP/2003/Vista/2008 Build Process *************
 
 Building OpenAFS for Windows requires configuring a Windows
 development system by installing compilation tools and header files.
@@ -29,6 +30,7 @@ one of:
  * Windows 2003 64
  * Windows 2003 R2 (32 or 64)
  * Windows Vista (32 or 64)
+ * Windows 2008 (32 or 64)
 
 The build process is controlled by a nmake file that generates the 
 necessary binaries and binds them into an install package.
@@ -64,7 +66,7 @@ versions are supported:
 
 The following Microsoft SDK is required:
 
-    Microsoft Platform SDK for Windows XP SP2 or Server 2003 SP1 or Vista
+    Microsoft Platform SDK for Windows XP SP2 or Server 2003 SP1 or Vista or 2008
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/downlevel.htm [IE required]
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
