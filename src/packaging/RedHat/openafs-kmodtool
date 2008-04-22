@@ -70,11 +70,16 @@ get_rpmtemplate ()
         *.EL*) kdep="kernel${dashvariant}-%{_target_cpu} = ${verrel}" ;;
         *)     kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
     esac
+    case "$verrel" in
+        *.fc9*) kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *)      kname="${verrel}${variant}"                             ;;
+    esac
+
     cat <<EOF
 %package       -n kmod-${kmod_name}${dashvariant}
 Summary:          ${kmod_name} kernel module(s)
 Group:            System Environment/Kernel
-Provides:         kernel-modules = ${verrel}${variant}
+Provides:         kernel-modules = ${kname}
 Provides:         ${kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
 Provides:         openafs-kernel = %{PACKAGE_VERSION}
 Requires:         ${kdep}
@@ -85,14 +90,14 @@ Release:          %{pkgrel}.%(echo ${verrel} | tr - _)
 BuildRequires:    kernel${dashvariant}-devel-%{_target_cpu} = ${verrel}
 %description   -n kmod-${kmod_name}${dashvariant}
 This package provides the ${kmod_name} kernel modules built for the Linux
-kernel ${verrel}${variant} for the %{_target_cpu} family of processors.
+kernel ${kname} for the %{_target_cpu} family of processors.
 %post          -n kmod-${kmod_name}${dashvariant}
-/sbin/depmod -aeF /boot/System.map-${verrel}${variant} ${verrel}${variant} > /dev/null || :
+/sbin/depmod -aeF /boot/System.map-${kname} ${kname} > /dev/null || :
 %postun        -n kmod-${kmod_name}${dashvariant}
-/sbin/depmod -aF /boot/System.map-${verrel}${variant} ${verrel}${variant} &> /dev/null || :
+/sbin/depmod -aF /boot/System.map-${kname} ${kname} &> /dev/null || :
 %files         -n kmod-${kmod_name}${dashvariant}
 %defattr(644,root,root,755)
-/lib/modules/${verrel}${variant}/extra/${kmod_name}/
+/lib/modules/${kname}/extra/${kmod_name}/
 
 EOF
 }
