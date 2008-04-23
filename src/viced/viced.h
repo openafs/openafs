@@ -190,7 +190,7 @@ extern int saneacls;
 #define DONTPANIC 0
 #define PANIC 1
 
-#define MAX_FILESERVER_THREAD	128	/* max number of threads in fileserver, subject to system limits */
+#define MAX_FILESERVER_THREAD	128	/* max number of threads in fileserver, subject to system limits. match to FD_HANDLE_SETASIDE */
 
 #define FILESERVER_HELPER_THREADS 7	/* Listner, IOMGR, FiveMinute, 
 					 * HostCheck, Signal, min 2 for RXSTATS */
