@@ -193,7 +193,7 @@ typedef struct StreamHandle_s {
 #define STREAM_HANDLE_MALLOCSIZE 1
 
 /* Number of file descriptors needed for non-cached I/O */
-#define FD_HANDLE_SETASIDE	64
+#define FD_HANDLE_SETASIDE	128 /* Match to MAX_FILESERVER_THREAD */
 
 /* Don't try to have more than 256 files open at once if you are planning
  * to use fopen or fdopen. The FILE structure has an eight bit field for
