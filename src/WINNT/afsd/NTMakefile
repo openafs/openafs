@@ -5,7 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash -I..\afsrdr\common -I..\afsrdr\user -IC:\winddk\IFSKit\inc\wnet
+
 AFSDEV_NETGUI = 1
 RELDIR=WINNT\afsd
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -63,7 +64,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_buf.h \
 	$(INCFILEDIR)\cm_freelance.h \
         $(INCFILEDIR)\cm_memmap.h \
-	$(INCFILEDIR)\cm_performance.h \
+        $(INCFILEDIR)\cm_performance.h \
         $(INCFILEDIR)\afsd_eventlog.h \
         $(INCFILEDIR)\afsd_eventmessages.h \
         $(INCFILEDIR)\afskfw.h \
@@ -126,9 +127,17 @@ AFSDOBJS=\
         $(OUT)\cm_freelance.obj \
         $(OUT)\afsd_eventlog.obj \
         $(OUT)\afsd_flushvol.obj \
-        $(OUT)\afsicf.obj
+        $(OUT)\afsicf.obj \
+	$(OUT)\RDRInit.obj \
+	$(OUT)\RDRFunction.obj
 
 $(AFSDOBJS):
+
+$(OUT)\RDRInit.obj: ..\afsrdr\user\RDRInit.cpp
+	$(CPP2OBJ) $**
+
+$(OUT)\RDRFunction.obj: ..\afsrdr\user\RDRFunction.c
+	$(C2OBJ) $**
 
 $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**

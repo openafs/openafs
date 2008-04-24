@@ -17,6 +17,9 @@
 
 #include <osi.h>
 
+extern DWORD RDR_Initialize(void);
+extern DWORD RDR_Shutdown(void);
+
 #ifdef DEBUG
 //#define NOTSERVICE
 #endif
@@ -1299,6 +1302,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
             osi_panic(reason, __FILE__, __LINE__);
         }
 
+        code = RDR_Initialize();
+        afsi_log("RDR_Initialize returned: (code = %d)", code);
+
         /* allow an exit to be called post smb initialization */
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
         if (hHookDll)
@@ -1421,7 +1427,10 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                                          
     smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
-                                         
+    
+    RDR_Shutdown();
+    afsi_log("RDR shutdown complete");
+
     RpcShutdown();                       
 
     cm_ReleaseAllLocks();
