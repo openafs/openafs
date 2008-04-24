@@ -87,22 +87,47 @@ extern int cm_diskCacheEnabled;
 /* set this to 1 when we are terminating to prevent access attempts */
 static int buf_ShutdownFlag = 0;
 
+#ifdef DEBUG_REFCOUNT
+void buf_HoldLockedDbg(cm_buf_t *bp, char *file, long line)
+#else
 void buf_HoldLocked(cm_buf_t *bp)
+#endif
 {
+    afs_int32 refCount;
+
     osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
-    InterlockedIncrement(&bp->refCount);
+    refCount = InterlockedIncrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"buf_HoldLocked bp 0x%p ref %d",bp, refCount);
+    afsi_log("%s:%d buf_HoldLocked bp 0x%p, ref %d", file, line, bp, refCount);
+#endif
 }
 
 /* hold a reference to an already held buffer */
+#ifdef DEBUG_REFCOUNT
+void buf_HoldDbg(cm_buf_t *bp, char *file, long line)
+#else
 void buf_Hold(cm_buf_t *bp)
+#endif
 {
+    afs_int32 refCount;
+
     lock_ObtainRead(&buf_globalLock);
-    buf_HoldLocked(bp);
+    osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
+    refCount = InterlockedIncrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"buf_Hold bp 0x%p ref %d",bp, refCount);
+    afsi_log("%s:%d buf_Hold bp 0x%p, ref %d", file, line, bp, refCount);
+#endif
     lock_ReleaseRead(&buf_globalLock);
 }
 
 /* code to drop reference count while holding buf_globalLock */
+#ifdef DEBUG_REFCOUNT
+void buf_ReleaseLockedDbg(cm_buf_t *bp, afs_uint32 writeLocked, char *file, long line)
+#else
 void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
+#endif
 {
     afs_int32 refCount;
 
@@ -115,6 +140,10 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
     osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
 
     refCount = InterlockedDecrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log3(afsd_logp,"buf_ReleaseLocked %s bp 0x%p ref %d",writeLocked?"write":"read", bp, refCount);
+    afsi_log("%s:%d buf_ReleaseLocked %s bp 0x%p, ref %d", file, line, writeLocked?"write":"read", bp, refCount);
+#endif
 #ifdef DEBUG
     if (refCount < 0)
 	osi_panic("buf refcount 0",__FILE__,__LINE__);;
@@ -147,7 +176,11 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
 }       
 
 /* release a buffer.  Buffer must be referenced, but unlocked. */
+#ifdef DEBUG_REFCOUNT
+void buf_ReleaseDbg(cm_buf_t *bp, char *file, long line)
+#else
 void buf_Release(cm_buf_t *bp)
+#endif
 {
     afs_int32 refCount;
 
@@ -155,6 +188,10 @@ void buf_Release(cm_buf_t *bp)
     osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
 
     refCount = InterlockedDecrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"buf_Release bp 0x%p ref %d", bp, refCount);
+    afsi_log("%s:%d buf_ReleaseLocked bp 0x%p, ref %d", file, line, bp, refCount);
+#endif
 #ifdef DEBUG
     if (refCount < 0)
 	osi_panic("buf refcount 0",__FILE__,__LINE__);;
@@ -179,7 +216,7 @@ void buf_Release(cm_buf_t *bp)
 /* incremental sync daemon.  Writes all dirty buffers every 5000 ms */
 void buf_IncrSyncer(long parm)
 {
-    cm_buf_t **bpp, *bp;
+    cm_buf_t **bpp, *bp, *prevbp;
     long i;				/* counter */
     long wasDirty = 0;
     cm_req_t req;
@@ -192,12 +229,15 @@ void buf_IncrSyncer(long parm)
 
 	wasDirty = 0;
 
-        /* now go through our percentage of the buffers */
-        for (bpp = &cm_data.buf_dirtyListp; bp = *bpp; ) {
+        /* go through all of the dirty buffers */
+        lock_ObtainRead(&buf_globalLock);
+        for (bpp = &cm_data.buf_dirtyListp, prevbp = NULL; bp = *bpp; ) {
+            lock_ReleaseRead(&buf_globalLock);
 	    /* all dirty buffers are held when they are added to the
 	     * dirty list.  No need for an additional hold.
 	     */
             lock_ObtainMutex(&bp->mx);
+
 	    if (bp->flags & CM_BUF_DIRTY) {
 		/* start cleaning the buffer; don't touch log pages since
  		 * the log code counts on knowing exactly who is writing
@@ -215,18 +255,30 @@ void buf_IncrSyncer(long parm)
             if (!(bp->flags & CM_BUF_DIRTY)) {
                 /* remove the buffer from the dirty list */
                 lock_ObtainWrite(&buf_globalLock);
+#ifdef DEBUG_REFCOUNT
+                if (bp->dirtyp == NULL && bp != cm_data.buf_dirtyListEndp) {
+                    osi_Log1(afsd_logp,"buf_IncrSyncer bp 0x%p list corruption",bp);
+                    afsi_log("buf_IncrSyncer bp 0x%p list corruption", bp);
+                }
+#endif
                 *bpp = bp->dirtyp;
                 bp->dirtyp = NULL;
+                bp->flags &= ~CM_BUF_INDL;
                 if (cm_data.buf_dirtyListp == NULL)
                     cm_data.buf_dirtyListEndp = NULL;
+                else if (cm_data.buf_dirtyListEndp == bp)
+                    cm_data.buf_dirtyListEndp = prevbp;
                 buf_ReleaseLocked(bp, TRUE);
-                lock_ReleaseWrite(&buf_globalLock);
+                lock_ConvertWToR(&buf_globalLock);
             } else {
                 /* advance the pointer so we don't loop forever */
+                lock_ObtainRead(&buf_globalLock);
                 bpp = &bp->dirtyp;
+                prevbp = bp;
             }
             lock_ReleaseMutex(&bp->mx);
         }	/* for loop over a bunch of buffers */
+        lock_ReleaseRead(&buf_globalLock);
     }		/* whole daemon's while loop */
 }
 
@@ -766,7 +818,11 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 		 * do not want to allow the buffer to be added
 		 * to the free list.
 		 */
-                bp->refCount--;
+                afs_int32 refCount = InterlockedDecrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+                osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, refCount);
+                afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, refCount);
+#endif
                 lock_ReleaseWrite(&buf_globalLock);
                 lock_ReleaseRead(&scp->bufCreateLock);
                 return CM_BUF_EXISTS;
@@ -909,7 +965,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
 	    /* prepare to return it.  Give it a refcount */
             bp->refCount = 1;
-                        
+#ifdef DEBUG_REFCOUNT
+            osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, 1);
+            afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, 1);
+#endif
             lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
             *bufpp = bp;
@@ -1223,7 +1282,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
          * already there.
          */
         lock_ObtainWrite(&buf_globalLock);
-        if (bp->dirtyp == NULL && cm_data.buf_dirtyListEndp != bp) {
+        if (!(bp->flags & CM_BUF_INDL)) {
             buf_HoldLocked(bp);
             if (!cm_data.buf_dirtyListp) {
                 cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
@@ -1232,6 +1291,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
                 cm_data.buf_dirtyListEndp = bp;
             }
             bp->dirtyp = NULL;
+            bp->flags |= CM_BUF_INDL;
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -1724,9 +1784,9 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_FreeListEndp.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
-    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_dirtyListEndp\r\n", cookie);
+    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_dirtyListp\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-    for(bp = cm_data.buf_dirtyListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+    for(bp = cm_data.buf_dirtyListp; bp; bp=bp->dirtyp) {
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
@@ -1737,7 +1797,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 			 bp->cmFlags, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
-    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_dirtyListEndp.\r\n", cookie);
+    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_dirtyListp.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     if (lock)

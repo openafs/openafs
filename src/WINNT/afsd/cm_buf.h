@@ -104,7 +104,7 @@ typedef struct cm_buf {
 #define CM_BUF_INLRU	0x10	/* in lru queue */
 #define CM_BUF_ERROR	0x20	/* something went wrong on delayed write */
 #define CM_BUF_WAITING	0x40	/* someone's waiting for a flag to change */
-
+#define CM_BUF_INDL     0x80    /* in the dirty list */
 #define CM_BUF_EOF	0x100	/* read 0 bytes; used for detecting EOF */
 
 typedef struct cm_buf_ops {
@@ -124,15 +124,30 @@ extern void buf_Shutdown(void);
 
 extern long buf_CountFreeList(void);
 
+#ifdef DEBUG_REFCOUNT
+extern void buf_ReleaseDbg(cm_buf_t *, char *, long);
+
+extern void buf_HoldDbg(cm_buf_t *, char *, long);
+
+extern void buf_ReleaseLockedDbg(cm_buf_t *, afs_uint32, char *, long);
+
+extern void buf_HoldLockedDbg(cm_buf_t *, char *, long);
+
+#define buf_Release(bufp) buf_ReleaseDbg(bufp, __FILE__, __LINE__)
+#define buf_Hold(bufp)    buf_HoldDbg(bufp, __FILE__, __LINE__)
+#define buf_ReleaseLocked(bufp, lock) buf_ReleaseLockedDbg(bufp, lock, __FILE__, __LINE__)
+#define buf_HoldLocked(bufp) buf_HoldLockedDbg(bufp, __FILE__, __LINE__)
+#else
 extern void buf_Release(cm_buf_t *);
 
 extern void buf_Hold(cm_buf_t *);
 
-extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
-
 extern void buf_ReleaseLocked(cm_buf_t *, afs_uint32);
 
 extern void buf_HoldLocked(cm_buf_t *);
+#endif
+
+extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
 
 extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 
