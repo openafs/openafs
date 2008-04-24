@@ -1852,6 +1852,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 		  (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	VDONE;
+	islocked = 0;
     }
 
     if (clonetid) {
@@ -2057,12 +2058,14 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     }
 
     /* unlock VLDB entry */
-    VPRINT1("Recovery: Releasing lock on VLDB entry for volume %u ...",
-	    afromvol);
-    ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
-	      (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
-    VDONE;
-
+    if (islocked) {
+	VPRINT1("Recovery: Releasing lock on VLDB entry for volume %u ...",
+		afromvol);
+	ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
+			    (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
+	VDONE;
+	islocked = 0;
+    }
   done:			/* routine cleanup */
     if (volName)
 	free(volName);
