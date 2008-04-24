@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 25 Oct 2007
+>grand.central.org      #GCO Public CellServDB 23 Apr 2008
 18.92.0.108                     #grand-opening.mit.edu
 128.2.203.61                    #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
@@ -53,6 +53,10 @@
 63.224.10.4                     #troilus.SetFilePointer.com
 >sodre.cx               #Sodre.cx
 128.8.140.165                   #greed.sodre.cx
+>ruk.cuni.cz            #Charles University Computer Centre, Prague, CR
+195.113.0.36                    #asterix.ruk.cuni.cz
+195.113.0.37                    #obelix.ruk.cuni.cz
+195.113.0.40                    #sal.ruk.cuni.cz
 >desy.de                #Deutsches Elektronen-Synchrotron
 131.169.40.62                   #vayu.desy.de
 131.169.244.60                  #solar00.desy.de
@@ -81,6 +85,8 @@
 130.183.134.20                  #irafs2.mpe-garching.mpg.de
 >i1.informatik.rwth-aachen.de #Informatik I, RWTH Aachen
 137.226.244.79                  #remus.informatik.rwth-aachen.de
+>combi.tfh-wildau.de    #Philips Research Lab
+194.95.50.106                   #joda13.combi.tfh-wildau.de
 >tu-bs.de               #Technical University of Braunschweig, Germany
 134.169.1.1                     #rzafs1.rz.tu-bs.de
 134.169.1.5                     #rzafs2.rz.tu-bs.de
@@ -155,6 +161,10 @@
 169.229.60.112                  #envy.eecs.berkeley.edu
 >hep.caltech.edu        #Caltech High Energy Physics
 131.215.116.20                  #afs.hep.caltech.edu
+>ugcs.caltech.edu       #Caltech UGCS lab
+131.215.176.65                  #afs-c.ugcs.caltech.edu
+131.215.176.67                  #afs-a.ugcs.caltech.edu
+131.215.176.68                  #afs-b.ugcs.caltech.edu
 >clarkson.edu           #Clarkson University, Potsdam, New York USA
 128.153.1.111                   #arthur.clarkson.edu
 128.153.9.111                   #lancelot.clarkson.edu
@@ -201,9 +211,9 @@
 129.170.30.145                  #dbicafs3.dartmouth.edu
 >northstar.dartmouth.edu #Dartmouth College Research Computing
 129.170.16.22                   #halley.dartmouth.edu
-129.170.16.42                   #oort.dartmouth.edu
+129.170.16.26                   #andromeda.dartmouth.edu
 129.170.16.43                   #cygnusx1.dartmouth.edu
->cs.fhm.edu             #Department Computer Science Munich University Of Applied Science
+>cs.hm.edu              #Department Computer Science Munich University Of Applied Science
 129.187.208.2                   #srv1.informatik.fh-muenchen.de
 >eecs.harvard.edu       #Harvard - EECS
 140.247.60.64                   #lefkada.eecs.harvard.edu
@@ -237,6 +247,10 @@
 129.74.223.17                   #john.helios.nd.edu
 129.74.223.33                   #lizardo.helios.nd.edu
 129.74.223.65                   #buckaroo.helios.nd.edu
+>crc.nd.edu             #University of Notre Dame - Center for Research Computing
+129.74.85.34                    #afsdb1.crc.nd.edu
+129.74.85.35                    #afsdb2.crc.nd.edu
+129.74.85.36                    #afsdb3.crc.nd.edu
 >pitt.edu               #University of Pittsburgh
 136.142.8.15                    #afs09.srv.cis.pitt.edu
 136.142.8.20                    #afs10.srv.cis.pitt.edu
@@ -503,6 +517,9 @@
 72.13.4.23                      #service-3.tproa.net
 72.13.4.24                      #service-4.tproa.net
 72.13.4.25                      #service-5.tproa.net
+>interdose.net          #Interdose Ltd. & Co. KG, Germany
+80.190.171.42                   #bfd9000.tow5.interdose.net
+217.111.69.188                  #bfd9001.z2.interdose.net
 >nikhef.nl              #The Dutch National Institute for High Energy Physics
 192.16.185.26                   #afs1.nikhef.nl
 192.16.185.27                   #afs2.nikhef.nl
@@ -527,6 +544,9 @@
 128.2.120.138                   #kurma.sys.hackish.org
 >idahofuturetruck.org   #University of Idaho hybrid vehicle development
 12.18.238.210                   #dsle210.fsr.net
+>mrph.org               #Mrph
+66.207.133.1                    #sanber.mrph.org
+128.2.99.209                    #hernandarias.mrph.org
 >nimlabs.org            #Nimlabs, Ink. Cell.
 18.238.1.103                    #olfin.nimlabs.org
 18.238.1.105                    #caerbanog.nimlabs.org
@@ -536,6 +556,8 @@
 >oc7.org                #The OC7 Project
 128.2.122.140                   #knife.oc7.org
 207.22.77.170                   #spoon.oc7.org
+>riscpkg.org            #The RISC OS Packaging Project
+83.104.175.10                   #delenn.riscpkg.org
 >kth.se                 #Royal Institute of Technology, Stockholm, Sweden
 130.237.32.145                  #sonen.e.kth.se
 130.237.48.7                    #anden.e.kth.se
@@ -544,9 +566,9 @@
 130.237.24.11                   #afs1.hallf.kth.se
 130.237.24.104                  #afs2.hallf.kth.se
 >isk.kth.se             #Royal Institute of Technology, ISK
-130.237.202.3                   #afsdb1.isk.kth.se
 130.237.209.5                   #afsdb2.isk.kth.se
 130.237.209.9                   #afsdb3.isk.kth.se
+130.237.216.17                  #afsdb1.isk.kth.se
 >it.kth.se              #Royal Institute of Technology, IT
 130.237.212.15                  #ptah.it.kth.se
 130.237.212.16                  #toth.it.kth.se
