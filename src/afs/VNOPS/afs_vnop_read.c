@@ -120,6 +120,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
     if (filePos >= avc->m.Length) {
 	if (len > AFS_ZEROS)
 	    len = sizeof(afs_zeros);	/* and in 0 buffer */
+	len = 0;
 #ifdef AFS_DARWIN80_ENV
 	trimlen = len;
 	tuiop = afsio_darwin_partialcopy(auio, trimlen);
