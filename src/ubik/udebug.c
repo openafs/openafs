@@ -172,8 +172,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     times = ctime(&now);
     times[24] = 0;
     diff = now - udebug.now;
-    printf("Local time is %s (time differential %d secs)\n", times, diff);
-    if (abs(diff) >= MAXSKEW)
+    printf("Local time is %s (time differential %d secs)\n", times, (int)diff);
+    if (abs((int)diff) >= MAXSKEW)
 	printf("****clock may be bad\n");
 
     /* UBIK skips the voting if 1 server - so we fudge it here */
@@ -192,14 +192,14 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     } else {
 	diff = udebug.now - udebug.lastYesTime;
 	printf("Last yes vote for %s was %d secs ago (%ssync site); \n",
-	       afs_inet_ntoa(htonl(udebug.lastYesHost)), diff,
+	       afs_inet_ntoa(htonl(udebug.lastYesHost)), (int)diff,
 	       ((udebug.lastYesState) ? "" : "not "));
 
 	diff = udebug.now - udebug.lastYesClaim;
 	newtime = now - diff;
 	times = ctime(&newtime);
 	times[24] = 0;
-	printf("Last vote started %d secs ago (at %s)\n", diff, times);
+	printf("Last vote started %d secs ago (at %s)\n", (int)diff, times);
     }
 
     printf("Local db version is %d.%d\n", udebug.localVersion.epoch,
@@ -216,7 +216,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    times[24] = 0;
 	    printf
 		("I am sync site until %d secs from now (at %s) (%d server%s)\n",
-		 diff, times, udebug.nServers,
+		 (int)diff, times, udebug.nServers,
 		 ((udebug.nServers > 1) ? "s" : ""));
 	}
 	printf("Recovery state %x\n", udebug.recoveryState);
@@ -232,12 +232,12 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	diff = udebug.now - udebug.lowestTime;
 	printf("Lowest host %s was set %d secs ago\n",
 	       afs_inet_ntoa(htonl(udebug.lowestHost)),
-	       diff);
+	       (int)diff);
 
 	diff = udebug.now - udebug.syncTime;
 	printf("Sync host %s was set %d secs ago\n",
 	       afs_inet_ntoa(htonl(udebug.syncHost)),
-	       diff);
+	       (int)diff);
     }
 
     printf("Sync site's db version is %d.%d\n", udebug.syncVersion.epoch,
@@ -265,7 +265,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	times[24] = 0;
 	printf
 	    ("Last time a new db version was labelled was:\n\t %d secs ago (at %s)\n",
-	     diff, times);
+	     (int)diff, times);
     }
 
     if (int32p || udebug.amSyncSite) {
@@ -305,7 +305,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 		newtime = now - diff;
 		times = ctime(&newtime);
 		times[24] = 0;
-		printf("    last vote rcvd %d secs ago (at %s),\n", diff,
+		printf("    last vote rcvd %d secs ago (at %s),\n", (int)diff,
 		       times);
 	    }
 
@@ -318,7 +318,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 		times[24] = 0;
 		printf
 		    ("    last beacon sent %d secs ago (at %s), last vote was %s\n",
-		     diff, times, ((usdebug.lastVote) ? "yes" : "no"));
+		     (int)diff, times, ((usdebug.lastVote) ? "yes" : "no"));
 	    }
 
 	    printf("    dbcurrent=%d, up=%d beaconSince=%d\n",
