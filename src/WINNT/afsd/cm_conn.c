@@ -26,6 +26,7 @@ osi_rwlock_t cm_connLock;
 DWORD RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 unsigned short ConnDeadtimeout = CM_CONN_CONNDEADTIME;
 unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
+unsigned short IdleDeadtimeout = CM_CONN_IDLEDEADTIME;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
@@ -84,7 +85,15 @@ void cm_InitConn(void)
 	    if (code == ERROR_SUCCESS)
                 HardDeadtimeout = (unsigned short)dwValue;
 	    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-	    RegCloseKey(parmKey);
+
+	    dummyLen = sizeof(DWORD);
+	    code = RegQueryValueEx(parmKey, "IdleDeadTimeout", NULL, NULL,
+				    (BYTE *) &dwValue, &dummyLen);
+	    if (code == ERROR_SUCCESS)
+                IdleDeadtimeout = (unsigned short)dwValue;
+	    afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+
+            RegCloseKey(parmKey);
 	}
 
 	afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
@@ -549,9 +558,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 	LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
 	  
-        retry = 0;
         osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime exceeded addr[%s]",
 		 osi_LogSaveString(afsd_logp,addr));
+        reqp->tokenIdleErrorServp = serverp;
+        reqp->idleError++;
+        retry = 1;
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
@@ -585,7 +596,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 retry = 1;
         }
     } else if (errorCode >= ERROR_TABLE_BASE_RXK && errorCode < ERROR_TABLE_BASE_RXK + 256) {
-        reqp->tokenErrorServp = serverp;
+        reqp->tokenIdleErrorServp = serverp;
         reqp->tokenError = errorCode;
         retry = 1;
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
@@ -767,15 +778,15 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        if (reqp->tokenErrorServp) {
+        if (reqp->tokenIdleErrorServp) {
             /* 
              * search the list until we find the server
              * that failed last time.  When we find it
              * clear the error, skip it and try the one
              * in the list.
              */
-            if (tsp == reqp->tokenErrorServp)
-                reqp->tokenErrorServp = NULL;
+            if (tsp == reqp->tokenIdleErrorServp)
+                reqp->tokenIdleErrorServp = NULL;
             continue;
         }
         cm_GetServerNoLock(tsp);
@@ -822,7 +833,8 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
     if (firstError == 0) {
         if (allDown) 
-            firstError = (reqp->tokenError ? reqp->tokenError : CM_ERROR_ALLDOWN);
+            firstError = (reqp->tokenError ? reqp->tokenError : 
+                          (reqp->idleError ? RX_CALL_TIMEOUT : CM_ERROR_ALLDOWN));
         else if (allBusy) 
             firstError = CM_ERROR_ALLBUSY;
 	else if (allOffline || (someBusy && someOffline))
@@ -906,6 +918,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
                                   secIndex);
     rx_SetConnDeadTime(tcp->callp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->callp, HardDeadtimeout);
+    rx_SetConnIdleDeadTime(tcp->callp, IdleDeadtimeout);
     tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
