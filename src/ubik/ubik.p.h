@@ -311,7 +311,8 @@ extern int uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 extern int uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 			  struct ubik_version *aversion);
 extern int uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile);
-
+extern void uphys_invalidate(register struct ubik_dbase *adbase, 
+			     afs_int32 afid);
 
 /* recovery.c */
 extern int urecovery_ResetState(void);
