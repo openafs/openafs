@@ -208,7 +208,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     tdb->read = uphys_read;
     tdb->write = uphys_write;
     tdb->truncate = uphys_truncate;
-    tdb->open = 0;		/* this function isn't used any more */
+    tdb->open = uphys_invalidate;	/* this function isn't used any more */
     tdb->sync = uphys_sync;
     tdb->stat = uphys_stat;
     tdb->getlabel = uphys_getlabel;

@@ -615,6 +615,8 @@ SDISK_SendFile(rxcall, file, length, avers)
 #endif
     if (!code) 
 	code = rename(pbuffer, tbuffer);
+    if (!code) 
+	code = (*ubik_dbase->open) (ubik_dbase, 0);
     if (!code)
 #endif
     code = (*ubik_dbase->setlabel) (dbase, file, avers);
