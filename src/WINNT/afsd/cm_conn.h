@@ -13,6 +13,7 @@
 #define	CM_CONN_DEFAULTRDRTIMEOUT	45
 #define CM_CONN_CONNDEADTIME		 0
 #define CM_CONN_HARDDEADTIME             0
+#define CM_CONN_IDLEDEADTIME            30
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
@@ -42,8 +43,9 @@ typedef struct cm_req {
 	int rpcError;			/* RPC error code */
 	int volumeError;		/* volume error code */
 	int accessError;		/* access error code */
-        struct cm_server * tokenErrorServp;  /* server that reported a token error other than expired */
+        struct cm_server * tokenIdleErrorServp;  /* server that reported a token/idle error other than expired */
         int tokenError;
+        int idleError;
 	afs_uint32 flags;
         char * tidPathp;
         char * relPathp;
