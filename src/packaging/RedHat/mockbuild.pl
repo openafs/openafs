@@ -17,8 +17,52 @@ my $resultbase="/tmp/result/";
 my $stashbase="/disk/scratch/repository/";
 my $mockcommand = "/usr/bin/mock";
 my $buildall = 0;
-
+my $ignorerelease = 1;
 my @newrpms;
+
+# Words cannot describe how gross this is. Yum no longer provides usable
+# output, so we need to call the python interface. At some point this
+# probably means this script should be entirely rewritten in python,
+# but this is not that point.
+
+sub findKernelModules {
+  my ($root, $uname, @modules) = @_;
+
+  my $modlist = join(",",map { "'".$_."'" } @modules);
+  my $python = <<EOS;
+import yum;
+import sys;
+base = yum.YumBase();
+base.doConfigSetup('$root/etc/yum.conf', '$root');
+base.doRepoSetup();
+base.doSackSetup();
+EOS
+
+  if ($uname) {
+    $python.= <<EOS;
+
+for pkg, values in base.searchPackageProvides(['kernel-devel-uname-r']).items():
+  if values[0].find('kernel-devel-uname-r = ') != -1:
+    print '%s.%s %s' % (pkg.name, pkg.arch, values[0].replace('kernel-devel-uname-r = ',''));
+
+EOS
+  } else {
+    $python.= <<EOS;
+
+print '\\n'.join(['%s.%s %s' % (x.name, x.arch, x.printVer()) for x in base.searchPackageProvides([$modlist]).keys()]);
+
+EOS
+  }
+
+#  my $output = `$suser -c "python -c \\\"$python\\\"" `;
+  my $output = `python -c "$python"`;
+
+  die "Python script to figure out available kernels failed : $output" 
+    if $?;
+
+  return $output;
+}
+
 
 my %platconf = ( "fedora-5-i386" => { osver => "fc5",
 				      kmod => '1',
@@ -80,28 +124,35 @@ my %platconf = ( "fedora-5-i386" => { osver => "fc5",
 				   	basearch => 'x86_64',
 				        updaterepo => 'update',
 					results => "el5/x86_64" },
-#		 "fedora-development-i386" => { osver => "fcd",
-#					  kmod => '1',
-#					  basearch => 'i386',
-#					  results => 'fedora-devel/i386'},
-#		 "fedora-development-x86_64" => { osver => "fcd",
-#					    kmod => '1',
-#					    basearch => 'x86_64',
-#					    results => 'fedora-devel/x86_64'} 
+		 "fedora-development-i386" => { osver => "fcd",
+					  kmod => '1',
+					  basearch => 'i386',
+					  results => 'fedora-devel/i386'},
+		 "fedora-development-x86_64" => { osver => "fcd",
+					    kmod => '1',
+					    basearch => 'x86_64',
+					    results => 'fedora-devel/x86_64'} 
 );
 
 # The following are kernels that we can't successfully build modules against
 # due to issues in the packaged kernel-devel RPM.
 
 my %badkernels = (
-	"2.6.21-2950.fc8" => { "xen" => 1} # Missing build ID
+	"2.6.21-2950.fc8" => { "xen" => 1}, # Missing build ID
 );
+
+my $help;
+my $ok = GetOptions("resultdir=s" => \$resultbase,
+		    "help" => \$help);
 
 my @platforms = @ARGV;
 my $srpm = pop @platforms;
 
-if (!$srpm || $#platforms==-1) {
-  print "Usage: $0 <platform> [<platform> [<platform> ...] ]  <srpm>\n";
+if (!$ok || $help || !$srpm || $#platforms==-1) {
+  print "Usage: $0 [options] <platform> [<platform> [...]]  <srpm>\n";
+  print "    Options are : \n";
+  print "         --resultdir <dir>    Location to place output RPMS\n";
+  print "\n";
   print "    Platform may be:\n";
   foreach ("all", sort(keys(%platconf))) { print "        ".$_."\n"; };
   exit(1);
@@ -148,21 +199,19 @@ foreach my $platform (@platforms) {
   print "Finding available kernel modules\n";
 
   my $arbitraryversion = "";
-  my $modules=`$suser -c 'yum --installroot $root provides kernel-devel'`;
-  if ($modules eq "") {
-      $modules=`$suser -c 'yum -d 2 --installroot $root provides kernel-devel'`;
-      my $modulen;
-      my %modulel;
-      foreach $modulen (split(/\n/, $modules)) {
-	  my ($pk, $colon, $comment)=split(/\s+/, $modulen);
-	  if ($pk =~ /^kernel/) {
-	      $modulel{$pk} = "$pk";
-	  } 
-      }
-      $modulen=join(" ", keys(%modulel));
-      $modules=`$suser -c 'yum --installroot $root list $modulen'`;
+
+  my $modules;
+  if ($platform=~/fedora-development/) {
+    $modules = findKernelModules($root, 0, "kernel-devel");
+  } elsif ($platform=~/centos-4/) {
+    $modules = findKernelModules($root, 0, "kernel-devel", "kernel-smp-devel", 
+				 "kernel-hugemem-devel", "kernel-xenU-devel");
+  } else {
+    $modules = findKernelModules($root, 0, 'kernel-devel');
   }
+
   foreach my $module (split(/\n/, $modules)) {
+      chomp $module;
       my ($package, $version, $repo)=split(/\s+/, $module);
       my ($arch) = ($package=~/\.(.*)$/);
       my ($variant) = ($package=~/kernel-(.*)-devel/);
@@ -174,6 +223,9 @@ foreach my $platform (@platforms) {
       if ($platform=~/fedora-5/) {
 	  next if ($variant eq "xen0"); # Fedora 5 has some bad xen0 kernel-devels
 	  next if ($variant eq "smp");
+      }
+      if ($platform=~/fedora-8/ || $platform=~/fedora-9/ || $platform=~/fedora-development/) {
+	  next if ($variant =~/debug$/); # Fedora 8 debug kernels are bad
       }
       print "$arch : $variant : $version\n";
       $modulelist{$arch} ={} if !$modulelist{$arch};
@@ -241,10 +293,18 @@ foreach my $platform (@platforms) {
           if (!-f $resultdir."/kmod-openafs-".$dvariant.
 		  $oafsversion."-".$oafsrelease.".".$kversion.".".
 		  $arch.".rpm") {
-	    push @tobuild, $variant;
-	    print $resultdir."/kmod-openafs-".$dvariant.
-                  $oafsversion."-".$oafsrelease.".".$kversion.".".
-                  $arch.".rpm is missing\n";
+	    my @done = glob ($resultdir."/kmod-openafs-".$dvariant.
+			     $oafsversion."-*.".$kversion.".".$arch.".rpm");
+
+	    if ($ignorerelease && $#done>=0) {
+	      print "Kernel module for $kversion already exists for an".
+	            "older release. Skipping building it this time.\n";
+	    } else {
+	      push @tobuild, $variant;
+	      print $resultdir."/kmod-openafs-".$dvariant.
+                    $oafsversion."-".$oafsrelease.".".$kversion.".".
+                    $arch.".rpm is missing\n";
+	    }
           }
         }
       }
@@ -289,7 +349,7 @@ foreach my $platform (@platforms) {
     if (defined($dirh)) {
       my $file;
       while (defined($file = $dirh->read)) {
-        if ( $file=~/^kernel-devel/ &&
+        if ( $file=~/^kernel.*devel/ &&
               -f $yumcachedir.$file && ! -f $rpmstashdir.$file) {
           print "Stashing $file for later use\n";
           system("cp ".$yumcachedir.$file." ".$rpmstashdir.$file) == 0

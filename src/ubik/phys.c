@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8.2.3 2007/12/10 22:46:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8.2.4 2008/04/28 21:48:25 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -130,7 +130,7 @@ uphys_close(register int afd)
 	return EBADF;
     tfd = fdcache;
     for (i = 0; i < MAXFDCACHE; i++, tfd++) {
-	if (tfd->fd == afd) {
+	if (tfd->fd == afd && tfd->fileID != -10000) {
 	    tfd->refCount--;
 	    return 0;
 	}
@@ -281,4 +281,21 @@ uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile)
     code = fsync(fd);
     uphys_close(fd);
     return code;
+}
+
+void
+uphys_invalidate(register struct ubik_dbase *adbase, afs_int32 afid)
+{
+    register int i;
+    register struct fdcache *tfd;
+
+    /* scan file descr cache */
+    for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {
+	if (afid == tfd->fileID) {
+	    tfd->fileID = -10000;
+	    if (tfd->fd >= 0 && tfd->refCount == 0)
+		close(tfd->fd);
+	    return;
+	}
+    }
 }

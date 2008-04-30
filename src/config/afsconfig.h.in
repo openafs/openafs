@@ -52,6 +52,9 @@
 /* define if your kernel exports init_mm */
 #undef EXPORTED_INIT_MM
 
+/* define if rcu_read_lock() is usable */
+#undef EXPORTED_RCU_READ_LOCK
+
 /* define if your linux kernel exports sys_chdir */
 #undef EXPORTED_SYS_CHDIR
 
@@ -185,11 +188,17 @@
 /* Define to 1 if you have the `krb5_decode_ticket' function. */
 #undef HAVE_KRB5_DECODE_TICKET
 
+/* Define to 1 if you have the `krb5_get_prompt_types' function. */
+#undef HAVE_KRB5_GET_PROMPT_TYPES
+
 /* Define to 1 if you have the `krb5_principal_get_comp_string' function. */
 #undef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
 
 /* Define to 1 if you have the `krb5_princ_size' function. */
 #undef HAVE_KRB5_PRINC_SIZE
+
+/* define if krb5_prompt has type */
+#undef HAVE_KRB5_PROMPT_TYPE
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H

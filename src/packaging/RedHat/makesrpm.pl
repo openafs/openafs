@@ -19,7 +19,7 @@ my $changelog = shift;
 my $cellservdb = shift;
 
 if (!$srcball && !$docball) {
-  printf "Usage:  <version> <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog> [<cellservdb>]]]\n";
+  printf "Usage:  makesrpm <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog> [<cellservdb>]]]\n";
   exit(1);
 }
 
@@ -42,30 +42,40 @@ die "Unable to find unpacked source code\n" if !$vdir;
 my $srcdir = $tmpdir."/".$vdir;
 
 # Work out which version we're dealing with from the configure.in file
-my $version;
+my $afsversion;
+my $linuxver;
+my $linuxrel;
 my $fh = new IO::File $srcdir."/configure.in"
   or die "Unable to find unpacked configure.in file";
 while(<$fh>) {
   if (/AM_INIT_AUTOMAKE\(openafs,(.*)\)/) {
-    $version = $1;
-    last;
+    $afsversion = $1;
+    next;
+  }
+  if (/LINUX_PKGVER=(.*)/) {
+    $linuxver = $1;
+    next;
+  }
+  if (/LINUX_PKGREL=(.*)/) {
+    $linuxrel = $1;
+    next;
   }
 }
 undef $fh;
 
 # Build the RPM root
 
-print "Building version $version\n";
+print "Building version $afsversion\n";
 File::Path::mkpath([ $tmpdir."/rpmdir/SPECS",
 		     $tmpdir."/rpmdir/SRPMS",
 		     $tmpdir."/rpmdir/SOURCES"], 0, 0755);
 
 File::Copy::copy($srcball, 
-		 $tmpdir."/rpmdir/SOURCES/openafs-$version-src.tar.bz2")
+		 $tmpdir."/rpmdir/SOURCES/openafs-$afsversion-src.tar.bz2")
   or die "Unable to copy $srcball into position\n";
 
 File::Copy::copy($docball,
-		 $tmpdir."/rpmdir/SOURCES/openafs-$version-doc.tar.bz2")
+		 $tmpdir."/rpmdir/SOURCES/openafs-$afsversion-doc.tar.bz2")
   or die "Unable to copy $docball into position\n";
 
 # Populate it with all the stuff in the packaging directory, except the 
@@ -90,9 +100,11 @@ chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kvers-is.sh";
 
 # Create the specfile. Use sed for this, cos its easier
 system("cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in | ".
-       "sed -e 's/\@VERSION\@/$version/g' ".
-       "    -e 's/\%define afsvers.*/%define afsvers $version/g' ".
-       "    -e 's/\%define pkgvers.*/%define pkgvers $version/g' > ".
+       "sed -e 's/\@VERSION\@/$afsversion/g' ".
+       "    -e 's/\@LINUX_PKGVER\@/$linuxver/g' ".
+       "    -e 's/\@LINUX_PKGREL\@/$linuxrel/g' ".
+       "    -e 's/\%define afsvers.*/%define afsvers $afsversion/g' ".
+       "    -e 's/\%define pkgvers.*/%define pkgvers $linuxver/g' > ".
        $tmpdir."/rpmdir/SPECS/openafs.spec") == 0
   or die "sed failed : $!\n";
 
@@ -106,11 +118,11 @@ if ($cellservdb) {
 
 if ($relnotes) {
   File::Copy::copy($relnotes,
-		   $tmpdir."/rpmdir/SOURCES/RELNOTES-$version")
+		   $tmpdir."/rpmdir/SOURCES/RELNOTES-$afsversion")
   or die "Unable to copy $relnotes into position\n";
 } else {
   print "WARNING: No release notes provided. Using empty file\n";
-  system("touch $tmpdir/rpmdir/SOURCES/RELNOTES-$version");
+  system("touch $tmpdir/rpmdir/SOURCES/RELNOTES-$afsversion");
 }
 
 if ($changelog) {
@@ -128,9 +140,9 @@ system("rpmbuild -bs --define \"_topdir $tmpdir/rpmdir\" ".
   or die "rpmbuild failed : $!\n";
 
 # Copy it out to somewhere useful
-File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$version-1.1.src.rpm",
-	         "openafs-$version-1.1.src.rpm")
+File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-1.$linuxrel.src.rpm",
+	         "openafs-$linuxver-1.$linuxrel.src.rpm")
   or die "Unable to copy output RPM : $!\n";
 
-print "SRPM is openafs-$version-1.1.src.rpm\n";
+print "SRPM is openafs-$linuxver-1.$linuxrel.src.rpm\n";
 

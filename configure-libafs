@@ -657,7 +657,8 @@ AMTAR
 am__tar
 am__untar
 MACOS_VERSION
-LINUX_VERSION
+LINUX_PKGVER
+LINUX_PKGREL
 CC
 CFLAGS
 LDFLAGS
@@ -721,6 +722,7 @@ LIB_AFSDB
 LINUX_KERNEL_PATH
 BSD_KERNEL_PATH
 BSD_KERNEL_BUILD
+LINUX_VERSION
 MKAFS_OSTYPE
 TOP_OBJDIR
 TOP_SRCDIR
@@ -2174,7 +2176,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.4.7pre3
+ VERSION=1.4.7
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2322,8 +2324,11 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.7fc3
-LINUX_VERSION=0.pre3
+MACOS_VERSION=1.4.7
+LINUX_PKGVER=1.4.7
+#LINUX_PKGREL=0.pre0
+LINUX_PKGREL=1.1
+
 
 
 
@@ -15980,6 +15985,130 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_sys_wait4" >&5
 echo "${ECHO_T}$ac_cv_linux_exports_sys_wait4" >&6; }
 
+  { echo "$as_me:$LINENO: checking if rcu_read_lock is usable" >&5
+echo $ECHO_N "checking if rcu_read_lock is usable... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_exports_rcu_read_lock+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/rcupdate.h>
+
+void conftest(void)
+{
+rcu_read_lock();
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_exports_rcu_read_lock=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_exports_rcu_read_lock=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/rcupdate.h>
+int
+main ()
+{
+rcu_read_lock();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_exports_rcu_read_lock=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_exports_rcu_read_lock=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_rcu_read_lock" >&5
+echo "${ECHO_T}$ac_cv_linux_exports_rcu_read_lock" >&6; }
+  if test "x$ac_cv_linux_exports_rcu_read_lock" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define EXPORTED_RCU_READ_LOCK 1
+_ACEOF
+
+  fi
+
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
 else
@@ -23759,7 +23888,8 @@ echo "${ECHO_T}Configuring support for Kerberos 5 utilities" >&6; }
 
 
 
-for ac_func in add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register krb5_decode_ticket
+
+for ac_func in add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register krb5_decode_ticket krb5_get_prompt_types
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -24646,6 +24776,76 @@ fi
 { echo "$as_me:$LINENO: result: $ac_cv_krb5_creds_session_exists" >&5
 echo "${ECHO_T}$ac_cv_krb5_creds_session_exists" >&6; }
 
+{ echo "$as_me:$LINENO: checking for krb5_prompt.type existence" >&5
+echo $ECHO_N "checking for krb5_prompt.type existence... $ECHO_C" >&6; }
+if test "${ac_cv_krb5_prompt_type_exists+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <krb5.h>
+int
+main ()
+{
+krb5_prompt _p;
+printf("%x\n", _p.type);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_krb5_prompt_type_exists=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_krb5_prompt_type_exists=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+{ echo "$as_me:$LINENO: result: $ac_cv_krb5_prompt_type_exists" >&5
+echo "${ECHO_T}$ac_cv_krb5_prompt_type_exists" >&6; }
+
 if test "x$ac_cv_krb5_creds_keyblock_exists" = "xyes"; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -24657,6 +24857,13 @@ if test "x$ac_cv_krb5_creds_session_exists" = "xyes"; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_KRB5_CREDS_SESSION 1
+_ACEOF
+
+fi
+if test "x$ac_cv_krb5_prompt_type_exists" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_KRB5_PROMPT_TYPE 1
 _ACEOF
 
 fi
@@ -25397,7 +25604,8 @@ AMTAR!$AMTAR$ac_delim
 am__tar!$am__tar$ac_delim
 am__untar!$am__untar$ac_delim
 MACOS_VERSION!$MACOS_VERSION$ac_delim
-LINUX_VERSION!$LINUX_VERSION$ac_delim
+LINUX_PKGVER!$LINUX_PKGVER$ac_delim
+LINUX_PKGREL!$LINUX_PKGREL$ac_delim
 CC!$CC$ac_delim
 CFLAGS!$CFLAGS$ac_delim
 LDFLAGS!$LDFLAGS$ac_delim
@@ -25434,7 +25642,6 @@ LEXLIB!$LEXLIB$ac_delim
 LEX_OUTPUT_ROOT!$LEX_OUTPUT_ROOT$ac_delim
 HEADER_RT!$HEADER_RT$ac_delim
 P5PLUS_KOPTS!$P5PLUS_KOPTS$ac_delim
-LINUX_GCC_KOPTS!$LINUX_GCC_KOPTS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -25476,6 +25683,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+LINUX_GCC_KOPTS!$LINUX_GCC_KOPTS$ac_delim
 RHCONFIG_SP!$RHCONFIG_SP$ac_delim
 RHCONFIG_MP!$RHCONFIG_MP$ac_delim
 MPS!$MPS$ac_delim
@@ -25502,6 +25710,7 @@ LIB_AFSDB!$LIB_AFSDB$ac_delim
 LINUX_KERNEL_PATH!$LINUX_KERNEL_PATH$ac_delim
 BSD_KERNEL_PATH!$BSD_KERNEL_PATH$ac_delim
 BSD_KERNEL_BUILD!$BSD_KERNEL_BUILD$ac_delim
+LINUX_VERSION!$LINUX_VERSION$ac_delim
 MKAFS_OSTYPE!$MKAFS_OSTYPE$ac_delim
 TOP_OBJDIR!$TOP_OBJDIR$ac_delim
 TOP_SRCDIR!$TOP_SRCDIR$ac_delim
@@ -25571,7 +25780,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 95; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

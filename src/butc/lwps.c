@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.6 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.7 2008/04/09 16:40:17 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -1920,7 +1920,7 @@ Restorer(void *param) {
 
     FreeNode(taskId);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 /* this is just scaffolding, creates new tape label with name <tapeName> */
@@ -2282,7 +2282,7 @@ Labeller(void *param)
 
     free(labelIfPtr);
     LeaveDeviceQueue(deviceLatch);
-    return (code);
+    return (void *)(code);
 }
 
 /* PrintTapeLabel

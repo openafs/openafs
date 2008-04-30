@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.26 2008/01/30 21:18:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.30 2008/04/18 14:06:50 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1415,7 +1415,11 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     if (current->thread.flags & THREAD_IA32)
 
 #elif defined(AFS_PPC64_LINUX26_ENV)
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
     if (current->thread_info->flags & _TIF_32BIT) 
+#else
+    if (task_thread_info(current)->flags & _TIF_32BIT) 
+#endif      
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT) 
 
@@ -1871,12 +1875,10 @@ afs_shutdown(void)
 #endif
     afs_warn("\n");
 
-    /* Close file only after daemons which can write to it are stopped. */
-    if (afs_cacheInodep) {	/* memcache won't set this */
-	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
-	afs_cacheInodep = 0;
-    }
-    return;			/* Just kill daemons for now */
+#ifdef AFS_AIX51_ENV
+    shutdown_daemons();
+#endif
+
 #ifdef notdef
     shutdown_CB();
     shutdown_AFS();
@@ -1884,21 +1886,16 @@ afs_shutdown(void)
     shutdown_rxevent();
     shutdown_rx();
     afs_shutdown_BKG();
+#endif
     shutdown_bufferpackage();
-#endif
-#ifdef AFS_AIX51_ENV
-    shutdown_daemons();
-#endif
-#ifdef notdef
     shutdown_cache();
     shutdown_osi();
     shutdown_osinet();
     shutdown_osifile();
     shutdown_vnodeops();
-    shutdown_vfsops();
-    shutdown_exporter();
     shutdown_memcache();
 #if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)) && !defined(AFS_OSF_ENV)
+    shutdown_exporter();
     shutdown_nfsclnt();
 #endif
     shutdown_afstest();
@@ -1909,8 +1906,16 @@ afs_shutdown(void)
     memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
 */
     afs_warn(" ALL allocated tables\n");
+
+    /* Close file only after daemons which can write to it are stopped. */
+    if (afs_cacheInodep) {	/* memcache won't set this */
+	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
+	afs_cacheInodep = 0;
+    }
+
     afs_shuttingdown = 0;
-#endif
+
+    return;			/* Just kill daemons for now */
 }
 
 void

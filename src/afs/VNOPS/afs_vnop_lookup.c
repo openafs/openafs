@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.20 2008/03/07 17:34:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.21 2008/04/15 12:29:56 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1120,6 +1120,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     register afs_int32 code;
     register afs_int32 bulkcode = 0;
     int pass = 0, hit = 0;
+    int force_eval = afs_fakestat_enable ? 0 : 1;
     long dirCookie;
     extern afs_int32 afs_mariner;	/*Writing activity to log? */
     afs_hyper_t versionNo;
@@ -1442,8 +1443,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     }				/* sub-block just to reduce stack usage */
 
     if (tvc) {
-	int force_eval = afs_fakestat_enable ? 0 : 1;
-
 	if (adp->states & CForeign)
 	    tvc->states |= CForeign;
 	tvc->parentVnode = adp->fid.Fid.Vnode;
@@ -1464,6 +1463,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
+	if (tvc->mvstat == 1 && (tvc->states & CMValid) && tvc->mvid != NULL)
+	  force_eval = 1; /* This is now almost for free, get it correct */
+
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
 	if (!(flags & AFS_LOOKUP_NOEVAL))
 	    /* don't eval mount points */
@@ -1589,7 +1591,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	     * rather than the vc of the mount point itself.  we can still find the
 	     * mount point's vc in the vcache by its fid. */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
-	    if (!hit) {
+	    if (!hit && force_eval) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
 #ifdef AFS_LINUX20_ENV
