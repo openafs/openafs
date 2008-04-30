@@ -209,10 +209,19 @@ et_to_sys_error(afs_int32 in)
 void
 afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
 {
+    int i = 0;
     AFS_STATCNT(afs_CopyError);
     if (!afrom->initd)
 	return;
     afs_FinalizeReq(ato);
+    while (i < MAXHOSTS) {
+	ato->skipserver[i] = afrom->skipserver[i];
+	i++;
+    }
+    if (afrom->tokenError)
+	ato->tokenError = afrom->tokenError;
+    if (afrom->idleError)
+	ato->idleError = afrom->idleError;
     if (afrom->accessError)
 	ato->accessError = 1;
     if (afrom->volumeError)
@@ -227,10 +236,17 @@ afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
 void
 afs_FinalizeReq(register struct vrequest *areq)
 {
+    int i = 0;
     AFS_STATCNT(afs_FinalizeReq);
     if (areq->initd)
 	return;
+    while (i < MAXHOSTS) {
+	areq->skipserver[i] = 0;
+	i++;
+    }
     areq->busyCount = 0;
+    areq->idleError = 0;
+    areq->tokenError = 0;
     areq->accessError = 0;
     areq->volumeError = 0;
     areq->networkError = 0;
