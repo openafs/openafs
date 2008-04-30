@@ -211,6 +211,66 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     return (changed ? DIFFERENT : SAME);
 }				/*VLDB_Same */
 
+/*------------------------------------------------------------------------
+ * afs_BlackListOnce
+ *
+ * Description:
+ *	Mark a server as invalid for further attempts of this request only.
+ *
+ * Arguments:
+ *	areq  : The request record associated with this operation.
+ *	afid  : The FID of the file involved in the action.  This argument
+ *		may be null if none was involved.
+ *      tsp   : pointer to a server struct for the server we wish to 
+ *              blacklist. 
+ *
+ * Returns:
+ *	Non-zero value if further servers are available to try,
+ *	zero otherwise.
+ *
+ * Environment:
+ *	This routine is typically called in situations where we believe
+ *      one server out of a pool may have an error condition.
+ *
+ * Side Effects:
+ *	As advertised.
+ *
+ * NOTE:
+ *	The afs_Conn* routines use the list of invalidated servers to 
+ *      avoid reusing a server marked as invalid for this request.
+ *------------------------------------------------------------------------*/
+static afs_int32 
+afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid, 
+		  struct server *tsp)
+{
+    struct volume *tvp;
+    afs_int32 i;
+    afs_int32 serversleft = 0;
+
+    if (afid)
+	tvp = afs_FindVolume(afid, READ_LOCK);
+    if (tvp) {
+	for (i = 0; i < MAXHOSTS; i++) {
+	    if (tvp->serverHost[i] == tsp) {
+		areq->skipserver[i] = 1;
+	    }
+	    if (tvp->serverHost[i] &&
+		!(tvp->serverHost[i]->addr->sa_flags & 
+		  SRVR_ISDOWN)) {
+		areq->skipserver[i] = 1;
+	    }
+	}
+	afs_PutVolume(tvp, READ_LOCK);
+    }
+    for (i = 0; i < MAXHOSTS; i++) {
+	if (areq->skipserver[i] == 0) {
+	    serversleft = 1;
+	    break;
+	}
+    }
+    return serversleft;
+}
+
 
 /*------------------------------------------------------------------------
  * EXPORTED afs_Analyze
@@ -254,7 +314,9 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
     struct server *tsp;
     struct volume *tvp;
     afs_int32 shouldRetry = 0;
+    afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
+    afs_int32 markeddown;
 
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,
@@ -378,10 +440,33 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
     if ((acode < 0) && (acode != VRESTARTING)) {
-	afs_ServerDown(sa);
-	ForceNewConnections(sa);	/*multi homed clients lock:afs_xsrvAddr? */
+	if (acode == RX_CALL_TIMEOUT) {
+	    serversleft = afs_BlackListOnce(areq, afid, tsp);
+	    areq->idleError++;
+	    if (serversleft) {
+		shouldRetry = 1;
+	    } else {
+		shouldRetry = 0;
+	    }
+	    /* By doing this, we avoid ever marking a server down
+	     * in an idle timeout case. That's because the server is 
+	     * still responding and may only be letting a single vnode
+	     * time out. We otherwise risk having the server continually
+	     * be marked down, then up, then down again... 
+	     */
+	    goto out;
+	} 
+	markeddown = afs_ServerDown(sa);
+	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
+#if 0
+	/* retry *once* when the server is timed out in case of NAT */
+	if (markeddown && acode == RX_CALL_DEAD) {
+	    aconn->forceConnectFS = 1;
+	    shouldRetry = 1;
+	}
+#endif
     }
 
     if (acode == VBUSY || acode == VRESTARTING) {
@@ -412,7 +497,6 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	       || (acode & ~0xff) == ERROR_TABLE_BASE_RXK) {
 	/* any rxkad error is treated as token expiration */
 	struct unixuser *tu;
-
 	/*
 	 * I'm calling these errors protection errors, since they involve
 	 * faulty authentication.
@@ -431,11 +515,22 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired\n",
 		     tu->vid, aconn->srvr->server->cell->cellName);
 	    } else {
-		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
-		afs_warnuser
-		    ("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
-		     tu->vid, aconn->srvr->server->cell->cellName, acode);
+		serversleft = afs_BlackListOnce(areq, afid, tsp);
+		areq->tokenError++;
+
+		if (serversleft) {
+		    afs_warnuser
+			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d\n",
+			 tu->vid, aconn->srvr->server->cell->cellName, acode);
+		    shouldRetry = 1;
+		} else {
+		    areq->tokenError = 0;
+		    aconn->forceConnectFS = 0;	/* don't check until new tokens set */
+		    aconn->user->states |= UTokensBad;
+		    afs_warnuser
+			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
+			 tu->vid, aconn->srvr->server->cell->cellName, acode);
+		}
 	    }
 	    afs_PutUser(tu, READ_LOCK);
 	} else {
@@ -531,7 +626,7 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	VSleep(1);		/* Just a hack for desperate times. */
 	shouldRetry = 1;
     }
-
+out:
     /* now unlock the connection and return */
     afs_PutConn(aconn, locktype);
     return (shouldRetry);

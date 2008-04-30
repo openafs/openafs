@@ -86,11 +86,13 @@ extern int afs_shuttingdown;
 #define	AFS_NRXPACKETS	80
 #define	AFS_RXDEADTIME	50
 #define AFS_HARDDEADTIME	120
+#define	AFS_IDLEDEADTIME	50
 #define AFS_BLKBITS	12
 #define AFS_BLKSIZE	(1 << AFS_BLKBITS)
 
 extern afs_int32 afs_rx_deadtime;
 extern afs_int32 afs_rx_harddead;
+extern afs_int32 afs_rx_idledead;
 
 struct sysname_info {
     char *name;
@@ -186,6 +188,9 @@ struct vrequest {
     char volumeError;		/* encountered a missing or busy volume */
     char networkError;		/* encountered network problems */
     char permWriteError;	/* fileserver returns permenent error. */
+    char tokenError;            /* a token error other than expired. */
+    char idleError;             /* the server idled too long */
+    char skipserver[MAXHOSTS];
 };
 #define VOLMISSING 1
 #define VOLBUSY 2

@@ -83,7 +83,9 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 
     /* First is always lowest rank, if it's up */
     if ((tv->status[0] == not_busy) && tv->serverHost[0]
-	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN))
+	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN) &&
+	!(((areq->idleError > 0) || (areq->tokenError > 0))
+	  && (areq->skipserver[0] == 1)))
 	lowp = tv->serverHost[0]->addr;
 
     /* Otherwise we look at all of them. There are seven levels of
@@ -95,6 +97,9 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
      */
     for (notbusy = not_busy; (!lowp && (notbusy <= end_not_busy)); notbusy++) {
 	for (i = 0; i < MAXHOSTS && tv->serverHost[i]; i++) {
+	    if (((areq->tokenError > 0)||(areq->idleError > 0)) 
+		&& (areq->skipserver[i] == 1))
+		continue;
 	    if (tv->status[i] != notbusy) {
 		if (tv->status[i] == rd_busy || tv->status[i] == rdwr_busy) {
 		    if (!areq->busyCount)
@@ -234,6 +239,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
+	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)
