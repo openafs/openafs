@@ -1,3 +1,10 @@
+openafs (1.4.7.dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+    - Work around GPLing of RCU locks.  (Closes: #476628)
+
+ -- Russ Allbery <rra@debian.org>  Thu, 01 May 2008 08:13:56 -0700
+
 openafs (1.4.7~pre3.dfsg1-1) unstable; urgency=low
 
   * New upstream release candidate:

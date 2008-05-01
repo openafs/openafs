@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.32 2008/03/22 04:17:33 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.33 2008/04/18 20:13:32 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -284,7 +284,11 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     if (current->thread.flags & THREAD_IA32)
 
 #elif defined(AFS_PPC64_LINUX26_ENV)
-    if (current->thread_info->flags & _TIF_32BIT)
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
+    if (current->thread_info->flags & _TIF_32BIT) 
+#else
+    if (task_thread_info(current)->flags & _TIF_32BIT) 
+#endif      
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT)
 

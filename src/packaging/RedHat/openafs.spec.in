@@ -1,11 +1,11 @@
-# Openafs Spec $Revision: 1.1.2.19 $
+# Openafs Spec $Revision: 1.1.2.22 $
 
 %define afsvers @VERSION@
-%define pkgvers @VERSION@
+%define pkgvers @LINUX_PKGVER@
 # for beta/rc releases make pkgrel 0.X.<tag>
 # for real releases make pkgrel 1 (or more for extra releases)
 #%define pkgrel 0.1.rc1
-%define pkgrel @LINUX_VERSION@
+%define pkgrel @LINUX_PKGREL@
 
 %if %{?osvers:0}%{!?osvers:1}
 %define osvers 1
@@ -37,7 +37,13 @@
 %define upvar ""
 %{!?kvariants: %define kvariants %{?upvar}}
 
-%{!?ksrcdir: %define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}}
+%if %{?ksrcdir:1}%{!?ksrcdir:0}
+  if ( -d %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}) ; then
+    %define ksrcdir %{_usrsrc}/kernels/%{kverrel}-%{_target_cpu}}
+  else
+    %define ksrcdir %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}}
+  fi
+%endif
 
 %else # Legacy kernel build stuff 
 
@@ -242,7 +248,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2007-10-25 
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-04-23
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
@@ -821,7 +827,11 @@ ksrc=""
 %if %{fedorakmod} 
   for kvariant in %{kvariants} ; do
     if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
-      ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+      if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
+        ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+      else
+        ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
+      fi
     fi
   done
 %endif
@@ -854,6 +864,12 @@ make only_libafs_tree || exit 1
 %if %{fedorakmod} && %{build_modules}
 for kvariant in %{kvariants} ; do
   if [ -n "${kvariant}" ] ; then
+    if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
+      ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+    else
+      ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
+    fi
+
     cp -R libafs_tree _kmod_build_${kvariant}
     pushd _kmod_build_${kvariant}
     ./configure --with-afs-sysname=${sysname} \
@@ -861,7 +877,7 @@ for kvariant in %{kvariants} ; do
 	--libdir=%{_libdir} \
 	--bindir=%{_bindir} \
 	--sbindir=%{_sbindir} \
-	--with-linux-kernel-headers=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} \
+	--with-linux-kernel-headers=${ksrc} \
 %if %{krb5support}
 	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
 %endif
@@ -1196,14 +1212,25 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so.*
 for kvariant in %{kvariants}
 do
   if [ -n "$kvariant" ] ; then
-    srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+    if [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP ] ; then
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+    else
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}.${kvariant}-SP
+    fi
   else
     srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
   fi
 
-  dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  if [ -f ${srcdir}/libafs-%{kverrel}${kvariant}.ko ] ; then
+    srcmod=${srcdir}/libafs-%{kverrel}${kvariant}.ko
+    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+  else
+    srcmod=${srcdir}/libafs-%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}.ko
+    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}/extra/openafs
+  fi
+
   mkdir -p ${dstdir}
-  install -m 755 ${srcdir}/libafs-%{kverrel}${kvariant}.ko $dstdir/openafs.ko
+  install -m 755 ${srcmod} ${dstdir}/openafs.ko
 done
 %else
 # Install the kernel modules

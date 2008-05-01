@@ -980,3 +980,16 @@ printk("%x\n", _nd.path);],
       ac_cv_linux_struct_nameidata_has_path=no)])
   AC_MSG_RESULT($ac_cv_linux_struct_nameidata_has_path)])
 
+AC_DEFUN([LINUX_EXPORTS_RCU_READ_LOCK], [
+  AC_MSG_CHECKING([if rcu_read_lock is usable])
+  AC_CACHE_VAL([ac_cv_linux_exports_rcu_read_lock], [
+    AC_TRY_KBUILD(
+[#include <linux/rcupdate.h>],
+[rcu_read_lock();],
+      ac_cv_linux_exports_rcu_read_lock=yes,
+      ac_cv_linux_exports_rcu_read_lock=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_rcu_read_lock)
+  if test "x$ac_cv_linux_exports_rcu_read_lock" = "xyes"; then
+    AC_DEFINE([EXPORTED_RCU_READ_LOCK], 1, [define if rcu_read_lock() is usable])
+  fi])
+ 

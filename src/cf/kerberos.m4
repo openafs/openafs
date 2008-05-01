@@ -1,5 +1,5 @@
 dnl
-dnl $Id: kerberos.m4,v 1.1.2.14 2008/01/05 04:48:41 shadow Exp $
+dnl $Id: kerberos.m4,v 1.1.2.16 2008/04/18 20:50:28 shadow Exp $
 dnl
 dnl Kerberos autoconf glue
 dnl
@@ -58,7 +58,7 @@ if test X$conf_krb5 = XYES; then
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register krb5_decode_ticket])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register krb5_decode_ticket krb5_get_prompt_types])
 	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
 	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
@@ -91,11 +91,25 @@ ac_cv_krb5_creds_session_exists=yes,
 ac_cv_krb5_creds_session_exists=no)])
 AC_MSG_RESULT($ac_cv_krb5_creds_session_exists)
 
+AC_MSG_CHECKING(for krb5_prompt.type existence)
+AC_CACHE_VAL(ac_cv_krb5_prompt_type_exists,
+[
+AC_TRY_COMPILE(
+[#include <krb5.h>],
+[krb5_prompt _p;
+printf("%x\n", _p.type);], 
+ac_cv_krb5_prompt_type_exists=yes,
+ac_cv_krb5_prompt_type_exists=no)])
+AC_MSG_RESULT($ac_cv_krb5_prompt_type_exists)
+	
 if test "x$ac_cv_krb5_creds_keyblock_exists" = "xyes"; then
 	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
 fi
 if test "x$ac_cv_krb5_creds_session_exists" = "xyes"; then
 	AC_DEFINE(HAVE_KRB5_CREDS_SESSION, 1, [define if krb5_creds has session])
+fi
+if test "x$ac_cv_krb5_prompt_type_exists" = "xyes"; then
+	AC_DEFINE(HAVE_KRB5_PROMPT_TYPE, 1, [define if krb5_prompt has type])
 fi
 	
 dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])

@@ -62,7 +62,7 @@ upstream for obvious reasons.
 +	    afs_atomlist.c afs_lhash.c snprintf.c
 --- openafs.orig/configure.in
 +++ openafs/configure.in
-@@ -85,9 +85,6 @@
+@@ -88,9 +88,6 @@
  src/mpp/Makefile \
  src/null/Makefile \
  src/package/Makefile \
