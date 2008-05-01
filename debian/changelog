@@ -2,6 +2,11 @@ openafs (1.4.7.dfsg1-1) unstable; urgency=low
 
   * New upstream release.
     - Work around GPLing of RCU locks.  (Closes: #476628)
+  * Include a Kerberos v5 klog, klog.krb5, in openafs-krb5.
+  * klog is now managed via alternatives.  openafs-client provides
+    klog.afs and openafs-krb5 provides klog.krb5.  If both packages are
+    installed, klog.krb5 is the default.
+  * Don't remove and reinstall the pagsh alternative on every upgrade.
   * Add many new upstream man pages for fs, vos, and pts sub-commands and
     the CellAlias config file.
   * Add read_tape to openafs-dbserver.

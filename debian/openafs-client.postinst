@@ -2,12 +2,15 @@
 
 set -e
 
-case "$1" in
-configure|reconfigure)
+if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
     update-alternatives --install /usr/bin/pagsh pagsh \
         /usr/bin/pagsh.openafs 100  \
         --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
         /usr/share/man/man1/pagsh.openafs.1.gz
+    update-alternatives --install /usr/bin/klog klog \
+        /usr/bin/klog.afs 10 \
+        --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
+        /usr/share/man/man1/klog.afs.1.gz
 
     test -d /afs || mkdir /afs
 
@@ -73,16 +76,7 @@ EOF
     echo AFS_DYNROOT=$RET >>/etc/openafs/afs.conf.client
     db_get openafs-client/fakestat
     echo AFS_FAKESTAT=$RET >>/etc/openafs/afs.conf.client
-    ;;
-
-abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
-
-*)
-    echo "postinst called with unknown argument '$1'" >&2
-    exit 0
-    ;;
-esac
+fi
 
 #DEBHELPER#
 
