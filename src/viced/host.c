@@ -1156,7 +1156,8 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 
     /* don't add the same entry multiple times */
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
-	if (host->interface && afs_uuid_equal(&host->interface->uuid, uuid))
+	if (chain->hostPtr->interface && 
+	    afs_uuid_equal(&chain->hostPtr->interface->uuid, uuid))
 	    return;
     }
 
