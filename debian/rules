@@ -44,6 +44,20 @@ LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
 DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 	openafs-kpasswd
 
+# These are files that we know we don't want to install.  List them so that we
+# can use dh_install --fail-missing and catch anything new that shows up.
+IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log \
+	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xklog.krb -Xkpwvalid \
+	-Xlibafssetpag.so -Xlibafsrpc.so -Xlibafsauthent.so -Xpackage \
+	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xup.1 -Xuss \
+	-Xvldb_convert -Xvsys -Xxfs_size_check
+
+# Installed via other means since we have to rename them.
+IGNORE += -Xpam_afs
+
+# These will be useful in 1.5, but aren't useful yet.
+IGNORE += -Xknfs -Xrmtsysd
+
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
 VERSION   = 1.4.7
@@ -115,7 +129,7 @@ install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_installdirs
-	dh_install
+	dh_install --fail-missing $(IGNORE)
 
 	set -e; for pkg in $(LINTIAN_PACKAGES) ; do \
 	    install -d debian/$$pkg/usr/share/lintian/overrides; \

@@ -2,6 +2,11 @@ openafs (1.4.7.dfsg1-1) unstable; urgency=low
 
   * New upstream release.
     - Work around GPLing of RCU locks.  (Closes: #476628)
+  * Add many new upstream man pages for fs, vos, and pts sub-commands and
+    the CellAlias config file.
+  * Add read_tape to openafs-dbserver.
+  * Add bos_util and a UserList man page to openafs-fileserver.
+  * Run dh_install with --fail-missing to catch new upstream additions.
 
  -- Russ Allbery <rra@debian.org>  Thu, 01 May 2008 08:13:56 -0700
 

@@ -1,3 +1,4 @@
+debian/tmp/usr/sbin/bos_util            usr/sbin
 debian/tmp/usr/sbin/bosserver           usr/sbin
 debian/tmp/usr/sbin/voldump             usr/sbin
 debian/tmp/usr/sbin/volinfo             usr/sbin
@@ -16,11 +17,13 @@ debian/tmp/usr/share/man/man5/KeyFile.5               usr/share/man/man5
 debian/tmp/usr/share/man/man5/NoAuth.5                usr/share/man/man5
 debian/tmp/usr/share/man/man5/SALVAGE.fs.5            usr/share/man/man5
 debian/tmp/usr/share/man/man5/SalvageLog.5            usr/share/man/man5
+debian/tmp/usr/share/man/man5/UserList.5              usr/share/man/man5
 debian/tmp/usr/share/man/man5/VolserLog.5             usr/share/man/man5
 debian/tmp/usr/share/man/man5/afs_volume_header.5     usr/share/man/man5
 debian/tmp/usr/share/man/man5/salvage.lock.5          usr/share/man/man5
 debian/tmp/usr/share/man/man5/sysid.5                 usr/share/man/man5
 
+debian/tmp/usr/share/man/man8/bos_util.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/bosserver.8             usr/share/man/man8
 debian/tmp/usr/share/man/man8/fileserver.8            usr/share/man/man8
 debian/tmp/usr/share/man/man8/salvager.8              usr/share/man/man8
