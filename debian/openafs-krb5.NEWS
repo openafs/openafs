@@ -1,0 +1,14 @@
+openafs-krb5 (1.4.7.dfsg1-1) unstable; urgency=low
+
+  This package now includes a Kerberos v5 version of klog, klog.krb5,
+  which authenticates via Kerberos v5 to obtain tokens.  When this package
+  is installed, that version of klog becomes the default.  This is correct
+  for any site that uses Kerberos v5 for AFS authentication
+
+  klog is managed by alternatives.  If your site still uses the AFS
+  kaserver or otherwise requires use of the old AFS protocol to obtain
+  tokens with klog, run update-alternatives --config /usr/bin/klog and
+  select klog.afs as the default instead of klog.krb5.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 01 May 2008 16:44:12 -0700
+
