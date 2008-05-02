@@ -49,7 +49,7 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log \
 	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xklog.krb -Xkpwvalid \
 	-Xlibafssetpag.so -Xlibafsrpc.so -Xlibafsauthent.so -Xpackage \
-	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xup.1 -Xuss \
+	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xman1/up.1 -Xuss \
 	-Xvldb_convert -Xvsys -Xxfs_size_check
 
 # Installed via other means since we have to rename them.

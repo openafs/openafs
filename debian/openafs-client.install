@@ -84,6 +84,7 @@ debian/tmp/usr/share/man/man1/fs_whereis.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_whichcell.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_wscell.1             usr/share/man/man1
 debian/tmp/usr/share/man/man1/klog.1                  usr/share/man/man1
+debian/tmp/usr/share/man/man1/klog.krb5.1             usr/share/man/man1
 debian/tmp/usr/share/man/man1/livesys.1               usr/share/man/man1
 debian/tmp/usr/share/man/man1/pagsh.1                 usr/share/man/man1
 debian/tmp/usr/share/man/man1/pts.1                   usr/share/man/man1
