@@ -152,7 +152,9 @@ install-stamp: build-stamp
 	    debian/openafs-client/usr/bin/afs-up
 
 	install -m 755 -c src/aklog/klog \
-	    debian/openafs-client/usr/bin/klog.krb5
+	    debian/openafs-krb5/usr/bin/klog.krb5
+	install -m 644 -c src/man-pages/man1/klog.krb5.1 \
+	    debian/openafs-krb5/usr/share/man/man1/klog.krb5.1
 	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
 	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
