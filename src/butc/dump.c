@@ -2215,6 +2215,6 @@ DeleteDump(void *param)
 	code = BUTX_DELETENOVOL;
 	setStatus(taskId, TASK_ERROR);
     }
-    return (code);
+    return (void *)(code);
 }
 #endif
