@@ -10,7 +10,7 @@
 
 #include <devioctl.h>
 
-#include "..\\Common\\KDFsdUserCommon.h"
+#include "..\\Common\\AFSUserCommon.h"
 #include <RDRPrototypes.h>
 #pragma warning(pop)
 
@@ -50,22 +50,22 @@
 
 
 void
-RDR_EnumerateDirectory( IN KDFileID ParentID,
-                        IN KDFsdDirQueryCB *QueryCB,
+RDR_EnumerateDirectory( IN AFSFileID ParentID,
+                        IN AFSDirQueryCB *QueryCB,
                         IN DWORD ResultBufferLength,
-                        IN OUT KDFsdCommResult **ResultCB)
+                        IN OUT AFSCommResult **ResultCB)
 {
     cm_direnum_t *      enump;
-    KDFsdDirEnumResp  * pDirEnumResp;
-    KDFsdDirEnumEntry * pCurrentEntry;
-    size_t size = sizeof(KDFsdCommResult) + ResultBufferLength - 1;
+    AFSDirEnumResp  * pDirEnumResp;
+    AFSDirEnumEntry * pCurrentEntry;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     afs_uint32  code = 0;
     cm_fid_t      fid;
     cm_scache_t * dscp = NULL;
     cm_user_t *   userp = cm_rootUserp;
     cm_req_t      req;
 
-    *ResultCB = (KDFsdCommResult *)malloc(size);
+    *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
 	return;
 
@@ -74,8 +74,8 @@ RDR_EnumerateDirectory( IN KDFileID ParentID,
 
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
 
-    pDirEnumResp = (KDFsdDirEnumResp *)&(*ResultCB)->ResultData;
-    pCurrentEntry = (KDFsdDirEnumEntry *)QuadAlign(&pDirEnumResp->Entry);
+    pDirEnumResp = (AFSDirEnumResp *)&(*ResultCB)->ResultData;
+    pCurrentEntry = (AFSDirEnumEntry *)QuadAlign(&pDirEnumResp->Entry);
 
     if (ParentID.Cell != 0) {
         fid.cell   = ParentID.Cell;
@@ -167,7 +167,7 @@ RDR_EnumerateDirectory( IN KDFileID ParentID,
                 pCurrentEntry->FileId.Unique = scp->fid.unique;
                 pCurrentEntry->FileId.Hash = scp->fid.hash;
 
-                pCurrentEntry->DataVersion = scp->dataVersion;
+                pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
                 pCurrentEntry->FileType = scp->fileType;
 
                 smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
@@ -186,7 +186,7 @@ RDR_EnumerateDirectory( IN KDFileID ParentID,
                 pCurrentEntry->ShortNameLength = strlen(entryp->shortName);
                 mbstowcs(pCurrentEntry->ShortName, entryp->shortName, pCurrentEntry->ShortNameLength);
 
-                pCurrentEntry->FileNameOffset = sizeof(KDFsdDirEnumEntry);
+                pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
                 len = strlen(entryp->name);
                 pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
                 wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
@@ -274,15 +274,15 @@ RDR_EnumerateDirectory( IN KDFileID ParentID,
 }
 
 void
-RDR_EvaluateNodeByName( IN KDFileID ParentID,
+RDR_EvaluateNodeByName( IN AFSFileID ParentID,
                         IN WCHAR   *Name,
                         IN DWORD    NameLength,
                         IN DWORD    CaseSensitive,
                         IN DWORD    ResultBufferLength,
-                        IN OUT KDFsdCommResult **ResultCB)
+                        IN OUT AFSCommResult **ResultCB)
 {
-    KDFsdDirEnumEntry * pCurrentEntry;
-    size_t size = sizeof(KDFsdCommResult) + ResultBufferLength - 1;
+    AFSDirEnumEntry * pCurrentEntry;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     afs_uint32  code = 0;
     char aname[1025];
     cm_scache_t * scp = NULL;
@@ -292,7 +292,7 @@ RDR_EvaluateNodeByName( IN KDFileID ParentID,
     cm_fid_t      parentFid;
     cm_dirOp_t    dirop;
 
-    *ResultCB = (KDFsdCommResult *)malloc(size);
+    *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
 	return;
 
@@ -313,7 +313,7 @@ RDR_EvaluateNodeByName( IN KDFileID ParentID,
         }
     }
 
-    pCurrentEntry = (KDFsdDirEnumEntry *)&(*ResultCB)->ResultData;
+    pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
 
     cm_InitReq(&req);
@@ -379,7 +379,7 @@ RDR_EvaluateNodeByName( IN KDFileID ParentID,
         pCurrentEntry->FileId.Unique = scp->fid.unique;
         pCurrentEntry->FileId.Hash = scp->fid.hash;
 
-        pCurrentEntry->DataVersion = scp->dataVersion;
+        pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
         pCurrentEntry->FileType = scp->fileType;
 
         smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
@@ -408,7 +408,7 @@ RDR_EvaluateNodeByName( IN KDFileID ParentID,
             mbstowcs(pCurrentEntry->ShortName, shortName, pCurrentEntry->ShortNameLength);
         }
 
-        pCurrentEntry->FileNameOffset = sizeof(KDFsdDirEnumEntry);
+        pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
         len = strlen(aname);
         pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
         wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
@@ -485,13 +485,13 @@ RDR_EvaluateNodeByName( IN KDFileID ParentID,
 }
 
 void
-RDR_EvaluateNodeByID( IN KDFileID ParentID, 
-                      IN KDFileID SourceID,
+RDR_EvaluateNodeByID( IN AFSFileID ParentID, 
+                      IN AFSFileID SourceID,
                       IN DWORD    ResultBufferLength,
-                      IN OUT KDFsdCommResult **ResultCB)
+                      IN OUT AFSCommResult **ResultCB)
 {
-    KDFsdDirEnumEntry * pCurrentEntry;
-    size_t size = sizeof(KDFsdCommResult) + ResultBufferLength - 1;
+    AFSDirEnumEntry * pCurrentEntry;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     afs_uint32  code = 0;
     char aname[1025];
     cm_scache_t * scp = NULL;
@@ -504,14 +504,14 @@ RDR_EvaluateNodeByID( IN KDFileID ParentID,
     WCHAR *  wname, *wtarget;
     size_t   len;
 
-    *ResultCB = (KDFsdCommResult *)malloc(size);
+    *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
 	return;
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
 
-    pCurrentEntry = (KDFsdDirEnumEntry *)&(*ResultCB)->ResultData;
+    pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
     cm_InitReq(&req);
 
@@ -601,7 +601,7 @@ RDR_EvaluateNodeByID( IN KDFileID ParentID,
     pCurrentEntry->FileId.Unique = scp->fid.unique;
     pCurrentEntry->FileId.Hash = scp->fid.hash;
 
-    pCurrentEntry->DataVersion = scp->dataVersion;
+    pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
     pCurrentEntry->FileType = scp->fileType;
 
     smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
@@ -630,7 +630,7 @@ RDR_EvaluateNodeByID( IN KDFileID ParentID,
         mbstowcs(pCurrentEntry->ShortName, shortName, pCurrentEntry->ShortNameLength);
     }
 
-    pCurrentEntry->FileNameOffset = sizeof(KDFsdDirEnumEntry);
+    pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
     len = strlen(aname);
     pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
     wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
@@ -700,39 +700,39 @@ RDR_EvaluateNodeByID( IN KDFileID ParentID,
 void
 RDR_CreateFileEntry( IN WCHAR *FileName,
                      IN DWORD FileNameLength,
-                     IN KDFsdFileCreateCB *CreateCB,
+                     IN AFSFileCreateCB *CreateCB,
                      IN DWORD ResultBufferLength,
-                     IN OUT KDFsdCommResult **ResultCB)
+                     IN OUT AFSCommResult **ResultCB)
 {
-    KDFsdFileCreateResultCB *pResultCB = NULL;
+    AFSFileCreateResultCB *pResultCB = NULL;
 
-    *ResultCB = (KDFsdCommResult *)malloc( sizeof( KDFsdCommResult) + sizeof( KDFsdFileCreateResultCB));
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
 
     memset( *ResultCB,
             '\0',
-            sizeof( KDFsdCommResult) + sizeof( KDFsdFileCreateResultCB));
+            sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
 
     (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
 
-    (*ResultCB)->ResultBufferLength = sizeof( KDFsdFileCreateResultCB);
+    (*ResultCB)->ResultBufferLength = sizeof( AFSFileCreateResultCB);
 
-    pResultCB = (KDFsdFileCreateResultCB *)(*ResultCB)->ResultData;
+    pResultCB = (AFSFileCreateResultCB *)(*ResultCB)->ResultData;
 
 
     return;
 }
 
 void
-RDR_UpdateFileEntry( IN KDFileID FileId,
-                     IN KDFsdFileUpdateCB *UpdateCB,
-                     IN OUT KDFsdCommResult **ResultCB)
+RDR_UpdateFileEntry( IN AFSFileID FileId,
+                     IN AFSFileUpdateCB *UpdateCB,
+                     IN OUT AFSCommResult **ResultCB)
 {
 
-    *ResultCB = (KDFsdCommResult *)malloc( sizeof( KDFsdCommResult));
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
 
     memset( *ResultCB,
             '\0',
-            sizeof( KDFsdCommResult));
+            sizeof( AFSCommResult));
     
     (*ResultCB)->ResultStatus = 0;
 
@@ -741,15 +741,15 @@ RDR_UpdateFileEntry( IN KDFileID FileId,
 }
 
 void
-RDR_DeleteFileEntry( IN KDFileID FileId,
-                     IN OUT KDFsdCommResult **ResultCB)
+RDR_DeleteFileEntry( IN AFSFileID FileId,
+                     IN OUT AFSCommResult **ResultCB)
 {
 
-    *ResultCB = (KDFsdCommResult *)malloc( sizeof( KDFsdCommResult));
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
 
     memset( *ResultCB,
             '\0',
-            sizeof( KDFsdCommResult));
+            sizeof( AFSCommResult));
     
     (*ResultCB)->ResultStatus = 0;
 
@@ -758,26 +758,132 @@ RDR_DeleteFileEntry( IN KDFileID FileId,
 }
 
 void
-RDR_RenameFileEntry( IN KDFileID FileId,
-                     IN KDFsdFileRenameCB *RenameCB,
+RDR_RenameFileEntry( IN AFSFileID FileId,
+                     IN AFSFileRenameCB *RenameCB,
                      IN DWORD ResultBufferLength,
-                     IN OUT KDFsdCommResult **ResultCB)
+                     IN OUT AFSCommResult **ResultCB)
 {
 
-    KDFsdFileRenameResultCB *pResultCB = NULL;
+    AFSFileRenameResultCB *pResultCB = NULL;
 
-    *ResultCB = (KDFsdCommResult *)malloc( sizeof( KDFsdCommResult) + sizeof( KDFsdFileRenameResultCB));
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileRenameResultCB));
 
     memset( *ResultCB,
             '\0',
-            sizeof( KDFsdCommResult) + sizeof( KDFsdFileRenameResultCB));
+            sizeof( AFSCommResult) + sizeof( AFSFileRenameResultCB));
 
-    pResultCB = (KDFsdFileRenameResultCB *)(*ResultCB)->ResultData;
+    pResultCB = (AFSFileRenameResultCB *)(*ResultCB)->ResultData;
     
     (*ResultCB)->ResultStatus = 0;
 
-    (*ResultCB)->ResultBufferLength = sizeof( KDFsdFileRenameResultCB);
+    (*ResultCB)->ResultBufferLength = sizeof( AFSFileRenameResultCB);
 
 
     return;
 }
+
+void
+RDR_FlushFileEntry( IN AFSFileID FileId,
+                    IN DWORD ResultBufferLength,
+                    IN OUT AFSCommResult **ResultCB)
+{
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult));
+
+    /* Flush the dirty buffers associated with FID 
+     * What do we do about extents that are currently held by the redirector?
+     * How do I know what to flush?
+     */
+    
+    (*ResultCB)->ResultStatus = 0;
+
+    (*ResultCB)->ResultBufferLength = 0;
+
+
+    return;
+}
+
+void
+RDR_OpenFileEntry( IN AFSFileID FileId,
+                     IN AFSFileOpenCB *OpenCB,
+                     IN DWORD ResultBufferLength,
+                     IN OUT AFSCommResult **ResultCB)
+{
+
+    AFSFileOpenResultCB *pResultCB = NULL;
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileOpenResultCB));
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult) + sizeof( AFSFileOpenResultCB));
+
+    pResultCB = (AFSFileOpenResultCB *)(*ResultCB)->ResultData;
+
+    /* The following specifies the access that has actually been granted 
+     * for the specified file.  This may be different from what was 
+     * requested in OpenCB->DesiredAccess.
+     */
+    pResultCB->GrantedAccess = 0;
+    
+    (*ResultCB)->ResultStatus = 0;
+
+    (*ResultCB)->ResultBufferLength = sizeof( AFSFileOpenResultCB);
+
+
+    return;
+}
+
+void
+RDR_RequestFileExtents( IN AFSFileID FileId,
+                     IN AFSFileRequestExtentsCB *RequestExtentsCB,
+                     IN DWORD ResultBufferLength,
+                     IN OUT AFSCommResult **ResultCB)
+{
+
+    AFSFileRequestExtentsResultCB *pResultCB = NULL;
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileRequestExtentsResultCB));
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult) + sizeof( AFSFileRequestExtentsResultCB));
+
+    /* Allocate the extents from the buffer package */
+
+    pResultCB = (AFSFileRequestExtentsResultCB *)(*ResultCB)->ResultData;
+    
+    (*ResultCB)->ResultStatus = 0;
+
+    (*ResultCB)->ResultBufferLength = sizeof( AFSFileRequestExtentsResultCB);
+
+
+    return;
+}
+
+void
+RDR_ReleaseFileExtents( IN AFSFileID FileId,
+                     IN AFSFileReleaseExtentsCB *ReleaseExtentsCB,
+                     IN DWORD ResultBufferLength,
+                     IN OUT AFSCommResult **ResultCB)
+{
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult));
+
+    /* Process the release */
+
+    (*ResultCB)->ResultStatus = 0;
+
+    (*ResultCB)->ResultBufferLength = 0;
+
+    return;
+}
+

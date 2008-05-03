@@ -16,7 +16,7 @@
 #include <winbase.h>
 #include <winreg.h>
 
-#include "..\\Common\\KDFsdUserCommon.h"
+#include "..\\Common\\AFSUserCommon.h"
 #include <RDRPrototypes.h>
 
 #ifndef FlagOn
@@ -107,7 +107,7 @@ RDR_ProcessWorkerThreads()
     DWORD index = 0;
     DWORD bytesReturned = 0;
 
-    glDevHandle = CreateFile( KDFSD_SYMLINK_W,
+    glDevHandle = CreateFile( AFS_SYMLINK_W,
 			      GENERIC_READ | GENERIC_WRITE,
 			      FILE_SHARE_READ | FILE_SHARE_WRITE,
 			      NULL,
@@ -126,7 +126,7 @@ RDR_ProcessWorkerThreads()
     //
 
     if( !DeviceIoControl( glDevHandle,
-			  IOCTL_KDFSD_INITIALIZE_CONTROL_DEVICE,
+			  IOCTL_AFS_INITIALIZE_CONTROL_DEVICE,
 			  NULL,
                           0,
                           NULL,
@@ -193,7 +193,7 @@ RDR_ProcessWorkerThreads()
     }
 
     if( !DeviceIoControl( glDevHandle,
-			  IOCTL_KDFSD_INITIALIZE_REDIRECTOR_DEVICE,
+			  IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE,
 			  NULL,
                           0,
                           NULL,
@@ -223,7 +223,7 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
 
     HANDLE hDevHandle = NULL;
     DWORD bytesReturned;
-    KDFsdCommRequest *requestBuffer;
+    AFSCommRequest *requestBuffer;
     bool bError = false;
     HANDLE hEvent = (HANDLE)lpParameter;
 
@@ -237,12 +237,12 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
     // Allocate a request buffer.
     //
 
-    requestBuffer = (KDFsdCommRequest *)malloc( sizeof( KDFsdCommRequest) + KDFSD_PAYLOAD_BUFFER_SIZE);
+    requestBuffer = (AFSCommRequest *)malloc( sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE);
 
     if( requestBuffer)
     {
 
-	memset( requestBuffer, '\0', sizeof( KDFsdCommRequest) + KDFSD_PAYLOAD_BUFFER_SIZE);
+	memset( requestBuffer, '\0', sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE);
 
         //
         // Here we simply signal back to the main thread that we ahve started
@@ -257,14 +257,14 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
         while( !Exit)
 	{
 
-            memset( requestBuffer, '\0', sizeof( KDFsdCommRequest) + KDFSD_PAYLOAD_BUFFER_SIZE);
+            memset( requestBuffer, '\0', sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE);
 
             if( !DeviceIoControl( hDevHandle,
-				  IOCTL_KDFSD_PROCESS_IRP_REQUEST,
+				  IOCTL_AFS_PROCESS_IRP_REQUEST,
 				  NULL,
 				  0,
 				  (void *)requestBuffer,
-				  sizeof( KDFsdCommRequest) + KDFSD_PAYLOAD_BUFFER_SIZE,
+				  sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE,
 				  &bytesReturned,
 				  NULL))
             {
@@ -296,15 +296,15 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
 //
 
 void
-RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
+RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 {
 
     DWORD       	bytesReturned;
     DWORD       	result = 0;
     ULONG       	ulIndex = 0;
     ULONG       	ulCreateFlags = 0;
-    KDFsdCommResult *   pResultCB = NULL;
-    KDFsdCommResult 	stResultCB;
+    AFSCommResult *   pResultCB = NULL;
+    AFSCommResult 	stResultCB;
     DWORD       	dwResultBufferLength = 0;
     WCHAR 		wchBuffer[256];
 
@@ -315,13 +315,13 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
     switch( RequestBuffer->RequestType)
     {
         
-        case KD_FSD_REQUEST_TYPE_DIR_ENUM:
+        case AFS_REQUEST_TYPE_DIR_ENUM:
         {
 
-            KDFsdDirQueryCB *pQueryCB = (KDFsdDirQueryCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSDirQueryCB *pQueryCB = (AFSDirQueryCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
             
             swprintf( wchBuffer,
-                      L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_DIR_ENUM Index %08lX\n",
+                      L"ProcessRequest Processing AFS_REQUEST_TYPE_DIR_ENUM Index %08lX\n",
                       RequestBuffer->RequestIndex);
                         
             OutputDebugString( wchBuffer);
@@ -337,12 +337,12 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_EVAL_TARGET_BY_ID:
+        case AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID:
         {
-            KDFsdEvalTargetCB *pEvalTargetCB = (KDFsdEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSEvalTargetCB *pEvalTargetCB = (AFSEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             swprintf( wchBuffer,
-                      L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_EVAL_TARGET_BY_ID Index %08lX\n",
+                      L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID Index %08lX\n",
                       RequestBuffer->RequestIndex);
                         
             OutputDebugString( wchBuffer);
@@ -358,12 +358,12 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_EVAL_TARGET_BY_NAME:
+        case AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME:
         {
-            KDFsdEvalTargetCB *pEvalTargetCB = (KDFsdEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSEvalTargetCB *pEvalTargetCB = (AFSEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             swprintf( wchBuffer,
-                      L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_EVAL_TARGET_BY_NAME Index %08lX\n",
+                      L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME Index %08lX\n",
                       RequestBuffer->RequestIndex);
 
             OutputDebugString( wchBuffer);
@@ -375,16 +375,16 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             RDR_EvaluateNodeByName( pEvalTargetCB->ParentId,
                                     RequestBuffer->Name,
                                     RequestBuffer->NameLength,
-                                    RequestBuffer->RequestFlags & KDFSD_REQUEST_FLAG_CASE_SENSITIVE ? 1 : 0,
+                                    RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? 1 : 0,
                                     RequestBuffer->ResultBufferLength,
                                     &pResultCB);
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_CREATE_FILE:
+        case AFS_REQUEST_TYPE_CREATE_FILE:
         {
 
-            KDFsdFileCreateCB *pCreateCB = (KDFsdFileCreateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSFileCreateCB *pCreateCB = (AFSFileCreateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
     
             WCHAR wchFileName[ 256];
 
@@ -394,7 +394,7 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
                     RequestBuffer->Name,
                     RequestBuffer->NameLength);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_CREATE_FILE File %s\n", wchFileName);
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_FILE File %s\n", wchFileName);
 
             OutputDebugString( wchBuffer);
 
@@ -407,12 +407,12 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_UPDATE_FILE:
+        case AFS_REQUEST_TYPE_UPDATE_FILE:
         {
 
-            KDFsdFileUpdateCB *pUpdateCB = (KDFsdFileUpdateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSFileUpdateCB *pUpdateCB = (AFSFileUpdateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_UPDATE_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_UPDATE_FILE File %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
 		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -425,10 +425,10 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_DELETE_FILE:
+        case AFS_REQUEST_TYPE_DELETE_FILE:
         {
 
-            swprintf( wchBuffer, L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
 		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -440,12 +440,12 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_RENAME_FILE:
+        case AFS_REQUEST_TYPE_RENAME_FILE:
         {
 
-            KDFsdFileRenameCB *pFileRenameCB = (KDFsdFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSFileRenameCB *pFileRenameCB = (AFSFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
 		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -455,36 +455,78 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
 				 pFileRenameCB,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
-        }
-
-        case KD_FSD_REQUEST_TYPE_REQUEST_FILE_EXTENTS:
-        {
-
-            OutputDebugString( L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_REQUEST_FILE_EXTENTS\n");
 
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_RELEASE_FILE_EXTENTS:
+        case AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS:
         {
 
-            OutputDebugString( L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_RELEASE_FILE_EXTENTS\n");
+            AFSFileRequestExtentsCB *pFileRequestExtentsCB = (AFSFileRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+            OutputDebugString( wchBuffer);
+
+            RDR_RequestFileExtents( RequestBuffer->FileId,
+				    pFileRequestExtentsCB,
+				    RequestBuffer->ResultBufferLength,
+				    &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS:
+        {
+
+            AFSFileReleaseExtentsCB *pFileReleaseExtentsCB = (AFSFileReleaseExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+            OutputDebugString( wchBuffer);
+
+            RDR_ReleaseFileExtents( RequestBuffer->FileId,
+				    pFileReleaseExtentsCB,
+				    RequestBuffer->ResultBufferLength,
+				    &pResultCB);
 
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_FLUSH_FILE:
+        case AFS_REQUEST_TYPE_FLUSH_FILE:
         {
+//            AFSFileFlushCB *pFileFlushCB = (AFSFileFlushCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            OutputDebugString( L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_FLUSH_FILE\n");
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_FLUSH_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
+            OutputDebugString( wchBuffer);
+
+            RDR_FlushFileEntry( RequestBuffer->FileId,
+                                // pFileFlushCB,
+                                RequestBuffer->ResultBufferLength,
+                                &pResultCB);
             break;
         }
 
-        case KD_FSD_REQUEST_TYPE_OPEN_FILE:
+        case AFS_REQUEST_TYPE_OPEN_FILE:
         {
+            AFSFileOpenCB *pFileOpenCB = (AFSFileOpenCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            OutputDebugString( L"ProcessRequest Processing KD_FSD_REQUEST_TYPE_OPEN_FILE\n");
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_OPEN_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+            OutputDebugString( wchBuffer);
+
+            RDR_OpenFileEntry( RequestBuffer->FileId,
+				 pFileOpenCB,
+				 RequestBuffer->ResultBufferLength,
+				 &pResultCB);
 
             break;
         }
@@ -494,7 +536,7 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
             break;
     }
 
-    if( BooleanFlagOn( RequestBuffer->RequestFlags, KDFSD_REQUEST_FLAG_RESPONSE_REQUIRED))
+    if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_RESPONSE_REQUIRED))
     {
 	if (pResultCB == NULL) {
 	    /* We failed probably due to a memory allocation error */
@@ -523,9 +565,9 @@ RDR_ProcessRequest( KDFsdCommRequest *RequestBuffer)
         //
 
         if( !DeviceIoControl( glDevHandle,
-			      IOCTL_KDFSD_PROCESS_IRP_RESULT,
+			      IOCTL_AFS_PROCESS_IRP_RESULT,
 			      (void *)pResultCB,
-                              sizeof( KDFsdCommResult) + pResultCB->ResultBufferLength,
+                              sizeof( AFSCommResult) + pResultCB->ResultBufferLength,
 			      (void *)NULL,
 			      0,
 			      &bytesReturned,
