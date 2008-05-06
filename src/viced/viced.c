@@ -1420,7 +1420,7 @@ ParseArgs(int argc, char *argv[])
 	if (!Sawcbs)
 	    numberofcbs = 64000;
 	if (!Sawlwps)
-	    lwps = 12;
+	    lwps = 128;
 	if (!Sawbufs)
 	    buffs = 120;
 	if (!SawVC)
