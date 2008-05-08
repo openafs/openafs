@@ -235,6 +235,8 @@ struct rx_connection {
     struct rx_call *call[RX_MAXCALLS];
 #endif
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
+    afs_uint32 rwind[RX_MAXCALLS];
+    u_short twind[RX_MAXCALLS];
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
