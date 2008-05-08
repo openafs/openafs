@@ -700,7 +700,7 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    }
 	    /* Wait for transmit window to open up */
 	    while (!call->error
-		   && call->tnext + 1 > call->tfirst + call->twind) {
+		   && call->tnext + 1 > call->tfirst + (2 * call->twind)) {
 		clock_NewTime();
 		call->startWait = clock_Sec();
 
@@ -1138,7 +1138,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     }
 
     /* Wait for the length of the transmit queue to fall below call->twind */
-    while (!call->error && call->tnext + 1 > call->tfirst + call->twind) {
+    while (!call->error && call->tnext + 1 > call->tfirst + (2 * call->twind)) {
 	clock_NewTime();
 	call->startWait = clock_Sec();
 #ifdef	RX_ENABLE_LOCKS

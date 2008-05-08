@@ -741,7 +741,7 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
 		 register struct rx_securityClass *securityObject,
 		 int serviceSecurityIndex)
 {
-    int hashindex;
+    int hashindex, i;
     afs_int32 cid;
     register struct rx_connection *conn;
 
@@ -777,6 +777,10 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     conn->delayedAbortEvent = NULL;
     conn->abortCount = 0;
     conn->error = 0;
+    for (i = 0; i < RX_MAXCALLS; i++) {
+	conn->twind[i] = rx_initSendWindow;
+	conn->rwind[i] = rx_initReceiveWindow;
+    }
 
     RXS_NewConnection(securityObject, conn);
     hashindex =
@@ -2153,6 +2157,8 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     }
     call->channel = channel;
     call->callNumber = &conn->callNumber[channel];
+    call->rwind = conn->rwind[channel];
+    call->twind = conn->twind[channel];
     /* Note that the next expected call number is retained (in
      * conn->callNumber[i]), even if we reallocate the call structure
      */
@@ -2313,7 +2319,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 		   register u_short port, u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex)
 {
-    int hashindex, flag;
+    int hashindex, flag, i;
     register struct rx_connection *conn;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
@@ -2383,6 +2389,10 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
 	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
+	for (i = 0; i < RX_MAXCALLS; i++) {
+	    conn->twind[i] = rx_initSendWindow;
+	    conn->rwind[i] = rx_initReceiveWindow;
+	}
 	/* Notify security object of the new connection */
 	RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
@@ -3759,6 +3769,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    if (tSize < call->twind) {	/* smaller than our send */
 		call->twind = tSize;	/* window, we must send less... */
 		call->ssthresh = MIN(call->twind, call->ssthresh);
+		call->conn->twind[call->channel] = call->twind;
 	    }
 
 	    /* Only send jumbograms to 3.4a fileservers. 3.3a RX gets the
@@ -3782,9 +3793,11 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	     */
 	    if (tSize < call->twind) {
 		call->twind = tSize;
+		call->conn->twind[call->channel] = call->twind;
 		call->ssthresh = MIN(call->twind, call->ssthresh);
 	    } else if (tSize > call->twind) {
 		call->twind = tSize;
+		call->conn->twind[call->channel] = call->twind;
 	    }
 
 	    /*
@@ -4499,8 +4512,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     }
     queue_Init(&call->rq);
     call->error = 0;
-    call->rwind = rx_initReceiveWindow;
-    call->twind = rx_initSendWindow;
+    call->twind = call->conn->twind[call->channel];
+    call->rwind = call->conn->rwind[call->channel];
     call->nSoftAcked = 0;
     call->nextCwind = 0;
     call->nAcks = 0;
@@ -4611,7 +4624,7 @@ rxi_SendAck(register struct rx_call *call,
      * Open the receive window once a thread starts reading packets
      */
     if (call->rnext > 1) {
-	call->rwind = rx_maxReceiveWindow;
+	call->conn->rwind[call->channel] = call->rwind = rx_maxReceiveWindow;
     }
 
     call->nHardAcks = 0;

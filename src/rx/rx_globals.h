@@ -119,9 +119,9 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 
 EXT int rx_minWindow GLOBALSINIT(1);
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
-EXT int rx_initSendWindow GLOBALSINIT(8);
-EXT int rx_maxSendWindow GLOBALSINIT(32);
+EXT int rx_maxReceiveWindow GLOBALSINIT(64);	/* how much to accept */
+EXT int rx_initSendWindow GLOBALSINIT(16);
+EXT int rx_maxSendWindow GLOBALSINIT(64);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
 					 * packets per datagram */

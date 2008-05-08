@@ -60,7 +60,6 @@ RCSID
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
-#include <malloc.h>
 #include <assert.h>
 #include "generator.h"
 
