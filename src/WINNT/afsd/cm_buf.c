@@ -1602,10 +1602,16 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             buf_WaitIO(scp, bp);
             lock_ReleaseMutex(&bp->mx);
 
-            code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
-            if (code && code != CM_ERROR_BADFD) 
-                goto skip;
-
+            /* 
+             * if the error for the previous buffer was BADFD
+             * then all buffers for the FID are bad.  Do not
+             * attempt to stabalize.
+             */
+            if (code != CM_ERROR_BADFD) {
+                code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
+                if (code && code != CM_ERROR_BADFD) 
+                    goto skip;
+            }
             if (code == CM_ERROR_BADFD) {
                 /* if the scp's FID is bad its because we received VNOVNODE 
                  * when attempting to FetchStatus before the write.  This
