@@ -4,6 +4,9 @@ openafs (1.4.7.dfsg1-2) UNRELEASED; urgency=low
     openafs-krb5 to ensure that the klog transition to alternatives is
     smooth.
   * When configuring a new cell, clear the general restart time.
+  * Add a NEWS file for openafs-dbserver warning of the serious Ubik bug
+    fixed in the previous release and suggesting restarting database
+    servers one at a time.
 
  -- Russ Allbery <rra@debian.org>  Fri, 09 May 2008 10:16:28 -0700
 
