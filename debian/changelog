@@ -8,6 +8,7 @@ openafs (1.4.7.dfsg1-2) UNRELEASED; urgency=medium
   * Add a NEWS file for openafs-dbserver warning of the serious Ubik bug
     fixed in the previous release and suggesting restarting database
     servers one at a time.
+  * Update to 2008-04-23 CellServDB.
 
  -- Russ Allbery <rra@debian.org>  Fri, 09 May 2008 10:16:28 -0700
 
