@@ -31,17 +31,31 @@ extern "C" {
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#ifdef UNICODE
+CStringA CStringToCStringA(const CString& str)
+{
+    CStringA astr(str);
+    return astr;
+}
+#define PCCHAR(str)     ((char *)(const char *)CStringToCStringA(str))
+#else
 #define PCCHAR(str)	((char *)(const char *)str)
-
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CKlogDlg dialog
 
-int kl_Authenticate(const CString& strCellName, const CString& strName, const CString& strPassword, char **reason)
+int kl_Authenticate(const CString& strCellName, const CString& strName,
+                    const CString& strPassword, char **reason)
 {
 	afs_int32 pw_exp;
 
-	return ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, PCCHAR(strName), "", PCCHAR(strCellName), PCCHAR(strPassword), 0, &pw_exp, 0, reason);
+	return ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
+                                          PCCHAR(strName), "",
+                                          PCCHAR(strCellName),
+                                          PCCHAR(strPassword),
+                                          0,
+                                          &pw_exp, 0, reason);
 }
 
 CKlogDlg::CKlogDlg(CWnd* pParent /*=NULL*/)
@@ -88,7 +102,7 @@ BOOL CKlogDlg::OnInitDialog()
 		char defaultCell[256];
 		long code = cm_GetRootCellName(defaultCell);
 		if (code < 0)
-			AfxMessageBox("Error determining root cell name.");
+                    AfxMessageBox(_T("Error determining root cell name."));
 		else
 			m_strCellName = defaultCell;
 	}
@@ -107,7 +121,8 @@ void CKlogDlg::OnOK()
 	HOURGLASS hg;
 
 	if (kl_Authenticate(m_strCellName, m_strName, m_strPassword, &reason)) {
-		AfxMessageBox(reason);
+            CString strReason(reason);
+            AfxMessageBox(strReason);
 		return;
 	}
 

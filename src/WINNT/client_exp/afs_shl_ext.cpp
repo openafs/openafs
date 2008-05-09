@@ -24,6 +24,9 @@ extern "C" {
 extern "C" {
 #include "WINNT\afsreg.h"
 }
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -75,8 +78,10 @@ HINSTANCE g_hInstance;
 
 BOOL CAfsShlExt::InitInstance()
 {
+    extern EXPORTED HINSTANCE TaLocale_LoadCorrespondingModuleByName (HINSTANCE hInstance, LPSTR pszFilename, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
+
     // Load our translated resources
-    TaLocale_LoadCorrespondingModuleByName (m_hInstance, TEXT("afs_shl_ext.dll"));
+    TaLocale_LoadCorrespondingModuleByName (m_hInstance, "afs_shl_ext.dll");
 
     // Register all OLE server (factories) as running.  This enables the
     //  OLE libraries to create objects from other applications.
@@ -115,8 +120,12 @@ STDAPI DllCanUnloadNow(void)
 
 int WideCharToLocal(LPTSTR pLocal, LPCWSTR pWide, DWORD dwChars)
 {
+#ifdef UNICODE
+    StringCchCopy(pLocal, dwChars, pWide);
+#else
     *pLocal = 0;
     WideCharToMultiByte( CP_ACP, 0, pWide, -1, pLocal, dwChars, NULL, NULL);
+#endif
     return lstrlen(pLocal);
 }
 
@@ -155,14 +164,12 @@ STDAPI DllRegisterServer(void)
     StringFromIID(IID_IShellExt, &pwsz);
     if(pwsz)
     {
+#ifdef UNICODE
+        StringCbCopy(szCLSID, sizeof(szCLSID), pwsz);
+#else
 	WideCharToMultiByte( CP_ACP, 0,pwsz, -1, szCLSID, sizeof(szCLSID), NULL, NULL);
-	LPMALLOC pMalloc;
-	CoGetMalloc(1, &pMalloc);
-	if(pMalloc)
-	{
-	    (pMalloc->Free)(pwsz);
-	    (pMalloc->Release)();
-	}
+#endif
+        CoTaskMemFree(pwsz);
     } else {
 	return E_FAIL;
     }
@@ -172,14 +179,15 @@ STDAPI DllRegisterServer(void)
     @="Y:\\DEST\\root.client\\usr\\vice\\etc\\afs_shl_ext.dll"
     "ThreadingModel"="Apartment"
     */
-    HMODULE hModule=GetModuleHandle("afs_shl_ext.dll");
+    HMODULE hModule=GetModuleHandle(TEXT("afs_shl_ext.dll"));
     DWORD z=GetModuleFileName(hModule,szModule,sizeof(szModule));
     wsprintf(szSubKey, TEXT("CLSID\\%s\\InprocServer32"),szCLSID);
     if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szModule))!=NOERROR)
 	return lResult;
 
     wsprintf(szSubKey, TEXT("CLSID\\%s\\InprocServer32"),szCLSID);
-    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,"Apartment","ThreadingModel"))!=NOERROR)
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,
+                            TEXT("Apartment"),TEXT("ThreadingModel")))!=NOERROR)
 	return lResult;
 
     /*
@@ -206,7 +214,7 @@ STDAPI DllRegisterServer(void)
     if(VER_PLATFORM_WIN32_NT == osvi.dwPlatformId)
     {
         wsprintf(szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
-        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,STR_EXT_TITLE,szCLSID))!=NOERROR)
+        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,_TEXT(STR_EXT_TITLE),szCLSID))!=NOERROR)
             return lResult;
     }
     wsprintf(szSubKey, TEXT("*\\shellex\\ContextMenuHandlers\\%s"),STR_EXT_TITLE);
@@ -276,7 +284,7 @@ STDAPI DllRegisterServer(void)
 	    TCHAR szData[MAX_PATH];
 
 	    //Create the value string.
-	    lstrcpy(szData, STR_EXT_TITLE);
+	    lstrcpy(szData, _TEXT(STR_EXT_TITLE));
 
 	    lResult = RegSetValueEx( hKey,
 				     szCLSID,
@@ -325,14 +333,12 @@ STDAPI DllUnregisterServer(void)
     StringFromIID(IID_IShellExt, &pwsz);
     if(pwsz)
     {
+#ifdef UNICODE
+        StringCbCopy(szCLSID, sizeof(szCLSID), pwsz);
+#else
 	WideCharToMultiByte( CP_ACP, 0,pwsz, -1, szCLSID, sizeof(szCLSID), NULL, NULL);
-	LPMALLOC pMalloc;
-	CoGetMalloc(1, &pMalloc);
-	if(pMalloc)
-	{
-	    (pMalloc->Free)(pwsz);
-	    (pMalloc->Release)();
-	}
+#endif
+        CoTaskMemFree(pwsz);
     } else {
 	return E_FAIL;
     }

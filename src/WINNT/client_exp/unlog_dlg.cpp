@@ -69,7 +69,7 @@ BOOL CUnlogDlg::OnInitDialog()
 		char defaultCell[256];
 		long code = cm_GetRootCellName(defaultCell);
 		if (code < 0)
-			AfxMessageBox("Error determining root cell name.");
+                    AfxMessageBox(_T("Error determining root cell name."));
 		else
 			m_strCellName = defaultCell;
 	}
@@ -83,21 +83,24 @@ int kl_Unlog(const CString& strCellName)
 {
 	struct ktc_principal server;
 	int code;
-	static char xreason[100];
 
 	if (strCellName.IsEmpty())
 		code = ktc_ForgetAllTokens();
 	else {
-		strcpy(server.cell, strCellName);
+            CStringA astrCellName(strCellName);
+
+            strcpy(server.cell, astrCellName);
 		server.instance[0] = '\0';
 		strcpy(server.name, "afs");
 		code = ktc_ForgetToken(&server);
 	}
 	
 	if (code == KTC_NOCM)
-		AfxMessageBox("AFS service may not have started");
+            AfxMessageBox(_T("AFS service may not have started"));
 	else if (code) {
-		sprintf(xreason, "Unexpected error, code %d", code);
+            CString xreason;
+
+            xreason.Format(_T("Unexpected error, code %d"), code);
 		AfxMessageBox(xreason);
 	}
 	

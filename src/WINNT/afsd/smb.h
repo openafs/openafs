@@ -64,6 +64,7 @@ typedef struct smb {
 
 #define KNOWS_LONG_NAMES(inp) ((((smb_t *)inp)->flg2 & SMB_FLAGS2_KNOWS_LONG_NAMES)?1:0)
 #define WANTS_DFS_PATHNAMES(inp) ((((smb_t *)inp)->flg2 & SMB_FLAGS2_DFS_PATHNAMES)?1:0)
+#define WANTS_UNICODE(inp) ((((smb_t *)inp)->flg2 & SMB_FLAGS2_UNICODE)?1:0)
 
 /* Information Levels */
 #define SMB_INFO_STANDARD               1
@@ -125,6 +126,8 @@ typedef struct smb {
 #define SMB_PACKETSIZE	32768 /* was 8400 */
 /* raw mode is considered obsolete and cannot be used with message signing */
 #define SMB_MAXRAWSIZE  65536
+/* max STRING characters per packet per request */
+#define SMB_STRINGBUFSIZE 4096
 
 /* Negotiate protocol constants */
 /* Security */
@@ -186,6 +189,7 @@ typedef struct smb_packet {
     unsigned char oddByte;
     unsigned short ncb_length;
     unsigned char flags;
+    cm_space_t *stringsp;               /* decoded strings from this packet */
 } smb_packet_t;
 
 /* smb_packet flags */
@@ -242,6 +246,7 @@ typedef struct smb_vc {
 #define SMB_VCFLAG_SESSX_RCVD	0x40	/* we received at least one session setups on this vc */
 #define SMB_VCFLAG_AUTH_IN_PROGRESS 0x80 /* a SMB NT extended authentication is in progress */
 #define SMB_VCFLAG_CLEAN_IN_PROGRESS 0x100
+#define SMB_VCFLAG_USEUNICODE   0x200   /* une UNICODE for STRING fields (NTLM 0.12 or later) */
 
 /* one per user session */
 typedef struct smb_user {
@@ -338,11 +343,13 @@ typedef struct smb_ioctl {
 
     /* uid pointer */
     smb_user_t *uidp;
+
 } smb_ioctl_t;
 
 /* flags for smb_ioctl_t */
 #define SMB_IOCTLFLAG_DATAIN	1	/* reading data from client to server */
 #define SMB_IOCTLFLAG_LOGON	2	/* got tokens from integrated logon */
+#define SMB_IOCTLFLAG_USEUTF8   4       /* this request is using UTF-8 strings */
 
 /* one per file ID; these are really file descriptors */
 typedef struct smb_fid {
@@ -622,7 +629,30 @@ extern void smb_SetSMBParmByte(smb_packet_t *smbp, int slot, unsigned int parmVa
 extern void smb_StripLastComponent(char *outPathp, char **lastComponentp,
 	char *inPathp);
 
-extern unsigned char *smb_ParseASCIIBlock(unsigned char *inp, char **chainpp);
+#define SMB_STRF_FORCEASCII (1<<0)
+#define SMB_STRF_ANSIPATH   (1<<1)
+#define SMB_STRF_IGNORENULL (1<<2)
+
+extern unsigned char *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
+                                          char **chainpp, int flags);
+
+extern unsigned char *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
+                                      char ** chainpp, int flags);
+
+extern unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
+                                         cm_space_t ** stringspp,
+                                         unsigned char *inp, size_t *pcb_max,
+                                         char **chainpp, int flags);
+
+extern unsigned char *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
+                                        size_t cb, char ** chainpp, int flags);
+
+extern unsigned char *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
+                                         size_t cch, char ** chainpp, int flags);
+
+extern unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
+                                         unsigned char * str,
+                                         size_t * plen, int flags);
 
 extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp,
 	int *lengthp);
@@ -678,6 +708,7 @@ extern char smb_ServerLanManager[];
 extern int smb_ServerLanManagerLength;
 extern GUID smb_ServerGUID;
 extern LSA_STRING smb_lsaLogonOrigin;
+extern LONG smb_UseUnicode;
 
 /* used for getting a challenge for SMB auth */
 typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {  
@@ -708,8 +739,6 @@ extern unsigned int smb_Attributes(cm_scache_t *scp);
 extern int smb_ChainFID(int fid, smb_packet_t *inp);
 
 extern unsigned char *smb_ParseDataBlock(unsigned char *inp, char **chainpp, int *lengthp);
-
-extern unsigned char *smb_ParseASCIIBlock(unsigned char *inp, char **chainpp);
 
 extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int *lengthp);
 

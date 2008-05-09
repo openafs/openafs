@@ -58,9 +58,11 @@ versions are supported:
     Microsoft Visual Studio .NET 2003
       available via a MSDN subscription
 
-    Microsoft Visual Studio .NET 2005 (required for AMD64 builds)
+    Microsoft Visual Studio .NET 2005
       available via a MSDN subscription
       (recommended - required for 64-bit builds)
+
+    Microsoft Visual Studio 2008 is not supported
 
 The following Microsoft SDK is required:
 
@@ -77,6 +79,10 @@ The following Microsoft DDK is required:
 The Microsoft HTML Help Workshop is required:
 
     http://www.microsoft.com/downloads/details.aspx?familyid=00535334-c8a6-452f-9aa0-d597d16580cc&displaylang=en
+
+The Microsoft Internationalized Domain Names (IDN) Mitigation APIs 1.1 is required:
+
+    http://www.microsoft.com/downloads/details.aspx?FamilyId=AD6158D7-DDBA-416A-9109-07607425A815&displaylang=en
 
 The NSIS installer requires about 14 MB of storage. The following 
 version is supported:
@@ -174,6 +180,7 @@ The header files that are required from a Microsoft SDK/DDK are:
    npapi.h    (Windows 2000,XP,2003 builds)
    netcfgx.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
    netcfgn.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
+   normalization.h (AFS Cache Manager)
 
 These files come from the following Microsoft DDKs/SDKs:
 
@@ -183,6 +190,9 @@ These files come from the following Microsoft DDKs/SDKs:
    netcfgn.h, netcfgx.h:
         Windows XP/2003 DDK - inc/wxp/
 
+
+   normalization.h:
+        Microsoft IDN Mitigation APIs 1.1 - include/
 
 STEP D. Configure NTBUILD.BAT.
 

@@ -44,10 +44,9 @@ static BOOL IsWindowsNT (void)
 }
 
 
-
-void SetHelpPath(const char *pszDefaultHelpFilePath)
+void SetHelpPath(LPCTSTR pszDefaultHelpFilePath)
 {
-	CString str = pszDefaultHelpFilePath;
+    CString str(pszDefaultHelpFilePath);
 	int nIndex = str.ReverseFind('\\');
 	ASSERT(nIndex >= 0);
 

@@ -37,6 +37,10 @@
 
 #sanity checks 
 
+!IF ("$(CPU)" != "x86")
+CPU=i386
+!ENDIF
+
 !IF ("$(CPU)" != "i386")
 !ERROR Platform SDK not configured for i386
 !ENDIF
@@ -82,7 +86,7 @@ INCLUDE = $(AFSDEV_INCLUDE)
 LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VER_MAJOR=0
+AFSPRODUCT_VER_MAJOR=2
 AFSPRODUCT_VER_MINOR=0
 AFSPRODUCT_VER_PATCH=0
 AFSPRODUCT_VER_BUILD=0
@@ -223,6 +227,7 @@ afscdefs =\
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
 	-DAFS_LARGEFILE_ENV \
+        -DAFS_OLD_COM_ERR \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)

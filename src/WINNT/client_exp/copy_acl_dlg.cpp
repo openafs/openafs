@@ -8,6 +8,7 @@
  */
 
 #include "stdafx.h"
+#include <shlwapi.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -72,7 +73,7 @@ void CCopyAclDlg::OnOK()
 	m_bClear = m_Clear.GetCheck() == 1;
 	m_ToDir.GetWindowText(m_strToDir);
 	
-	if (access(m_strToDir, 0) == -1) {
+	if (PathIsDirectory(m_strToDir) == -1) {
 		ShowMessageBox(IDS_DIR_DOES_NOT_EXIST_ERROR, MB_ICONEXCLAMATION, IDS_DIR_DOES_NOT_EXIST_ERROR, m_strToDir);
 		return;
 	}
@@ -100,7 +101,7 @@ void CCopyAclDlg::OnChangeToDir()
 
 void CCopyAclDlg::OnBrowse() 
 {
-	CFileDialog dlg(TRUE, 0, "*.*", OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY, 0, 0);
+    CFileDialog dlg(TRUE, 0, TEXT("*.*"), OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY, 0, 0);
 
 	if (dlg.DoModal() == IDCANCEL)
 		return;
