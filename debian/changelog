@@ -1,5 +1,6 @@
-openafs (1.4.7.dfsg1-2) UNRELEASED; urgency=low
+openafs (1.4.7.dfsg1-2) UNRELEASED; urgency=medium
 
+  * Bumping urgency for the conflict fix, which fixes a latent RC bug.
   * Add a missing conflict on older versions of openafs-client to
     openafs-krb5 to ensure that the klog transition to alternatives is
     smooth.
