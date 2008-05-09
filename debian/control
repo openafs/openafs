@@ -80,6 +80,7 @@ Description: AFS distributed filesystem documentation
 Package: openafs-krb5
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Depends: ${shlibs:Depends}
+Conflicts: openafs-client (<< 1.4.7.dfsg1-1)
 Description: AFS distributed filesystem Kerberos 5 integration
  AFS is a distributed filesystem allowing cross-platform sharing of files
  among multiple computers.  Facilities are provided for access control,
