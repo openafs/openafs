@@ -87,6 +87,7 @@ void smb_InitIoctl(void)
         smb_ioctlProcsp[VIOC_PATH_AVAILABILITY] = cm_IoctlPathAvailability;
         smb_ioctlProcsp[VIOC_GETFILETYPE] = cm_IoctlGetFileType;
         smb_ioctlProcsp[VIOC_VOLSTAT_TEST] = cm_IoctlVolStatTest;
+        smb_ioctlProcsp[VIOC_UNICODECTL] = cm_IoctlUnicodeControl;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */

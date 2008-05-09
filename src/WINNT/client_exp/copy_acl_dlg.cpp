@@ -7,12 +7,14 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include "stdafx.h"
+#include <shlwapi.h>
+
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
 }
 
-#include "stdafx.h"
 #include "afs_shl_ext.h"
 #include "copy_acl_dlg.h"
 #include "io.h"
@@ -69,7 +71,7 @@ void CCopyAclDlg::OnOK()
 	m_bClear = m_Clear.GetCheck() == 1;
 	m_ToDir.GetWindowText(m_strToDir);
 	
-	if (access(m_strToDir, 0) == -1) {
+	if (PathIsDirectory(m_strToDir) == -1) {
 		ShowMessageBox(IDS_DIR_DOES_NOT_EXIST_ERROR, MB_ICONEXCLAMATION, IDS_DIR_DOES_NOT_EXIST_ERROR, m_strToDir);
 		return;
 	}
@@ -97,7 +99,7 @@ void CCopyAclDlg::OnChangeToDir()
 
 void CCopyAclDlg::OnBrowse() 
 {
-	CFileDialog dlg(TRUE, 0, "*.*", OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY, 0, 0);
+    CFileDialog dlg(TRUE, 0, TEXT("*.*"), OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY, 0, 0);
 
 	if (dlg.DoModal() == IDCANCEL)
 		return;

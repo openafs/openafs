@@ -34,6 +34,6 @@
 #define EDIT_PATH_NAME_HELP_ID		46
 #define SYMLINK_HELP_ID                 47
 
-void SetHelpPath(const char *pszDefaultHelpFilePath);
+void SetHelpPath(LPCTSTR pszDefaultHelpFilePath);
 void ShowHelp(HWND hWnd, DWORD nHelpID);
 

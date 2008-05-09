@@ -37,6 +37,10 @@
 
 #sanity checks 
 
+!IF ("$(CPU)" == "x86")
+CPU=i386
+!ENDIF
+
 !IF ("$(CPU)" != "i386")
 !ERROR Platform SDK not configured for i386
 !ENDIF

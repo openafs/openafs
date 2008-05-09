@@ -230,10 +230,15 @@ void CVolumeInfo::ShowInfo()
 
  			if (nQuota != 0) {
 				LONG nPercentUsed = (m_pVolInfo[i].m_nUsed * 100) / nQuota;
-				strEntry.Format("%s\t%s\t%ld\t%ldK\t%ldK\t%ld%%", m_pVolInfo[i].m_strFileName, m_pVolInfo[i].m_strName,
-					m_pVolInfo[i].m_nID, nQuota, m_pVolInfo[i].m_nUsed, nPercentUsed);
+                            strEntry.Format(_T("%s\t%s\t%ld\t%ldK\t%ldK\t%ld%%"),
+                                            m_pVolInfo[i].m_strFileName,
+                                            m_pVolInfo[i].m_strName,
+                                            m_pVolInfo[i].m_nID, nQuota,
+                                            m_pVolInfo[i].m_nUsed, nPercentUsed);
 			} else {
-				strEntry.Format("%s\t%s\t%ld\tUnlimited\t%ldK", m_pVolInfo[i].m_strFileName, m_pVolInfo[i].m_strName,
+                            strEntry.Format(_T("%s\t%s\t%ld\tUnlimited\t%ldK"),
+                                            m_pVolInfo[i].m_strFileName,
+                                            m_pVolInfo[i].m_strName,
 					m_pVolInfo[i].m_nID, m_pVolInfo[i].m_nUsed);
 			}
 		}

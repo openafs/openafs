@@ -115,3 +115,4 @@ EXPORTS
 	VOTE_GetSyncSite				@113
 	ubik_RefreshConn				@114
         rx_SetSecurityConfiguration                     @115
+        pioctl_utf8                                     @116

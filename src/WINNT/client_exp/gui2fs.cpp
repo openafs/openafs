@@ -38,6 +38,9 @@ extern "C" {
 #include <cm.h>
 }
 
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
+
 #define PCCHAR(str)		((char *)(const char *)(str))
 #define VL_NOENT                (363524L)
 
@@ -65,6 +68,83 @@ static char pn[] = "fs";
 static char *szLogFileName = "afsguilog.txt";
 #endif
 
+#ifdef UNICODE
+class CStringUtf8 : public CStringA
+{
+public:
+    CStringUtf8(const CStringW& csw) : CStringA()
+    {
+        SetString(csw);
+    }
+
+    CStringUtf8(const char * cp) : CStringA(cp) {}
+
+    CStringUtf8() :CStringA() {}
+
+    void SetString(const CStringW& csw)
+    {
+        char buffer[1024];
+        int rv;
+
+        rv = WideCharToMultiByte(CP_UTF8, 0, csw, -1,
+                                 buffer, sizeof(buffer),
+                                 NULL, FALSE);
+
+        if (rv != 0) {
+            CStringA::SetString(buffer);
+        } else {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                int cb_req;
+
+                cb_req = WideCharToMultiByte(CP_UTF8, 0, csw, -1, NULL, 0, NULL, FALSE);
+                if (cb_req != 0) {
+                    cb_req ++;
+
+                    WideCharToMultiByte(CP_UTF8, 0, csw, -1, CStringA::GetBuffer(cb_req), cb_req, NULL, FALSE);
+                    CStringA::ReleaseBuffer();
+                }
+            } else {
+#ifdef DEBUG
+                DebugBreak();
+#endif
+            }
+        }
+    }
+
+    static CString _Utf8ToCString(const char * ustr)
+    {
+        CString cs;
+        int cch;
+
+        cch = MultiByteToWideChar(CP_UTF8, 0, ustr, -1, NULL, 0);
+        if (cch == 0) {
+            cs.Empty();
+            return cs;
+        }
+
+        cch++;
+        cch = MultiByteToWideChar(CP_UTF8, 0, ustr, -1, cs.GetBuffer(cch), cch);
+        cs.ReleaseBuffer();
+
+        return cs;
+    }
+};
+
+long pioctl_T(const CString& path, long opcode, struct ViceIoctl * blob, int follow)
+{
+    CStringUtf8 upath(path);
+
+    return pioctl_utf8(PCCHAR(upath), opcode, blob, follow);
+}
+
+#define Utf8ToCString(cs) CStringUtf8::_Utf8ToCString(cs)
+#else
+#define pioctl_T(path, op, vblob, follow) pioctl(PCCHAR(path), op, vblob, follow)
+#define Utf8ToCString(cs) (cs)
+#endif
+
+
+
 static int
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
@@ -79,14 +159,15 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
     return code;
 }
 
-FILE *OpenFile(char *file, char *rwp)
+static FILE *
+OpenFile(char *file, char *rwp)
 {
     char wdir[256];
     long code;
     long tlen;
     FILE *fp;
 
-    code = GetWindowsDirectory(wdir, sizeof(wdir));
+    code = GetWindowsDirectoryA(wdir, sizeof(wdir));
     if (code == 0 || code > sizeof(wdir)) 
         return FALSE;
 
@@ -132,7 +213,7 @@ void Flush(const CStringArray& files)
     for (int i = 0; i < files.GetSize(); i++) {
         blob.in_size = blob.out_size = 0;
 
-        code = pioctl(PCCHAR(files[i]), VIOCFLUSH, &blob, 0);
+        code = pioctl_T(files[i], VIOCFLUSH, &blob, 0);
         if (code) {
             error = 1;
             if (errno == EMFILE)
@@ -157,7 +238,7 @@ void FlushVolume(const CStringArray& files)
     for (int i = 0; i < files.GetSize(); i++) {
         blob.in_size = blob.out_size = 0;
 
-        code = pioctl(PCCHAR(files[i]), VIOC_FLUSHVOLUME, &blob, 0);
+        code = pioctl_T(files[i], VIOC_FLUSHVOLUME, &blob, 0);
         if (code) {
             error = 1;
             ShowMessageBox(IDS_FLUSH_VOLUME_ERROR, MB_ICONERROR, IDS_FLUSH_VOLUME_ERROR, files[i], strerror(errno));
@@ -187,15 +268,16 @@ void WhichCell(CStringArray& files)
         blob.out_size = MAXSIZE;
         blob.out = space;
 
-        code = pioctl(PCCHAR(files[i]), VIOC_FILE_CELL_NAME, &blob, 1);
+        code = pioctl_T(files[i], VIOC_FILE_CELL_NAME, &blob, 1);
         if (code) {
             if (code == ENOENT) {
                 LoadString (str, IDS_CANT_GET_CELL);
                 results.Add(str);
             } else
                 results.Add(GetAfsError(errno));
-        } else
-            results.Add(space);
+        } else {
+            results.Add(Utf8ToCString(space));
+        }
     }       
 
     LoadString (str, IDS_SHOW_CELL);
@@ -279,7 +361,7 @@ void WhereIs(CStringArray& files)
         blob.out = space;
         memset(space, 0, sizeof(space));
 
-        code = pioctl(PCCHAR(files[i]), VIOCWHEREIS, &blob, 1);
+        code = pioctl_T(files[i], VIOCWHEREIS, &blob, 1);
         if (code) {
             resultFiles.Add(StripPath(files[i]));
             servers.Add(GetAfsError(errno));
@@ -352,7 +434,7 @@ CMtoUNIXerror(int cm_code)
     }
 }
 
-CString GetAfsError(int code, const char *filename)
+CString GetAfsError(int code, const TCHAR *filename)
 {
     CString strMsg;
 
@@ -360,28 +442,28 @@ CString GetAfsError(int code, const char *filename)
 
     if (code == EINVAL) {
         if (filename)
-            strMsg.Format("Invalid argument; it is possible that the file is not in AFS");
+            strMsg.Format(_T("Invalid argument; it is possible that the file is not in AFS"));
         else 
-            strMsg.Format("Invalid argument");
+            strMsg.Format(_T("Invalid argument"));
     } else if (code == ENOENT) {
         if (filename) 
-            strMsg.Format("The file does not exist");
+            strMsg.Format(_T("The file does not exist"));
         else 
-            strMsg.Format("No such file returned");
+            strMsg.Format(_T("No such file returned"));
     } else if (code == EROFS)  {
-        strMsg.Format("You can not change a backup or readonly volume");
+        strMsg.Format(_T("You can not change a backup or readonly volume"));
     } else if (code == EACCES || code == EPERM) {
-        strMsg.Format("You do not have the required rights to do this operation");
+        strMsg.Format(_T("You do not have the required rights to do this operation"));
     } else if (code == ENODEV) {
-        strMsg.Format("AFS service may not have started");
+        strMsg.Format(_T("AFS service may not have started"));
     } else if (code == ESRCH) {
-        strMsg.Format("Cell name not recognized");
+        strMsg.Format(_T("Cell name not recognized"));
     } else if (code == ETIMEDOUT) {
-        strMsg.Format("Connection timed out");
+        strMsg.Format(_T("Connection timed out"));
     } else if (code == EPIPE) {
-        strMsg.Format("Volume name or ID not recognized");
+        strMsg.Format(_T("Volume name or ID not recognized"));
     } else {
-        strMsg.Format("Error 0x%x occurred", code);
+        strMsg.Format(_T("Error 0x%x occurred"), code);
     }
 
     return strMsg;
@@ -492,23 +574,23 @@ CString GetRightsString(register LONG arights, int dfs)
     CString str;
 
     if (!dfs) {
-        if (arights & PRSFS_READ) str += "r";
-        if (arights & PRSFS_LOOKUP) str += "l";
-        if (arights & PRSFS_INSERT) str += "i";
-        if (arights & PRSFS_DELETE) str += "d";
-        if (arights & PRSFS_WRITE) str += "w";
-        if (arights & PRSFS_LOCK) str += "k";
-        if (arights & PRSFS_ADMINISTER) str += "a";
+        if (arights & PRSFS_READ) str += _T("r");
+        if (arights & PRSFS_LOOKUP) str += _T("l");
+        if (arights & PRSFS_INSERT) str += _T("i");
+        if (arights & PRSFS_DELETE) str += _T("d");
+        if (arights & PRSFS_WRITE) str += _T("w");
+        if (arights & PRSFS_LOCK) str += _T("k");
+        if (arights & PRSFS_ADMINISTER) str += _T("a");
     } else {
         ASSERT(FALSE);
 /*
-		if (arights & DFS_READ) str += "r"; else str += "-";
-		if (arights & DFS_WRITE) str += "w"; else printf("-");
-		if (arights & DFS_EXECUTE) str += "x"; else printf("-");
-		if (arights & DFS_CONTROL) str += "c"; else printf("-");
-		if (arights & DFS_INSERT) str += "i"; else printf("-");
-		if (arights & DFS_DELETE) str += "d"; else printf("-");
-		if (arights & (DFS_USRALL)) str += "+";
+		if (arights & DFS_READ) str += _T("r"); else str += _T("-");
+		if (arights & DFS_WRITE) str += _T("w"); else printf(_T("-"));
+		if (arights & DFS_EXECUTE) str += _T("x"); else printf(_T("-"));
+		if (arights & DFS_CONTROL) str += _T("c"); else printf(_T("-"));
+		if (arights & DFS_INSERT) str += _T("i"); else printf(_T("-"));
+		if (arights & DFS_DELETE) str += _T("d"); else printf(_T("-"));
+		if (arights & (DFS_USRALL)) str += _T("+");
 */
     }	
 
@@ -544,12 +626,13 @@ char *AclToString(struct Acl *acl)
 struct Acl *EmptyAcl(const CString& strCellName)
 {
     register struct Acl *tp;
+    CStringUtf8 ustrCell(strCellName);
     
     tp = (struct Acl *)malloc(sizeof (struct Acl));
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     tp->dfs = 0;
-    strcpy(tp->cell, strCellName);
+    StringCbCopyA(tp->cell, sizeof(tp->cell), ustrCell);
 
     return tp;
 }
@@ -640,7 +723,6 @@ ParseAcl (char *astr)
     }
     ta->minuslist = first;
 
-  exit:
     return ta;
 
   nminus_err:
@@ -722,7 +804,7 @@ void CleanACL(CStringArray& names)
         blob.in_size = 0;
         blob.out = space;
 
-        code = pioctl(PCCHAR(names[i]), VIOCGETAL, &blob, 1);
+        code = pioctl_T(names[i], VIOCGETAL, &blob, 1);
         if (code) {
             ShowMessageBox(IDS_CLEANACL_ERROR, MB_ICONERROR, 0, names[i], GetAfsError(errno));
             continue;
@@ -747,7 +829,7 @@ void CleanACL(CStringArray& names)
         blob.in_size = strlen((char *)blob.in) + 1;
         blob.out_size = 0;
 		
-        code = pioctl(PCCHAR(names[i]), VIOCSETAL, &blob, 1);
+        code = pioctl_T(names[i], VIOCSETAL, &blob, 1);
         if (code) {
             if (errno == EINVAL) {
                 ShowMessageBox(IDS_CLEANACL_INVALID_ARG, MB_ICONERROR, IDS_CLEANACL_INVALID_ARG, names[i]);
@@ -776,7 +858,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     blob.in_size = idf;
     blob.in = blob.out = space;
 	
-    code = pioctl(PCCHAR(strDir), VIOCGETAL, &blob, 1);
+    code = pioctl_T(strDir, VIOCGETAL, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_GETRIGHTS_ERROR, MB_ICONERROR, IDS_GETRIGHTS_ERROR, strDir, GetAfsError(errno));
         return FALSE;
@@ -825,17 +907,18 @@ struct AclEntry *FindList(register struct AclEntry *pCurEntry, const char *entry
     return 0;
 }
 
-void ChangeList (struct Acl *pAcl, BYTE bNormalRights, const char *entryName, LONG nEntryRights)
+void ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName, LONG nEntryRights)
 {
     ASSERT(pAcl);
     ASSERT(entryName);
     
     struct AclEntry *pEntry;
+    CStringUtf8 uEntryName(entryName);
 
     HOURGLASS hourglass;
 
     pEntry = (bNormalRights ? pAcl->pluslist : pAcl->minuslist);
-    pEntry = FindList(pEntry, entryName);
+    pEntry = FindList(pEntry, uEntryName);
 
     /* Found the item already in the list. */
     if (pEntry) {
@@ -851,7 +934,7 @@ void ChangeList (struct Acl *pAcl, BYTE bNormalRights, const char *entryName, LO
     pEntry = (struct AclEntry *) malloc(sizeof (struct AclEntry));
     ASSERT(pEntry);
 	
-    strcpy(pEntry->name, entryName);
+    strcpy(pEntry->name, uEntryName);
     pEntry->rights = nEntryRights;
     
     if (bNormalRights) {
@@ -872,42 +955,41 @@ void ChangeList (struct Acl *pAcl, BYTE bNormalRights, const char *entryName, LO
 
 enum rtype {add, destroy, deny};
 
-LONG Convert(const register char *arights, int dfs, enum rtype *rtypep)
+static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
 {
     register int i, len;
     LONG mode;
-    register char tc;
 
     *rtypep = add;	/* add rights, by default */
 
-    if (!strcmp(arights,"read")) 
+    if (strRights == _T("read")) 
         return PRSFS_READ | PRSFS_LOOKUP;
-    if (!strcmp(arights, "write")) 
+    if (strRights == _T("write")) 
         return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK;
-    if (!strcmp(arights, "mail")) 
+    if (strRights == _T("mail")) 
         return PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP;
-    if (!strcmp(arights, "all")) 
+    if (strRights == _T("all")) 
         return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
     
-    if (!strcmp(arights, "none")) {
+    if (strRights == _T("none")) {
         *rtypep = destroy; /* Remove entire entry */
         return 0;
     }
 
-    len = strlen(arights);
+    len = strRights.GetLength();
     mode = 0;
 
     for (i = 0; i < len; i++) {
-        tc = *arights++;
-        if (tc == 'r') mode |= PRSFS_READ;
-        else if (tc == 'l') mode |= PRSFS_LOOKUP;
-        else if (tc == 'i') mode |= PRSFS_INSERT;
-        else if (tc == 'd') mode |= PRSFS_DELETE;
-        else if (tc == 'w') mode |= PRSFS_WRITE;
-        else if (tc == 'k') mode |= PRSFS_LOCK;
-        else if (tc == 'a') mode |= PRSFS_ADMINISTER;
+        TCHAR c = strRights[i];
+        if (c == _T('r')) mode |= PRSFS_READ;
+        else if (c == _T('l')) mode |= PRSFS_LOOKUP;
+        else if (c == _T('i')) mode |= PRSFS_INSERT;
+        else if (c == _T('d')) mode |= PRSFS_DELETE;
+        else if (c == _T('w')) mode |= PRSFS_WRITE;
+        else if (c == _T('k')) mode |= PRSFS_LOCK;
+        else if (c == _T('a')) mode |= PRSFS_ADMINISTER;
         else {
-            fprintf(stderr, "illegal rights character '%c'.\n", tc);
+            fprintf(stderr, "illegal rights character '%c'.\n", c);
             exit(1);
         }
     }   
@@ -945,7 +1027,7 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
     blob.out_size = 0;
     blob.in_size = 1 + strlen((const char *)blob.in);
 
-    code = pioctl(PCCHAR(strDir), VIOCSETAL, &blob, 1);
+    code = pioctl_T(strDir, VIOCSETAL, &blob, 1);
     if (code) {
         if (errno == EINVAL)
             ShowMessageBox(IDS_SAVE_ACL_EINVAL_ERROR, MB_ICONERROR, IDS_SAVE_ACL_EINVAL_ERROR, strDir);
@@ -972,7 +1054,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     blob.in_size = idf;
     blob.in = blob.out = space;
 	
-    code = pioctl(PCCHAR(strToDir), VIOCGETAL, &blob, 1);
+    code = pioctl_T(strToDir, VIOCGETAL, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_ACL_READ_ERROR, MB_ICONERROR, IDS_ACL_READ_ERROR, strToDir, GetAfsError(errno, strToDir));
         return FALSE;
@@ -1016,7 +1098,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     blob.out_size = 0;
     blob.in_size = 1 + strlen((char *)blob.in);
 
-    code = pioctl(PCCHAR(strToDir), VIOCSETAL, &blob, 1);
+    code = pioctl_T(strToDir, VIOCSETAL, &blob, 1);
     if (code) {
         ZapAcl(pToAcl);
         if (errno == EINVAL)
@@ -1052,7 +1134,7 @@ CString ParseMountPoint(const CString strFile, CString strMountPoint)
     } else
         strVolume = strMountPoint.Mid(1);
 
-    strMountPointInfo = strFile + "\t" + strVolume + "\t" + strCell + "\t" + strType;
+    strMountPointInfo = strFile + _T("\t") + strVolume + _T("\t") + strCell + _T("\t") + strType;
 
     return strMountPointInfo;
 }       
@@ -1061,30 +1143,31 @@ CString ParseSymlink(const CString strFile, CString strSymlink)
 {
     CString strSymlinkInfo;
 
-    strSymlinkInfo = strFile + "\t" + strSymlink;
+    strSymlinkInfo = strFile + _T("\t") + strSymlink;
 
     return strSymlinkInfo;
 }       
 
-BOOL IsPathInAfs(const CHAR *strPath)
+BOOL IsPathInAfs(const CString & strPath)
 {
     struct ViceIoctl blob;
     int code;
 
     HOURGLASS hourglass;
 
-    char buf[512];
-    sprintf(buf, "IsPathInAfs(%s)", strPath);
-    OutputDebugString(buf);
+    CString debugBuf;
+
+    debugBuf.Format(_T("IsPathInAfs(%s)"), strPath);
+    OutputDebugString(debugBuf);
 
     blob.in_size = 0;
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_T(strPath, VIOC_FILE_CELL_NAME, &blob, 1);
 
-    sprintf(buf, "VIOC_FILE_CELL_NAME=%d", code);
-    OutputDebugString(buf);
+    debugBuf.Format(_T("VIOC_FILE_CELL_NAME=%d"), code);
+    OutputDebugString(debugBuf);
 
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT))
@@ -1094,7 +1177,7 @@ BOOL IsPathInAfs(const CHAR *strPath)
 }
 
 static int 
-IsFreelanceRoot(char *apath)
+IsFreelanceRoot(const CString& apath)
 {
     struct ViceIoctl blob;
     afs_int32 code;
@@ -1103,13 +1186,13 @@ IsFreelanceRoot(char *apath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_T(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
         return !strcmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
-const char * NetbiosName(void)
+static const char * NetbiosName(void)
 {
     static char buffer[1024] = "AFS";
     HKEY  parmKey;
@@ -1117,17 +1200,35 @@ const char * NetbiosName(void)
     DWORD dummyLen;
     DWORD enabled = 0;
 
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+    code = RegOpenKeyExA(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(buffer);
-        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+        code = RegQueryValueExA(parmKey, "NetbiosName", NULL, NULL,
 			       (LPBYTE)buffer, &dummyLen);
         RegCloseKey (parmKey);
     } else {
 	strcpy(buffer, "AFS");
     }
     return buffer;
+}
+
+static void FixNetbiosPath(CString& path)
+{
+    if (!IsPathInAfs(path)) {
+        CString nbroot;
+        const char * nbname = NetbiosName();
+
+#ifdef UNICODE
+        nbroot.Format(_T("\\\\%S\\"), nbname);
+#else
+        nbroot.Format(_T("\\\\%s\\"), nbname);
+#endif
+
+        if (nbroot.CompareNoCase(path) == 0) {
+            path.Append(_T("all\\"));
+        }
+    }
 }
 
 #define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
@@ -1144,8 +1245,8 @@ static BOOL IsAdmin (void)
          */
         PSID psidAdmin = NULL;
         DWORD dwSize, dwSize2;
-        char pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
-        char *pszRefDomain = NULL;
+        TCHAR pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
+        TCHAR *pszRefDomain = NULL;
         SID_NAME_USE snu = SidTypeGroup;
 
         dwSize = sizeof(pszAdminGroup);
@@ -1159,8 +1260,8 @@ static BOOL IsAdmin (void)
         dwSize = 0;
         dwSize2 = 0;
 
-        strcat(pszAdminGroup,"\\");
-        strcat(pszAdminGroup, AFSCLIENT_ADMIN_GROUPNAME);
+        lstrcat(pszAdminGroup, _T("\\"));
+        lstrcat(pszAdminGroup, _T(AFSCLIENT_ADMIN_GROUPNAME));
 
         LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
         /* that should always fail. */
@@ -1178,7 +1279,7 @@ static BOOL IsAdmin (void)
         }
 
         psidAdmin = (PSID)malloc(dwSize); memset(psidAdmin,0,dwSize);
-        pszRefDomain = (char *)malloc(dwSize2);
+        pszRefDomain = (TCHAR *)malloc(dwSize2);
 
         if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
             /* We can't lookup the group now even though we looked it up earlier.  
@@ -1265,36 +1366,63 @@ static BOOL IsAdmin (void)
     return fAdmin;
 }
 
-/* return a static pointer to a buffer */
-static char *Parent(char *apath)
+CString Parent(const CString& path)
 {
-    register char *tp;
+    int last_slash = path.ReverseFind(_T('\\'));
 
-    strcpy(tspace, apath);
-    tp = strrchr(tspace, '\\');
-    if (tp) {
-        *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+    if (last_slash != -1) {
+        CString ret = path.Left(last_slash + 1);
+        return ret;
+    } else {
+        if (path.GetLength() >= 2 && path[1] == _T(':')) {
+            CString ret = path.Left(2);
+            ret.AppendChar(_T('.'));
+            return ret;
+        } else {
+            CString ret = _T(".");
+            return ret;
+        }
     }
-    else {
-        fs_ExtractDriveLetter(apath, tspace);
-    	strcat(tspace, ".");
     }
     
-    return tspace;
+CString LastComponent(const CString& path)
+{
+    int last_slash = path.ReverseFind(_T('\\'));
+
+    if (last_slash != -1) {
+        CString ret = path.Mid(last_slash + 1);
+        return ret;
+    } else {
+        if (path.GetLength() >= 2 && path[1] == _T(':')) {
+            CString ret = path.Mid(2);
+            return ret;
+        } else {
+            CString ret = path;
+            return ret;
+        }
+    }
 }
 
-static afs_int32
-GetCell(char *fname, char *cellname)
+static CString
+GetCell(const CString & path)
 {
+    char cellname[MAXCELLCHARS];
     afs_int32 code;
     struct ViceIoctl blob;
 
     blob.in_size = 0;
-    blob.out_size = MAXCELLCHARS;
+    blob.out_size = sizeof(cellname);
     blob.out = cellname;
 
-    code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-    return code ? errno : 0;
+    code = pioctl_T(path, VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code) {
+        CString s;
+        s.Empty();
+
+        return s;
+    } else {
+        return Utf8ToCString(cellname);
+    }
 }
 
 
@@ -1303,10 +1431,10 @@ BOOL ListMount(CStringArray& files)
     register LONG code;
     struct ViceIoctl blob;
     int error;
-    char orig_name[1024];			/* Original name, may be modified */
-    char true_name[1024];			/* ``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];			/* Parent directory of true name */
-    register char *last_component;	/* Last component of true name */
+
+    CString parent_dir;		/* Parent directory of true name */
+    CStringUtf8 last_component;	        /* Last component of true name */
+
     CStringArray mountPoints;
     
     HOURGLASS hourglass;
@@ -1314,58 +1442,41 @@ BOOL ListMount(CStringArray& files)
     error = 0;
 
     for (int i = 0; i < files.GetSize(); i++) {
-        strcpy(orig_name, files[i]);
-        strcpy(true_name, orig_name);
+        int last_slash = files[i].ReverseFind(_T('\\'));
 
-        /*
-         * Find rightmost slash, if any.
-         */
-        last_component = (char *)strrchr(true_name, '\\');
-        if (last_component) {
-            /*
-             * Found it.  Designate everything before it as the parent directory,
-             * everything after it as the final component.
-             */
-            strncpy(parent_dir, true_name, last_component - true_name + 1);
-            parent_dir[last_component - true_name + 1] = 0;
-            last_component++;   /* Skip the slash */
+        if (last_slash != -1) {
+            last_component.SetString( files[i].Mid(last_slash + 1) );
+            parent_dir.SetString( files[i].Left(last_slash + 1) );
+            FixNetbiosPath(parent_dir);
+        } else {
+            // The path is of the form "C:foo" or just "foo".  If
+            // there is a drive, then use the current directory of
+            // that drive.  Otherwise we just use '.'.
 
-	    if (!IsPathInAfs(parent_dir)) {
-		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
-
-		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
-		    parent_dir[len+2] == '\\' &&
-		    parent_dir[len+3] == '\0' &&
-		    !strnicmp(nbname,&parent_dir[2],len))
-		{
-		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
-		}
+            if (files[i].GetLength() >= 2 && files[i][1] == _T(':')) {
+                parent_dir.Format(_T("%c:."), files[i][0]);
+                last_component.SetString( files[i].Mid(2) );
+            } else {
+                parent_dir.SetString( _T("."));
+                last_component.SetString( files[i] );
 	    }
         }
-        else {
-            /*
-             * No slash appears in the given file name.  Set parent_dir to the current
-             * directory, and the last component as the given name.
-             */
-            fs_ExtractDriveLetter(true_name, parent_dir);
-            strcat(parent_dir, ".");
-            last_component = true_name;
-            fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
-        }
 
-        blob.in = last_component;
-        blob.in_size = strlen(last_component) + 1;
+        blob.in_size = last_component.GetLength() + 1;
+        blob.in = last_component.GetBuffer();
         blob.out_size = MAXSIZE;
         blob.out = space;
         memset(space, 0, MAXSIZE);
 
-        code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+        code = pioctl_T(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+
+        last_component.ReleaseBuffer();
+
         if (code == 0) {
             int nPos = strlen(space) - 1;
             if (space[nPos] == '.')
                 space[nPos] = 0;
-            mountPoints.Add(ParseMountPoint(StripPath(files[i]), space));
+            mountPoints.Add(ParseMountPoint(StripPath(files[i]), Utf8ToCString(space)));
         } else {
             error = 1;
             if (errno == EINVAL)
@@ -1382,113 +1493,52 @@ BOOL ListMount(CStringArray& files)
     return !error;
 }
 
-BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& strCellName, BOOL bRW)
+BOOL
+MakeMount(const CString& strDir,
+          const CString& strVolName,
+          const CString& strInCellName,
+          BOOL bRW)
 {
-    register LONG code;
-    register char *cellName;
-    char localCellName[128];
-    struct afsconf_cell info;
-#if 0
-    struct vldbentry vldbEntry;
-#endif
+    LONG code;
     struct ViceIoctl blob;
-    char * parent;
-    char path[1024] = "";
-
     HOURGLASS hourglass;
 
     ASSERT(strVolName.GetLength() < 64);
 
-    if (strCellName.GetLength() > 0)	/* cell name specified */
-        cellName = PCCHAR(strCellName);
-    else
-        cellName = (char *) 0;
+    CString strParent = Parent(strDir);
 
-    parent = Parent(PCCHAR(strDir));
-    if (!IsPathInAfs(parent)) {
-	const char * nbname = NetbiosName();
-	int len = strlen(nbname);
-
-	if (parent[0] == '\\' && parent[1] == '\\' &&
-	    parent[len+2] == '\\' &&
-	    parent[len+3] == '\0' &&
-	    !strnicmp(nbname,&parent[2],len))
-	{
-	    sprintf(path,"%sall\\%s", parent, &(PCCHAR(strDir)[strlen(parent)]));
-	    parent = Parent(path);
-	    if (!IsPathInAfs(parent)) {
-		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_MP_NOT_AFS_ERROR);
-		return FALSE;
-	    }
-	} else {
+    FixNetbiosPath(strParent);
+    if (!IsPathInAfs(strParent)) {
 	    ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_MP_NOT_AFS_ERROR);
 	    return FALSE;
 	}
-    }
 
-    if ( strlen(path) == 0 )
-	strcpy(path, PCCHAR(strDir));
+    CString strPath = strParent + LastComponent(strDir);
 
-    if ( IsFreelanceRoot(parent) ) {
-	if ( !IsAdmin() ) {
-	    ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+    if ( IsFreelanceRoot(strParent) && !IsAdmin() ) {
+        ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR,
+                       IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	    return FALSE;
 	}
 
-	if (!cellName) {
-	    blob.in_size = 0;
-	    blob.out_size = sizeof(localCellName);
-	    blob.out = localCellName;
-	    code = pioctl(parent, VIOC_GET_WS_CELL, &blob, 1);
-	    if (!code)
-		cellName = localCellName;
-	}
-    } else {
-	if (!cellName)
-	    GetCell(parent,space);
-    }
+    CString strMount;
 
-    code = GetCellName(cellName?cellName:space, &info);
-    if (code) {
-	return FALSE;
-    }
+    strMount.Format(_T("%c%s%s%s."),
+                    ((bRW)?_T('%'):_T('#')),
+                    strInCellName,
+                    ((strInCellName.IsEmpty())?_T(""):_T(":")),
+                    strVolName);
 
-#if 0
-    code = VLDBInit(1, &info);
-    if (code == 0) {
-	/* make the check.  Don't complain if there are problems with init */
-	code = ubik_VL_GetEntryByNameO(uclient, 0, PCCHAR(strVolName), &vldbEntry);
-	if (code == VL_NOENT) {
-	    ShowMessageBox(IDS_WARNING, MB_ICONWARNING, IDS_VOLUME_NOT_IN_CELL_WARNING, 
-			    PCCHAR(strVolName), cellName ? cellName : space);
-	}
-    }
-    if (rxInitDone) 
-        rx_Finalize();
-#endif
+    CStringUtf8 ustrMount(strMount);
 
-    if (bRW)	/* if -rw specified */
-        strcpy(space, "%");
-    else
-        strcpy(space, "#");
-
-    /* If cellular mount point, prepend cell prefix */
-    if (cellName) {
-        strcat(space, info.name);
-        strcat(space, ":");
-    }   
-
-    strcat(space, strVolName);	/* append volume name */
-    strcat(space, ".");		/* stupid convention; these end with a period */
-
-    /* create symlink with a special pioctl for Windows NT, since it doesn't
-     * have a symlink system call.
-     */
     blob.out_size = 0;
-    blob.in_size = 1 + strlen(space);
-    blob.in = space;
+    blob.in_size = ustrMount.GetLength() + 1;
+    blob.in = ustrMount.GetBuffer();
     blob.out = NULL;
-    code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
+
+    code = pioctl_T(strPath, VIOC_AFS_CREATE_MT_PT, &blob, 0);
+
+    ustrMount.ReleaseBuffer();
 
     if (code) {
         ShowMessageBox(IDS_MOUNT_POINT_ERROR, MB_ICONERROR, IDS_MOUNT_POINT_ERROR, GetAfsError(errno, strDir));
@@ -1530,178 +1580,112 @@ long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize)
 }       
 
 
-BOOL RemoveSymlink(const char * linkName)
+BOOL RemoveSymlink(const CString& strName)
 {
     BOOL error = FALSE;
     INT code=0;
     struct ViceIoctl blob;
-    char tbuffer[1024];
     char lsbuffer[1024];
-    char tpbuffer[1024];
-    char *tp;
     
     HOURGLASS hourglass;
 
-    tp = (char *) strrchr(linkName, '\\');
-    if (!tp)
-        tp = (char *) strrchr(linkName, '/');
-    if (tp) {
-        strncpy(tbuffer, linkName, code=tp-linkName+1);  /* the dir name */
-        tbuffer[code] = 0;
-        tp++;   /* skip the slash */
+    CString strParent = Parent(strName);
+    CStringUtf8 ustrLast(LastComponent(strName));
+    FixNetbiosPath(strParent);
 
-	if (!IsPathInAfs(tbuffer)) {
-	    const char * nbname = NetbiosName();
-	    int len = strlen(nbname);
-
-	    if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
-		 tbuffer[len+2] == '\\' &&
-		 tbuffer[len+3] == '\0' &&
-		 !strnicmp(nbname,&tbuffer[2],len))
-	    {
-		sprintf(tbuffer,"\\\\%s\\all\\", nbname);
-	    }
-	}
-    }
-    else {
-        fs_ExtractDriveLetter(linkName, tbuffer);
-        strcat(tbuffer, ".");
-        fs_StripDriveLetter(tp, tpbuffer, 0);
-        tp=tpbuffer;
-    }
-
-    if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
+    if ( IsFreelanceRoot(strParent) && !IsAdmin() ) {
 	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
     }
 
-    blob.in = tp;
-    blob.in_size = strlen(tp)+1;
+    blob.in_size = ustrLast.GetLength() + 1;
+    blob.in = ustrLast.GetBuffer();
     blob.out = lsbuffer;
     blob.out_size = sizeof(lsbuffer);
-    code = pioctl(tbuffer, VIOC_LISTSYMLINK, &blob, 0);
+    code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 0);
+    ustrLast.ReleaseBuffer();
     if (code)
         return FALSE;
     blob.out_size = 0;
-    blob.in = tp;
-    blob.in_size = strlen(tp)+1;
-    return (pioctl(tbuffer, VIOC_DELSYMLINK, &blob, 0)==0);
+    blob.in_size = ustrLast.GetLength() + 1;
+    blob.in = ustrLast.GetBuffer();
+
+    code = pioctl_T(strParent, VIOC_DELSYMLINK, &blob, 0);
+
+    ustrLast.ReleaseBuffer();
+
+    return (code == 0);
 }       
 
-BOOL IsSymlink(const char * true_name)
+BOOL IsSymlink(const CString& strName)
 {
-    char parent_dir[MAXSIZE];		/*Parent directory of true name*/
-    char strip_name[MAXSIZE];
     struct ViceIoctl blob;
-    char *last_component;
     int code;
 
     HOURGLASS hourglass;
 
-    char buf[512];
-    sprintf(buf, "IsSymlink(%s)", true_name);
-    OutputDebugString(buf);
-
-    last_component = (char *) strrchr(true_name, '\\');
-    if (!last_component)
-        last_component = (char *) strrchr(true_name, '/');
-    if (last_component) {
-        /*
-         * Found it.  Designate everything before it as the parent directory,
-         * everything after it as the final component.
-         */
-        strncpy(parent_dir, true_name, last_component - true_name + 1);
-        parent_dir[last_component - true_name + 1] = 0;
-        last_component++;   /*Skip the slash*/
-
-	if (!IsPathInAfs(parent_dir)) {
-	    const char * nbname = NetbiosName();
-	    int len = strlen(nbname);
-
-	    if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
-		 parent_dir[len+2] == '\\' &&
-		 parent_dir[len+3] == '\0' &&
-		 !strnicmp(nbname,&parent_dir[2],len))
 	    {
-		sprintf(parent_dir,"\\\\%s\\all\\", nbname);
-	    }
-	}
-    }
-    else {
-        /*
-         * No slash appears in the given file name.  Set parent_dir to the current
-         * directory, and the last component as the given name.
-         */
-        fs_ExtractDriveLetter(true_name, parent_dir);
-        strcat(parent_dir, ".");
-        last_component = strip_name;
-        fs_StripDriveLetter(true_name, strip_name, sizeof(strip_name));
+        CString str;
+        str.Format(_T("IsSymlink(%s)"), strName);
+        OutputDebugString(str);
     }
 
-    sprintf(buf, "last_component=%s", last_component);
-    OutputDebugString(buf);
+    CStringUtf8 ustrLast(LastComponent(strName));
+    CString strParent = Parent(strName);
 
-    blob.in = last_component;
-    blob.in_size = strlen(last_component)+1;
+    FixNetbiosPath(strParent);
+
+    blob.in_size = ustrLast.GetLength() + 1;
+    blob.in = ustrLast.GetBuffer();
     blob.out_size = MAXSIZE;
     blob.out = space;
     memset(space, 0, MAXSIZE);
-    code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
+
+    code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 1);
+
+    ustrLast.ReleaseBuffer();
+
     return (code==0);
 }       
 
 
-BOOL IsMountPoint(const char * name)
+BOOL IsMountPoint(const CString& path)
 {
     register LONG code = 0;
     struct ViceIoctl blob;
-    char tbuffer[1024];
     char lsbuffer[1024];
-    register char *tp;
-    char szCurItem[1024];
 
     HOURGLASS hourglass;
 
-    strcpy(szCurItem, name);
-	
-    char buf[512];
-    sprintf(buf, "IsMountPoint(%s)", name);
-    OutputDebugString(buf);
-
-    tp = (char *)strrchr(szCurItem, '\\');
-    if (tp) {
-        strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
-        tbuffer[code] = 0;
-        tp++;   /* skip the slash */
-
-	if (!IsPathInAfs(tbuffer)) {
-	    const char * nbname = NetbiosName();
-	    int len = strlen(nbname);
-
-	    if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
-		 tbuffer[len+2] == '\\' &&
-		 tbuffer[len+3] == '\0' &&
-		 !strnicmp(nbname,&tbuffer[2],len))
-	    {
-		sprintf(tbuffer,"\\\\%s\\all\\", nbname);
-	    }
-	}
-    } else {
-        fs_ExtractDriveLetter(szCurItem, tbuffer);
-        strcat(tbuffer, ".");
-        tp = szCurItem;
-        fs_StripDriveLetter(tp, tp, 0);
+    {
+        CString str;
+        str.Format(_T("IsMountPoint(%s)"), path);
+        OutputDebugString(str);
     }
 
-    sprintf(buf, "last_component=%s", tp);
-    OutputDebugString(buf);
+    CString parent = Parent(path);
+    FixNetbiosPath(parent);
 
-    blob.in = tp;
-    blob.in_size = strlen(tp)+1;
+    CStringUtf8 mountpoint(LastComponent(path));
+
+	    {
+        CString str;
+#ifdef UNICODE
+        str.Format(_T("last_component=%S"), mountpoint);
+#else
+        str.Format(_T("last_component=%s"), mountpoint);
+#endif
+        OutputDebugString(str);
+    }
+
+    blob.in_size = mountpoint.GetLength() + 1;
+    blob.in = mountpoint.GetBuffer();
     blob.out = lsbuffer;
     blob.out_size = sizeof(lsbuffer);
 
-    code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
+    code = pioctl_T(parent, VIOC_AFS_STAT_MT_PT, &blob, 0);
+
+    mountpoint.ReleaseBuffer();
 
     return (code==0);
 }       
@@ -1717,9 +1701,6 @@ BOOL RemoveMount(CStringArray& files)
 {
     register LONG code = 0;
     struct ViceIoctl blob;
-    char tbuffer[1024];
-    register char *tp;
-    char szCurItem[1024];
     BOOL error = FALSE;
     CStringArray results;
     CString str;
@@ -1737,44 +1718,24 @@ BOOL RemoveMount(CStringArray& files)
             continue;	// don't bother trying
         }
 
-        strcpy(szCurItem, files[i]);
-	
-        tp = (char *)strrchr(szCurItem, '\\');
-        if (tp) {
-            strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
-            tbuffer[code] = 0;
-            tp++;   /* skip the slash */
+        CString parent = Parent(files[i]);
+        CStringUtf8 mountpoint(LastComponent(files[i]));
+        FixNetbiosPath(parent);
 
-	    if (!IsPathInAfs(tbuffer)) {
-		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
-
-		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
-		    tbuffer[len+2] == '\\' &&
-		    tbuffer[len+3] == '\0' &&
-		    !strnicmp(nbname,&tbuffer[2],len))
-		{
-		    sprintf(tbuffer,"\\\\%s\\all\\", nbname);
-		}
-	    }
-        } else {
-            fs_ExtractDriveLetter(szCurItem, tbuffer);
-            strcat(tbuffer, ".");
-            tp = szCurItem;
-            fs_StripDriveLetter(tp, tp, 0);
-        }
-
-	if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
+        if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
 	    results.Add(GetMessageString(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, StripPath(files[i])));
             error = TRUE;
             continue;   /* skip */
         }
 
         blob.out_size = 0;
-        blob.in = tp;
-        blob.in_size = strlen(tp)+1;
+        blob.in_size = mountpoint.GetLength() + 1;
+        blob.in = mountpoint.GetBuffer();
 
-        code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
+        code = pioctl_T(parent, VIOC_AFS_DELETE_MT_PT, &blob, 0);
+
+        mountpoint.ReleaseBuffer();
+
         if (code) {
             error = TRUE;
             results.Add(GetMessageString(IDS_ERROR, GetAfsError(errno, StripPath(files[i]))));
@@ -1819,7 +1780,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     blob.in_size = 0;
     blob.out = space;
 
-    code = pioctl(PCCHAR(strFile), VIOCGETVOLSTAT, &blob, 1);
+    code = pioctl_T(strFile, VIOCGETVOLSTAT, &blob, 1);
     if (code) {
         volInfo.m_strErrorMsg = GetAfsError(errno, strFile);
         return FALSE;
@@ -1828,7 +1789,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     status = (VolumeStatus *)space;
     name = (char *)status + sizeof(*status);
 
-    volInfo.m_strName = name;
+    volInfo.m_strName = Utf8ToCString(name);
     volInfo.m_nID = status->Vid;
     volInfo.m_nQuota = status->MaxQuota;
     volInfo.m_nNewQuota = status->MaxQuota;
@@ -1878,7 +1839,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
     }
 #endif
 
-    code = pioctl(PCCHAR(volInfo.m_strFilePath), VIOCSETVOLSTAT, &blob, 1);
+    code = pioctl_T(volInfo.m_strFilePath, VIOCSETVOLSTAT, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_SET_QUOTA_ERROR, MB_ICONERROR, IDS_SET_QUOTA_ERROR, GetAfsError(errno, volInfo.m_strName));
         return FALSE;
@@ -1887,10 +1848,11 @@ BOOL SetVolInfo(CVolInfo& volInfo)
     return TRUE;
 }
 
-int GetCellName(char *cellNamep, struct afsconf_cell *infop)
+void GetCellName(const CString& cellNamep, struct afsconf_cell *infop)
 {
-    strcpy(infop->name, cellNamep);
-    return 0;
+    CStringUtf8 uCellName(cellNamep);
+
+    StringCbCopyA(infop->name, sizeof(infop->name), uCellName);
 }
 
 BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bFast)
@@ -1914,7 +1876,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
 
     if (nCellsToCheck == SPECIFIC_CELL) {
 	temp = 2;
-        GetCellName(PCCHAR(strCellName), &info);
+        GetCellName(strCellName, &info);
         strcpy(checkserv.tbuffer,info.name);
         checkserv.tsize = strlen(info.name) + 1;
     } else {
@@ -1930,7 +1892,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     checkserv.tflags = temp;
     checkserv.tinterval = -1;	/* don't change current interval */
 
-    code = pioctl(0, VIOCCKSERV, &blob, 1);
+    code = pioctl_utf8(0, VIOCCKSERV, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_CHECK_SERVERS_ERROR, MB_ICONERROR, IDS_CHECK_SERVERS_ERROR, GetAfsError(errno, CString()));
         return FALSE;
@@ -2046,7 +2008,11 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
                 expireString += 4;	 /* Skip day of week */
                 expireString[12] = '\0'; /* Omit secs & year */
 //		printf("[Expires %s]\n", expireString);
-                strExpir.Format("%s", expireString);
+#ifdef UNICODE
+                strExpir.Format(_T("%S"), expireString);
+#else
+                strExpir.Format(_T("%s"), expireString);
+#endif
             }
 
             strTokenInfo = strUserName + "\t" + strCellName + "\t" + strExpir + "\t" + strCellName;
@@ -2059,40 +2025,41 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
     return TRUE;
 }
 
-UINT MakeSymbolicLink(const char *strName, const char *strTarget)
+UINT MakeSymbolicLink(const CString& strName, const CString& strTarget)
 {
     struct ViceIoctl blob;
-    char space[MAXSIZE];
-    char * parent;
-    char path[1024] = "";
     UINT code;
-
     HOURGLASS hourglass;
-    static char message[2048];
 
-    strcpy(path, strName);
-    parent = Parent(path);
+    CString strParent = Parent(strName);
+    FixNetbiosPath(strParent);
 
-    sprintf(message,"MakeSymbolicLink: name = %s target = %s parent = %s\n",strName,strTarget, parent);
-    OutputDebugString(message);
+    {
+        CString str;
+        str.Format(_T("MakeSymbolicLink: name = %s target = %s parent = %s\n"),
+                   strName, strTarget, strParent);
+        OutputDebugString(str);
+    }
 
-    if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
+    if ( IsFreelanceRoot(strParent) && !IsAdmin() ) {
 	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
     }
 
-    LPTSTR lpsz = new TCHAR[strlen(strTarget)+1];
-    _tcscpy(lpsz, strName);
-    strcpy(space, strTarget);
+    CStringUtf8 ustrTarget(strTarget);
+
+    blob.in_size = ustrTarget.GetLength() + 1;
+    blob.in = ustrTarget.GetBuffer();
     blob.out_size = 0;
-    blob.in_size = 1 + strlen(space);
-    blob.in = space;
     blob.out = NULL;
-    code=pioctl(lpsz, VIOC_SYMLINK, &blob, 0);
-    delete lpsz;
+
+    code = pioctl_T(strName, VIOC_SYMLINK, &blob, 0);
+
+    ustrTarget.ReleaseBuffer();
+
     if (code != 0)
         return code;
-    return FALSE;
+    return 0;
 }
 
 void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
@@ -2163,10 +2130,6 @@ BOOL ListSymlink(CStringArray& files)
     register LONG code;
     struct ViceIoctl blob;
     int error;
-    char orig_name[1024];			/* Original name, may be modified */
-    char true_name[1024];			/* ``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];			/* Parent directory of true name */
-    register char *last_component;	/* Last component of true name */
     CStringArray symlinks;
     
     HOURGLASS hourglass;
@@ -2174,58 +2137,33 @@ BOOL ListSymlink(CStringArray& files)
     error = 0;
 
     for (int i = 0; i < files.GetSize(); i++) {
-        strcpy(orig_name, files[i]);
-        strcpy(true_name, orig_name);
 
-        /*
-         * Find rightmost slash, if any.
-         */
-        last_component = (char *)strrchr(true_name, '\\');
-        if (last_component) {
-            /*
-             * Found it.  Designate everything before it as the parent directory,
-             * everything after it as the final component.
-             */
-            strncpy(parent_dir, true_name, last_component - true_name + 1);
-            parent_dir[last_component - true_name + 1] = 0;
-            last_component++;   /* Skip the slash */
+        CString strParent = Parent(files[i]);
+        CStringUtf8 ustrLast(LastComponent(files[i]));
 
-	    if (!IsPathInAfs(parent_dir)) {
-		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
+        FixNetbiosPath(strParent);
 
-		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
-		    parent_dir[len+2] == '\\' &&
-		    parent_dir[len+3] == '\0' &&
-		    !strnicmp(nbname,&parent_dir[2],len))
-		{
-		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
-		}
-	    }
-        }
-        else {
-            /*
-             * No slash appears in the given file name.  Set parent_dir to the current
-             * directory, and the last component as the given name.
-             */
-            fs_ExtractDriveLetter(true_name, parent_dir);
-            strcat(parent_dir, ".");
-            last_component = true_name;
-            fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
-        }
-
-        blob.in = last_component;
-        blob.in_size = strlen(last_component) + 1;
+        blob.in_size = ustrLast.GetLength() + 1;
+        blob.in = ustrLast.GetBuffer();
         blob.out_size = MAXSIZE;
         blob.out = space;
         memset(space, 0, MAXSIZE);
 
-        code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
+        code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 1);
+
+        ustrLast.ReleaseBuffer();
+
         if (code == 0) {
-            int nPos = strlen(space) - 1;
-            if (space[nPos] == '.')
-                space[nPos] = 0;
-            symlinks.Add(ParseSymlink(StripPath(files[i]), space));
+            CString syml = Utf8ToCString(space);
+            int len = syml.GetLength();
+
+            if (len > 0) {
+                if (syml[len - 1] == _T('.'))
+                    syml.Truncate(len - 1);
+            }
+
+            symlinks.Add(ParseSymlink(StripPath(files[i]), syml));
+
         } else {
             error = 1;
             if (errno == EINVAL)

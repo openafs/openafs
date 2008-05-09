@@ -135,15 +135,6 @@ int smb_V3IsStarMask(char *maskp)
     return 0;
 }
 
-unsigned char *smb_ParseString(unsigned char *inp, char **chainpp)
-{
-    if (chainpp) {
-        /* skip over null-terminated string */
-        *chainpp = inp + strlen(inp) + 1;
-    }
-    return inp;
-}   
-
 void OutputDebugF(char * format, ...) {
     va_list args;
     int len;
@@ -678,6 +669,7 @@ long smb_GetNormalizedUsername(char * usern, const char * accountName, const cha
  * sending a session setup packet, which means that we can't rely on a
  * UID in subsequent packets.  Though in practice we get one anyway.
  */
+/* SMB_COM_SESSION_SETUP_ANDX */
 long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *tp;
@@ -713,21 +705,23 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             code = smb_AuthenticateUserExt(vcp, usern, secBlobIn, secBlobInLength, &secBlobOut, &secBlobOutLength);
 
             if (code == CM_ERROR_GSSCONTINUE) {
+                size_t cb_data = 0;
+
                 smb_SetSMBParm(outp, 2, 0);
                 smb_SetSMBParm(outp, 3, secBlobOutLength);
-                smb_SetSMBDataLength(outp, secBlobOutLength + smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+
                 tp = smb_GetSMBData(outp, NULL);
                 if (secBlobOutLength) {
                     memcpy(tp, secBlobOut, secBlobOutLength);
                     free(secBlobOut);
                     tp += secBlobOutLength;
+                    cb_data += secBlobOutLength;
                 }	
-                memcpy(tp,smb_ServerOS,smb_ServerOSLength);
-                tp += smb_ServerOSLength;
-                memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
-                tp += smb_ServerLanManagerLength;
-                memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
-                tp += smb_ServerDomainNameLength;
+                tp = smb_UnparseString(outp, tp, smb_ServerOS, &cb_data, 0);
+                tp = smb_UnparseString(outp, tp, smb_ServerLanManager, &cb_data, 0);
+                tp = smb_UnparseString(outp, tp, smb_ServerDomainName, &cb_data, 0);
+
+                smb_SetSMBDataLength(outp, cb_data);
             }
 
             /* TODO: handle return code and continue auth. Also free secBlobOut if applicable. */
@@ -756,8 +750,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             csPwd = tp;
             tp += csPwdLength;
 
-            accountName = smb_ParseString(tp, &tp);
-            primaryDomain = smb_ParseString(tp, NULL);
+            accountName = smb_ParseString(inp, tp, &tp, 0);
+            primaryDomain = smb_ParseString(inp, tp, NULL, 0);
 
             OutputDebugF("Account Name: %s",accountName);
             OutputDebugF("Primary Domain: %s", primaryDomain);
@@ -804,8 +798,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         ciPwd = tp;
         tp += ciPwdLength;
 
-        accountName = smb_ParseString(tp, &tp);
-        primaryDomain = smb_ParseString(tp, NULL);
+        accountName = smb_ParseString(inp, tp, &tp, 0);
+        primaryDomain = smb_ParseString(inp, tp, NULL, 0);
 
         OutputDebugF("Account Name: %s",accountName);
         OutputDebugF("Primary Domain: %s", primaryDomain);
@@ -838,6 +832,12 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         if (caps & NTNEGOTIATE_CAPABILITY_NTSTATUS) {
             vcp->flags |= SMB_VCFLAG_STATUS32;
         }       
+
+#ifdef SMB_UNICODE
+        if ((caps & NTNEGOTIATE_CAPABILITY_UNICODE) && smb_UseUnicode) {
+            vcp->flags |= SMB_VCFLAG_USEUNICODE;
+        }
+#endif
         lock_ReleaseMutex(&vcp->mx);
     }
 
@@ -920,33 +920,37 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
     if (vcp->flags & SMB_VCFLAG_USENT) {
         if (smb_authType == SMB_AUTH_EXTENDED) {
+            size_t cb_data = 0;
+
             smb_SetSMBParm(outp, 3, secBlobOutLength);
-            smb_SetSMBDataLength(outp, secBlobOutLength + smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+
             tp = smb_GetSMBData(outp, NULL);
             if (secBlobOutLength) {
                 memcpy(tp, secBlobOut, secBlobOutLength);
                 free(secBlobOut);
                 tp += secBlobOutLength;
+                cb_data +=  secBlobOutLength;
             }	
-            memcpy(tp,smb_ServerOS,smb_ServerOSLength);
-            tp += smb_ServerOSLength;
-            memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
-            tp += smb_ServerLanManagerLength;
-            memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
-            tp += smb_ServerDomainNameLength;
+
+            tp = smb_UnparseString(outp, tp, smb_ServerOS, &cb_data, 0);
+            tp = smb_UnparseString(outp, tp, smb_ServerLanManager, &cb_data, 0);
+            tp = smb_UnparseString(outp, tp, smb_ServerDomainName, &cb_data, 0);
+
+            smb_SetSMBDataLength(outp, cb_data);
         } else {
             smb_SetSMBDataLength(outp, 0);
         }
     } else {
         if (smb_authType == SMB_AUTH_EXTENDED) {
-            smb_SetSMBDataLength(outp, smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+            size_t cb_data = 0;
+
             tp = smb_GetSMBData(outp, NULL);
-            memcpy(tp,smb_ServerOS,smb_ServerOSLength);
-            tp += smb_ServerOSLength;
-            memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
-            tp += smb_ServerLanManagerLength;
-            memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
-            tp += smb_ServerDomainNameLength;
+
+            tp = smb_UnparseString(outp, tp, smb_ServerOS, &cb_data, 0);
+            tp = smb_UnparseString(outp, tp, smb_ServerLanManager, &cb_data, 0);
+            tp = smb_UnparseString(outp, tp, smb_ServerDomainName, &cb_data, 0);
+
+            smb_SetSMBDataLength(outp, cb_data);
         } else {
             smb_SetSMBDataLength(outp, 0);
         }
@@ -955,6 +959,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     return 0;
 }
 
+/* SMB_COM_LOGOFF_ANDX */
 long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_user_t *uidp;
@@ -1002,6 +1007,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 #define SMB_SUPPORT_SEARCH_BITS        0x0001
 #define SMB_SHARE_IS_IN_DFS            0x0002
 
+/* SMB_COM_TREE_CONNECT_ANDX */
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tid_t *tidp;
@@ -1021,11 +1027,9 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 
     /* parse input parameters */
     tp = smb_GetSMBData(inp, NULL);
-    passwordp = smb_ParseString(tp, &tp);
-    pathp = smb_ParseString(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
-    servicep = smb_ParseString(tp, &tp);
+    passwordp = smb_ParseString(inp, tp, &tp, SMB_STRF_FORCEASCII);
+    pathp = smb_ParseString(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    servicep = smb_ParseString(inp, tp, &tp, SMB_STRF_FORCEASCII);
 
     tp = strrchr(pathp, '\\');
     if (!tp) {
@@ -1033,9 +1037,10 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     }
     strcpy(shareName, tp+1);
 
-    osi_Log2(smb_logp, "Tree connect pathp[%s] shareName[%s]",
+    osi_Log3(smb_logp, "Tree connect pathp[%s] shareName[%s] service[%s]",
              osi_LogSaveString(smb_logp, pathp),
-             osi_LogSaveString(smb_logp, shareName));
+             osi_LogSaveString(smb_logp, shareName),
+             osi_LogSaveString(smb_logp, servicep));
 
     if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0) {
 #ifndef NO_IPC
@@ -1106,18 +1111,16 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     ((smb_t *)inp)->tid = newTid;
     tp = smb_GetSMBData(outp, NULL);
     if (!ipc) {
-        /* XXX - why is this a drive letter? */
-        *tp++ = 'A';
-        *tp++ = ':';
-        *tp++ = 0;
-        *tp++ = 'A';
-        *tp++ = 'F';
-        *tp++ = 'S';
-        *tp++ = 0;
-        smb_SetSMBDataLength(outp, 7);
+        size_t cb_data = 0;
+
+        tp = smb_UnparseString(outp, tp, "A:", &cb_data, SMB_STRF_FORCEASCII);
+        tp = smb_UnparseString(outp, tp, "AFS", &cb_data, 0);
+        smb_SetSMBDataLength(outp, cb_data);
     } else {
-        strcpy(tp, "IPC");
-        smb_SetSMBDataLength(outp, 4);
+        size_t cb_data = 0;
+
+        tp = smb_UnparseString(outp, tp, "IPC", &cb_data, SMB_STRF_FORCEASCII);
+        smb_SetSMBDataLength(outp, cb_data);
     }
 
     osi_Log1(smb_logp, "SMB3 tree connect created ID %d", newTid);
@@ -1169,6 +1172,10 @@ smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
         tp->com = 0x32;
     }
     tp->flags |= SMB_TRAN2PFLAG_ALLOC;
+#ifdef SMB_UNICODE
+    if (WANTS_UNICODE(inp) && (vcp->flags & SMB_VCFLAG_USEUNICODE))
+        tp->flags |= SMB_TRAN2PFLAG_USEUNICODE;
+#endif
     return tp;
 }
 
@@ -1228,7 +1235,35 @@ void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
         if (t2p->datap)
             free(t2p->datap);
     }       
+    while (t2p->stringsp) {
+        cm_space_t * ns;
+
+        ns = t2p->stringsp;
+        t2p->stringsp = ns->nextp;
+        cm_FreeSpace(ns);
+    }
     free(t2p);
+}
+
+unsigned char *smb_ParseStringT2Parm(smb_tran2Packet_t * p, unsigned char * inp,
+                                     char ** chainpp, int flags)
+{
+    size_t cb;
+
+#ifdef SMB_UNICODE
+    if (!(p->flags & SMB_TRAN2PFLAG_USEUNICODE))
+        flags |= SMB_STRF_FORCEASCII;
+#endif
+
+    cb = p->totalParms - (inp - (unsigned char *)p->parmsp);
+    if (inp < (unsigned char *) p->parmsp ||
+        inp > ((unsigned char *) p->parmsp) + p->totalParms) {
+        DebugBreak();
+        cb = p->totalParms;
+    }
+
+    return smb_ParseStringBuf((unsigned char *) p->parmsp, &p->stringsp,
+                              inp, &cb, chainpp, flags);
 }
 
 /* called with a VC, an input packet to respond to, and an error code.
@@ -1333,6 +1368,8 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
     smb_SendPacket(vcp, tp);
 }   
 
+
+/* SMB_COM_TRANSACTION and SMB_COM_TRANSACTION_SECONDARY */
 long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tran2Packet_t *asp;
@@ -1457,31 +1494,32 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
-/* ANSI versions.  The unicode versions support arbitrary length
-   share names, but we don't support unicode yet. */
+/* ANSI versions. */
+
+#pragma pack(push, 1)
 
 typedef struct smb_rap_share_info_0 {
-    char        shi0_netname[13];
+    BYTE                shi0_netname[13];
 } smb_rap_share_info_0_t;
 
 typedef struct smb_rap_share_info_1 {
-    char			shi1_netname[13];
-    char			shi1_pad;
+    BYTE                shi1_netname[13];
+    BYTE                shi1_pad;
     WORD			shi1_type;
     DWORD			shi1_remark; /* char *shi1_remark; data offset */
 } smb_rap_share_info_1_t;
 
 typedef struct smb_rap_share_info_2 {
-    char			shi2_netname[13];
-    char			shi2_pad;
-    unsigned short		shi2_type;
+    BYTE		shi2_netname[13];
+    BYTE		shi2_pad;
+    WORD        	shi2_type;
     DWORD			shi2_remark; /* char *shi2_remark; data offset */
-    unsigned short		shi2_permissions;
-    unsigned short		shi2_max_uses;
-    unsigned short		shi2_current_uses;
+    WORD        	shi2_permissions;
+    WORD        	shi2_max_uses;
+    WORD        	shi2_current_uses;
     DWORD			shi2_path;  /* char *shi2_path; data offset */
-    unsigned short		shi2_passwd[9];
-    unsigned short		shi2_pad2;
+    WORD        	shi2_passwd[9];
+    WORD        	shi2_pad2;
 } smb_rap_share_info_2_t;
 
 #define SMB_RAP_MAX_SHARES 512
@@ -1491,6 +1529,8 @@ typedef struct smb_rap_share_list {
     int maxShares;
     smb_rap_share_info_0_t * shares;
 } smb_rap_share_list_t;
+
+#pragma pack(pop)
 
 int smb_rapCollectSharesProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp) {
     smb_rap_share_list_t * sp;
@@ -1514,6 +1554,7 @@ int smb_rapCollectSharesProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp
         return 0;
 }       
 
+/* RAP NetShareEnumRequest */
 long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     smb_tran2Packet_t *outp;
@@ -1544,14 +1585,36 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     osi_hyper_t thyper;
 
     tp = p->parmsp + 1; /* skip over function number (always 0) */
-    (void) smb_ParseString((char *) tp, (char **) &tp); /* skip over parm descriptor */
-    (void) smb_ParseString((char *) tp, (char **) &tp); /* skip over data descriptor */
+
+    {
+        char * cdescp;
+
+        cdescp = smb_ParseStringT2Parm(p, (char *) tp, (char **) &tp, SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "WrLeh"))
+            return CM_ERROR_INVAL;
+        cdescp = smb_ParseStringT2Parm(p, (char *) tp, (char **) &tp, SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "B13BWz"))
+            return CM_ERROR_INVAL;
+    }
+
     infoLevel = tp[0];
     bufsize = tp[1];
 
     if (infoLevel != 1) {
         return CM_ERROR_INVAL;
     }
+
+    /* We are supposed to use the same ASCII data structure even if
+       Unicode is negotiated, which ultimately means that the share
+       names that we return must be at most 13 characters in length,
+       including the NULL terminator.
+
+       The RAP specification states that shares with names longer than
+       12 characters should not be included in the enumeration.
+       However, since we support prefix cell references and since many
+       cell names are going to exceed 12 characters, we lie and send
+       the first 12 characters.
+    */
 
     /* first figure out how many shares there are */
     rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
@@ -1628,8 +1691,10 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
         for (dw=0; dw < nRegShares && cshare < nSharesRet; dw++) {
             len = sizeof(thisShare);
             rv = RegEnumValue(hkSubmount, dw, thisShare, &len, NULL, NULL, NULL, NULL);
-            if (rv == ERROR_SUCCESS && strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
-                strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
+            if (rv == ERROR_SUCCESS &&
+                strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
+                strncpy(shares[cshare].shi1_netname, thisShare,
+                        sizeof(shares->shi1_netname)-1);
                 shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
                 shares[cshare].shi1_remark = (DWORD)(cstrp - outp->datap);
                 cshare++;
@@ -1677,6 +1742,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     return code;
 }
 
+/* RAP NetShareGetInfo */
 long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     smb_tran2Packet_t *outp;
@@ -1700,9 +1766,24 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     cm_InitReq(&req);
 
     tp = p->parmsp + 1; /* skip over function number (always 1) */
-    (void) smb_ParseString( (char *) tp, (char **) &tp); /* skip over param descriptor */
-    (void) smb_ParseString( (char *) tp, (char **) &tp); /* skip over data descriptor */
-    shareName = smb_ParseString( (char *) tp, (char **) &tp);
+
+    {
+        char * cdescp;
+
+        cdescp = smb_ParseStringT2Parm(p, (char *) tp, (char **) &tp, SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "zWrLh"))
+
+            return CM_ERROR_INVAL;
+
+        cdescp = smb_ParseStringT2Parm(p, (char *) tp, (char **) &tp, SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "B13") &&
+            strcmp(cdescp, "B13BWz") &&
+            strcmp(cdescp, "B13BWzWWWzB9B"))
+
+            return CM_ERROR_INVAL;
+    }
+    shareName = smb_ParseStringT2Parm(p, (char *) tp, (char **) &tp, SMB_STRF_FORCEASCII);
+
     infoLevel = *tp++;
     bufsize = *tp++;
     
@@ -1797,16 +1878,19 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     return code;
 }
 
+#pragma pack(push, 1)
+
 typedef struct smb_rap_wksta_info_10 {
     DWORD	wki10_computername;	/*char *wki10_computername;*/
     DWORD	wki10_username; /* char *wki10_username; */
     DWORD  	wki10_langroup;	/* char *wki10_langroup;*/
-    unsigned char  	wki10_ver_major;
-    unsigned char	wki10_ver_minor;
+    BYTE  	wki10_ver_major;
+    BYTE	wki10_ver_minor;
     DWORD	wki10_logon_domain;	/*char *wki10_logon_domain;*/
     DWORD	wki10_oth_domains; /* char *wki10_oth_domains;*/
 } smb_rap_wksta_info_10_t;
 
+#pragma pack(pop)
 
 long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
@@ -1822,8 +1906,20 @@ long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     smb_user_t *uidp;
 
     tp = p->parmsp + 1; /* Skip over function number */
-    (void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over param descriptor */
-    (void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over data descriptor */
+
+    {
+        char * cdescp;
+
+        cdescp = smb_ParseStringT2Parm(p, (unsigned char*) tp, (char **) &tp,
+                                       SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "WrLh"))
+            return CM_ERROR_INVAL;
+        cdescp = smb_ParseStringT2Parm(p, (unsigned char*) tp, (char **) &tp,
+                                       SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "zzzBBzz"))
+            return CM_ERROR_INVAL;
+    }
+
     infoLevel = *tp++;
     bufsize = *tp++;
 
@@ -1889,17 +1985,21 @@ long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     return code;
 }
 
+#pragma pack(push, 1)
+
 typedef struct smb_rap_server_info_0 {
-    char    sv0_name[16];
+    BYTE    sv0_name[16];
 } smb_rap_server_info_0_t;
 
 typedef struct smb_rap_server_info_1 {
-    char            sv1_name[16];
-    char            sv1_version_major;
-    char            sv1_version_minor;
-    unsigned long   sv1_type;
-    DWORD           *sv1_comment_or_master_browser; /* char *sv1_comment_or_master_browser;*/
+    BYTE            sv1_name[16];
+    BYTE            sv1_version_major;
+    BYTE            sv1_version_minor;
+    DWORD           sv1_type;
+    DWORD           sv1_comment_or_master_browser; /* char *sv1_comment_or_master_browser;*/
 } smb_rap_server_info_1_t;
+
+#pragma pack(pop)
 
 char smb_ServerComment[] = "OpenAFS Client";
 int smb_ServerCommentLen = sizeof(smb_ServerComment);
@@ -1922,8 +2022,21 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
     char * cstrp;
 
     tp = p->parmsp + 1; /* Skip over function number */
-    (void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over param descriptor */
-    (void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over data descriptor */
+
+    {
+        char * cdescp;
+
+        cdescp = smb_ParseStringT2Parm(p, (unsigned char*) tp, (char **) &tp,
+                                       SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "WrLh"))
+            return CM_ERROR_INVAL;
+        cdescp = smb_ParseStringT2Parm(p, (unsigned char*) tp, (char **) &tp,
+                                       SMB_STRF_FORCEASCII);
+        if (strcmp(cdescp, "B16") ||
+            strcmp(cdescp, "B16BBDz"))
+            return CM_ERROR_INVAL;
+    }
+
     infoLevel = *tp++;
     bufsize = *tp++;
 
@@ -1958,7 +2071,7 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
 
         info1->sv1_version_major = 5;
         info1->sv1_version_minor = 1;
-        info1->sv1_comment_or_master_browser = (DWORD *) (cstrp - outp->datap);
+        info1->sv1_comment_or_master_browser = (DWORD) (cstrp - outp->datap);
 
         strcpy(cstrp, smb_ServerComment);
 
@@ -1977,6 +2090,7 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
     return code;
 }
 
+/* SMB_COM_TRANSACTION2 and SMB_COM_TRANSACTION2_SECONDARY */
 long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tran2Packet_t *asp;
@@ -2097,6 +2211,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
+/* TRANS2_OPEN2 */
 long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     char *pathp;
@@ -2145,9 +2260,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     if (attributes & SMB_ATTR_READONLY) 
         initialModeBits &= ~0222;
         
-    pathp = (char *) (&p->parmsp[14]);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[14]), NULL,
+                                  SMB_STRF_ANSIPATH);
     
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
 
@@ -2494,44 +2608,21 @@ long smb_ReceiveTran2QFSInfoFid(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     return CM_ERROR_BAD_LEVEL;
 }
 
+/* TRANS2_QUERY_FS_INFORMATION */
 long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     smb_tran2Packet_t *outp;
     smb_tran2QFSInfo_t qi;
     int responseSize;
-    static char FSname[8] = {'A', 0, 'F', 0, 'S', 0, 0, 0};
+    size_t sz = 0;
         
     osi_Log1(smb_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
 
     switch (p->parmsp[0]) {
     case SMB_INFO_ALLOCATION: 
-	responseSize = sizeof(qi.u.allocInfo); 
-	break;
-    case SMB_INFO_VOLUME: 
-	responseSize = sizeof(qi.u.volumeInfo); 
-	break;
-    case SMB_QUERY_FS_VOLUME_INFO: 
-	responseSize = sizeof(qi.u.FSvolumeInfo); 
-	break;
-    case SMB_QUERY_FS_SIZE_INFO: 
-	responseSize = sizeof(qi.u.FSsizeInfo); 
-	break;
-    case SMB_QUERY_FS_DEVICE_INFO: 
-	responseSize = sizeof(qi.u.FSdeviceInfo); 
-	break;
-    case SMB_QUERY_FS_ATTRIBUTE_INFO: 
-	responseSize = sizeof(qi.u.FSattributeInfo); 
-	break;
-    case SMB_INFO_UNIX: 	/* CIFS Unix Info */
-    case SMB_INFO_MACOS: 	/* Mac FS Info */
-    default: 
-	return CM_ERROR_BADOP;
-    }
-
-    outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
-    switch (p->parmsp[0]) {
-    case SMB_INFO_ALLOCATION: 
         /* alloc info */
+	responseSize = sizeof(qi.u.allocInfo); 
+
         qi.u.allocInfo.FSID = 0;
         qi.u.allocInfo.sectorsPerAllocUnit = 1;
         qi.u.allocInfo.totalAllocUnits = 0x7fffffff;
@@ -2541,23 +2632,34 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 
     case SMB_INFO_VOLUME: 
         /* volume info */
-        qi.u.volumeInfo.vsn = 1234;
-        qi.u.volumeInfo.vnCount = 4;
+        qi.u.volumeInfo.vsn = 1234;  /* Volume serial number */
+        qi.u.volumeInfo.vnCount = 4; /* Number of characters in label (AFS\0)*/
+
         /* we're supposed to pad it out with zeroes to the end */
         memset(&qi.u.volumeInfo.label, 0, sizeof(qi.u.volumeInfo.label));
-        memcpy(qi.u.volumeInfo.label, "AFS", 4);
+        smb_UnparseString(op, qi.u.volumeInfo.label, "AFS", &sz, 0);
+
+        responseSize = sizeof(unsigned long) + sizeof(char) + max(12, sz);
         break;
 
     case SMB_QUERY_FS_VOLUME_INFO: 
         /* FS volume info */
-        memset((char *)&qi.u.FSvolumeInfo.vct, 0, 4);
+	responseSize = sizeof(qi.u.FSvolumeInfo);
+
+        {
+            FILETIME ft = {0x832cf000, 0x01abfcc4}; /* October 1, 1982 00:00:00 +0600 */
+            memcpy(&qi.u.FSvolumeInfo.vct, &ft, sizeof(ft));
+        }
+
         qi.u.FSvolumeInfo.vsn = 1234;
-        qi.u.FSvolumeInfo.vnCount = 8;
-        memcpy(qi.u.FSvolumeInfo.label, "A\0F\0S\0\0\0", 8);
+        qi.u.FSvolumeInfo.vnCount = 8; /* This is always in Unicode */
+        memcpy(qi.u.FSvolumeInfo.label, L"AFS", sizeof(L"AFS"));
         break;
 
     case SMB_QUERY_FS_SIZE_INFO: 
         /* FS size info */
+	responseSize = sizeof(qi.u.FSsizeInfo); 
+
         qi.u.FSsizeInfo.totalAllocUnits.HighPart = 0;
 	qi.u.FSsizeInfo.totalAllocUnits.LowPart= 0x7fffffff;
         qi.u.FSsizeInfo.availAllocUnits.HighPart = 0;
@@ -2568,12 +2670,15 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 
     case SMB_QUERY_FS_DEVICE_INFO: 
         /* FS device info */
+	responseSize = sizeof(qi.u.FSdeviceInfo); 
+
         qi.u.FSdeviceInfo.devType = 0x14; /* network file system */
         qi.u.FSdeviceInfo.characteristics = 0x50; /* remote, virtual */
         break;
 
     case SMB_QUERY_FS_ATTRIBUTE_INFO: 
         /* FS attribute info */
+
         /* attributes, defined in WINNT.H:
          *	FILE_CASE_SENSITIVE_SEARCH	0x1
          *	FILE_CASE_PRESERVED_NAMES	0x2
@@ -2584,11 +2689,34 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
          *	   despite our protestations to the contrary.
          */
         qi.u.FSattributeInfo.attributes = 0x4003;
+        /* The maxCompLength is supposed to be in bytes */
+#ifdef SMB_UNICODE
+        if ((vcp->flags & SMB_VCFLAG_USEUNICODE) == SMB_VCFLAG_USEUNICODE)
+            qi.u.FSattributeInfo.maxCompLength = MAX_PATH * sizeof(wchar_t);
+        else {
+#endif
         qi.u.FSattributeInfo.maxCompLength = MAX_PATH;
-        qi.u.FSattributeInfo.FSnameLength = sizeof(FSname);
-        memcpy(qi.u.FSattributeInfo.FSname, FSname, sizeof(FSname));
+#ifdef SMB_UNICODE
+        }
+#endif
+        smb_UnparseString(op, qi.u.FSattributeInfo.FSname, "AFS", &sz, 0);
+        qi.u.FSattributeInfo.FSnameLength = sz;
+
+	responseSize =
+            sizeof(qi.u.FSattributeInfo.attributes) +
+            sizeof(qi.u.FSattributeInfo.maxCompLength) +
+            sizeof(qi.u.FSattributeInfo.FSnameLength) +
+            sz;
+
         break;
+
+    case SMB_INFO_UNIX: 	/* CIFS Unix Info */
+    case SMB_INFO_MACOS: 	/* Mac FS Info */
+    default: 
+	return CM_ERROR_BADOP;
     }   
+        
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
         
     /* copy out return data, and set corresponding sizes */
     outp->totalParms = 0;
@@ -2684,6 +2812,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
     return code;
 }
 
+/* TRANS2_QUERY_PATH_INFORMATION */
 long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     smb_tran2Packet_t *outp;
@@ -2695,7 +2824,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     unsigned short attributes;
     unsigned long extAttributes;
     char shortName[13];
-    unsigned int len;
+    size_t len;
     cm_user_t *userp;
     cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
@@ -2735,9 +2864,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return 0;
     }
 
-    pathp = (char *)(&p->parmsp[3]);
-    if (smb_StoreAnsiFilenames)
-	OemToChar(pathp,pathp);
+    pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[3]), NULL, SMB_STRF_ANSIPATH);
     osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
               osi_LogSaveString(smb_logp, pathp));
 
@@ -2873,6 +3000,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         
     lock_ConvertWToR(&scp->rw);
 
+    len = 0;
+
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
      */
@@ -2880,20 +3009,19 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) {
         code = cm_GetShortName(pathp, userp, &req,
                                 tidPathp, scp->fid.vnode, shortName,
-                                (size_t *) &len);
+                               &len);
         if (code) {
             goto done;
         }
 
-	qpi.u.QPfileAltNameInfo.fileNameLength = (len + 1) * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileAltNameInfo.fileName, shortName, len + 1);
+        smb_UnparseString(opx, qpi.u.QPfileAltNameInfo.fileName, shortName, &len, 0);
+	qpi.u.QPfileAltNameInfo.fileNameLength = len;
 
         goto done;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
-	len = (unsigned int)strlen(lastComp);
-	qpi.u.QPfileNameInfo.fileNameLength = (len + 1) * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileNameInfo.fileName, lastComp, len + 1);
+        smb_UnparseString(opx, qpi.u.QPfileNameInfo.fileName, lastComp, &len, 0);
+	qpi.u.QPfileNameInfo.fileNameLength = len;
 
         goto done;
     }
@@ -2969,9 +3097,9 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPfileAllInfo.currentByteOffset.LowPart = 0;
 	qpi.u.QPfileAllInfo.mode = 0;
 	qpi.u.QPfileAllInfo.alignmentRequirement = 0;
-	len = (unsigned int)strlen(lastComp);
-	qpi.u.QPfileAllInfo.fileNameLength = (len + 1) * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileAllInfo.fileName, lastComp, len + 1);
+
+        smb_UnparseString(opx, qpi.u.QPfileAllInfo.fileName, lastComp, &len, 0);
+	qpi.u.QPfileAllInfo.fileNameLength = len;
     }
 
     /* send and free the packets */
@@ -2991,6 +3119,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     return 0;
 }
 
+/* TRANS2_SET_PATH_INFORMATION */
 long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
 #if 0
@@ -3024,9 +3153,8 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         return 0;
     }
 
-    pathp = (char *)(&p->parmsp[3]);
-    if (smb_StoreAnsiFilenames)
-	OemToChar(pathp,pathp);
+    pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[3]), NULL, SMB_STRF_ANSIPATH);
+
     osi_Log2(smb_logp, "T2 SetPathInfo infolevel 0x%x path %s", infoLevel,
               osi_LogSaveString(smb_logp, pathp));
 
@@ -3218,6 +3346,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 #endif
 }
 
+/* TRANS2_QUERY_FILE_INFORMATION */
 long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     smb_tran2Packet_t *outp;
@@ -3328,7 +3457,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qfi.u.QFeaInfo.eaSize = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
-        unsigned long len;
+        size_t len = 0;
         char *name;
 
 	lock_ReleaseRead(&scp->rw);
@@ -3339,10 +3468,10 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         else
             name = "\\";	/* probably can't happen */
 	lock_ReleaseMutex(&fidp->mx);
-        len = (unsigned long)strlen(name);
-        outp->totalData = ((len+1)*2) + 4;	/* this is actually what we want to return */
-        qfi.u.QFfileNameInfo.fileNameLength = (len + 1) * 2;
-        mbstowcs((unsigned short *)qfi.u.QFfileNameInfo.fileName, name, len + 1);
+
+        smb_UnparseString(opx, qfi.u.QFfileNameInfo.fileName, name, &len, 0);
+        outp->totalData = len + 4;	/* this is actually what we want to return */
+        qfi.u.QFfileNameInfo.fileNameLength = len;
     }
 
     /* send and free the packets */
@@ -3365,6 +3494,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     return 0;
 }       
 
+
+/* TRANS2_SET_FILE_INFORMATION */
 long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     long code = 0;
@@ -3553,6 +3684,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     return 0;
 }
 
+/* TRANS2_FSCTL */
 long 
 smb_ReceiveTran2FSCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3560,6 +3692,7 @@ smb_ReceiveTran2FSCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
     return CM_ERROR_BADOP;
 }
 
+/* TRANS2_IOCTL2 */
 long 
 smb_ReceiveTran2IOCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3567,6 +3700,7 @@ smb_ReceiveTran2IOCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
     return CM_ERROR_BADOP;
 }
 
+/* TRANS2_FIND_NOTIFY_FIRST */
 long 
 smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3574,6 +3708,7 @@ smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     return CM_ERROR_BADOP;
 }
 
+/* TRANS2_FIND_NOTIFY_NEXT */
 long 
 smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3581,6 +3716,7 @@ smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     return CM_ERROR_BADOP;
 }
 
+/* TRANS2_CREATE_DIRECTORY */
 long 
 smb_ReceiveTran2CreateDirectory(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3588,6 +3724,7 @@ smb_ReceiveTran2CreateDirectory(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     return CM_ERROR_BADOP;
 }
 
+/* TRANS2_SESSION_SETUP */
 long 
 smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3605,6 +3742,7 @@ struct smb_v2_referral {
     USHORT NetworkAddressOffset;
 };
 
+/* TRANS2_GET_DFS_REFERRAL */
 long 
 smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
@@ -3811,6 +3949,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #endif /* DFS_SUPPORT */
 }
 
+/* TRANS2_REPORT_DFS_INCONSISTENCY */
 long 
 smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -3836,10 +3975,8 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
     long code = 0;
     cm_scache_t *scp;
     cm_scache_t *targetScp;			/* target if scp is a symlink */
-    char *dptr;
     afs_uint32 dosTime;
     FILETIME ft;
-    int shortTemp;
     unsigned short attr;
     unsigned long lattr;
     smb_dirListPatch_t *patchp;
@@ -3882,37 +4019,27 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
         if (mustFake || code) { 
             lock_ReleaseWrite(&scp->rw);
 
-            dptr = patchp->dptr;
-
             /* Plug in fake timestamps. A time stamp of 0 causes 'invalid parameter'
                errors in the client. */
             if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
+                smb_V3FileAttrsLong * fa = (smb_V3FileAttrsLong *) patchp->dptr;
+
                 /* 1969-12-31 23:59:59 +00 */
                 ft.dwHighDateTime = 0x19DB200;
                 ft.dwLowDateTime = 0x5BB78980;
 
                 /* copy to Creation Time */
-                *((FILETIME *)dptr) = ft;
-                dptr += 8;
-
-                /* copy to Last Access Time */
-                *((FILETIME *)dptr) = ft;
-                dptr += 8;
-
-                /* copy to Last Write Time */
-                *((FILETIME *)dptr) = ft;
-                dptr += 8;
-
-                /* copy to Change Time */
-                *((FILETIME *)dptr) = ft;
-                dptr += 24;
+                fa->creationTime = ft;
+                fa->lastAccessTime = ft;
+                fa->lastWriteTime = ft;
+                fa->lastChangeTime = ft;
 
                 switch (scp->fileType) {
                 case CM_SCACHETYPE_DIRECTORY:
                 case CM_SCACHETYPE_MOUNTPOINT:
                 case CM_SCACHETYPE_SYMLINK:
                 case CM_SCACHETYPE_INVALID:
-                    *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
+                    fa->extFileAttributes = SMB_ATTR_DIRECTORY;
                     break;
                 default:
                     /* if we get here we either have a normal file
@@ -3923,49 +4050,24 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                      * and odd means it is to be treated as a file.
                      */
                     if (mustFake && (scp->fid.vnode & 0x1))
-                        *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
+                        fa->extFileAttributes = SMB_ATTR_DIRECTORY;
                     else
-                        *((u_long *)dptr) = SMB_ATTR_NORMAL;
+                        fa->extFileAttributes = SMB_ATTR_NORMAL;
                         
                 }
                 /* merge in hidden attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
-                    *((u_long *)dptr) |= SMB_ATTR_HIDDEN;
+                    fa->extFileAttributes |= SMB_ATTR_HIDDEN;
                 }
-                dptr += 4;
             } else {
+                smb_V3FileAttrsShort * fa = (smb_V3FileAttrsShort *) patchp->dptr;
+
                 /* 1969-12-31 23:59:58 +00*/
                 dosTime = 0xEBBFBF7D;
 
-                /* and copy out date */
-                shortTemp = (dosTime>>16) & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 2;
-
-                /* copy out creation time */
-                shortTemp = dosTime & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 2;
-
-                /* and copy out date */
-                shortTemp = (dosTime>>16) & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 2;
-    			
-                /* copy out access time */
-                shortTemp = dosTime & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 2;
-
-                /* and copy out date */
-                shortTemp = (dosTime>>16) & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 2;
-    			
-                /* copy out mod time */
-                shortTemp = dosTime & 0xffff;
-                *((u_short *)dptr) = shortTemp;
-                dptr += 10;
+                fa->creationDateTime = MAKELONG(HIWORD(dosTime),LOWORD(dosTime));
+                fa->lastAccessDateTime = fa->creationDateTime;
+                fa->lastWriteDateTime = fa->creationDateTime;
 
                 /* set the attribute */
                 switch (scp->fileType) {
@@ -3973,16 +4075,14 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                 case CM_SCACHETYPE_MOUNTPOINT:
                 case CM_SCACHETYPE_SYMLINK:
                 case CM_SCACHETYPE_INVALID:
-                    attr = SMB_ATTR_DIRECTORY;
+                    fa->attributes = SMB_ATTR_DIRECTORY;
                 default:
-                    attr = SMB_ATTR_NORMAL;
+                    fa->attributes = SMB_ATTR_NORMAL;
                 }
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
-                    attr |= SMB_ATTR_HIDDEN;
+                    fa->attributes |= SMB_ATTR_HIDDEN;
                 }       
-                *dptr++ = attr & 0xff;
-                *dptr++ = (attr >> 8) & 0xff;
             }
             
             cm_ReleaseSCache(scp);
@@ -4015,33 +4115,20 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
 
         lock_ConvertWToR(&scp->rw);
 
-        dptr = patchp->dptr;
-
         if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
+            smb_V3FileAttrsLong * fa = (smb_V3FileAttrsLong *) patchp->dptr;
+
             /* get filetime */
             smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
 
-            /* copy to Creation Time */
-            *((FILETIME *)dptr) = ft;
-            dptr += 8;
-
-            /* copy to Last Access Time */
-            *((FILETIME *)dptr) = ft;
-            dptr += 8;
-
-            /* copy to Last Write Time */
-            *((FILETIME *)dptr) = ft;
-            dptr += 8;
-
-            /* copy to Change Time */
-            *((FILETIME *)dptr) = ft;
-            dptr += 8;
+            fa->creationTime = ft;
+            fa->lastAccessTime = ft;
+            fa->lastWriteTime = ft;
+            fa->lastChangeTime = ft;
 
             /* Use length for both file length and alloc length */
-            *((LARGE_INTEGER *)dptr) = scp->length;
-            dptr += 8;
-            *((LARGE_INTEGER *)dptr) = scp->length;
-            dptr += 8;
+            fa->endOfFile = scp->length;
+            fa->allocationSize = scp->length;
 
             /* Copy attributes */
             lattr = smb_ExtAttributes(scp);
@@ -4059,49 +4146,23 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                 else
                     lattr |= SMB_ATTR_HIDDEN;
             }
-            *((u_long *)dptr) = lattr;
-            dptr += 4;
+
+            fa->extFileAttributes = lattr;
         } else {
+            smb_V3FileAttrsShort * fa = (smb_V3FileAttrsShort *) patchp->dptr;
+
             /* get dos time */
             smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
 
-            /* and copy out date */
-            shortTemp = (dosTime>>16) & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
-
-            /* copy out creation time */
-            shortTemp = dosTime & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
-
-            /* and copy out date */
-            shortTemp = (dosTime>>16) & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
-
-            /* copy out access time */
-            shortTemp = dosTime & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
-
-            /* and copy out date */
-            shortTemp = (dosTime>>16) & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
-
-            /* copy out mod time */
-            shortTemp = dosTime & 0xffff;
-            *((u_short *)dptr) = shortTemp;
-            dptr += 2;
+            fa->creationDateTime = MAKELONG(HIWORD(dosTime), LOWORD(dosTime));
+            fa->lastAccessDateTime = fa->creationDateTime;
+            fa->lastWriteDateTime = fa->creationDateTime;
 
             /* copy out file length and alloc length,
              * using the same for both
              */
-            *((u_long *)dptr) = scp->length.LowPart;
-            dptr += 4;
-            *((u_long *)dptr) = scp->length.LowPart;
-            dptr += 4;
+            fa->dataSize = scp->length.LowPart;
+            fa->allocationSize = scp->length.LowPart;
 
             /* finally copy out attributes as short */
             attr = smb_Attributes(scp);
@@ -4112,8 +4173,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                 else
                     lattr |= SMB_ATTR_HIDDEN;
             }
-            *dptr++ = attr & 0xff;
-            *dptr++ = (attr >> 8) & 0xff;
+            fa->attributes = attr;
         }
 
         lock_ReleaseRead(&scp->rw);
@@ -4273,6 +4333,8 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
    the usual mechanism. 
    
    This function will return either CM_ERROR_NOSUCHFILE or SUCCESS.
+
+   TRANS2_FIND_FIRST2 and TRANS2_FIND_NEXT2
    */
 long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
@@ -4283,16 +4345,16 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     int maxCount;
     smb_dirListPatch_t *dirListPatchesp;
     smb_dirListPatch_t *curPatchp;
-    long orbytes;			/* # of bytes in this output record */
-    long ohbytes;			/* # of bytes, except file name */
-    long onbytes;			/* # of bytes in name, incl. term. null */
+    size_t orbytes;			/* # of bytes in this output record */
+    size_t ohbytes;			/* # of bytes, except file name */
+    size_t onbytes;			/* # of bytes in name, incl. term. null */
     cm_scache_t *scp = NULL;
     cm_scache_t *targetscp = NULL;
     cm_user_t *userp = NULL;
     char *op;				/* output data ptr */
     char *origOp;			/* original value of op */
     cm_space_t *spacep;			/* for pathname buffer */
-    long maxReturnData;			/* max # of return data */
+    unsigned long maxReturnData;	/* max # of return data */
     long maxReturnParms;		/* max # of return parms */
     long bytesInBuffer;			/* # data bytes in the output buffer */
     char *maskp;			/* mask part of path */
@@ -4308,6 +4370,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     cm_dirEntry_t * dep = NULL;
     cm_req_t req;
     char * s;
+    void * attrp = NULL;
+    smb_tran2Find_t * fp;
 
     cm_InitReq(&req);
 
@@ -4323,7 +4387,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     maxCount = p->parmsp[1];
     infoLevel = p->parmsp[3];
     searchFlags = p->parmsp[2];
-    pathp = ((char *) p->parmsp) + 12;	/* points to path */
+    pathp = smb_ParseStringT2Parm(p, (char *) &(p->parmsp[6]), NULL, SMB_STRF_ANSIPATH);
     nextCookie = 0;
     maskp = strrchr(pathp, '\\');
     if (maskp == NULL) 
@@ -4339,27 +4403,42 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     switch ( infoLevel ) {
     case SMB_INFO_STANDARD:
 	s = "InfoStandard";
+        ohbytes = sizeof(fp->u.FstandardInfo);
     	break;
+
     case SMB_INFO_QUERY_EA_SIZE:
+        ohbytes = sizeof(fp->u.FeaSizeInfo);
 	s = "InfoQueryEaSize";
     	break;
+
     case SMB_INFO_QUERY_EAS_FROM_LIST:
+        ohbytes = sizeof(fp->u.FeasFromListInfo);
 	s = "InfoQueryEasFromList";
     	break;
+
     case SMB_FIND_FILE_DIRECTORY_INFO:
 	s = "FindFileDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileDirectoryInfo);
     	break;
+
     case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
 	s = "FindFileFullDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileFullDirectoryInfo);
     	break;
+
     case SMB_FIND_FILE_NAMES_INFO:
 	s = "FindFileNamesInfo";
+        ohbytes = sizeof(fp->u.FfileNamesInfo);
     	break;
+
     case SMB_FIND_FILE_BOTH_DIRECTORY_INFO:
 	s = "FindFileBothDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileBothDirectoryInfo);
     	break;
+
     default:
 	s = "unknownInfoLevel";
+        ohbytes = 0;
     }
 
     osi_Log1(smb_logp, "smb_T2SearchDirSingle info level: %s", s);
@@ -4368,13 +4447,16 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
              "smb_T2SearchDirSingle attr 0x%x, info level 0x%x, max count %d, flags 0x%x",
              attribute, infoLevel, maxCount, searchFlags);
     
-    if (infoLevel > SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+    if (ohbytes == 0) {
         osi_Log1(smb_logp, "Unsupported InfoLevel 0x%x", infoLevel);
         return CM_ERROR_INVAL;
     }
 
     if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
         searchFlags &= ~TRAN2_FIND_FLAG_RETURN_RESUME_KEYS;	/* no resume keys */
+
+    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
+        ohbytes += 4;
 
     dirListPatchesp = NULL;
 
@@ -4484,6 +4566,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         op += 4;
     }
 
+    fp = (smb_tran2Find_t *) op;
+
     if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO
         && targetscp->fid.vnode != 0
         && !cm_Is8Dot3(maskp)) {
@@ -4526,29 +4610,10 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     }
 
-    /* Check if the name will fit */
-    if (infoLevel < 0x101)
-        ohbytes = 23;           /* pre-NT */
-    else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
-        ohbytes = 12;           /* NT names only */
-    else
-        ohbytes = 64;           /* NT */
-
-    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO)
-        ohbytes += 26;          /* Short name & length */
-
-    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
-        ohbytes += 4;           /* if resume key required */
-    }
-
-    if (infoLevel != SMB_INFO_STANDARD
-        && infoLevel != SMB_FIND_FILE_DIRECTORY_INFO
-        && infoLevel != SMB_FIND_FILE_NAMES_INFO)
-        ohbytes += 4;           /* EASIZE */
-
     /* add header to name & term. null */
-    onbytes = (int)strlen(maskp);
-    orbytes = ohbytes + onbytes + 1;
+    onbytes = 0;
+    smb_UnparseString(opx, NULL, maskp, &onbytes, SMB_STRF_ANSIPATH);
+    orbytes = ohbytes + onbytes;
 
     /* now, we round up the record to a 4 byte alignment, and we make
      * sure that we have enough room here for even the aligned version
@@ -4576,42 +4641,80 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
      * preceded by its length.
      */
     /* First zero everything else */
-    memset(origOp, 0, ohbytes);
+    memset(origOp, 0, orbytes);
 
-    if (infoLevel <= SMB_FIND_FILE_DIRECTORY_INFO)
-        *(origOp + ohbytes - 1) = (unsigned char) onbytes;
-    else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
-        *((u_long *)(op + 8)) = onbytes;
-    else
-        *((u_long *)(op + 60)) = onbytes;
-    strcpy(origOp+ohbytes, maskp);
-    if (smb_StoreAnsiFilenames)
-        CharToOem(origOp+ohbytes, origOp+ohbytes);
+    onbytes = 0;
+    smb_UnparseString(opx, origOp + ohbytes, maskp, &onbytes, SMB_STRF_ANSIPATH);
 
-    /* Short name if requested and needed */
-    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+    switch (infoLevel) {
+    case SMB_INFO_STANDARD:
+        fp->u.FstandardInfo.fileNameLength = onbytes;
+        attrp = &fp->u.FstandardInfo.fileAttrs;
+        break;
+
+    case SMB_INFO_QUERY_EA_SIZE:
+        fp->u.FeaSizeInfo.fileNameLength = onbytes;
+        attrp = &fp->u.FeaSizeInfo.fileAttrs;
+        fp->u.FeaSizeInfo.eaSize = 0;
+        break;
+
+    case SMB_INFO_QUERY_EAS_FROM_LIST:
+        fp->u.FeasFromListInfo.fileNameLength = onbytes;
+        attrp = &fp->u.FeasFromListInfo.fileAttrs;
+        fp->u.FeasFromListInfo.eaSize = 0;
+        break;
+
+    case SMB_FIND_FILE_BOTH_DIRECTORY_INFO:
         if (NeedShortName) {
-            strcpy(op + 70, shortName);
-            if (smb_StoreAnsiFilenames)
-                CharToOem(op + 70, op + 70);
-            *(op + 68) = (char)(shortNameEnd - shortName);
-        }
-    }
+#ifdef SMB_UNICODE
+            int nchars;
 
-    /* NextEntryOffset and FileIndex */
-    if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
-        int entryOffset = orbytes + align;
-        *((u_long *)op) = 0;
-        *((u_long *)(op+4)) = 0;
+            nchars = MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
+                                         shortName, -1,
+                                         fp->u.FfileBothDirectoryInfo.shortName,
+                                         sizeof(fp->u.FfileBothDirectoryInfo.shortName) / sizeof(wchar_t));
+            if (nchars > 0)
+                fp->u.FfileBothDirectoryInfo.shortNameLength = (nchars - 1)*sizeof(wchar_t);
+            else
+                fp->u.FfileBothDirectoryInfo.shortNameLength = 0;
+            fp->u.FfileBothDirectoryInfo.reserved = 0;
+#else
+            strcpy(fp->u.FfileBothDirectoryInfo.shortName,
+                   shortName);
+            fp->u.FfileBothDirectoryInfo.shortNameLength = strlen(shortName);
+#endif
+    }
+        /* Fallthrough */
+
+    case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
+        fp->u.FfileFullDirectoryInfo.eaSize = 0;
+        /* Fallthrough */
+
+    case SMB_FIND_FILE_DIRECTORY_INFO:
+        fp->u.FfileDirectoryInfo.nextEntryOffset = 0;
+        fp->u.FfileDirectoryInfo.fileIndex = 0;
+        attrp = &fp->u.FfileDirectoryInfo.fileAttrs;
+        fp->u.FfileDirectoryInfo.fileNameLength = onbytes;
+        break;
+
+    case SMB_FIND_FILE_NAMES_INFO:
+        fp->u.FfileNamesInfo.nextEntryOffset = 0;
+        fp->u.FfileNamesInfo.fileIndex = 0;
+        fp->u.FfileNamesInfo.fileNameLength = onbytes;
+        break;
+
+    default:
+        /* we shouldn't hit this case */
+        osi_assertx(FALSE, "Unknown query type");
     }
 
     if (infoLevel != SMB_FIND_FILE_NAMES_INFO) {
+        osi_assert(attrp != NULL);
+
         curPatchp = malloc(sizeof(*curPatchp));
         osi_QAdd((osi_queue_t **) &dirListPatchesp,
                  &curPatchp->q);
-        curPatchp->dptr = op;
-        if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
-            curPatchp->dptr += 8;
+        curPatchp->dptr = attrp;
 
         if (smb_hideDotFiles && smb_IsDotFile(maskp)) {
             curPatchp->flags = SMB_DIRLISTPATCH_DOTFILE;
@@ -4680,6 +4783,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 }
 
 
+/* TRANS2_FIND_FIRST2 and TRANS2_FIND_NEXT2 */
 long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     int attribute;
@@ -4693,9 +4797,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     smb_dirListPatch_t *curPatchp = 0;
     cm_buf_t *bufferp;
     long temp;
-    long orbytes;			/* # of bytes in this output record */
-    long ohbytes;			/* # of bytes, except file name */
-    long onbytes;			/* # of bytes in name, incl. term. null */
+    size_t orbytes;			/* # of bytes in this output record */
+    size_t ohbytes;			/* # of bytes, except file name */
+    size_t onbytes;			/* # of bytes in name, incl. term. null */
     osi_hyper_t dirLength;
     osi_hyper_t bufferOffset;
     osi_hyper_t curOffset;
@@ -4713,8 +4817,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     char *op;			/* output data ptr */
     char *origOp;			/* original value of op */
     cm_space_t *spacep;		/* for pathname buffer */
-    long maxReturnData;		/* max # of return data */
-    long maxReturnParms;		/* max # of return parms */
+    unsigned long maxReturnData;		/* max # of return data */
+    unsigned long maxReturnParms;		/* max # of return parms */
     long bytesInBuffer;		/* # data bytes in the output buffer */
     int starPattern;
     char *maskp;			/* mask part of path */
@@ -4723,7 +4827,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     int eos;
     smb_tran2Packet_t *outp;	/* response packet */
     char *tidPathp;
-    int align;
+    unsigned int align;
     char shortName[13];		/* 8.3 name if needed */
     int NeedShortName;
     int foundInexact;
@@ -4731,7 +4835,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     int fileType;
     cm_fid_t fid;
     cm_req_t req;
+    void * attrp;
     char * s;
+    smb_tran2Find_t * fp;
 
     cm_InitReq(&req);
 
@@ -4742,9 +4848,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         maxCount = p->parmsp[1];
         infoLevel = p->parmsp[3];
         searchFlags = p->parmsp[2];
-        pathp = ((char *) p->parmsp) + 12;	/* points to path */
-        if (smb_StoreAnsiFilenames)
-            OemToChar(pathp,pathp);
+        pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[6]), NULL, SMB_STRF_ANSIPATH);
         nextCookie = 0;
         maskp = strrchr(pathp, '\\');
         if (maskp == NULL) 
@@ -4772,7 +4876,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 return code;
             }
         }
-#endif
+#endif  /* NOFINDFIRSTOPTIMIZE */
         dir_enums++;
 
         dsp = smb_NewDirSearch(1);
@@ -4801,27 +4905,42 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     switch ( infoLevel ) {
     case SMB_INFO_STANDARD:
 	s = "InfoStandard";
+        ohbytes = sizeof(fp->u.FstandardInfo);
     	break;
+
     case SMB_INFO_QUERY_EA_SIZE:
+        ohbytes = sizeof(fp->u.FeaSizeInfo);
 	s = "InfoQueryEaSize";
     	break;
+
     case SMB_INFO_QUERY_EAS_FROM_LIST:
+        ohbytes = sizeof(fp->u.FeasFromListInfo);
 	s = "InfoQueryEasFromList";
     	break;
+
     case SMB_FIND_FILE_DIRECTORY_INFO:
 	s = "FindFileDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileDirectoryInfo);
     	break;
+
     case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
 	s = "FindFileFullDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileFullDirectoryInfo);
     	break;
+
     case SMB_FIND_FILE_NAMES_INFO:
 	s = "FindFileNamesInfo";
+        ohbytes = sizeof(fp->u.FfileNamesInfo);
     	break;
+
     case SMB_FIND_FILE_BOTH_DIRECTORY_INFO:
 	s = "FindFileBothDirectoryInfo";
+        ohbytes = sizeof(fp->u.FfileBothDirectoryInfo);
     	break;
+
     default:
 	s = "unknownInfoLevel";
+        ohbytes = 0;
     }
 
     osi_Log1(smb_logp, "T2 search dir info level: %s", s);
@@ -4833,7 +4952,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     osi_Log3(smb_logp, "...T2 search op %d, id %d, nextCookie 0x%x",
               p->opcode, dsp->cookie, nextCookie);
 
-    if (infoLevel > SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+    if (ohbytes == 0) {
         osi_Log1(smb_logp, "Unsupported InfoLevel 0x%x", infoLevel);
         smb_ReleaseDirSearch(dsp);
         return CM_ERROR_INVAL;
@@ -4841,6 +4960,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
         searchFlags &= ~TRAN2_FIND_FLAG_RETURN_RESUME_KEYS;	/* no resume keys */
+
+    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
+        ohbytes += 4;
 
     dirListPatchesp = NULL;
 
@@ -4986,6 +5108,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
             /* skip over resume key */
             op += 4;
+
+        fp = (smb_tran2Find_t *) op;
 
         /* make sure that curOffset.LowPart doesn't point to the first
          * 32 bytes in the 2nd through last dir page, and that it doesn't
@@ -5195,29 +5319,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
 
             /* finally check if this name will fit */
-
-            /* standard dir entry stuff */
-            if (infoLevel < 0x101)
-                ohbytes = 23;	/* pre-NT */
-            else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
-                ohbytes = 12;	/* NT names only */
-            else
-                ohbytes = 64;	/* NT */
-
-            if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO)
-                ohbytes += 26;	/* Short name & length */
-
-            if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
-                ohbytes += 4;	/* if resume key required */
-            }   
-
-            if ( infoLevel != SMB_INFO_STANDARD && 
-                 infoLevel != SMB_FIND_FILE_DIRECTORY_INFO &&
-                 infoLevel != SMB_FIND_FILE_NAMES_INFO)
-                ohbytes += 4;	/* EASIZE */
-
-            /* add header to name & term. null */
-            orbytes = onbytes + ohbytes + 1;
+            onbytes = 0;
+            smb_UnparseString(opx, NULL, dep->name, &onbytes, SMB_STRF_ANSIPATH);
+            orbytes = ohbytes + onbytes;
 
             /* now, we round up the record to a 4 byte alignment,
              * and we make sure that we have enough room here for
@@ -5229,6 +5333,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 align = (4 - (orbytes & 3)) & 3;
             else
                 align = 0;
+
             if (orbytes + bytesInBuffer + align > maxReturnData) {
                 osi_Log1(smb_logp, "T2 dir search exceed max return data %d",
                           maxReturnData);
@@ -5240,37 +5345,76 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * Put out the name, preceded by its length.
              */
             /* First zero everything else */
-            memset(origOp, 0, ohbytes);
+            memset(origOp, 0, orbytes);
 
-            if (infoLevel <= SMB_FIND_FILE_DIRECTORY_INFO)
-                *(origOp + ohbytes - 1) = (unsigned char) onbytes;
-            else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
-                *((u_long *)(op + 8)) = onbytes;
-            else
-                *((u_long *)(op + 60)) = onbytes;
-            strcpy(origOp+ohbytes, dep->name);
-            if (smb_StoreAnsiFilenames)
-                CharToOem(origOp+ohbytes, origOp+ohbytes);
+            onbytes = 0;
+            smb_UnparseString(opx, origOp + ohbytes, dep->name, &onbytes, SMB_STRF_ANSIPATH);
 
-            /* Short name if requested and needed */
-            if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+            switch (infoLevel) {
+            case SMB_INFO_STANDARD:
+                fp->u.FstandardInfo.fileNameLength = onbytes;
+                attrp = &fp->u.FstandardInfo.fileAttrs;
+                break;
+
+            case SMB_INFO_QUERY_EA_SIZE:
+                fp->u.FeaSizeInfo.fileNameLength = onbytes;
+                attrp = &fp->u.FeaSizeInfo.fileAttrs;
+                fp->u.FeaSizeInfo.eaSize = 0;
+                break;
+
+            case SMB_INFO_QUERY_EAS_FROM_LIST:
+                fp->u.FeasFromListInfo.fileNameLength = onbytes;
+                attrp = &fp->u.FeasFromListInfo.fileAttrs;
+                fp->u.FeasFromListInfo.eaSize = 0;
+                break;
+
+            case SMB_FIND_FILE_BOTH_DIRECTORY_INFO:
                 if (NeedShortName) {
-                    strcpy(op + 70, shortName);
-                    if (smb_StoreAnsiFilenames)
-                        CharToOem(op + 70, op + 70);
-                    *(op + 68) = (char)(shortNameEnd - shortName);
+#ifdef SMB_UNICODE
+                    int nchars;
+
+                    nchars = MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
+                                                 shortName, -1,
+                                                 fp->u.FfileBothDirectoryInfo.shortName,
+                                                 sizeof(fp->u.FfileBothDirectoryInfo.shortName) / sizeof(wchar_t));
+                    if (nchars > 0)
+                        fp->u.FfileBothDirectoryInfo.shortNameLength = (nchars - 1)*sizeof(wchar_t);
+                    else
+                        fp->u.FfileBothDirectoryInfo.shortNameLength = 0;
+                    fp->u.FfileBothDirectoryInfo.reserved = 0;
+#else
+                    strcpy(fp->u.FfileBothDirectoryInfo.shortName,
+                           shortName);
+                    fp->u.FfileBothDirectoryInfo.shortNameLength = strlen(shortName);
+#endif
                 }
+                /* Fallthrough */
+
+            case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
+                fp->u.FfileFullDirectoryInfo.eaSize = 0;
+                /* Fallthrough */
+
+            case SMB_FIND_FILE_DIRECTORY_INFO:
+                fp->u.FfileDirectoryInfo.nextEntryOffset = orbytes + align;
+                fp->u.FfileDirectoryInfo.fileIndex = nextEntryCookie;
+                attrp = &fp->u.FfileDirectoryInfo.fileAttrs;
+                fp->u.FfileDirectoryInfo.fileNameLength = onbytes;
+                break;
+
+            case SMB_FIND_FILE_NAMES_INFO:
+                fp->u.FfileNamesInfo.nextEntryOffset = orbytes + align;
+                fp->u.FfileNamesInfo.fileIndex = nextEntryCookie;
+                fp->u.FfileNamesInfo.fileNameLength = onbytes;
+                attrp = NULL;
+                break;
+
+            default:
+                /* we shouldn't hit this case */
+                osi_assertx(FALSE, "Unknown query type");
             }
 
             /* now, adjust the # of entries copied */
             returnedNames++;
-
-            /* NextEntryOffset and FileIndex */
-            if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
-                int entryOffset = orbytes + align;
-                *((u_long *)op) = entryOffset;
-                *((u_long *)(op+4)) = nextEntryCookie;
-            }
 
             /* now we emit the attribute.  This is tricky, since
              * we need to really stat the file to find out what
@@ -5286,17 +5430,16 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * safe to unlock the directory.
              */
             if (infoLevel != SMB_FIND_FILE_NAMES_INFO) {
+                osi_assert(attrp != NULL);
                 curPatchp = malloc(sizeof(*curPatchp));
                 osi_QAdd((osi_queue_t **) &dirListPatchesp, &curPatchp->q);
-                curPatchp->dptr = op;
-                if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
-                    curPatchp->dptr += 8;
+                curPatchp->dptr = attrp;
 
                 if (smb_hideDotFiles && smb_IsDotFile(dep->name)) {
                     curPatchp->flags = SMB_DIRLISTPATCH_DOTFILE;
-                }       
-                else    
+                } else {
                     curPatchp->flags = 0;
+                }
 
                 cm_SetFid(&curPatchp->fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
 
@@ -5313,7 +5456,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             bytesInBuffer += orbytes;
 
             /* and pad the record out */
-            while (--align >= 0) {
+            while (align-- > 0) {
                 *origOp++ = 0;
                 bytesInBuffer++;
             }
@@ -5414,6 +5557,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     return 0;
 }
 
+/* SMB_COM_FIND_CLOSE2 */
 long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int dirHandle;
@@ -5438,12 +5582,15 @@ long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     return 0;
 }
 
+
+/* SMB_COM_FIND_NOTIFY_CLOSE */
 long smb_ReceiveV3FindNotifyClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_SetSMBDataLength(outp, 0);
     return 0;
 }
 
+/* SMB_COM_OPEN_ANDX */
 long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp;
@@ -5458,7 +5605,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_fid_t *fidp;
     int attributes;
     char *lastNamep;
-    afs_uint32 dosTime;
+    unsigned long dosTime;
     int openFun;
     int trunc;
     int openMode;
@@ -5488,9 +5635,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (attributes & SMB_ATTR_READONLY) 
 	initialModeBits &= ~0222;
         
-    pathp = smb_GetSMBData(inp, NULL);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, smb_GetSMBData(inp, NULL), NULL,
+                                SMB_STRF_ANSIPATH);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5791,6 +5937,7 @@ static void smb_GetLockParams(unsigned char LockType,
     }
 }
 
+/* SMB_COM_LOCKING_ANDX */
 long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     cm_req_t req;
@@ -6085,6 +6232,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return code;
 }
 
+/* SMB_COM_QUERY_INFORMATION2 */
 long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short fid;
@@ -6172,6 +6320,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     return code;
 }       
 
+/* SMB_COM_SET_INFORMATION2 */
 long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short fid;
@@ -6241,6 +6390,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     return code;
 }
 
+/* SMB_COM_WRITE_ANDX */
 long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     osi_hyper_t offset;
@@ -6379,6 +6529,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return code;
 }
 
+/* SMB_COM_READ_ANDX */
 long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     osi_hyper_t offset;
@@ -6537,6 +6688,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #define FILE_DELETE_ON_CLOSE      0x1000
 #define FILE_OPEN_BY_FILE_ID      0x2000
 
+/* SMB_COM_NT_CREATE_ANDX */
 long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp, *realPathp;
@@ -6633,13 +6785,16 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (extAttributes & SMB_ATTR_READONLY) 
         initialModeBits &= ~0222;
 
-    pathp = smb_GetSMBData(inp, NULL);
+    if (nameLength == 0)
+        return CM_ERROR_INVAL;
+
+    pathp = smb_ParseStringCb(inp, smb_GetSMBData(inp, NULL), nameLength,
+                              NULL, SMB_STRF_ANSIPATH);
+
     /* Sometimes path is not null-terminated, so we make a copy. */
     realPathp = malloc(nameLength+1);
     memcpy(realPathp, pathp, nameLength);
     realPathp[nameLength] = 0;
-    if (smb_StoreAnsiFilenames)
-        OemToChar(realPathp,realPathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
@@ -7371,6 +7526,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
  * A lot of stuff copied verbatim from NT Create&X to NT Tran Create.
  * Instead, ultimately, would like to use a subroutine for common code.
  */
+
+/* NT_TRANSACT_CREATE (SMB_COM_NT_TRANSACT) */
 long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp, *realPathp;
@@ -7480,13 +7637,11 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         initialModeBits &= ~0222;
 
     pathp = parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR);
+    pathp = smb_ParseStringCch(inp, pathp, nameLength, NULL, SMB_STRF_ANSIPATH);
     /* Sometimes path is not null-terminated, so we make a copy. */
     realPathp = malloc(nameLength+1);
     memcpy(realPathp, pathp, nameLength);
     realPathp[nameLength] = 0;
-    if (smb_StoreAnsiFilenames)
-        OemToChar(realPathp,realPathp);
-
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
 
@@ -8109,6 +8264,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     return 0;
 }
 
+/* NT_TRANSACT_NOTIFY_CHANGE (SMB_COM_NT_TRANSACT) */
 long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *outp)
 {
@@ -8207,6 +8363,7 @@ unsigned char nullSecurityDesc[36] = {
                                         /* "null SID" group SID */
 };      
 
+/* NT_TRANSACT_QUERY_SECURITY_DESC (SMB_COM_NT_TRANSACT) */
 long smb_ReceiveNTTranQuerySecurityDesc(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int parmOffset, parmCount, dataOffset, dataCount;
@@ -8275,6 +8432,10 @@ long smb_ReceiveNTTranQuerySecurityDesc(smb_vc_t *vcp, smb_packet_t *inp, smb_pa
         return CM_ERROR_BUFFERTOOSMALL;
 }
 
+/* SMB_COM_NT_TRANSACT
+
+   SMB_COM_NT_TRANSACT_SECONDARY should also be handled here.
+ */
 long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short function;
@@ -8288,20 +8449,20 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         ((smb_t *)outp)->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
         
     switch (function) {
-    case 1: 
+    case 1:                     /* NT_TRANSACT_CREATE */
         return smb_ReceiveNTTranCreate(vcp, inp, outp);
-    case 2:
+    case 2:                     /* NT_TRANSACT_IOCTL */
 	osi_Log0(smb_logp, "SMB NT Transact Ioctl - not implemented");
 	break;
-    case 3:
+    case 3:                     /* NT_TRANSACT_SET_SECURITY_DESC */
 	osi_Log0(smb_logp, "SMB NT Transact SetSecurityDesc - not implemented");
 	break;
-    case 4:
+    case 4:                     /* NT_TRANSACT_NOTIFY_CHANGE */
         return smb_ReceiveNTTranNotifyChange(vcp, inp, outp);
-    case 5:
+    case 5:                     /* NT_TRANSACT_RENAME */
 	osi_Log0(smb_logp, "SMB NT Transact Rename - not implemented");
 	break;
-    case 6:
+    case 6:                     /* NT_TRANSACT_QUERY_SECURITY_DESC */
         return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
     case 7:
         osi_Log0(smb_logp, "SMB NT Transact Query Quota - not implemented");
@@ -8544,6 +8705,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
     lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 }       
 
+/* SMB_COM_NT_CANCEL */
 long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned char *replyWctp;
@@ -8642,12 +8804,8 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     tp = smb_GetSMBData(inp, NULL);
-    oldPathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(oldPathp,oldPathp);
-    newPathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(newPathp,newPathp);
+    oldPathp = smb_ParseASCIIBlock(inp, tp, &tp, 0);
+    newPathp = smb_ParseASCIIBlock(inp, tp, &tp, 0);
 
     osi_Log3(smb_logp, "NTRename for [%s]->[%s] type [%s]",
              osi_LogSaveString(smb_logp, oldPathp),

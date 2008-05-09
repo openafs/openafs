@@ -12,7 +12,7 @@ extern "C" {
 #include <afs/stds.h>
 }
 
-#include <string.h>
+#include <tchar.h>
 #include <stdarg.h>
 
 #include "stdafx.h"
@@ -58,134 +58,134 @@ extern "C" {
 UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 
     CString temp;
-    char *pszstring, 
+    TCHAR *pszstring, 
     *pszpaste, 
     *pszcut, 
     *pszdone,
     *pszconvert;
-    char chread;
+    TCHAR chread;
     va_list params;
     int x;
 
-    pszconvert = new char[255];    	
+    pszconvert = new TCHAR[255];    	
     va_start(params, Help);
     LoadString (temp, Id);
     pszstring = temp.GetBuffer(512);
-    strcpy(pszstring,pszstring);
+    _tcscpy(pszstring,pszstring);
     temp.ReleaseBuffer();
     // Look and see - is there a need to insert chars (95% of the time, there won't)
-    if (!strstr(pszstring, "%")) {
+    if (!_tcsstr(pszstring, _T("%"))) {
 	delete pszconvert;
 	return AfxMessageBox(pszstring, Button, Help);
     }   
 
-    x = strcspn(pszstring, "%");
-    pszdone = new char[512];
-    pszcut = new char[512];
-    pszpaste = new char[512];
-    strcpy(pszcut, &pszstring[x+2]);
-    strncpy(pszpaste, pszstring, x);
-    pszpaste[x] = '\0';
+    x = _tcscspn(pszstring, _T("%"));
+    pszdone = new TCHAR[512];
+    pszcut = new TCHAR[512];
+    pszpaste = new TCHAR[512];
+    _tcscpy(pszcut, &pszstring[x+2]);
+    _tcsncpy(pszpaste, pszstring, x);
+    pszpaste[x] = _T('\0');
     chread = pszstring[x+1];
 
     for ( ; ; ) {
 
 	switch (chread) { 
-	case	'i' :
-	case	'd' :
+	case	_T('i') :
+	case	_T('d') :
 	{ 	    
 	    int anint = va_arg(params, int);
-	    _itoa( anint, pszconvert, 10);
+	    _itot( anint, pszconvert, 10);
 	    break;
 	}
-	case	'u' :
+	case	_T('u') :
 	{	
 	    UINT anuint = va_arg(params, UINT);
-	    _itoa( anuint, pszconvert, 10);
+	    _itot( anuint, pszconvert, 10);
 	    break;
 	}
 
-	case	'x' :
-	case	'X' :   
+	case	_T('x') :
+	case	_T('X') :   
 	{
 	    int ahex = va_arg(params, int);
-	    _itoa( ahex, pszconvert, 16);
+	    _itot( ahex, pszconvert, 16);
 	    break;
 	}
-	case	'g' :
-	case	'f' :
-	case	'e' :   
+	case	_T('g') :
+	case	_T('f') :
+	case	_T('e') :   
 	{
 	    double adbl = va_arg(params, double);
-	    _gcvt( adbl, 10, pszconvert);
+            _stprintf(pszconvert, _T("%g"), adbl);
 	    break;
 	}
-	case	's' :	
+	case	_T('s') :	
 	{
-	    char *pStr = va_arg(params, char*);
-	    ASSERT(strlen(pStr) <= 255);
-	    strcpy(pszconvert, pStr);
+	    TCHAR *pStr = va_arg(params, TCHAR*);
+	    ASSERT(_tcslen(pStr) <= 255);
+	    _tcscpy(pszconvert, pStr);
 	    break;
 	}
-	case	'l' :	
+	case	_T('l') :	
 	{
 	    chread = pszdone[x+2];
 	    switch(chread) {
-	    case	'x'	:
+	    case	_T('x')	:
 	    {
 		long int alhex = va_arg(params, long int);
-		_ltoa(alhex, pszconvert, 16);
-		strcpy(pszcut, &pszcut[1]);
+		_ltot(alhex, pszconvert, 16);
+		_tcscpy(pszcut, &pszcut[1]);
 		break;
 	    }
-	    case 	'd'	:
+	    case 	_T('d')	:
 		default 	:
 		{
 		    long int along = va_arg(params, long int);
-		    _ltoa( along, pszconvert, 10);
+		    _ltot( along, pszconvert, 10);
 		    // For the L, there will be one character after it,
 		    //   so move ahead another letter
-		    strcpy(pszcut, &pszcut[1]);
+		    _tcscpy(pszcut, &pszcut[1]);
 		    break;
 		}
 	    }
 	    break;
 	}
 
-	case	'c' :	
+	case	_T('c') :	
 	{
 	    int letter = va_arg(params, int);
-	    pszconvert[0] = (char)letter;
+	    pszconvert[0] = (TCHAR)letter;
 	    pszconvert[1] = '\0'; 
 	    break;
 	}
-	case 	'a'	:
+	case 	_T('a')	:
 	{
 	    CString zeta;
-	    char* lsc;
+	    TCHAR* lsc;
 	    UINT ls = va_arg(params, UINT);
 	    LoadString (zeta, ls);
 	    lsc = zeta.GetBuffer(255);
-	    strcpy(pszconvert, lsc);
+	    _tcscpy(pszconvert, lsc);
 	    zeta.ReleaseBuffer();
 	    break;
 	}
-	case	'o'	:
+	case	_T('o')	:
 	{
 	    CString get = va_arg(params, CString);
-	    char* ex = get.GetBuffer(255);
-	    strcpy(pszconvert,ex);
+	    TCHAR* ex = get.GetBuffer(255);
+	    _tcscpy(pszconvert,ex);
 	    get.ReleaseBuffer();
 	    break;
 	}
 	    default 	:
 	    {	
-		strcpy(pszconvert, " Could not load message. Invalid %type in string table entry. ");
+		_tcscpy(pszconvert, _T(" Could not load message. Invalid %type in string table entry. "));
 		delete pszdone;
-		pszdone = new char[strlen(pszpaste)+strlen(pszcut)+strlen(pszconvert)+5];
-		strcpy(pszdone, pszpaste);
-		strcat(pszdone, pszconvert);
-		strcat(pszdone, pszcut);
+		pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
+		_tcscpy(pszdone, pszpaste);
+		_tcscat(pszdone, pszconvert);
+		_tcscat(pszdone, pszcut);
 		AfxMessageBox(pszdone, Button, Help);
 		delete pszcut;
 		delete pszpaste;
@@ -197,14 +197,14 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	} // case
 
 	delete pszdone;
-	pszdone = new char[strlen(pszpaste)+strlen(pszcut)+strlen(pszconvert)+5];
-	strcpy(pszdone, pszpaste);
-	strcat(pszdone, pszconvert);
-	strcat(pszdone, pszcut);
+	pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
+	_tcscpy(pszdone, pszpaste);
+	_tcscat(pszdone, pszconvert);
+	_tcscat(pszdone, pszcut);
 	// Now pszdone holds the entire message.
 	// Check to see if there are more insertions to be made or not
 	
-	if (!strstr(pszdone, "%"))	{
+	if (!_tcsstr(pszdone, _T("%")))	{
 	    UINT rt_type = AfxMessageBox(pszdone, Button, Help);
 	    delete pszcut;
 	    delete pszpaste;
@@ -214,10 +214,10 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	} // if
 
 	// there are more insertions to make, prepare the strings to use.
-	x = strcspn(pszdone, "%");
-	strcpy(pszcut, &pszdone[x+2]);
-	strncpy(pszpaste, pszdone, x); 
-	pszpaste[x] = '\0';
+	x = _tcscspn(pszdone, _T("%"));
+	_tcscpy(pszcut, &pszdone[x+2]);
+	_tcsncpy(pszpaste, pszdone, x); 
+	pszpaste[x] = _T('\0');
 	chread = pszdone[x+1];
 	
     } // for
@@ -229,137 +229,137 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 CString GetMessageString(UINT Id, ...)
 {
     CString temp;
-    char *pszstring, 
+    TCHAR *pszstring, 
     *pszpaste, 
     *pszcut, 
     *pszdone,
     *pszconvert;
-    char chread;
+    TCHAR chread;
     va_list params;
     int x;
     CString strMsg;
 
-    pszconvert = new char[255];    	
+    pszconvert = new TCHAR[255];    	
     va_start(params, Id);
     LoadString (temp, Id);
     pszstring = temp.GetBuffer(512);
-    strcpy(pszconvert,pszstring);
+    _tcscpy(pszconvert,pszstring);
     temp.ReleaseBuffer();
 
     // Look and see - is there a need to insert chars (95% of the time, there won't)
-    if (!strstr(pszstring, "%")) {
+    if (!_tcsstr(pszstring, _T("%"))) {
 	strMsg = pszconvert;
 	delete pszconvert;
 	return strMsg;
     }   
 
-    x = strcspn(pszstring, "%");
-    pszdone = new char[512];
-    pszcut = new char[512];
-    pszpaste = new char[512];
-    strcpy(pszcut, &pszstring[x+2]);
-    strncpy(pszpaste, pszstring, x);
-    pszpaste[x] = '\0';
+    x = _tcscspn(pszstring, _T("%"));
+    pszdone = new TCHAR[512];
+    pszcut = new TCHAR[512];
+    pszpaste = new TCHAR[512];
+    _tcscpy(pszcut, &pszstring[x+2]);
+    _tcsncpy(pszpaste, pszstring, x);
+    pszpaste[x] = _T('\0');
     chread = pszstring[x+1];
 
     for ( ; ; ) {
 
 	switch (chread) { 
-	case	'i' :
-	case	'd' :
+	case	_T('i') :
+	case	_T('d') :
 	{ 	    
 	    int anint = va_arg(params, int);
-	    _itoa( anint, pszconvert, 10);
+	    _itot( anint, pszconvert, 10);
 	    break;
 	}
-	case	'u' :
+	case	_T('u') :
 	{	
 	    UINT anuint = va_arg(params, UINT);
-	    _itoa( anuint, pszconvert, 10);
+	    _itot( anuint, pszconvert, 10);
 	    break;
 	}
 
-	case	'x' :
-	case	'X' :   
+	case	_T('x') :
+	case	_T('X') :   
 	{
 	    int ahex = va_arg(params, int);
-	    _itoa( ahex, pszconvert, 16);
+	    _itot( ahex, pszconvert, 16);
 	    break;
 	}
-	case	'g' :
-	case	'f' :
-	case	'e' :   
+	case	_T('g') :
+	case	_T('f') :
+	case	_T('e') :   
 	{
 	    double adbl = va_arg(params, double);
-	    _gcvt( adbl, 10, pszconvert);
+            _stprintf(pszconvert, _T("%g"), adbl);
 	    break;
 	}
-	case	's' :	
+	case	_T('s') :	
 	{
-	    char *pStr = va_arg(params, char*);
-	    ASSERT(strlen(pStr) <= 255);
-	    strcpy(pszconvert, pStr);
+	    TCHAR *pStr = va_arg(params, TCHAR*);
+	    ASSERT(_tcslen(pStr) <= 255);
+	    _tcscpy(pszconvert, pStr);
 	    break;
 	}
-	case	'l' :	
+	case	_T('l') :	
 	{
 	    chread = pszdone[x+2];
 	    switch(chread) {
-	    case	'x'	:
+	    case	_T('x')	:
 	    {
 		long int alhex = va_arg(params, long int);
-		_ltoa(alhex, pszconvert, 16);
-		strcpy(pszcut, &pszcut[1]);
+		_ltot(alhex, pszconvert, 16);
+		_tcscpy(pszcut, &pszcut[1]);
 		break;
 	    }
-	    case 	'd'	:
+	    case 	_T('d')	:
 		default 	:
 		{
 		    long int along = va_arg(params, long int);
-		    _ltoa( along, pszconvert, 10);
+		    _ltot( along, pszconvert, 10);
 		    // For the L, there will be one character after it,
 		    //   so move ahead another letter
-		    strcpy(pszcut, &pszcut[1]);
+		    _tcscpy(pszcut, &pszcut[1]);
 		    break;
 		}
 	    }
 	    break;
 	}	
 
-	case	'c' :	
+	case	_T('c') :	
 	{
 	    int letter = va_arg(params, int);
-	    pszconvert[0] = (char)letter;
-	    pszconvert[1] = '\0'; 
+	    pszconvert[0] = (TCHAR)letter;
+	    pszconvert[1] = _T('\0'); 
 	    break;
 	}
-	case 	'a'	:
+	case 	_T('a')	:
 	{
 	    CString zeta;
-	    char* lsc;
+	    TCHAR* lsc;
 	    UINT ls = va_arg(params, UINT);
 	    LoadString (zeta, ls);
 	    lsc = zeta.GetBuffer(255);
-	    strcpy(pszconvert, lsc);
+	    _tcscpy(pszconvert, lsc);
 	    zeta.ReleaseBuffer();
 	    break;
 	}
-	case	'o'	:
+	case	_T('o')	:
 	{
 	    CString get = va_arg(params, CString);
-	    char* ex = get.GetBuffer(255);
-	    strcpy(pszconvert,ex);
+	    TCHAR* ex = get.GetBuffer(255);
+	    _tcscpy(pszconvert,ex);
 	    get.ReleaseBuffer();
 	    break;
 	}
 	default:
 	    {	
-		strcpy(pszconvert, " Could not load message. Invalid %type in string table entry. ");
+		_tcscpy(pszconvert, _T(" Could not load message. Invalid %type in string table entry. "));
 		delete pszdone;
-		pszdone = new char[strlen(pszpaste)+strlen(pszcut)+strlen(pszconvert)+5];
-		strcpy(pszdone, pszpaste);
-		strcat(pszdone, pszconvert);
-		strcat(pszdone, pszcut);
+		pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
+		_tcscpy(pszdone, pszpaste);
+		_tcscat(pszdone, pszconvert);
+		_tcscat(pszdone, pszcut);
 		strMsg = pszdone;
 		delete pszcut;
 		delete pszpaste;
@@ -371,14 +371,14 @@ CString GetMessageString(UINT Id, ...)
 	} // case
 
 	delete pszdone;
-	pszdone = new char[strlen(pszpaste)+strlen(pszcut)+strlen(pszconvert)+5];
-	strcpy(pszdone, pszpaste);
-	strcat(pszdone, pszconvert);
-	strcat(pszdone, pszcut);
+	pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
+	_tcscpy(pszdone, pszpaste);
+	_tcscat(pszdone, pszconvert);
+	_tcscat(pszdone, pszcut);
 	// Now pszdone holds the entire message.
 	// Check to see if there are more insertions to be made or not
 	
-	if (!strstr(pszdone, "%"))	{
+	if (!_tcsstr(pszdone, _T("%")))	{
 	    strMsg = pszdone;
 	    delete pszcut;
 	    delete pszpaste;
@@ -388,10 +388,10 @@ CString GetMessageString(UINT Id, ...)
 	} // if
 
 	// there are more insertions to make, prepare the strings to use.
-	x = strcspn(pszdone, "%");
-	strcpy(pszcut, &pszdone[x+2]);
-	strncpy(pszpaste, pszdone, x); 
-	pszpaste[x] = '\0';
+	x = _tcscspn(pszdone, _T("%"));
+	_tcscpy(pszcut, &pszdone[x+2]);
+	_tcsncpy(pszpaste, pszdone, x); 
+	pszpaste[x] = _T('\0');
 	chread = pszdone[x+1];
 	
     } // for
@@ -401,8 +401,15 @@ CString GetMessageString(UINT Id, ...)
 
 void LoadString (CString &Str, UINT id)
 {
-    TCHAR szString[ 256 ];
+    extern EXPORTED void GetString (LPSTR pszTarget, int idsSource, int cchMax = cchRESOURCE);
+
+    char szString[ 256 ];
     GetString (szString, id);
+#ifdef UNICODE
+    CString wstr(szString);
+    Str = wstr;
+#else
     Str = szString;
+#endif
 }
 

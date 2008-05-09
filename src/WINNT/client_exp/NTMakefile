@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd  /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL"
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd  /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL" -DUNICODE -D_UNICODE
 
 NO_CRTDBG=1			#define this to disable any CRT_DBG flag
 RELDIR=WINNT\client_exp

@@ -30,10 +30,12 @@ typedef struct smb_tran2Packet {
 	unsigned short res[6];		/* contains PidHigh */
         unsigned short *parmsp;		/* parms */
         unsigned char *datap;		/* data bytes */
+        cm_space_t * stringsp;          /* decoded strings */
 } smb_tran2Packet_t;
 
 /* for flags field */
 #define SMB_TRAN2PFLAG_ALLOC	1
+#define SMB_TRAN2PFLAG_USEUNICODE  2
 
 typedef struct smb_tran2Dispatch {
 	long (*procp)(smb_vc_t *, smb_tran2Packet_t *, smb_packet_t *);
@@ -56,14 +58,14 @@ typedef struct smb_tran2QFSInfo {
         struct {
             unsigned long vsn;			/* volume serial number */
             char vnCount;			/* count of chars in label, incl null */
-            char label[12];			/* pad out with nulls */
+            char /* STRING */ label[24];        /* pad out with nulls */
         } volumeInfo;
         struct {
             FILETIME      vct;		/* volume creation time */
             unsigned long vsn;	        /* volume serial number */
             unsigned long vnCount;	/* length of volume label in bytes */
             char res[2];		/* reserved */
-            char label[10];		/* volume label */
+            char /* STRING */ label[20];	/* volume label */
         } FSvolumeInfo;
         struct {
             LARGE_INTEGER totalAllocUnits;	/* on the disk */
@@ -79,7 +81,7 @@ typedef struct smb_tran2QFSInfo {
             unsigned long attributes;
             unsigned long maxCompLength;	/* max path component length */
             unsigned long FSnameLength;		/* length of file system name */
-            unsigned char FSname[12];
+            unsigned char /* STRING */ FSname[24]; /* File system name */
         } FSattributeInfo;
     } u;
 } smb_tran2QFSInfo_t;
@@ -137,7 +139,7 @@ typedef struct {
 	} QPfileEaInfo;
 	struct {
 	    unsigned long  fileNameLength;
-	    unsigned char  fileName[512];
+	    unsigned char  fileName[512]; /* STRING */
 	} QPfileNameInfo;
 	struct {
 	    FILETIME       creationTime;
@@ -158,18 +160,18 @@ typedef struct {
 	    unsigned long  mode;
 	    unsigned long  alignmentRequirement;
 	    unsigned long  fileNameLength;
-	    unsigned char  fileName[512];
+	    unsigned char  fileName[512]; /* STRING */
 	} QPfileAllInfo;
 	struct {
 	    unsigned long  fileNameLength;
-	    unsigned char  fileName[512];
+	    unsigned char  fileName[512]; /* STRING */
 	} QPfileAltNameInfo;
 	struct {
 	    unsigned long  nextEntryOffset;
 	    unsigned long  streamNameLength;
 	    LARGE_INTEGER  streamSize;
 	    LARGE_INTEGER  streamAllocationSize;
-	    unsigned char  fileName[512];
+	    unsigned char  fileName[512]; /* STRING */
 	} QPfileStreamInfo;
 	struct {
 	    LARGE_INTEGER  compressedFileSize;
@@ -207,6 +209,79 @@ typedef struct {
 	} QFfileNameInfo;
     } u;
 } smb_tran2QFileInfo_t;
+
+typedef struct {
+    unsigned long  creationDateTime;	/* SMB_DATE / SMB_TIME */
+    unsigned long  lastAccessDateTime;	/* SMB_DATE / SMB_TIME */
+    unsigned long  lastWriteDateTime;	/* SMB_DATE / SMB_TIME */
+    unsigned long  dataSize;
+    unsigned long  allocationSize;
+    unsigned short attributes;
+} smb_V3FileAttrsShort;
+
+typedef struct {
+    FILETIME       creationTime;
+    FILETIME       lastAccessTime;
+    FILETIME       lastWriteTime;
+    FILETIME       lastChangeTime;
+    LARGE_INTEGER  endOfFile;
+    LARGE_INTEGER  allocationSize;
+    unsigned long  extFileAttributes;
+} smb_V3FileAttrsLong;
+
+typedef struct {
+    union {
+	struct {
+            smb_V3FileAttrsShort fileAttrs;
+	    unsigned char  fileNameLength;
+            /* STRING fileName */
+	} FstandardInfo;
+
+	struct {
+            smb_V3FileAttrsShort fileAttrs;
+	    unsigned long  eaSize;
+            unsigned char  fileNameLength;
+            /* STRING fileName */
+	} FeaSizeInfo, FeasFromListInfo;
+
+        struct {
+            unsigned long  nextEntryOffset;
+            unsigned long  fileIndex;
+            smb_V3FileAttrsLong fileAttrs;
+            unsigned long  fileNameLength;
+            /* STRING fileName */
+        } FfileDirectoryInfo;
+
+        struct {
+            unsigned long  nextEntryOffset;
+            unsigned long  fileIndex;
+            smb_V3FileAttrsLong fileAttrs;
+            unsigned long  fileNameLength;
+            unsigned long  eaSize;
+            /* STRING fileName */
+        } FfileFullDirectoryInfo;
+
+        struct {
+            unsigned long  nextEntryOffset;
+            unsigned long  fileIndex;
+            smb_V3FileAttrsLong fileAttrs;
+            unsigned long  fileNameLength;
+            unsigned long  eaSize;
+            unsigned char  shortNameLength;
+            unsigned char  reserved;
+            wchar_t        shortName[12];
+            /* STRING fileName */
+        } FfileBothDirectoryInfo;
+
+        struct {
+            unsigned long  nextEntryOffset;
+            unsigned long  fileIndex;
+            unsigned long  fileNameLength;
+            /* STRING fileName */
+        } FfileNamesInfo;
+    } u;
+} smb_tran2Find_t;
+
 #pragma pack(pop)
 
 /* more than enough opcodes for today, anyway */

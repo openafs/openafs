@@ -51,7 +51,7 @@ static BOOL IsADir(const CString& strName)
 {
     struct _stat statbuf;
 
-    if (_stat(strName, &statbuf) < 0)
+    if (_tstat(strName, &statbuf) < 0)
 	return FALSE;
 
     return statbuf.st_mode & _S_IFDIR;
@@ -76,9 +76,9 @@ CShellExt::CShellExt()
     m_bIsOverlayEnabled=FALSE;
     if (FAILED(hr))
 	m_pAlloc = NULL;
-    RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &NPKey);
+    RegOpenKeyExA(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &NPKey);
     LSPsize=sizeof(ShellOption);
-    code=RegQueryValueEx(NPKey, "ShellOption", NULL,
+    code=RegQueryValueEx(NPKey, _T("ShellOption"), NULL,
 			  &LSPtype, (LPBYTE)&ShellOption, &LSPsize);
     RegCloseKey (NPKey);
     m_bIsOverlayEnabled=((code==0) && (LSPtype==REG_DWORD) && ((ShellOption & OVERLAYENABLED)!=0));
@@ -203,11 +203,11 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
-	if ((!lstrcmp(szItemText,"&Delete"))&&(pThis->m_bIsSymlink)) {	/*this is a symlink - don't present a delete menu!*/
+	if ((!lstrcmp(szItemText,_T("&Delete")))&&(pThis->m_bIsSymlink)) {	/*this is a symlink - don't present a delete menu!*/
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
-	if ((!lstrcmp(szItemText,"Cu&t"))&&(pThis->m_bIsSymlink)) {	/*same for cut*/
+	if ((!lstrcmp(szItemText,_T("Cu&t")))&&(pThis->m_bIsSymlink)) {	/*same for cut*/
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
@@ -408,7 +408,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     }
 
     case IDM_SYMBOLICLINK_ADD: {
-	CString msg=files.GetAt(0);
+	CStringA msg(files.GetAt(0));
 	int i;
 	if ((i=msg.ReverseFind('\\'))>0)
 	    msg=msg.Left(i+1);
@@ -528,7 +528,7 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
     CString strMsg;
     LoadString (strMsg, nCmdStrID);
 
-    strncpy(pszName, strMsg, cchMax);
+    _tcsncpy((LPTSTR) pszName, strMsg, cchMax);
 
     return NOERROR;
 }
@@ -655,10 +655,14 @@ STDMETHODIMP CShellExt::XIconExt::GetOverlayInfo(LPWSTR pwszIconFile
     if(IsBadWritePtr(pdwFlags, sizeof(DWORD)))
 	return E_INVALIDARG;
 
-    HMODULE hModule=GetModuleHandle("shell32.dll");
+    HMODULE hModule=GetModuleHandle(_T("shell32.dll"));
     TCHAR szModule[MAX_PATH];
     DWORD z=GetModuleFileName(hModule,szModule,sizeof(szModule));
+#ifndef UNICODE
     MultiByteToWideChar( CP_ACP,0,szModule,-1,pwszIconFile,cchMax); 
+#else
+    _tcsncpy(pwszIconFile, szModule, cchMax);
+#endif
     *pIndex = 30;
     *pdwFlags = ISIOI_ICONFILE | ISIOI_ICONINDEX;
     return S_OK;
@@ -675,7 +679,11 @@ STDMETHODIMP CShellExt::XIconExt::GetPriority(int* pPriority)
 STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
 {
     TCHAR szPath[MAX_PATH];
+#ifdef UNICODE
+    _tcscpy(szPath, pwszPath);
+#else
     WideCharToMultiByte( CP_ACP,0,pwszPath,-1,szPath,MAX_PATH,NULL,NULL);
+#endif
     if (IsSymlink(szPath))
 	return S_OK;
     return S_FALSE;

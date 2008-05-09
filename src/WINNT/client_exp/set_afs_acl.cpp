@@ -101,10 +101,10 @@ BOOL CSetAfsAcl::OnInitDialog()
 
         int i;
 	for (i = 0; i < m_Normal.GetSize(); i += 2)
-		m_NormalRights.AddString(m_Normal[i + 1] + "\t" + m_Normal[i]);
+		m_NormalRights.AddString(m_Normal[i + 1] + _T("\t") + m_Normal[i]);
 
 	for (i = 0; i < m_Negative.GetSize(); i += 2)
-		m_NegativeRights.AddString(m_Negative[i + 1] + "\t" + m_Negative[i]);
+		m_NegativeRights.AddString(m_Negative[i + 1] + _T("\t") + m_Negative[i]);
 
 	CenterWindow();
 
@@ -159,13 +159,13 @@ void CSetAfsAcl::OnAdd()
 	if (bNormal) {
 		m_Normal.Add(name);
 		m_Normal.Add(rights);
-		m_nCurSel = m_NormalRights.AddString(rights + "\t" + name);
+		m_nCurSel = m_NormalRights.AddString(rights + _T("\t") + name);
 		m_NormalRights.SetSel(m_nCurSel);
 		m_bShowingNormal = TRUE;
 	} else {
 		m_Negative.Add(name);
 		m_Negative.Add(rights);
-		m_nCurSel = m_NegativeRights.AddString(rights + "\t" + name);
+		m_nCurSel = m_NegativeRights.AddString(rights + _T("\t") + name);
 		m_NegativeRights.SetSel(m_nCurSel);
 		m_bShowingNormal = FALSE;
 	}
@@ -193,13 +193,13 @@ void CSetAfsAcl::OnCopy()
 
 void CSetAfsAcl::ShowRights(const CString& strRights)
 {
-	m_ReadPerm.SetCheck((strRights.Find("r") == -1) ? UNCHECKED : CHECKED);
-	m_WritePerm.SetCheck((strRights.Find("w") == -1) ? UNCHECKED : CHECKED);
-	m_LookupPerm.SetCheck((strRights.Find("l") == -1) ? UNCHECKED : CHECKED);
-	m_DeletePerm.SetCheck((strRights.Find("d") == -1) ? UNCHECKED : CHECKED);
-	m_InsertPerm.SetCheck((strRights.Find("i") == -1) ? UNCHECKED : CHECKED);
-	m_LockPerm.SetCheck((strRights.Find("k") == -1) ? UNCHECKED : CHECKED);
-	m_AdminPerm.SetCheck((strRights.Find("a") == -1) ? UNCHECKED : CHECKED);
+	m_ReadPerm.SetCheck((strRights.Find(_T("r")) == -1) ? UNCHECKED : CHECKED);
+	m_WritePerm.SetCheck((strRights.Find(_T("w")) == -1) ? UNCHECKED : CHECKED);
+	m_LookupPerm.SetCheck((strRights.Find(_T("l")) == -1) ? UNCHECKED : CHECKED);
+	m_DeletePerm.SetCheck((strRights.Find(_T("d")) == -1) ? UNCHECKED : CHECKED);
+	m_InsertPerm.SetCheck((strRights.Find(_T("i")) == -1) ? UNCHECKED : CHECKED);
+	m_LockPerm.SetCheck((strRights.Find(_T("k")) == -1) ? UNCHECKED : CHECKED);
+	m_AdminPerm.SetCheck((strRights.Find(_T("a")) == -1) ? UNCHECKED : CHECKED);
 }
 
 void CSetAfsAcl::OnSelChangeNormalRights() 
@@ -210,7 +210,7 @@ void CSetAfsAcl::OnSelChangeNormalRights()
 
 	int nNum = m_NormalRights.GetSelCount();
 	if (nNum != 1) {
-		ShowRights("");
+		ShowRights(_T(""));
 		EnablePermChanges(FALSE);
 		return;
 	}
@@ -233,7 +233,7 @@ void CSetAfsAcl::OnSelChangeNegativeEntries()
 
 	int nNum = m_NegativeRights.GetSelCount();
 	if (nNum != 1) {
-		ShowRights("");
+		ShowRights(_T(""));
 		EnablePermChanges(FALSE);
 		return;
 	}
@@ -253,19 +253,19 @@ CString CSetAfsAcl::MakeRightsString()
 	CString str;
 
 	if (m_ReadPerm.GetCheck() == CHECKED)
-		str += "r";
+		str += _T("r");
 	if (m_LookupPerm.GetCheck() == CHECKED)
-		str += "l";
+		str += _T("l");
 	if (m_InsertPerm.GetCheck() == CHECKED)
-		str += "i";
+		str += _T("i");
 	if (m_DeletePerm.GetCheck() == CHECKED)
-		str += "d";
+		str += _T("d");
 	if (m_WritePerm.GetCheck() == CHECKED)
-		str += "w";
+		str += _T("w");
 	if (m_LockPerm.GetCheck() == CHECKED)
-		str += "k";
+		str += _T("k");
 	if (m_AdminPerm.GetCheck() == CHECKED)
-		str += "a";
+		str += _T("a");
 
 	return str;
 }
@@ -287,7 +287,7 @@ void CSetAfsAcl::OnPermChange()
 
 	CString str = MakeRightsString();
 	(*pRights)[(2 * m_nCurSel) + 1] = str;
-	str += "\t" + (*pRights)[(2 * m_nCurSel)];
+	str += _T("\t") + (*pRights)[(2 * m_nCurSel)];
 
 	pRightsList->DeleteString(m_nCurSel);
 	pRightsList->InsertString(m_nCurSel, str);
@@ -361,7 +361,7 @@ void CSetAfsAcl::OnNothingSelected()
     {
 	m_NegativeRights.SetSel(i, FALSE);
     }
-    ShowRights("");				// Show no rights
+    ShowRights(_T(""));				// Show no rights
     EnablePermChanges(FALSE);		// Allow no rights changes
     m_Remove.EnableWindow(FALSE);		// Disable remove button
 }

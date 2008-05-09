@@ -36,6 +36,9 @@
 #include "smb.h"
 #include "lanahelper.h"
 
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
+
 /* These characters are illegal in Windows filenames */
 static char *illegalChars = "\\/:*?\"<>|";
 
@@ -147,6 +150,9 @@ smb_dirSearch_t *smb_lastDirSearchp;
 
 /* hide dot files? */
 int smb_hideDotFiles;
+
+/* Negotiate Unicode support? */
+LONG smb_UseUnicode;
 
 /* global state about V3 protocols */
 int smb_useV3;		/* try to negotiate V3 */
@@ -2240,7 +2246,7 @@ static smb_packet_t *GetPacket(void)
     lock_ReleaseWrite(&smb_globalLock);
     if (!tbp) {
 #ifndef DJGPP
-        tbp = calloc(65540,1);
+        tbp = calloc(sizeof(*tbp),1);
 #else /* DJGPP */
         tbp = malloc(sizeof(smb_packet_t));
 #endif /* !DJGPP */
@@ -2256,7 +2262,7 @@ static smb_packet_t *GetPacket(void)
         tbp->ncb_length = 0;
         tbp->flags = 0;
         tbp->spacep = NULL;
-        
+        tbp->stringsp = NULL;
 #ifdef DJGPP
         npar = SMB_PACKETSIZE >> 4;  /* number of paragraphs */
         {
@@ -2288,6 +2294,7 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
     tbp = GetPacket();
     memcpy(tbp, pkt, sizeof(smb_packet_t));
     tbp->wctp = tbp->data + (unsigned int)(pkt->wctp - pkt->data);
+    tbp->stringsp = NULL;
     if (tbp->vcp)
 	smb_HoldVC(tbp->vcp);
     return tbp;
@@ -2341,6 +2348,18 @@ static NCB *GetNCB(void)
     return ncbp;
 }
 
+static void FreeSMBStrings(smb_packet_t * pkt)
+{
+    cm_space_t * s;
+    cm_space_t * ns;
+
+    for (s = pkt->stringsp; s; s = ns) {
+        ns = s->nextp;
+        cm_FreeSpace(s);
+    }
+    pkt->stringsp = NULL;
+}
+
 void smb_FreePacket(smb_packet_t *tbp)
 {
     smb_vc_t * vcp = NULL;
@@ -2361,6 +2380,7 @@ void smb_FreePacket(smb_packet_t *tbp)
     tbp->oddByte = 0;
     tbp->ncb_length = 0;
     tbp->flags = 0;
+    FreeSMBStrings(tbp);
     lock_ReleaseWrite(&smb_globalLock);
 
     if (vcp)
@@ -2574,6 +2594,8 @@ void smb_SetSMBParmByte(smb_packet_t *smbp, int slot, unsigned int parmValue)
     *parmDatap++ = parmValue & 0xff;
 }
 
+
+
 void smb_StripLastComponent(char *outPathp, char **lastComponentp, char *inPathp)
 {
     char *lastSlashp;
@@ -2594,14 +2616,286 @@ void smb_StripLastComponent(char *outPathp, char **lastComponentp, char *inPathp
     }
 }
 
-unsigned char *smb_ParseASCIIBlock(unsigned char *inp, char **chainpp)
+unsigned char *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
+                                   char **chainpp, int flags)
 {
+    size_t cb;
+
     if (*inp++ != 0x4) 
         return NULL;
-    if (chainpp) {
-        *chainpp = inp + strlen(inp) + 1;	/* skip over null-terminated string */
+
+#ifdef SMB_UNICODE
+    if (!WANTS_UNICODE(pktp))
+        flags |= SMB_STRF_FORCEASCII;
+#endif
+
+    cb = sizeof(pktp->data) - (inp - pktp->data);
+    if (inp < pktp->data || inp >= pktp->data + sizeof(pktp->data)) {
+#ifdef DEBUG_UNICODE
+        DebugBreak();
+#endif
+        cb = sizeof(pktp->data);
     }
+    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
+}
+
+unsigned char *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
+                               char ** chainpp, int flags)
+{
+    size_t cb;
+
+#ifdef SMB_UNICODE
+    if (!WANTS_UNICODE(pktp))
+        flags |= SMB_STRF_FORCEASCII;
+#endif
+
+    cb = sizeof(pktp->data) - (inp - pktp->data);
+    if (inp < pktp->data || inp >= pktp->data + sizeof(pktp->data)) {
+#ifdef DEBUG_UNICODE
+        DebugBreak();
+#endif
+        cb = sizeof(pktp->data);
+    }
+    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
+}
+
+unsigned char *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
+                                 size_t cb, char ** chainpp, int flags)
+{
+#ifdef SMB_UNICODE
+    if (!WANTS_UNICODE(pktp))
+        flags |= SMB_STRF_FORCEASCII;
+#endif
+
+    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
+}
+
+unsigned char *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
+                                  size_t cch, char ** chainpp, int flags)
+{
+    size_t cb = cch;
+
+#ifdef SMB_UNICODE
+    if (!WANTS_UNICODE(pktp))
+        flags |= SMB_STRF_FORCEASCII;
+    else
+        cb = cch * sizeof(wchar_t);
+#endif
+
+    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
+}
+
+unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
+                                  cm_space_t ** stringspp,
+                                  unsigned char *inp, size_t *pcb_max,
+                                  char **chainpp, int flags)
+{
+#ifdef SMB_UNICODE
+    if (!(flags & SMB_STRF_FORCEASCII)) {
+        size_t cch_src;
+        int    cb_dest;
+        cm_space_t * spacep;
+        int    null_terms = 0;
+
+        if (bufbase && ((inp - bufbase) % 2) != 0) {
+            inp++;              /* unicode strings are always word aligned */
+        }
+
+        if (*pcb_max > 0) {
+            if (FAILED(StringCchLengthW((const wchar_t *) inp, *pcb_max / sizeof(wchar_t),
+                                        &cch_src))) {
+                cch_src = *pcb_max / sizeof(wchar_t);
+                *pcb_max = 0;
+                null_terms = 0;
+            } else {
+                *pcb_max -= (cch_src + 1) * sizeof(wchar_t);
+                null_terms = 1;
+            }
+        } else {
+            return NULL;
+        }
+
+        spacep = cm_GetSpace();
+        spacep->nextp = *stringspp;
+        *stringspp = spacep;
+
+        if (cch_src == 0) {
+            if (chainpp) {
+                *chainpp = inp + sizeof(wchar_t);
+            }
+
+            spacep->data[0] = '\0';
+            return spacep->data;
+        }
+
+        cb_dest = cm_NormalizeUtf16StringToUtf8((const wchar_t *) inp, cch_src,
+                                                spacep->data, sizeof(spacep->data));
+        if (cb_dest == 0) {
+            *stringspp = spacep->nextp;
+            cm_FreeSpace(spacep);
+#ifdef DEBUG_UNICODE
+            DebugBreak();
+#endif
+            return NULL;
+        }
+
+        if (chainpp)
+            *chainpp = inp + (cch_src + null_terms)*sizeof(wchar_t);
+
+        if (cb_dest == 0) {
+#ifdef DEBUG_UNICODE
+            DebugBreak();
+#endif
+        } else if (spacep->data[cb_dest - 1] != 0) {
+            spacep->data[cb_dest++] = 0;
+        }
+
+        return spacep->data;
+
+    } else {
+#endif
+        /* Not using Unicode */
+    if (chainpp) {
+            *chainpp = inp + strlen(inp) + 1;
+    }
+        if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
+            OemToChar(inp, inp);
     return inp;
+#ifdef SMB_UNICODE
+    }
+#endif
+}
+
+unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
+                                  unsigned char * str,
+                                  size_t * plen, int flags)
+{
+    size_t buffersize;
+    int align = 0;
+
+    if (outp == NULL) {
+        /* we are only calculating the required size */
+#ifdef SMB_UNICODE
+
+        if (WANTS_UNICODE(pktp) && !(flags & SMB_STRF_FORCEASCII)) {
+            int nchars;
+
+            nchars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                         str, -1, NULL, 0);
+            if (nchars == 0 && GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+
+                if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
+                    nchars = MultiByteToWideChar(1252 /* ANSI - Latin1 */,
+                                                 0, str, -1, NULL, 0);
+                else
+                    nchars = MultiByteToWideChar(CP_OEMCP,
+                                                 0, str, -1, NULL, 0);
+            }
+
+            if (nchars == 0) {
+                osi_Log2(smb_logp, "UnparseString: Can't convert string to Unicode [%S], GLE=%d",
+                         osi_LogSaveString(smb_logp, str),
+                         GetLastError());
+                if (plen)
+                    *plen = 0;
+                return NULL;
+            }
+
+            if (plen)
+                *plen = sizeof(wchar_t) * ((flags & SMB_STRF_IGNORENULL)? nchars - 1 : nchars);
+
+            return (unsigned char *) 1; /* return TRUE if we are using unicode */
+        }
+        else
+#endif
+        {
+            /* Storing ANSI */
+            size_t len;
+
+            len = strlen(str);
+            if (plen)
+                *plen = ((flags & SMB_STRF_IGNORENULL)? len: len+1);
+
+            return NULL;
+        }
+    }
+
+    /* Number of bytes left in the buffer. */
+    if (outp >= pktp->data && outp < pktp->data + sizeof(pktp->data)) {
+        align = ((outp - pktp->data) % 2);
+        buffersize = (pktp->data + sizeof(pktp->data)) - ((char *) outp);
+    } else {
+        align = (((size_t) outp) % 2);
+        buffersize = sizeof(pktp->data);
+    }
+
+#ifdef SMB_UNICODE
+
+    if (WANTS_UNICODE(pktp) && !(flags & SMB_STRF_FORCEASCII)) {
+        int nchars;
+
+        if (align)
+            *outp++ = '\0';
+
+        if (*str == '\0') {
+
+            if (buffersize < sizeof(wchar_t))
+                return NULL;
+
+            *((wchar_t *) outp) = L'\0';
+            if (plen && !(flags & SMB_STRF_IGNORENULL))
+                *plen += sizeof(wchar_t);
+            return outp + sizeof(wchar_t);
+        }
+
+        nchars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                     str, -1, (wchar_t *) outp, buffersize);
+        if (nchars == 0 && GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+
+            /* If we failed to translate the string from UTF-8 to
+               UTF-16, then chances are the string wasn't UTF-8 to
+               begin with.  If StoreAnsiFileNames is set and this is
+               possibly an ANSI file name, we try assuming that the
+               source name is in ANSI.  otherwise we try OEM. */
+
+            if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
+                nchars = MultiByteToWideChar(1252 /* ANSI - Latin1 */,
+                                             0, str, -1, (wchar_t *) outp, buffersize);
+            else
+                nchars = MultiByteToWideChar(CP_OEMCP,
+                                             0, str, -1, (wchar_t *) outp, buffersize);
+        }
+
+        if (nchars == 0) {
+            /* Both 1252 and OEM should translate to Unicode without a
+               complaint.  This is something else. */
+            osi_Log2(smb_logp, "UnparseString: Can't convert string to Unicode [%S], GLE=%d",
+                     osi_LogSaveString(smb_logp, str),
+                     GetLastError());
+            return NULL;
+        }
+
+        if (plen)
+            *plen += sizeof(wchar_t) * ((flags & SMB_STRF_IGNORENULL)? nchars - 1: nchars);
+
+        return outp + sizeof(wchar_t) * nchars;
+    }
+    else
+#endif
+    {
+        /* Storing ANSI */
+        size_t len;
+
+        len = strlen(str); len++;
+        if (len > buffersize)
+            return NULL;
+
+        strcpy(outp, str);
+        if (plen)
+            *plen += ((flags & SMB_STRF_IGNORENULL)? len - 1: len);
+
+        return outp + len;
+    }
 }
 
 unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int *lengthp)
@@ -2622,6 +2916,23 @@ unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int *length
         
     return inp;
 }	
+
+unsigned char *smb_ParseDataBlock(unsigned char *inp, char **chainpp, int *lengthp)
+{
+    int tlen;
+
+    if (*inp++ != 0x1) return NULL;
+    tlen = inp[0] + (inp[1]<<8);
+    inp += 2;		/* skip length field */
+        
+    if (chainpp) {
+        *chainpp = inp + tlen;
+    }	
+
+    if (lengthp) *lengthp = tlen;
+        
+    return inp;
+}
 
 /* format a packet as a response */
 void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op)
@@ -2656,6 +2967,10 @@ void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op
     outp->reb |= SMB_FLAGS_CANONICAL_PATHNAMES;
 #endif
     outp->flg2 = SMB_FLAGS2_KNOWS_LONG_NAMES;
+#ifdef SMB_UNICODE
+    if ((vcp->flags & SMB_VCFLAG_USEUNICODE) == SMB_VCFLAG_USEUNICODE)
+        outp->flg2 |= SMB_FLAGS2_UNICODE;
+#endif
 
     /* copy fields in generic packet area */
     op->wctp = &outp->wct;
@@ -3077,6 +3392,7 @@ long smb_SendCoreBadOp(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return CM_ERROR_BADOP;
 }
 
+/* SMB_COM_ECHO */
 long smb_ReceiveCoreEcho(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short EchoCount, i;
@@ -3097,6 +3413,7 @@ long smb_ReceiveCoreEcho(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
+/* SMB_COM_READ_RAW */
 long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     osi_hyper_t offset;
@@ -3292,6 +3609,7 @@ long smb_ReceiveCoreUnlockRecord(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     return 0;
 }
 
+/* SMB_COM_NEGOTIATE */
 long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *namep;
@@ -3411,7 +3729,8 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * and NT Find *
          * and NT SMB's *
          * and raw mode 
-         * and DFS */
+         * and DFS
+         * and Unicode */
         caps = NTNEGOTIATE_CAPABILITY_NTSTATUS |
 #ifdef DFS_SUPPORT
                NTNEGOTIATE_CAPABILITY_DFS |
@@ -3425,6 +3744,12 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         if ( smb_authType == SMB_AUTH_EXTENDED )
             caps |= NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY;
+
+#ifdef SMB_UNICODE
+        if ( smb_UseUnicode ) {
+            caps |= NTNEGOTIATE_CAPABILITY_UNICODE;
+        }
+#endif
 
         smb_SetSMBParmLong(outp, 9, caps);
         time(&unixTime);
@@ -3801,6 +4126,7 @@ long smb_ReceiveCoreGetDiskAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     return 0;
 }
 
+/* SMB_COM_TREE_CONNECT */
 long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *rsp)
 {
     smb_tid_t *tidp;
@@ -3811,17 +4137,13 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     int shareFound;
     char *tp;
     char *pathp;
-    char *passwordp;
     cm_user_t *userp;
 
     osi_Log0(smb_logp, "SMB receive tree connect");
 
     /* parse input parameters */
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
-    passwordp = smb_ParseASCIIBlock(tp, &tp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
     tp = strrchr(pathp, '\\');
     if (!tp)
         return CM_ERROR_BADSMB;
@@ -3853,23 +4175,6 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
     osi_Log1(smb_logp, "SMB tree connect created ID %d", newTid);
     return 0;
-}
-
-unsigned char *smb_ParseDataBlock(unsigned char *inp, char **chainpp, int *lengthp)
-{
-    int tlen;
-
-    if (*inp++ != 0x1) return NULL;
-    tlen = inp[0] + (inp[1]<<8);
-    inp += 2;		/* skip length field */
-        
-    if (chainpp) {
-        *chainpp = inp + tlen;
-    }	
-
-    if (lengthp) *lengthp = tlen;
-        
-    return inp;
 }
 
 /* set maskp to the mask part of the incoming path.
@@ -3989,6 +4294,10 @@ char *smb_FindMask(char *pathp)
         return pathp;	/* no slash, return the entire path */
 }       
 
+/* SMB_COM_SEARCH for a volume label
+
+   (This is called from smb_ReceiveCoreSearchDir() and not an actual
+   dispatch function.) */
 long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned char *pathp;
@@ -4002,10 +4311,9 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 
     /* pull pathname and stat block out of request */
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, (char **) &tp);
+    pathp = smb_ParseASCIIBlock(inp, tp, (char **) &tp,
+                                SMB_STRF_ANSIPATH|SMB_STRF_FORCEASCII);
     osi_assertx(pathp != NULL, "null path");
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
     statBlockp = smb_ParseVblBlock(tp, (char **) &tp, &statLen);
     osi_assertx(statBlockp != NULL, "null statBlock");
     if (statLen == 0) {
@@ -4047,6 +4355,9 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     *tp++ = 0;
     *tp++ = 0;
     *tp++ = 0;
+
+    /* The filename is a UCHAR buffer that is ASCII even if Unicode
+       was negotiated. */
 
     /* finally, null-terminated 8.3 pathname, which we set to AFS */
     memset(tp, ' ', 13);
@@ -4143,6 +4454,7 @@ smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     return code;
 }
 
+/* SMB_COM_SEARCH */
 long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int attribute;
@@ -4198,9 +4510,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     caseFold = CM_FLAG_CASEFOLD;
 
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp,
+                                SMB_STRF_ANSIPATH|SMB_STRF_FORCEASCII);
     inCookiep = smb_ParseVblBlock(tp, &tp, &dataLength);
 
     /* bail out if request looks bad */
@@ -4617,6 +4928,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             strncpy(op, actualName, 13);
             if (smb_StoreAnsiFilenames)
                 CharToOem(op, op);
+            /* This is a UCHAR field, which is ASCII even if Unicode
+               is negotiated. */
 
             /* Uppercase if requested by client */
             if (!KNOWS_LONG_NAMES(inp))
@@ -4684,8 +4997,11 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     return code;
 }	
 
+
 /* verify that this is a valid path to a directory.  I don't know why they
  * don't use the get file attributes call.
+ *
+ * SMB_COM_CHECK_DIRECTORY
  */
 long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -4702,11 +5018,9 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_InitReq(&req);
 
     pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(pathp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADFD;
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
     osi_Log1(smb_logp, "SMB receive check path %s",
              osi_LogSaveString(smb_logp, pathp));
         
@@ -4769,6 +5083,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     return code;
 }	
 
+/* SMB_COM_SET_INFORMATION */
 long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp;
@@ -4790,11 +5105,9 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     dosTime = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
 
     pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(pathp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADSMB;
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
                
     osi_Log2(smb_logp, "SMB receive setfile attributes time %d, attr 0x%x",
              dosTime, attribute);
@@ -4884,6 +5197,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     return code;
 }
 
+
 long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp;
@@ -4902,15 +5216,12 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     cm_InitReq(&req);
 
     pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(pathp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADSMB;
         
     if (*pathp == 0)		/* null path */
         pathp = "\\";
-    else
-        if (smb_StoreAnsiFilenames)
-            OemToChar(pathp,pathp);
 
     osi_Log1(smb_logp, "SMB receive getfile attributes path %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -5050,6 +5361,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     return 0;
 }	
 
+/* SMB_COM_TREE_DISCONNECT */
 long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tid_t *tidp;
@@ -5068,6 +5380,7 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
     return 0;
 }
 
+/* SMB_COM_0PEN */
 long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_fid_t *fidp;
@@ -5087,9 +5400,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_InitReq(&req);
 
     pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(pathp, NULL);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
 	
     osi_Log1(smb_logp, "SMB receive open file [%s]", osi_LogSaveString(smb_logp, pathp));
 
@@ -5274,6 +5585,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     return code;
 }
 
+/* SMB_COM_DELETE */
 long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int attribute;
@@ -5295,9 +5607,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     attribute = smb_GetSMBParm(inp, 0);
         
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     osi_Log1(smb_logp, "SMB receive unlink %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -5801,6 +6111,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     return code;
 }
 
+/* SMB_COM_RENAME */
 long 
 smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -5810,12 +6121,8 @@ smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long code;
 
     tp = smb_GetSMBData(inp, NULL);
-    oldPathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(oldPathp,oldPathp);
-    newPathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(newPathp,newPathp);
+    oldPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    newPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     osi_Log2(smb_logp, "smb rename [%s] to [%s]",
              osi_LogSaveString(smb_logp, oldPathp),
@@ -5870,6 +6177,7 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
     return 0;
 }
 
+
 long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     long code = 0;
@@ -5888,9 +6196,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_InitReq(&req);
 
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5977,6 +6283,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     return code;
 }
 
+/* SMB_COM_FLUSH */
 long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short fid;
@@ -6283,6 +6590,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     return code;
 }
 
+/* SMB_COM_CLOSE */
 long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short fid;
@@ -6765,6 +7073,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
     return code;
 }
 
+/* SMB_COM_WRITE */
 long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     unsigned short fd;
@@ -6989,6 +7298,7 @@ long smb_ReceiveCoreWriteRawDummy(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t
     return 0;
 }
 
+/* SMB_COM_WRITE_RAW */
 long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp, raw_write_cont_t *rwcp)
 {
     osi_hyper_t offset;
@@ -7180,6 +7490,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     return 0;
 }
 
+/* SMB_COM_READ */
 long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     osi_hyper_t offset;
@@ -7281,6 +7592,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return code;
 }
 
+/* SMB_COM_CREATE_DIRECTORY */
 long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp;
@@ -7305,9 +7617,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     initialModeBits = 0777;
         
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     if (strcmp(pathp, "\\") == 0)
         return CM_ERROR_EXISTS;
@@ -7400,6 +7710,7 @@ BOOL smb_IsLegalFilename(char *filename)
     return TRUE;
 }        
 
+/* SMB_COM_CREATE and SMB_COM_CREATE_NEW */
 long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp;
@@ -7435,9 +7746,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	initialModeBits &= ~0222;
         
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(tp, &tp);
-    if (smb_StoreAnsiFilenames)
-        OemToChar(pathp,pathp);
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -7599,6 +7908,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
+/* SMB_COM_SEEK */
 long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     long code = 0;
@@ -7775,9 +8085,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 /* Raw Write */
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
             else {
-                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",opName,vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",
+                         opName,vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",
+                         code,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
@@ -7796,8 +8108,9 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 		osi_Log3(smb_logp, "Request %s straddled session startup, "
                           "took %d ms, ncb length %d", opName, newTime - oldTime, ncbp->ncb_length);
             }
-        }
-        else {
+
+            FreeSMBStrings(inp);
+        } else {
             /* bad opcode, fail the request, after displaying it */
             osi_Log1(smb_logp, "Received bad SMB req 0x%X", inp->inCom);
 #ifdef LOG_PACKET
@@ -8355,8 +8668,10 @@ void smb_Server(VOID *parmp)
         outbufp->flags = 0;
 
 #if !defined(DJGPP) && !defined(AFS_WIN32_ENV)
+#ifndef NOTRACE
         __try
         {
+#endif
 #endif
             if (smbp->com == 0x1d) {
                 /* Special handling for Write Raw */
@@ -8400,9 +8715,11 @@ void smb_Server(VOID *parmp)
                 smb_DispatchPacket(vcp, bufp, outbufp, ncbp, NULL);
             }
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
+#ifndef NOTRACE
         }
         __except( smb_ServerExceptionFilter() ) {
         }
+#endif /* NOTRACE */
 #endif
 
         smb_concurrentCalls--;
@@ -8741,6 +9058,7 @@ void smb_Listener(void *parmp)
                 smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
                 smbp->rcls = errClass;
             }
+
             smb_SendPacket(vcp, outp);
             smb_FreePacket(outp);
 
@@ -9813,6 +10131,7 @@ char *smb_GetSharename()
 void smb_LogPacket(smb_packet_t *packet)
 {
     BYTE *vp, *cp;
+    smb_t * smbp;
     unsigned length, paramlen, datalen, i, j;
     char buf[81];
     char hex[]={'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
@@ -9821,11 +10140,12 @@ void smb_LogPacket(smb_packet_t *packet)
 
     osi_Log0(smb_logp, "*** SMB packet dump ***");
 
+    smbp = (smb_t *) packet->data;
     vp = (BYTE *) packet->data;
 
-    datalen = *((WORD*)(vp + (paramlen = ((unsigned)*(vp+20)) << 1)));
-    length = paramlen + 2 + datalen;
-
+    paramlen = smbp->wct * 2;
+    datalen = *((WORD *) (smbp->vdata + paramlen));
+    length = sizeof(*smbp) + paramlen + 1 + datalen;
 
     for (i=0;i < length; i+=16)
     {

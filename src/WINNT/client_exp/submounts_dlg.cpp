@@ -42,10 +42,10 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
 
 	DWORD len;
 
-	char pathName[1024];
+	TCHAR pathName[1024];
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
@@ -58,7 +58,7 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
     DWORD dwType;
     DWORD status;
     len = sizeof(pathName);
-    status = RegQueryValueEx( hkSubmounts, (LPCSTR)PCCHAR(strShareName), 0,
+    status = RegQueryValueEx( hkSubmounts, strShareName, 0,
                               &dwType, (LPBYTE)pathName, &len);
     RegCloseKey( hkSubmounts );
 
@@ -166,7 +166,7 @@ BOOL CSubmountsDlg::FillSubmtList()
     DWORD dwIndex;
     DWORD dwSubmounts;
 
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
@@ -192,7 +192,7 @@ BOOL CSubmountsDlg::FillSubmtList()
 
 
     for ( dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
-        char submountName[256];
+        TCHAR submountName[256];
         DWORD submountNameLen = sizeof(submountName);
 
         RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
@@ -219,7 +219,7 @@ void CSubmountsDlg::OnDelete()
 
 	ASSERT(!strSubmt.IsEmpty());
 
-	strShareName = strSubmt.SpanExcluding("=");
+	strShareName = strSubmt.SpanExcluding(_T("="));
 
 	if (ShowMessageBox(IDS_REALLY_DELETE_SUBMT, MB_YESNO | MB_ICONQUESTION, IDS_REALLY_DELETE_SUBMT, strShareName) != IDYES)
 		return;
@@ -248,7 +248,7 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
@@ -258,8 +258,9 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
                     &hkSubmounts,
                     NULL );
 
-    DWORD status = RegSetValueEx( hkSubmounts, PCCHAR(pInfo->GetShareName()), 0, REG_SZ,
-                   (const BYTE *)PCCHAR(pInfo->GetPathName()), strlen(PCCHAR(pInfo->GetPathName())) + 1);
+    DWORD status = RegSetValueEx( hkSubmounts, pInfo->GetShareName(), 0, REG_SZ,
+                                  (const BYTE *)(const TCHAR *) pInfo->GetPathName(),
+                                  pInfo->GetPathName().GetLength() + 1);
 
     RegCloseKey(hkSubmounts);
 	return (status == ERROR_SUCCESS);
@@ -270,7 +271,7 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
@@ -280,7 +281,7 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
                     &hkSubmounts,
                     NULL );
 
-    DWORD status = RegDeleteValue( hkSubmounts, PCCHAR(pInfo->GetShareName()));
+    DWORD status = RegDeleteValue( hkSubmounts, pInfo->GetShareName());
 
     RegCloseKey(hkSubmounts);
 	return (status == ERROR_SUCCESS);
@@ -322,7 +323,7 @@ void CSubmountsDlg::OnChange()
 
 	ASSERT(!strSubmt.IsEmpty());
 
-	strShareName = strSubmt.SpanExcluding("=");
+	strShareName = strSubmt.SpanExcluding(_T("="));
 
 	CSubmountInfo *pInfo = FindWork(strShareName);
 	if (pInfo != 0)
