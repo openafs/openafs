@@ -45,6 +45,9 @@
 #define PIOCTL_LOGON	0x1
 #define MAX_PATH 260
 
+static const char utf8_prefix[] = UTF8_PREFIX;
+static const int  utf8_prefix_size = sizeof(utf8_prefix) -  sizeof(char);
+
 osi_mutex_t cm_Afsdsbmt_Lock;
 
 extern afs_int32 cryptall;
@@ -199,6 +202,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     char * relativePath;
     char * lastComponent = NULL;
     afs_uint32 follow = (flags & CM_PARSE_FLAG_LITERAL ? CM_FLAG_NOMOUNTCHASE : CM_FLAG_FOLLOW);
+    int free_path = FALSE;
 
     relativePath = ioctlp->inDatap;
     /* setup the next data value for the caller to use */
@@ -219,10 +223,46 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	 * file system API.  Therefore, they are not OEM characters but 
 	 * whatever the display character set is.
 	 */
+
     // TranslateExtendedChars(relativePath);
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
     // TranslateExtendedChars(ioctlp->inDatap);
+
+    /* If the string starts with our UTF-8 prefix (which is the
+       sequence [ESC,'%','G'] as used by ISO-2022 to designate UTF-8
+       strings), we assume that the provided path is UTF-8.  Otherwise
+       we have to convert the string to UTF-8, since that is what we
+       want to use everywhere else.*/
+
+    if (memcmp(relativePath, utf8_prefix, utf8_prefix_size) == 0) {
+        int len, normalized_len;
+        char * normalized_path;
+
+        /* String is UTF-8 */
+        relativePath += utf8_prefix_size;
+        ioctlp->flags |= SMB_IOCTLFLAG_USEUTF8;
+
+        len = (ioctlp->inDatap - relativePath);
+
+        normalized_len = cm_NormalizeUtf8String(relativePath, len, NULL, 0);
+
+        if (normalized_len > len) {
+            normalized_path = malloc(normalized_len);
+            free_path = TRUE;
+        } else {
+            normalized_path = relativePath;
+        }
+
+        cm_NormalizeUtf8String(relativePath, len, normalized_path, normalized_len);
+
+        if (normalized_path != relativePath)
+            relativePath = normalized_path;
+    } else {
+        /* Not a UTF-8 string */
+        /* TODO: If this is an OEM string, we should convert it to
+           UTF-8. */
+    }
 
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
@@ -257,6 +297,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             free(sharePath);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [1] code 0x%x", code);
+                if (free_path)
+                    free(relativePath);
                 return code;
 	    }
 
@@ -279,6 +321,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    cm_ReleaseSCache(substRootp);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
+                if (free_path)
+                    free(relativePath);
                 return code;
 	    }
         } else {
@@ -304,6 +348,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                              userp, shareName, reqp, &substRootp);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [3] code 0x%x", code);
+                if (free_path)
+                    free(relativePath);
                 return code;
 	    }
 
@@ -327,6 +373,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    if (code) {
 		cm_ReleaseSCache(substRootp);
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath code [4] 0x%x", code);
+                if (free_path)
+                    free(relativePath);
                 return code;
 	    }
         }
@@ -336,6 +384,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) {
 	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [6] code 0x%x", code);
+            if (free_path)
+                free(relativePath);
             return code;
 	}
         
@@ -358,6 +408,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         if (code) {
 	    cm_ReleaseSCache(substRootp);
 	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [7] code 0x%x", code);
+            if (free_path)
+                free(relativePath);
             return code;
 	}
     }
@@ -367,6 +419,9 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     /* and return success */
     osi_Log1(afsd_logp,"cm_ParseIoctlPath [8] code 0x%x", code);
+
+    if (free_path)
+        free(relativePath);
     return 0;
 }
 
@@ -458,8 +513,47 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     char tbuffer[1024];
     char *tp, *jp;
     cm_scache_t *substRootp = NULL;
+    char *inpathp;
+    int free_path = FALSE;
 
-    StringCbCopyA(tbuffer, sizeof(tbuffer), ioctlp->inDatap);
+    inpathp = ioctlp->inDatap;
+
+    /* If the string starts with our UTF-8 prefix (which is the
+       sequence [ESC,'%','G'] as used by ISO-2022 to designate UTF-8
+       strings), we assume that the provided path is UTF-8.  Otherwise
+       we have to convert the string to UTF-8, since that is what we
+       want to use everywhere else.*/
+
+    if (memcmp(inpathp, utf8_prefix, utf8_prefix_size) == 0) {
+        int len, normalized_len;
+        char * normalized_path;
+
+        /* String is UTF-8 */
+        inpathp += utf8_prefix_size;
+        ioctlp->flags |= SMB_IOCTLFLAG_USEUTF8;
+
+        len = strlen(inpathp) + 1;
+
+        normalized_len = cm_NormalizeUtf8String(inpathp, len, NULL, 0);
+
+        if (normalized_len > len) {
+            normalized_path = malloc(normalized_len);
+            free_path = TRUE;
+        } else {
+            normalized_path = inpathp;
+        }
+
+        cm_NormalizeUtf8String(inpathp, len, normalized_path, normalized_len);
+
+        if (normalized_path != inpathp)
+            inpathp = normalized_path;
+    } else {
+        /* Not a UTF-8 string */
+        /* TODO: If this is an OEM string, we should convert it to
+           UTF-8. */
+    }
+
+    StringCbCopyA(tbuffer, sizeof(tbuffer), inpathp);
     tp = strrchr(tbuffer, '\\');
     jp = strrchr(tbuffer, '/');
     if (!tp)
@@ -469,13 +563,17 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     if (!tp) {
         StringCbCopyA(tbuffer, sizeof(tbuffer), "\\");
         if (leafp) 
-            StringCbCopyA(leafp, LEAF_SIZE, ioctlp->inDatap);
+            StringCbCopyA(leafp, LEAF_SIZE, inpathp);
     }
     else {
         *tp = 0;
         if (leafp) 
             StringCbCopyA(leafp, LEAF_SIZE, tp+1);
     }   
+
+    if (free_path)
+        free(inpathp);
+    inpathp = NULL;             /* We don't need this from this point on */
 
     if (tbuffer[0] == tbuffer[1] &&
         tbuffer[1] == '\\' && 
@@ -847,6 +945,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_cell_t *cellp;
     cm_req_t req;
     struct rx_connection * callp;
+    int len;
 
     cm_InitReq(&req);
 
@@ -879,11 +978,17 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cp = ioctlp->inDatap;
         memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
         cp += sizeof(AFSFetchVolumeStatus);
-        StringCbCopyA(volName, sizeof(volName), cp);
-        cp += strlen(volName)+1;
-        StringCbCopyA(offLineMsg, sizeof(offLineMsg), cp);
-        cp +=  strlen(offLineMsg)+1;
-        StringCbCopyA(motd, sizeof(motd), cp);
+
+        len = strlen(cp) + 1;
+        cm_NormalizeUtf8String(cp, len, volName, sizeof(volName));
+        cp += len;
+
+        len = strlen(cp) + 1;
+        cm_NormalizeUtf8String(cp, len, offLineMsg, sizeof(offLineMsg));
+        cp +=  len;
+
+        len = strlen(cp) + 1;
+        cm_NormalizeUtf8String(cp, len, motd, sizeof(motd));
         storeStat.Mask = 0;
         if (volStat.MinQuota != -1) {
             storeStat.MinQuota = volStat.MinQuota;
@@ -1906,7 +2011,9 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         return code;
 
     /* Translate chars for the mount point name */
+    if (!(ioctlp->flags & SMB_IOCTLFLAG_USEUTF8)) {
     TranslateExtendedChars(leaf);
+    }
 
     /* 
      * The fs command allows the user to specify partial cell names on NT.  These must
@@ -1975,19 +2082,45 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_attr_t tattr;
     char *cp;
     cm_req_t req;
+    char *symlp;
+    int free_syml = FALSE;
 
     cm_InitReq(&req);
 
     code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
     if (code) return code;
 
+    if (!(ioctlp->flags & SMB_IOCTLFLAG_USEUTF8)) {
     /* Translate chars for the link name */
     TranslateExtendedChars(leaf);
 
     /* Translate chars for the linked to name */
     TranslateExtendedChars(ioctlp->inDatap);
+    }
 
-    cp = ioctlp->inDatap;		/* contents of link */
+    symlp = ioctlp->inDatap;		/* contents of link */
+
+    {
+        char * normalized;
+        int normalized_len;
+
+        int len = strlen(symlp) + 1;
+
+        normalized_len = cm_NormalizeUtf8String(symlp, len, NULL, 0);
+        if (normalized_len > len) {
+            normalized = malloc(normalized_len);
+            free_syml = TRUE;
+        } else {
+            normalized = symlp;
+        }
+
+        cm_NormalizeUtf8String(symlp, len, normalized, normalized_len);
+
+        if (symlp != normalized)
+            symlp = normalized;
+    }
+
+    cp = symlp;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
@@ -2022,6 +2155,9 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           dscp, leaf, NULL, TRUE);
 
     cm_ReleaseSCache(dscp);
+
+    if (free_syml)
+        free(symlp);
 
     return code;
 }
@@ -2891,10 +3027,42 @@ long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
   return 0;
 }
 
+long cm_IoctlUnicodeControl(struct smb_ioctl *ioctlp, struct cm_user * userp)
+{
+    long result = 0;
+#ifdef SMB_UNICODE
+    long cmd;
+
+    cm_SkipIoctlPath(ioctlp);
+
+    memcpy(&cmd, ioctlp->inDatap, sizeof(long));
+
+    if (cmd & 2) {
+        /* Setting the Unicode flag */
+        LONG newflag;
+
+        newflag = ((cmd & 1) == 1);
+
+        InterlockedExchange(&smb_UseUnicode, newflag);
+    }
+
+    result = smb_UseUnicode;
+#else
+    result = 2;
+#endif
+
+    memcpy(ioctlp->outDatap, &result, sizeof(result));
+    ioctlp->outDatap += sizeof(result);
+
+    return 0;
+}
+
 long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp)
 {
     long cmd;
     afsUUID uuid;
+
+    cm_SkipIoctlPath(ioctlp);
 
     memcpy(&cmd, ioctlp->inDatap, sizeof(long));
 
@@ -2909,6 +3077,8 @@ long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp)
 
     return 0;
 }
+
+
 
 /* 
  * functions to dump contents of various structures. 
@@ -3119,7 +3289,6 @@ long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
     struct VolStatTest * testp;
     cm_req_t req;
     afs_uint32 n;
-    size_t len;
 
     cm_InitReq(&req);
 

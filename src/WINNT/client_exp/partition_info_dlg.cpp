@@ -69,18 +69,18 @@ BOOL CPartitionInfoDlg::OnInitDialog()
 	ASSERT(m_nSize != 0);
 
 	CString strSize;
-	strSize.Format("%ld", m_nSize);
+	strSize.Format(_T("%ld"), m_nSize);
 	
 	CString strFree;
-	strFree.Format("%ld", m_nFree);
+	strFree.Format(_T("%ld"), m_nFree);
 	
 	CString strPerUsed;
-	strPerUsed.Format("%d", ((m_nSize - m_nFree) * 100) / m_nSize);
+	strPerUsed.Format(_T("%d"), ((m_nSize - m_nFree) * 100) / m_nSize);
 
 	m_Size.SetWindowText(strSize);
 	m_Free.SetWindowText(strFree);
     percentUsed = ( double(m_nSize - m_nFree) * 100.0l ) / double(m_nSize);
-    strPerUsed.Format("%2.2lf", percentUsed );
+    strPerUsed.Format(_T("%2.2lf"), percentUsed );
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

@@ -100,6 +100,12 @@ extern char *         cm_sysName;
 extern unsigned int   cm_sysNameCount;
 extern char *         cm_sysNameList[MAXNUMSYSNAMES];
 
+/* Paths that are passed into pioctl calls can be specified using
+   UTF-8.  These strings are prefixed with UTF8_PREFIX defined below.
+   The sequence ESC '%' 'G' is used by ISO-2022 to designate UTF-8
+   strings. */
+#define UTF8_PREFIX "\33%G"
+
 /* flags for rxstats pioctl */
 
 #define AFSCALL_RXSTATS_MASK    0x7     /* Valid flag bits */
@@ -222,6 +228,8 @@ extern long cm_IoctlPathAvailability(struct smb_ioctl * ioctlp, struct cm_user *
 extern long cm_IoctlGetFileType(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp);
+
+extern long cm_IoctlUnicodeControl(struct smb_ioctl *ioctlp, struct cm_user * userp);
 
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 

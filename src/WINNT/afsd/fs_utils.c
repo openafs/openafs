@@ -74,8 +74,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 		/* there's a drive letter there */
         firstp = pathp+2;
         pathHasDrive = 1;
-    }
-    else {
+    } else {
         firstp = pathp;
 		pathHasDrive = 0;
 	}   
@@ -86,7 +85,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
         return 0;
     }
         
-    GetCurrentDirectory(sizeof(origPath), origPath);
+    GetCurrentDirectoryA(sizeof(origPath), origPath);
         
 	doSwitch = 0;
     if (pathHasDrive && (*pathp & ~0x20) != (origPath[0] & ~0x20)) {
@@ -98,14 +97,14 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
         newPath[0] = *pathp;
         newPath[1] = ':';
         newPath[2] = 0;
-        if (!SetCurrentDirectory(newPath)) {
+        if (!SetCurrentDirectoryA(newPath)) {
 			code = GetLastError();
             return code;
         }
     }
         
     /* now get the absolute path to the current wdir in this drive */
-    GetCurrentDirectory(sizeof(tpath), tpath);
+    GetCurrentDirectoryA(sizeof(tpath), tpath);
     strcpy(outPathp, tpath+2);	/* skip drive letter */
 	/* if there is a non-null name after the drive, append it */
 	if (*firstp != 0) {
@@ -115,7 +114,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
 	/* finally, if necessary, switch back to our home drive letter */
     if (doSwitch) {
-		SetCurrentDirectory(origPath);
+        SetCurrentDirectoryA(origPath);
     }
         
     return 0;
@@ -197,9 +196,9 @@ void fs_utils_InitMountRoot()
     char *pmount=mountRoot;
     DWORD len=sizeof(mountRoot)-1;
     printf("int mountroot \n");
-    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, 
+    if ((RegOpenKeyExA(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, 
                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS)
-         || (RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
+        || (RegQueryValueExA(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
          || (len==sizeof(mountRoot)-1)
          ) 
         strcpy(mountRoot, "\\afs"); 

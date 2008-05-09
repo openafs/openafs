@@ -251,7 +251,7 @@ InAFS(char *apath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT)) 
             return 0;
@@ -269,7 +269,7 @@ IsFreelanceRoot(char *apath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
         return !stricmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
@@ -612,7 +612,6 @@ ParseAcl (char *astr)
     }
     ta->minuslist = first;
 
-  exit:
     return ta;
 
   nminus_err:
@@ -929,7 +928,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
-	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;
@@ -992,7 +991,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = AclToString(ta);
 	blob.out_size=0;
 	blob.in_size = 1+(long)strlen(blob.in);
-	code = pioctl(ti->data, VIOCSETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
 		if (ta->dfs) {
@@ -1069,7 +1068,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
-    code = pioctl(as->parms[0].items->data, VIOCGETAL, &blob, 1);
+    code = pioctl_utf8(as->parms[0].items->data, VIOCGETAL, &blob, 1);
     if (code) {
 	Die(errno, as->parms[0].items->data);
 	return 1;
@@ -1086,7 +1085,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
-	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;
@@ -1130,7 +1129,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = AclToString(ta);
 	blob.out_size=0;
 	blob.in_size = 1+(long)strlen(blob.in);
-	code = pioctl(ti->data, VIOCSETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
 		fprintf(stderr,
@@ -1148,7 +1147,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-/* pioctl() call to get the cellname of a pathname */
+/* pioctl_utf8() call to get the cellname of a pathname */
 static afs_int32
 GetCell(char *fname, char *cellname)
 {
@@ -1159,7 +1158,7 @@ GetCell(char *fname, char *cellname)
     blob.out_size = MAXCELLCHARS;
     blob.out = cellname;
 
-    code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(fname, VIOC_FILE_CELL_NAME, &blob, 1);
     return code;
 }
 
@@ -1258,7 +1257,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
-	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1289,7 +1288,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	    blob.in=AclToString(ta);
 	    blob.in_size = (long)strlen(blob.in)+1;
 	    blob.out_size = 0;
-	    code = pioctl(ti->data, VIOCSETAL, &blob, 1);
+	    code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	    if (code) {
 		if (errno == EINVAL) {
 		    fprintf(stderr,
@@ -1352,7 +1351,7 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
-	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1415,7 +1414,7 @@ FlushAllCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
 
     blob.in_size = blob.out_size = 0;
-    code = pioctl(NULL, VIOC_FLUSHALL, &blob, 0);
+    code = pioctl_utf8(NULL, VIOC_FLUSHALL, &blob, 0);
     if (code) {
 	fprintf(stderr, "Error flushing all ");
 	return 1;
@@ -1434,7 +1433,7 @@ FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	blob.in_size = blob.out_size = 0;
-	code = pioctl(ti->data, VIOC_FLUSHVOLUME, &blob, 0);
+	code = pioctl_utf8(ti->data, VIOC_FLUSHVOLUME, &blob, 0);
 	if (code) {
 	    fprintf(stderr, "Error flushing volume ");
             perror(ti->data);
@@ -1468,7 +1467,7 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
         blob.in = &options;
 
 	blob.out_size = 0;
-	code = pioctl(ti->data, VIOCFLUSH, &blob, 0);
+	code = pioctl_utf8(ti->data, VIOCFLUSH, &blob, 0);
 	if (code) {
 	    if (errno == EMFILE) {
 		fprintf(stderr, "%s: Can't flush active file %s\n", pn, 
@@ -1550,7 +1549,7 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
 	    input += strlen(motd) + 1;
 	} else 
             *(input++) = '\0';
-	code = pioctl(ti->data,VIOCSETVOLSTAT, &blob, 1);
+	code = pioctl_utf8(ti->data,VIOCSETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;
@@ -1619,7 +1618,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -1631,12 +1630,12 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         blob.out_size = sizeof(filetype);
         blob.out = &filetype;
 
-        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
 
         blob.out_size = MAXCELLCHARS;
         blob.out = cell;
 
-        code = pioctl(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
         printf("%s %s (%u.%u.%u) contained in cell %s\n",
                 filetypestr(filetype),
                 ti->data, fid.volume, fid.vnode, fid.unique,
@@ -1644,7 +1643,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
 	blob.out_size = 2 * sizeof(afs_uint32);
         blob.out = (char *) &owner;
-	if (0 == pioctl(ti->data, VIOCGETOWNER, &blob, 1)) {
+	if (0 == pioctl_utf8(ti->data, VIOCGETOWNER, &blob, 1)) {
 	    char oname[PR_MAXNAMELEN] = "(unknown)";
             char confDir[257];
 
@@ -1658,7 +1657,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
 	blob.out = space;
 	blob.out_size = MAXSIZE;
-	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code == 0) {
             status = (VolumeStatus *)space;
             name = (char *)status + sizeof(*status);
@@ -1671,7 +1670,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         }
 
         errno = 0;
-        code = pioctl(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
         switch (errno) {
         case 0:
             printf("Volume is online\n");
@@ -1713,7 +1712,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
-	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1759,7 +1758,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
         
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -1771,12 +1770,12 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
         blob.out_size = sizeof(filetype);
         blob.out = &filetype;
 
-        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
 
         blob.out_size = MAXSIZE;
 	blob.out = space;
 	memset(space, 0, sizeof(space));
-	code = pioctl(ti->data, VIOCWHEREIS, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1817,7 +1816,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
-	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1846,7 +1845,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
-	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -1994,7 +1993,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	memset(space, 0, MAXSIZE);
 
-	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+	code = pioctl_utf8(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 
 	if (code == 0) {
 	    printf("'%s' is a %smount point for volume '%s'\n",
@@ -2091,7 +2090,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	    blob.in_size = 0;
 	    blob.out_size = sizeof(localCellName);
 	    blob.out = localCellName;
-	    code = pioctl(parent, VIOC_GET_WS_CELL, &blob, 1);
+	    code = pioctl_utf8(parent, VIOC_GET_WS_CELL, &blob, 1);
 	    if (!code)
 		cellName = localCellName;
 	}
@@ -2142,7 +2141,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = 1 + (long)strlen(space);
     blob.in = space;
     blob.out = NULL;
-    code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
+    code = pioctl_utf8(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
 #else /* not WIN32 */
     code = symlink(space, path);
 #endif /* not WIN32 */
@@ -2203,7 +2202,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 	blob.in_size = (long)strlen(tp)+1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
-	code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
+	code = pioctl_utf8(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
 	if (code) {
 	    if (errno == EINVAL) {
 		fprintf(stderr,"%s: '%s' is not a mount point.\n", pn, ti->data);
@@ -2223,7 +2222,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
         blob.out_size = 0;
 	blob.in = tp;
 	blob.in_size = (long)strlen(tp)+1;
-	code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
+	code = pioctl_utf8(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
 	if (code) {
 	    Die(errno, ti->data);
             error = 1;
@@ -2306,7 +2305,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 #endif /* WIN32 */
     }
 
-    code = pioctl(0, VIOCCKSERV, &blob, 1);
+    code = pioctl_utf8(0, VIOCCKSERV, &blob, 1);
     if (code) {
 	if ((errno == EACCES) && (checkserv.tinterval > 0)) {
 	    printf("Must be root to change -interval\n");
@@ -2376,7 +2375,7 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
     if (code)
         return 1;
 
-    code = pioctl(0, VIOC_GAG, &blob, 1);
+    code = pioctl_utf8(0, VIOC_GAG, &blob, 1);
     if (code) {
 	Die(errno, 0);
         return 1;
@@ -2392,7 +2391,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
     
     blob.in_size = 0;
     blob.out_size = 0;
-    code = pioctl(0, VIOCCKBACK, &blob, 1);
+    code = pioctl_utf8(0, VIOCCKBACK, &blob, 1);
     if (code) {
 	Die(errno, 0);
 	return 1;
@@ -2436,7 +2435,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
     blob.in = (char *) &temp;
     blob.in_size = sizeof(afs_int32);
     blob.out_size = 0;
-    code = pioctl(0, VIOCSETCACHESIZE, &blob, 1);
+    code = pioctl_utf8(0, VIOCSETCACHESIZE, &blob, 1);
     if (code) {
 	Die(errno, (char *) 0);
         return 1;
@@ -2458,7 +2457,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = 0;
     blob.out_size = sizeof(parms);
     blob.out = (char *) &parms;
-    code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
+    code = pioctl_utf8(0, VIOCGETCACHEPARMS, &blob, 1);
     if (code) {
 	Die(errno, NULL);
         return 1;
@@ -2494,7 +2493,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
 	blob.out = space;
-	code = pioctl(0, VIOCGETCELL, &blob, 1);
+	code = pioctl_utf8(0, VIOCGETCELL, &blob, 1);
 	if (code < 0) {
 	    if (errno == EDOM) 
                 break;	/* done with the list */
@@ -2545,7 +2544,7 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
 	blob.out = space;
-	code = pioctl(0, VIOC_GETALIAS, &blob, 1);
+	code = pioctl_utf8(0, VIOC_GETALIAS, &blob, 1);
 	if (code < 0) {
 	    if (errno == EDOM)
 		break;		/* done with the list */
@@ -2592,7 +2591,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
     
-    code = pioctl(0, VIOC_CBADDR, &blob, 1);
+    code = pioctl_utf8(0, VIOC_CBADDR, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
 	return 1;
@@ -2667,7 +2666,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = size;
     blob.in = space;
     blob.out_size = 0;
-    code = pioctl(0, VIOCNEWCELL, &blob, 1);
+    code = pioctl_utf8(0, VIOCNEWCELL, &blob, 1);
     if (code < 0)
 	Die(errno, 0);
     return 0;
@@ -2685,7 +2684,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl((char *) 0, VIOCNEWCELL, &blob, 1);
+    code = pioctl_utf8((char *) 0, VIOCNEWCELL, &blob, 1);
 
     if (code) {
         Die(errno, (char *) 0);
@@ -2719,7 +2718,7 @@ NewAliasCmd(struct cmd_syndesc *as, void *arock)
     blob.in = space;
     blob.out_size = 0;
     blob.out = space;
-    code = pioctl(0, VIOC_NEWALIAS, &blob, 1);
+    code = pioctl_utf8(0, VIOC_NEWALIAS, &blob, 1);
     if (code < 0) {
 	if (errno == EEXIST) {
 	    fprintf(stderr,
@@ -2765,7 +2764,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -2777,12 +2776,12 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
         blob.out_size = sizeof(filetype);
         blob.out = &filetype;
 
-        code = pioctl(ti->data, VIOC_GETFILETYPE, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
 
         blob.out_size = MAXCELLCHARS;
         blob.out = cell;
 
-        code = pioctl(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
 	if (code) {
 	    if (errno == ENOENT)
 		fprintf(stderr,"%s: no such cell as '%s'\n", pn, ti->data);
@@ -2809,7 +2808,7 @@ WSCellCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(NULL, VIOC_GET_WS_CELL, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_GET_WS_CELL, &blob, 1);
 
     if (code) {
 	Die(errno, NULL);
@@ -2871,7 +2870,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = sizeof(afs_int32);
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
-    code = pioctl(0, VIOC_AFS_MARINER_HOST, &blob, 1);
+    code = pioctl_utf8(0, VIOC_AFS_MARINER_HOST, &blob, 1);
     if (code) {
 	Die(errno, 0);
 	return 1;
@@ -2934,7 +2933,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
         *(input++) = '\0';
     }
     memcpy(space, &setp, sizeof(afs_int32));
-    code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
+    code = pioctl_utf8(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
         Die(errno, 0);
         return 1;
@@ -3040,7 +3039,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = sizeof(afs_int32);
     blob.out = (char *) &exportcall;
     blob.out_size = sizeof(afs_int32);
-    code = pioctl(0, VIOC_EXPORTAFS, &blob, 1);
+    code = pioctl_utf8(0, VIOC_EXPORTAFS, &blob, 1);
     if (code) {
 	if (errno == ENODEV) {
 	    fprintf(stderr,
@@ -3090,7 +3089,7 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	}
 	blob.in_size = 1+(long)strlen(info.name);
 	blob.in = info.name;
-	code = pioctl(0, VIOC_GETCELLSTATUS, &blob, 1);
+	code = pioctl_utf8(0, VIOC_GETCELLSTATUS, &blob, 1);
 	if (code) {
 	    if (errno == ENOENT)
 		fprintf(stderr,"%s: the cell named '%s' does not exist\n", pn, info.name);
@@ -3166,7 +3165,7 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = (caddr_t) &args;
 	blob.out_size = 0;
 	blob.out = (caddr_t) 0;
-	code = pioctl(0, VIOC_SETCELLSTATUS, &blob, 1);
+	code = pioctl_utf8(0, VIOC_SETCELLSTATUS, &blob, 1);
 	if (code) {
 	    Die(errno, info.name);      /* XXX added cell name to Die() call */
             error = 1;
@@ -3218,7 +3217,7 @@ pokeServers(void)
 {
     int code;
     cm_SSetPref_t *ssp;
-    code = pioctl(0, VIOC_SETSPREFS, &gblob, 1);
+    code = pioctl_utf8(0, VIOC_SETSPREFS, &gblob, 1);
 
     ssp = (cm_SSetPref_t *)space;
     gblob.in_size = (long)(((char *)&(ssp->servers[0])) - (char *)ssp);
@@ -3236,14 +3235,14 @@ pokeServers(void)
 {
     int code;
 
-    code = pioctl(0, VIOC_SETSPREFS, &gblob, 1);
+    code = pioctl_utf8(0, VIOC_SETSPREFS, &gblob, 1);
     if (code && (errno == EINVAL)) {
 	struct setspref *ssp;
 	ssp = (struct setspref *)gblob.in;
 	if (!(ssp->flags & DBservers)) {
 	    gblob.in = (void *)&(ssp->servers[0]);
 	    gblob.in_size -= ((char *)&(ssp->servers[0])) - (char *)ssp;
-	    code = pioctl(0, VIOC_SETSPREFS33, &gblob, 1);
+	    code = pioctl_utf8(0, VIOC_SETSPREFS33, &gblob, 1);
 	    return code ? errno : 0;
 	}
 	fprintf(stderr,
@@ -3617,7 +3616,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
         in->num_servers = (MAXSIZE - 2*sizeof(short))/sizeof(struct cm_SPref);
         in->flags = vlservers; 
 
-        code = pioctl(0, VIOC_GETSPREFS, &blob, 1);
+        code = pioctl_utf8(0, VIOC_GETSPREFS, &blob, 1);
         if (code){
             perror("getserverprefs pioctl");
             Die (errno,0);
@@ -3689,7 +3688,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    (MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
 	in->flags = vlservers;
 
-	code = pioctl(0, VIOC_GETSPREFS, &blob, 1);
+	code = pioctl_utf8(0, VIOC_GETSPREFS, &blob, 1);
 	if (code) {
 	    perror("getserverprefs pioctl");
 	    return 1;
@@ -3715,6 +3714,52 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 #endif /* WIN32 */
+
+static afs_int32
+SmbUnicodeCmd(struct cmd_syndesc * asp, void * arock)
+{
+    long inValue = 0;
+    long outValue = 0;
+    long code;
+
+    struct ViceIoctl blob;
+
+    if (asp->parms[0].items) {
+        /* On */
+
+        inValue = 3;
+    } else if (asp->parms[1].items) {
+        /* Off */
+
+        inValue = 2;
+    }
+
+    if (inValue != 0 && !IsAdmin()) {
+        fprintf (stderr, "Permission denied: Requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
+
+    blob.in_size = sizeof(inValue);
+    blob.in = (char *) &inValue;
+    blob.out_size = sizeof(outValue);
+    blob.out = (char *) &outValue;
+
+    code = pioctl_utf8(NULL, VIOC_UNICODECTL, &blob, 1);
+    if (code) {
+        Die(errno, NULL);
+        return code;
+    }
+
+    if (outValue != 2) {
+        printf("Unicode support is %s%s.\n",
+               ((outValue != 0)? "enabled":"disabled"),
+               ((inValue != 0)? " for new SMB connections":""));
+    } else {
+        printf("Unicode support is absent in this installation of OpenAFS.\n");
+    }
+
+    return 0;
+}
 
 static int
 UuidCmd(struct cmd_syndesc *asp, void *arock)
@@ -3747,7 +3792,7 @@ UuidCmd(struct cmd_syndesc *asp, void *arock)
     blob.out_size = sizeof(outValue);
     blob.out = (char *) &outValue;
 
-    code = pioctl(NULL, VIOC_UUIDCTL, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_UUIDCTL, &blob, 1);
     if (code) {
         Die(errno, NULL);
         return code;
@@ -3806,7 +3851,7 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
     blob.out_size = sizeof(long);
     blob.out = (char *) &outValue;
         
-    code = pioctl(NULL, VIOC_TRACECTL, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_TRACECTL, &blob, 1);
     if (code) {
         Die(errno, NULL);
         return code;
@@ -3887,14 +3932,14 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     /* once per -file */
     for (ti = as->parms[1].items; ti; ti = ti->next) {
 	/* Do this solely to see if the file is there */
-	code = pioctl(ti->data, VIOCWHEREIS, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;
 	    continue;
 	}
 
-	code = pioctl(ti->data, VIOC_STOREBEHIND, &blob, 1);
+	code = pioctl_utf8(ti->data, VIOC_STOREBEHIND, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;
@@ -3918,7 +3963,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
      */
     if (!as->parms[1].items || (allfiles != -1)) {
 	tsb.sb_default = allfiles;
-	code = pioctl(0, VIOC_STOREBEHIND, &blob, 1);
+	code = pioctl_utf8(0, VIOC_STOREBEHIND, &blob, 1);
 	if (code) {
 	    Die(errno, ((allfiles == -1) ? 0 : "-allfiles"));
 	    error = 1;
@@ -3961,7 +4006,7 @@ SetCryptCmd(struct cmd_syndesc *as, void *arock)
     blob.in = (char *) &flag;
     blob.in_size = sizeof(flag);
     blob.out_size = 0;
-    code = pioctl(0, VIOC_SETRXKCRYPT, &blob, 1);
+    code = pioctl_utf8(0, VIOC_SETRXKCRYPT, &blob, 1);
     if (code)
         Die(code, NULL);
     return 0;
@@ -3979,7 +4024,7 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = sizeof(flag);
     blob.out = space;
 
-    code = pioctl(0, VIOC_GETRXKCRYPT, &blob, 1);
+    code = pioctl_utf8(0, VIOC_GETRXKCRYPT, &blob, 1);
 
     if (code) 
         Die(code, NULL);
@@ -4025,7 +4070,7 @@ MemDumpCmd(struct cmd_syndesc *asp, void *arock)
     blob.out_size = sizeof(long);
     blob.out = (char *) &outValue;
 
-    code = pioctl(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
     if (code) {
         Die(errno, NULL);
         return code;
@@ -4217,7 +4262,7 @@ GetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 	in->num_servers =
 	    (MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
 	/* returns addr in network byte order */
-	code = pioctl(0, VIOC_GETCPREFS, &blob, 1);
+	code = pioctl_utf8(0, VIOC_GETCPREFS, &blob, 1);
 	if (code) {
 	    perror("getClientInterfaceAddr pioctl");
 	    return 1;
@@ -4306,7 +4351,7 @@ SetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
     }
     blob.in_size = sizeUsed - sizeof(struct spref);
 
-    code = pioctl(0, VIOC_SETCPREFS, &blob, 1);	/* network order */
+    code = pioctl_utf8(0, VIOC_SETCPREFS, &blob, 1);	/* network order */
     if (code) {
 	Die(errno, 0);
 	error = 1;
@@ -4417,7 +4462,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	memset(space, 0, MAXSIZE);
 
-	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
+	code = pioctl_utf8(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
 
 	if (code != 0) {
 	    if (errno == EINVAL) {
@@ -4457,7 +4502,7 @@ RxStatProcCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = sizeof(afs_int32);
     blob.out_size = 0;
 
-    code = pioctl(NULL, VIOC_RXSTAT_PROC, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_RXSTAT_PROC, &blob, 1);
     if (code != 0) {
 	Die(errno, NULL);
 	return 1;
@@ -4491,7 +4536,7 @@ RxStatPeerCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = sizeof(afs_int32);
     blob.out_size = 0;
 
-    code = pioctl(NULL, VIOC_RXSTAT_PEER, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_RXSTAT_PEER, &blob, 1);
     if (code != 0) {
 	Die(errno, NULL);
 	return 1;
@@ -4571,7 +4616,7 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = sizeof(test);
     blob.out_size = 0;
 
-    code = pioctl(NULL, VIOC_VOLSTAT_TEST, &blob, 1);
+    code = pioctl_utf8(NULL, VIOC_VOLSTAT_TEST, &blob, 1);
     if (code != 0) {
 	Die(errno, NULL);
 	return 1;
@@ -4584,10 +4629,55 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 #endif
 
-main(int argc, char **argv)
+static void
+FreeUtf8CmdLine(int argc, char ** argv)
+{
+    int i;
+    for (i=0; i < argc; i++) {
+        if (argv[i])
+            free(argv[i]);
+    }
+    free(argv);
+}
+
+static char **
+MakeUtf8Cmdline(int argc, const wchar_t **wargv)
+{
+    char ** argv;
+    int i;
+
+    argv = calloc(argc, sizeof(argv[0]));
+    if (argv == NULL)
+        return NULL;
+
+    for (i=0; i < argc; i++) {
+        int s;
+
+        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, NULL, 0, NULL, FALSE);
+        if (s == 0 ||
+            (argv[i] = calloc(s+1, sizeof(char))) == NULL) {
+            break;
+        }
+
+        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], s+1, NULL, FALSE);
+        if (s == 0) {
+            break;
+        }
+    }
+
+    if (i < argc) {
+        FreeUtf8CmdLine(argc, argv);
+        return NULL;
+    }
+
+    return argv;
+}
+
+int wmain(int argc, wchar_t **wargv)
 {
     afs_int32 code;
     struct cmd_syndesc *ts;
+    char ** argv;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -4608,6 +4698,8 @@ main(int argc, char **argv)
     WSADATA WSAjunk;
     WSAStartup(0x0101, &WSAjunk);
 #endif /* WIN32 */
+
+    argv = MakeUtf8Cmdline(argc, wargv);
 
     /* try to find volume location information */
     osi_Init();
@@ -4885,10 +4977,16 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-volume",  CMD_SINGLE, CMD_OPTIONAL, "volume name or number");
     cmd_AddParm(ts, "-state",   CMD_SINGLE, CMD_OPTIONAL, "new volume state: online, busy, offline, down");
 
+    ts = cmd_CreateSyntax("smbunicode", SmbUnicodeCmd, NULL, "enable or disable Unicode on new SMB connections");
+    cmd_AddParm(ts, "-on", CMD_FLAG, CMD_OPTIONAL, "enable Unicode on new connections");
+    cmd_AddParm(ts, "-off", CMD_FLAG, CMD_OPTIONAL, "disable Unicode on new connections");
+
     code = cmd_Dispatch(argc, argv);
 
     if (rxInitDone) 
         rx_Finalize();
+    
+    FreeUtf8CmdLine(argc, argv);
     
     return code;
 }

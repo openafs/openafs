@@ -68,7 +68,7 @@ static int InAFS(register char *apath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT)) 
             return 0;
@@ -86,7 +86,7 @@ IsFreelanceRoot(char *apath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
         return !stricmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
@@ -399,7 +399,7 @@ static ListLinkCmd(register struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	memset(space, 0, MAXSIZE);
 
-	code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
+	code = pioctl_utf8(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
 
 	if (code == 0)
 	    printf("'%s' is a %ssymlink to '%s'\n",
@@ -460,6 +460,8 @@ static MakeLinkCmd(register struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
+    fprintf(stderr, "Creating symlink [%s] to [%s]\n", path, as->parms[1].items->data);
+
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
@@ -467,7 +469,7 @@ static MakeLinkCmd(register struct cmd_syndesc *as, void *arock)
     blob.in_size = 1 + (long)strlen(as->parms[1].items->data);
     blob.in = as->parms[1].items->data;
     blob.out = NULL;
-    code = pioctl(path, VIOC_SYMLINK, &blob, 0);
+    code = pioctl_utf8(path, VIOC_SYMLINK, &blob, 0);
 #else /* not WIN32 */
     code = symlink(as->parms[1].items->data, path);
 #endif /* not WIN32 */
@@ -528,7 +530,7 @@ static RemoveLinkCmd(register struct cmd_syndesc *as, void *arock)
 	blob.in_size = (int)strlen(tp)+1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
-	code = pioctl(tbuffer, VIOC_LISTSYMLINK, &blob, 0);
+	code = pioctl_utf8(tbuffer, VIOC_LISTSYMLINK, &blob, 0);
 	if (code) {
 	    if (errno == EINVAL)
 		fprintf(stderr,"symlink: '%s' is not a symlink.\n", ti->data);
@@ -547,7 +549,7 @@ static RemoveLinkCmd(register struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	blob.in = tp;
 	blob.in_size = (long)strlen(tp)+1;
-	code = pioctl(tbuffer, VIOC_DELSYMLINK, &blob, 0);
+	code = pioctl_utf8(tbuffer, VIOC_DELSYMLINK, &blob, 0);
 	if (code) {
 	    Die(errno, ti->data);
 	}
@@ -555,14 +557,58 @@ static RemoveLinkCmd(register struct cmd_syndesc *as, void *arock)
     return code;
 }
 
+static void
+FreeUtf8CmdLine(int argc, char ** argv)
+{
+    int i;
+    for (i=0; i < argc; i++) {
+        if (argv[i])
+            free(argv[i]);
+    }
+    free(argv);
+}
+
+static char **
+MakeUtf8Cmdline(int argc, const wchar_t **wargv)
+{
+    char ** argv;
+    int i;
+
+    argv = calloc(argc, sizeof(argv[0]));
+    if (argv == NULL)
+        return NULL;
+
+    for (i=0; i < argc; i++) {
+        int s;
+
+        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, NULL, 0, NULL, FALSE);
+        if (s == 0 ||
+            (argv[i] = calloc(s+1, sizeof(char))) == NULL) {
+            break;
+        }
+
+        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], s+1, NULL, FALSE);
+        if (s == 0) {
+            break;
+        }
+    }
+
+    if (i < argc) {
+        FreeUtf8CmdLine(argc, argv);
+        return NULL;
+    }
+
+    return argv;
+}
+
 static    struct ViceIoctl gblob;
 static int debug = 0;
 
-main(argc, argv)
-int argc;
-char **argv; {
+int wmain(int argc, wchar_t **wargv)
+{
     register afs_int32 code;
     register struct cmd_syndesc *ts;
+    char ** argv;
     
 #ifdef	AFS_AIX32_ENV
     /*
@@ -586,6 +632,7 @@ char **argv; {
 
     /* try to find volume location information */
     
+    argv = MakeUtf8Cmdline(argc, wargv);
 
     osi_Init();
 
@@ -605,6 +652,8 @@ char **argv; {
 #ifndef WIN32
     if (rxInitDone) rx_Finalize();
 #endif /* not WIN32 */
+    
+    FreeUtf8CmdLine(argc, argv);
     
     return code;
 }

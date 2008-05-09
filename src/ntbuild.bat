@@ -53,6 +53,9 @@ set NTDDKDIR=c:\progra~1\micros~5
 REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
 SET W9XDDKDIR=c:\progra~1\micros~6
 
+REM Location of Microsoft IDN Normalization SDK
+set MSIDNNLS=C:\progra~1\MI5913~1
+
 REM ########################################################################
 REM NTMakefile optional definitions:
 REM
@@ -113,7 +116,7 @@ REM     AFSDEV_BIN = default build binary directories
 
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
-set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include
+set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSIDNNLS%\include
 IF "%AFSVER_CL%" == "1400" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1300" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include

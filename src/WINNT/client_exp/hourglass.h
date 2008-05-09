@@ -15,7 +15,7 @@ typedef class HOURGLASS
       HCURSOR m_OldCursor;
 
    public:
-      HOURGLASS (LPCSTR idCursor = IDC_WAIT)
+      HOURGLASS (LPTSTR idCursor = IDC_WAIT)
       {
          m_OldCursor = GetCursor();
          SetCursor (LoadCursor (NULL, idCursor));
