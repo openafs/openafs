@@ -2097,6 +2097,7 @@ main(int argc, char *argv[])
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
     rx_SetCheckReach(tservice, 1);
+    rx_SetServerIdleDeadErr(tservice, VNOSERVICE);
 
     tservice =
 	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 4,
