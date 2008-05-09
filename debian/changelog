@@ -3,6 +3,7 @@ openafs (1.4.7.dfsg1-2) UNRELEASED; urgency=low
   * Add a missing conflict on older versions of openafs-client to
     openafs-krb5 to ensure that the klog transition to alternatives is
     smooth.
+  * When configuring a new cell, clear the general restart time.
 
  -- Russ Allbery <rra@debian.org>  Fri, 09 May 2008 10:16:28 -0700
 

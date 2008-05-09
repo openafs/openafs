@@ -234,6 +234,9 @@ run("bos create $server fs fs"
     . " -cmd /usr/lib/openafs/salvager -localauth");
 unwind("bos delete $server fs -localauth");
 
+# Make sure that there is no scheduled general restart time; it's not needed.
+run("bos setrestart $server -time never -general");
+
 # Pause for a while for ubik to catch up.
 print "Waiting for database elections: ";
 sleep(30);
