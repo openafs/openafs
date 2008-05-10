@@ -192,7 +192,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     } else {
 	diff = udebug.now - udebug.lastYesTime;
 	printf("Last yes vote for %s was %d secs ago (%ssync site); \n",
-	       afs_inet_ntoa(htonl(udebug.lastYesHost)), diff,
+	       afs_inet_ntoa(udebug.lastYesHost), diff,
 	       ((udebug.lastYesState) ? "" : "not "));
 
 	diff = udebug.now - udebug.lastYesClaim;
