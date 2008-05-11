@@ -139,7 +139,7 @@ extern long
 cm_EndDirOp(cm_dirOp_t * op);
 
 extern long
-cm_NameEntries(char *namep, long *lenp);
+cm_NameEntries(char *namep, size_t *lenp);
 
 extern long
 cm_DirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);

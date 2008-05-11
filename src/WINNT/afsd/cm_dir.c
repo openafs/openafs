@@ -121,7 +121,7 @@ cm_DirFreeBlobs(cm_dirOp_t * op, int firstblob, int nblobs);
  * the specified name.
  */
 long 
-cm_NameEntries(char *namep, long *lenp)
+cm_NameEntries(char *namep, size_t *lenp)
 {
     long i;
         
