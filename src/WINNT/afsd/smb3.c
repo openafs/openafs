@@ -6785,9 +6785,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (extAttributes & SMB_ATTR_READONLY) 
         initialModeBits &= ~0222;
 
-    if (nameLength == 0)
-        return CM_ERROR_INVAL;
-
     pathp = smb_ParseStringCb(inp, smb_GetSMBData(inp, NULL), nameLength,
                               NULL, SMB_STRF_ANSIPATH);
 
