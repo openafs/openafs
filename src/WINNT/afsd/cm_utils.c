@@ -429,7 +429,7 @@ long cm_InitNormalization(void)
 
    Returns a pointer to the buffer containing the normalized string or
    NULL if the call was unsuccessful.  If the returned destination
-   buffer is different fron the supplied buffer and non-NULL, it
+   buffer is different from the supplied buffer and non-NULL, it
    should be freed using free().
 */
 static wchar_t * 
@@ -437,6 +437,16 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
 {
     if ((pIsNormalizedString && (*pIsNormalizedString)(AFS_NORM_FORM, src, cch_src)) ||
         (!pNormalizeString)) {
+
+        /* No need to or unable to normalize.  Just copy the string */
+        if (SUCCEEDED(StringCchCopyNW(ext_dest, *pcch_dest, src, cch_src))) {
+            *pcch_dest = cch_src;
+            return ext_dest;
+        } else {
+            *pcch_dest = 0;
+            return NULL;
+        }
+    } else {
 
         int rv;
         DWORD gle;
@@ -507,16 +517,6 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
 
         *pcch_dest = 0;
         return NULL;
-    } else {
-
-        /* No need to or unable to normalize.  Just copy the string */
-        if (SUCCEEDED(StringCchCopyNW(ext_dest, *pcch_dest, src, cch_src))) {
-            *pcch_dest = cch_src;
-            return ext_dest;
-        } else {
-            *pcch_dest = 0;
-            return NULL;
-        }
     }
 }
 
