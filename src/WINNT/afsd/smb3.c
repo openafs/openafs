@@ -1258,7 +1258,9 @@ unsigned char *smb_ParseStringT2Parm(smb_tran2Packet_t * p, unsigned char * inp,
     cb = p->totalParms - (inp - (unsigned char *)p->parmsp);
     if (inp < (unsigned char *) p->parmsp ||
         inp > ((unsigned char *) p->parmsp) + p->totalParms) {
+#ifdef DEBUG_UNICODE
         DebugBreak();
+#endif
         cb = p->totalParms;
     }
 
@@ -2787,7 +2789,9 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
+#ifdef DEBUG
         DebugBreak();
+#endif
         return CM_ERROR_PATH_NOT_COVERED;
     }
 #endif /* DFS_SUPPORT */
