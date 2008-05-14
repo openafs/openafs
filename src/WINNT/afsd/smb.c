@@ -2483,7 +2483,7 @@ unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
                 null_terms = 1;
             }
         } else {
-            return NULL;
+            cch_src = 0;
         }
 
         spacep = cm_GetSpace();
