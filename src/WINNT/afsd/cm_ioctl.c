@@ -1407,44 +1407,51 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         
     /* if something went wrong, bail out now */
-    if (code) {
-        goto done2;
-    }
+    if (code)
+        goto done3;
         
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {     
-        lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseSCache(scp);
+    if (code)  
         goto done2;
-    }
 
     /* now check that this is a real mount point */
     if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
-        lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
         goto done1;
     }
 
     /* time to make the RPC, so drop the lock */
     lock_ReleaseWrite(&scp->rw);
-    cm_ReleaseSCache(scp);
 
-    /* easier to do it this way */
-    code = cm_Unlink(dscp, cp, userp, &req);
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
+        /* we are adding the mount point to the root dir., so call
+         * the freelance code to do the add. */
+        osi_Log0(afsd_logp,"IoctlDeleteMountPoint from Freelance root dir");
+        code = cm_FreelanceRemoveMount(cp);
+    } else 
+#endif
+    {
+        /* easier to do it this way */
+        code = cm_Unlink(dscp, cp, userp, &req);
+    }
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_REMOVED,
                           FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
 
-  done1:
     lock_ObtainWrite(&scp->rw);
+  done1:
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseWrite(&scp->rw);
 
   done2:
+    cm_DiscardSCache(scp);
+    lock_ReleaseWrite(&scp->rw);
+    cm_ReleaseSCache(scp);
+
+  done3:
     cm_ReleaseSCache(dscp);
     return code;
 }
@@ -2076,18 +2083,19 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
         code = cm_FreelanceAddMount(leaf, fullCell, volume, 
                                     *ioctlp->inDatap == '%', NULL);
-	cm_ReleaseSCache(dscp);
-        return code;
-    }
+    } else 
 #endif
-    /* create the symlink with mode 644.  The lack of X bits tells
-     * us that it is a mount point.
-     */
-    tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
-    tattr.unixModeBits = 0644;
-    tattr.clientModTime = time(NULL);
+    {
+        /* create the symlink with mode 644.  The lack of X bits tells
+         * us that it is a mount point.
+         */
+        tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
+        tattr.unixModeBits = 0644;
+        tattr.clientModTime = time(NULL);
 
-    code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
+        code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
+    }
+    
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                          FILE_NOTIFY_CHANGE_DIR_NAME,
@@ -2161,16 +2169,16 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
         code = cm_FreelanceAddSymlink(leaf, cp, NULL);
-	cm_ReleaseSCache(dscp);
-        return code;
-    }
+    } else
 #endif
+    {
+        /* Create symlink with mode 0755. */
+        tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
+        tattr.unixModeBits = 0755;
 
-    /* Create symlink with mode 0755. */
-    tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
-    tattr.unixModeBits = 0755;
+        code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
+    }
 
-    code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                           FILE_NOTIFY_CHANGE_FILE_NAME
@@ -2290,17 +2298,6 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     cp = ioctlp->inDatap;
 
-#ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
-        /* we are adding the mount point to the root dir., so call
-         * the freelance code to do the add. */
-        osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
-        code = cm_FreelanceRemoveSymlink(cp);
-	cm_ReleaseSCache(dscp);
-        return code;
-    }
-#endif
-
     code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         
     /* if something went wrong, bail out now */
@@ -2324,8 +2321,18 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     /* time to make the RPC, so drop the lock */
     lock_ReleaseWrite(&scp->rw);
         
-    /* easier to do it this way */
-    code = cm_Unlink(dscp, cp, userp, &req);
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
+        /* we are adding the mount point to the root dir., so call
+         * the freelance code to do the add. */
+        osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
+        code = cm_FreelanceRemoveSymlink(cp);
+    } else 
+#endif
+    {
+        /* easier to do it this way */
+        code = cm_Unlink(dscp, cp, userp, &req);
+    }
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_REMOVED,
                           FILE_NOTIFY_CHANGE_FILE_NAME
@@ -2337,6 +2344,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
   done2:
+    cm_DiscardSCache(scp);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
