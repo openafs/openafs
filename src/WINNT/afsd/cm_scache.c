@@ -649,13 +649,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     osi_assertx(fidp->cell != 0, "unassigned cell value");
 
-    if (fidp->cell== cm_data.rootFid.cell && 
-         fidp->volume==cm_data.rootFid.volume &&
-         fidp->vnode==0x0 && fidp->unique==0x0)
-    {
-        osi_Log0(afsd_logp,"cm_GetSCache called with root cell/volume and vnode=0 and unique=0");
-    }
-
     // yj: check if we have the scp, if so, we don't need
     // to do anything else
     lock_ObtainWrite(&cm_scacheLock);
@@ -904,10 +897,6 @@ void cm_SyncOpAddToWaitQueue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp
 {
     cm_scache_waiter_t * w;
 
-    /* Do not use the queue for asynchronous store operations */
-    if (flags == CM_SCACHESYNC_ASYNCSTORE)
-        return;
-
     lock_ObtainWrite(&cm_scacheLock);
     if (cm_allFreeWaiters == NULL) {
         w = malloc(sizeof(*w));
@@ -933,10 +922,6 @@ int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
 {
     cm_scache_waiter_t * w;
     int this_is_me;
-
-    /* Do not use the queue for asynchronous store operations */
-    if (flags == CM_SCACHESYNC_ASYNCSTORE)
-        return 1;
 
     osi_Log0(afsd_logp, "cm_SyncOpCheckContinue checking for continuation");
 
