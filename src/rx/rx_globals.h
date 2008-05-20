@@ -591,4 +591,18 @@ EXT2 int rx_enable_stats GLOBALSINIT(0);
  */
 EXT int rx_enable_hot_thread GLOBALSINIT(0);
 
+/*
+ * Set rx_max_clones_per_connection to a value > 0 to enable connection clone 
+ * workaround to RX_MAXCALLS limit.
+ */
+ 
+#define RX_HARD_MAX_CLONES 10
+
+/* Should be syncd before 1.6.0 */
+#if defined(AFS_NT40_ENV)
+EXT int rx_max_clones_per_connection GLOBALSINIT(0);
+#else
+EXT int rx_max_clones_per_connection GLOBALSINIT(2);
+#endif
+
 #endif /* AFS_RX_GLOBALS_H */
