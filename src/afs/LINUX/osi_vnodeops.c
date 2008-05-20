@@ -1012,7 +1012,15 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
-	if (hlist_unhashed(&ip->i_hash))
+	if (
+#ifdef HAVE_KERNEL_HLIST_UNHASHED
+	    hlist_unhashed(&ip->i_hash)
+#elif defined(AFS_LINUX26_ENV)
+	    ip->i_hash.pprev == NULL
+#else
+	    ip->i_hash.prev == NULL
+#endif
+	    )
 	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
