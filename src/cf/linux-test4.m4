@@ -511,6 +511,18 @@ AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK], [
     CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)])
 
+AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
+  AC_MSG_CHECKING([for hlist_unhashed])
+  AC_CACHE_VAL([ac_cv_linux_kernel_hlist_unhashed], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/list.h>],
+[hlist_unhashed(0);],
+      ac_cv_linux_kernel_hlist_unhashed=yes,
+      ac_cv_linux_kernel_hlist_unhashed=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
 
 AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
   AC_MSG_CHECKING([for gfp_mask in struct address_space])
