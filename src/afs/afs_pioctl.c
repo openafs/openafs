@@ -93,6 +93,7 @@ DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PDiscon);
 DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
+DECL_PIOCTL(PPrecache); 
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -201,6 +202,9 @@ static int (*(CpioctlSw[])) () = {
         PBogus,                 /* 7 */
         PBogus,                 /* 8 */
         PNewUuid,               /* 9 */
+    PBogus,                     /* 0 */
+    PBogus,                     /* 0 */
+    PPrecache,                  /* 12 */
 };
 
 static int (*(OpioctlSw[])) () = {
@@ -2062,6 +2066,18 @@ DECL_PIOCTL(PViceAccess)
 	return 0;
     else
 	return EACCES;
+}
+
+DECL_PIOCTL(PPrecache)
+{
+    afs_int32 newValue;
+
+    /*AFS_STATCNT(PPrecache);*/
+    if (!afs_osi_suser(*acred))
+	return EACCES;
+    memcpy((char *)&newValue, ain, sizeof(afs_int32));
+    afs_preCache = newValue*1024;
+    return 0;
 }
 
 DECL_PIOCTL(PSetCacheSize)

@@ -150,6 +150,35 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     }
 #endif
     ReleaseReadLock(&tvc->lock);
+    if ((afs_preCache != 0) && (writing == 0) && (vType(tvc) != VDIR) && 
+	(!afs_BBusy())) {
+	register struct dcache *tdc;
+	afs_size_t offset, len, totallen = 0;
+
+	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
+
+	ObtainSharedLock(&tdc->mflock, 865);
+	if (!(tdc->mflags & DFFetchReq)) {
+	    struct brequest *bp;
+
+	    /* start the daemon (may already be running, however) */
+	    UpgradeSToWLock(&tdc->mflock, 666);
+	    tdc->mflags |= DFFetchReq;  /* guaranteed to be cleared by BKG or 
+					   GetDCache */
+	    /* last parm (1) tells bkg daemon to do an afs_PutDCache when it 
+	       is done, since we don't want to wait for it to finish before 
+	       doing so ourselves.
+	    */
+	    bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
+			    (afs_size_t) 0, (afs_size_t) 1, tdc);
+	    if (!bp) {
+		tdc->mflags &= ~DFFetchReq;
+	    }
+	    ReleaseWriteLock(&tdc->mflock);
+	} else {
+	    ReleaseSharedLock(&tdc->mflock);
+	}
+    }	
   done:
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 4);	/* avoid AIX -O bug */

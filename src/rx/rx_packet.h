@@ -51,7 +51,7 @@
 #define IPv6_FRAG_HDR_SIZE	 8	/* IPv6 Fragment Header */
 #define UDP_HDR_SIZE             8	/* UDP Header */
 #define	RX_IP_SIZE		(IPv6_HDR_SIZE + IPv6_FRAG_HDR_SIZE)
-#define	RX_IPUDP_SIZE		(RX_IP_SIZE + UDP_HDR_SIZE)
+#define	_RX_IPUDP_SIZE		(RX_IP_SIZE + UDP_HDR_SIZE)
 
 /* REMOTE_PACKET_SIZE is currently the same as local.  This is because REMOTE
  * is defined much too generally for my tastes, and includes the case of 
@@ -102,11 +102,15 @@
 /* The minimum MTU for an IP network is 576 bytes including headers */
 #define RX_MIN_PACKET_SIZE      (576 - RX_IPUDP_SIZE)
 #define	RX_PP_PACKET_SIZE	RX_MIN_PACKET_SIZE
+#define _RX_MIN_PACKET_SIZE      (576 - _RX_IPUDP_SIZE)
+#define	_RX_PP_PACKET_SIZE	_RX_MIN_PACKET_SIZE
 
 #define	OLD_MAX_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
+#define	_OLD_MAX_PACKET_SIZE	(1500 - _RX_IPUDP_SIZE)
 
 /* if the other guy is not on the local net, use this size */
 #define	RX_REMOTE_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
+#define	_RX_REMOTE_PACKET_SIZE	(1500 - _RX_IPUDP_SIZE)
 
 /* for now, never send more data than this */
 #define	RX_MAX_PACKET_SIZE	16384

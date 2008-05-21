@@ -397,7 +397,7 @@ EXT int rx_packetReclaims GLOBALSINIT(0);
  * This is provided for backward compatibility with peers which may be unable
  * to swallow anything larger. THIS MUST NEVER DECREASE WHILE AN APPLICATION
  * IS RUNNING! */
-EXT afs_uint32 rx_maxReceiveSize GLOBALSINIT(OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
+EXT afs_uint32 rx_maxReceiveSize GLOBALSINIT(_OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
 				      UDP_HDR_SIZE * (RX_MAX_FRAGS - 1));
 
 /* this is the maximum packet size that the user wants us to receive */
@@ -600,4 +600,5 @@ EXT int rx_enable_hot_thread GLOBALSINIT(0);
 
 EXT int rx_max_clones_per_connection GLOBALSINIT(2);
 
+EXT int RX_IPUDP_SIZE GLOBALSINIT(_RX_IPUDP_SIZE);
 #endif /* AFS_RX_GLOBALS_H */

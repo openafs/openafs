@@ -199,6 +199,7 @@ extern afs_int32 afs_gcpags;
 extern afs_int32 afs_gcpags_procsize;
 extern afs_int32 afs_CheckServerDaemonStarted;
 extern afs_int32 afs_probe_interval;
+extern afs_int32 afs_preCache;
 
 extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode,

@@ -37,6 +37,8 @@ AC_ARG_ENABLE( unix-sockets,
 [  --enable-unix-sockets 		enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
 AC_ARG_ENABLE( full-vos-listvol-switch,
 [  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
+AC_ARG_ENABLE( icmp-pmtu-discovery,
+[  --enable-icmp-pmtu-discovery		enable path MTU discovery by decoding ICMP unreachable replies],, enable_icmp_pmtu_discovery="no")
 AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
@@ -1069,6 +1071,19 @@ else
   
 fi
 
+AC_CACHE_VAL(ac_cv_setsockopt_iprecverr,
+[
+AC_MSG_CHECKING([for setsockopt(, SOL_IP, IP_RECVERR)])
+AC_TRY_COMPILE( [#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>],
+[int on=1;
+setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));], ac_cv_setsockopt_iprecverr=yes, ac_cv_setsockopt_iprecverr=no)
+AC_MSG_RESULT($ac_cv_setsockopt_iprecverr)])
+if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+   AC_DEFINE(ADAPT_PMTU_RECVERR, 1, [define if asynchronous socket errors can be received])
+fi
+
 PTHREAD_LIBS=error
 if test "x$MKAFS_OSTYPE" = OBSD; then
         PTHREAD_LIBS="-pthread"
@@ -1158,6 +1173,12 @@ if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])
 fi
 
+if test "$enable_icmp_pmtu_discovery" = "yes"; then
+   if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
+   fi
+fi
+
 if test "$enable_bos_restricted_mode" = "yes"; then
 	AC_DEFINE(BOS_RESTRICTED_MODE, 1, [define if you want to want bos restricted mode])
 fi
@@ -1210,6 +1231,7 @@ AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
+AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 
 dnl Don't build PAM on IRIX; the interface doesn't work for us.
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then

@@ -1996,6 +1996,39 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
+PreCacheCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    afs_int32 temp;
+    
+    if (!as->parms[0].items && !as->parms[1].items) {
+	fprintf(stderr, "%s: syntax error in precache cmd.\n", pn);
+	return 1;
+    }
+    if (as->parms[0].items) {
+	code = util_GetInt32(as->parms[0].items->data, &temp);
+	if (code) {
+	    fprintf(stderr, "%s: bad integer specified for precache size.\n",
+		    pn);
+	    return 1;
+	}
+    } else
+	temp = 0;
+    blob.in = (char *)&temp;
+    blob.in_size = sizeof(afs_int32);
+    blob.out_size = 0;
+    code = pioctl(0, VIOCPRECACHE, &blob, 1);
+    if (code) {
+	Die(errno, NULL);
+	return 1;
+    }
+    
+    printf("New precache size set.\n");
+    return 0;
+}
+
+static int
 SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -3656,6 +3689,11 @@ defect 3069
 
     ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, "manage the UUID for the cache manager");
     cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_REQUIRED, "generate a new UUID");
+
+    ts = cmd_CreateSyntax("precache", PreCacheCmd, 0,
+			  "set precache size");
+    cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
+		"size in 1K byte blocks (0 => disable)");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
