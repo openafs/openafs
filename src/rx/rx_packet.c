@@ -2630,6 +2630,8 @@ rxi_AdjustIfMTU(int mtu)
     int adjMTU;
     int frags;
 
+    if (rxi_nRecvFrags == 1 && rxi_nSendFrags == 1)
+        return mtu;
     adjMTU = RX_HEADER_SIZE + RX_JUMBOBUFFERSIZE + RX_JUMBOHEADERSIZE;
     if (mtu <= adjMTU) {
 	return mtu;

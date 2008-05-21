@@ -388,12 +388,16 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
      */
     if (tdc) {
 	ReleaseReadLock(&tdc->lock);
-#if !defined(AFS_VM_RDWR_ENV)
 	/* try to queue prefetch, if needed */
-	if (!noLock) {
+	if (!noLock &&
+#ifndef AFS_VM_RDWR_ENV
+	    afs_preCache
+#else
+	    1
+#endif
+	    ) {
 	    afs_PrefetchChunk(avc, tdc, acred, &treq);
 	}
-#endif
 	afs_PutDCache(tdc);
     }
     if (!noLock)

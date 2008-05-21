@@ -52,6 +52,7 @@ afs_int32 afs_CheckServerDaemonStarted = 0;
 afs_int32 afs_probe_interval = DEFAULT_PROBE_INTERVAL;
 afs_int32 afs_probe_all_interval = 600;
 afs_int32 afs_nat_probe_interval = 60;
+afs_int32 afs_preCache = 0;
 
 #define PROBE_WAIT() (1000 * (afs_probe_interval - ((afs_random() & 0x7fffffff) \
 		      % (afs_probe_interval/2))))
@@ -478,17 +479,22 @@ BPrefetch(register struct brequest *ab)
 {
     register struct dcache *tdc;
     register struct vcache *tvc;
-    afs_size_t offset, len;
+    afs_size_t offset, len, abyte, totallen = 0;
     struct vrequest treq;
 
     AFS_STATCNT(BPrefetch);
     if ((len = afs_InitReq(&treq, ab->cred)))
 	return;
+    abyte = ab->size_parm[0];
     tvc = ab->vc;
-    tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
-    if (tdc) {
-	afs_PutDCache(tdc);
-    }
+    do {
+	tdc = afs_GetDCache(tvc, abyte, &treq, &offset, &len, 1);
+	if (tdc) {
+	    afs_PutDCache(tdc);
+	}
+	abyte+=len; 
+	totallen += len;
+    } while ((totallen < afs_preCache) && tdc && (len > 0));
     /* now, dude may be waiting for us to clear DFFetchReq bit; do so.  Can't
      * use tdc from GetDCache since afs_GetDCache may fail, but someone may
      * be waiting for our wakeup anyway.

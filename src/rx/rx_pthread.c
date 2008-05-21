@@ -412,6 +412,10 @@ int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+    while((rxi_HandleSocketError(socket)) > 0)
+      ;
+#endif
     ret = recvmsg(socket, msg_p, flags);
     return ret;
 }
