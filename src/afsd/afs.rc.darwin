@@ -140,6 +140,10 @@ StartService()
 	fs sysname $AFS_SYSNAME
     fi
 
+    if [ -n "$AFS_PRECACHE" ] ; then
+	fs precache $AFS_PRECACHE
+    fi
+
 #
 # Run package to update the disk
 #
