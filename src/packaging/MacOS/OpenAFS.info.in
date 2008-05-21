@@ -11,6 +11,6 @@ Application NO
 Relocatable NO
 Required NO
 InstallOnly NO
-RequiresReboot YES
+RequiresReboot NO
 InstallFat NO
 rootVolumeOnly YES
