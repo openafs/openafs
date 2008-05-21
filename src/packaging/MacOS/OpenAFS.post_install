@@ -108,3 +108,7 @@ elif [ -e config/afssettings ]; then
   # turn off execution of afssettings
   chmod a-x config/afssettings
 fi
+
+#here we should run tools which configure the client, and then if it's enabled:
+/Library/StartupItems/OpenAFS/OpenAFS start
+

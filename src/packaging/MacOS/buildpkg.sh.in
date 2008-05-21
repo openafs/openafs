@@ -125,7 +125,7 @@ if [ $firstpass = yes ]; then
     cp $CURDIR/CellServDB $PKGROOT/private/var/db/openafs/etc/CellServDB.master
     echo grand.central.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
     if [ $majorvers -ge 7 ]; then
-	echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
+	echo /afs:/var/db/openafs/cache:100000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
         cp -RP $PKGROOT/Library/OpenAFS/Tools/etc/afssettings $PKGROOT/private/var/db/openafs/etc/config
 	cp settings.plist $PKGROOT/private/var/db/openafs/etc/config/settings.plist.orig
     else
@@ -210,14 +210,6 @@ if [ $secondpass = yes ]; then
     cp CellServDB.list $PKGRES
     chown -R root${SEP}wheel $PKGRES
     rm -rf $CURDIR/OpenAFS.pkg
-
-    # once we have cm cleanup in 10.4 this can go
-    if [ $majorvers -le 8 ]; then
-	cat $RESSRC/OpenAFS.info|sed 's/RequiresReboot NO/RequiresReboot YES/'>$RESSRC/OpenAFS.info.new
-	rm -f $RESSRC/OpenAFS.info
-	mv $RESSRC/OpenAFS.info.new $RESSRC/OpenAFS.info
-    fi
-
     if [ $majorvers -ge 7 ]; then
 	echo $package -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
