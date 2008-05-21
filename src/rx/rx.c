@@ -33,6 +33,11 @@ RCSID
 #include "h/socket.h"
 #endif
 #include "netinet/in.h"
+#ifdef AFS_SUN57_ENV
+#include "inet/common.h"
+#include "inet/ip.h"
+#include "inet/ip_ire.h"
+#endif
 #include "afs/afs_args.h"
 #include "afs/afs_osi.h"
 #ifdef RX_KERNEL_TRACE
@@ -2323,6 +2328,43 @@ rxi_Free(void *addr, register size_t size)
 {
     rx_MutexAdd1Decrement2(rxi_Allocsize, -(afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
     osi_Free(addr, size);
+}
+
+void 
+rxi_SetPeerMtu(register afs_uint32 host, register afs_uint32 port, int mtu)
+{
+    struct rx_peer **peer_ptr, **peer_end;
+    int hashIndex;
+
+    MUTEX_ENTER(&rx_peerHashTable_lock);
+    if (port == 0) {
+       for (peer_ptr = &rx_peerHashTable[0], peer_end =
+                &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
+            peer_ptr++) {
+           struct rx_peer *peer, *next;
+           for (peer = *peer_ptr; peer; peer = next) {
+               next = peer->next;
+               if (host == peer->host) {
+                   MUTEX_ENTER(&peer->peer_lock);
+                   peer->ifMTU=MIN(mtu, peer->ifMTU);
+                   peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+                   MUTEX_EXIT(&peer->peer_lock);
+               }
+           }
+       }
+    } else {
+       struct rx_peer *peer, *next;
+       hashIndex = PEER_HASH(host, port);
+       for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
+           if ((peer->host == host) && (peer->port == port)) {
+               MUTEX_ENTER(&peer->peer_lock);
+               peer->ifMTU=MIN(mtu, peer->ifMTU);
+               peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+               MUTEX_EXIT(&peer->peer_lock);
+           }
+       }
+    }
+    MUTEX_EXIT(&rx_peerHashTable_lock);
 }
 
 /* Find the peer process represented by the supplied (host,port)
@@ -5496,6 +5538,32 @@ rxi_CheckCall(register struct rx_call *call)
      * number of seconds. */
     if (now > (call->lastReceiveTime + deadTime)) {
 	if (call->state == RX_STATE_ACTIVE) {
+#ifdef ADAPT_PMTU
+#if defined(KERNEL) && defined(AFS_SUN57_ENV)
+	    ire_t *ire;
+#if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
+	    netstack_t *ns =  netstack_find_by_stackid(GLOBAL_NETSTACKID);
+	    ip_stack_t *ipst = ns->netstack_ip;
+#endif
+	    ire = ire_cache_lookup(call->conn->peer->host
+#if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
+				   , ALL_ZONES
+#if defined(AFS_SUN510_ENV) && (defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID))
+				   , NULL
+#if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
+				   , ipst
+#endif
+#endif
+#endif
+		);
+	    
+	    if (ire && ire->ire_max_frag > 0)
+		rxi_SetPeerMtu(call->conn->peer->host, 0, ire->ire_max_frag);
+#if defined(GLOBAL_NETSTACKID)
+	    netstack_rele(ns);
+#endif
+#endif
+#endif /* ADAPT_PMTU */
 	    rxi_CallError(call, RX_CALL_DEAD);
 	    return -1;
 	} else {

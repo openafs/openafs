@@ -95,7 +95,19 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
+#if defined(ADAPT_PMTU)
+    int pmtu=IP_PMTUDISC_WANT;
+    int recverr=1;
+#else
     int pmtu=IP_PMTUDISC_DONT;
+#endif
+#endif
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#include <linux/types.h>
+#include <linux/errqueue.h>
+#ifndef IP_MTU
+#define IP_MTU 14
+#endif
 #endif
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
@@ -180,8 +192,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+#if defined(ADAPT_PMTU)
+    setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
 #endif
-
+#endif
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
     }
@@ -614,6 +628,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
     afs_uint32 ppaddr;
     u_short rxmtu;
     int ix;
+#if defined(ADAPT_PMTU) && defined(IP_MTU)
+    int sock;
+    struct sockaddr_in addr;
+#endif
 
 
 
@@ -665,6 +683,22 @@ rxi_InitPeerParams(struct rx_peer *pp)
     pp->timeout.sec = 2;
     pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
 #endif /* ADAPT_MTU */
+#if defined(ADAPT_PMTU) && defined(IP_MTU)
+    sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock >= 0) {
+      addr.sin_family = AF_INET;
+      addr.sin_addr.s_addr = pp->host;
+      addr.sin_port = pp->port;
+      if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+	int mtu=0;
+        socklen_t s = sizeof(mtu);
+	if (getsockopt(sock, SOL_IP, IP_MTU, &mtu, &s)== 0) {
+	  pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
+	}
+      }
+      close(sock);
+    }
+#endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
     pp->natMTU = MIN((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
@@ -697,3 +731,54 @@ rx_SetMaxMTU(int mtu)
 {
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
 }
+
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+int
+rxi_HandleSocketError(int socket)
+{
+    struct msghdr msg;
+    struct cmsghdr *cmsg;
+    struct sock_extended_err *err;
+    struct sockaddr_in addr;
+    struct sockaddr *offender;
+    char controlmsgbuf[256];
+    int ret=0;
+    int code;
+
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = NULL;
+    msg.msg_iovlen = 0;
+    msg.msg_control = controlmsgbuf;
+    msg.msg_controllen = 256;
+    msg.msg_flags = 0;
+    code = recvmsg(socket, &msg, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
+
+    if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
+        goto out;
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+       if ((char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(0) ||
+           (char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(cmsg->cmsg_len) ||
+	   cmsg->cmsg_len == 0) {
+	   cmsg = 0;
+           break;
+	}
+        if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
+            break;
+    }
+    if (!cmsg)
+        goto out;
+    ret=1;
+    err =(struct sock_extended_err *) CMSG_DATA(cmsg);
+    
+    if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
+        rxi_SetPeerMtu(addr.sin_addr.s_addr, addr.sin_port,
+                       err->ee_info - RX_IPUDP_SIZE);
+    }
+    /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
+    
+out:
+    return ret;
+}
+#endif

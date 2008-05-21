@@ -428,6 +428,10 @@ rxi_Listen(osi_socket sock)
 int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+    while((rxi_HandleSocketError(socket)) > 0)
+	;
+#endif
     return recvmsg(socket, msg_p, flags);
 }
 
@@ -451,6 +455,10 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    }
 	    FD_SET(socket, sfds);
 	}
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+	while((rxi_HandleSocketError(socket)) > 0)
+	  ;
+#endif
 #ifdef AFS_NT40_ENV
 	if (WSAGetLastError())
 #elif defined(AFS_LINUX22_ENV)
