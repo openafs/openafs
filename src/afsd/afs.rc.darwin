@@ -11,6 +11,8 @@
 # Updated to match standard service scripts
 # Phil Holland <hollandp@umich.edu> 6/11/04
 
+PRECACHE="$AFS_PRECACHE"
+
 . /etc/rc.common
 
 #
@@ -140,7 +142,7 @@ StartService()
 	fs sysname $AFS_SYSNAME
     fi
 
-    if [ -n "$AFS_PRECACHE" ] ; then
+    if [ ! -z "$PRECACHE" ] ; then
 	fs precache $AFS_PRECACHE
     fi
 
