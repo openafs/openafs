@@ -4050,6 +4050,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	&& call->tfirst + call->nSoftAcked >= call->tnext) {
 	call->state = RX_STATE_DALLY;
 	rxi_ClearTransmitQueue(call, 0);
+        rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     } else if (!queue_IsEmpty(&call->tq)) {
 	rxi_Start(0, call, 0, istack);
     }
@@ -4314,7 +4315,6 @@ rxi_SetAcksInTransmitQueue(register struct rx_call *call)
     }
 
     rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
-    rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     call->tfirst = call->tnext;
     call->nSoftAcked = 0;
 
@@ -4355,7 +4355,6 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
     rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
-    rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     call->tfirst = call->tnext;	/* implicitly acknowledge all data already sent */
     call->nSoftAcked = 0;
 
