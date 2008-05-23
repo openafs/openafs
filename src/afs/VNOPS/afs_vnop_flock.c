@@ -219,6 +219,9 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
     94.04.13 add "force" parameter.  If a child explicitly unlocks a
     file, I guess we'll permit it.  however, we don't want simple,
     innocent closes by children to unlock files in the parent process.
+
+    If called when disconnected support is unabled, the discon_lock must
+    be held
 */
 /* clid - nonzero on sgi sunos osf1 only */
 int
@@ -295,20 +298,25 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	    avc->slocks = 0;
 	}
 	if (avc->flockCount == 0) {
-	    do {
-		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
-		if (tc) {
-		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-		    RX_AFS_GUNLOCK();
-		    code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
-					     &avc->fid.Fid, &tsync);
-		    RX_AFS_GLOCK();
-		    XSTATS_END_TIME;
-		} else
+	    if (!AFS_IS_DISCONNECTED) {
+	        do {
+		    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		    if (tc) {
+		        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
+		        RX_AFS_GUNLOCK();
+		        code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
+					         &avc->fid.Fid, &tsync);
+		        RX_AFS_GLOCK();
+		        XSTATS_END_TIME;
+		    } else
 		    code = -1;
-	    } while (afs_Analyze
-		     (tc, code, &avc->fid, areq,
-		      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK, NULL));
+	        } while (afs_Analyze
+		         (tc, code, &avc->fid, areq,
+		          AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK, NULL));
+	    } else {
+	  	/*printf("Network is dooooooowwwwwwwnnnnnnn\n");*/
+	       code = ENETDOWN;
+	    }
 	}
     } else {
 	while (1) {		/* set a new lock */
@@ -348,24 +356,26 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		    }
 		}
 		if (!code && avc->flockCount == 0) {
-		    do {
-			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
-			if (tc) {
-			    XSTATS_START_TIME
-				(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-			    RX_AFS_GUNLOCK();
-			    code =
-				RXAFS_ReleaseLock(tc->id,
-						  (struct AFSFid *)&avc->fid.
-						  Fid, &tsync);
-			    RX_AFS_GLOCK();
-			    XSTATS_END_TIME;
-			} else
-			    code = -1;
-		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
-			      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK,
-			      NULL));
+		    if (!AFS_IS_DISCONNECTED) {
+		        do {
+			    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			    if (tc) {
+			        XSTATS_START_TIME
+				    (AFS_STATS_FS_RPCIDX_RELEASELOCK);
+			        RX_AFS_GUNLOCK();
+			        code =
+				    RXAFS_ReleaseLock(tc->id,
+						      (struct AFSFid *)&avc->
+						      fid.Fid, &tsync);
+			        RX_AFS_GLOCK();
+			       XSTATS_END_TIME;
+			    } else
+			        code = -1;
+		        } while (afs_Analyze
+			         (tc, code, &avc->fid, areq,
+			          AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK,
+			          NULL));
+		    }
 		}
 	    } else if (avc->flockCount == -1 && (acom & LOCK_EX)) {
 		if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
@@ -381,22 +391,28 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		if (avc->flockCount == 0) {
 		    /* we're the first on our block, send the call through */
 		    lockType = ((acom & LOCK_EX) ? LockWrite : LockRead);
-		    do {
-			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
-			if (tc) {
-			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
-			    RX_AFS_GUNLOCK();
-			    code = RXAFS_SetLock(tc->id, (struct AFSFid *)
-						 &avc->fid.Fid, lockType,
-						 &tsync);
-			    RX_AFS_GLOCK();
-			    XSTATS_END_TIME;
-			} else
-			    code = -1;
-		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
-			      AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
-			      NULL));
+		    if (!AFS_IS_DISCONNECTED) {
+		        do {
+			    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			    if (tc) {
+			        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
+			        RX_AFS_GUNLOCK();
+			        code = RXAFS_SetLock(tc->id, (struct AFSFid *)
+						     &avc->fid.Fid, lockType,
+						     &tsync);
+			        RX_AFS_GLOCK();
+			        XSTATS_END_TIME;
+			    } else
+			        code = -1;
+		        } while (afs_Analyze
+			         (tc, code, &avc->fid, areq,
+			          AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
+			          NULL));
+		    } else
+		        /* XXX - Should probably try and log this when we're
+		         * XXX - running with logging enabled. But it's horrid
+		         */
+		        code = 0; /* pretend we worked - ick!!! */
 		} else
 		    code = 0;	/* otherwise, pretend things worked */
 	    }
@@ -497,15 +513,17 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
     afs_InitFakeStat(&fakestate);
+
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
-	afs_PutFakeStat(&fakestate);
-	return code;
+	goto done;
     }
 #ifdef	AFS_OSF_ENV
     if (flag & VNOFLCK) {
-	afs_PutFakeStat(&fakestate);
-	return 0;
+	code = 0;
+	goto done;
     }
     if (flag & CLNFLCK) {
 	acmd = LOCK_UN;
@@ -521,15 +539,14 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     if (acmd == F_GETLK) {
 #endif
 	if (af->l_type == F_UNLCK) {
-	    afs_PutFakeStat(&fakestate);
-	    return 0;
+	    code = 0;
+	    goto done;
 	}
 #ifndef	AFS_OSF_ENV		/* getlock is a no-op for osf (for now) */
 	code = HandleGetLock(avc, af, &treq, clid);
 #endif
 	code = afs_CheckCode(code, &treq, 2);	/* defeat buggy AIX optimz */
-	afs_PutFakeStat(&fakestate);
-	return code;
+	goto done;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
 #if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
 	       || (acmd == F_RSETLK) || (acmd == F_RSETLKW)) {
@@ -559,8 +576,8 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
      * even when they should block */
     if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
 	DoLockWarning();
-	afs_PutFakeStat(&fakestate);
-	return 0;
+	code = 0;
+	goto done;
     }
     /* otherwise we can turn this into a whole-file flock */
     if (af->l_type == F_RDLCK)
@@ -589,11 +606,13 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     code = HandleFlock(avc, code, &treq, 0, 0 /*!onlymine */ );
 #endif
     code = afs_CheckCode(code, &treq, 3);	/* defeat AIX -O bug */
-    afs_PutFakeStat(&fakestate);
-    return code;
+    goto done;
     }
+    code = EINVAL;
+done:
     afs_PutFakeStat(&fakestate);
-    return EINVAL;
+    AFS_DISCON_UNLOCK();
+    return code;
 }
 
 
@@ -819,6 +838,10 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
     temp = areq->flags & O_NONBLOCK;
     areq->flags |= O_NONBLOCK;
 
+    /* If we're disconnected, lie and say that we've got no locks. Ick */
+    if (AFS_IS_DISCONNECTED)
+        return 0;
+        
     do {
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
@@ -889,6 +912,9 @@ afs_xflock(void)
 	afs_PutFakeStat(&fakestate);
 	return flockDone;
     }
+
+    AFS_DISCON_LOCK();
+    
     /* first determine whether this is any sort of vnode */
     if (fd->f_type == DTYPE_VNODE) {
 	/* good, this is a vnode; next see if it is an AFS vnode */
@@ -897,6 +923,7 @@ afs_xflock(void)
 	    /* This is an AFS vnode, so do the work */
 	    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
 	    if (code) {
+		AFS_DISCON_UNLOCK();
 		afs_PutFakeStat(&fakestate);
 		return code;
 	    }
@@ -950,11 +977,13 @@ afs_xflock(void)
 #else
     FP_UNREF(fd);
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     return code;
 #else /* AFS_OSF_ENV */
     if (!flockDone)
 	flock();
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     return;
 #endif

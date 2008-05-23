@@ -382,6 +382,9 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (avc->vc_error)
 	return avc->vc_error;
 
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)
+	return ENETDOWN;
+    
     startDate = osi_Time();
     if ((code = afs_InitReq(&treq, acred)))
 	return code;

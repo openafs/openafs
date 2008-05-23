@@ -443,6 +443,15 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 	ReleaseReadLock(&adc->lock);
 
 	tdc = afs_GetDCache(avc, offset, areq, &j1, &j2, 2);	/* type 2 never returns 0 */
+#ifdef AFS_DISCON_ENV
+        /*
+         * In disconnected mode, type 2 can return 0 because it doesn't
+         * make any sense to allocate a dcache we can never fill
+         */
+         if (tdc == NULL)
+             return;
+#endif /* AFS_DISCON_ENV */
+
 	ObtainSharedLock(&tdc->mflock, 651);
 	if (!(tdc->mflags & DFFetchReq)) {
 	    /* ask the daemon to do the work */
@@ -512,6 +521,8 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
     if (avc && avc->vc_error)
 	return EIO;
 
+    AFS_DISCON_LOCK();
+    
     /* check that we have the latest status info in the vnode cache */
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
@@ -522,6 +533,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    code = afs_VerifyVCache(avc, &treq);
 	    if (code) {
 		code = afs_CheckCode(code, &treq, 11);	/* failed to get it */
+		AFS_DISCON_UNLOCK();
 		return code;
 	    }
 	}
@@ -531,6 +543,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	if (!afs_AccessOK
 	    (avc, PRSFS_READ, &treq,
 	     CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
+	    AFS_DISCON_UNLOCK();
 	    return afs_CheckCode(EACCES, &treq, 12);
 	}
     }
@@ -621,6 +634,14 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		afs_PutDCache(tdc);	/* before reusing tdc */
 	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
+#ifdef AFS_DISCON_ENV
+	    if (!tdc) {
+		/*printf("Network down in afs_read");*/
+	        error = ENETDOWN;
+	        break;
+	    }
+#endif /* AFS_DISCON_ENV */
+
 	    ObtainReadLock(&tdc->lock);
 	    /* now, first try to start transfer, if we'll need the data.  If
 	     * data already coming, we don't need to do this, obviously.  Type
@@ -952,6 +973,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 #else
     osi_FreeSmallSpace(tvec);
 #endif
+    AFS_DISCON_UNLOCK();
     error = afs_CheckCode(error, &treq, 13);
     return error;
 }

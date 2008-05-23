@@ -578,6 +578,9 @@ afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
 
     ReleaseWriteLock(&afs_xvolume);
 
+    if (AFS_IS_DISCONNECTED)
+        return NULL;
+
     tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
     return (tv);
 }

@@ -1292,10 +1292,64 @@ afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred, int sync)
 #endif
     MReleaseWriteLock(&afs_xdcache);
     /*
-     * It's treated like a callback so that when we do lookups we'll invalidate the unique bit if any
+     * It's treated like a callback so that when we do lookups we'll 
+     * invalidate the unique bit if any
      * trytoSmush occured during the lookup call
      */
     afs_allCBs++;
+}
+
+/*
+ * afs_DCacheMissingChunks
+ *
+ * Description
+ * 	Given the cached info for a file, return the number of chunks that
+ * 	are not available from the dcache.
+ * 
+ * Parameters:
+ * 	avc:    Pointer to the (held) vcache entry to look in.
+ * 
+ * Returns:
+ * 	The number of chunks which are not currently cached.
+ * 
+ * Environment:
+ * 	The vcache entry is held upon entry.
+ */
+
+int
+afs_DCacheMissingChunks(struct vcache *avc)
+{
+    int i, index;
+    afs_size_t totalLength;
+    afs_uint32 totalChunks;
+    struct dcache *tdc;
+
+    totalLength = avc->m.Length;
+    if (avc->truncPos < totalLength)
+        totalLength = avc->truncPos;
+
+    totalChunks = AFS_CHUNK(totalLength) + 1;
+
+    /*printf("Should have %d chunks for %d bytes\n", totalChunks, totalLength);*/
+    
+    i = DVHash(&avc->fid);
+    MObtainWriteLock(&afs_xdcache, 1001);
+    for (index = afs_dvhashTbl[i]; index != NULLIDX; index = i) {
+        i = afs_dvnextTbl[index];
+        if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+            tdc = afs_GetDSlot(index, NULL);
+            if (!FidCmp(&tdc->f.fid, &avc->fid)) {
+		totalChunks--;
+            }
+            ReleaseReadLock(&tdc->tlock);
+            afs_PutDCache(tdc);
+        }
+    }
+    MReleaseWriteLock(&afs_xdcache);
+
+    /*printf("Missing %d chunks\n", totalChunks);*/
+
+    return (totalChunks);
 }
 
 /*
@@ -1815,6 +1869,17 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	 * If we didn't find the entry, we'll create one.
 	 */
 	if (index == NULLIDX) {
+	    /* If we're disconnected, we can't do anything */
+            if (AFS_IS_DISCONNECTED) {
+                MReleaseWriteLock(&afs_xdcache);
+                if (setLocks) {
+                    if (slowPass)
+	                ReleaseWriteLock(&avc->lock);
+	            else
+		        ReleaseReadLock(&avc->lock);
+                }
+                return NULL;
+            }
 	    /*
 	     * Locks held:
 	     * avc->lock(R) if setLocks
@@ -2059,6 +2124,23 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	/*
 	 * Version number mismatch.
 	 */
+        /*
+         * If we are disconnected, then we can't do much of anything
+         * because the data doesn't match the file.
+         */
+        if (AFS_IS_DISCONNECTED) {
+            ReleaseSharedLock(&tdc->lock);
+            if (setLocks) {
+                if (slowPass)
+                    ReleaseWriteLock(&avc->lock);
+                else
+                    ReleaseReadLock(&avc->lock);
+            }
+            /* Flush the Dcache */
+            afs_PutDCache(tdc);
+                
+            return NULL;
+        }
 	UpgradeSToWLock(&tdc->lock, 609);
 
 	/*

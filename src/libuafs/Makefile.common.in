@@ -95,6 +95,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_daemons.o	\
 	$(UOBJ)/afs_dcache.o \
 	$(UOBJ)/afs_dir.o		\
+	$(UOBJ)/afs_disconnected.o	\
 	$(UOBJ)/afs_dynroot.o \
 	$(UOBJ)/afs_icl.o \
 	$(UOBJ)/afs_init.o \
@@ -220,6 +221,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_daemons.o \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
+	$(WEBOBJ)/afs_disconnected.o \
 	$(WEBOBJ)/afs_dynroot.o \
 	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
@@ -347,6 +349,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
 	$(WEBOBJ)/afs_dynroot.o \
+	$(WEBOBJ)/afs_disconnected.o \
 	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
@@ -468,6 +471,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_dcache.o \
 	$(JUAFS)/afs_dir.o \
 	$(JUAFS)/afs_dynroot.o \
+	$(JUAFS)/afs_disconnected.o \
 	$(JUAFS)/afs_icl.o \
 	$(JUAFS)/afs_init.o \
 	$(JUAFS)/afs_lock.o	\
@@ -596,6 +600,8 @@ $(UOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 $(UOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE1)
 $(UOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
+	$(CRULE1)
+$(UOBJ)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
 	$(CRULE1)
 $(UOBJ)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
 	$(CRULE1)
@@ -851,6 +857,8 @@ $(WEBOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 $(WEBOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 	$(CRULE2)
 $(WEBOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
+	$(CRULE2)
+$(WEBOBJ)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
 	$(CRULE2)
 $(WEBOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE2)
@@ -1112,6 +1120,8 @@ $(JUAFS)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 $(JUAFS)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 	$(CRULE1)
 $(JUAFS)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
+	$(CRULE1)
+$(JUAFS)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
 	$(CRULE1)
 $(JUAFS)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE1)

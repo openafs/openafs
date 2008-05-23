@@ -87,10 +87,14 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	volnamep = data;
 	tcell = afs_GetCell(cellnum, READ_LOCK);
     } else {
+	/*printf("No cellname %s , or cellnum %d , returning ENODEV\n", 
+	       data, cellnum);*/
 	return ENODEV;
     }
-    if (!tcell)
+    if (!tcell) {
+	/*printf("Lookup failed, returning ENODEV\n");*/
 	return ENODEV;
+    }
 
     cellidx = tcell->cellIndex;
     mtptCell = tcell->cellNum;	/* The cell for the mountpoint */
@@ -143,8 +147,10 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	tfid.Fid.Volume = volid;	/* remember BK volume */
 	tfid.Cell = mtptCell;
 	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
-	if (!tvp)
+	if (!tvp) {
+	    /*printf("afs_GetVolume failed - returning ENODEV");*/
 	    return ENODEV;	/* oops, can't do it */
+	}
 	goto done;
     }
 
@@ -179,6 +185,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * ".backup" in it, this will get the volume struct for the RW volume.
      * The RO volume will be prefetched if requested (but not returned).
      */
+    /*printf("Calling GetVolumeByName\n");*/
     tvp = afs_GetVolumeByName(volnamep, mtptCell, prefetch, areq, WRITE_LOCK);
 
     /* If no volume was found in this cell, try the associated linked cell */
@@ -207,8 +214,10 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	osi_FreeSmallSpace(buf);
     }
 
-    if (!tvp)
+    if (!tvp) {
+	/*printf("Couldn't find the volume\n");*/
 	return ENODEV;		/* Couldn't find the volume */
+    }
 
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((states & CBackup) && (tvp->states & VBackup)) {
@@ -1222,6 +1231,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
 
+    AFS_DISCON_LOCK();
+
+    /*printf("Looking up %s\n", aname);*/
+    
     if ((code = afs_InitReq(&treq, acred)))
 	goto done;
 
@@ -1250,6 +1263,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	code = afs_TryEvalFakeStat(&adp, &fakestate, &treq);
     else
 	code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+
+    /*printf("Code is %d\n", code);*/
+    
     if (tryEvalOnly && adp->mvstat == 1)
 	code = ENOENT;
     if (code)
@@ -1291,6 +1307,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	    goto done;
 	}
 	/* otherwise we have the fid here, so we use it */
+	/*printf("Getting vcache\n");*/
 	tvc = afs_GetVCache(adp->mvid, &treq, NULL, NULL);
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
@@ -1550,7 +1567,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	/* prefetch some entries, if the dir is currently open.  The variable
 	 * dirCookie tells us where to start prefetching from.
 	 */
-	if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)
+	if (!AFS_IS_DISCONNECTED && 
+	    AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)
 	    && !afs_IsDynroot(adp) && !afs_InReadDir(adp)) {
 	    afs_int32 retry;
 	    /* if the entry is not in the cache, or is in the cache,
@@ -1697,25 +1715,30 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 * be located (a Multics "connection failure").  If the volume is
 	 * read-only, we try flushing this entry from the cache and trying
 	 * again. */
-	if (pass == 0) {
-	    struct volume *tv;
-	    tv = afs_GetVolume(&adp->fid, &treq, READ_LOCK);
-	    if (tv) {
-		if (tv->states & VRO) {
-		    pass = 1;	/* try this *once* */
-		    ObtainWriteLock(&afs_xcbhash, 495);
-		    afs_DequeueCallback(adp);
-		    /* re-stat to get later version */
-		    adp->states &= ~CStatd;
-		    ReleaseWriteLock(&afs_xcbhash);
-		    osi_dnlc_purgedp(adp);
+	if (!AFS_IS_DISCONNECTED) {
+	    if (pass == 0) {
+	        struct volume *tv;
+	        tv = afs_GetVolume(&adp->fid, &treq, READ_LOCK);
+	        if (tv) {
+		    if (tv->states & VRO) {
+		        pass = 1;	/* try this *once* */
+		        ObtainWriteLock(&afs_xcbhash, 495);
+		        afs_DequeueCallback(adp);
+		        /* re-stat to get later version */
+		        adp->states &= ~CStatd;
+		        ReleaseWriteLock(&afs_xcbhash);
+		        osi_dnlc_purgedp(adp);
+		        afs_PutVolume(tv, READ_LOCK);
+		        goto redo;
+		    }
 		    afs_PutVolume(tv, READ_LOCK);
-		    goto redo;
-		}
-		afs_PutVolume(tv, READ_LOCK);
+	        }
 	    }
+	    code = ENOENT;
+	} else {
+	    /*printf("Network down in afs_lookup\n");*/
+	    code = ENETDOWN;
 	}
-	code = ENOENT;
     }
 
   done:
@@ -1753,6 +1776,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		code = afs_VerifyVCache(tvc, &treq);
 #else
 		afs_PutFakeStat(&fakestate);
+		AFS_DISCON_UNLOCK();
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
 	    }
@@ -1769,5 +1793,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     }
 
     afs_PutFakeStat(&fakestate);
+    AFS_DISCON_UNLOCK();
     return code;
 }

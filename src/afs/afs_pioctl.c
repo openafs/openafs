@@ -30,6 +30,11 @@ afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;	/* show all messages */
 
+#ifdef AFS_DISCON_ENV
+afs_int32 afs_is_disconnected;
+afs_int32 afs_is_logging;
+#endif
+
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
 	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
 	struct AFS_UCRED **acred)
@@ -3985,6 +3990,52 @@ DECL_PIOCTL(PDiscon)
     /* Return new mode */
     memcpy(aout, &mode, sizeof(afs_int32));
     *aoutSize = sizeof(struct VenusFid);
+    return 0;
+#else
+    return EINVAL;
+#endif
+}
+
+DECL_PIOCTL(PDiscon)
+{
+#ifdef AFS_DISCON_ENV
+    static afs_int32 mode = 4; /* Start up in 'full' */
+
+    if (ainSize == sizeof(afs_int32)) {
+
+	if (!afs_osi_suser(*acred))
+	    return EPERM;
+
+	memcpy(&mode, ain, sizeof(afs_int32));
+
+	/*
+	 * All of these numbers are hard coded in fs.c. If they
+	 * change here, they should change there and vice versa
+	 */
+	switch (mode) {
+	case 0: /* Disconnect, breaking all callbacks */
+	    if (!AFS_IS_DISCONNECTED) {
+		ObtainWriteLock(&afs_discon_lock, 999);
+		afs_DisconGiveUpCallbacks();
+		afs_RemoveAllConns();
+		afs_is_disconnected = 1;
+		ReleaseWriteLock(&afs_discon_lock);
+	    }
+	    break;
+	case 4: /* Fully connected */
+	    ObtainWriteLock(&afs_discon_lock, 998);
+	    afs_is_disconnected = 0;
+	    ReleaseWriteLock(&afs_discon_lock);
+	    break;
+	default:
+	    return EINVAL;
+	}
+    } else {
+	return EINVAL;
+    }
+
+    memcpy(aout, &mode, sizeof(afs_int32));
+    *aoutSize = sizeof(afs_int32);
     return 0;
 #else
     return EINVAL;

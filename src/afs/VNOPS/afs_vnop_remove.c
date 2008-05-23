@@ -104,26 +104,29 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	  register struct vcache *tvc, char *aname, struct AFS_UCRED *acred,
 	  struct vrequest *treqp)
 {
-    register afs_int32 code;
+    register afs_int32 code = 0;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
-    do {
-	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
-	if (tc) {
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
-				 aname, &OutDirStatus, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
-	      SHARED_LOCK, NULL));
+    
+    if (!AFS_IS_DISCONNECTED) {
+        do {
+	    tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
+	    if (tc) {
+	        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
+	        RX_AFS_GUNLOCK();
+	        code =
+		    RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		  		     aname, &OutDirStatus, &tsync);
+	        RX_AFS_GLOCK();
+	        XSTATS_END_TIME;
+	    } else
+	        code = -1;
+        } while (afs_Analyze
+	         (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	          SHARED_LOCK, NULL));
+    }
 
     osi_dnlc_remove(adp, aname, tvc);
 
@@ -304,6 +307,16 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	return code;
     }
 
+    /* If we're running disconnected without logging, go no further... */
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(tvc);
+#endif
+        code = ENETDOWN;
+        afs_PutFakeStat(&fakestate);
+        return code;
+    }
+    
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
     if (tdc)

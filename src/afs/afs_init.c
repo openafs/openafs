@@ -45,6 +45,9 @@ int afs_memvolumes = 0;
 #if defined(AFS_XBSD_ENV)
 static struct vnode *volumeVnode;
 #endif
+#if defined(AFS_DISCON_ENV)
+afs_rwlock_t afs_discon_lock;
+#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -110,6 +113,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
     RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
+#ifdef AFS_DISCON_ENV
+    RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
+#endif
     osi_dnlc_init();
 
     /* 
