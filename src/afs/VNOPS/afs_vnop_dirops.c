@@ -65,13 +65,16 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     if (strlen(aname) > AFSNAMEMAX) {
 	code = ENAMETOOLONG;
-	goto done;
+	goto done3;
     }
 
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
-	goto done;
+	goto done3;
     }
+    
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code)
 	goto done;
@@ -85,6 +88,11 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (adp->states & CRO) {
 	code = EROFS;
 	goto done;
+    }
+   
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+	/*printf("Network is down in afs_mkdir\n");*/
+	code = ENETDOWN;
     }
 
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
@@ -156,6 +164,8 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     } else
 	code = ENOENT;
   done:
+    AFS_DISCON_UNLOCK();
+  done3:
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 26);
   done2:
@@ -198,6 +208,8 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	goto done;
     }
 
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code)
 	goto done;
@@ -214,6 +226,11 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	goto done;
     }
 
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+        code = ENETDOWN;
+        goto done;
+    }
+    
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 154);
     if (tdc)
@@ -304,6 +321,8 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     code = 0;
 
   done:
+    AFS_DISCON_UNLOCK();
+  done3:
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 27);
   done2:

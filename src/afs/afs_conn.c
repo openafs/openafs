@@ -158,6 +158,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	ReleaseSharedLock(&afs_xconn);
 	return NULL;
     }
+    
+    if (AFS_IS_DISCONNECTED) {
+        afs_warnuser("afs_ConnBySA: disconnected\n");
+        ReleaseSharedLock(&afs_xconn);
+        return NULL;
+    }
 
     if (!tc) {
 	/* No such connection structure exists.  Create one and splice it in.
@@ -269,6 +275,12 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     struct srvAddr *sa = 0;
 
     AFS_STATCNT(afs_ConnByHost);
+
+    if (AFS_IS_DISCONNECTED) {
+        afs_warnuser("afs_ConnByHost: disconnected\n");
+        return NULL;
+    }
+
 /* 
   1.  look for an existing connection
   2.  create a connection at an address believed to be up

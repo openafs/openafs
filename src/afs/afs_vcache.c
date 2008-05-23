@@ -1658,7 +1658,7 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
-	name = "";		/* XXX */
+	name = "";		/* XXX */    
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	if (tc) {
@@ -1899,7 +1899,15 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    tvc->parentUnique = OutStatus.ParentUnique;
 	    code = 0;
 	} else {
-	    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+	    /* If we've got here and we're disconnected, then we can go
+	     * no further
+	     */
+	    if (AFS_IS_DISCONNECTED) {
+		code = ENETDOWN;
+		/*printf("Network is down in afs_GetCache");*/
+	    } else
+	        code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+
 	    /* For the NFS translator's benefit, make sure
 	     * non-directory vnodes always have their parent FID set
 	     * correctly, even when created as a result of decoding an
@@ -1986,9 +1994,14 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     nfid = *afid;
     now = osi_Time();
     origCBs = afs_allCBs;	/* if anything changes, we don't have a cb */
-    code =
-	afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, &CallBack,
-			 &serverp, &tsync);
+    
+    if (AFS_IS_DISCONNECTED) {
+	/*printf("Network is down in afs_LookupVcache\n");*/
+        code = ENETDOWN;
+    } else 
+        code =
+	    afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, 
+	                     &CallBack, &serverp, &tsync);
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop2:
@@ -3103,3 +3116,32 @@ shutdown_vcache(void)
     for(i = 0; i < VCSIZE; ++i)
 	QInit(&afs_vhashTV[i]);
 }
+
+#ifdef AFS_DISCON_ENV
+void afs_DisconGiveUpCallbacks() {
+    int i;
+    struct vcache *tvc;
+    int nq=0;
+            
+    ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
+    
+    /* Somehow, walk the set of vcaches, with each one coming out as tvc */
+    for (i = 0; i < VCSIZE; i++) {
+        for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+            if ((tvc->states & CRO) == 0 && tvc->callback) {
+                /* XXX - should we check if the callback has expired here? */
+                afs_QueueVCB(tvc);
+                tvc->callback = NULL;
+                tvc->states &- ~(CStatd | CUnique);
+                nq++;
+            }
+        }
+    }
+    /*printf("%d callbacks to be discarded. queued ... ", nq);*/
+    afs_FlushVCBs(0);
+    
+    ReleaseWriteLock(&afs_xvcache);
+    /*printf("gone\n");*/
+}
+
+#endif

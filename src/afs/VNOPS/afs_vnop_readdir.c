@@ -648,6 +648,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     }
     /* update the cache entry */
     afs_InitFakeStat(&fakestate);
+
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code)
 	goto done;
@@ -910,6 +913,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #ifdef	AFS_HPUX_ENV
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 28);
     return code;
@@ -957,11 +961,13 @@ afs1_readdir(avc, auio, acred)
 	return code;
     }
     afs_InitFakeStat(&fakestate);
+    AFS_DISCON_LOCK();
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+	AFS_DISCON_UNLOCK();
 	afs_PutFakeStat(&fakestate);
 	return code;
     }
@@ -1177,6 +1183,7 @@ afs1_readdir(avc, auio, acred)
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 29);
     return code;

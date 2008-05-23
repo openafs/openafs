@@ -209,10 +209,13 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
+    AFS_DISCON_LOCK();
+
     if (afs_fakestat_enable && avc->mvstat == 1) {
 	code = afs_TryEvalFakeStat(&avc, &fakestate, &treq);
         if (code == 0 && avc->mvstat == 1) {
 	    afs_PutFakeStat(&fakestate);
+	    AFS_DISCON_UNLOCK();
 	    return 0;
         }
     } else {
@@ -221,6 +224,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 
     if (code) {
 	afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
 	return code;
     }
 
@@ -228,6 +232,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 	code = afs_VerifyVCache(avc, &treq);
 	if (code) {
 	    afs_PutFakeStat(&fakestate);
+	    AFS_DISCON_UNLOCK();
 	    code = afs_CheckCode(code, &treq, 16);
 	    return code;
 	}
@@ -236,8 +241,18 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     /* if we're looking for write access and we have a read-only file system, report it */
     if ((amode & VWRITE) && (avc->states & CRO)) {
 	afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
 	return EROFS;
     }
+    
+    /* If we're looking for write access, and we're disconnected without logging, forget it */
+    if ((amode & VWRITE) && (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)) {
+        afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
+	/*printf("Network is down in afs_vnop_access\n");*/
+        return ENETDOWN;
+    }
+    
     code = 1;			/* Default from here on in is access ok. */
     if (avc->states & CForeign) {
 	/* In the dfs xlator the EXEC bit is mapped to LOOKUP */
@@ -316,6 +331,9 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 	}
     }
     afs_PutFakeStat(&fakestate);
+
+    AFS_DISCON_UNLOCK();
+    
     if (code) {
 	return 0;		/* if access is ok */
     } else {

@@ -85,6 +85,7 @@ AFSAOBJS = \
 	afs_daemons.o	\
 	afs_dcache.o \
 	afs_dir.o		\
+	afs_disconnected.o	\
 	afs_dynroot.o		\
 	afs_error.o \
 	afs_icl.o \
@@ -244,6 +245,8 @@ afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 	$(CRULE_OPT)
 afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
+	$(CRULE_OPT)
+afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
 	$(CRULE_OPT)
 afs_dynroot.o: 	$(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE_OPT)

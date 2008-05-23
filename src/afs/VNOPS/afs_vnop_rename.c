@@ -82,6 +82,12 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    code = 0;
 	    goto done;
 	}
+	
+	if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+	    code = ENETDOWN;
+	    goto done;
+	}
+	
 	ObtainWriteLock(&andp->lock, 147);
 	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (!tdc1) {
@@ -161,7 +167,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	goto done;
     }
 
-    /* locks are now set, proceed to do the real work */
     do {
 	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
 	if (tc) {
@@ -376,6 +381,9 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, s
 	return code;
     afs_InitFakeStat(&ofakestate);
     afs_InitFakeStat(&nfakestate);
+
+    AFS_DISCON_LOCK();
+    
     code = afs_EvalFakeStat(&aodp, &ofakestate, &treq);
     if (code)
 	goto done;
@@ -386,6 +394,9 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, s
   done:
     afs_PutFakeStat(&ofakestate);
     afs_PutFakeStat(&nfakestate);
+
+    AFS_DISCON_UNLOCK();
+    
     code = afs_CheckCode(code, &treq, 25);
     return code;
 }

@@ -547,6 +547,13 @@ afs_CheckServers(int adown, struct cell *acellp)
 
     AFS_STATCNT(afs_CheckServers);
 
+    /* 
+     * No sense in doing the server checks if we are running in disconnected
+     * mode
+     */
+    if (AFS_IS_DISCONNECTED)
+        return;
+
     conns = (struct conn **)0;
     rxconns = (struct rx_connection **) 0;
     conntimer = 0;
@@ -1845,6 +1852,46 @@ void afs_ActivateServer(struct srvAddr *sap) {
     }
 }
 
+#ifdef AFS_DISCON_ENV
+
+void afs_RemoveAllConns()
+{
+    int i;
+    struct server *ts, *nts;
+    struct srvAddr *sa;
+    struct conn *tc, *ntc;
+
+    ObtainReadLock(&afs_xserver);
+    ObtainWriteLock(&afs_xconn, 1001);
+    
+    /*printf("Destroying connections ... ");*/
+    for (i = 0; i < NSERVERS; i++) {
+        for (ts = afs_servers[i]; ts; ts = nts) {
+            nts = ts->next;
+            for (sa = ts->addr; sa; sa = sa->next_sa) {
+                if (sa->conns) {
+                    tc = sa->conns;
+                    while (tc) {
+                        ntc = tc->next;
+                        AFS_GUNLOCK();
+                        rx_DestroyConnection(tc->id);
+                        AFS_GLOCK();
+                        afs_osi_Free(tc, sizeof(struct conn));
+                        tc = ntc;
+                    }
+                    sa->conns = NULL;
+                }
+            }
+        }
+    }
+    /*printf("done\n");*/
+
+    ReleaseWriteLock(&afs_xconn);
+    ReleaseReadLock(&afs_xserver);
+    
+}
+
+#endif /* AFS_DISCON_ENV */
 
 void shutdown_server()
 {

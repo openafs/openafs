@@ -318,6 +318,20 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
     struct afs_stats_RPCErrors *aerrP;
     afs_int32 markeddown;
 
+ 
+    if (AFS_IS_DISCONNECTED) {
+	/* SXW - This may get very tired after a while. We should try and
+	 *       intercept all RPCs before they get here ... */
+	/*printf("afs_Analyze: disconnected\n");*/
+	afs_FinalizeReq(areq);
+	if (aconn) {
+	    /* SXW - I suspect that this will _never_ happen - we shouldn't
+	     *       get a connection because we're disconnected !!!*/
+	    afs_PutConn(aconn, locktype);
+	}
+	return 0;
+    }
+  
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,
 	       ICL_TYPE_POINTER, aconn, ICL_TYPE_INT32, acode, ICL_TYPE_LONG,
