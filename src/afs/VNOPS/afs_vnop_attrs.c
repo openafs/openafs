@@ -230,6 +230,8 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     }
 #endif
 
+    AFS_DISCON_LOCK();
+
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);
 #endif
@@ -328,6 +330,9 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 	    }
 	}
     }
+
+    AFS_DISCON_UNLOCK();
+
     if (!code)
 	return 0;
     code = afs_CheckCode(code, &treq, 14);
@@ -463,6 +468,8 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
+    AFS_DISCON_LOCK();
+
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code)
@@ -500,6 +507,11 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    code = EACCES;
 	    goto done;
 	}
+    }
+
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+        code = ENETDOWN;
+        goto done;
     }
 
     afs_VAttrToAS(avc, attrs, &astat);	/* interpret request */
@@ -551,19 +563,25 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	hzero(avc->flushDV);
 	osi_FlushText(avc);	/* do this after releasing all locks */
     }
-    if (code == 0) {
-	ObtainSharedLock(&avc->lock, 16);	/* lock entry */
-	code = afs_WriteVCache(avc, &astat, &treq);	/* send request */
-	ReleaseSharedLock(&avc->lock);	/* release lock */
-    }
-    if (code) {
-	ObtainWriteLock(&afs_xcbhash, 487);
-	afs_DequeueCallback(avc);
-	avc->states &= ~CStatd;
-	ReleaseWriteLock(&afs_xcbhash);
-	if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	    osi_dnlc_purgedp(avc);
-	/* error?  erase any changes we made to vcache entry */
+    
+    if (!AFS_IS_DISCONNECTED) {
+        if (code == 0) {
+	    ObtainSharedLock(&avc->lock, 16);	/* lock entry */
+	    code = afs_WriteVCache(avc, &astat, &treq);	/* send request */
+	    ReleaseSharedLock(&avc->lock);	/* release lock */
+        }
+        if (code) {
+	    ObtainWriteLock(&afs_xcbhash, 487);
+	    afs_DequeueCallback(avc);
+	    avc->states &= ~CStatd;
+	    ReleaseWriteLock(&afs_xcbhash);
+	    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+	        osi_dnlc_purgedp(avc);
+	    /* error?  erase any changes we made to vcache entry */
+        }
+    } else {
+        /* Must be logging - but not implemented yet ... */
+        code = ENETDOWN;
     }
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
@@ -578,6 +596,8 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #endif
   done:
     afs_PutFakeStat(&fakestate);
+
+    AFS_DISCON_UNLOCK();
     code = afs_CheckCode(code, &treq, 15);
     return code;
 }

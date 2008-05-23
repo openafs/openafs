@@ -3305,9 +3305,9 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
 
 #ifdef AFS_DISCON_ENV
 static char *modenames[] = {
-    "discon",
-    "fetchonly",
-    "partial",
+    "readonly",
+    "fetchonly", /* Not currently supported */
+    "partial",   /* Not currently supported */
     "nat",
     "full",
     NULL
@@ -3678,7 +3678,7 @@ defect 3069
 #ifdef AFS_DISCON_ENV
     ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
 			  "disconnection mode");
-    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "nat | full");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "readonly | nat | full");
 #endif
 
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");

@@ -35,6 +35,8 @@ AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_ENABLE( demand-attach-fs,
 [  --enable-demand-attach-fs 		enable Demand Attach Fileserver (please see documentation)],, enable_demand_attach_fs="no")
+AC_ARG_ENABLE( disconnected,
+[  --enable-disconnected		enable disconnected support in cache manager (experimental)],, enable_disconnected="no")
 AC_ARG_ENABLE( unix-sockets,
 [  --enable-unix-sockets 		enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
 AC_ARG_ENABLE( full-vos-listvol-switch,
@@ -1174,6 +1176,10 @@ else
 	DEMAND_ATTACH="no"
 fi
 AC_SUBST(DEMAND_ATTACH)
+
+if test "$enable_disconnected" = "yes"; then
+	AC_DEFINE(AFS_DISCON_ENV, 1, [define if you want support for disconnected operation])
+fi
 
 if test "$enable_unix_sockets" = "yes"; then
 	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])

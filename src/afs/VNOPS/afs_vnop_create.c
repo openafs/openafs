@@ -84,12 +84,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     if (strlen(aname) > AFSNAMEMAX) {
 	code = ENAMETOOLONG;
-	goto done;
+	goto done3;
     }
 
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
-	goto done;
+	goto done3;
     }
     switch (attrs->va_type) {
     case VBLK:
@@ -100,10 +100,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     case VFIFO:
 	/* We don't support special devices or FIFOs */
 	code = EINVAL;
-	goto done;
+	goto done3;
     default:
 	;
     }
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code)
 	goto done;
@@ -118,6 +120,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (adp->states & CRO) {
 	code = EROFS;
 	goto done;
+    }
+
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+        code = ENETDOWN;
+        goto done;
     }
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
@@ -252,6 +259,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    goto done;
 	}
     }
+    
+    if (AFS_IS_DISCONNECTED) {
+        /* XXX - If we get here, logging must be enabled (as we bypassed the
+         * earlier check. So - do that logging thang, then return */
+    }       
 
     /* if we create the file, we don't do any access checks, since
      * that's how O_CREAT is supposed to work */
@@ -447,6 +459,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ReleaseWriteLock(&afs_xvcache);
 
   done:
+    AFS_DISCON_UNLOCK();
+
+  done3:
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
 

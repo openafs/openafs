@@ -268,7 +268,9 @@ extern struct dcache *afs_UFSGetDSlot(register afs_int32 aslot,
 extern int afs_WriteDCache(register struct dcache *adc, int atime);
 extern int afs_wakeup(register struct vcache *avc);
 extern int afs_InitCacheFile(char *afile, ino_t ainode);
+extern int afs_DCacheHasAllChunks(struct vcache *avc);
 
+/* afs_disconnected.c */
 
 /* afs_dynroot.c */
 extern int afs_IsDynrootFid(struct VenusFid *fid);
@@ -768,7 +770,7 @@ void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 #endif
 extern int afs_HaveCallBacksFrom(struct server *aserver);
 extern void shutdown_server(void);
-
+extern void afs_RemoveAllConns(void);
 
 
 /* afs_osidnlc.c */
@@ -938,6 +940,7 @@ extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 				   struct VenusFid *afid);
 extern void afs_vcacheInit(int astatSize);
 extern void shutdown_vcache(void);
+extern void afs_DisconGiveUpCallbacks(void);
 
 
 /* VNOPS/afs_vnop_access.c */
