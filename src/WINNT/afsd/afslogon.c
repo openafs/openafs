@@ -370,7 +370,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     if(domain) {
         dwSize = MAX_COMPUTERNAME_LENGTH;
         if(GetComputerName(computerName, &dwSize)) {
-            if(!stricmp(computerName, domain)) {
+            if(!cm_stricmp_utf8(computerName, domain)) {
                 effDomain = "LOCALHOST";
                 opt->flags = LOGON_FLAG_LOCAL;
             }
@@ -977,7 +977,7 @@ DWORD APIENTRY NPLogonNotify(
                             }
 			    p = opt.theseCells;
 			    while ( *p ) {
-                                if ( stricmp(p, cell) ) {
+                                if ( cm_stricmp_utf8(p, cell) ) {
                                     SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
                                     code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
                                     SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);

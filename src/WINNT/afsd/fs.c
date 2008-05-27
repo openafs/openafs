@@ -271,7 +271,7 @@ IsFreelanceRoot(char *apath)
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
-        return !stricmp("Freelance.Local.Root",space);
+        return !cm_stricmp_utf8N("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
 }
 

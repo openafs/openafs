@@ -44,6 +44,7 @@ static int rxInitDone = 0;
 
 void Die();
 
+#if 0
 foldcmp (a, b)
     register char *a;
     register char *b; {
@@ -57,6 +58,7 @@ foldcmp (a, b)
         if (t == 0) return 0;
     }
 }
+#endif
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 static int InAFS(register char *apath)

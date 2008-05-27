@@ -55,6 +55,7 @@ typedef struct key {
 typedef struct dirdata {
     cm_fid_t    fid;
     char * longname;
+    char * origname;
 } dataT;
 
 typedef struct entry {
@@ -136,7 +137,9 @@ void	delete(Tree *B, keyT key);
 Nptr	lookup(Tree *B, keyT key);
 
 /******************* cache manager directory operations ***************/
+
 int  cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);
+int  cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, char * entry, char ** originalNameRetp);
 long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);
 int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry);
 long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);

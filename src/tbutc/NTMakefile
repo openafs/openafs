@@ -96,7 +96,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	     $(DESTDIR)\lib\afsdes.lib \
-	     $(DESTDIR)\lib\cm_dns.obj
+	     $(DESTDIR)\lib\cm_dns.obj \
+             $(DESTDIR)\lib\cm_nls.obj
 
 
 #	$(DESTDIR)\lib\afsauthent.lib \
