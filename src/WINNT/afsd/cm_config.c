@@ -93,11 +93,11 @@ IsWindowsModule(const char * name)
     p = strrchr(name, '.');
     if (p) {
 	if (i == 1 && 
-	    (!stricmp(p,".dll") ||
-	     !stricmp(p,".exe") ||
-	     !stricmp(p,".ini") ||
-	     !stricmp(p,".db") ||
-	     !stricmp(p,".drv")))
+	    (!cm_stricmp_utf8N(p,".dll") ||
+	     !cm_stricmp_utf8N(p,".exe") ||
+	     !cm_stricmp_utf8N(p,".ini") ||
+	     !cm_stricmp_utf8N(p,".db") ||
+	     !cm_stricmp_utf8N(p,".drv")))
 	    return 1;
     }
     return 0;
@@ -203,8 +203,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 			 inRightCell, osi_LogSaveString(afsd_logp,lineBuffer));
 #endif
 	    }
-	    else if (strnicmp(lineBuffer+1, cellNamep,
-			       strlen(cellNamep)) == 0) {
+	    else if (cm_stricmp_utf8(lineBuffer+1, cellNamep) == 0) {
 		/* partial match */
 		if (partial) {	/* ambiguous */
 		    fclose(tfilep);

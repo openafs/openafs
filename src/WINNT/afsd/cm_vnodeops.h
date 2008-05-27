@@ -123,8 +123,8 @@ extern long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 extern void cm_StatusFromAttr(struct AFSStoreStatus *statusp,
 	struct cm_scache *scp, struct cm_attr *attrp);
 
-extern long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp,
-	cm_req_t *reqp);
+extern long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
+                      cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp, 
@@ -133,12 +133,13 @@ extern long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 extern long cm_MakeDir(cm_scache_t *dscp, char *lastNamep, long flags,
 	cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_RemoveDir(cm_scache_t *dscp, char *lastNamep, cm_user_t *userp,
-	cm_req_t *reqp);
+extern long cm_RemoveDir(cm_scache_t *dscp, char *lastNamep, char *originalNamep,
+                         cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_Rename(cm_scache_t *oldDscp, char *oldLastNamep,
-	cm_scache_t *newDscp, char *newLastNamep, cm_user_t *userp,
-	cm_req_t *reqp);
+extern long cm_Rename(cm_scache_t *oldDscp,
+                      char *oldLastNamep, char *normalizedOldNamep,
+                      cm_scache_t *newDscp, char *newLastNamep,
+                      cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_HandleLink(cm_scache_t *linkScp, struct cm_user *userp,
 	cm_req_t *reqp);

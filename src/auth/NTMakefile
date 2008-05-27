@@ -81,7 +81,8 @@ EXELIBS =\
 	$(EXELIBDIR)\afs\afsutil.lib \
 	$(EXELIBDIR)\afs\afseventlog.lib \
 	$(EXELIBDIR)\afs\afsreg.lib \
-	$(EXELIBDIR)\cm_dns.obj
+	$(EXELIBDIR)\cm_dns.obj \
+        $(EXELIBDIR)\cm_nls.obj
 
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)

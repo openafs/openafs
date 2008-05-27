@@ -70,7 +70,8 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-     $(DESTDIR)\lib\cm_dns.obj
+        $(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 
 ############################################################################
