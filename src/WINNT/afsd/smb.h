@@ -257,7 +257,7 @@ typedef struct smb_user {
     unsigned short userID;		/* the session identifier */
     struct smb_vc *vcp;		        /* back ptr to virtual circuit */
     struct smb_username *unp;           /* user name struct */
-    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
+    afs_uint32	deleteOk;		/* ok to del: locked by smb_rctLock */
 } smb_user_t;
 
 #define SMB_USERFLAG_DELETE	    1	/* delete struct when ref count zero */
@@ -303,7 +303,7 @@ typedef struct smb_tid {
     struct cm_user *userp;		/* user logged in at the
 					 * tree connect level (base) */
     char *pathname;			/* pathname derived from sharename */
-    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
+    afs_uint32	deleteOk;		/* ok to del: locked by smb_rctLock */
 } smb_tid_t;
 
 #define SMB_TIDFLAG_IPC		1 	/* IPC$ */
@@ -378,7 +378,7 @@ typedef struct smb_fid {
     int prev_chunk;			/* previous chunk read */
     int raw_writers;		        /* pending async raw writes */
     EVENT_HANDLE raw_write_event;	/* signal this when raw_writers zero */
-    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
+    afs_uint32	deleteOk;		/* ok to del: locked by smb_rctLock */
 } smb_fid_t;
 
 #define SMB_FID_OPENREAD_LISTDIR	1	/* open for reading / listing directory */

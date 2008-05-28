@@ -1017,7 +1017,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     for (fidpIter = vcp->fidsp; fidpIter; fidpIter = fidpNext) {
         fidpNext = (smb_fid_t *) osi_QNext(&fidpIter->q);
 
-        if (fidpIter->delete)
+        if (fidpIter->deleteOk)
             continue;
 
         fid = fidpIter->fid;
@@ -1035,9 +1035,9 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     for (tidpIter = vcp->tidsp; tidpIter; tidpIter = tidpNext) {
 	tidpNext = tidpIter->nextp;
-	if (tidpIter->delete)
+	if (tidpIter->deleteOk)
 	    continue;
-	tidpIter->delete = 1;
+	tidpIter->deleteOk = 1;
 
 	tid = tidpIter->tid;
 	osi_Log2(smb_logp, "  Cleanup TID %d (tidp=0x%x)", tid, tidpIter);
@@ -1049,9 +1049,9 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     for (uidpIter = vcp->usersp; uidpIter; uidpIter = uidpNext) {
 	uidpNext = uidpIter->nextp;
-	if (uidpIter->delete)
+	if (uidpIter->deleteOk)
 	    continue;
-	uidpIter->delete = 1;
+	uidpIter->deleteOk = 1;
 
 	/* do not add an additional reference count for the smb_user_t
 	 * as the smb_vc_t already is holding a reference */
@@ -1078,7 +1078,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
     lock_ObtainWrite(&smb_rctLock);
   retry:
     for (tidp = vcp->tidsp; tidp; tidp = tidp->nextp) {
-	if (tidp->refCount == 0 && tidp->delete) {
+	if (tidp->refCount == 0 && tidp->deleteOk) {
 	    tidp->refCount++;
 	    smb_ReleaseTID(tidp, TRUE);
 	    goto retry;
@@ -1119,7 +1119,7 @@ void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked)
     if (!locked)
         lock_ObtainWrite(&smb_rctLock);
     osi_assertx(tidp->refCount-- > 0, "smb_tid_t refCount 0");
-    if (tidp->refCount == 0 && (tidp->delete)) {
+    if (tidp->refCount == 0 && (tidp->deleteOk)) {
         ltpp = &tidp->vcp->tidsp;
         for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
             if (tp == tidp) 
@@ -1388,7 +1388,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 
   retry:
     for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
-	if (fidp->refCount == 0 && fidp->delete) {
+	if (fidp->refCount == 0 && fidp->deleteOk) {
 	    fidp->refCount++;
 	    lock_ReleaseWrite(&smb_rctLock);
 	    smb_ReleaseFID(fidp);
@@ -1487,7 +1487,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     lock_ObtainMutex(&fidp->mx);
     lock_ObtainWrite(&smb_rctLock);
     osi_assertx(fidp->refCount-- > 0, "smb_fid_t refCount 0");
-    if (fidp->refCount == 0 && (fidp->delete)) {
+    if (fidp->refCount == 0 && (fidp->deleteOk)) {
         vcp = fidp->vcp;
         fidp->vcp = NULL;
         scp = fidp->scp;    /* release after lock is released */
@@ -3655,7 +3655,7 @@ void smb_Daemon(void *parmp)
 	now = osi_Time();
 	lock_ObtainWrite(&smb_rctLock);
 	for ( unpp=&usernamesp; *unpp; ) {
-	    int delete = 0;
+	    int deleteOk = 0;
 	    smb_username_t *unp;
 
 	    lock_ObtainMutex(&(*unpp)->mx);
@@ -3665,10 +3665,10 @@ void smb_Daemon(void *parmp)
 		;
 	    else if (!smb_LogoffTokenTransfer ||
 		     ((*unpp)->last_logoff_t + smb_LogoffTransferTimeout < now))
-		delete = 1;
+		deleteOk = 1;
 	    lock_ReleaseMutex(&(*unpp)->mx);
 
-	    if (delete) {
+	    if (deleteOk) {
 		cm_user_t * userp;
 
 		unp = *unpp;	
@@ -5096,7 +5096,7 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
     tidp = smb_FindTID(vcp, ((smb_t *)inp)->tid, 0);
     if (tidp) {
 	lock_ObtainWrite(&smb_rctLock);
-        tidp->delete = 1;
+        tidp->deleteOk = 1;
         smb_ReleaseTID(tidp, TRUE);
         lock_ReleaseWrite(&smb_rctLock);
     }
@@ -6163,12 +6163,12 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     cm_InitReq(&req);
 
     lock_ObtainWrite(&smb_rctLock);
-    if (fidp->delete) {
+    if (fidp->deleteOk) {
 	osi_Log0(smb_logp, "  Fid already closed.");
 	lock_ReleaseWrite(&smb_rctLock);
 	return CM_ERROR_BADFD;
     }
-    fidp->delete = 1;
+    fidp->deleteOk = 1;
     lock_ReleaseWrite(&smb_rctLock);
 
     lock_ObtainMutex(&fidp->mx);
