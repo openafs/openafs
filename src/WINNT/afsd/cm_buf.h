@@ -106,6 +106,7 @@ typedef struct cm_buf {
 #define CM_BUF_WAITING	0x40	/* someone's waiting for a flag to change */
 #define CM_BUF_INDL     0x80    /* in the dirty list */
 #define CM_BUF_EOF	0x100	/* read 0 bytes; used for detecting EOF */
+#define CM_BUF_REDIR    0x200   /* buffer held by the redirector */
 
 typedef struct cm_buf_ops {
     long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,
