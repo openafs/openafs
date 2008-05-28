@@ -864,6 +864,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
              * we hold the global lock.
              */
 
+            /* Don't recycle a buffer held by the redirector. */
+            if (bp->flags & CM_BUF_REDIR)
+                continue;
+
             /* don't recycle someone in our own chunk */
             if (!cm_FidCmp(&bp->fid, &scp->fid)
                  && (bp->offset.LowPart & (-cm_chunkSize))
