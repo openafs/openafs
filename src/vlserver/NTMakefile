@@ -21,6 +21,13 @@ INCFILES = \
 	$(INCFILEDIR)\afs\vlserver.h \
 	$(INCFILEDIR)\afs\vldbint.h
 
+
+$(INCFILEDIR)\afs\vlserver.h: vlserver.h
+	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
+        
+$(INCFILEDIR)\afs\vl_opcodes.h: vl_opcodes.h
+	$(COPY) vl_opcodes.h $(INCFILEDIR)\vl_opcodes.h
+        
 ############################################################################
 # build afsvldb.lib
 
@@ -88,7 +95,6 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\cm_dns.obj \
         $(DESTDIR)\lib\cm_nls.obj
 
-	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -116,7 +122,9 @@ vldbint.xdr.c: vldbint.xg vldbint.h
 
 vldbint.h: vldbint.xg
 	$(RXGEN) -u -x -h -o $@ vldbint.xg
-	$(COPY) vldbint.h $(DESTDIR)\include\afs\vldbint.h
+
+$(INCFILEDIR)\vldbint.h: vldbint.h
+	$(COPY) vldbint.h $(INCFILEDIR)\vldbint.h
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET
