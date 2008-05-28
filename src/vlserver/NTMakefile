@@ -21,6 +21,13 @@ INCFILES = \
 	$(INCFILEDIR)\vlserver.h \
 	$(INCFILEDIR)\vldbint.h
 
+
+$(INCFILEDIR)\afs\vlserver.h: vlserver.h
+	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
+        
+$(INCFILEDIR)\afs\vl_opcodes.h: vl_opcodes.h
+	$(COPY) vl_opcodes.h $(INCFILEDIR)\vl_opcodes.h
+        
 ############################################################################
 # build afsvldb.lib
 
@@ -114,6 +121,8 @@ vldbint.xdr.c: vldbint.xg vldbint.h
 
 vldbint.h: vldbint.xg
 	$(RXGEN) -u -x -h -o $@ vldbint.xg
+
+$(INCFILEDIR)\vldbint.h: vldbint.h
 	$(COPY) vldbint.h $(INCFILEDIR)\vldbint.h
 
 ############################################################################
