@@ -56,6 +56,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_utils.h"
 #include "cm_vnodeops.h"
 #include "cm_dir.h"
+#include "cm_btree.h"
 #include "cm_daemon.h"
 #include "cm_ioctl.h"
 #include "cm_dnlc.h"
