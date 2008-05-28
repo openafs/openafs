@@ -859,7 +859,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
             '\0',
             sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
 
-    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength, utf8_name, sizeof(utf8_name));
+    code = !WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength, utf8_name, sizeof(utf8_name), NULL, NULL);
     if (code) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
@@ -1325,6 +1325,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     afs_uint32          flags = 0;
     cm_attr_t           setAttr;
     cm_req_t            req;
+    char                utf8_norm[1025];
     char                utf8_name[1025];
 
     cm_InitReq(&req);
@@ -1336,7 +1337,13 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
             '\0',
             sizeof( AFSCommResult) + sizeof( AFSFileDeleteResultCB));
 
-    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength, utf8_name, sizeof(utf8_name));
+    code = !WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength, utf8_name, sizeof(utf8_name), NULL, NULL);
+    if (code) {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        return;
+    }
+
+    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength, utf8_norm, sizeof(utf8_norm));
     if (code) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
@@ -1360,7 +1367,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Unlink(dscp, utf8_name, userp, &req);
+    code = cm_Unlink(dscp, utf8_name, utf8_norm, userp, &req);
 
     if (code == 0) {
         (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here

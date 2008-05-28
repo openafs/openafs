@@ -4,6 +4,7 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
 #define UNICODE 1
 
+#include <ntstatus.h>
 #include <windows.h>
 
 #include <stdio.h>
@@ -101,11 +102,16 @@ RDR_Shutdown(void)
 DWORD
 RDR_ProcessWorkerThreads()
 {
-
     DWORD WorkerID;
     HANDLE hEvent;
     DWORD index = 0;
     DWORD bytesReturned = 0;
+    DWORD dwCacheFileInfo;
+    AFSCacheFileInfo * cacheFileInfo = NULL;
+    DWORD dwErr;
+
+    if (dwErr = RDR_SetInitParams(&cacheFileInfo, &dwCacheFileInfo))
+        return dwErr;
 
     glDevHandle = CreateFile( AFS_SYMLINK_W,
 			      GENERIC_READ | GENERIC_WRITE,
@@ -117,7 +123,7 @@ RDR_ProcessWorkerThreads()
 
     if( glDevHandle == INVALID_HANDLE_VALUE)
     {
-
+        free(cacheFileInfo);
         return GetLastError();
     }
 
@@ -127,7 +133,7 @@ RDR_ProcessWorkerThreads()
 
     if( !DeviceIoControl( glDevHandle,
 			  IOCTL_AFS_INITIALIZE_CONTROL_DEVICE,
-			  NULL,
+                          NULL,
                           0,
                           NULL,
                           0,
@@ -138,6 +144,8 @@ RDR_ProcessWorkerThreads()
         CloseHandle( glDevHandle);
 
         glDevHandle = NULL;
+
+        free(cacheFileInfo);
 
         return GetLastError();
     }
@@ -194,8 +202,8 @@ RDR_ProcessWorkerThreads()
 
     if( !DeviceIoControl( glDevHandle,
 			  IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE,
-			  NULL,
-                          0,
+			  cacheFileInfo,
+                          dwCacheFileInfo,
                           NULL,
                           0,
                           &bytesReturned,
@@ -206,8 +214,12 @@ RDR_ProcessWorkerThreads()
 
         glDevHandle = NULL;
 
+        free(cacheFileInfo);
+
         return GetLastError();
     }
+
+    free(cacheFileInfo);
 
     return 0;
 }
@@ -303,10 +315,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     DWORD       	result = 0;
     ULONG       	ulIndex = 0;
     ULONG       	ulCreateFlags = 0;
-    AFSCommResult *   pResultCB = NULL;
+    AFSCommResult *     pResultCB = NULL;
     AFSCommResult 	stResultCB;
     DWORD       	dwResultBufferLength = 0;
+    AFSSetFileExtentsCB * SetFileExtentsResultCB = NULL;
     WCHAR 		wchBuffer[256];
+    cm_user_t *         userp = NULL;
+
+    userp = RDR_UserFromCommRequest(RequestBuffer);
 
     //
     // Build up the string to display based on the request type. 
@@ -330,7 +346,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             // Here is where the content of the specific directory is enumerated.
             //
 
-            RDR_EnumerateDirectory( RequestBuffer->FileId,
+            RDR_EnumerateDirectory( userp, RequestBuffer->FileId,
 				    pQueryCB,
 				    RequestBuffer->ResultBufferLength,
 				    &pResultCB);
@@ -351,7 +367,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             // Here is where the specified node is evaluated.
             //
 
-            RDR_EvaluateNodeByID( pEvalTargetCB->ParentId,
+            RDR_EvaluateNodeByID( userp, pEvalTargetCB->ParentId,
                                   RequestBuffer->FileId,
                                   RequestBuffer->ResultBufferLength,
                                   &pResultCB);
@@ -372,7 +388,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             // Here is where the specified node is evaluated.
             //
 
-            RDR_EvaluateNodeByName( pEvalTargetCB->ParentId,
+            RDR_EvaluateNodeByName( userp, pEvalTargetCB->ParentId,
                                     RequestBuffer->Name,
                                     RequestBuffer->NameLength,
                                     RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? 1 : 0,
@@ -398,7 +414,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_CreateFileEntry( RequestBuffer->Name,
+            RDR_CreateFileEntry( userp, 
+                                 RequestBuffer->Name,
 				 RequestBuffer->NameLength,
 				 pCreateCB,
 				 RequestBuffer->ResultBufferLength,
@@ -418,7 +435,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_UpdateFileEntry( RequestBuffer->FileId,
+            RDR_UpdateFileEntry( userp, RequestBuffer->FileId,
 				 pUpdateCB,
 				 &pResultCB);
 
@@ -428,13 +445,18 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         case AFS_REQUEST_TYPE_DELETE_FILE:
         {
 
+            AFSFileDeleteCB *pDeleteCB = (AFSFileDeleteCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+    
             swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
 		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
             OutputDebugString( wchBuffer);
 
-            RDR_DeleteFileEntry( RequestBuffer->FileId,
+            RDR_DeleteFileEntry( userp, 
+                                 pDeleteCB->ParentId,
+                                 RequestBuffer->Name,
+				 RequestBuffer->NameLength,
 				 &pResultCB);
 
             break;
@@ -451,7 +473,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_RenameFileEntry( RequestBuffer->FileId,
+            RDR_RenameFileEntry( userp, RequestBuffer->FileId,
 				 pFileRenameCB,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
@@ -462,7 +484,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         case AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS:
         {
 
-            AFSFileRequestExtentsCB *pFileRequestExtentsCB = (AFSFileRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSRequestExtentsCB *pFileRequestExtentsCB = (AFSRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
@@ -470,17 +492,24 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_RequestFileExtents( RequestBuffer->FileId,
-				    pFileRequestExtentsCB,
-				    RequestBuffer->ResultBufferLength,
-				    &pResultCB);
+            if (BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
+                RDR_RequestFileExtentsSync( userp, RequestBuffer->FileId,
+                                            pFileRequestExtentsCB,
+                                            RequestBuffer->ResultBufferLength,
+                                            &pResultCB);
+            else
+                RDR_RequestFileExtentsAsync( userp, RequestBuffer->FileId, 
+                                             pFileRequestExtentsCB,
+                                             &dwResultBufferLength,
+                                             &SetFileExtentsResultCB );
+
             break;
         }
 
         case AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS:
         {
 
-            AFSFileReleaseExtentsCB *pFileReleaseExtentsCB = (AFSFileReleaseExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            AFSReleaseExtentsCB *pFileReleaseExtentsCB = (AFSReleaseExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
@@ -488,7 +517,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_ReleaseFileExtents( RequestBuffer->FileId,
+            RDR_ReleaseFileExtents( userp, RequestBuffer->FileId,
 				    pFileReleaseExtentsCB,
 				    RequestBuffer->ResultBufferLength,
 				    &pResultCB);
@@ -506,7 +535,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_FlushFileEntry( RequestBuffer->FileId,
+            RDR_FlushFileEntry( userp, RequestBuffer->FileId,
                                 // pFileFlushCB,
                                 RequestBuffer->ResultBufferLength,
                                 &pResultCB);
@@ -523,10 +552,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_OpenFileEntry( RequestBuffer->FileId,
-				 pFileOpenCB,
-				 RequestBuffer->ResultBufferLength,
-				 &pResultCB);
+            RDR_OpenFileEntry( userp, RequestBuffer->FileId,
+                               pFileOpenCB,
+                               RequestBuffer->ResultBufferLength,
+                               &pResultCB);
 
             break;
         }
@@ -536,7 +565,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             break;
     }
 
-    if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_RESPONSE_REQUIRED))
+    if (userp) 
+        RDR_ReleaseUser(userp);
+
+    if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
     {
 	if (pResultCB == NULL) {
 	    /* We failed probably due to a memory allocation error */
@@ -578,8 +610,30 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         }
 
     }
-    else
-    {
+    else if (RequestBuffer->RequestType == AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS) {
+
+        swprintf( wchBuffer,
+                  L"ProcessRequest Responding Asynchronously to REQUEST_FILE_EXTENTS request index %08lX\n",
+                  RequestBuffer->RequestIndex);
+                        
+        OutputDebugString( wchBuffer);
+
+        if( !DeviceIoControl( glDevHandle,
+			      IOCTL_AFS_SET_FILE_EXTENTS,
+			      (void *)SetFileExtentsResultCB,
+                              dwResultBufferLength,
+			      (void *)NULL,
+			      0,
+			      &bytesReturned,
+			      NULL))
+        {
+
+            MessageBox( NULL, L"Failed to post IOCtl", L"Error", MB_OK);
+        }
+
+        free(SetFileExtentsResultCB);
+    } 
+    else {
 
         swprintf( wchBuffer,
                   L"ProcessRequest Not responding to async request index %08lX\n",
