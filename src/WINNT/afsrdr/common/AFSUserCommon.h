@@ -1,5 +1,5 @@
-#ifndef _AFS_COMMON_H
-#define _AFS_COMMON_H
+#ifndef _AFS_USER_COMMON_H
+#define _AFS_USER_COMMON_H
 
 
 //
@@ -91,13 +91,17 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 // IOCtl definitions
 //
 
-#define IOCTL_AFS_INITIALIZE_CONTROL_DEVICE     CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1001, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_AFS_INITIALIZE_CONTROL_DEVICE     CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1001, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE  CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1002, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE  CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1002, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IOCTL_AFS_PROCESS_IRP_REQUEST           CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1003, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IOCTL_AFS_PROCESS_IRP_RESULT            CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1004, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_SET_FILE_EXTENTS              CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1005, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_RELEASE_FILE_EXTENTS          CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1006, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //
 // Request types
@@ -119,7 +123,14 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 // Request Flags
 //
 
-#define AFS_REQUEST_FLAG_RESPONSE_REQUIRED       0x00000001
+#define AFS_REQUEST_FLAG_SYNCHRONOUS             0x00000001 // The service must call back through the
+                                                            // IOCTL_AFS_PROCESS_IRP_RESULT IOCtl to ack
+                                                            // the request with a response. The absense of 
+                                                            // this flag indicates no call should be made to 
+                                                            // the IOCTL_AFS_PROCESS_IRP_RESULT IOCtl and if a 
+                                                            // response is required for the call it is to be made
+                                                            // through an IOCtl call
+
 #define AFS_REQUEST_FLAG_CASE_SENSITIVE          0x00000002
 
 //
@@ -133,6 +144,21 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define STATUS_NO_MORE_FILES             0x80000006
 
 #endif
+
+//
+// Control block passed to IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE
+//
+
+typedef struct _AFS_CACHE_FILE_INFO_CB
+{
+
+    ULONG       CacheBlockSize;         // Size, in bytes, of the current cache block
+
+    ULONG       CacheFileNameLength;    // size, in bytes, of the cache file name
+
+    WCHAR       CacheFileName[ 1];      // Fully qualified cache file name in the form
+                                        // \??\C:\OPenAFSDir\CacheFile.dat
+} AFSCacheFileInfo;
 
 //
 // Directory query CB
@@ -291,21 +317,13 @@ typedef struct _AFS_FILE_CREATE_CB
 
     AFSFileID       ParentId;
 
-    LARGE_INTEGER   CreationTime;
-
-    LARGE_INTEGER   LastAccessTime;
-
-    LARGE_INTEGER   LastWriteTime;
-
-    LARGE_INTEGER   ChangeTime;
-
-    LARGE_INTEGER   EndOfFile;
-
     LARGE_INTEGER   AllocationSize;
 
     ULONG           FileAttributes;
 
     ULONG           EaSize;
+
+    char            EaBuffer[ 1];
 
 } AFSFileCreateCB;
 
@@ -316,9 +334,7 @@ typedef struct _AFS_FILE_CREATE_RESULT_CB
 
     LARGE_INTEGER   ParentDataVersion;
 
-    CCHAR           ShortNameLength;
-
-    WCHAR           ShortName[12];
+    AFSDirEnumEntry DirEnum;
 
 } AFSFileCreateResultCB;
 
@@ -345,7 +361,24 @@ typedef struct _AFS_FILE_OPEN_RESULT_CB
 } AFSFileOpenResultCB;
 
 //
-// IO Interace control blocks
+// Flags which can be specified for each extent in the AFSFileExtentCB structure
+//
+
+#define AFS_EXTENT_FLAG_DIRTY   1   // The specified extent requires flushing, this can be
+                                    // specified by the file system during a release of the
+                                    // extent
+
+#define AFS_EXTENT_FLAG_RELEASE 2   // The presence of this flag during a AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS
+                                    // call from the file system indicates to the service that the file system
+                                    // no longer requires the extents and they can be completely released. The
+                                    // absense of this flag tells the service that the extent should not be
+                                    // dereferenced; this is usually the case when the file system tells the
+                                    // service to flush a range of exents but do not release them
+
+//
+// IO Interace control blocks for extent processing when performing
+// queries via the AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS or synchronous
+// results from the service
 //
 
 typedef struct _AFS_FILE_EXTENT_CB
@@ -361,7 +394,7 @@ typedef struct _AFS_FILE_EXTENT_CB
 
 } AFSFileExtentCB;
 
-typedef struct _AFS_FILE_REQUEST_EXTENTS_CB
+typedef struct _AFS_REQUEST_EXTENTS_CB
 {
 
     ULONG           Flags;
@@ -370,18 +403,23 @@ typedef struct _AFS_FILE_REQUEST_EXTENTS_CB
 
     ULONG           Length;
 
-} AFSFileRequestExtentsCB;
+} AFSRequestExtentsCB;
 
-typedef struct _AFS_FILE_REQUEST_EXTENTS_RESULT_CB
+typedef struct _AFS_REQUEST_EXTENTS_RESULT_CB
 {
 
     ULONG           ExtentCount;
 
     AFSFileExtentCB FileExtents[ 1];
 
-} AFSFileRequestExtentsResultCB;
+} AFSRequestExtentsResultCB;
 
-typedef struct _AFS_FILE_RELEASE_EXTENTS_CB
+//
+// Extent processing when the file system calls the service to
+// release extens through the AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS interface
+//
+
+typedef struct _AFS_RELEASE_EXTENTS_CB
 {
 
     ULONG           Flags;
@@ -390,7 +428,39 @@ typedef struct _AFS_FILE_RELEASE_EXTENTS_CB
 
     AFSFileExtentCB FileExtents[ 1];
 
-} AFSFileReleaseExtentsCB;
+} AFSReleaseExtentsCB;
+
+//
+// This is the control structure used when the service passes the extent
+// information via the IOCTL_AFS_SET_FILE_EXTENTS interface
+//
+
+typedef struct _AFS_SET_FILE_EXTENTS_CB
+{
+
+    AFSFileID       FileID;
+
+    ULONG           ExtentCount;
+
+    AFSFileExtentCB FileExtents[ 1];
+
+} AFSSetFileExtentsCB;
+
+//
+// This is the control structure used when the service passes the extent
+// information via the IOCTL_AFS_RELEASE_FILE_EXTENTS interface
+//
+
+typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
+{
+
+    AFSFileID       FileID;
+
+    ULONG           ExtentCount;
+
+    AFSFileExtentCB FileExtents[ 1];
+
+} AFSReleaseFileExtentsCB;
 
 //
 // File updatee CB
@@ -398,7 +468,8 @@ typedef struct _AFS_FILE_RELEASE_EXTENTS_CB
 
 typedef struct _AFS_FILE_UPDATE_CB
 {
-    LARGE_INTEGER   CreationTime;
+    
+    AFSFileID       ParentId;
 
     LARGE_INTEGER   LastAccessTime;
 
@@ -406,15 +477,26 @@ typedef struct _AFS_FILE_UPDATE_CB
 
     LARGE_INTEGER   ChangeTime;
 
-    LARGE_INTEGER   EndOfFile;
-
     LARGE_INTEGER   AllocationSize;
 
     ULONG           FileAttributes;
 
     ULONG           EaSize;
 
+    char            EaBuffer[ 1];
+
 } AFSFileUpdateCB;
+
+//
+// File update CB result
+//
+
+typedef struct _AFS_FILE_UPDATE_RESULT_CB
+{
+
+    AFSDirEnumEntry DirEnum;
+
+} AFSFileUpdateResultCB;
 
 //
 // File delete CB
