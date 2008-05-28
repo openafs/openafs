@@ -81,7 +81,6 @@ unsigned short cm_callbackport = CM_DEFAULT_CALLBACKPORT;
 char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
 char cm_CachePath[MAX_PATH];
-DWORD cm_CachePathLen;
 DWORD cm_ValidateCache = 1;
 
 BOOL reportSessionStartups = FALSE;
