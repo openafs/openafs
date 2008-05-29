@@ -309,15 +309,36 @@ rx_getAllAddr(afs_int32 * buffer, int maxSize)
 #endif
 
 #ifdef AFS_NT40_ENV
+extern int rxinit_status;
+void 
+rxi_InitMorePackets(void) {
+    int npackets, ncbufs;
+
+    ncbufs = (rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE);
+    if (ncbufs > 0) {
+        ncbufs = ncbufs / RX_CBUFFERSIZE;
+        npackets = rx_initSendWindow - 1;
+        rxi_MorePackets(npackets * (ncbufs + 1));
+    }
+}
 void
 rx_GetIFInfo(void)
 {
     u_int maxsize;
     u_int rxsize;
-    int npackets, ncbufs;
     afs_uint32 i;
 
     LOCK_IF_INIT;
+    if (Inited) {
+        if (Inited < 2 && rxinit_status == 0) {
+            /* We couldn't initialize more packets earlier.
+             * Do it now. */
+            rxi_InitMorePackets();
+            Inited = 2;
+        }
+        UNLOCK_IF_INIT;
+	return;
+    }
     Inited = 1;
     UNLOCK_IF_INIT;
 
@@ -339,12 +360,16 @@ rx_GetIFInfo(void)
 
     }
     UNLOCK_IF;
-    ncbufs = (rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE);
-    if (ncbufs > 0) {
-        ncbufs = ncbufs / RX_CBUFFERSIZE;
-        npackets = rx_initSendWindow - 1;
-        rxi_MorePackets(npackets * (ncbufs + 1));
-    }
+
+    /*
+     * If rxinit_status is still set, rx_InitHost() has yet to be called
+     * and we therefore do not have any mutex locks initialized.  As a
+     * result we cannot call rxi_MorePackets() without crashing.
+     */
+    if (rxinit_status)
+        return;
+
+    rxi_InitMorePackets();
 }
 #endif
 
