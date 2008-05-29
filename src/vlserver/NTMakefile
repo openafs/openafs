@@ -107,9 +107,6 @@ $(OUT)\vlserver.res: AFS_component_version_number.h
 ############################################################################
 # rxgen on vldbint.xg
 
-$(INCFILES):$$(@F)
-	 $(COPY)  $** $(INCFILEDIR)\.
-
 vldbint.cs.c: vldbint.xg vldbint.h
 	$(RXGEN) -u -x -C -o $@ vldbint.xg
 
