@@ -544,6 +544,7 @@ rxi_MorePackets(int apackets)
 
     getme = apackets * sizeof(struct rx_packet);
     p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+    osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
@@ -579,6 +580,7 @@ rxi_MorePackets(int apackets)
 
     getme = apackets * sizeof(struct rx_packet);
     p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+    osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
