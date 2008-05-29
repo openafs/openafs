@@ -358,7 +358,10 @@ rx_SetEpoch(afs_uint32 epoch)
  * by the kernel.  Whether this will ever overlap anything in
  * /etc/services is anybody's guess...  Returns 0 on success, -1 on
  * error. */
-static int rxinit_status = 1;
+#ifndef AFS_NT40_ENV
+static
+#endif
+int rxinit_status = 1;
 #ifdef AFS_PTHREAD_ENV
 /*
  * This mutex protects the following global variables:
