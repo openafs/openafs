@@ -46,9 +46,9 @@ pr_TimeToString(time_t clock)
     }
     tm = localtime(&clock);
     if (tm->tm_year != this_year)
-	strftime(buffer, 32, "%m/%d/%Y %T", tm);
+	strftime(buffer, 32, "%m/%d/%Y %H:%M:%S", tm);
     else
-	strftime(buffer, 32, "%m/%d %T", tm);
+	strftime(buffer, 32, "%m/%d %H:%M:%S", tm);
     return buffer;
 }
 #endif
