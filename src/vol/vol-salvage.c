@@ -3372,7 +3372,7 @@ TimeStamp(time_t clock, int precision)
     static char timestamp[20];
     lt = localtime(&clock);
     if (precision)
-	(void)strftime(timestamp, 20, "%m/%d/%Y %T", lt);
+	(void)strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
     else
 	(void)strftime(timestamp, 20, "%m/%d/%Y %H:%M", lt);
     return timestamp;
