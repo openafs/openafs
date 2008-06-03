@@ -828,7 +828,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
 		 fi
-		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
+		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
