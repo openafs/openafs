@@ -416,7 +416,7 @@ typedef struct _AFS_REQUEST_EXTENTS_RESULT_CB
 
 //
 // Extent processing when the file system calls the service to
-// release extens through the AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS interface
+// release extents through the AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS interface
 //
 
 typedef struct _AFS_RELEASE_EXTENTS_CB
@@ -463,7 +463,7 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
 } AFSReleaseFileExtentsCB;
 
 //
-// File updatee CB
+// File update CB
 //
 
 typedef struct _AFS_FILE_UPDATE_CB
@@ -540,9 +540,11 @@ typedef struct _AFS_FILE_RENAME_CB
 typedef struct _AFS_FILE_RENAME_RESULT_CB
 {
 
-    ULONG           SourceParentDataVersion;
+    LARGE_INTEGER   SourceParentDataVersion;
     
-    ULONG           TargetParentDataVersion;
+    LARGE_INTEGER   TargetParentDataVersion;
+
+    AFSDirEnumEntry DirEnum;
 
 } AFSFileRenameResultCB;
 
