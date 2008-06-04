@@ -1964,9 +1964,9 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
 
         cm_Gen8Dot3NameInt(dep->name, &dfid, shortName, NULL);
 
-        key.name = shortName;
         data.longname = strdup(key.name);
         data.origname = NULL;
+        key.name = shortName;
         insert(scp->dirBplus, key, data);
     }
 
