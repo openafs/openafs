@@ -118,7 +118,8 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_TYPE_OPEN_FILE               0x00000009
 #define AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID       0x0000000A
 #define AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME     0x0000000B
-
+#define AFS_REQUEST_TYPE_PIOCTL_READ             0x0000000C
+#define AFS_REQUEST_TYPE_PIOCTL_WRITE            0x0000000D
 //
 // Request Flags
 //
@@ -468,7 +469,7 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
 
 typedef struct _AFS_FILE_UPDATE_CB
 {
-    
+
     AFSFileID       ParentId;
 
     LARGE_INTEGER   LastAccessTime;
@@ -563,5 +564,29 @@ typedef struct _AFS_FILE_EVAL_TARGET_CB
 //
 // The response to these requests is a AFSDirEnumEntry
 //
+
+//
+// Control structure for read and write requests through the PIOCtl interface
+//
+
+typedef struct _AFS_PIOCTL_IO_CB
+{
+
+    ULONG       BufferLength;
+
+    void        *MappedBuffer;
+
+} AFSPIOCtlIORequestCB;
+
+//
+// The returned information for the IO Request
+//
+
+typedef struct _AFS_PIOCTL_IO_RESULT_CB
+{
+
+    ULONG       BytesProcessed;
+
+} AFSPIOCtlIOResultCB;
 
 #endif
