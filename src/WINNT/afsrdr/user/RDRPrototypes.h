@@ -73,7 +73,9 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
 
 void
 RDR_RenameFileEntry( IN cm_user_t *userp,
-                     IN AFSFileID FileId,
+                     IN WCHAR    *SourceFileName,
+                     IN DWORD     SourceFileNameLength,
+                     IN AFSFileID SourceFileId,
                      IN AFSFileRenameCB *RenameCB,
                      IN DWORD ResultBufferLength,
                      IN OUT AFSCommResult **ResultCB);

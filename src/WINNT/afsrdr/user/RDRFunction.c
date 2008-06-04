@@ -4,6 +4,7 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
 
 #include <windows.h>
+#include <sddl.h>
 #pragma warning(push)
 #pragma warning(disable: 4005)
 #include <ntstatus.h>
@@ -75,7 +76,43 @@ cm_user_t *
 RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
 {
     cm_user_t *userp = cm_rootUserp;
-    cm_HoldUser(userp);
+    HANDLE hProcess = 0, hToken = 0;
+    PSID        pSid = 0;
+    char      *secSidString = 0;
+    char cname[MAX_COMPUTERNAME_LENGTH+1];
+    int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
+
+    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, RequestBuffer->ProcessId);
+    if (hProcess == NULL)
+        goto done;
+
+    if (!OpenProcessToken( hProcess, TOKEN_READ, &hToken))
+        goto done;
+
+    if (!smb_GetUserSID( hToken, &pSid))
+        goto done;
+
+    if (!ConvertSidToStringSidA(pSid, &secSidString))
+        goto done;
+
+    GetComputerNameA(cname, &cnamelen);
+    _strupr(cname);
+
+    userp = smb_FindCMUserByName(secSidString, cname, SMB_FLAG_CREATE);
+    if (!userp) {
+        userp = cm_rootUserp;
+        cm_HoldUser(userp);
+    }
+
+  done:
+    if (secSidString)
+        LocalFree(secSidString);
+    if (pSid)
+        smb_FreeSID(pSid);
+    if (hToken)
+        CloseHandle(hToken);
+    if (hProcess)
+        CloseHandle(hProcess);
     return userp;
 }
 
@@ -86,12 +123,161 @@ RDR_ReleaseUser( IN cm_user_t *userp )
 }
 
 void
+RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry, 
+                          IN cm_scache_t     * dscp,
+                          IN cm_scache_t     * scp,
+                          IN cm_user_t       * userp,
+                          IN cm_req_t        * reqp,
+                          IN char            * name,
+                          IN char            * shortName )
+{
+    FILETIME ft;
+    WCHAR *  wname, *wtarget;
+    size_t   len;
+    afs_uint32 code;
+
+    if (!name)
+        name = "";
+    if (!shortName)
+        shortName = "";
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp( scp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    pCurrentEntry->FileId.Cell = scp->fid.cell;
+    pCurrentEntry->FileId.Volume = scp->fid.volume;
+    pCurrentEntry->FileId.Vnode = scp->fid.vnode;
+    pCurrentEntry->FileId.Unique = scp->fid.unique;
+    pCurrentEntry->FileId.Hash = scp->fid.hash;
+
+    pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
+    pCurrentEntry->FileType = scp->fileType;
+
+    smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+    pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
+    pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
+    pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
+    pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
+    pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
+
+    pCurrentEntry->EndOfFile = scp->length;
+    pCurrentEntry->AllocationSize = scp->length;
+    pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
+    pCurrentEntry->EaSize = 0;
+    pCurrentEntry->Links = scp->linkCount;
+
+    len = strlen(shortName);
+#ifdef UNICODE
+    cch = MultiByteToWideChar( CP_UTF8, 0, shortname, 
+                               len * sizeof(char),
+                               pCurrentEntry->ShortName, 
+                               len * sizeof(WCHAR));
+#else
+    mbstowcs(pCurrentEntry->ShortName, shortName, len);
+#endif
+    pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
+
+    pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
+    len = strlen(name);
+    wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
+
+
+#ifdef UNICODE
+    cch = MultiByteToWideChar( CP_UTF8, 0, name, 
+                               len * sizeof(char),
+                               wname, 
+                               len * sizeof(WCHAR));
+#else
+    mbstowcs(wname, name, len);
+#endif
+    pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
+
+    if (code == 0)
+        cm_SyncOpDone( scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+
+    switch (scp->fileType) {
+    case CM_SCACHETYPE_MOUNTPOINT:
+        if (cm_ReadMountPoint(scp, userp, reqp) == 0) {
+            afs_uint32 code2;
+            cm_scache_t *targetScp = NULL;
+
+            pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
+            len = strlen(scp->mountPointStringp);
+            wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
+
+#ifdef UNICODE
+            cch = MultiByteToWideChar( CP_UTF8, 0, scp->mountPointStringp, 
+                                       len * sizeof(char),
+                                       wtarget, 
+                                       len * sizeof(WCHAR));
+#else
+            mbstowcs(wtarget, scp->mountPointStringp, len);
+#endif
+            pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
+
+            code2 = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
+
+            if (code2 == 0) {
+                pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
+                pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
+                pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
+                pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
+                pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
+
+                cm_ReleaseSCache(targetScp);
+            }
+        }
+        break;
+    case CM_SCACHETYPE_SYMLINK:
+    case CM_SCACHETYPE_DFSLINK:
+        {
+            afs_uint32 code2;
+            cm_scache_t *targetScp = NULL;
+
+            lock_ReleaseWrite(&scp->rw);
+            code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, reqp);
+            lock_ObtainWrite(&scp->rw);
+            if (code2 == 0) {
+                pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
+                len = strlen(scp->mountPointStringp);
+                wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
+
+#ifdef UNICODE
+                cch = MultiByteToWideChar( CP_UTF8, 0, scp->mountPointStringp, 
+                                           len * sizeof(char),
+                                           wtarget, 
+                                           len * sizeof(WCHAR));
+#else
+                mbstowcs(wtarget, scp->mountPointStringp, len);
+#endif
+                pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
+
+                pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
+                pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
+                pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
+                pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
+                pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
+
+                cm_ReleaseSCache(targetScp);
+            }
+        }
+        break;
+    default:
+        pCurrentEntry->TargetNameOffset = 0;
+        pCurrentEntry->TargetNameLength = 0;
+    }
+    lock_ReleaseWrite(&scp->rw);
+}
+
+void
 RDR_EnumerateDirectory( IN cm_user_t *userp,
                         IN AFSFileID ParentID,
                         IN AFSDirQueryCB *QueryCB,
                         IN DWORD ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB)
 {
+    DWORD status;
     cm_direnum_t *      enump;
     AFSDirEnumResp  * pDirEnumResp;
     AFSDirEnumEntry * pCurrentEntry;
@@ -120,9 +306,10 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         fid.unique = ParentID.Unique;
         fid.hash   = ParentID.Hash;
 
-        dscp = cm_FindSCache(&fid);
-        if (dscp == NULL) {
-            (*ResultCB)->ResultStatus = STATUS_NO_SUCH_FILE;
+        code = cm_GetSCache(&fid, &dscp, userp, &req);
+        if (code) {
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
             return;
         }
     } else {
@@ -136,7 +323,6 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        DWORD status;
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
@@ -191,136 +377,12 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
             if ( !strcmp(".", entryp->name) || !strcmp("..", entryp->name) )
                 goto getnextentry;
 
-            scp = cm_FindSCache(&entryp->fid);
-            if (scp) {
-                FILETIME ft;
-                WCHAR *  wname, *wtarget;
-                size_t   len;
-
-                pCurrentEntry->FileId.Cell = scp->fid.cell;
-                pCurrentEntry->FileId.Volume = scp->fid.volume;
-                pCurrentEntry->FileId.Vnode = scp->fid.vnode;
-                pCurrentEntry->FileId.Unique = scp->fid.unique;
-                pCurrentEntry->FileId.Hash = scp->fid.hash;
-
-                pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
-                pCurrentEntry->FileType = scp->fileType;
-
-                smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-                pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
-                pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
-                pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
-                pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
-                pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
-
-                pCurrentEntry->EndOfFile = scp->length;
-                pCurrentEntry->AllocationSize = scp->length;
-                pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
-                pCurrentEntry->EaSize = 0;
-                pCurrentEntry->Links = scp->linkCount;
-
-
-                len = strlen(entryp->shortName);
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, entryp->shortname, 
-                                          len * sizeof(char),
-                                          pCurrentEntry->ShortName, 
-                                          len * sizeof(WCHAR));
-#else
-                mbstowcs(pCurrentEntry->ShortName, entryp->shortName, len);
-#endif
-                pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
-
-                pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-                len = strlen(entryp->name);
-                wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, entryp->name, 
-                                          len * sizeof(char),
-                                          wname, 
-                                          len * sizeof(WCHAR));
-#else
-                mbstowcs(wname, entryp->name, len);
-#endif
-                pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
-
-                switch (scp->fileType) {
-                case CM_SCACHETYPE_MOUNTPOINT:
-                    lock_ObtainWrite(&scp->rw);
-                    if (cm_ReadMountPoint(scp, userp, &req) == 0) {
-                        afs_uint32 code2;
-                        cm_scache_t *targetScp = NULL;
-
-                        pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                        len = strlen(scp->mountPointStringp);
-                        wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                        cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                          len * sizeof(char),
-                                          wtarget, 
-                                          len * sizeof(WCHAR));
-#else
-                        mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                        pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                        code2 = cm_FollowMountPoint(scp, dscp, userp, &req, &targetScp);
-
-                        if (code2 == 0) {
-                            pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                            pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                            pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                            pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                            pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                            cm_ReleaseSCache(targetScp);
-                        }
-                    }
-                    lock_ReleaseWrite(&scp->rw);
-                    break;
-                case CM_SCACHETYPE_SYMLINK:
-                case CM_SCACHETYPE_DFSLINK:
-                    {
-                        afs_uint32 code2;
-                        cm_scache_t *targetScp = NULL;
-
-                        code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                        if (code2 == 0) {
-                            pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                            len = strlen(scp->mountPointStringp);
-                            wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                            cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                                       len * sizeof(char),
-                                                       wtarget, 
-                                                       len * sizeof(WCHAR));
-#else
-                            mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                            pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                            pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                            pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                            pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                            pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                            pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                            cm_ReleaseSCache(targetScp);
-                        }
-                    }
-                    break;
-                default:
-                    pCurrentEntry->TargetNameOffset = 0;
-                    pCurrentEntry->TargetNameLength = 0;
-                }
-
+            code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
+            if (!code) {
+                RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, entryp->name, entryp->shortName);
                 cm_ReleaseSCache(scp);
             } else {
-                code = STATUS_NO_SUCH_FILE;
+                goto getnextentry;
             }
         }
     }
@@ -361,6 +423,9 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     cm_req_t      req;
     cm_fid_t      parentFid;
     cm_dirOp_t    dirop;
+    DWORD         status;
+
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
@@ -385,9 +450,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
-
-    cm_InitReq(&req);
-
     if (ParentID.Cell != 0) {
         parentFid.cell   = ParentID.Cell;
         parentFid.volume = ParentID.Volume;
@@ -395,9 +457,10 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         parentFid.unique = ParentID.Unique;
         parentFid.hash   = ParentID.Hash;
 
-        dscp = cm_FindSCache(&parentFid);
-        if (dscp == NULL) {
-            (*ResultCB)->ResultStatus = STATUS_NO_SUCH_FILE;
+        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        if (code) {
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
             return;
         }
     } else {
@@ -411,7 +474,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        DWORD status;
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
@@ -434,145 +496,32 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
         code = cm_BPlusDirLookup(&dirop, aname, &fid);
         cm_EndDirOp(&dirop);
-        if (code == 0 || (code == CM_ERROR_INEXACT_MATCH && !CaseSensitive))
-            scp = cm_FindSCache(&fid);
+        if (code == 0 || (code == CM_ERROR_INEXACT_MATCH && !CaseSensitive)) {
+            code = cm_GetSCache(&fid, &scp, userp, &req);
+            if (code)
+                scp = NULL;
+        }
     }
 
     if (scp) {
-        FILETIME ft;
-        WCHAR *  wname, *wtarget;
-        size_t   len;
+        char shortName[13];
+        cm_dirFid_t dfid;
 
-        pCurrentEntry->FileId.Cell = scp->fid.cell;
-        pCurrentEntry->FileId.Volume = scp->fid.volume;
-        pCurrentEntry->FileId.Vnode = scp->fid.vnode;
-        pCurrentEntry->FileId.Unique = scp->fid.unique;
-        pCurrentEntry->FileId.Hash = scp->fid.hash;
+        dfid.vnode = htonl(scp->fid.vnode);
+        dfid.unique = htonl(scp->fid.unique);
 
-        pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
-        pCurrentEntry->FileType = scp->fileType;
-
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-        pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
-        pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
-        pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
-
-        pCurrentEntry->EndOfFile = scp->length;
-        pCurrentEntry->AllocationSize = scp->length;
-        pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
-        pCurrentEntry->EaSize = 0;
-        pCurrentEntry->Links = scp->linkCount;
-
-        {
-            char shortName[13];
-            cm_dirFid_t dfid;
-
-            dfid.vnode = htonl(scp->fid.vnode);
-            dfid.unique = htonl(scp->fid.unique);
-
-            cm_Gen8Dot3NameInt(aname, &dfid, shortName, NULL);
-            len = strlen(shortName);
-#ifdef UNICODE
-            cch = MultiByteToWideChar(CP_UTF8, 0, shortName, 
-                                       len * sizeof(char),
-                                       pCurrentEntry->ShortName, 
-                                       len * sizeof(WCHAR));
-#else
-            mbstowcs(pCurrentEntry->ShortName, shortName, len);
-#endif
-            pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
-        }
-
-        pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-        len = strlen(aname);
-        wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-#ifdef UNICODE
-        cch = MultiByteToWideChar(CP_UTF8, 0, aname, 
-                                   len * sizeof(char),
-                                   wname, 
-                                   len * sizeof(WCHAR));
-#else
-        mbstowcs(wname, aname, len);
-#endif
-        pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
-
-        switch (scp->fileType) {
-        case CM_SCACHETYPE_MOUNTPOINT:
-            lock_ObtainWrite(&scp->rw);
-            if (cm_ReadMountPoint(scp, userp, &req) == 0) {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                len = strlen(scp->mountPointStringp);
-                wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                           len * sizeof(char),
-                                           wtarget, 
-                                           len * sizeof(WCHAR));
-#else
-                mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                code2 = cm_FollowMountPoint(scp, dscp, userp, &req, &targetScp);
-
-                if (code2 == 0) {
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            lock_ReleaseWrite(&scp->rw);
-            break;
-        case CM_SCACHETYPE_SYMLINK:
-        case CM_SCACHETYPE_DFSLINK:
-            {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                if (code2 == 0) {
-                    pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                    len = strlen(scp->mountPointStringp);
-                    wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                    cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                              len * sizeof(char),
-                                              wtarget, 
-                                              len * sizeof(WCHAR));
-#else
-                    mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                    pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            break;
-        default:
-            pCurrentEntry->TargetNameOffset = 0;
-            pCurrentEntry->TargetNameLength = 0;
-        }
+        cm_Gen8Dot3NameInt(aname, &dfid, shortName, NULL);
+        RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, aname, shortName);
 
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+#if 0
+    } else if (ParentID.Cell == 0) {
+        /* We have a share name that does not exist.  Try to evaluate it.
+         * It might be a cell name or it might be a volume reference.
+         */
+
+#endif    
     } else if (code) {
         DWORD status;
         smb_MapNTError(code, &status);
@@ -595,15 +544,12 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     AFSDirEnumEntry * pCurrentEntry;
     size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     afs_uint32  code = 0;
-    char aname[1025] = "";
     cm_scache_t * scp = NULL;
     cm_scache_t * dscp = NULL;
     cm_req_t      req;
     cm_fid_t      Fid;
     cm_fid_t      parentFid;
-    FILETIME ft;
-    WCHAR *  wname, *wtarget;
-    size_t   len;
+    DWORD         status;
 
     *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
@@ -623,12 +569,18 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         parentFid.unique = ParentID.Unique;
         parentFid.hash   = ParentID.Hash;
 
-        dscp = cm_FindSCache(&parentFid);
-        if (dscp == NULL) {
-            (*ResultCB)->ResultStatus = STATUS_NO_SUCH_FILE;
+        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        if (code) {
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
             return;
         }
     } else {
+        if (SourceID.Cell == 0) {
+            (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+            return;
+        }
+
         /* If the ParentID.Cell == 0 then we are evaluating the root mount point */
         parentFid = cm_data.rootFid;
         dscp = cm_data.rootSCachep;
@@ -642,9 +594,10 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         Fid.unique = SourceID.Unique;
         Fid.hash   = SourceID.Hash;
 
-        scp = cm_FindSCache(&Fid);
-        if (scp == NULL) {
-            (*ResultCB)->ResultStatus = STATUS_NO_SUCH_FILE;
+        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
             cm_ReleaseSCache(dscp);
             return;
         }
@@ -660,7 +613,6 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        DWORD status;
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
@@ -696,135 +648,10 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     lock_ReleaseWrite(&scp->rw);
 
-    pCurrentEntry->FileId.Cell = scp->fid.cell;
-    pCurrentEntry->FileId.Volume = scp->fid.volume;
-    pCurrentEntry->FileId.Vnode = scp->fid.vnode;
-    pCurrentEntry->FileId.Unique = scp->fid.unique;
-    pCurrentEntry->FileId.Hash = scp->fid.hash;
-
-    pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
-    pCurrentEntry->FileType = scp->fileType;
-
-    smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-    pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
-    pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
-    pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
-    pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
-    pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
-
-    pCurrentEntry->EndOfFile = scp->length;
-    pCurrentEntry->AllocationSize = scp->length;
-    pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
-    pCurrentEntry->EaSize = 0;
-    pCurrentEntry->Links = scp->linkCount;
-
-    {
-        char shortName[13]="";
-        cm_dirFid_t dfid;
-
-        dfid.vnode = htonl(scp->fid.vnode);
-        dfid.unique = htonl(scp->fid.unique);
-
-        cm_Gen8Dot3NameInt(aname, &dfid, shortName, NULL);
-        len = strlen(shortName);
-#ifdef UNICODE
-        cch = MultiByteToWideChar(CP_UTF8, 0, shortName, 
-                                   len * sizeof(char),
-                                   pCurrentEntry->ShortName, 
-                                   len * sizeof(WCHAR));
-#else
-        mbstowcs(pCurrentEntry->ShortName, shortName, len);
-#endif
-        pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
-    }
-
-    pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-    len = strlen(aname);
-    wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-#ifdef UNICODE
-    cch = MultiByteToWideChar(CP_UTF8, 0, aname, 
-                               len * sizeof(char),
-                               wname
-                               len * sizeof(WCHAR));
-#else
-    mbstowcs(wname, aname, len);
-#endif
-    pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
-
-    switch (scp->fileType) {
-    case CM_SCACHETYPE_MOUNTPOINT:
-        lock_ObtainWrite(&scp->rw);
-        if (cm_ReadMountPoint(scp, userp, &req) == 0) {
-            afs_uint32 code2;
-            cm_scache_t *targetScp = NULL;
-
-            pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-            len = strlen(scp->mountPointStringp);
-            wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-            cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                       len * sizeof(char),
-                                       wtarget, 
-                                       len * sizeof(WCHAR));
-#else
-            mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-            pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-            code2 = cm_FollowMountPoint(scp, dscp, userp, &req, &targetScp);
-
-            if (code2 == 0) {
-                pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                cm_ReleaseSCache(targetScp);
-            }
-        }
-        lock_ReleaseWrite(&scp->rw);
-        break;
-    case CM_SCACHETYPE_SYMLINK:
-    case CM_SCACHETYPE_DFSLINK:
-        {
-            afs_uint32 code2;
-            cm_scache_t *targetScp = NULL;
-
-            code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-            if (code2 == 0) {
-                pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                len = strlen(scp->mountPointStringp);
-                wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                           len * sizeof(char),
-                                           wtarget, 
-                                           len * sizeof(WCHAR));
-#else
-                mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                cm_ReleaseSCache(targetScp);
-            }
-        }
-        break;
-    default:
-        pCurrentEntry->TargetNameOffset = 0;
-        pCurrentEntry->TargetNameLength = 0;
-    }
+    RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, NULL, NULL);
 
     cm_ReleaseSCache(scp);
+    cm_ReleaseSCache(dscp);
     (*ResultCB)->ResultStatus = STATUS_SUCCESS;
     return;
 }
@@ -846,14 +673,14 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     cm_scache_t *       scp = NULL;
     cm_req_t            req;
     char                utf8_name[1025];
-    FILETIME            ft;
-    WCHAR               *wname, *wtarget;
-    size_t              len;
+    DWORD               status;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
@@ -871,9 +698,10 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     parentFid.unique = CreateCB->ParentId.Unique;
     parentFid.hash   = CreateCB->ParentId.Hash;
 
-    dscp = cm_FindSCache(&parentFid);
-    if (dscp == NULL) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
 
@@ -894,7 +722,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     code = cm_Create(dscp, utf8_name, flags, &setAttr, &scp, userp, &req);
 
     if (code == 0) {
-        AFSDirEnumEntry * pCurrentEntry;
+        char shortName[13];
+        cm_dirFid_t dfid;
 
         (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
 
@@ -910,141 +739,16 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
 
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
 
-        pCurrentEntry = &pResultCB->DirEnum;
-        pCurrentEntry->FileId.Cell = scp->fid.cell;
-        pCurrentEntry->FileId.Volume = scp->fid.volume;
-        pCurrentEntry->FileId.Vnode = scp->fid.vnode;
-        pCurrentEntry->FileId.Unique = scp->fid.unique;
-        pCurrentEntry->FileId.Hash = scp->fid.hash;
+        dfid.vnode = htonl(scp->fid.vnode);
+        dfid.unique = htonl(scp->fid.unique);
 
-        pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
-        pCurrentEntry->FileType = scp->fileType;
-
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-        pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
-        pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
-        pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
-
-        pCurrentEntry->EndOfFile = scp->length;
-        pCurrentEntry->AllocationSize = scp->length;
-        pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
-        pCurrentEntry->EaSize = 0;
-        pCurrentEntry->Links = scp->linkCount;
-
-        {
-            char shortName[13];
-            cm_dirFid_t dfid;
-
-            dfid.vnode = htonl(scp->fid.vnode);
-            dfid.unique = htonl(scp->fid.unique);
-
-            cm_Gen8Dot3NameInt(utf8_name, &dfid, shortName, NULL);
-            len = strlen(shortName);
-#ifdef UNICODE
-            cch = MultiByteToWideChar(CP_UTF8, 0, shortName, 
-                                       len * sizeof(char),
-                                       pCurrentEntry->ShortName, 
-                                       len * sizeof(WCHAR));
-#else
-            mbstowcs(pCurrentEntry->ShortName, shortName, len);
-#endif
-            pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
-        }
-
-        pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-        len = strlen(utf8_name);
-        wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-#ifdef UNICODE
-        cch = MultiByteToWideChar(CP_UTF8, 0, utf8_name, 
-                                   len * sizeof(char),
-                                   wname
-                                   len * sizeof(WCHAR));
-#else
-        mbstowcs(wname, utf8_name, len);
-#endif
-        pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
-
-        switch (scp->fileType) {
-        case CM_SCACHETYPE_MOUNTPOINT:
-            lock_ObtainWrite(&scp->rw);
-            if (cm_ReadMountPoint(scp, userp, &req) == 0) {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                len = strlen(scp->mountPointStringp);
-                wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                           len * sizeof(char),
-                                           wtarget, 
-                                           len * sizeof(WCHAR));
-#else
-                mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                code2 = cm_FollowMountPoint(scp, dscp, userp, &req, &targetScp);
-
-                if (code2 == 0) {
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            lock_ReleaseWrite(&scp->rw);
-            break;
-        case CM_SCACHETYPE_SYMLINK:
-        case CM_SCACHETYPE_DFSLINK:
-            {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                if (code2 == 0) {
-                    pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                    len = strlen(scp->mountPointStringp);
-                    wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                    cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                               len * sizeof(char),
-                                               wtarget, 
-                                               len * sizeof(WCHAR));
-#else
-                    mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                    pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            break;
-        default:
-            pCurrentEntry->TargetNameOffset = 0;
-            pCurrentEntry->TargetNameLength = 0;
-        }
-
+        cm_Gen8Dot3NameInt(utf8_name, &dfid, shortName, NULL);
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, utf8_name, shortName);
 
         cm_ReleaseSCache(scp);
     } else {
-        DWORD               NTStatus;
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
     }
 
@@ -1068,16 +772,16 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     cm_scache_t *       scp = NULL;
     cm_scache_t *       dscp = NULL;
     cm_req_t            req;
-    char                aname[1025];
-    FILETIME            ft;
-    WCHAR               *wname, *wtarget;
-    size_t              len;
     time_t              clientModTime;
+    FILETIME            ft;
+    DWORD               status;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileUpdateResultCB));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
@@ -1089,9 +793,10 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     parentFid.unique = UpdateCB->ParentId.Unique;
     parentFid.hash   = UpdateCB->ParentId.Hash;
 
-    dscp = cm_FindSCache(&parentFid);
-    if (dscp == NULL) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
 
@@ -1107,9 +812,10 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash   = FileId.Hash;
 
-    scp = cm_FindSCache(&Fid);
-    if (scp == NULL) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         cm_ReleaseSCache(dscp);
         return;
     }
@@ -1118,7 +824,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
     if (code) {
-        DWORD               NTStatus;
+        DWORD NTStatus;
         lock_ReleaseWrite(&scp->rw);
         smb_MapNTError(code, &NTStatus);
         (*ResultCB)->ResultStatus = NTStatus;
@@ -1129,20 +835,25 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-
-    /* TODO - Deal with Truncation properly */
+    /* Do not set length and other attributes at the same time */
     if (scp->length.QuadPart != UpdateCB->AllocationSize.QuadPart) {
         setAttr.mask |= CM_ATTRMASK_LENGTH;
         setAttr.length.LowPart = UpdateCB->AllocationSize.LowPart;
         setAttr.length.HighPart = UpdateCB->AllocationSize.HighPart;
+        lock_ReleaseWrite(&scp->rw);
+        code = cm_SetAttr(scp, &setAttr, userp, &req);
+        if (code)
+            goto on_error;
+        setAttr.mask = 0;
+        lock_ObtainWrite(&scp->rw);
     }
 
     if ((scp->unixModeBits & 0222) && !(UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
         setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-        setAttr.unixModeBits &= ~0222;
+        setAttr.unixModeBits = scp->unixModeBits & ~0222;
     } else if (!(scp->unixModeBits & 0222) && (UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
         setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-        setAttr.unixModeBits |= 0222;
+        setAttr.unixModeBits = scp->unixModeBits | 0222;
     }
 
     ft.dwLowDateTime = UpdateCB->LastWriteTime.LowPart;
@@ -1161,147 +872,14 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     else
         code = 0;
 
+  on_error:
     if (code == 0) {
-        AFSDirEnumEntry * pCurrentEntry;
-
-        (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
-
-        (*ResultCB)->ResultBufferLength = sizeof( AFSFileUpdateResultCB);
-
         pResultCB = (AFSFileUpdateResultCB *)(*ResultCB)->ResultData;
 
-        pCurrentEntry = &pResultCB->DirEnum;
-        pCurrentEntry->FileId.Cell = scp->fid.cell;
-        pCurrentEntry->FileId.Volume = scp->fid.volume;
-        pCurrentEntry->FileId.Vnode = scp->fid.vnode;
-        pCurrentEntry->FileId.Unique = scp->fid.unique;
-        pCurrentEntry->FileId.Hash = scp->fid.hash;
-
-        pCurrentEntry->DataVersion.QuadPart = scp->dataVersion;
-        pCurrentEntry->FileType = scp->fileType;
-
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-        pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
-        pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
-        pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
-        pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
-
-        pCurrentEntry->EndOfFile = scp->length;
-        pCurrentEntry->AllocationSize = scp->length;
-        pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
-        pCurrentEntry->EaSize = 0;
-        pCurrentEntry->Links = scp->linkCount;
-
-        {
-            char shortName[13];
-            cm_dirFid_t dfid;
-
-            dfid.vnode = htonl(scp->fid.vnode);
-            dfid.unique = htonl(scp->fid.unique);
-
-            cm_Gen8Dot3NameInt(aname, &dfid, shortName, NULL);
-            len = strlen(shortName);
-#ifdef UNICODE
-            cch = MultiByteToWideChar(CP_UTF8, 0, shortName, 
-                                       len * sizeof(char),
-                                       pCurrentEntry->ShortName, 
-                                       len * sizeof(WCHAR));
-#else
-            mbstowcs(pCurrentEntry->ShortName, shortName, len);
-#endif
-            pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
-        }
-
-        pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-        len = strlen(aname);
-        wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-#ifdef UNICODE
-        cch = MultiByteToWideChar(CP_UTF8, 0, aname, 
-                                   len * sizeof(char),
-                                   wname
-                                   len * sizeof(WCHAR));
-#else
-        mbstowcs(wname, aname, len);
-#endif
-        pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
-
-        switch (scp->fileType) {
-        case CM_SCACHETYPE_MOUNTPOINT:
-            lock_ObtainWrite(&scp->rw);
-            if (cm_ReadMountPoint(scp, userp, &req) == 0) {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                len = strlen(scp->mountPointStringp);
-                wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                           len * sizeof(char),
-                                           wtarget, 
-                                           len * sizeof(WCHAR));
-#else
-                mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                code2 = cm_FollowMountPoint(scp, dscp, userp, &req, &targetScp);
-
-                if (code2 == 0) {
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            lock_ReleaseWrite(&scp->rw);
-            break;
-        case CM_SCACHETYPE_SYMLINK:
-        case CM_SCACHETYPE_DFSLINK:
-            {
-                afs_uint32 code2;
-                cm_scache_t *targetScp = NULL;
-
-                code2 = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                if (code2 == 0) {
-                    pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-                    len = strlen(scp->mountPointStringp);
-                    wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-#ifdef UNICODE
-                    cch = MultiByteToWideChar(CP_UTF8, 0, scp->mountPointStringp, 
-                                               len * sizeof(char),
-                                               wtarget, 
-                                               len * sizeof(WCHAR));
-#else
-                    mbstowcs(wtarget, scp->mountPointStringp, len);
-#endif
-                    pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
-
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
-
-                    cm_ReleaseSCache(targetScp);
-                }
-            }
-            break;
-        default:
-            pCurrentEntry->TargetNameOffset = 0;
-            pCurrentEntry->TargetNameLength = 0;
-        }
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, NULL, NULL);
     } else {
-        DWORD               NTStatus;
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
     }
     cm_ReleaseSCache(scp);
@@ -1327,11 +905,14 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     cm_req_t            req;
     char                utf8_norm[1025];
     char                utf8_name[1025];
+    DWORD               status;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileDeleteResultCB));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
@@ -1355,9 +936,10 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     parentFid.unique = ParentId.Unique;
     parentFid.hash   = ParentId.Hash;
 
-    dscp = cm_FindSCache(&parentFid);
-    if (dscp == NULL) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
 
@@ -1379,9 +961,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
 
     } else {
-        DWORD               NTStatus;
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
     }
 
@@ -1392,15 +973,38 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
 
 void
 RDR_RenameFileEntry( IN cm_user_t *userp,
-                     IN AFSFileID FileId,
-                     IN AFSFileRenameCB *RenameCB,
+                     IN WCHAR    *SourceFileName,
+                     IN DWORD     SourceFileNameLength,
+                     IN AFSFileID SourceFileId,
+                     IN AFSFileRenameCB *pRenameCB,
                      IN DWORD ResultBufferLength,
                      IN OUT AFSCommResult **ResultCB)
 {
 
     AFSFileRenameResultCB *pResultCB = NULL;
+    AFSFileID              SourceParentId   = pRenameCB->SourceParentId;
+    AFSFileID              TargetParentId   = pRenameCB->TargetParentId;
+    WCHAR *                TargetFileName       = pRenameCB->TargetName;
+    DWORD                  TargetFileNameLength = pRenameCB->TargetNameLength;
+    cm_fid_t               SourceParentFid;
+    cm_fid_t               TargetParentFid;
+    cm_scache_t *          oldDscp;
+    cm_scache_t *          newDscp;
+    char                   utf8_old_name[1025];
+    char                   utf8_old_norm[1025];
+    char                   utf8_new_name[1025];
+    char                   utf8_new_norm[1025];
+    char                   shortName[13];
+    cm_dirFid_t            dfid;
+    cm_req_t               req;
+    afs_uint32             code;
+    DWORD                  status;
+
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileRenameResultCB));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
@@ -1408,11 +1012,144 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
     pResultCB = (AFSFileRenameResultCB *)(*ResultCB)->ResultData;
     
-    (*ResultCB)->ResultStatus = 0;
+    code = !WideCharToMultiByte( CP_UTF8, 0, SourceFileName, SourceFileNameLength, 
+                                 utf8_old_name, sizeof(utf8_old_name), NULL, NULL);
+    if (code) {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        return;
+    }
 
-    (*ResultCB)->ResultBufferLength = sizeof( AFSFileRenameResultCB);
+    code = !cm_NormalizeUtf16StringToUtf8( SourceFileName, SourceFileNameLength, utf8_old_norm, sizeof(utf8_old_norm));
+    if (code) {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        return;
+    }
 
+    SourceParentFid.cell   = SourceParentId.Cell;
+    SourceParentFid.volume = SourceParentId.Volume;
+    SourceParentFid.vnode  = SourceParentId.Vnode;
+    SourceParentFid.unique = SourceParentId.Unique;
+    SourceParentFid.hash   = SourceParentId.Hash;
 
+    code = !WideCharToMultiByte( CP_UTF8, 0, TargetFileName, TargetFileNameLength, 
+                                 utf8_new_name, sizeof(utf8_new_name), NULL, NULL);
+    if (code) {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        return;
+    }
+
+    code = !cm_NormalizeUtf16StringToUtf8( TargetFileName, TargetFileNameLength, utf8_new_norm, sizeof(utf8_new_norm));
+    if (code) {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        return;
+    }
+
+    TargetParentFid.cell   = TargetParentId.Cell;
+    TargetParentFid.volume = TargetParentId.Volume;
+    TargetParentFid.vnode  = TargetParentId.Vnode;
+    TargetParentFid.unique = TargetParentId.Unique;
+    TargetParentFid.hash   = TargetParentId.Hash;
+
+    code = cm_GetSCache(&SourceParentFid, &oldDscp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
+
+    if (oldDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
+        cm_ReleaseSCache(oldDscp);
+        return;
+    }
+
+    code = cm_GetSCache(&TargetParentFid, &newDscp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+        cm_ReleaseSCache(oldDscp);
+    }
+
+    if (newDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseSCache(newDscp);
+        return;
+    }
+
+    code = cm_Rename( oldDscp, utf8_old_name, utf8_old_norm, 
+                      newDscp, utf8_new_name, userp, &req);
+    if (code == 0) {
+        cm_dirOp_t dirop;
+        cm_fid_t   targetFid;
+        cm_scache_t *scp = 0;
+
+        (*ResultCB)->ResultBufferLength = sizeof( AFSFileRenameResultCB);
+        (*ResultCB)->ResultStatus = 0;
+
+        pResultCB->SourceParentDataVersion.QuadPart = oldDscp->dataVersion;
+        pResultCB->TargetParentDataVersion.QuadPart = newDscp->dataVersion;
+
+        code = cm_BeginDirOp( newDscp, userp, &req, CM_DIRLOCK_READ, &dirop);
+        if (code == 0) {
+            code = cm_BPlusDirLookup(&dirop, utf8_new_norm, &targetFid);
+            if (code == EINVAL)
+                code = cm_DirLookup(&dirop, utf8_new_norm, &targetFid);
+
+            cm_EndDirOp(&dirop);
+        }
+
+        if (code != 0) {
+            (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+            cm_ReleaseSCache(oldDscp);
+            cm_ReleaseSCache(newDscp);
+            return;
+        } 
+
+        code = cm_GetSCache(&targetFid, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
+            cm_ReleaseSCache(oldDscp);
+            cm_ReleaseSCache(newDscp);
+            return;
+        }
+
+        /* Make sure the source vnode is current */
+        lock_ObtainWrite(&scp->rw);
+        code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {       
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&scp->rw);
+            cm_ReleaseSCache(oldDscp);
+            cm_ReleaseSCache(newDscp);
+            cm_ReleaseSCache(scp);
+            return;
+        }
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&scp->rw);
+
+        dfid.vnode = htonl(scp->fid.vnode);
+        dfid.unique = htonl(scp->fid.unique);
+
+        cm_Gen8Dot3NameInt(utf8_new_name, &dfid, shortName, NULL);
+
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, newDscp, scp, userp, &req, utf8_new_name, shortName);
+            
+        cm_ReleaseSCache(scp);
+    } else {
+        DWORD NTStatus;
+        smb_MapNTError(code, &NTStatus);
+        (*ResultCB)->ResultStatus = NTStatus;
+        (*ResultCB)->ResultBufferLength = 0;
+    }
+
+    cm_ReleaseSCache(oldDscp);
+    cm_ReleaseSCache(newDscp);
     return;
 }
 
@@ -1422,24 +1159,124 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
                     IN DWORD ResultBufferLength,
                     IN OUT AFSCommResult **ResultCB)
 {
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
             sizeof( AFSCommResult));
 
-    /* Flush the dirty buffers associated with FID 
-     * What do we do about extents that are currently held by the redirector?
-     * How do I know what to flush?
-     */
-    
-    (*ResultCB)->ResultStatus = 0;
+    /* Process the release */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
+
+    code = cm_FSync(scp, userp, &req);
+    cm_ReleaseSCache(scp);
+
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+    } else
+        (*ResultCB)->ResultStatus = 0;
 
     (*ResultCB)->ResultBufferLength = 0;
-
-
+    
     return;
+}
+
+afs_uint32
+RDR_CheckAccess( IN cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
+                 ULONG access,
+                 ULONG *granted)
+{
+    ULONG afs_acc, afs_gr;
+    BOOLEAN file, dir;
+    afs_uint32 code;
+
+    file = (scp->fileType == CM_SCACHETYPE_FILE);
+    dir = !file;
+
+    /* access definitions from prs_fs.h */
+    afs_acc = 0;
+    if (access & FILE_READ_DATA)
+	afs_acc |= PRSFS_READ;
+    if (file && ((access & FILE_WRITE_DATA) || (access & FILE_APPEND_DATA)))
+	afs_acc |= PRSFS_WRITE;
+    if (access & FILE_WRITE_EA || access & FILE_WRITE_ATTRIBUTES)
+	afs_acc |= PRSFS_WRITE;
+    if (dir && ((access & FILE_ADD_FILE) || (access & FILE_ADD_SUBDIRECTORY)))
+	afs_acc |= PRSFS_INSERT;
+    if (dir && (access & FILE_LIST_DIRECTORY))
+	afs_acc |= PRSFS_LOOKUP;
+    if (access & FILE_READ_EA || access & FILE_READ_ATTRIBUTES)
+	afs_acc |= PRSFS_LOOKUP;
+    if (file && (access & FILE_EXECUTE))
+	afs_acc |= PRSFS_WRITE;
+    if (dir && (access & FILE_TRAVERSE))
+	afs_acc |= PRSFS_READ;
+    if (dir && (access & FILE_DELETE_CHILD))
+	afs_acc |= PRSFS_DELETE;
+    if ((access & DELETE))
+	afs_acc |= PRSFS_DELETE;
+
+    /* check ACL with server */
+    lock_ObtainWrite(&scp->rw);
+    while (1)
+    {
+	if (cm_HaveAccessRights(scp, userp, afs_acc, &afs_gr))
+        {
+            break;
+        }
+	else
+        {
+            /* we don't know the required access rights */
+            code = cm_GetAccessRights(scp, userp, reqp);
+            if (code)
+                break;
+            continue;
+        }
+    }
+    lock_ReleaseWrite(&(scp->rw));
+
+    if (code == 0) {
+        *granted = 0;
+        if (afs_gr & PRSFS_READ)
+            *granted |= FILE_READ_DATA | FILE_EXECUTE;
+        if (afs_gr & PRSFS_WRITE)
+            *granted |= FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES | FILE_EXECUTE;
+        if (afs_gr & PRSFS_INSERT)
+            *granted |= (dir ? FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY : 0) | (file ? FILE_ADD_SUBDIRECTORY : 0);
+        if (afs_gr & PRSFS_LOOKUP)
+            *granted |= (dir ? FILE_LIST_DIRECTORY : 0) | FILE_READ_EA | FILE_READ_ATTRIBUTES;
+        if (afs_gr & PRSFS_DELETE)
+            *granted |= FILE_DELETE_CHILD | DELETE;
+        if (afs_gr & PRSFS_LOCK)
+            *granted |= 0;
+        if (afs_gr & PRSFS_ADMINISTER)
+            *granted |= 0;
+
+        *granted |= SYNCHRONIZE | READ_CONTROL;
+    }
+    return 0;
 }
 
 void
@@ -1449,10 +1286,19 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
                    IN DWORD ResultBufferLength,
                    IN OUT AFSCommResult **ResultCB)
 {
-
     AFSFileOpenResultCB *pResultCB = NULL;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    cm_lock_data_t      *ldp = NULL;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileOpenResultCB));
+    if (!(*ResultCB))
+	return;
 
     memset( *ResultCB,
             '\0',
@@ -1460,48 +1306,160 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
 
     pResultCB = (AFSFileOpenResultCB *)(*ResultCB)->ResultData;
 
-    /* The following specifies the access that has actually been granted 
-     * for the specified file.  This may be different from what was 
-     * requested in OpenCB->DesiredAccess.
-     *
-     * TODO - compute the actual access based upon the user's permissions
-     * for OpenCB->ParentId and FileId.
-     */
-    pResultCB->GrantedAccess = OpenCB->DesiredAccess;
-    
-    (*ResultCB)->ResultStatus = 0;
+    /* Process the release */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
 
-    (*ResultCB)->ResultBufferLength = sizeof( AFSFileOpenResultCB);
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
 
+    code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
+    if (code == 0) {
+        cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 
+        code = RDR_CheckAccess(scp, userp, &req, OpenCB->DesiredAccess, &pResultCB->GrantedAccess);
+    }
+    cm_ReleaseSCache(scp);
+
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+    } else {
+        (*ResultCB)->ResultStatus = 0;
+        (*ResultCB)->ResultBufferLength = sizeof( AFSFileOpenResultCB);
+    }
     return;
 }
 
 void
 RDR_RequestFileExtentsSync( IN cm_user_t *userp,
-                        IN AFSFileID FileId,
-                        IN AFSRequestExtentsCB *RequestExtentsCB,
-                        IN DWORD ResultBufferLength,
-                        IN OUT AFSCommResult **ResultCB)
+                            IN AFSFileID FileId,
+                            IN AFSRequestExtentsCB *RequestExtentsCB,
+                            IN DWORD ResultBufferLength,
+                            IN OUT AFSCommResult **ResultCB)
 {
-
     AFSRequestExtentsResultCB *pResultCB = NULL;
+    DWORD Length;
+    DWORD count;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    cm_buf_t    *bufp;
+    afs_uint32  code;
+    osi_hyper_t thyper;
+    LARGE_INTEGER ByteOffset, EndOffset;
+    cm_req_t    req;
+    DWORD               NTStatus;
 
-    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSRequestExtentsResultCB));
+    cm_InitReq(&req);
 
-    memset( *ResultCB,
-            '\0',
-            sizeof( AFSCommResult) + sizeof( AFSRequestExtentsResultCB));
+    Length = sizeof( AFSCommResult) + sizeof( AFSRequestExtentsResultCB) * (RequestExtentsCB->Length / cm_data.blockSize + 1);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult));
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
 
-    /* Allocate the extents from the buffer package */
+    *ResultCB = (AFSCommResult *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
 
     pResultCB = (AFSRequestExtentsResultCB *)(*ResultCB)->ResultData;
-    
+
+    /* Allocate the extents from the buffer package */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &NTStatus);
+        (*ResultCB)->ResultStatus = NTStatus;
+        (*ResultCB)->ResultBufferLength = 0;
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+
+    /* start by looking up the file's end */
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(code, &NTStatus);
+        (*ResultCB)->ResultStatus = NTStatus;
+        (*ResultCB)->ResultBufferLength = 0;
+        return;
+    }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    /* the scp is now locked and current */
+
+    /* Allocate the extents from the buffer package */
+    for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + Length; 
+          ByteOffset.QuadPart < EndOffset.QuadPart; 
+          ByteOffset.QuadPart += cm_data.blockSize)
+    {
+        thyper.QuadPart = ByteOffset.QuadPart;
+
+        lock_ReleaseWrite(&scp->rw);
+        code = buf_Get(scp, &thyper, &bufp);
+        lock_ObtainWrite(&scp->rw);
+        
+        if (code == 0) {
+            lock_ObtainMutex(&bufp->mx);
+            bufp->flags |= CM_BUF_REDIR;
+            lock_ReleaseMutex(&bufp->mx);
+
+            /* now get the data in the cache */
+            if (ByteOffset.QuadPart < scp->length.QuadPart) {
+                while (1) {
+                    code = cm_SyncOp(scp, bufp, userp, &req, 0,
+                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                    if (code) 
+                        break;
+
+                    cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
+                    if (cm_HaveBuffer(scp, bufp, 0)) 
+                        break;
+
+                    /* otherwise, load the buffer and try again */
+                    code = cm_GetBuffer(scp, bufp, NULL, userp, &req);
+                    if (code) 
+                        break;
+                }
+            } else {
+                memset(bufp->datap, 0, cm_data.blockSize);
+            }
+
+            pResultCB->FileExtents[count].Flags = 0;
+            pResultCB->FileExtents[count].FileOffset = ByteOffset;
+            pResultCB->FileExtents[count].CacheOffset.QuadPart = bufp->datap - cm_data.baseAddress;
+            pResultCB->FileExtents[count].Length = cm_data.blockSize;
+            count++;
+            buf_Release(bufp);
+        }
+    }
+    pResultCB->ExtentCount = count;
+    lock_ReleaseWrite(&scp->rw);
+    cm_ReleaseSCache(scp);
+
     (*ResultCB)->ResultStatus = 0;
-
     (*ResultCB)->ResultBufferLength = sizeof( AFSRequestExtentsResultCB);
-
-
     return;
 }
 
@@ -1542,8 +1500,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    scp = cm_FindSCache(&Fid);
-    if (scp == NULL) {
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
         free(*ResultCB);
         *ResultCB = NULL;
         *ResultBufferLength = 0;
@@ -1559,6 +1517,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         free(*ResultCB);
         *ResultCB = NULL;
         *ResultBufferLength = 0;
+        lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         return;
     }
@@ -1642,7 +1601,6 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
-
     memset( *ResultCB,
             '\0',
             sizeof( AFSCommResult));
@@ -1654,8 +1612,8 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    scp = cm_FindSCache(&Fid);
-    if (scp == NULL) {
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
         free(*ResultCB);
         *ResultCB = NULL;
         return;
@@ -1671,7 +1629,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_RELEASE )
                     bufp->flags &= ~CM_BUF_REDIR;
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_DIRTY ) {
-                    bufp->flags |= CM_BUF_DIRTY;
+                    buf_SetDirty(bufp, 0, cm_data.blockSize);
                     dirty = 1;
                 }
                 lock_ReleaseMutex(&bufp->mx);
@@ -1681,7 +1639,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     }
 
     if (dirty)
-        code = cm_FlushFile(scp, userp, &req);
+        code = cm_FSync(scp, userp, &req);
 
     cm_ReleaseSCache(scp);
 

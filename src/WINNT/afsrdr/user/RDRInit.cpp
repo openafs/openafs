@@ -473,7 +473,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             OutputDebugString( wchBuffer);
 
-            RDR_RenameFileEntry( userp, RequestBuffer->FileId,
+            RDR_RenameFileEntry( userp, 
+                                 RequestBuffer->Name,
+				 RequestBuffer->NameLength,
+                                 RequestBuffer->FileId,
 				 pFileRenameCB,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
