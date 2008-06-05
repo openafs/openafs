@@ -236,9 +236,6 @@ Known Problems
    * bos addkey should be marked deprecated in favor of using asetkey with
      a keytab.
 
-   * I'm fairly sure that the fileserver man page no longer documents all
-     of the fileserver options.
-
    * There are lingering references to AFS Development or AFS Product
      Support in descriptions of options that one should generally not
      use.  Also, all of the manual references refer to the "IBM" manual.
