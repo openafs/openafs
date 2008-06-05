@@ -9,16 +9,16 @@ pts_examine - Displays a Protection Database entry
 
 B<pts examine> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] 
-    [B<-force>] [B<-help>]
+    [B<-force>] [B<-auth>] [B<-help>]
 
 B<pts e> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
 
 B<pts check> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
 
 B<pts che> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
 
 =for html
 </div>
@@ -62,6 +62,11 @@ B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
+
+=item B<-auth>
+
+Run using the user's current authentication. This is the default unless
+the B<-noauth> or B<-localauth> options are used.
 
 =item B<-help>
 
@@ -203,7 +208,9 @@ group and the entry's owner (as well as the user for a user entry).
 The default privacy flags for group entries are C<S-M-->, meaning that all
 users can display the entry and the members of the group, but only the
 entry owner and members of the system:administrators group can perform
-other functions.
+other functions. The defaults for the privacy flags may be changed by
+running B<ptserver> with the B<-default_access> option. See L<ptserver(8)>
+for more discussion of the B<-default_access> option.
 
 =item group quota
 
@@ -211,8 +218,15 @@ The number of additional groups the user is allowed to create. The B<pts
 createuser> command sets it to 20 for both users and machines, but it has
 no meaningful interpretation for a machine, because it is not possible to
 authenticate as a machine. Similarly, it has no meaning in group entries
-and the B<pts creategroup> command sets it to 0 (zero); do not change this
-value.
+that only deal with the local cell and the B<pts creategroup> command sets
+it to 0 (zero); do not change this value.
+
+When using cross-realm authentication, a special group of the form
+system:authuser@FOREIGN.REALM is created by an administrator and used.  If
+the group quota for this special group is greater than zero, then aklog
+will automatically register foreign users in the local PTS database, add
+the foreign user to the system:authuser@FOREIGN.REALM, and decrement the
+group quota by one.
 
 =back
 
