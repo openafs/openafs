@@ -201,6 +201,7 @@ Known Problems
 
    * The following installed commands have no man pages:
 
+       compile_et.afs
        copyauth
        fs cscpolicy
        fs memdump
@@ -208,12 +209,18 @@ Known Problems
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
+       klog.krb
+       krb.conf
+       pagsh.krb
        restorevol
        rmtsysd
+       tokens.krb
        vldb_convert
        vos clone
        vos setfields
        vsys
+
+   * Add -noresolve to the documentation of all the vos commands.
 
    * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative
      names in the NAME line of the non-.krb man pages, links should be
