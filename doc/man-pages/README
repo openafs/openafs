@@ -236,9 +236,6 @@ Known Problems
    * bos addkey should be marked deprecated in favor of using asetkey with
      a keytab.
 
-   * I'm fairly sure that the fileserver man page no longer documents all
-     of the fileserver options.
-
    * The package man page should probably mention the (pointless) package
      apropos and package help commands, or they could be removed.  There
      used to be separate man pages for them, but that seemed rather
