@@ -752,6 +752,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     free(conntimer);
     free(deltas);
     free(results);
+    free(serversp);
     free(caps);
 }
 #endif /* MULTI_CHECKSERVERS */
