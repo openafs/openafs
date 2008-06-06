@@ -1345,6 +1345,8 @@ putFreeNode(Tree *B, Nptr node)
     if (isdata(node)) {
         if ( getdatakey(node).name )
             free(getdatakey(node).name);
+	if ( getdatavalue(node).longname )
+	    free(getdatavalue(node).longname);
     } else {    /* data node */
         for ( i=1; i<=getfanout(B); i++ ) {
             if (getkey(node, i).name)
