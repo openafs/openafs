@@ -237,8 +237,16 @@ afsproc_init(void)
 {
     struct proc_dir_entry *entry1;
     struct proc_dir_entry *entry2;
+#if !defined(EXPORTED_PROC_ROOT_FS)
+    char path[64];
+#endif
 
+#if defined(EXPORTED_PROC_ROOT_FS)
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
+#else
+    sprintf(path, "fs/%s", PROC_FSDIRNAME);
+    openafs_procfs = proc_mkdir(path, NULL);
+#endif
     entry1 = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
 
     entry1->proc_fops = &afs_syscall_fops;
@@ -263,9 +271,18 @@ afsproc_init(void)
 static void
 afsproc_exit(void)
 {
+#if !defined(EXPORTED_PROC_ROOT_FS)
+    char path[64];
+#endif
+
+#if defined(EXPORTED_PROC_ROOT_FS)
+    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
+#else
+    sprintf(path, "fs/%s", PROC_FSDIRNAME);
+    remove_proc_entry(path, NULL);
+#endif
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
-    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 #if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
     if (ioctl32_done)
 	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
