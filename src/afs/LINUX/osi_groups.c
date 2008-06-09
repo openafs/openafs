@@ -646,7 +646,11 @@ void osi_keyring_init(void)
 #  endif
 	    rcu_read_lock();
 # endif
+#if defined(EXPORTED_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
+#else
+	p = find_task_by_vpid(1);
+#endif
 	if (p && p->user->session_keyring)
 	    __key_type_keyring = p->user->session_keyring->type;
 # ifdef EXPORTED_TASKLIST_LOCK
