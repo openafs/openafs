@@ -317,9 +317,16 @@ void
 osi_proc_init(void)
 {
     struct proc_dir_entry *entry;
-
+#if !defined(EXPORTED_PROC_ROOT_FS)
+    char path[64];
+#endif
+    
+#if defined(EXPORTED_PROC_ROOT_FS)
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
-
+#else
+    sprintf(path, "fs/%s", PROC_FSDIRNAME);
+    openafs_procfs = proc_mkdir(path, NULL);
+#endif
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
     entry = create_proc_entry("unixusers", 0, openafs_procfs);
     if (entry) {
@@ -338,9 +345,18 @@ osi_proc_init(void)
 void
 osi_proc_clean(void)
 {
+#if !defined(EXPORTED_PROC_ROOT_FS)
+    char path[64];
+#endif
+
+#if defined(EXPORTED_PROC_ROOT_FS)
+    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
+#else
+    sprintf(path, "fs/%s", PROC_FSDIRNAME);
+    remove_proc_entry(path, NULL);
+#endif
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
     remove_proc_entry("unixusers", openafs_procfs);
 #endif
-    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }
