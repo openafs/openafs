@@ -3036,27 +3036,47 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     } else {
 	if (ShowSuid && (vnodeEssence->modeBits & 06000))
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
-	if (ShowMounts && (vnodeEssence->type == vSymlink)
+	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
 	    int code, size;
-	    char buf[1024];
+	    char buf[1025];
 	    IHandle_t *ihP;
 	    FdHandle_t *fdP;
 
 	    IH_INIT(ihP, fileSysDevice, dir->dirHandle.dirh_handle->ih_vid,
 		    vnodeEssence->InodeNumber);
 	    fdP = IH_OPEN(ihP);
-	    assert(fdP != NULL);
+	    if (fdP == NULL) {
+		Log("ERROR %s could not open mount point vnode %u\n", dir->vname, vnodeNumber);
+		IH_RELEASE(ihP);
+		return;
+	    }
 	    size = FDH_SIZE(fdP);
-	    assert(size != -1);
-	    memset(buf, 0, 1024);
+	    if (size < 0) {
+		Log("ERROR %s mount point has invalid size %d, vnode %u\n", dir->vname, size, vnodeNumber);
+		FDH_REALLYCLOSE(fdP);
+		IH_RELEASE(ihP);
+		return;
+	    }
+	
 	    if (size > 1024)
 		size = 1024;
 	    code = FDH_READ(fdP, buf, size);
-	    assert(code == size);
-	    Log("In volume %u (%s) found mountpoint %s/%s to '%s'\n",
-		dir->dirHandle.dirh_handle->ih_vid, dir->vname,
-		dir->name ? dir->name : "??", name, buf);
+	    if (code == size) {
+		buf[size] = '\0';
+		if ( (*buf != '#' && *buf != '%') || buf[strlen(buf)-1] != '.' ) {
+		    Log("Volume %u (%s) mount point %s/%s to '%s' invalid, %s to symbolic link\n",
+			dir->dirHandle.dirh_handle->ih_vid, dir->vname, dir->name ? dir->name : "??", name, buf,
+			Testing ? "would convert" : "converted");
+		    vnodeEssence->modeBits |= 0111;
+		    vnodeEssence->changed = 1;
+		} else if (ShowMounts) Log("In volume %u (%s) found mountpoint %s/%s to '%s'\n",
+		    dir->dirHandle.dirh_handle->ih_vid, dir->vname,
+		    dir->name ? dir->name : "??", name, buf);
+	    } else {
+		Log("Volume %s cound not read mount point vnode %u size %d code %d\n",
+		    dir->vname, vnodeNumber, size, code);
+	    }
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(ihP);
 	}
@@ -3532,6 +3552,8 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		    if (!Showmode) {
 			Log("Vnode %u: link count incorrect (was %d, %s %d)\n", vnodeNumber, oldCount, (Testing ? "would have changed to" : "now"), vnode.linkCount);
 		    }
+		} else {
+		    vnode.modeBits = vnp->modeBits;
 		}
 
 		vnode.dataVersion++;
