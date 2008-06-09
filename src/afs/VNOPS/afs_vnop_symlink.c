@@ -119,7 +119,7 @@ int afs_symlink
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE;
     InStatus.ClientModTime = osi_Time();
     alen = strlen(atargetName);	/* we want it to include the null */
-    if (*atargetName == '#' || *atargetName == '%') {
+    if ( (*atargetName == '#' || *atargetName == '%') && alen > 1 && atargetName[alen-1] == '.') {
 	InStatus.UnixModeBits = 0644;	/* mt pt: null from "." at end */
 	if (alen == 1)
 	    alen++;		/* Empty string */
