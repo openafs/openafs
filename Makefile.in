@@ -395,7 +395,7 @@ ubik_depinstall: config comerr rxgen
 vlserver_depinstall: config rxgen ubik_depinstall auth_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
 
-tvlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
+tvlserver_depinstall: config rxgen ubik_depinstall auth_depinstall
 	${COMPILE_PART1} tvlserver ${COMPILE_DEPINSTALL}
 
 auth_depinstall: config comerr
