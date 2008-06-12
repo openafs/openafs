@@ -321,8 +321,16 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
     } else {
 	for (i = 0; i < HASHSIZE; i++) {
 	    upos = nflag ? ntohl(prh.nameHash[i]) : ntohl(prh.idHash[i]);
-	    while (upos)
-		upos = display_entry(upos);
+	    while (upos) {
+		long newpos;
+		newpos = display_entry(upos);
+		if (newpos == upos) {
+		    fprintf(stderr, "pt_util: hash error in %s chain %d\n", 
+			    nflag ? "name":"id", i);
+		    exit(1);
+		} else
+		    upos = newpos;
+	    }
 	}
 	if (flags & DO_GRP)
 	    display_groups();
