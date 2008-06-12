@@ -925,7 +925,7 @@ long cm_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-	cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
@@ -1239,7 +1239,7 @@ long cm_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
@@ -1286,7 +1286,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(ioctlp);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
