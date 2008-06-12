@@ -6393,7 +6393,6 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     char *pathp = NULL;
     cm_scache_t * scp = NULL;
     cm_scache_t *delscp = NULL;
-    int deleted = 0;
     int nullcreator = 0;
 
     osi_Log4(smb_logp, "smb_CloseFID Closing fidp 0x%x (fid=%d scp=0x%x vcp=0x%x)",
@@ -6512,7 +6511,6 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         if (delscp->fileType == CM_SCACHETYPE_DIRECTORY) {
             code = cm_RemoveDir(dscp, fullPathp, userp, &req);
 	    if (code == 0) {
-		deleted = 1;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
 				      FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
@@ -6521,7 +6519,6 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         } else {
             code = cm_Unlink(dscp, fullPathp, userp, &req);
 	    if (code == 0) {				
-		deleted = 1;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
 				      FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
@@ -6566,12 +6563,6 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 	cm_ReleaseSCache(dscp);
 
     if (delscp) {
-	if (deleted) {
-	    lock_ObtainWrite(&delscp->rw);
-	    if (deleted)
-		delscp->flags |= CM_SCACHEFLAG_DELETED;
-	    lock_ReleaseWrite(&delscp->rw);
-	}
         cm_ReleaseSCache(delscp);
     }
 
