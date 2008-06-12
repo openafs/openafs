@@ -179,6 +179,8 @@ static afs_int32 FSYNC_com_StatsOpVLRU(FSSYNC_StatsOp_command * scom, SYNC_respo
 
 static void FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info);
 
+static int FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon);
+
 
 /*
  * This lock controls access to the handler array. The overhead
@@ -230,6 +232,9 @@ FSYNC_sync(void * args)
     int tid;
 #endif
     SYNC_server_state_t * state = &fssync_server_state;
+#ifdef AFS_DEMAND_ATTACH_FS
+    VThreadOptions_t * thread_opts;
+#endif
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -256,10 +261,25 @@ FSYNC_sync(void * args)
 	LWP_DispatchProcess();
 #endif /* AFS_PTHREAD_ENV */
     }
-
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
     assert(!code);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /*
+     * make sure the volume package is incapable of recursively executing
+     * salvsync calls on this thread, since there is a possibility of
+     * deadlock.
+     */
+    thread_opts = malloc(sizeof(VThreadOptions_t));
+    if (thread_opts == NULL) {
+	Log("failed to allocate memory for thread-specific volume package options structure\n");
+	return NULL;
+    }
+    memcpy(thread_opts, &VThread_defaults, sizeof(VThread_defaults));
+    thread_opts->disallow_salvsync = 1;
+    assert(pthread_setspecific(VThread_key, thread_opts) == 0);
+#endif
 
     InitHandler();
     AcceptOn();
@@ -321,12 +341,11 @@ FSYNC_com(int fd)
     com.payload.buf = (void *)com_buf;
     com.payload.len = SYNC_PROTO_MAX_LEN;
     res.hdr.response_len = sizeof(res.hdr);
-    res.hdr.proto_version = FSYNC_PROTO_VERSION;
     res.payload.len = SYNC_PROTO_MAX_LEN;
     res.payload.buf = (void *)res_buf;
 
     FS_cnt++;
-    if (SYNC_getCom(fd, &com)) {
+    if (SYNC_getCom(&fssync_server_state, fd, &com)) {
 	Log("FSYNC_com:  read failed; dropping connection (cnt=%d)\n", FS_cnt);
 	FSYNC_Drop(fd);
 	return;
@@ -353,6 +372,7 @@ FSYNC_com(int fd)
 	goto respond;
     }
 
+    res.hdr.com_seq = com.hdr.com_seq;
 
     VOL_LOCK;
     switch (com.hdr.command) {
@@ -388,7 +408,7 @@ FSYNC_com(int fd)
     VOL_UNLOCK;
 
  respond:
-    SYNC_putRes(fd, &res);
+    SYNC_putRes(&fssync_server_state, fd, &res);
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	FSYNC_Drop(fd);
     }
@@ -464,6 +484,30 @@ FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res)
     return code;
 }
 
+/**
+ * service an FSYNC request to bring a volume online.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume transitioned online
+ *   @retval SYNC_FAILED invalid command protocol message
+ *   @retval SYNC_DENIED operation could not be completed
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_ON
+ *       - FSYNC_VOL_ATTACH
+ *       - FSYNC_VOL_LEAVE_OFF
+ *
+ * @note the supplementary reason code contains additional details.
+ *       When SYNC_DENIED is returned, the specific reason is
+ *       placed in the response packet reason field.
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
@@ -478,49 +522,13 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	goto done;
     }
 
-    /*
-      This is where a detatched volume gets reattached. However in the
-      special case where the volume is merely busy, it is already
-      attatched and it is only necessary to clear the busy flag. See
-      defect #2080 for details.
-    */
-
-    /* is the volume already attatched? */
-#ifdef	notdef
-    /*
-     * XXX With the following enabled we had bizarre problems where the backup id would
-     * be reset to 0; that was due to the interaction between fileserver/volserver in that they
-     * both keep volumes in memory and the changes wouldn't be made to the fileserver. Some of
-     * the problems were due to refcnt changes as result of VGetVolume/VPutVolume which would call
-     * VOffline, etc. when we don't want to; someday the whole #2080 issue should be revisited to
-     * be done right XXX
-     */
-    vp = VGetVolume_r(&error, vcom->vop->volume);
-    if (vp) {
-	/* yep, is the BUSY flag set? */
-	if (vp->specialStatus == VBUSY) {
-
-	    /* yep, clear BUSY flag */
-
-	    vp->specialStatus = 0;
-	    /* make sure vol is online */
-	    if (vcom->v) {
-		vcom->v->volumeID = 0;
-		V_inUse(vp) = 1;	/* online */
-	    }
-	    VPutVolume_r(vp);
-	    break;
-	}
-	VPutVolume_r(vp);
-    }
-#endif /* notdef */
-
     /* so, we need to attach the volume */
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /* check DAFS permissions */
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
-    if (vp && !strcmp(VPartitionPath(V_partition(vp)), vcom->vop->partName) &&
+    if (vp &&
+	FSYNC_partMatch(vcom, vp, 1) &&
 	vp->pending_vol_op && 
 	(vcom->hdr->programType != vp->pending_vol_op->com.programType)) {
 	/* a different program has this volume checked out. deny. */
@@ -545,10 +553,23 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vcom->hdr->command == FSYNC_VOL_LEAVE_OFF) {
 	/* nothing much to do if we're leaving the volume offline */
 #ifdef AFS_DEMAND_ATTACH_FS
-	if (vp &&
-	    !strcmp(VPartitionPath(V_partition(vp)), vcom->vop->partName)) {
-	    VDeregisterVolOp_r(vp);
-	    VChangeState_r(vp, VOL_STATE_UNATTACHED);
+	if (vp) {
+	    if (FSYNC_partMatch(vcom, vp, 1)) {
+		if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+		    (V_attachState(vp) == VOL_STATE_PREATTACHED)) {
+		    VChangeState_r(vp, VOL_STATE_UNATTACHED);
+		    VDeregisterVolOp_r(vp);
+		} else {
+		    code = SYNC_DENIED;
+		    res->hdr.reason = FSYNC_BAD_STATE;
+		}
+	    } else {
+		code = SYNC_DENIED;
+		res->hdr.reason = FSYNC_WRONG_PART;
+	    }
+	} else {
+	    code = SYNC_DENIED;
+	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
 	}
 #endif
 	goto done;
@@ -581,6 +602,29 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     return code;
 }
 
+/**
+ * service an FSYNC request to take a volume offline.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume transitioned offline
+ *   @retval SYNC_FAILED invalid command protocol message
+ *   @retval SYNC_DENIED operation could not be completed
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_OFF 
+ *       - FSYNC_VOL_NEEDVOLUME
+ *
+ * @note the supplementary reason code contains additional details.
+ *       When SYNC_DENIED is returned, the specific reason is
+ *       placed in the response packet reason field.
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
@@ -589,6 +633,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     int i;
     Volume * vp, * nvp;
     Error error;
+#ifdef AFS_DEMAND_ATTACH_FS
+    int reserved = 0;
+#endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -623,9 +670,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #endif
 
     if (vp) {
-	if ((vcom->vop->partName[0] != 0) &&
-	    (strncmp(vcom->vop->partName, vp->partition->name, 
-		    sizeof(vcom->vop->partName)) != 0)) {
+	    if (!FSYNC_partMatch(vcom, vp, 1)) {
 	    /* volume on desired partition is not online, so we
 	     * should treat this as an offline volume.
 	     */
@@ -683,15 +728,21 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	 */
 	switch (type) {
 	case salvageServer:
+	    /* it is possible for the salvageserver to checkout a 
+	     * volume for salvage before its scheduling request
+	     * has been sent to the salvageserver */
+	    if (vp->salvage.requested && !vp->salvage.scheduled) {
+		vp->salvage.scheduled = 1;
+	    }
 	case debugUtility:
-	    /* give the salvageserver lots of liberty */
 	    break;
+
 	case volumeUtility:
-	    if ((V_attachState(vp) == VOL_STATE_ERROR) ||
-		(V_attachState(vp) == VOL_STATE_SALVAGING)) {
+	    if (VIsErrorState(V_attachState(vp))) {
 		goto deny;
 	    }
 	    break;
+
 	default:
 	    Log("bad program type passed to FSSYNC\n");
 	    goto deny;
@@ -718,16 +769,20 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	/* convert to heavyweight ref */
 	nvp = VGetVolumeByVp_r(&error, vp);
 
-	/* register the volume operation metadata with the volume */
-	VRegisterVolOp_r(vp, &info);
-
 	if (!nvp) {
 	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u\n",
 		vcom->vop->volume);
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
 	    goto deny;
+	} else if (nvp != vp) {
+	    /* i don't think this should ever happen, but just in case... */
+	    Log("FSYNC_com_VolOff: warning: potentially dangerous race detected\n");
+	    vp = nvp;
 	}
-	vp = nvp;
+
+	/* register the volume operation metadata with the volume */
+	VRegisterVolOp_r(vp, &info);
+
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -769,11 +824,43 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     return SYNC_DENIED;
 }
 
+/**
+ * service an FSYNC request to mark a volume as moved.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume marked as moved to a remote server
+ *   @retval SYNC_FAILED invalid command protocol message
+ *   @retval SYNC_DENIED current volume state does not permit this operation
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this operation also breaks all callbacks for the given volume
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_MOVE
+ *
+ * @note the supplementary reason code contains additional details.  For
+ *       instance, SYNC_OK is still returned when the partition specified
+ *       does not match the one registered in the volume object -- reason
+ *       will be FSYNC_WRONG_PART in this case.
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
+    afs_int32 code = SYNC_DENIED;
     Error error;
     Volume * vp;
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	code = SYNC_FAILED;
+	goto done;
+    }
 
     /* Yuch:  the "reason" for the move is the site it got moved to... */
     /* still set specialStatus so we stop sending back VBUSY.
@@ -787,13 +874,27 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     vp = VGetVolume_r(&error, vcom->vop->volume);
 #endif
     if (vp) {
-	vp->specialStatus = VMOVED;
-#ifndef AFS_DEMAND_ATTACH_FS
-	VPutVolume_r(vp);
+	if (FSYNC_partMatch(vcom, vp, 1)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+		(V_attachState(vp) == VOL_STATE_PREATTACHED)) {
 #endif
+		code = SYNC_OK;
+		vp->specialStatus = VMOVED;
+#ifdef AFS_DEMAND_ATTACH_FS
+	    } else {
+		res->hdr.reason = FSYNC_BAD_STATE;
+	    }
+#endif
+	} else {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	}
+	VPutVolume_r(vp);
+    } else {
+	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
 
-    if (V_BreakVolumeCallbacks) {
+    if ((code == SYNC_OK) && (V_BreakVolumeCallbacks != NULL)) {
 	Log("fssync: volume %u moved to %x; breaking all call backs\n",
 	    vcom->vop->volume, vcom->hdr->reason);
 	VOL_UNLOCK;
@@ -801,16 +902,47 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	VOL_LOCK;
     }
 
-    return SYNC_OK;
+
+ done:
+    return code;
 }
 
+/**
+ * service an FSYNC request to mark a volume as destroyed.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume marked as destroyed
+ *   @retval SYNC_FAILED invalid command protocol message
+ *   @retval SYNC_DENIED current volume state does not permit this operation
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_DONE
+ *
+ * @note the supplementary reason code contains additional details.  For
+ *       instance, SYNC_OK is still returned when the partition specified
+ *       does not match the one registered in the volume object -- reason
+ *       will be FSYNC_WRONG_PART in this case.
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
+    afs_int32 code = SYNC_FAILED;
 #ifdef AFS_DEMAND_ATTACH_FS
     Error error;
     Volume * vp;
 #endif
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
 
     /* don't try to put online, this call is made only after deleting
      * a volume, in which case we want to remove the vol # from the
@@ -821,38 +953,107 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp) {
-	VChangeState_r(vp, VOL_STATE_UNATTACHED);
-	VDeregisterVolOp_r(vp);
+	if (FSYNC_partMatch(vcom, vp, 1)) {
+	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+		(V_attachState(vp) == VOL_STATE_PREATTACHED)) {
+		VChangeState_r(vp, VOL_STATE_UNATTACHED);
+		VDeregisterVolOp_r(vp);
+		code = SYNC_OK;
+	    } else {
+		code = SYNC_DENIED;
+		res->hdr.reason = FSYNC_BAD_STATE;
+	    }
+	} else {
+	    code = SYNC_OK; /* XXX is this really a good idea? */
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	}
+    } else {
+	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
 #endif
 
-    return SYNC_OK;
+ done:
+    return code;
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /**
- * force a volume into the hard error state.
+ * service an FSYNC request to transition a volume to the hard error state.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume transitioned to hard error state
+ *   @retval SYNC_FAILED invalid command protocol message
+ *   @retval SYNC_DENIED (see note)
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_FORCE_ERROR
+ *
+ * @note SYNC_DENIED is returned in the following cases:
+ *        - no partition name is specified (reason field set to
+ *          FSYNC_WRONG_PART).
+ *        - volume id not known to fileserver (reason field set
+ *          to FSYNC_UNKNOWN_VOLID).
+ *
+ * @note demand attach fileserver only
+ *
+ * @internal
  */
 static afs_int32
 FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     Error error;
     Volume * vp;
-    afs_int32 code = SYNC_DENIED;
+    afs_int32 code = SYNC_FAILED;
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
 
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
-    if (vp && !strcmp(VPartitionPath(V_partition(vp)), vcom->vop->partName)) {
-	memset(&vp->salvage, 0, sizeof(vp->salvage));
-	VChangeState_r(vp, VOL_STATE_ERROR);
-	code = SYNC_OK;
+    if (vp) {
+	if (FSYNC_partMatch(vcom, vp, 0)) {
+	    /* null out salvsync control state, as it's no longer relevant */
+	    memset(&vp->salvage, 0, sizeof(vp->salvage));
+	    VChangeState_r(vp, VOL_STATE_ERROR);
+	    code = SYNC_OK;
+	} else {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	}
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
-	
+
+ done:
     return code;
 }
-#endif
+#endif /* AFS_DEMAND_ATTACH_FS */
 
+/**
+ * service an FSYNC request to break all callbacks for this volume.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK callback breaks scheduled for volume
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_BREAKCBKS
+ *
+ * @note demand attach fileserver only
+ *
+ * @todo should do partition matching
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolBreakCBKs(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
@@ -867,12 +1068,34 @@ FSYNC_com_VolBreakCBKs(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     return SYNC_OK;
 }
 
+/**
+ * service an FSYNC request to return the Volume object.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK      volume object returned to caller
+ *   @retval SYNC_FAILED  bad command packet, or failed to locate volume object
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_QUERY
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
-    afs_int32 code = SYNC_OK;
+    afs_int32 code = SYNC_FAILED;
     Error error;
     Volume * vp;
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
@@ -881,58 +1104,101 @@ FSYNC_com_VolQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
     if (vp) {
-	assert(sizeof(Volume) <= res->payload.len);
-	memcpy(res->payload.buf, vp, sizeof(Volume));
-	res->hdr.response_len += sizeof(Volume);
+	if (FSYNC_partMatch(vcom, vp, 1)) {
+	    if (res->payload.len >= sizeof(Volume)) {
+		memcpy(res->payload.buf, vp, sizeof(Volume));
+		res->hdr.response_len += sizeof(Volume);
+		code = SYNC_OK;
+	    } else {
+		res->hdr.reason = SYNC_REASON_PAYLOAD_TOO_BIG;
+	    }
+	} else {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	}
 #ifndef AFS_DEMAND_ATTACH_FS
 	VPutVolume_r(vp);
 #endif
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
-	code = SYNC_FAILED;
     }
+
+ done:
     return code;
 }
 
+/**
+ * service an FSYNC request to return the Volume header.
+ *
+ * @param[in]   vcom  pointer command object
+ * @param[out]  res   object in which to store response packet
+ *
+ * @return operation status
+ *   @retval SYNC_OK volume header returned to caller
+ *   @retval SYNC_FAILED  bad command packet, or failed to locate volume header
+ *
+ * @note this is an FSYNC RPC server stub
+ *
+ * @note this procedure handles the following FSSYNC command codes:
+ *       - FSYNC_VOL_QUERY_HDR
+ *
+ * @internal
+ */
 static afs_int32
 FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
-    afs_int32 code = SYNC_OK;
+    afs_int32 code = SYNC_FAILED;
     Error error;
     Volume * vp;
     int hdr_ok = 0;
 
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
+    if (res->payload.len < sizeof(VolumeDiskData)) {
+	res->hdr.reason = SYNC_REASON_PAYLOAD_TOO_BIG;
+	goto done;
+    }
+
 #ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
-    if (vp &&
-	(vp->header != NULL) &&
-	(V_attachFlags(vp) & VOL_HDR_ATTACHED) &&
-	(V_attachFlags(vp) & VOL_HDR_LOADED)) {
-	hdr_ok = 1;
-    }
 #else /* !AFS_DEMAND_ATTACH_FS */
     vp = VGetVolume_r(&error, vcom->vop->volume);
-    if (vp && vp->header) {
-	hdr_ok = 1;
-    }
+#endif
+
+    if (vp) {
+	if (FSYNC_partMatch(vcom, vp, 1)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	    if ((vp->header == NULL) ||
+		!(V_attachFlags(vp) & VOL_HDR_ATTACHED) ||
+		!(V_attachFlags(vp) & VOL_HDR_LOADED)) {
+		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
+		goto done;
+	    }
+#else /* !AFS_DEMAND_ATTACH_FS */
+	    if (!vp || !vp->header) {
+		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
+		goto done;
+	    }
 #endif /* !AFS_DEMAND_ATTACH_FS */
+	} else {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	    goto done;
+	}
+    } else {
+	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+	goto done;
+    }
 
  load_done:
-    if (hdr_ok) {
-	assert(sizeof(VolumeDiskData) <= res->payload.len);
-	memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
-	res->hdr.response_len += sizeof(VolumeDiskData);
+    memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
+    res->hdr.response_len += sizeof(VolumeDiskData);
 #ifndef AFS_DEMAND_ATTACH_FS
-	VPutVolume_r(vp);
+    VPutVolume_r(vp);
 #endif
-    } else {
-	if (vp) {
-	    res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
-	} else {
-	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
-	}
-	code = SYNC_FAILED;
-    }
+    code = SYNC_OK;
+
+ done:
     return code;
 }
 
@@ -1148,12 +1414,50 @@ FSYNC_com_StatsOpVLRU(FSSYNC_StatsOp_command * scom, SYNC_response * res)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**
+ * populate an FSSYNC_VolOp_info object from a command packet object.
+ *
+ * @param[in]   vcom  pointer to command packet
+ * @param[out]  info  pointer to info object which will be populated
+ *
+ * @note FSSYNC_VolOp_info objects are attached to Volume objects when
+ *       a volume operation is commenced.
+ *
+ * @internal
+ */
 static void
 FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
 {
     memcpy(&info->com, vcom->hdr, sizeof(SYNC_command_hdr));
     memcpy(&info->vop, vcom->vop, sizeof(FSSYNC_VolOp_hdr));
 }
+
+/**
+ * check whether command packet partition name matches volume 
+ * object's partition name.
+ *
+ * @param[in] vcom        pointer to command packet
+ * @param[in] vp          pointer to volume object
+ * @param[in] match_anon  anon matching control flag (see note below)
+ *
+ * @return whether partitions match
+ *   @retval 0  partitions do NOT match
+ *   @retval 1  partitions match
+ *
+ * @note if match_anon is non-zero, then this function will return a
+ *       positive match for a zero-length partition string in the
+ *       command packet.
+ *
+ * @internal
+ */
+static int 
+FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon)
+{
+    return ((match_anon && vcom->vop->partName[0] == 0) ||
+	    (strncmp(vcom->vop->partName, V_partition(vp)->name, 
+		     sizeof(vcom->vop->partName)) == 0));
+}
+
 
 static void
 FSYNC_Drop(int fd)

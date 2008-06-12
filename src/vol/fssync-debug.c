@@ -98,6 +98,9 @@ static int VolDetach(struct cmd_syndesc * as, void * rock);
 static int VolBreakCBKs(struct cmd_syndesc * as, void * rock);
 static int VolMove(struct cmd_syndesc * as, void * rock);
 static int VolList(struct cmd_syndesc * as, void * rock);
+static int VolLeaveOff(struct cmd_syndesc * as, void * rock);
+static int VolForceAttach(struct cmd_syndesc * as, void * rock);
+static int VolForceError(struct cmd_syndesc * as, void * rock);
 static int VolQuery(struct cmd_syndesc * as, void * rock);
 static int VolHdrQuery(struct cmd_syndesc * as, void * rock);
 static int VolOpQuery(struct cmd_syndesc * as, void * rock);
@@ -179,6 +182,15 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("list", VolList, NULL, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "ls");
+
+    ts = cmd_CreateSyntax("leaveoff", VolLeaveOff, 0, "leave volume offline (FSYNC_VOL_LEAVE_OFF opcode)");
+    VOLOP_PARMS_DECL(ts);
+
+    ts = cmd_CreateSyntax("attach", VolForceAttach, 0, "force full attachment (FSYNC_VOL_ATTACH opcode)");
+    VOLOP_PARMS_DECL(ts);
+
+    ts = cmd_CreateSyntax("error", VolForceError, 0, "force into hard error state (FSYNC_VOL_FORCE_ERROR opcode)");
+    VOLOP_PARMS_DECL(ts);
 
     ts = cmd_CreateSyntax("query", VolQuery, NULL, "get volume structure (FSYNC_VOL_QUERY opcode)");
     VOLOP_PARMS_DECL(ts);
@@ -496,6 +508,45 @@ VolList(struct cmd_syndesc * as, void * rock)
     common_volop_prolog(as, &state);
 
     do_volop(&state, FSYNC_VOL_LISTVOLUMES, NULL);
+
+    return 0;
+}
+
+static int
+VolLeaveOff(struct cmd_syndesc * as, void * rock)
+{
+    struct state state;
+
+    common_prolog(as, &state);
+    common_volop_prolog(as, &state);
+
+    do_volop(&state, FSYNC_VOL_LEAVE_OFF, NULL);
+
+    return 0;
+}
+
+static int
+VolForceAttach(struct cmd_syndesc * as, void * rock)
+{
+    struct state state;
+
+    common_prolog(as, &state);
+    common_volop_prolog(as, &state);
+
+    do_volop(&state, FSYNC_VOL_ATTACH, NULL);
+
+    return 0;
+}
+
+static int
+VolForceError(struct cmd_syndesc * as, void * rock)
+{
+    struct state state;
+
+    common_prolog(as, &state);
+    common_volop_prolog(as, &state);
+
+    do_volop(&state, FSYNC_VOL_FORCE_ERROR, NULL);
 
     return 0;
 }
@@ -835,8 +886,12 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 
 	printf("\tcom = {\n");
 	printf("\t\tproto_version  = %u\n", vop.com.proto_version);
+	printf("\t\tpkt_seq        = %u\n", vop.com.pkt_seq);
+	printf("\t\tcom_seq        = %u\n", vop.com.com_seq);
 	printf("\t\tprogramType    = %d (%s)\n", 
 	       vop.com.programType, program_type_to_string(vop.com.programType));
+	printf("\t\tpid            = %d\n", vop.com.pid);
+	printf("\t\ttid            = %d\n", vop.com.tid);
 	printf("\t\tcommand        = %d (%s)\n", 
 	       vop.com.command, command_code_to_string(vop.com.command));
 	printf("\t\treason         = %d (%s)\n", 

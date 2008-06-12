@@ -739,7 +739,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	if ((programType != salvageServer) && !VConnectFS()) {
 	    Abort("Couldn't connect to file server\n");
 	}
-	AskOffline(singleVolumeNumber);
+	AskOffline(singleVolumeNumber, partP->name);
     } else {
 	if (!Showmode)
 	    Log("SALVAGING FILE SYSTEM PARTITION %s (device=%s%s)\n",
@@ -1289,7 +1289,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
 				       VFORMAT, vsp->header.id);
 		    if (singleVolumeNumber)
-			AskOffline(vsp->header.id);
+			AskOffline(vsp->header.id, fileSysPartition->name);
 		    if (strcmp(nameShouldBe, dp->d_name)) {
 			if (!Showmode)
 			    Log("Volume header file %s is incorrectly named; %sdeleted (it will be recreated later, if necessary)\n", dp->d_name, (Testing ? "it would have been " : ""));
@@ -3180,12 +3180,12 @@ MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
 
 
 void
-AskOffline(VolumeId volumeId)
+AskOffline(VolumeId volumeId, char * partition)
 {
     afs_int32 code, i;
 
     for (i = 0; i < 3; i++) {
-	code = FSYNC_VolOp(volumeId, NULL, FSYNC_VOL_OFF, FSYNC_SALVAGE, NULL);
+	code = FSYNC_VolOp(volumeId, partition, FSYNC_VOL_OFF, FSYNC_SALVAGE, NULL);
 
 	if (code == SYNC_OK) {
 	    break;

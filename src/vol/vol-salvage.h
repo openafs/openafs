@@ -221,7 +221,7 @@ extern void Exit(int code);
 extern int Fork(void);
 extern int Wait(char *prog);
 extern char *ToString(char *s);
-extern void AskOffline(VolumeId volumeId);
+extern void AskOffline(VolumeId volumeId, char * partition);
 extern void AskOnline(VolumeId volumeId, char *partition);
 extern void CheckLogFile(char * log_path);
 #ifndef AFS_NT40_ENV

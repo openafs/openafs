@@ -352,7 +352,6 @@ SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
 afs_int32
 VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
 {
-    register char *tp;
     char partName[50];
     afs_int32 error;
     register afs_int32 code;
@@ -365,10 +364,8 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
     if (DoLogging)
 	Log("%s is executing VolNukeVolume %u\n", caller, avolID);
 
-    tp = volutil_PartitionName(apartID);
-    if (!tp)
+    if (volutil_PartitionName2_r(apartID, partName, sizeof(partName)) != 0)
 	return VOLSERNOVOL;
-    strcpy(partName, tp);	/* remember it for later */
     /* we first try to attach the volume in update mode, so that the file
      * server doesn't try to use it (and abort) while (or after) we delete it.
      * If we don't get the volume, that's fine, too.  We just won't put it back.
@@ -1448,6 +1445,7 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 {
     register struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
+    char partName[16];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
@@ -1462,7 +1460,10 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
     }
     strcpy(tt->lastProcName, "SetForwarding");
     tt->rxCallPtr = acid;
-    FSYNC_VolOp(tt->volid, NULL, FSYNC_VOL_MOVE, anewsite, NULL);
+    if (volutil_PartitionName2_r(tt->partition, partName, sizeof(partName)) != 0) {
+	partName[0] = '\0';
+    }
+    FSYNC_VolOp(tt->volid, partName, FSYNC_VOL_MOVE, anewsite, NULL);
     tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
@@ -1830,6 +1831,9 @@ typedef struct {
  *
  * @pre handle object must have a valid pointer and enumeration value
  *
+ * @note passing a NULL value for vp means that the fileserver doesn't
+ *       know about this particular volume, thus implying it is offline.
+ *
  * @return operation status
  *   @retval 0 success
  *   @retval 1 failure
@@ -1871,7 +1875,8 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
      * along with the blessed and inService flags from the header.
      *   -- tkeiser 11/27/2007
      */
-    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+    if (!vp ||
+	(V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 	VIsErrorState(V_attachState(vp)) ||
 	!hdr->inService ||
 	!hdr->blessed) {
@@ -1889,7 +1894,8 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
 
 #ifdef AFS_DEMAND_ATTACH_FS
 	/* see comment above where we set inUse bit */
-	if (hdr->needsSalvaged || VIsErrorState(V_attachState(vp))) {
+	if (hdr->needsSalvaged || 
+	    (vp && VIsErrorState(V_attachState(vp)))) {
 	    handle->volinfo_ptr.base->needsSalvaged = 1;
 	} else {
 	    handle->volinfo_ptr.base->needsSalvaged = 0;
@@ -1939,27 +1945,43 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
  * get struct Volume out of the fileserver.
  *
  * @param[in] volumeId  volumeId for which we want state information
- * @param[out] vp       pointer to Volume object
+ * @param[in] pname     partition name string
+ * @param[inout] vp     pointer to pointer to Volume object which 
+ *                      will be populated (see note)
  *
  * @return operation status
- *   @retval 0 success
- *   @retval nonzero failure
+ *   @retval 0         success
+ *   @retval non-zero  failure
+ *
+ * @note if FSYNC_VolOp fails in certain ways, *vp will be set to NULL
+ *
+ * @internal
  */
 static int
-GetVolObject(afs_uint32 volumeId, Volume * vp)
+GetVolObject(afs_uint32 volumeId, char * pname, Volume ** vp)
 {
     int code;
     SYNC_response res;
 
     res.hdr.response_len = sizeof(res.hdr);
-    res.payload.buf = vp;
-    res.payload.len = sizeof(*vp);
+    res.payload.buf = *vp;
+    res.payload.len = sizeof(Volume);
 
     code = FSYNC_VolOp(volumeId,
-		       "",
+		       pname,
 		       FSYNC_VOL_QUERY,
 		       0,
 		       &res);
+
+    if (code != SYNC_OK) {
+	switch (res.hdr.reason) {
+	case FSYNC_WRONG_PART:
+	case FSYNC_UNKNOWN_VOLID:
+	    *vp = NULL;
+	    code = SYNC_OK;
+	    break;
+	}
+    }
 
     return code;
 }
@@ -1997,9 +2019,10 @@ GetVolInfo(afs_uint32 partId,
 	   vol_info_list_mode_t mode)
 {
     int code = -1;
+    int reason;
     afs_int32 error;
     struct volser_trans *ttc = NULL;
-    struct Volume fs_tv, *tv = NULL;
+    struct Volume fs_tv_buf, *fs_tv = &fs_tv_buf, *tv = NULL;
 
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
@@ -2046,13 +2069,13 @@ GetVolInfo(afs_uint32 partId,
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    if (GetVolObject(volumeId, &fs_tv)) {
+    if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK) {
 	goto drop;
     }
 #endif
 
     /* ok, we have all the data we need; fill in the on-wire struct */
-    code = FillVolInfo(&fs_tv, &tv->header->diskstuff, handle);
+    code = FillVolInfo(fs_tv, &tv->header->diskstuff, handle);
 
 
  drop:
