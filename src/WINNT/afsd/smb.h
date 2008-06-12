@@ -318,38 +318,9 @@ typedef struct smb_pid {
     struct smb_tid *tidp;		/* back ptr */
 } smb_pid_t;
 
-/* ioctl parameter, while being assembled and/or processed */
-typedef struct smb_ioctl {
-    /* input side */
-    char *inDatap;			/* ioctl func's current position
-					 * in input parameter block */
-    char *inAllocp;			/* allocated input parameter block */
-    afs_uint32 inCopied;			/* # of input bytes copied in so far
-					 * by write calls */
-    cm_space_t *prefix;		        /* prefix for subst drives */
-    char *tidPathp;			/* Pathname associated with Tree ID */
 
-    /* output side */
-    char *outDatap;			/* output results assembled so far */
-    char *outAllocp;		        /* output results assembled so far */
-    afs_uint32 outCopied;		/* # of output bytes copied back so far
-                                         * by read calls */
-	
-    /* flags */
-    afs_uint32 flags;
-
-    /* fid pointer */
-    struct smb_fid *fidp;
-
-    /* uid pointer */
-    smb_user_t *uidp;
-
-} smb_ioctl_t;
-
-/* flags for smb_ioctl_t */
-#define SMB_IOCTLFLAG_DATAIN	1	/* reading data from client to server */
-#define SMB_IOCTLFLAG_LOGON	2	/* got tokens from integrated logon */
-#define SMB_IOCTLFLAG_USEUTF8   4       /* this request is using UTF-8 strings */
+/* Defined in smb_ioctl.h */
+struct smb_ioctl;
 
 /* one per file ID; these are really file descriptors */
 typedef struct smb_fid {
@@ -365,7 +336,7 @@ typedef struct smb_fid {
                                            the file if session is
                                            terminated) */
     osi_hyper_t offset;			/* our file pointer */
-    smb_ioctl_t *ioctlp;		/* ptr to ioctl structure */
+    struct smb_ioctl *ioctlp;		/* ptr to ioctl structure */
 					/* Under NT, we may need to know the
 					 * parent directory and pathname used
 					 * to open the file, either to delete
@@ -562,6 +533,8 @@ extern void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked);
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 
 extern smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags);
+
+extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags);
 
 extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern); 
 

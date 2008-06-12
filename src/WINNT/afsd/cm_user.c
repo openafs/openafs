@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "afsd.h"
+#include "smb.h"
 #include <osi.h>
 #include <rx/rx.h>
 
