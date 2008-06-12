@@ -108,7 +108,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 7, 
+#endif
 	.procname	= "afs_blocksUsed",
 	.data		= &afs_blocksUsed,
 	.maxlen		= sizeof(afs_int32), 
@@ -116,7 +120,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 8, 
+#endif
 	.procname	= "afs_blocksUsed_0",
 	.data		= &afs_blocksUsed_0,
 	.maxlen		= sizeof(afs_int32),
@@ -124,7 +132,11 @@ static ctl_table afs_sysctl_table[] = {
      	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 9, 
+#endif
 	.procname	= "afs_blocksUsed_1",
 	.data		= &afs_blocksUsed_1, 
 	.maxlen		= sizeof(afs_int32),
@@ -132,7 +144,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 10, 
+#endif
 	.procname	= "afs_blocksUsed_2",
 	.data		= &afs_blocksUsed_2, 
 	.maxlen		= sizeof(afs_int32), 
@@ -140,7 +156,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 11, 
+#endif
 	.procname	= "afs_pct1",
 	.data		= &afs_pct1, 
 	.maxlen		= sizeof(afs_int32),
@@ -148,7 +168,11 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 12, 
+#endif
 	.procname	= "afs_pct2",
 	.data		= &afs_pct2, 
 	.maxlen		= sizeof(afs_int32),
@@ -156,7 +180,11 @@ static ctl_table afs_sysctl_table[] = {
      	.proc_handler   = &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 13,
+#endif
 	.procname	= "afs_cacheBlocks",
 	.data		= &afs_cacheBlocks,
 	.maxlen		= sizeof(afs_int32),
@@ -164,7 +192,11 @@ static ctl_table afs_sysctl_table[] = {
     	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
 	.ctl_name	= 14, 
+#endif
 	.procname	= "md5inum",
 	.data		= &afs_new_inum, 
 	.maxlen		= sizeof(afs_int32),
