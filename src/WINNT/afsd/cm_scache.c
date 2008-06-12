@@ -70,6 +70,7 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 	     lscpp = &tscp->nextp, tscp = tscp->nextp) {
 	    if (tscp == scp) {
 		*lscpp = scp->nextp;
+                scp->nextp = NULL;
 		scp->flags &= ~CM_SCACHEFLAG_INHASH;
 		break;
 	    }
@@ -751,8 +752,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->dotdotFid.vnode=1;
         scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
         if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
-            scp->nextp=cm_data.scacheHashTablep[hash];
-            cm_data.scacheHashTablep[hash]=scp;
+            scp->nextp = cm_data.scacheHashTablep[hash];
+            cm_data.scacheHashTablep[hash] = scp;
             scp->flags |= CM_SCACHEFLAG_INHASH;
         }
         scp->refCount = 1;
