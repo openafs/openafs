@@ -66,6 +66,10 @@ VPurgeVolume(Error * ec, Volume * vp)
     struct DiskPartition64 *tpartp = vp->partition;
     char purgePath[MAXPATHLEN];
 
+    /* so VCheckDetach doesn't try to update the volume header and
+     * dump spurious errors into the logs */
+    V_inUse(vp) = 0;
+
     /* N.B.  it's important here to use the partition pointed to by the
      * volume header. This routine can, under some circumstances, be called
      * when two volumes with the same id exist on different partitions.

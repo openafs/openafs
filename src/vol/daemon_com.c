@@ -369,7 +369,26 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 	goto done;
     }
 
+    /*
+     * fill in some common header fields
+     */
     com->hdr.proto_version = state->proto_version;
+    com->hdr.pkt_seq = ++state->pkt_seq;
+    com->hdr.com_seq = ++state->com_seq;
+#ifdef AFS_NT40_ENV
+    com->hdr.pid = 0;
+    com->hdr.tid = 0;
+#else
+    com->hdr.pid = getpid();
+#ifdef AFS_PTHREAD_ENV
+    com->hdr.tid = (afs_int32)pthread_self();
+#else
+    {
+	PROCESS handle = LWP_ThreadId();
+	com->hdr.tid = (handle) ? handle->index : 0;
+    }
+#endif /* !AFS_PTHREAD_ENV */
+#endif /* !AFS_NT40_ENV */
 
     memcpy(buf, &com->hdr, sizeof(com->hdr));
     if (com->payload.len) {
@@ -473,15 +492,18 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 /**
  * receive a command structure off a sync socket.
  *
- * @param[in] fd    socket descriptor
- * @param[out] com  sync command object to be populated
+ * @param[in]  state  pointer to server-side state object
+ * @param[in]  fd     file descriptor on which to perform i/o
+ * @param[out] com    sync command object to be populated
  *
  * @return operation status
  *    @retval SYNC_OK command received
  *    @retval SYNC_COM_ERROR there was a socket communications error
  */
 afs_int32
-SYNC_getCom(int fd, SYNC_command * com)
+SYNC_getCom(SYNC_server_state_t * state,
+	    int fd,
+	    SYNC_command * com)
 {
     int n;
     afs_int32 code = SYNC_OK;
@@ -546,15 +568,18 @@ SYNC_getCom(int fd, SYNC_command * com)
 /**
  * write a response structure to a sync socket.
  *
- * @param[in] fd
- * @param[in] res
+ * @param[in] state  handle to server-side state object
+ * @param[in] fd     file descriptor on which to perform i/o
+ * @param[in] res    handle to response packet
  *
  * @return operation status
  *    @retval SYNC_OK
  *    @retval SYNC_COM_ERROR
  */
 afs_int32
-SYNC_putRes(int fd, SYNC_response * res)
+SYNC_putRes(SYNC_server_state_t * state, 
+	    int fd,
+	    SYNC_response * res)
 {
     int n;
     afs_int32 code = SYNC_OK;
@@ -575,6 +600,9 @@ SYNC_putRes(int fd, SYNC_response * res)
 #ifdef AFS_DEMAND_ATTACH_FS
     res->hdr.flags |= SYNC_FLAG_DAFS_EXTENSIONS;
 #endif
+    res->hdr.proto_version = state->proto_version;
+    res->hdr.pkt_seq = ++state->pkt_seq;
+    res->hdr.res_seq = ++state->res_seq;
 
     memcpy(buf, &res->hdr, sizeof(res->hdr));
     if (res->payload.len) {

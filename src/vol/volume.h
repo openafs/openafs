@@ -222,6 +222,17 @@ typedef enum {
 #define VLRU_DEFAULT_OFFLINE_INTERVAL (60*2) /* 2 minutes */
 #define VLRU_DEFAULT_OFFLINE_MAX 8 /* 8 volumes */
 
+
+/**
+ * DAFS thread-specific options structure
+ */
+typedef struct VThreadOptions {
+     int disallow_salvsync;     /**< whether or not salvsync calls are allowed
+				 *   on this thread (deadlock prevention). */
+} VThreadOptions_t;
+extern pthread_key_t VThread_key;
+extern VThreadOptions_t VThread_defaults;
+
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 

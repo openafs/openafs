@@ -281,8 +281,10 @@ VInitPartition_r(char *path, char *devname, Device dev)
     VSetPartitionDiskUsage_r(dp);
 #ifdef AFS_DEMAND_ATTACH_FS
     AddPartitionToTable_r(dp);
-    queue_Init(&dp->vol_list);
+    queue_Init(&dp->vol_list.head);
     assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
+    dp->vol_list.len = 0;
+    dp->vol_list.busy = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 
@@ -1264,9 +1266,28 @@ VUnlockPartition(char *name)
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+
 /* XXX not sure this will work on AFS_NT40_ENV
  * needs to be tested!
  */
+
+/**
+ * lookup a disk partition object by its index number.
+ *
+ * @param[in] id      partition index number
+ * @param[in] abortp  see abortp usage note below
+ *
+ * @return disk partition object
+ *   @retval NULL no such disk partition
+ *
+ * @note when abortp is non-zero, lookups which would return
+ *       NULL will result in an assertion failure
+ *
+ * @pre VOL_LOCK must be held
+ *
+ * @internal volume package internal use only
+ */
+
 struct DiskPartition64 * 
 VGetPartitionById_r(afs_int32 id, int abortp)
 {
@@ -1281,6 +1302,19 @@ VGetPartitionById_r(afs_int32 id, int abortp)
     }
     return dp;
 }
+
+/**
+ * lookup a disk partition object by its index number.
+ *
+ * @param[in] id      partition index number
+ * @param[in] abortp  see abortp usage note below
+ *
+ * @return disk partition object
+ *   @retval NULL no such disk partition
+ *
+ * @note when abortp is non-zero, lookups which would return
+ *       NULL will result in an assertion failure
+ */
 
 struct DiskPartition64 *
 VGetPartitionById(afs_int32 id, int abortp)

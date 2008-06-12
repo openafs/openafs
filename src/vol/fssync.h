@@ -20,7 +20,7 @@
 #define __fssync_h_
 
 
-#define FSYNC_PROTO_VERSION     2
+#define FSYNC_PROTO_VERSION     3
 
 
 /**
@@ -67,6 +67,8 @@ enum FSYNCReasonCode {
     FSYNC_NO_PENDING_VOL_OP   = SYNC_REASON_CODE_DECL(7), /**< no volume operation pending */
     FSYNC_VOL_PKG_ERROR       = SYNC_REASON_CODE_DECL(8), /**< error in the volume package */
     FSYNC_UNKNOWN_VNID        = SYNC_REASON_CODE_DECL(9), /**< vnode id not known by fileserver */
+    FSYNC_WRONG_PART          = SYNC_REASON_CODE_DECL(10),/**< volume attached on different partition */
+    FSYNC_BAD_STATE           = SYNC_REASON_CODE_DECL(11),/**< current volume state does not allow this operation */
     FSYNC_REASON_CODE_END
 };
 

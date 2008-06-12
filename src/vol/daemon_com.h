@@ -8,7 +8,7 @@
  */
 
 #ifndef _AFS_VOL_DAEMON_COM_H
-#define _AFS_VOL_DAEMON_COM_H
+#define _AFS_VOL_DAEMON_COM_H 1
 
 /* 
  * SYNC protocol constants
@@ -48,7 +48,7 @@ enum SYNCReasonCode {
     SYNC_COM_ERROR            = 2,  /**< sync protocol communicaions error */
     SYNC_BAD_COMMAND          = 3,  /**< sync command code not implemented by server */
     SYNC_FAILED               = 4,  /**< sync server-side procedure failed */
-    SYNC_REASON_CODE_END
+    SYNC_RESPONSE_CODE_END
 };
 
 /* SYNC protocol reason codes
@@ -61,9 +61,10 @@ enum SYNCReasonCode {
 
 /* general reason codes */
 #define SYNC_REASON_NONE                 0
-#define SYNC_REASON_MALFORMED_PACKET     1
-#define SYNC_REASON_NOMEM                2
+#define SYNC_REASON_MALFORMED_PACKET     1   /**< command packet was malformed */
+#define SYNC_REASON_NOMEM                2   /**< sync server out of memory */
 #define SYNC_REASON_ENCODING_ERROR       3
+#define SYNC_REASON_PAYLOAD_TOO_BIG      4   /**< payload too big for response packet buffer */
 
 /* SYNC protocol flags
  *
@@ -120,6 +121,8 @@ typedef struct SYNC_server_state {
     int listen_depth;           /**< socket listen queue depth */
     char * proto_name;          /**< sync protocol associated with this conn */
     SYNC_sockaddr_t addr;       /**< server listen socket sockaddr */
+    afs_uint32 pkt_seq;         /**< packet xmit sequence counter */
+    afs_uint32 res_seq;         /**< response xmit sequence counter */
 } SYNC_server_state_t;
 
 /**
@@ -132,25 +135,40 @@ typedef struct SYNC_client_state {
     int retry_limit;            /**< max number of times for SYNC_ask to retry */
     afs_int32 hard_timeout;     /**< upper limit on time to keep trying */
     char * proto_name;          /**< sync protocol associated with this conn */
-    byte fatal_error;           /**< nonzer if fatal error on this client conn */
+    byte fatal_error;           /**< nonzero if fatal error on this client conn */
+    afs_uint32 pkt_seq;         /**< packet xmit sequence counter */
+    afs_uint32 com_seq;         /**< command xmit sequence counter */
 } SYNC_client_state;
 
 /* wire types */
+/**
+ * on-wire command packet header.
+ */
 typedef struct SYNC_command_hdr {
-    afs_uint32 proto_version;   /* sync protocol version */
-    afs_int32 programType;      /* type of program issuing the request */
-    afs_int32 command;          /* request type */
-    afs_int32 reason;           /* reason for request */
-    afs_uint32 command_len;     /* entire length of command */
-    afs_uint32 flags;
+    afs_uint32 proto_version;   /**< sync protocol version */
+    afs_uint32 pkt_seq;         /**< packet sequence number */
+    afs_uint32 com_seq;         /**< command sequence number */
+    afs_int32 programType;      /**< type of program issuing the request */
+    afs_int32 pid;              /**< pid of requestor */
+    afs_int32 tid;              /**< thread id of requestor */
+    afs_int32 command;          /**< request type */
+    afs_int32 reason;           /**< reason for request */
+    afs_uint32 command_len;     /**< entire length of command */
+    afs_uint32 flags;           /**< miscellanous control flags */
 } SYNC_command_hdr;
 
+/**
+ * on-wire response packet header.
+ */
 typedef struct SYNC_response_hdr {
-    afs_uint32 proto_version;    /* sync protocol version */
-    afs_uint32 response_len;    /* entire length of response */
-    afs_int32 response;         /* response code */
-    afs_int32 reason;           /* reason for response */
-    afs_uint32 flags;
+    afs_uint32 proto_version;   /**< sync protocol version */
+    afs_uint32 pkt_seq;         /**< packet sequence number */
+    afs_uint32 com_seq;         /**< in response to com_seq... */
+    afs_uint32 res_seq;         /**< response sequence number */
+    afs_uint32 response_len;    /**< entire length of response */
+    afs_int32 response;         /**< response code */
+    afs_int32 reason;           /**< reason for response */
+    afs_uint32 flags;           /**< miscellanous control flags */
 } SYNC_response_hdr;
 
 
@@ -185,8 +203,8 @@ extern afs_int32 SYNC_closeChannel(SYNC_client_state *);  /* do a graceful chann
 extern int SYNC_reconnect(SYNC_client_state *);           /* do a reconnect after a protocol error, or from a forked child */
 
 /* server-side prototypes */
-extern int SYNC_getCom(int fd, SYNC_command * com);
-extern int SYNC_putRes(int fd, SYNC_response * res);
+extern int SYNC_getCom(SYNC_server_state_t *, int fd, SYNC_command * com);
+extern int SYNC_putRes(SYNC_server_state_t *, int fd, SYNC_response * res);
 extern int SYNC_verifyProtocolString(char * buf, size_t len);
 extern void SYNC_cleanupSock(SYNC_server_state_t * state);
 extern int SYNC_bindSock(SYNC_server_state_t * state);
