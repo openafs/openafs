@@ -380,7 +380,7 @@ SALVSYNC_com(int fd)
     sres.res = &res;
 
     SALV_cnt++;
-    if (SYNC_getCom(fd, &com)) {
+    if (SYNC_getCom(&salvsync_server_state, fd, &com)) {
 	Log("SALVSYNC_com:  read failed; dropping connection (cnt=%d)\n", SALV_cnt);
 	SALVSYNC_Drop(fd);
 	return;
@@ -414,6 +414,8 @@ SALVSYNC_com(int fd)
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
 	goto respond;
     }
+
+    res.hdr.com_seq = com.hdr.com_seq;
 
     VOL_LOCK;
     switch (com.hdr.command) {
@@ -449,7 +451,7 @@ SALVSYNC_com(int fd)
     VOL_UNLOCK;
 
  respond:
-    SYNC_putRes(fd, &res);
+    SYNC_putRes(&salvsync_server_state, fd, &res);
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	SALVSYNC_Drop(fd);
     }
