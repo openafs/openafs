@@ -1510,10 +1510,10 @@ void smb_ReleaseFID(smb_fid_t *fidp)
         if (ioctlp) {
             if (ioctlp->prefix)
                 cm_FreeSpace(ioctlp->prefix);
-            if (ioctlp->inAllocp)
-                free(ioctlp->inAllocp);
-            if (ioctlp->outAllocp)
-                free(ioctlp->outAllocp);
+            if (ioctlp->ioctl.inAllocp)
+                free(ioctlp->ioctl.inAllocp);
+            if (ioctlp->ioctl.outAllocp)
+                free(ioctlp->ioctl.outAllocp);
             free(ioctlp);
         }       
 	lock_ReleaseMutex(&fidp->mx);

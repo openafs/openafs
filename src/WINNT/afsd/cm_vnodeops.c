@@ -21,6 +21,7 @@
 #include <osi.h>
 
 #include "afsd.h"
+#include "smb.h"
 #include "cm_btree.h"
 
 #ifdef DEBUG

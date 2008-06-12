@@ -21,7 +21,7 @@ typedef struct chservinfo {
 } chservinfo_t;
 
 struct gaginfo {
-	unsigned long showflags, logflags, logwritethruflag, spare[3];
+	afs_uint32 showflags, logflags, logwritethruflag, spare[3];
         unsigned char spare2[128];
 };
 
@@ -97,5 +97,13 @@ struct sbstruct {
 #define VIOC_UNICODECTL                 0x33
 
 #define VIOC_VOLSTAT_TEST               0x3F
-/* Not to exceed SMB_IOCTL_MAXPROCS from smb_ioctl.h */
+
+/* magic file name for ioctl opens */
+#define CM_IOCTL_FILENAME	"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
+#define CM_IOCTL_FILENAME_NOSLASH "_._AFS_IOCTL_._"
+
+/* max parms for ioctl, in either direction */
+#define CM_IOCTL_MAXDATA	        8192*2
+#define CM_IOCTL_MAXPROCS               64
+
 #endif /*  __SMB_IOCONS_H_ENV_ */
