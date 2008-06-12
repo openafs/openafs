@@ -2994,7 +2994,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         code = RXAFS_Link(callp, &dirAFSFid, namep, &existingAFSFid,
             &newLinkStatus, &updatedDirStatus, &volSync);
         rx_PutConnection(callp);
-        osi_Log1(smb_logp,"  RXAFS_Link returns 0x%x", code);
+        osi_Log1(afsd_logp,"  RXAFS_Link returns 0x%x", code);
 
     } while (cm_Analyze(connp, userp, reqp,
         &dscp->fid, &volSync, NULL, NULL, code));
@@ -5035,7 +5035,7 @@ void cm_CheckLocks()
                                  | CM_SCACHESYNC_LOCK);
 
                 if (code) {
-                    osi_Log1(smb_logp,
+                    osi_Log1(afsd_logp,
                              "cm_CheckLocks SyncOp failure code 0x%x", code);
                     goto post_syncopdone;
                 }
@@ -5361,7 +5361,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 			 | CM_SCACHESYNC_GETSTATUS
 			 | CM_SCACHESYNC_LOCK);
         if (code) {
-            osi_Log1(smb_logp, "cm_RetryLock SyncOp failure code 0x%x", code);
+            osi_Log1(afsd_logp, "cm_RetryLock SyncOp failure code 0x%x", code);
             lock_ReleaseWrite(&cm_scacheLock);
             goto post_syncopdone;
         }
