@@ -68,6 +68,7 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 	     lscpp = &tscp->nextp, tscp = tscp->nextp) {
 	    if (tscp == scp) {
 		*lscpp = scp->nextp;
+                scp->nextp = NULL;
 		scp->flags &= ~CM_SCACHEFLAG_INHASH;
 		break;
 	    }
