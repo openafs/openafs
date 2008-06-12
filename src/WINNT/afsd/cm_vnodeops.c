@@ -1610,6 +1610,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    cm_scache_t *scp = NULL;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
@@ -1618,6 +1619,8 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
         return code;
     }
 #endif  
+
+    code = cm_Lookup(dscp, namep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* make sure we don't screw up the dir status during the merge */
     code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
@@ -1680,6 +1683,15 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
 #endif
     }
     cm_EndDirOp(&dirop);
+
+    if (scp) {
+        cm_ReleaseSCache(scp);
+        if (code == 0) {
+	    lock_ObtainWrite(&scp->rw);
+            scp->flags |= CM_SCACHEFLAG_DELETED;
+	    lock_ReleaseWrite(&scp->rw);
+        }
+    }
 
     return code;
 }
@@ -3163,6 +3175,9 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    cm_scache_t *scp = NULL;
+
+    code = cm_Lookup(dscp, namep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -3224,6 +3239,15 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
         }
     }
     cm_EndDirOp(&dirop);
+
+    if (scp) {
+        cm_ReleaseSCache(scp);
+        if (code == 0) {
+	    lock_ObtainWrite(&scp->rw);
+            scp->flags |= CM_SCACHEFLAG_DELETED;
+	    lock_ReleaseWrite(&scp->rw);
+        }
+    }
 
     /* and return error code */
     return code;
