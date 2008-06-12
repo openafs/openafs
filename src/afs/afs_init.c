@@ -123,8 +123,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
      */
     if (aVolumes < 50)
 	aVolumes = 50;
-    else if (aVolumes > 3000)
-	aVolumes = 3000;
+    else if (aVolumes > 32767)
+	aVolumes = 32767;
 
     tv = (struct volume *)afs_osi_Alloc(aVolumes * sizeof(struct volume));
     for (i = 0; i < aVolumes - 1; i++)
