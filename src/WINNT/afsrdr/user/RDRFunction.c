@@ -4,6 +4,7 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
 
 #include <windows.h>
+#include <ntsecapi.h>
 #include <sddl.h>
 #pragma warning(push)
 #pragma warning(disable: 4005)
@@ -13,7 +14,6 @@
 
 #include "..\\Common\\AFSUserCommon.h"
 #include <RDRPrototypes.h>
-
 
 #pragma warning(pop)
 
@@ -28,7 +28,10 @@
 
 
 #include "afsd.h"
+#include "smb.h"
 #include "cm_btree.h"
+
+#include <RDRIoctl.h>
 
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
@@ -163,6 +166,8 @@ RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry,
     pCurrentEntry->EndOfFile = scp->length;
     pCurrentEntry->AllocationSize = scp->length;
     pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
+    if (smb_hideDotFiles && smb_IsDotFile(name))
+        pCurrentEntry->FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
     pCurrentEntry->EaSize = 0;
     pCurrentEntry->Links = scp->linkCount;
 
@@ -278,7 +283,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                         IN OUT AFSCommResult **ResultCB)
 {
     DWORD status;
-    cm_direnum_t *      enump;
+    cm_direnum_t *      enump = NULL;
     AFSDirEnumResp  * pDirEnumResp;
     AFSDirEnumEntry * pCurrentEntry;
     size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
@@ -422,7 +427,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     cm_scache_t * dscp = NULL;
     cm_req_t      req;
     cm_fid_t      parentFid;
-    cm_dirOp_t    dirop;
     DWORD         status;
 
     cm_InitReq(&req);
@@ -490,20 +494,9 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
-    if (code == 0) {
-        cm_fid_t fid;
+    code = cm_Lookup(dscp, aname, 0, userp, &req, &scp);
 
-        code = cm_BPlusDirLookup(&dirop, aname, &fid);
-        cm_EndDirOp(&dirop);
-        if (code == 0 || (code == CM_ERROR_INEXACT_MATCH && !CaseSensitive)) {
-            code = cm_GetSCache(&fid, &scp, userp, &req);
-            if (code)
-                scp = NULL;
-        }
-    }
-
-    if (scp) {
+    if (code == 0 && scp) {
         char shortName[13];
         cm_dirFid_t dfid;
 
@@ -515,13 +508,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
-#if 0
-    } else if (ParentID.Cell == 0) {
-        /* We have a share name that does not exist.  Try to evaluate it.
-         * It might be a cell name or it might be a volume reference.
-         */
-
-#endif    
     } else if (code) {
         DWORD status;
         smb_MapNTError(code, &status);
@@ -665,6 +651,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
                      IN OUT AFSCommResult **ResultCB)
 {
     AFSFileCreateResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     cm_fid_t            parentFid;
     afs_uint32          code;
     cm_scache_t *       dscp = NULL;
@@ -674,23 +661,25 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     cm_req_t            req;
     char                utf8_name[1025];
     DWORD               status;
+    DWORD               cch;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
-    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
+    *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
 	return;
 
     memset( *ResultCB,
             '\0',
-            sizeof( AFSCommResult) + sizeof( AFSFileCreateResultCB));
+            size);
 
-    code = !WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength, utf8_name, sizeof(utf8_name), NULL, NULL);
-    if (code) {
+    cch = WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength / sizeof(*FileName), utf8_name, sizeof(utf8_name), NULL, NULL);
+    if (!cch) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
     }
+    utf8_name[cch] = '\0';
 
     parentFid.cell   = CreateCB->ParentId.Cell;
     parentFid.volume = CreateCB->ParentId.Volume;
@@ -731,12 +720,6 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
 
         pResultCB = (AFSFileCreateResultCB *)(*ResultCB)->ResultData;
 
-        pResultCB->FileId.Cell = scp->fid.cell;
-        pResultCB->FileId.Volume = scp->fid.volume;
-        pResultCB->FileId.Vnode = scp->fid.vnode;
-        pResultCB->FileId.Unique = scp->fid.unique;
-        pResultCB->FileId.Hash = scp->fid.hash;
-
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
 
         dfid.vnode = htonl(scp->fid.vnode);
@@ -761,9 +744,11 @@ void
 RDR_UpdateFileEntry( IN cm_user_t *userp,
                      IN AFSFileID FileId,
                      IN AFSFileUpdateCB *UpdateCB,
+                     IN DWORD ResultBufferLength, 
                      IN OUT AFSCommResult **ResultCB)
 {
     AFSFileUpdateResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     cm_fid_t            Fid;
     cm_fid_t            parentFid;
     afs_uint32          code;
@@ -779,13 +764,13 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
-    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileUpdateResultCB));
+    *ResultCB = (AFSCommResult *)malloc( size);
     if (!(*ResultCB))
 	return;
 
     memset( *ResultCB,
             '\0',
-            sizeof( AFSCommResult) + sizeof( AFSFileUpdateResultCB));
+            size);
 
     parentFid.cell   = UpdateCB->ParentId.Cell;
     parentFid.volume = UpdateCB->ParentId.Volume;
@@ -848,10 +833,10 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         lock_ObtainWrite(&scp->rw);
     }
 
-    if ((scp->unixModeBits & 0222) && !(UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
+    if ((scp->unixModeBits & 0222) && (UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
         setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
         setAttr.unixModeBits = scp->unixModeBits & ~0222;
-    } else if (!(scp->unixModeBits & 0222) && (UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
+    } else if (!(scp->unixModeBits & 0222) && !(UpdateCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
         setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
         setAttr.unixModeBits = scp->unixModeBits | 0222;
     }
@@ -893,10 +878,12 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
                      IN AFSFileID ParentId,
                      IN WCHAR *FileName,
                      IN DWORD FileNameLength,
+                     IN DWORD ResultBufferLength, 
                      IN OUT AFSCommResult **ResultCB)
 {
 
     AFSFileDeleteResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     cm_fid_t            parentFid;
     afs_uint32          code;
     cm_scache_t *       dscp = NULL;
@@ -905,26 +892,27 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     cm_req_t            req;
     char                utf8_norm[1025];
     char                utf8_name[1025];
-    DWORD               status;
+    DWORD               status, cch;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
-    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileDeleteResultCB));
+    *ResultCB = (AFSCommResult *)malloc( size);
     if (!(*ResultCB))
 	return;
 
     memset( *ResultCB,
             '\0',
-            sizeof( AFSCommResult) + sizeof( AFSFileDeleteResultCB));
+            size);
 
-    code = !WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength, utf8_name, sizeof(utf8_name), NULL, NULL);
-    if (code) {
+    cch = WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength / sizeof(*FileName), utf8_name, sizeof(utf8_name), NULL, NULL);
+    if (!cch) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
     }
+    utf8_name[cch] = '\0';
 
-    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength, utf8_norm, sizeof(utf8_norm));
+    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength / sizeof(*FileName), utf8_norm, sizeof(utf8_norm));
     if (code) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
@@ -982,6 +970,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 {
 
     AFSFileRenameResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     AFSFileID              SourceParentId   = pRenameCB->SourceParentId;
     AFSFileID              TargetParentId   = pRenameCB->TargetParentId;
     WCHAR *                TargetFileName       = pRenameCB->TargetName;
@@ -999,27 +988,29 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     cm_req_t               req;
     afs_uint32             code;
     DWORD                  status;
+    DWORD                  cch;
 
     cm_InitReq(&req);
 
-    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileRenameResultCB));
+    *ResultCB = (AFSCommResult *)malloc( size);
     if (!(*ResultCB))
 	return;
 
     memset( *ResultCB,
             '\0',
-            sizeof( AFSCommResult) + sizeof( AFSFileRenameResultCB));
+            size);
 
     pResultCB = (AFSFileRenameResultCB *)(*ResultCB)->ResultData;
     
-    code = !WideCharToMultiByte( CP_UTF8, 0, SourceFileName, SourceFileNameLength, 
+    cch = WideCharToMultiByte( CP_UTF8, 0, SourceFileName, SourceFileNameLength / sizeof(*SourceFileName), 
                                  utf8_old_name, sizeof(utf8_old_name), NULL, NULL);
-    if (code) {
+    if (!cch) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
     }
+    utf8_old_name[cch] = '\0';
 
-    code = !cm_NormalizeUtf16StringToUtf8( SourceFileName, SourceFileNameLength, utf8_old_norm, sizeof(utf8_old_norm));
+    code = !cm_NormalizeUtf16StringToUtf8( SourceFileName, SourceFileNameLength / sizeof(*SourceFileName), utf8_old_norm, sizeof(utf8_old_norm));
     if (code) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
@@ -1031,14 +1022,15 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     SourceParentFid.unique = SourceParentId.Unique;
     SourceParentFid.hash   = SourceParentId.Hash;
 
-    code = !WideCharToMultiByte( CP_UTF8, 0, TargetFileName, TargetFileNameLength, 
+    cch = WideCharToMultiByte( CP_UTF8, 0, TargetFileName, TargetFileNameLength / sizeof(*TargetFileName), 
                                  utf8_new_name, sizeof(utf8_new_name), NULL, NULL);
-    if (code) {
+    if (!cch) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
     }
+    utf8_new_name[cch] = '\0';
 
-    code = !cm_NormalizeUtf16StringToUtf8( TargetFileName, TargetFileNameLength, utf8_new_norm, sizeof(utf8_new_norm));
+    code = !cm_NormalizeUtf16StringToUtf8( TargetFileName, TargetFileNameLength / sizeof(*TargetFileName), utf8_new_norm, sizeof(utf8_new_norm));
     if (code) {
         (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
         return;
@@ -1597,10 +1589,14 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     osi_hyper_t thyper;
     cm_req_t    req;
     int         dirty = 0;
+    DWORD status;
 
     cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+    if (!(*ResultCB))
+	return;
+
     memset( *ResultCB,
             '\0',
             sizeof( AFSCommResult));
@@ -1614,8 +1610,8 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        free(*ResultCB);
-        *ResultCB = NULL;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
 
@@ -1644,7 +1640,6 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     cm_ReleaseSCache(scp);
 
     if (code) {
-        DWORD status;
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
     } else
@@ -1653,5 +1648,138 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     (*ResultCB)->ResultBufferLength = 0;
 
     return;
+}
+
+void
+RDR_PioctlOpen( IN cm_user_t *userp,
+                IN AFSFileID  ParentId,
+                IN AFSPIOCtlOpenCloseRequestCB *pPioctlCB,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB)
+{
+    cm_fid_t    ParentFid;
+    cm_fid_t    RootFid;
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+    if (!(*ResultCB))
+	return;
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult));
+
+    /* Get the active directory */
+    ParentFid.cell = ParentId.Cell;
+    ParentFid.volume = ParentId.Volume;
+    ParentFid.vnode = ParentId.Vnode;
+    ParentFid.unique = ParentId.Unique;
+    ParentFid.hash = ParentId.Hash;
+
+    /* Get the root directory */
+    RootFid.cell = pPioctlCB->RootId.Cell;
+    RootFid.volume = pPioctlCB->RootId.Volume;
+    RootFid.vnode = pPioctlCB->RootId.Vnode;
+    RootFid.unique = pPioctlCB->RootId.Unique;
+    RootFid.hash = pPioctlCB->RootId.Hash;
+
+    /* Create the pioctl index */
+    RDR_SetupIoctl(pPioctlCB->RequestId, &ParentFid, &RootFid, userp);
+
+    return;
+}
+
+
+void
+RDR_PioctlClose( IN cm_user_t *userp,
+                 IN AFSFileID  ParentId,
+                 IN AFSPIOCtlOpenCloseRequestCB *pPioctlCB,
+                 IN DWORD ResultBufferLength,
+                 IN OUT AFSCommResult **ResultCB)
+{
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+    if (!(*ResultCB))
+	return;
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult));
+
+    /* Cleanup the pioctl index */
+    RDR_CleanupIoctl(pPioctlCB->RequestId);
+
+    return;
+}
+
+
+void
+RDR_PioctlWrite( IN cm_user_t *userp,
+                 IN AFSFileID  ParentId,
+                 IN AFSPIOCtlIORequestCB *pPioctlCB,
+                 IN DWORD ResultBufferLength,
+                 IN OUT AFSCommResult **ResultCB)
+{
+    AFSPIOCtlIOResultCB *pResultCB;
+    cm_scache_t *dscp = NULL;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    cm_InitReq(&req);
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
+    if (!(*ResultCB))
+	return;
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
+
+    pResultCB = (AFSPIOCtlIOResultCB *)(*ResultCB)->ResultData;
+
+    code = RDR_IoctlWrite(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
+
+    pResultCB->BytesProcessed = pPioctlCB->BufferLength;
+    (*ResultCB)->ResultBufferLength = sizeof( AFSPIOCtlIOResultCB);
+}
+
+void
+RDR_PioctlRead( IN cm_user_t *userp,
+                IN AFSFileID  ParentId,
+                IN AFSPIOCtlIORequestCB *pPioctlCB,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB)
+{
+    AFSPIOCtlIOResultCB *pResultCB;
+    cm_scache_t *dscp = NULL;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    cm_InitReq(&req);
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
+    if (!(*ResultCB))
+	return;
+
+    memset( *ResultCB,
+            '\0',
+            sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
+
+    pResultCB = (AFSPIOCtlIOResultCB *)(*ResultCB)->ResultData;
+
+    code = RDR_IoctlRead(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer, 
+                         &pResultCB->BytesProcessed, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
+
+    (*ResultCB)->ResultBufferLength = sizeof( AFSPIOCtlIOResultCB);
 }
 

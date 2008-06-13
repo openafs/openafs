@@ -62,6 +62,7 @@ void
 RDR_UpdateFileEntry( IN cm_user_t *userp,
                      IN AFSFileID FileId,
                      IN AFSFileUpdateCB *UpdateCB,
+                     IN DWORD ResultBufferLength,
                      IN OUT AFSCommResult **ResultCB);
 
 void
@@ -69,6 +70,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
                      IN AFSFileID ParentId,
                      IN WCHAR *FileName,
                      IN DWORD FileNameLength,
+                     IN DWORD ResultBufferLength,
                      IN OUT AFSCommResult **ResultCB);
 
 void
@@ -114,11 +116,43 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                         IN DWORD ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB);
 
+void
+RDR_PioctlOpen( IN cm_user_t *userp,
+                IN AFSFileID  ParentId,
+                IN AFSPIOCtlOpenCloseRequestCB *pPioctlCB,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_PioctlClose( IN cm_user_t *userp,
+                 IN AFSFileID  ParentId,
+                 IN AFSPIOCtlOpenCloseRequestCB *pPioctlCB,
+                 IN DWORD ResultBufferLength,
+                 IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_PioctlWrite( IN cm_user_t *userp,
+                 IN AFSFileID  ParentId,
+                 IN AFSPIOCtlIORequestCB *pPioctlCB,
+                 IN DWORD ResultBufferLength,
+                 IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_PioctlRead( IN cm_user_t *userp,
+                IN AFSFileID  ParentId,
+                IN AFSPIOCtlIORequestCB *pPioctlCB,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB);
+
+
 cm_user_t *
 RDR_UserFromCommRequest( IN AFSCommRequest * pRequest );
 
 void
 RDR_ReleaseUser( IN cm_user_t *userp);
+
+void 
+RDR_InitIoctl(void);
 
 #ifdef __cplusplus
 }

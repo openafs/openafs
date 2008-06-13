@@ -56,6 +56,8 @@ RDR_Initialize(void)
 		
     Exit = false;
 
+    RDR_InitIoctl();
+
     //
     // Launch our workers down to the
     // filters control device for processing requests
@@ -437,6 +439,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_UpdateFileEntry( userp, RequestBuffer->FileId,
 				 pUpdateCB,
+				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
 
             break;
@@ -457,6 +460,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                  pDeleteCB->ParentId,
                                  RequestBuffer->Name,
 				 RequestBuffer->NameLength,
+				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
 
             break;
@@ -562,6 +566,78 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             break;
         }
+
+        case AFS_REQUEST_TYPE_PIOCTL_OPEN:
+        {
+            AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_OPEN Parent %08lX.%08lX.%08lX.%08lX\n", 
+                      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+            OutputDebugString( wchBuffer);
+
+            RDR_PioctlOpen( userp, 
+                            RequestBuffer->FileId,
+                            pPioctlCB,
+                            RequestBuffer->ResultBufferLength,
+                            &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIOCTL_WRITE:
+        {
+            AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_WRITE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+            OutputDebugString( wchBuffer);
+
+            RDR_PioctlWrite( userp, 
+                             RequestBuffer->FileId,
+                             pPioctlCB,
+                             RequestBuffer->ResultBufferLength,
+                             &pResultCB);
+            break;
+        }
+
+    case AFS_REQUEST_TYPE_PIOCTL_READ:
+            {
+                AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                OutputDebugString( wchBuffer);
+
+                RDR_PioctlRead( userp, 
+                                RequestBuffer->FileId,
+                                pPioctlCB,
+                                RequestBuffer->ResultBufferLength,
+                                &pResultCB);
+                break;
+            }
+
+    case AFS_REQUEST_TYPE_PIOCTL_CLOSE:
+            {
+                AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                OutputDebugString( wchBuffer);
+
+                RDR_PioctlClose( userp, 
+                                RequestBuffer->FileId,
+                                pPioctlCB,
+                                RequestBuffer->ResultBufferLength,
+                                &pResultCB);
+                break;
+            }
 
     default:
 

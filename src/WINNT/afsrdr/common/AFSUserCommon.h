@@ -120,6 +120,9 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME     0x0000000B
 #define AFS_REQUEST_TYPE_PIOCTL_READ             0x0000000C
 #define AFS_REQUEST_TYPE_PIOCTL_WRITE            0x0000000D
+#define AFS_REQUEST_TYPE_PIOCTL_OPEN             0x0000000E
+#define AFS_REQUEST_TYPE_PIOCTL_CLOSE            0x0000000F
+
 //
 // Request Flags
 //
@@ -330,8 +333,6 @@ typedef struct _AFS_FILE_CREATE_CB
 
 typedef struct _AFS_FILE_CREATE_RESULT_CB
 {
-
-    AFSFileID       FileId;
 
     LARGE_INTEGER   ParentDataVersion;
 
@@ -553,6 +554,8 @@ typedef struct _AFS_FILE_RENAME_RESULT_CB
 // Control structures for AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID
 // and AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME
 //
+// The response to these requests is a AFSDirEnumEntry
+//
 
 typedef struct _AFS_FILE_EVAL_TARGET_CB
 {
@@ -561,16 +564,17 @@ typedef struct _AFS_FILE_EVAL_TARGET_CB
 
 } AFSEvalTargetCB;
 
-//
-// The response to these requests is a AFSDirEnumEntry
-//
 
 //
 // Control structure for read and write requests through the PIOCtl interface
 //
+// CommRequest FileId field contains the active directory
 
 typedef struct _AFS_PIOCTL_IO_CB
 {
+    ULONG       RequestId;
+
+    AFSFileID   RootId;
 
     ULONG       BufferLength;
 
@@ -588,5 +592,22 @@ typedef struct _AFS_PIOCTL_IO_RESULT_CB
     ULONG       BytesProcessed;
 
 } AFSPIOCtlIOResultCB;
+
+
+//
+// Control structure for open and close requests through the PIOCtl interface
+//
+// CommRequest FileId field contains the active directory
+//
+// There is no return structure.
+//
+typedef struct _AFS_PIOCTL_OPEN_CLOSE_CB
+{
+
+    ULONG       RequestId;    
+
+    AFSFileID   RootId;
+
+} AFSPIOCtlOpenCloseRequestCB;
 
 #endif
