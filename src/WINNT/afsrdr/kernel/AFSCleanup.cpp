@@ -41,7 +41,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
         if( DeviceObject == AFSDeviceObject)
         {
             
-            if( pFileObject->FsContext == (void *)AFS_CONTROL_INSTANCE)
+            if( FlagOn( (ULONG_PTR)pFileObject->FsContext, AFS_CONTROL_INSTANCE))
             {
 
                 //
@@ -49,6 +49,10 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 AFSCleanupIrpPool();
+            }
+
+            if( FlagOn( (ULONG_PTR)pFileObject->FsContext, AFS_REDIRECTOR_INSTANCE))
+            {
 
                 //
                 // Close the redirector
@@ -198,12 +202,14 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     SetFlag( pFcb->Flags, AFS_FCB_DELETED);
 
+                    ASSERT( pFcb->ParentFcb != NULL);
+
                     if( NT_SUCCESS( AFSGetFullName( pFcb,
                                                       &uniFullFileName)))
                     {
 
-						FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-													 &pRootFcb->NPFcb->DirNotifyList,
+						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+													 &pFcb->ParentFcb->NPFcb->DirNotifyList,
 													 (PSTRING)&uniFullFileName,
 													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
 													 (PSTRING)NULL,
@@ -244,12 +250,14 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
     				ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
+                    ASSERT( pFcb->ParentFcb != NULL);
+
                     if( NT_SUCCESS( AFSGetFullName( pFcb,
                                                       &uniFullFileName)))
                     {
 
-                		FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-				    								 &pRootFcb->NPFcb->DirNotifyList,
+                		FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+				    								 &pFcb->ParentFcb->NPFcb->DirNotifyList,
 													 (PSTRING)&uniFullFileName,
 													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
 													 (PSTRING)NULL,
@@ -342,16 +350,18 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
                 {
 
-                    UNICODE_STRING uniFullFileName;
+                    UNICODE_STRING uniFullFileName;                  
 
                     SetFlag( pFcb->Flags, AFS_FCB_DELETED);
+
+                    ASSERT( pFcb->ParentFcb != NULL);
 
                     if( NT_SUCCESS( AFSGetFullName( pFcb,
                                                       &uniFullFileName)))
                     {
 
-						FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-													 &pRootFcb->NPFcb->DirNotifyList,
+						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+													 &pFcb->ParentFcb->NPFcb->DirNotifyList,
 													 (PSTRING)&uniFullFileName,
 													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
 													 (PSTRING)NULL,
@@ -398,8 +408,16 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                       &uniFullFileName)))
                     {
 
-                		FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-				    								 &pRootFcb->NPFcb->DirNotifyList,
+                        AFSFcb *pParentDcb = pRootFcb;
+
+                        if( pFcb->ParentFcb != NULL)
+                        {
+
+                            pParentDcb = pFcb->ParentFcb;
+                        }
+
+                		FsRtlNotifyFullReportChange( pParentDcb->NPFcb->NotifySync,
+				    								 &pParentDcb->NPFcb->DirNotifyList,
 													 (PSTRING)&uniFullFileName,
 													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
 													 (PSTRING)NULL,
@@ -422,8 +440,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // Release the notification for this directory if there is one
                 //
 
-                FsRtlNotifyCleanup( pRootFcb->NPFcb->NotifySync,
-									&pRootFcb->NPFcb->DirNotifyList,
+                FsRtlNotifyCleanup( pFcb->NPFcb->NotifySync,
+									&pFcb->NPFcb->DirNotifyList,
 									pCcb);
 
                 //

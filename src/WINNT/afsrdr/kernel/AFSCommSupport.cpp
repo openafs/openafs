@@ -66,6 +66,7 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                          0,
                                           NULL,
                                           ParentFileID,
                                           (void *)pDirQueryCB,
@@ -136,13 +137,23 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
                                    pDirNode->DirectoryEntry.ShortNameLength);
 
                     //
-                    // Generate the short name index
+                    // Only perform the short work if it is a file or directory
                     //
 
-                    uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
-                    uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
+                    if( ShortNameTree != NULL &&
+                        ( pCurrentDirEntry->FileType == AFS_FILE_TYPE_DIRECTORY ||
+                          pCurrentDirEntry->FileType == AFS_FILE_TYPE_FILE))
+                    {
 
-                    pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
+                        //
+                        // Generate the short name index
+                        //
+
+                        uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
+                        uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
+
+                        pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
+                    }
                 }
 
                 //
@@ -176,35 +187,32 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
                     else
                     {
 
-                        (*DirListTail)->Type.Data.ListEntry.fLink = pDirNode;
+                        (*DirListTail)->ListEntry.fLink = pDirNode;
 
-                        pDirNode->Type.Data.ListEntry.bLink = *DirListTail;
+                        pDirNode->ListEntry.bLink = *DirListTail;
                     }
 
                     *DirListTail = pDirNode;
                 }
 
-                if( ShortNameTree != NULL)
+                if( ShortNameTree != NULL &&
+                    pDirNode->Type.Data.ShortNameTreeEntry.Index != 0)
                 {
 
                     //
                     // Insert the short name entry if we have a valid short name
                     //
 
-                    if( pDirNode->Type.Data.ShortNameTreeEntry.Index != 0)
+                    if( *ShortNameTree == NULL)
                     {
 
-                        if( *ShortNameTree == NULL)
-                        {
+                        *ShortNameTree = pDirNode;
+                    }
+                    else
+                    {
 
-                            *ShortNameTree = pDirNode;
-                        }
-                        else
-                        {
-
-                            AFSInsertShortNameDirEntry( *ShortNameTree,
-                                                          pDirNode);
-                        }
+                        AFSInsertShortNameDirEntry( *ShortNameTree,
+                                                    pDirNode);
                     }
                 }
 
@@ -259,14 +267,18 @@ try_exit:
 
 NTSTATUS
 AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
-                     IN AFSDirEntryCB *DirNode,
-                     IN UNICODE_STRING *FileName)
+                     IN PLARGE_INTEGER FileSize,
+                     IN ULONG FileAttributes,
+                     IN UNICODE_STRING *FileName,
+                     OUT AFSDirEntryCB **DirNode)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSFileCreateCB stCreateCB;
-    AFSFileCreateResultCB stResultCB;
+    AFSFileCreateResultCB *pResultCB = NULL;
     ULONG ulResultLen = 0;
+    UNICODE_STRING uniTargetName;
+    AFSDirEntryCB *pDirNode = NULL;
 
     __Enter
     {
@@ -280,28 +292,39 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
 
         stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
 
-        stCreateCB.AllocationSize = DirNode->DirectoryEntry.AllocationSize;
+        stCreateCB.AllocationSize = *FileSize;
 
-        stCreateCB.FileAttributes = DirNode->DirectoryEntry.FileAttributes;
+        stCreateCB.FileAttributes = FileAttributes;
 
-        stCreateCB.EaSize = DirNode->DirectoryEntry.EaSize;
+        stCreateCB.EaSize = 0;
 
         //
-        // Send off the request
+        // Allocate our return buffer
         //
 
-        RtlZeroMemory( &stResultCB,
-                       sizeof( AFSFileCreateResultCB));
+        pResultCB = (AFSFileCreateResultCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                    PAGE_SIZE,
+                                                                    AFS_GENERIC_MEMORY_TAG);
 
-        ulResultLen = sizeof( AFSFileCreateResultCB);
+        if( pResultCB == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pResultCB,
+                       PAGE_SIZE);
+
+        ulResultLen = PAGE_SIZE;
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CREATE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
                                       FileName,
                                       NULL,
                                       &stCreateCB,
                                       sizeof( AFSFileCreateCB),
-                                      &stResultCB,
+                                      pResultCB,
                                       &ulResultLen);
 
         if( !NT_SUCCESS( ntStatus))
@@ -311,34 +334,78 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         }
 
         //
-        // Setup the passed back information in the directory entry
+        // Initialize the directory entry
         //
 
-        ParentDcb->DirEntry->DirectoryEntry.DataVersion = stResultCB.ParentDataVersion;
+        ASSERT( (USHORT)pResultCB->DirEnum.FileNameLength == FileName->Length);
 
-        DirNode->DirectoryEntry.FileIndex = InterlockedIncrement( &ParentDcb->Specific.Directory.DirectoryNodeHdr.ContentIndex);
+        uniTargetName.Length = (USHORT)pResultCB->DirEnum.TargetNameLength;
 
-        DirNode->DirectoryEntry.FileId = stResultCB.DirEnum.FileId;
+        uniTargetName.MaximumLength = uniTargetName.Length;
 
-        DirNode->DirectoryEntry.CreationTime = stResultCB.DirEnum.CreationTime;
+        uniTargetName.Buffer = (WCHAR *)((char *)&pResultCB->DirEnum + pResultCB->DirEnum.TargetNameOffset);
 
-        DirNode->DirectoryEntry.LastAccessTime = stResultCB.DirEnum.LastAccessTime;
+        pDirNode = AFSInitDirEntry( &(ParentDcb->DirEntry->DirectoryEntry.FileId),
+                                    FileName,
+                                    &uniTargetName,
+                                    &pResultCB->DirEnum,
+                                    (ULONG)InterlockedIncrement( &(ParentDcb->Specific.Directory.DirectoryNodeHdr.ContentIndex)));
 
-        DirNode->DirectoryEntry.LastWriteTime = stResultCB.DirEnum.LastWriteTime;
+        if( pDirNode == NULL)
+        {
 
-        DirNode->DirectoryEntry.ChangeTime = stResultCB.DirEnum.ChangeTime;
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
 
-        DirNode->DirectoryEntry.EndOfFile = stResultCB.DirEnum.EndOfFile;
+        //
+        // Update the parent data version
+        //
 
-        DirNode->DirectoryEntry.AllocationSize = stResultCB.DirEnum.AllocationSize;
+        ParentDcb->DirEntry->DirectoryEntry.DataVersion = pResultCB->ParentDataVersion;
 
-        DirNode->DirectoryEntry.FileAttributes = stResultCB.DirEnum.FileAttributes;
+        //
+        // Init the short name if we have one
+        //
 
-        DirNode->DirectoryEntry.EaSize = stResultCB.DirEnum.EaSize;
+        if( pResultCB->DirEnum.ShortNameLength > 0)
+        {
+
+            UNICODE_STRING uniShortName;
+
+            pDirNode->DirectoryEntry.ShortNameLength = pResultCB->DirEnum.ShortNameLength;
+
+            RtlCopyMemory( pDirNode->DirectoryEntry.ShortName,
+                           pResultCB->DirEnum.ShortName,
+                           pDirNode->DirectoryEntry.ShortNameLength);
+
+            //
+            // Generate the short name index
+            //
+
+            uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
+            uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
+
+            pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
+        }
+
+        //
+        // Return the directory node
+        //
+
+        *DirNode = pDirNode;
 
 try_exit:
 
-        NOTHING;
+        if( pResultCB != NULL)
+        {
+
+            ExFreePool( pResultCB);
+        }
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+        }
     }
 
     return ntStatus;
@@ -366,9 +433,14 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
         RtlZeroMemory( &stUpdateCB,
                        sizeof( AFSFileUpdateCB));
 
-        stUpdateCB.AllocationSize = Fcb->DirEntry->DirectoryEntry.AllocationSize;
+        stUpdateCB.AllocationSize = Fcb->DirEntry->DirectoryEntry.EndOfFile;
 
         stUpdateCB.FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
+
+        DbgPrint("Setting %wZ attrib %08lX EOF %08lX\n", 
+                                        &Fcb->DirEntry->DirectoryEntry.FileName,
+                                        Fcb->DirEntry->DirectoryEntry.FileAttributes,
+                                        Fcb->DirEntry->DirectoryEntry.EndOfFile.LowPart);
 
         stUpdateCB.EaSize = Fcb->DirEntry->DirectoryEntry.EaSize;
 
@@ -378,6 +450,7 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_UPDATE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
                                       NULL,
                                       &Fcb->DirEntry->DirectoryEntry.FileId,
                                       &stUpdateCB,
@@ -412,6 +485,7 @@ AFSNotifyDelete( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DELETE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
                                       NULL,
                                       &DirEntry->DirectoryEntry.FileId,
                                       NULL,
@@ -485,6 +559,7 @@ AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RENAME_FILE,
                                         AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                        0,
                                         NULL,
                                         &Fcb->DirEntry->FileId,
                                         pRenameCB,
@@ -555,6 +630,7 @@ AFSEvaluateTargetByID( IN AFSFileID *ParentFileId,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
                                       NULL,
                                       SourceFileId,
                                       &stTargetID,
@@ -630,6 +706,7 @@ AFSEvaluateTargetByName( IN AFSFileID *ParentFileId,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
                                       SourceName,
                                       NULL,
                                       &stTargetID,
@@ -670,6 +747,7 @@ try_exit:
 NTSTATUS
 AFSProcessRequest( IN ULONG RequestType,
                    IN ULONG RequestFlags,
+                   IN HANDLE CallerProcess,
                    IN PUNICODE_STRING FileName,
                    IN AFSFileID *FileId,
                    IN void  *Data,
@@ -825,7 +903,16 @@ AFSProcessRequest( IN ULONG RequestType,
         // Store off the process id
         //
 
-        pPoolEntry->ProcessID = PsGetCurrentProcessId();
+        if( CallerProcess != 0)
+        {
+
+            pPoolEntry->ProcessID = CallerProcess;
+        }
+        else
+        {
+
+            pPoolEntry->ProcessID = PsGetCurrentProcessId();
+        }
 
         //
         // Insert the entry into the request pool
@@ -943,7 +1030,7 @@ AFSProcessControlRequest( IN PIRP Irp)
                 // Tag this instance as the one to close the irp pool when it is closed
                 //
 
-                pIrpSp->FileObject->FsContext = (void *)AFS_CONTROL_INSTANCE;
+                pIrpSp->FileObject->FsContext = (void *)((ULONG_PTR)pIrpSp->FileObject->FsContext | AFS_CONTROL_INSTANCE);
 
                 break;
             }
@@ -979,6 +1066,12 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                     break;
                 }
+
+                //
+                // Stash away context so we know the instance used to initialize the redirector
+                //
+
+                pIrpSp->FileObject->FsContext = (void *)((ULONG_PTR)pIrpSp->FileObject->FsContext | AFS_REDIRECTOR_INSTANCE);
 
                 break;
             }

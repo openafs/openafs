@@ -61,10 +61,49 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
             case AFS_IOCTL_FCB:
             {
 
+                AFSPIOCtlOpenCloseRequestCB stPIOCtlClose;
+                AFSFileID stParentFileId;
+
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+                //
+                // Send the close to the CM
+                //
+
+                RtlZeroMemory( &stPIOCtlClose,
+                               sizeof( AFSPIOCtlOpenCloseRequestCB));
+
+                stPIOCtlClose.RequestId = pCcb->PIOCtlRequestID;
+
+                if( pFcb->RootFcb != NULL)
+                {
+                    stPIOCtlClose.RootId = pFcb->RootFcb->DirEntry->DirectoryEntry.FileId;
+                }
+
+                RtlZeroMemory( &stParentFileId,
+                               sizeof( AFSFileID));
+
+                if( pFcb->ParentFcb != NULL)
+                {
+                    stParentFileId = pFcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+                }
+
+                //
+                // Issue the open request to the service
+                //
+
+                AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_CLOSE,
+                                   AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                   0,
+                                   NULL,
+                                   &stParentFileId,
+                                   (void *)&stPIOCtlClose,
+                                   sizeof( AFSPIOCtlOpenCloseRequestCB),
+                                   NULL,
+                                   NULL);
 
                 //
                 // If we ahve a Ccb then remove it from the Fcb chain

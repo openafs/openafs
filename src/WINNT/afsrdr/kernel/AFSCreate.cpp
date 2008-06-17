@@ -139,6 +139,58 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( pRootFcb == NULL)
         {
 
+            //
+            // Remove any leading or trailing slashes
+            //
+
+            if( uniFileName.Length >= sizeof( WCHAR) &&
+                uniFileName.Buffer[ (uniFileName.Length/sizeof( WCHAR)) - 1] == L'\\')
+            {
+
+                uniFileName.Length -= sizeof( WCHAR);
+            }
+
+            if( uniFileName.Length >= sizeof( WCHAR) &&
+                uniFileName.Buffer[ 0] == L'\\')
+            {
+
+                uniFileName.Buffer = &uniFileName.Buffer[ 1];
+
+                uniFileName.Length -= sizeof( WCHAR);
+            }
+
+            //
+            // If there is a remaining portion returned for this request then
+            // check if it is for the PIOCtl interface
+            //
+
+            if( uniFileName.Length > 0)
+            {
+
+                //
+                // We don't accept any other opens off of the AFS Root
+                //
+
+                ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+
+                //
+                // If this is an open on "_._AFS_IOCTL_._" then perform handling on it accordingly
+                //
+
+                if( RtlCompareUnicodeString( &AFSPIOCtlName,
+                                             &uniFileName,
+                                             TRUE) == 0)
+                {
+
+                    ntStatus = AFSOpenIOCtlFcb( Irp,
+                                                AFSAllRoot,
+                                                &pFcb,
+                                                &pCcb);
+                }
+
+                try_return( ntStatus);
+            }
+
             ntStatus = AFSOpenAFSRoot( Irp,
                                        &pFcb,
                                        &pCcb);
@@ -453,7 +505,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         {
 
             //
-            // If this is an open on "__AFS_IOCTL__" then perform handling on it accordingly
+            // If this is an open on "_._AFS_IOCTL_._" then perform handling on it accordingly
             //
 
             if( RtlCompareUnicodeString( &AFSPIOCtlName,
@@ -991,7 +1043,7 @@ AFSProcessCreate( IN PIRP             Irp,
                 // The .. entry
                 //
 
-                pParentNode = (AFSDirEntryCB *)pParentNode->Type.Data.ListEntry.fLink;
+                pParentNode = (AFSDirEntryCB *)pParentNode->ListEntry.fLink;
 
                 KeQuerySystemTime( &pParentNode->DirectoryEntry.LastWriteTime);
 
@@ -1021,10 +1073,8 @@ AFSProcessCreate( IN PIRP             Irp,
                                           &uniFullFileName)))
         {
 
-            AFSFcb *pRootFcb = (*Fcb)->RootFcb;
-
-			FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-										 &pRootFcb->NPFcb->DirNotifyList,
+			FsRtlNotifyFullReportChange( ParentDcb->NPFcb->NotifySync,
+										 &ParentDcb->NPFcb->DirNotifyList,
 										 (PSTRING)&uniFullFileName,
 										 (USHORT)(uniFullFileName.Length - (*Fcb)->DirEntry->DirectoryEntry.FileName.Length),
 										 (PSTRING)NULL,
@@ -1486,6 +1536,17 @@ AFSProcessOpen( IN PIRP Irp,
         }
 
         //
+        // If they are asking for write access then store away the PID
+        //
+
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE &&
+            !AFSCheckForReadOnlyAccess( *pDesiredAccess))
+        {
+
+            Fcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+        }
+
+        //
         // Return the open result for this file
         //
 
@@ -1676,6 +1737,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     BOOLEAN bRemoveFcb = FALSE, bAllocatedCcb = FALSE;
     UNICODE_STRING uniFullFileName;
+    AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
 
     __Enter
     {
@@ -1719,6 +1781,42 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
+
+        //
+        // Set the PIOCtl index
+        //
+
+        (*Ccb)->PIOCtlRequestID = InterlockedIncrement( &ParentDcb->Specific.Directory.PIOCtlIndex);
+
+        RtlZeroMemory( &stPIOCtlOpen,
+                       sizeof( AFSPIOCtlOpenCloseRequestCB));
+
+        stPIOCtlOpen.RequestId = (*Ccb)->PIOCtlRequestID;
+
+        if( ParentDcb->RootFcb != NULL)
+        {
+            stPIOCtlOpen.RootId = ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileId;
+        }
+
+        //
+        // Issue the open request to the service
+        //
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_OPEN,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
+                                      NULL,
+                                      &ParentDcb->DirEntry->DirectoryEntry.FileId,
+                                      (void *)&stPIOCtlOpen,
+                                      sizeof( AFSPIOCtlOpenCloseRequestCB),
+                                      NULL,
+                                      NULL);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
 
         //
         // Increment the open count on this Fcb

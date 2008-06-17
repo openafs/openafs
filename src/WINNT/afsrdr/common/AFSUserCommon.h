@@ -1,7 +1,6 @@
 #ifndef _AFS_USER_COMMON_H
 #define _AFS_USER_COMMON_H
 
-
 //
 // Common defines for shared code
 //
@@ -80,6 +79,8 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define AFS_SYMLINK                    "\\\\.\\AFSRedirector"
 #define AFS_SYMLINK_W                 L"\\\\.\\AFSRedirector"
+
+#define AFS_PIOCTL_FILE_INTERFACE_NAME  L"_._AFS_IOCTL_._"
 
 //
 // Payload buffer length

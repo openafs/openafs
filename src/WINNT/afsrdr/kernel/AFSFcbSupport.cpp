@@ -86,6 +86,13 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         FsRtlSetupAdvancedHeader( &pFcb->Header, &pNPFcb->AdvancedHdrMutex);
 
         //
+        // The notification information
+        //
+
+        InitializeListHead( &pNPFcb->DirNotifyList);
+        FsRtlNotifyInitializeSync( &pNPFcb->NotifySync);
+
+        //
         // OK, initialize the entry
         //
         ExInitializeResourceLite( &pNPFcb->Resource);
@@ -113,14 +120,14 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
         pFcb->RootFcb = ParentFcb->RootFcb;
 
-        DirEntry->Type.Data.Fcb = pFcb;
-
         pFcb->DirEntry = DirEntry;
 
         pFcb->VolumeNode = ParentFcb->VolumeNode;
 
         if( DirEntry != NULL)
         {
+
+            DirEntry->Type.Data.Fcb = pFcb;
 
             //
             // Set the index for the file id tree entry
@@ -323,205 +330,208 @@ AFSInitAFSRoot()
     __Enter
     {
 
-        if( AFSAllRoot != NULL)
+        if( AFSAllRoot == NULL)
         {
 
             //
-            // Already initialized
+            // Allocate our volume directory entry for the root node
             //
 
-            try_return( ntStatus);
+            pVolumeDirEntry = (AFSDirEntryCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                      sizeof( AFSDirEntryCB),
+                                                                      AFS_DIR_ENTRY_TAG);
+
+            if( pVolumeDirEntry == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlZeroMemory( pVolumeDirEntry,
+                           sizeof( AFSDirEntryCB));
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.TotalAllocationUnits.QuadPart = 0x100000;
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.AvailableAllocationUnits.QuadPart = 0x100000;        
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.Characteristics = FILE_REMOTE_DEVICE;
+                                        
+            pVolumeDirEntry->Type.Volume.VolumeInformation.SectorsPerAllocationUnit = 1;
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.BytesPerSector = 0x400;
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeLabelLength = 12;
+
+            RtlCopyMemory( pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeLabel,
+                           L"AFSVol",
+                           12);
+
+            KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.CreationTime);
+            KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.LastWriteTime);
+            KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.LastAccessTime);
+
+            pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeCreationTime = pVolumeDirEntry->DirectoryEntry.CreationTime;
+
+            //
+            // Allocate the non paged portion
+            //
+
+            pVolumeDirEntry->NPDirNode = (AFSNonPagedDirNode *)ExAllocatePoolWithTag( NonPagedPool,  
+                                                                                      sizeof( AFSNonPagedDirNode),
+                                                                                      AFS_DIR_ENTRY_NP_TAG);
+
+            if( pVolumeDirEntry->NPDirNode == NULL)
+            {
+
+                ExFreePool( pVolumeDirEntry);
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            //
+            // Initialize the non-paged portion of the dire entry
+            //
+
+            AFSInitNonPagedDirEntry( pVolumeDirEntry);
+
+            //
+            // Initialize the root fcb
+            //
+
+            pFcb = (AFSFcb *)ExAllocatePoolWithTag( PagedPool,
+                                                      sizeof( AFSFcb),
+                                                      AFS_FCB_ALLOCATION_TAG);
+
+            if( pFcb == NULL)
+            {
+
+                AFSPrint("AFSInitRootFcb Failed to allocate the root fcb\n");
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlZeroMemory( pFcb,
+                           sizeof( AFSFcb)); 
+
+            pFcb->Header.NodeByteSize = sizeof( AFSFcb);
+            pFcb->Header.NodeTypeCode = AFS_ROOT_ALL;
+
+            pNPFcb = (AFSNonPagedFcb *)ExAllocatePoolWithTag( NonPagedPool,
+                                                              sizeof( AFSNonPagedFcb),
+                                                              AFS_FCB_NP_ALLOCATION_TAG);
+
+            if( pNPFcb == NULL)
+            {
+
+                AFSPrint("AFSInitRootFcb Failed to allocate the nonpaged fcb\n");
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlZeroMemory( pNPFcb,
+                           sizeof( AFSNonPagedFcb));
+
+            pNPFcb->Size = sizeof( AFSNonPagedFcb);
+            pNPFcb->Type = AFS_NON_PAGED_FCB;
+
+            //
+            // OK, initialize the entry
+            //
+
+            ExInitializeFastMutex( &pNPFcb->AdvancedHdrMutex);
+
+            FsRtlSetupAdvancedHeader( &pFcb->Header, &pNPFcb->AdvancedHdrMutex);
+
+            ExInitializeResourceLite( &pNPFcb->Resource);
+
+            ExInitializeResourceLite( &pNPFcb->Specific.Directory.DirectoryTreeLock);
+
+            pFcb->Header.Resource = &pNPFcb->Resource;
+
+            pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &pNPFcb->Specific.Directory.DirectoryTreeLock;
+
+            pFcb->NPFcb = pNPFcb;
+
+            //
+            // Point the root at itself
+            //
+
+            pFcb->RootFcb = pFcb;
+
+            //
+            // The notification information
+            //
+
+            InitializeListHead( &pFcb->NPFcb->DirNotifyList);
+            FsRtlNotifyInitializeSync( &pFcb->NPFcb->NotifySync);
+
+            //
+            // Initialize the Root directory DirEntry
+            //
+
+            pFcb->DirEntry = (AFSDirEntryCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                     sizeof( AFSDirEntryCB) + sizeof( WCHAR),
+                                                                     AFS_DIR_ENTRY_TAG);
+
+            if( pFcb->DirEntry == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlZeroMemory( pFcb->DirEntry,
+                           sizeof( AFSDirEntryCB) + sizeof( WCHAR));
+
+            pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
+            pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
+            pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
+
+            pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+
+            pFcb->DirEntry->DirectoryEntry.FileName.Length = sizeof( WCHAR);
+        
+            pFcb->DirEntry->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pFcb->DirEntry + sizeof( AFSDirEntryCB));
+
+            RtlCopyMemory( pFcb->DirEntry->DirectoryEntry.FileName.Buffer,
+                           L"&",
+                           sizeof( WCHAR));
+
+            pFcb->VolumeNode = pVolumeDirEntry;
+
+            AFSAllRoot = pFcb;
         }
 
-        //
-        // Allocate our volume directory entry for the root node
-        //
-
-        pVolumeDirEntry = (AFSDirEntryCB *)ExAllocatePoolWithTag( PagedPool,
-                                                                  sizeof( AFSDirEntryCB),
-                                                                  AFS_DIR_ENTRY_TAG);
-
-        if( pVolumeDirEntry == NULL)
-        {
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pVolumeDirEntry,
-                       sizeof( AFSDirEntryCB));
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.TotalAllocationUnits.QuadPart = 0x100000;
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.AvailableAllocationUnits.QuadPart = 0x100000;        
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.Characteristics = FILE_REMOTE_DEVICE;
-                                    
-        pVolumeDirEntry->Type.Volume.VolumeInformation.SectorsPerAllocationUnit = 1;
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.BytesPerSector = 0x400;
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeLabelLength = 12;
-
-        RtlCopyMemory( pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeLabel,
-                       L"AFSVol",
-                       12);
-
-        KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.CreationTime);
-        KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.LastWriteTime);
-        KeQuerySystemTime( &pVolumeDirEntry->DirectoryEntry.LastAccessTime);
-
-        pVolumeDirEntry->Type.Volume.VolumeInformation.VolumeCreationTime = pVolumeDirEntry->DirectoryEntry.CreationTime;
-
-        //
-        // Allocate the non paged portion
-        //
-
-        pVolumeDirEntry->NPDirNode = (AFSNonPagedDirNode *)ExAllocatePoolWithTag( NonPagedPool,  
-                                                                                  sizeof( AFSNonPagedDirNode),
-                                                                                  AFS_DIR_ENTRY_NP_TAG);
-
-        if( pVolumeDirEntry->NPDirNode == NULL)
-        {
-
-            ExFreePool( pVolumeDirEntry);
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        //
-        // Initialize the non-paged portion of the dire entry
-        //
-
-        AFSInitNonPagedDirEntry( pVolumeDirEntry);
-
-        //
-        // Initialize the root fcb
-        //
-
-        pFcb = (AFSFcb *)ExAllocatePoolWithTag( PagedPool,
-                                                  sizeof( AFSFcb),
-                                                  AFS_FCB_ALLOCATION_TAG);
-
-        if( pFcb == NULL)
-        {
-
-            AFSPrint("AFSInitRootFcb Failed to allocate the root fcb\n");
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pFcb,
-                       sizeof( AFSFcb)); 
-
-        pFcb->Header.NodeByteSize = sizeof( AFSFcb);
-        pFcb->Header.NodeTypeCode = AFS_ROOT_ALL;
-
-        pNPFcb = (AFSNonPagedFcb *)ExAllocatePoolWithTag( NonPagedPool,
-                                                          sizeof( AFSNonPagedFcb),
-                                                          AFS_FCB_NP_ALLOCATION_TAG);
-
-        if( pNPFcb == NULL)
-        {
-
-            AFSPrint("AFSInitRootFcb Failed to allocate the nonpaged fcb\n");
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pNPFcb,
-                       sizeof( AFSNonPagedFcb));
-
-        pNPFcb->Size = sizeof( AFSNonPagedFcb);
-        pNPFcb->Type = AFS_NON_PAGED_FCB;
-
-        //
-        // OK, initialize the entry
-        //
-
-        ExInitializeFastMutex( &pNPFcb->AdvancedHdrMutex);
-
-        FsRtlSetupAdvancedHeader( &pFcb->Header, &pNPFcb->AdvancedHdrMutex);
-
-        ExInitializeResourceLite( &pNPFcb->Resource);
-
-        ExInitializeResourceLite( &pNPFcb->Specific.Directory.DirectoryTreeLock);
-
-        pFcb->Header.Resource = &pNPFcb->Resource;
-
-        pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &pNPFcb->Specific.Directory.DirectoryTreeLock;
-
-        pFcb->NPFcb = pNPFcb;
-
-        //
-        // Point the root at itself
-        //
-
-        pFcb->RootFcb = pFcb;
-
-        //
-        // The notification information
-        //
-
-        InitializeListHead( &pFcb->NPFcb->DirNotifyList);
-        FsRtlNotifyInitializeSync( &pFcb->NPFcb->NotifySync);
-
-        //
-        // Initialize the Root directory DirEntry
-        //
-
-        pFcb->DirEntry = (AFSDirEntryCB *)ExAllocatePoolWithTag( PagedPool,
-                                                                 sizeof( AFSDirEntryCB) + sizeof( WCHAR),
-                                                                 AFS_DIR_ENTRY_TAG);
-
-        if( pFcb->DirEntry == NULL)
-        {
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pFcb->DirEntry,
-                       sizeof( AFSDirEntryCB) + sizeof( WCHAR));
-
-        pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
-        pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
-        pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
-
-        pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-
-        pFcb->DirEntry->DirectoryEntry.FileName.Length = sizeof( WCHAR);
-    
-        pFcb->DirEntry->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pFcb->DirEntry + sizeof( AFSDirEntryCB));
-
-        RtlCopyMemory( pFcb->DirEntry->DirectoryEntry.FileName.Buffer,
-                       L"&",
-                       sizeof( WCHAR));
-
-        pFcb->VolumeNode = pVolumeDirEntry;
+        AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
 
         //
         // Initialize the root information
         //
 
-        pDevExt->Specific.RDR.DirectoryNameTree.ContentIndex = 1;
+        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
 
         //
         // Enumerate the shares in the volume
         //
 
-        ntStatus = AFSEnumerateDirectory( &pFcb->DirEntry->DirectoryEntry.FileId,
-                                          &pDevExt->Specific.RDR.DirectoryNameTree,
-                                          &pFcb->Specific.Directory.DirectoryNodeListHead,
-                                          &pFcb->Specific.Directory.DirectoryNodeListTail,
+        ntStatus = AFSEnumerateDirectory( &AFSAllRoot->DirEntry->DirectoryEntry.FileId,
+                                          &AFSAllRoot->Specific.Directory.DirectoryNodeHdr,
+                                          &AFSAllRoot->Specific.Directory.DirectoryNodeListHead,
+                                          &AFSAllRoot->Specific.Directory.DirectoryNodeListTail,
                                           NULL,
                                           NULL);
 
-        //
-        // Indicate the node is initialized
-        //
+        if( NT_SUCCESS( ntStatus))
+        {
 
-        SetFlag( pFcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+            //
+            // Indicate the node is initialized
+            //
 
-        AFSAllRoot = pFcb;
+            SetFlag( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+        }
+
+        AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
 try_exit:
 
@@ -533,6 +543,85 @@ try_exit:
 
                 AFSRemoveRootFcb( pFcb);
             }
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRemoveAFSRoot()
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSDirEntryCB *pCurrentDirEntry = NULL;
+
+    __Enter
+    {
+
+        if( AFSAllRoot == NULL)
+        {
+
+            //
+            // Already initialized
+            //
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Reset the Redirector device tree
+        //
+
+        AFSAcquireExcl( &pDevExt->Specific.RDR.FileIDTreeLock, 
+                        TRUE);
+
+        pDevExt->Specific.RDR.FileIDTree.TreeHead = NULL;
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.FileIDTreeLock);
+
+        AFSAcquireExcl( &AFSAllRoot->NPFcb->Resource,
+                        TRUE);
+
+        AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeHead = NULL;
+
+        //
+        // Reset the btree and directory list information
+        //
+
+        pCurrentDirEntry = AFSAllRoot->Specific.Directory.DirectoryNodeListHead;
+
+        while( pCurrentDirEntry != NULL)
+        {
+
+            AFSDeleteDirEntry( AFSAllRoot,
+                               pCurrentDirEntry);
+
+            pCurrentDirEntry = AFSAllRoot->Specific.Directory.DirectoryNodeListHead;
+        }
+
+        AFSAllRoot->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        AFSAllRoot->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        //
+        // Indicate the node is NOT initialized
+        //
+
+        ClearFlag( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+
+        AFSReleaseResource( &AFSAllRoot->NPFcb->Resource);
+
+        AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+try_exit:
+
+        if( !NT_SUCCESS( ntStatus))
+        {
         }
     }
 
@@ -842,6 +931,12 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
 
         ExDeleteResourceLite( &Fcb->NPFcb->Specific.Directory.DirectoryTreeLock);
     }
+
+    //
+    // Sync notif object
+    //
+
+    FsRtlNotifyUninitializeSync( &Fcb->NPFcb->NotifySync);
 
     //
     // Tear down the FM specific contexts

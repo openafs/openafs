@@ -240,100 +240,10 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEntryCB *pDirNode = NULL;
     UNICODE_STRING uniShortName;
+    LARGE_INTEGER liFileSize = {0,0};
 
     __Enter
     {
-
-        //
-        // When performing this operation, we wil first allocate our
-        // dir entry and initialize it correctly. Before inserting the 
-        // node into the parent tree we will issue the notification to
-        // the service for processing in the event that the file can
-        // not be created
-        //
-
-        pDirNode = (AFSDirEntryCB *)ExAllocatePoolWithTag( PagedPool,         
-                                                           sizeof( AFSDirEntryCB) + ComponentName->Length,
-                                                           AFS_DIR_ENTRY_TAG);
-
-        if( pDirNode == NULL)
-        {
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pDirNode,
-                       sizeof( AFSDirEntryCB) + ComponentName->Length);
-
-        //
-        // Create a CRC for the file
-        //
-
-        pDirNode->TreeEntry.Index = AFSGenerateCRC( ComponentName);
-
-        //
-        // Populate the dir node
-        //
-
-        RtlZeroMemory( &pDirNode->DirectoryEntry.FileId,
-                       sizeof( AFSFileID));
-
-        KeQuerySystemTime( &pDirNode->DirectoryEntry.CreationTime);
-
-        ExSystemTimeToLocalTime( &pDirNode->DirectoryEntry.CreationTime,
-                                 &pDirNode->DirectoryEntry.CreationTime);
-
-        pDirNode->DirectoryEntry.LastAccessTime = pDirNode->DirectoryEntry.CreationTime;
-
-        pDirNode->DirectoryEntry.LastWriteTime = pDirNode->DirectoryEntry.CreationTime;
-
-        pDirNode->DirectoryEntry.FileAttributes = Attributes;
-
-        pDirNode->DirectoryEntry.FileName.Length = ComponentName->Length;
-
-        pDirNode->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pDirNode + sizeof( AFSDirEntryCB));
-
-        RtlCopyMemory( pDirNode->DirectoryEntry.FileName.Buffer,
-                       ComponentName->Buffer,
-                       pDirNode->DirectoryEntry.FileName.Length);
-
-        //
-        // Build up the short name
-        //
-
-        if( !RtlIsNameLegalDOS8Dot3( ComponentName,
-                                     NULL,
-                                     NULL))
-        {
-
-            ntStatus = AFSGenerateShortName( ParentDcb,
-                                             pDirNode);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                //
-                // Get out now
-                //
-
-                ExFreePool( pDirNode);
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
-
-            uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
-            uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
-
-            pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
-        }
-        else
-        {
-
-            uniShortName.Length = ComponentName->Length;
-            uniShortName.Buffer = ComponentName->Buffer;
-
-            pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
-        }
 
         //
         // OK, before inserting the node into the parent tree, issue
@@ -341,13 +251,13 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
         //
 
         ntStatus = AFSNotifyFileCreate( ParentDcb,
-                                        pDirNode,
-                                        FileName);
+                                        &liFileSize,
+                                        Attributes,
+                                        ComponentName,
+                                        &pDirNode);
 
         if( !NT_SUCCESS( ntStatus))
         {
-
-            ExFreePool( pDirNode);
 
             try_return( ntStatus);
         }
@@ -493,9 +403,9 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
         else
         {
 
-            ParentDcb->Specific.Directory.DirectoryNodeListTail->Type.Data.ListEntry.fLink = (void *)DirEntry;
+            ParentDcb->Specific.Directory.DirectoryNodeListTail->ListEntry.fLink = (void *)DirEntry;
 
-            DirEntry->Type.Data.ListEntry.bLink = (void *)ParentDcb->Specific.Directory.DirectoryNodeListTail;
+            DirEntry->ListEntry.bLink = (void *)ParentDcb->Specific.Directory.DirectoryNodeListTail;
         }
 
         ParentDcb->Specific.Directory.DirectoryNodeListTail = DirEntry;
@@ -559,41 +469,45 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
         AFSRemoveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
                            DirEntry);
 
-        //
-        // From the short name tree
-        //
-
-        AFSRemoveShortNameDirEntry( &ParentDcb->Specific.Directory.ShortNameTree,
-                                    DirEntry);
-
-        //
-        // And remove the entry from the enumeraiotn lsit
-        //
-
-        if( DirEntry->Type.Data.ListEntry.fLink == NULL)
+        if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
         {
 
-            ParentDcb->Specific.Directory.DirectoryNodeListTail = (AFSDirEntryCB *)DirEntry->Type.Data.ListEntry.bLink;
+            //
+            // From the short name tree
+            //
+
+            AFSRemoveShortNameDirEntry( &ParentDcb->Specific.Directory.ShortNameTree,
+                                        DirEntry);
+        }
+
+        //
+        // And remove the entry from the enumeration lsit
+        //
+
+        if( DirEntry->ListEntry.fLink == NULL)
+        {
+
+            ParentDcb->Specific.Directory.DirectoryNodeListTail = (AFSDirEntryCB *)DirEntry->ListEntry.bLink;
         }
         else
         {
 
-            ((AFSDirEntryCB *)DirEntry->Type.Data.ListEntry.fLink)->Type.Data.ListEntry.bLink = DirEntry->Type.Data.ListEntry.bLink;
+            ((AFSDirEntryCB *)DirEntry->ListEntry.fLink)->ListEntry.bLink = DirEntry->ListEntry.bLink;
         }
 
-        if( DirEntry->Type.Data.ListEntry.bLink == NULL)
+        if( DirEntry->ListEntry.bLink == NULL)
         {
 
-            ParentDcb->Specific.Directory.DirectoryNodeListHead = (AFSDirEntryCB *)DirEntry->Type.Data.ListEntry.fLink;
+            ParentDcb->Specific.Directory.DirectoryNodeListHead = (AFSDirEntryCB *)DirEntry->ListEntry.fLink;
         }
         else
         {
 
-            ((AFSDirEntryCB *)DirEntry->Type.Data.ListEntry.bLink)->Type.Data.ListEntry.fLink = DirEntry->Type.Data.ListEntry.fLink;
+            ((AFSDirEntryCB *)DirEntry->ListEntry.bLink)->ListEntry.fLink = DirEntry->ListEntry.fLink;
         }
 
-        DirEntry->Type.Data.ListEntry.fLink = NULL;
-        DirEntry->Type.Data.ListEntry.bLink = NULL;
+        DirEntry->ListEntry.fLink = NULL;
+        DirEntry->ListEntry.bLink = NULL;
 
         AFSReleaseResource( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
     }
@@ -1032,6 +946,8 @@ AFSParseName( IN PIRP Irp,
 
             *RootFcb = NULL;
 
+            *FileName = uniRemainingPath;  // Return any remaining portion
+
             try_return( ntStatus = STATUS_SUCCESS);
         }
 
@@ -1045,14 +961,14 @@ AFSParseName( IN PIRP Irp,
         // Grab our tree lock shared
         //
 
-        AFSAcquireExcl( pDeviceExt->Specific.RDR.DirectoryNameTree.TreeLock,
+        AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
         //
         // Locate the dir entry for this node
         //
 
-        ntStatus = AFSLocateDirEntry( pDeviceExt->Specific.RDR.DirectoryNameTree.TreeHead,
+        ntStatus = AFSLocateDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeHead,
                                       ulCRC,
                                       &pShareDirEntry);
 
@@ -1071,7 +987,7 @@ AFSParseName( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSReleaseResource( pDeviceExt->Specific.RDR.DirectoryNameTree.TreeLock);
+                AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
             }
@@ -1084,7 +1000,7 @@ AFSParseName( IN PIRP Irp,
         AFSAcquireExcl( &pShareDirEntry->NPDirNode->Lock,
                         TRUE);
 
-        AFSReleaseResource( pDeviceExt->Specific.RDR.DirectoryNameTree.TreeLock);
+        AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
         //
         // TODO: If this is not a volume type node then we will need to walk the
@@ -1152,7 +1068,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
     AFSFileID stFileID;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSDirHdr *pDirHdr = &pDevExt->Specific.RDR.DirectoryNameTree;
+    AFSDirHdr *pDirHdr = &AFSAllRoot->Specific.Directory.DirectoryNodeHdr;
     AFSDirEntryCB *pDirNode = NULL;
     UNICODE_STRING uniDirName, uniTargetName;
 
@@ -1255,22 +1171,11 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
         if( pDirEnumEntry->ShortNameLength > 0)
         {
 
-            UNICODE_STRING uniShortName;
-
             pDirNode->DirectoryEntry.ShortNameLength = pDirEnumEntry->ShortNameLength;
 
             RtlCopyMemory( pDirNode->DirectoryEntry.ShortName,
                            pDirEnumEntry->ShortName,
                            pDirNode->DirectoryEntry.ShortNameLength);
-
-            //
-            // Generate the short name index
-            //
-
-            uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
-            uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
-
-            pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
         }
 
         //
@@ -1297,9 +1202,9 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
         else
         {
 
-            AFSAllRoot->Specific.Directory.DirectoryNodeListTail->Type.Data.ListEntry.fLink = pDirNode;
+            AFSAllRoot->Specific.Directory.DirectoryNodeListTail->ListEntry.fLink = pDirNode;
 
-            pDirNode->Type.Data.ListEntry.bLink = AFSAllRoot->Specific.Directory.DirectoryNodeListTail;
+            pDirNode->ListEntry.bLink = AFSAllRoot->Specific.Directory.DirectoryNodeListTail;
         }
 
         AFSAllRoot->Specific.Directory.DirectoryNodeListTail = pDirNode;

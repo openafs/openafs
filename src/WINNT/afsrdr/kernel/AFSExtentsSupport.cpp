@@ -125,6 +125,7 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
     AFSReleaseExtentsCB *pRelease = NULL;
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus;
+    HANDLE               hModifyProcessId = PsGetCurrentProcessId();
 
     __Enter
     {
@@ -188,8 +189,15 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
         AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
         locked = FALSE;
 
+        if( Fcb->Specific.File.ModifyProcessId != 0)
+        {
+
+            hModifyProcessId = Fcb->Specific.File.ModifyProcessId;
+        }
+
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                       0,
+                                      hModifyProcessId,
                                       NULL,
                                       &Fcb->DirEntry->DirectoryEntry.FileId,
                                       pRelease,
@@ -414,6 +422,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         request.Length = newSize;
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
+                                      0,
                                       0,
                                       NULL,
                                       &Fcb->DirEntry->DirectoryEntry.FileId,
@@ -672,6 +681,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     ULONG                total = 0;
     ULONG                sz = 0;
     NTSTATUS             ntStatus;
+    HANDLE               hModifyProcessId = PsGetCurrentProcessId();
     
     __Enter
     {
@@ -735,11 +745,19 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             le = (AFSListEntry *) le->fLink;
         }
 
+        if( Fcb->Specific.File.ModifyProcessId != 0)
+        {
+
+            hModifyProcessId = Fcb->Specific.File.ModifyProcessId;
+        }
+
         //
         // Fire off the request syncrhonously
         //
+
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      hModifyProcessId,
                                       NULL,
                                       &Fcb->DirEntry->DirectoryEntry.FileId,
                                       pRelease,

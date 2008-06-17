@@ -211,6 +211,16 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                     TRUE);
 
+    if( PsGetCurrentProcess() != AFSSysProcess)
+    {
+
+        //
+        // Save off the last writer
+        //
+
+        pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+    }
+
     return;
 }
 

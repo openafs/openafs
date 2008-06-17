@@ -675,7 +675,7 @@ AFSInitializeControlFilter()
         //
 
         RtlInitUnicodeString( &AFSPIOCtlName,
-                              L"__AFS_IOCTL__");
+                              AFS_PIOCTL_FILE_INTERFACE_NAME);
     }
 
     return ntStatus;
@@ -795,9 +795,9 @@ AFSInitializeDirectory( IN AFSFcb *Dcb)
         // This is the second entry in the list
         //
 
-        Dcb->Specific.Directory.DirectoryNodeListTail->Type.Data.ListEntry.fLink = (void *)pDirNode;
+        Dcb->Specific.Directory.DirectoryNodeListTail->ListEntry.fLink = (void *)pDirNode;
 
-        pDirNode->Type.Data.ListEntry.bLink = (void *)Dcb->Specific.Directory.DirectoryNodeListTail;
+        pDirNode->ListEntry.bLink = (void *)Dcb->Specific.Directory.DirectoryNodeListTail;
 
         Dcb->Specific.Directory.DirectoryNodeListTail = pDirNode;
 
@@ -1001,4 +1001,56 @@ try_exit:
     }
 
     return pDirNode;
+}
+
+BOOLEAN
+AFSCheckForReadOnlyAccess( IN ACCESS_MASK DesiredAccess)
+{
+
+    BOOLEAN bReturn = TRUE;
+
+    //
+    // Get rid of anything we don't know about
+    //
+
+    DesiredAccess = (DesiredAccess   &
+                          ( DELETE |
+                            READ_CONTROL |
+                            WRITE_OWNER |
+                            WRITE_DAC |
+                            SYNCHRONIZE |
+                            ACCESS_SYSTEM_SECURITY |
+                            FILE_WRITE_DATA |
+                            FILE_READ_EA |
+                            FILE_WRITE_EA |
+                            FILE_READ_ATTRIBUTES |
+                            FILE_WRITE_ATTRIBUTES |
+                            FILE_LIST_DIRECTORY |
+                            FILE_TRAVERSE |
+                            FILE_DELETE_CHILD |
+                            FILE_APPEND_DATA));                       
+
+    if( FlagOn( DesiredAccess, ~( READ_CONTROL |
+                                 WRITE_OWNER |
+                                 WRITE_DAC |
+                                 SYNCHRONIZE |
+                                 ACCESS_SYSTEM_SECURITY |
+                                 FILE_READ_DATA |
+                                 FILE_READ_EA |
+                                 FILE_WRITE_EA |
+                                 FILE_READ_ATTRIBUTES |
+                                 FILE_WRITE_ATTRIBUTES |
+                                 FILE_EXECUTE |
+                                 FILE_LIST_DIRECTORY |
+                                 FILE_TRAVERSE))) 
+    {
+
+        //
+        // A write access is set ...
+        //
+
+        bReturn = FALSE;
+    }
+
+    return bReturn;
 }

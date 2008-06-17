@@ -58,21 +58,29 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
-    pFileObject = pIrpSp->FileObject;
-
-    //
-    // Extract the fileobject references
-    //
-
-    pFcb = (AFSFcb *)pFileObject->FsContext;
-    pNPFcb = pFcb->NPFcb;
-
     __Enter
     {
-        ObReferenceObject( pFileObject);
+
+        pFileObject = pIrpSp->FileObject;
 
         //
-        // If this is a read against an IOCtl node then handle it 
+        // Extract the fileobject references
+        //
+
+        pFcb = (AFSFcb *)pFileObject->FsContext;
+        pNPFcb = pFcb->NPFcb;
+
+        ObReferenceObject( pFileObject);
+
+        if( pFcb->Header.NodeTypeCode != AFS_IOCTL_FCB &&
+            pFcb->Header.NodeTypeCode != AFS_FILE_FCB)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If this is a write against an IOCtl node then handle it 
         // in a different pathway
         //
 
@@ -92,20 +100,6 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         if( NULL == pDeviceExt->Specific.RDR.CacheFileObject) 
         {
             try_return( ntStatus = STATUS_TOO_LATE );
-        }
-
-        //
-        // If this is a read against an IOCtl node then handle it 
-        // in a different pathway
-        //
-
-        if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
-        {
-
-            ntStatus = AFSIOCtlWrite( DeviceObject,
-                                      Irp);
-
-            try_return( ntStatus);
         }
 
         liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
@@ -161,6 +155,12 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             AFSPrint("MN_COMPLETE \n");
 
             CcMdlWriteComplete(pFileObject, &pIrpSp->Parameters.Write.ByteOffset, Irp->MdlAddress);
+
+            //
+            // Save off the last writer
+            //
+
+            pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
 
             //
             // Mdl is now Deallocated
@@ -287,6 +287,16 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         {
             ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount);
 
+            if( NT_SUCCESS( ntStatus))
+            {
+
+                //
+                // Save off the last writer
+                //
+
+                pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+            }
+
             try_return( ntStatus );
         }
         else
@@ -328,18 +338,16 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
     AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
-    UNICODE_STRING uniFullName;
+    AFSCcb *pCcb = NULL;
     AFSPIOCtlIOResultCB stIOResultCB;
     ULONG ulBytesReturned = 0;
+    AFSFileID stParentFID;
 
     __Enter
     {
 
-        uniFullName.Length = 0;
-        uniFullName.Buffer = NULL;
-
-        stIORequestCB.MappedBuffer = NULL;
-        stIORequestCB.BufferLength = 0;
+        RtlZeroMemory( &stIORequestCB,
+                       sizeof( AFSPIOCtlIORequestCB));
 
         if( pIrpSp->Parameters.Write.Length == 0)
         {
@@ -353,20 +361,39 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
 
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
 
-        ntStatus = AFSGetFullName( pFcb,
-                                   &uniFullName);
+        //
+        // Get the parent fid to pass to the cm
+        //
 
-        if( !NT_SUCCESS( ntStatus))
+        RtlZeroMemory( &stParentFID,
+                       sizeof( AFSFileID));
+
+        if( pFcb->ParentFcb != NULL)
         {
 
-            try_return( ntStatus);
+            RtlCopyMemory( &stParentFID,
+                           &pFcb->ParentFcb->DirEntry->DirectoryEntry.FileId,
+                           sizeof( AFSFileID));
         }
 
         //
-        // Locak down the buffer
+        // Set the control block up
+        //
+
+        stIORequestCB.RequestId = pCcb->PIOCtlRequestID;
+
+        if( pFcb->RootFcb != NULL)
+        {
+            stIORequestCB.RootId = pFcb->RootFcb->DirEntry->DirectoryEntry.FileId;
+        }
+
+        //
+        // Lock down the buffer
         //
 
         stIORequestCB.MappedBuffer = AFSMapToService( Irp,
@@ -390,8 +417,9 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_WRITE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &uniFullName,
+                                      0,
                                       NULL,
+                                      &stParentFID,
                                       (void *)&stIORequestCB,
                                       sizeof( AFSPIOCtlIORequestCB),
                                       &stIOResultCB,
@@ -416,12 +444,6 @@ try_exit:
 
             AFSUnmapServiceMappedBuffer( stIORequestCB.MappedBuffer,
                                          Irp->MdlAddress);
-        }
-
-        if( uniFullName.Buffer != NULL)
-        {
-
-            ExFreePool( uniFullName.Buffer);
         }
 
         if( pFcb != NULL)
@@ -628,6 +650,16 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         else 
         {
             try_return( ntStatus);
+        }
+
+        if( !bPagingIo)
+        {
+
+            //
+            // Save off the last writer
+            //
+
+            pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
         }
 
         //

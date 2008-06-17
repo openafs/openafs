@@ -285,7 +285,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     // Go to the next entry if there is one
                     //
 
-                    if( pDirEntry->Type.Data.ListEntry.fLink == NULL)
+                    if( pDirEntry->ListEntry.fLink == NULL)
                     {
 
                         pDirEntry = NULL;
@@ -293,13 +293,13 @@ AFSQueryDirectory( IN PIRP Irp)
                     else
                     {
 
-                        pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                        pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                     }
 
                     break;
                 }
 
-                if( pDirEntry->Type.Data.ListEntry.fLink == NULL)
+                if( pDirEntry->ListEntry.fLink == NULL)
                 {
 
                     pDirEntry = NULL;
@@ -307,7 +307,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     break;
                 }
 
-                pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
             }
 
             if( pDirEntry == NULL)
@@ -366,7 +366,7 @@ AFSQueryDirectory( IN PIRP Irp)
                         // Go to the next entry if there is one
                         //
 
-                        if( pDirEntry->Type.Data.ListEntry.fLink == NULL)
+                        if( pDirEntry->ListEntry.fLink == NULL)
                         {
 
                             pDirEntry = NULL;
@@ -374,13 +374,13 @@ AFSQueryDirectory( IN PIRP Irp)
                         else
                         {
 
-                            pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                            pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                         }
 
                         break;
                     }
 
-                    if( pDirEntry->Type.Data.ListEntry.fLink == NULL)
+                    if( pDirEntry->ListEntry.fLink == NULL)
                     {
 
                         pDirEntry = NULL;
@@ -388,7 +388,7 @@ AFSQueryDirectory( IN PIRP Irp)
                         break;
                     }
 
-                    pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                    pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                 }
 
                 if( pDirEntry == NULL)
@@ -464,12 +464,12 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( !(pDirEntry->DirectoryEntry.FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                     {
 
-                        if( pDirEntry->Type.Data.ListEntry.fLink != NULL)
+                        if( pDirEntry->ListEntry.fLink != NULL)
                         {
 
                             pCcb->CurrentDirIndex = pDirEntry->DirectoryEntry.FileIndex;
 
-                            pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                            pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
 
                             continue;
                         }
@@ -493,12 +493,12 @@ AFSQueryDirectory( IN PIRP Irp)
                                                       NULL))
                         {
 
-                            if( pDirEntry->Type.Data.ListEntry.fLink != NULL)
+                            if( pDirEntry->ListEntry.fLink != NULL)
                             {
 
                                 pCcb->CurrentDirIndex = pDirEntry->DirectoryEntry.FileIndex;
 
-                                pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                                pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
 
                                 continue;
                             }
@@ -514,12 +514,12 @@ AFSQueryDirectory( IN PIRP Irp)
                                                      TRUE))
                         {
 
-                            if( pDirEntry->Type.Data.ListEntry.fLink != NULL)
+                            if( pDirEntry->ListEntry.fLink != NULL)
                             {
 
                                 pCcb->CurrentDirIndex = pDirEntry->DirectoryEntry.FileIndex;
 
-                                pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                                pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
 
                                 continue;
                             }
@@ -556,7 +556,7 @@ AFSQueryDirectory( IN PIRP Irp)
     
                 pCcb->CurrentDirIndex = pDirEntry->DirectoryEntry.FileIndex;
 
-                pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+                pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                                 
                 continue;
             }
@@ -672,7 +672,7 @@ AFSQueryDirectory( IN PIRP Irp)
             
             dStatus = STATUS_SUCCESS;
 
-            if( pDirEntry->Type.Data.ListEntry.fLink == NULL)
+            if( pDirEntry->ListEntry.fLink == NULL)
             {
 
                 try_return( ntStatus = STATUS_SUCCESS);
@@ -682,7 +682,7 @@ AFSQueryDirectory( IN PIRP Irp)
             ulLastEntry = ulNextEntry;
             ulNextEntry += (ULONG)QuadAlign( ulBaseLength + ulBytesConverted);
 
-            pDirEntry = (AFSDirEntryCB *)pDirEntry->Type.Data.ListEntry.fLink;
+            pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
         }
 
 try_exit:
@@ -709,7 +709,6 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
     BOOLEAN bWatchTree;
     BOOLEAN bReleaseLock = FALSE;
     UNICODE_STRING uniFullFileName;
-    AFSFcb *pRootFcb = NULL;
 
     __Enter
     {
@@ -719,18 +718,6 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
 
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
-
-        pRootFcb = pFcb->RootFcb;
-
-        if( pRootFcb == NULL)
-        {
-
-            //
-            // We are working with the root
-            //
-
-            pRootFcb = pFcb;
-        }
 
         uniFullFileName.Buffer = NULL;
         uniFullFileName.Length = 0;
@@ -771,7 +758,7 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         //
 
         ntStatus = AFSGetFullName( pFcb,
-                                     &uniFullFileName);
+                                   &uniFullFileName);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -780,8 +767,8 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         }
 
         //  Call the Fsrtl package to process the request.
-        FsRtlNotifyFullChangeDirectory( pRootFcb->NPFcb->NotifySync,
-								        &pRootFcb->NPFcb->DirNotifyList,
+        FsRtlNotifyFullChangeDirectory( pFcb->NPFcb->NotifySync,
+								        &pFcb->NPFcb->DirNotifyList,
 								        pCcb,
 							            (PSTRING)&uniFullFileName,
 								        bWatchTree,

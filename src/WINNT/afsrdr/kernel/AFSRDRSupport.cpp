@@ -39,12 +39,6 @@ AFSInitRDRDevice()
         // Initialize resources
         //
 
-        pDeviceExt->Specific.RDR.DirectoryNameTree.TreeLock = &pDeviceExt->Specific.RDR.NameTreeLock;
-
-        ExInitializeResourceLite( pDeviceExt->Specific.RDR.DirectoryNameTree.TreeLock);
-
-        pDeviceExt->Specific.RDR.DirectoryNameTree.TreeHead = NULL;
-
         pDeviceExt->Specific.RDR.FileIDTree.TreeLock = &pDeviceExt->Specific.RDR.FileIDTreeLock;
 
         ExInitializeResourceLite( pDeviceExt->Specific.RDR.FileIDTree.TreeLock);
@@ -56,6 +50,13 @@ AFSInitRDRDevice()
         pDeviceExt->Specific.RDR.FcbListHead = NULL;
 
         pDeviceExt->Specific.RDR.FcbListTail = NULL;
+
+        //
+        // Initialize the volume worker thread responsible for handling any volume specific
+        // work such as Fcb teear down
+        //
+
+        AFSInitVolumeWorker();
 
         //
         // Clear the initializing bit
@@ -294,13 +295,6 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         }
 
         //
-        // Initialize the volume worker thread responsible for handling any volume specific
-        // work such as Fcb teear down
-        //
-
-        ntStatus = AFSInitVolumeWorker();
-
-        //
         // Initialize the root information
         //
 
@@ -386,10 +380,10 @@ AFSCloseRedirector()
         }            
 
         //
-        // Close the volume worker
+        // Reset the ALL Root
         //
 
-        AFSShutdownVolumeWorker();
+        AFSRemoveAFSRoot();
     }
 
     return ntStatus;
@@ -430,10 +424,14 @@ AFSShutdownRedirector()
         }
 
         //
-        // Delete resources
+        // Close the volume worker
         //
 
-        ExDeleteResourceLite( pDevExt->Specific.RDR.DirectoryNameTree.TreeLock);
+        AFSShutdownVolumeWorker();
+
+        //
+        // Delete resources
+        //
 
         ExDeleteResourceLite( pDevExt->Specific.RDR.FileIDTree.TreeLock);
 

@@ -902,10 +902,16 @@ AFSSetBasicInfo( IN PIRP Irp,
     PFILE_BASIC_INFORMATION pBuffer;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     ULONG ulNotifyFilter = 0;
-    AFSFcb *pRootFcb = Fcb->RootFcb;
+    AFSFcb *pParentFcb = Fcb->ParentFcb;
 
     __Enter
     {
+
+        if( pParentFcb == NULL)
+        {
+
+            pParentFcb = Fcb->RootFcb;
+        }
 
         pBuffer = (PFILE_BASIC_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
@@ -984,8 +990,8 @@ AFSSetBasicInfo( IN PIRP Irp,
                                               &uniFullFileName)))
             {
 
-				FsRtlNotifyFullReportChange( pRootFcb->NPFcb->NotifySync,
-											 &pRootFcb->NPFcb->DirNotifyList,
+				FsRtlNotifyFullReportChange( pParentFcb->NPFcb->NotifySync,
+											 &pParentFcb->NPFcb->DirNotifyList,
 											 (PSTRING)&uniFullFileName,
 											 (USHORT)(uniFullFileName.Length - Fcb->DirEntry->DirectoryEntry.FileName.Length),
 											 (PSTRING)NULL,

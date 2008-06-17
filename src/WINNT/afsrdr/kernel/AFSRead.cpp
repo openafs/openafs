@@ -459,6 +459,13 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
 
         pFcb = (AFSFcb *)pFileObject->FsContext;
 
+        if( pFcb->Header.NodeTypeCode != AFS_IOCTL_FCB &&
+            pFcb->Header.NodeTypeCode != AFS_FILE_FCB)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
         //
         // If this is a read against an IOCtl node then handle it 
         // in a different pathway
@@ -656,18 +663,16 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
     AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
-    UNICODE_STRING uniFullName;
+    AFSCcb *pCcb = NULL;
     AFSPIOCtlIOResultCB stIOResultCB;
     ULONG ulBytesReturned = 0;
+    AFSFileID   stParentFID;
 
     __Enter
     {
 
-        uniFullName.Length = 0;
-        uniFullName.Buffer = NULL;
-
-        stIORequestCB.MappedBuffer = NULL;
-        stIORequestCB.BufferLength = 0;
+        RtlZeroMemory( &stIORequestCB,
+                       sizeof( AFSPIOCtlIORequestCB));
 
         if( pIrpSp->Parameters.Read.Length == 0)
         {
@@ -681,20 +686,39 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
 
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
 
-        ntStatus = AFSGetFullName( pFcb,
-                                   &uniFullName);
+        //
+        // Get the parent fid to pass to the cm
+        //
 
-        if( !NT_SUCCESS( ntStatus))
+        RtlZeroMemory( &stParentFID,
+                       sizeof( AFSFileID));
+
+        if( pFcb->ParentFcb != NULL)
         {
 
-            try_return( ntStatus);
+            RtlCopyMemory( &stParentFID,
+                           &pFcb->ParentFcb->DirEntry->DirectoryEntry.FileId,
+                           sizeof( AFSFileID));
         }
 
         //
-        // Locak down the buffer
+        // Set the control block up
+        //
+
+        stIORequestCB.RequestId = pCcb->PIOCtlRequestID;
+
+        if( pFcb->RootFcb != NULL)
+        {
+            stIORequestCB.RootId = pFcb->RootFcb->DirEntry->DirectoryEntry.FileId;
+        }
+
+        //
+        // Lock down the buffer
         //
 
         stIORequestCB.MappedBuffer = AFSMapToService( Irp,
@@ -718,8 +742,9 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_READ,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &uniFullName,
+                                      0,
                                       NULL,
+                                      &stParentFID,
                                       (void *)&stIORequestCB,
                                       sizeof( AFSPIOCtlIORequestCB),
                                       &stIOResultCB,
@@ -744,12 +769,6 @@ try_exit:
 
             AFSUnmapServiceMappedBuffer( stIORequestCB.MappedBuffer,
                                          Irp->MdlAddress);
-        }
-
-        if( uniFullName.Buffer != NULL)
-        {
-
-            ExFreePool( uniFullName.Buffer);
         }
 
         if( pFcb != NULL)
