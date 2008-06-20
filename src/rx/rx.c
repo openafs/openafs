@@ -1325,6 +1325,7 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	    service->minProcs = 0;
 	    service->maxProcs = 1;
 	    service->idleDeadTime = 60;
+	    service->idleDeadErr = 0;
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
@@ -2399,6 +2400,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
 	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
+	rx_SetServerConnIdleDeadErr(conn, service->idleDeadErr);
 	/* Notify security object of the new connection */
 	RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
@@ -4877,7 +4879,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    conn->lastSendTime = call->lastSendTime = clock_Sec();
+    call->lastSendData = conn->lastSendTime = call->lastSendTime = clock_Sec();
 }
 
 /* When sending packets we need to follow these rules:
@@ -5347,6 +5349,9 @@ rxi_Send(register struct rx_call *call, register struct rx_packet *p,
      * processing), and for the connection (so that we can discover
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
+    /* Don't count keepalives here, so idleness can be tracked. */
+    if (p->header.type != RX_PACKET_TYPE_ACK)
+	call->lastSendData = call->lastSendTime;
 }
 
 
@@ -5417,6 +5422,13 @@ rxi_CheckCall(register struct rx_call *call)
 	&& ((call->startWait + conn->idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
+	    return -1;
+	}
+    }
+    if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
+        && ((call->lastSendData + conn->idleDeadTime) < now)) {
+	if (call->state == RX_STATE_ACTIVE) {
+	    rxi_CallError(call, conn->idleDeadErr);
 	    return -1;
 	}
     }

@@ -145,6 +145,9 @@ int ntoh_syserr_conv(int error);
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
+/* Define error to return in server connections when failing to answer */
+#define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
+
 /* Define procedures for getting and setting before and after execute-request procs */
 #define rx_SetAfterProc(service,proc) ((service)->afterProc = (proc))
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
@@ -165,6 +168,7 @@ int ntoh_syserr_conv(int error);
 /* Set connection hard and idle timeouts for a connection */
 #define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
 #define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
+#define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -263,6 +267,7 @@ struct rx_connection {
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
+    afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };
@@ -307,6 +312,7 @@ struct rx_service {
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
+    afs_int32 idleDeadErr;
 };
 
 #endif /* KDUMP_RX_LOCK */
@@ -503,6 +509,7 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
+    u_int lastSendData;		/* Last time a nonping was sent on this call */
     void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
