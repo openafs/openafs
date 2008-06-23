@@ -419,6 +419,7 @@ int cm_reInitLocalMountPoints() {
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
+                        scp->nextp = NULL;
 			lock_ObtainWrite(&scp->rw);
                         scp->flags &= ~CM_SCACHEFLAG_INHASH;
 			lock_ReleaseWrite(&scp->rw);
