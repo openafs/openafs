@@ -661,7 +661,7 @@ TimeStamp(time_t t)
     static char timestamp[20];
 
     lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %T", lt);
+    strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
     return timestamp;
 }
 
