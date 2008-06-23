@@ -1,3 +1,22 @@
+Since 1.5.35
+ * Update CellServDB file to GCO Public 23 Apr 2008
+
+ * Fix a cm_buf_t reference count leak when attempts to write 
+   dirty buffers to the file server from within cm_IncrSyncer() 
+   fail.
+
+ * Prevent udebug from crashing.
+
+ * Activate RX Idle Timeouts.  If the file server is busy for more 
+   then 30 seconds, attempt to failover to another server without 
+   marking the busy server down.
+
+ * Another VNOVNODE issue fixed.  When writing a dirty buffer
+   to the file server, if VNOVNODE is received, mark all buffers
+   as invalid without further attempts to contact the file server.
+   
+ * Improved performance on high latency links.
+
 Since 1.5.34
  * Fix a bug preventing the re-initialization of the Freelance 
    root.cell contents when a change is made.
