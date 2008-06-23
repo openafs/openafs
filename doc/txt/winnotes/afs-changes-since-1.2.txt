@@ -1,3 +1,45 @@
+Since 1.5.36 [1.5.39 released 23 June 2008]
+ * There were no 1.5.37 or 1.5.38 releases for Windows
+
+ * Use Visual Studio version of vsprintf() instead of 
+   home grown version that resulted in linking conflicts
+
+ * Prevent buserver, ptserver and fileserver from crashing
+   due to non-portable strftime() format strings.
+
+ * Prevent server crashes caused by rx_InitMorePackets()
+   being called prior to allocation of all of the required
+   synchronization objects.
+
+ * Fixed a memory leak in the internal B+ tree directory.
+   For objects with non-8.3 names, the 'longname' memory
+   allocation would be leaked during object deletion or
+   tree destruction.
+
+ * Fixed a memory leak in the background daemon cm_CheckServer() 
+   routine.  The memory allocated to store the server list
+   was not freed.  
+
+ * Obtain a missing lock around a call to cm_RemoveSCacheFromHashTable(). 
+
+ * Correct an abstraction layer violation. cm_scache_t objects 
+   should be marked deleted in cm_Unlink() and cm_RemoveDir() and not 
+   in smb_CloseFID(). Cleanup of deleted cm_scache_t objects should be 
+   performed in cm_ReleaseSCache() when the reference count hits zero. 
+
+ * Prototype cm_AdjustScacheLRU() and re-implement it using osi_QAddH().
+
+ * Do not reference 'smb_logp' in cm_vnodeops.c.  Use 'afsd_logp'
+   instead.
+
+ * Ensure that scache object 'nextp' pointers are set to NULL
+   when the objects are removed from the hash table linked list.
+
+ * If a dirty buffer cannot be written to the file server because
+   of an access denied error, mark the error in the cm_buf_t
+   structure so that it can be dealt with instead of retrying 
+   forever.
+
 Since 1.5.35
  * Update CellServDB file to GCO Public 23 Apr 2008
 
