@@ -47,21 +47,20 @@ extern osi_mutex_t cm_Freelance_Lock;
 /* must be called with cm_scacheLock write-locked! */
 void cm_AdjustScacheLRU(cm_scache_t *scp)
 {
-    if (scp == cm_data.scacheLRULastp)
-        cm_data.scacheLRULastp = (cm_scache_t *) osi_QPrev(&scp->q);
+    lock_AssertWrite(&cm_scacheLock);
     osi_QRemoveHT((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
-    osi_QAdd((osi_queue_t **) &cm_data.scacheLRUFirstp, &scp->q);
-    if (!cm_data.scacheLRULastp) 
-        cm_data.scacheLRULastp = scp;
+    osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
 }
 
-/* call with scache write-locked and mutex held */
+/* call with cm_scacheLock write-locked and scp rw held */
 void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 {
     cm_scache_t **lscpp;
     cm_scache_t *tscp;
     int i;
 	
+    lock_AssertWrite(&cm_scacheLock);
+    lock_AssertWrite(&scp->rw);
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
 	/* hash it out first */
 	i = CM_SCACHE_HASH(&scp->fid);
@@ -96,7 +95,9 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
+    lock_ObtainWrite(&scp->rw);
     cm_RemoveSCacheFromHashTable(scp);
+    lock_ReleaseWrite(&scp->rw);
 
 #if 0
     if (flags & CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS) {
@@ -235,6 +236,7 @@ cm_scache_t *cm_GetNewSCache(void)
     cm_scache_t *scp;
     int retry = 0;
 
+    lock_AssertWrite(&cm_scacheLock);
 #if 0
     /* first pass - look for deleted objects */
     for ( scp = cm_data.scacheLRULastp;
@@ -1804,8 +1806,12 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 #endif
 {
     afs_int32 refCount;
+    long      lockstate;
+
     osi_assertx(scp != NULL, "null cm_scache_t");
     lock_AssertAny(&cm_scacheLock);
+
+    lockstate = lock_GetRWLockState(&cm_scacheLock);
     refCount = InterlockedDecrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
     if (refCount < 0)
@@ -1816,6 +1822,21 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
     osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp, refCount);
     afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, refCount);
 #endif
+
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+        int deleted = 0;
+        lock_ObtainWrite(&scp->rw);
+        if (scp->flags & CM_SCACHEFLAG_DELETED)
+            deleted = 1;
+        lock_ReleaseWrite(&scp->rw);
+        if (deleted) {
+            if (lockstate != OSI_RWLOCK_WRITEHELD) 
+                lock_ConvertRToW(&cm_scacheLock);
+            cm_RecycleSCache(scp, 0);
+            if (lockstate != OSI_RWLOCK_WRITEHELD) 
+                lock_ConvertWToR(&cm_scacheLock);
+        }
+    }
 }
 
 #ifdef DEBUG_REFCOUNT
@@ -1838,6 +1859,20 @@ void cm_ReleaseSCache(cm_scache_t *scp)
     osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp, refCount);
     afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, refCount);
 #endif
+
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+        int deleted = 0;
+        lock_ObtainWrite(&scp->rw);
+        if (scp->flags & CM_SCACHEFLAG_DELETED)
+            deleted = 1;
+        lock_ReleaseWrite(&scp->rw);
+        if (deleted) {
+            lock_ConvertRToW(&cm_scacheLock);
+            cm_RecycleSCache(scp, 0);
+            lock_ConvertWToR(&cm_scacheLock);
+        }
+    }
+
     lock_ReleaseRead(&cm_scacheLock);
 }
 
