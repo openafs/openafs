@@ -132,15 +132,19 @@ AFSDOBJS=\
         $(OUT)\afsd_flushvol.obj \
         $(OUT)\afsicf.obj \
 	$(OUT)\RDRInit.obj \
-	$(OUT)\RDRFunction.obj
+	$(OUT)\RDRFunction.obj \
+        $(OUT)\RDRIoctl.obj
 
 $(AFSDOBJS):
 
-$(OUT)\RDRInit.obj: ..\afsrdr\user\RDRInit.cpp
-	$(CPP2OBJ) $**
+$(OUT)\RDRInit.obj: ..\afsrdr\user\RDRInit.cpp ..\afsrdr\user\RDRPrototypes.h ..\afsrdr\user\RDRIoctl.h
+	$(CPP2OBJ) ..\afsrdr\user\RDRInit.cpp
 
-$(OUT)\RDRFunction.obj: ..\afsrdr\user\RDRFunction.c
-	$(C2OBJ) $**
+$(OUT)\RDRFunction.obj: ..\afsrdr\user\RDRFunction.c ..\afsrdr\user\RDRPrototypes.h ..\afsrdr\user\RDRIoctl.h
+	$(C2OBJ)  ..\afsrdr\user\RDRFunction.c
+
+$(OUT)\RDRIoctl.obj: ..\afsrdr\user\RDRIoctl.c ..\afsrdr\user\RDRIoctl.h
+	$(C2OBJ)  ..\afsrdr\user\RDRIoctl.c
 
 $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
