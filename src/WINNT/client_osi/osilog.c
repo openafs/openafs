@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <WINNT\afsreg.h>
+#include <strsafe.h>
 
 #define AFS_DAEMON_EVENT_NAME "TransarcAFSDaemon"
 
@@ -81,9 +82,12 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 
         logp = malloc(sizeof(osi_log_t));
         memset(logp, 0, sizeof(osi_log_t));
-        logp->namep = malloc(strlen(namep)+1);
-        strcpy(logp->namep, namep);
-        
+        {
+            size_t namelen = strlen(namep) + 1;
+
+            logp->namep = malloc(namelen * sizeof(char));
+            StringCchCopyA(logp->namep, namelen, namep);
+        }
         osi_QAdd((osi_queue_t **) &osi_allLogsp, &logp->q);
 
 	/* compute size we'll use */
@@ -101,8 +105,8 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
         /* and sync */
         thrd_InitCrit(&logp->cs);
         
-	strcpy(tbuffer, "log:");
-        strcat(tbuffer, namep);
+	StringCbCopyA(tbuffer, sizeof(tbuffer), "log:");
+        StringCbCatA(tbuffer, sizeof(tbuffer), namep);
 	typep = osi_RegisterFDType(tbuffer, &osi_logFDOps, logp);
 	if (typep) {
 		/* add formatting info */
@@ -210,11 +214,11 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
         if(ISCLIENTDEBUGLOG(osi_TraceOption)) {
 	    char wholemsg[1024], msg[1000];
 
-	    snprintf(msg, sizeof(msg), formatp,
-		     p0, p1, p2, p3);
-	    snprintf(wholemsg, sizeof(wholemsg), 
-		     "tid[%d] %s\n",
-		     lep->tid, msg);
+	    StringCbPrintfA(msg, sizeof(msg), formatp,
+                            p0, p1, p2, p3);
+	    StringCbPrintfA(wholemsg, sizeof(wholemsg), 
+                            "tid[%d] %s\n",
+                            lep->tid, msg);
             OutputDebugStringA(wholemsg);
         }
 
@@ -235,16 +239,16 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 	     i < logp->nused;
 	     i++, ix++, (ix >= logp->alloc ? ix -= logp->alloc : 0)) {
 		lep = logp->datap + ix;		/* pointer arithmetic */
-		snprintf(msg, sizeof(msg), lep->formatp,
-			lep->parms[0], lep->parms[1],
-			lep->parms[2], lep->parms[3]);
-		snprintf(wholemsg, sizeof(wholemsg),
-			 "time %d.%06d, tid %d %s\r\n",
-			lep->micros / 1000000,
-			lep->micros % 1000000,
-			lep->tid, msg);
+		StringCbPrintfA(msg, sizeof(msg), lep->formatp,
+                                lep->parms[0], lep->parms[1],
+                                lep->parms[2], lep->parms[3]);
+		StringCbPrintfA(wholemsg, sizeof(wholemsg),
+                                "time %d.%06d, tid %d %s\r\n",
+                                lep->micros / 1000000,
+                                lep->micros % 1000000,
+                                lep->tid, msg);
 		if (!WriteFile(handle, wholemsg, strlen(wholemsg),
-				&ioCount, NULL))
+                               &ioCount, NULL))
 			break;
 	}
 
@@ -253,31 +257,63 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 
 char *osi_LogSaveString(osi_log_t *logp, char *s)
 {
-	char *saveplace;
+    char *saveplace;
 
-        if (!logp) return s;
+    if (!logp) return s;
 
-        if (!logp->enabled) return s;
+    if (!logp->enabled) return s;
 
-	if (s == NULL) return NULL;
+    if (s == NULL) return NULL;
 
-        thrd_EnterCrit(&logp->cs);
+    thrd_EnterCrit(&logp->cs);
 
-        saveplace = logp->stringsp[logp->stringindex];
+    saveplace = logp->stringsp[logp->stringindex];
 
-	if (strlen(s) >= OSI_LOG_STRINGSIZE)
-		sprintf(saveplace, "...%s",
-			s + strlen(s) - (OSI_LOG_STRINGSIZE - 4));
-	else
-		strcpy(saveplace, s);
-	logp->stringindex++;
+    if (strlen(s) >= OSI_LOG_STRINGSIZE)
+        StringCbPrintfA(saveplace, OSI_LOG_STRINGSIZE,
+                        "...%s",
+                        s + strlen(s) - (OSI_LOG_STRINGSIZE - 4));
+    else
+        StringCbCopyA(saveplace, OSI_LOG_STRINGSIZE, s);
 
-	if (logp->stringindex >= logp->maxstringindex)
-	    logp->stringindex = 0;
+    logp->stringindex++;
 
-        thrd_LeaveCrit(&logp->cs);
+    if (logp->stringindex >= logp->maxstringindex)
+        logp->stringindex = 0;
 
-	return saveplace;
+    thrd_LeaveCrit(&logp->cs);
+
+    return saveplace;
+}
+
+wchar_t *osi_LogSaveStringW(osi_log_t *logp, wchar_t *s)
+{
+    wchar_t *saveplace;
+
+    if (!logp) return s;
+
+    if (!logp->enabled) return s;
+
+    if (s == NULL) return NULL;
+
+    thrd_EnterCrit(&logp->cs);
+
+    saveplace = (wchar_t *) (logp->stringsp[logp->stringindex]);
+
+    if (wcslen(s)*sizeof(wchar_t) >= OSI_LOG_STRINGSIZE)
+        StringCbPrintfW(saveplace, OSI_LOG_STRINGSIZE, L"...%s",
+                        (s + wcslen(s) - (OSI_LOG_STRINGSIZE/sizeof(wchar_t) - 4)));
+    else
+        StringCbCopyW(saveplace, OSI_LOG_STRINGSIZE, s);
+
+    logp->stringindex++;
+
+    if (logp->stringindex >= logp->maxstringindex)
+        logp->stringindex = 0;
+
+    thrd_LeaveCrit(&logp->cs);
+
+    return saveplace;
 }
 
 long osi_LogFDCreate(osi_fdType_t *typep, osi_fd_t **outpp)
@@ -299,40 +335,40 @@ long osi_LogFDCreate(osi_fdType_t *typep, osi_fd_t **outpp)
 
 long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
 {
-	osi_logFD_t *lfdp;
-        osi_log_t *logp;
-        osi_logEntry_t *lep;
-        char tbuffer[256];
-        long ix;
+    osi_logFD_t *lfdp;
+    osi_log_t *logp;
+    osi_logEntry_t *lep;
+    char tbuffer[256];
+    long ix;
         
-        lfdp = (osi_logFD_t *) ifd;
-        logp = lfdp->logp;
+    lfdp = (osi_logFD_t *) ifd;
+    logp = lfdp->logp;
         
-	/* see if we're done */
-	if (lfdp->current >= lfdp->nused) return OSI_DBRPC_EOF;
+    /* see if we're done */
+    if (lfdp->current >= lfdp->nused) return OSI_DBRPC_EOF;
         
-	/* grab lock */
-	thrd_EnterCrit(&logp->cs);
+    /* grab lock */
+    thrd_EnterCrit(&logp->cs);
 
-        /* compute which one we want */
-        ix = lfdp->first + lfdp->current;
-        if (ix >= logp->alloc) ix -= logp->alloc;
-        lfdp->current++;
-        lep = logp->datap + ix;	/* ptr arith to current index */
+    /* compute which one we want */
+    ix = lfdp->first + lfdp->current;
+    if (ix >= logp->alloc) ix -= logp->alloc;
+    lfdp->current++;
+    lep = logp->datap + ix;	/* ptr arith to current index */
 
-	sprintf(tbuffer, lep->formatp, lep->parms[0], lep->parms[1],
-        	lep->parms[2], lep->parms[3]);
+    StringCbPrintfA(tbuffer, sizeof(tbuffer), lep->formatp, lep->parms[0], lep->parms[1],
+                    lep->parms[2], lep->parms[3]);
 
-	/* now copy out info */
-        strcpy(outp->sdata[0], tbuffer);
-        sprintf(tbuffer, "%5.6f", ((double)lep->micros)/1000000.0);
-        strcpy(outp->sdata[1], tbuffer);
-        outp->idata[0] = lep->tid;
-        outp->scount = 2;
-        outp->icount = 1;
+    /* now copy out info */
+    StringCbCopyA(outp->sdata[0], sizeof(outp->sdata[0]), tbuffer);
+    StringCbPrintfA(tbuffer, sizeof(tbuffer), "%5.6f", ((double)lep->micros)/1000000.0);
+    StringCbCopyA(outp->sdata[1], sizeof(outp->sdata[0]), tbuffer);
+    outp->idata[0] = lep->tid;
+    outp->scount = 2;
+    outp->icount = 1;
 
-	thrd_LeaveCrit(&logp->cs);
-        return 0;
+    thrd_LeaveCrit(&logp->cs);
+    return 0;
 }
 
 long osi_LogFDClose(osi_fd_t *ifdp)
@@ -387,7 +423,7 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 		return;
     h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,c);
-	_vsnprintf(buf,MAXBUF_,c,marker);
+	StringCbVPrintfA(buf,MAXBUF_,c,marker);
 	ptbuf[0] = buf;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
 	DeregisterEventSource(h);
