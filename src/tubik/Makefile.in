@@ -73,13 +73,13 @@ volparse.o: ${UTIL}/volparse.c
 	${CCRULE}
 
 strlcat.o: ${UTIL}/strlcat.c
-       ${CCRULE}
+	${CCRULE}
 
 strlcpy.o: ${UTIL}/strlcpy.c
-       ${CCRULE}
+	${CCRULE}
 
 strnlen.o: ${UTIL}/strnlen.c
-       ${CCRULE}
+	${CCRULE}
 
 flipbase64.o: ${UTIL}/flipbase64.c
 	${CCRULE}
