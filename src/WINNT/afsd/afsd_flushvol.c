@@ -64,18 +64,18 @@ afsd_ServicePerformFlushVolumes()
     CONST CHAR	COLON = ':';
     CONST CHAR	SLASH = '\\';
     CONST DWORD	NETRESBUFSIZE = 16384;
-    CHAR		bufMessage[1024];
-    UINT		i;
-    DWORD		dwServerSize;
-    DWORD		dwRet;
-    DWORD		dwCount;
-    DWORD		dwNetResBufSize;
-    DWORD		dwTotalVols = 0;
-    DWORD		dwVolBegin, dwVolEnd;
-    DWORD		dwFlushBegin, dwFlushEnd;
-    HANDLE		hEnum;
+    CHAR	bufMessage[1024];
+    UINT	i;
+    DWORD	dwServerSize;
+    DWORD	dwRet;
+    DWORD	dwCount;
+    DWORD	dwNetResBufSize;
+    DWORD	dwTotalVols = 0;
+    DWORD	dwVolBegin, dwVolEnd;
+    DWORD	dwFlushBegin, dwFlushEnd;
+    HANDLE	hEnum;
     LPNETRESOURCE	lpNetResBuf, lpnr;
-    PCHAR		pszShareName, pc;
+    char        *pszShareName, *pc;
     afs_int32	afsRet = 0;
 
     if ( lana_OnlyLoopback() ) {

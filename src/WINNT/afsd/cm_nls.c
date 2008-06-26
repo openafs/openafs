@@ -28,11 +28,18 @@
 #include <strsafe.h>
 #include <errno.h>
 
-#define DEBUG_UNICODE
+#include "cm_nls.h"
+
+#ifdef DEBUG_UNICODE
+#include <assert.h>
+#endif
 
 /* This is part of the Microsoft Internationalized Domain Name
    Mitigation APIs. */
 #include <normalization.h>
+
+/* TODO: All the normalization and conversion code should NUL
+   terminate destination strings. */
 
 int
 (WINAPI *pNormalizeString)( __in NORM_FORM NormForm,
@@ -65,8 +72,15 @@ long cm_InitNormalization(void)
         return 1;
     }
 
-    pNormalizeString = GetProcAddress(h_Nls, "NormalizeString");
-    pIsNormalizedString = GetProcAddress(h_Nls, "IsNormalizedString");
+    pNormalizeString =
+        (int (WINAPI *)( NORM_FORM, LPCWSTR,
+                         int, LPWSTR, int))
+        GetProcAddress(h_Nls, "NormalizeString");
+
+    pIsNormalizedString =
+        (BOOL
+         (WINAPI *)( NORM_FORM, LPCWSTR, int ))
+        GetProcAddress(h_Nls, "IsNormalizedString");
 
     return (pNormalizeString && pIsNormalizedString);
 }
@@ -100,6 +114,13 @@ long cm_InitNormalization(void)
 static wchar_t * 
 NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *pcch_dest)
 {
+#ifdef DEBUG_UNICODE
+    assert (pNormalizeString != NULL && pIsNormalizedString != NULL);
+#endif
+
+    if (cch_src == -1)
+        cch_src = wcslen(src) + 1;
+
     if ((pIsNormalizedString && (*pIsNormalizedString)(AFS_NORM_FORM, src, cch_src)) ||
         (!pNormalizeString)) {
 
@@ -109,7 +130,8 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
         }
 
         /* No need to or unable to normalize.  Just copy the string.
-           Note that the string is not necessarily NULL terminated. */
+           Note that the string is not NUL terminated if the source
+           string is not NUL terminated. */
 
         if (ext_dest) {
             memcpy(ext_dest, src, cch_src * sizeof(wchar_t));
@@ -169,6 +191,13 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
                 }
 
                 *pcch_dest = rv;
+                if (cch_dest > rv)
+                    dest[rv] = 0;
+                else {
+                    /* Can't NUL terminate */
+                    cch_dest = max(rv,cch_dest) + NLSERRCCH;
+                    goto cont;
+                }
 
                 /* Success! */
                 return dest;
@@ -187,6 +216,111 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
 
         *pcch_dest = 0;
         return NULL;
+    }
+}
+
+/*! \brief Normalize a Unicode string into a newly allocated buffer
+
+  The input string will be normalized using NFC.
+
+  \param[in] s UTF-16 string to be normalized.
+
+  \param[in] cch_src The number of characters in the input string.  If
+      this is -1, then the input string is assumed to be NUL
+      terminated.
+
+  \param[out] pcch_dest Receives the number of characters copied to
+      the output buffer.  Note that the character count is the number
+      of wchar_t characters copied, and not the count of Unicode code
+      points.  This includes the terminating NUL if cch_src was -1 or
+      included the terminating NUL.
+
+  \return A newly allocated buffer holding the normalized string or
+      NULL if the call failed.
+ */
+cm_normchar_t * cm_NormalizeStringAlloc(const cm_unichar_t * s, int cch_src, int *pcch_dest)
+{
+    int cch_dest = 0;
+    cm_normchar_t * r;
+
+    r = NormalizeUtf16String(s, cch_src, NULL, &cch_dest);
+
+    if (pcch_dest)
+        *pcch_dest = cch_dest;
+
+    return r;
+}
+
+int cm_NormalizeString(const cm_unichar_t * s, int cch_src,
+                       cm_normchar_t * dest, int cch_dest)
+{
+    int tcch = cch_dest;
+    cm_normchar_t * r;
+
+    r = NormalizeUtf16String(s, cch_src, dest, &tcch);
+
+    if (r != dest) {
+        /* The supplied buffer was insufficient */
+        free(r);
+        return 0;
+    } else {
+        return tcch;
+    }
+}
+
+/*! \brief Convert a UTF-16 string to a UTF-8 string using a newly allocated buffer
+
+  \param[in] s UTF-16 source string
+
+  \param[in] cch_src Number of characters in \a s. This can be set to
+      -1 if \a s is NUL terminated.
+
+  \param[out] pcch_dest Receives a count of characters that were
+      copied to the target buffer.
+
+  \return A newly allocated buffer holding the UTF-8 string.
+
+ */
+cm_utf8char_t * cm_Utf16ToUtf8Alloc(const cm_unichar_t * s, int cch_src, int *pcch_dest)
+{
+    int cch_dest;
+    cm_utf8char_t * dest;
+
+    cch_dest = WideCharToMultiByte(CP_UTF8, 0, s, cch_src, NULL, 0, NULL, FALSE);
+
+    if (cch_dest == 0) {
+        if (pcch_dest)
+            *pcch_dest = cch_dest;
+        return NULL;
+    }
+
+    dest = malloc((cch_dest + 1) * sizeof(cm_utf8char_t));
+
+    WideCharToMultiByte(CP_UTF8, 0, s, cch_src, dest, cch_dest, NULL, FALSE);
+    dest[cch_dest] = 0;
+
+    if (pcch_dest)
+        *pcch_dest = cch_dest;
+
+    return dest;
+}
+
+int cm_Utf16ToUtf8(const cm_unichar_t * src, int cch_src,
+                   cm_utf8char_t * dest, int cch_dest)
+{
+    return WideCharToMultiByte(CP_UTF8, 0, src, cch_src, dest, cch_dest, NULL, FALSE);
+}
+
+int cm_Utf16ToUtf16(const cm_unichar_t * src, int cch_src,
+                    cm_unichar_t * dest, int cch_dest)
+{
+    if (cch_src == -1) {
+        StringCchCopyW(dest, cch_dest, src);
+        return wcslen(dest) + 1;
+    } else {
+        int cch_conv = min(cch_src, cch_dest);
+        memcpy(dest, src, cch_conv * sizeof(cm_unichar_t));
+        return cch_conv;
     }
 }
 
@@ -305,7 +439,7 @@ static const short sanitized_escapes_1252[] = {
 };
 
 static int sanitize_bytestring(const char * src, int cch_src,
-                                char * odest, int cch_dest)
+                               char * odest, int cch_dest)
 {
     char * dest = odest;
     while (cch_src > 0 && *src && cch_dest > 0) {
@@ -347,6 +481,282 @@ static int sanitize_bytestring(const char * src, int cch_src,
 #undef Esc
 #undef IS_ESCAPED
 #undef ESCVAL
+
+long cm_NormalizeUtf8StringToUtf16(const char * src, int cch_src,
+                                   wchar_t * dest, int cch_dest)
+{
+    wchar_t wsrcbuf[NLSMAXCCH];
+    wchar_t *wnorm;
+    int cch;
+    int cch_norm;
+
+    /* Get some edge cases out first, so we don't have to worry about
+       cch_src being 0 etc. */
+    if (cch_src == 0) {
+        return 0;
+    } else if (*src == '\0') {
+        if (cch_dest >= 1)
+            *dest = L'\0';
+        return 1;
+    }
+
+    if (cch_src == -1) {
+        cch_src = strlen(src) + 1;
+    }
+
+    cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
+                              cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
+
+    if (cch == 0) {
+        if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+            char sanitized[NLSMAXCCH];
+            int cch_sanitized;
+
+            /* If src doesn't have a unicode translation, then it
+               wasn't valid UTF-8.  In this case, we assume that src
+               is CP-1252 and then try to convert again.  But before
+               that, we use a translation table to "sanitize" the
+               input. */
+
+            cch_sanitized = sanitize_bytestring(src, cch_src, sanitized,
+                                                sizeof(sanitized)/sizeof(char));
+
+            if (cch_sanitized == 0) {
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return 0;
+            }
+
+            cch = MultiByteToWideChar(1252, 0, sanitized,
+                                      cch_sanitized * sizeof(char), wsrcbuf, NLSMAXCCH);
+            if (cch == 0) {
+                /* Well, that didn't work either.  Something is very wrong. */
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    cch_norm = cch_dest;
+    wnorm = NormalizeUtf16String(wsrcbuf, cch, dest, &cch_norm);
+    if (wnorm == NULL) {
+#ifdef DEBUG_UNICODE
+        DebugBreak();
+#endif
+        return 0;
+    }
+
+    if (wnorm != dest) {
+        /* The buffer was insufficient */
+        if (dest != NULL && cch_dest > 1) {
+            *dest = L'\0';
+            cch_norm = 0;
+        }
+
+        free(wnorm);
+    }
+
+    return cch_norm;
+}
+
+cm_normchar_t *cm_NormalizeUtf8StringToUtf16Alloc(const cm_utf8char_t * src, int cch_src,
+                                                  int *pcch_dest)
+{
+    wchar_t wsrcbuf[NLSMAXCCH];
+    wchar_t *wnorm;
+    int cch;
+    int cch_norm;
+
+    /* Get some edge cases out first, so we don't have to worry about
+       cch_src being 0 etc. */
+    if (cch_src == 0) {
+        return NULL;
+    } else if (*src == '\0') {
+        return wcsdup(L"");
+    }
+
+    if (cch_src == -1) {
+        cch_src = strlen(src) + 1;
+    }
+
+    cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
+                              cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
+
+    if (cch == 0) {
+        if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+            char sanitized[NLSMAXCCH];
+            int cch_sanitized;
+
+            /* If src doesn't have a unicode translation, then it
+               wasn't valid UTF-8.  In this case, we assume that src
+               is CP-1252 and then try to convert again.  But before
+               that, we use a translation table to "sanitize" the
+               input. */
+
+            cch_sanitized = sanitize_bytestring(src, cch_src, sanitized,
+                                                sizeof(sanitized)/sizeof(char));
+
+            if (cch_sanitized == 0) {
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return NULL;
+            }
+
+            cch = MultiByteToWideChar(1252, 0, sanitized,
+                                      cch_sanitized * sizeof(char), wsrcbuf, NLSMAXCCH);
+            if (cch == 0) {
+                /* Well, that didn't work either.  Something is very wrong. */
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return NULL;
+            }
+        } else {
+            return NULL;
+        }
+    }
+
+    cch_norm = 0;
+    wnorm = NormalizeUtf16String(wsrcbuf, cch, NULL, &cch_norm);
+    if (wnorm == NULL) {
+#ifdef DEBUG_UNICODE
+        DebugBreak();
+#endif
+        return NULL;
+    }
+
+    if (pcch_dest)
+        *pcch_dest = cch_norm;
+
+    return wnorm;
+}
+
+int cm_Utf8ToUtf16(const cm_utf8char_t * src, int cch_src,
+                   cm_unichar_t * dest, int cch_dest)
+{
+    int cch;
+
+    if (cch_src == -1) {
+        cch_src = strlen(src) + 1;
+    }
+
+    cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
+                              cch_src * sizeof(char), dest, cch_dest);
+
+    if (cch == 0) {
+        if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+            char sanitized[NLSMAXCCH];
+            int cch_sanitized;
+
+            /* If src doesn't have a unicode translation, then it
+               wasn't valid UTF-8.  In this case, we assume that src
+               is CP-1252 and then try to convert again.  But before
+               that, we use a translation table to "sanitize" the
+               input. */
+
+            cch_sanitized = sanitize_bytestring(src, cch_src, sanitized,
+                                                sizeof(sanitized)/sizeof(char));
+
+            if (cch_sanitized == 0) {
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return 0;
+            }
+
+            cch = MultiByteToWideChar(1252, 0, sanitized,
+                                      cch_sanitized * sizeof(char), dest, cch_dest);
+            if (cch == 0) {
+                /* Well, that didn't work either.  Something is very wrong. */
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return 0;
+            } else {
+                return cch;
+            }
+
+        } else {
+            return 0;
+        }
+    } else {
+        return cch;
+    }
+}
+
+cm_unichar_t  * cm_Utf8ToUtf16Alloc(const cm_utf8char_t * src, int cch_src, int *pcch_dest)
+{
+    cm_unichar_t * ustr = NULL;
+    int cch;
+
+    if (cch_src == -1) {
+        cch_src = strlen(src) + 1;
+    }
+
+    cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
+                              cch_src * sizeof(char), NULL, 0);
+
+    if (cch == 0) {
+        if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+            char sanitized[NLSMAXCCH];
+            int cch_sanitized;
+
+            /* If src doesn't have a unicode translation, then it
+               wasn't valid UTF-8.  In this case, we assume that src
+               is CP-1252 and then try to convert again.  But before
+               that, we use a translation table to "sanitize" the
+               input. */
+
+            cch_sanitized = sanitize_bytestring(src, cch_src, sanitized,
+                                                sizeof(sanitized)/sizeof(char));
+
+            if (cch_sanitized == 0) {
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return NULL;
+            }
+
+            cch = MultiByteToWideChar(1252, 0, sanitized,
+                                      cch_sanitized * sizeof(char), NULL, 0);
+            if (cch == 0) {
+                /* Well, that didn't work either.  Something is very wrong. */
+#ifdef DEBUG_UNICODE
+                DebugBreak();
+#endif
+                return NULL;
+            }
+
+            ustr = malloc((cch + 1) * sizeof(wchar_t));
+
+            cch = MultiByteToWideChar(1252, 0, sanitized,
+                                      cch_sanitized * sizeof(char), ustr, cch);
+            ustr[cch] = 0;
+        } else {
+            return NULL;
+        }
+    } else {
+
+        ustr = malloc((cch + 1) * sizeof(wchar_t));
+
+        cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
+                                  cch_src * sizeof(char), ustr, cch);
+        ustr[cch] = 0;
+    }
+
+    if (pcch_dest)
+        *pcch_dest = cch;
+
+    return ustr;
+}
+
+
 
 /* \brief Normalize a UTF-8 string.
 
@@ -391,7 +801,7 @@ long cm_NormalizeUtf8String(const char * src, int cch_src,
         cch_src = strlen(src) + 1;
     }
 
-    cch = MultiByteToWideChar(CP_UTF8, 0, src,
+    cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                               cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
 
     if (cch == 0) {
@@ -465,7 +875,7 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
     wchar_t wstr2[NLSMAXCCH];
     int rv;
 
-    /* first check for NULL pointers */
+    /* first check for NULL pointers (assume NULL < "") */
     if (str1 == NULL) {
         if (str2 == NULL)
             return 0;
@@ -475,7 +885,7 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
         return 1;
     }
 
-    len1 = MultiByteToWideChar(CP_UTF8, 0, str1, n, wstr1, NLSMAXCCH);
+    len1 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str1, n, wstr1, NLSMAXCCH);
     if (len1 == 0) {
 #ifdef DEBUG
         DebugBreak();
@@ -483,7 +893,7 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
         wstr1[0] = L'\0';
     }
 
-    len2 = MultiByteToWideChar(CP_UTF8, 0, str2, n, wstr2, NLSMAXCCH);
+    len2 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str2, n, wstr2, NLSMAXCCH);
     if (len2 == 0) {
 #ifdef DEBUG
         DebugBreak();
@@ -501,6 +911,97 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
         return 0;
     }
 }
+
+int cm_strnicmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2, int len)
+{
+    int rv;
+    size_t cch1;
+    size_t cch2;
+
+    /* first check for NULL pointers */
+    if (str1 == NULL) {
+        if (str2 == NULL)
+            return 0;
+        else
+            return -1;
+    } else if (str2 == NULL) {
+        return 1;
+    }
+
+    if (FAILED(StringCchLengthW(str1, len, &cch1)))
+        cch1 = len;
+
+    if (FAILED(StringCchLengthW(str2, len, &cch2)))
+        cch2 = len;
+
+    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, str1, cch1, str2, cch2);
+    if (rv > 0)
+        return (rv - 2);
+    else {
+#ifdef DEBUG
+        DebugBreak();
+#endif
+        return 0;
+    }
+}
+
+int cm_stricmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2)
+{
+    int rv;
+
+    /* first check for NULL pointers */
+    if (str1 == NULL) {
+        if (str2 == NULL)
+            return 0;
+        else
+            return -1;
+    } else if (str2 == NULL) {
+        return 1;
+    }
+
+    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, str1, -1, str2, -1);
+    if (rv > 0)
+        return (rv - 2);
+    else {
+#ifdef DEBUG
+        DebugBreak();
+#endif
+        return 0;
+    }
+}
+
+cm_unichar_t *cm_strlwr_utf16(cm_unichar_t * str)
+{
+    int rv;
+    int len;
+
+    len = wcslen(str) + 1;
+    rv = LCMapStringW(LOCALE_INVARIANT, LCMAP_LOWERCASE, str, len, str, len);
+#ifdef DEBUG
+    if (rv == 0) {
+        DebugBreak();
+    }
+#endif
+
+    return str;
+}
+
+cm_unichar_t *cm_strupr_utf16(cm_unichar_t * str)
+{
+    int rv;
+    int len;
+
+    len = wcslen(str) + 1;
+    rv = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, str, len, str, len);
+#ifdef DEBUG
+    if (rv == 0) {
+        DebugBreak();
+    }
+#endif
+
+    return str;
+}
+
 
 int cm_stricmp_utf8(const char * str1, const char * str2)
 {
@@ -520,7 +1021,7 @@ int cm_stricmp_utf8(const char * str1, const char * str2)
         return 1;
     }
 
-    len1 = MultiByteToWideChar(CP_UTF8, 0, str1, -1, wstr1, NLSMAXCCH);
+    len1 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str1, -1, wstr1, NLSMAXCCH);
     if (len1 == 0) {
 #ifdef DEBUG
         DebugBreak();
@@ -528,7 +1029,7 @@ int cm_stricmp_utf8(const char * str1, const char * str2)
         wstr1[0] = L'\0';
     }
 
-    len2 = MultiByteToWideChar(CP_UTF8, 0, str2, -1, wstr2, NLSMAXCCH);
+    len2 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str2, -1, wstr2, NLSMAXCCH);
     if (len2 == 0) {
 #ifdef DEBUG
         DebugBreak();
@@ -547,6 +1048,7 @@ int cm_stricmp_utf8(const char * str1, const char * str2)
     }
 }
 
+#if 0
 wchar_t * strupr_utf16(wchar_t * wstr, size_t cbstr)
 {
     wchar_t wstrd[NLSMAXCCH];
@@ -558,15 +1060,15 @@ wchar_t * strupr_utf16(wchar_t * wstr, size_t cbstr)
 
     return wstr;
 }
+#endif
 
 char * strupr_utf8(char * str, size_t cbstr)
 {
     wchar_t wstr[NLSMAXCCH];
     wchar_t wstrd[NLSMAXCCH];
     int len;
-    int r;
 
-    len = MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, NLSMAXCCH);
+    len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, wstr, NLSMAXCCH);
     if (len == 0)
         return str;
 
@@ -618,3 +1120,31 @@ char * char_prev_utf8(const char * c)
 
 #undef CH
 }
+
+wchar_t * char_next_utf16(const wchar_t * c)
+{
+    unsigned short sc = (unsigned short) *c;
+
+    if (sc >= 0xd800 && sc <= 0xdbff)
+        return (wchar_t *) c+2;
+    return (wchar_t *) c+1;
+}
+
+wchar_t * char_prev_utf16(const wchar_t * c)
+{
+    unsigned short sc = (unsigned short) *(--c);
+
+    if (sc >= 0xdc00 && sc <= 0xdfff)
+        return (wchar_t *) --c;
+    return (wchar_t *) c;
+}
+
+wchar_t * char_this_utf16(const wchar_t * c)
+{
+    unsigned short sc = (unsigned short) *c;
+
+    if (sc >= 0xdc00 && sc <= 0xdfff)
+        return (wchar_t *) --c;
+    return (wchar_t *) c;
+}
+

@@ -39,16 +39,16 @@ typedef struct cm_conn {
  * to the cache manager functions.
  */
 typedef struct cm_req {
-	DWORD startTime;		/* Quit before RDR times us out */
-	int rpcError;			/* RPC error code */
-	int volumeError;		/* volume error code */
-	int accessError;		/* access error code */
-        struct cm_server * tokenIdleErrorServp;  /* server that reported a token/idle error other than expired */
-        int tokenError;
-        int idleError;
-	afs_uint32 flags;
-        char * tidPathp;
-        char * relPathp;
+    DWORD startTime;		/* Quit before RDR times us out */
+    int rpcError;			/* RPC error code */
+    int volumeError;		/* volume error code */
+    int accessError;		/* access error code */
+    struct cm_server * tokenIdleErrorServp;  /* server that reported a token/idle error other than expired */
+    int tokenError;
+    int idleError;
+    afs_uint32 flags;
+    clientchar_t * tidPathp;
+    clientchar_t * relPathp;
 } cm_req_t;
 
 /* flags in cm_req structure */

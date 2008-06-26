@@ -407,4 +407,6 @@ extern long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags);
 extern void cm_RemoveSCacheFromHashTable(cm_scache_t *scp);
 
 extern void cm_AdjustScacheLRU(cm_scache_t *scp);
+
+extern int cm_DumpSCache(FILE *outputFile, char *cookie, int lock);
 #endif /*  __CM_SCACHE_H_ENV__ */

@@ -23,6 +23,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include <nb30.h>
 
 #include "cm.h"
+#include "cm_nls.h"
 
 #include <osi.h>
 #include <afs/vldbint.h>
@@ -44,9 +45,9 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_volume.h"
 #include "cm_dcache.h"
 #include "cm_access.h"
+#include "cm_dir.h"
 #include "cm_utils.h"
 #include "cm_vnodeops.h"
-#include "cm_dir.h"
 #include "cm_btree.h"
 #include "cm_daemon.h"
 #include "cm_ioctl.h"
@@ -55,7 +56,6 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_memmap.h"
 #include "cm_freelance.h"
 #include "cm_performance.h"
-#include "cm_nls.h"
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
 #include "afsd_init.h"
@@ -84,8 +84,11 @@ extern cm_scache_t *cm_rootSCachep;
 
 extern osi_log_t *afsd_logp;
 
-extern char cm_mountRoot[];
+extern fschar_t cm_mountRoot[];
 extern DWORD cm_mountRootLen;
+
+extern clientchar_t cm_mountRootC[];
+extern DWORD cm_mountRootCLen;
 
 extern char cm_CachePath[];
 

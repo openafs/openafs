@@ -24,6 +24,8 @@
 #include "smb.h"
 #include "cm_btree.h"
 
+#include <strsafe.h>
+
 #ifdef DEBUG
 extern void afsi_log(char *pattern, ...);
 #endif
@@ -97,156 +99,7 @@ int cm_stricmp(const char *str1, const char *str2)
     }
 }
 
-/* characters that are legal in an 8.3 name */
-/*
- * We used to have 1's for all characters from 128 to 254.  But
- * the NT client behaves better if we create an 8.3 name for any
- * name that has a character with the high bit on, and if we
- * delete those characters from 8.3 names.  In particular, see
- * Sybase defect 10859.
- */
-char cm_LegalChars[256] = {
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0,
- 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
- 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
- 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
- 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
- 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
 
-/* return true iff component is a valid 8.3 name */
-int cm_Is8Dot3(char *namep)
-{
-    int sawDot = 0;
-    unsigned char tc;
-    int charCount = 0;
-        
-    /*
-     * can't have a leading dot;
-     * special case for . and ..
-     */
-    if (namep[0] == '.') {
-        if (namep[1] == 0)
-            return 1;
-        if (namep[1] == '.' && namep[2] == 0)
-            return 1;
-        return 0;
-    }
-    while (tc = *namep++) {
-        if (tc == '.') {
-            /* saw another dot */
-            if (sawDot) return 0;	/* second dot */
-            sawDot = 1;
-            charCount = 0;
-            continue;
-        }
-        if (cm_LegalChars[tc] == 0)
-            return 0;
-        charCount++;
-        if (!sawDot && charCount > 8)
-            /* more than 8 chars in name */
-            return 0;
-        if (sawDot && charCount > 3)
-            /* more than 3 chars in extension */
-            return 0;
-    }
-    return 1;
-}
-
-/*
- * Number unparsing map for generating 8.3 names;
- * The version taken from DFS was on drugs.  
- * You can't include '&' and '@' in a file name.
- */
-char cm_8Dot3Mapping[42] =
-{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
- 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 
- 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 
- 'V', 'W', 'X', 'Y', 'Z', '_', '-', '$', '#', '!', '+', '='
-};
-int cm_8Dot3MapSize = sizeof(cm_8Dot3Mapping);
-
-void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
-                        char *shortName, char **shortNameEndp)
-{
-    char number[12];
-    int i, nsize = 0;
-    int vnode = ntohl(pfid->vnode);
-    char *lastDot;
-    int validExtension = 0;
-    char tc, *temp;
-    const char *name;
-
-    /* Unparse the file's vnode number to get a "uniquifier" */
-    do {
-        number[nsize] = cm_8Dot3Mapping[vnode % cm_8Dot3MapSize];
-        nsize++;
-        vnode /= cm_8Dot3MapSize;
-    } while (vnode);
-
-    /*
-     * Look for valid extension.  There has to be a dot, and
-     * at least one of the characters following has to be legal.
-     */
-    lastDot = strrchr(longname, '.');
-    if (lastDot) {
-        temp = lastDot; temp++;
-        while (tc = *temp++)
-            if (cm_LegalChars[tc])
-                break;
-        if (tc)
-            validExtension = 1;
-    }
-
-    /* Copy name characters */
-    for (i = 0, name = longname;
-          i < (7 - nsize) && name != lastDot; ) {
-        tc = *name++;
-
-        if (tc == 0)
-            break;
-        if (!cm_LegalChars[tc])
-            continue;
-        i++;
-        *shortName++ = toupper(tc);
-    }
-
-    /* tilde */
-    *shortName++ = '~';
-
-    /* Copy uniquifier characters */
-    memcpy(shortName, number, nsize);
-    shortName += nsize;
-
-    if (validExtension) {
-        /* Copy extension characters */
-        *shortName++ = *lastDot++;	/* copy dot */
-        for (i = 0, tc = *lastDot++;
-              i < 3 && tc;
-              tc = *lastDot++) {
-            if (cm_LegalChars[tc]) {
-                i++;
-                *shortName++ = toupper(tc);
-            }
-        }
-    }
-
-    /* Trailing null */
-    *shortName = 0;
-
-    if (shortNameEndp)
-        *shortNameEndp = shortName;
-}       
 
 /* return success if we can open this file in this mode */
 long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
@@ -576,8 +429,8 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
  * cm_lookupSearch_t object.  
  */
 long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
-                  osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
-                  cm_scache_t **retscp)
+                 osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
+                 cm_scache_t **retscp)
 {
     char *tp;
     long code;
@@ -647,7 +500,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 if (code == 0) {
 
 #ifdef USE_BPLUS
-                    code = cm_BPlusDirLookup(&dirop, sp->searchNamep, &sp->fid);
+                    code = cm_BPlusDirLookup(&dirop, sp->nsearchNamep, &sp->fid);
                     if (code != EINVAL)
                         usedBplus = 1;
                     else 
@@ -847,18 +700,18 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
     return code;
 }
 
-int cm_NoneUpper(char *s)
+int cm_NoneUpper(normchar_t *s)
 {
-    char c;
+    normchar_t c;
     while (c = *s++)
         if (c >= 'A' && c <= 'Z')
             return 0;
     return 1;
 }
 
-int cm_NoneLower(char *s)
+int cm_NoneLower(normchar_t *s)
 {
-    char c;
+    normchar_t c;
     while (c = *s++)
         if (c >= 'a' && c <= 'z')
             return 0;
@@ -866,30 +719,30 @@ int cm_NoneLower(char *s)
 }
 
 long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
-                          osi_hyper_t *offp)
+                         osi_hyper_t *offp)
 {
     cm_lookupSearch_t *sp;
     int match;
-    char matchName[MAX_PATH];
+    normchar_t matchName[MAX_PATH];
     int looking_for_short_name = FALSE;
 
     sp = (cm_lookupSearch_t *) rockp;
 
-    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
+    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
     if (sp->caseFold)
-        match = cm_stricmp_utf8(matchName, sp->searchNamep);
+        match = cm_NormStrCmpI(matchName, sp->nsearchNamep);
     else
-        match = strcmp(matchName, sp->searchNamep);
+        match = cm_NormStrCmp(matchName, sp->nsearchNamep);
 
     if (match != 0
-         && sp->hasTilde
-         && !cm_Is8Dot3(dep->name)) {
+        && sp->hasTilde
+        && !cm_Is8Dot3(matchName)) {
 
-        cm_Gen8Dot3Name(dep, matchName, NULL);
+        cm_Gen8Dot3NameInt(dep->name, &dep->fid, matchName, NULL);
         if (sp->caseFold)
-            match = cm_stricmp_utf8(matchName, sp->searchNamep);
+            match = cm_NormStrCmpI(matchName, sp->nsearchNamep);
         else
-            match = strcmp(matchName, sp->searchNamep);
+            match = cm_NormStrCmp(matchName, sp->nsearchNamep);
         looking_for_short_name = TRUE;
     }
 
@@ -913,7 +766,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
      */
 
     /* Exact matches are the best. */
-    match = strcmp(matchName, sp->searchNamep);
+    match = cm_NormStrCmp(matchName, sp->nsearchNamep);
     if (match == 0) {
         sp->ExactFound = 1;
         cm_SetFid(&sp->fid, sp->fid.cell, sp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
@@ -1024,15 +877,15 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
                          cm_req_t *reqp, cm_scache_t **outScpp)
 {
-    char *cellNamep;
-    char *volNamep;
+    fschar_t *cellNamep = NULL;
+    fschar_t *volNamep = NULL;
     int tlen;
-    long code;
-    char *cp;
-    char *mpNamep;
+    afs_uint32 code;
+    fschar_t *cp;
+    fschar_t *mpNamep;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
-    char mtType;
+    fschar_t mtType;
     cm_fid_t tfid;
     size_t vnLength;
     int targetType;
@@ -1049,25 +902,23 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     mpNamep = scp->mountPointStringp;
     if (!mpNamep[0])
 	return CM_ERROR_NOSUCHPATH;
-    tlen = (int)strlen(scp->mountPointStringp);
+    tlen = cm_FsStrLen(scp->mountPointStringp);
     mtType = *scp->mountPointStringp;
-    cellNamep = malloc(tlen);
-    volNamep = malloc(tlen);
 
-    cp = strrchr(mpNamep, ':');
+    cp = cm_FsStrChr(mpNamep, _FS(':'));
     if (cp) {
         /* cellular mount point */
-        memset(cellNamep, 0, tlen);
-        strncpy(cellNamep, mpNamep+1, cp - mpNamep - 1);
-        strcpy(volNamep, cp+1);
+        cellNamep = (fschar_t *)malloc((cp - mpNamep) * sizeof(fschar_t));
+        cm_FsStrCpyN(cellNamep, cp - mpNamep, mpNamep + 1, cp - mpNamep - 1);
+        volNamep = cm_FsStrDup(cp+1);
+
         /* now look up the cell */
         lock_ReleaseWrite(&scp->rw);
         cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE);
         lock_ObtainWrite(&scp->rw);
-    }
-    else {
+    } else {
         /* normal mt pt */
-        strcpy(volNamep, mpNamep+1);
+        volNamep = cm_FsStrDup(mpNamep + 1);
 
         cellp = cm_FindCellByID(scp->fid.cell, 0);
     }
@@ -1077,11 +928,11 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         goto done;
     }
 
-    vnLength = strlen(volNamep);
-    if (vnLength >= 8 && strcmp(volNamep + vnLength - 7, ".backup") == 0)
+    vnLength = cm_FsStrLen(volNamep);
+    if (vnLength >= 8 && cm_FsStrCmp(volNamep + vnLength - 7, ".backup") == 0)
         targetType = BACKVOL;
     else if (vnLength >= 10
-              && strcmp(volNamep + vnLength - 9, ".readonly") == 0)
+             && cm_FsStrCmp(volNamep + vnLength - 9, ".readonly") == 0)
         targetType = ROVOL;
     else
         targetType = RWVOL;
@@ -1153,12 +1004,14 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
   done:
     if (volp)
 	cm_PutVolume(volp);
-    free(cellNamep);
-    free(volNamep);
+    if (cellNamep)
+        free(cellNamep);
+    if (volNamep)
+        free(volNamep);
     return code;
 }       
 
-long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
+long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_user_t *userp,
                        cm_req_t *reqp, cm_scache_t **outpScpp)
 {
     long code;
@@ -1167,19 +1020,24 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     cm_scache_t *mountedScp;
     cm_lookupSearch_t rock;
     int getroot;
+    normchar_t *nnamep = NULL;
+    fschar_t *fnamep = NULL;
 
     memset(&rock, 0, sizeof(rock));
 
     if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
-         && strcmp(namep, "..") == 0) {
+        && cm_ClientStrCmp(cnamep, _C("..")) == 0) {
         if (dscp->dotdotFid.volume == 0)
             return CM_ERROR_NOSUCHVOLUME;
         rock.fid = dscp->dotdotFid;
         goto haveFid;
-    } else if (strcmp(namep, ".") == 0) {
+    } else if (cm_ClientStrCmp(cnamep, _C(".")) == 0) {
 	rock.fid = dscp->fid;
 	goto haveFid;
     }
+
+    nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
+    fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
 
     if (flags & CM_FLAG_NOMOUNTCHASE) {
         /* In this case, we should go and call cm_Dir* functions
@@ -1194,12 +1052,12 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
         if (code == 0) {
 #ifdef USE_BPLUS
-            code = cm_BPlusDirLookup(&dirop, namep, &rock.fid);
+            code = cm_BPlusDirLookup(&dirop, nnamep, &rock.fid);
             if (code != EINVAL)
                 usedBplus = 1;
             else
 #endif
-                code = cm_DirLookup(&dirop, namep, &rock.fid);
+                code = cm_DirLookup(&dirop, fnamep, &rock.fid);
 
             cm_EndDirOp(&dirop);
         }
@@ -1225,13 +1083,14 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
 
     rock.fid.cell = dscp->fid.cell;
     rock.fid.volume = dscp->fid.volume;
-    rock.searchNamep = namep;
+    rock.searchNamep = fnamep;
+    rock.nsearchNamep = nnamep;
     rock.caseFold = (flags & CM_FLAG_CASEFOLD);
-    rock.hasTilde = ((strchr(namep, '~') != NULL) ? 1 : 0);
+    rock.hasTilde = ((cm_ClientStrChr(cnamep, '~') != NULL) ? 1 : 0);
 
     /* If NOMOUNTCHASE, bypass DNLC by passing NULL scp pointer */
     code = cm_ApplyDir(dscp, cm_LookupSearchProc, &rock, NULL, userp, reqp,
-                        (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
+                       (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
 
     /* code == 0 means we fell off the end of the dir, while stopnow means
      * that we stopped early, probably because we found the entry we're
@@ -1244,31 +1103,34 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
          */
         if (code == CM_ERROR_NOTDIR) {
             if (flags & CM_FLAG_CHECKPATH)
-                return CM_ERROR_NOSUCHPATH;
+                code = CM_ERROR_NOSUCHPATH;
             else
-                return CM_ERROR_NOSUCHFILE;
+                code = CM_ERROR_NOSUCHFILE;
         }
-        return code;
+        goto done;
     }
 
     getroot = (dscp==cm_data.rootSCachep) ;
     if (!rock.found) {
         if (!cm_freelanceEnabled || !getroot) {
             if (flags & CM_FLAG_CHECKPATH)
-                return CM_ERROR_NOSUCHPATH;
+                code = CM_ERROR_NOSUCHPATH;
             else
-                return CM_ERROR_NOSUCHFILE;
+                code = CM_ERROR_NOSUCHFILE;
+            goto done;
         }
-        else if (!strchr(namep, '#') && !strchr(namep, '%') &&
-                 strcmp(namep, "srvsvc") && strcmp(namep, "wkssvc") &&
-                 strcmp(namep, "ipc$")) 
+        else if (!cm_ClientStrChr(cnamep, '#') &&
+                 !cm_ClientStrChr(cnamep, '%') &&
+                 cm_ClientStrCmpI(cnamep, _C("srvsvc")) &&
+                 cm_ClientStrCmpI(cnamep, _C("wkssvc")) &&
+                 cm_ClientStrCmpI(cnamep, _C("ipc$"))) 
         {
             /* nonexistent dir on freelance root, so add it */
-            char fullname[200] = ".";
+            fschar_t fullname[200] = ".";
             int  found = 0;
 
-            osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", 
-                      osi_LogSaveString(afsd_logp,namep));
+            osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %S", 
+                     osi_LogSaveClientString(afsd_logp,cnamep));
 
             /* 
              * There is an ugly behavior where a share name "foo" will be searched
@@ -1278,39 +1140,42 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
              */
 
             code = -1;
-            if (namep[0] == '.') {
-                if (cm_GetCell_Gen(&namep[1], &fullname[1], CM_FLAG_CREATE)) {
+            if (cnamep[0] == '.') {
+                if (cm_GetCell_Gen(&fnamep[1], &fullname[1], CM_FLAG_CREATE)) {
                     found = 1;
                     if (!cm_FreelanceMountPointExists(fullname, 0))
-                        code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.", 1, &rock.fid);
-                    if ( cm_stricmp_utf8(&namep[1], &fullname[1]) && 
-						!cm_FreelanceMountPointExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
-						!cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
-                        code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
+                        code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.",
+                                                    1, &rock.fid);
+                    if ( cm_FsStrCmpI(&fnamep[1], &fullname[1]) && 
+                         !cm_FreelanceMountPointExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
+                         !cm_FreelanceSymlinkExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
+                        code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
                 }
             } else {
-                if (cm_GetCell_Gen(namep, fullname, CM_FLAG_CREATE)) {
+                if (cm_GetCell_Gen(fnamep, fullname, CM_FLAG_CREATE)) {
                     found = 1;
                     if (!cm_FreelanceMountPointExists(fullname, 0))
                         code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
-                    if ( cm_stricmp_utf8(namep, fullname) && 
-						!cm_FreelanceMountPointExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
-						!cm_FreelanceSymlinkExists(namep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
-                        code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
+                    if ( cm_FsStrCmpI(fnamep, fullname) && 
+                         !cm_FreelanceMountPointExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
+                         !cm_FreelanceSymlinkExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
+                        code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
                 }
             }
             if (!found || code < 0) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
-                    return CM_ERROR_NOSUCHPATH;
+                    code = CM_ERROR_NOSUCHPATH;
                 else
-                    return CM_ERROR_NOSUCHFILE;
+                    code = CM_ERROR_NOSUCHFILE;
+                goto done;
             }
             tscp = NULL;   /* to force call of cm_GetSCache */
         } else {
             if (flags & CM_FLAG_CHECKPATH)
-                return CM_ERROR_NOSUCHPATH;
+                code = CM_ERROR_NOSUCHPATH;
             else
-                return CM_ERROR_NOSUCHFILE;
+                code = CM_ERROR_NOSUCHFILE;
+            goto done;
         }
     }
 
@@ -1320,8 +1185,8 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         dnlcHit = 0; 
         code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
         if (code) 
-            return code;
-    }       
+            goto done;
+    }
     /* tscp is now held */
 
     lock_ObtainWrite(&tscp->rw);
@@ -1330,7 +1195,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     if (code) { 
         lock_ReleaseWrite(&tscp->rw);
         cm_ReleaseSCache(tscp);
-        return code;
+        goto done;
     }
     cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     /* tscp is now locked */
@@ -1343,12 +1208,12 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         code = cm_ReadMountPoint(tscp, userp, reqp);
         if (code == 0)
             code = cm_FollowMountPoint(tscp, dscp, userp, reqp,
-                                        &mountedScp);
+                                       &mountedScp);
         lock_ReleaseWrite(&tscp->rw);
         cm_ReleaseSCache(tscp);
-        if (code) {
-            return code;
-        }
+        if (code)
+            goto done;
+
         tscp = mountedScp;
     }
     else {
@@ -1363,26 +1228,39 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         /* lock the directory entry to prevent racing callback revokes */
         lock_ObtainRead(&dscp->rw);
         if ( dscp->cbServerp != NULL && dscp->cbExpires > 0 ) {
-            /* Note: namep is a normalized name */
-            cm_dnlcEnter(dscp, namep, tscp);
+            /* TODO: reuse nnamep from above */
+            if (nnamep) 
+                free(nnamep);
+            nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
+            cm_dnlcEnter(dscp, nnamep, tscp);
         }
         lock_ReleaseRead(&dscp->rw);
     }
 
     /* and return */
-    return 0;
+  done:
+    if (fnamep) {
+        free (fnamep);
+        fnamep = NULL;
+    }
+    if (nnamep) {
+        free (nnamep);
+        nnamep = NULL;
+    }
+
+    return code;
 }
 
-int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
+int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, unsigned int index)
 {
-    char *tp;
+    clientchar_t *tp;
     int prefixCount;
 
-    tp = strrchr(inp, '@');
+    tp = cm_ClientStrRChr(inp, '@');
     if (tp == NULL) 
         return 0;		/* no @sys */
 
-    if (strcmp(tp, "@sys") != 0) 
+    if (cm_ClientStrCmp(tp, _C("@sys")) != 0) 
         return 0;	/* no @sys */
 
     /* caller just wants to know if this is a valid @sys type of name */
@@ -1395,21 +1273,22 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
     /* otherwise generate the properly expanded @sys name */
     prefixCount = (int)(tp - inp);
 
-    strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
+    cm_ClientStrCpyN(outp, outSizeCch, inp, prefixCount);	/* copy out "a." from "a.@sys" */
     outp[prefixCount] = 0;		/* null terminate the "a." */
-    strcat(outp, cm_sysNameList[index]);/* append i386_nt40 */
+    cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);/* append i386_nt40 */
     return 1;
 }   
 
-long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
+long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * userp,
                                 cm_req_t *reqp, cm_scache_t ** outpScpp)
 {
-    long          code = 0;
-    char          cellName[CELL_MAXNAMELEN];
-    char          volumeName[VL_MAXNAMELEN];
+    afs_uint32    code = 0;
+    fschar_t      cellName[CELL_MAXNAMELEN];
+    fschar_t      volumeName[VL_MAXNAMELEN];
     size_t        len;
-    char *        cp;
-    char *        tp;
+    fschar_t *        cp;
+    fschar_t *        tp;
+    fschar_t *        fnamep = NULL;
 
     cm_cell_t *   cellp = NULL;
     cm_volume_t * volp = NULL;
@@ -1418,10 +1297,10 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
     int           volType;
     int           mountType = RWVOL;
 
-    osi_Log1(afsd_logp, "cm_EvaluateVolumeReference for string [%s]",
-             osi_LogSaveString(afsd_logp, namep));
+    osi_Log1(afsd_logp, "cm_EvaluateVolumeReference for string [%S]",
+             osi_LogSaveClientString(afsd_logp, namep));
 
-    if (strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) != 0) {
+    if (cm_ClientStrCmpNI(namep, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH) != 0) {
         goto _exit_invalid_path;
     }
 
@@ -1433,39 +1312,38 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
 
      */
 
-    cp = namep + CM_PREFIX_VOL_CCH; /* cp points to cell name, hopefully */
-    tp = strchr(cp, '%');
+    fnamep = cm_ClientStringToFsStringAlloc(namep, cm_ClientStrLen(namep), NULL);
+    cp = fnamep + CM_PREFIX_VOL_CCH; /* cp points to cell name, hopefully */
+    tp = cm_FsStrChr(cp, '%');
     if (tp == NULL)
-        tp = strchr(cp, '#');
+        tp = cm_FsStrChr(cp, '#');
     if (tp == NULL ||
         (len = tp - cp) == 0 ||
         len > CELL_MAXNAMELEN)
         goto _exit_invalid_path;
-    strncpy(cellName, cp, len);
-    cellName[len] = '\0';
+    cm_FsStrCpyN(cellName, lengthof(cellName), cp, len);
 
     if (*tp == '#')
         mountType = ROVOL;
 
     cp = tp+1;                  /* cp now points to volume, supposedly */
-    strncpy(volumeName, cp, VL_MAXNAMELEN-1);
-    volumeName[VL_MAXNAMELEN - 1] = 0;
+    cm_FsStrCpy(volumeName, lengthof(volumeName), cp);
 
     /* OK, now we have the cell and the volume */
     osi_Log2(afsd_logp, "   Found cell [%s] and volume [%s]",
-             osi_LogSaveString(afsd_logp, cellName),
-             osi_LogSaveString(afsd_logp, volumeName));
+             osi_LogSaveFsString(afsd_logp, cellName),
+             osi_LogSaveFsString(afsd_logp, volumeName));
 
     cellp = cm_GetCell(cellName, CM_FLAG_CREATE);
     if (cellp == NULL) {
         goto _exit_invalid_path;
     }
 
-    len = strlen(volumeName);
-    if (len >= 8 && strcmp(volumeName + len - 7, ".backup") == 0)
+    len = cm_FsStrLen(volumeName);
+    if (len >= 8 && cm_FsStrCmp(volumeName + len - 7, ".backup") == 0)
         volType = BACKVOL;
     else if (len >= 10 &&
-             strcmp(volumeName + len - 9, ".readonly") == 0)
+             cm_FsStrCmp(volumeName + len - 9, ".readonly") == 0)
         volType = ROVOL;
     else
         volType = RWVOL;
@@ -1493,7 +1371,10 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
 
     code = cm_GetSCache(&fid, outpScpp, userp, reqp);
 
- _exit_cleanup:
+  _exit_cleanup:
+    if (fnamep)
+        free(fnamep);
+
     if (volp)
         cm_PutVolume(volp);
 
@@ -1508,15 +1389,15 @@ long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
 }
 
 #ifdef DEBUG_REFCOUNT
-long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
+long cm_LookupDbg(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *userp,
                cm_req_t *reqp, cm_scache_t **outpScpp, char * file, long line)
 #else
-long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
+long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *userp,
                cm_req_t *reqp, cm_scache_t **outpScpp)
 #endif
 {
     long code;
-    char tname[AFSPATHMAX];
+    clientchar_t tname[AFSPATHMAX];
     int sysNameIndex = 0;
     cm_scache_t *scp = NULL;
 
@@ -1525,7 +1406,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
     osi_Log2(afsd_logp, "cm_Lookup dscp 0x%p ref %d", dscp, dscp->refCount);
 #endif
 
-    if ( cm_stricmp_utf8N(namep,SMB_IOCTL_FILENAME_NOSLASH) == 0 ) {
+    if ( cm_ClientStrCmpI(namep,_C(SMB_IOCTL_FILENAME_NOSLASH)) == 0 ) {
         if (flags & CM_FLAG_CHECKPATH)
             return CM_ERROR_NOSUCHPATH;
         else
@@ -1533,13 +1414,13 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
     }
 
     if (dscp == cm_data.rootSCachep &&
-        strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) == 0) {
+        cm_ClientStrCmpNI(namep, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH) == 0) {
         return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outpScpp);
     }
 
     if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
         for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
-            code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
+            code = cm_ExpandSysName(namep, tname, lengthof(tname), sysNameIndex);
             if (code > 0) {
                 code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
@@ -1589,18 +1470,20 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
   \param[in] dscp cm_scache_t pointing at the directory containing the
       name to be unlinked.
 
-  \param[in] namep Non-normalized name to be unlinked.  This is the
+  \param[in] fnamep Original name to be unlinked.  This is the
       name that will be passed into the RXAFS_RemoveFile() call.
+      This parameter is optional.  If not provided, the value will
+      be looked up.
 
-  \param[in] normalizedName Normalized name to be unlinked.  This name
-      will be used to update the local directory caches.
+  \param[in] came Client name to be unlinked.  This name will be used
+      to update the local directory caches.
 
   \param[in] userp cm_user_t for the request.
 
   \param[in] reqp Request tracker.
  
  */
-long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
+long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
                cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
@@ -1612,16 +1495,32 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
     struct rx_connection * callp;
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
+    int free_fnamep = FALSE;
+
+    if (fnamep == NULL) {
+        code = -1;
+#ifdef USE_BPLUS
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        if (code == 0) {
+            code = cm_BPlusDirLookupOriginalName(&dirop, cnamep, &fnamep);
+            if (code == 0)
+                free_fnamep = TRUE;
+            cm_EndDirOp(&dirop);
+        }
+#endif
+        if (code)
+            goto done;
+    }
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* deleting a mount point from the root dir. */
-        code = cm_FreelanceRemoveMount(namep);
-        return code;
+        code = cm_FreelanceRemoveMount(fnamep);
+        goto done;
     }
 #endif  
 
-    code = cm_Lookup(dscp, namep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    code = cm_Lookup(dscp, cnamep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* make sure we don't screw up the dir status during the merge */
     code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
@@ -1632,7 +1531,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
     lock_ReleaseWrite(&dscp->rw);
     if (code) {
         cm_EndDirOp(&dirop);
-        return code;
+        goto done;
     }
 
     /* make the RPC */
@@ -1643,12 +1542,12 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
     osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
-        if (code) 
+        if (code)
             continue;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_RemoveFile(callp, &afsFid, namep,
-                                 &newDirStatus, &volSync);
+        code = RXAFS_RemoveFile(callp, &afsFid, fnamep,
+                                &newDirStatus, &volSync);
         rx_PutConnection(callp);
 
     } while (cm_Analyze(connp, userp, reqp, &dscp->fid, &volSync, NULL, NULL, code));
@@ -1664,7 +1563,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_dnlcRemove(dscp, normalizedName);
+    cm_dnlcRemove(dscp, cnamep);
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
@@ -1677,10 +1576,10 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
     }
     lock_ReleaseWrite(&dscp->rw);
 
-    if (code == 0 && cm_CheckDirOpForSingleChange(&dirop) && normalizedName) {
-        cm_DirDeleteEntry(&dirop, namep);
+    if (code == 0 && cm_CheckDirOpForSingleChange(&dirop) && cnamep) {
+        cm_DirDeleteEntry(&dirop, fnamep);
 #ifdef USE_BPLUS
-        cm_BPlusDirDeleteEntry(&dirop, normalizedName);
+        cm_BPlusDirDeleteEntry(&dirop, cnamep);
 #endif
     }
     cm_EndDirOp(&dirop);
@@ -1693,6 +1592,10 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
 	    lock_ReleaseWrite(&scp->rw);
         }
     }
+
+  done:
+    if (free_fnamep)
+        free(fnamep);
 
     return code;
 }
@@ -1765,13 +1668,13 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
  * other than the directory containing the symbolic link, then the new root is
  * returned in *newRootScpp, otherwise a null is returned there.
  */
-long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
-                      cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
-                      cm_user_t *userp, cm_req_t *reqp)
+long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
+                     cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
+                     cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
     long len;
-    char *linkp;
+    fschar_t *linkp;
     cm_space_t *tsp;
 
     *newRootScpp = NULL;
@@ -1786,17 +1689,17 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
      * bigger than max path length, so we don't really have to worry about
      * being a little conservative here.
      */
-    if (strlen(linkScp->mountPointStringp) + strlen(pathSuffixp) + 2
-		>= CM_UTILS_SPACESIZE) {
+    if (cm_FsStrLen(linkScp->mountPointStringp) + cm_FsStrLen(pathSuffixp) + 2
+        >= CM_UTILS_SPACESIZE) {
         code = CM_ERROR_TOOBIG;
-		goto done;
-	}
+        goto done;
+    }
 
     tsp = cm_GetSpace();
     linkp = linkScp->mountPointStringp;
     if (strncmp(linkp, cm_mountRoot, cm_mountRootLen) == 0) {
         if (strlen(linkp) > cm_mountRootLen)
-            strcpy(tsp->data, linkp+cm_mountRootLen+1);
+            StringCbCopyA((char *) tsp->data, sizeof(tsp->data), linkp+cm_mountRootLen+1);
         else
             tsp->data[0] = 0;
         *newRootScpp = cm_data.rootSCachep;
@@ -1808,7 +1711,7 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
             if (strnicmp(p, "all", 3) == 0)
                 p += 4;
 
-            strcpy(tsp->data, p);
+            StringCbCopyA(tsp->data, sizeof(tsp->data), p);
             for (p = tsp->data; *p; p++) {
                 if (*p == '\\')
                     *p = '/';
@@ -1817,20 +1720,20 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
             cm_HoldSCache(cm_data.rootSCachep);
         } else {
             linkScp->fileType = CM_SCACHETYPE_DFSLINK;
-            strcpy(tsp->data, linkp);
+            StringCchCopyA(tsp->data,lengthof(tsp->data), linkp);
             code = CM_ERROR_PATH_NOT_COVERED;
         }
     } else if ( linkScp->fileType == CM_SCACHETYPE_DFSLINK ||
                 !strnicmp(linkp, "msdfs:", (len = (long)strlen("msdfs:"))) ) {
         linkScp->fileType = CM_SCACHETYPE_DFSLINK;
-        strcpy(tsp->data, linkp);
+        StringCchCopyA(tsp->data,lengthof(tsp->data), linkp);
         code = CM_ERROR_PATH_NOT_COVERED;
     } else if (*linkp == '\\' || *linkp == '/') {
 #if 0   
         /* formerly, this was considered to be from the AFS root,
          * but this seems to create problems.  instead, we will just
          * reject the link */
-        strcpy(tsp->data, linkp+1);
+        StringCchCopyA(tsp->data,lengthof(tsp->data), linkp+1);
         *newRootScpp = cm_data.rootSCachep;
         cm_HoldSCache(cm_data.rootSCachep);
 #else
@@ -1838,45 +1741,51 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
          * the user can see what the link points to
          */
         linkScp->fileType = CM_SCACHETYPE_INVALID;
-        strcpy(tsp->data, linkp);
+        StringCchCopyA(tsp->data,lengthof(tsp->data), linkp);
         code = CM_ERROR_NOSUCHPATH;
 #endif  
     } else {
         /* a relative link */
-        strcpy(tsp->data, linkp);
+        StringCchCopyA(tsp->data,lengthof(tsp->data), linkp);
     }
     if (pathSuffixp[0] != 0) {	/* if suffix string is non-null */
-        strcat(tsp->data, "\\");
-        strcat(tsp->data, pathSuffixp);
+        StringCchCatA(tsp->data,lengthof(tsp->data), "\\");
+        StringCchCatA(tsp->data,lengthof(tsp->data), pathSuffixp);
     }
-    if (code == 0)
+    if (code == 0) {
+        clientchar_t * cpath = cm_FsStringToClientStringAlloc(tsp->data, -1, NULL);
+        cm_ClientStrCpy(tsp->wdata, lengthof(tsp->wdata), cpath);
+        free(cpath);
         *newSpaceBufferp = tsp;
-    else {
+    } else {
         cm_FreeSpace(tsp);
 
-        if (code == CM_ERROR_PATH_NOT_COVERED && reqp->tidPathp && reqp->relPathp)
+        if (code == CM_ERROR_PATH_NOT_COVERED && reqp->tidPathp && reqp->relPathp) {
             cm_VolStatus_Notify_DFS_Mapping(linkScp, reqp->tidPathp, reqp->relPathp);
+        }
     }
 
-  done:
+ done:
     lock_ReleaseWrite(&linkScp->rw);
     return code;
 }
 #ifdef DEBUG_REFCOUNT
-long cm_NameIDbg(cm_scache_t *rootSCachep, char *pathp, long flags,
-               cm_user_t *userp, char *tidPathp, cm_req_t *reqp, cm_scache_t **outScpp, 
-	       char * file, long line)
+long cm_NameIDbg(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
+                 cm_user_t *userp, clientchar_t *tidPathp, cm_req_t *reqp,
+                 cm_scache_t **outScpp, 
+                 char * file, long line)
 #else
-long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
-               cm_user_t *userp, char *tidPathp, cm_req_t *reqp, cm_scache_t **outScpp)
+long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
+              cm_user_t *userp, clientchar_t *tidPathp,
+              cm_req_t *reqp, cm_scache_t **outScpp)
 #endif
 {
     long code;
-    char *tp;			/* ptr moving through input buffer */
-    char tc;			/* temp char */
+    clientchar_t *tp;			/* ptr moving through input buffer */
+    clientchar_t tc;			/* temp char */
     int haveComponent;		/* has new component started? */
-    char component[AFSPATHMAX];	/* this is the new component */
-    char *cp;			/* component name being assembled */
+    clientchar_t component[AFSPATHMAX];	/* this is the new component */
+    clientchar_t *cp;			/* component name being assembled */
     cm_scache_t *tscp;		/* current location in the hierarchy */
     cm_scache_t *nscp;		/* next dude down */
     cm_scache_t *dirScp;	/* last dir we searched */
@@ -1885,7 +1794,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     cm_space_t *psp;		/* space for current path, if we've hit
     * any symlinks */
     cm_space_t *tempsp;		/* temp vbl */
-    char *restp;		/* rest of the pathname to interpret */
+    clientchar_t *restp;		/* rest of the pathname to interpret */
     int symlinkCount;		/* count of # of symlinks traversed */
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
@@ -1896,9 +1805,9 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 
 #ifdef DEBUG_REFCOUNT
     afsi_log("%s:%d cm_NameI rootscp 0x%p ref %d", file, line, rootSCachep, rootSCachep->refCount);
-    osi_Log4(afsd_logp,"cm_NameI rootscp 0x%p path %s tidpath %s flags 0x%x",
-	      rootSCachep, pathp ? pathp : "<NULL>", tidPathp ? tidPathp : "<NULL>", 
-	      flags);
+    osi_Log4(afsd_logp,"cm_NameI rootscp 0x%p path %S tidpath %S flags 0x%x",
+             rootSCachep, pathp ? pathp : "<NULL>", tidPathp ? tidPathp : "<NULL>", 
+             flags);
 #endif
 
     tp = tidPathp;
@@ -1907,7 +1816,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         phase = 2;
     }
     if (tp == NULL) {
-        tp = "";
+        tp = _C("");
     }
     haveComponent = 0;
     psp = NULL;
@@ -1954,16 +1863,18 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 		if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
 		    extraFlag = CM_FLAG_NOMOUNTCHASE;
 		code = cm_Lookup(tscp, component,
-				  flags | extraFlag,
-				  userp, reqp, &nscp);
+                                 flags | extraFlag,
+                                 userp, reqp, &nscp);
 
                 if (code == 0) {
-                    if (!strcmp(component,"..") || !strcmp(component,".")) {
+                    if (!cm_ClientStrCmp(component,_C("..")) ||
+                        !cm_ClientStrCmp(component,_C("."))) {
                         /* 
-                         * roll back the fid list until we find the fid 
-                         * that matches where we are now.  Its not necessarily
-                         * one or two fids because they might have been 
-                         * symlinks or mount points or both that were crossed.  
+                         * roll back the fid list until we find the
+                         * fid that matches where we are now.  Its not
+                         * necessarily one or two fids because they
+                         * might have been symlinks or mount points or
+                         * both that were crossed.
                          */
                         for ( i=fid_count-1; i>=0; i--) {
                             if (!cm_FidCmp(&nscp->fid, &fids[i]))
@@ -1993,8 +1904,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 		    if (psp) 
 			cm_FreeSpace(psp);
 		    if ((code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) && 
-                         tscp->fileType == CM_SCACHETYPE_SYMLINK) 
-                    {
+                        tscp->fileType == CM_SCACHETYPE_SYMLINK) {
 			osi_Log0(afsd_logp,"cm_NameI code CM_ERROR_NOSUCHPATH");
 			return CM_ERROR_NOSUCHPATH;
 		    } else {
@@ -2018,8 +1928,8 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     break;
                 }
 
-                /* now, if tscp is a symlink, we should follow
-                 * it and assemble the path again.
+                /* now, if tscp is a symlink, we should follow it and
+                 * assemble the path again.
                  */
                 lock_ObtainWrite(&tscp->rw);
                 code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
@@ -2053,10 +1963,18 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                         return CM_ERROR_TOO_MANY_SYMLINKS;
                     }
                     if (tc == 0) 
-                        restp = "";
+                        restp = _C("");
                     else 
                         restp = tp;
-                    code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
+
+                    {
+                        fschar_t * frestp;
+
+                        /* TODO: make this better */
+                        frestp = cm_ClientStringToFsStringAlloc(restp, -1, NULL);
+                        code = cm_AssembleLink(tscp, frestp, &linkScp, &tempsp, userp, reqp);
+                        free(frestp);
+                    }
 
                     if (code == 0 && linkScp != NULL) {
                         if (linkScp == cm_data.rootSCachep) 
@@ -2098,7 +2016,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     if (psp) 
                         cm_FreeSpace(psp);
                     psp = tempsp;
-                    tp = psp->data;
+                    tp = psp->wdata;
                     cm_ReleaseSCache(tscp);
                     tscp = linkScp;
                     linkScp = NULL;
@@ -2196,9 +2114,9 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
         cm_HoldSCache(dscp);
     }
 
-    code = cm_NameI(newRootScp, spacep->data,
-                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW | CM_FLAG_DIRSEARCH,
-                     userp, NULL, reqp, outScpp);
+    code = cm_NameI(newRootScp, spacep->wdata,
+                    CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW | CM_FLAG_DIRSEARCH,
+                    userp, NULL, reqp, outScpp);
 
     if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH)
         code = CM_ERROR_NOSUCHPATH;
@@ -2674,7 +2592,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     return code;
 }       
 
-long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
+long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *attrp,
                cm_scache_t **scpp, cm_user_t *userp, cm_req_t *reqp)
 {       
     cm_conn_t *connp;
@@ -2692,11 +2610,12 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    fschar_t * fnamep = NULL;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(namep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
@@ -2728,6 +2647,8 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     }
     didEnd = 0;
 
+    fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
+
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
@@ -2742,7 +2663,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         dirAFSFid.Unique = dscp->fid.unique;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_CreateFile(connp->callp, &dirAFSFid, namep,
+        code = RXAFS_CreateFile(connp->callp, &dirAFSFid, fnamep,
                                  &inStatus, &newAFSFid, &newFileStatus,
                                  &updatedDirStatus, &newFileCallback,
                                  &volSync);
@@ -2781,9 +2702,9 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
-                                userp, 0);
+                               userp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
-                                            &newFileCallback, 0);
+                                           &newFileCallback, 0);
                 didEnd = 1;     
             }       
             lock_ReleaseWrite(&scp->rw);
@@ -2796,12 +2717,15 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 
     if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
-        cm_DirCreateEntry(&dirop, namep, &newFid);
+        cm_DirCreateEntry(&dirop, fnamep, &newFid);
 #ifdef USE_BPLUS
-        cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+        cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
 #endif
     }
     cm_EndDirOp(&dirop);
+
+    if (fnamep)
+        free(fnamep);
 
     return code;
 }       
@@ -2829,7 +2753,7 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
-long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
+long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *attrp,
                  cm_user_t *userp, cm_req_t *reqp)
 {
     cm_conn_t *connp;
@@ -2847,11 +2771,12 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    fschar_t * fnamep = NULL;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(namep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
@@ -2883,6 +2808,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     }
     didEnd = 0;
 
+    fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
@@ -2897,14 +2823,14 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         dirAFSFid.Unique = dscp->fid.unique;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_MakeDir(connp->callp, &dirAFSFid, namep,
+        code = RXAFS_MakeDir(connp->callp, &dirAFSFid, fnamep,
                               &inStatus, &newAFSFid, &newDirStatus,
                               &updatedDirStatus, &newDirCallback,
                               &volSync);
         rx_PutConnection(callp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                         &dscp->fid, &volSync, NULL, &cbReq, code));
+                        &dscp->fid, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
         
     if (code)
@@ -2950,18 +2876,20 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 
     if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
-        cm_DirCreateEntry(&dirop, namep, &newFid);
+        cm_DirCreateEntry(&dirop, fnamep, &newFid);
 #ifdef USE_BPLUS
-        cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+        cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
 #endif
     }
     cm_EndDirOp(&dirop);
+
+    free(fnamep);
 
     /* and return error code */
     return code;
 }       
 
-long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
+long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long flags,
              cm_user_t *userp, cm_req_t *reqp)
 {
     cm_conn_t *connp;
@@ -2973,6 +2901,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    fschar_t * fnamep = NULL;
 
     if (dscp->fid.cell != sscp->fid.cell ||
         dscp->fid.volume != sscp->fid.volume) {
@@ -2989,6 +2918,8 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     if (code)
         return code;
 
+    fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
+
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL Link scp 0x%p", dscp);
     do {
@@ -3004,7 +2935,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         existingAFSFid.Unique = sscp->fid.unique;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_Link(callp, &dirAFSFid, namep, &existingAFSFid,
+        code = RXAFS_Link(callp, &dirAFSFid, fnamep, &existingAFSFid,
             &newLinkStatus, &updatedDirStatus, &volSync);
         rx_PutConnection(callp);
         osi_Log1(afsd_logp,"  RXAFS_Link returns 0x%x", code);
@@ -3032,18 +2963,20 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&dirop)) {
-            cm_DirCreateEntry(&dirop, namep, &sscp->fid);
+            cm_DirCreateEntry(&dirop, fnamep, &sscp->fid);
 #ifdef USE_BPLUS
-            cm_BPlusDirCreateEntry(&dirop, namep, &sscp->fid);
+            cm_BPlusDirCreateEntry(&dirop, cnamep, &sscp->fid);
 #endif
         }
     }
     cm_EndDirOp(&dirop);
 
+    free(fnamep);
+
     return code;
 }
 
-long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
+long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, long flags,
                 cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp)
 {
     cm_conn_t *connp;
@@ -3058,6 +2991,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     AFSVolSync volSync;
     struct rx_connection * callp;
     cm_dirOp_t dirop;
+    fschar_t *fnamep = NULL;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -3073,6 +3007,8 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         return code;
     }
 
+    fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
+
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
@@ -3087,7 +3023,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         dirAFSFid.Unique = dscp->fid.unique;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_Symlink(callp, &dirAFSFid, namep, contentsp,
+        code = RXAFS_Symlink(callp, &dirAFSFid, fnamep, contentsp,
                               &inStatus, &newAFSFid, &newLinkStatus,
                               &updatedDirStatus, &volSync);
         rx_PutConnection(callp);
@@ -3116,9 +3052,9 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         if (cm_CheckDirOpForSingleChange(&dirop)) {
             cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
 
-            cm_DirCreateEntry(&dirop, namep, &newFid);
+            cm_DirCreateEntry(&dirop, fnamep, &newFid);
 #ifdef USE_BPLUS
-            cm_BPlusDirCreateEntry(&dirop, namep, &newFid);
+            cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
 #endif
         }
     }
@@ -3142,6 +3078,8 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
             cm_ReleaseSCache(scp);
         }
     }
+
+    free(fnamep);
 	
     /* and return error code */
     return code;
@@ -3154,19 +3092,19 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
   \param[in] dscp cm_scache_t for the directory containing the
       directory to be removed.
 
-  \param[in] namep Non-normalized name of the directory to be
-      removed. This will be the name that is passed in to
-      RXAFS_RemoveDir().
+  \param[in] fnamep This will be the original name of the directory
+      as known to the file server.   It will be passed in to RXAFS_RemoveDir().
+      This parameter is optional.  If it is not provided the value
+      will be looked up.
 
-  \param[in] normalizedNamep Normalized name used to update the local
+  \param[in] cnamep Normalized name used to update the local
       directory caches.
 
   \param[in] userp cm_user_t for the request.
 
   \param[in] reqp Request tracker.
 */
-long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
-                  cm_user_t *userp, cm_req_t *reqp)
+long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_user_t *userp, cm_req_t *reqp)
 {
     cm_conn_t *connp;
     long code;
@@ -3177,8 +3115,26 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
     struct rx_connection * callp;
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
+    int free_fnamep = FALSE;
 
-    code = cm_Lookup(dscp, namep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    if (fnamep == NULL) {
+        code = -1;
+#ifdef USE_BPLUS
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        if (code == 0) {
+            code = cm_BPlusDirLookupOriginalName(&dirop, cnamep, &fnamep);
+            if (code == 0)
+                free_fnamep = TRUE;
+            cm_EndDirOp(&dirop);
+        }
+#endif
+        if (code)
+            goto done;
+    }
+
+    code = cm_Lookup(dscp, cnamep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    if (code)
+        goto done;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -3190,7 +3146,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
     lock_ReleaseWrite(&dscp->rw);
     if (code) {
         cm_EndDirOp(&dirop);
-        return code;
+        goto done;
     }
     didEnd = 0;
 
@@ -3206,12 +3162,12 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
         dirAFSFid.Unique = dscp->fid.unique;
 
         callp = cm_GetRxConn(connp);
-        code = RXAFS_RemoveDir(callp, &dirAFSFid, namep,
-                                &updatedDirStatus, &volSync);
+        code = RXAFS_RemoveDir(callp, &dirAFSFid, fnamep,
+                               &updatedDirStatus, &volSync);
         rx_PutConnection(callp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                         &dscp->fid, &volSync, NULL, NULL, code));
+                        &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCErrorRmdir(code, reqp);
 
     if (code)
@@ -3226,16 +3182,16 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
     lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_dnlcRemove(dscp, normalizedNamep); 
+        cm_dnlcRemove(dscp, cnamep); 
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&dirop) && normalizedNamep != NULL) {
-            cm_DirDeleteEntry(&dirop, namep);
+        if (cm_CheckDirOpForSingleChange(&dirop) && cnamep != NULL) {
+            cm_DirDeleteEntry(&dirop, fnamep);
 #ifdef USE_BPLUS
-            cm_BPlusDirDeleteEntry(&dirop, normalizedNamep);
+            cm_BPlusDirDeleteEntry(&dirop, cnamep);
 #endif
         }
     }
@@ -3249,6 +3205,10 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, char *normalizedNamep,
 	    lock_ReleaseWrite(&scp->rw);
         }
     }
+
+  done:
+    if (free_fnamep)
+        free(fnamep);
 
     /* and return error code */
     return code;
@@ -3279,8 +3239,9 @@ long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp)
   \param[in] oldDscp cm_scache_t for the directory containing the old
       name.
 
-  \param[in] oldNamep Non-normalized old name.  This is the name that
-  will be passed into the RXAFS_Rename().
+  \param[in] oldNamep The original old name known to the file server.
+      This is the name that will be passed into the RXAFS_Rename().
+      If it is not provided, it will be looked up.
 
   \param[in] normalizedOldNamep Normalized old name.  This is used for
   updating local directory caches.
@@ -3295,8 +3256,8 @@ long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp)
   \param[in,out] reqp Request tracker.
 
 */
-long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
-               cm_scache_t *newDscp, char *newNamep, cm_user_t *userp,
+long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep,
+               cm_scache_t *newDscp, clientchar_t *cNewNamep, cm_user_t *userp,
                cm_req_t *reqp)
 {
     cm_conn_t *connp;
@@ -3313,6 +3274,24 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
     cm_fid_t   fileFid;
     int        diropCode = -1;
     cm_dirOp_t newDirOp;
+    fschar_t * newNamep = NULL;
+    int free_oldNamep = FALSE;
+
+    if (oldNamep == NULL) {
+        code = -1;
+#ifdef USE_BPLUS
+        code = cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_READ, &oldDirOp);
+        if (code == 0) {
+            code = cm_BPlusDirLookupOriginalName(&oldDirOp, cOldNamep, &oldNamep);
+            if (code == 0)
+                free_oldNamep = TRUE;
+            cm_EndDirOp(&oldDirOp);
+        }
+#endif
+        if (code)
+            goto done;
+    }
+
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our call
@@ -3321,14 +3300,16 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
      */
     if (oldDscp == newDscp) {
         /* check for identical names */
-        if (strcmp(oldNamep, newNamep) == 0)
-            return CM_ERROR_RENAME_IDENTICAL;
+        if (cm_ClientStrCmp(cOldNamep, cNewNamep) == 0) {
+            code = CM_ERROR_RENAME_IDENTICAL;
+            goto done;
+        }
 
         oneDir = 1;
         cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
         lock_ObtainWrite(&oldDscp->rw);
-        cm_dnlcRemove(oldDscp, normalizedOldNamep);
-        cm_dnlcRemove(oldDscp, newNamep);
+        cm_dnlcRemove(oldDscp, cOldNamep);
+        cm_dnlcRemove(oldDscp, cNewNamep);
         code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                           CM_SCACHESYNC_STOREDATA);
         lock_ReleaseWrite(&oldDscp->rw);
@@ -3340,31 +3321,35 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
         /* two distinct dir vnodes */
         oneDir = 0;
         if (oldDscp->fid.cell != newDscp->fid.cell ||
-             oldDscp->fid.volume != newDscp->fid.volume)
-            return CM_ERROR_CROSSDEVLINK;
+             oldDscp->fid.volume != newDscp->fid.volume) {
+            code = CM_ERROR_CROSSDEVLINK;
+            goto done;
+        }
 
         /* shouldn't happen that we have distinct vnodes for two
          * different files, but could due to deliberate attack, or
          * stale info.  Avoid deadlocks and quit now.
          */
-        if (oldDscp->fid.vnode == newDscp->fid.vnode)
-            return CM_ERROR_CROSSDEVLINK;
+        if (oldDscp->fid.vnode == newDscp->fid.vnode) {
+            code = CM_ERROR_CROSSDEVLINK;
+            goto done;
+        }
 
         if (oldDscp->fid.vnode < newDscp->fid.vnode) {
             cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
             lock_ObtainWrite(&oldDscp->rw);
-            cm_dnlcRemove(oldDscp, normalizedOldNamep);
+            cm_dnlcRemove(oldDscp, cOldNamep);
             code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
-                              CM_SCACHESYNC_STOREDATA);
+                             CM_SCACHESYNC_STOREDATA);
             lock_ReleaseWrite(&oldDscp->rw);
             if (code != 0)
                 cm_EndDirOp(&oldDirOp);
             if (code == 0) {
                 cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
                 lock_ObtainWrite(&newDscp->rw);
-                cm_dnlcRemove(newDscp, newNamep);
+                cm_dnlcRemove(newDscp, cNewNamep);
                 code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
-                                  CM_SCACHESYNC_STOREDATA);
+                                 CM_SCACHESYNC_STOREDATA);
                 lock_ReleaseWrite(&newDscp->rw);
                 if (code) {
                     cm_EndDirOp(&newDirOp);
@@ -3382,7 +3367,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
             /* lock the new vnode entry first */
             cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
             lock_ObtainWrite(&newDscp->rw);
-            cm_dnlcRemove(newDscp, newNamep);
+            cm_dnlcRemove(newDscp, cNewNamep);
             code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
                               CM_SCACHESYNC_STOREDATA);
             lock_ReleaseWrite(&newDscp->rw);
@@ -3391,7 +3376,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
             if (code == 0) {
                 cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
                 lock_ObtainWrite(&oldDscp->rw);
-                cm_dnlcRemove(oldDscp, normalizedOldNamep);
+                cm_dnlcRemove(oldDscp, cOldNamep);
                 code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
                                   CM_SCACHESYNC_STOREDATA);
                 lock_ReleaseWrite(&oldDscp->rw);
@@ -3409,10 +3394,12 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
         }
     }	/* two distinct vnodes */
 
-    if (code) {
-        return code;
-    }
+    if (code) 
+        goto done;
+
     didEnd = 0;
+
+    newNamep = cm_ClientStringToFsStringAlloc(cNewNamep, -1, NULL);
 
     /* try the RPC now */
     osi_Log2(afsd_logp, "CALL Rename old scp 0x%p new scp 0x%p", 
@@ -3431,9 +3418,9 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
 
         callp = cm_GetRxConn(connp);
         code = RXAFS_Rename(callp, &oldDirAFSFid, oldNamep,
-                             &newDirAFSFid, newNamep,
-                             &updatedOldDirStatus, &updatedNewDirStatus,
-                             &volSync);
+                            &newDirAFSFid, newNamep,
+                            &updatedOldDirStatus, &updatedNewDirStatus,
+                            &volSync);
         rx_PutConnection(callp);
 
     } while (cm_Analyze(connp, userp, reqp, &oldDscp->fid,
@@ -3455,14 +3442,14 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
 
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
-                        userp, CM_MERGEFLAG_DIROP);
+                       userp, CM_MERGEFLAG_DIROP);
     lock_ReleaseWrite(&oldDscp->rw);
 
     if (code == 0) {
         if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
 
 #ifdef USE_BPLUS
-            diropCode = cm_BPlusDirLookup(&oldDirOp, normalizedOldNamep, &fileFid);
+            diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
             if (diropCode == CM_ERROR_INEXACT_MATCH)
                 diropCode = 0;
             else if (diropCode == EINVAL)
@@ -3473,14 +3460,14 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
                 if (oneDir) {
                     diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
 #ifdef USE_BPLUS
-                    cm_BPlusDirCreateEntry(&oldDirOp, newNamep, &fileFid);
+                    cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
 #endif
                 }
-
+                
                 if (diropCode == 0) { 
                     diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
 #ifdef USE_BPLUS
-                    cm_BPlusDirDeleteEntry(&oldDirOp, normalizedOldNamep);
+                    cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
 #endif
                 }
             }
@@ -3508,12 +3495,18 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, char *normalizedOldNamep,
             if (diropCode == 0 && cm_CheckDirOpForSingleChange(&newDirOp)) {
                 cm_DirCreateEntry(&newDirOp, newNamep, &fileFid);
 #ifdef USE_BPLUS
-                cm_BPlusDirCreateEntry(&newDirOp, newNamep, &fileFid);
+                cm_BPlusDirCreateEntry(&newDirOp, cNewNamep, &fileFid);
 #endif
             }
         }
         cm_EndDirOp(&newDirOp);
     }
+
+  done:
+    if (free_oldNamep)
+        free(oldNamep);
+
+    free(newNamep);
 
     /* and return error code */
     return code;

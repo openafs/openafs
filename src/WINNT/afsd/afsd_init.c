@@ -36,6 +36,9 @@
 #include "lanahelper.h"
 #include <strsafe.h>
 #include "cm_memmap.h"
+#ifdef DEBUG
+#include <crtdbg.h>
+#endif
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
@@ -50,16 +53,21 @@ extern afs_int32 cm_BPlusTrees;
 #endif
 extern afs_int32 cm_OfflineROIsValid;
 extern afs_int32 cm_giveUpAllCBs;
-extern const char **smb_ExecutableExtensions;
+extern const clientchar_t **smb_ExecutableExtensions;
 
 osi_log_t *afsd_logp;
 
 cm_config_data_t        cm_data;
 
-char cm_rootVolumeName[VL_MAXNAMELEN];
+fschar_t cm_rootVolumeName[VL_MAXNAMELEN];
 DWORD cm_rootVolumeNameLen;
-char cm_mountRoot[1024];
+
+fschar_t cm_mountRoot[1024];
 DWORD cm_mountRootLen;
+
+clientchar_t cm_mountRootC[1024];
+DWORD cm_mountRootCLen;
+
 int cm_logChunkSize;
 int cm_chunkSize;
 
@@ -79,6 +87,7 @@ long cm_HostAddr;
 unsigned short cm_callbackport = CM_DEFAULT_CALLBACKPORT;
 
 char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
+clientchar_t cm_NetbiosNameC[MAX_NB_NAME_LENGTH] = _C("");
 
 char cm_CachePath[MAX_PATH];
 DWORD cm_ValidateCache = 1;
@@ -87,9 +96,9 @@ BOOL reportSessionStartups = FALSE;
 
 cm_initparams_v1 cm_initParams;
 
-char *cm_sysName = 0;
-unsigned int   cm_sysNameCount = 0;
-char *cm_sysNameList[MAXNUMSYSNAMES];
+clientchar_t *cm_sysName = 0;
+unsigned int  cm_sysNameCount = 0;
+clientchar_t *cm_sysNameList[MAXNUMSYSNAMES];
 
 DWORD TraceOption = 0;
 
@@ -132,12 +141,6 @@ afsi_log(char *pattern, ...)
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, s, (DWORD)strlen(s), &zilch, NULL);
     }
-}
-
-extern initUpperCaseTable();
-void afsd_initUpperCaseTable() 
-{
-    initUpperCaseTable();
 }
 
 void
@@ -296,10 +299,10 @@ configureBackConnectionHostNames(void)
 				 pHostNames, &dwSize) == ERROR_SUCCESS) 
             {
 		for (pName = pHostNames; 
-		     (pName - pHostNames < dwSize) && *pName ; 
+		     (pName - pHostNames < (int) dwSize) && *pName ; 
 		     pName += strlen(pName) + 1)
 		{
-		    if ( !cm_stricmp_utf8(pName, cm_NetbiosName) ) {
+		    if ( !stricmp(pName, cm_NetbiosName) ) {
 			bNameFound = TRUE;
 			break;
 		    }   
@@ -562,7 +565,7 @@ int afsd_InitCM(char **reasonP)
     long ltt, ltto;
     long rx_nojumbo;
     long virtualCache = 0;
-    char rootCellName[256];
+    fschar_t rootCellName[256];
     struct rx_service *serverp;
     static struct rx_securityClass *nullServerSecurityClassp;
     struct hostent *thp;
@@ -575,7 +578,6 @@ int afsd_InitCM(char **reasonP)
     /*int freelanceEnabled;*/
     WSADATA WSAjunk;
     int i;
-    char *p, *q; 
     int cm_noIPAddr;         /* number of client network interfaces */
     int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
     int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
@@ -584,7 +586,6 @@ int afsd_InitCM(char **reasonP)
 
     WSAStartup(0x0101, &WSAjunk);
 
-    afsd_initUpperCaseTable();
     init_et_to_sys_error();
 
     /* setup osidebug server at RPC slot 1000 */
@@ -612,7 +613,7 @@ int afsd_InitCM(char **reasonP)
 
     /* Look up configuration parameters in Registry */
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                        0, KEY_QUERY_VALUE, &parmKey);
     if (code != ERROR_SUCCESS) {
         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
                        | FORMAT_MESSAGE_ALLOCATE_BUFFER,
@@ -820,29 +821,32 @@ int afsd_InitCM(char **reasonP)
 
     dummyLen = sizeof(cm_rootVolumeName);
     code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,
-                            cm_rootVolumeName, &dummyLen);
+                            (LPBYTE) cm_rootVolumeName, &dummyLen);
     if (code == ERROR_SUCCESS)
         afsi_log("Root volume %s", cm_rootVolumeName);
     else {
-        StringCbCopyA(cm_rootVolumeName, sizeof(cm_rootVolumeName), "root.afs");
+        cm_FsStrCpy(cm_rootVolumeName, lengthof(cm_rootVolumeName), "root.afs");
         afsi_log("Default root volume name root.afs");
     }
 
-    cm_mountRootLen = sizeof(cm_mountRoot);
-    code = RegQueryValueEx(parmKey, "MountRoot", NULL, NULL,
-                            cm_mountRoot, &cm_mountRootLen);
+    cm_mountRootCLen = sizeof(cm_mountRootC);
+    code = RegQueryValueExW(parmKey, L"MountRoot", NULL, NULL,
+                            (LPBYTE) cm_mountRootC, &cm_mountRootCLen);
     if (code == ERROR_SUCCESS) {
-        afsi_log("Mount root %s", cm_mountRoot);
-        cm_mountRootLen = (DWORD)strlen(cm_mountRoot);
+        afsi_log("Mount root %S", cm_mountRootC);
+        cm_mountRootCLen = cm_ClientStrLen(cm_mountRootC);
     } else {
-        StringCbCopyA(cm_mountRoot, sizeof(cm_mountRoot), "/afs");
-        cm_mountRootLen = 4;
+        cm_ClientStrCpy(cm_mountRootC, lengthof(cm_mountRootC), _C("/afs"));
+        cm_mountRootCLen = cm_ClientStrLen(cm_mountRootC);
         /* Don't log */
     }
 
+    cm_ClientStringToFsString(cm_mountRootC, -1, cm_mountRoot, lengthof(cm_mountRoot));
+    cm_mountRootLen = cm_FsStrLen(cm_mountRoot);
+
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
-                            buf, &dummyLen);
+                           buf, &dummyLen);
     if (code == ERROR_SUCCESS && buf[0]) {
         if (regType == REG_EXPAND_SZ) {
             dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
@@ -907,47 +911,49 @@ int afsd_InitCM(char **reasonP)
     }
 
     for ( i=0; i < MAXNUMSYSNAMES; i++ ) {
-        cm_sysNameList[i] = osi_Alloc(MAXSYSNAME);
+        cm_sysNameList[i] = osi_Alloc(MAXSYSNAME * sizeof(clientchar_t));
         cm_sysNameList[i][0] = '\0';
     }
     cm_sysName = cm_sysNameList[0];
 
-    dummyLen = sizeof(buf);
-    code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, buf, &dummyLen);
-    if (code != ERROR_SUCCESS || !buf[0]) {
-#if defined(_IA64_)
-        StringCbCopyA(buf, sizeof(buf), "ia64_win64");
-#elif defined(_AMD64_)
-        StringCbCopyA(buf, sizeof(buf), "amd64_win64 x86_win32 i386_w2k");
-#else /* assume x86 32-bit */
-        StringCbCopyA(buf, sizeof(buf), "x86_win32 i386_w2k i386_nt40");
-#endif
-    }
-    afsi_log("Sys name %s", buf); 
-
-    /* breakup buf into individual search string entries */
-    for (p = q = buf; p < buf + dummyLen; p++)
     {
-        if (*p == '\0' || isspace(*p)) {
-            memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
-            cm_sysNameList[cm_sysNameCount][p-q] = '\0';
-            cm_sysNameCount++;
+        clientchar_t *p, *q;
+        clientchar_t * cbuf = (clientchar_t *) buf;
+        dummyLen = sizeof(buf);
+        code = RegQueryValueExW(parmKey, L"SysName", NULL, NULL, (LPBYTE) cbuf, &dummyLen);
+        if (code != ERROR_SUCCESS || !cbuf[0]) {
+#if defined(_IA64_)
+            cm_ClientStrCpy(cbuf, lengthof(buf), _C("ia64_win64"));
+#elif defined(_AMD64_)
+            cm_ClientStrCpy(cbuf, lengthof(buf), _C("amd64_win64 x86_win32 i386_w2k"));
+#else /* assume x86 32-bit */
+            cm_ClientStrCpy(cbuf, lengthof(buf), _C("x86_win32 i386_w2k i386_nt40"));
+#endif
+        }
+        afsi_log("Sys name %S", cbuf); 
 
-            do {
-                if (*p == '\0')
-                    goto done_sysname;
-                p++;
-            } while (*p == '\0' || isspace(*p));
-            q = p;
-            p--;
+        /* breakup buf into individual search string entries */
+        for (p = q = cbuf; p < cbuf + dummyLen; p++) {
+            if (*p == '\0' || iswspace(*p)) {
+                memcpy(cm_sysNameList[cm_sysNameCount],q,(p-q) * sizeof(clientchar_t));
+                cm_sysNameList[cm_sysNameCount][p-q] = '\0';
+                cm_sysNameCount++;
+                do {
+                    if (*p == '\0')
+                        goto done_sysname;
+                    p++;
+                } while (*p == '\0' || isspace(*p));
+                q = p;
+                p--;
+            }
         }
     }
   done_sysname:
-    StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
+    cm_ClientStrCpy(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
 
     dummyLen = sizeof(cryptall);
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
-                            (BYTE *) &cryptall, &dummyLen);
+                           (BYTE *) &cryptall, &dummyLen);
     if (code == ERROR_SUCCESS) {
         afsi_log("SecurityLevel is %s", cryptall?"crypt":"clear");
     } else {
@@ -1150,28 +1156,27 @@ int afsd_InitCM(char **reasonP)
     afsi_log("CM BPlusTrees is not supported");
 #endif
 
-    if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, 
-                          &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
+    if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0, 
+                           &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
          (regType == REG_MULTI_SZ)) 
     {
-        char * pSz;
+        clientchar_t * pSz;
         dummyLen += 3; /* in case the source string is not nul terminated */
         pSz = malloc(dummyLen);
-        if ((RegQueryValueEx( parmKey, "PrefetchExecutableExtensions", 0, &regType, 
-                             pSz, &dummyLen) == ERROR_SUCCESS) &&
+        if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0, &regType, 
+                               (LPBYTE) pSz, &dummyLen) == ERROR_SUCCESS) &&
              (regType == REG_MULTI_SZ))
         {
             int cnt;
-            char * p;
+            clientchar_t * p;
 
-            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1);
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += cm_ClientStrLen(p) + 1);
 
-            smb_ExecutableExtensions = malloc(sizeof(char *) * (cnt+1));
+            smb_ExecutableExtensions = malloc(sizeof(clientchar_t *) * (cnt+1));
 
-            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += strlen(p) + 1)
-            {
+            for (cnt = 0, p = pSz; (p - pSz < dummyLen) && *p; cnt++, p += cm_ClientStrLen(p) + 1) {
                 smb_ExecutableExtensions[cnt] = p;
-                afsi_log("PrefetchExecutableExtension: \"%s\"", p);
+                afsi_log("PrefetchExecutableExtension: \"%S\"", p);
             }
             smb_ExecutableExtensions[cnt] = NULL;
         }
@@ -1275,6 +1280,8 @@ int afsd_InitCM(char **reasonP)
     }
 
     if ( rx_mtu != -1 ) {
+        extern void rx_SetMaxMTU(int);
+
         rx_SetMaxMTU(rx_mtu);
         afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
     }
@@ -1324,7 +1331,7 @@ int afsd_InitCM(char **reasonP)
 
     code = cm_GetRootCellName(rootCellName);
     afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
-              code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
+             code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
     if (code != 0 && !cm_freelanceEnabled) 
     {
         *reasonP = "can't find root cell name in " AFS_CELLSERVDB;
@@ -1790,7 +1797,7 @@ void afsd_SetUnhandledExceptionFilter()
     SetUnhandledExceptionFilter(afsd_ExceptionFilter);
 #endif
 }
-  
+
 #ifdef _DEBUG
 void afsd_DbgBreakAllocInit()
 {

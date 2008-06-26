@@ -20,7 +20,7 @@ typedef struct nc {
     unsigned int key;
     struct nc *next, *prev;
     cm_scache_t *dirp, *vp;
-    unsigned char name[CM_AFSNCNAMESIZE];   
+    normchar_t name[CM_AFSNCNAMESIZE];   
 } cm_nc_t;
 
 typedef struct {
@@ -29,12 +29,12 @@ typedef struct {
     afs_int32 cycles, lookuprace;
 } cm_dnlcstats_t;
 
-#define dnlcHash(ts, hval) for (hval=0; *ts; ts++) {    \
-                                hval *= 173;            \
-                                hval += cm_foldUpper[(unsigned char)(*ts)]; \
-                           }
-extern void cm_dnlcEnter(cm_scache_t *adp, char *name, cm_scache_t *avc);
-extern void cm_dnlcRemove(cm_scache_t *adp, char *name);
+#define dnlcHash(ts, hval) for (hval=0; *ts; ts++) {                    \
+        hval *= 173;                                                    \
+        hval += cm_NormCharUpr(*ts);                                   \
+    }
+extern void cm_dnlcEnter(cm_scache_t *adp, normchar_t *name, cm_scache_t *avc);
+extern void cm_dnlcRemove(cm_scache_t *adp, normchar_t *name);
 extern void cm_dnlcPurgedp(cm_scache_t *adp);
 extern void cm_dnlcPurgevp(cm_scache_t *avc);
 extern void cm_dnlcPurge(void);

@@ -14,8 +14,8 @@
 #include <windows.h>
 #include <winsock2.h>
 #include "cm_dns_private.h"
-#include "cm_dns.h"
 #include "cm_nls.h"
+#include "cm_dns.h"
 #include <lwp.h>
 #include <afs/afsint.h>
 #if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0500)
@@ -23,6 +23,7 @@
 #define DNSAPI_ENV
 #endif
 #include <errno.h>
+#include <strsafe.h>
 
 /*extern void afsi_log(char *pattern, ...);*/
 
@@ -31,51 +32,56 @@ static int cm_dnsEnabled = -1;
 
 void DNSlowerCase(char *str)
 {
-  int i;
+    unsigned int i;
 
-  for (i=0; i<strlen(str); i++)
-    /*str[i] = tolower(str[i]);*/
-    if (str[i] >= 'A' && str[i] <= 'Z')
-      str[i] += 'a' - 'A';
+    for (i=0; i<strlen(str); i++)
+        /*str[i] = tolower(str[i]);*/
+        if (str[i] >= 'A' && str[i] <= 'Z')
+            str[i] += 'a' - 'A';
 }
 
 int cm_InitDNS(int enabled)
 {
 #ifndef DNSAPI_ENV
-  char configpath[100];
-  int len;
-  int code;
-  char *addr;
+    char configpath[100];
+    int len;
+    int code;
+    char *addr;
   
-  if (!enabled) { fprintf(stderr, "DNS support disabled\n"); cm_dnsEnabled = 0; return 0; }
-
-  /* First try AFS_NS environment var. */
-  addr = getenv("AFS_NS");
-  if (addr && inet_addr(addr) != -1) {
-    strcpy(dns_addr, addr);
-  } else {
-    /* Now check for the AFSDNS.INI file */
-    code = GetWindowsDirectory(configpath, sizeof(configpath));
-    if (code == 0 || code > sizeof(configpath)) return -1;
-    strcat(configpath, "\\afsdns.ini");
-
-    /* Currently we only get (and query) the first nameserver.  Getting
-       list of mult. nameservers should be easy to do. */
-    len = GetPrivateProfileString("AFS Domain Name Servers", "ns1", NULL,
-			    dns_addr, sizeof(dns_addr),
-			    configpath);
-  
-    if (len == 0 || inet_addr(dns_addr) == -1) {
-      fprintf(stderr, "No valid name server addresses found, DNS lookup is "
-                      "disabled\n");
-      cm_dnsEnabled = 0;  /* failed */
-      return -1;     /* No name servers defined */
+    if (!enabled) { 
+        fprintf(stderr, "DNS support disabled\n"); 
+        cm_dnsEnabled = 0; 
+        return 0; 
     }
-    else fprintf(stderr, "Found DNS server %s\n", dns_addr);
-  }
+
+    /* First try AFS_NS environment var. */
+    addr = getenv("AFS_NS");
+    if (addr && inet_addr(addr) != -1) {
+        strcpy(dns_addr, addr);
+    } else {
+        /* Now check for the AFSDNS.INI file */
+        code = GetWindowsDirectory(configpath, sizeof(configpath));
+        if (code == 0 || code > sizeof(configpath)) return -1;
+        strcat(configpath, "\\afsdns.ini");
+
+        /* Currently we only get (and query) the first nameserver.  Getting
+        list of mult. nameservers should be easy to do. */
+        len = GetPrivateProfileString("AFS Domain Name Servers", "ns1", NULL,
+                                       dns_addr, sizeof(dns_addr),
+                                       configpath);
+  
+        if (len == 0 || inet_addr(dns_addr) == -1) {
+            fprintf(stderr, "No valid name server addresses found, DNS lookup is "
+                     "disabled\n");
+            cm_dnsEnabled = 0;  /* failed */
+            return -1;     /* No name servers defined */
+        }
+        else 
+            fprintf(stderr, "Found DNS server %s\n", dns_addr);
+    }
 #endif /* DNSAPI_ENV */
-  cm_dnsEnabled = 1;
-  return 0;
+    cm_dnsEnabled = 1;
+    return 0;
 }
 
 #ifndef DNSAPI_ENV
@@ -618,72 +624,67 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
                  int *numServers, int *ttl)
 {
 #ifndef DNSAPI_ENV
-   /*static AFS_SRV_LIST srvList;
-    static int ans = 0;*/
-  SOCKET commSock;
-  SOCKADDR_IN sockAddr;
-  PDNS_HDR  pDNShdr;
-  char buffer[BUFSIZE];
-  char query[1024];
-  int rc;
+    SOCKET commSock;
+    SOCKADDR_IN sockAddr;
+    PDNS_HDR  pDNShdr;
+    char buffer[BUFSIZE];
+    char query[1024];
+    int rc;
 
 #ifdef DEBUG
-  fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
+    fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
 #endif
 
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-  if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
-    cm_InitDNS(1);    /* assume enabled */
-  }
+    if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
+        cm_InitDNS(1);         /* assume enabled */
+    }
 #endif
-  if (cm_dnsEnabled == 0) {  /* possibly we failed in cm_InitDNS above */
-    fprintf(stderr, "DNS initialization failed, disabled\n");
-    *numServers = 0;
-    return -1;
-  }
+    if (cm_dnsEnabled == 0) {  /* possibly we failed in cm_InitDNS above */
+        fprintf(stderr, "DNS initialization failed, disabled\n");
+        *numServers = 0;
+        return -1;
+    }
   
-  sockAddr = setSockAddr(dns_addr, DNS_PORT);
+    sockAddr = setSockAddr(dns_addr, DNS_PORT);
   
-  commSock = socket( AF_INET, SOCK_DGRAM, 0 );
-  if ( commSock < 0 )
+    commSock = socket( AF_INET, SOCK_DGRAM, 0 );
+    if ( commSock < 0 )
     {
-      /*afsi_log("socket() failed\n");*/
-      fprintf(stderr, "getAFSServer: socket() failed, errno=%d\n", errno);
-      *numServers = 0;
-      return (-1);
+        /*afsi_log("socket() failed\n");*/
+        fprintf(stderr, "getAFSServer: socket() failed, errno=%d\n", errno);
+        *numServers = 0;
+        return (-1);
     } 
-  
-  strncpy(query, cellName, 1024);
-  query[1023] = 0;
-  if (query[strlen(query)-1] != '.') {
-    strncat(query,".",1024);
-    query[1023] = 0;
-  }
 
-  rc = send_DNS_AFSDB_Query(cellName,commSock,sockAddr, buffer);
-  if (rc < 0) {
-    fprintf(stderr,"getAFSServer: send_DNS_AFSDB_Query failed\n");
-    *numServers = 0;
-    return -1;
-  }
+    StringCbCopyA(query, sizeof(query), cellName);
+    if (query[strlen(query)-1] != '.') {
+        StringCbCatA(query, sizeof(query), ".");
+    }
+
+    rc = send_DNS_AFSDB_Query(cellName,commSock,sockAddr, buffer);
+    if (rc < 0) {
+        fprintf(stderr,"getAFSServer: send_DNS_AFSDB_Query failed\n");
+        *numServers = 0;
+        return -1;
+    }
     
-  pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
+    pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
   
-  /*printReplyBuffer_AFSDB(pDNShdr);*/
-  if (pDNShdr)
-    processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, numServers, ttl);
-  else
-    *numServers = 0;
-  
-  closesocket(commSock);
-  if (*numServers == 0)
-    return(-1);
+    /*printReplyBuffer_AFSDB(pDNShdr);*/
+    if (pDNShdr)
+        processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, numServers, ttl);
+    else
+        *numServers = 0;
 
-  else
-    return 0;
+    closesocket(commSock);
+    if (*numServers == 0)
+        return(-1);
+    else
+        return 0;
 #else /* DNSAPI_ENV */
     PDNS_RECORD pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
-    DWORD i;
+    int i;
     struct sockaddr_in vlSockAddr;
     char query[1024];
 
@@ -696,22 +697,20 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     *ttl = 0;
 
     /* query the AFSDB records of cell */
-    strncpy(query, cellName, 1024);
-    query[1023] = 0;
+    StringCbCopyA(query, sizeof(query), cellName);
     if (query[strlen(query)-1] != '.') {
-        strncat(query,".",1024);
-        query[1023] = 0;
+        StringCbCatA(query, sizeof(query), ".");
     }
 
     if (DnsQuery_A(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
         memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
-		
+
         /* go through the returned records */
         for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
             /* if we find an AFSDB record with Preference set to 1, we found a volserver */
             if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
-                strncpy(cellHostNames[*numServers], pDnsIter->Data.Afsdb.pNameExchange, MAXHOSTCHARS);
-                cellHostNames[*numServers][MAXHOSTCHARS-1]='\0';
+                StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
+                              pDnsIter->Data.Afsdb.pNameExchange);
                 (*numServers)++;
                 
                 if (!*ttl) 
@@ -731,7 +730,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
                 for (i=0;i<*numServers;i++)
                     if(cm_stricmp_utf8(pDnsIter->pName, cellHostNames[i]) == 0)
                         cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
-        }       
+        }
 
         for (i=0;i<*numServers;i++) {
             /* if we don't have an IP yet, then we should try resolving the volserver hostname
@@ -771,4 +770,100 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
         return -1;
 #endif /* DNSAPI_ENV */
 }
+
+int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
+                  cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
+                  int *numServers, int *ttl)
+{
+#ifdef DNSAPI_ENV
+    PDNS_RECORDW pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
+    int i;
+    struct sockaddr_in vlSockAddr;
+    cm_unichar_t query[1024];
+
+#ifdef AFS_FREELANCE_CLIENT
+    if ( cm_stricmp_utf16(cellName, L"Freelance.Local.Root") == 0 )
+        return -1;
+#endif /* AFS_FREELANCE_CLIENT */
+
+    *numServers = 0; 
+    *ttl = 0;
+
+    /* query the AFSDB records of cell */
+    StringCbCopyW(query, sizeof(query), cellName);
+    if (query[wcslen(query)-1] != L'.') {
+        StringCbCatW(query, sizeof(query), L".");
+    }
+
+    if (DnsQuery_W(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, (PDNS_RECORD *) &pDnsCell,
+                   NULL) == ERROR_SUCCESS) {
+        memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
+
+        /* go through the returned records */
+        for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
+            /* if we find an AFSDB record with Preference set to 1, we found a volserver */
+            if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+                StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
+                              pDnsIter->Data.Afsdb.pNameExchange);
+                (*numServers)++;
+                
+                if (!*ttl) 
+                    *ttl = pDnsIter->dwTtl;
+                if (*numServers == AFSMAXCELLHOSTS) 
+                    break;
+            }
+        }
+
+        for (i=0;i<*numServers;i++) 
+            cellHostAddrs[i] = 0;
+
+        /* now check if there are any A records in the results */
+        for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
+            if(pDnsIter->wType == DNS_TYPE_A)
+                /* check if its for one of the volservers */
+                for (i=0;i<*numServers;i++)
+                    if(cm_stricmp_utf16(pDnsIter->pName, cellHostNames[i]) == 0)
+                        cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
+        }
+
+        for (i=0;i<*numServers;i++) {
+            /* if we don't have an IP yet, then we should try resolving the volserver hostname
+               in a separate query. */
+            if (!cellHostAddrs[i]) {
+                if (DnsQuery_W(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL,
+                               (PDNS_RECORD *) &pDnsVol, NULL) == ERROR_SUCCESS) {
+                    for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
+                        /* if we get an A record, keep it */
+                        if (pDnsVolIter->wType == DNS_TYPE_A && cm_stricmp_utf16(cellHostNames[i], pDnsVolIter->pName)==0) {
+                            cellHostAddrs[i] = pDnsVolIter->Data.A.IpAddress;
+                            break;
+                        }
+                        /* if we get a CNAME, look for a corresponding A record */
+                        if (pDnsVolIter->wType == DNS_TYPE_CNAME && cm_stricmp_utf16(cellHostNames[i], pDnsVolIter->pName)==0) {
+                            for (pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
+                                if (pDnsCIter->wType == DNS_TYPE_A && cm_stricmp_utf16(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
+                                    cellHostAddrs[i] = pDnsCIter->Data.A.IpAddress;
+                                    break;
+                                }
+                            }
+                            if (cellHostAddrs[i]) 
+                                break;
+                            /* TODO: if the additional section is missing, then do another lookup for the CNAME */
+                        }
+                    }
+                    /* we are done with the volserver lookup */
+                    DnsRecordListFree((PDNS_RECORD) pDnsVol, DnsFreeRecordListDeep);
+                }
+            }
+        }
+        DnsRecordListFree((PDNS_RECORD) pDnsCell, DnsFreeRecordListDeep);
+    }
+
+    if ( *numServers > 0 )
+        return 0;
+    else        
+#endif  /* DNSAPI_ENV */
+        return -1;
+}
 #endif /* AFS_AFSDB_ENV */
+

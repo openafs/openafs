@@ -40,6 +40,7 @@
 #include <string.h>
 #include <malloc.h>
 #include "afsd.h"
+#include "smb.h"
 #include <WINNT/afsreg.h>
 
 HMODULE hVolStatus = NULL;
@@ -171,7 +172,7 @@ long
 #ifdef _WIN64
 cm_VolStatus_Network_Started(const char * netbios32, const char * netbios64)
 #else /* _WIN64 */
-cm_VolStatus_Network_Started(const char * netbios)
+cm_VolStatus_Network_Started(const char * netbios32)
 #endif /* _WIN64 */
 {
     long code = 0;
@@ -182,7 +183,7 @@ cm_VolStatus_Network_Started(const char * netbios)
 #ifdef _WIN64
     code = dll_funcs.dll_VolStatus_Network_Started(netbios32, netbios64);
 #else
-    code = dll_funcs.dll_VolStatus_Network_Started(netbios, netbios);
+    code = dll_funcs.dll_VolStatus_Network_Started(netbios32, netbios32);
 #endif
 
     return code;
@@ -196,7 +197,7 @@ long
 #ifdef _WIN64
 cm_VolStatus_Network_Stopped(const char * netbios32, const char * netbios64)
 #else /* _WIN64 */
-cm_VolStatus_Network_Stopped(const char * netbios)
+cm_VolStatus_Network_Stopped(const char * netbios32)
 #endif /* _WIN64 */
 {
     long code = 0;
@@ -207,7 +208,7 @@ cm_VolStatus_Network_Stopped(const char * netbios)
 #ifdef _WIN64
     code = dll_funcs.dll_VolStatus_Network_Stopped(netbios32, netbios64);
 #else
-    code = dll_funcs.dll_VolStatus_Network_Stopped(netbios, netbios);
+    code = dll_funcs.dll_VolStatus_Network_Stopped(netbios32, netbios32);
 #endif
 
     return code;
@@ -250,14 +251,20 @@ cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volst
 
 
 long
-cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, char *tidPathp, char *pathp)
+cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, const clientchar_t *ctidPathp,
+                                const clientchar_t *cpathp)
 {
     long code = 0;
     char src[1024], *p;
     size_t len;
+    char * tidPathp = NULL;
+    char * pathp = NULL;
 
     if (hVolStatus == NULL || dll_funcs.version < 2)
         return 0;
+
+    tidPathp = cm_ClientStringToUtf8Alloc(ctidPathp, -1, NULL);
+    pathp = cm_ClientStringToUtf8Alloc(cpathp, -1, NULL);
 
     snprintf(src,sizeof(src), "\\\\%s%s", volstat_NetbiosName, tidPathp);
     len = strlen(src);
@@ -274,6 +281,11 @@ cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, char *tidPathp, char *pathp)
 
     code = dll_funcs.dll_VolStatus_Notify_DFS_Mapping(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
                                                       src, scp->mountPointStringp);
+
+    if (tidPathp)
+        free(tidPathp);
+    if (pathp)
+        free(pathp);
 
     return code;
 }
@@ -299,6 +311,8 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     cm_req_t    req;
     cm_scache_t *scp;
     cm_volume_t *volp;
+    clientchar_t * cpath = NULL;
+    clientchar_t * cshare = NULL;
 
     if (cellID == NULL || volID == NULL)
         return CM_ERROR_INVAL;
@@ -308,7 +322,12 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
 
     cm_InitReq(&req);
 
-    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, cm_rootUserp, (char *)share, &req, &scp);
+    cpath = cm_FsStringToClientStringAlloc(path, -1, NULL);
+    cshare = cm_FsStringToClientStringAlloc(share, -1, NULL);
+
+    code = cm_NameI(cm_data.rootSCachep, cpath,
+                    CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                    cm_rootUserp, cshare, &req, &scp);
     if (code)
         goto done;
 
@@ -336,6 +355,11 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     cm_ReleaseSCache(scp);
 
   done:
+    if (cpath)
+        free(cpath);
+    if (cshare)
+        free(cshare);
+
     osi_Log1(afsd_logp,"cm_VolStatus_Path_To_ID code 0x%x",code); 
     return code;
 }
@@ -347,6 +371,8 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     cm_req_t    req;
     cm_scache_t *scp;
     size_t      len;
+    clientchar_t *cpath = NULL;
+    clientchar_t *cshare = NULL;
 
     if (pBufSize == NULL || (pBuffer == NULL && *pBufSize != 0))
         return CM_ERROR_INVAL;
@@ -356,8 +382,11 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
 
     cm_InitReq(&req);
 
-    code = cm_NameI(cm_data.rootSCachep, (char *)path, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, 
-                    cm_rootUserp, (char *)share, &req, &scp);
+    cpath = cm_FsStringToClientStringAlloc(path, -1, NULL);
+    cshare = cm_FsStringToClientStringAlloc(share, -1, NULL);
+
+    code = cm_NameI(cm_data.rootSCachep, cpath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, 
+                    cm_rootUserp, cshare, &req, &scp);
     if (code)
         goto done;
 
@@ -392,6 +421,11 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     cm_ReleaseSCache(scp);
 
   done:
+    if (cpath)
+        free(cpath);
+    if (cshare)
+        free(cshare);
+
     osi_Log1(afsd_logp,"cm_VolStatus_Path_To_DFSlink code 0x%x",code); 
     return code;
 }

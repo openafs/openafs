@@ -31,7 +31,7 @@ typedef struct cm_ucell {
     int gen;			        /* generation number */
     int iterator;			/* for use as ListTokens cookie */
     long flags;			        /* flags */
-    char userName[MAXKTCNAMELEN];	/* user name */
+    fschar_t userName[MAXKTCNAMELEN];   /* user name */
 #ifdef QUERY_AFSID
     afs_uint32 uid;			/* User's AFS ID in this cell */
 #endif

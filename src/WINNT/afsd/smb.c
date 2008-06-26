@@ -35,7 +35,7 @@
 #include <strsafe.h>
 
 /* These characters are illegal in Windows filenames */
-static char *illegalChars = "\\/:*?\"<>|";
+static clientchar_t *illegalChars = _C("\\/:*?\"<>|");
 
 static int smbShutdownFlag = 0;
 static int smb_ListenerState = SMB_LISTENER_UNINITIALIZED;
@@ -63,7 +63,7 @@ osi_rwlock_t smb_globalLock;
 osi_rwlock_t smb_rctLock;
 osi_mutex_t  smb_ListenerLock;
 osi_mutex_t  smb_StartedLock;
- 
+
 unsigned char smb_LANadapter = LANA_INVALID;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 int  smb_LanAdapterChangeDetected = 0;
@@ -120,12 +120,12 @@ char *smb_RawBufs;
 
 /* for raw write */
 typedef struct raw_write_cont {
-	long code;
-	osi_hyper_t offset;
-	long count;
-	char *buf;
-	int writeMode;
-	long alreadyWritten;
+    long code;
+    osi_hyper_t offset;
+    long count;
+    char *buf;
+    int writeMode;
+    long alreadyWritten;
 } raw_write_cont_t;
 
 /* dir search stuff */
@@ -142,9 +142,10 @@ LONG smb_UseUnicode;
 /* global state about V3 protocols */
 int smb_useV3;		/* try to negotiate V3 */
 
-static showErrors = 0;
+static int showErrors = 0;
 /* MessageBox or something like it */
-int (_stdcall *smb_MBfunc)(HWND, LPCTSTR, LPCTSTR, UINT) = NULL;
+int (_stdcall *smb_MBfunc)(HWND, LPCTSTR, LPCTSTR, UINT)
+= NULL;
 
 /* GMT time info:
  * Time in Unix format of midnight, 1/1/1970 local time.
@@ -178,13 +179,13 @@ int smb_NetbiosInit(int);
 #ifdef LOG_PACKET
 void smb_LogPacket(smb_packet_t *packet);
 #endif /* LOG_PACKET */
-
-char smb_ServerDomainName[MAX_COMPUTERNAME_LENGTH + 1] = ""; /* domain name */
+                                                         
+clientchar_t smb_ServerDomainName[MAX_COMPUTERNAME_LENGTH + 1] = _C(""); /* domain name */
 int smb_ServerDomainNameLength = 0;
-char smb_ServerOS[] = "Windows 5.0"; /* Faux OS String */
-int smb_ServerOSLength = sizeof(smb_ServerOS);
-char smb_ServerLanManager[] = "Windows 2000 LAN Manager"; /* Faux LAN Manager string */
-int smb_ServerLanManagerLength = sizeof(smb_ServerLanManager);
+clientchar_t smb_ServerOS[] = _C("Windows 5.0"); /* Faux OS String */
+int smb_ServerOSLength = lengthof(smb_ServerOS);
+clientchar_t smb_ServerLanManager[] = _C("Windows 2000 LAN Manager"); /* Faux LAN Manager string */
+int smb_ServerLanManagerLength = lengthof(smb_ServerLanManager);
 
 /* Faux server GUID. This is never checked. */
 GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
@@ -493,8 +494,9 @@ unsigned int smb_Attributes(cm_scache_t *scp)
 /* Check if the named file/dir is a dotfile/dotdir */
 /* String pointed to by lastComp can have leading slashes, but otherwise should have
    no other patch components */
-unsigned int smb_IsDotFile(char *lastComp) {
-    char *s;
+unsigned int smb_IsDotFile(clientchar_t *lastComp) {
+    clientchar_t *s;
+
     if(lastComp) {
         /* skip over slashes */
         for(s=lastComp;*s && (*s == '\\' || *s == '/'); s++);
@@ -503,12 +505,12 @@ unsigned int smb_IsDotFile(char *lastComp) {
         return 0;
 
     /* nulls, curdir and parent dir doesn't count */
-    if (!*s) 
+    if (!*s)
         return 0;
-    if (*s == '.') {
+    if (*s == _C('.')) {
         if (!*(s + 1)) 
             return 0;
-        if(*(s+1) == '.' && !*(s + 2)) 
+        if(*(s+1) == _C('.') && !*(s + 2)) 
             return 0;
         return 1;
     }
@@ -895,16 +897,16 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
     return vcp;
 }
 
-int smb_IsStarMask(char *maskp)
+int smb_IsStarMask(clientchar_t *maskp)
 {
     int i;
-    char tc;
+    clientchar_t tc;
         
     for(i=0; i<11; i++) {
         tc = *maskp++;
-        if (tc == '?' || tc == '*' || tc == '>')
+        if (tc == _C('?') || tc == _C('*') || tc == _C('>'))
 	    return 1;
-    }	
+    }
     return 0;
 }
 
@@ -1087,7 +1089,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
         if (tid == tidp->tid) {
             tidp->refCount++;
             break;
-        }	
+        }
     }
     if (!tidp && (flags & SMB_FLAG_CREATE)) {
         tidp = malloc(sizeof(*tidp));
@@ -1102,7 +1104,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
     }
     lock_ReleaseWrite(&smb_rctLock);
     return tidp;
-}       	
+}
 
 void smb_HoldTIDNoLock(smb_tid_t *tidp)
 {
@@ -1147,9 +1149,9 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
     for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
         if (uid == uidp->userID) {
             uidp->refCount++;
-            osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] found-uid[%d] name[%s]",
+            osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] found-uid[%d] name[%S]",
 		     vcp, uidp->userID, 
-		     osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name : ""));
+		     ((uidp->unp)? osi_LogSaveClientString(smb_logp, uidp->unp->name):_C("")));
             break;
         }
     }
@@ -1163,22 +1165,23 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         vcp->usersp = uidp;
         lock_InitializeMutex(&uidp->mx, "user_t mutex");
         uidp->userID = uid;
-        osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] new-uid[%d] name[%s]",
-		 vcp, uidp->userID, 
-		 osi_LogSaveString(smb_logp,uidp->unp ? uidp->unp->name : ""));
+        osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] new-uid[%d] name[%S]",
+		 vcp, uidp->userID,
+		 ((uidp->unp)?osi_LogSaveClientString(smb_logp,uidp->unp->name):_C("")));
     }
     lock_ReleaseWrite(&smb_rctLock);
     return uidp;
 }       	
 
-smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
+smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine,
+                                   afs_uint32 flags)
 {
     smb_username_t *unp= NULL;
 
     lock_ObtainWrite(&smb_rctLock);
     for(unp = usernamesp; unp; unp = unp->nextp) {
-        if (cm_stricmp_utf8(unp->name, usern) == 0 &&
-            cm_stricmp_utf8(unp->machine, machine) == 0) {
+        if (cm_ClientStrCmpI(unp->name, usern) == 0 &&
+            cm_ClientStrCmpI(unp->machine, machine) == 0) {
             unp->refCount++;
             break;
         }
@@ -1188,8 +1191,8 @@ smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
         memset(unp, 0, sizeof(*unp));
         unp->refCount = 1;
         unp->nextp = usernamesp;
-        unp->name = strdup(usern);
-        unp->machine = strdup(machine);
+        unp->name = cm_ClientStrDup(usern);
+        unp->machine = cm_ClientStrDup(machine);
         usernamesp = unp;
         lock_InitializeMutex(&unp->mx, "username_t mutex");
 	if (flags & SMB_FLAG_AFSLOGON)
@@ -1200,7 +1203,7 @@ smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
     return unp;
 }	
 
-smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
+smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, clientchar_t *usern)
 {
     smb_user_t *uidp= NULL;
 
@@ -1208,10 +1211,10 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
     for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
         if (!uidp->unp) 
             continue;
-        if (cm_stricmp_utf8(uidp->unp->name, usern) == 0) {
+        if (cm_stricmp_utf16(uidp->unp->name, usern) == 0) {
             uidp->refCount++;
-            osi_Log3(smb_logp,"smb_FindUserByNameThisSession vcp[0x%p] uid[%d] match-name[%s]",
-		     vcp,uidp->userID,osi_LogSaveString(smb_logp,usern));
+            osi_Log3(smb_logp,"smb_FindUserByNameThisSession vcp[0x%p] uid[%d] match-name[%S]",
+		     vcp,uidp->userID,osi_LogSaveClientString(smb_logp,usern));
             break;
         } else
             continue;
@@ -1244,7 +1247,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
 	free(unp->name);
 	free(unp->machine);
 	free(unp);
-    }		
+    }
     lock_ReleaseWrite(&smb_rctLock);
     if (userp)
         cm_ReleaseUser(userp);
@@ -1329,7 +1332,7 @@ cm_user_t *smb_GetUserFromVCP(smb_vc_t *vcp, smb_packet_t *inp)
  * Return a pointer to a pathname extracted from a TID structure.  The
  * TID structure is not held; assume it won't go away.
  */
-long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** treepath)
+long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, clientchar_t ** treepath)
 {
     smb_tid_t *tidp;
     long code = 0;
@@ -1539,12 +1542,12 @@ void smb_ReleaseFID(smb_fid_t *fidp)
  * Case-insensitive search for one string in another;
  * used to find variable names in submount pathnames.
  */
-static char *smb_stristr(char *str1, char *str2)
+static clientchar_t *smb_stristr(clientchar_t *str1, clientchar_t *str2)
 {
-    char *cursor;
+    clientchar_t *cursor;
 
     for (cursor = str1; *cursor; cursor++)
-        if (cm_stricmp_utf8(cursor, str2) == 0)
+        if (cm_ClientStrCmpI(cursor, str2) == 0)
             return cursor;
 
     return NULL;
@@ -1555,24 +1558,24 @@ static char *smb_stristr(char *str1, char *str2)
  * name has been identified by smb_stristr() and is in substr.  Variable name
  * length (plus one) is in substr_size.  Variable value is in newstr.
  */
-static void smb_subst(char *str1, char *substr, unsigned int substr_size,
-                      char *newstr)
+static void smb_subst(clientchar_t *str1, int cchstr1, clientchar_t *substr, 
+                      unsigned int substr_size, clientchar_t *newstr)
 {
-    char temp[1024];
+    clientchar_t temp[1024];
 
-    strcpy(temp, substr + substr_size - 1);
-    strcpy(substr, newstr);
-    strcat(str1, temp);
-}       
+    cm_ClientStrCpy(temp, lengthof(temp), substr + substr_size - 1);
+    cm_ClientStrCpy(substr, cchstr1 - (substr - str1), newstr);
+    cm_ClientStrCat(str1, cchstr1, temp);
+}
 
-char VNUserName[] = "%USERNAME%";
-char VNLCUserName[] = "%LCUSERNAME%";
-char VNComputerName[] = "%COMPUTERNAME%";
-char VNLCComputerName[] = "%LCCOMPUTERNAME%";
+clientchar_t VNUserName[] = _C("%USERNAME%");
+clientchar_t VNLCUserName[] = _C("%LCUSERNAME%");
+clientchar_t VNComputerName[] = _C("%COMPUTERNAME%");
+clientchar_t VNLCComputerName[] = _C("%LCCOMPUTERNAME%");
 
 typedef struct smb_findShare_rock {
-    char * shareName;
-    char * match;
+    clientchar_t * shareName;
+    clientchar_t * match;
     int matchType;
 } smb_findShare_rock_t;
 
@@ -1584,17 +1587,17 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 {
     int matchType = 0;
     smb_findShare_rock_t * vrock = (smb_findShare_rock_t *) rockp;
-    char normName[MAX_PATH];
+    normchar_t normName[MAX_PATH];
 
-    cm_NormalizeUtf8String(dep->name, -1, normName, sizeof(normName)/sizeof(char));
+    cm_FsStringToNormString(dep->name, -1, normName, sizeof(normName)/sizeof(normName[0]));
 
-    if (!strnicmp(normName, vrock->shareName, 12)) {
-        if(!cm_stricmp_utf8(normName, vrock->shareName))
+    if (!cm_ClientStrCmpNI(normName, vrock->shareName, 12)) {
+        if(!cm_ClientStrCmpI(normName, vrock->shareName))
             matchType = SMB_FINDSHARE_EXACT_MATCH;
         else
             matchType = SMB_FINDSHARE_PARTIAL_MATCH;
         if(vrock->match) free(vrock->match);
-        vrock->match = strdup(normName);
+        vrock->match = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
         vrock->matchType = matchType;
 
         if(matchType == SMB_FINDSHARE_EXACT_MATCH)
@@ -1605,15 +1608,17 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
 
 /* find a shareName in the table of submounts */
-int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
-	char **pathNamep)
+int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
+                  clientchar_t *shareName,
+                  clientchar_t **pathNamep)
 {
-    DWORD len;
-    char pathName[1024];
-    char *var;
-    char temp[1024];
+    DWORD cblen;
+    DWORD cchlen;
+    clientchar_t pathName[1024];
+    clientchar_t *var;
     DWORD sizeTemp;
-    char *p, *q;
+    clientchar_t *p, *q;
+    fschar_t *cellname = NULL;
     HKEY parmKey;
     DWORD code;
     DWORD allSubmount = 1;
@@ -1624,18 +1629,18 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
      * world to do so.
      */
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &parmKey);
+                        0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
-        len = sizeof(allSubmount);
+        cblen = sizeof(allSubmount);
         code = RegQueryValueEx(parmKey, "AllSubmount", NULL, NULL,
-                                (BYTE *) &allSubmount, &len);
+                               (BYTE *) &allSubmount, &cblen);
         if (code != ERROR_SUCCESS) {
             allSubmount = 1;
         }
         RegCloseKey (parmKey);
     }
 
-    if (allSubmount && cm_stricmp_utf8N(shareName, "all") == 0) {
+    if (allSubmount && cm_ClientStrCmpI(shareName, _C("all")) == 0) {
         *pathNamep = NULL;
         return 1;
     }
@@ -1643,17 +1648,17 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
     /* In case, the all share is disabled we need to still be able
      * to handle ioctl requests 
      */
-    if (cm_stricmp_utf8N(shareName, "ioctl$") == 0) {
-        *pathNamep = strdup("/.__ioctl__");
+    if (cm_ClientStrCmpI(shareName, _C("ioctl$")) == 0) {
+        *pathNamep = cm_ClientStrDup(_C("/.__ioctl__"));
         return 1;
     }
 
-    if (cm_stricmp_utf8N(shareName, "IPC$") == 0 ||
-        cm_stricmp_utf8N(shareName, "srvsvc") == 0 ||
-        cm_stricmp_utf8N(shareName, "wkssvc") == 0 ||
-        cm_stricmp_utf8N(shareName, SMB_IOCTL_FILENAME_NOSLASH) == 0 ||
-        cm_stricmp_utf8N(shareName, "DESKTOP.INI") == 0
-         ) {
+    if (cm_ClientStrCmpIA(shareName, _C("IPC$")) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C("srvsvc")) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C("wkssvc")) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C(SMB_IOCTL_FILENAME_NOSLASH)) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C("DESKTOP.INI")) == 0
+        ) {
         *pathNamep = NULL;
         return 0;
     }
@@ -1662,25 +1667,24 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 
        They look like <cell>{%,#}<volume>
     */
-    if (strchr(shareName, '%') != NULL ||
-        strchr(shareName, '#') != NULL) {
-        char pathstr[CELL_MAXNAMELEN + VL_MAXNAMELEN + 1 + CM_PREFIX_VOL_CCH];
-                                /* make room for '/@vol:' + mountchar + NULL terminator*/
+    if (cm_ClientStrChr(shareName, '%') != NULL ||
+         cm_ClientStrChr(shareName, '#') != NULL) {
+        clientchar_t pathstr[CELL_MAXNAMELEN + VL_MAXNAMELEN + 1 + CM_PREFIX_VOL_CCH];
+        /* make room for '/@vol:' + mountchar + NULL terminator*/
 
-        osi_Log1(smb_logp, "smb_FindShare found volume reference [%s]",
-                 osi_LogSaveString(smb_logp, shareName));
+        osi_Log1(smb_logp, "smb_FindShare found volume reference [%S]",
+                 osi_LogSaveClientString(smb_logp, shareName));
 
-        snprintf(pathstr, sizeof(pathstr)/sizeof(char),
-                 "/" CM_PREFIX_VOL "%s", shareName);
-        pathstr[sizeof(pathstr)/sizeof(char) - 1] = '\0';
-        len = (DWORD)(strlen(pathstr) + 1);
-
-        *pathNamep = malloc(len);
+        cm_ClientStrPrintfN(pathstr, lengthof(pathstr),
+                            _C("/") _C(CM_PREFIX_VOL) _C("%s"), shareName);
+        cchlen = (DWORD)(cm_ClientStrLen(pathstr) + 1);
+  
+        *pathNamep = malloc(cchlen * sizeof(clientchar_t));
         if (*pathNamep) {
-            strcpy(*pathNamep, pathstr);
-            strlwr(*pathNamep);
-            osi_Log1(smb_logp, "   returning pathname [%s]",
-                     osi_LogSaveString(smb_logp, *pathNamep));
+            cm_ClientStrCpy(*pathNamep, cchlen, pathstr);
+            cm_ClientStrLwr(*pathNamep);
+            osi_Log1(smb_logp, "   returning pathname [%S]",
+                     osi_LogSaveClientString(smb_logp, *pathNamep));
 
             return 1;
         } else {
@@ -1689,64 +1693,75 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
     }
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
-                         0, KEY_QUERY_VALUE, &parmKey);
+                        0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
-        len = sizeof(pathName);
-        code = RegQueryValueEx(parmKey, shareName, NULL, NULL,
-                                (BYTE *) pathName, &len);
+        cblen = sizeof(pathName);
+        code = RegQueryValueExW(parmKey, shareName, NULL, NULL,
+                                (BYTE *) pathName, &cblen);
         if (code != ERROR_SUCCESS)
-            len = 0;
+            cblen = 0;
         RegCloseKey (parmKey);
     } else {
-        len = 0;
-    }   
-    if (len != 0 && len != sizeof(pathName) - 1) {
+        cblen = 0;
+    }
+    cchlen = cblen / sizeof(clientchar_t);
+    if (cchlen != 0 && cchlen != lengthof(pathName) - 1) {
         /* We can accept either unix or PC style AFS pathnames.  Convert
          * Unix-style to PC style here for internal use. 
          */
         p = pathName;
-        if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot)) == 0)
-            p += strlen(cm_mountRoot);  /* skip mount path */
+        cchlen = lengthof(pathName);
+
+        /* within this code block, we maintain, cchlen = writeable
+           buffer length of p */
+
+        if (cm_ClientStrCmpN(p, cm_mountRootC, cm_mountRootCLen) == 0) {
+            p += cm_mountRootCLen;  /* skip mount path */
+            cchlen -= (p - pathName);
+        }
+
         q = p;
         while (*q) {
-            if (*q == '/') *q = '\\';    /* change to \ */
+            if (*q == _C('/')) *q = _C('\\');    /* change to \ */
             q++;
         }
 
         while (1)
         {
+            clientchar_t temp[1024];
+
             if (var = smb_stristr(p, VNUserName)) {
                 if (uidp && uidp->unp)
-                    smb_subst(p, var, sizeof(VNUserName),uidp->unp->name);
+                    smb_subst(p, cchlen, var, lengthof(VNUserName),uidp->unp->name);
                 else
-                    smb_subst(p, var, sizeof(VNUserName)," ");
+                    smb_subst(p, cchlen, var, lengthof(VNUserName), _C(" "));
             }
             else if (var = smb_stristr(p, VNLCUserName)) 
             {
                 if (uidp && uidp->unp)
-                    strcpy(temp, uidp->unp->name);
+                    cm_ClientStrCpy(temp, lengthof(temp), uidp->unp->name);
                 else 
-                    strcpy(temp, " ");
-                _strlwr(temp);
-                smb_subst(p, var, sizeof(VNLCUserName), temp);
+                    cm_ClientStrCpy(temp, lengthof(temp), _C(" "));
+                cm_ClientStrLwr(temp);
+                smb_subst(p, cchlen, var, lengthof(VNLCUserName), temp);
             }
             else if (var = smb_stristr(p, VNComputerName)) 
             {
-                sizeTemp = sizeof(temp);
-                GetComputerName((LPTSTR)temp, &sizeTemp);
-                smb_subst(p, var, sizeof(VNComputerName), temp);
+                sizeTemp = lengthof(temp);
+                GetComputerNameW(temp, &sizeTemp);
+                smb_subst(p, cchlen, var, lengthof(VNComputerName), temp);
             }
             else if (var = smb_stristr(p, VNLCComputerName)) 
             {
-                sizeTemp = sizeof(temp);
+                sizeTemp = lengthof(temp);
                 GetComputerName((LPTSTR)temp, &sizeTemp);
-                _strlwr(temp);
-                smb_subst(p, var, sizeof(VNLCComputerName), temp);
+                cm_ClientStrLwr(temp);
+                smb_subst(p, cchlen, var, lengthof(VNLCComputerName), temp);
             }
             else     
                 break;
         }
-        *pathNamep = strdup(p);
+        *pathNamep = cm_ClientStrDup(p);
         return 1;
     } 
     else
@@ -1755,7 +1770,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         cm_req_t req;
         smb_findShare_rock_t vrock;
         osi_hyper_t thyper;
-        char * p = shareName; 
+        fschar_t ftemp[1024];
+        clientchar_t * p = shareName; 
         int rw = 0;
 
         /*  attempt to locate a partial match in root.afs.  This is because
@@ -1765,18 +1781,21 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         thyper.HighPart = 0;
         thyper.LowPart = 0;
 
-        vrock.shareName = shareName;
+        vrock.shareName = cm_ClientStringToNormStringAlloc(shareName, -1, NULL);
         vrock.match = NULL;
         vrock.matchType = 0;
 
         cm_HoldSCache(cm_data.rootSCachep);
         code = cm_ApplyDir(cm_data.rootSCachep, smb_FindShareProc, &vrock, &thyper,
-            (uidp? (uidp->unp ? uidp->unp->userp : NULL) : NULL), &req, NULL);
+                           (uidp? (uidp->unp ? uidp->unp->userp : NULL) : NULL), &req, NULL);
         cm_ReleaseSCache(cm_data.rootSCachep);
 
+        free(vrock.shareName);
+        vrock.shareName = NULL;
+
         if (vrock.matchType) {
-            sprintf(pathName,"/%s/",vrock.match);
-            *pathNamep = strdup(strlwr(pathName));
+            cm_ClientStrPrintfN(pathName, lengthof(pathName), _C("/%s/"), vrock.match);
+            *pathNamep = cm_ClientStrDup(cm_ClientStrLwr(pathName));
             free(vrock.match);
             return 1;
         }
@@ -1788,17 +1807,25 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
             rw = 1;
         }
         /* Get the full name for this cell */
-        code = cm_SearchCellFile(p, temp, 0, 0);
+        cellname = cm_ClientStringToFsStringAlloc(p, cm_ClientStrLen(p), NULL);
+        code = cm_SearchCellFile(cellname, ftemp, 0, 0);
 #ifdef AFS_AFSDB_ENV
         if (code && cm_dnsEnabled) {
             int ttl;
-            code = cm_SearchCellByDNS(p, temp, &ttl, 0, 0);
+            code = cm_SearchCellByDNS(cellname, ftemp, &ttl, 0, 0);
         }
 #endif
+        if (cellname)
+            free(cellname);
+
         /* construct the path */
-        if (code == 0) {     
-            sprintf(pathName,rw ? "/.%s/" : "/%s/",temp);
-            *pathNamep = strdup(strlwr(pathName));
+        if (code == 0) {
+            clientchar_t temp[1024];
+
+            cm_FsStringToClientString(ftemp, cm_FsStrLen(ftemp), temp, 1024);
+            cm_ClientStrPrintfN(pathName, lengthof(pathName),
+                                rw ? _C("/.%S/") : _C("/%S/"), temp);
+            *pathNamep = cm_ClientStrDup(cm_ClientStrLwr(pathName));
             return 1;
         }
     }
@@ -1813,10 +1840,10 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 #define CSC_POLICY_PROGRAMS 2
 #define CSC_POLICY_DISABLE 3
 
-int smb_FindShareCSCPolicy(char *shareName)
+int smb_FindShareCSCPolicy(clientchar_t *shareName)
 {
     DWORD len;
-    char policy[1024];
+    clientchar_t policy[1024];
     DWORD dwType;
     HKEY hkCSCPolicy;
     int  retval = CSC_POLICY_MANUAL;
@@ -1832,19 +1859,19 @@ int smb_FindShareCSCPolicy(char *shareName)
                     NULL );
 
     len = sizeof(policy);
-    if ( RegQueryValueEx( hkCSCPolicy, shareName, 0, &dwType, policy, &len ) ||
+    if ( RegQueryValueExW( hkCSCPolicy, shareName, 0, &dwType, (LPBYTE) policy, &len ) ||
          len == 0) {
-        retval = cm_stricmp_utf8N("all",shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
+        retval = cm_ClientStrCmpIA(_C("all"),shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
     }
-    else if (cm_stricmp_utf8N(policy, "documents") == 0)
+    else if (cm_ClientStrCmpIA(policy, _C("documents")) == 0)
     {
         retval = CSC_POLICY_DOCUMENTS;
     }
-    else if (cm_stricmp_utf8N(policy, "programs") == 0)
+    else if (cm_ClientStrCmpIA(policy, _C("programs")) == 0)
     {
         retval = CSC_POLICY_PROGRAMS;
     }
-    else if (cm_stricmp_utf8N(policy, "disable") == 0)
+    else if (cm_ClientStrCmpIA(policy, _C("disable")) == 0)
     {
         retval = CSC_POLICY_DISABLE;
     }
@@ -2311,7 +2338,7 @@ unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset)
 
 void smb_SetSMBParm(smb_packet_t *smbp, int slot, unsigned int parmValue)
 {
-    char *parmDatap;
+    unsigned char *parmDatap;
 
     /* make sure we have enough slots */
     if (*smbp->wctp <= slot) 
@@ -2324,7 +2351,7 @@ void smb_SetSMBParm(smb_packet_t *smbp, int slot, unsigned int parmValue)
 
 void smb_SetSMBParmLong(smb_packet_t *smbp, int slot, unsigned int parmValue)
 {
-    char *parmDatap;
+    unsigned char *parmDatap;
 
     /* make sure we have enough slots */
     if (*smbp->wctp <= slot) 
@@ -2339,7 +2366,7 @@ void smb_SetSMBParmLong(smb_packet_t *smbp, int slot, unsigned int parmValue)
 
 void smb_SetSMBParmDouble(smb_packet_t *smbp, int slot, char *parmValuep)
 {
-    char *parmDatap;
+    unsigned char *parmDatap;
     int i;
 
     /* make sure we have enough slots */
@@ -2353,7 +2380,7 @@ void smb_SetSMBParmDouble(smb_packet_t *smbp, int slot, char *parmValuep)
 
 void smb_SetSMBParmByte(smb_packet_t *smbp, int slot, unsigned int parmValue)
 {
-    char *parmDatap;
+    unsigned char *parmDatap;
 
     /* make sure we have enough slots */
     if (*smbp->wctp <= slot) {
@@ -2370,11 +2397,12 @@ void smb_SetSMBParmByte(smb_packet_t *smbp, int slot, unsigned int parmValue)
 
 
 
-void smb_StripLastComponent(char *outPathp, char **lastComponentp, char *inPathp)
+void smb_StripLastComponent(clientchar_t *outPathp, clientchar_t **lastComponentp,
+                            clientchar_t *inPathp)
 {
-    char *lastSlashp;
+    clientchar_t *lastSlashp;
         
-    lastSlashp = strrchr(inPathp, '\\');
+    lastSlashp = cm_ClientStrRChr(inPathp, '\\');
     if (lastComponentp)
         *lastComponentp = lastSlashp;
     if (lastSlashp) {
@@ -2390,8 +2418,8 @@ void smb_StripLastComponent(char *outPathp, char **lastComponentp, char *inPathp
     }
 }
 
-unsigned char *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
-                                   char **chainpp, int flags)
+clientchar_t *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
+                                  char **chainpp, int flags)
 {
     size_t cb;
 
@@ -2413,8 +2441,8 @@ unsigned char *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
     return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
 }
 
-unsigned char *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
-                               char ** chainpp, int flags)
+clientchar_t *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
+                              char ** chainpp, int flags)
 {
     size_t cb;
 
@@ -2433,8 +2461,8 @@ unsigned char *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
     return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
 }
 
-unsigned char *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
-                                 size_t cb, char ** chainpp, int flags)
+clientchar_t *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
+                                size_t cb, char ** chainpp, int flags)
 {
 #ifdef SMB_UNICODE
     if (!WANTS_UNICODE(pktp))
@@ -2444,8 +2472,8 @@ unsigned char *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
     return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
 }
 
-unsigned char *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
-                                  size_t cch, char ** chainpp, int flags)
+clientchar_t *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
+                                 size_t cch, char ** chainpp, int flags)
 {
     size_t cb = cch;
 
@@ -2459,15 +2487,15 @@ unsigned char *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
     return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
 }
 
-unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
-                                  cm_space_t ** stringspp,
-                                  unsigned char *inp, size_t *pcb_max,
-                                  char **chainpp, int flags)
+clientchar_t *
+smb_ParseStringBuf(const unsigned char * bufbase,
+                   cm_space_t ** stringspp,
+                   unsigned char *inp, size_t *pcb_max,
+                   char **chainpp, int flags)
 {
 #ifdef SMB_UNICODE
     if (!(flags & SMB_STRF_FORCEASCII)) {
         size_t cch_src;
-        int    cb_dest;
         cm_space_t * spacep;
         int    null_terms = 0;
 
@@ -2498,85 +2526,62 @@ unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
                 *chainpp = inp + sizeof(wchar_t);
             }
 
-            spacep->data[0] = '\0';
-            return spacep->data;
+            *(spacep->wdata) = 0;
+            return spacep->wdata;
         }
 
-        cb_dest = cm_NormalizeUtf16StringToUtf8((const wchar_t *) inp, cch_src,
-                                                spacep->data, sizeof(spacep->data));
-        if (cb_dest == 0) {
-            *stringspp = spacep->nextp;
-            cm_FreeSpace(spacep);
-#ifdef DEBUG_UNICODE
-            DebugBreak();
-#endif
-            return NULL;
-        }
+        StringCchCopyNW(spacep->wdata,
+                        lengthof(spacep->wdata),
+                        (const clientchar_t *) inp, cch_src);
 
         if (chainpp)
             *chainpp = inp + (cch_src + null_terms)*sizeof(wchar_t);
 
-        if (cb_dest == 0) {
-#ifdef DEBUG_UNICODE
-            DebugBreak();
-#endif
-        } else if (spacep->data[cb_dest - 1] != 0) {
-            spacep->data[cb_dest++] = 0;
-        }
-
-        return spacep->data;
+        return spacep->wdata;
 
     } else {
 #endif
+        cm_space_t * spacep;
+        int cchdest;
+
         /* Not using Unicode */
-    if (chainpp) {
+        if (chainpp) {
             *chainpp = inp + strlen(inp) + 1;
-    }
-        if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
-            OemToChar(inp, inp);
-    return inp;
+        }
+
+        spacep = cm_GetSpace();
+        spacep->nextp = *stringspp;
+        *stringspp = spacep;
+
+        cchdest = lengthof(spacep->wdata);
+        cm_Utf8ToUtf16(inp, *pcb_max, spacep->wdata, cchdest);
+
+        return spacep->wdata;
 #ifdef SMB_UNICODE
     }
 #endif
 }
 
 unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
-                                  unsigned char * str,
-                                  size_t * plen, int flags)
+                            clientchar_t * str,
+                            size_t * plen, int flags)
 {
     size_t buffersize;
     int align = 0;
 
     if (outp == NULL) {
         /* we are only calculating the required size */
+
+        if (plen == NULL)
+            return NULL;
+
 #ifdef SMB_UNICODE
 
         if (WANTS_UNICODE(pktp) && !(flags & SMB_STRF_FORCEASCII)) {
-            int nchars;
 
-            nchars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-                                         str, -1, NULL, 0);
-            if (nchars == 0 && GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
-
-                if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
-                    nchars = MultiByteToWideChar(1252 /* ANSI - Latin1 */,
-                                                 0, str, -1, NULL, 0);
-                else
-                    nchars = MultiByteToWideChar(CP_OEMCP,
-                                                 0, str, -1, NULL, 0);
-            }
-
-            if (nchars == 0) {
-                osi_Log2(smb_logp, "UnparseString: Can't convert string to Unicode [%S], GLE=%d",
-                         osi_LogSaveString(smb_logp, str),
-                         GetLastError());
-                if (plen)
-                    *plen = 0;
-                return NULL;
-            }
-
-            if (plen)
-                *plen = sizeof(wchar_t) * ((flags & SMB_STRF_IGNORENULL)? nchars - 1 : nchars);
+            StringCbLengthW(str, SMB_STRINGBUFSIZE * sizeof(wchar_t), plen);
+            if (!(flags & SMB_STRF_IGNORENULL))
+                *plen += sizeof(wchar_t);
 
             return (unsigned char *) 1; /* return TRUE if we are using unicode */
         }
@@ -2584,17 +2589,31 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
 #endif
         {
             /* Storing ANSI */
-            size_t len;
 
-            len = strlen(str);
+            int cch_str;
+            int cch_dest;
+
+            cch_str = cm_ClientStrLen(str);
+            cch_dest = cm_ClientStringToUtf8(str, cch_str, NULL, 0);
+
             if (plen)
-                *plen = ((flags & SMB_STRF_IGNORENULL)? len: len+1);
+                *plen = ((flags & SMB_STRF_IGNORENULL)? cch_dest: cch_dest+1);
 
             return NULL;
         }
+
+        /* Not reached. */
     }
 
-    /* Number of bytes left in the buffer. */
+    /* if outp != NULL ... */
+
+    /* Number of bytes left in the buffer.
+
+       If outp lies inside the packet data buffer, we assume that the
+       buffer is the packet data buffer.  Otherwise we assume that the
+       buffer is sizeof(packet->data).
+
+    */
     if (outp >= pktp->data && outp < pktp->data + sizeof(pktp->data)) {
         align = ((outp - pktp->data) % 2);
         buffersize = (pktp->data + sizeof(pktp->data)) - ((char *) outp);
@@ -2611,7 +2630,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         if (align)
             *outp++ = '\0';
 
-        if (*str == '\0') {
+        if (*str == _C('\0')) {
 
             if (buffersize < sizeof(wchar_t))
                 return NULL;
@@ -2622,29 +2641,10 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
             return outp + sizeof(wchar_t);
         }
 
-        nchars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-                                     str, -1, (wchar_t *) outp, buffersize);
-        if (nchars == 0 && GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
-
-            /* If we failed to translate the string from UTF-8 to
-               UTF-16, then chances are the string wasn't UTF-8 to
-               begin with.  If StoreAnsiFileNames is set and this is
-               possibly an ANSI file name, we try assuming that the
-               source name is in ANSI.  otherwise we try OEM. */
-
-            if ((flags & SMB_STRF_ANSIPATH) && smb_StoreAnsiFilenames)
-                nchars = MultiByteToWideChar(1252 /* ANSI - Latin1 */,
-                                             0, str, -1, (wchar_t *) outp, buffersize);
-            else
-                nchars = MultiByteToWideChar(CP_OEMCP,
-                                             0, str, -1, (wchar_t *) outp, buffersize);
-        }
-
+        nchars = cm_ClientStringToUtf16(str, -1, (wchar_t *) outp, buffersize / sizeof(wchar_t));
         if (nchars == 0) {
-            /* Both 1252 and OEM should translate to Unicode without a
-               complaint.  This is something else. */
             osi_Log2(smb_logp, "UnparseString: Can't convert string to Unicode [%S], GLE=%d",
-                     osi_LogSaveString(smb_logp, str),
+                     osi_LogSaveClientString(smb_logp, str),
                      GetLastError());
             return NULL;
         }
@@ -2658,17 +2658,14 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
 #endif
     {
         /* Storing ANSI */
-        size_t len;
+        size_t cch_dest;
 
-        len = strlen(str); len++;
-        if (len > buffersize)
-            return NULL;
+        cch_dest = cm_ClientStringToUtf8(str, -1, outp, buffersize);
 
-        strcpy(outp, str);
         if (plen)
-            *plen += ((flags & SMB_STRF_IGNORENULL)? len - 1: len);
+            *plen += ((flags & SMB_STRF_IGNORENULL)? cch_dest - 1: cch_dest);
 
-        return outp + len;
+        return outp + cch_dest;
     }
 }
 
@@ -3490,7 +3487,9 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             datap = smb_GetSMBData(outp, NULL);
             memcpy(datap,vcp->encKey,MSV1_0_CHALLENGE_LENGTH);
             /* and the faux domain name */
-            strcpy(datap + MSV1_0_CHALLENGE_LENGTH,smb_ServerDomainName);
+            cm_ClientStringToUtf8(smb_ServerDomainName, -1,
+                                  datap + MSV1_0_CHALLENGE_LENGTH,
+                                  sizeof(outp->data)/sizeof(char) - (datap - outp->data));
         } else if ( smb_authType == SMB_AUTH_EXTENDED ) {
             void * secBlob;
             int secBlobLength;
@@ -3552,7 +3551,9 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             /* paste in a new encryption key */
             memcpy(datap, vcp->encKey, MSV1_0_CHALLENGE_LENGTH);
             /* and the faux domain name */
-            strcpy(datap + MSV1_0_CHALLENGE_LENGTH, smb_ServerDomainName);
+            cm_ClientStringToUtf8(smb_ServerDomainName, -1,
+                                  datap + MSV1_0_CHALLENGE_LENGTH,
+                                  sizeof(outp->data)/sizeof(char) - (datap - outp->data));
         } else {
             smb_SetSMBParm(outp, 11, 0); /* encryption key length */
             smb_SetSMBParm(outp, 12, 0); /* resvd */
@@ -3855,22 +3856,25 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_tid_t *tidp;
     smb_user_t *uidp;
     unsigned short newTid;
-    char shareName[AFSPATHMAX];
-    char *sharePath;
+    clientchar_t shareName[AFSPATHMAX];
+    clientchar_t *sharePath;
     int shareFound;
-    char *tp;
-    char *pathp;
+    clientchar_t *tp;
+    clientchar_t *pathp;
     cm_user_t *userp;
 
     osi_Log0(smb_logp, "SMB receive tree connect");
 
     /* parse input parameters */
-    tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
-    tp = strrchr(pathp, '\\');
+    {
+        char *tbp;
+        tbp = smb_GetSMBData(inp, NULL);
+        pathp = smb_ParseASCIIBlock(inp, tbp, &tbp, SMB_STRF_ANSIPATH);
+    }
+    tp = cm_ClientStrRChr(pathp, '\\');
     if (!tp)
         return CM_ERROR_BADSMB;
-    strcpy(shareName, tp+1);
+    cm_ClientStrCpy(shareName, lengthof(shareName), tp+1);
 
     lock_ObtainMutex(&vcp->mx);
     newTid = vcp->tidCounter++;
@@ -3905,10 +3909,10 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
  * Returns true if succeeds with a valid name, otherwise it does
  * its best, but returns false.
  */
-int smb_Get8Dot3MaskFromPath(unsigned char *maskp, unsigned char *pathp)
+int smb_Get8Dot3MaskFromPath(clientchar_t *maskp, clientchar_t *pathp)
 {
-    char *tp;
-    char *up;
+    clientchar_t *tp;
+    clientchar_t *up;
     int i;
     int tc;
     int valid8Dot3;
@@ -3921,7 +3925,7 @@ int smb_Get8Dot3MaskFromPath(unsigned char *maskp, unsigned char *pathp)
     maskp[11] = '\0';
 
     /* find last backslash, or use whole thing if there is none */
-    tp = strrchr(pathp, '\\');
+    tp = cm_ClientStrRChr(pathp, '\\');
     if (!tp) 
         tp = pathp;
     else 
@@ -3966,17 +3970,17 @@ int smb_Get8Dot3MaskFromPath(unsigned char *maskp, unsigned char *pathp)
     /* unreachable */
 }
 
-int smb_Match8Dot3Mask(char *unixNamep, char *maskp)
+int smb_Match8Dot3Mask(clientchar_t *unixNamep, clientchar_t *maskp)
 {
-    char umask[11];
+    clientchar_t umask[11];
     int valid;
     int i;
-    char tc1;
-    char tc2;
-    char *tp1;
-    char *tp2;
+    clientchar_t tc1;
+    clientchar_t tc2;
+    clientchar_t *tp1;
+    clientchar_t *tp2;
 
-    /* XXX redo this, calling smb_V3MatchMask with a converted mask */
+    /* XXX redo this, calling cm_MatchMask with a converted mask */
 
     valid = smb_Get8Dot3MaskFromPath(umask, unixNamep);
     if (!valid) 
@@ -3988,10 +3992,10 @@ int smb_Match8Dot3Mask(char *unixNamep, char *maskp)
     tp1 = umask;	/* real name, in mask format */
     tp2 = maskp;	/* mask, in mask format */
     for(i=0; i<11; i++) {
-        tc1 = *tp1++;	/* char from real name */
-        tc2 = *tp2++;	/* char from mask */
-        tc1 = (char) cm_foldUpper[(unsigned char)tc1];
-        tc2 = (char) cm_foldUpper[(unsigned char)tc2];
+        tc1 = *tp1++;	/* clientchar_t from real name */
+        tc2 = *tp2++;	/* clientchar_t from mask */
+        tc1 = (clientchar_t) cm_foldUpper[(clientchar_t)tc1];
+        tc2 = (clientchar_t) cm_foldUpper[(clientchar_t)tc2];
         if (tc1 == tc2) 
             continue;
         if (tc2 == '?' && tc1 != ' ') 
@@ -4005,11 +4009,11 @@ int smb_Match8Dot3Mask(char *unixNamep, char *maskp)
     return 1;
 }
 
-char *smb_FindMask(char *pathp)
+clientchar_t *smb_FindMask(clientchar_t *pathp)
 {
-    char *tp;
+    clientchar_t *tp;
         
-    tp = strrchr(pathp, '\\');	/* find last slash */
+    tp = cm_ClientStrRChr(pathp, '\\');	/* find last slash */
 
     if (tp) 
         return tp+1;	/* skip the slash */
@@ -4023,9 +4027,9 @@ char *smb_FindMask(char *pathp)
    dispatch function.) */
 long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    unsigned char *pathp;
+    clientchar_t *pathp;
     unsigned char *tp;
-    unsigned char mask[12];
+    clientchar_t mask[12];
     unsigned char *statBlockp;
     unsigned char initStatBlock[21];
     int statLen;
@@ -4034,10 +4038,10 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 
     /* pull pathname and stat block out of request */
     tp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, tp, (char **) &tp,
+    pathp = smb_ParseASCIIBlock(inp, tp, &tp,
                                 SMB_STRF_ANSIPATH|SMB_STRF_FORCEASCII);
     osi_assertx(pathp != NULL, "null path");
-    statBlockp = smb_ParseVblBlock(tp, (char **) &tp, &statLen);
+    statBlockp = smb_ParseVblBlock(tp, &tp, &statLen);
     osi_assertx(statBlockp != NULL, "null statBlock");
     if (statLen == 0) {
         statBlockp = initStatBlock;
@@ -4095,7 +4099,7 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 
 static long 
 smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
-                        char * tidPathp, char * relPathp,
+                        clientchar_t * tidPathp, clientchar_t * relPathp,
                         cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
@@ -4106,14 +4110,15 @@ smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     char attr;
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
-    char path[AFSPATHMAX];
+    clientchar_t path[AFSPATHMAX];
 
     for (patchp = *dirPatchespp; patchp; patchp =
          (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
 
         dptr = patchp->dptr;
 
-        snprintf(path, AFSPATHMAX, "%s\\%s", relPathp ? relPathp : "", patchp->dep->name);
+        cm_ClientStrPrintfN(path, AFSPATHMAX, _C("%s\\%s"),
+                            relPathp ? relPathp : _C(""), patchp->dep->name);
         reqp->relPathp = path;
         reqp->tidPathp = tidPathp;
 
@@ -4182,9 +4187,9 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 {
     int attribute;
     long nextCookie;
-    char *tp;
+    unsigned char *tp;
     long code = 0;
-    char *pathp;
+    clientchar_t *pathp;
     cm_dirEntry_t *dep = 0;
     int maxCount;
     smb_dirListPatch_t *dirListPatchesp;
@@ -4205,10 +4210,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_pageHeader_t *pageHeaderp;
     cm_user_t *userp = NULL;
     int slotInPage;
-    char shortName[13];
-    char *actualName;
-    char *shortNameEnd;
-    char mask[12];
+    clientchar_t mask[12];
     int returnedNames;
     long nextEntryCookie;
     int numDirChunks;		/* # of 32 byte dir chunks in this entry */
@@ -4219,7 +4221,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     int starPattern;
     int rootPath = 0;
     int caseFold;
-    char *tidPathp = 0;
+    clientchar_t *tidPathp = 0;
     cm_req_t req;
     cm_fid_t fid;
     int fileType;
@@ -4257,8 +4259,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         if (attribute & 0x8)
             return smb_ReceiveCoreSearchVolume(vcp, inp, outp);
 
-        osi_Log2(smb_logp, "SMB receive search dir count %d [%s]",
-                  maxCount, osi_LogSaveString(smb_logp, pathp));
+        osi_Log2(smb_logp, "SMB receive search dir count %d [%S]",
+                 maxCount, osi_LogSaveClientString(smb_logp, pathp));
 
         if (*pathp == 0) {	/* null pathp, treat as root dir */
             if (!(attribute & SMB_ATTR_DIRECTORY))	/* exclude dirs */
@@ -4283,8 +4285,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         dsp = smb_FindDirSearch(inCookiep[12]);
         if (!dsp) {
             /* can't find dir search status; fatal error */
-            osi_Log3(smb_logp, "SMB receive search dir bad cookie: cookie %d nextCookie %u [%s]",
-                     inCookiep[12], nextCookie, osi_LogSaveString(smb_logp, pathp));
+            osi_Log3(smb_logp, "SMB receive search dir bad cookie: cookie %d nextCookie %u [%S]",
+                     inCookiep[12], nextCookie, osi_LogSaveClientString(smb_logp, pathp));
             return CM_ERROR_BADFD;
         }
         attribute = dsp->attribute;
@@ -4317,7 +4319,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         code = 0;
     } else {
         spacep = inp->spacep;
-        smb_StripLastComponent(spacep->data, NULL, pathp);
+        smb_StripLastComponent(spacep->wdata, NULL, pathp);
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code) {
             lock_ReleaseMutex(&dsp->mx);
@@ -4326,15 +4328,17 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             smb_ReleaseDirSearch(dsp);
             return CM_ERROR_NOFILES;
         }
-        strcpy(dsp->tidPath, tidPathp ? tidPathp : "/");
-        strcpy(dsp->relPath, spacep->data);
+        cm_ClientStrCpy(dsp->tidPath, lengthof(dsp->tidPath), tidPathp ? tidPathp : _C("/"));
+        cm_ClientStrCpy(dsp->relPath, lengthof(dsp->relPath), spacep->wdata);
 
-        code = cm_NameI(cm_data.rootSCachep, spacep->data,
+        code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
                         caseFold | CM_FLAG_FOLLOW, userp, tidPathp, &req, &scp);
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-                int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, spacep->data);
+                int pnc;
+
+                pnc  = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, spacep->wdata);
                 cm_ReleaseSCache(scp);
                 lock_ReleaseMutex(&dsp->mx);
                 cm_ReleaseUser(userp);
@@ -4407,6 +4411,10 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     code = 0;
     returnedNames = 0;
     while (1) {
+        clientchar_t *actualName;
+        clientchar_t shortName[13];
+        clientchar_t *shortNameEnd;
+
         /* make sure that curOffset.LowPart doesn't point to the first
          * 32 bytes in the 2nd through last dir page, and that it doesn't
          * point at the first 13 32-byte chunks in the first dir page,
@@ -4561,15 +4569,16 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         nextEntryCookie = curOffset.LowPart + (CM_DIR_CHUNKSIZE * numDirChunks);
 
         /* Compute 8.3 name if necessary */
-        actualName = dep->name;
+        actualName = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
         if (dep->fid.vnode != 0 && !cm_Is8Dot3(actualName)) {
-            cm_Gen8Dot3Name(dep, shortName, &shortNameEnd);
+            free(actualName);
+            cm_Gen8Dot3NameInt(dep->name, &dep->fid, shortName, &shortNameEnd);
             actualName = shortName;
         }
 
-        osi_Log3(smb_logp, "SMB search dir vn %d name %s (%s)",
-                  dep->fid.vnode, osi_LogSaveString(smb_logp, dep->name),
-                  osi_LogSaveString(smb_logp, actualName));
+        osi_Log3(smb_logp, "SMB search dir vn %d name %s (%S)",
+                 dep->fid.vnode, osi_LogSaveString(smb_logp, dep->name),
+                 osi_LogSaveClientString(smb_logp, actualName));
 
         if (dep->fid.vnode != 0 && smb_Match8Dot3Mask(actualName, mask)) {
             /* this is one of the entries to use: it is not deleted
@@ -4603,11 +4612,11 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
             *op++ = resByte;
             memcpy(op, mask, 11); op += 11;
-            *op++ = (char) dsp->cookie;	/* they say it must be non-zero */
-            *op++ = (char)(nextEntryCookie & 0xff);
-            *op++ = (char)((nextEntryCookie>>8) & 0xff);
-            *op++ = (char)((nextEntryCookie>>16) & 0xff);
-            *op++ = (char)((nextEntryCookie>>24) & 0xff);
+            *op++ = (unsigned char) dsp->cookie;	/* they say it must be non-zero */
+            *op++ = (unsigned char)(nextEntryCookie & 0xff);
+            *op++ = (unsigned char)((nextEntryCookie>>8) & 0xff);
+            *op++ = (unsigned char)((nextEntryCookie>>16) & 0xff);
+            *op++ = (unsigned char)((nextEntryCookie>>24) & 0xff);
             memcpy(op, &clientCookie, 4); op += 4;
 
             /* now we emit the attribute.  This is sort of tricky,
@@ -4648,7 +4657,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * it fits in 8.3 or the pattern wouldn't match, but it
              * never hurts to be sure.
              */
-            strncpy(op, actualName, 13);
+            cm_ClientStringToUtf8(actualName, -1, op, 13);
             if (smb_StoreAnsiFilenames)
                 CharToOem(op, op);
             /* This is a UCHAR field, which is ASCII even if Unicode
@@ -4710,8 +4719,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
      */
     temp -= 3;		/* deduct vbl block info */
     osi_assertx(temp == (43 * returnedNames), "unexpected data length");
-    origOp[1] = (char)(temp & 0xff);
-    origOp[2] = (char)((temp>>8) & 0xff);
+    origOp[1] = (unsigned char)(temp & 0xff);
+    origOp[2] = (unsigned char)((temp>>8) & 0xff);
     if (returnedNames == 0) 
         smb_DeleteDirSearch(dsp);
     smb_ReleaseDirSearch(dsp);
@@ -4728,24 +4737,25 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
  */
 long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *pathp;
+    clientchar_t *pathp;
     long code = 0;
     cm_scache_t *rootScp;
     cm_scache_t *newScp;
     cm_user_t *userp;
     unsigned int attrs;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_req_t req;
+    char * pdata;
 
     cm_InitReq(&req);
 
-    pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
+    pdata = smb_GetSMBData(inp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, pdata, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADFD;
-    osi_Log1(smb_logp, "SMB receive check path %s",
-             osi_LogSaveString(smb_logp, pathp));
+    osi_Log1(smb_logp, "SMB receive check path %S",
+             osi_LogSaveClientString(smb_logp, pathp));
         
     rootScp = cm_data.rootSCachep;
         
@@ -4809,7 +4819,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 /* SMB_COM_SET_INFORMATION */
 long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *pathp;
+    clientchar_t *pathp;
     long code = 0;
     cm_scache_t *rootScp;
     unsigned short attribute;
@@ -4818,7 +4828,8 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     afs_uint32 dosTime;
     cm_user_t *userp;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
+    char * datap;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -4827,8 +4838,8 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     attribute = smb_GetSMBParm(inp, 0);
     dosTime = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
 
-    pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
+    datap = smb_GetSMBData(inp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADSMB;
                
@@ -4923,7 +4934,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
 long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *pathp;
+    clientchar_t *pathp;
     long code = 0;
     cm_scache_t *rootScp;
     cm_scache_t *newScp, *dscp;
@@ -4931,23 +4942,24 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     int attrs;
     cm_user_t *userp;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_space_t *spacep;
-    char *lastComp;
+    clientchar_t *lastComp;
+    char * datap;
     cm_req_t req;
 
     cm_InitReq(&req);
 
-    pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
+    datap = smb_GetSMBData(inp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
         return CM_ERROR_BADSMB;
         
     if (*pathp == 0)		/* null path */
-        pathp = "\\";
+        pathp = _C("\\");
 
-    osi_Log1(smb_logp, "SMB receive getfile attributes path %s",
-             osi_LogSaveString(smb_logp, pathp));
+    osi_Log1(smb_logp, "SMB receive getfile attributes path %S",
+             osi_LogSaveClientString(smb_logp, pathp));
 
     rootScp = cm_data.rootSCachep;
         
@@ -4980,16 +4992,17 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
      * http://msdn.microsoft.com/library/en-us/shellcc/platform/shell/programmersguide/shell_basics/shell_basics_extending/custom.asp
      */
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastComp, pathp);
+    smb_StripLastComponent(spacep->wdata, &lastComp, pathp);
 #ifndef SPECIAL_FOLDERS
-    if (lastComp && cm_stricmp_utf8N(lastComp, "\\desktop.ini") == 0) {
-        code = cm_NameI(rootScp, spacep->data,
+    if (lastComp && cm_ClientStrCmpIA(lastComp, _C("\\desktop.ini")) == 0) {
+        code = cm_NameI(rootScp, spacep->wdata,
                         caseFold | CM_FLAG_DIRSEARCH | CM_FLAG_FOLLOW,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
 #ifdef DFS_SUPPORT
             if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp,
+                                                          spacep->wdata);
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
@@ -5107,8 +5120,8 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
 long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_fid_t *fidp;
-    char *pathp;
-    char *lastNamep;
+    clientchar_t *pathp;
+    clientchar_t *lastNamep;
     int share;
     int attribute;
     long code = 0;
@@ -5117,15 +5130,16 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     afs_uint32 dosTime;
     int caseFold;
     cm_space_t *spacep;
-    char *tidPathp;
+    clientchar_t *tidPathp;
+    char * datap;
     cm_req_t req;
 
     cm_InitReq(&req);
 
-    pathp = smb_GetSMBData(inp, NULL);
-    pathp = smb_ParseASCIIBlock(inp, pathp, NULL, SMB_STRF_ANSIPATH);
-	
-    osi_Log1(smb_logp, "SMB receive open file [%s]", osi_LogSaveString(smb_logp, pathp));
+    datap = smb_GetSMBData(inp, NULL);
+    pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
+
+    osi_Log1(smb_logp, "SMB receive open file [%S]", osi_LogSaveClientString(smb_logp, pathp));
 
 #ifdef DEBUG_VERBOSE
     {
@@ -5141,8 +5155,8 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     attribute = smb_GetSMBParm(inp, 1);
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
-    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
+    if (lastNamep && cm_ClientStrCmp(lastNamep, _C(SMB_IOCTL_FILENAME)) == 0) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -5258,7 +5272,7 @@ typedef struct smb_unlinkRock {
     cm_user_t *userp;
     cm_req_t *reqp;
     smb_vc_t *vcp;
-    char *maskp;		/* pointer to the star pattern */
+    clientchar_t *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
     cm_dirEntryList_t * matches;
@@ -5270,7 +5284,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     smb_unlinkRock_t *rockp;
     int caseFold;
     int match;
-    char matchName[MAX_PATH];
+    normchar_t matchName[MAX_PATH];
         
     rockp = vrockp;
 
@@ -5278,25 +5292,25 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
 
-    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
-    match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
+    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
-         (rockp->flags & SMB_MASKFLAG_TILDE) &&
-         !cm_Is8Dot3(dep->name)) {
+        (rockp->flags & SMB_MASKFLAG_TILDE) &&
+        !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
         /* 8.3 matches are always case insensitive */
-        match = smb_V3MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
+        match = cm_MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
     }
     if (match) {
-        osi_Log1(smb_logp, "Found match %s",
-                 osi_LogSaveString(smb_logp, matchName));
+        osi_Log1(smb_logp, "Found match %S",
+                 osi_LogSaveClientString(smb_logp, matchName));
 
         cm_DirEntryListAdd(dep->name, &rockp->matches);
 
         rockp->any = 1;
 
         /* If we made a case sensitive exact match, we might as well quit now. */
-        if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
+        if (!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !cm_ClientStrCmp(matchName, rockp->maskp))
             code = CM_ERROR_STOPNOW;
         else
             code = 0;
@@ -5311,16 +5325,16 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int attribute;
     long code = 0;
-    char *pathp;
-    char *tp;
+    clientchar_t *pathp;
+    unsigned char *tp;
     cm_space_t *spacep;
     cm_scache_t *dscp;
-    char *lastNamep;
+    clientchar_t *lastNamep;
     smb_unlinkRock_t rock;
     cm_user_t *userp;
     osi_hyper_t thyper;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -5330,11 +5344,11 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
-    osi_Log1(smb_logp, "SMB receive unlink %s",
-             osi_LogSaveString(smb_logp, pathp));
+    osi_Log1(smb_logp, "SMB receive unlink %S",
+             osi_LogSaveClientString(smb_logp, pathp));
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -5345,7 +5359,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold, userp, tidPathp,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold, userp, tidPathp,
                     &req, &dscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -5354,7 +5368,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp,spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -5371,8 +5385,8 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lastNamep++;
 
     rock.any = 0;
-    rock.maskp = smb_FindMask(pathp);
-    rock.flags = ((strchr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
+    rock.maskp = cm_ClientStringToNormStringAlloc(smb_FindMask(pathp), -1, NULL);
+    rock.flags = ((cm_ClientStrChr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 
     thyper.LowPart = 0;
     thyper.HighPart = 0;
@@ -5405,15 +5419,15 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_dirEntryList_t * entry;
 
         for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
-            char normalizedName[MAX_PATH];
+            normchar_t normalizedName[MAX_PATH];
 
             /* Note: entry->name is a non-normalized name */
 
             osi_Log1(smb_logp, "Unlinking %s",
                      osi_LogSaveString(smb_logp, entry->name));
 
-            cm_NormalizeUtf8String(entry->name, -1, normalizedName,
-                                   sizeof(normalizedName)/sizeof(char));
+            cm_FsStringToNormString(entry->name, -1,
+                                    normalizedName, lengthof(normalizedName));
 
             code = cm_Unlink(dscp, entry->name, normalizedName, userp, &req);
 
@@ -5430,22 +5444,24 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     cm_ReleaseSCache(dscp);
 
+    free(rock.maskp);
+
     if (code == 0 && !rock.any)
         code = CM_ERROR_NOSUCHFILE;
     return code;
 }       
 
 typedef struct smb_renameRock {
-    cm_scache_t *odscp;	/* old dir */
-    cm_scache_t *ndscp;	/* new dir */
-    cm_user_t *userp;	/* user */
-    cm_req_t *reqp;		/* request struct */
-    smb_vc_t *vcp;		/* virtual circuit */
-    char *maskp;		/* pointer to star pattern of old file name */
-    int flags;		    /* tilde, casefold, etc */
-    char *newNamep;		/* ptr to the new file's name */
-    char oldName[MAX_PATH];     /* non-normalized name */
-    char normalizedOldName[MAX_PATH]; /* normalized name */
+    cm_scache_t *odscp;  /* old dir */
+    cm_scache_t *ndscp;  /* new dir */
+    cm_user_t *userp;    /* user */
+    cm_req_t *reqp;      /* request struct */
+    smb_vc_t *vcp;       /* virtual circuit */
+    normchar_t *maskp;   /* pointer to star pattern of old file name */
+    int flags;           /* tilde, casefold, etc */
+    clientchar_t *newNamep;     /* ptr to the new file's name */
+    fschar_t fsOldName[MAX_PATH]; /* raw FS name */
+    clientchar_t clOldName[MAX_PATH]; /* client name */
     int any;
 } smb_renameRock_t;
 
@@ -5455,29 +5471,29 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     smb_renameRock_t *rockp;
     int caseFold;
     int match;
-    char matchName[MAX_PATH];
+    normchar_t matchName[MAX_PATH];
 
     rockp = (smb_renameRock_t *) vrockp;
 
-    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
+    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
     caseFold = ((rockp->flags & SMB_MASKFLAG_CASEFOLD)? CM_FLAG_CASEFOLD : 0);
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
 
-    match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
+    match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
         (rockp->flags & SMB_MASKFLAG_TILDE) &&
-         !cm_Is8Dot3(dep->name)) {
+        !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
-        match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
+        match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     }
 
     if (match) {
 	rockp->any = 1;
-        StringCbCopyA(rockp->oldName, sizeof(rockp->oldName), dep->name);
-        StringCbCopyA(rockp->normalizedOldName, sizeof(rockp->normalizedOldName),
-                      matchName);
-            code = CM_ERROR_STOPNOW;
+        StringCbCopyA(rockp->fsOldName, sizeof(rockp->fsOldName), dep->name);
+        cm_ClientStrCpy(rockp->clOldName, lengthof(rockp->clOldName),
+                        matchName);
+        code = CM_ERROR_STOPNOW;
     } else {
 	code = 0;
     }
@@ -5487,7 +5503,7 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 
 
 long 
-smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, int attrs)
+smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t * newPathp, int attrs)
 {
     long code = 0;
     cm_space_t *spacep = NULL;
@@ -5496,12 +5512,12 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     cm_scache_t *newDscp = NULL;
     cm_scache_t *tmpscp= NULL;
     cm_scache_t *tmpscp2 = NULL;
-    char *oldLastNamep;
-    char *newLastNamep;
+    clientchar_t *oldLastNamep;
+    clientchar_t *newLastNamep;
     osi_hyper_t thyper;
     cm_user_t *userp;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     DWORD filter;
     cm_req_t req;
 
@@ -5514,10 +5530,10 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
 
     cm_InitReq(&req);
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
+    smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
 
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
                     userp, tidPathp, &req, &oldDscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -5526,7 +5542,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
         
 #ifdef DFS_SUPPORT
     if (oldDscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -5536,8 +5552,8 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     }
 #endif /* DFS_SUPPORT */
 
-    smb_StripLastComponent(spacep->data, &newLastNamep, newPathp);
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold,
+    smb_StripLastComponent(spacep->wdata, &newLastNamep, newPathp);
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
                     userp, tidPathp, &req, &newDscp);
 
     if (code) {
@@ -5548,7 +5564,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
 
 #ifdef DFS_SUPPORT
     if (newDscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseSCache(newDscp);
         cm_ReleaseUser(userp);
@@ -5584,11 +5600,11 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     rock.userp = userp;
     rock.reqp = &req;
     rock.vcp = vcp;
-    rock.maskp = oldLastNamep;
-    rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
+    rock.maskp = cm_ClientStringToNormStringAlloc(oldLastNamep, -1, NULL);
+    rock.flags = ((cm_ClientStrChr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
     rock.newNamep = newLastNamep;
-    rock.oldName[0] = '\0';
-    rock.normalizedOldName[0] = '\0';
+    rock.fsOldName[0] = '\0';
+    rock.clOldName[0] = '\0';
     rock.any = 0;
 
     /* Check if the file already exists; if so return error */
@@ -5596,13 +5612,13 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) && 
         (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
     {
-        osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
-                 osi_LogSaveString(smb_logp, newLastNamep));
+        osi_Log2(smb_logp, "  lookup returns %ld for [%S]", code,
+                 osi_LogSaveClientString(smb_logp, newLastNamep));
 
         /* Check if the old and the new names differ only in case. If so return
          * success, else return CM_ERROR_EXISTS 
          */
-        if (!code && oldDscp == newDscp && !cm_stricmp_utf8(oldLastNamep, newLastNamep)) {
+        if (!code && oldDscp == newDscp && !cm_ClientStrCmpI(oldLastNamep, newLastNamep)) {
 
             /* This would be a success only if the old file is *as same as* the new file */
             code = cm_Lookup(oldDscp, oldLastNamep, CM_FLAG_CHECKPATH, userp, &req, &tmpscp2);
@@ -5627,6 +5643,9 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
         cm_ReleaseSCache(newDscp);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
+
+        free(rock.maskp);
+        rock.maskp = NULL;
         return code; 
     }
 
@@ -5643,10 +5662,10 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     }
     osi_Log1(smb_logp, "smb_RenameProc returns %ld", code);
 
-    if (code == CM_ERROR_STOPNOW && rock.oldName[0] != '\0') {
-	code = cm_Rename(rock.odscp, rock.oldName, rock.normalizedOldName,
+    if (code == CM_ERROR_STOPNOW && rock.fsOldName[0] != '\0') {
+	code = cm_Rename(rock.odscp, rock.fsOldName, rock.clOldName,
                          rock.ndscp, rock.newNamep, rock.userp,
-                         rock.reqp);	
+                         rock.reqp);
         /* if the call worked, stop doing the search now, since we
          * really only want to rename one file.
          */
@@ -5661,22 +5680,22 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     * filter, since we'd have to do a lookup.
     */
     if (code == 0) {
-    filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
-    if (oldDscp == newDscp) {
-        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, rock.normalizedOldName,
-                             newLastNamep, TRUE);
-    } else {
-        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, rock.normalizedOldName,
-                             NULL, TRUE);
-        if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-            smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
-                             filter, newDscp, newLastNamep,
-                             NULL, TRUE);
-    }
+        filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
+        if (oldDscp == newDscp) {
+            if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                                 filter, oldDscp, rock.clOldName,
+                                 newLastNamep, TRUE);
+        } else {
+            if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                                 filter, oldDscp, rock.clOldName,
+                                 NULL, TRUE);
+            if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+                smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
+                                 filter, newDscp, newLastNamep,
+                                 NULL, TRUE);
+        }
     }
 
     if (tmpscp != NULL) 
@@ -5684,11 +5703,15 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     cm_ReleaseUser(userp);
     cm_ReleaseSCache(oldDscp);
     cm_ReleaseSCache(newDscp);
+
+    free(rock.maskp);
+    rock.maskp = NULL;
+
     return code;
 }       
 
 long 
-smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp) 
+smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t * newPathp) 
 {
     long code = 0;
     cm_space_t *spacep = NULL;
@@ -5697,11 +5720,11 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     cm_scache_t *tmpscp= NULL;
     cm_scache_t *tmpscp2 = NULL;
     cm_scache_t *sscp = NULL;
-    char *oldLastNamep;
-    char *newLastNamep;
+    clientchar_t *oldLastNamep;
+    clientchar_t *newLastNamep;
     cm_user_t *userp;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     DWORD filter;
     cm_req_t req;
 
@@ -5718,9 +5741,9 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
+    smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
     
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
                     userp, tidPathp, &req, &oldDscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -5729,7 +5752,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
         
 #ifdef DFS_SUPPORT
     if (oldDscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(oldDscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -5739,8 +5762,8 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     }
 #endif /* DFS_SUPPORT */
 
-    smb_StripLastComponent(spacep->data, &newLastNamep, newPathp);
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold,
+    smb_StripLastComponent(spacep->wdata, &newLastNamep, newPathp);
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
                     userp, tidPathp, &req, &newDscp);
     if (code) {
         cm_ReleaseSCache(oldDscp);
@@ -5750,7 +5773,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
 
 #ifdef DFS_SUPPORT
     if (newDscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(newDscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(newDscp);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
@@ -5784,7 +5807,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
         newLastNamep++;
 
     /* now lookup the old name */
-    osi_Log1(smb_logp,"  looking up [%s]", osi_LogSaveString(smb_logp,oldLastNamep));
+    osi_Log1(smb_logp,"  looking up [%S]", osi_LogSaveClientString(smb_logp,oldLastNamep));
     code = cm_Lookup(oldDscp, oldLastNamep, CM_FLAG_CHECKPATH | CM_FLAG_CASEFOLD, userp, &req, &sscp);
     if (code) {
         cm_ReleaseSCache(oldDscp);
@@ -5798,8 +5821,8 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) &&
         (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) 
     {
-        osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
-                 osi_LogSaveString(smb_logp, newLastNamep));
+        osi_Log2(smb_logp, "  lookup returns %ld for [%S]", code,
+                 osi_LogSaveClientString(smb_logp, newLastNamep));
 
         /* if the existing link is to the same file, then we return success */
         if (!code) {
@@ -5821,7 +5844,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     }
 
     /* now create the hardlink */
-    osi_Log1(smb_logp,"  Attempting to create new link [%s]", osi_LogSaveString(smb_logp, newLastNamep));
+    osi_Log1(smb_logp,"  Attempting to create new link [%S]", osi_LogSaveClientString(smb_logp, newLastNamep));
     code = cm_Link(newDscp, newLastNamep, sscp, 0, userp, &req);
     osi_Log1(smb_logp,"  Link returns 0x%x", code);
 
@@ -5847,18 +5870,18 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
 long 
 smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *oldPathp;
-    char *newPathp;
-    char *tp;
+    clientchar_t *oldPathp;
+    clientchar_t *newPathp;
+    unsigned char *tp;
     long code;
 
     tp = smb_GetSMBData(inp, NULL);
     oldPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
     newPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
-    osi_Log2(smb_logp, "smb rename [%s] to [%s]",
-             osi_LogSaveString(smb_logp, oldPathp),
-             osi_LogSaveString(smb_logp, newPathp));
+    osi_Log2(smb_logp, "smb rename [%S] to [%S]",
+             osi_LogSaveClientString(smb_logp, oldPathp),
+             osi_LogSaveClientString(smb_logp, newPathp));
 
     code = smb_Rename(vcp,inp,oldPathp,newPathp,0);
 
@@ -5872,7 +5895,7 @@ typedef struct smb_rmdirRock {
     cm_scache_t *dscp;
     cm_user_t *userp;
     cm_req_t *reqp;
-    char *maskp;		/* pointer to the star pattern */
+    normchar_t *maskp;		/* pointer to the star pattern */
     int flags;
     int any;
     cm_dirEntryList_t * matches;
@@ -5883,24 +5906,24 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
     long code = 0;
     smb_rmdirRock_t *rockp;
     int match;
-    char matchName[MAX_PATH];
+    normchar_t matchName[MAX_PATH];
         
     rockp = (smb_rmdirRock_t *) vrockp;
 
-    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
+    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
     if (rockp->flags & SMB_MASKFLAG_CASEFOLD)
-        match = (cm_stricmp_utf8(matchName, rockp->maskp) == 0);
+        match = (cm_ClientStrCmpI(matchName, rockp->maskp) == 0);
     else
-        match = (strcmp(matchName, rockp->maskp) == 0);
+        match = (cm_ClientStrCmp(matchName, rockp->maskp) == 0);
     if (!match &&
          (rockp->flags & SMB_MASKFLAG_TILDE) &&
-         !cm_Is8Dot3(dep->name)) {
+         !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
-        match = (cm_stricmp_utf8(matchName, rockp->maskp) == 0);
+        match = (cm_ClientStrCmpI(matchName, rockp->maskp) == 0);
     }       
 
     if (match) {
-            rockp->any = 1;
+        rockp->any = 1;
         cm_DirEntryListAdd(dep->name, &rockp->matches);
     }
 
@@ -5911,16 +5934,16 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
 long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     long code = 0;
-    char *pathp;
-    char *tp;
+    clientchar_t *pathp;
+    unsigned char *tp;
     cm_space_t *spacep;
     cm_scache_t *dscp;
-    char *lastNamep;
+    clientchar_t *lastNamep;
     smb_rmdirRock_t rock;
     cm_user_t *userp;
     osi_hyper_t thyper;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -5929,7 +5952,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -5940,7 +5963,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold | CM_FLAG_FOLLOW,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold | CM_FLAG_FOLLOW,
                     userp, tidPathp, &req, &dscp);
 
     if (code) {
@@ -5950,7 +5973,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -5967,8 +5990,8 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         lastNamep++;
 	
     rock.any = 0;
-    rock.maskp = lastNamep;
-    rock.flags = ((strchr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
+    rock.maskp = cm_ClientStringToNormStringAlloc(lastNamep, -1, NULL);
+    rock.flags = ((cm_ClientStrChr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 
     thyper.LowPart = 0;
     thyper.HighPart = 0;
@@ -5990,20 +6013,19 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         cm_dirEntryList_t * entry;
 
         for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
-            char normalizedName[MAX_PATH];
+            clientchar_t clientName[MAX_PATH];
 
-            cm_NormalizeUtf8String(entry->name, -1, normalizedName,
-                                   sizeof(normalizedName)/sizeof(char));
+            cm_FsStringToClientString(entry->name, -1, clientName, lengthof(clientName));
 
             osi_Log1(smb_logp, "Removing directory %s",
                      osi_LogSaveString(smb_logp, entry->name));
 
-            code = cm_RemoveDir(dscp, entry->name, normalizedName, userp, &req);
+            code = cm_RemoveDir(dscp, entry->name, clientName, userp, &req);
 
             if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
                 smb_NotifyChange(FILE_ACTION_REMOVED,
                                  FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                                 dscp, normalizedName, NULL, TRUE);
+                                 dscp, clientName, NULL, TRUE);
         }
     }
 
@@ -6015,6 +6037,10 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     if (code == 0 && !rock.any)
         code = CM_ERROR_NOSUCHFILE;        
+
+    free(rock.maskp);
+    rock.maskp = NULL;
+
     return code;
 }
 
@@ -6074,45 +6100,45 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 }
 
 struct smb_FullNameRock {
-    char *name;
-    cm_scache_t *vnode;
-    char *fullName;
-    char *originalName;
+    clientchar_t *name;
+    cm_scache_t  *vnode;
+    clientchar_t *fullName;
+    fschar_t     *originalName;
 };
 
 int smb_FullNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
                      osi_hyper_t *offp)
 {
-    char matchName[MAX_PATH];
+    normchar_t matchName[MAX_PATH];
     struct smb_FullNameRock *vrockp;
 
     vrockp = (struct smb_FullNameRock *)rockp;
 
-    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
+    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
 
-    if (!cm_Is8Dot3(dep->name)) {
-        char shortName[13];
+    if (!cm_Is8Dot3(matchName)) {
+        clientchar_t shortName[13];
 
         cm_Gen8Dot3Name(dep, shortName, NULL);
 
-        if (cm_stricmp_utf8N(shortName, vrockp->name) == 0) {
-            vrockp->fullName = strdup(matchName);
-            vrockp->originalName = strdup(dep->name);
+        if (cm_ClientStrCmpIA(shortName, vrockp->name) == 0) {
+            vrockp->fullName = cm_ClientStrDup(matchName);
+            vrockp->originalName = cm_FsStrDup(dep->name);
             return CM_ERROR_STOPNOW;
         }
     }
-    if (cm_stricmp_utf8(matchName, vrockp->name) == 0 &&
+    if (cm_ClientStrCmpI(matchName, vrockp->name) == 0 &&
         ntohl(dep->fid.vnode) == vrockp->vnode->fid.vnode &&
         ntohl(dep->fid.unique) == vrockp->vnode->fid.unique) {
-        vrockp->fullName = strdup(matchName);
-        vrockp->originalName = strdup(dep->name);
+        vrockp->fullName = cm_ClientStrDup(matchName);
+        vrockp->originalName = cm_FsStrDup(dep->name);
         return CM_ERROR_STOPNOW;
     }
     return 0;
 }
 
-void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
-                  char **newPathp, char ** originalPathp,
+void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, clientchar_t *pathp,
+                  clientchar_t **newPathp, fschar_t ** originalPathp,
                   cm_user_t *userp, cm_req_t *reqp)
 {
     struct smb_FullNameRock rock;
@@ -6127,8 +6153,8 @@ void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
         *newPathp = rock.fullName;
         *originalPathp = rock.originalName;
     } else {
-        *newPathp = strdup(pathp);
-        *originalPathp = strdup(pathp);
+        *newPathp = cm_ClientStrDup(pathp);
+        *originalPathp = cm_ClientStringToFsStringAlloc(pathp, -1, NULL);
     }
 }
 
@@ -6137,7 +6163,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     long code = 0;
     cm_req_t req;
     cm_scache_t *dscp = NULL;
-    char *pathp = NULL;
+    clientchar_t *pathp = NULL;
     cm_scache_t * scp = NULL;
     cm_scache_t *delscp = NULL;
     int nullcreator = 0;
@@ -6176,7 +6202,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     }
 
     if (fidp->NTopen_pathp) {
-	pathp = strdup(fidp->NTopen_pathp);
+	pathp = cm_ClientStrDup(fidp->NTopen_pathp);
     }
 
     if (fidp->scp) {
@@ -6245,8 +6271,8 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     }
 
     if (fidp->flags & SMB_FID_DELONCLOSE) {
-        char *fullPathp = NULL;
-        char *originalNamep = NULL;
+        clientchar_t *fullPathp = NULL;
+        fschar_t *originalNamep = NULL;
 
 	lock_ReleaseMutex(&fidp->mx);
 
@@ -6275,7 +6301,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         }
 
         if (fullPathp)
-        free(fullPathp);
+            free(fullPathp);
         if (originalNamep)
             free(originalNamep);
 
@@ -7284,18 +7310,18 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 /* SMB_COM_CREATE_DIRECTORY */
 long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *pathp;
+    clientchar_t *pathp;
     long code = 0;
     cm_space_t *spacep;
-    char *tp;
+    unsigned char *tp;
     cm_user_t *userp;
     cm_scache_t *dscp;			/* dir we're dealing with */
     cm_scache_t *scp;			/* file we're creating */
     cm_attr_t setAttr;
     int initialModeBits;
-    char *lastNamep;
+    clientchar_t *lastNamep;
     int caseFold;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -7308,11 +7334,11 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
-    if (strcmp(pathp, "\\") == 0)
+    if (cm_ClientStrCmp(pathp, _C("\\")) == 0)
         return CM_ERROR_EXISTS;
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -7324,7 +7350,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         return CM_ERROR_NOSUCHPATH;
     }
 
-    code = cm_NameI(cm_data.rootSCachep, spacep->data,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
                     caseFold | CM_FLAG_FOLLOW | CM_FLAG_CHECKPATH,
                     userp, tidPathp, &req, &dscp);
 
@@ -7335,7 +7361,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -7385,7 +7411,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     return 0;
 }
 
-BOOL smb_IsLegalFilename(char *filename)
+BOOL smb_IsLegalFilename(clientchar_t *filename)
 {
     /* 
      *  Find the longest substring of filename that does not contain
@@ -7393,19 +7419,19 @@ BOOL smb_IsLegalFilename(char *filename)
      *  than the length of the whole string, then one or more of the
      *  illegal chars is in filename. 
      */
-    if (strcspn(filename, illegalChars) < strlen(filename))
+    if (cm_ClientStrCSpn(filename, illegalChars) < cm_ClientStrLen(filename))
         return FALSE;
 
     return TRUE;
-}        
+}
 
 /* SMB_COM_CREATE and SMB_COM_CREATE_NEW */
 long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *pathp;
+    clientchar_t *pathp;
     long code = 0;
     cm_space_t *spacep;
-    char *tp;
+    unsigned char *tp;
     int excl;
     cm_user_t *userp;
     cm_scache_t *dscp;			/* dir we're dealing with */
@@ -7414,10 +7440,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int initialModeBits;
     smb_fid_t *fidp;
     int attributes;
-    char *lastNamep;
+    clientchar_t *lastNamep;
     int caseFold;
     afs_uint32 dosTime;
-    char *tidPathp;
+    clientchar_t *tidPathp;
     cm_req_t req;
     int created = 0;			/* the file was new */
 
@@ -7438,7 +7464,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
 
     spacep = inp->spacep;
-    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -7449,7 +7475,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold | CM_FLAG_FOLLOW,
+    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold | CM_FLAG_FOLLOW,
                     userp, tidPathp, &req, &dscp);
 
     if (code) {
@@ -7459,7 +7485,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 #ifdef DFS_SUPPORT
     if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->data);
+        int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
         cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
@@ -7480,7 +7506,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!smb_IsLegalFilename(lastNamep))
         return CM_ERROR_BADNTFILENAME;
 
-    osi_Log1(smb_logp, "SMB receive create [%s]", osi_LogSaveString( smb_logp, pathp ));
+    osi_Log1(smb_logp, "SMB receive create [%S]", osi_LogSaveClientString( smb_logp, pathp ));
 #ifdef DEBUG_VERBOSE
     {
         char *hexp;
@@ -8110,6 +8136,7 @@ void smb_Server(VOID *parmp)
     UCHAR rc;
     smb_vc_t *vcp = NULL;
     smb_t *smbp;
+    extern void rx_StartClientThread(void);
 
     rx_StartClientThread();
 
@@ -8445,7 +8472,7 @@ void smb_Listener(void *parmp)
     INT_PTR lana = (INT_PTR) parmp;
     char eventName[MAX_PATH];
 
-    sprintf(eventName,"smb_Listener_lana_%d", (char)lana);
+    sprintf(eventName,"smb_Listener_lana_%d", (unsigned char)lana);
     ListenerShutdown[lana] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         thrd_ResetEvent(ListenerShutdown[lana]);
@@ -8593,7 +8620,7 @@ void smb_Listener(void *parmp)
 	    }
 	    
 	    lock_ObtainMutex(&vcp->mx);
-	    strcpy(vcp->rname, rname);
+            cm_Utf8ToUtf16(rname, -1, vcp->rname, lengthof(vcp->rname));
 	    vcp->flags |= flags;
 	    lock_ReleaseMutex(&vcp->mx);
 
@@ -8873,6 +8900,8 @@ int smb_NetbiosInit(int locked)
     strcpy(smb_localNamep, cm_NetbiosName);
     afsi_log("smb_localNamep is >%s<", smb_localNamep);
 
+    /* Also copy the value to the client character encoded string */
+    cm_Utf8ToClientString(cm_NetbiosName, -1, cm_NetbiosNameC, MAX_NB_NAME_LENGTH);
 
     if (smb_LANadapter == LANA_INVALID) {
         ncbp->ncb_command = NCBENUM;
@@ -9457,10 +9486,10 @@ void smb_Init(osi_log_t *logp, int useV3, int nThreads, void *aMBfunc)
          * It is actually the domain for local logins, and we are acting as
          * a local SMB server. 
          */
-        bufsize = sizeof(smb_ServerDomainName) - 1;
-        GetComputerName(smb_ServerDomainName, &bufsize);
+        bufsize = lengthof(smb_ServerDomainName) - 1;
+        GetComputerNameW(smb_ServerDomainName, &bufsize);
         smb_ServerDomainNameLength = bufsize + 1; /* bufsize doesn't include terminator */
-        afsi_log("Setting SMB server domain name to [%s]", smb_ServerDomainName);
+        afsi_log("Setting SMB server domain name to [%S]", smb_ServerDomainName);
     }
 
     /* Start listeners, waiters, servers, and daemons */
@@ -9617,6 +9646,7 @@ void smb_Shutdown(void)
 char *smb_GetSharename()
 {
     char *name;
+    int len;
 
     /* Make sure we have been properly initialized. */
     if (smb_localNamep == NULL)
@@ -9625,10 +9655,11 @@ char *smb_GetSharename()
     /* Allocate space for \\<servername>\<sharename>, plus the
      * terminator.
      */
-    name = malloc(strlen(smb_localNamep) + strlen("ALL") + 4);
-    sprintf(name, "\\\\%s\\%s", smb_localNamep, "ALL");
+    len = (strlen(smb_localNamep) + strlen("ALL") + 4) * sizeof(char);
+    name = malloc(len);
+    snprintf(name, len, "\\\\%s\\%s", smb_localNamep, "ALL");
     return name;
-}   
+}
 
 
 #ifdef LOG_PACKET
@@ -9724,8 +9755,8 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
         {
             sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
-                     fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
-                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
+                    fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
+                    fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
@@ -9754,8 +9785,8 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
         {
             sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
-                     fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
-                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
+                    fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
+                    fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
