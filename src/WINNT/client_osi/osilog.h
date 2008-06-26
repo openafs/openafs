@@ -19,7 +19,7 @@
 #include "osiqueue.h"
 
 #define OSI_LOG_DEFAULTSIZE	1000
-#define OSI_LOG_STRINGSIZE	128
+#define OSI_LOG_STRINGSIZE	256
 #define OSI_LOG_MAXPARMS	4	/* max # of int parms */
 
 typedef struct osi_logEntry {
@@ -32,7 +32,7 @@ typedef struct osi_logEntry {
 typedef struct osi_log {
 	osi_queue_t q;			/* queue of all logs */
 	char *namep;			/* name */
-	size_t alloc;			/* allocated size */
+        long alloc;			/* allocated size */
         long nused;			/* number currently in use */
         long first;			/* index of first entry */
         Crit_Sec cs;			/* use this, rather than a higher-level
@@ -79,6 +79,7 @@ extern void osi_LogPanic(char *filep, size_t line);
 
 extern void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle);
 
+extern wchar_t *osi_LogSaveStringW(osi_log_t *logp, wchar_t *s);
 extern char *osi_LogSaveString(osi_log_t *logp, char *s);
 extern void osi_InitTraceOption();
 extern void osi_LogEvent0(char *a,char *b);
