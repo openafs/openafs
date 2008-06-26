@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <winsock2.h>
 #include <WINNT\afsreg.h>
+#include "cm_btree.h"
+#include "cm_rpc.h"
+#include "smb.h"
 
 #include <osi.h>
 
@@ -1094,6 +1097,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     HMODULE hAdvApi32;
 
 #ifdef _DEBUG
+    void afsd_DbgBreakAllocInit();
+
     afsd_DbgBreakAllocInit();
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
                    _CRTDBG_CHECK_CRT_DF /* | _CRTDBG_DELAY_FREE_MEM_DF */ );

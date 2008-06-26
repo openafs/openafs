@@ -20,5 +20,5 @@ void afsd_SetUnhandledExceptionFilter();
 
 extern char cm_HostName[];
 extern char cm_NetbiosName[];
-
+extern clientchar_t cm_NetbiosNameC[];
 

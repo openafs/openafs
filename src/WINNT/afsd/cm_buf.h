@@ -203,6 +203,8 @@ extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
 
 extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion);
 
+extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock);
+
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */
 #endif /*  _BUF_H__ENV_ */

@@ -15,6 +15,12 @@
    names for the given cell, ending in null */
 int getAFSServer(char *cellname, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], int *numServers, int *ttl);
 
+/* Same as above, but using cm_unichar_t.  Note that this functon will
+   only be defined for DNSAPI_ENV. */
+int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
+                  cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
+                  int *numServers, int *ttl);
+
 /* a supplement for the DJGPP gethostbyname ... which 
    never bothers calling a DNS server ... so this function
    takes care of that. This should be called when you

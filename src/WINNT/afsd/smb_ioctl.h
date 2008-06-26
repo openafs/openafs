@@ -11,6 +11,7 @@
 #define __SMB_IOCTL_H_ENV__ 1
 
 #include <cm_ioctl.h>
+#include <smb_iocons.h>
 
 /* magic file name for ioctl opens */
 #define SMB_IOCTL_FILENAME	   CM_IOCTL_FILENAME
@@ -33,8 +34,8 @@ typedef struct smb_ioctl {
     struct smb_user *uidp;
 
     /* pathname associated with the Tree ID */
-    char *tidPathp;
-
+    clientchar_t *tidPathp;
+    
     /* prefix for subst drives */
     cm_space_t *prefix;
 
@@ -44,28 +45,42 @@ typedef struct smb_ioctl {
 /* procedure implementing an ioctl */
 typedef long (smb_ioctlProc_t)(smb_ioctl_t *, struct cm_user *userp);
 
-extern void smb_InitIoctl(void);
+extern void
+smb_InitIoctl(void);
 
-extern void smb_SetupIoctlFid(struct smb_fid *fidp, cm_space_t *prefix);
-
-extern afs_int32 smb_IoctlRead(struct smb_fid *fidp, struct smb_vc *vcp, struct smb_packet *inp, struct smb_packet *outp);
-
-extern afs_int32 smb_IoctlWrite(struct smb_fid *fidp, struct smb_vc *vcp, struct smb_packet *inp, struct smb_packet *outp);
-
-extern afs_int32 smb_IoctlV3Write(struct smb_fid *fidp, struct smb_vc *vcp, struct smb_packet *inp, struct smb_packet *outp);
-
-extern afs_int32 smb_IoctlV3Read(struct smb_fid *fidp, struct smb_vc *vcp, struct smb_packet *inp, struct smb_packet *outp);
-
-extern afs_int32 smb_IoctlReadRaw(struct smb_fid *fidp, struct smb_vc *vcp, struct smb_packet *inp,
-	struct smb_packet *outp);
-
-extern long smb_IoctlPrepareRead(struct smb_fid *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern void
+smb_SetupIoctlFid(struct smb_fid *fidp, cm_space_t *prefix);
 
 extern afs_int32
-smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp, cm_scache_t **scpp, afs_uint32 flags);
+smb_IoctlRead(struct smb_fid *fidp, struct smb_vc *vcp,
+              struct smb_packet *inp, struct smb_packet *outp);
 
 extern afs_int32
-smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp, cm_scache_t **scpp, char *leafp);
+smb_IoctlWrite(struct smb_fid *fidp, struct smb_vc *vcp,
+               struct smb_packet *inp, struct smb_packet *outp);
+
+extern afs_int32
+smb_IoctlV3Write(struct smb_fid *fidp, struct smb_vc *vcp,
+                 struct smb_packet *inp, struct smb_packet *outp);
+
+extern afs_int32
+smb_IoctlV3Read(struct smb_fid *fidp, struct smb_vc *vcp,
+                struct smb_packet *inp, struct smb_packet *outp);
+
+extern afs_int32
+smb_IoctlReadRaw(struct smb_fid *fidp, struct smb_vc *vcp,
+                 struct smb_packet *inp, struct smb_packet *outp);
+
+extern afs_int32
+smb_IoctlPrepareRead(struct smb_fid *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern afs_int32
+smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
+                   cm_scache_t **scpp, afs_uint32 flags);
+
+extern afs_int32
+smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
+                     cm_scache_t **scpp, clientchar_t *leafp);
 
 extern afs_int32 
 smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp);

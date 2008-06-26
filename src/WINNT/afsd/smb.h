@@ -16,6 +16,8 @@
 #endif
 #include <ntsecapi.h>
 
+#include <cm_nls.h>
+
 /* Support largefiles by default */
 #define AFS_LARGEFILES
 
@@ -47,7 +49,7 @@ typedef struct smb {
 #define SMB_FLAGS_CANONICAL_PATHNAMES      0x10
 #define SMB_FLAGS_REQUEST_OPLOCK           0x20
 #define SMB_FLAGS_REQUEST_BATCH_OPLOCK     0x40
-#define SMB_FLAGS_SERVER_TO_CLIENT         0x80           
+#define SMB_FLAGS_SERVER_TO_CLIENT         0x80
 
 /* flg2 values */
 
@@ -226,7 +228,7 @@ typedef struct smb_vc {
     struct smb_user *usersp;	        /* the first child in the user session list */
     struct smb_fid *fidsp;		/* the first child in the open file list */
     unsigned char errorCount;
-    char rname[17];
+    clientchar_t rname[17];
     int lana;
     char encKey[MSV1_0_CHALLENGE_LENGTH]; /* MSV1_0_CHALLENGE_LENGTH is 8 */
     void * secCtx;                      /* security context when negotiating SMB extended auth
@@ -268,8 +270,8 @@ typedef struct smb_username {
     long flags;			        /* flags; locked by mx */
     osi_mutex_t mx;
     struct cm_user *userp;		/* CM user structure */
-    char *name;			        /* user name */
-    char *machine;                      /* machine name */
+    clientchar_t *name;                 /* user name */
+    clientchar_t *machine;              /* machine name */
     time_t last_logoff_t;		/* most recent logoff time */
 } smb_username_t;
 
@@ -302,7 +304,7 @@ typedef struct smb_tid {
     struct smb_vc *vcp;		        /* back ptr */
     struct cm_user *userp;		/* user logged in at the
 					 * tree connect level (base) */
-    char *pathname;			/* pathname derived from sharename */
+    clientchar_t *pathname;             /* pathname derived from sharename */
     afs_uint32	deleteOk;		/* ok to del: locked by smb_rctLock */
 } smb_tid_t;
 
@@ -343,8 +345,8 @@ typedef struct smb_fid {
 					 * the file on close, or to do a
 					 * change notification */
     struct cm_scache *NTopen_dscp;	/* parent directory (NT) */
-    char *NTopen_pathp;		        /* path used in open (NT) */
-    char *NTopen_wholepathp;	        /* entire path, not just last name */
+    clientchar_t *NTopen_pathp;		/* path used in open (NT) */
+    clientchar_t *NTopen_wholepathp;	/* entire path, not just last name */
     int curr_chunk;			/* chunk being read */
     int prev_chunk;			/* previous chunk read */
     int raw_writers;		        /* pending async raw writes */
@@ -425,9 +427,9 @@ typedef struct smb_dirSearch {
 					 * locked by smb_globalLock */
     unsigned short attribute;	        /* search attribute
 					 * (used for extended protocol) */
-    char tidPath[256];                  /* tid path */
-    char relPath[1024];                 /* relative path */        
-    char mask[256];			/* search mask for V3 */
+    clientchar_t tidPath[256];          /* tid path */
+    clientchar_t relPath[1024];         /* relative path */        
+    clientchar_t mask[256];	        /* search mask for V3 */
 } smb_dirSearch_t;
 
 #define SMB_DIRSEARCH_DELETE	1	/* delete struct when ref count zero */
@@ -438,7 +440,7 @@ typedef struct smb_dirSearch {
 /* type for patching directory listings */
 typedef struct smb_dirListPatch {
     osi_queue_t q;
-    char *dptr;		                /* ptr to attr, time, data, sizel, sizeh */
+    char *dptr;                      /* ptr to attr, time, data, sizel, sizeh */
     long flags;                         /* flags.  See below */
     cm_fid_t fid;
     cm_dirEntry_t *dep;                 /* temp */
@@ -532,11 +534,11 @@ extern void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked);
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 
-extern smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags);
+extern smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 
-extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags);
+extern cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 
-extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern); 
+extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, clientchar_t *usern); 
 
 extern void smb_ReleaseUsername(smb_username_t *unp);
 
@@ -548,7 +550,7 @@ extern cm_user_t *smb_GetUserFromVCP(smb_vc_t *vcp, smb_packet_t *inp);
 
 extern cm_user_t *smb_GetUserFromUID(smb_user_t *uidp);
 
-extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPathp);
+extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, clientchar_t ** tidPathp);
 
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 
@@ -561,9 +563,9 @@ extern void smb_ReleaseFID(smb_fid_t *fidp);
 extern long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
                          afs_uint32 dosTime);
 
-extern int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName, char **pathNamep);
+extern int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, clientchar_t *shareName, clientchar_t **pathNamep);
 
-extern int smb_FindShareCSCPolicy(char *shareName);
+extern int smb_FindShareCSCPolicy(clientchar_t *shareName);
 
 extern smb_dirSearch_t *smb_FindDirSearchNL(long cookie);
 
@@ -599,36 +601,36 @@ extern void smb_SetSMBParmDouble(smb_packet_t *smbp, int slot, char *parmValuep)
 
 extern void smb_SetSMBParmByte(smb_packet_t *smbp, int slot, unsigned int parmValue);
 
-extern void smb_StripLastComponent(char *outPathp, char **lastComponentp,
-	char *inPathp);
+extern void smb_StripLastComponent(clientchar_t *outPathp, clientchar_t **lastComponentp,
+	clientchar_t *inPathp);
 
 #define SMB_STRF_FORCEASCII (1<<0)
 #define SMB_STRF_ANSIPATH   (1<<1)
 #define SMB_STRF_IGNORENULL (1<<2)
 
-extern unsigned char *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
-                                          char **chainpp, int flags);
-
-extern unsigned char *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
-                                      char ** chainpp, int flags);
-
-extern unsigned char *smb_ParseStringBuf(const unsigned char * bufbase,
-                                         cm_space_t ** stringspp,
-                                         unsigned char *inp, size_t *pcb_max,
+extern clientchar_t *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
                                          char **chainpp, int flags);
 
-extern unsigned char *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
-                                        size_t cb, char ** chainpp, int flags);
+extern clientchar_t *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
+                                     char ** chainpp, int flags);
 
-extern unsigned char *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
-                                         size_t cch, char ** chainpp, int flags);
+extern clientchar_t *smb_ParseStringBuf(const unsigned char * bufbase,
+                                        cm_space_t ** stringspp,
+                                        unsigned char *inp, size_t *pcb_max,
+                                        char **chainpp, int flags);
+
+extern clientchar_t *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
+                                       size_t cb, char ** chainpp, int flags);
+
+extern clientchar_t *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
+                                        size_t cch, char ** chainpp, int flags);
 
 extern unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
-                                         unsigned char * str,
-                                         size_t * plen, int flags);
+                                   clientchar_t * str,
+                                   size_t * plen, int flags);
 
 extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp,
-	int *lengthp);
+                                  int *lengthp);
 
 extern smb_packet_t *smb_GetResponsePacket(smb_vc_t *vcp, smb_packet_t *inp);
 
@@ -660,7 +662,7 @@ extern int smb_maxMpxRequests; /* max # of mpx requests */
 
 extern int smb_StoreAnsiFilenames;
 extern int smb_hideDotFiles;
-extern unsigned int smb_IsDotFile(char *lastComp);
+extern unsigned int smb_IsDotFile(clientchar_t *lastComp);
 extern afs_uint32 smb_AsyncStore;
 extern afs_uint32 smb_AsyncStoreSize;
 
@@ -673,11 +675,11 @@ extern int smb_authType; /* Type of SMB authentication to be used. One from belo
 
 extern HANDLE smb_lsaHandle; /* LSA handle obtained during smb_init if using SMB auth */
 extern ULONG smb_lsaSecPackage; /* LSA security package id. Set during smb_init */
-extern char smb_ServerDomainName[];
+extern clientchar_t smb_ServerDomainName[];
 extern int smb_ServerDomainNameLength;
-extern char smb_ServerOS[];
+extern clientchar_t smb_ServerOS[];
 extern int smb_ServerOSLength;
-extern char smb_ServerLanManager[];
+extern clientchar_t smb_ServerLanManager[];
 extern int smb_ServerLanManagerLength;
 extern GUID smb_ServerGUID;
 extern LSA_STRING smb_lsaLogonOrigin;
@@ -694,9 +696,9 @@ typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {
 } MSV1_0_LM20_CHALLENGE_RESPONSE, *PMSV1_0_LM20_CHALLENGE_RESPONSE;
 /**/
 
-extern long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDomain, char * ciPwd, unsigned ciPwdLength, char * csPwd, unsigned csPwdLength);
+extern long smb_AuthenticateUserLM(smb_vc_t *vcp, clientchar_t * accountName, clientchar_t * primaryDomain, char * ciPwd, unsigned ciPwdLength, char * csPwd, unsigned csPwdLength);
 
-extern long smb_GetNormalizedUsername(char * usern, const char * accountName, const char * domainName);
+extern long smb_GetNormalizedUsername(clientchar_t * usern, const clientchar_t * accountName, const clientchar_t * domainName);
 
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
@@ -723,11 +725,11 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count,
 	char *op, cm_user_t *userp, long *readp);
 
-extern long smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp, int attrs);
+extern long smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t *oldPathp, clientchar_t *newPathp, int attrs);
 
-extern long smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp);
+extern long smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t *oldPathp, clientchar_t *newPathp);
 
-extern BOOL smb_IsLegalFilename(char *filename);
+extern BOOL smb_IsLegalFilename(clientchar_t *filename);
 
 extern char *smb_GetSharename(void);
 
@@ -753,7 +755,11 @@ extern void smb_SetLanAdapterChangeDetected(void);
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
 
-cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, char *usern);
+cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, clientchar_t *usern);
+
+int smb_DumpVCP(FILE *outputFile, char *cookie, int lock);
+
+void smb_Shutdown(void);
 
 #ifdef NOTSERVICE
 extern void smb_LogPacket(smb_packet_t *packet);

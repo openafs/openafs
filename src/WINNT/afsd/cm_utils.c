@@ -363,3 +363,372 @@ void cm_FreeSpace(cm_space_t *tsp)
         lock_ReleaseWrite(&cm_utilsLock);
 }
 
+/* characters that are legal in an 8.3 name */
+/*
+ * We used to have 1's for all characters from 128 to 254.  But
+ * the NT client behaves better if we create an 8.3 name for any
+ * name that has a character with the high bit on, and if we
+ * delete those characters from 8.3 names.  In particular, see
+ * Sybase defect 10859.
+ */
+char cm_LegalChars[256] = {
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+#define ISLEGALCHAR(c) ((c) < 256 && (c) > 0 && cm_LegalChars[(c)] != 0)
+
+/* return true iff component is a valid 8.3 name */
+int cm_Is8Dot3(clientchar_t *namep)
+{
+    int sawDot = 0;
+    clientchar_t tc;
+    int charCount = 0;
+        
+    /*
+     * can't have a leading dot;
+     * special case for . and ..
+     */
+    if (namep[0] == '.') {
+        if (namep[1] == 0)
+            return 1;
+        if (namep[1] == '.' && namep[2] == 0)
+            return 1;
+        return 0;
+    }
+    while (tc = *namep++) {
+        if (tc == '.') {
+            /* saw another dot */
+            if (sawDot) return 0;	/* second dot */
+            sawDot = 1;
+            charCount = 0;
+            continue;
+        }
+        if (!ISLEGALCHAR(tc))
+            return 0;
+        charCount++;
+        if (!sawDot && charCount > 8)
+            /* more than 8 chars in name */
+            return 0;
+        if (sawDot && charCount > 3)
+            /* more than 3 chars in extension */
+            return 0;
+    }
+    return 1;
+}
+
+/*
+ * Number unparsing map for generating 8.3 names;
+ * The version taken from DFS was on drugs.  
+ * You can't include '&' and '@' in a file name.
+ */
+char cm_8Dot3Mapping[42] =
+{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 
+ 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 
+ 'V', 'W', 'X', 'Y', 'Z', '_', '-', '$', '#', '!', '+', '='
+};
+int cm_8Dot3MapSize = sizeof(cm_8Dot3Mapping);
+
+void cm_Gen8Dot3NameInt(const fschar_t * longname, cm_dirFid_t * pfid,
+                        clientchar_t *shortName, clientchar_t **shortNameEndp)
+{
+    char number[12];
+    int i, nsize = 0;
+    int vnode = ntohl(pfid->vnode);
+    char *lastDot;
+    int validExtension = 0;
+    char tc, *temp;
+    const char *name;
+
+    /* Unparse the file's vnode number to get a "uniquifier" */
+    do {
+        number[nsize] = cm_8Dot3Mapping[vnode % cm_8Dot3MapSize];
+        nsize++;
+        vnode /= cm_8Dot3MapSize;
+    } while (vnode);
+
+    /*
+     * Look for valid extension.  There has to be a dot, and
+     * at least one of the characters following has to be legal.
+     */
+    lastDot = strrchr(longname, '.');
+    if (lastDot) {
+        temp = lastDot; temp++;
+        while (tc = *temp++)
+            if (ISLEGALCHAR(tc))
+                break;
+        if (tc)
+            validExtension = 1;
+    }
+
+    /* Copy name characters */
+    for (i = 0, name = longname;
+          i < (7 - nsize) && name != lastDot; ) {
+        tc = *name++;
+
+        if (tc == 0)
+            break;
+        if (!ISLEGALCHAR(tc))
+            continue;
+        i++;
+        *shortName++ = toupper(tc);
+    }
+
+    /* tilde */
+    *shortName++ = '~';
+
+    /* Copy uniquifier characters */
+    for (i=0; i < nsize; i++) {
+        *shortName++ = number[i];
+    }
+
+    if (validExtension) {
+        /* Copy extension characters */
+        *shortName++ = *lastDot++;	/* copy dot */
+        for (i = 0, tc = *lastDot++;
+             i < 3 && tc;
+             tc = *lastDot++) {
+            if (ISLEGALCHAR(tc)) {
+                i++;
+                *shortName++ = toupper(tc);
+            }
+        }
+    }
+
+    /* Trailing null */
+    *shortName = 0;
+
+    if (shortNameEndp)
+        *shortNameEndp = shortName;
+}
+
+void cm_Gen8Dot3NameIntW(const clientchar_t * longname, cm_dirFid_t * pfid,
+                         clientchar_t *shortName, clientchar_t **shortNameEndp)
+{
+    clientchar_t number[12];
+    int i, nsize = 0;
+    int vnode = ntohl(pfid->vnode);
+    clientchar_t *lastDot;
+    int validExtension = 0;
+    clientchar_t tc, *temp;
+    const clientchar_t *name;
+
+    /* Unparse the file's vnode number to get a "uniquifier" */
+    do {
+        number[nsize] = cm_8Dot3Mapping[vnode % cm_8Dot3MapSize];
+        nsize++;
+        vnode /= cm_8Dot3MapSize;
+    } while (vnode);
+
+    /*
+     * Look for valid extension.  There has to be a dot, and
+     * at least one of the characters following has to be legal.
+     */
+    lastDot = cm_ClientStrRChr(longname, '.');
+    if (lastDot) {
+        temp = lastDot; temp++;
+        while (tc = *temp++)
+            if (ISLEGALCHAR(tc))
+                break;
+        if (tc)
+            validExtension = 1;
+    }
+
+    /* Copy name characters */
+    for (i = 0, name = longname;
+          i < (7 - nsize) && name != lastDot; ) {
+        tc = *name++;
+
+        if (tc == 0)
+            break;
+        if (!ISLEGALCHAR(tc))
+            continue;
+        i++;
+        *shortName++ = toupper((char) tc);
+    }
+
+    /* tilde */
+    *shortName++ = '~';
+
+    /* Copy uniquifier characters */
+    for (i=0; i < nsize; i++) {
+        *shortName++ = number[i];
+    }
+
+    if (validExtension) {
+        /* Copy extension characters */
+        *shortName++ = *lastDot++;	/* copy dot */
+        for (i = 0, tc = *lastDot++;
+             i < 3 && tc;
+             tc = *lastDot++) {
+            if (ISLEGALCHAR(tc)) {
+                i++;
+                *shortName++ = toupper(tc);
+            }
+        }
+    }
+
+    /* Trailing null */
+    *shortName = 0;
+
+    if (shortNameEndp)
+        *shortNameEndp = shortName;
+}
+
+/*! \brief Compare 'pattern' (containing metacharacters '*' and '?') with the file name 'name'.
+
+  \note This procedure works recursively calling itself.
+
+  \param[in] pattern string containing metacharacters.
+  \param[in] name File name to be compared with 'pattern'.
+
+  \return BOOL : TRUE/FALSE (match/mistmatch)
+*/
+static BOOL 
+szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefold) 
+{
+    clientchar_t upattern[MAX_PATH];
+    clientchar_t uname[MAX_PATH];
+
+    clientchar_t * pename;         // points to the last 'name' character
+    clientchar_t * p;
+    clientchar_t * pattern_next;
+
+    if (casefold) {
+        cm_ClientStrCpy(upattern, lengthof(upattern), pattern);
+        cm_ClientStrUpr(upattern);
+        pattern = upattern;
+
+        cm_ClientStrCpy(uname, lengthof(uname), name);
+        cm_ClientStrUpr(uname);
+        name = uname;
+
+        /* The following translations all work on single byte
+           characters */
+        for (p=upattern; *p; p++) {
+            if (*p == '"') *p = '.'; continue;
+            if (*p == '<') *p = '*'; continue;
+            if (*p == '>') *p = '?'; continue;
+        }
+
+        for (p=uname; *p; p++) {
+            if (*p == '"') *p = '.'; continue;
+            if (*p == '<') *p = '*'; continue;
+            if (*p == '>') *p = '?'; continue;
+        }
+    }
+
+    pename = cm_ClientCharThis(name + cm_ClientStrLen(name));
+
+    while (*name) {
+        switch (*pattern) {
+        case '?':
+	    pattern = cm_ClientCharNext(pattern);
+            if (*name == '.')
+		continue;
+            name = cm_ClientCharNext(name);
+            break;
+
+         case '*':
+            pattern = cm_ClientCharNext(pattern);
+            if (*pattern == '\0')
+                return TRUE;
+
+            pattern_next = cm_ClientCharNext(pattern);
+
+            for (p = pename; p >= name; p = cm_ClientCharPrev(p)) {
+                if (*p == *pattern &&
+                    szWildCardMatchFileName(pattern_next,
+                                            cm_ClientCharNext(p), FALSE))
+                    return TRUE;
+            } /* endfor */
+            return FALSE;
+
+        default:
+            if (*name != *pattern)
+                return FALSE;
+            pattern = cm_ClientCharNext(pattern);
+            name = cm_ClientCharNext(name);
+            break;
+        } /* endswitch */
+    } /* endwhile */
+
+    /* if all we have left are wildcards, then we match */
+    for (;*pattern; pattern = cm_ClientCharNext(pattern)) {
+	if (*pattern != '*' && *pattern != '?')
+	    return FALSE;
+    }
+    return TRUE;
+}
+
+/* do a case-folding search of the star name mask with the name in namep.
+ * Return 1 if we match, otherwise 0.
+ */
+int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags) 
+{
+    clientchar_t * newmask;
+    int    i, j, star, qmark, casefold, retval;
+
+    /* make sure we only match 8.3 names, if requested */
+    if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
+        return 0;
+
+    casefold = (flags & CM_FLAG_CASEFOLD) ? 1 : 0;
+
+    /* optimize the pattern:
+     * if there is a mixture of '?' and '*',
+     * for example  the sequence "*?*?*?*"
+     * must be turned into the form "*"
+     */
+    newmask = (clientchar_t *)malloc((cm_ClientStrLen(maskp)+1)*sizeof(clientchar_t));
+    for ( i=0, j=0, star=0, qmark=0; maskp[i]; i++) {
+        switch ( maskp[i] ) {
+        case '?':
+        case '>':
+            qmark++;
+            break;
+        case '<':
+        case '*':
+            star++;
+            break;
+        default:
+            if ( star ) {
+                newmask[j++] = '*';
+            } else if ( qmark ) {
+                while ( qmark-- )
+                    newmask[j++] = '?';
+            }
+            newmask[j++] = maskp[i];
+            star = 0;
+            qmark = 0;
+        }
+    }
+    if ( star ) {
+        newmask[j++] = '*';
+    } else if ( qmark ) {
+        while ( qmark-- )
+            newmask[j++] = '?';
+    }
+    newmask[j++] = '\0';
+
+    retval = szWildCardMatchFileName(newmask, namep, casefold) ? 1:0;
+
+    free(newmask);
+    return retval;
+}
+

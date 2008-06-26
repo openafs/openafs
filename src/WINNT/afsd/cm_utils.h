@@ -12,8 +12,11 @@
 
 #define CM_UTILS_SPACESIZE		8192	/* space to allocate */
 typedef struct cm_space {
-	char data[CM_UTILS_SPACESIZE];
-        struct cm_space *nextp;
+    union {
+        clientchar_t wdata[CM_UTILS_SPACESIZE];
+        char data[CM_UTILS_SPACESIZE];
+    };
+    struct cm_space *nextp;
 } cm_space_t;
 
 /* error code hack */
@@ -29,5 +32,23 @@ extern long cm_MapRPCError(long error, cm_req_t *reqp);
 extern long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp);
 
 extern long cm_MapVLRPCError(long error, cm_req_t *reqp);
+
+extern void init_et_to_sys_error(void);
+
+extern int cm_Is8Dot3(clientchar_t *namep);
+
+extern void cm_Gen8Dot3Name(struct cm_dirEntry *dep, clientchar_t *shortName,
+                            clientchar_t **shortNameEndp);
+
+#define cm_Gen8Dot3Name(dep,shortName,shortNameEndp)                  \
+cm_Gen8Dot3NameInt((dep)->name, &(dep)->fid, shortName, shortNameEndp)
+
+extern void cm_Gen8Dot3NameInt(const fschar_t * longname, cm_dirFid_t * pfid,
+                               clientchar_t *shortName, clientchar_t **shortNameEndp);
+
+extern void cm_Gen8Dot3NameIntW(const clientchar_t* longname, cm_dirFid_t * pfid,
+                                clientchar_t *shortName, clientchar_t **shortNameEndp);
+
+extern int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags);
 
 #endif /*  __CM_UTILS_H_ENV__ */
