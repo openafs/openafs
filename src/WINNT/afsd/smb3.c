@@ -10,7 +10,6 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #pragma warning(push)
 #pragma warning(disable: 4005)
@@ -19,7 +18,6 @@
 #include <security.h>
 #include <lmaccess.h>
 #pragma warning(pop)
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -1391,9 +1389,7 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* We sometimes see 0 word count.  What to do? */
     if (*inp->wctp == 0) {
         osi_Log0(smb_logp, "Transaction2 word count = 0"); 
-#ifndef DJGPP
 	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_ZERO_TRANSACTION_COUNT);
-#endif /* !DJGPP */
 
         smb_SetSMBDataLength(outp, 0);
         smb_SendPacket(vcp, outp);
@@ -2111,9 +2107,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* We sometimes see 0 word count.  What to do? */
     if (*inp->wctp == 0) {
         osi_Log0(smb_logp, "Transaction2 word count = 0"); 
-#ifndef DJGPP
 	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_ZERO_TRANSACTION_COUNT);
-#endif /* !DJGPP */
 
         smb_SetSMBDataLength(outp, 0);
         smb_SendPacket(vcp, outp);
@@ -6549,11 +6543,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     code = 0;
     while ( code == 0 && count > 0 ) {
-#ifndef DJGPP
 	code = smb_WriteData(fidp, &offset, count, op, userp, &written);
-#else /* DJGPP */
-	code = smb_WriteData(fidp, &offset, count, op, userp, &written, FALSE);
-#endif /* !DJGPP */
 	if (code == 0 && written == 0)
             code = CM_ERROR_PARTIALWRITE;
 
@@ -6696,11 +6686,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* set the packet data length the count of the # of bytes */
     smb_SetSMBDataLength(outp, count);
 
-#ifndef DJGPP
     code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount);
-#else /* DJGPP */
-    code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount, FALSE);
-#endif /* !DJGPP */
 
     /* fix some things up */
     smb_SetSMBParm(outp, 5, finalCount);

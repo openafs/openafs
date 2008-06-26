@@ -10,11 +10,7 @@
 #ifndef __CM_SERVER_H_ENV__
 #define __CM_SERVER_H_ENV__ 1
 
-#ifndef DJGPP
 #include <winsock2.h>
-#else /* DJGPP */
-#include <netinet/in.h>
-#endif /* !DJGPP */
 #include <osi.h>
 
 /* this value is set to 1022 in order to  */

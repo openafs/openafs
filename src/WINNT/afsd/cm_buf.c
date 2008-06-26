@@ -12,9 +12,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#endif
 #include <osi.h>
 #include <stdio.h>
 #include <assert.h>
@@ -225,12 +223,8 @@ void buf_IncrSyncer(long parm)
 
     while (buf_ShutdownFlag == 0) {
 	if (!wasDirty) {
-#ifndef DJGPP
 	    i = SleepEx(5000, 1);
 	    if (i != 0) continue;
-#else
-	    thrd_Sleep(5000);
-#endif /* DJGPP */
 	}
 
 	wasDirty = 0;
@@ -481,9 +475,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                                "buf_IncrSyncer");
 
         osi_assertx(phandle != NULL, "buf: can't create incremental sync proc");
-#ifndef DJGPP
         CloseHandle(phandle);
-#endif /* !DJGPP */
     }
 
 #ifdef TESTING

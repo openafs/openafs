@@ -113,13 +113,7 @@ BOOL InitInstance(struct cmd_syndesc *as, char *arock)
         long code;
 	char *reason;
 
-#ifdef DJGPP
-	osi_Init();
-#endif
- 
-#ifndef DJGPP
 	osi_InitPanic(afsd_notifier);
-#endif
 
         /*sleep(10);*/
         
@@ -149,20 +143,6 @@ BOOL InitInstance(struct cmd_syndesc *as, char *arock)
         afs_current_status = AFS_STATUS_RUNNING;
         afsMsg_StatusChange(afs_current_status, 0, NULL);
 
-#ifdef DJGPP
-	/* Keep the process from just terminating */
-	while(afs_shutdown == 0)
-        {
-        /*IOMGR_Sleep(180);*/
-          IOMGR_Sleep(8);
-		/* workaround: WaitForKeystroke(nonzero num) calls 
-		   IOMGR_Select, though Win95 select works only on sockets */
-		/* so, we poll instead */
-		/*if (LWP_WaitForKeystroke(0))
-                  break;*/
-        }
-        afsd_shutdown(0);
-#endif
         afs_exit(0);
         
 	return (TRUE);

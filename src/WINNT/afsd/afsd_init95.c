@@ -324,7 +324,6 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
 
           WSAStartup(0x0101, &WSAjunk);*/
 
-#ifndef DJGPP
 	/* setup osidebug server at RPC slot 1000 */
 	osi_LongToUID(1000, &debugID);
 	code = osi_InitDebug(&debugID);
@@ -334,18 +333,9 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
 		*reasonP = "unknown error";
 		return -1;
 	}
-#endif 
 
 	/* who are we ? */
 	gethostname(cm_HostName, sizeof(cm_HostName));
-#ifdef DJGPP
-	/* For some reason, we may be getting space-padded hostnames.
-	   If so, we take out the padding so that we can append -AFS later. */
-	{
-	  char *space = strchr(cm_HostName,' ');
-	  if (space) *space = '\0';
-	}
-#endif
 	afsi_log("gethostname %s", cm_HostName);
 	thp = gethostbyname(cm_HostName);
 	memcpy(&cm_HostAddr, thp->h_addr_list[0], 4);

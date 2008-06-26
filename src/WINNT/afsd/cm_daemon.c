@@ -10,13 +10,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
-#else
-#include <netdb.h>
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -58,7 +54,6 @@ static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] = 
        {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
-#ifndef DJGPP
 void cm_IpAddrDaemon(long parm)
 {
     extern void smb_CheckVCs(void);
@@ -85,7 +80,6 @@ void cm_IpAddrDaemon(long parm)
 
     thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
 }
-#endif
 
 void cm_BkgDaemon(void * parm)
 {
@@ -610,13 +604,11 @@ void cm_InitDaemon(int nDaemons)
         lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
         osi_EndOnce(&once);
 
-#ifndef DJGPP
 	/* creating IP Address Change monitor daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_IpAddrDaemon, 0, 0, &pid, "cm_IpAddrDaemon");
         osi_assertx(phandle != NULL, "cm_IpAddrDaemon thread creation failure");
         thrd_CloseHandle(phandle);
-#endif /* DJGPP */
 
         /* creating pinging daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,

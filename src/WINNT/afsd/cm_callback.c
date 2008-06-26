@@ -11,12 +11,8 @@
 #include <afs/afs_args.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
-#else
-#include <sys/socket.h>
-#endif /* !DJGPP */
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>

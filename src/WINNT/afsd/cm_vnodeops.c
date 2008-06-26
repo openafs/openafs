@@ -10,10 +10,8 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
-#endif /* !DJGPP */
 #include <stddef.h>
 #include <malloc.h>
 #include <string.h>
