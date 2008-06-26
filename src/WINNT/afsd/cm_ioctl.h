@@ -11,7 +11,6 @@
 #define __CM_IOCTL_H_ENV__ 1
 
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
-#include "smb.h"
 #include "cm_user.h"
 #else
 typedef struct cm_fid {
@@ -51,6 +50,28 @@ typedef struct cm_SSetPref {
 typedef struct cm_cacheParms {
         afs_uint64 parms[CM_IOCTLCACHEPARMS];
 } cm_cacheParms_t;
+
+typedef struct cm_ioctl {
+    /* input side */
+    char *inDatap;			/* ioctl func's current position
+					 * in input parameter block */
+    char *inAllocp;			/* allocated input parameter block */
+    afs_uint32 inCopied;		/* # of input bytes copied in so far
+					 * by write calls */
+    /* output side */
+    char *outDatap;			/* output results assembled so far */
+    char *outAllocp;		        /* output results assembled so far */
+    afs_uint32 outCopied;		/* # of output bytes copied back so far
+	
+    /* flags */
+    afs_uint32 flags;
+} cm_ioctl_t;
+
+/* flags for smb_ioctl_t */
+#define CM_IOCTLFLAG_DATAIN	1	/* reading data from client to server */
+#define CM_IOCTLFLAG_LOGON	2	/* got tokens from integrated logon */
+#define CM_IOCTLFLAG_USEUTF8    4       /* this request is using UTF-8 strings */
+
 
 /* 
  * The cm_IoctlQueryOptions structure is designed to be extendible.
@@ -106,6 +127,9 @@ extern char *         cm_sysNameList[MAXNUMSYSNAMES];
    strings. */
 #define UTF8_PREFIX "\33%G"
 
+extern const char utf8_prefix[];
+extern const int  utf8_prefix_size;
+
 /* flags for rxstats pioctl */
 
 #define AFSCALL_RXSTATS_MASK    0x7     /* Valid flag bits */
@@ -115,121 +139,129 @@ extern char *         cm_sysNameList[MAXNUMSYSNAMES];
 
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 
-void cm_InitIoctl(void);
+extern void cm_InitIoctl(void);
 
-void cm_ResetACLCache(cm_user_t *userp);
+extern void cm_ResetACLCache(cm_user_t *userp);
 
-extern long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern cm_ioctlQueryOptions_t * cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
-extern long cm_IoctlGetFileCellName(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern void cm_IoctlSkipQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
-extern long cm_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern void cm_NormalizeAfsPath(char *outpathp, long outlen, char *inpathp);
 
-extern long cm_IoctlFlushAllVolumes(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern void cm_SkipIoctlPath(cm_ioctl_t *ioctlp);
 
-extern long cm_IoctlFlushVolume(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlFlushFile(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetFileCellName(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlSetVolumeStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlGetVolumeStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlFlushAllVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetFid(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlFlushVolume(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlGetOwner(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlFlushFile(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlWhereIs(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetVolumeStatus(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlStatMountPoint(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetVolumeStatus(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlDeleteMountPoint(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetFid(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlCheckServers(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetOwner(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlGag(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlWhereIs(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlCheckVolumes(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlStatMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlSetCacheSize(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlDeleteMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlGetCacheParms(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlCheckServers(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGag(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlNewCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlCheckVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetCacheSize(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlSysName(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetCacheParms(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetCellStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlSetCellStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlNewCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlSetSPrefs(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetSPrefs(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSysName(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlStoreBehind(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetCellStatus(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlCreateMountPoint(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetCellStatus(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
+extern afs_int32 cm_IoctlSetSPrefs(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
+extern afs_int32 cm_IoctlGetSPrefs(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_FlushVolume(cm_user_t *, cm_req_t *reqp, afs_uint32 cell, afs_uint32 volume);
+extern afs_int32 cm_IoctlStoreBehind(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
+extern afs_int32 cm_IoctlCreateMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, char *leaf);
 
-extern long cm_IoctlTraceControl(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_IoctlSetToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_IoctlGetTokenIter(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_FlushVolume(cm_user_t *, cm_req_t *reqp, afs_uint32 cell, afs_uint32 volume);
 
-extern long cm_IoctlGetToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_IoctlDelToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlTraceControl(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlDelAllToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlSymlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetTokenIter(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlIslink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlListlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlDelToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlDeletelink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlDelAllToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSymlink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, char *leaf);
 
-extern long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlIslink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlListlink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlDeletelink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp);
 
-extern long cm_IoctlFreemountAddCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlFreemountRemoveCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetRxkcrypt(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlMemoryDump(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetRxkcrypt(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlRxStatProcess(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlShutdown(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlRxStatPeer(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlFreemountAddCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp);
+extern afs_int32 cm_IoctlFreemountRemoveCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlPathAvailability(struct smb_ioctl * ioctlp, struct cm_user *userp);
+extern afs_int32 cm_IoctlMemoryDump(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlGetFileType(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlRxStatProcess(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp);
+extern afs_int32 cm_IoctlRxStatPeer(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern long cm_IoctlUnicodeControl(struct smb_ioctl *ioctlp, struct cm_user * userp);
+extern afs_int32 cm_IoctlUUIDControl(struct cm_ioctl * ioctlp, struct cm_user *userp);
+
+extern afs_int32 cm_IoctlPathAvailability(struct cm_ioctl * ioctlp, struct cm_user *userp, struct cm_scache *scp, struct cm_req *reqp);
+
+extern afs_int32 cm_IoctlGetFileType(cm_ioctl_t *ioctlp, cm_user_t *userp, struct cm_scache *scp, struct cm_req *reqp);
+
+extern afs_int32 cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp);
+
+extern afs_int32 cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user * userp);
 
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 

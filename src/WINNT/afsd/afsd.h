@@ -57,6 +57,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_performance.h"
 #include "cm_nls.h"
 #include "smb_ioctl.h"
+#include "smb_iocons.h"
 #include "afsd_init.h"
 #include "afsd_eventlog.h"
 
