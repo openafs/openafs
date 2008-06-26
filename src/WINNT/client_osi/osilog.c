@@ -275,7 +275,7 @@ char *osi_LogSaveString(osi_log_t *logp, char *s)
 
         if (!logp) return s;
 
-        if (!logp->enabled) s;
+        if (!logp->enabled) return s;
 
 	if (s == NULL) return NULL;
 
