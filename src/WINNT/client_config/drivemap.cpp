@@ -403,6 +403,7 @@ extern "C" {
 #define __CM_CONFIG_INTERFACES_ONLY__
 #include "../afsd/cm_config.h"
 
+#include "../afsd/cm_nls.h"
 #define __CM_IOCTL_INTERFACES_ONLY__
 #include "../afsd/cm_ioctl.h"
 
