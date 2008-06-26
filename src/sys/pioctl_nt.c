@@ -29,6 +29,7 @@ RCSID
 #include <osi.h>
 
 #include <cm.h>
+#include <cm_nls.h>
 #include <cm_server.h>
 #include <cm_cell.h>
 #include <cm_user.h>
