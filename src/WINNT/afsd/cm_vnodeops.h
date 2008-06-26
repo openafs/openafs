@@ -18,12 +18,12 @@ extern int cm_followBackupPath;
 
 /* parms for attribute setting call */
 typedef struct cm_attr {
-	int mask;
-	time_t clientModTime;
-        osi_hyper_t length;
-	int unixModeBits;
-        long owner;
-        long group;
+    int         mask;
+    time_t      clientModTime;
+    osi_hyper_t length;
+    int         unixModeBits;
+    long        owner;
+    long        group;
 } cm_attr_t;
 
 #define CM_ATTRMASK_CLIENTMODTIME	1	/* set if field is valid */
@@ -34,18 +34,19 @@ typedef struct cm_attr {
 
 /* type of rock for lookup's searches */
 typedef struct cm_lookupSearch {
-        cm_fid_t fid;
-        char *searchNamep;
-        int found;
-        int LCfound, UCfound, NCfound, ExactFound;
-        int caseFold;
-        int hasTilde;
+    cm_fid_t      fid;
+    fschar_t     *searchNamep;
+    normchar_t   *nsearchNamep;
+    int           found;
+    int           LCfound, UCfound, NCfound, ExactFound;
+    int           caseFold;
+    int           hasTilde;
 } cm_lookupSearch_t;
 
 #include "cm_dir.h"
 
 typedef int (*cm_DirFuncp_t)(struct cm_scache *, struct cm_dirEntry *, void *,
-	osi_hyper_t *entryOffsetp);
+                             osi_hyper_t *entryOffsetp);
 
 /* Special path syntax for direct references to volumes
 
@@ -60,107 +61,99 @@ typedef int (*cm_DirFuncp_t)(struct cm_scache *, struct cm_dirEntry *, void *,
 
 /* arrays */
 
-extern unsigned char cm_foldUpper[];
+extern fschar_t cm_foldUpper[];
 
 /* functions */
 
-extern int cm_NoneLower(char *s);
+extern int cm_NoneLower(normchar_t *s);
 
-extern int cm_NoneUpper(char *s);
-
-extern int cm_Is8Dot3(char *namep);
+extern int cm_NoneUpper(normchar_t *s);
 
 extern int cm_stricmp(const char *, const char *);
-
-extern void cm_Gen8Dot3Name(struct cm_dirEntry *dep, char *shortName,
-	char **shortNameEndp);
-
-#define cm_Gen8Dot3Name(dep,shortName,shortNameEndp) \
-cm_Gen8Dot3NameInt((dep)->name, &(dep)->fid, shortName, shortNameEndp)
-
-extern void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
-                               char *shortName, char **shortNameEndp);
 
 extern long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp,
                               cm_req_t *reqp);
 
-extern long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
+extern long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * userp,
                                        cm_req_t *reqp, cm_scache_t ** outpScpp);
 
 #ifdef DEBUG_REFCOUNT
-extern long cm_NameIDbg(cm_scache_t *rootSCachep, char *pathp, long flags,
-	cm_user_t *userp, char *tidPathp, cm_req_t *reqp,
-	cm_scache_t **outScpp, char *, long);
+extern long cm_NameIDbg(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
+                        cm_user_t *userp, clientchar_t *tidPathp, cm_req_t *reqp,
+                        cm_scache_t **outScpp, char *, long);
 
-extern long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags,
-	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp, char *, long);
+extern long cm_LookupDbg(cm_scache_t *dscp, clientchar_t *namep, long flags,
+                         cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp,
+                         char *, long);
 
 #define cm_Lookup(a,b,c,d,e,f)  cm_LookupDbg(a,b,c,d,e,f,__FILE__,__LINE__)
 #define cm_NameI(a,b,c,d,e,f,g) cm_NameIDbg(a,b,c,d,e,f,g,__FILE__,__LINE__)
 #else
-extern long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
-	cm_user_t *userp, char *tidPathp, cm_req_t *reqp,
-	cm_scache_t **outScpp);
-extern long cm_Lookup(cm_scache_t *dscp, char *namep, long flags,
-	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp);
+extern long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
+                     cm_user_t *userp, clientchar_t *tidPathp, cm_req_t *reqp,
+                     cm_scache_t **outScpp);
+extern long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags,
+                      cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp);
 #endif
 
-extern long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags,
+extern long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *namep, long flags,
                               cm_user_t *userp, cm_req_t *reqp, 
                               cm_scache_t **outpScpp);
 
 extern afs_int32 cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
-	cm_user_t *userp, cm_req_t *reqp);
+                                cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
-	cm_req_t *reqp);
+                       cm_req_t *reqp);
 
-extern long cm_Create(cm_scache_t *scp, char *namep, long flags,
-	cm_attr_t *attrp, cm_scache_t **scpp, cm_user_t *userp, cm_req_t *reqp);
+extern long cm_Create(cm_scache_t *scp, clientchar_t *namep, long flags,
+                      cm_attr_t *attrp, cm_scache_t **scpp,
+                      cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
 extern void cm_StatusFromAttr(struct AFSStoreStatus *statusp,
-	struct cm_scache *scp, struct cm_attr *attrp);
+                              struct cm_scache *scp, struct cm_attr *attrp);
 
-extern long cm_Unlink(cm_scache_t *dscp, char *namep, char * normalizedName,
+extern long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep,
+                      clientchar_t *cnamep,
                       cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
-	osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp, 
-	cm_scache_t **retscp);
+                        osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp, 
+                        cm_scache_t **retscp);
 
-extern long cm_MakeDir(cm_scache_t *dscp, char *lastNamep, long flags,
-	cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
+extern long cm_MakeDir(cm_scache_t *dscp, clientchar_t *lastNamep, long flags,
+                       cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_RemoveDir(cm_scache_t *dscp, char *lastNamep, char *originalNamep,
+extern long cm_RemoveDir(cm_scache_t *dscp, fschar_t *lastNamep, clientchar_t *originalNamep,
                          cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_Rename(cm_scache_t *oldDscp,
-                      char *oldLastNamep, char *normalizedOldNamep,
-                      cm_scache_t *newDscp, char *newLastNamep,
+                      fschar_t *oldLastNamep, clientchar_t *normalizedOldNamep,
+                      cm_scache_t *newDscp, clientchar_t *newLastNamep,
                       cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_HandleLink(cm_scache_t *linkScp, struct cm_user *userp,
-	cm_req_t *reqp);
+                          cm_req_t *reqp);
 
-extern long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp,
-    long flags, cm_user_t *userp, cm_req_t *reqp);
+extern long cm_Link(cm_scache_t *dscp, clientchar_t *namep, cm_scache_t *sscp,
+                    long flags, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
-	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
+extern long cm_SymLink(cm_scache_t *dscp, clientchar_t *namep, fschar_t *contentsp,
+                       long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
+extern long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
                             cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
                             cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_ExpandSysName(char *inp, char *outp, long outSize,
+extern int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch,
                             unsigned int sysNameIndex);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);
 
 extern long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc,
-	cm_user_t *userp, cm_req_t *reqp);
+                         cm_user_t *userp, cm_req_t *reqp);
 
 /*
  * Combinations of file opening access bits for AFS.
@@ -180,47 +173,49 @@ typedef struct cm_lock_data {
 } cm_lock_data_t;
 
 extern long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
-	unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp, cm_lock_data_t ** ldpp);
+                           unsigned int createDisp, cm_user_t *userp,
+                           cm_req_t *reqp, cm_lock_data_t ** ldpp);
 
 extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
 			       cm_lock_data_t ** ldpp);
 
 extern long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp,
-	cm_user_t *userp, cm_req_t *reqp);
+                             cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
-	cm_scache_t **outScpp, cm_user_t *userp, cm_req_t *reqp);
+                               cm_scache_t **outScpp, cm_user_t *userp,
+                               cm_req_t *reqp);
 
 extern long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
                                 cm_req_t *reqp, cm_scache_t **outScpp);
 
 
 extern long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
-        LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
-	int allowWait, cm_user_t *userp, cm_req_t *reqp,
-	cm_file_lock_t **lockpp);
+                    LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
+                    int allowWait, cm_user_t *userp, cm_req_t *reqp,
+                    cm_file_lock_t **lockpp);
 
 #define CM_UNLOCK_BY_FID 	0x0001
 
 extern long cm_UnlockByKey(cm_scache_t * scp,
-        cm_key_t key,
-        int flags,
-        cm_user_t * userp,
-        cm_req_t * reqp);
+                           cm_key_t key,
+                           int flags,
+                           cm_user_t * userp,
+                           cm_req_t * reqp);
 
 extern long cm_Unlock(cm_scache_t *scp, unsigned char sLockType,
-        LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
-	cm_user_t *userp, cm_req_t *reqp);
+                      LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
+                      cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_LockCheckRead(cm_scache_t *scp, 
-        LARGE_INTEGER LOffset, 
-        LARGE_INTEGER LLength, 
-        cm_key_t key);
+                             LARGE_INTEGER LOffset, 
+                             LARGE_INTEGER LLength, 
+                             cm_key_t key);
 
 extern long cm_LockCheckWrite(cm_scache_t *scp,
-        LARGE_INTEGER LOffset,
-        LARGE_INTEGER LLength,
-        cm_key_t key);
+                              LARGE_INTEGER LOffset,
+                              LARGE_INTEGER LLength,
+                              cm_key_t key);
 
 extern void cm_CheckLocks(void);
 

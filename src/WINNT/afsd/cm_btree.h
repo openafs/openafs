@@ -48,14 +48,18 @@
 typedef struct node	*Nptr;
 
 typedef struct key {
-    char *name;
+    normchar_t  *name;           /* Normalized name */
 } keyT;
-
 
 typedef struct dirdata {
     cm_fid_t    fid;
-    char * longname;
-    char * origname;
+    int         shortform;      /* This is the short form entry.  If
+                                   this value is non-zero, then there
+                                   is another entry in the B-Plus tree
+                                   corresponding to the long name of
+                                   this fid. */
+    clientchar_t  *cname;          /* Client name (long) */
+    fschar_t * fsname;         /* FileServer name */
 } dataT;
 
 typedef struct entry {
@@ -138,20 +142,20 @@ Nptr	lookup(Tree *B, keyT key);
 
 /******************* cache manager directory operations ***************/
 
-int  cm_BPlusDirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);
-int  cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, char * entry, char ** originalNameRetp);
-long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid);
-int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, char *entry);
+int  cm_BPlusCompareNormalizedKeys(keyT key1, keyT key2, int flags);
+int  cm_BPlusDirLookup(cm_dirOp_t * op, clientchar_t *entry, cm_fid_t * cfid);
+int  cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, clientchar_t *entry, fschar_t **originalNameRetp);
+long cm_BPlusDirCreateEntry(cm_dirOp_t * op, clientchar_t *entry, cm_fid_t * cfid);
+int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *entry);
 long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);
 void cm_BPlusDumpStats(void);
-int cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
-
+int  cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
 
 /******************* directory enumeration operations ****************/
 typedef struct cm_direnum_entry {
-    char * 	name;
-    cm_fid_t 	fid;
-    char        shortName[13];
+    clientchar_t *name;
+    cm_fid_t 	 fid;
+    normchar_t   shortName[13];
 } cm_direnum_entry_t;
 
 typedef struct cm_direnum {
@@ -160,7 +164,7 @@ typedef struct cm_direnum {
     cm_direnum_entry_t 	entry[1];
 } cm_direnum_t;
 
-long cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, char *maskp, cm_direnum_t **enumpp);
+long cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, clientchar_t *maskp, cm_direnum_t **enumpp);
 long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
 long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
 long cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked);
@@ -182,7 +186,7 @@ extern afs_uint64 bplus_free_time;
 /* access keys and pointers in a node */
 #define getkey(j, q) (nAdr(j).e[(q)].key)
 #define getnode(j, q) (nAdr(j).e[(q)].downNode)
-#define setkey(j, q, v) ((q > 0) ? nAdr(j).e[(q)].key.name = strdup((v).name) : NULL)
+#define setkey(j, q, v) ((q > 0) ? nAdr(j).e[(q)].key.name = cm_NormStrDup((v).name) : NULL)
 #define setnode(j, q, v) (nAdr(j).e[(q)].downNode = (v))
 
 /* access tree flag values */

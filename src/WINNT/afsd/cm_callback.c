@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "afsd.h"
+#include "smb.h"
 #include <osi.h>
 #include <rx_pthread.h>
 
@@ -744,8 +745,10 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
             cep->cbExpires = volp->cbExpiresRO;
             cm_PutVolume(volp);
         }
-    } else
-        cep->cbExpires = scp->cbExpires;
+    } else {
+        /* TODO: deal with time_t below */
+        cep->cbExpires = (afs_int32) scp->cbExpires;
+    }
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
     cep->writers = scp->openWrites;
@@ -859,8 +862,10 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
             cep->cbExpires = volp->cbExpiresRO;
             cm_PutVolume(volp);
         }
-    } else
-        cep->cbExpires = scp->cbExpires;
+    } else {
+        /* TODO: handle time_t */
+        cep->cbExpires = (afs_int32) scp->cbExpires;
+    }
     cep->refCount = scp->refCount;
     cep->opens = scp->openReads;
     cep->writers = scp->openWrites;
@@ -1313,8 +1318,7 @@ int SRXAFSCB_GetLocalCell(struct rx_call *callp, char **a_name)
              ntohl(host), ntohs(port));
 
     if (cm_data.rootCellp) {
-	t_name = (char *)malloc(strlen(cm_data.rootCellp->name)+1);
-        strcpy(t_name, cm_data.rootCellp->name);
+        t_name = strdup(cm_data.rootCellp->name);
     } else {
 	t_name = (char *)malloc(1);
 	t_name[0] = '\0';

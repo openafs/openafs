@@ -119,7 +119,7 @@ smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
  * call to the ioctl code.
  */
 afs_int32
-smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
+smb_IoctlPrepareRead(struct smb_fid *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
     afs_int32 opcode;
     smb_ioctlProc_t *procp = NULL;
@@ -353,9 +353,9 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     osi_assertx(userp != NULL, "null cm_user_t");
     iop->uidp = uidp;
     if (uidp && uidp->unp) {
-        osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-                 uidp->userID, userp,
-                 osi_LogSaveString(afsd_logp, uidp->unp->name));
+        osi_Log3(afsd_logp, "Ioctl uid %d user %x name %S",
+                  uidp->userID, userp,
+                  osi_LogSaveClientString(afsd_logp, uidp->unp->name));
     } else {
         if (uidp)
 	    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
@@ -444,11 +444,11 @@ smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     if (uidp && uidp->unp) {
         osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-                  uidp->userID, userp,
-                  osi_LogSaveString(afsd_logp, uidp->unp->name));
+                 uidp->userID, userp,
+                 osi_LogSaveClientString(afsd_logp, uidp->unp->name));
     } else if (uidp) {
         osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-                  uidp->userID, userp);
+                 uidp->userID, userp);
     } else {
         osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
                   userp);
@@ -499,33 +499,33 @@ afs_int32
 smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                    cm_scache_t **scpp, afs_uint32 flags)
 {
-    afs_int32 code;
-    cm_scache_t *substRootp = NULL;
-    cm_scache_t *iscp = NULL;
-    char * relativePath;
-    char * lastComponent = NULL;
+    long code;
+    cm_scache_t  *substRootp = NULL;
+    cm_scache_t  *iscp = NULL;
+    char      *inPath;
+    clientchar_t *relativePath = NULL;
+    clientchar_t *lastComponent = NULL;
     afs_uint32 follow = (flags & CM_PARSE_FLAG_LITERAL ? CM_FLAG_NOMOUNTCHASE : CM_FLAG_FOLLOW);
-    int free_path = FALSE;
 
-    relativePath = ioctlp->ioctl.inDatap;
+    inPath = ioctlp->ioctl.inDatap;
     /* setup the next data value for the caller to use */
-    ioctlp->ioctl.inDatap += (long)strlen(ioctlp->ioctl.inDatap) + 1;;
+    ioctlp->ioctl.inDatap += (long)strlen(ioctlp->ioctl.inDatap) + 1;
 
-    osi_Log1(afsd_logp, "smb_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
+    osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,inPath));
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
-    /* ioctlp->inDatap can be either of the form:
+    /* ioctlp->ioctl.inDatap can be either of the form:
      *    \path\.
      *    \path\file
      *    \\netbios-name\submount\path\.
      *    \\netbios-name\submount\path\file
      */
 
-	/* We do not perform path name translation on the ioctl path data 
-	 * because these paths were not translated by Windows through the
-	 * file system API.  Therefore, they are not OEM characters but 
-	 * whatever the display character set is.
-	 */
+    /* We do not perform path name translation on the ioctl path data
+     * because these paths were not translated by Windows through the
+     * file system API.  Therefore, they are not OEM characters but
+     * whatever the display character set is.
+     */
 
     // TranslateExtendedChars(relativePath);
 
@@ -538,41 +538,44 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        we have to convert the string to UTF-8, since that is what we
        want to use everywhere else.*/
 
-    if (memcmp(relativePath, utf8_prefix, utf8_prefix_size) == 0) {
-        int len, normalized_len;
-        char * normalized_path;
-
+    if (memcmp(inPath, utf8_prefix, utf8_prefix_size) == 0) {
         /* String is UTF-8 */
-        relativePath += utf8_prefix_size;
+        inPath += utf8_prefix_size;
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
-        len = (ioctlp->ioctl.inDatap - relativePath);
-
-        normalized_len = cm_NormalizeUtf8String(relativePath, len, NULL, 0);
-
-        if (normalized_len > len) {
-            normalized_path = malloc(normalized_len);
-            free_path = TRUE;
-        } else {
-            normalized_path = relativePath;
-        }
-
-        cm_NormalizeUtf8String(relativePath, len, normalized_path, normalized_len);
-
-        if (normalized_path != relativePath)
-            relativePath = normalized_path;
+        relativePath = cm_Utf8ToClientStringAlloc(inPath, -1, NULL);
     } else {
+        int cch;
+
         /* Not a UTF-8 string */
         /* TODO: If this is an OEM string, we should convert it to
            UTF-8. */
+        if (smb_StoreAnsiFilenames) {
+            cch = cm_AnsiToClientString(inPath, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            relativePath = malloc(cch * sizeof(clientchar_t));
+            cm_AnsiToClientString(inPath, -1, relativePath, cch);
+        } else {
+            TranslateExtendedChars(inPath);
+
+            cch = cm_OemToClientString(inPath, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            relativePath = malloc(cch * sizeof(clientchar_t));
+            cm_OemToClientString(inPath, -1, relativePath, cch);
+        }
     }
 
     if (relativePath[0] == relativePath[1] &&
-         relativePath[1] == '\\' && 
-         !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
+        relativePath[1] == '\\' && 
+        !cm_ClientStrCmpNI(cm_NetbiosNameC, relativePath+2,
+                           cm_ClientStrLen(cm_NetbiosNameC))) 
     {
-        char shareName[256];
-        char *sharePath;
+        clientchar_t shareName[256];
+        clientchar_t *sharePath;
         int shareFound, i;
 
         /* We may have found a UNC path. 
@@ -580,9 +583,9 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
          */
-        char * p;
-        p = relativePath + 2 + strlen(cm_NetbiosName) + 1;			/* buffer overflow vuln.? */
-        if ( !_strnicmp("all", p, 3) )
+        clientchar_t * p;
+        p = relativePath + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;			/* buffer overflow vuln.? */
+        if ( !cm_ClientStrCmpNI(_C("all"),  p,  3) )
             p += 4;
 
         for (i = 0; *p && *p != '\\'; i++,p++ ) {
@@ -594,24 +597,25 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
-                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                             userp, sharePath, reqp, &substRootp);
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+                            CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, sharePath, reqp, &substRootp);
             free(sharePath);
             if (code) {
-		osi_Log1(afsd_logp,"smb_ParseIoctlPath [1] code 0x%x", code);
-                if (free_path)
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [1] code 0x%x", code);
+                if (relativePath)
                     free(relativePath);
                 return code;
 	    }
 
-	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
+	    lastComponent = cm_ClientStrRChr(p,  '\\');
+	    if (lastComponent && (lastComponent - p) > 1 &&
+                cm_ClientStrLen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
 		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-				 userp, NULL, reqp, &iscp);
+                                userp, NULL, reqp, &iscp);
 		if (code == 0)
 		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
 				    userp, NULL, reqp, scpp);
@@ -623,8 +627,8 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
 	    cm_ReleaseSCache(substRootp);
             if (code) {
-		osi_Log1(afsd_logp,"smb_ParseIoctlPath [2] code 0x%x", code);
-                if (free_path)
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
+                if (relativePath)
                     free(relativePath);
                 return code;
 	    }
@@ -633,8 +637,8 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
              * This requires that we reconstruct the shareName string with 
              * leading and trailing slashes.
              */
-            p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
-            if ( !_strnicmp("all", p, 3) )
+            p = relativePath + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;
+            if ( !cm_ClientStrCmpNI(_C("all"),  p,  3) )
                 p += 4;
 
             shareName[0] = '/';
@@ -646,23 +650,24 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i] = 0;       /* terminate string */
 
 
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
-                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                             userp, shareName, reqp, &substRootp);
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+                            CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, shareName, reqp, &substRootp);
             if (code) {
-		osi_Log1(afsd_logp,"smb_ParseIoctlPath [3] code 0x%x", code);
-                if (free_path)
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [3] code 0x%x", code);
+                if (relativePath)
                     free(relativePath);
                 return code;
 	    }
 
-	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
+	    lastComponent = cm_ClientStrRChr(p,  '\\');
+	    if (lastComponent && (lastComponent - p) > 1 &&
+                cm_ClientStrLen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
 		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-				 userp, NULL, reqp, &iscp);
+                                userp, NULL, reqp, &iscp);
 		if (code == 0)
 		    code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
 				    userp, NULL, reqp, scpp);
@@ -675,43 +680,44 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
 	    if (code) {
 		cm_ReleaseSCache(substRootp);
-		osi_Log1(afsd_logp,"smb_ParseIoctlPath code [4] 0x%x", code);
-                if (free_path)
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath code [4] 0x%x", code);
+                if (relativePath)
                     free(relativePath);
                 return code;
 	    }
         }
     } else {
-        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
+        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) {
-	    osi_Log1(afsd_logp,"smb_ParseIoctlPath [6] code 0x%x", code);
-            if (free_path)
+	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [6] code 0x%x", code);
+            if (relativePath)
                 free(relativePath);
             return code;
 	}
         
-	lastComponent = strrchr(relativePath, '\\');
-	if (lastComponent && (lastComponent - relativePath) > 1 && strlen(lastComponent) > 1) {
+	lastComponent = cm_ClientStrRChr(relativePath,  '\\');
+	if (lastComponent && (lastComponent - relativePath) > 1 &&
+            cm_ClientStrLen(lastComponent) > 1) {
 	    *lastComponent = '\0';
 	    lastComponent++;
 
 	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-			     userp, NULL, reqp, &iscp);
+                            userp, NULL, reqp, &iscp);
 	    if (code == 0)
 		code = cm_NameI(iscp, lastComponent, CM_FLAG_CASEFOLD | follow,
-				 userp, NULL, reqp, scpp);
+                                userp, NULL, reqp, scpp);
 	    if (iscp)
 		cm_ReleaseSCache(iscp);
 	} else {
 	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | follow,
-			     userp, NULL, reqp, scpp);
+                            userp, NULL, reqp, scpp);
 	}
         if (code) {
 	    cm_ReleaseSCache(substRootp);
-	    osi_Log1(afsd_logp,"smb_ParseIoctlPath [7] code 0x%x", code);
-            if (free_path)
+	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [7] code 0x%x", code);
+            if (relativePath)
                 free(relativePath);
             return code;
 	}
@@ -721,9 +727,9 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_ReleaseSCache(substRootp);
 
     /* and return success */
-    osi_Log1(afsd_logp,"smb_ParseIoctlPath [8] code 0x%x", code);
+    osi_Log1(afsd_logp,"cm_ParseIoctlPath [8] code 0x%x", code);
 
-    if (free_path)
+    if (relativePath)
         free(relativePath);
     return 0;
 }
@@ -736,16 +742,16 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
  */
 afs_int32
 smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
-                     cm_scache_t **scpp, char *leafp)
+                     cm_scache_t **scpp, clientchar_t *leafp)
 {
-    afs_int32 code;
-    char tbuffer[1024];
-    char *tp, *jp;
+    long code;
+    clientchar_t tbuffer[1024];
+    clientchar_t *tp, *jp;
     cm_scache_t *substRootp = NULL;
-    char *inpathp;
-    int free_path = FALSE;
+    clientchar_t *inpathp = NULL;
+    char *inpathdatap;
 
-    inpathp = ioctlp->ioctl.inDatap;
+    inpathdatap = ioctlp->ioctl.inDatap;
 
     /* If the string starts with our UTF-8 prefix (which is the
        sequence [ESC,'%','G'] as used by ISO-2022 to designate UTF-8
@@ -753,67 +759,66 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        we have to convert the string to UTF-8, since that is what we
        want to use everywhere else.*/
 
-    if (memcmp(inpathp, utf8_prefix, utf8_prefix_size) == 0) {
-        int len, normalized_len;
-        char * normalized_path;
+    if (memcmp(inpathdatap, utf8_prefix, utf8_prefix_size) == 0) {
 
         /* String is UTF-8 */
-        inpathp += utf8_prefix_size;
+        inpathdatap += utf8_prefix_size;
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
-        len = strlen(inpathp) + 1;
-
-        normalized_len = cm_NormalizeUtf8String(inpathp, len, NULL, 0);
-
-        if (normalized_len > len) {
-            normalized_path = malloc(normalized_len);
-            free_path = TRUE;
-        } else {
-            normalized_path = inpathp;
-        }
-
-        cm_NormalizeUtf8String(inpathp, len, normalized_path, normalized_len);
-
-        if (normalized_path != inpathp)
-            inpathp = normalized_path;
+        inpathp = cm_Utf8ToClientStringAlloc(inpathdatap, -1, NULL);
     } else {
+        int cch;
+
         /* Not a UTF-8 string */
         /* TODO: If this is an OEM string, we should convert it to
            UTF-8. */
+        if (smb_StoreAnsiFilenames) {
+            cch = cm_AnsiToClientString(inpathdatap, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            inpathp = malloc(cch * sizeof(clientchar_t));
+            cm_AnsiToClientString(inpathdatap, -1, inpathp, cch);
+        } else {
+            TranslateExtendedChars(inpathdatap);
+
+            cch = cm_OemToClientString(inpathdatap, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            inpathp = malloc(cch * sizeof(clientchar_t));
+            cm_OemToClientString(inpathdatap, -1, inpathp, cch);
+        }
     }
 
-    StringCbCopyA(tbuffer, sizeof(tbuffer), inpathp);
-    tp = strrchr(tbuffer, '\\');
-    jp = strrchr(tbuffer, '/');
+    cm_ClientStrCpy(tbuffer, lengthof(tbuffer), inpathp);
+    tp = cm_ClientStrRChr(tbuffer, '\\');
+    jp = cm_ClientStrRChr(tbuffer, '/');
     if (!tp)
         tp = jp;
     else if (jp && (tp - tbuffer) < (jp - tbuffer))
         tp = jp;
     if (!tp) {
-        StringCbCopyA(tbuffer, sizeof(tbuffer), "\\");
-        if (leafp) 
-            StringCbCopyA(leafp, LEAF_SIZE, inpathp);
+        cm_ClientStrCpy(tbuffer, lengthof(tbuffer), _C("\\"));
+        if (leafp)
+            cm_ClientStrCpy(leafp, LEAF_SIZE, inpathp);
     }
     else {
         *tp = 0;
         if (leafp) 
-            StringCbCopyA(leafp, LEAF_SIZE, tp+1);
-    }   
+            cm_ClientStrCpy(leafp, LEAF_SIZE, tp+1);
+    }
 
-    if (free_path)
-        free(inpathp);
-    inpathp = NULL;             /* We don't need this from this point on */
-
-    if (free_path)
-        free(inpathp);
+    free(inpathp);
     inpathp = NULL;             /* We don't need this from this point on */
 
     if (tbuffer[0] == tbuffer[1] &&
         tbuffer[1] == '\\' && 
-        !_strnicmp(cm_NetbiosName,tbuffer+2,strlen(cm_NetbiosName))) 
+        !cm_ClientStrCmpNI(cm_NetbiosNameC, tbuffer+2,
+                           cm_ClientStrLen(cm_NetbiosNameC))) 
     {
-        char shareName[256];
-        char *sharePath;
+        clientchar_t shareName[256];
+        clientchar_t *sharePath;
         int shareFound, i;
 
         /* We may have found a UNC path. 
@@ -821,9 +826,9 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
          */
-        char * p;
-        p = tbuffer + 2 + strlen(cm_NetbiosName) + 1;
-        if ( !_strnicmp("all", p, 3) )
+        clientchar_t * p;
+        p = tbuffer + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;
+        if ( !cm_ClientStrCmpNI(_C("all"),  p,  3) )
             p += 4;
 
         for (i = 0; *p && *p != '\\'; i++,p++ ) {
@@ -835,14 +840,14 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
-                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                             userp, sharePath, reqp, &substRootp);
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+                            CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, sharePath, reqp, &substRootp);
             free(sharePath);
             if (code) return code;
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                             userp, NULL, reqp, scpp);
+                            userp, NULL, reqp, scpp);
 	    cm_ReleaseSCache(substRootp);
             if (code) return code;
         } else {
@@ -850,8 +855,8 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
              * This requires that we reconstruct the shareName string with 
              * leading and trailing slashes.
              */
-            p = tbuffer + 2 + strlen(cm_NetbiosName) + 1;
-            if ( !_strnicmp("all", p, 3) )
+            p = tbuffer + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;
+            if ( !cm_ClientStrCmpNI(_C("all"),  p,  3) )
                 p += 4;
 
             shareName[0] = '/';
@@ -862,9 +867,9 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i++] = '/';	/* add trailing slash */
             shareName[i] = 0;       /* terminate string */
 
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
-                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                             userp, shareName, reqp, &substRootp);
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+                            CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, shareName, reqp, &substRootp);
             if (code) return code;
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
@@ -873,7 +878,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             if (code) return code;
         }
     } else {
-        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
+        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
@@ -903,13 +908,14 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     struct ClearToken ct;
     cm_cell_t *cellp;
     cm_ucell_t *ucellp;
-    char *uname = NULL;
     afs_uuid_t uuid;
     int flags;
     char sessionKey[8];
-    char *smbname;
     int release_userp = 0;
-    char * wdir = NULL;
+    clientchar_t *uname = NULL;
+    clientchar_t *smbname = NULL;
+    clientchar_t *wdir = NULL;
+    afs_int32 code = 0;
 
     saveDataPtr = ioctlp->ioctl.inDatap;
 
@@ -946,31 +952,46 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         tp += sizeof(int);
 
         /* cell name */
-        cellp = cm_GetCell(tp, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
-        if (!cellp) 
-            return CM_ERROR_NOSUCHCELL;
+        {
+            fschar_t * cellnamep;
+            clientchar_t * temp;
+
+            temp = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
+            cellnamep = cm_ClientStringToFsStringAlloc(temp, -1, NULL);
+            cellp = cm_GetCell(cellnamep, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
+            free(cellnamep);
+            free(temp);
+        }
+
+        if (!cellp) {
+            code = CM_ERROR_NOSUCHCELL;
+            goto done;
+        }
         tp += strlen(tp) + 1;
 
         /* user name */
-        uname = tp;
+        uname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
         tp += strlen(tp) + 1;
 
         if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
-            smbname = tp;
-            osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
-                     osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
-            fprintf(stderr, "SMB name = %s\n", smbname);
+            smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
+            osi_Log2(smb_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
+                     osi_LogSaveClientString(smb_logp,uname),
+                     osi_LogSaveClientString(smb_logp,smbname));
+            fprintf(stderr, "SMB name = %S\n", smbname);
             tp += strlen(tp) + 1;
         } else {
-            osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
-                     osi_LogSaveString(smb_logp, uname));
+            osi_Log1(smb_logp,"cm_IoctlSetToken for user [%S]",
+                     osi_LogSaveClientString(smb_logp, uname));
         }
 
-		/* uuid */
+        /* uuid */
         memcpy(&uuid, tp, sizeof(uuid));
-        if (!cm_FindTokenEvent(uuid, sessionKey))
-            return CM_ERROR_INVAL;
+        if (!cm_FindTokenEvent(uuid, sessionKey)) {
+            code = CM_ERROR_INVAL;
+            goto done;
+        }
     } else {
         cellp = cm_data.rootCellp;
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
@@ -1005,7 +1026,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     ucellp->uid = ANONYMOUSID;
 #endif
     if (uname) {
-        StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
+        cm_ClientStringToFsString(uname, -1, ucellp->userName, MAXKTCNAMELEN);
 #ifdef QUERY_AFSID
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
 #endif
@@ -1019,10 +1040,17 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     cm_ResetACLCache(userp);
 
+  done:
     if (release_userp)
 	cm_ReleaseUser(userp);
 
-    return 0;
+    if (uname)
+        free(uname);
+
+    if (smbname)
+        free(smbname);
+
+    return code;
 }
 
 
@@ -1033,8 +1061,17 @@ smb_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
     smb_user_t *uidp = ioctlp->uidp;
 
     if (uidp && uidp->unp) {
-        memcpy(ioctlp->ioctl.outDatap, uidp->unp->name, strlen(uidp->unp->name));
-        ioctlp->ioctl.outDatap += strlen(uidp->unp->name);
+        int cch;
+
+        cch = cm_ClientStringToUtf8(uidp->unp->name,
+                                    cm_ClientStrLen(uidp->unp->name),
+
+                                    ioctlp->ioctl.outDatap,
+                                    (SMB_IOCTL_MAXDATA -
+                                     (ioctlp->ioctl.outDatap - ioctlp->ioctl.outAllocp))
+                                    / sizeof(cm_utf8char_t));
+
+        ioctlp->ioctl.outDatap += cch * sizeof(cm_utf8char_t);
     }
 
     return 0;
@@ -1561,13 +1598,13 @@ smb_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    char leaf[LEAF_SIZE];
+    clientchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
     cm_InitReq(&req);
         
     code = smb_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlCreateMountPoint(&ioctlp->ioctl, userp, dscp, &req, leaf);
@@ -1581,7 +1618,7 @@ smb_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    char leaf[LEAF_SIZE];
+    clientchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
     cm_InitReq(&req);

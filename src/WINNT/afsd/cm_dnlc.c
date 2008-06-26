@@ -105,27 +105,27 @@ InsertEntry(cm_nc_t *tnc)
 
 void 
 cm_dnlcEnter ( cm_scache_t *adp,
-               char        *aname,
+               normchar_t  *nname,
                cm_scache_t *avc )
 {
     cm_nc_t *tnc;
     unsigned int key, skey, new=0;
-    char *ts = aname;
+    normchar_t *ts = nname;
     int safety;
     int writeLocked = 0;
 
     if (!cm_useDnlc)
 	return ;
 
-    if (!strcmp(aname,".") || !strcmp(aname,".."))
+    if (!cm_NormStrCmp(nname,_C(".")) || !cm_NormStrCmp(nname,_C("..")))
 	return ;
 
     if ( cm_debugDnlc ) 
-	osi_Log3(afsd_logp,"cm_dnlcEnter dir %x name %s scache %x", 
-	    adp, osi_LogSaveString(afsd_logp,aname), avc);
+	osi_Log3(afsd_logp,"cm_dnlcEnter dir %x name %S scache %x", 
+	    adp, osi_LogSaveStringW(afsd_logp,nname), avc);
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
-    if (ts - aname >= CM_AFSNCNAMESIZE) 
+    if (ts - nname >= CM_AFSNCNAMESIZE) 
 	return ;
     skey = key & (NHSIZE -1);
 
@@ -133,7 +133,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
     lock_ObtainRead(&cm_dnlcLock);
   retry:
     for (tnc = cm_data.nameHash[skey], safety=0; tnc; tnc = tnc->next, safety++ )
-	if ((tnc->dirp == adp) && (!strcmp(tnc->name, aname)))
+	if ((tnc->dirp == adp) && (!cm_NormStrCmp(tnc->name, nname)))
 	    break;				/* preexisting entry */
 	else if ( tnc->next == cm_data.nameHash[skey])	/* end of list */
 	{
@@ -169,10 +169,10 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	tnc->dirp = adp;
 	tnc->vp = avc;
 	tnc->key = key;
-	memcpy (tnc->name, aname, ts-aname+1); /* include the NULL */
+	memcpy (tnc->name, nname, (ts-nname+1)*sizeof(normchar_t)); /* include the NULL */
 
     	if ( new )	/* insert entry only if it is newly created */ 
-		InsertEntry(tnc);
+            InsertEntry(tnc);
 
     }
     if (writeLocked)
@@ -192,8 +192,8 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 {
     cm_scache_t * tvc;
     unsigned int key, skey;
-    char* aname = sp->searchNamep;
-    char *ts = aname;
+    normchar_t* nname = sp->nsearchNamep;
+    normchar_t *ts = nname;
     cm_nc_t * tnc, * tnc_begin;
     int safety, match;
   
@@ -201,12 +201,12 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	return NULL;
 
     if ( cm_debugDnlc ) 
-	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %s", 
-		adp, osi_LogSaveString(afsd_logp,aname));
+	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %S", 
+		adp, osi_LogSaveStringW(afsd_logp,nname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
 
-    if (ts - aname >= CM_AFSNCNAMESIZE) {
+    if (ts - nname >= CM_AFSNCNAMESIZE) {
         InterlockedIncrement(&dnlcstats.lookups);
         InterlockedIncrement(&dnlcstats.misses);
 	return NULL;
@@ -225,26 +225,26 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	if (tnc->dirp == adp) 
 	{
         if( cm_debugDnlc ) 
-            osi_Log1(afsd_logp,"Looking at [%s]",
-                     osi_LogSaveString(afsd_logp,tnc->name));
+            osi_Log1(afsd_logp,"Looking at [%S]",
+                     osi_LogSaveStringW(afsd_logp,tnc->name));
 
 	    if ( sp->caseFold ) 	/* case insensitive */
 	    {
-            match = cm_stricmp_utf8(tnc->name, aname);
+            match = cm_NormStrCmpI(tnc->name, nname);
             if ( !match )	/* something matches */
             {
                 tvc = tnc->vp;
                 ts = tnc->name;
 
                 /* determine what type of match it is */
-                if ( !strcmp(tnc->name, aname))
+                if ( !cm_NormStrCmp(tnc->name, nname))
                 {	
                     /* exact match. */
                     sp->ExactFound = 1;
 
                     if( cm_debugDnlc )
-                        osi_Log1(afsd_logp,"DNLC found exact match [%s]",
-                                 osi_LogSaveString(afsd_logp,tnc->name));
+                        osi_Log1(afsd_logp,"DNLC found exact match [%S]",
+                                 osi_LogSaveStringW(afsd_logp,tnc->name));
                     break;
                 }
                 else if ( cm_NoneUpper(tnc->name))
@@ -258,7 +258,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	    }
 	    else			/* case sensitive */
 	    {
-            match = strcmp(tnc->name, aname);
+            match = cm_NormStrCmp(tnc->name, nname);
             if ( !match ) /* found a match */
             {
                 sp->ExactFound = 1;
@@ -285,9 +285,9 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
     }
 
     if(cm_debugDnlc && ts) {
-        osi_Log3(afsd_logp, "DNLC matched [%s] for [%s] with vnode[%ld]",
-                 osi_LogSaveString(afsd_logp,ts),
-                 osi_LogSaveString(afsd_logp,aname),
+        osi_Log3(afsd_logp, "DNLC matched [%S] for [%W] with vnode[%ld]",
+                 osi_LogSaveStringW(afsd_logp,ts),
+                 osi_LogSaveStringW(afsd_logp,nname),
                  (long) tvc->fid.vnode);
     }
 
@@ -337,22 +337,22 @@ RemoveEntry (cm_nc_t *tnc, unsigned int key)
 
 
 void 
-cm_dnlcRemove (cm_scache_t *adp, char *aname)
+cm_dnlcRemove (cm_scache_t *adp, normchar_t *nname)
 {
     unsigned int key, skey, error=0;
     int found= 0, safety;
-    char *ts = aname;
+    normchar_t *ts = nname;
     cm_nc_t *tnc, *tmp;
   
     if (!cm_useDnlc)
 	return ;
 
     if ( cm_debugDnlc )
-	osi_Log2(afsd_logp, "cm_dnlcRemove dir %x name %s", 
-		adp, osi_LogSaveString(afsd_logp,aname));
+	osi_Log2(afsd_logp, "cm_dnlcRemove dir %x name %S", 
+		adp, osi_LogSaveStringW(afsd_logp,nname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
-    if (ts - aname >= CM_AFSNCNAMESIZE) 
+    if (ts - nname >= CM_AFSNCNAMESIZE) 
 	return ;
 
     skey = key & (NHSIZE -1);
@@ -362,7 +362,7 @@ cm_dnlcRemove (cm_scache_t *adp, char *aname)
     for (tnc = cm_data.nameHash[skey], safety=0; tnc; safety++) 
     {
 	if ( (tnc->dirp == adp) && (tnc->key == key) 
-			&& !strcmp(tnc->name,aname) )
+             && !cm_NormStrCmp(tnc->name,nname) )
 	{
 	    tmp = tnc->next;
     	    error = RemoveEntry(tnc, skey);

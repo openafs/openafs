@@ -389,17 +389,16 @@ extern long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 extern long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern void smb_NotifyChange(DWORD action, DWORD notifyFilter,
-	cm_scache_t *dscp, char *filename, char *otherFilename,
+	cm_scache_t *dscp, clientchar_t *filename, clientchar_t *otherFilename,
 	BOOL isDirectParent);
 
 extern long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
-extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
+extern unsigned long smb_ExtAttributes(cm_scache_t *scp);
 
 extern void smb3_Init();
-extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags);
 
 /* SMB auth related functions */
 extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);

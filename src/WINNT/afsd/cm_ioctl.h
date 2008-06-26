@@ -117,9 +117,9 @@ typedef struct cm_IoctlQueryOptions {
 
 #define MAXNUMSYSNAMES    16      /* max that current constants allow */
 #define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
-extern char *         cm_sysName;
+extern clientchar_t  *cm_sysName;
 extern unsigned int   cm_sysNameCount;
-extern char *         cm_sysNameList[MAXNUMSYSNAMES];
+extern clientchar_t  *cm_sysNameList[MAXNUMSYSNAMES];
 
 /* Paths that are passed into pioctl calls can be specified using
    UTF-8.  These strings are prefixed with UTF8_PREFIX defined below.
@@ -143,13 +143,20 @@ extern void cm_InitIoctl(void);
 
 extern void cm_ResetACLCache(cm_user_t *userp);
 
-extern cm_ioctlQueryOptions_t * cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
+extern cm_ioctlQueryOptions_t *
+cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
-extern void cm_IoctlSkipQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
+extern void
+cm_IoctlSkipQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
-extern void cm_NormalizeAfsPath(char *outpathp, long outlen, char *inpathp);
+extern void
+cm_NormalizeAfsPath(clientchar_t *outpathp, long outlen, clientchar_t *inpathp);
 
 extern void cm_SkipIoctlPath(cm_ioctl_t *ioctlp);
+
+extern clientchar_t * cm_ParseIoctlStringAlloc(cm_ioctl_t *ioctlp, const char * ext_instrp);
+
+extern int cm_UnparseIoctlString(cm_ioctl_t *ioctlp, char * ext_outp, const clientchar_t * cstr, int cchlen);
 
 extern afs_int32 cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
@@ -205,7 +212,7 @@ extern afs_int32 cm_IoctlGetSPrefs(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 cm_IoctlStoreBehind(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern afs_int32 cm_IoctlCreateMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, char *leaf);
+extern afs_int32 cm_IoctlCreateMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, clientchar_t *leaf);
 
 extern afs_int32 cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
@@ -227,7 +234,7 @@ extern afs_int32 cm_IoctlDelToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 cm_IoctlDelAllToken(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
-extern afs_int32 cm_IoctlSymlink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, char *leaf);
+extern afs_int32 cm_IoctlSymlink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *dscp, cm_req_t *reqp, clientchar_t *leaf);
 
 extern afs_int32 cm_IoctlIslink(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
@@ -262,6 +269,8 @@ extern afs_int32 cm_IoctlGetFileType(cm_ioctl_t *ioctlp, cm_user_t *userp, struc
 extern afs_int32 cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
 extern afs_int32 cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user * userp);
+
+extern void TranslateExtendedChars(char *str);
 
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 

@@ -42,9 +42,11 @@ extern long cm_VolStatus_Service_Started(void);
 extern long cm_VolStatus_Service_Stopped(void);
 
 #ifdef _WIN64
-extern long cm_VolStatus_Network_Started(const char * netbios32, const char * netbios64);
+extern long cm_VolStatus_Network_Started(const char * netbios32,
+                                         const char * netbios64);
 
-extern long cm_VolStatus_Network_Stopped(const char * netbios32, const char * netbios64);
+extern long cm_VolStatus_Network_Stopped(const char * netbios32,
+                                         const char * netbios64);
 #else /* _WIN64 */
 extern long cm_VolStatus_Network_Started(const char * netbios);
 
@@ -55,11 +57,19 @@ extern long cm_VolStatus_Network_Addr_Change(void);
 
 extern long cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volstatus status);
 
-extern long __fastcall cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cellID, afs_uint32 * volID, enum volstatus *pstatus);
+extern long __fastcall cm_VolStatus_Path_To_ID(const char * share,
+                                               const char * path,
+                                               afs_uint32 * cellID, afs_uint32 * volID,
+                                               enum volstatus *pstatus);
 
-extern long __fastcall cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *pBufSize, char *pBuffer);
+extern long __fastcall cm_VolStatus_Path_To_DFSlink(const char * share,
+                                                    const char * path,
+                                                    afs_uint32 *pBufSize,
+                                                    char *pBuffer);
 
-extern long cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp, char *tidPathp, char *pathp);
+extern long cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp,
+                                            const clientchar_t *tidPathp,
+                                            const clientchar_t *pathp);
 
 extern long cm_VolStatus_Invalidate_DFS_Mapping(cm_scache_t *scp);
 
