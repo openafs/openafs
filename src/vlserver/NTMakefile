@@ -21,11 +21,7 @@ INCFILES = \
 	$(INCFILEDIR)\vlserver.h \
 	$(INCFILEDIR)\vldbint.h
 
-
-$(INCFILEDIR)\afs\vlserver.h: vlserver.h
-	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
-        
-$(INCFILEDIR)\afs\vl_opcodes.h: vl_opcodes.h
+$(INCFILEDIR)\vl_opcodes.h: vl_opcodes.h
 	$(COPY) vl_opcodes.h $(INCFILEDIR)\vl_opcodes.h
         
 ############################################################################
@@ -127,7 +123,7 @@ $(INCFILEDIR)\vldbint.h: vldbint.h
 # Definitions for generating files via COMPILE_ET
 # Need an explicit copy here, since we've fussed with the general rule.
 
-vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
+$(INCFILEDIR)\vlserver.h vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 	$(DEL) vlserver.h vl_errors.c
 	$(COMPILE_ET) vl_errors  -h vlserver
 	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
