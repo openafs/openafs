@@ -62,6 +62,7 @@ RCSID
 #ifdef AFS_NT40_ENV
 #ifdef AFS_AFSDB_ENV
 /* cm_dns.h depends on cellconfig.h */
+#include <cm_nls.h>
 #include <cm_dns.h>
 #endif /* AFS_AFSDB_ENV */
 #endif
