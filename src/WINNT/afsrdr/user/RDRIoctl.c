@@ -29,17 +29,14 @@
 #include "smb_iocons.h"
 #define RDR_IOCTL_PRIVATE 1
 #include "RDRIoctl.h"
-
-/* don't want to include smb.h */
-extern int smb_FindShare(void *vcp, void *uidp, char *shareName, char **pathNamep);
-
-extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags);
+#include "smb.h"
+#include "cm_nls.h"
 
 RDR_ioctlProc_t *RDR_ioctlProcsp[CM_IOCTL_MAXPROCS];
 
 RDR_ioctl_t * RDR_allIoctls = NULL, *RDR_allIoctlsLast = NULL;
 osi_rwlock_t  RDR_globalLock;
-char          RDR_UNCName[64]="AFS";
+wchar_t       RDR_UNCName[64]=L"AFS";
 
 void 
 RDR_InitIoctl(void)
@@ -355,16 +352,17 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     afs_int32 code;
     cm_scache_t *substRootp = NULL;
     cm_scache_t *iscp = NULL;
-    char * relativePath;
-    char * lastComponent = NULL;
+    char     *inPath;
+    wchar_t     *relativePath = NULL;
+    wchar_t     *lastComponent = NULL;
     afs_uint32 follow = (flags & CM_PARSE_FLAG_LITERAL ? CM_FLAG_NOMOUNTCHASE : CM_FLAG_FOLLOW);
     int free_path = FALSE;
 
-    relativePath = ioctlp->ioctl.inDatap;
+    inPath = ioctlp->ioctl.inDatap;
     /* setup the next data value for the caller to use */
     ioctlp->ioctl.inDatap += (long)strlen(ioctlp->ioctl.inDatap) + 1;;
 
-    osi_Log1(afsd_logp, "RDR_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
+    osi_Log1(afsd_logp, "RDR_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,inPath));
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
     /* ioctlp->inDatap can be either of the form:
@@ -374,11 +372,11 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
      *    \\netbios-name\submount\path\file
      */
 
-	/* We do not perform path name translation on the ioctl path data 
-	 * because these paths were not translated by Windows through the
-	 * file system API.  Therefore, they are not OEM characters but 
-	 * whatever the display character set is.
-	 */
+    /* We do not perform path name translation on the ioctl path data 
+     * because these paths were not translated by Windows through the
+     * file system API.  Therefore, they are not OEM characters but 
+     * whatever the display character set is.
+     */
 
     // TranslateExtendedChars(relativePath);
 
@@ -391,51 +389,51 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        we have to convert the string to UTF-8, since that is what we
        want to use everywhere else.*/
 
-    if (memcmp(relativePath, utf8_prefix, utf8_prefix_size) == 0) {
-        int len, normalized_len;
-        char * normalized_path;
-
+    if (memcmp(inPath, utf8_prefix, utf8_prefix_size) == 0) {
         /* String is UTF-8 */
-        relativePath += utf8_prefix_size;
+        inPath += utf8_prefix_size;
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
-        len = (ioctlp->ioctl.inDatap - relativePath);
-
-        normalized_len = cm_NormalizeUtf8String(relativePath, len, NULL, 0);
-
-        if (normalized_len > len) {
-            normalized_path = malloc(normalized_len);
-            free_path = TRUE;
-        } else {
-            normalized_path = relativePath;
-        }
-
-        cm_NormalizeUtf8String(relativePath, len, normalized_path, normalized_len);
-
-        if (normalized_path != relativePath)
-            relativePath = normalized_path;
+        relativePath = cm_Utf8ToClientStringAlloc(inPath, -1, NULL);
     } else {
+        int cch;
         /* Not a UTF-8 string */
-        /* TODO: If this is an OEM string, we should convert it to
-           UTF-8. */
+        /* TODO: If this is an OEM string, we should convert it to UTF-8. */
+        if (smb_StoreAnsiFilenames) {
+            cch = cm_AnsiToClientString(inPath, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            relativePath = malloc(cch * sizeof(clientchar_t));
+            cm_AnsiToClientString(inPath, -1, relativePath, cch);
+        } else {
+            TranslateExtendedChars(inPath);
+
+            cch = cm_OemToClientString(inPath, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            relativePath = malloc(cch * sizeof(clientchar_t));
+            cm_OemToClientString(inPath, -1, relativePath, cch);
+        }
     }
 
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
-         !_strnicmp(RDR_UNCName,relativePath+2,strlen(RDR_UNCName))) 
+         !cm_ClientStrCmpNI(RDR_UNCName,relativePath+2,wcslen(RDR_UNCName))) 
     {
-        char shareName[256];
-        char *sharePath;
+        wchar_t shareName[256];
+        wchar_t *sharePath;
         int shareFound, i;
+        wchar_t *p;
 
         /* We may have found a UNC path. 
          * If the first component is the RDR UNC Name,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
          */
-        char * p;
-        p = relativePath + 2 + strlen(RDR_UNCName) + 1;			/* buffer overflow vuln.? */
-        if ( !_strnicmp("all", p, 3) )
+        p = relativePath + 2 + wcslen(RDR_UNCName) + 1;			/* buffer overflow vuln.? */
+        if ( !cm_ClientStrCmpNI(_C("all"), p, 3) )
             p += 4;
 
         for (i = 0; *p && *p != '\\'; i++,p++ ) {
@@ -458,8 +456,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
+	    lastComponent = cm_ClientStrRChr(p, '\\');
+	    if (lastComponent && (lastComponent - p) > 1 && wcslen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
@@ -486,8 +484,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
              * This requires that we reconstruct the shareName string with 
              * leading and trailing slashes.
              */
-            p = relativePath + 2 + strlen(RDR_UNCName) + 1;
-            if ( !_strnicmp("all", p, 3) )
+            p = relativePath + 2 + wcslen(RDR_UNCName) + 1;
+            if ( !cm_ClientStrCmpNI(_C("all"), p, 3) )
                 p += 4;
 
             shareName[0] = '/';
@@ -509,8 +507,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-	    lastComponent = strrchr(p, '\\');
-	    if (lastComponent && (lastComponent - p) > 1 &&strlen(lastComponent) > 1) {
+	    lastComponent = cm_ClientStrRChr(p, '\\');
+	    if (lastComponent && (lastComponent - p) > 1 && wcslen(lastComponent) > 1) {
 		*lastComponent = '\0';
 		lastComponent++;
 
@@ -543,8 +541,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             return code;
 	}
         
-	lastComponent = strrchr(relativePath, '\\');
-	if (lastComponent && (lastComponent - relativePath) > 1 && strlen(lastComponent) > 1) {
+	lastComponent = cm_ClientStrRChr(relativePath, '\\');
+	if (lastComponent && (lastComponent - relativePath) > 1 && wcslen(lastComponent) > 1) {
 	    *lastComponent = '\0';
 	    lastComponent++;
 
@@ -576,6 +574,7 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     if (free_path)
         free(relativePath);
+
     return 0;
 }
 
@@ -587,16 +586,17 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
  */
 afs_int32
 RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
-                     cm_scache_t **scpp, char *leafp)
+                     cm_scache_t **scpp, wchar_t *leafp)
 {
     afs_int32 code;
-    char tbuffer[1024];
-    char *tp, *jp;
+    clientchar_t tbuffer[1024];
+    clientchar_t *tp, *jp;
     cm_scache_t *substRootp = NULL;
-    char *inpathp;
+    clientchar_t *inpathp;
+    char *inpathdatap;
     int free_path = FALSE;
 
-    inpathp = ioctlp->ioctl.inDatap;
+    inpathdatap = ioctlp->ioctl.inDatap;
 
     /* If the string starts with our UTF-8 prefix (which is the
        sequence [ESC,'%','G'] as used by ISO-2022 to designate UTF-8
@@ -604,56 +604,54 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
        we have to convert the string to UTF-8, since that is what we
        want to use everywhere else.*/
 
-    if (memcmp(inpathp, utf8_prefix, utf8_prefix_size) == 0) {
-        int len, normalized_len;
-        char * normalized_path;
-
+    if (memcmp(inpathdatap, utf8_prefix, utf8_prefix_size) == 0) {
         /* String is UTF-8 */
-        inpathp += utf8_prefix_size;
+        inpathdatap += utf8_prefix_size;
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
-        len = strlen(inpathp) + 1;
-
-        normalized_len = cm_NormalizeUtf8String(inpathp, len, NULL, 0);
-
-        if (normalized_len > len) {
-            normalized_path = malloc(normalized_len);
-            free_path = TRUE;
-        } else {
-            normalized_path = inpathp;
-        }
-
-        cm_NormalizeUtf8String(inpathp, len, normalized_path, normalized_len);
-
-        if (normalized_path != inpathp)
-            inpathp = normalized_path;
+        inpathp = cm_Utf8ToClientStringAlloc(inpathdatap, -1, NULL);
     } else {
+        int cch;
+
         /* Not a UTF-8 string */
         /* TODO: If this is an OEM string, we should convert it to
            UTF-8. */
+        if (smb_StoreAnsiFilenames) {
+            cch = cm_AnsiToClientString(inpathdatap, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            inpathp = malloc(cch * sizeof(clientchar_t));
+            cm_AnsiToClientString(inpathdatap, -1, inpathp, cch);
+        } else {
+            TranslateExtendedChars(inpathdatap);
+
+            cch = cm_OemToClientString(inpathdatap, -1, NULL, 0);
+#ifdef DEBUG
+            osi_assert(cch > 0);
+#endif
+            inpathp = malloc(cch * sizeof(clientchar_t));
+            cm_OemToClientString(inpathdatap, -1, inpathp, cch);
+        }
     }
 
-    StringCbCopyA(tbuffer, sizeof(tbuffer), inpathp);
-    tp = strrchr(tbuffer, '\\');
-    jp = strrchr(tbuffer, '/');
+    cm_ClientStrCpy(tbuffer, lengthof(tbuffer), inpathp);
+    tp = cm_ClientStrRChr(tbuffer, '\\');
+    jp = cm_ClientStrRChr(tbuffer, '/');
     if (!tp)
         tp = jp;
     else if (jp && (tp - tbuffer) < (jp - tbuffer))
         tp = jp;
     if (!tp) {
-        StringCbCopyA(tbuffer, sizeof(tbuffer), "\\");
-        if (leafp) 
-            StringCbCopyA(leafp, LEAF_SIZE, inpathp);
+        cm_ClientStrCpy(tbuffer, lengthof(tbuffer), _C("\\"));
+        if (leafp)
+            cm_ClientStrCpy(leafp, LEAF_SIZE, inpathp);
     }
     else {
         *tp = 0;
         if (leafp) 
-            StringCbCopyA(leafp, LEAF_SIZE, tp+1);
-    }   
-
-    if (free_path)
-        free(inpathp);
-    inpathp = NULL;             /* We don't need this from this point on */
+            cm_ClientStrCpy(leafp, LEAF_SIZE, tp+1);
+    }
 
     if (free_path)
         free(inpathp);
@@ -661,10 +659,10 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     if (tbuffer[0] == tbuffer[1] &&
         tbuffer[1] == '\\' && 
-        !_strnicmp(RDR_UNCName,tbuffer+2,strlen(RDR_UNCName))) 
+        !cm_ClientStrCmpNI(RDR_UNCName,tbuffer+2, wcslen(RDR_UNCName))) 
     {
-        char shareName[256];
-        char *sharePath;
+        wchar_t shareName[256];
+        wchar_t *sharePath;
         int shareFound, i;
 
         /* We may have found a UNC path. 
@@ -672,9 +670,9 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
          */
-        char * p;
-        p = tbuffer + 2 + strlen(RDR_UNCName) + 1;
-        if ( !_strnicmp("all", p, 3) )
+        clientchar_t * p;
+        p = tbuffer + 2 + cm_ClientStrLen(RDR_UNCName) + 1;
+        if ( !cm_ClientStrCmpNI(_C("all"), p, 3) )
             p += 4;
 
         for (i = 0; *p && *p != '\\'; i++,p++ ) {
@@ -701,8 +699,8 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
              * This requires that we reconstruct the shareName string with 
              * leading and trailing slashes.
              */
-            p = tbuffer + 2 + strlen(RDR_UNCName) + 1;
-            if ( !_strnicmp("all", p, 3) )
+            p = tbuffer + 2 + wcslen(RDR_UNCName) + 1;
+            if ( !cm_ClientStrCmpNI(_C("all"), p, 3) )
                 p += 4;
 
             shareName[0] = '/';
@@ -752,13 +750,13 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
     struct ClearToken ct;
     cm_cell_t *cellp;
     cm_ucell_t *ucellp;
-    char *uname = NULL;
     afs_uuid_t uuid;
     int flags;
     char sessionKey[8];
-    char *smbname;
+    wchar_t *smbname = NULL;
+    wchar_t *uname = NULL;
+    afs_uint32 code = 0;
     int release_userp = 0;
-    char * wdir = NULL;
 
     saveDataPtr = ioctlp->ioctl.inDatap;
 
@@ -769,8 +767,10 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
     /* ticket length */
     memcpy(&ticketLen, tp, sizeof(ticketLen));
     tp += sizeof(ticketLen);
-    if (ticketLen < MINKTCTICKETLEN || ticketLen > MAXKTCTICKETLEN)
-        return CM_ERROR_INVAL;
+    if (ticketLen < MINKTCTICKETLEN || ticketLen > MAXKTCTICKETLEN) {
+        code = CM_ERROR_INVAL;
+        goto done;
+    }
 
     /* remember ticket and skip over it for now */
     ticket = tp;
@@ -779,8 +779,10 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
     /* clear token size */
     memcpy(&ctSize, tp, sizeof(ctSize));
     tp += sizeof(ctSize);
-    if (ctSize != sizeof(struct ClearToken))
-        return CM_ERROR_INVAL;
+    if (ctSize != sizeof(struct ClearToken)) {
+        code = CM_ERROR_INVAL;
+        goto done;
+    }
 
     /* clear token */
     memcpy(&ct, tp, ctSize);
@@ -796,41 +798,46 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 
         /* cell name */
         cellp = cm_GetCell(tp, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
-        if (!cellp) 
-            return CM_ERROR_NOSUCHCELL;
+        if (!cellp) {
+            code = CM_ERROR_NOSUCHCELL;
+            goto done;
+        }
         tp += strlen(tp) + 1;
 
         /* user name */
-        uname = tp;
+        uname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
         tp += strlen(tp) + 1;
 
         if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
-            smbname = tp;
-            osi_Log2(afsd_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
-                     osi_LogSaveString(afsd_logp,uname), osi_LogSaveString(afsd_logp,smbname));
-            fprintf(stderr, "SMB name = %s\n", smbname);
+            smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
             tp += strlen(tp) + 1;
+            osi_Log2(afsd_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
+                     osi_LogSaveStringW(afsd_logp,uname), 
+                     osi_LogSaveStringW(afsd_logp,smbname));
+            fprintf(stderr, "SMB name = %S\n", smbname);
         } else {
-            osi_Log1(afsd_logp,"cm_IoctlSetToken for user [%s]",
-                     osi_LogSaveString(afsd_logp, uname));
+            osi_Log1(afsd_logp,"cm_IoctlSetToken for user [%S]",
+                     osi_LogSaveStringW(afsd_logp, uname));
         }
 
         /* uuid */
         memcpy(&uuid, tp, sizeof(uuid));
-        if (!cm_FindTokenEvent(uuid, sessionKey))
-            return CM_ERROR_INVAL;
+        if (!cm_FindTokenEvent(uuid, sessionKey)) {
+            code = CM_ERROR_INVAL;
+            goto done;
+        }
     } else {
         cellp = cm_data.rootCellp;
         osi_Log0(afsd_logp,"cm_IoctlSetToken - no name specified");
     }
 
     if (flags & PIOCTL_LOGON) {
-        char cname[MAX_COMPUTERNAME_LENGTH+1];
+        wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
         int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
-        GetComputerNameA(cname, &cnamelen);
-        _strupr(cname);
+        GetComputerNameW(cname, &cnamelen);
+        wcsupr(cname);
 
         userp = smb_FindCMUserByName(smbname, cname, 1 /* create */ | 2 /* afslogon */);
 	release_userp = 1;
@@ -859,7 +866,7 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
     ucellp->uid = ANONYMOUSID;
 #endif
     if (uname) {
-        StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
+        cm_ClientStringToFsString(uname, MAXKTCNAMELEN, ucellp->userName, MAXKTCNAMELEN);
 #ifdef QUERY_AFSID
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
 #endif
@@ -873,10 +880,17 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 
     cm_ResetACLCache(userp);
 
+  done:
     if (release_userp)
 	cm_ReleaseUser(userp);
 
-    return 0;
+    if (uname)
+        free(uname);
+
+    if (smbname)
+        free(smbname);
+
+    return code;
 }
 
 afs_int32 
@@ -1400,7 +1414,7 @@ RDR_IoctlCreateMountPoint(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    char leaf[LEAF_SIZE];
+    wchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -1420,7 +1434,7 @@ RDR_IoctlSymlink(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    char leaf[LEAF_SIZE];
+    wchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
     cm_InitReq(&req);

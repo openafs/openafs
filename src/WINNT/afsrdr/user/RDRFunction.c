@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
+#include <strsafe.h>
 
 #include "afsd.h"
 #include "smb.h"
@@ -81,8 +81,8 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
     cm_user_t *userp = cm_rootUserp;
     HANDLE hProcess = 0, hToken = 0;
     PSID        pSid = 0;
-    char      *secSidString = 0;
-    char cname[MAX_COMPUTERNAME_LENGTH+1];
+    wchar_t      *secSidString = 0;
+    wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
     int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
     hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, RequestBuffer->ProcessId);
@@ -95,11 +95,11 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
     if (!smb_GetUserSID( hToken, &pSid))
         goto done;
 
-    if (!ConvertSidToStringSidA(pSid, &secSidString))
+    if (!ConvertSidToStringSidW(pSid, &secSidString))
         goto done;
 
-    GetComputerNameA(cname, &cnamelen);
-    _strupr(cname);
+    GetComputerNameW(cname, &cnamelen);
+    _wcsupr(cname);
 
     userp = smb_FindCMUserByName(secSidString, cname, SMB_FLAG_CREATE);
     if (!userp) {
@@ -131,8 +131,8 @@ RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry,
                           IN cm_scache_t     * scp,
                           IN cm_user_t       * userp,
                           IN cm_req_t        * reqp,
-                          IN char            * name,
-                          IN char            * shortName )
+                          IN wchar_t         * name,
+                          IN wchar_t         * shortName )
 {
     FILETIME ft;
     WCHAR *  wname, *wtarget;
@@ -140,9 +140,9 @@ RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry,
     afs_uint32 code;
 
     if (!name)
-        name = "";
+        name = L"";
     if (!shortName)
-        shortName = "";
+        shortName = L"";
 
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp( scp, NULL, userp, reqp, 0,
@@ -171,30 +171,14 @@ RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry,
     pCurrentEntry->EaSize = 0;
     pCurrentEntry->Links = scp->linkCount;
 
-    len = strlen(shortName);
-#ifdef UNICODE
-    cch = MultiByteToWideChar( CP_UTF8, 0, shortname, 
-                               len * sizeof(char),
-                               pCurrentEntry->ShortName, 
-                               len * sizeof(WCHAR));
-#else
-    mbstowcs(pCurrentEntry->ShortName, shortName, len);
-#endif
+    len = wcslen(shortName);
+    wcsncpy(pCurrentEntry->ShortName, shortName, len);
     pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
 
     pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
-    len = strlen(name);
+    len = wcslen(name);
     wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
-
-
-#ifdef UNICODE
-    cch = MultiByteToWideChar( CP_UTF8, 0, name, 
-                               len * sizeof(char),
-                               wname, 
-                               len * sizeof(WCHAR));
-#else
-    mbstowcs(wname, name, len);
-#endif
+    wcsncpy(wname, name, len);
     pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
 
     if (code == 0)
@@ -379,7 +363,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         if (code == 0 && entryp) {
             cm_scache_t *scp;
 
-            if ( !strcmp(".", entryp->name) || !strcmp("..", entryp->name) )
+            if ( !wcscmp(L".", entryp->name) || !wcscmp(L"..", entryp->name) )
                 goto getnextentry;
 
             code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
@@ -422,7 +406,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     AFSDirEnumEntry * pCurrentEntry;
     size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     afs_uint32  code = 0;
-    char aname[1025];
     cm_scache_t * scp = NULL;
     cm_scache_t * dscp = NULL;
     cm_req_t      req;
@@ -437,20 +420,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
-
-    {
-        wchar_t wname[1025];
-        size_t err;
-
-        wmemcpy(wname, Name, min(NameLength, 1024));
-        wname[min(NameLength, 1024)] = '\0';
-
-        err = wcstombs(aname, wname, sizeof(aname));
-        if (err == -1) {
-            (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-            return;
-        }
-    }
 
     pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
@@ -494,17 +463,18 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Lookup(dscp, aname, 0, userp, &req, &scp);
+    code = cm_Lookup(dscp, Name, 0, userp, &req, &scp);
 
     if (code == 0 && scp) {
-        char shortName[13];
+        wchar_t shortName[13];
         cm_dirFid_t dfid;
 
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
-        cm_Gen8Dot3NameInt(aname, &dfid, shortName, NULL);
-        RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, aname, shortName);
+        
+        cm_Gen8Dot3NameIntW(Name, &dfid, shortName, NULL);
+        RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, Name, shortName);
 
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
@@ -659,9 +629,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     cm_attr_t           setAttr;
     cm_scache_t *       scp = NULL;
     cm_req_t            req;
-    char                utf8_name[1025];
     DWORD               status;
-    DWORD               cch;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
@@ -673,13 +641,6 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     memset( *ResultCB,
             '\0',
             size);
-
-    cch = WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength / sizeof(*FileName), utf8_name, sizeof(utf8_name), NULL, NULL);
-    if (!cch) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
-    utf8_name[cch] = '\0';
 
     parentFid.cell   = CreateCB->ParentId.Cell;
     parentFid.volume = CreateCB->ParentId.Volume;
@@ -708,10 +669,10 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         setAttr.unixModeBits = 0222;
     }
 
-    code = cm_Create(dscp, utf8_name, flags, &setAttr, &scp, userp, &req);
+    code = cm_Create(dscp, FileName, flags, &setAttr, &scp, userp, &req);
 
     if (code == 0) {
-        char shortName[13];
+        wchar_t shortName[13];
         cm_dirFid_t dfid;
 
         (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
@@ -725,8 +686,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
-        cm_Gen8Dot3NameInt(utf8_name, &dfid, shortName, NULL);
-        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, utf8_name, shortName);
+        cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, FileName, shortName);
 
         cm_ReleaseSCache(scp);
     } else {
@@ -887,12 +848,11 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     cm_fid_t            parentFid;
     afs_uint32          code;
     cm_scache_t *       dscp = NULL;
+    cm_scache_t *       scp = NULL;
     afs_uint32          flags = 0;
     cm_attr_t           setAttr;
     cm_req_t            req;
-    char                utf8_norm[1025];
-    char                utf8_name[1025];
-    DWORD               status, cch;
+    DWORD               status;
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
@@ -904,19 +864,6 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     memset( *ResultCB,
             '\0',
             size);
-
-    cch = WideCharToMultiByte(CP_UTF8, 0, FileName, FileNameLength / sizeof(*FileName), utf8_name, sizeof(utf8_name), NULL, NULL);
-    if (!cch) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
-    utf8_name[cch] = '\0';
-
-    code = !cm_NormalizeUtf16StringToUtf8(FileName, FileNameLength / sizeof(*FileName), utf8_norm, sizeof(utf8_norm));
-    if (code) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
 
     parentFid.cell   = ParentId.Cell;
     parentFid.volume = ParentId.Volume;
@@ -937,7 +884,19 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Unlink(dscp, utf8_name, utf8_norm, userp, &req);
+    code = cm_Lookup(dscp, FileName, 0, userp, &req, &scp);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        cm_ReleaseSCache(dscp);
+        return;
+    }
+
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
+        code = cm_RemoveDir(dscp, NULL, FileName, userp, &req);
+    else
+        code = cm_Unlink(dscp, NULL, FileName, userp, &req);
 
     if (code == 0) {
         (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
@@ -955,6 +914,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     }
 
     cm_ReleaseSCache(dscp);
+    cm_ReleaseSCache(scp);
 
     return;
 }
@@ -979,16 +939,11 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     cm_fid_t               TargetParentFid;
     cm_scache_t *          oldDscp;
     cm_scache_t *          newDscp;
-    char                   utf8_old_name[1025];
-    char                   utf8_old_norm[1025];
-    char                   utf8_new_name[1025];
-    char                   utf8_new_norm[1025];
-    char                   shortName[13];
+    wchar_t                shortName[13];
     cm_dirFid_t            dfid;
     cm_req_t               req;
     afs_uint32             code;
     DWORD                  status;
-    DWORD                  cch;
 
     cm_InitReq(&req);
 
@@ -1002,39 +957,11 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
     pResultCB = (AFSFileRenameResultCB *)(*ResultCB)->ResultData;
     
-    cch = WideCharToMultiByte( CP_UTF8, 0, SourceFileName, SourceFileNameLength / sizeof(*SourceFileName), 
-                                 utf8_old_name, sizeof(utf8_old_name), NULL, NULL);
-    if (!cch) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
-    utf8_old_name[cch] = '\0';
-
-    code = !cm_NormalizeUtf16StringToUtf8( SourceFileName, SourceFileNameLength / sizeof(*SourceFileName), utf8_old_norm, sizeof(utf8_old_norm));
-    if (code) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
-
     SourceParentFid.cell   = SourceParentId.Cell;
     SourceParentFid.volume = SourceParentId.Volume;
     SourceParentFid.vnode  = SourceParentId.Vnode;
     SourceParentFid.unique = SourceParentId.Unique;
     SourceParentFid.hash   = SourceParentId.Hash;
-
-    cch = WideCharToMultiByte( CP_UTF8, 0, TargetFileName, TargetFileNameLength / sizeof(*TargetFileName), 
-                                 utf8_new_name, sizeof(utf8_new_name), NULL, NULL);
-    if (!cch) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
-    utf8_new_name[cch] = '\0';
-
-    code = !cm_NormalizeUtf16StringToUtf8( TargetFileName, TargetFileNameLength / sizeof(*TargetFileName), utf8_new_norm, sizeof(utf8_new_norm));
-    if (code) {
-        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
-        return;
-    }
 
     TargetParentFid.cell   = TargetParentId.Cell;
     TargetParentFid.volume = TargetParentId.Volume;
@@ -1070,8 +997,8 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Rename( oldDscp, utf8_old_name, utf8_old_norm, 
-                      newDscp, utf8_new_name, userp, &req);
+    code = cm_Rename( oldDscp, NULL, SourceFileName, 
+                      newDscp, TargetFileName, userp, &req);
     if (code == 0) {
         cm_dirOp_t dirop;
         cm_fid_t   targetFid;
@@ -1085,10 +1012,11 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
         code = cm_BeginDirOp( newDscp, userp, &req, CM_DIRLOCK_READ, &dirop);
         if (code == 0) {
-            code = cm_BPlusDirLookup(&dirop, utf8_new_norm, &targetFid);
+            code = cm_BPlusDirLookup(&dirop, TargetFileName, &targetFid);
+#ifdef COMMENT
             if (code == EINVAL)
-                code = cm_DirLookup(&dirop, utf8_new_norm, &targetFid);
-
+                code = cm_DirLookup(&dirop, utf8(TargetFileName), &targetFid);
+#endif
             cm_EndDirOp(&dirop);
         }
 
@@ -1128,9 +1056,9 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
-        cm_Gen8Dot3NameInt(utf8_new_name, &dfid, shortName, NULL);
+        cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
 
-        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, newDscp, scp, userp, &req, utf8_new_name, shortName);
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, newDscp, scp, userp, &req, TargetFileName, shortName);
             
         cm_ReleaseSCache(scp);
     } else {
