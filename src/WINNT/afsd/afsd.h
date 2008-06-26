@@ -64,6 +64,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_memmap.h"
 #include "cm_freelance.h"
 #include "cm_performance.h"
+#include "cm_nls.h"
 #include "smb_ioctl.h"
 #include "afsd_init.h"
 #ifdef DJGPP

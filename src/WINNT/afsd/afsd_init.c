@@ -299,7 +299,7 @@ configureBackConnectionHostNames(void)
 		     (pName - pHostNames < dwSize) && *pName ; 
 		     pName += strlen(pName) + 1)
 		{
-		    if ( !stricmp(pName, cm_NetbiosName) ) {
+		    if ( !cm_stricmp_utf8(pName, cm_NetbiosName) ) {
 			bNameFound = TRUE;
 			break;
 		    }   

@@ -46,6 +46,8 @@
 #include <winioctl.h>
 #include <rx\rx.h>
 
+#include "cm_btree.h"
+
 #ifdef _DEBUG
 #include <crtdbg.h>
 #endif
@@ -588,6 +590,10 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         if (leafp) 
             StringCbCopyA(leafp, LEAF_SIZE, tp+1);
     }   
+
+    if (free_path)
+        free(inpathp);
+    inpathp = NULL;             /* We don't need this from this point on */
 
     if (free_path)
         free(inpathp);
@@ -1413,7 +1419,9 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_scache_t *scp;
     char *cp;
+    char *originalName = NULL;
     cm_req_t req;
+    cm_dirOp_t dirop;
 
     cm_InitReq(&req);
 
@@ -1443,22 +1451,48 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     /* time to make the RPC, so drop the lock */
     lock_ReleaseWrite(&scp->rw);
 
+#ifdef USE_BPLUS
+    code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
+    if (code == 0) {
+        code = cm_BPlusDirLookupOriginalName(&dirop, cp, &originalName);
+        /* The cm_Dir* functions can't be used to lookup the
+           originalName.  Those functions only know of the original
+           name. */
+        cm_EndDirOp(&dirop);
+    }
+#endif
+
+    /* If this name doesn't have a non-normalized name associated with
+       it, we assume that what we had is what is actually present on
+       the file server. */
+
+    if (originalName == NULL) {
+        originalName = cp;
+    }
+
+    /* cp is a normalized name.  originalName is the actual name we
+       saw on the fileserver. */
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* we are adding the mount point to the root dir., so call
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeleteMountPoint from Freelance root dir");
-        code = cm_FreelanceRemoveMount(cp);
+        code = cm_FreelanceRemoveMount(originalName);
     } else 
 #endif
     {
         /* easier to do it this way */
-        code = cm_Unlink(dscp, cp, userp, &req);
+        code = cm_Unlink(dscp, originalName, cp, userp, &req);
     }
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_REMOVED,
                           FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
+
+    if (originalName != NULL && originalName != cp) {
+        free(originalName);
+        originalName = NULL;
+    }
 
     lock_ObtainWrite(&scp->rw);
   done1:
@@ -2307,7 +2341,9 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_scache_t *scp;
     char *cp;
+    char * originalName = NULL;
     cm_req_t req;
+    cm_dirOp_t dirop;
 
     cm_InitReq(&req);
 
@@ -2339,23 +2375,50 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     /* time to make the RPC, so drop the lock */
     lock_ReleaseWrite(&scp->rw);
         
+#ifdef USE_BPLUS
+    code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
+    if (code == 0) {
+        code = cm_BPlusDirLookupOriginalName(&dirop, cp, &originalName);
+        /* cm_Dir*() functions can't be used to lookup the original
+           name since those functions only know of the original
+           name. */
+        cm_EndDirOp(&dirop);
+    }
+#endif
+
+    /* If this name doesn't have a non-normalized name associated with
+       it, we assume that what we had is what is actually present on
+       the file server. */
+
+    if (originalName == NULL)
+        originalName = cp;
+
+    /* cp is a normalized name.  originalName is the actual name we
+       saw on the fileserver. */
+
+
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* we are adding the mount point to the root dir., so call
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
-        code = cm_FreelanceRemoveSymlink(cp);
+        code = cm_FreelanceRemoveSymlink(originalName);
     } else 
 #endif
     {
         /* easier to do it this way */
-        code = cm_Unlink(dscp, cp, userp, &req);
+        code = cm_Unlink(dscp, originalName, cp, userp, &req);
     }
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_REMOVED,
                           FILE_NOTIFY_CHANGE_FILE_NAME
                           | FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
+
+    if (originalName != NULL && originalName != cp) {
+        free(originalName);
+        originalName = NULL;
+    }
 
     lock_ObtainWrite(&scp->rw);
   done1:
@@ -2428,7 +2491,7 @@ long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 	if (*p == '@')
 	    r = p;
     }
-    if (r && !stricmp(r+1,ucellp->cellp->name))
+    if (r && !cm_stricmp_utf8(r+1,ucellp->cellp->name))
 	*r = '\0';
 
     code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);

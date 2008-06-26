@@ -65,6 +65,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_freelance.h \
         $(INCFILEDIR)\cm_memmap.h \
 	$(INCFILEDIR)\cm_performance.h \
+        $(INCFILEDIR)\cm_nls.h \
         $(INCFILEDIR)\afsd_eventlog.h \
         $(INCFILEDIR)\afsd_eventmessages.h \
         $(INCFILEDIR)\afskfw.h \
@@ -74,7 +75,8 @@ IDLFILES =\
 	afsrpc.h $(OUT)\afsrpc_c.obj
 
 CONFOBJS=$(OUT)\cm_config.obj \
-         $(OUT)\cm_dns.obj
+         $(OUT)\cm_dns.obj \
+         $(OUT)\cm_nls.obj
 
 $(CONFOBJS):
 
@@ -120,6 +122,7 @@ AFSDOBJS=\
 	$(OUT)\cm_rpc.obj \
         $(OUT)\cm_memmap.obj \
         $(OUT)\cm_performance.obj \
+        $(OUT)\cm_nls.obj \
 	$(OUT)\afsrpc_s.obj \
 !IFDEF OSICRASH
 	$(OUT)\afsdcrash.obj \
@@ -134,7 +137,8 @@ $(AFSDOBJS):
 $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
-FSOBJS=$(OUT)\fs.obj $(OUT)\fs_utils.obj
+FSOBJS=$(OUT)\fs.obj \
+       $(OUT)\fs_utils.obj
 
 CMDBGOBJS=$(OUT)\cmdebug.obj
 
@@ -225,7 +229,8 @@ LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
 LOGON_DLLOBJS =\
     $(OUT)\afslogon.obj \
     $(OUT)\logon_ad.obj \
-    $(OUT)\afslogon.res
+    $(OUT)\afslogon.res \
+    $(OUT)\cm_nls.obj
 
 LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afsauthent.lib \
@@ -277,8 +282,9 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
+install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(OUT)\cm_nls.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
      $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
+     $(COPY) $(OUT)\cm_nls.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
 
@@ -336,7 +342,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+        $(DESTDIR)\lib\cm_nls.obj
 
 EXELIBS2 = \
         $(DESTDIR)\lib\afsrpc.lib \

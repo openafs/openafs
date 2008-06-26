@@ -141,7 +141,7 @@ Tree *initBtree(unsigned int poolsz, unsigned int fanout, KeyCmp keyCmp)
 {
     Tree *B;
     keyT empty = {NULL};
-    dataT data = {0,0,0,0};
+    dataT data = {0,0,0,0,0,0,0};
 
     if (fanout > MAX_FANOUT)
         fanout = MAX_FANOUT;
@@ -1293,6 +1293,10 @@ cleanupNodePool(Tree *B)
                 free(getdatavalue(node).longname);
                 getdatavalue(node).longname = NULL;
             }
+            if ( getdatavalue(node).origname ) {
+                free(getdatavalue(node).origname);
+                getdatavalue(node).origname = NULL;
+            }
         } else { /* data node */
             for ( j=1; j<=getfanout(B); j++ ) {
                 if (getkey(node, j).name)
@@ -1557,10 +1561,89 @@ compareKeys(keyT key1, keyT key2, int flags)
 {
     int comp;
 
-    comp = stricmp(key1.name, key2.name);
+    comp = cm_stricmp_utf8(key1.name, key2.name);
     if (comp == 0 && (flags & EXACT_MATCH))
         comp = strcmp(key1.name, key2.name);
     return (comp < 0 ? -1 : (comp > 0 ? 1 : 0));
+}
+
+int
+cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, char * entry,
+                              char ** originalNameRetp)
+{
+    int rc = EINVAL;
+    keyT key = {entry};
+    Nptr leafNode = NONODE;
+    LARGE_INTEGER start, end;
+    char * originalName = NULL;
+
+    if (op->scp->dirBplus == NULL || 
+        op->dataVersion != op->scp->dirDataVersion) {
+        rc = EINVAL;
+        goto done;
+    }
+
+    lock_AssertAny(&op->scp->dirlock);
+
+    QueryPerformanceCounter(&start);
+
+    leafNode = bplus_Lookup(op->scp->dirBplus, key);
+    if (leafNode != NONODE) {
+        int         slot;
+        Nptr        firstDataNode, dataNode, nextDataNode;
+        int         exact = 0;
+        int         count = 0;
+
+        /* Found a leaf that matches the key via a case-insensitive
+         * match.  There may be one or more data nodes that match.
+         * If we have an exact match, return that.
+         * If we have an ambiguous match, return an error.
+         * If we have only one inexact match, return that.
+         */
+        slot = getSlot(op->scp->dirBplus, leafNode);
+        if (slot <= BTERROR) {
+            op->scp->dirDataVersion = 0;
+            rc = (slot == BTERROR ? EINVAL : ENOENT);
+            goto done;
+        }
+        firstDataNode = getnode(leafNode, slot);
+
+        for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+            count++;
+            if (!comparekeys(op->scp->dirBplus)(key, getdatakey(dataNode), EXACT_MATCH) ) {
+                exact = 1;
+                break;
+            }
+            nextDataNode = getdatanext(dataNode);
+        }
+
+        if (exact) {
+            originalName = getdatavalue(dataNode).origname;
+            rc = 0;
+            bplus_lookup_hits++;
+        } else if (count == 1) {
+            originalName = getdatavalue(firstDataNode).origname;
+            rc = CM_ERROR_INEXACT_MATCH;
+            bplus_lookup_hits_inexact++;
+        } else {
+            rc = CM_ERROR_AMBIGUOUS_FILENAME;
+            bplus_lookup_ambiguous++;
+        } 
+    } else {
+        rc = ENOENT;
+        bplus_lookup_misses++;
+    }
+
+    if (originalName)
+        *originalNameRetp = strdup(originalName);
+
+    QueryPerformanceCounter(&end);
+
+    bplus_lookup_time += (end.QuadPart - start.QuadPart);
+
+  done:
+    return rc;
+
 }
 
 /* Look up a file name in directory.
@@ -1671,6 +1754,7 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 
     cm_SetFid(&data.fid, cfid->cell, cfid->volume, cfid->vnode, cfid->unique);
     data.longname = NULL;
+    data.origname = NULL;
 
     QueryPerformanceCounter(&start);
     bplus_create_entry++;
@@ -1859,6 +1943,7 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     char  *normalized_name=NULL;
     cm_SetFid(&data.fid, scp->fid.cell, scp->fid.volume, ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     data.longname = NULL;
+    data.origname = NULL;
 
     normalized_len = cm_NormalizeUtf8String(dep->name, -1, NULL, 0);
     if (normalized_len)
@@ -1866,6 +1951,8 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     if (normalized_name) {
         cm_NormalizeUtf8String(dep->name, -1, normalized_name, normalized_len);
         key.name = normalized_name;
+        if (strcmp(normalized_name, dep->name))
+            data.origname = strdup(dep->name);
     } else {
         key.name = dep->name;
     }
@@ -1880,7 +1967,8 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
         cm_Gen8Dot3NameInt(dep->name, &dfid, shortName, NULL);
 
         key.name = shortName;
-        data.longname = strdup(dep->name);
+        data.longname = strdup(key.name);
+        data.origname = NULL;
         insert(scp->dirBplus, key, data);
     }
 

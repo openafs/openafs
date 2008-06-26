@@ -1273,8 +1273,8 @@ smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
 
     lock_ObtainWrite(&smb_rctLock);
     for(unp = usernamesp; unp; unp = unp->nextp) {
-        if (stricmp(unp->name, usern) == 0 &&
-             stricmp(unp->machine, machine) == 0) {
+        if (cm_stricmp_utf8(unp->name, usern) == 0 &&
+            cm_stricmp_utf8(unp->machine, machine) == 0) {
             unp->refCount++;
             break;
         }
@@ -1304,7 +1304,7 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
     for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
         if (!uidp->unp) 
             continue;
-        if (stricmp(uidp->unp->name, usern) == 0) {
+        if (cm_stricmp_utf8(uidp->unp->name, usern) == 0) {
             uidp->refCount++;
             osi_Log3(smb_logp,"smb_FindUserByNameThisSession vcp[0x%p] uid[%d] match-name[%s]",
 		     vcp,uidp->userID,osi_LogSaveString(smb_logp,usern));
@@ -1640,7 +1640,7 @@ static char *smb_stristr(char *str1, char *str2)
     char *cursor;
 
     for (cursor = str1; *cursor; cursor++)
-        if (stricmp(cursor, str2) == 0)
+        if (cm_stricmp_utf8(cursor, str2) == 0)
             return cursor;
 
     return NULL;
@@ -1746,13 +1746,17 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 {
     int matchType = 0;
     smb_findShare_rock_t * vrock = (smb_findShare_rock_t *) rockp;
-    if (!strnicmp(dep->name, vrock->shareName, 12)) {
-        if(!stricmp(dep->name, vrock->shareName))
+    char normName[MAX_PATH];
+
+    cm_NormalizeUtf8String(dep->name, -1, normName, sizeof(normName)/sizeof(char));
+
+    if (!strnicmp(normName, vrock->shareName, 12)) {
+        if(!cm_stricmp_utf8(normName, vrock->shareName))
             matchType = SMB_FINDSHARE_EXACT_MATCH;
         else
             matchType = SMB_FINDSHARE_PARTIAL_MATCH;
         if(vrock->match) free(vrock->match);
-        vrock->match = strdup(dep->name);
+        vrock->match = strdup(normName);
         vrock->matchType = matchType;
 
         if(matchType == SMB_FINDSHARE_EXACT_MATCH)
@@ -1796,7 +1800,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         RegCloseKey (parmKey);
     }
 
-    if (allSubmount && _stricmp(shareName, "all") == 0) {
+    if (allSubmount && cm_stricmp_utf8N(shareName, "all") == 0) {
         *pathNamep = NULL;
         return 1;
     }
@@ -1804,16 +1808,16 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
     /* In case, the all share is disabled we need to still be able
      * to handle ioctl requests 
      */
-    if (_stricmp(shareName, "ioctl$") == 0) {
+    if (cm_stricmp_utf8N(shareName, "ioctl$") == 0) {
         *pathNamep = strdup("/.__ioctl__");
         return 1;
     }
 
-    if (_stricmp(shareName, "IPC$") == 0 ||
-        _stricmp(shareName, "srvsvc") == 0 ||
-        _stricmp(shareName, "wkssvc") == 0 ||
-        _stricmp(shareName, SMB_IOCTL_FILENAME_NOSLASH) == 0 ||
-        _stricmp(shareName, "DESKTOP.INI") == 0
+    if (cm_stricmp_utf8N(shareName, "IPC$") == 0 ||
+        cm_stricmp_utf8N(shareName, "srvsvc") == 0 ||
+        cm_stricmp_utf8N(shareName, "wkssvc") == 0 ||
+        cm_stricmp_utf8N(shareName, SMB_IOCTL_FILENAME_NOSLASH) == 0 ||
+        cm_stricmp_utf8N(shareName, "DESKTOP.INI") == 0
          ) {
         *pathNamep = NULL;
         return 0;
@@ -2002,17 +2006,17 @@ int smb_FindShareCSCPolicy(char *shareName)
     len = sizeof(policy);
     if ( RegQueryValueEx( hkCSCPolicy, shareName, 0, &dwType, policy, &len ) ||
          len == 0) {
-        retval = stricmp("all",shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
+        retval = cm_stricmp_utf8N("all",shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
     }
-    else if (stricmp(policy, "documents") == 0)
+    else if (cm_stricmp_utf8N(policy, "documents") == 0)
     {
         retval = CSC_POLICY_DOCUMENTS;
     }
-    else if (stricmp(policy, "programs") == 0)
+    else if (cm_stricmp_utf8N(policy, "programs") == 0)
     {
         retval = CSC_POLICY_PROGRAMS;
     }
-    else if (stricmp(policy, "disable") == 0)
+    else if (cm_stricmp_utf8N(policy, "disable") == 0)
     {
         retval = CSC_POLICY_DISABLE;
     }
@@ -5259,7 +5263,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastComp, pathp);
 #ifndef SPECIAL_FOLDERS
-    if (lastComp && stricmp(lastComp, "\\desktop.ini") == 0) {
+    if (lastComp && cm_stricmp_utf8N(lastComp, "\\desktop.ini") == 0) {
         code = cm_NameI(rootScp, spacep->data,
                         caseFold | CM_FLAG_DIRSEARCH | CM_FLAG_FOLLOW,
                         userp, tidPathp, &req, &dscp);
@@ -5547,8 +5551,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     smb_unlinkRock_t *rockp;
     int caseFold;
     int match;
-    char shortName[13];
-    char *matchName;
+    char matchName[MAX_PATH];
         
     rockp = vrockp;
 
@@ -5556,13 +5559,12 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
 
-    matchName = dep->name;
+    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
     match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
          (rockp->flags & SMB_MASKFLAG_TILDE) &&
          !cm_Is8Dot3(dep->name)) {
-        cm_Gen8Dot3Name(dep, shortName, NULL);
-        matchName = shortName;
+        cm_Gen8Dot3Name(dep, matchName, NULL);
         /* 8.3 matches are always case insensitive */
         match = smb_V3MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
     }
@@ -5684,15 +5686,22 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_dirEntryList_t * entry;
 
         for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+            char normalizedName[MAX_PATH];
+
+            /* Note: entry->name is a non-normalized name */
 
             osi_Log1(smb_logp, "Unlinking %s",
                      osi_LogSaveString(smb_logp, entry->name));
-            code = cm_Unlink(dscp, entry->name, userp, &req);
+
+            cm_NormalizeUtf8String(entry->name, -1, normalizedName,
+                                   sizeof(normalizedName)/sizeof(char));
+
+            code = cm_Unlink(dscp, entry->name, normalizedName, userp, &req);
 
             if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
                 smb_NotifyChange(FILE_ACTION_REMOVED,
                                  FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                                 dscp, entry->name, NULL, TRUE);
+                                 dscp, normalizedName, NULL, TRUE);
         }
     }
 
@@ -5716,7 +5725,8 @@ typedef struct smb_renameRock {
     char *maskp;		/* pointer to star pattern of old file name */
     int flags;		    /* tilde, casefold, etc */
     char *newNamep;		/* ptr to the new file's name */
-    char oldName[MAX_PATH];
+    char oldName[MAX_PATH];     /* non-normalized name */
+    char normalizedOldName[MAX_PATH]; /* normalized name */
     int any;
 } smb_renameRock_t;
 
@@ -5726,26 +5736,28 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     smb_renameRock_t *rockp;
     int caseFold;
     int match;
-    char shortName[13]="";
+    char matchName[MAX_PATH];
 
     rockp = (smb_renameRock_t *) vrockp;
 
+    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
     caseFold = ((rockp->flags & SMB_MASKFLAG_CASEFOLD)? CM_FLAG_CASEFOLD : 0);
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
 
-    match = smb_V3MatchMask(dep->name, rockp->maskp, caseFold);
+    match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
         (rockp->flags & SMB_MASKFLAG_TILDE) &&
          !cm_Is8Dot3(dep->name)) {
-        cm_Gen8Dot3Name(dep, shortName, NULL);
-        match = smb_V3MatchMask(shortName, rockp->maskp, caseFold);
+        cm_Gen8Dot3Name(dep, matchName, NULL);
+        match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
     }
 
     if (match) {
 	rockp->any = 1;
-        strncpy(rockp->oldName, dep->name, sizeof(rockp->oldName)/sizeof(char) - 1);
-        rockp->oldName[sizeof(rockp->oldName)/sizeof(char) - 1] = '\0';
+        StringCbCopyA(rockp->oldName, sizeof(rockp->oldName), dep->name);
+        StringCbCopyA(rockp->normalizedOldName, sizeof(rockp->normalizedOldName),
+                      matchName);
             code = CM_ERROR_STOPNOW;
     } else {
 	code = 0;
@@ -5857,6 +5869,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
     rock.newNamep = newLastNamep;
     rock.oldName[0] = '\0';
+    rock.normalizedOldName[0] = '\0';
     rock.any = 0;
 
     /* Check if the file already exists; if so return error */
@@ -5870,7 +5883,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
         /* Check if the old and the new names differ only in case. If so return
          * success, else return CM_ERROR_EXISTS 
          */
-        if (!code && oldDscp == newDscp && !stricmp(oldLastNamep, newLastNamep)) {
+        if (!code && oldDscp == newDscp && !cm_stricmp_utf8(oldLastNamep, newLastNamep)) {
 
             /* This would be a success only if the old file is *as same as* the new file */
             code = cm_Lookup(oldDscp, oldLastNamep, CM_FLAG_CHECKPATH, userp, &req, &tmpscp2);
@@ -5912,7 +5925,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     osi_Log1(smb_logp, "smb_RenameProc returns %ld", code);
 
     if (code == CM_ERROR_STOPNOW && rock.oldName[0] != '\0') {
-	code = cm_Rename(rock.odscp, rock.oldName,
+	code = cm_Rename(rock.odscp, rock.oldName, rock.normalizedOldName,
                          rock.ndscp, rock.newNamep, rock.userp,
                          rock.reqp);	
         /* if the call worked, stop doing the search now, since we
@@ -5933,12 +5946,12 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     if (oldDscp == newDscp) {
         if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, oldLastNamep,
+                             filter, oldDscp, rock.normalizedOldName,
                              newLastNamep, TRUE);
     } else {
         if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-                             filter, oldDscp, oldLastNamep,
+                             filter, oldDscp, rock.normalizedOldName,
                              NULL, TRUE);
         if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
@@ -6151,22 +6164,20 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
     long code = 0;
     smb_rmdirRock_t *rockp;
     int match;
-    char shortName[13];
-    char *matchName;
+    char matchName[MAX_PATH];
         
     rockp = (smb_rmdirRock_t *) vrockp;
 
-    matchName = dep->name;
+    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
     if (rockp->flags & SMB_MASKFLAG_CASEFOLD)
-        match = (cm_stricmp(matchName, rockp->maskp) == 0);
+        match = (cm_stricmp_utf8(matchName, rockp->maskp) == 0);
     else
         match = (strcmp(matchName, rockp->maskp) == 0);
     if (!match &&
          (rockp->flags & SMB_MASKFLAG_TILDE) &&
          !cm_Is8Dot3(dep->name)) {
-        cm_Gen8Dot3Name(dep, shortName, NULL);
-        matchName = shortName;
-        match = (cm_stricmp(matchName, rockp->maskp) == 0);
+        cm_Gen8Dot3Name(dep, matchName, NULL);
+        match = (cm_stricmp_utf8(matchName, rockp->maskp) == 0);
     }       
 
     if (match) {
@@ -6260,15 +6271,20 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         cm_dirEntryList_t * entry;
 
         for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
+            char normalizedName[MAX_PATH];
+
+            cm_NormalizeUtf8String(entry->name, -1, normalizedName,
+                                   sizeof(normalizedName)/sizeof(char));
+
             osi_Log1(smb_logp, "Removing directory %s",
                      osi_LogSaveString(smb_logp, entry->name));
 
-            code = cm_RemoveDir(dscp, entry->name, userp, &req);
+            code = cm_RemoveDir(dscp, entry->name, normalizedName, userp, &req);
 
             if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
                 smb_NotifyChange(FILE_ACTION_REMOVED,
                                  FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                                 dscp, entry->name, NULL, TRUE);
+                                 dscp, normalizedName, NULL, TRUE);
         }
     }
 
@@ -6342,47 +6358,59 @@ struct smb_FullNameRock {
     char *name;
     cm_scache_t *vnode;
     char *fullName;
+    char *originalName;
 };
 
 int smb_FullNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
                      osi_hyper_t *offp)
 {
-    char shortName[13];
+    char matchName[MAX_PATH];
     struct smb_FullNameRock *vrockp;
 
     vrockp = (struct smb_FullNameRock *)rockp;
 
+    cm_NormalizeUtf8String(dep->name, -1, matchName, sizeof(matchName)/sizeof(char));
+
     if (!cm_Is8Dot3(dep->name)) {
+        char shortName[13];
+
         cm_Gen8Dot3Name(dep, shortName, NULL);
 
-        if (cm_stricmp(shortName, vrockp->name) == 0) {
-            vrockp->fullName = strdup(dep->name);
+        if (cm_stricmp_utf8N(shortName, vrockp->name) == 0) {
+            vrockp->fullName = strdup(matchName);
+            vrockp->originalName = strdup(dep->name);
             return CM_ERROR_STOPNOW;
         }
     }
-    if (cm_stricmp(dep->name, vrockp->name) == 0 &&
+    if (cm_stricmp_utf8(matchName, vrockp->name) == 0 &&
         ntohl(dep->fid.vnode) == vrockp->vnode->fid.vnode &&
         ntohl(dep->fid.unique) == vrockp->vnode->fid.unique) {
-        vrockp->fullName = strdup(dep->name);
+        vrockp->fullName = strdup(matchName);
+        vrockp->originalName = strdup(dep->name);
         return CM_ERROR_STOPNOW;
     }
     return 0;
 }
 
 void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
-                  char **newPathp, cm_user_t *userp, cm_req_t *reqp)
+                  char **newPathp, char ** originalPathp,
+                  cm_user_t *userp, cm_req_t *reqp)
 {
     struct smb_FullNameRock rock;
     long code = 0;
 
+    memset(&rock, 0, sizeof(rock));
     rock.name = pathp;
     rock.vnode = scp;
 
     code = cm_ApplyDir(dscp, smb_FullNameProc, &rock, NULL, userp, reqp, NULL); 
-    if (code == CM_ERROR_STOPNOW)
+    if (code == CM_ERROR_STOPNOW) {
         *newPathp = rock.fullName;
-    else
+        *originalPathp = rock.originalName;
+    } else {
         *newPathp = strdup(pathp);
+        *originalPathp = strdup(pathp);
+    }
 }
 
 long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
@@ -6498,7 +6526,8 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     }
 
     if (fidp->flags & SMB_FID_DELONCLOSE) {
-        char *fullPathp;
+        char *fullPathp = NULL;
+        char *originalNamep = NULL;
 
 	lock_ReleaseMutex(&fidp->mx);
 
@@ -6507,9 +6536,9 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
             cm_HoldSCache(scp);
             delscp = scp;
         }
-        smb_FullName(dscp, delscp, pathp, &fullPathp, userp, &req);
+        smb_FullName(dscp, delscp, pathp, &fullPathp, &originalNamep, userp, &req);
         if (delscp->fileType == CM_SCACHETYPE_DIRECTORY) {
-            code = cm_RemoveDir(dscp, fullPathp, userp, &req);
+            code = cm_RemoveDir(dscp, originalNamep, fullPathp, userp, &req);
 	    if (code == 0) {
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
@@ -6517,7 +6546,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 				      dscp, fullPathp, NULL, TRUE);
 	    }
         } else {
-            code = cm_Unlink(dscp, fullPathp, userp, &req);
+            code = cm_Unlink(dscp, originalNamep, fullPathp, userp, &req);
 	    if (code == 0) {				
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
@@ -6525,7 +6554,12 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 				      dscp, fullPathp, NULL, TRUE);
 	    }
         }
+
+        if (fullPathp)
         free(fullPathp);
+        if (originalNamep)
+            free(originalNamep);
+
 	lock_ObtainMutex(&fidp->mx);
 	fidp->flags &= ~SMB_FID_DELONCLOSE;
     }

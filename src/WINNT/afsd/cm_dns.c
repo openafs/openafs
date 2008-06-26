@@ -17,6 +17,7 @@
 #endif
 #include "cm_dns_private.h"
 #include "cm_dns.h"
+#include "cm_nls.h"
 #include <lwp.h>
 #include <afs/afsint.h>
 #if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0500)
@@ -708,7 +709,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     char query[1024];
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( stricmp(cellName, "Freelance.Local.Root") == 0 )
+    if ( cm_stricmp_utf8N(cellName, "Freelance.Local.Root") == 0 )
         return -1;
 #endif /* AFS_FREELANCE_CLIENT */
 
@@ -749,7 +750,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
             if(pDnsIter->wType == DNS_TYPE_A)
                 /* check if its for one of the volservers */
                 for (i=0;i<*numServers;i++)
-                    if(stricmp(pDnsIter->pName, cellHostNames[i]) == 0)
+                    if(cm_stricmp_utf8(pDnsIter->pName, cellHostNames[i]) == 0)
                         cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
         }       
 
@@ -760,14 +761,14 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
                 if (DnsQuery_A(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
                     for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
                         /* if we get an A record, keep it */
-                        if (pDnsVolIter->wType == DNS_TYPE_A && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+                        if (pDnsVolIter->wType == DNS_TYPE_A && cm_stricmp_utf8(cellHostNames[i], pDnsVolIter->pName)==0) {
                             cellHostAddrs[i] = pDnsVolIter->Data.A.IpAddress;
                             break;
                         }
                         /* if we get a CNAME, look for a corresponding A record */
-                        if (pDnsVolIter->wType == DNS_TYPE_CNAME && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+                        if (pDnsVolIter->wType == DNS_TYPE_CNAME && cm_stricmp_utf8(cellHostNames[i], pDnsVolIter->pName)==0) {
                             for (pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
-                                if (pDnsCIter->wType == DNS_TYPE_A && stricmp(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
+                                if (pDnsCIter->wType == DNS_TYPE_A && cm_stricmp_utf8(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
                                     cellHostAddrs[i] = pDnsCIter->Data.A.IpAddress;
                                     break;
                                 }

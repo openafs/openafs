@@ -874,7 +874,7 @@ long cm_FreelanceMountPointExists(char * filename, int prefix_ok)
             memcpy(shortname, line, cp-line);
             shortname[cp-line]=0;
 
-            if (!stricmp(shortname, filename)) {
+            if (!cm_stricmp_utf8(shortname, filename)) {
                 found = 1;
                 break;
             }
@@ -957,7 +957,7 @@ long cm_FreelanceSymlinkExists(char * filename, int prefix_ok)
             memcpy(shortname, line, cp-line);
             shortname[cp-line]=0;
 
-            if (!stricmp(shortname, filename)) {
+            if (!cm_stricmp_utf8(shortname, filename)) {
                 found = 1;
                 break;
             }
@@ -1237,11 +1237,11 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     fullname[0] = '\0';
     if (filename[0] == '.') {
         cm_GetCell_Gen(&filename[1], fullname, CM_FLAG_CREATE);
-        if (stricmp(&filename[1],fullname) == 0)
+        if (cm_stricmp_utf8(&filename[1],fullname) == 0)
             return CM_ERROR_EXISTS;
     } else {
         cm_GetCell_Gen(filename, fullname, CM_FLAG_CREATE);
-        if (stricmp(filename,fullname) == 0)
+        if (cm_stricmp_utf8(filename,fullname) == 0)
             return CM_ERROR_EXISTS;
     }
 

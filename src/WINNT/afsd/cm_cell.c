@@ -151,7 +151,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 
     lock_ObtainRead(&cm_cellLock);
     for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
-        if (stricmp(namep, cp->name) == 0) {
+        if (cm_stricmp_utf8(namep, cp->name) == 0) {
             strcpy(fullname, cp->name);
             break;
         }
@@ -178,7 +178,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          * to the list so check again while holding the write lock 
          */
         for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
-            if (stricmp(namep, cp->name) == 0) {
+            if (cm_stricmp_utf8(namep, cp->name) == 0) {
                 strcpy(fullname, cp->name);
                 break;
             }
@@ -247,7 +247,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          */
         hash = CM_CELL_NAME_HASH(fullname);
         for (cp2 = cm_data.cellNameHashTablep[hash]; cp2; cp2=cp2->nameNextp) {
-            if (stricmp(fullname, cp2->name) == 0) {
+            if (cm_stricmp_utf8(fullname, cp2->name) == 0) {
                 break;
             }
         }   

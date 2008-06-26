@@ -1,3 +1,4 @@
+
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -52,7 +53,8 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\cm_dns.obj
+	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 $(EXERES): butc.rc AFS_component_version_number.h
 

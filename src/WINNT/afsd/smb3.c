@@ -31,6 +31,7 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
+#include <strsafe.h>
 
 extern osi_hyper_t hzero;
 
@@ -79,7 +80,7 @@ afs_uint32 smb_IsExecutableFileName(const char *name)
 
     for ( i=0; smb_ExecutableExtensions[i]; i++) {
         j = len - (int)strlen(smb_ExecutableExtensions[i]);
-        if (_stricmp(smb_ExecutableExtensions[i], &name[j]) == 0)
+        if (cm_stricmp_utf8N(smb_ExecutableExtensions[i], &name[j]) == 0)
             return 1;
     }
 
@@ -1536,9 +1537,9 @@ typedef struct smb_rap_share_list {
 
 int smb_rapCollectSharesProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp) {
     smb_rap_share_list_t * sp;
-    char * name;
+    char name[MAX_PATH];
 
-    name = dep->name;
+    cm_NormalizeUtf8String(dep->name, -1, name, sizeof(name)/sizeof(char));
 
     if (name[0] == '.' && (!name[1] || (name[1] == '.' && !name[2])))
         return 0; /* skip over '.' and '..' */
@@ -1694,7 +1695,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
             len = sizeof(thisShare);
             rv = RegEnumValue(hkSubmount, dw, thisShare, &len, NULL, NULL, NULL, NULL);
             if (rv == ERROR_SUCCESS &&
-                strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
+                strlen(thisShare) && (!allSubmount || cm_stricmp_utf8N(thisShare,"all"))) {
                 strncpy(shares[cshare].shi1_netname, thisShare,
                         sizeof(shares->shi1_netname)-1);
                 shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
@@ -1714,7 +1715,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     for (i=0; i < rootShares.cShare && cshare < nSharesRet; i++) {
         /* in case there are collisions with submounts, submounts have higher priority */		
         for (j=0; j < nonrootShares; j++)
-            if (!stricmp(shares[j].shi1_netname, rootShares.shares[i].shi0_netname))
+            if (!cm_stricmp_utf8(shares[j].shi1_netname, rootShares.shares[i].shi0_netname))
                 break;
 		
         if (j < nonrootShares) {
@@ -1800,7 +1801,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     else
         return CM_ERROR_INVAL;
 
-    if(!stricmp(shareName,"all") || !strcmp(shareName,"*.")) {
+    if(!cm_stricmp_utf8N(shareName,"all") || !strcmp(shareName,"*.")) {
         rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                           KEY_QUERY_VALUE, &hkParam);
         if (rv == ERROR_SUCCESS) {
@@ -2271,10 +2272,10 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
     if (lastNamep && 
-         (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
-           stricmp(lastNamep, "\\srvsvc") == 0 ||
-           stricmp(lastNamep, "\\wkssvc") == 0 ||
-           stricmp(lastNamep, "\\ipc$") == 0)) {
+         (cm_stricmp_utf8N(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+           cm_stricmp_utf8N(lastNamep, "\\srvsvc") == 0 ||
+           cm_stricmp_utf8N(lastNamep, "\\wkssvc") == 0 ||
+           cm_stricmp_utf8N(lastNamep, "\\ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -2749,19 +2750,25 @@ int cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
                          osi_hyper_t *offp)
 {       
     struct smb_ShortNameRock *rockp;
+    char normName[MAX_PATH];
     char *shortNameEnd;
 
     rockp = vrockp;
+
+    cm_NormalizeUtf8String(dep->name, -1, normName, sizeof(normName)/sizeof(char));
+
     /* compare both names and vnodes, though probably just comparing vnodes
      * would be safe enough.
      */
-    if (cm_stricmp(dep->name, rockp->maskp) != 0)
+    if (cm_stricmp_utf8(normName, rockp->maskp) != 0)
         return 0;
     if (ntohl(dep->fid.vnode) != rockp->vnode)
         return 0;
+
     /* This is the entry */
     cm_Gen8Dot3Name(dep, rockp->shortName, &shortNameEnd);
     rockp->shortNameLen = shortNameEnd - rockp->shortName;
+
     return CM_ERROR_STOPNOW;
 }       
 
@@ -2925,7 +2932,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
-            if (stricmp(lastComp, "\\desktop.ini") == 0) {
+            if (cm_stricmp_utf8N(lastComp, "\\desktop.ini") == 0) {
                 code = cm_NameI(cm_data.rootSCachep, spacep->data,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
@@ -3201,7 +3208,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 #ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
-            if (stricmp(lastComp, "\\desktop.ini") == 0) {
+            if (cm_stricmp_utf8N(lastComp, "\\desktop.ini") == 0) {
                 code = cm_NameI(cm_data.rootSCachep, spacep->data,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
@@ -4212,51 +4219,86 @@ VOID initUpperCaseTable(VOID)
     mapCaseTable[(int)'>'] = toupper('?');    
 }
 
-// Compare 'pattern' (containing metacharacters '*' and '?') with the file
-// name 'name'.
-// Note : this procedure works recursively calling itself.
-// Parameters
-// PSZ pattern    : string containing metacharacters.
-// PSZ name       : file name to be compared with 'pattern'.
-// Return value
-// BOOL : TRUE/FALSE (match/mistmatch)
+/*! \brief Compare 'pattern' (containing metacharacters '*' and '?') with the file name 'name'.
 
+  \note This procedure works recursively calling itself.
+
+  \param[in] pattern string containing metacharacters.
+  \param[in] name File name to be compared with 'pattern'.
+
+  \return BOOL : TRUE/FALSE (match/mistmatch)
+*/
 BOOL 
-szWildCardMatchFileName(PSZ pattern, PSZ name, int casefold) 
+szWildCardMatchFileName(char * pattern, char * name, int casefold) 
 {
-    PSZ pename;         // points to the last 'name' character
-    PSZ p;
-    pename = name + strlen(name) - 1;
+    char upattern[MAX_PATH];
+    char uname[MAX_PATH];
+
+    char * pename;         // points to the last 'name' character
+    char * p;
+    char * pattern_next;
+
+    if (casefold) {
+        StringCbCopyA(upattern, sizeof(upattern), pattern);
+        strupr_utf8(upattern, sizeof(upattern));
+        pattern = upattern;
+
+        StringCbCopyA(uname, sizeof(uname), name);
+        strupr_utf8(uname, sizeof(uname));
+        name = uname;
+
+        /* The following translations all work on single byte
+           characters */
+        for (p=pattern; *p; p++) {
+            if (*p == '"') *p = '.'; continue;
+            if (*p == '<') *p = '*'; continue;
+            if (*p == '>') *p = '?'; continue;
+        }
+
+        for (p=name; *p; p++) {
+            if (*p == '"') *p = '.'; continue;
+            if (*p == '<') *p = '*'; continue;
+            if (*p == '>') *p = '?'; continue;
+        }
+    }
+
+    pename = char_prev_utf8(name + strlen(name));
+
     while (*name) {
         switch (*pattern) {
         case '?':
-	    ++pattern;
+	    pattern = char_next_utf8(pattern);
             if (*name == '.')
 		continue;
-            ++name;
+            name = char_next_utf8(name);
             break;
+
          case '*':
-            ++pattern;
+            pattern = char_next_utf8(pattern);
             if (*pattern == '\0')
                 return TRUE;
-            for (p = pename; p >= name; --p) {
-                if ((casefold && (mapCaseTable[*p] == mapCaseTable[*pattern]) ||
-                     !casefold && (*p == *pattern)) &&
-                     szWildCardMatchFileName(pattern + 1, p + 1, casefold))
+
+            pattern_next = char_next_utf8(pattern);
+
+            for (p = pename; p >= name; p = char_prev_utf8(p)) {
+                if (*p == *pattern &&
+                    szWildCardMatchFileName(pattern_next,
+                                            char_next_utf8(p), FALSE))
                     return TRUE;
             } /* endfor */
             return FALSE;
+
         default:
-            if ((casefold && mapCaseTable[*name] != mapCaseTable[*pattern]) ||
-                (!casefold && *name != *pattern))
+            if (*name != *pattern)
                 return FALSE;
-            ++pattern, ++name;
+            pattern = char_next_utf8(pattern);
+            name = char_next_utf8(name);
             break;
         } /* endswitch */
     } /* endwhile */ 
 
     /* if all we have left are wildcards, then we match */
-    for (;*pattern; pattern++) {
+    for (;*pattern; pattern = char_next_utf8(pattern)) {
 	if (*pattern != '*' && *pattern != '?')
 	    return FALSE;
     }
@@ -5108,6 +5150,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     returnedNames = 0;
     bytesInBuffer = 0;
     while (1) {
+        char normName[MAX_PATH]; /* Normalized name */
+
         op = origOp;
         if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
             /* skip over resume key */
@@ -5280,6 +5324,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         if (dep->fid.vnode == 0) 
             goto nextEntry;             /* This entry is not in use */
 
+        cm_NormalizeUtf8String(dep->name, -1, normName, sizeof(normName)/sizeof(char));
+
         /* Need 8.3 name? */
         NeedShortName = 0;
         if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO && 
@@ -5290,18 +5336,18 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         osi_Log4(smb_logp, "T2 search dir vn %u uniq %u name %s (%s)",
                   dep->fid.vnode, dep->fid.unique, 
-                  osi_LogSaveString(smb_logp, dep->name),
+                  osi_LogSaveString(smb_logp, normName),
                   NeedShortName ? osi_LogSaveString(smb_logp, shortName) : "");
 
         /* When matching, we are using doing a case fold if we have a wildcard mask.
          * If we get a non-wildcard match, it's a lookup for a specific file. 
          */
-        if (smb_V3MatchMask(dep->name, maskp, (starPattern? CM_FLAG_CASEFOLD : 0)) ||
+        if (smb_V3MatchMask(normName, maskp, (starPattern? CM_FLAG_CASEFOLD : 0)) ||
              (NeedShortName && smb_V3MatchMask(shortName, maskp, CM_FLAG_CASEFOLD))) 
         {
             /* Eliminate entries that don't match requested attributes */
             if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
-                 smb_IsDotFile(dep->name)) {
+                 smb_IsDotFile(normName)) {
                 osi_Log0(smb_logp, "T2 search dir skipping hidden");
                 goto nextEntry; /* no hidden files */
             }
@@ -5324,7 +5370,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
             /* finally check if this name will fit */
             onbytes = 0;
-            smb_UnparseString(opx, NULL, dep->name, &onbytes, SMB_STRF_ANSIPATH);
+            smb_UnparseString(opx, NULL, normName, &onbytes, SMB_STRF_ANSIPATH);
             orbytes = ohbytes + onbytes;
 
             /* now, we round up the record to a 4 byte alignment,
@@ -5352,7 +5398,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             memset(origOp, 0, orbytes);
 
             onbytes = 0;
-            smb_UnparseString(opx, origOp + ohbytes, dep->name, &onbytes, SMB_STRF_ANSIPATH);
+            smb_UnparseString(opx, origOp + ohbytes, normName, &onbytes, SMB_STRF_ANSIPATH);
 
             switch (infoLevel) {
             case SMB_INFO_STANDARD:
@@ -5439,7 +5485,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 osi_QAdd((osi_queue_t **) &dirListPatchesp, &curPatchp->q);
                 curPatchp->dptr = attrp;
 
-                if (smb_hideDotFiles && smb_IsDotFile(dep->name)) {
+                if (smb_hideDotFiles && smb_IsDotFile(normName)) {
                     curPatchp->flags = SMB_DIRLISTPATCH_DOTFILE;
                 } else {
                     curPatchp->flags = 0;
@@ -5467,7 +5513,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         }	/* if we're including this name */
         else if (!starPattern &&
                   !foundInexact &&
-                  smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
+                  smb_V3MatchMask(normName, maskp, CM_FLAG_CASEFOLD)) {
             /* We were looking for exact matches, but here's an inexact one*/
             foundInexact = 1;
         }
@@ -5646,10 +5692,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
     if (lastNamep && 
-         (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
-           stricmp(lastNamep, "\\srvsvc") == 0 ||
-           stricmp(lastNamep, "\\wkssvc") == 0 ||
-           stricmp(lastNamep, "ipc$") == 0)) {
+         (cm_stricmp_utf8N(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+           cm_stricmp_utf8N(lastNamep, "\\srvsvc") == 0 ||
+           cm_stricmp_utf8N(lastNamep, "\\wkssvc") == 0 ||
+           cm_stricmp_utf8N(lastNamep, "ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -6805,10 +6851,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log3(smb_logp,"... share=[%x] flags=[%x] lastNamep=[%s]", shareAccess, flags, osi_LogSaveString(smb_logp,(lastNamep?lastNamep:"null")));
 
 	if (lastNamep && 
-             (stricmp(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
-               stricmp(lastNamep, "\\srvsvc") == 0 ||
-               stricmp(lastNamep, "\\wkssvc") == 0 ||
-               stricmp(lastNamep, "ipc$") == 0)) {
+             (cm_stricmp_utf8N(lastNamep, SMB_IOCTL_FILENAME) == 0 ||
+               cm_stricmp_utf8N(lastNamep, "\\srvsvc") == 0 ||
+               cm_stricmp_utf8N(lastNamep, "\\wkssvc") == 0 ||
+               cm_stricmp_utf8N(lastNamep, "ipc$") == 0)) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */

@@ -574,6 +574,7 @@ cm_DirMakeDir(cm_dirOp_t * op, cm_fid_t * me, cm_fid_t * parent)
     return rc;
 }
 
+
 /* Look up a file name in directory.
 
    On entry:

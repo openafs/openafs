@@ -152,7 +152,7 @@ afsd_ServicePerformFlushVolumes()
             {
                 // got one!
                 // but we don't want to flush '\\[...]afs\all'
-                if (_stricmp(lpnr->lpRemoteName, pszShareName) == 0)
+                if (cm_stricmp_utf8(lpnr->lpRemoteName, pszShareName) == 0)
                     continue;
                 ++dwTotalVols;
 

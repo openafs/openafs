@@ -232,7 +232,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 
 	    if ( sp->caseFold ) 	/* case insensitive */
 	    {
-            match = cm_stricmp(tnc->name, aname);
+            match = cm_stricmp_utf8(tnc->name, aname);
             if ( !match )	/* something matches */
             {
                 tvc = tnc->vp;

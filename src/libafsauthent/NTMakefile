@@ -96,6 +96,7 @@ DLLOBJS =\
 	$(WINNTAFSDOBJS) \
 	$(AUDITBJS) \
 	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj \
 	$(OUT)\afsauthent.res
 
 $(RXOBJS): $(RX)\$$(@B).c

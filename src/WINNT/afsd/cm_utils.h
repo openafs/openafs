@@ -25,12 +25,9 @@ extern cm_space_t *cm_GetSpace(void);
 extern void cm_FreeSpace(cm_space_t *);
 
 extern long cm_MapRPCError(long error, cm_req_t *reqp);
+
 extern long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp);
+
 extern long cm_MapVLRPCError(long error, cm_req_t *reqp);
 
-extern long cm_InitNormalization(void);
-extern long cm_NormalizeUtf16StringToUtf8(const wchar_t * src, int cch_src,
-                                          char * adest, int cch_adest);
-extern long cm_NormalizeUtf8String(const char * src, int cch_src,
-                                   char * adest, int cch_adest);
 #endif /*  __CM_UTILS_H_ENV__ */
