@@ -1683,8 +1683,8 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
 
         cm_Gen8Dot3NameInt(entry, &dfid, shortName, NULL);
 
-        key.name = shortName;
         data.longname = strdup(entry);
+        key.name = shortName;
         insert(op->scp->dirBplus, key, data);
     }
 
