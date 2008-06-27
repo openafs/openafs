@@ -531,6 +531,11 @@ Section "!AFS Client" secClient
   nsExec::Exec "net stop TransarcAFSDaemon"
   nsExec::Exec "net stop TransarcAFSServer"
   
+  ; Install the Microsoft IDNM Redistributable
+  GetTempFileName $R0
+  File /oname=$R0 "${IDNMREDIST}"
+  nsExec::Exec '$R0 /quiet /norestart'
+  
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
