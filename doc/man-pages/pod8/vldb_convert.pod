@@ -1,0 +1,135 @@
+=head1 NAME
+
+vldb_convert - Convert the VLDB to/from Transarc AFS versions 3.1-3.4a
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vldb_convert> [B<initcmd>] S<<< [B<-to>] <I<AFS version goal>> >>>
+    S<<< [B<-from>] <I<current AFS version>> >>>
+    S<<< [B<-path>] <I<path to VLDB file>> >>> [B<-showversion>]
+    [B<-dumpvldb>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vldb_convert> command is used to convert legacy Transarc 3.1-3.4
+VLDB database files between versions. This command is not needed when
+using OpenAFS except in the case of preparing to migrate a pre-3.4 version
+of Transarc AFS to OpenAFS.
+
+In order to convert the VLDB file, do the following:
+
+=over 4
+
+=item 1.
+
+Shutdown the B<vlserver> process on all server machines. B<vlserver> is
+typically run only on the Cell servers, which must be listed in
+F<CellServDB> or DNS.
+
+=item 2.
+
+Backup the VLDB file F</usr/afs/db/vldb.DB0> on the sync site to a safe
+place. Typically, the sync site if the machine with the lowest IP address.
+
+=item 3.
+
+Remove the F</usr/afs/db/vldb.DBSYS1> file from all cell server machines.
+
+=item 4.
+
+Remove the F</usr/afs/db/vldb.DB0> file from the non-sync site server
+machines.
+
+=item 5.
+
+Run the B<vldb_convert> command on the VLDB file using the following
+command:
+
+   # vldb_convert -path /usr/afs/db/vldb.DB0
+
+=item 6.
+
+Copy the new version of the vlserver binaries to all Cell servers.
+
+=item 7.
+
+Restart the vlserver process on all Cell servers. The new VLDB will be
+distributed to all of the Cell servers.
+
+=item 8.
+
+Confirm that all Cell servers are synchronized and that the vldb looks in
+good shape.
+
+=back
+
+=head1 CAUTIONS
+
+Backup the VLDB file to a different directory or machine before performing
+the upgrade. Be sure that all vlserver processes are always running the
+same version. This requires downtime, but for this conversion, all
+vlserver instances must be at the same version. This restriction is
+relaxed in OpenAFS.
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<initcmd>]
+
+This is an optional string that does nothing.
+
+=item [B<-to>] <I<AFS version goal>>
+
+This option is required when downgrading or when upgrading to a version
+less than 3.4.  Specify 1, 2, 3, or 4 to choose version 3.1, 3.2, 3.3, or
+3,4 respectively. This defaults to version 3.4.
+
+=item [B<-from>] <I<current AFS version>>
+
+This option is required when downgrading. Specify 1, 2, 3, or 4 to choose
+version 3.1, 3.2, 3.3, or 3.4 respectively.
+
+=item [B<-path>] <I<path to VLDB file>>
+
+Specifies the path the VLDB file. This defaults to F</usr/afs/db/vldb.DB0>
+and only needs to be used if the VLDB file is not in the default path..
+
+=item B<-showversion>
+
+Shows the current version of the VLDB. This option can only be used by itself.
+
+=item B<-dumpvldb>
+
+Produces verbose debugging output during the conversion process.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have read and write access to the file
+F</usr/afs/db/vldb.DB0>. This usually means that root access is required
+on the cell server machines.
+
+=head1 SEE ALSO
+
+L<vlserver(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2008 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.
