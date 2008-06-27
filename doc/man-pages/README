@@ -216,7 +216,6 @@ Known Problems
        rmtsysd
        tokens.krb
        vldb_convert
-       vos clone
        vos setfields
        vsys
 
