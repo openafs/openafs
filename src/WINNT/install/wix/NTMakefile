@@ -17,6 +17,11 @@ MSIFILE = $(MEDIADIR)\openafs-$(LANG).msi
 BINMSIFILE = $(MEDIADIR)\openafs-32bit-tools-$(LANG).msi
 !ENDIF
 
+!IFNDEF MSIDNNLS
+!ERROR Please set MSIDNNLS to the directory where Microsoft IDN Mitigation APIs are installed.
+# $(MSIDNNLS)\REDIST\idndl.(platform).exe should exist.
+!ENDIF
+
 WIXINCLUDES = \
 	config.wxi \
 	feature.wxi \
@@ -74,6 +79,7 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-dVersionPatch=$(AFSPRODUCT_VER_PATCH)	\
 		"-dDestDir=$(DESTDIR)\\" \
 		-dCellDbFile=CellServDB \
+		-dIDNMRedistDir=$(MSIDNNLS)\\REDIST 	\
 		-v0 \
 		-w0 \
         $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
