@@ -1046,7 +1046,7 @@
 	  <ProgressText Action="ConfigureClient">$(loc.ActConfigureClient)</ProgressText>
 	  <ProgressText Action="ConfigureServer">$(loc.ActConfigureServer)</ProgressText>
 	  <ProgressText Action="RemoveNsisInstallation">$(loc.ActRemoveNsisInstallation)</ProgressText>
-	  
+	  <ProgressText Action="InstallIDNMRedistributable">$(loc.ActInstallIDNMRedistributable)</ProgressText>
 	  
       <AdminUISequence>
         <Show Dialog="FatalError" OnExit="error" />

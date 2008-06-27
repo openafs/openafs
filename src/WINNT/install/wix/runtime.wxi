@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?> 
+<?xml version="1.0"?> 
 <Include>
     <?if $(env.AFSVER_CL) = "1400" ?>
 		<MergeRef Id="MSVCRT8MEM"/>

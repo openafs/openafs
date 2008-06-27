@@ -61,6 +61,7 @@
 	<String Id="ActConfigureClient">Configuring the AFS client service</String>
 	<String Id="ActConfigureServer">Configuring the AFS server service</String>
 	<String Id="ActRemoveNsisInstallation">Removing existing installation of OpenAFS</String>
+        <String Id="ActInstallIDNMRedistributable">Installing Microsoft Internationalized Domain Name Mitigation APIs</String>
 	
 	<String Id="StrNsisAbortReason">Installation of OpenAFS for Windows was prematurely terminated because OpenAFS [NSISVERSION] was already installed.</String>
 	<String Id="StrUninstallDesc">Uninstall OpenAFS from the local machine.</String>

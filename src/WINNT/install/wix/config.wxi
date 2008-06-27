@@ -125,10 +125,12 @@
 	<?define InstallerVersion="110"?>
 	<?define Platform="Intel"?>
 	<?define Win64="no"?>
+        <?define Arch="x86"?>
     <?elseif $(env.CPU) = "AMD64"?>
 	<?define InstallerVersion="200"?>
 	<?define Platform="x64"?>
 	<?define Win64="yes"?>
+        <?define Arch="amd64"?>
     <?else?>
         <?error Unknown build type?>
     <?endif?>
