@@ -87,6 +87,17 @@
         <Binary
 		 Id="BIN_afsCustom"
 		 src="$(var.MediaDllDir)afscustom.dll"/>
+    <Binary
+       Id="BIN_idndl.exe"
+       src="$(var.IDNMRedistDir)\idndl.$(var.Arch).exe" />
+    <CustomAction
+       Id="InstallIDNMRedistributable"
+       BinaryKey="BIN_idndl.exe"
+       ExeCommand="/quiet /norestart"
+       Execute="deferred"
+       Impersonate="no"
+       />
+
 	<?ifdef UseDllLoopbackInstaller?>
         <CustomAction
          Id="InstallLoopback"
@@ -224,6 +235,7 @@
             <Custom Action="RollbackNetProvider" After="WriteRegistryValues">&amp;feaClient=3</Custom>
 			<Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
 			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
+      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
 			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
