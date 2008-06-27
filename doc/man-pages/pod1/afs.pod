@@ -31,7 +31,7 @@ Interface for tracing Cache Manager operations when debugging problems.
 =item kas
 
 Interface to the Authentication Server for administering security and
-authentication information.
+authentication information. This aspect of OpenAFS has been deprecated.
 
 =item pts
 
@@ -391,7 +391,7 @@ Partitions that house AFS volumes must have names of the form
 F</vicepI<x>> or F</vicepI<xx>>, where the variable final portion is one
 or two lowercase letters. By convention, the first server partition
 created on a file server machine is called F</vicepa>, the second
-F</vicepb>, and so on.  The I<IBM AFS Quick Beginnings> explains how to
+F</vicepb>, and so on.  The I<OpenAFS QuickStart Guide> explains how to
 configure and name a file server machine's partitions in preparation for
 storing AFS volumes on them.
 
@@ -409,6 +409,9 @@ After /vicepz (for which the index is 25) comes
 and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
+
+F</vicepiv> is the last permissible AFS partition name. In practice it
+will not work well; stopping with F</vicepiu> is highly recommended.
 
 =head4 Abbreviating Cell Names
 
