@@ -13,7 +13,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 all: depinstall
 
 depinstall: ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h \
-	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h ${TOP_INCDIR}/afs/sysctl.h
+	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
@@ -43,7 +43,7 @@ afszcm.cat: afs_trace.msf
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
 
-install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h ${DESTDIR}${includedir}/afs/sysctl.h
+install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
@@ -131,7 +131,7 @@ ${TOP_INCDIR}/afs/nfsclient.h: nfsclient.h
 	${INSTALL} $? $@
 
 
-dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h ${DEST}/include/afs/sysctl.h
+dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
