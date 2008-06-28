@@ -14,6 +14,7 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
     Strooisma for the analysis.  (Closes: #486816)
   * Stop using quilt to manage patches and pre-apply them to the source
     package now that the package is maintained with Git.
+  * Add Vcs-Git and Vcs-Browser control fields.
   * Translation updates:
     - Galician, thanks Jacobo Tarrio.  (Closes: #481675)
 
