@@ -1,5 +1,8 @@
 openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
 
+  * When clearing the restart time while installing a new cell, pass
+    -localauth to avoid an authentication failure.  Thanks, Davor Ocelic.
+    (Closes: #488152)
   * Stop using quilt to manage patches and pre-apply them to the source
     package now that the package is maintained with Git.
   * Translation updates:
