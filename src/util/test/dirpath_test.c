@@ -124,6 +124,8 @@ main(int argc, char *argv[])
 	   AFSDIR_SERVER_FILELOG_FILEPATH);
     printf("AFSDIR_SERVER_AUDIT_FILEPATH = %s\n",
 	   AFSDIR_SERVER_AUDIT_FILEPATH);
+    printf("AFSDIR_SERVER_KRB_EXCL_FILEPATH  = %s\n",
+	   AFSDIR_SERVER_KRB_EXCL_FILEPATH);
     printf("\n");
     printf("\n");
     printf("AFSDIR_CLIENT_THISCELL_FILEPATH = %s\n",
