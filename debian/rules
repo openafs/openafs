@@ -44,7 +44,7 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 # These are files that we know we don't want to install.  List them so that we
 # can use dh_install --fail-missing and catch anything new that shows up.
 IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log \
-	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xklog.krb -Xkpwvalid \
+	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xkpwvalid \
 	-Xlibafssetpag.so -Xlibafsrpc.so -Xlibafsauthent.so -Xpackage \
 	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xuss \
 	-Xvldb_convert -Xvsys -Xxfs_size_check
@@ -110,6 +110,7 @@ build-stamp:
 	dh_testdir
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	rm -f debian/tmp/usr/bin/klog.krb
 	chmod +x debian/afs-rootvol debian/afs-newcell
 	touch $@
 
