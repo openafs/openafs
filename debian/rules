@@ -49,7 +49,7 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log \
 	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xklog.krb -Xkpwvalid \
 	-Xlibafssetpag.so -Xlibafsrpc.so -Xlibafsauthent.so -Xpackage \
-	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xman1/up.1 -Xuss \
+	-Xpagsh.krb -Xrestorevol -Xsymlink -Xtokens.krb -Xuss \
 	-Xvldb_convert -Xvsys -Xxfs_size_check
 
 # Installed via other means since we have to rename them.
@@ -88,7 +88,6 @@ configure: configure-stamp
 configure-stamp: $(QUILT_STAMPFN)
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
-	cp doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
 	    sh configure \
