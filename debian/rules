@@ -237,6 +237,10 @@ binary-arch: install-stamp
 	DH_OPTIONS= dh_installinit -popenafs-fileserver -r
 	dh_link
 	dh_strip --dbg-package=openafs-dbg
+	rm -rf debian/openafs-dbg/usr/lib/debug/lib
+	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
+	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
+	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
 	dh_compress
 	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs

@@ -17,6 +17,11 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
     with a zero status still doesn't get OpenAFS started, but at least it
     doesn't leave the system in a partly installed state.  Thanks to Durk
     Strooisma for the analysis.  (Closes: #486816)
+  * Don't include debug symbols for /sbin, /usr/bin, and /usr/sbin
+    binaries or PAM modules in openafs-dbg, just the servers in
+    /usr/lib/openafs, since those are the most likely cases where
+    backtraces are important and a 10MB debug symbol package seems like
+    overkill.
   * Stop using quilt to manage patches and pre-apply them to the source
     package now that the package is maintained with Git.
   * Add Vcs-Git and Vcs-Browser control fields.
