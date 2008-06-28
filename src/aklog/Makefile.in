@@ -39,7 +39,7 @@ ${DESTDIR}${bindir}/aklog: aklog
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/klog.krb5: klog
-	${INSTALL} $? $@
+	${INSTALL} -f $? $@
 
 ${DESTDIR}${afssrvbindir}/asetkey: asetkey
 	${INSTALL} $? $@
@@ -52,7 +52,7 @@ ${DEST}/bin/aklog: aklog
 	${INSTALL} $? $@
 
 ${DEST}/bin/klog.krb5: klog
-	${INSTALL} $? $@
+	${INSTALL} -f $? $@
 
 ${DEST}/root.server/usr/afs/bin/asetkey: asetkey
 	${INSTALL} $? $@
