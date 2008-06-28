@@ -2,6 +2,9 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
 
   * Apply upstream delta for Linux 2.6.26 support.
   * Enable support for arm and armel, added upstream in 1.4.7.
+  * Enable support for lpia by making it synonymous with i386.  This means
+    that lpia systems will get a sysname of i386_linux26, which isn't
+    ideal but should at least work.
   * When clearing the restart time while installing a new cell, pass
     -localauth to avoid an authentication failure.  Thanks, Davor Ocelic.
     (Closes: #488152)

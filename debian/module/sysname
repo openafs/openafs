@@ -38,7 +38,7 @@ hppa)
         ;;
     esac
     ;;
-i[3456]86)
+i[3456]86|lpia)
     case $KVERS in
     2.2*)
         echo i386_linux22
