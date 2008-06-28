@@ -28,7 +28,8 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
-MODULEDIR=${MODULEDIR:-/lib/modules/`uname -r`/fs}
+MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
+MODULEDIR=${MODULEDIR:-$MODULEROOT/fs}
 
 exec 3>/dev/null
 exec </dev/null
@@ -78,7 +79,9 @@ choose_client() {
 }
 
 # Load the AFS client module if it's not already loaded.  Set $MODULEDIR and
-# $LIBAFS to override the default location and module name.
+# $LIBAFS to override the default location and module name.  Also check before
+# loading whether the module is listed in the module dependencies so that we
+# can exit with a 0 status in that case.
 load_client() {
     if [ -z "$LIBAFS" ] ; then
         choose_client
@@ -94,6 +97,10 @@ EOF
         # installation unless a module is installed.
         exit 0
     fi
+    sawdep=0
+    if grep -q openafs "$MODULEROOT/modules.dep" ; then
+        sawdep=1
+    fi
     LOADED=`/sbin/lsmod | fgrep openafs`
     if [ -z "$LOADED" ] ; then
         modprobe openafs
@@ -101,7 +108,16 @@ EOF
         if [ $status = 0 ] ; then
             echo -n " openafs"
         fi
-        return $status
+
+        # We must exit successfully here if the openafs module just isn't
+        # listed in the dependency information for modprobe, which can happen
+        # if openafs-client and the module package are installed at the same
+        # time and the module hasn't been set up yet.
+        if [ $sawdep = 0 ] ; then
+            return 0
+        else
+            return $status
+        fi
     fi
     return 0
 }

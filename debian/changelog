@@ -3,6 +3,15 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
   * When clearing the restart time while installing a new cell, pass
     -localauth to avoid an authentication failure.  Thanks, Davor Ocelic.
     (Closes: #488152)
+  * If the openafs module isn't listed in modules.dep, exit with a zero
+    status from the init script even if modprobe fails.  Otherwise, if a
+    module package and openafs-client are installed at the same time and
+    openafs-client is set up before the module package, the init script
+    can find the module, fail the modprobe (because the dependency map
+    hasn't yet been updated), and fail the whole installation.  Exiting
+    with a zero status still doesn't get OpenAFS started, but at least it
+    doesn't leave the system in a partly installed state.  Thanks to Durk
+    Strooisma for the analysis.  (Closes: #486816)
   * Stop using quilt to manage patches and pre-apply them to the source
     package now that the package is maintained with Git.
   * Translation updates:
