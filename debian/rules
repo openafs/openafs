@@ -221,11 +221,10 @@ binary-indep: install-stamp binary-source
 # Build architecture-dependent files here.  Pass -a to all debhelper commands
 # in this target to reduce clutter.
 #
-# We would like to install debugging information for everything, but currently
-# OpenAFS's makefiles strip all binaries when installed except for the
-# fileserver and the volserver.  This is fixed in OpenAFS's development
-# branch.  Until that's released, only retain debugging information for the
-# fileserver and the volserver.
+# Only include debugging information for the servers installed into
+# /usr/lib/openafs rather than for all binaries.  The servers are where
+# debugging backtraces really matter, and a 10MB debugging package is
+# overkill.
 binary-arch: DH_OPTIONS=-a
 binary-arch: install-stamp
 	dh_testdir
