@@ -23,6 +23,12 @@
 #include <afs/pioctl_nt.h>
 #include <afs/kautils.h>
 
+#include <userenv.h>
+#include <Winwlx.h>
+#include <sddl.h>
+#include <afs/vice.h>
+#include <afs/fs_utils.h>
+
 #include "afsd.h"
 #include "cm_config.h"
 #include "krb.h"
@@ -449,35 +455,42 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         PSECURITY_LOGON_SESSION_DATA plsd;
         char lsaUsername[MAX_USERNAME_LENGTH];
         char lsaDomain[MAX_DOMAIN_LENGTH];
+        char *secSidString = NULL;
         size_t len, tlen;
+
 
         LsaGetLogonSessionData(lpLogonId, &plsd);
         
         UnicodeStringToANSI(plsd->UserName, lsaUsername, MAX_USERNAME_LENGTH);
         UnicodeStringToANSI(plsd->LogonDomain, lsaDomain, MAX_DOMAIN_LENGTH);
+        if (ConvertSidToStringSidA(plsd->Sid, &secSidString)) {
+            DebugEvent("PLSD SID[%s]",secSidString);
 
-        DebugEvent("PLSD username[%s] domain[%s]",lsaUsername,lsaDomain);
+            opt->smbName = strdup(secSidString);
+            LocalFree(secSidString);
+        } else {
+            DebugEvent("PLSD username[%s] domain[%s]",lsaUsername,lsaDomain);
 
-        if(SUCCEEDED(StringCbLength(lsaUsername, MAX_USERNAME_LENGTH, &tlen)))
-            len = tlen;
-        else
-            goto bad_strings;
+            if(SUCCEEDED(StringCbLength(lsaUsername, MAX_USERNAME_LENGTH, &tlen)))
+                len = tlen;
+            else
+                goto bad_strings;
 
-        if(SUCCEEDED(StringCbLength(lsaDomain, MAX_DOMAIN_LENGTH, &tlen)))
-            len += tlen;
-        else
-            goto bad_strings;
+            if(SUCCEEDED(StringCbLength(lsaDomain, MAX_DOMAIN_LENGTH, &tlen)))
+                len += tlen;
+            else
+                goto bad_strings;
 
-        len += 2;
+            len += 2;
 
-        opt->smbName = malloc(len);
+            opt->smbName = malloc(len);
 
-        StringCbCopy(opt->smbName, len, lsaDomain);
-        StringCbCat(opt->smbName, len, "\\");
-        StringCbCat(opt->smbName, len, lsaUsername);
+            StringCbCopy(opt->smbName, len, lsaDomain);
+            StringCbCat(opt->smbName, len, "\\");
+            StringCbCat(opt->smbName, len, lsaUsername);
 
-        strlwr(opt->smbName);
-
+            strlwr(opt->smbName);
+        }
       bad_strings:
         LsaFreeReturnBuffer(plsd);
     } else {
@@ -1123,11 +1136,6 @@ DWORD APIENTRY NPPasswordChangeNotify(
     DebugEvent0("AFS AfsLogon - NPPasswordChangeNotify");
     return 0;
 }
-
-#include <userenv.h>
-#include <Winwlx.h>
-#include <afs/vice.h>
-#include <afs/fs_utils.h>
 
 BOOL IsPathInAfs(const CHAR *strPath)
 {

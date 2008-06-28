@@ -408,4 +408,9 @@ extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 #define FILE_NOTIFY_CHANGE_STREAM_NAME  0x00000200
 #define FILE_NOTIFY_CHANGE_STREAM_SIZE  0x00000400
 #define FILE_NOTIFY_CHANGE_STREAM_WRITE 0x00000800
+
+extern afs_uint32 smb_GetLogonSID(HANDLE hToken, PSID *ppsid);
+extern afs_uint32 smb_GetUserSID(HANDLE hToken, PSID *ppsid);
+extern void smb_FreeSID (PSID psid);
+
 #endif /*  __SMB3_H_ENV__ */
