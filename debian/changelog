@@ -1,4 +1,4 @@
-openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
+openafs (1.4.7.dfsg1-3) unstable; urgency=low
 
   * Apply upstream delta for Linux 2.6.26 support.
   * Enable support for arm and armel, added upstream in 1.4.7.
@@ -32,7 +32,7 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
   * Translation updates:
     - Galician, thanks Jacobo Tarrio.  (Closes: #481675)
 
- -- Russ Allbery <rra@debian.org>  Sat, 24 May 2008 17:39:23 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 28 Jun 2008 12:35:43 -0700
 
 openafs (1.4.7.dfsg1-2) unstable; urgency=high
 
