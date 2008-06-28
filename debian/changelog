@@ -1,5 +1,7 @@
 openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
 
+  * Stop using quilt to manage patches and pre-apply them to the source
+    package now that the package is maintained with Git.
   * Translation updates:
     - Galician, thanks Jacobo Tarrio.  (Closes: #481675)
 
