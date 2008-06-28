@@ -21,6 +21,16 @@ alpha)
         ;;
     esac
     ;;
+arm|armel)
+    case $KVERS in
+    2.4*)
+        echo arm_linux24
+        ;;
+    2.6*)
+        echo arm_linux26
+        ;;
+    esac
+    ;;
 hppa)
     case $KVERS in
     2.4*)

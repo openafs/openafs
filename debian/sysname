@@ -9,6 +9,9 @@ case `dpkg --print-architecture` in
 alpha)
     echo alpha_linux_26
     ;;
+arm|armel)
+    echo arm_linux26
+    ;;
 amd64)
     echo amd64_linux26
     ;;

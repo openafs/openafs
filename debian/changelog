@@ -1,6 +1,7 @@
 openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
 
   * Apply upstream delta for Linux 2.6.26 support.
+  * Enable support for arm and armel, added upstream in 1.4.7.
   * When clearing the restart time while installing a new cell, pass
     -localauth to avoid an authentication failure.  Thanks, Davor Ocelic.
     (Closes: #488152)
