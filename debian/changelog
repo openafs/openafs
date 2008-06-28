@@ -1,5 +1,6 @@
 openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
 
+  * Apply upstream delta for Linux 2.6.26 support.
   * When clearing the restart time while installing a new cell, pass
     -localauth to avoid an authentication failure.  Thanks, Davor Ocelic.
     (Closes: #488152)

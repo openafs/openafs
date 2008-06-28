@@ -993,3 +993,30 @@ AC_DEFUN([LINUX_EXPORTS_RCU_READ_LOCK], [
     AC_DEFINE([EXPORTED_RCU_READ_LOCK], 1, [define if rcu_read_lock() is usable])
   fi])
  
+AC_DEFUN([LINUX_EXPORTS_FIND_TASK_BY_PID], [
+  AC_MSG_CHECKING([if find_task_by_pid is usable])
+  AC_CACHE_VAL([ac_cv_linux_exports_find_task_by_pid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[pid_t p;
+find_task_by_pid(p);],
+      ac_cv_linux_exports_find_task_by_pid=yes,
+      ac_cv_linux_exports_find_task_by_pid=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_find_task_by_pid)
+  if test "x$ac_cv_linux_exports_find_task_by_pid" = "xyes"; then
+    AC_DEFINE([EXPORTED_FIND_TASK_BY_PID], 1, [define if find_task_by_pid() is usable])
+  fi])
+ 
+AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
+  AC_MSG_CHECKING([if proc_root_fs is defined and exported])
+  AC_CACHE_VAL([ac_cv_linux_exports_proc_root_fs], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry *p = proc_root_fs;],
+      ac_cv_linux_exports_proc_root_fs=yes,
+      ac_cv_linux_exports_proc_root_fs=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_proc_root_fs)
+  if test "x$ac_cv_linux_exports_proc_root_fs" = "xyes"; then
+    AC_DEFINE([EXPORTED_PROC_ROOT_FS], 1, [define if proc_root_fs is exported])
+  fi])
+ 
