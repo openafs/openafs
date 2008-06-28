@@ -32,18 +32,26 @@ klog: klog.o skipwrap.o ${AFSLIBS}
 # Installation targets
 #
 install: \
-	${DESTDIR}${bindir}/aklog ${DESTDIR}${afssrvbindir}/asetkey
+	${DESTDIR}${bindir}/aklog ${DESTDIR}${bindir}/klog.krb5 \
+	${DESTDIR}${afssrvbindir}/asetkey
 
 ${DESTDIR}${bindir}/aklog: aklog
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/klog.krb5: klog
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvbindir}/asetkey: asetkey
 	${INSTALL} $? $@
 
 dest: \
-	${DEST}/bin/aklog ${DEST}/root.server/usr/afs/bin/asetkey
+	${DEST}/bin/aklog ${DEST}/bin/klog.krb5 \
+	${DEST}/root.server/usr/afs/bin/asetkey
 
 ${DEST}/bin/aklog: aklog
+	${INSTALL} $? $@
+
+${DEST}/bin/klog.krb5: klog
 	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/asetkey: asetkey
