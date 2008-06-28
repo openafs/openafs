@@ -4,9 +4,8 @@ AC_DEFUN([OPENAFS_OSCONF], [
 dnl defaults, override in case below as needed
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
-CC="cc"
-CCOBJ="cc"
-MT_CC="cc"
+CCOBJ=$CC
+MT_CC=$CC
 XLIBS="${LIB_AFSDB}"
 
 dnl debugging and optimization flag defaults
@@ -327,9 +326,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux22)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -344,9 +342,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux*)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -365,9 +362,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux24)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -386,9 +382,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux26)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -601,8 +596,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux22)
-		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="$CC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -619,8 +613,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux24|s390_linux26)
-		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="$CC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -637,8 +630,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390x_linux24|s390x_linux26)
-		CC="gcc"
-		CCOBJ="gcc -fPIC"
+		CCOBJ="$CC -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -716,7 +708,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	sparc64_linux*)
+	sparc*_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -728,20 +720,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	sparc_linux22)
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
