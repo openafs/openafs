@@ -23,6 +23,7 @@ openafs (1.4.7.dfsg1-3) UNRELEASED; urgency=low
   * Reflect current responsibilities more accurately by listing myself as
     maintainer and Sam as uploader.
   * Update standards version to 3.8.0 (no changes required).
+  * Drop unused postinst-uses-db-input override; Lintian has been fixed.
   * Translation updates:
     - Galician, thanks Jacobo Tarrio.  (Closes: #481675)
 
