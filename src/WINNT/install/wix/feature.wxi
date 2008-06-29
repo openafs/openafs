@@ -266,6 +266,9 @@
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
                 <ComponentRef Id="efl_DocHtml_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_1_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_5_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_8_en_US" />
                 <ComponentRef Id="cmp_Install_Guide_en_US" />
                 <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
 

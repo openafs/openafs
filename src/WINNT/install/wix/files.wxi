@@ -389,6 +389,313 @@
                                 <File Id="fileimage002_JPG_$(var.Language)" Name="image002.jpg" LongName="image002.jpg" DiskId="1" />
                             </Component>
                         </Directory>
+                    <?if $(var.Language) = "en_US"?>
+                        <Directory Id="dirCmdRef_en_US" Name="CmdRef" src="$(var.DocDir)\man-pages\html\">
+                            <Component Id="cmp_Cmd_Ref_en_US" Guid="$(var.DocHtmlCmdRefGuid)">
+                                <File Id="file_CmdRef_Index_HTM_en_US" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1" />
+                                <File Id="file_CmdRef_Style_CSS_en_US" Name="style.css" LongName="style.css" DiskId="1" />
+                            </Component>
+                        </Directory> <!-- CmdRef -->
+                        <Directory Id="dirCmdRef1_en_US" Name="CmdRef_1" src="$(var.DocDir)\man-pages\html\1\">
+                            <Component Id="cmp_Cmd_Ref_1_en_US" Guid="$(var.DocHtmlCmdRef1Guid)">
+                            <File Id="file_CmdRef_1_afs_html" Name="afs.htm" LongName="afs.html" KeyPath="yes" DiskId="1" />
+                            <File Id="file_CmdRef_1_afsmonitor_html" Name="afsmonit.htm" LongName="afsmonitor.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_aklog_html" Name="aklog.htm" LongName="aklog.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_cmdebug_html" Name="cmdebug.htm" LongName="cmdebug.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_dlog_html" Name="dlog.htm" LongName="dlog.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_dpass_html"  Name="dpass.htm"  LongName="dpass.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_html"  Name="fs.htm"  LongName="fs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_apropos_html"  Name="fs_aprop.htm"  LongName="fs_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_checkservers_html"  Name="fs_chsrv.htm"  LongName="fs_checkservers.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_checkvolumes_html"  Name="fs_chvol.htm"  LongName="fs_checkvolumes.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_cleanacl_html"  Name="fs_clean.htm"  LongName="fs_cleanacl.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_copyacl_html"  Name="fs_copya.htm"  LongName="fs_copyacl.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_diskfree_html"  Name="fs_diskf.htm"  LongName="fs_diskfree.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_examine_html"  Name="fs_exami.htm"  LongName="fs_examine.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_exportafs_html"  Name="fs_expor.htm"  LongName="fs_exportafs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_flush_html"  Name="fs_flush.htm"  LongName="fs_flush.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_flushall_html"  Name="fs_flall.htm"  LongName="fs_flushall.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_flushmount_html"  Name="fs_flmnt.htm"  LongName="fs_flushmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_flushvolume_html"  Name="fs_flvol.htm"  LongName="fs_flushvolume.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getcacheparms_html"  Name="fs_getcp.htm"  LongName="fs_getcacheparms.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getcalleraccess_html"  Name="fs_getca.htm"  LongName="fs_getcalleraccess.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getcellstatus_html"  Name="fs_getce.htm"  LongName="fs_getcellstatus.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getclientaddrs_html"  Name="fs_getcl.htm"  LongName="fs_getclientaddrs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getcrypt_html"  Name="fs_getcr.htm"  LongName="fs_getcrypt.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getserverprefs_html"  Name="fs_getse.htm"  LongName="fs_getserverprefs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_help_html"  Name="fs_help.htm"  LongName="fs_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_listacl_html"  Name="fs_lista.htm"  LongName="fs_listacl.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_listaliases_html"  Name="fs_listl.htm"  LongName="fs_listaliases.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_listcells_html"  Name="fs_listc.htm"  LongName="fs_listcells.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_listquota_html"  Name="fs_listq.htm"  LongName="fs_listquota.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_lsmount_html"  Name="fs_lsmou.htm"  LongName="fs_lsmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_messages_html"  Name="fs_messa.htm"  LongName="fs_messages.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_minidump_html"  Name="fs_minid.htm"  LongName="fs_minidump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_mkmount_html"  Name="fs_mkmou.htm"  LongName="fs_mkmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_newalias_html"  Name="fs_newal.htm"  LongName="fs_newalias.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_newcell_html"  Name="fs_newce.htm"  LongName="fs_newcell.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_quota_html"  Name="fs_quota.htm"  LongName="fs_quota.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_rmmount_html"  Name="fs_rmmou.htm"  LongName="fs_rmmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_rxstatpeer_html"  Name="fs_rxsta.htm"  LongName="fs_rxstatpeer.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setacl_html"  Name="fs_setac.htm"  LongName="fs_setacl.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setcachesize_html"  Name="fs_setca.htm"  LongName="fs_setcachesize.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setcell_html"  Name="fs_setce.htm"  LongName="fs_setcell.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setclientaddrs_html"  Name="fs_setcl.htm"  LongName="fs_setclientaddrs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setcrypt_html"  Name="fs_setcr.htm"  LongName="fs_setcrypt.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setquota_html"  Name="fs_setqu.htm"  LongName="fs_setquota.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setserverprefs_html"  Name="fs_setse.htm"  LongName="fs_setserverprefs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setvol_html"  Name="fs_setvo.htm"  LongName="fs_setvol.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_storebehind_html"  Name="fs_store.htm"  LongName="fs_storebehind.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_sysname_html"  Name="fs_sysna.htm"  LongName="fs_sysname.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_uuid_html"  Name="fs_uuid.htm"  LongName="fs_uuid.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_whereis_html"  Name="fs_where.htm"  LongName="fs_whereis.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_whichcell_html"  Name="fs_which.htm"  LongName="fs_whichcell.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_wscell_html"  Name="fs_wscel.htm"  LongName="fs_wscell.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_klog_html"  Name="klog.htm"  LongName="klog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_knfs_html"  Name="knfs.htm"  LongName="knfs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_kpasswd_html"  Name="kpasswd.htm"  LongName="kpasswd.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_livesys_html"  Name="livesys.htm"  LongName="livesys.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_package_test_html"  Name="pack_tst.htm"  LongName="package_test.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pagsh_html"  Name="pagsh.htm"  LongName="pagsh.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_html"  Name="pts.htm"  LongName="pts.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_adduser_html"  Name="pts_addu.htm"  LongName="pts_adduser.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_apropos_html"  Name="pts_apro.htm"  LongName="pts_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_chown_html"  Name="pts_chow.htm"  LongName="pts_chown.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_creategroup_html"  Name="pts_crgr.htm"  LongName="pts_creategroup.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_createuser_html"  Name="pts_crus.htm"  LongName="pts_createuser.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_delete_html"  Name="pts_dele.htm"  LongName="pts_delete.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_examine_html"  Name="pts_exam.htm"  LongName="pts_examine.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_help_html"  Name="pts_help.htm"  LongName="pts_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_interactive_html"  Name="pts_inte.htm"  LongName="pts_interactive.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_listentries_html"  Name="pts_lent.htm"  LongName="pts_listentries.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_listmax_html"  Name="pts_lmax.htm"  LongName="pts_listmax.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_listowned_html"  Name="pts_lown.htm"  LongName="pts_listowned.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_membership_html"  Name="pts_memb.htm"  LongName="pts_membership.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_quit_html"  Name="pts_quit.htm"  LongName="pts_quit.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_removeuser_html"  Name="pts_remo.htm"  LongName="pts_removeuser.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_rename_html"  Name="pts_rena.htm"  LongName="pts_rename.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_setfields_html"  Name="pts_setf.htm"  LongName="pts_setfields.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_setmax_html"  Name="pts_setm.htm"  LongName="pts_setmax.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_sleep_html"  Name="pts_slee.htm"  LongName="pts_sleep.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_pts_source_html"  Name="pts_sour.htm"  LongName="pts_source.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_rxdebug_html"  Name="rxdebug.htm"  LongName="rxdebug.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_rxgen_html"  Name="rxgen.htm"  LongName="rxgen.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_scout_html"  Name="scout.htm"  LongName="scout.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_symlink_html"  Name="symlink.htm"  LongName="symlink.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_symlink_list_html"  Name="sym_list.htm"  LongName="symlink_list.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_symlink_make_html"  Name="sym_make.htm"  LongName="symlink_make.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_symlink_remove_html"  Name="symremov.htm"  LongName="symlink_remove.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_sys_html"  Name="sys.htm"  LongName="sys.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_tokens_html"  Name="tokens.htm"  LongName="tokens.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_translate_et_html"  Name="translat.htm"  LongName="translate_et.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_udebug_html"  Name="udebug.htm"  LongName="udebug.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_unlog_html"  Name="unlog.htm"  LongName="unlog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_up_html"  Name="up.htm"  LongName="up.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_html"  Name="vos.htm"  LongName="vos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_addsite_html"  Name="vos_adds.htm"  LongName="vos_addsite.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_apropos_html"  Name="vos_apro.htm"  LongName="vos_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_backup_html"  Name="vos_back.htm"  LongName="vos_backup.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_backupsys_html"  Name="vos_bsys.htm"  LongName="vos_backupsys.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_changeaddr_html"  Name="vos_chad.htm"  LongName="vos_changeaddr.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_changeloc_html"  Name="vos_chan.htm"  LongName="vos_changeloc.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_clone_html"  Name="vos_clon.htm"  LongName="vos_clone.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_convertROtoRW_html"  Name="vos_conv.htm"  LongName="vos_convertROtoRW.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_copy_html"  Name="vos_copy.htm"  LongName="vos_copy.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_create_html"  Name="vos_crea.htm"  LongName="vos_create.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_delentry_html"  Name="vos_dele.htm"  LongName="vos_delentry.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_dump_html"  Name="vos_dump.htm"  LongName="vos_dump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_examine_html"  Name="vos_exam.htm"  LongName="vos_examine.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_help_html"  Name="vos_help.htm"  LongName="vos_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_listaddrs_html"  Name="vos_ladd.htm"  LongName="vos_listaddrs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_listpart_html"  Name="vos_lpar.htm"  LongName="vos_listpart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_listvldb_html"  Name="vos_lvld.htm"  LongName="vos_listvldb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_listvol_html"  Name="vos_lvol.htm"  LongName="vos_listvol.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_lock_html"  Name="vos_lock.htm"  LongName="vos_lock.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_move_html"  Name="vos_move.htm"  LongName="vos_move.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_offline_html"  Name="vos_offl.htm"  LongName="vos_offline.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_online_html"  Name="vos_onli.htm"  LongName="vos_online.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_partinfo_html"  Name="vos_part.htm"  LongName="vos_partinfo.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_release_html"  Name="vos_rele.htm"  LongName="vos_release.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_remove_html"  Name="vos_remo.htm"  LongName="vos_remove.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_remsite_html"  Name="vos_rems.htm"  LongName="vos_remsite.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_rename_html"  Name="vos_rena.htm"  LongName="vos_rename.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_restore_html"  Name="vos_rest.htm"  LongName="vos_restore.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_shadow_html"  Name="vos_shad.htm"  LongName="vos_shadow.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_size_html"  Name="vos_size.htm"  LongName="vos_size.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_status_html"  Name="vos_stat.htm"  LongName="vos_status.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_syncserv_html"  Name="vos_syse.htm"  LongName="vos_syncserv.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_syncvldb_html"  Name="vos_syvl.htm"  LongName="vos_syncvldb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_unlock_html"  Name="vos_unlo.htm"  LongName="vos_unlock.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_unlockvldb_html"  Name="vos_unvl.htm"  LongName="vos_unlockvldb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_vos_zap_html"  Name="vos_zap.htm"  LongName="vos_zap.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_xstat_cm_test_html"  Name="xstat_cm.htm"  LongName="xstat_cm_test.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_xstat_fs_test_html"  Name="xstat_fs.htm"  LongName="xstat_fs_test.html"  DiskId="1"  />
+                            </Component>
+                        </Directory> <!-- CmdRef_1 -->
+                        <Directory Id="dirCmdRef5_en_US" Name="CmdRef_5" src="$(var.DocDir)\man-pages\html\5\">
+                            <Component Id="cmp_Cmd_Ref_5_en_US" Guid="$(var.DocHtmlCmdRef5Guid)">
+                            <File Id="file_CmdRef_5_afs_html"  Name="afs.htm"  LongName="afs.html"  KeyPath="yes"  DiskId="1"  />
+                            <File Id="file_CmdRef_5_afsmonitor_html"  Name="afsmonit.htm"  LongName="afsmonitor.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_afs_cache_html"  Name="afs_cach.htm"  LongName="afs_cache.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_afs_volume_header_html"  Name="afs_volu.htm"  LongName="afs_volume_header.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_AuthLog_html"  Name="AuthLog.htm"  LongName="AuthLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_BackupLog_html"  Name="BackupLo.htm"  LongName="BackupLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_BosConfig_html"  Name="BosConfi.htm"  LongName="BosConfig.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_BosLog_html"  Name="BosLog.htm"  LongName="BosLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_butc_html"  Name="butc.htm"  LongName="butc.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_butc_logs_html"  Name="butc_log.htm"  LongName="butc_logs.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_cacheinfo_html"  Name="cacheinf.htm"  LongName="cacheinfo.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_CellAlias_html"  Name="CellAlia.htm"  LongName="CellAlias.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_CellServDB_html"  Name="CellServ.htm"  LongName="CellServDB.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_FileLog_html"  Name="FileLog.htm"  LongName="FileLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_ForceSalvage_html"  Name="ForceSal.htm"  LongName="ForceSalvage.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_kaserverauxdb_html"  Name="kaserver.htm"  LongName="kaserverauxdb.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_KeyFile_html"  Name="KeyFile.htm"  LongName="KeyFile.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_NetInfo_html"  Name="NetInfo.htm"  LongName="NetInfo.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_NetRestrict_html"  Name="NetRestr.htm"  LongName="NetRestrict.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_NoAuth_html"  Name="NoAuth.htm"  LongName="NoAuth.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_package_html"  Name="package.htm"  LongName="package.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_SalvageLog_html"  Name="SalvageL.htm"  LongName="SalvageLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_sysid_html"  Name="sysid.htm"  LongName="sysid.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_tapeconfig_html"  Name="tapeconf.htm"  LongName="tapeconfig.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_ThisCell_html"  Name="ThisCell.htm"  LongName="ThisCell.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_UserList_html"  Name="UserList.htm"  LongName="UserList.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_uss_html"  Name="uss.htm"  LongName="uss.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_uss_bulk_html"  Name="uss_bulk.htm"  LongName="uss_bulk.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_VLLog_html"  Name="VLLog.htm"  LongName="VLLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_VolserLog_html"  Name="VolserLo.htm"  LongName="VolserLog.html"    DiskId="1"  />
+                            </Component>
+                        </Directory> <!-- CmdRef_5 -->
+                        <Directory Id="dirCmdRef8_en_US" Name="CmdRef_8" src="$(var.DocDir)\man-pages\html\8\">
+                            <Component Id="cmp_Cmd_Ref_8_en_US" Guid="$(var.DocHtmlCmdRef8Guid)">
+                            <File Id="file_CmdRef_8_afsd_html"  Name="afsd.htm"  LongName="afsd.html"  KeyPath="yes"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_asetkey_html"  Name="asetkey.htm"  LongName="asetkey.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_html"  Name="backup.htm"  LongName="backup.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_adddump_html"  Name="bk_adddu.htm"  LongName="backup_adddump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_addhost_html"  Name="bk_addho.htm"  LongName="backup_addhost.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_addvolentry_html"  Name="bk_avole.htm"  LongName="backup_addvolentry.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_addvolset_html"  Name="bk_avols.htm"  LongName="backup_addvolset.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_apropos_html"  Name="bk_aprop.htm"  LongName="backup_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_dbverify_html"  Name="bk_dbver.htm"  LongName="backup_dbverify.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_deldump_html"  Name="bk_deldu.htm"  LongName="backup_deldump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_deletedump_html"  Name="bk_deldu.htm"  LongName="backup_deletedump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_delhost_html"  Name="bk_delho.htm"  LongName="backup_delhost.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_delvolentry_html"  Name="bk_delve.htm"  LongName="backup_delvolentry.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_delvolset_html"  Name="bk_delvo.htm"  LongName="backup_delvolset.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_diskrestore_html"  Name="bk_diskr.htm"  LongName="backup_diskrestore.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_dump_html"  Name="bk_dump.htm"  LongName="backup_dump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_dumpinfo_html"  Name="bk_dumpi.htm"  LongName="backup_dumpinfo.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_help_html"  Name="bk_help.htm"  LongName="backup_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_interactive_html"  Name="bk_inter.htm"  LongName="backup_interactive.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_jobs_html"  Name="bk_jobs.htm"  LongName="backup_jobs.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_kill_html"  Name="bk_kill.htm"  LongName="backup_kill.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_labeltape_html"  Name="bk_label.htm"  LongName="backup_labeltape.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_listdumps_html"  Name="bk_lsdum.htm"  LongName="backup_listdumps.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_listhosts_html"  Name="bk_listh.htm"  LongName="backup_listhosts.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_listvolsets_html"  Name="bk_listv.htm"  LongName="backup_listvolsets.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_quit_html"  Name="bk_quit.htm"  LongName="backup_quit.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_readlabel_html"  Name="bk_readl.htm"  LongName="backup_readlabel.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_restoredb_html"  Name="bk_resto.htm"  LongName="backup_restoredb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_savedb_html"  Name="bk_saved.htm"  LongName="backup_savedb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_scantape_html"  Name="bk_scant.htm"  LongName="backup_scantape.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_setexp_html"  Name="bk_setex.htm"  LongName="backup_setexp.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_status_html"  Name="bk_statu.htm"  LongName="backup_status.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_volinfo_html"  Name="bk_volin.htm"  LongName="backup_volinfo.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_volrestore_html"  Name="bk_volre.htm"  LongName="backup_volrestore.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_backup_volsetrestore_html"  Name="bk_volse.htm"  LongName="backup_volsetrestore.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_html"  Name="bos.htm"  LongName="bos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bosserver_html"  Name="bosserve.htm"  LongName="bosserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_addhost_html"  Name="bos_addh.htm"  LongName="bos_addhost.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_addkey_html"  Name="bos_addk.htm"  LongName="bos_addkey.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_adduser_html"  Name="bos_addu.htm"  LongName="bos_adduser.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_apropos_html"  Name="bos_apro.htm"  LongName="bos_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_create_html"  Name="bos_crea.htm"  LongName="bos_create.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_delete_html"  Name="bos_dele.htm"  LongName="bos_delete.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_exec_html"  Name="bos_exec.htm"  LongName="bos_exec.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_getdate_html"  Name="bos_getd.htm"  LongName="bos_getdate.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_getlog_html"  Name="bos_getl.htm"  LongName="bos_getlog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_getrestart_html"  Name="bos_getr.htm"  LongName="bos_getrestart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_help_html"  Name="bos_help.htm"  LongName="bos_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_install_html"  Name="bos_inst.htm"  LongName="bos_install.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_listhosts_html"  Name="bos_lsho.htm"  LongName="bos_listhosts.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_listkeys_html"  Name="bos_lsky.htm"  LongName="bos_listkeys.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_listusers_html"  Name="bos_lsus.htm"  LongName="bos_listusers.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_prune_html"  Name="bos_prun.htm"  LongName="bos_prune.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_removehost_html"  Name="bos_rmho.htm"  LongName="bos_removehost.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_removekey_html"  Name="bos_rmky.htm"  LongName="bos_removekey.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_removeuser_html"  Name="bos_rmus.htm"  LongName="bos_removeuser.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_restart_html"  Name="bos_rest.htm"  LongName="bos_restart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_salvage_html"  Name="bos_salv.htm"  LongName="bos_salvage.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_setauth_html"  Name="bos_seta.htm"  LongName="bos_setauth.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_setcellname_html"  Name="bos_setc.htm"  LongName="bos_setcellname.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_setrestart_html"  Name="bos_setr.htm"  LongName="bos_setrestart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_shutdown_html"  Name="bos_shut.htm"  LongName="bos_shutdown.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_start_html"  Name="bos_star.htm"  LongName="bos_start.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_startup_html"  Name="bos_stup.htm"  LongName="bos_startup.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_status_html"  Name="bos_stat.htm"  LongName="bos_status.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_stop_html"  Name="bos_stop.htm"  LongName="bos_stop.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_uninstall_html"  Name="bos_unin.htm"  LongName="bos_uninstall.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_util_html"  Name="bos_util.htm"  LongName="bos_util.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_buserver_html"  Name="buserver.htm"  LongName="buserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_butc_html"  Name="butc.htm"  LongName="butc.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fileserver_html"  Name="fileserv.htm"  LongName="fileserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fms_html"  Name="fms.htm"  LongName="fms.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_html"  Name="fstrace.htm"  LongName="fstrace.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_apropos_html"  Name="fst_apro.htm"  LongName="fstrace_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_clear_html"  Name="fst_clea.htm"  LongName="fstrace_clear.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_dump_html"  Name="fst_dump.htm"  LongName="fstrace_dump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_help_html"  Name="fst_help.htm"  LongName="fstrace_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_lslog_html"  Name="fst_lslo.htm"  LongName="fstrace_lslog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_lsset_html"  Name="fst_lsse.htm"  LongName="fstrace_lsset.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_setlog_html"  Name="fst_setl.htm"  LongName="fstrace_setlog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_fstrace_setset_html"  Name="fst_sets.htm"  LongName="fstrace_setset.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_ka_forwarder_html"  Name="ka-forwa.htm"  LongName="ka-forwarder.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kadb_check_html"  Name="kadb_che.htm"  LongName="kadb_check.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_html"  Name="kas.htm"  LongName="kas.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kaserver_html"  Name="kaserver.htm"  LongName="kaserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_apropos_html"  Name="kas_apro.htm"  LongName="kas_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_create_html"  Name="kas_crea.htm"  LongName="kas_create.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_delete_html"  Name="kas_dele.htm"  LongName="kas_delete.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_examine_html"  Name="kas_exam.htm"  LongName="kas_examine.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_forgetticket_html"  Name="kas_forg.htm"  LongName="kas_forgetticket.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_help_html"  Name="kas_help.htm"  LongName="kas_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_interactive_html"  Name="kas_inte.htm"  LongName="kas_interactive.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_list_html"  Name="kas_list.htm"  LongName="kas_list.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_listtickets_html"  Name="kas_ltkt.htm"  LongName="kas_listtickets.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_noauthentication_html"  Name="kas_noau.htm"  LongName="kas_noauthentication.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_quit_html"  Name="kas_quit.htm"  LongName="kas_quit.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_setfields_html"  Name="kas_setf.htm"  LongName="kas_setfields.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_setpassword_html"  Name="kas_setp.htm"  LongName="kas_setpassword.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_statistics_html"  Name="kas_stat.htm"  LongName="kas_statistics.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_stringtokey_html"  Name="kas_stri.htm"  LongName="kas_stringtokey.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kas_unlock_html"  Name="kas_unlo.htm"  LongName="kas_unlock.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kdb_html"  Name="kdb.htm"  LongName="kdb.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_kpwvalid_html"  Name="kpwvalid.htm"  LongName="kpwvalid.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_package_html"  Name="package.htm"  LongName="package.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_prdb_check_html"  Name="prdb_che.htm"  LongName="prdb_check.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_ptserver_html"  Name="ptserver.htm"  LongName="ptserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_pt_util_html"  Name="pt_util.htm"  LongName="pt_util.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_read_tape_html"  Name="read_tap.htm"  LongName="read_tape.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_salvager_html"  Name="salvager.htm"  LongName="salvager.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_salvageserver_html"  Name="salvages.htm"  LongName="salvageserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_upclient_html"  Name="upclient.htm"  LongName="upclient.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_upserver_html"  Name="upserver.htm"  LongName="upserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_html"  Name="uss.htm"  LongName="uss.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_add_html"  Name="uss_add.htm"  LongName="uss_add.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_apropos_html"  Name="uss_apro.htm"  LongName="uss_apropos.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_bulk_html"  Name="uss_bulk.htm"  LongName="uss_bulk.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_delete_html"  Name="uss_dele.htm"  LongName="uss_delete.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_uss_help_html"  Name="uss_help.htm"  LongName="uss_help.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_vldb_check_html"  Name="vldb_che.htm"  LongName="vldb_check.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_vldb_convert_html"  Name="vldb_con.htm"  LongName="vldb_convert.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_vlserver_html"  Name="vlserver.htm"  LongName="vlserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_voldump_html"  Name="voldump.htm"  LongName="voldump.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_volinfo_html"  Name="volinfo.htm"  LongName="volinfo.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_volserver_html"  Name="volserve.htm"  LongName="volserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_xfs_size_check_html"  Name="xfs_size.htm"  LongName="xfs_size_check.html"  DiskId="1"  />
+                            </Component>
+                        </Directory> <!-- CmdRef_8 -->
+                    <?else?>
                         <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
                             <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
                                 <File Id="fileauarf000_HTM_$(var.Language)" Name="auarf000.htm" LongName="auarf000.htm" KeyPath="yes" DiskId="1" />
@@ -677,6 +984,7 @@
                                 <File Id="fileauarf284_HTM_$(var.Language)" Name="auarf284.htm" LongName="auarf284.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- CmdRef -->
+                    <?endif?>
                         <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
                             <Component Id="cmp_Install_Guide_$(var.Language)" Guid="$(var.DocHtmlInstallGuid)">
                                 <File Id="fileawqbg000_HTM_$(var.Language)" Name="awqbg000.htm" LongName="awqbg000.htm" KeyPath="yes" DiskId="1" />

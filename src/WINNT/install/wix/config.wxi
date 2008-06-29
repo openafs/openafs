@@ -23,6 +23,7 @@
        MediaDllDir    : Installer Dlls
        MediaBinDir    : Installer Exes
        SrcDir         : openafs\src\
+       DocDir         : openafs\doc\
        DestDir        : $(DEST)\
        BinDir         : $(DEST)\bin\
        LibDir         : $(DEST)\lib\
@@ -150,6 +151,9 @@
     <?endif?>
     <?ifndef SrcDir?>
         <?define SrcDir="$(env.AFSROOT)\src\"?>
+    <?endif?>
+    <?ifndef DocDir?>
+        <?define DocDir="$(env.AFSROOT)\doc\"?>
     <?endif?>
     <?ifndef MediaDllDir?>
         <?define MediaDllDir="$(var.DestDir)WinInstall\Dll\"?>
