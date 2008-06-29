@@ -261,7 +261,7 @@
             <Feature Id="feaDocumentation" AllowAdvertise="no" Description="$(loc.StrAFSDocLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
 
-				<ComponentRef Id="rcm_Documentation" />
+        	<ComponentRef Id="rcm_Documentation" />
                 
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
                 <ComponentRef Id="efl_DocHtml_en_US" />
@@ -269,7 +269,6 @@
                 <ComponentRef Id="cmp_Cmd_Ref_1_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_5_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_8_en_US" />
-                <ComponentRef Id="cmp_Install_Guide_en_US" />
                 <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
 
                 <ComponentRef Id="cmf_afs_nt_HLP_en_US" />

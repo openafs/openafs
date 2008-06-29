@@ -984,7 +984,6 @@
                                 <File Id="fileauarf284_HTM_$(var.Language)" Name="auarf284.htm" LongName="auarf284.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- CmdRef -->
-                    <?endif?>
                         <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
                             <Component Id="cmp_Install_Guide_$(var.Language)" Guid="$(var.DocHtmlInstallGuid)">
                                 <File Id="fileawqbg000_HTM_$(var.Language)" Name="awqbg000.htm" LongName="awqbg000.htm" KeyPath="yes" DiskId="1" />
@@ -993,6 +992,7 @@
                                 <File Id="fileawqbg004_HTM_$(var.Language)" Name="awqbg004.htm" LongName="awqbg004.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- InstallGd -->
+                    <?endif?>
                         <Directory Id="dirSysAdminGd_$(var.Language)" Name="SysAd" LongName="SysAdminGd" SourceName="SysAdm" LongSource="SysAdminGd" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\SysAdminGd\">
                             <Component Id="cmp_Sys_Admin_Guide_$(var.Language)" Guid="$(var.DocHtmlSysAdminGuid)">
                                 <File Id="fileauagd000_HTM_$(var.Language)" Name="auagd.htm" LongName="auagd000.htm" KeyPath="yes" DiskId="1" />
@@ -1034,13 +1034,6 @@
                         </Directory> <!-- Sys Admin guide -->
                         <Directory Id="dirReleaseNotes_$(var.Language)" Name="Relea" LongName="ReleaseNotes" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\">
                             <Component Id="cmp_Release_Notes_$(var.Language)" Guid="$(var.DocHtmlRelNotesGuid)">
-                                <File Id="fileawrns000_HTM_$(var.Language)" Name="awrns.htm" LongName="awrns000.htm" KeyPath="yes" DiskId="1" />
-                                <File Id="fileawrns002_HTM_$(var.Language)" Name="awrns~2.htm" LongName="awrns002.htm" DiskId="1" />
-                                <File Id="fileawrns003_HTM_$(var.Language)" Name="awrns~3.htm" LongName="awrns003.htm" DiskId="1" />
-                                <File Id="fileawrns004_HTM_$(var.Language)" Name="awrns~4.htm" LongName="awrns004.htm" DiskId="1" />
-                                <File Id="fileawrns005_HTM_$(var.Language)" Name="awrns~5.htm" LongName="awrns005.htm" DiskId="1" />
-                                <File Id="fileawrns006_HTM_$(var.Language)" Name="awrns~6.htm" LongName="awrns006.htm" DiskId="1" />
-                                <File Id="fileawrns007_HTM_$(var.Language)" Name="awrns~7.htm" LongName="awrns007.htm" DiskId="1" />
                                 <File Id="fileframes_HTM_$(var.Language)" Name="relnot~2.htm" LongName="relnotes-frames.htm" DiskId="1" />
                                 <File Id="filelogo_HTM_$(var.Language)" Name="logo.htm" LongName="logo.htm" DiskId="1" />
                                 <File Id="filerelnotes_HTM_$(var.Language)" Name="relnotes.htm" LongName="relnotes.htm" DiskId="1" />
