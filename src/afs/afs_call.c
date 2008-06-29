@@ -110,6 +110,7 @@ char afs_cachebasedir[1024];
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
+afs_int32 afs_rx_idledead = AFS_IDLEDEADTIME;
 
 static int
   Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval);

@@ -239,14 +239,14 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 }				/*MarkServerUpOrDown */
 
 
-void
+afs_int32
 afs_ServerDown(struct srvAddr *sa)
 {
     register struct server *aserver = sa->server;
 
     AFS_STATCNT(ServerDown);
-    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN)
-	return;
+    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN) 
+	return 0;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
 	print_internet_address
@@ -254,7 +254,7 @@ afs_ServerDown(struct srvAddr *sa)
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
 			       1);
-
+    return 1;
 }				/*ServerDown */
 
 
