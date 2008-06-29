@@ -247,20 +247,21 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
     afs_int32 i;
     afs_int32 serversleft = 0;
 
-    if (afid)
+    if (afid) {
 	tvp = afs_FindVolume(afid, READ_LOCK);
-    if (tvp) {
-	for (i = 0; i < MAXHOSTS; i++) {
-	    if (tvp->serverHost[i] == tsp) {
-		areq->skipserver[i] = 1;
+	if (tvp) {
+	    for (i = 0; i < MAXHOSTS; i++) {
+		if (tvp->serverHost[i] == tsp) {
+		    areq->skipserver[i] = 1;
+		}
+		if (tvp->serverHost[i] &&
+		    !(tvp->serverHost[i]->addr->sa_flags & 
+		      SRVR_ISDOWN)) {
+		    areq->skipserver[i] = 1;
+		}
 	    }
-	    if (tvp->serverHost[i] &&
-		!(tvp->serverHost[i]->addr->sa_flags & 
-		  SRVR_ISDOWN)) {
-		areq->skipserver[i] = 1;
-	    }
+	    afs_PutVolume(tvp, READ_LOCK);
 	}
-	afs_PutVolume(tvp, READ_LOCK);
     }
     for (i = 0; i < MAXHOSTS; i++) {
 	if (areq->skipserver[i] == 0) {
