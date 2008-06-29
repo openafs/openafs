@@ -1021,7 +1021,7 @@ Section /o "Supplemental Documentation" secDocs
    
 DoEnglish:
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
-   File "..\..\doc\install\Documentation\en_US\html\CmdRef\*"
+   File "..\..\..\..\doc\man-pages\html\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    File "..\..\doc\install\Documentation\en_US\html\SysAdminGd\*"
    goto DoneLanguage
