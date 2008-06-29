@@ -18,6 +18,7 @@
 
 # These three macros define the source, object, and destination folders
 SRC=$(AFSROOT)\src
+DOC=$(AFSROOT)\doc
 
 #If AFS_OBJDIR is not defined then use obj as relative obj folder
 !IFNDEF AFS_OBJDIR
@@ -46,7 +47,14 @@ config:
 	$(NTMAKE)
 	$(CD) ..\..
 
-procmgmt_headers:config
+man-pages: config
+     echo ***** $@
+        $(DOCD) $(DOC)\man-pages
+        $(CD) $(DOC)\man-pages
+        $(NTMAKE)
+        $(CD) ..\..
+
+procmgmt_headers: man-pages
      echo ***** $@
 	$(DOCD) $(SRC)\procmgmt
 	$(CD) $(SRC)\procmgmt
@@ -65,7 +73,7 @@ lwp_headers:
 	$(DOCD) $(SRC)\lwp
 	$(CD) $(SRC)\lwp
 	$(NTMAKE_HEADERS)
-	$(CD) ..\..\..
+	$(CD) ..\..
 
 util: procmgmt_headers afsreg_headers lwp_headers
      echo ***** $@
