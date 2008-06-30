@@ -107,9 +107,10 @@ Formatting Standards
   own copyright and a statement that the man page is released under the
   IBM Public License Version 1.0, or under some other license that is
   sufficiently compatible that we can use your work.  If you use another
-  license and that license isn't "public domain," you have to give the
-  full license text in the man page; please don't use a license so long
-  that this is annoying.
+  license and that license isn't "public domain" or one of the ones
+  already listed in our LICENSE file, you have to give the full license
+  text in the man page; please don't use a license so long that this is
+  annoying.
 
   The SYNOPSIS section should start with the full command name and the
   full names of all options, and then have a second section showing the
@@ -146,6 +147,35 @@ Formatting Standards
   in examples should be shown like <this> with simple angle brackets
   surrounding the variable.  For consistency in formatting, references to
   those variables should be formatted the same in following text.
+
+Man Page Sections
+
+  The section of a man page is determined by which directory it's in.
+  pod1 will be section 1 man pages, pod5 will be section 5, and pod8 will
+  be section 8.
+
+  The breakdown between section 1 and section 8 is fuzzy and it's hard to
+  get right.  The current layout balances the following goals:
+
+  * In general, section 1 is used for commands that can be executed by any
+    user and section 8 is used for commands that can only be meaningfully
+    issued as root.  If a command can be run with AFS privileged
+    credentials but still as a regular user on the local system, the
+    preference is for it to be in section 1, although some pages of that
+    type are in section 8.
+
+  * All the commands for a given suite should be kept together.  So, for
+    example, there are fs commands that can only be issued as root, but
+    since most of the suite is available to any user, all of the fs
+    commands are in section 1.
+
+  * The sections of the man pages should roughly correspond to the
+    installation paths of the binaries.  Binaries installed in bin should
+    have man pages in section 1 and binaries installed in sbin should have
+    man pages in section 8.
+
+  Section 5 should be used for all documentation of configuration files
+  and file formats.
 
 How You Can Help
 
@@ -204,11 +234,13 @@ Known Problems
        compile_et.afs
        copyauth
        fs cscpolicy
+       fs getfid
        fs memdump
        fs monitor
        fs rxstatpeer
        fs rxstatproc
        fs setcbaddr
+       fs trace
        klog.krb
        krb.conf
        pagsh.krb
