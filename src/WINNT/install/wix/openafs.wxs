@@ -235,7 +235,7 @@
             <Custom Action="RollbackNetProvider" After="WriteRegistryValues">&amp;feaClient=3</Custom>
 			<Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
 			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
-      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">&amp;feaClient=3</Custom>
+      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3 And (VersionNT=501 Or VersionNT=502)</Custom>
 			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
 			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
