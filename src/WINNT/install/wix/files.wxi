@@ -395,8 +395,7 @@
                                 <File Id="file_CmdRef_Index_HTM_en_US" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1" />
                                 <File Id="file_CmdRef_Style_CSS_en_US" Name="style.css" LongName="style.css" DiskId="1" />
                             </Component>
-                        </Directory> <!-- CmdRef -->
-                        <Directory Id="dirCmdRef1_en_US" Name="CmdRef_1" src="$(var.DocDir)\man-pages\html\1\">
+                        <Directory Id="dirCmdRef1_en_US" Name="1" src="$(var.DocDir)\man-pages\html\1\">
                             <Component Id="cmp_Cmd_Ref_1_en_US" Guid="$(var.DocHtmlCmdRef1Guid)">
                             <File Id="file_CmdRef_1_afs_html" Name="afs.htm" LongName="afs.html" KeyPath="yes" DiskId="1" />
                             <File Id="file_CmdRef_1_afsmonitor_html" Name="afsmonit.htm" LongName="afsmonitor.html" DiskId="1" />
@@ -532,7 +531,7 @@
                             <File Id="file_CmdRef_1_xstat_fs_test_html"  Name="xstat_fs.htm"  LongName="xstat_fs_test.html"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_1 -->
-                        <Directory Id="dirCmdRef5_en_US" Name="CmdRef_5" src="$(var.DocDir)\man-pages\html\5\">
+                        <Directory Id="dirCmdRef5_en_US" Name="5" src="$(var.DocDir)\man-pages\html\5\">
                             <Component Id="cmp_Cmd_Ref_5_en_US" Guid="$(var.DocHtmlCmdRef5Guid)">
                             <File Id="file_CmdRef_5_afs_html"  Name="afs.htm"  LongName="afs.html"  KeyPath="yes"  DiskId="1"  />
                             <File Id="file_CmdRef_5_afsmonitor_html"  Name="afsmonit.htm"  LongName="afsmonitor.html"    DiskId="1"  />
@@ -566,7 +565,7 @@
                             <File Id="file_CmdRef_5_VolserLog_html"  Name="VolserLo.htm"  LongName="VolserLog.html"    DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_5 -->
-                        <Directory Id="dirCmdRef8_en_US" Name="CmdRef_8" src="$(var.DocDir)\man-pages\html\8\">
+                        <Directory Id="dirCmdRef8_en_US" Name="8" src="$(var.DocDir)\man-pages\html\8\">
                             <Component Id="cmp_Cmd_Ref_8_en_US" Guid="$(var.DocHtmlCmdRef8Guid)">
                             <File Id="file_CmdRef_8_afsd_html"  Name="afsd.htm"  LongName="afsd.html"  KeyPath="yes"  DiskId="1"  />
                             <File Id="file_CmdRef_8_asetkey_html"  Name="asetkey.htm"  LongName="asetkey.html"  DiskId="1"  />
@@ -695,6 +694,7 @@
                             <File Id="file_CmdRef_8_xfs_size_check_html"  Name="xfs_size.htm"  LongName="xfs_size_check.html"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_8 -->
+                        </Directory> <!-- CmdRef -->
                     <?else?>
                         <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
                             <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
