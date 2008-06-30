@@ -1028,6 +1028,12 @@ Section /o "Supplemental Documentation" secDocs
 DoEnglish:
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    File "..\..\..\..\doc\man-pages\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\1"
+   File "..\..\..\..\doc\man-pages\html\1\*"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\5"
+   File "..\..\..\..\doc\man-pages\html\5\*"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\8"
+   File "..\..\..\..\doc\man-pages\html\8\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    File "..\..\doc\install\Documentation\en_US\html\SysAdminGd\*"
    goto DoneLanguage
@@ -1674,10 +1680,13 @@ StartRemove:
   Delete "$INSTDIR\Documentation\README.TXT"
   Delete "$INSTDIR\Documentation\html\*"
   Delete "$INSTDIR\Documentation\html\index_files\*"
+  Delete "$INSTDIR\Documentation\html\CmdRef\1\*"
+  Delete "$INSTDIR\Documentation\html\CmdRef\5\*"
+  Delete "$INSTDIR\Documentation\html\CmdRef\8\*"
   Delete "$INSTDIR\Documentation\html\CmdRef\*"
-  Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\logo_files\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files\*"
+  Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
