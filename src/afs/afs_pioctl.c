@@ -3976,29 +3976,6 @@ DECL_PIOCTL(PCallBackAddr)
 DECL_PIOCTL(PDiscon)
 {
 #ifdef AFS_DISCON_ENV
-    static afs_int32 mode;
-
-    if (ainSize == sizeof(afs_int32)) {
-	memcpy(&mode, ain, sizeof(afs_int32));
-
-	/* 3 is magic, should be a #define. */
-	afs_SetCheckServerNATmode(mode == 3);
-    } else if (ainSize != 0) {
-	return EINVAL;
-    }
-
-    /* Return new mode */
-    memcpy(aout, &mode, sizeof(afs_int32));
-    *aoutSize = sizeof(struct VenusFid);
-    return 0;
-#else
-    return EINVAL;
-#endif
-}
-
-DECL_PIOCTL(PDiscon)
-{
-#ifdef AFS_DISCON_ENV
     static afs_int32 mode = 4; /* Start up in 'full' */
 
     if (ainSize == sizeof(afs_int32)) {
