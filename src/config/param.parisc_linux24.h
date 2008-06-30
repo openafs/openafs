@@ -30,4 +30,7 @@
 #define AFSBIG_ENDIAN		1
 #define AFS_SYSCALL		137
 
+/* glibc doesn't implement getcontext/savecontext for parisc. */
+#undef USE_UCONTEXT
+
 #endif /* AFS_PARAM_H */

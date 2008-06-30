@@ -33,4 +33,8 @@
 #ifndef __NR_afs_syscall
 #define __NR_afs_syscall 137
 #endif
+
+/* glibc doesn't implement getcontext/savecontext for arm. */
+#undef USE_UCONTEXT
+
 #endif /* AFS_PARAM_H */
