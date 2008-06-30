@@ -532,10 +532,16 @@ Section "!AFS Client" secClient
   nsExec::Exec "net stop TransarcAFSServer"
   
   ; Install the Microsoft IDNM Redistributable
+  Call GetWindowsVersion
+  Pop $R1
+  StrCmp $R1 "XP" installIDN +1
+  StrCmp $R1 "2003" installIDN skipIDN
+  installIDN:
   GetTempFileName $R0
   File /oname=$R0 "${IDNMREDIST}"
   nsExec::Exec '$R0 /quiet /norestart'
-  
+  skipIDN:  
+
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
@@ -3628,7 +3634,7 @@ FunctionEnd
 ;
 ; Returns on top of stack
 ;
-; Windows Version (95, 98, ME, NT x.x, 2000, XP, 2003, Vista)
+; Windows Version (95, 98, ME, NT x.x, 2000, XP, 2003, Vista/2008)
 ; or
 ; '' (Unknown Windows Version)
 ;
