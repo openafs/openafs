@@ -1827,6 +1827,12 @@ get_fe(afs_uint32 idx)
 static int
 get_fe_hdr(void)
 {
+    if (!fe_cursor.cursor) {
+        if(get_fe(fe_cursor.idx)) {
+	    return 1;
+        }
+    }
+    
     memcpy(&fe_cursor.hdr, fe_cursor.cursor, sizeof(struct callback_state_entry_header));
     fe_cursor.hdr_valid = 1;
     return 0;
