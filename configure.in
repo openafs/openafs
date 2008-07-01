@@ -11,7 +11,8 @@ AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
 AC_PROG_CC
-AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp],,[$PATH:/])
+AC_PATH_PROGS([PATH_CPP], [cpp], , [$PATH:/lib:/usr/ccs/lib])
+AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
 
 if test -d 'doc/man-pages' ; then
