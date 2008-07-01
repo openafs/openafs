@@ -50,6 +50,7 @@ char *afs_sysname = 0;
 char *afs_sysnamelist[MAXNUMSYSNAMES];
 int afs_sysnamecount = 0;
 int afs_sysnamegen = 0;
+afs_int32 afs_showflags = GAGUSER | GAGCONSOLE; /* show all messages */
 
 
 void afs_Daemon(void)

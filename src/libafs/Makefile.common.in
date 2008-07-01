@@ -126,6 +126,7 @@ AFSAOBJS = \
 	afs_vnop_symlink.o \
 	afs_vnop_write.o \
 	afs_volume.o \
+	afs_warn.o \
 	afsaux.o		\
 	Kvice.xdr.o	\
 	xdr_arrayn.o	\
@@ -194,6 +195,7 @@ AFSPAGOBJS = \
 	afs_pag_user.o \
 	afs_stat.o \
 	afs_syscall.o \
+	afs_warn.o \
 	afsaux.o		\
 	xdr_arrayn.o	\
 	xdr_array.o	\
@@ -281,6 +283,8 @@ afs_server.o: $(TOP_SRC_AFS)/afs_server.c
 afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE_OPT)
 afs_util.o: $(TOP_SRC_AFS)/afs_util.c
+	$(CRULE_OPT)
+afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
 	$(CRULE_OPT)
 afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
 	$(CRULE_OPT)
