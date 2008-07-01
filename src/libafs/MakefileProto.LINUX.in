@@ -209,6 +209,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 <ia64_linux24 ia64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
+	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \
+	    TARGPREFIX="pack_"; \
+	fi ; \
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
@@ -226,7 +229,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
-		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARGPREFIX}$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
 		cd ../ ; \
 <all>
 	done
@@ -244,13 +247,16 @@ linux_destdirs_libafs.mp: dest_libafs.mp
 linux_destdirs_libafs.ep: dest_libafs.ep
 linux_destdirs_libafs.bm: dest_libafs.bm
 
+linux_compdirs_pack_libafs: depsrcs pack_libafs
+linux_instdirs_pack_libafs: install_pack_libafs
+linux_destdirs_pack_libafs: dest_pack_libafs
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = libafs-${CLIENT}.${LINUX_MODULE_EXT}
-LIBAFS_MP = libafs-${CLIENT}.mp.${LINUX_MODULE_EXT}
-LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
-LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
+LIBAFS = ${LINUX_LIBAFS_NAME}-${CLIENT}.${LINUX_MODULE_EXT}
+LIBAFS_MP = ${LINUX_LIBAFS_NAME}-${CLIENT}.mp.${LINUX_MODULE_EXT}
+LIBAFS_EP = ${LINUX_LIBAFS_NAME}-${CLIENT}.ep.${LINUX_MODULE_EXT}
+LIBAFS_BM = ${LINUX_LIBAFS_NAME}-${CLIENT}.bm.${LINUX_MODULE_EXT}
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
@@ -262,6 +268,10 @@ DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
 DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
 DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
+SYSTEM_LIBAFS = /lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}/${LINUX_LIBAFS_NAME}.ko
+
+INST_SYSTEM = ${DESTDIR}${SYSTEM_LIBAFS}
+DEST_SYSTEM = ${DEST}/root.client${SYSTEM_LIBAFS}
 
 libafs:	$(LIBAFS) 
 	echo SP Build Complete
@@ -276,12 +286,15 @@ libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
 <linux26 linux_26 umlinux26>
-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
-	cp libafs.ko $@
+pack_libafs: ${LINUX_LIBAFS_NAME}.ko
+	echo "Packaging Friendly Build Complete"
+
+${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
+	cp ${LINUX_LIBAFS_NAME}.ko $@
 
 .FORCE:
-libafs.ko afspag.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
 <all -linux26 -linux_26 -umlinux26>
@@ -314,6 +327,9 @@ install_libafs.ep: $(INST_LIBAFS_EP)
 install_libafs.bm: $(INST_LIBAFS_BM)
 	echo BM Install Complete
 
+install_pack_libafs: $(INST_SYSTEM)
+	echo Packinging Friendly Install Complete
+
 dest_libafs:	$(DEST_LIBAFS) 
 	echo SP Install Complete
 
@@ -326,6 +342,9 @@ dest_libafs.ep: $(DEST_LIBAFS_EP)
 dest_libafs.bm: $(DEST_LIBAFS_BM)
 	echo BM Install Complete
 
+dest_pack_libafs: $(DEST_SYSTEM)
+	echo Packaging Friendly Install Complete
+
 $(INST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
 
@@ -336,6 +355,9 @@ $(INST_LIBAFS_EP): $(LIBAFS_EP)
 	${INSTALL} -f $? $@
 
 $(INST_LIBAFS_BM): $(LIBAFS_BM)
+	${INSTALL} -f $? $@
+
+$(INST_SYSTEM) $(DEST_SYSTEM): $(LINUX_LIBAFS_NAME).ko
 	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)

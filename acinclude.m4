@@ -55,6 +55,18 @@ AC_ARG_WITH(bsd-kernel-headers,
 AC_ARG_WITH(bsd-kernel-build,
 [  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
 )
+
+AC_ARG_WITH([linux-kernel-packaging],
+	    AS_HELP_STRING([--with-linux-kernel-packaging],
+			   [ use standard naming conventions to aid Linux 
+			     kernel build packaging (disables MPS, sets the 
+			     kernel module name to openafs.ko, and installs 
+			     kernel modules into the standard Linux location)
+			   ]), 
+	    [ AC_SUBST(LINUX_KERNEL_PACKAGING, "yes")
+	      AC_SUBST(LINUX_LIBAFS_NAME, "openafs") ], 
+            [ AC_SUBST(LINUX_LIBAFS_NAME, "libafs") ] )
+
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
 )
@@ -707,7 +719,11 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_EXPORTS_SYS_OPEN
                  LINUX_EXPORTS_SYS_WAIT4
 		 LINUX_EXPORTS_RCU_READ_LOCK
-		 LINUX_WHICH_MODULES
+		 if test "x$with_linux_kernel_packaging" = "xno" ; then
+		   LINUX_WHICH_MODULES
+		 else
+		   AC_SUBST(MPS,'SP')
+		 fi
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
                    ac_cv_linux_exports_sys_call_table=no

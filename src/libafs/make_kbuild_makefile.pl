@@ -2,10 +2,10 @@
 # make_kbuild_makefile.pl
 # Generate a Makefile for use with the Linux 2.6+ kernel build system
 #
-# Usage: make_kbuild_makefile.pl ${KDIR} Makefiles...
+# Usage: make_kbuild_makefile.pl ${KDIR} ${TARG} Makefiles...
 #
 # The specified makefiles will be scanned for variable values
-# The libafs.ko module will be built in ${TOP_SRCDIR}/src/libafs/${KDIR}.
+# The module ${TARG} will be built in ${TOP_SRCDIR}/src/libafs/${KDIR}.
 # It will include objects listed in ${AFSAOBJS} and ${AFSNFSOBJS}
 # The afspag.ko module will be built from objects listed in ${AFSPAGOBJS}.
 # Appropriate source files for each object will be symlinked into ${KDIR}
@@ -17,11 +17,12 @@
 use IO::File;
 
 
-if (@ARGV < 2) {
-  die "Usage: $0 KDIR Makefiles...\n";
+if (@ARGV < 3) {
+  die "Usage: $0 KDIR TARG Makefiles...\n";
 }
 
-($KDIR, @Makefiles) = @ARGV;
+($KDIR, $TARG, @Makefiles) = @ARGV;
+$TARG =~ s/\.k?o$//;
 
 ## Read in all of the Makefiles given on the command line
 ## Our ultimate goal is to find the correct source file for each object.
@@ -111,8 +112,8 @@ foreach (sort keys %vars) {
   print $F "$_ = $vars{$_}\n";
 }
 print $F "EXTRA_CFLAGS=$cflags\n";
-print $F "obj-m := libafs.o afspag.o\n";
-print $F "libafs-objs := ", join("\\\n $_", @libafs_objs), "\n";
+print $F "obj-m := $TARG.o afspag.o\n";
+print $F "$TARG-objs := ", join("\\\n $_", @libafs_objs), "\n";
 print $F "afspag-objs := ", join("\\\n $_", @afspag_objs), "\n";
 print $F "\n$MakefileVersion\n";
 $F->close() or die "$KDIR/Makefile: $!\n";
