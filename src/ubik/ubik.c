@@ -263,7 +263,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
-		      (void *)0, "rx_ServerProc", &junk);
+		      NULL, "rx_ServerProc", &junk);
 
     /* do basic initialization */
     code = uvote_Init();
