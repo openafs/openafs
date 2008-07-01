@@ -119,7 +119,7 @@ volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen)
     if (strlcat(tbuffer, tempString, buflen) >= buflen) {
 	return -1;
     }
-    return tbuffer;
+    return 0;
 }
 
 #define BAD_VID "BAD VOLUME ID"
