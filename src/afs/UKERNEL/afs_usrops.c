@@ -1641,7 +1641,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     /*
      * Set the primary cell name.
      */
-    call_syscall(AFSOP_SET_THISCELL, (long)afs_LclCellName, 0, 0, 0, 0);
+    call_syscall(AFSCALL_CALL, AFSOP_SET_THISCELL, (long)afs_LclCellName, 0, 0, 0);
 
     if ((logfd = fopen(fullpn_AFSLogFile, "r+")) == 0) {
 	if (afsd_verbose)
