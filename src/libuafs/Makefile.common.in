@@ -112,6 +112,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_user.o \
 	$(UOBJ)/afs_util.o \
 	$(UOBJ)/afs_vcache.o \
+	$(UOBJ)/afs_warn.o \
 	$(UOBJ)/afs_osi_uio.o \
 	$(UOBJ)/afs_vnop_access.o \
 	$(UOBJ)/afs_vnop_attrs.o \
@@ -238,6 +239,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
+	$(WEBOBJ)/afs_warn.o \
 	$(WEBOBJ)/afs_osi_uio.o \
 	$(WEBOBJ)/afs_vnop_access.o \
 	$(WEBOBJ)/afs_vnop_attrs.o \
@@ -365,6 +367,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
+	$(WEBOBJ)/afs_warn.o \
 	$(WEBOBJ)/afs_osi_uio.o \
 	$(WEBOBJ)/afs_vnop_access.o \
 	$(WEBOBJ)/afs_vnop_attrs.o \
@@ -487,6 +490,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_user.o \
 	$(JUAFS)/afs_util.o \
 	$(JUAFS)/afs_vcache.o \
+	$(JUAFS)/afs_warn.o \
 	$(JUAFS)/afs_osi_uio.o \
 	$(JUAFS)/afs_vnop_access.o \
 	$(JUAFS)/afs_vnop_attrs.o \
@@ -624,6 +628,8 @@ $(UOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 $(UOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
 	$(CRULE1)
 $(UOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
+	$(CRULE1)
+$(UOBJ)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
 	$(CRULE1)
 $(UOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE1)
@@ -883,6 +889,8 @@ $(WEBOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 $(WEBOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
 	$(CRULE2)
 $(WEBOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
+	$(CRULE2)
+$(WEBOBJ)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
 	$(CRULE2)
 $(WEBOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE2)
@@ -1146,6 +1154,8 @@ $(JUAFS)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 $(JUAFS)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
 	$(CRULE1)
 $(JUAFS)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
+	$(CRULE1)
+$(JUAFS)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
 	$(CRULE1)
 $(JUAFS)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE1)
