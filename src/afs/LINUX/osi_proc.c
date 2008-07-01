@@ -349,14 +349,14 @@ osi_proc_clean(void)
     char path[64];
 #endif
 
+    remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+    remove_proc_entry("unixusers", openafs_procfs);
+#endif
 #if defined(EXPORTED_PROC_ROOT_FS)
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 #else
     sprintf(path, "fs/%s", PROC_FSDIRNAME);
     remove_proc_entry(path, NULL);
-#endif
-    remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
-    remove_proc_entry("unixusers", openafs_procfs);
 #endif
 }

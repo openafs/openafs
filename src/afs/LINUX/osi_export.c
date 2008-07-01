@@ -30,6 +30,10 @@ RCSID
 /* #define OSI_EXPORT_DEBUG */
 
 extern struct dentry_operations afs_dentry_operations;
+#if defined(NEW_EXPORT_OPS)
+static struct dentry *afs_export_get_dentry(struct super_block *sb,
+					    void *inump);
+#endif
 
 struct get_name_data {
     char *name;
@@ -154,14 +158,23 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
     return AFSFH_NET_CELLFID;
 }
 
+#if defined(NEW_EXPORT_OPS)
+static struct dentry *afs_fh_to_dentry(struct super_block *sb, struct fid *fh_fid,
+				    int fh_len, int fh_type)
+#else
 static struct dentry *afs_decode_fh(struct super_block *sb, __u32 *fh,
 				    int fh_len, int fh_type,
 				    int (*acceptable)(void *, struct dentry *),
 				    void *context)
+#endif
 {
     struct VenusFid fid;
     struct cell *tc;
     struct dentry *result;
+#if defined(NEW_EXPORT_OPS)
+    __u32 *fh = (__u32 *)fh_fid->raw;
+#endif
+
 
     switch (fh_type) {
 	case AFSFH_VENUSFID:
@@ -191,8 +204,6 @@ static struct dentry *afs_decode_fh(struct super_block *sb, __u32 *fh,
 	    break;
 
 	case AFSFH_NET_VENUSFID:
-	    if (fh_len != 4)
-		return NULL;
 	    fid.Cell       = ntohl(fh[0]);
 	    fid.Fid.Volume = ntohl(fh[1]);
 	    fid.Fid.Vnode  = ntohl(fh[2]);
@@ -275,8 +286,14 @@ static struct dentry *afs_decode_fh(struct super_block *sb, __u32 *fh,
 	    return NULL;
     }
 
+#if defined(NEW_EXPORT_OPS)
+    result = afs_export_get_dentry(sb, &fid);
+#else
     result = sb->s_export_op->find_exported_dentry(sb, &fid, 0,
 						   acceptable, context);
+
+#endif
+
 #ifdef OSI_EXPORT_DEBUG
     if (!result) {
 	printk("afs: decode_fh(0x%08x/%d/%d.%d): no dentry\n",
@@ -930,8 +947,12 @@ done:
 
 struct export_operations afs_export_ops = {
     .encode_fh  = afs_encode_fh,
+#if defined(NEW_EXPORT_OPS)
+    .fh_to_dentry  = afs_fh_to_dentry,
+#else
     .decode_fh  = afs_decode_fh,
     .get_dentry = afs_export_get_dentry,
+#endif
     .get_name   = afs_export_get_name,
     .get_parent = afs_export_get_parent,
 };
