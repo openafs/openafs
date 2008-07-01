@@ -1093,6 +1093,15 @@ if test "x$enable_warnings" = "xyes"; then
   fi
 fi
 
+dnl horribly cheating, assuming double / is ok.
+case $INSTALL in
+  ./* ) 
+    INSTALL="/@abs_top_srcdir@/install-sh -c"
+  ;;
+  *) 
+  ;;
+esac
+
 INSTALL_PROGRAM="${INSTALL_PROGRAM} ${NO_STRIP_BIN}"
 
 AC_SUBST(CCXPG2)
