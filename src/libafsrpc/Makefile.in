@@ -366,7 +366,7 @@ syscall.o: ${SYS}/syscall.s
 	 *bsd* ) \
 		touch syscall.o ;; \
 	 *) \
-		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
