@@ -150,15 +150,6 @@ extern struct vnodeops *afs_ops;
 #endif
 #endif
 
-#ifdef AFS_SGI65_ENV
-#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp),\
-			NULL)
-#else
-#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
-#endif
-
 /*
  * In IRIX 6.5 we cannot have DEBUG turned on since certain
  * system-defined structures are a different size with DEBUG on, the
