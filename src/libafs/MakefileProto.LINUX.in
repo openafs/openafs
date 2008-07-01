@@ -213,6 +213,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 <ia64_linux24 ia64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
+	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \
+	    TARGPREFIX="pack_"; \
+	fi ; \
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
@@ -230,7 +233,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
-		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARGPREFIX}$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
 		cd ../ ; \
 <all>
 	done
@@ -248,13 +251,16 @@ linux_destdirs_libafs.mp: dest_libafs.mp
 linux_destdirs_libafs.ep: dest_libafs.ep
 linux_destdirs_libafs.bm: dest_libafs.bm
 
+linux_compdirs_pack_libafs: depsrcs pack_libafs
+linux_instdirs_pack_libafs: install_pack_libafs
+linux_destdirs_pack_libafs: dest_pack_libafs
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = libafs-${CLIENT}.${LINUX_MODULE_EXT}
-LIBAFS_MP = libafs-${CLIENT}.mp.${LINUX_MODULE_EXT}
-LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
-LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
+LIBAFS = ${LINUX_LIBAFS_NAME}-${CLIENT}.${LINUX_MODULE_EXT}
+LIBAFS_MP = ${LINUX_LIBAFS_NAME}-${CLIENT}.mp.${LINUX_MODULE_EXT}
+LIBAFS_EP = ${LINUX_LIBAFS_NAME}-${CLIENT}.ep.${LINUX_MODULE_EXT}
+LIBAFS_BM = ${LINUX_LIBAFS_NAME}-${CLIENT}.bm.${LINUX_MODULE_EXT}
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
@@ -266,6 +272,10 @@ DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
 DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
 DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
+SYSTEM_LIBAFS = /lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}/${LINUX_LIBAFS_NAME}.ko
+
+INST_SYSTEM = ${DESTDIR}${SYSTEM_LIBAFS}
+DEST_SYSTEM = ${DEST}/root.client${SYSTEM_LIBAFS}
 
 libafs:	$(LIBAFS) 
 	echo SP Build Complete
@@ -280,14 +290,17 @@ libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
 <linux26 linux_26 umlinux26>
-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
-	cp libafs.ko $@
+pack_libafs: ${LINUX_LIBAFS_NAME}.ko
+	echo "Packaging Friendly Build Complete"
+
+${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
+	cp ${LINUX_LIBAFS_NAME}.ko $@
 
 .FORCE:
-libafs.ko afspag.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
-        
+
 <all -linux26 -linux_26 -umlinux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
@@ -311,6 +324,11 @@ install_libafs:	$(LIBAFS)
 	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
 	echo SP Install Complete
 
+install_pack_libafs: $(LINUX_LIBAFS_NAME).ko
+	${INSTALL} -d ${DESTDIR}/lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}
+	${INSTALL} -m 644 $(LINUX_LIBAFS_NAME).ko $(INST_SYSTEM)
+	echo Packaging Friendly Install Complete
+
 install_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
 	${INSTALL} -m 644 $(LIBAFS_MP) $(INST_LIBAFS_MP)
@@ -330,6 +348,11 @@ dest_libafs:	$(LIBAFS)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
 	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
 	echo SP Install Complete
+
+dest_pack_libafs: $(LINUX_LIBAFS_NAME).ko
+	${INSTALL} -d ${DEST}/root.client/lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}
+	${INSTALL} -m 644 $(LINUX_LIBAFS_NAME).ko $(DEST_SYSTEM)
+	echo Packaging Friendly Install Complete
 
 dest_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
