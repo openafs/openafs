@@ -14,7 +14,7 @@ Package: openafs-client
 Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2, lsof
-Suggests: openafs-doc
+Suggests: openafs-doc, openafs-krb5
 Conflicts: arla, openafs-modules1
 Description: AFS distributed filesystem client support
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -22,7 +22,8 @@ Description: AFS distributed filesystem client support
  control, authentication, backup and administrative management.
  .
  This package provides basic client support to mount and manipulate
- AFS.
+ AFS.  If your site uses Kerberos v5 authentication for AFS, you will also
+ want to install openafs-krb5.
 
 Package: openafs-kpasswd
 Priority: extra

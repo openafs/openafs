@@ -3,6 +3,8 @@ openafs (1.4.7.dfsg1-4) UNRELEASED; urgency=low
   * Don't use UCONTEXT on hppa; its glibc doesn't provide those
     functions.  It's possible that OpenAFS isn't working properly on hppa
     these days, but as yet there have been no reports.
+  * Suggest openafs-krb5 in openafs-client and mention it in the long
+    description.
 
  -- Russ Allbery <rra@debian.org>  Mon, 30 Jun 2008 13:33:58 -0700
 
