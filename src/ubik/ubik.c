@@ -299,7 +299,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     assert(pthread_create(&rxServerThread, &rxServer_tattr, (void *)rx_ServerProc, NULL) == 0);
 #else
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
-              (void *)0, "rx_ServerProc", &junk);
+              NULL, "rx_ServerProc", &junk);
 #endif
 
     /* do basic initialization */
