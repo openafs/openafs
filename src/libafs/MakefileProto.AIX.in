@@ -116,21 +116,13 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			KASOPTS="64" ; \
 			TARG="afs.ext.64" ; \
 		fi ; \
-		$(MAKE) DEST="$${DEST}" KOPTS="$${KOPTS}"  KLDOPTS="$${KLDOPTS}" KASOPTS="$${KASOPTS}" SUBDIR=$${KDIR} $@_$${TARG} || exit $$?; \
+		cd $${KDIR} ; \
+		$(MAKE) DEST="$${DEST}" KOPTS="$${KOPTS}"  KLDOPTS="$${KLDOPTS}" KASOPTS="$${KASOPTS}" $@_$${TARG} || exit $$?; \
+		cd ../ ; \
 	done
 
-aix_compdirs_afs.ext.32: 
-	if true; then \
-	cd $${SUBDIR}; \
-	$(MAKE) afs.ext.32 || exit $$?; \
-	cd ..; \
-	fi
-aix_compdirs_afs.ext.64: 
-	if true; then \
-	cd $${SUBDIR}; \
-	$(MAKE) afs.ext.64 || exit $$?; \
-	cd ..; \
-	fi
+aix_compdirs_afs.ext.32: afs.ext.32
+aix_compdirs_afs.ext.64: afs.ext.64
 aix_instdirs_afs.ext.32: install_afs.ext.32
 aix_instdirs_afs.ext.64: install_afs.ext.64
 aix_destdirs_afs.ext.32: dest_afs.ext.32
@@ -138,30 +130,31 @@ aix_destdirs_afs.ext.64: dest_afs.ext.64
 
 dest_afs.ext.32: afs.ext.32
 	${INSTALL} -d $(DEST)/root.client/usr/vice/etc/dkload
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.32 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
+	$(INSTALL) -m 644 afs.ext.32 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
 	-${STRIP} -X 32 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.32.map $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32.map
+	$(INSTALL) -m 644 afs.ext.32.map $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32.map
 	echo Install for 32-bit Kernel Complete
 
 dest_afs.ext.64: afs.ext.64
 	${INSTALL} -d $(DEST)/root.client/usr/vice/etc/dkload
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.64 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
+	$(INSTALL) -m 644 afs.ext.64 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
 	-${STRIP} -X 64 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.64.map $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64.map
+	$(INSTALL) -m 644 afs.ext.64.map $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64.map
 	echo Install for 64-bit Kernel Complete
 
 install_afs.ext.32: afs.ext.32
 	${INSTALL} -d $(DESTDIR)$(afskerneldir)
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.32 $(DESTDIR)$(afskerneldir)/afs.ext.32
+	$(INSTALL) -m 644 afs.ext.32 $(DESTDIR)$(afskerneldir)/afs.ext.32
 	-${STRIP} -X 32 $(DESTDIR)$(afskerneldir)/afs.ext.32
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.32.map $(DESTDIR)$(afskerneldir)/afs.ext.32.map
+	$(INSTALL) -m 644 afs.ext.32.map $(DESTDIR)$(afskerneldir)/afs.ext.32.map
 	echo Install for 32-bit Kernel Complete
 
 install_afs.ext.64: afs.ext.64
-	${INSTALL} -d $(DESTDIR)$(afskerneldir)	
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.64 $(DESTDIR)$(afskerneldir)/afs.ext.64
+	${INSTALL} -d $(DESTDIR)$(afskerneldir)
+	$(DESTDIR)$(afskerneldir)/afs.ext.64
+	$(INSTALL) -m 644 afs.ext.64 $(DESTDIR)$(afskerneldir)/afs.ext.64
 	-${STRIP} -X 64 $(DESTDIR)$(afskerneldir)/afs.ext.64
-	$(INSTALL) -m 644 $(SUBDIR)/afs.ext.64.map $(DESTDIR)$(afskerneldir)/afs.ext.64.map
+	$(INSTALL) -m 644 afs.ext.64.map $(DESTDIR)$(afskerneldir)/afs.ext.64.map
 	echo Install for 64-bit Kernel Complete
 
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
@@ -202,15 +195,15 @@ libafs: $(LIBAFS) $(LIBAFS64) $(LIBAFSIAUTH)
 
 install_libafs: $(INST_LIBAFSIAUTH)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	$(INSTALL) -m 644 $(SUBDIR)/$(LIBAFSIAUTH) $(INST_LIBAFSIAUTH)
+	$(INSTALL) -m 644 $(LIBAFSIAUTH) $(INST_LIBAFSIAUTH)
 	-${STRIP} $(INST_LIBAFSIAUTH)
-	$(INSTALL) -m 644 $(SUBDIR)/$(LIBAFSIAUTH).map $(INST_LIBAFSIAUTH).map
+	$(INSTALL) -m 644 $(LIBAFSIAUTH).map $(INST_LIBAFSIAUTH).map
 
 dest_libafs: $(DEST_LIBAFSIAUTH)
 	${INSTALL} -d $(DEST)/root.client/usr/vice/etc/dkload
-	$(INSTALL) -m 644 $(SUBDIR)/$(LIBAFSIAUTH) $(DEST_LIBAFSIAUTH)
+	$(INSTALL) -m 644 $(LIBAFSIAUTH) $(DEST_LIBAFSIAUTH)
 	-${STRIP} $(DEST_LIBAFSIAUTH)
-	$(INSTALL) -m 644 $(SUBDIR)/$(LIBAFSIAUTH).map $(DEST_LIBAFSIAUTH).map
+	$(INSTALL) -m 644 $(LIBAFSIAUTH).map $(DEST_LIBAFSIAUTH).map
 
 osi_assem.o:	osi_assem.s
 	${AS} -a${KASOPTS} -o osi_assem.o osi_assem.s

@@ -202,19 +202,14 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		32)	bopts="$(KDEFS_32)"; bsuff="";; \
 		64)	bopts="$(KDEFS_64)"; bsuff="64";; \
 		esac; \
-		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" SUBDIR=$$dir $@_libafs || exit $$?; \
+		cd $$dir; \
+		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" $@_libafs || exit $$?; \
+		cd ..; \
 	    done; \
 	done; \
 	fi
 
-hpux_compdirs_libafs: 
-	if true; then \
-	cd $${SUBDIR}; \
-	$(MAKE) depsrcs; \
-	$(MAKE) libafs || exit $$?; \
-	cd ..; \
-	fi
-
+hpux_compdirs_libafs: depsrcs libafs
 hpux_instdirs_libafs: install_libafs
 hpux_destdirs_libafs: dest_libafs
 
@@ -239,11 +234,11 @@ libafs: ${LIBAFSNONFS}
 
 install_libafs: $(LIBAFSNONFS)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFSNONFS) $(INST_LIBAFSNONFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(INST_LIBAFSNONFS)
 
 dest_libafs: $(LIBAFSNONFS)
 	${INSTALL} -d ${DEST}/root.client/usr/bin
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 <all -ia64_hpux1123 -hp_ux1123>

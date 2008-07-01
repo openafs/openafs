@@ -229,23 +229,16 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
 			TARG=libafs ; \
 		fi ; \
-		$(MAKE) SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		cd $${KDIR} ; \
+		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		cd ../ ; \
 <all>
 	done
 
-
-linux_compdirs_libafs:
-	cd ${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" depsrcs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" libafs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} 
-
-linux_compdirs_libafs.mp: 
-	cd ${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" depsrcs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" libafs.mp CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} 
-
-linux_compdirs_libafs.ep: 
-	cd ${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" depsrcs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" libafs.ep CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} 
-
-linux_compdirs_libafs.bm: 
-	cd ${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" depsrcs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} && $(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" libafs.bm CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} 
-
+linux_compdirs_libafs: depsrcs libafs
+linux_compdirs_libafs.mp: depsrcs libafs.mp
+linux_compdirs_libafs.ep: depsrcs libafs.ep
+linux_compdirs_libafs.bm: depsrcs libafs.bm
 linux_instdirs_libafs: install_libafs
 linux_instdirs_libafs.mp: install_libafs.mp
 linux_instdirs_libafs.ep: install_libafs.ep
@@ -315,40 +308,40 @@ ${LIBAFS_BM}: $(AFSAOBJS) $(AFSNONFSOBJS)
 
 install_libafs:	$(LIBAFS) 
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS) $(INST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
 	echo SP Install Complete
 
 install_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_MP) $(INST_LIBAFS_MP)
+	${INSTALL} -m 644 $(LIBAFS_MP) $(INST_LIBAFS_MP)
 	echo MP Install Complete
 
 install_libafs.ep: $(LIBAFS_EP)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_EP) $(INST_LIBAFS_EP)
+	${INSTALL} -m 644 $(LIBAFS_EP) $(INST_LIBAFS_EP)
 	echo EP Install Complete
 
 install_libafs.bm: $(LIBAFS_BM)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_BM) $(INST_LIBAFS_BM)
+	${INSTALL} -m 644 $(LIBAFS_BM) $(INST_LIBAFS_BM)
 	echo BM Install Complete
 
 dest_libafs:	$(LIBAFS) 
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS) $(DEST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
 	echo SP Install Complete
 
 dest_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_MP) $(DEST_LIBAFS_MP)
+	${INSTALL} -m 644 $(LIBAFS_MP) $(DEST_LIBAFS_MP)
 	echo MP Install Complete
 
 dest_libafs.ep: $(LIBAFS_EP)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_EP) $(DEST_LIBAFS_EP)
+	${INSTALL} -m 644 $(LIBAFS_EP) $(DEST_LIBAFS_EP)
 	echo EP Install Complete
 
 dest_libafs.bm: $(LIBAFS_BM)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(KDIR)/$(LIBAFS_BM) $(DEST_LIBAFS_BM)
+	${INSTALL} -m 644 $(LIBAFS_BM) $(DEST_LIBAFS_BM)
 	echo BM Install Complete

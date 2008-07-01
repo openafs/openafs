@@ -107,16 +107,12 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		esac ; \
 		export ARCH_DEFS ; \
 		export BITS ; \
-		$(MAKE) SUBDIR=$$t $@_libafs ; \
+		cd $$t  ; \
+		$(MAKE) $@_libafs ; \
+		cd ../ ;\
 	done
 
-solaris_compdirs_libafs: 
-	if true; then \
-	cd ${SUBDIR}; \
-	$(MAKE) depsrcs; \
-	$(MAKE) libafs || exit $$?; \
-	cd ..; \
-	fi
+solaris_compdirs_libafs: depsrcs libafs
 solaris_instdirs_libafs: install_libafs
 solaris_destdirs_libafs: dest_libafs
 
@@ -149,13 +145,13 @@ libafs:	$(LIBAFSNONFS) $(LIBAFS)
 
 install_libafs:	$(LIBAFS) $(LIBAFSNONFS)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFS) $(INST_LIBAFS)
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFSNONFS) $(INST_LIBAFSNONFS)
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(INST_LIBAFSNONFS)
 
 dest_libafs: $(LIBAFS) $(LIBAFSNONFS)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFS) $(DEST_LIBAFS)
-	${INSTALL} -m 644 $(SUBDIR)/$(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(RM) -f $@
