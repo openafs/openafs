@@ -206,7 +206,8 @@ void osi_linux_nfssrv_init(void)
     nfssrv_list = 0;
     RWLOCK_INIT(&afs_xnfssrv, "afs_xnfssrv");
 
-    if (authtab)	   afs_authtab = authtab;
+    if (authtab && !IS_ERR(authtab))
+	   afs_authtab = authtab;
     else if (authtab_addr) afs_authtab = (struct auth_ops **)authtab_addr;
     else {
 	printk("Warning: Unable to find the address of authtab\n");

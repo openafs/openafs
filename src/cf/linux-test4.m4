@@ -1051,3 +1051,31 @@ AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
     AC_DEFINE([EXPORTED_PROC_ROOT_FS], 1, [define if proc_root_fs is exported])
   fi])
  
+AC_DEFUN([LINUX_D_PATH_TAKES_STRUCT_PATH], [
+  AC_MSG_CHECKING([if d_path() takes a struct path argument])
+  AC_CACHE_VAL([ac_cv_linux_d_path_takes_struct_path], [
+    AC_TRY_KBUILD(
+[#include <linux/dcache.h>],
+[struct path *p;
+d_path(p, NULL, 0);],
+      ac_cv_linux_d_path_takes_struct_path=yes,
+      ac_cv_linux_d_path_takes_struct_path=no)])
+  AC_MSG_RESULT($ac_cv_linux_d_path_takes_struct_path)
+  if test "x$ac_cv_linux_d_path_takes_struct_path" = "xyes"; then
+    AC_DEFINE([D_PATH_TAKES_STRUCT_PATH], 1, [define if d_path() takes a struct path argument])
+  fi])
+ 
+AC_DEFUN([LINUX_NEW_EXPORT_OPS], [
+  AC_MSG_CHECKING([if kernel uses new export ops])
+  AC_CACHE_VAL([ac_cv_linux_new_export_ops], [
+    AC_TRY_KBUILD(
+[#include <linux/exportfs.h>],
+[struct export_operations _eops;
+_eops.fh_to_parent(NULL, NULL, 0, 0);],
+      ac_cv_linux_new_export_ops=yes,
+      ac_cv_linux_new_export_ops=no)])
+  AC_MSG_RESULT($ac_cv_linux_new_export_ops)
+  if test "x$ac_cv_linux_new_export_ops" = "xyes"; then
+    AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
+  fi])
+ 
