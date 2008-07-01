@@ -78,6 +78,7 @@ sub scan_names {
             unless ($name) {
                 warn "$dir/$file: cannot find NAME section, skipping\n";
             }
+            $name =~ s/^(backup|bos|fs|fstrace|kas|pts|symlink|uss|vos)_/$1 /;
             my $page = $file;
             $page =~ s/\.pod$//;
             push (@index, [ $section, $name, $page, $desc ]);
