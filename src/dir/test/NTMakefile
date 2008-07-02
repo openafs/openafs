@@ -13,6 +13,7 @@ tests: $(OUT)\dtest.exe
 $(OUT)\dtest.exe: $(OUT)\dtest.obj $(DESTDIR)\lib\afs\afsdir.lib
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 mkdir:
 	

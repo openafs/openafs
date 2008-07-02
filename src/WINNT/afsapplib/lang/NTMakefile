@@ -46,6 +46,7 @@ $(DLLFILE) : $(DLLOBJS)
 	$(DLLRESLINK)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP) 
+        $(CODESIGN_USERLAND)
 
 install : $(DLLFILE)
 

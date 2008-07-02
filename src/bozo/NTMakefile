@@ -74,7 +74,7 @@ $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
-
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build bos.exe
@@ -112,6 +112,7 @@ $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)
 	$(COPY) $** $@

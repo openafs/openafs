@@ -78,6 +78,7 @@ $(DLLFILE): $(DLLOBJS)
 	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
 
@@ -107,6 +108,7 @@ $(EXEOBJS) : osidebug.c
 $(EXEFILE) : $(EXEOBJS)
 	$(EXEGUILINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # midl on dbrpc.idl

@@ -67,6 +67,7 @@ $(MSIFILE): $(WIXOBJ)
 	light -nologo -out $(MSIFILE) \
 		-loc lang\$(LANG)\strings.wxl \
 		$(WIXOBJ)
+	$(CODESIGN_USERLAND)
 	dir $(MSIFILE)
 
 $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
@@ -103,6 +104,7 @@ $(BINMSIFILE): $(BINWIXOBJ)
 	light -nologo -out $(BINMSIFILE) \
 		-loc lang\en_US\strings.wxl \
 		$(BINWIXOBJ)
+	$(CODESIGN_USERLAND)
 	dir $(BINMSIFILE)
 !ENDIF
 
@@ -124,3 +126,6 @@ lang_clean:
 	-$(DEL) $(BINWIXOBJ)
 	-$(DEL) $(BINMSIFILE)
 !ENDIF
+
+
+

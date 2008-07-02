@@ -98,6 +98,7 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 
 # Definitions for generating versioninfo resources
 $(OUT)\afsrpc.res: AFS_component_version_number.h

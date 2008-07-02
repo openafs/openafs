@@ -64,6 +64,7 @@ $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build cbd - not generally distributed debugging program
@@ -77,6 +78,7 @@ $(OUT)\cbd.obj: callback.c AFS_component_version_number.h
 $(CBD): $(OUT)\cbd.obj $(CBDRES)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # generate versioninfo resources

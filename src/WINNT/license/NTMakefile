@@ -32,6 +32,7 @@ $(EXEFILE) : $(EXEOBJS) $(EXERES)
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 install : $(EXEFILE) lang

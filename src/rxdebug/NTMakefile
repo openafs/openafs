@@ -35,6 +35,7 @@ $(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
 	$(EXECONLINK) iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 install: $(RXDEBUG)
 

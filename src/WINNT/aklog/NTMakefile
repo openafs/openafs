@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # include the primary makefile
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES)  -DHAVE_KRB5_CREDS_KEYBLOCK=1
 RELDIR=WINNT\aklog
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
@@ -61,11 +62,13 @@ $(AKLOG) : $(AKLOGOBJS) $(EXELIBS) $(OUT)\aklog.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 $(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 install : $(COPYHEADERS) $(AKLOG) $(ASETKEY)
 
@@ -77,6 +80,8 @@ install : $(COPYHEADERS) $(AKLOG) $(ASETKEY)
 $(OUT)\aklog.res : aklog.rc AFS_component_version_number.h
 
 $(OUT)\asetkey.res : asetkey.rc AFS_component_version_number.h
+
+$(OUT)\k5log.res : k5log.rc AFS_component_version_number.h
 
 mkdir:
 	-mkdir $(OUT)\lang

@@ -508,14 +508,17 @@ $(INCTOOLS):$(OUT)\$$(@F)
 $(OUT)\mkvers.exe : $(OUT)\mkvers.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\touch.exe : $(OUT)\touch.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\util_cr.exe : $(OUT)\util_cr.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 

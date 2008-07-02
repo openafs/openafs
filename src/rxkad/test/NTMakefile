@@ -37,6 +37,7 @@ $(EXEFILE): $(EXEOBJS)
 	$(EXECONLINK) $(EXELIBS) 
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 
 ############################################################################

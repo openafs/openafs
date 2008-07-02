@@ -29,6 +29,7 @@ ILIST = $(OUT)\ilist.exe
 $(ILIST): $(OUT)\ilist_nt.obj $(EXEC_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 
 ############################################################################
@@ -38,6 +39,7 @@ LTLIST = $(OUT)\ltlist.exe
 $(LTLIST): $(OUT)\ltlist.obj $(EXEC_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 mkdir:
 	

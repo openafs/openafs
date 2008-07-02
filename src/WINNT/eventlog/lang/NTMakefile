@@ -43,6 +43,7 @@ DLLOBJS = $(DLLRESFILE)
 $(DLLFILE): $(DLLOBJS)
 	$(DLLRESLINK)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Generate versioninfo resources
