@@ -591,15 +591,22 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-extra: netidmgr_plugin
-!	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
-     echo ***** $@
-    $(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
+afsrdr: netidmgr_plugin
+      echo ***** $@
+        $(DOCD) $(SRC)WINNT\afsrdr
+        $(CD) $(SRC)WINNT\afsrdr
+        $(NTMAKE)
+        $(CD) ..\..\..\..
+
+extra: afsrdr
+        IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
+        echo ***** $@
+            $(DOCD) $(SRC)\WINNT\$@
+	    $(CD) $(SRC)\WINNT\$@
+	    $(NTMAKE)
+	    $(CD) ..\..\..
 !	ELSE
-     echo ***** Skipping $@ ***** Not found.
+        echo ***** Skipping $@ ***** Not found.
 !	ENDIF
                 
 finale: extra

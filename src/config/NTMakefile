@@ -308,6 +308,15 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\aklog))
 		$(MKDIR) $(OJT)\WINNT\aklog
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\kernel))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\kernel
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\npdll))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\npdll
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\bosctlsvc))
 		$(MKDIR) $(OJT)\WINNT\bosctlsvc
 !	ENDIF

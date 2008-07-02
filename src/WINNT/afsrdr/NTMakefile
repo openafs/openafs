@@ -1,0 +1,59 @@
+!IF ("$(CPU)" == "x86")
+CPU = i386
+!ENDIF
+
+RELDIR=WINNT\afsrdr
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+TARGETPATH = $(DESTDIR)\root.client\usr\vice\etc
+
+!IF ("$(CPU)" == "i386")
+DDK_ARCH=X86
+DDK_PLATFORM=WXP
+!ELSE IF ("$(CPU)" == "amd64")
+DDK_ARCH=AMD64
+DDK_PLATFORM=WXP
+!ENDIF
+
+$(OUT)\ddkbuild.cmd:
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(AFSDEV_BUILDTYPE) > $@
+        echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
+        echo cd kernel >> $@
+        echo build.exe -M >> $@
+        echo cd ..\npdll >> $@
+        echo build.exe -M >> $@
+        echo cd ..\build\$(CPU) >> $@
+        echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll AFSRedir.sys >> $@
+        echo exit >> $@
+
+$(OUT)\ddkclean.cmd:
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(AFSDEV_BUILDTYPE) > $@
+        echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
+        echo cd kernel >> $@
+        echo build.exe -c -0 >> $@
+        echo cd ..\npdll >> $@
+        echo build.exe -c -0 >> $@
+        echo exit >> $@
+
+
+install: $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd
+        type $(OUT)\ddkbuild.cmd
+        start /wait $(OUT)\ddkbuild.cmd
+
+clean:: 
+        $(DEL) $(OUT)\ddkbuild.cmd
+        -type $(OUT)\ddkclean.cmd
+        if exist $(OUT)\ddkclean.cmd start /wait $(OUT)\ddkclean.cmd
+        -$(DEL) $(OUT)\ddkclean.cmd
+        cd kernel
+        -$(DEL) *.log
+        -$(DEL) *.wrn
+        -$(DEL) *.aps
+        -$(DEL) *.suo
+        cd ..\npdll
+        -$(DEL) *.log
+        -$(DEL) *.wrn
+        -$(DEL) *.aps
+        -$(DEL) *.suo
+        cd ..
