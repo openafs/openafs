@@ -19,9 +19,10 @@ $(OBJECTS): $$(@B).c
 $(OUT)\uninstall.res: uninstall.rc AFS_component_version_number.h
 
 $(UNINSTALL): $(OBJECTS) $(OUT)\uninstall.res
-  $(EXECONLINK) msi.lib
+        $(EXECONLINK) msi.lib
         $(_VC_MANIFEST_EMBED_EXE)
-  $(EXEPREP)
+        $(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 install: $(UNINSTALL)
 

@@ -85,6 +85,7 @@ $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Definitions for generating versioninfo resources

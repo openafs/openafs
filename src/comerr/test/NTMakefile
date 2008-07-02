@@ -20,6 +20,7 @@ $(EXEFILE): $(EXEOBJS)  # dependents built from predefined inference rules
 	$(EXECONLINK) $(EXELIBS) 
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 test1.c test1.h: test1.et 
 	$(DEL) test1.c test1.h

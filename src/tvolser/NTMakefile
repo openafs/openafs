@@ -74,6 +74,7 @@ $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 $(VOLSEROBJS): $(VOLSER)\$$(@B).c
         $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**

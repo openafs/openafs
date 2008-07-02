@@ -23,6 +23,7 @@ $(OUT)\Service.res: Service.rc AFS_component_version_number.h
 $(EXEDIR)\Service.exe: $(OUT)\Service.obj $(OUT)\Service.res
       $(EXECONLINK) 
       $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\Killer.res: Killer.rc AFS_component_version_number.h
 
@@ -32,6 +33,7 @@ $(OUT)\Killer.obj: Killer.cpp
 $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj $(OUT)\Killer.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\AdminGroup.res: AdminGroup.rc AFS_component_version_number.h
 
@@ -41,6 +43,7 @@ $(OUT)\AdminGroup.obj: AdminGroup.cpp
 $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 !IF ("$(AFSDEV_BUILDTYPE)"=="FREE")
 !IF ("$(CPU)" == "i386")
@@ -139,6 +142,7 @@ MSVCMSI=$(EXEDIR)\vcruntime.msi
 
 $(MSVCMSI): $(OUT)\vcruntime.wixobj
 	light -out $@ $**
+	$(CODESIGN_USERLAND)
 
 $(OUT)\vcruntime.wixobj: vcruntime.wxs
 	candle -out $@ $** -dPlatform=$(ARCH) -dConfig=Debug
@@ -149,10 +153,17 @@ MSVCMSI=
 
 runtime: $(MSVCMSI)
 
-build: prebuild
-   "$(NSISDIR)\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
+!if ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+NSISEXE=$(DESTDIR)\WinInstall\OpenAFSforWindows-DEBUG.exe
+!else
+NSISEXE=$(DESTDIR)\WinInstall\OpenAFSforWindows.exe
+!endif
 
-install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe runtime build
+$(NSISEXE): prebuild
+	"$(NSISDIR)\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
+	$(CODESIGN_USERLAND)
+
+install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\AdminGroup.exe runtime $(NSISEXE)
 
 clean::
    $(DEL) $(OUT)\Service.obj
@@ -168,8 +179,8 @@ clean::
    $(DEL) AFS_component_version_number.h
 #   $(DEL) $(EXEDIR)\Msvcr71.dll
 #   $(DEL) $(EXEDIR)\MFC42.DLL
-#   $(DEL) OpenAFSforWindows.exe
 !if ("$(AFSVER_CL)"=="1400") && ("$(AFSDEV_BUILDTYPE)"!="FREE")
    $(DEL) $(OUT)\vcruntime.wixobj
    $(DEL) $(MSVCMSI)
 !endif
+   $(DEL) $(NSISEXE)

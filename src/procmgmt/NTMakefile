@@ -37,6 +37,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLRES) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsprocmgmt.def
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
 
@@ -57,6 +58,7 @@ $(RS_KILL_EXEFILE): $(KILL_EXEOBJS)	$(KILL_EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 $(CL_KILL_EXEFILE): $(RS_KILL_EXEFILE)
 	$(COPY) $** $@
