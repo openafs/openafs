@@ -95,6 +95,7 @@ $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # generate versioninfo resources
@@ -123,9 +124,11 @@ $(INCFILEDIR)\vldbint.h: vldbint.h
 # Definitions for generating files via COMPILE_ET
 # Need an explicit copy here, since we've fussed with the general rule.
 
-$(INCFILEDIR)\vlserver.h vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
+vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 	$(DEL) vlserver.h vl_errors.c
 	$(COMPILE_ET) vl_errors  -h vlserver
+
+$(INCFILEDIR)\vlserver.h: vlserver.h
 	$(COPY) vlserver.h $(INCFILEDIR)\vlserver.h
 
 ############################################################################
@@ -140,6 +143,7 @@ VLDB_CHECK_LIBS =\
 $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # build local vlclient
@@ -150,6 +154,7 @@ VLCLIENT_LIBS = \
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 
 ############################################################################

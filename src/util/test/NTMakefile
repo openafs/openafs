@@ -16,6 +16,7 @@ LIBS =\
 $(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 test tests: $(OUT)\dirpath_test.exe
 

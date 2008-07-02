@@ -55,6 +55,7 @@ $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # upclient
@@ -71,6 +72,7 @@ $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # generate versioninfo resources

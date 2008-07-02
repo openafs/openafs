@@ -51,6 +51,7 @@ $(OUT)\wmi.obj: wmi.cpp
 $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_DLL)
+        $(CODESIGN_USERLAND)
 
 # instloop.exe
 
@@ -61,8 +62,9 @@ $(OUT)\instloop.obj: instloop.c
       $(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(EXEFILE): $(EXEOBJFILES) $(EXERES)
-      $(LINK) /OUT:$@ $** $(DLLLIBFILES)
-      $(_VC_MANIFEST_EMBED_EXE)
+        $(LINK) /OUT:$@ $** $(DLLLIBFILES)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 install:  $(DLLFILE) $(EXEFILE)
 

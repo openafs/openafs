@@ -51,6 +51,7 @@ $(BINDIR)\xstat_fs_test.exe: $(OUT)\xstat_fs_test.obj $(LIBDIR)\afs_xstat_fs.lib
 	$(EXECONLINK) rpcrt4.lib
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 #
 # Cache Manager data collection
@@ -64,6 +65,7 @@ $(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(LIBDIR)\afs_xstat_cm.lib
 	$(EXECONLINK) 
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 #
 # Misc targets

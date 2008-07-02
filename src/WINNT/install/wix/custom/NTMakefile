@@ -36,6 +36,7 @@ $(DLLFILE): $(OUT)\afscustom.obj $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) \
 	  -OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_DLL)
+        $(CODESIGN_USERLAND)
 
 install: $(DLLFILE)
 

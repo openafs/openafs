@@ -120,6 +120,7 @@ $(BUTCEXE): $(BUTCOBJS) $(BUTCRES) $(BUTCLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 .c.$(OUT)\obj:
 	$(C2OBJ) -I$(BUCOORD) $<

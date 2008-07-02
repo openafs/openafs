@@ -31,6 +31,7 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build Windows 95 version of afspthread.dll

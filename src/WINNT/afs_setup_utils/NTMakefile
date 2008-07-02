@@ -81,8 +81,9 @@ AFSRM_EXELIBS =\
     $(DESTDIR)\lib\afs\afsutil.lib
 
 $(AFSRM_EXEFILE): $(AFSRM_EXEOBJS) $(AFSRM_EXELIBS)
-    $(EXECONLINK)
+        $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 
@@ -132,6 +133,7 @@ $(INSTALL_UTILS_DLLFILE) : $(OUT)\afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:install_utils.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -139,6 +141,7 @@ $(SERVER_UNINST_DLLFILE) : $(OUT)\s_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:server_uninst.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -146,6 +149,7 @@ $(CLIENT_UNINST_DLLFILE) : $(OUT)\c_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:client_uninst.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -153,6 +157,7 @@ $(CC_UNINST_DLLFILE) : $(OUT)\cc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:cc_uninst.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -160,6 +165,7 @@ $(LIGHT_CLIENT_UNINST_DLLFILE) : $(OUT)\lc_afs_setup_utils.obj $(DLLOBJS) $(DLLL
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:light_client_uninst.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -167,6 +173,7 @@ $(DOCS_UNINST_DLLFILE) : $(OUT)\d_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:docs_uninst.def $(VCLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
+        $(CODESIGN_USERLAND)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 

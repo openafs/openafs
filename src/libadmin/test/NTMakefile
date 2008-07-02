@@ -36,6 +36,7 @@ AFSCP_EXEOBJS =\
 $(OUT)\afscp.exe: $(OUT)\afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 mkdir:
 	

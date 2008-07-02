@@ -80,8 +80,7 @@ $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
-
-
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # build pts.exe
@@ -119,12 +118,13 @@ $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
-
+        $(CODESIGN_USERLAND)
 
 
 ############################################################################
@@ -215,18 +215,22 @@ TEST_LIBS = $(PTS_EXELIBS)
 $(OUT)\readgroup.exe: $(OUT)\readgroup.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\readpwd.exe: $(OUT)\readpwd.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\testpt.exe: $(OUT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib 
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 mkdir:
 	

@@ -89,6 +89,7 @@ $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 # build copyauth
 COPYAUTH_EXEFILE = $(DESTDIR)\etc\copyauth.exe
@@ -100,6 +101,7 @@ $(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
