@@ -593,10 +593,10 @@ netidmgr_plugin: xstat
 
 afsrdr: netidmgr_plugin
       echo ***** $@
-        $(DOCD) $(SRC)WINNT\afsrdr
-        $(CD) $(SRC)WINNT\afsrdr
+        $(DOCD) $(SRC)\WINNT\afsrdr
+        $(CD) $(SRC)\WINNT\afsrdr
         $(NTMAKE)
-        $(CD) ..\..\..\..
+        $(CD) ..\..\..
 
 extra: afsrdr
         IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
