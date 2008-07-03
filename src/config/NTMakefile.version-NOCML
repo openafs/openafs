@@ -14,12 +14,13 @@ VERSFILE=AFS_component_version_number
 !ENDIF
 
 $(VERSFILE).c:
-	echo char $(CML_PREFIX)cml_version_number[]="@(#)OpenAFS$(AFSPRODUCT_VERSION)"; >$(VERSFILE).c
-	echo char* AFSVersion = "OpenAFS$(AFSPRODUCT_VERSION)";  >>$(VERSFILE).c
+	echo char $(CML_PREFIX)cml_version_number[]="@(#)OpenAFS_$(AFSPRODUCT_VERSION)"; >$(VERSFILE).c
+	echo char* AFSVersion = "OpenAFS_$(AFSPRODUCT_VERSION)";  >>$(VERSFILE).c
 
 $(VERSFILE).h:
-	echo #define AFS_VERINFO_BUILD "OpenAFS$(AFSPRODUCT_VERSION)" >$(VERSFILE).h
+	echo #define AFS_VERINFO_BUILD "OpenAFS_$(AFSPRODUCT_VERSION)" >$(VERSFILE).h
 	echo #define AFS_VERINFO_FILEVER $(AFSPRODUCT_FILE_VERSION) >>$(VERSFILE).h
+        echo #define AFSPRODUCT_VERSION "$(AFSPRODUCT_VERSION)" >> $(VERSFILE).h
 
 $(VERSFILE).txt:
-	echo OpenAFS$(AFSPRODUCT_VERSION)>$(VERSFILE).txt
+	echo OpenAFS_$(AFSPRODUCT_VERSION)>$(VERSFILE).txt

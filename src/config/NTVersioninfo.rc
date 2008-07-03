@@ -27,7 +27,7 @@ BEGIN
         BLOCK "000004E4"
         BEGIN
             VALUE "CompanyName",        "OpenAFS Project", "\0"
-            VALUE "LegalCopyright",     "Copyright \251 IBM Corporation and others, 1998, 1999, 2000, 2001, 2002, 2003.", "\0"
+            VALUE "LegalCopyright",     "Copyright \251 IBM Corporation and many others, 1998-2008.", "\0"
             VALUE "ProductName",        "OpenAFS for Windows", "\0"
             VALUE "ProductVersion",     AFSPRODUCT_VERSION, "\0"
             VALUE "FileVersion",        AFSPRODUCT_VERSION, "\0"
