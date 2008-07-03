@@ -59,6 +59,17 @@
 			</Feature>
 		<?endif?>
 
+      <Feature Id="feaClientDriver" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverLongDesc)" Display="expand"
+               InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDriverDesc)">
+        <ComponentRef Id="Drv_FSRDR" />
+        <?ifdef DebugSyms?>
+        <Feature Id="feaClientDriverDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverDebugLongDesc)" Display="expand"
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+          <ComponentRef Id="Drv_FSRDR_Debug" />
+        </Feature>
+        <?endif?>
+      </Feature>
+
 		<ComponentRef Id="rcm_Client" />
                 <ComponentRef Id="rcm_ClientCacheSize" />
                 <ComponentRef Id="rcm_ClientCachePath" />

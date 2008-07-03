@@ -104,6 +104,8 @@
         <?define _afscreds_debugsym_guid="38DC7EA0-3130-4C27-8FD5-442660197208"?>
         <?define _afscreds_chm_guid="24A87704-5F47-43Af-9F2B-568AB103ADAF"?>
         <?define clsid_afs_shl_ext="5F820CA1-3DDE-11DB-B2CE-001558092DB5"?>
+        <?define DrvFSRDR_guid="BB385DAC-33AA-40C7-A081-45058C7932BD"?>
+        <?define DrvFSRDRDebug_guid="898561B8-AA21-4DAE-9956-A3ED1E089E12"?>
 
 <?elseif $(var.Platform) = "Intel"?>
 	<?define PISystemFolder="SystemFolder"?>
@@ -208,6 +210,8 @@
         <?define _afscreds_plugin_guid="3477A7C4-9BC9-4AF9-B97D-C96455CC3AF6"?>
         <?define _afscreds_debugsym_guid="DCBE9170-746F-4894-96FA-B8441A133133"?>
         <?define _afscreds_chm_guid="11657F75-67AD-4DBA-8344-BF65B7CCAAD2"?>
+        <?define DrvFSRDR_guid="61246DB9-6416-417E-A5BD-AA8803313FAA"?>
+        <?define DrvFSRDRDebug_guid="9C62C123-4C72-4D95-8443-7A240AD0B57D"?>
 <?else?>
 	<?error Unknown platform?>
 <?endif?>

@@ -877,17 +877,52 @@
                     </Component>
 
   <?ifndef BinsOnly ?>
+          <Component Id="Drv_FSRDR"
+                     Guid="$(var.DrvFSRDR_guid)"
+                     Win64="$(var.Win64)">
+            <File Id="file_RedirFltrInstall.inf"
+                  Name="afsredir.inf" LongName="AFSRedirInstall.inf"
+                  Vital="yes" DiskId="1"
+                  KeyPath="yes"
+                  Source="$(var.SrcDir)WINNT\afsrdr\kernel\AFSRedirInstall.inf"
+                  />
+            <File Id="file_AFSRDFSProvider.dll" Name="AFSRDFSP.DLL" LongName="AFSRDFSProvider.dll" Vital="yes"
+                  Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRDFSProvider.dll"
+                  DiskId="1" />
+            <File Id="file_AFSRedir.sys"
+                  Name="afsredir.sys" LongName="AFSRedir.sys" Vital="yes"
+                  Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRedir.sys"
+                  DiskId="1" />
+          </Component>
+
+          <Component Id="Drv_FSRDR_Debug"
+                     Guid="$(var.DrvFSRDRDebug_guid)"
+                     Win64="$(var.Win64)">
+            <File Id="file_AFSRedir.pdb"
+                  Name="afsredir.pdb" LongName="AFSRedir.pdb" Vital="no"
+                  Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRedir.pdb"
+                  KeyPath="yes"
+                  DiskId="1" />
+            <File Id="file_AFSRDFSProvider.pdb"
+                  Name="AFSRDFSP.PDB" LongName="AFSRDFSProvider.pdb" Vital="no"
+                  Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRDFSProvider.pdb"
+                  DiskId="1" />
+          </Component>
+
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
-                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client Service" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
+            <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client Service" Type="ownProcess"
+                            Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
 							<!-- ServiceConfig doesn't currently do what you think it does.
 							     We instead use a custom action to set the service failure actions.
-                            <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
+                   <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10"
+                                  SecondFailureActionType="restart" ThirdFailureActionType="none"/>
                             -->
                             <ServiceDependency Id="Tcpip" />
                             <ServiceDependency Id="RpcSs" />
                             <ServiceDependency Id="NetBIOS" />
+              <!-- <ServiceDependency Id="AFSRedirector" /> -->
                             <ServiceDependency Id="PNP_TDI" Group="yes"/>
                         </ServiceInstall>
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />

@@ -80,7 +80,7 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-dVersionPatch=$(AFSPRODUCT_VER_PATCH)	\
 		"-dDestDir=$(DESTDIR)\\" \
 		-dCellDbFile=CellServDB \
-		-dIDNMRedistDir=$(MSIDNNLS)\\REDIST 	\
+		-dIDNMRedistDir=$(MSIDNNLS)\REDIST 	\
 		-v0 \
 		-w0 \
         $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
@@ -98,6 +98,7 @@ $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
 		-dCellDbFile=CellServDB \
 		-v0 \
 		-w0 \
+		-sw1044					\
         $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
 
 $(BINMSIFILE): $(BINWIXOBJ)

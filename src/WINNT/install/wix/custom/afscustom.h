@@ -52,7 +52,7 @@ SOFTWARE.
 #define STR_VAL_ORDER _T("ProviderOrder")
 
 #define STR_SERVICE _T("TransarcAFSDaemon")
-#define STR_SERVICE_LEN 18
+#define STR_RDRSVC  _T("AFSRedirector")
 
 #define INP_ERR_PRESENT 1
 #define INP_ERR_ADDED   2
@@ -69,7 +69,7 @@ SOFTWARE.
 
 /* non-exported */
 int npi_CheckAndAddRemove( LPTSTR, LPTSTR, int );
-DWORD InstNetProvider(MSIHANDLE, int);
+DWORD InstNetProvider(MSIHANDLE, LPTSTR, int);
 void ShowMsiError(MSIHANDLE, DWORD, DWORD);
 DWORD ConfigService(int);
 UINT createAfsAdminGroup(void);
@@ -79,6 +79,8 @@ UINT removeAfsAdminGroup(void);
 /* exported */
 MSIDLLEXPORT InstallNetProvider( MSIHANDLE );
 MSIDLLEXPORT UninstallNetProvider ( MSIHANDLE );
+MSIDLLEXPORT InstallRedirNetProvider( MSIHANDLE );
+MSIDLLEXPORT UninstallRedirNetProvider ( MSIHANDLE );
 MSIDLLEXPORT ConfigureClientService( MSIHANDLE );
 MSIDLLEXPORT ConfigureServerService( MSIHANDLE );
 MSIDLLEXPORT AbortMsiImmediate( MSIHANDLE );

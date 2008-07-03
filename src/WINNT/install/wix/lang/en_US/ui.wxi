@@ -1047,6 +1047,12 @@
 	  <ProgressText Action="ConfigureServer">$(loc.ActConfigureServer)</ProgressText>
 	  <ProgressText Action="RemoveNsisInstallation">$(loc.ActRemoveNsisInstallation)</ProgressText>
 	  <ProgressText Action="InstallIDNMRedistributable">$(loc.ActInstallIDNMRedistributable)</ProgressText>
+          <ProgressText Action="InstallRedirNetProvider">$(loc.ActInstallRedirNetProvider)</ProgressText>
+          <ProgressText Action="RemoveRedirNetProvider">$(loc.ActRemoveRedirNetProvider)</ProgressText>
+          <ProgressText Action="UnloadFilterDriver">$(loc.ActUnloadFilterDriver)</ProgressText>
+          <ProgressText Action="UninstallRdrDriver">$(loc.ActUninstallRdrDriver)</ProgressText>
+          <ProgressText Action="InstallRdrDriver">$(loc.ActInstallRdrDriver)</ProgressText>
+          <ProgressText Action="LoadFilterDriver">$(loc.ActLoadFilterDriver)</ProgressText>
 	  
       <AdminUISequence>
         <Show Dialog="FatalError" OnExit="error" />

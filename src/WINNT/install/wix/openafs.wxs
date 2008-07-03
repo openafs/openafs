@@ -74,6 +74,26 @@
         <!-- User interface -->
         <?include lang\$(var.Language)\ui.wxi?>
         
+    <Property Id="RUNDLL32EXE" Secure="yes">
+      <DirectorySearch Id="RunDLLSearch" Depth="0" Path="[$(var.PISystemFolder)]">
+        <FileSearch Id="RunDLLSearch" Name="rundll32.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <Property Id="SETUPAPIDLL" Secure="yes">
+      <DirectorySearch Id="SetupAPISearch" Depth="0" Path="[$(var.PISystemFolder)]">
+        <FileSearch Id="SetupAPISearch" Name="setupapi.dll" />
+      </DirectorySearch>
+    </Property>
+
+    <Condition Message="Can't find RunDLL32.exe.  We looked in [$(var.PISystemFolder)].">
+      RUNDLL32EXE
+    </Condition>
+
+    <Condition Message="Can't find SetupAPI.DLL.  We looked in [$(var.PISystemFolder)].">
+      SETUPAPIDLL
+    </Condition>
+
         <!-- Custom actions -->
     <?ifndef UseDllLoopbackInstaller?>
         <Binary
@@ -97,6 +117,14 @@
        Execute="deferred"
        Impersonate="no"
        />
+
+    <CustomAction Id="InstallRdrDriver" Property="RUNDLL32EXE"
+                  Execute="deferred"
+                  ExeCommand='rundll32.exe [SETUPAPIDLL],InstallHinfSection DefaultInstall 128 [#file_RedirFltrInstall.inf]' />
+
+    <CustomAction Id="UninstallRdrDriver" Property="RUNDLL32EXE"
+                  Execute="deferred" Return="ignore"
+                  ExeCommand='rundll32.exe [SETUPAPIDLL],InstallHinfSection DefaultUninstall 128 [#file_RedirFltrInstall.inf]' />
 
 	<?ifdef UseDllLoopbackInstaller?>
         <CustomAction
@@ -169,6 +197,28 @@
 		 Return="ignore"
 		 Execute="rollback" />
 		<CustomAction
+       Id="InstallRedirNetProvider" 
+       BinaryKey="BIN_afsCustom" 
+       DllEntry="InstallRedirNetProvider"
+       Execute="deferred" 
+       Impersonate="no"
+       />
+    <CustomAction 
+       Id="RemoveRedirNetProvider" 
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallRedirNetProvider"
+       Return="ignore"
+       Execute="deferred" 
+       Impersonate="no"
+       />
+    <CustomAction 
+       Id="RollbackRedirNetProvider" 
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallRedirNetProvider"
+       Return="ignore"
+       Execute="rollback" />
+
+    <CustomAction
 		 Id="ConfigureClient"
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="ConfigureClientService"
@@ -232,15 +282,24 @@
 		<?else?>
             <Custom Action="InstallLoopback" After="SelfRegModules">&amp;feaLoopback=3</Custom>
         <?endif?>
-            <Custom Action="RollbackNetProvider" After="WriteRegistryValues">&amp;feaClient=3</Custom>
+      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3  And (VersionNT=501 Or VersionNT=502)</Custom>
+      <Custom Action="RollbackNetProvider" After="InstallIDNMRedistributable">&amp;feaClient=3</Custom>
 			<Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
 			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
-      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3 And (VersionNT=501 Or VersionNT=502)</Custom>
+
+      <Custom Action="RollbackRedirNetProvider" After="InstallNetProvider">&amp;feaClientDriver=3</Custom>
+      <Custom Action="InstallRedirNetProvider" After="RollbackRedirNetProvider">&amp;feaClientDriver=3</Custom>
+      <Custom Action="RemoveRedirNetProvider" After="InstallRedirNetProvider">&amp;feaClientDriver=2</Custom>
+
 			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
 			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
 			<Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
 			<Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
+
+      <Custom Action="UninstallRdrDriver" After="InstallInitialize">&amp;feaClientDriver=2 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+      <Custom Action="InstallRdrDriver" Before="RegisterProduct">&amp;feaClientDriver=3 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+
             <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
         </InstallExecuteSequence>
 

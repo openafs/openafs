@@ -166,14 +166,22 @@ _cleanup:
 provider */
 
 MSIDLLEXPORT InstallNetProvider( MSIHANDLE hInstall ) {
-    return InstNetProvider( hInstall, 1 );
+    return InstNetProvider( hInstall, STR_SERVICE, 1 );
 }
 
 MSIDLLEXPORT UninstallNetProvider( MSIHANDLE hInstall) {
-    return InstNetProvider( hInstall, 0 );
+    return InstNetProvider( hInstall, STR_SERVICE, 0 );
 }
 
-DWORD InstNetProvider(MSIHANDLE hInstall, int bInst) {
+MSIDLLEXPORT InstallRedirNetProvider( MSIHANDLE hInstall ) {
+    return InstNetProvider( hInstall, STR_RDRSVC, 1 );
+}
+
+MSIDLLEXPORT UninstallRedirNetProvider( MSIHANDLE hInstall) {
+    return InstNetProvider( hInstall, STR_RDRSVC, 0 );
+}
+
+DWORD InstNetProvider(MSIHANDLE hInstall, LPTSTR svcname, int bInst) {
     LPTSTR strOrder;
     HKEY hkOrder;
     LONG rv;
@@ -187,11 +195,11 @@ DWORD InstNetProvider(MSIHANDLE hInstall, int bInst) {
     dwSize = 0;
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, NULL, &dwSize ) );
     
-    strOrder = new TCHAR[ (dwSize + STR_SERVICE_LEN) * sizeof(TCHAR) ];
+    strOrder = new TCHAR[ (dwSize + _tcslen(svcname)) * sizeof(TCHAR) ];
     
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, (LPBYTE) strOrder, &dwSize));
     
-    npi_CheckAndAddRemove( strOrder, STR_SERVICE , bInst);
+    npi_CheckAndAddRemove( strOrder, svcname , bInst);
     
     dwSize = (lstrlen( strOrder ) + 1) * sizeof(TCHAR);
     
