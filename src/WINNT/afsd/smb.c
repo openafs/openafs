@@ -1001,7 +1001,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     smb_user_t *uidpIter;
     smb_user_t *uidpNext;
     smb_vc_t **vcpp;
-
+    afs_uint32 refCount = 0;
 
     lock_ObtainMutex(&vcp->mx);
     if (vcp->flags & SMB_VCFLAG_CLEAN_IN_PROGRESS) {
@@ -1077,13 +1077,21 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	uidpNext = vcp->usersp;
     }
 
-    lock_ObtainMutex(&vcp->mx);
-    vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
-    lock_ReleaseMutex(&vcp->mx);
-
     /* The vcp is now on the deadVCsp list.  We intentionally drop the
      * reference so that the refcount can reach 0 and we can delete it */
+    refCount = vcp->refCount;
     smb_ReleaseVCNoLock(vcp);
+
+    /* 
+     * If the refCount == 1 going into the ReleaseVCNoLock call 
+     * the object will be freed and it won't be safe to clear 
+     * the flag.
+     */
+    if (refCount > 1) {
+        lock_ObtainMutex(&vcp->mx);
+        vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
+        lock_ReleaseMutex(&vcp->mx);
+    }
 
     lock_ReleaseWrite(&smb_rctLock);
     osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
