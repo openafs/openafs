@@ -42,7 +42,5 @@ SOURCES= AFSInit.cpp \
 		 AFSSystemControl.cpp \
 		 AFSVolumeInfo.cpp \
 		 AFSWorker.cpp \
-		 AFSWrite.cpp
-		 
-		 
-		 
+		 AFSWrite.cpp \
+                 FileSystem.rc
