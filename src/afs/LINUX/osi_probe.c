@@ -45,7 +45,6 @@
 
 /* Code to find the Linux syscall table */
 
-#if defined(EXPORTED_INIT_MM)
 #ifdef OSI_PROBE_STANDALONE
 #define OSI_PROBE_DEBUG
 #endif
@@ -53,6 +52,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
+#if defined(EXPORTED_INIT_MM)
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifndef OSI_PROBE_STANDALONE
