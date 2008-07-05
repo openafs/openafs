@@ -735,11 +735,16 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     long rcount;
     long ioCount;
     DWORD gle;
+    DWORD ioctlDebug = IoctlDebug();
+    int save;
 
     rcount = (long)(reqp->mp - reqp->data);
     if (rcount <= 0) {
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive rcount <= 0: %d\r\n",rcount);
+            errno = save;
+        }
 	return EINVAL;		/* not supposed to happen */
     }
 
@@ -747,8 +752,11 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 	/* failed to write */
 	gle = GetLastError();
 
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive WriteFile failed: 0x%X\r\n",gle);
+            errno = save;
+        }
         return gle;
     }
 
@@ -756,8 +764,11 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 	/* failed to read */
 	gle = GetLastError();
 
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
+            errno = save;
+        }
         return gle;
     }
 
@@ -779,11 +790,16 @@ MarshallLong(fs_ioctlRequest_t * reqp, long val)
 static long
 UnmarshallLong(fs_ioctlRequest_t * reqp, long *valp)
 {
+    int save;
+
     /* not enough data left */
     if (reqp->nbytes < 4) {
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl UnmarshallLong reqp->nbytes < 4: %d\r\n",
                      reqp->nbytes);
+            errno = save;
+        }
 	return -1;
     }
 
@@ -798,6 +814,7 @@ static long
 MarshallString(fs_ioctlRequest_t * reqp, char *stringp, int is_utf8)
 {
     int count;
+    int save;
 
     if (stringp)
 	count = (int)strlen(stringp) + 1;/* space required including null */
@@ -810,8 +827,11 @@ MarshallString(fs_ioctlRequest_t * reqp, char *stringp, int is_utf8)
 
     /* watch for buffer overflow */
     if ((reqp->mp - reqp->data) + count > sizeof(reqp->data)) {
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl MarshallString buffer overflow\r\n");
+            errno = save;
+        }
 	return -1;
     }
 
@@ -844,6 +864,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     int doSwitch;
     char newPath[3];
     char * p;
+    int save;
 
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */
@@ -898,9 +919,12 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	if (!SetCurrentDirectory(newPath)) {
 	    code = GetLastError();
 
-            if ( IoctlDebug() )
+            if ( IoctlDebug() ) {
+                save = errno;
                 fprintf(stderr, "pioctl fs_GetFullPath SetCurrentDirectory(%s) failed: 0x%X\r\n",
                          newPath, code);
+                errno = save;
+            }
 	    return code;
 	}
     }
@@ -956,6 +980,7 @@ pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is
     long temp;
     char fullPath[1000];
     HANDLE reqHandle;
+    int save;
 
     code = GetIoctlHandle(pathp, &reqHandle);
     if (code) {
@@ -1013,8 +1038,11 @@ pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is
     if (temp != 0) {
 	CloseHandle(reqHandle);
 	errno = CMtoUNIXerror(temp);
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl temp != 0: 0x%X\r\n",temp);
+            errno = save;
+        }
 	return -1;
     }
 
