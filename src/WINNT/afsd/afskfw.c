@@ -3122,7 +3122,7 @@ KFW_AFS_klog(
                 retry++;
                 goto retry_gettoken5;
             }
-            goto try_krb524d;
+            goto cleanup;
         }
 
         if (atoken.kvno == btoken.kvno &&
