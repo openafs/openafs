@@ -415,6 +415,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
+    int saveerrno;
 
     memset(HostName, '\0', sizeof(HostName));
     gethostname(HostName, sizeof(HostName));
@@ -492,7 +493,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
-
+            
+            saveerrno = errno;
             if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                NULL,
                                gle,
@@ -505,6 +507,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                         tbuffer,gle,buf);
             }
+            errno = saveerrno;
         }
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
@@ -518,9 +521,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         }
 
         if ( szUser[0] ) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl Explorer logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -529,8 +534,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -539,8 +546,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -557,6 +566,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -569,6 +579,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
                 }
             }
         }
@@ -580,9 +591,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
         dwSize = sizeof(szUser);
         if (GetLSAPrincipalName(szUser, &dwSize)) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl LSA Principal logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -591,8 +604,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -601,8 +616,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -619,6 +636,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -631,6 +649,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
+
                 }
             }
         }
@@ -640,9 +660,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     if ( fh == INVALID_HANDLE_VALUE ) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl SamCompatible logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -651,8 +673,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
             }
 
@@ -660,8 +684,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 return -1;
             }
@@ -675,6 +701,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -687,6 +714,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
                 }
                 return -1;
             }
