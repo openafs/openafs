@@ -69,6 +69,10 @@ void (*sockfs_sockfree)
   (struct sonode *);
 #endif
 
+#ifndef UDP_MOD_NAME
+#define UDP_MOD_NAME "udp"
+#endif
+
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
 static int numMyNetAddrs = 0;
