@@ -28,6 +28,15 @@
 %define kernvers %(%{_sourcedir}/openafs-kernel-version.sh)
 %endif
 
+# If we're building for a 2.4 series kernel, then fedora style kmods aren't
+# appropriate - disable them.
+
+%define kern24 %([ `echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'` = "2.4" ] && echo 1 || echo 0)
+
+%if %{kern24}
+%define fedorakmod 0
+%endif
+
 %if %{fedorakmod}
 %define kmodtool bash %{_sourcedir}/openafs-kmodtool
 
