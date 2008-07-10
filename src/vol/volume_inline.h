@@ -37,8 +37,6 @@
  *   @retval 1  yes, state is mutually exclusive
  *
  * @note DEMAND_ATTACH_FS only
- *
- * @note should VOL_STATE_SALVSYNC_REQ be treated as exclusive?
  */
 static_inline int
 VIsExclusiveState(VolState state)
@@ -51,6 +49,7 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_HDR_ATTACHING:
     case VOL_STATE_OFFLINING:
     case VOL_STATE_DETACHING:
+    case VOL_STATE_SALVSYNC_REQ:
     case VOL_STATE_VNODE_ALLOC:
     case VOL_STATE_VNODE_GET:
     case VOL_STATE_VNODE_CLOSE:
