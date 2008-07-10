@@ -28,6 +28,17 @@ DLLLIBFILES=\
 
 LINK=link
 
+# Figure out which DDK include path we require
+!IF EXIST ($(NTDDKDIR)\netcfgx.h)
+DDK_INCL = $(NTDDKDIR)
+!ELSEIF EXIST ($(NTDDKDIR)\INC\WNET\netcfgx.h)
+DDK_INCL = $(NTDDKDIR)\INC\WNET
+!ELSEIF EXIST ($(NTDDKDIR)\INC\API\netcfgx.h)
+DDK_INCL = $(NTDDKDIR)\INC\API
+!ELSE
+!ERROR netcfgx.h header file cannot be found.  DDK improperly configured.
+!ENDIF
+
 # afsloopback.dll
 
 DLLSOURCEFILES = loopbackutils.cpp renameconnection.cpp wmi.cpp
@@ -46,7 +57,7 @@ $(OUT)\renameconnection.obj: renameconnection.cpp
 	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(OUT)\wmi.obj: wmi.cpp
-	$(STATICC2OBJ)  -I$(NTDDKDIR) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ)  -I$(DDK_INCL) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
