@@ -126,23 +126,37 @@ RDR_ReleaseUser( IN cm_user_t *userp )
 }
 
 void
-RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry, 
-                          IN cm_scache_t     * dscp,
-                          IN cm_scache_t     * scp,
-                          IN cm_user_t       * userp,
-                          IN cm_req_t        * reqp,
-                          IN wchar_t         * name,
-                          IN wchar_t         * shortName )
+RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
+                          IN  DWORD             dwMaxEntryLength,
+                          IN  cm_scache_t     * dscp,
+                          IN  cm_scache_t     * scp,
+                          IN  cm_user_t       * userp,
+                          IN  cm_req_t        * reqp,
+                          IN  wchar_t         * name,
+                          IN  wchar_t         * shortName,
+                          OUT AFSDirEnumEntry **ppNextEntry,
+                          OUT DWORD           * pdwRemainingLength)
 {
     FILETIME ft;
     WCHAR *  wname, *wtarget;
     size_t   len;
+    DWORD      dwEntryLength;
     afs_uint32 code;
+
+    if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + MAX_PATH * sizeof(wchar_t)) {
+        if (ppNextEntry)
+            *ppNextEntry = pCurrentEntry;
+        if (pdwRemainingLength)
+            *pdwRemainingLength = dwMaxEntryLength;
+        return;
+    }
 
     if (!name)
         name = L"";
     if (!shortName)
         shortName = L"";
+
+    dwEntryLength = sizeof(AFSDirEnumEntry);
 
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp( scp, NULL, userp, reqp, 0,
@@ -257,6 +271,13 @@ RDR_PopulateCurrentEntry( IN AFSDirEnumEntry * pCurrentEntry,
         pCurrentEntry->TargetNameLength = 0;
     }
     lock_ReleaseWrite(&scp->rw);
+
+    dwEntryLength += pCurrentEntry->FileNameLength + pCurrentEntry->TargetNameLength;
+    dwEntryLength += (dwEntryLength % 8) ? 8 - (dwEntryLength % 8) : 0;   /* quad align */
+    if (ppNextEntry)
+        *ppNextEntry = (AFSDirEnumEntry *)((PBYTE)pCurrentEntry + dwEntryLength);
+    if (pdwRemainingLength)
+        *pdwRemainingLength = dwMaxEntryLength - dwEntryLength;
 }
 
 void
@@ -271,19 +292,27 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     AFSDirEnumResp  * pDirEnumResp;
     AFSDirEnumEntry * pCurrentEntry;
     size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
+    DWORD             dwMaxEntryLength;
     afs_uint32  code = 0;
     cm_fid_t      fid;
     cm_scache_t * dscp = NULL;
     cm_req_t      req;
 
+    cm_InitReq(&req);
+
     *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
 	return;
 
-    cm_InitReq(&req);
     memset(*ResultCB, 0, size);
 
-    (*ResultCB)->ResultBufferLength = ResultBufferLength;
+    if (QueryCB->EnumHandle == (ULONG_PTR)-1) {
+        (*ResultCB)->ResultStatus = STATUS_NO_MORE_ENTRIES;
+        (*ResultCB)->ResultBufferLength = 0;
+        return;
+    }
+
+    (*ResultCB)->ResultBufferLength = dwMaxEntryLength = ResultBufferLength;
 
     pDirEnumResp = (AFSDirEnumResp *)&(*ResultCB)->ResultData;
     pCurrentEntry = (AFSDirEnumEntry *)QuadAlign(&pDirEnumResp->Entry);
@@ -355,9 +384,12 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     }
 
     if (enump) {
-        cm_direnum_entry_t    * entryp = NULL;
+        cm_direnum_entry_t * entryp = NULL;
 
       getnextentry:
+        if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + MAX_PATH * sizeof(wchar_t))
+            goto outofspace;
+
         code = cm_BPlusDirNextEnumEntry(enump, &entryp);
 
         if (code == 0 && entryp) {
@@ -368,23 +400,31 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 
             code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
             if (!code) {
-                RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, entryp->name, entryp->shortName);
+                RDR_PopulateCurrentEntry(pCurrentEntry, dwMaxEntryLength, 
+                                         dscp, scp, userp, &req, entryp->name, entryp->shortName,
+                                         &pCurrentEntry, &dwMaxEntryLength);
                 cm_ReleaseSCache(scp);
+                goto getnextentry;
             } else {
                 goto getnextentry;
             }
         }
     }
+  outofspace:
 
-    if (code != 0 || enump->next == enump->count) {
+    if (code || enump->next == enump->count) {
         cm_BPlusDirFreeEnumeration(enump);
-        enump = NULL;
-        if (code != 0)
-            (*ResultCB)->ResultStatus = STATUS_NO_MORE_ENTRIES;
-        else
-            (*ResultCB)->ResultStatus = STATUS_SUCCESS;
-    } else 
-        (*ResultCB)->ResultStatus = STATUS_MORE_ENTRIES;
+        enump = (cm_direnum_t *)(ULONG_PTR)-1;
+    } 
+
+    if (code == 0 || code == CM_ERROR_STOPNOW)
+        (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+    else {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+    }
+
+    (*ResultCB)->ResultBufferLength = ResultBufferLength - dwMaxEntryLength;
 
     pDirEnumResp->EnumHandle = (ULONG_PTR) enump;
 
@@ -411,6 +451,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     cm_req_t      req;
     cm_fid_t      parentFid;
     DWORD         status;
+    DWORD         dwRemaining;
 
     cm_InitReq(&req);
 
@@ -420,7 +461,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
-
     pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
     if (ParentID.Cell != 0) {
@@ -472,12 +512,29 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
+        lock_ObtainWrite(&scp->rw);
+        code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {     
+            smb_MapNTError(code, &status);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&scp->rw);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseSCache(dscp);
+            return;
+        }
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&scp->rw);
         
         cm_Gen8Dot3NameIntW(Name, &dfid, shortName, NULL);
-        RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, Name, shortName);
+        RDR_PopulateCurrentEntry(pCurrentEntry, ResultBufferLength, 
+                                 dscp, scp, userp, &req, Name, shortName,
+                                 NULL, &dwRemaining);
 
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
     } else if (code) {
         DWORD status;
         smb_MapNTError(code, &status);
@@ -506,6 +563,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     cm_fid_t      Fid;
     cm_fid_t      parentFid;
     DWORD         status;
+    DWORD         dwRemaining;
 
     *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB))
@@ -513,7 +571,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
-
+    dwRemaining = ResultBufferLength;
     pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
     cm_InitReq(&req);
@@ -604,11 +662,14 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     lock_ReleaseWrite(&scp->rw);
 
-    RDR_PopulateCurrentEntry(pCurrentEntry, dscp, scp, userp, &req, NULL, NULL);
+    RDR_PopulateCurrentEntry(pCurrentEntry, ResultBufferLength, 
+                             dscp, scp, userp, &req, NULL, NULL,
+                             NULL, &dwRemaining);
 
     cm_ReleaseSCache(scp);
     cm_ReleaseSCache(dscp);
     (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+    (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
     return;
 }
 
@@ -655,6 +716,20 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&dscp->rw);
+    code = cm_SyncOp(dscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&dscp->rw);
+        cm_ReleaseSCache(dscp);
+        return;
+    }
+
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&dscp->rw);
+        
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
@@ -674,6 +749,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     if (code == 0) {
         wchar_t shortName[13];
         cm_dirFid_t dfid;
+        DWORD dwRemaining;
 
         (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
 
@@ -681,15 +757,20 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
 
         pResultCB = (AFSFileCreateResultCB *)(*ResultCB)->ResultData;
 
+        dwRemaining = ResultBufferLength - sizeof( AFSFileCreateResultCB) + sizeof( AFSDirEnumEntry);
+
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
 
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
         cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
-        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, FileName, shortName);
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining, 
+                                 dscp, scp, userp, &req, FileName, shortName,
+                                 NULL, &dwRemaining);
 
         cm_ReleaseSCache(scp);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
     } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
@@ -746,6 +827,20 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&dscp->rw);
+    code = cm_SyncOp(dscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&dscp->rw);
+        cm_ReleaseSCache(dscp);
+        return;
+    }
+
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&dscp->rw);
+        
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
@@ -820,9 +915,14 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 
   on_error:
     if (code == 0) {
+        DWORD dwRemaining = ResultBufferLength - sizeof( AFSFileUpdateResultCB) + sizeof( AFSDirEnumEntry);
+        
         pResultCB = (AFSFileUpdateResultCB *)(*ResultCB)->ResultData;
 
-        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dscp, scp, userp, &req, NULL, NULL);
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining, 
+                                 dscp, scp, userp, &req, NULL, NULL,
+                                 NULL, &dwRemaining);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
     } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
@@ -878,6 +978,21 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&dscp->rw);
+    code = cm_SyncOp(dscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        lock_ReleaseWrite(&dscp->rw);
+        cm_ReleaseSCache(dscp);
+        return;
+    }
+
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&dscp->rw);
+
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
@@ -893,6 +1008,22 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        cm_ReleaseSCache(dscp);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+        
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
         code = cm_RemoveDir(dscp, NULL, FileName, userp, &req);
     else
@@ -976,6 +1107,21 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&oldDscp->rw);
+    code = cm_SyncOp(oldDscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&oldDscp->rw);
+        cm_ReleaseSCache(oldDscp);
+        return;
+    }
+
+    cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&oldDscp->rw);
+        
+
     if (oldDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(oldDscp);
@@ -990,6 +1136,22 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         cm_ReleaseSCache(oldDscp);
     }
 
+    lock_ObtainWrite(&newDscp->rw);
+    code = cm_SyncOp(newDscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&newDscp->rw);
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseSCache(newDscp);
+        return;
+    }
+
+    cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&newDscp->rw);
+        
+
     if (newDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(oldDscp);
@@ -1003,8 +1165,10 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         cm_dirOp_t dirop;
         cm_fid_t   targetFid;
         cm_scache_t *scp = 0;
+        DWORD dwRemaining;
 
-        (*ResultCB)->ResultBufferLength = sizeof( AFSFileRenameResultCB);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength;
+        dwRemaining = ResultBufferLength - sizeof( AFSFileRenameResultCB) + sizeof( AFSDirEnumEntry);
         (*ResultCB)->ResultStatus = 0;
 
         pResultCB->SourceParentDataVersion.QuadPart = oldDscp->dataVersion;
@@ -1058,8 +1222,10 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
         cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
 
-        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, newDscp, scp, userp, &req, TargetFileName, shortName);
-            
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
+                                 newDscp, scp, userp, &req, TargetFileName, shortName,
+                                 NULL, &dwRemaining);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         cm_ReleaseSCache(scp);
     } else {
         DWORD NTStatus;
@@ -1109,6 +1275,20 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+        
     code = cm_FSync(scp, userp, &req);
     cm_ReleaseSCache(scp);
 
@@ -1240,6 +1420,20 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+        
     code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
     if (code == 0) {
         cm_CheckNTOpenDone(scp, userp, &req, &ldp);
@@ -1543,6 +1737,20 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
         return;
     }
 
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+        
     for ( count = 0; count < ReleaseExtentsCB->ExtentCount; count++) {
         thyper.QuadPart = ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart;
 
