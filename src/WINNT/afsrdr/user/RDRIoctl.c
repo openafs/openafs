@@ -996,9 +996,13 @@ RDR_IoctlGetFileCellName(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 afs_int32 
 RDR_IoctlFlushAllVolumes(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 {
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
     cm_SkipIoctlPath(&ioctlp->ioctl);	/* we don't care about the path */
 
-    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp);
+    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp, &req);
 }
 
 afs_int32 
@@ -1641,7 +1645,11 @@ RDR_IoctlPathAvailability(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 afs_int32
 RDR_IoctlVolStatTest(struct RDR_ioctl *ioctlp, struct cm_user *userp)
 {
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
-    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp);
+    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
 }
