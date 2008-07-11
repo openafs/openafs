@@ -34,7 +34,7 @@ VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 LWPOBJS     =lock.o
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
-	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
+	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o afsxbsa.o \
             ${LWPOBJS} ${BUCOORDOBJS} ${VOLSEROBJS}
 
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
@@ -76,6 +76,9 @@ libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a
 	$(AR) crv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
 	${RANLIB} libbutm.a
+
+afsxbsa.o: ${BUTC}/afsxbsa.c ${BUTC}/afsxbsa.h ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/afsxbsa.c
 
 dbentries.o: ${BUTC}/dbentries.c ${BUTCINCLS}
 	${CC} ${CFLAGS} -c ${BUTC}/dbentries.c

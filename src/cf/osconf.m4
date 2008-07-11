@@ -8,7 +8,7 @@ SHLIB_SUFFIX="so"
 CC="cc"
 CCOBJ="cc"
 MT_CC="cc"
-XLIBS="${LIB_AFSDB}"
+XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
@@ -204,7 +204,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -236,7 +235,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0}"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
