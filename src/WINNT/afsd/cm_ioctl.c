@@ -515,14 +515,11 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32 
-cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp)
+cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *reqp)
 {
     afs_int32 code;
     cm_scache_t *scp;
     int i;
-    cm_req_t req;
-
-    cm_InitReq(&req);
 
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
@@ -531,7 +528,7 @@ cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp)
 	    lock_ReleaseWrite(&cm_scacheLock);
 
 	    /* now flush the file */
-	    code = cm_FlushFile(scp, userp, &req);
+	    code = cm_FlushFile(scp, userp, reqp);
 	    lock_ObtainWrite(&cm_scacheLock);
 	    cm_ReleaseSCacheNoLock(scp);
         }
@@ -3078,7 +3075,7 @@ cm_IoctlPathAvailability(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
-cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp)
+cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *reqp)
 {
     afs_int32 code;
     cm_cell_t *cellp = NULL;
@@ -3086,9 +3083,6 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cm_vol_state_t *statep;
     struct VolStatTest * testp;
     afs_uint32 n;
-    cm_req_t req;
-
-    cm_InitReq(&req);
 
     testp = (struct VolStatTest *)ioctlp->inDatap;
 
@@ -3140,11 +3134,11 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp)
         if (n)
             testp->fid.volume = n;
         else
-            code = cm_FindVolumeByName(cellp, testp->volname, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+            code = cm_FindVolumeByName(cellp, testp->volname, userp, reqp, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
     }
 
     if (testp->fid.volume > 0)
-        code = cm_FindVolumeByID(cellp, testp->fid.volume, userp, &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+        code = cm_FindVolumeByID(cellp, testp->fid.volume, userp, reqp, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
 
     if (code)
         return code;

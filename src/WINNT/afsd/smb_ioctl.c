@@ -1180,9 +1180,13 @@ smb_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 afs_int32 
 smb_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
     cm_SkipIoctlPath(&ioctlp->ioctl);	/* we don't care about the path */
 
-    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp);
+    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp, &req);
 }
 
 afs_int32 
@@ -1825,7 +1829,11 @@ smb_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
 afs_int32
 smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
-    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp);
+    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
 }
