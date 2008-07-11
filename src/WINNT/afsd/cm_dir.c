@@ -976,7 +976,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
     op->scp = scp;
     cm_HoldUser(userp);
     op->userp = userp;
-    cm_InitReq(&op->req);
+    op->req = *reqp;            /* copy the values from the input */
 
     op->dirtyBufCount = 0;
     op->nBuffers = 0;
