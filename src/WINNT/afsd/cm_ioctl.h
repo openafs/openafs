@@ -164,7 +164,7 @@ extern afs_int32 cm_IoctlGetFileCellName(cm_ioctl_t *ioctlp, cm_user_t *userp, c
 
 extern afs_int32 cm_IoctlSetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
-extern afs_int32 cm_IoctlFlushAllVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlFlushAllVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp);
 
 extern afs_int32 cm_IoctlFlushVolume(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
@@ -266,7 +266,7 @@ extern afs_int32 cm_IoctlPathAvailability(struct cm_ioctl * ioctlp, struct cm_us
 
 extern afs_int32 cm_IoctlGetFileType(cm_ioctl_t *ioctlp, cm_user_t *userp, struct cm_scache *scp, struct cm_req *reqp);
 
-extern afs_int32 cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp);
+extern afs_int32 cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *reqp);
 
 extern afs_int32 cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user * userp);
 
