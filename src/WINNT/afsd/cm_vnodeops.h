@@ -233,4 +233,25 @@ extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead);
 extern cm_key_t cm_GenerateKey(unsigned int session, unsigned long process_id, unsigned int file_id);
 
 #define MAX_SYMLINK_COUNT 16
+
+/* make this big enough so that one buffer of dir pages won't overflow.  We'll
+ * check anyway, but we want to minimize the chance that we have to leave stuff
+ * unstat'd.
+ */
+#define CM_BULKMAX		(3 * AFSCBMAX)
+
+/* rock for bulk stat calls */
+typedef struct cm_bulkStat {
+    osi_hyper_t bufOffset;	/* only do it for things in this buffer page */
+
+    /* info for the actual call */
+    int counter;			/* next free slot */
+    AFSFid fids[CM_BULKMAX];
+    AFSFetchStatus stats[CM_BULKMAX];
+    AFSCallBack callbacks[CM_BULKMAX];
+} cm_bulkStat_t;
+
+extern afs_int32 cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, 
+                                   cm_user_t *userp, cm_req_t *reqp);
+
 #endif /*  __CM_VNODEOPS_H_ENV__ */

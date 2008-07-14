@@ -2282,6 +2282,58 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 }
 
 long 
+cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp, cm_req_t *reqp)
+{
+    cm_bulkStat_t *bsp;
+    afs_uint32 count;
+    afs_uint32 code;
+
+    if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
+        return 0;
+
+    bsp = malloc(sizeof(cm_bulkStat_t));
+    memset(bsp, 0, sizeof(cm_bulkStat_t));
+
+    for ( count = 0; count < enump->count; count++ ) {
+        cm_scache_t   *tscp = cm_FindSCache(&enump->entry[count].fid);
+        int i;
+
+        if (tscp) {
+            if (lock_TryWrite(&tscp->rw)) {
+                /* we have an entry that we can look at */
+                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                    /* we have a callback on it.  Don't bother
+                     * fetching this stat entry, since we're happy
+                     * with the info we have.
+                     */
+                    lock_ReleaseWrite(&tscp->rw);
+                    cm_ReleaseSCache(tscp);
+                    continue;
+                }
+                lock_ReleaseWrite(&tscp->rw);
+            }	/* got lock */
+            cm_ReleaseSCache(tscp);
+        }	/* found entry */
+
+        i = bsp->counter++;
+        bsp->fids[i].Volume = enump->entry[count].fid.volume;
+        bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
+        bsp->fids[i].Unique = enump->entry[count].fid.unique;
+
+        if (bsp->counter == AFSCBMAX) {
+            code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+            memset(bsp, 0, sizeof(cm_bulkStat_t));
+        }
+    }
+
+    if (bsp->counter > 0)
+        code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+
+    free(bsp);
+    return 0;
+}
+
+long 
 cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {	
     if (enump == NULL || entrypp == NULL || enump->next > enump->count) {
