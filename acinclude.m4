@@ -10,106 +10,200 @@ AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
 
 #BOZO_SAVE_CORES pam
-AC_ARG_WITH(afs-sysname,
-[  --with-afs-sysname=sys    use sys for the afs sysname]
-)
-AC_ARG_ENABLE( afsdb,
-[  --disable-afsdb 			disable AFSDB DNS RR support],, enable_afsdb="yes")
-AC_ARG_ENABLE( pam,
-[  --disable-pam 			disable PAM support],, enable_pam="yes")
-AC_ARG_ENABLE( bos-restricted-mode,
-[  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
-AC_ARG_ENABLE( bos-new-config,
-[  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
-AC_ARG_ENABLE( largefile-fileserver,
-[  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
-AC_ARG_ENABLE( namei-fileserver,
-[  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
-AC_ARG_ENABLE( supergroups,
-[  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
-AC_ARG_ENABLE( fast-restart,
-[  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
-AC_ARG_ENABLE( bitmap-later,
-[  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
-AC_ARG_ENABLE( demand-attach-fs,
-[  --enable-demand-attach-fs 		enable Demand Attach Fileserver (please see documentation)],, enable_demand_attach_fs="no")
-AC_ARG_ENABLE( disconnected,
-[  --enable-disconnected		enable disconnected support in cache manager (experimental)],, enable_disconnected="no")
-AC_ARG_ENABLE( unix-sockets,
-[  --enable-unix-sockets 		enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
-AC_ARG_ENABLE( full-vos-listvol-switch,
-[  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
-AC_ARG_ENABLE( icmp-pmtu-discovery,
-[  --enable-icmp-pmtu-discovery		enable path MTU discovery by decoding ICMP unreachable replies],, enable_icmp_pmtu_discovery="no")
-AC_ARG_WITH(dux-kernel-headers,
-[  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
-)
-AC_ARG_WITH(linux-kernel-headers,
-[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
-)
-AC_ARG_WITH(bsd-kernel-headers,
-[  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
-)
-AC_ARG_WITH(bsd-kernel-build,
-[  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
-)
 
+dnl System identity.
+AC_ARG_WITH([afs-sysname],
+    [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])])
+
+dnl General feature options.
+AC_ARG_ENABLE([afsdb],
+    [AS_HELP_STRING([--disable-afsdb], [disable AFSDB DNS RR support])],
+    ,
+    [enable_afsdb="yes"])
+AC_ARG_ENABLE([pam],
+    [AS_HELP_STRING([--disable-pam], [disable PAM support])],
+    ,
+    [enable_pam="yes"])
+AC_ARG_ENABLE([bos-restricted-mode],
+    [AS_HELP_STRING([--enable-bos-restricted-mode],
+        [enable bosserver restricted mode which disables certain bosserver
+         functionality])],
+    , 
+    [enable_bos_restricted_mode="no"])
+AC_ARG_ENABLE([bos-new-config],
+    [AS_HELP_STRING([--enable-bos-new-config],
+        [enable bosserver pickup of BosConfig.new on restarts])],
+    ,
+    [enable_bos_new_config="no"])
+AC_ARG_ENABLE([largefile-fileserver],
+    [AS_HELP_STRING([--disable-largefile-fileserver],
+        [disable large file support in fileserver])],
+    ,
+    [enable_largefile_fileserver="yes"])
+AC_ARG_ENABLE([namei-fileserver],
+    [AS_HELP_STRING([--enable-namei-fileserver],
+        [force compilation of namei fileserver in preference to inode
+         fileserver])],
+    , 
+    [enable_namei_fileserver="no"])
+AC_ARG_ENABLE([supergroups],
+    [AS_HELP_STRING([--enable-supergroups],
+        [enable support for nested pts groups])],
+    , 
+    [enable_supergroups="no"])
+AC_ARG_ENABLE([fast-restart],
+    [AS_HELP_STRING([--enable-fast-restart],
+        [enable fast startup of file server without salvaging])],
+    , 
+    [enable_fast_restart="no"])
+AC_ARG_ENABLE([bitmap-later],
+    [AS_HELP_STRING([--enable-bitmap-later],
+        [enable fast startup of file server by not reading bitmap till
+         needed])],
+    , 
+    [enable_bitmap_later="no"])
+AC_ARG_ENABLE([demand-attach-fs],
+    [AS_HELP_STRING([--enable-demand-attach-fs],
+        [enable Demand Attach Fileserver (please see documentation)])],
+    , 
+    [enable_demand_attach_fs="no"])
+AC_ARG_ENABLE([disconnected],
+    [AS_HELP_STRING([--enable-disconnected],
+        [enable disconnected support in cache manager (experimental)])],
+    , 
+    [enable_disconnected="no"])
+AC_ARG_ENABLE([unix-sockets],
+    [AS_HELP_STRING([--enable-unix-sockets],
+        [enable use of unix domain sockets for fssync])],
+    ,
+    [enable_unix_sockets="yes"])
+AC_ARG_ENABLE([full-vos-listvol-switch],
+    [AS_HELP_STRING([--disable-full-vos-listvol-switch],
+        [disable vos full listvol switch for formatted output])],
+    , 
+    [enable_full_vos_listvol_switch="yes"])
+AC_ARG_ENABLE([icmp-pmtu-discovery],
+    [AS_HELP_STRING([--enable-icmp-pmtu-discovery],
+        [enable path MTU discovery by decoding ICMP unreachable replies])],
+    , 
+    [enable_icmp_pmtu_discovery="no"])
+AC_ARG_ENABLE([tivoli-tsm],
+    [AS_HELP_STRING([--enable-tivoli-tsm],
+        [enable use of the Tivoli TSM API libraries for butc support])],
+    , 
+    [enable_tivoli_tsm="no"])
+AC_ARG_ENABLE([pthreaded-ubik],
+    [AS_HELP_STRING([--enable-pthreaded-ubik],
+        [enable installation of pthreaded ubik applications (defaults to
+         disabled)])],
+    ,
+    [enable_pthreaded_ubik="no"])
+
+dnl Kernel module build options.
+AC_ARG_WITH([dux-kernel-headers],
+    [AS_HELP_STRING([--with-dux-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to first
+         match in /usr/sys)])])
+AC_ARG_WITH([linux-kernel-headers],
+    [AS_HELP_STRING([--with-linux-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to
+         /usr/src/linux-2.4, then /usr/src/linux)])])
+AC_ARG_WITH([bsd-kernel-headers],
+    [AS_HELP_STRING([--with-bsd-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to
+         /usr/src/sys)])])
+AC_ARG_WITH([bsd-kernel-build],
+    [AS_HELP_STRING([--with-bsd-kernel-build=path], 
+        [use the kernel build found at path (optional, defaults to
+         KSRC/i386/compile/GENERIC)])])
 AC_ARG_WITH([linux-kernel-packaging],
-	    AS_HELP_STRING([--with-linux-kernel-packaging],
-			   [ use standard naming conventions to aid Linux 
-			     kernel build packaging (disables MPS, sets the 
-			     kernel module name to openafs.ko, and installs 
-			     kernel modules into the standard Linux location)
-			   ]), 
-	    [ AC_SUBST(LINUX_KERNEL_PACKAGING, "yes")
-	      AC_SUBST(LINUX_LIBAFS_NAME, "openafs") ], 
-            [ AC_SUBST(LINUX_LIBAFS_NAME, "libafs") ] )
+    [AS_HELP_STRING([--with-linux-kernel-packaging],
+        [use standard naming conventions to aid Linux kernel build packaging
+         (disables MPS, sets the kernel module name to openafs.ko, and
+         installs kernel modules into the standard Linux location)])],
+    [AC_SUBST(LINUX_KERNEL_PACKAGING, "yes")
+     AC_SUBST(LINUX_LIBAFS_NAME, "openafs")],
+    [AC_SUBST(LINUX_LIBAFS_NAME, "libafs")])
+AC_ARG_ENABLE([kernel-module],
+    [AS_HELP_STRING([--disable-kernel-module],
+        [disable compilation of the kernel module (defaults to enabled)])],
+    , 
+    [enable_kernel_module="yes"])
+AC_ARG_ENABLE([redhat-buildsys],
+    [AS_HELP_STRING([--enable-redhat-buildsys],
+        [enable compilation of the redhat build system kernel (defaults to
+         disabled)])],
+    ,
+    [enable_redhat_buildsys="no"])
 
-AC_ARG_ENABLE(kernel-module,
-[  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
-)
-AC_ARG_ENABLE(redhat-buildsys,
-[  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
-)
-AC_ARG_ENABLE(transarc-paths,
-[  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice],, enable_transarc_paths="no"
-)
-AC_ARG_ENABLE(tivoli-tsm,
-[  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
-)
-AC_ARG_ENABLE(debug-kernel,
-[  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
-)
-AC_ARG_ENABLE(optimize-kernel,
-[  --disable-optimize-kernel		disable compilation of the kernel module with optimization (defaults based on platform)],, enable_optimize_kernel="yes"
-)
-AC_ARG_ENABLE(debug,
-[  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
-)
-AC_ARG_ENABLE(strip-binaries,
-[  --disable-strip-binaries             disable stripping of symbol information from binaries (defaults to enabled)],, enable_strip_binaries="maybe"
-)
-AC_ARG_ENABLE(optimize,
-[  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
-)
-AC_ARG_ENABLE(debug-lwp,
-[  --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)],, enable_debug_lwp="no"
-)
-AC_ARG_ENABLE(optimize-lwp,
-[  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
-)
-AC_ARG_ENABLE(debug-pam,
-[  --enable-debug-pam			enable compilation of the PAM code with debugging information (defaults to disabled)],, enable_debug_pam="no"
-)
-AC_ARG_ENABLE(optimize-pam,
-[  --disable-optimize-pam		disable optimization for compilation of the PAM code (defaults to enabled)],, enable_optimize_pam="yes"
-)
-AC_ARG_ENABLE(warnings,
-[  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)],, enable_warnings="no"
-)
-AC_ARG_ENABLE(pthreaded-ubik,
-[  --enable-pthreaded-ubik		enable installation of pthreaded ubik applications (defaults to disabled)],, enable_pthreaded_ubik="no"
-)
+dnl Installation locations.
+AC_ARG_ENABLE([transarc-paths],
+    [AS_HELP_STRING([--enable-transarc-paths],
+        [use Transarc style paths like /usr/afs and /usr/vice])],
+    , 
+    [enable_transarc_paths="no"])
+
+dnl Optimization and debugging flags.
+AC_ARG_ENABLE([strip-binaries],
+    [AS_HELP_STRING([--disable-strip-binaries],
+        [disable stripping of symbol information from binaries (defaults to
+         enabled)])],
+    ,
+    [enable_strip_binaries="maybe"])
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+        [enable compilation of the user space code with debugging information
+         (defaults to disabled)])],
+    , 
+    [enable_debug="no"])
+AC_ARG_ENABLE([optimize],
+    [AS_HELP_STRING([--disable-optimize],
+        [disable optimization for compilation of the user space code (defaults
+         to enabled)])],
+    , 
+    [enable_optimize="yes"])
+AC_ARG_ENABLE([warnings],
+    [AS_HELP_STRING([--enable-warnings],
+        [enable compilation warnings when building with gcc (defaults to
+         disabled)])],
+    ,
+    [enable_warnings="no"])
+AC_ARG_ENABLE([debug-kernel],
+    [AS_HELP_STRING([--enable-debug-kernel],
+        [enable compilation of the kernel module with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_kernel="no"])
+AC_ARG_ENABLE([optimize-kernel],
+    [AS_HELP_STRING([--disable-optimize-kernel],
+        [disable compilation of the kernel module with optimization (defaults
+         based on platform)])],
+    , 
+    [enable_optimize_kernel="yes"])
+AC_ARG_ENABLE([debug-lwp],
+    [AS_HELP_STRING([--enable-debug-lwp],
+        [enable compilation of the LWP code with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_lwp="no"])
+AC_ARG_ENABLE([optimize-lwp],
+    [AS_HELP_STRING([--disable-optimize-lwp],
+        [disable optimization for compilation of the LWP code (defaults to
+         enabled)])],
+    ,
+    [enable_optimize_lwp="yes"])
+AC_ARG_ENABLE([debug-pam],
+    [AS_HELP_STRING([--enable-debug-pam],
+        [enable compilation of the PAM code with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_pam="no"])
+AC_ARG_ENABLE([optimize-pam],
+    [AS_HELP_STRING([--disable-optimize-pam],
+        [disable optimization for compilation of the PAM code (defaults to
+         enabled)])],
+    ,
+    [enable_optimize_pam="yes"])
 
 
 enable_login="no"

@@ -8,12 +8,13 @@ dnl otherwise test for it and define it.  also allow options for overriding
 dnl it when cross-compiling
 
 AC_DEFUN([OPENAFS_CHECK_BIGENDIAN], [
-AC_ARG_ENABLE(bigendian,
-[  --enable-bigendian	the target is big endian],
-openafs_cv_c_bigendian=yes)
-AC_ARG_ENABLE(littleendian,
-[  --enable-littleendian	the target is little endian],
-openafs_cv_c_bigendian=no)
+AC_ARG_ENABLE([bigendian],
+    [AS_HELP_STRING([--enable-bigendian], [the target is big endian])],
+    [openafs_cv_c_bigendian=yes])
+AC_ARG_ENABLE([littleendian],
+    [AS_HELP_STRING([--enable-littleendian], [the target is little endian])],
+    [openafs_cv_c_bigendian=no])
+
 AC_CACHE_CHECK(whether byte order is known at compile time,
 openafs_cv_c_bigendian_compile,
 [AC_TRY_COMPILE([
