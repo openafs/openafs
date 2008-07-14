@@ -104,8 +104,11 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
 #endif /* SPECIAL_FOLDERS */
     } else if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
         attrs = SMB_ATTR_DIRECTORY | SMB_ATTR_SPARSE_FILE;
-    } else
+    } else if (scp->fid.vnode & 0x1)
+        attrs = SMB_ATTR_DIRECTORY;
+    else 
         attrs = 0;
+
     /*
      * We used to mark a file RO if it was in an RO volume, but that
      * turns out to be impolitic in NT.  See defect 10007.
@@ -4073,7 +4076,6 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                         fa->extFileAttributes = SMB_ATTR_DIRECTORY;
                     else
                         fa->extFileAttributes = SMB_ATTR_NORMAL;
-                        
                 }
                 /* merge in hidden attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
@@ -4096,8 +4098,19 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                 case CM_SCACHETYPE_SYMLINK:
                 case CM_SCACHETYPE_INVALID:
                     fa->attributes = SMB_ATTR_DIRECTORY;
+                    break;
                 default:
-                    fa->attributes = SMB_ATTR_NORMAL;
+                    /* if we get here we either have a normal file
+                     * or we have a file for which we have never 
+                     * received status info.  In this case, we can
+                     * check the even/odd value of the entry's vnode.
+                     * even means it is to be treated as a directory
+                     * and odd means it is to be treated as a file.
+                     */
+                    if (mustFake && (scp->fid.vnode & 0x1))
+                        fa->extFileAttributes = SMB_ATTR_DIRECTORY;
+                    else
+                        fa->extFileAttributes = SMB_ATTR_NORMAL;
                 }
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
@@ -8729,7 +8742,7 @@ cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_
         lock_ReleaseMutex(&unp->mx);
         osi_Log2(smb_logp,"smb_FindCMUserByName New user name[%S] machine[%S]",osi_LogSaveClientString(smb_logp,usern),osi_LogSaveClientString(smb_logp,machine));
     }  else	{
-        osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%S] machine[%S]",osi_LogSaveClientString(smb_logp,usern),osi_LogSaveClientString(smb_logp,machine));
+        osi_Log2(smb_logp,"smb_FindCMUserByName Found name[%S] machine[%S]",osi_LogSaveClientString(smb_logp,usern),osi_LogSaveClientString(smb_logp,machine));
     }
     userp = unp->userp;
     cm_HoldUser(userp);
