@@ -1,4 +1,4 @@
-openafs (1.4.7.dfsg1-4) UNRELEASED; urgency=low
+openafs (1.4.7.dfsg1-4) unstable; urgency=low
 
   * Undo the move of up.pod to afs-up.pod in debian/rules clean rather
     than just deleting the file and causing the second build to fail.
@@ -9,7 +9,7 @@ openafs (1.4.7.dfsg1-4) UNRELEASED; urgency=low
   * Suggest openafs-krb5 in openafs-client and mention it in the long
     description.
 
- -- Russ Allbery <rra@debian.org>  Mon, 30 Jun 2008 13:33:58 -0700
+ -- Russ Allbery <rra@debian.org>  Sun, 13 Jul 2008 19:03:58 -0700
 
 openafs (1.4.7.dfsg1-3) unstable; urgency=low
 
