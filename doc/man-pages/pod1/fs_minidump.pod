@@ -19,6 +19,16 @@ of the afsd_service.exe process.  This output can be very helpful when
 debugging the AFS Client Service when it is unresponsive to SMB/CIFS
 requests.
 
+If the AFS Client Service becomes unresponsive to any form of
+communication there may be a serious error that can only be diagnosed
+by someone with access to the source code and a debugger.  The "fs
+minidump" command can be used to force the generation of a MiniDump
+file containing the state of all of the threads in the AFS Client
+Service process.
+
+The "MiniDumpType" registry value can be used to adjust the scope of the
+process information included within the dump file.
+
 =head1 CAUTIONS
 
 This command is only available in OpenAFS for Windows version 1.4 and later.

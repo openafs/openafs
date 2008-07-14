@@ -232,12 +232,8 @@ option only on the relevant system type.
 
 Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
 and the maximum size of a /vicepX partition on a fileserver is 2^64 
-kilobytes. The fileserver will not report an error when it has access
-to a partition larger than 2^64 kilobytes, but it will probably fail if
-the administrator attempts to use more than 2^64 kilobytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-B<vos partinfo> or other OpenAFS disk reporting tools are used with
-partitions larger than 2^64 kilobytes.
+kilobytes.  (The maximum partition size in releases 1.5.34 and earlier
+is 2^31 kilobytes.)
 
 The maximum number of directory entries is 64,000 if all of the
 entries have names that are 15 characters or less in length. A name
