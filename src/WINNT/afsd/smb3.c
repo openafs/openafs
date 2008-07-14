@@ -4108,9 +4108,9 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                      * and odd means it is to be treated as a file.
                      */
                     if (mustFake && (scp->fid.vnode & 0x1))
-                        fa->extFileAttributes = SMB_ATTR_DIRECTORY;
+                        fa->attributes = SMB_ATTR_DIRECTORY;
                     else
-                        fa->extFileAttributes = SMB_ATTR_NORMAL;
+                        fa->attributes = SMB_ATTR_NORMAL;
                 }
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
