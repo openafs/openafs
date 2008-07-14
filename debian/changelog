@@ -1,5 +1,8 @@
 openafs (1.4.7.dfsg1-4) UNRELEASED; urgency=low
 
+  * Undo the move of up.pod to afs-up.pod in debian/rules clean rather
+    than just deleting the file and causing the second build to fail.
+    Thanks, Dominic Hargreaves.  (Closes: #490752)
   * Don't use UCONTEXT on hppa; its glibc doesn't provide those
     functions.  It's possible that OpenAFS isn't working properly on hppa
     these days, but as yet there have been no reports.

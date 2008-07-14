@@ -118,11 +118,12 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp install-stamp
+	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
+	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean aclocal.m4 configure configure-libafs doc/man-pages/man1/*.1 \
 	    doc/man-pages/man5/*.5 doc/man-pages/man8/*.8 \
-	    src/kauth/ka-forwarder src/packaging/RedHat/openafs.spec \
-	    doc/man-pages/pod1/afs-up.pod
+	    src/kauth/ka-forwarder src/packaging/RedHat/openafs.spec
 
 install: install-stamp
 install-stamp: DH_OPTIONS=
