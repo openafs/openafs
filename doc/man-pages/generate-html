@@ -59,12 +59,33 @@ $Pod::Simple::HTML::Tagmap{'/item-bullet'} = '</p></li>';
 $Pod::Simple::HTML::Tagmap{'item-number'} = '<li><p>';
 $Pod::Simple::HTML::Tagmap{'/item-number'} = '</p></li>';
 
+# This horrific hack is required because Pod::Simple::HTMLBatch has no way
+# of setting search options and we have to set laborious to true in order
+# to pick up man pages like krb.conf(5).
+package OpenAFS::Search;
+
+use strict;
+use vars qw(@ISA);
+
+use Pod::Simple::Search;
+@ISA = qw(Pod::Simple::HTML);
+
+sub new {
+    my $class = shift;
+    my $object = Pod::Simple::Search->new;
+    $object->laborious (1);
+    return $object;
+}
+
 package main;
 
 use strict;
 
 use File::Copy;
 use Pod::Simple::HTMLBatch;
+
+# Override the search class to set laborious.
+$Pod::Simple::HTMLBatch::SEARCH_CLASS = 'OpenAFS::Search';
 
 our $HEADER = <<'EOH';
 <html>
