@@ -2512,7 +2512,7 @@ clientchar_t *smb_ParseStringCch(smb_packet_t * pktp, unsigned char * inp,
 }
 
 clientchar_t *
-smb_ParseStringBuf(const char * bufbase,
+smb_ParseStringBuf(const unsigned char * bufbase,
                    cm_space_t ** stringspp,
                    unsigned char *inp, size_t *pcb_max,
                    char **chainpp, int flags)
