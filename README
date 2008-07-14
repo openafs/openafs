@@ -131,7 +131,7 @@ A  Configuring
     afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
 
    The Demand Attach Fileserver (DAFS), is built by providing the
-   --enable_demand_attach_fs argument to configure.  Note that the
+   --enable-demand-attach-fs argument to configure.  Note that the
    bosserver must be built with DAFS in order to be able to create the
    dafs instance, which will be used in place of the fs instance.  In
    addition, the fileserver, volserver, salvager, salvage, and
