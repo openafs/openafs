@@ -17,10 +17,10 @@ in /usr/src/linux.
 
 Otherwise, please read on.
 
-Building OpenAFS on UNIX and LINUX
+Building OpenAFS on UNIX and Linux
 ----------------------------------
 
-A. Creating the proper directory structure.
+A  Configuring
 
    Uncompress the source into a directory of your choice. A directory
    in afs space is also valid. In the directory that you uncompressed the
@@ -30,77 +30,94 @@ A. Creating the proper directory structure.
       A directory will be automatically created for binaries to be written 
       into with this name when you build.
 
-      alpha_dux40
-      alpha_dux50 (only tested on 5.0A, does not work with 5.1)
+      alpha_dux40, alpha_dux50, alpha_dux51
+      alpha_linux22, alpha_linux24, alpha_linux26
+      alpha_nbsd15, alpha_nbsd16
+      amd64_fbsd_53 (client does not work)
+      amd64_linux24, amd64_linux26
+      amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
+      arm_linux24, arm_linux26
+      hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
+         getting missing header)
+      hp_ux102 (Client port possible, but db servers and utilities work)
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
          i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
-         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61
+         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61,
+         i386_fbsd_62, i386_fbsd_70
          (client does not work)
       i386_linux22, i386_linux24, i386_linux26
-      i386_umlinux22, i386_umlinux24
+      i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
+         i386_nbsd40
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39
-      rs_aix42
-      sgi_65 (file server not tested)
-      sun4_413 (No client support, no fileserver support, db servers only)
-      sun4x_56, sun4x_57, sun4x_58, sun4x_59, sun4x_510,
-      sunx86_57, sunx86_58, sunx86_59, sunx86_510 (logging UFS not supported 
-         for mixed-use partitions containing client cache)
-      ppc_darwin_70
-      ppc_linux22, ppc_linux24
-      alpha_linux22, alpha_linux24 
+         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
+         i386_obsd41
+      i386_umlinux22, i386_umlinux24, i386_umlinux26
+      ia64_hpux1122, ia64_hpux1123
       ia64_linux24, ia64_linux26
+      parisc_linux24
+      ppc64_linux24, ppc64_linux26
+      ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
+         ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
+      ppc_linux22, ppc_linux24, ppc_linux26
+      ppc_nbsd16, ppc_nbsd20
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53
+      s390_linux22, s390_linux24, s390_linux26
+      s390x_linux24, s390x_linux26
+      sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
+      sparc64_linux22, sparc64_linux24, sparc64_linux26
       sparc_linux22, sparc_linux24
-      sparc64_linux22, sparc64_linux24
-      hp_ux11i, hp_ux110 (See notes below for information on getting 
-         missing header)
-      hp_ux102 (Client port possible, but db servers and utilities work)
+      sun4_413 (No client support, no fileserver support, db servers only)
+      sun4x_56, sun4x_57, sun4x_58, sun4x_59, sun4x_510, sun4x_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      sunx86_57, sunx86_58, sunx86_59, sunx86_510, sunx86_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      x86_darwin_80, x86_darwin90
 
    2. Using configure in the top level directory, configure for your
       AFS system type, providing the necessary flags:
       % ./configure --with-afs-sysname=sun4x_58 --enable-transarc-paths
 
-      If you do not have the "configure" script you can re-create it by
-      running regen.sh.  You will need autoconf to do this.
+      If you do not have the "configure" script, or if you modify the
+      source files, you can re-create it by running regen.sh.  You will
+      need autoconf to do this.
 
       For some systems you need also provide the path in which your kernel
       headers for your configured kernel can be found.  See the
-      system-specific Notes sections below for details.
+      system-specific Notes sections below for details.  If you want to
+      build only the user-space programs and servers and not the kernel
+      module, specify the --disable-kernel-module option on the
+      ./configure command line.
 
-      There is an option to control whether or not binaries are stripped
-      of their symbol table information.  All binaries, except for the
-      'fileserver' and 'volserver' executables, are stripped by default.
+      All binaries, except for the 'fileserver' and 'volserver'
+      executables, are stripped of their symbol table information by
+      default.  To enable a debugging build, specify the --enable-debug
+      option on the ./configure command line.  This builds with debugging
+      compiler options and disables stripping of binaries.
 
-      To prevent stripping, specify the '--disable-strip-binaries' option on
-      the ./configure command line.
+      You can also use different combinations of --enable-debug and
+      --enable (or --disable)-strip-binaries for finer control.  One can,
+      for example, compile binaries for debug and strip them anyway.
+      Alternatively, one can compile without debug and force the binaries
+      to not be stripped.  Note that these combinations are not
+      necessarily useful.
 
-      This option works alongside the existing --enable-debug option to
-      control how binaries are produced.  When --enable-debug is specified,
-      binaries will not be stripped.  This behavior can be modified by
-      using different combinations of --enable-debug and --enable (or
-      --disable)-strip-binaries.  One can, for example, compile binaries for
-      debug and strip them anyway.  Alternatively, one can compile without
-      debug and force the binaries to not be stripped.  Note that these
-      combinations are not necessarily useful.
+      The two binaries noted above, 'fileserver' and 'volserver' will
+      never be stripped, regardless of any options given to configure.
 
-      If neither of these options is specified, the default will be to build
-      non-debug binaries that are stripped (with the exceptions noted above,
-      which are never stripped at present).  Specifying --enable-debug also
-      turns on --disable-strip-binaries.  These are the most useful settings.
+   There are two modes for directory path handling: "Transarc mode" and
+   "default mode":
 
-      The two binaries noted above, 'fileserver' and 'volserver' will never
-      be stripped, regardless of any options given to configure.
-
-  There are two modes for directory path handling: "Transarc mode" and "default mode":
-  - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
-    by putting client configuaration files in /usr/vice/etc, and server
-    files in /usr/afs under the traditional directory layout.
-  - In default mode, files are located in standardized locations, usually
-    under $(prefix).
-  - Client programs, libraries, and related files always go in standard
-    directories under $(prefix).  This rule covers things that would go
-    into $(bindir), $(includedir), $(libdir), $(mandir), and $(sbindir).
-  - Other files get located in the following places:
+   - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
+     by putting client configuaration files in /usr/vice/etc, and server
+     files in /usr/afs under the traditional directory layout.
+   - In default mode, files are located in standardized locations, usually
+     under $(prefix).
+   - Client programs, libraries, and related files always go in standard
+     directories under $(prefix).  This rule covers things that would go
+     into $(bindir), $(includedir), $(libdir), $(mandir), and $(sbindir).
+   - Other files get located in the following places:
 
     Directory     Transarc Mode              Default Mode
     ============  =========================  ==============================
@@ -113,13 +130,14 @@ A. Creating the proper directory structure.
     afsbosconfig  $(afslocaldir)/BosConfig   $(afsconfdir)/BosConfig
     afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
 
+   The Demand Attach Fileserver (DAFS), is built by providing the
+   --enable_demand_attach_fs argument to configure.  Note that the
+   bosserver must be built with DAFS in order to be able to create the
+   dafs instance, which will be used in place of the fs instance.  In
+   addition, the fileserver, volserver, salvager, salvage, and
+   salvageserver binaries must be built for DAFS.
 
-    The Demand Attach Fileserver (DAFS), is built by providing the
-    --enable_demand_attach_fs argument to configure.  Note that the
-    bosserver must be built with DAFS in order to be able to create
-    the dafs instance, which will be used in place of the fs instance.  In
-    addition, the fileserver, volserver, salvager, salvage, and salvageserver
-    binaries must be built for DAFS.
+   For additional options, see section H below.
 
 B  Building
 
@@ -157,7 +175,8 @@ D  Linux Notes
    be the path of the directory containing a child directory named
    "include". So if your version file was 
    /usr/src/linux/include/linux/version.h you would invoke:
-   % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux
+   % ./configure --with-afs-sysname=i386_linux24 \
+       --with-linux-kernel-headers=/usr/src/linux
 
    Currently you can build for only one Linux kernel at a time,
    and the version is extracted from the kernel headers in the root
@@ -165,7 +184,8 @@ D  Linux Notes
 
    To build for another Linux kernel version:
    the system type defined in step A1.
-      % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+      % ./configure --with-afs-sysname=i386_linux24 \
+          --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
       % make 
 
    Your dest tree will now include an additional kernel module for your
@@ -176,13 +196,11 @@ D  Linux Notes
 
 E  HP-UX 11.0 Notes
 
-   HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on their
-   web site: http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,687,00.html
-   To navigate down from the top level of the portal, one would do
-
-        www.hp.com/dspp -> i want to... -> download software -> operating systems
-
-   to get to the same page. 
+   HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on
+   their web site.  Go to http://www.hp.com/dspp, choose Software
+   downloads from the side menu, and select Software: HP operating systems
+   and then Operating systems: HP-UX from the select boxes.  The last
+   select box will have an option for downloading vfs_vm.h.
 
 F  OpenBSD Notes
 
@@ -190,20 +208,20 @@ F  OpenBSD Notes
    first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
 
    You need kernel source installed to build OpenAFS.  Use the
-   --with-bsd-kernel-headers= configure option if your kernel source is not
-   in /usr/src/sys.
+   --with-bsd-kernel-headers= configure option if your kernel source is
+   not in /usr/src/sys.
 
    If you want to build src/aklog, add the following options to your
    configure.  Note that you shouldn't need aklog because heimdal afslog
    does (almost) the same thing.
      --with-krb5 KRB5CFLAGS=-I/usr/include/kerberosV KRB5LIBS=-lcrypto
 
-   src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing the
-   client.  There is no server package, but I am told that "make install"
-   will put server binaries in /usr/afs.
+   src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing
+   the client.  There is no server package, but I am told that "make
+   install" will put server binaries in /usr/afs.
 
-   Your kernel may panic when you try to shutdown after running the OpenAFS
-   client.  To prevent this, change the "dangling vnode" panic in
+   Your kernel may panic when you try to shutdown after running the
+   OpenAFS client.  To prevent this, change the "dangling vnode" panic in
    sys/kern/vfs_syscalls.c to a printf and build a new kernel.
 
    You can't run arla and OpenAFS at the same time.
@@ -215,8 +233,8 @@ G  FreeBSD Notes
    server should work.
 
    You need kernel source installed to build OpenAFS.  Use the
-   --with-bsd-kernel-headers= configure option if your kernel source is not
-   in /usr/src/sys.
+   --with-bsd-kernel-headers= configure option if your kernel source is
+   not in /usr/src/sys.
 
    You also need access to your kernel build directory for the opt_global.h
    include file.  Use the --with-bsd-kernel-build= configure option if your
@@ -226,3 +244,96 @@ G  FreeBSD Notes
    server binaries in /usr/afs.
 
    You can't run arla and OpenAFS at the same time.
+
+H  Other configure options
+
+   AFS has a ton of other optional features that must be enabled using
+   configure options.  Here is a summary:
+
+   --enable-bitmap-later
+       Speeds the startup of the fileserver by deferring reading volume
+       bitmaps until necessary.  Demand attach is a better solution to the
+       same problem.
+
+   --enable-bos-new-config
+       A bosserver built with this option will look for BosConfig.new when
+       it restarts and, if present, replace BosConfig with that file
+       before reading its configuration.
+
+   --enable-bos-restricted-mode
+       Enables support for restricted mode in the bosserver.  This mode
+       can be enabled or disabled via a command-line switch and a signal
+       and can be enabled (but not disabled) remotely.  When enabled,
+       bosserver will not permit any operations that change the local file
+       system (install, uninstall, prune), run commands on the server
+       (exec, create, delete), or view files (getlog).
+
+   --enable-demand-attach-fs
+       Enable Demand Attach file servers.  Demand Attach is an extensive
+       re-engineering of the file server that avoids the long startup and
+       shutdown delays of the traditional file server by enabling
+       persistance of file server state to disk.  It is still very new,
+       but is expected to become the default in a future version of
+       OpenAFS.
+
+   --enable-disconnected
+       Enable disconnected support in the cache manager (EXPERIMENTAL).
+
+   --enable-fast-restart
+       When restarting the fileserver, don't salvage volumes.  Instead,
+       assume all volumes are okay and only take them off-line if that
+       assumption is incorrect.  Using this option safely requires
+       scanning the fileserver log for error messages when volumes are
+       taken off-line and salvaging them manually.  Not recommended; use
+       demand attach instead.
+
+   --enable-icmp-pmtu-discovery
+       Enable path MTU discovery in the Rx libraries by decoding ICMP
+       unreachable packets.
+
+   --enable-namei-fileserver
+       Forces the namei fileserver on platforms (like Solaris) where the
+       inode fileserver is the default.
+
+   --enable-obsolete
+       Enables building and installation of mpp and package, utilities
+       that historically shipped with AFS but are not supported by OpenAFS
+       and will be removed entirely in a later release.
+
+   --enable-pthreaded-ubik
+       Enable the threaded version of Ubik and install the threaded
+       versions of Ubik servers.  (EXPERIMENTAL)
+
+   --enable-supergroups
+       Enables support of nested groups in the ptserver.  WARNING: Once
+       you make use of this option by nesting one group inside another,
+       the resulting PTS database cannot be correctly and safely used by a
+       ptserver built without this option.
+
+   --enable-tivoli-tsm
+       Build with the Tivoli TSM API libraries for butc support of the
+       Tivoli backup system.
+
+   --enable-unix-sockets
+       Enable use of UNIX domain sockets for fssync.
+
+   It's also possible to disable some standard features.  None of these
+   options are recommended but may be useful in unusual circumstances:
+
+   --disable-afsdb
+       Disable AFSDB DNS record support in the cache manager, normally
+       used to find cell VLDB servers.
+
+   --disable-full-vos-listvol-switch
+       Removes support for the -format option to vos listvol and also
+       suppresses some additional fields that were added to vos examine
+       output but may confuse older software.
+
+   --disable-largefile-fileserver
+       Disable large file (>2GB) support in the fileserver.
+
+   --disable-pam
+       Do not build the AFS PAM modules.  Normally building them is
+       harmless, but the PAM modules that come with OpenAFS are deprecated
+       and should not be used unless you're still using the OpenAFS
+       kaserver (which is itself deprecated and should not be used).
