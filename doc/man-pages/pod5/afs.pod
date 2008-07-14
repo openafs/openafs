@@ -73,6 +73,8 @@ Configuration files:
 
 =item L<cacheinfo(5)>
 
+=item L<krb.conf(5)>
+
 =item L<package(5)>
 
 =item L<sysid(5)>
