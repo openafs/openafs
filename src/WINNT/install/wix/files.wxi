@@ -451,6 +451,7 @@
                             <File Id="file_CmdRef_1_fs_whichcell_html"  Name="fs_which.htm"  LongName="fs_whichcell.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_wscell_html"  Name="fs_wscel.htm"  LongName="fs_wscell.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_klog_html"  Name="klog.htm"  LongName="klog.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_klog__krb5_html"  Name="klogkrb5.htm"  LongName="klog.krb5.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_knfs_html"  Name="knfs.htm"  LongName="knfs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_kpasswd_html"  Name="kpasswd.htm"  LongName="kpasswd.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_livesys_html"  Name="livesys.htm"  LongName="livesys.html"  DiskId="1"  />
@@ -535,10 +536,13 @@
                             <Component Id="cmp_Cmd_Ref_5_en_US" Guid="$(var.DocHtmlCmdRef5Guid)">
                             <File Id="file_CmdRef_5_afs_html"  Name="afs.htm"  LongName="afs.html"  KeyPath="yes"  DiskId="1"  />
                             <File Id="file_CmdRef_5_afsmonitor_html"  Name="afsmonit.htm"  LongName="afsmonitor.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_afszcm_cat_html"  Name="afszcm.htm"  LongName="afszcm.cat.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_afs_cache_html"  Name="afs_cach.htm"  LongName="afs_cache.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_afs_volume_header_html"  Name="afs_volu.htm"  LongName="afs_volume_header.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_AuthLog_dir_html"  Name="AuthLogD.htm"  LongName="AuthLog.dir.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_AuthLog_html"  Name="AuthLog.htm"  LongName="AuthLog.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_BackupLog_html"  Name="BackupLo.htm"  LongName="BackupLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_bdb_DB0_html"  Name="bdb_DB0.htm"  LongName="bdb.DB0.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_BosConfig_html"  Name="BosConfi.htm"  LongName="BosConfig.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_BosLog_html"  Name="BosLog.htm"  LongName="BosLog.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_butc_html"  Name="butc.htm"  LongName="butc.html"    DiskId="1"  />
@@ -547,13 +551,19 @@
                             <File Id="file_CmdRef_5_CellAlias_html"  Name="CellAlia.htm"  LongName="CellAlias.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_CellServDB_html"  Name="CellServ.htm"  LongName="CellServDB.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_FileLog_html"  Name="FileLog.htm"  LongName="FileLog.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_fms_log_html"  Name="fms_log.htm"  LongName="fms.log.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_ForceSalvage_html"  Name="ForceSal.htm"  LongName="ForceSalvage.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_kaserver_DB0_html"  Name="kaserved.htm"  LongName="kaserver.DB0.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_kaserverauxdb_html"  Name="kaserver.htm"  LongName="kaserverauxdb.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_KeyFile_html"  Name="KeyFile.htm"  LongName="KeyFile.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_krb_conf_html"  Name="krb_conf.htm"  LongName="krb.conf.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_NetInfo_html"  Name="NetInfo.htm"  LongName="NetInfo.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_NetRestrict_html"  Name="NetRestr.htm"  LongName="NetRestrict.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_NoAuth_html"  Name="NoAuth.htm"  LongName="NoAuth.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_package_html"  Name="package.htm"  LongName="package.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_prdb_DB0_html"  Name="prdb_DB0.htm"  LongName="prdb.DB0.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_Salvage_fs_html"  Name="SalvageF.htm"  LongName="Salvage.fs.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_Salvage_lock_html"  Name="SalvageL.htm"  LongName="Salvage.lock.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_SalvageLog_html"  Name="SalvageL.htm"  LongName="SalvageLog.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_sysid_html"  Name="sysid.htm"  LongName="sysid.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_tapeconfig_html"  Name="tapeconf.htm"  LongName="tapeconfig.html"    DiskId="1"  />
@@ -561,6 +571,7 @@
                             <File Id="file_CmdRef_5_UserList_html"  Name="UserList.htm"  LongName="UserList.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_uss_html"  Name="uss.htm"  LongName="uss.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_uss_bulk_html"  Name="uss_bulk.htm"  LongName="uss_bulk.html"    DiskId="1"  />
+                            <File Id="file_CmdRef_5_vldb_DB0_html"  Name="vldb_DB0.htm"  LongName="vldb.DB0.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_VLLog_html"  Name="VLLog.htm"  LongName="VLLog.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_VolserLog_html"  Name="VolserLo.htm"  LongName="VolserLog.html"    DiskId="1"  />
                             </Component>
