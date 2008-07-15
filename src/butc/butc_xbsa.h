@@ -38,7 +38,11 @@
 #define XBSADFLTBUFFER 16384	/* default size is 16KB */
 #define XBSAMAXBUFFER  65535	/* maximum size in 64KB-1; has to fit in 16bit integer */
 
+#ifdef NEW_XBSA
+#include "afsxbsa.h"
+#else
 #include <xbsa.h>
+#endif
 
 #define XBSA_NUM_ENV_STRS ADSM_ENV_STRS
 #define XBSA_MAX_OSNAME   BSA_MAX_OSNAME
