@@ -37,7 +37,7 @@ static pthread_t softsig_tid;
 static struct {
     void (*handler) (int);
     int pending;
-#if !defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD30_ENV) || !defined(AFS_NBSD_ENV)
+#if !(defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD30_ENV)))
     int fatal;
 #endif /* !defined(AFS_DARWIN60_ENV) || !defined(AFS_NBSD_ENV) */
     int inited;
