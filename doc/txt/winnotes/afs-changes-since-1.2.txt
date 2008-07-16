@@ -1,3 +1,38 @@
+Since 1.5.39 [1.5.50 released 16 July 2008]
+ * There were no releases between 1.5.39 and 1.5.50.
+
+ * FIRST RELEASE WITH UNICODE SUPPORT
+
+ * Pioctl interfaces to the cache manager refactored
+   to provide layering between the SMB specific code
+   and the general purpose ioctl operation.
+
+ * Garbage collect dead SMB virtual circuits as soon
+   as they are no longer being referenced.  This avoids
+   problems with outstanding locks not being dropped
+   when the virtual circuit becomes invalid.
+
+ * Remove the IBM Administration Reference documentation
+   and replace it with the OpenAFS Command Reference 
+   Manual.  
+
+ * Avoid calling rx_SetDeadTime and rx_SetHardDeadTime
+   functions each time a connection is about to be used.
+   Do not hold a lock on the rx connection object while
+   it is being selected.  This avoids a race between 
+   threads attempting to set the timeout values and 
+   removes a bottleneck that was hampering performance.
+
+ * Ensure that the smb directory attribute is set 
+   for all directory objects.
+
+ * Add vs2008 support to the NSIS installer scripts
+
+ * Replace the VC Runtime EXE installer with the MSI
+   installer in the NSIS installer scripts
+
+ * Properly delete the VC7.1 C Runtime libraries.   
+
 Since 1.5.36 [1.5.39 released 23 June 2008]
  * There were no 1.5.37 or 1.5.38 releases for Windows
 
