@@ -1312,7 +1312,7 @@ long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * us
 
      */
 
-    fnamep = cm_ClientStringToFsStringAlloc(namep, cm_ClientStrLen(namep), NULL);
+    fnamep = cm_ClientStringToFsStringAlloc(namep, -1, NULL);
     cp = fnamep + CM_PREFIX_VOL_CCH; /* cp points to cell name, hopefully */
     tp = cm_FsStrChr(cp, '%');
     if (tp == NULL)
