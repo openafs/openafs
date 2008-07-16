@@ -243,6 +243,12 @@ cm_normchar_t * cm_NormalizeStringAlloc(const cm_unichar_t * s, int cch_src, int
     int cch_dest = 0;
     cm_normchar_t * r;
 
+    if (s == NULL || cch_src == 0 || *s == L'\0') {
+        if (pcch_dest)
+            *pcch_dest = ((cch_src != 0)? 1: 0);
+        return wcsdup(L"");
+    }
+
     r = NormalizeUtf16String(s, cch_src, NULL, &cch_dest);
 
     if (pcch_dest)
@@ -285,6 +291,12 @@ cm_utf8char_t * cm_Utf16ToUtf8Alloc(const cm_unichar_t * s, int cch_src, int *pc
 {
     int cch_dest;
     cm_utf8char_t * dest;
+
+    if (s == NULL || cch_src == 0 || *s == L'\0') {
+        if (pcch_dest)
+            *pcch_dest = ((cch_src != 0)?1:0);
+        return strdup("");
+    }
 
     cch_dest = WideCharToMultiByte(CP_UTF8, 0, s, cch_src, NULL, 0, NULL, FALSE);
 
@@ -574,9 +586,9 @@ cm_normchar_t *cm_NormalizeUtf8StringToUtf16Alloc(const cm_utf8char_t * src, int
 
     /* Get some edge cases out first, so we don't have to worry about
        cch_src being 0 etc. */
-    if (cch_src == 0) {
-        return NULL;
-    } else if (*src == '\0') {
+    if (cch_src == 0 || src == NULL || *src == '\0') {
+        if (pcch_dest)
+            *pcch_dest = ((cch_src != 0)? 1 : 0);
         return wcsdup(L"");
     }
 
@@ -694,6 +706,12 @@ cm_unichar_t  * cm_Utf8ToUtf16Alloc(const cm_utf8char_t * src, int cch_src, int 
 {
     cm_unichar_t * ustr = NULL;
     int cch;
+
+    if (cch_src == 0 || src == NULL || *src == '\0') {
+        if (pcch_dest)
+            *pcch_dest = ((cch_src != 0)? 1 : 0);
+        return wcsdup(L"");
+    }
 
     if (cch_src == -1) {
         cch_src = strlen(src) + 1;

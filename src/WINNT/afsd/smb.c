@@ -1831,7 +1831,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
             rw = 1;
         }
         /* Get the full name for this cell */
-        cellname = cm_ClientStringToFsStringAlloc(p, cm_ClientStrLen(p), NULL);
+        cellname = cm_ClientStringToFsStringAlloc(p, -1, NULL);
         code = cm_SearchCellFile(cellname, ftemp, 0, 0);
 #ifdef AFS_AFSDB_ENV
         if (code && cm_dnsEnabled) {
