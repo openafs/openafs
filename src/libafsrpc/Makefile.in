@@ -112,7 +112,8 @@ DESOBJS =\
 CRYPT_OBJ = crypt.o
 
 LWPOBJS = \
-	fasttime.o
+	fasttime.o \
+	lock.o
 
 LIBOBJS = \
 	${RXOBJS} \
@@ -272,7 +273,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.9 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.36.4.5 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -351,10 +352,13 @@ base64.o: ${UTIL}/base64.c
 fasttime.o: ${LWP}/fasttime.c
 	${CCRULE} ${LWP}/fasttime.c
 
+lock.o: ${LWP}/lock.c
+	${CCRULE} ${LWP}/lock.c
+
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
 	     sun4x_5* | sunx86_5*) \
-		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(PATH_CPP)  ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* | *_darwin_* ) \
@@ -366,7 +370,7 @@ syscall.o: ${SYS}/syscall.s
 	 *bsd* ) \
 		touch syscall.o ;; \
 	 *) \
-		$(CPP)  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
+		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac

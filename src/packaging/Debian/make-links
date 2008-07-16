@@ -1,9 +1,0 @@
-#!/bin/sh -e
-mkdir -p /usr/afs 2>/dev/null || true
-cd /usr/afs
-ln -s /etc/openafs/server etc
-ln -s /etc/openafs/server-local local
-ln -s /var/lib/openafs/db db
-ln -s /var/log/openafs logs
-ln -s /var/lib/openafs/cores cores
-ln -s /usr/lib/openafs bin

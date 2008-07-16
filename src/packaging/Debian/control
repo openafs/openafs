@@ -3,13 +3,15 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev
-Standards-Version: 3.6.2
+Build-Depends: debhelper (>= 5), libncurses5-dev, libpam0g-dev, bison,
+ flex, perl, comerr-dev, libkrb5-dev, autoconf, automake, quilt (>= 0.40)
+Standards-Version: 3.7.3
+Homepage: http://www.openafs.org/
 
 Package: openafs-client
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2
+Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2, lsof
 Suggests: openafs-doc
 Conflicts: arla, openafs-modules1
 Description: AFS distributed filesystem client support
@@ -22,7 +24,7 @@ Description: AFS distributed filesystem client support
 
 Package: openafs-kpasswd
 Priority: extra
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Depends: ${shlibs:Depends}, openafs-client
 Conflicts: krb5-user, heimdal-clients, kerberos4kth-clients
 Description: AFS distributed filesystem old password changing
@@ -36,8 +38,8 @@ Description: AFS distributed filesystem old password changing
  package for new cells or for cells using Kerberos v5.
 
 Package: openafs-fileserver
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
-Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
+Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client, lsb-base
 Recommends: ntp
 Suggests: openafs-doc
 Description: AFS distributed filesystem file server
@@ -49,7 +51,7 @@ Description: AFS distributed filesystem file server
  installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Depends: ${shlibs:Depends}, ${perl:Depends}, openafs-fileserver, openafs-client
 Suggests: openafs-doc
 Conflicts: openafs-ptutil
@@ -64,13 +66,37 @@ Description: AFS distributed filesystem database server
  installed on the servers that will act as volume location and
  protection servers.
 
+Package: openafs-doc
+Section: doc
+Architecture: all
+Description: AFS distributed filesystem documentation
+ AFS is a distributed filesystem allowing cross-platform sharing of files
+ among multiple computers.  Facilities are provided for access control,
+ authentication, backup and administrative management.
+ .
+ This package contains the OpenAFS user's and reference manuals, some
+ protocol documentation, and other OpenAFS documentation.
+
+Package: openafs-krb5
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
+Depends: ${shlibs:Depends}
+Description: AFS distributed filesystem Kerberos 5 integration
+ AFS is a distributed filesystem allowing cross-platform sharing of files
+ among multiple computers.  Facilities are provided for access control,
+ authentication, backup and administrative management.
+ .
+ This package provides aklog, a utility for authenticating to AFS using
+ Kerberos 5.  It also provides asetkey, a utility to set AFS server keys
+ from a Kerberos keytab, and ka-forwarder, a utility to forward kaserver
+ requests to a KDC using fakeka.
+
 Package: libopenafs-dev
 Section: libdevel
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Priority: extra
 Depends: ${shlibs:Depends}
 Suggests: openafs-doc
-Conflicts: arla-dev
+Conflicts: arla-dev, liblwp-dev
 Description: AFS distributed filesystem development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -81,7 +107,7 @@ Description: AFS distributed filesystem development libraries
 
 Package: openafs-modules-source
 Priority: extra
-Depends: bison, flex, debhelper (>= 4.0.0), kernel-package | module-assistant
+Depends: bison, flex, debhelper (>= 5), kernel-package | module-assistant
 Architecture: all
 Description: AFS distributed filesystem kernel module source
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -93,7 +119,7 @@ Description: AFS distributed filesystem kernel module source
 Package: libpam-openafs-kaserver
 Priority: extra
 Depends: ${shlibs:Depends}, openafs-client
-Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
 Description: AFS distributed filesystem kaserver PAM module
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -101,3 +127,18 @@ Description: AFS distributed filesystem kaserver PAM module
  .
  This package provides a PAM module for existing  sites using the AFS
  kaserver for authentication.  New sites should use a Kerberos v5
+ implementation, a Kerberos v5 PAM module, and libpam-openafs-session.
+
+Package: openafs-dbg
+Priority: extra
+Depends: openafs-fileserver (= ${binary:Version})
+ | libpam-openafs-kaserver (= ${binary:Version})
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64 s390x
+Section: libdevel
+Description: AFS distributed filesystem debugging information
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package contains the debugging information for the OpenAFS
+ fileserver and volserver and for libpam-openafs-kaserver.

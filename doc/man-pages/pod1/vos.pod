@@ -96,14 +96,7 @@ Commands to obtain help: B<vos apropos> and B<vos help>.
 
 =head1 CAUTIONS
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
-and the maximum size of a /vicepX partition on a fileserver is also 2
-terabytes. The fileserver will not report an error when it has access
-to a partition larger than 2 terabytes, but it will probably fail if
-the administrator attempts to use more than 2 terabytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-B<vos partinfo> or other OpenAFS disk reporting tools are used with
-partitions larger than 2 terabytes.
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 
 =head1 OPTIONS
 
@@ -249,6 +242,7 @@ L<vos_backup(1)>,
 L<vos_backupsys(1)>,
 L<vos_changeaddr(1)>,
 L<vos_convertROtoRW(1)>,
+L<vos_clone(1)>,
 L<vos_copy(1)>,
 L<vos_create(1)>,
 L<vos_delentry(1)>,
@@ -267,6 +261,7 @@ L<vos_remove(1)>,
 L<vos_remsite(1)>,
 L<vos_rename(1)>,
 L<vos_restore(1)>,
+L<vos_shadow(1)>,
 L<vos_size(1)>,
 L<vos_status(1)>,
 L<vos_syncserv(1)>,

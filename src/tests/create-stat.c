@@ -44,7 +44,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 
@@ -56,7 +55,7 @@ struct VenusFid {
 };
 
 #ifdef RCSID
-RCSID("$Id: create-stat.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
+RCSID("$Id: create-stat.c,v 1.2.14.1 2007/02/09 01:00:21 shadow Exp $");
 #endif
 
 static void

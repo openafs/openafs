@@ -1,4 +1,4 @@
-# Openafs Spec $Revision: 1.1.2.22 $
+# Openafs Spec $Revision: 1.2.2.24 $
 
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
@@ -26,6 +26,15 @@
 #
 %if !%{kernvers_on_cmdline}
 %define kernvers %(%{_sourcedir}/openafs-kernel-version.sh)
+%endif
+
+# If we're building for a 2.4 series kernel, then fedora style kmods aren't
+# appropriate - disable them.
+
+%define kern24 %([ `echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'` = "2.4" ] && echo 1 || echo 0)
+
+%if %{kern24}
+%define fedorakmod 0
 %endif
 
 %if %{fedorakmod}
@@ -1494,11 +1503,11 @@ dkms remove -m %{namee} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/upclient.*
 %{_mandir}/man8/upserver.*
 %{_mandir}/man8/vldb_check.*
+%{_mandir}/man8/vldb_convert.*
 %{_mandir}/man8/vlserver.*
 %{_mandir}/man8/voldump.*
 %{_mandir}/man8/volinfo.*
 %{_mandir}/man8/volserver.*
-#%{_mandir}/man8/vldb_convert.*
 
 %if %{build_authlibs}
 %files authlibs
@@ -1568,6 +1577,7 @@ dkms remove -m %{namee} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %files krb5
 %defattr(-,root,root)
 %{_bindir}/aklog
+%{_bindir}/klog.krb5
 %{_sbindir}/asetkey
 %{_mandir}/man1/aklog.*
 %{_mandir}/man8/asetkey.*

@@ -31,7 +31,7 @@
 #include "rx.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_refernce.c,v 1.6.2.2 2007/10/30 15:24:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_refernce.c,v 1.7.4.1 2007/10/30 15:16:45 shadow Exp $");
 
 #ifndef	NeXT
 

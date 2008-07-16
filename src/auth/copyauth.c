@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/copyauth.c,v 1.6.2.2 2007/11/01 16:09:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/copyauth.c,v 1.6.14.2 2007/11/01 16:09:32 shadow Exp $");
 
 #include <string.h>
 #include <sys/types.h>

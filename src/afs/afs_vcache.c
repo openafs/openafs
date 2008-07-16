@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.48 2007/12/13 19:49:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.114.2.9 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -599,7 +599,7 @@ afs_FlushReclaimedVcaches(void)
 	       We probably need a way to be smarter about this. */
 	    tvc->nextfree = tmpReclaimedVCList;
 	    tmpReclaimedVCList = tvc;
-	    printf("Reclaim list flush %x failed: %d\n", tvc, code);
+	    printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code);
 	}
         if (tvc->states & (CVInit
 #ifdef AFS_DARWIN80_ENV
@@ -1658,7 +1658,7 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
-	name = "";		/* XXX */
+	name = "";		/* XXX */    
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	if (tc) {
@@ -1752,7 +1752,8 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (cached)
 	    *cached = 1;
 	osi_Assert((tvc->states & CVInit) == 0);
-	if (tvc->states & CStatd) {
+	/* If we are in readdir, return the vnode even if not statd */
+	if ((tvc->states & CStatd) || afs_InReadDir(tvc)) {
 	    ReleaseSharedLock(&afs_xvcache);
 	    return tvc;
 	}
@@ -1894,9 +1895,32 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (afs_DynrootNewVnode(tvc, &OutStatus)) {
 	    afs_ProcessFS(tvc, &OutStatus, areq);
 	    tvc->states |= CStatd | CUnique;
+	    tvc->parentVnode  = OutStatus.ParentVnode;
+	    tvc->parentUnique = OutStatus.ParentUnique;
 	    code = 0;
 	} else {
-	    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+	    /* If we've got here and we're disconnected, then we can go
+	     * no further
+	     */
+	    if (AFS_IS_DISCONNECTED) {
+		code = ENETDOWN;
+		/*printf("Network is down in afs_GetCache");*/
+	    } else
+	        code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+
+	    /* For the NFS translator's benefit, make sure
+	     * non-directory vnodes always have their parent FID set
+	     * correctly, even when created as a result of decoding an
+	     * NFS filehandle.  It would be nice to also do this for
+	     * directories, but we can't because the fileserver fills
+	     * in the FID of the directory itself instead of that of
+	     * its parent.
+	     */
+            if (!code && OutStatus.FileType != Directory &&
+		!tvc->parentVnode) {
+		tvc->parentVnode  = OutStatus.ParentVnode;
+		tvc->parentUnique = OutStatus.ParentUnique;
+            }
 	}
     }
 
@@ -1970,9 +1994,14 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     nfid = *afid;
     now = osi_Time();
     origCBs = afs_allCBs;	/* if anything changes, we don't have a cb */
-    code =
-	afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, &CallBack,
-			 &serverp, &tsync);
+    
+    if (AFS_IS_DISCONNECTED) {
+	/*printf("Network is down in afs_LookupVcache\n");*/
+        code = ENETDOWN;
+    } else 
+        code =
+	    afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, 
+	                     &CallBack, &serverp, &tsync);
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop2:
@@ -2798,7 +2827,6 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    && ((tvc->fid.Fid.Unique & 0xffffff) == afid->Fid.Unique)
 	    && (tvc->fid.Cell == afid->Cell)) {
 	    if (tvc->states & CVInit) {
-		int lock;
 		ReleaseSharedLock(&afs_xvcache);
 		afs_osi_Sleep(&tvc->states);
 		goto loop;
@@ -3072,11 +3100,11 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
-#ifdef  KERNEL_HAVE_PIN
-    unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
-#endif
 #if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
     afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
+#endif
+#ifdef  KERNEL_HAVE_PIN
+    unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
 
 #if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
@@ -3088,3 +3116,32 @@ shutdown_vcache(void)
     for(i = 0; i < VCSIZE; ++i)
 	QInit(&afs_vhashTV[i]);
 }
+
+#ifdef AFS_DISCON_ENV
+void afs_DisconGiveUpCallbacks() {
+    int i;
+    struct vcache *tvc;
+    int nq=0;
+            
+    ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
+    
+    /* Somehow, walk the set of vcaches, with each one coming out as tvc */
+    for (i = 0; i < VCSIZE; i++) {
+        for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+            if ((tvc->states & CRO) == 0 && tvc->callback) {
+                /* XXX - should we check if the callback has expired here? */
+                afs_QueueVCB(tvc);
+                tvc->callback = NULL;
+                tvc->states &- ~(CStatd | CUnique);
+                nq++;
+            }
+        }
+    }
+    /*printf("%d callbacks to be discarded. queued ... ", nq);*/
+    afs_FlushVCBs(0);
+    
+    ReleaseWriteLock(&afs_xvcache);
+    /*printf("gone\n");*/
+}
+
+#endif

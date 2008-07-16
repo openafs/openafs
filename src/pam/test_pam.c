@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/test_pam.c,v 1.7.2.1 2005/05/30 03:37:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/test_pam.c,v 1.8 2005/05/30 03:35:52 shadow Exp $");
 
 #include <stdio.h>
 #include <security/pam_appl.h>

@@ -173,6 +173,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\rx\test))
 		$(MKDIR) $(OJT)\rx\test
 !	ENDIF
+!	IF (!EXIST($(OJT)\rxdebug))
+		$(MKDIR) $(OJT)\rxdebug
+!	ENDIF
 !	IF (!EXIST($(OJT)\rxgen))
 		$(MKDIR) $(OJT)\rxgen
 !	ENDIF
@@ -374,6 +377,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\license\lang))
 		$(MKDIR) $(OJT)\WINNT\license\lang
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\netidmgr_plugin))
+		$(MKDIR) $(OJT)\WINNT\netidmgr_plugin
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\pthread))
 		$(MKDIR) $(OJT)\WINNT\pthread
 !	ENDIF
@@ -495,15 +501,24 @@ INCTOOLS = \
 
 $(INCTOOLS):$(OUT)\$$(@F)
 	$(COPY) $** $(DESTDIR)\bin\.
+!IF ("$(AFSVER_CL)"=="1400")
+	$(COPY) $**.manifest $(DESTDIR)\bin\.
+!ENDIF
 
 $(OUT)\mkvers.exe : $(OUT)\mkvers.obj
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\touch.exe : $(OUT)\touch.obj
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\util_cr.exe : $(OUT)\util_cr.obj
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 
@@ -518,8 +533,8 @@ clean_version:
 
 clean::
 	$(DEL) $(DESTDIR)\LIB\*.DLL
-	$(DEL) $(DESTDIR)\bin\mkver.exe
-	$(DEL) $(DESTDIR)\bin\touch.exe
-	$(DEL) $(OUT)\util_cr.exe
-	$(DEL) $(OUT)\mkver.exe
-	$(DEL) $(OUT)\touch.exe
+	$(DEL) $(DESTDIR)\bin\mkver.exe*
+	$(DEL) $(DESTDIR)\bin\touch.exe*
+	$(DEL) $(OUT)\util_cr.exe*
+	$(DEL) $(OUT)\mkver.exe*
+	$(DEL) $(OUT)\touch.exe*

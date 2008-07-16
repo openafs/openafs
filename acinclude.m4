@@ -10,81 +10,206 @@ AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
 
 #BOZO_SAVE_CORES pam sia
-AC_ARG_WITH(afs-sysname,
-[  --with-afs-sysname=sys    use sys for the afs sysname]
-)
-AC_ARG_ENABLE( obsolete,
-[  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
-AC_ARG_ENABLE( afsdb,
-[  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
-AC_ARG_ENABLE( pam,
-[  --disable-pam 			disable PAM support],, enable_pam="yes")
-AC_ARG_ENABLE( bos-restricted-mode,
-[  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
-AC_ARG_ENABLE( bos-new-config,
-[  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
-AC_ARG_ENABLE( largefile-fileserver,
-[  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
-AC_ARG_ENABLE( namei-fileserver,
-[  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
-AC_ARG_ENABLE( supergroups,
-[  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
-AC_ARG_ENABLE( fast-restart,
-[  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
-AC_ARG_ENABLE( bitmap-later,
-[  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
-AC_ARG_ENABLE( unix-sockets,
-[  --enable-unix-sockets               enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
-AC_ARG_ENABLE( full-vos-listvol-switch,
-[  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
-AC_ARG_WITH(dux-kernel-headers,
-[  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
-)
-AC_ARG_WITH(linux-kernel-headers,
-[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
-)
-AC_ARG_WITH(bsd-kernel-headers,
-[  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
-)
-AC_ARG_WITH(bsd-kernel-build,
-[  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
-)
-AC_ARG_ENABLE(kernel-module,
-[  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
-)
-AC_ARG_ENABLE(redhat-buildsys,
-[  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
-)
-AC_ARG_ENABLE(transarc-paths,
-[  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice],, enable_transarc_paths="no"
-)
-AC_ARG_ENABLE(tivoli-tsm,
-[  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
-)
-AC_ARG_ENABLE(debug-kernel,
-[  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
-)
-AC_ARG_ENABLE(optimize-kernel,
-[  --disable-optimize-kernel		disable compilation of the kernel module with optimization (defaults based on platform)],, enable_optimize_kernel="yes"
-)
-AC_ARG_ENABLE(debug,
-[  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
-)
-AC_ARG_ENABLE(strip-binaries,
-[  --disable-strip-binaries             disable stripping of symbol information from binaries (defaults to enabled)],, enable_strip_binaries="maybe"
-)
-AC_ARG_ENABLE(optimize,
-[  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
-)
-AC_ARG_ENABLE(debug-lwp,
-[  --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)],, enable_debug_lwp="no"
-)
-AC_ARG_ENABLE(optimize-lwp,
-[  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
-)
-AC_ARG_ENABLE(warnings,
-[  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)],, enable_warnings="no"
-)
+
+dnl System identity.
+AC_ARG_WITH([afs-sysname],
+    [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])])
+
+dnl General feature options.
+AC_ARG_ENABLE([afsdb],
+    [AS_HELP_STRING([--disable-afsdb], [disable AFSDB DNS RR support])],
+    ,
+    [enable_afsdb="yes"])
+AC_ARG_ENABLE([obsolete],
+    [AC_HELP_STRING([--enable-obsolete],
+        [enable obsolete portions of AFS (mpp and package)])],
+    ,
+    [enable_obsolete="no"])
+AC_ARG_ENABLE([pam],
+    [AS_HELP_STRING([--disable-pam], [disable PAM support])],
+    ,
+    [enable_pam="yes"])
+AC_ARG_ENABLE([bos-restricted-mode],
+    [AS_HELP_STRING([--enable-bos-restricted-mode],
+        [enable bosserver restricted mode which disables certain bosserver
+         functionality])],
+    , 
+    [enable_bos_restricted_mode="no"])
+AC_ARG_ENABLE([bos-new-config],
+    [AS_HELP_STRING([--enable-bos-new-config],
+        [enable bosserver pickup of BosConfig.new on restarts])],
+    ,
+    [enable_bos_new_config="no"])
+AC_ARG_ENABLE([largefile-fileserver],
+    [AS_HELP_STRING([--disable-largefile-fileserver],
+        [disable large file support in fileserver])],
+    ,
+    [enable_largefile_fileserver="yes"])
+AC_ARG_ENABLE([namei-fileserver],
+    [AS_HELP_STRING([--enable-namei-fileserver],
+        [force compilation of namei fileserver in preference to inode
+         fileserver])],
+    , 
+    [enable_namei_fileserver="no"])
+AC_ARG_ENABLE([supergroups],
+    [AS_HELP_STRING([--enable-supergroups],
+        [enable support for nested pts groups])],
+    , 
+    [enable_supergroups="no"])
+AC_ARG_ENABLE([fast-restart],
+    [AS_HELP_STRING([--enable-fast-restart],
+        [enable fast startup of file server without salvaging])],
+    , 
+    [enable_fast_restart="no"])
+AC_ARG_ENABLE([bitmap-later],
+    [AS_HELP_STRING([--enable-bitmap-later],
+        [enable fast startup of file server by not reading bitmap till
+         needed])],
+    , 
+    [enable_bitmap_later="no"])
+AC_ARG_ENABLE([demand-attach-fs],
+    [AS_HELP_STRING([--enable-demand-attach-fs],
+        [enable Demand Attach Fileserver (please see documentation)])],
+    , 
+    [enable_demand_attach_fs="no"])
+AC_ARG_ENABLE([disconnected],
+    [AS_HELP_STRING([--enable-disconnected],
+        [enable disconnected support in cache manager (experimental)])],
+    , 
+    [enable_disconnected="no"])
+AC_ARG_ENABLE([unix-sockets],
+    [AS_HELP_STRING([--enable-unix-sockets],
+        [enable use of unix domain sockets for fssync])],
+    ,
+    [enable_unix_sockets="yes"])
+AC_ARG_ENABLE([full-vos-listvol-switch],
+    [AS_HELP_STRING([--disable-full-vos-listvol-switch],
+        [disable vos full listvol switch for formatted output])],
+    , 
+    [enable_full_vos_listvol_switch="yes"])
+AC_ARG_ENABLE([icmp-pmtu-discovery],
+    [AS_HELP_STRING([--enable-icmp-pmtu-discovery],
+        [enable path MTU discovery by decoding ICMP unreachable replies])],
+    , 
+    [enable_icmp_pmtu_discovery="no"])
+AC_ARG_ENABLE([tivoli-tsm],
+    [AS_HELP_STRING([--enable-tivoli-tsm],
+        [enable use of the Tivoli TSM API libraries for butc support])],
+    , 
+    [enable_tivoli_tsm="no"])
+AC_ARG_ENABLE([pthreaded-ubik],
+    [AS_HELP_STRING([--enable-pthreaded-ubik],
+        [enable installation of pthreaded ubik applications (defaults to
+         disabled)])],
+    ,
+    [enable_pthreaded_ubik="no"])
+
+dnl Kernel module build options.
+AC_ARG_WITH([dux-kernel-headers],
+    [AS_HELP_STRING([--with-dux-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to first
+         match in /usr/sys)])])
+AC_ARG_WITH([linux-kernel-headers],
+    [AS_HELP_STRING([--with-linux-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to
+         /usr/src/linux-2.4, then /usr/src/linux)])])
+AC_ARG_WITH([bsd-kernel-headers],
+    [AS_HELP_STRING([--with-bsd-kernel-headers=path],
+        [use the kernel headers found at path (optional, defaults to
+         /usr/src/sys)])])
+AC_ARG_WITH([bsd-kernel-build],
+    [AS_HELP_STRING([--with-bsd-kernel-build=path], 
+        [use the kernel build found at path (optional, defaults to
+         KSRC/i386/compile/GENERIC)])])
+AC_ARG_WITH([linux-kernel-packaging],
+    [AS_HELP_STRING([--with-linux-kernel-packaging],
+        [use standard naming conventions to aid Linux kernel build packaging
+         (disables MPS, sets the kernel module name to openafs.ko, and
+         installs kernel modules into the standard Linux location)])],
+    [AC_SUBST(LINUX_KERNEL_PACKAGING, "yes")
+     AC_SUBST(LINUX_LIBAFS_NAME, "openafs")],
+    [AC_SUBST(LINUX_LIBAFS_NAME, "libafs")])
+AC_ARG_ENABLE([kernel-module],
+    [AS_HELP_STRING([--disable-kernel-module],
+        [disable compilation of the kernel module (defaults to enabled)])],
+    , 
+    [enable_kernel_module="yes"])
+AC_ARG_ENABLE([redhat-buildsys],
+    [AS_HELP_STRING([--enable-redhat-buildsys],
+        [enable compilation of the redhat build system kernel (defaults to
+         disabled)])],
+    ,
+    [enable_redhat_buildsys="no"])
+
+dnl Installation locations.
+AC_ARG_ENABLE([transarc-paths],
+    [AS_HELP_STRING([--enable-transarc-paths],
+        [use Transarc style paths like /usr/afs and /usr/vice])],
+    , 
+    [enable_transarc_paths="no"])
+
+dnl Optimization and debugging flags.
+AC_ARG_ENABLE([strip-binaries],
+    [AS_HELP_STRING([--disable-strip-binaries],
+        [disable stripping of symbol information from binaries (defaults to
+         enabled)])],
+    ,
+    [enable_strip_binaries="maybe"])
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+        [enable compilation of the user space code with debugging information
+         (defaults to disabled)])],
+    , 
+    [enable_debug="no"])
+AC_ARG_ENABLE([optimize],
+    [AS_HELP_STRING([--disable-optimize],
+        [disable optimization for compilation of the user space code (defaults
+         to enabled)])],
+    , 
+    [enable_optimize="yes"])
+AC_ARG_ENABLE([warnings],
+    [AS_HELP_STRING([--enable-warnings],
+        [enable compilation warnings when building with gcc (defaults to
+         disabled)])],
+    ,
+    [enable_warnings="no"])
+AC_ARG_ENABLE([debug-kernel],
+    [AS_HELP_STRING([--enable-debug-kernel],
+        [enable compilation of the kernel module with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_kernel="no"])
+AC_ARG_ENABLE([optimize-kernel],
+    [AS_HELP_STRING([--disable-optimize-kernel],
+        [disable compilation of the kernel module with optimization (defaults
+         based on platform)])],
+    , 
+    [enable_optimize_kernel="yes"])
+AC_ARG_ENABLE([debug-lwp],
+    [AS_HELP_STRING([--enable-debug-lwp],
+        [enable compilation of the LWP code with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_lwp="no"])
+AC_ARG_ENABLE([optimize-lwp],
+    [AS_HELP_STRING([--disable-optimize-lwp],
+        [disable optimization for compilation of the LWP code (defaults to
+         enabled)])],
+    ,
+    [enable_optimize_lwp="yes"])
+AC_ARG_ENABLE([debug-pam],
+    [AS_HELP_STRING([--enable-debug-pam],
+        [enable compilation of the PAM code with debugging information
+         (defaults to disabled)])],
+    ,
+    [enable_debug_pam="no"])
+AC_ARG_ENABLE([optimize-pam],
+    [AS_HELP_STRING([--disable-optimize-pam],
+        [disable optimization for compilation of the PAM code (defaults to
+         enabled)])],
+    ,
+    [enable_optimize_pam="yes"])
+
 
 enable_login="no"
 
@@ -262,6 +387,12 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
+		sparc64-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="sparc64_obsd${vM}${vm}"
+			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
 			vM=${v%.*}
@@ -418,7 +549,7 @@ else
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
 			;;
-		powerpc-apple-darwin8*)
+		powerpc-apple-darwin8.0*)
 			AFS_SYSNAME="ppc_darwin_80"
 			;;
 		powerpc-apple-darwin8.*)
@@ -600,12 +731,17 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
                  LINUX_KBUILD_USES_EXTRA_CFLAGS
 		 LINUX_KERNEL_COMPILE_WORKS
+		 LINUX_EXPORTS_FIND_TASK_BY_PID
+		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_HAVE_CURRENT_KERNEL_TIME
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
+		 LINUX_D_PATH_TAKES_STRUCT_PATH
+		 LINUX_NEW_EXPORT_OPS
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_EXPORTFS_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
@@ -641,6 +777,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
+		 LINUX_KERNEL_HLIST_UNHASHED
                  LINUX_KEY_TYPE_H_EXISTS
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
@@ -659,6 +796,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 LINUX_FREEZER_H_EXISTS
+		 LINUX_HAVE_SVC_ADDR_IN
 		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
 		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
 		 fi
@@ -678,7 +816,11 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_EXPORTS_SYS_OPEN
                  LINUX_EXPORTS_SYS_WAIT4
 		 LINUX_EXPORTS_RCU_READ_LOCK
-		 LINUX_WHICH_MODULES
+		 if test "x$with_linux_kernel_packaging" = "xno" ; then
+		   LINUX_WHICH_MODULES
+		 else
+		   AC_SUBST(MPS,'SP')
+		 fi
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
                    ac_cv_linux_exports_sys_call_table=no
@@ -745,6 +887,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
 		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
+		 fi
+		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
+		  AC_DEFINE(EXPORTFS_H_EXISTS, 1, [define if linux/exportfs.h exists])
 		 fi
 		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
 		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if key-type.h exists])
@@ -814,6 +959,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
+		 fi
+		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
+		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
@@ -928,6 +1076,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
+		 if test "x$ac_cv_linux_have_svc_addr_in" = "xyes"; then
+		  AC_DEFINE(HAVE_SVC_ADDR_IN, 1, [define if svc_add_in exists])
+                 fi
                 :
 		fi
 esac
@@ -1054,9 +1205,27 @@ else
   
 fi
 
+AC_CACHE_VAL(ac_cv_setsockopt_iprecverr,
+[
+AC_MSG_CHECKING([for setsockopt(, SOL_IP, IP_RECVERR)])
+AC_TRY_COMPILE( [#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>],
+[int on=1;
+setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));], ac_cv_setsockopt_iprecverr=yes, ac_cv_setsockopt_iprecverr=no)
+AC_MSG_RESULT($ac_cv_setsockopt_iprecverr)])
+if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+   AC_DEFINE(ADAPT_PMTU_RECVERR, 1, [define if asynchronous socket errors can be received])
+fi
+
 PTHREAD_LIBS=error
-AC_CHECK_LIB(pthread, pthread_attr_init,
-             PTHREAD_LIBS="-lpthread")
+if test "x$MKAFS_OSTYPE" = OBSD; then
+        PTHREAD_LIBS="-pthread"
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(pthread, pthread_attr_init,
+                PTHREAD_LIBS="-lpthread")
+fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_LIB(pthreads, pthread_attr_init,
                 PTHREAD_LIBS="-lpthreads")
@@ -1083,6 +1252,8 @@ if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
+HOST_CPU="$host_cpu"
+
 if test "x$with_bsd_kernel_headers" != "x"; then
 	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
 else
@@ -1093,11 +1264,11 @@ if test "x$with_bsd_kernel_build" != "x"; then
 	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
 else
 	case $AFS_SYSNAME in
-		i386_fbsd_4?)
+		*_fbsd_4?)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
 			;;
-		i386_fbsd_5?)
-			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
+		*_fbsd_*)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/${HOST_CPU}/compile/GENERIC"
 			;;
 	esac
 fi
@@ -1115,16 +1286,40 @@ if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
 
-if test "$enable_unix_sockets" = "yes"; then
-       AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
-       USE_UNIX_SOCKETS="yes"
+if test "$enable_demand_attach_fs" = "yes"; then
+	AC_DEFINE(DEMAND_ATTACH_ENABLE, 1, [define if you want the demand attach fileserver])
+	DEMAND_ATTACH="yes"
 else
-       USE_UNIX_SOCKETS="no"
+	DEMAND_ATTACH="no"
+fi
+AC_SUBST(DEMAND_ATTACH)
+
+if test "$enable_disconnected" = "yes"; then
+	AC_DEFINE(AFS_DISCON_ENV, 1, [define if you want support for disconnected operation])
+fi
+
+if test "$enable_unix_sockets" = "yes"; then
+	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
+	USE_UNIX_SOCKETS="yes"
+else
+	USE_UNIX_SOCKETS="no"
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
 
+if test "$enable_fast_restart" = "yes" &&
+   test "$enable_demand_attach_fs" = "yes" ; then
+	AC_MSG_ERROR([The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless.])
+	exit 1
+fi
+
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])
+fi
+
+if test "$enable_icmp_pmtu_discovery" = "yes"; then
+   if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
+   fi
 fi
 
 if test "$enable_bos_restricted_mode" = "yes"; then
@@ -1154,31 +1349,45 @@ XBSA_CFLAGS=""
 if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
+	XBSADIR3=/usr/tivoli/tsm/client/api/bin/sample
+	XBSADIR4=/opt/tivoli/tsm/client/api/bin/sample
 
 	if test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
+		XBSA_XLIBS=""
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
+		XBSA_XLIBS=""
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR3/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR3"
+		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR4/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR4"
+		XBSA_XLIBS="-ldl"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
-		AC_MSG_RESULT([no, missing xbsa.h header file])
+		AC_MSG_RESULT([no, missing xbsa.h and dsmapifp.h header files])
 	fi
 else
 	AC_MSG_RESULT([no])
 fi
 AC_SUBST(XBSA_CFLAGS)
+AC_SUBST(XBSA_XLIBS) 
 
 dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
+AC_CHECK_HEADERS(stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
+AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
@@ -1273,11 +1482,17 @@ if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
 
+if test "x$enable_pthreaded_ubik" = "xyes"; then
+ENABLE_PTHREADED_UBIK=yes
+fi
+
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
+AC_SUBST(ENABLE_PTHREADED_UBIK)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(HOST_CPU)
 AC_SUBST(BSD_KERNEL_PATH)
 AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)

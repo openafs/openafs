@@ -1,0 +1,24 @@
+openafs (1.4.2-6) unstable; urgency=medium
+
+  As of this release of the OpenAFS kernel module, all cells, including
+  the local cell, have setuid support turned off by default due to the
+  possibility of an attacker forging AFS fileserver responses to create a
+  fake setuid binary.  Prior releases enabled setuid support for the local
+  cell.  Those binaries will now run with normal permissions by default.
+
+  This security fix will only take effect once you've installed a kernel
+  module from openafs-modules-source 1.4.2-6 or later.  Doing so is highly
+  recommended.  In the meantime, you can disable setuid support by
+  running:
+
+      fs setcell -cell <localcell> -nosuid
+
+  as root (where <localcell> is your local cell, the one listed in
+  /etc/openafs/ThisCell).
+
+  If you are certain there is no security risk of an attacker forging AFS
+  fileserver responses, you can enable setuid status selectively using the
+  fs setcell command.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 11 Mar 2007 22:28:07 -0700
+

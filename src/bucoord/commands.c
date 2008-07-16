@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.11 2007/11/26 21:21:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.18.2.6 2007/11/26 21:08:41 shadow Exp $");
 
 #include <afs/stds.h>
 #if defined(AFS_LINUX24_ENV)

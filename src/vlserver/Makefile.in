@@ -110,10 +110,18 @@ vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 system: install
 
 ${DEST}/root.server/usr/afs/bin/vlserver: vlserver
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install vlserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DEST}/etc/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install cnvldb for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${TOP_LIBDIR}/libvldb.a: libvldb.a
 	${INSTALL} $? $@
@@ -141,10 +149,18 @@ install: \
 	${DESTDIR}${afssrvsbindir}/vldb_check
 
 ${DESTDIR}${afssrvlibexecdir}/vlserver: vlserver
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install vlserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${afssrvsbindir}/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install cnvldb for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${libdir}/afs/libvldb.a: libvldb.a
 	${INSTALL} $? $@
@@ -162,7 +178,11 @@ ${DESTDIR}${includedir}/afs/cnvldb.h: cnvldb.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/vldb_check: vldb_check
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install vldb_check for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 dest: \
 	${DEST}/root.server/usr/afs/bin/vlserver \
@@ -190,7 +210,11 @@ ${DEST}/include/afs/cnvldb.h: cnvldb.h
 	${INSTALL} $? $@
 
 ${DEST}/etc/vldb_check: vldb_check
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install vldb_check for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 #
 # Misc targets

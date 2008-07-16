@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/winsock_nt.c,v 1.5.2.2 2006/08/30 01:41:41 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/winsock_nt.c,v 1.6.4.2 2006/08/30 01:44:21 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -48,6 +48,7 @@ afs_winsockCleanup(void)
     WSACleanup();
 }
 
+/* This function will begin to fail in the year 2038 */
 int
 afs_gettimeofday(struct timeval *tv, struct timezone *tz)
 {

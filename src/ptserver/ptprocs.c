@@ -51,7 +51,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21.2.9 2007/10/30 15:24:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.29.2.4 2008/04/02 19:51:56 shadow Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -87,6 +87,7 @@ extern struct ubik_dbase *dbase;
 extern afs_int32 Initdb();
 extern int pr_noAuth;
 extern afs_int32 initd;
+extern char *pr_realmName;
 afs_int32 iNewEntry(), newEntry(), whereIsIt(), dumpEntry(), addToGroup(),
 nameToID(), Delete(), removeFromGroup();
 afs_int32 getCPS(), getCPS2(), getHostCPS(), listMax(), setMax(), listEntry();
@@ -172,22 +173,9 @@ WhoIsThis(acall, at, aid)
 	if (exp < FT_ApproxTime())
 	    goto done;
 #endif
-	if (strlen(tcell)) {
-	    extern char *pr_realmName;
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	    static char local_realm[AFS_REALM_SZ] = "";
-	    if (!local_realm[0]) {
-		if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
-		    strncpy(local_realm, pr_realmName, AFS_REALM_SZ);
-	    }
-#endif
-	    if (
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-		   strcasecmp(local_realm, tcell) &&
-#endif
-		   strcasecmp(pr_realmName, tcell))
-		foreign = 1;
-	}
+	if (tcell[0])
+	    foreign = afs_is_foreign_ticket_name(name,inst,tcell,pr_realmName);
+
 	strncpy(vname, name, sizeof(vname));
 	if (ilen = strlen(inst)) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
@@ -634,7 +622,24 @@ nameToID(call, aname, aid)
 	ABORT_WITH(tt, code);
 
     for (i = 0; i < aname->namelist_len; i++) {
-	code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
+	char vname[256];
+	char *nameinst, *cell;
+
+	strncpy(vname, aname->namelist_val[i], sizeof(vname));
+	vname[sizeof(vname)-1] ='\0';
+
+	nameinst = vname;
+	cell = strchr(vname, '@');
+	if (cell) {
+	    *cell = '\0';
+	    cell++;
+	}
+
+	if (cell && afs_is_foreign_ticket_name(nameinst,NULL,cell,pr_realmName))
+	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
+	else 
+	    code = NameToID(tt, nameinst, &aid->idlist_val[i]);
+
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
         osi_audit(PTS_NmToIdEvent, code, AUD_STR,
@@ -642,8 +647,12 @@ nameToID(call, aname, aid)
 		   AUD_END);
 	ViceLog(125, ("PTS_NameToID: code %d aname %s aid %d", code,
 		      aname->namelist_val[i], aid->idlist_val[i]));
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
     aid->idlist_len = aname->namelist_len;
 
@@ -720,8 +729,12 @@ idToName(call, aid, aname)
 		  AUD_STR, aname->namelist_val[i], AUD_END);
 	ViceLog(125, ("PTS_idToName: code %d aid %d aname %s", code,
 		      aid->idlist_val[i], aname->namelist_val[i]));
-	if (count++ > 50)
-	    IOMGR_Poll(), count = 0;
+	if (count++ > 50) {
+#ifndef AFS_PTHREAD_ENV
+	    IOMGR_Poll();
+#endif
+	    count = 0;
+	}
     }
     aname->namelist_len = aid->idlist_len;
 
@@ -816,8 +829,10 @@ Delete(call, aid, cid)
 	    if (code)
 		ABORT_WITH(tt, code);
 	    tentry.count--;	/* maintain count */
+#ifndef AFS_PTHREAD_ENV
 	    if ((i & 3) == 0)
 		IOMGR_Poll();
+#endif
 	}
 	tentry.next = centry.next;	/* thread out this block */
 	code = FreeBlock(tt, nptr);	/* free continuation block */
@@ -831,7 +846,9 @@ Delete(call, aid, cid)
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
+#endif
 	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	if (code)
 	    return code;
@@ -872,8 +889,10 @@ Delete(call, aid, cid)
 		if (code)
 		    ABORT_WITH(tt, code);
 		tentryg->countsg--;	/* maintain count */
+#ifndef AFS_PTHREAD_ENV
 		if ((i & 3) == 0)
 		    IOMGR_Poll();
+#endif
 	    }
 	    tentryg->nextsg = centry.next;	/* thread out this block */
 	    code = FreeBlock(tt, nptr);	/* free continuation block */
@@ -887,7 +906,9 @@ Delete(call, aid, cid)
 	    code = ubik_EndTrans(tt);
 	    if (code)
 		return code;
+#ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();	/* just to keep the connection alive */
+#endif
 
 	    code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	    if (code)
@@ -928,8 +949,10 @@ Delete(call, aid, cid)
 	    if (code)
 		ABORT_WITH(tt, code);
 	    count++;
+#ifndef AFS_PTHREAD_ENV
 	    if ((count & 3) == 0)
 		IOMGR_Poll();
+#endif
 	}
 	if (count < 50)
 	    continue;
@@ -941,7 +964,9 @@ Delete(call, aid, cid)
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
+#endif
 	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
 	if (code)
 	    return code;
@@ -1657,7 +1682,9 @@ listEntries(call, flag, startindex, bulkentries, nextstartindex, cid)
 	    goto done;
 
 	if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();
+#endif
 	    pollcount = 0;
 	}
 
@@ -2275,7 +2302,6 @@ addWildCards(tt, alist, host)
 }
 #endif /* IP_WILDCARDS */
 
-
 afs_int32
 WhoIsThisWithName(acall, at, aid, aname)
      struct rx_call *acall;
@@ -2303,11 +2329,12 @@ WhoIsThisWithName(acall, at, aid, aname)
     } else if (code == 2) {	/* kad class */
 
 	int clen;
-	extern char *pr_realmName;
 
 	if ((code = rxkad_GetServerInfo(acall->conn, NULL, 0 /*was &exp */ ,
 					name, inst, tcell, NULL)))
 	    goto done;
+
+
 	strncpy(vname, name, sizeof(vname));
 	if ((ilen = strlen(inst))) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
@@ -2316,19 +2343,9 @@ WhoIsThisWithName(acall, at, aid, aname)
 	    strcat(vname, inst);
 	}
 	if ((clen = strlen(tcell))) {
+	    int foreign = afs_is_foreign_ticket_name(name,inst,tcell,pr_realmName);
 
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	    static char local_realm[AFS_REALM_SZ] = "";
-	    if (!local_realm[0]) {
-		if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
-		    strncpy(local_realm, pr_realmName, AFS_REALM_SZ);
-	    }
-#endif
-	    if (
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-		   strcasecmp(local_realm, tcell) &&
-#endif
-		   strcasecmp(pr_realmName, tcell)) {
+	    if (foreign) {
 		if (strlen(vname) + 1 + clen >= sizeof(vname))
 		    goto done;
 		strcat(vname, "@");

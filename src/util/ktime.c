@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.10.2.2 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.12.2.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -511,6 +511,7 @@ ktime_ParseDate(char *adate, struct ktime_date *akdate)
     if (akdate->mask)
 	return 0;
 
+    /* Old ambiguous mm/dd/yy hh:mm:ss format */
 
     code =
 	sscanf(adate, "%d / %d / %d %d : %d : %d%1s", &month, &day2, &year,
@@ -522,12 +523,27 @@ ktime_ParseDate(char *adate, struct ktime_date *akdate)
 		   &hour, &min, &c[0]);
 	if (code != 5) {
 	    hour = min = 0;
-	    code = sscanf(adate, "%d / %d / %d%1s", &month, &day2, &year, &c[0]);
+	    code =
+		sscanf(adate, "%d / %d / %d%1s", &month, &day2, &year, &c[0]);
 	    if (code != 3) {
-		return -1;
+		code = -1;
 	    }
 	}
     }
+
+    /* New ISO 8601 (subset) format */
+
+    if (code < 0) {
+	hour = min = sec = 0;
+	code =
+	    sscanf(adate, "%d-%d-%d %d:%d:%d%1s", &year, &month, &day2,
+		   &hour, &min, &sec, c);
+	if (code != 3 && code != 5 && code != 6)
+	    code = -1;
+    }
+
+    if (code < 0)
+	return code;
 
     if ((year < 0) || (month < 1) || (month > 12) || (day2 < 1) || (day2 > 31) ||	/* more or less */
 	(hour < 0) || (hour > 23) || (min < 0) || (min > 59) || (sec < 0)
@@ -569,23 +585,28 @@ afs_int32
 ktime_DateToInt32(char *adate, afs_int32 * aint32)
 {
     struct ktime_date tdate;
-    register afs_int32 code;
+    afs_int32 code;
+    unsigned long l;
+    char c[2];
 
-    /* parse the date into a ktime_date structure */
-    code = ktime_ParseDate(adate, &tdate);
-    if (code)
-	return code;		/* failed to parse */
+    if (sscanf(adate, "%lu%1s", &l, c) == 1 && l > 200000000)
+	*aint32 = l;
+    else {
+	/* parse the date into a ktime_date structure */
+	code = ktime_ParseDate(adate, &tdate);
+	if (code)
+	    return code;		/* failed to parse */
+	*aint32 = ktime_InterpretDate(&tdate);	/* interpret as seconds since 1970 */
+    }
 
-    code = ktime_InterpretDate(&tdate);	/* interpret as seconds since 1970 */
-    *aint32 = code;		/* return it */
-    return 0;			/* and declare no errors */
+    return 0;
 }
 
 /* get useful error message to print about date input format */
 char *
 ktime_GetDateUsage(void)
 {
-    return "date format is 'mm/dd/yy [hh:mm]', using a 24 hour clock";
+    return "date format is '(yyyy-mm-dd | mm/dd/yy) [hh:mm]', using a 24 hour clock";
 }
 
 

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.28 2007/11/23 13:45:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.42.4.22 2008/07/01 03:35:23 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -39,6 +39,9 @@ struct vfsmount *afs_cacheMnt;
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
+extern struct export_operations afs_export_ops;
+#endif
 extern afs_rwlock_t afs_xvcache;
 extern struct afs_q VLRU;
 
@@ -143,6 +146,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
+    sb->s_export_op = &afs_export_ops;
+#endif
 #if defined(MAX_NON_LFS)
 #ifdef AFS_64BIT_CLIENT
 #if !defined(MAX_LFS_FILESIZE)
@@ -470,6 +476,7 @@ struct super_operations afs_sops = {
 #endif
 };
 
+
 /************** Support routines ************************/
 
 /* vattr_setattr
@@ -537,7 +544,11 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_atime.tv_nsec = 0;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
-    ip->i_mtime.tv_nsec = 0;
+    /* Set the mtime nanoseconds to the sysname generation number.
+     * This convinces NFS clients that all directories have changed
+     * any time the sysname list changes.
+     */
+    ip->i_mtime.tv_nsec = afs_sysnamegen;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
     ip->i_ctime.tv_nsec = 0;
 #else
@@ -545,4 +556,28 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_mtime = vp->va_mtime.tv_sec;
     ip->i_ctime = vp->va_ctime.tv_sec;
 #endif
+}
+
+/* osi_linux_free_inode_pages
+ *
+ * Free all vnodes remaining in the afs hash.  Must be done before
+ * shutting down afs and freeing all memory.
+ */
+void
+osi_linux_free_inode_pages(void)
+{
+    int i;
+    struct vcache *tvc, *nvc;
+    extern struct vcache *afs_vhashT[VCSIZE];
+
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; ) {
+	    int slept;
+	
+	    nvc = tvc->hnext;
+	    if (afs_FlushVCache(tvc, &slept))		/* slept always 0 for linux? */
+		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
+	    tvc = nvc;
+	}
+    }
 }

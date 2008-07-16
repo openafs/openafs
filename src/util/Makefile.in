@@ -13,8 +13,8 @@ HELPER_SPLINT=@HELPER_SPLINT@
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o \
-	 daemon.o rxkstats.o ${REGEX_OBJ}
+	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
+	 pthread_glock.o daemon.o rxkstats.o ${REGEX_OBJ}
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
@@ -61,6 +61,9 @@ util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
+
+pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
+	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c ${srcdir}/pthread_glock.c
 
 assert.o: ${srcdir}/assert.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/assert.c
@@ -133,6 +136,9 @@ strlcat.o: ${srcdir}/strlcat.c ${includes}
 
 strlcpy.o: ${srcdir}/strlcpy.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcpy.c
+
+strnlen.o: ${srcdir}/strnlen.c ${includes}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/strnlen.c
 
 daemon.o: ${srcdir}/daemon.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/daemon.c

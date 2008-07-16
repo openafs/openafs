@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.16.8.2 2008/04/04 18:17:35 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -123,11 +123,12 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     int fd, i;
     char headerName[32], volumePath[64];
     Device device;
-    struct DiskPartition *partition;
+    struct DiskPartition64 *partition;
     struct VolumeDiskHeader diskHeader;
     IHandle_t *handle;
     FdHandle_t *fdP;
     Inode nearInode = 0;
+    char *part, *name;
 
     *ec = 0;
     memset(&vol, 0, sizeof(vol));
@@ -150,6 +151,17 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     nearInodeHash(volumeId, nearInode);
     nearInode %= partition->f_files;
 #endif
+    VGetVolumePath(ec, vol.id, &part, &name);
+    if (*ec == VNOVOL || !strcmp(partition->name, part)) {
+	/* this case is ok */
+    } else {
+	/* return EXDEV if it's a clone to an alternate partition
+	 * otherwise assume it's a move */
+	if (vol.parentId != vol.id) {
+	    *ec = EXDEV;
+	    return NULL;
+	}
+    }
     VLockPartition_r(partname);
     memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;

@@ -1,0 +1,88 @@
+Apply an incredibly ugly hack to build the PAM modules against the shared
+objects generated for the shared libraries.  Not suitable upstream in its
+current form.  The right upstream solution is to standardize the shared
+library ABI and install it with a real SONAME, and then link the PAM
+modules against it.
+
+--- openafs.orig/Makefile.in
++++ openafs/Makefile.in
+@@ -515,8 +515,6 @@
+ # pthread based user space RX library
+ shlibafsrpc: rx rxkad des
+ 	case ${SYS_NAME} in \
+-	amd64_linux24) \
+-		echo Skipping shlibafsrpc for amd64_linux24 ;; \
+ 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+ 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+ 	*) \
+@@ -525,8 +523,6 @@
+ 
+ shlibafsauthent: ubik auth kauth shlibafsrpc
+ 	case ${SYS_NAME} in \
+-	amd64_linux24) \
+-		echo Skipping shlibafsauthent for amd64_linux24 ;; \
+ 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+ 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+ 	*) \
+--- openafs.orig/src/pam/Makefile.in
++++ openafs/src/pam/Makefile.in
+@@ -25,7 +25,17 @@
+ 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
+    OBJS = $(SHOBJS) test_pam.o
+ INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
+-CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
++CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS} ${MT_CFLAGS}
++
++# For Debian, we link directly with the object files that would have gone
++# into the libafsrpc and libafsauthent shared libraries.  The shared libraries
++# themselves cannot be used because the interface isn't stable and they have
++# no SONAME, but this is the easiest way of getting PIC objects built with the
++# pthread API.
++SHLIB_OBJS	:= `ls ../shlibafsauthent/*.o | grep -v version_num` \
++		   `ls ../shlibafsrpc/*.o | grep -v version_num`
++KRB_SHLIB_OBJS	:= `ls ../shlibafsauthent/*.o | egrep -v 'version_num|ktc.o'` \
++		   `ls ../shlibafsrpc/*.o | grep -v version_num`
+ 
+ all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
+ 
+@@ -47,6 +57,9 @@
+ afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
+ 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
+ 
++ktc.o: ${srcdir}/../auth/ktc.c
++	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c
++
+ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
+ 	set -x; \
+ 	case "$(SYS_NAME)" in \
+@@ -59,8 +72,9 @@
+ 			afs_setcred.o afs_auth.o afs_util.o \
+ 			$(SHOBJS) $(LIBS) ;; \
+ 	*linux*) \
+-		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
+-			afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
++		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o \
++			afs_auth.o afs_util.o $(SHOBJS) $(SHLIB_OBJS) \
++			$(MT_LIBS) -lpam -lresolv;;\
+ 	*fbsd*| *nbsd*) \
+ 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
+ 			afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
+@@ -68,7 +82,7 @@
+ 		echo No link line for system $(SYS_NAME). ;; \
+ 	esac
+ 
+-pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
++pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o ktc.o
+ 	set -x; \
+ 	case "$(SYS_NAME)" in \
+ 	hp_ux* | ia64_hpux*) \
+@@ -81,7 +95,8 @@
+ 			$(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
+ 	*linux*) \
+ 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
+-			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
++			afs_auth_krb.o afs_util_krb.o ktc.o $(SHOBJS) \
++			$(KRB_SHLIB_OBJS) $(MT_LIBS) -lpam -lresolv;;\
+ 	*fbsd*| *nbsd*) \
+ 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
+ 			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\

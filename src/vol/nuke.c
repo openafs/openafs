@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.13.2.3 2006/09/03 05:38:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.17.2.1 2006/09/03 05:33:41 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -41,6 +41,7 @@ RCSID
 #include "partition.h"
 #include "viceinode.h"
 #include "salvage.h"
+#include "daemon_com.h"
 #include "fssync.h"
 
 #ifdef O_LARGEFILE

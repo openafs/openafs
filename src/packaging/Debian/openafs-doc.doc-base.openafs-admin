@@ -1,0 +1,11 @@
+Document: openafs-admin
+Title: AFS Administrator's Guide
+Author: IBM
+Abstract: Describes concepts and procedures for an AFS cell administrator.
+ This is a somewhat outdated guide to configuring and administering an AFS
+ cell and an introduction to AFS for those considering running it.
+Section: Apps/Net
+
+Format: HTML
+Index: /usr/share/doc/openafs-doc/html/AdminGuide/auagd000.htm
+Files: /usr/share/doc/openafs-doc/html/AdminGuide/*

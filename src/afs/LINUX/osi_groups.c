@@ -20,11 +20,12 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.15 2008/04/19 21:56:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.28.4.14 2008/06/09 03:39:16 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
+#include "afs/nfsclient.h"
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
 #endif
@@ -333,8 +334,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     code = __setpag(cr, pagvalue, newpag, change_parent);
 
 #ifdef LINUX_KEYRING_SUPPORT
-    if (code == 0) {
-
+    if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
 	(void) install_session_keyring(current, NULL);
 
 	if (current->signal->session_keyring) {
@@ -646,7 +646,11 @@ void osi_keyring_init(void)
 #  endif
 	    rcu_read_lock();
 # endif
+#if defined(EXPORTED_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
+#else
+	p = find_task_by_vpid(1);
+#endif
 	if (p && p->user->session_keyring)
 	    __key_type_keyring = p->user->session_keyring->type;
 # ifdef EXPORTED_TASKLIST_LOCK

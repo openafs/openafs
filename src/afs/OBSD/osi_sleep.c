@@ -1,5 +1,5 @@
 /*
- * $Id: osi_sleep.c,v 1.7.2.3 2008/01/04 17:53:37 rees Exp $
+ * $Id: osi_sleep.c,v 1.9 2005/07/26 15:25:43 rees Exp $
  */
 
 /*
@@ -45,7 +45,7 @@ such damages.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_sleep.c,v 1.7.2.3 2008/01/04 17:53:37 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_sleep.c,v 1.9 2005/07/26 15:25:43 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -53,21 +53,6 @@ RCSID
 
 static char waitV;
 
-
-time_t
-osi_Time()
-{
-    struct timeval now;
-
-    getmicrotime(&now);
-    return now.tv_sec;
-}
-
-void
-afs_osi_SetTime(osi_timeval_t * atv)
-{
-    printf("afs attempted to set clock; use \"afsd -nosettime\"\n");
-}
 
 /* cancel osi_Wait */
 void
@@ -91,14 +76,13 @@ int
 afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int timo, code = 0;
-    struct timeval atv, now, endTime;
+    struct timeval atv, endTime;
 
     AFS_STATCNT(osi_Wait);
 
     atv.tv_sec = ams / 1000;
     atv.tv_usec = (ams % 1000) * 1000;
-    getmicrotime(&now);
-    timeradd(&atv, &now, &endTime);
+    timeradd(&atv, &time, &endTime);
 
     if (ahandle)
 	ahandle->proc = (caddr_t) curproc;
@@ -106,7 +90,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     AFS_GUNLOCK();
 
     do {
-	timersub(&endTime, &now, &atv);
+	timersub(&endTime, &time, &atv);
 	timo = atv.tv_sec * hz + atv.tv_usec * hz / 1000000 + 1;
 	if (aintok) {
 	    code = tsleep(&waitV, PCATCH | PVFS, "afs_W1", timo);
@@ -120,8 +104,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	    /* we've been signalled */
 	    break;
 	}
-	getmicrotime(&now);
-    } while (timercmp(&now, &endTime, <));
+    } while (timercmp(&time, &endTime, <));
 
     AFS_GLOCK();
     return code;

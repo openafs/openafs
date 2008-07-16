@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.47 2008/02/19 14:33:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.113.2.25 2008/07/14 13:42:30 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,10 +42,11 @@ RCSID
 #else
 #include <sys/param.h>
 #include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <string.h>
 
 #ifndef AFS_LINUX20_ENV
@@ -72,9 +73,10 @@ RCSID
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include <afs/acl.h>
 #include <afs/ptclient.h>
+#include <afs/ptuser.h>
 #include <afs/prs_fs.h>
+#include <afs/acl.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <sys/stat.h>
@@ -97,12 +99,12 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 
-#include <afs/auth.h>
 #include <signal.h>
 #include <afs/partition.h>
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
+#include "callback.h"
 #include <afs/unified_afs.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
@@ -200,7 +202,7 @@ extern afs_int32 readonlyServer;
 /*
  * Externals used by the xstat code.
  */
-extern int VolumeCacheSize, VolumeGets, VolumeReplacements;
+extern VolPkgStats VStats;
 extern int CEs, CEBlocks;
 
 extern int HTs, HTBlocks;
@@ -458,7 +460,7 @@ static afs_int32
 CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 {
     int fileCode = 0;
-    int errorCode = -1;
+    afs_int32 local_errorCode, errorCode = -1;
     static struct timeval restartedat = { 0, 0 };
 
     if (fid->Volume == 0 || fid->Vnode == 0)	/* not: || fid->Unique == 0) */
@@ -467,8 +469,16 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 	extern int VInit;
 
 	while (1) {
+	    int restarting = 
+#ifdef AFS_DEMAND_ATTACH_FS
+		VSALVAGE
+#else
+		VRESTARTING
+#endif
+		;
+
 	    errorCode = 0;
-	    *volptr = VGetVolume(&errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolume(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
 		assert(*volptr);
 		break;
@@ -529,7 +539,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			afs_perfstats.fs_nBusies++;
 			FS_UNLOCK;
 		    }
-		    return (busyonrst ? VBUSY : VRESTARTING);
+		    return (busyonrst ? VBUSY : restarting);
 		} else {
 		    struct timeval now;
 		    TM_GetTimeOfDay(&now, 0);
@@ -539,14 +549,24 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			    afs_perfstats.fs_nBusies++;
 			    FS_UNLOCK;
 			}
-			return (busyonrst ? VBUSY : VRESTARTING);
+			return (busyonrst ? VBUSY : restarting);
 		    } else {
-			return (VRESTARTING);
+			return (restarting);
 		    }
 		}
 	    }
-	    /* allow read operations on busy volume */
-	    else if (errorCode == VBUSY && lock == READ_LOCK) {
+	    /* allow read operations on busy volume. 
+	     * must check local_errorCode because demand attach fs
+	     * can have local_errorCode == VSALVAGING, errorCode == VBUSY */
+	    else if (local_errorCode == VBUSY && lock == READ_LOCK) {
+#ifdef AFS_DEMAND_ATTACH_FS
+		/* DAFS case is complicated by the fact that local_errorCode can
+		 * be VBUSY in cases where the volume is truly offline */
+		if (!*volptr) {
+		    /* volume is in VOL_STATE_UNATTACHED */
+		    return (errorCode);
+		}
+#endif /* AFS_DEMAND_ATTACH_FS */
 		errorCode = 0;
 		break;
 	    } else if (errorCode)
@@ -1064,49 +1084,6 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 }				/*RXStore_AccessList */
 
 
-static afs_int32
-Fetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
-		 struct AFSAccessList *AccessList)
-{
-    char *eACL;			/* External access list placeholder */
-
-    assert(acl_Externalize
-	   ((targetptr->disk.type ==
-	     vDirectory ? VVnodeACL(targetptr) :
-	     VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
-    if ((strlen(eACL) + 1) > AccessList->MaxSeqLen) {
-	acl_FreeExternalACL(&eACL);
-	return (E2BIG);
-    } else {
-	strcpy((char *)(AccessList->SeqBody), (char *)eACL);
-	AccessList->SeqLen = strlen(eACL) + 1;
-    }
-    acl_FreeExternalACL(&eACL);
-    return (0);
-
-}				/*Fetch_AccessList */
-
-/*
- * The Access List information is converted from its external form in the
- * input AccessList structure to the internal representation and copied into
- * the target dir's vnode storage.
- */
-static afs_int32
-Store_AccessList(Vnode * targetptr, struct AFSAccessList *AccessList)
-{
-    struct acl_accessList *newACL;	/* PlaceHolder for new access list */
-
-    if (acl_Internalize(AccessList->SeqBody, &newACL) != 0)
-	return (EINVAL);
-    if ((newACL->size + 4) > VAclSize(targetptr))
-	return (E2BIG);
-    memcpy((char *)VVnodeACL(targetptr), (char *)newACL, (int)(newACL->size));
-    acl_FreeACL(&newACL);
-    return (0);
-
-}				/*Store_AccessList */
-
-
 /* In our current implementation, each successive data store (new file
  * data version) creates a new inode. This function creates the new
  * inode, copies the old inode's contents to the new one, remove the old
@@ -1221,7 +1198,11 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
 			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
 			 V_id(volptr), volptr->partition->name, length, rdlen,
 			 wrlen, errno));
+#if defined(AFS_DEMAND_ATTACH_FS)
+		ViceLog(0, ("CopyOnWrite failed: requesting salvage\n"));
+#else
 		ViceLog(0, ("CopyOnWrite failed: taking volume offline\n"));
+#endif
 		/* Decrement this inode so salvager doesn't find it. */
 		FDH_REALLYCLOSE(newFdP);
 		IH_RELEASE(newH);
@@ -1772,11 +1753,12 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
 		0;
 	Time += AFS_LOCKWAIT;
 	if (LockingType == LockRead) {
-	    if ( !(rights & PRSFS_LOCK) &&
+	    if ( !(rights & PRSFS_LOCK) && 
                  !(rights & PRSFS_WRITE) &&
                  !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
-		return(EACCES);
- 
+                    return(EACCES);
+            return(EACCES);
+
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
 		targetptr->disk.lock.lockTime = Time;
@@ -1865,80 +1847,6 @@ RXUpdate_VolumeStatus(Volume * volptr, AFSStoreVolumeStatus * StoreVolStatus,
 }				/*RXUpdate_VolumeStatus */
 
 
-/* old interface */
-static afs_int32
-Update_VolumeStatus(Volume * volptr, VolumeStatus * StoreVolStatus,
-		    struct BBS *Name, struct BBS *OfflineMsg,
-		    struct BBS *Motd)
-{
-    Error errorCode = 0;
-
-    if (StoreVolStatus->MinQuota > -1)
-	V_minquota(volptr) = StoreVolStatus->MinQuota;
-    if (StoreVolStatus->MaxQuota > -1)
-	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
-    if (OfflineMsg->SeqLen > 1)
-	strcpy(V_offlineMessage(volptr), OfflineMsg->SeqBody);
-    if (Name->SeqLen > 1)
-	strcpy(V_name(volptr), Name->SeqBody);
-#if OPENAFS_VOL_STATS
-    /*
-     * We don't overwrite the motd field, since it's now being used
-     * for stats
-     */
-#else
-    if (Motd->SeqLen > 1)
-	strcpy(V_motd(volptr), Motd->SeqBody);
-#endif /* FS_STATS_DETAILED */
-    VUpdateVolume(&errorCode, volptr);
-    return (errorCode);
-
-}				/*Update_VolumeStatus */
-
-
-/*
- * Get internal volume-related statistics from the Volume disk label
- * structure and put it into the VolumeStatus structure, status; it's
- * used by both SAFS_GetVolumeStatus and SAFS_SetVolumeStatus to return
- * the volume status to the caller.
- */
-static afs_int32
-GetVolumeStatus(VolumeStatus * status, struct BBS *name, struct BBS *offMsg,
-		struct BBS *motd, Volume * volptr)
-{
-    status->Vid = V_id(volptr);
-    status->ParentId = V_parentId(volptr);
-    status->Online = V_inUse(volptr);
-    status->InService = V_inService(volptr);
-    status->Blessed = V_blessed(volptr);
-    status->NeedsSalvage = V_needsSalvaged(volptr);
-    if (VolumeWriteable(volptr))
-	status->Type = ReadWrite;
-    else
-	status->Type = ReadOnly;
-    status->MinQuota = V_minquota(volptr);
-    status->MaxQuota = V_maxquota(volptr);
-    status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
-    strncpy(name->SeqBody, V_name(volptr), (int)name->MaxSeqLen);
-    name->SeqLen = strlen(V_name(volptr)) + 1;
-    if (name->SeqLen > name->MaxSeqLen)
-	name->SeqLen = name->MaxSeqLen;
-    strncpy(offMsg->SeqBody, V_offlineMessage(volptr), (int)name->MaxSeqLen);
-    offMsg->SeqLen = strlen(V_offlineMessage(volptr)) + 1;
-    if (offMsg->SeqLen > offMsg->MaxSeqLen)
-	offMsg->SeqLen = offMsg->MaxSeqLen;
-#ifdef notdef
-    /*Don't do anything with the motd field */
-    strncpy(motd->SeqBody, nullString, (int)offMsg->MaxSeqLen);
-    motd->SeqLen = strlen(nullString) + 1;
-#endif
-    if (motd->SeqLen > motd->MaxSeqLen)
-	motd->SeqLen = motd->MaxSeqLen;
-
-}				/*GetVolumeStatus */
-
 static afs_int32
 RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 		  char **motd, Volume * volptr)
@@ -1958,8 +1866,8 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->MinQuota = V_minquota(volptr);
     status->MaxQuota = V_maxquota(volptr);
     status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
+    status->PartBlocksAvail = RoundInt64ToInt32(volptr->partition->free);
+    status->PartMaxBlocks = RoundInt64ToInt32(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
@@ -2015,26 +1923,6 @@ FileNameOK(register char *aname)
 }				/*FileNameOK */
 
 
-/* Debugging tool to print Volume Statu's contents */
-static void
-PrintVolumeStatus(VolumeStatus * status)
-{
-    ViceLog(5, ("Volume header contains:\n"));
-    ViceLog(5,
-	    ("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
-	     status->Vid, status->ParentId, status->Online, status->InService,
-	     status->Blessed, status->NeedsSalvage));
-    ViceLog(5,
-	    ("MinQuota = %d, MaxQuota = %d\n", status->MinQuota,
-	     status->MaxQuota));
-    ViceLog(5,
-	    ("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
-	     status->Type, status->BlocksInUse, status->PartBlocksAvail,
-	     status->PartMaxBlocks));
-
-}				/*PrintVolumeStatus */
-
-
 /*
  * This variant of symlink is expressly to support the AFS/DFS translator
  * and is not supported by the AFS fileserver. We just return EINVAL.
@@ -2058,6 +1946,7 @@ SRXAFS_ResidencyCmd(struct rx_call * acall, struct AFSFid * Fid,
     return EINVAL;
 }
 
+#ifdef AFS_NT40_ENV
 static struct afs_buffer {
     struct afs_buffer *next;
 } *freeBufferList = 0;
@@ -2099,6 +1988,7 @@ AllocSendBuffer()
     return (char *)tp;
 
 }				/*AllocSendBuffer */
+#endif /* AFS_NT40_ENV */
 
 /*
  * This routine returns the status info associated with the targetptr vnode
@@ -5140,7 +5030,7 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
-    static char *locktype[2] = { "LockRead", "LockWrite" };
+    static char *locktype[4] = { "LockRead", "LockWrite", "LockExtend", "LockRelease" };
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     if (type != LockRead && type != LockWrite) {
@@ -5577,13 +5467,13 @@ SetAFSStats(struct AFSStatistics *stats)
 void
 SetVolumeStats(struct AFSStatistics *stats)
 {
-    struct DiskPartition *part;
+    struct DiskPartition64 *part;
     int i = 0;
 
     for (part = DiskPartitionList; part && i < AFS_MSTATDISKS;
 	 part = part->next) {
-	stats->Disks[i].TotalBlocks = part->totalUsable;
-	stats->Disks[i].BlocksAvailable = part->free;
+	stats->Disks[i].TotalBlocks = RoundInt64ToInt32(part->totalUsable);
+	stats->Disks[i].BlocksAvailable = RoundInt64ToInt32(part->free);
 	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
 	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
 	i++;
@@ -5630,6 +5520,117 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     SetSystemStats((struct AFSStatistics *)Statistics);
 
   Bad_GetStatistics:
+    code = CallPostamble(tcon, code, thost);
+
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
+#if FS_STATS_DETAILED
+    TM_GetTimeOfDay(&opStopTime, 0);
+    if (code == 0) {
+	FS_LOCK;
+	(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+	FS_UNLOCK;
+    }
+#endif /* FS_STATS_DETAILED */
+
+    osi_auditU(acall, GetStatisticsEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
+    return code;
+}				/*SRXAFS_GetStatistics */
+
+
+afs_int32
+SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatistics64 *Statistics)
+{
+    extern afs_int32 StartTime, CurrentConnections;
+    int seconds;
+    afs_int32 code;
+    struct rx_connection *tcon = rx_ConnectionOf(acall);
+    struct host *thost;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
+    struct timeval time;
+#if FS_STATS_DETAILED
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
+
+    /*
+     * Set our stats pointer, remember when the RPC operation started, and
+     * tally the operation.
+     */
+    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETSTATISTICS]);
+    FS_LOCK;
+    (opP->numOps)++;
+    FS_UNLOCK;
+    TM_GetTimeOfDay(&opStartTime, 0);
+#endif /* FS_STATS_DETAILED */
+
+    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+	goto Bad_GetStatistics64;
+
+    ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
+    Statistics->ViceStatistics64_val = 
+	malloc(statsVersion*sizeof(afs_int64));
+    Statistics->ViceStatistics64_len = statsVersion;
+    FS_LOCK;
+    AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
+    Statistics->ViceStatistics64_val[STATS64_STARTTIME] = StartTime;
+    Statistics->ViceStatistics64_val[STATS64_CURRENTCONNECTIONS] =
+	CurrentConnections;
+    Statistics->ViceStatistics64_val[STATS64_TOTALVICECALLS] = 
+	AFSCallStats.TotalCalls;
+    Statistics->ViceStatistics64_val[STATS64_TOTALFETCHES] =
+       AFSCallStats.FetchData + AFSCallStats.FetchACL +
+       AFSCallStats.FetchStatus;
+    Statistics->ViceStatistics64_val[STATS64_FETCHDATAS] = 
+	AFSCallStats.FetchData;
+    Statistics->ViceStatistics64_val[STATS64_FETCHEDBYTES] = 
+	AFSCallStats.TotalFetchedBytes;
+    seconds = AFSCallStats.AccumFetchTime / 1000;
+    if (seconds <= 0)
+        seconds = 1;
+    Statistics->ViceStatistics64_val[STATS64_FETCHDATARATE] = 
+	AFSCallStats.TotalFetchedBytes / seconds;
+    Statistics->ViceStatistics64_val[STATS64_TOTALSTORES] =
+        AFSCallStats.StoreData + AFSCallStats.StoreACL +
+        AFSCallStats.StoreStatus;
+    Statistics->ViceStatistics64_val[STATS64_STOREDATAS] = 
+	AFSCallStats.StoreData;
+    Statistics->ViceStatistics64_val[STATS64_STOREDBYTES] = 
+	AFSCallStats.TotalStoredBytes;
+    seconds = AFSCallStats.AccumStoreTime / 1000;
+    if (seconds <= 0)
+        seconds = 1;
+    Statistics->ViceStatistics64_val[STATS64_STOREDATARATE] = 
+	AFSCallStats.TotalStoredBytes / seconds;
+#ifdef AFS_NT40_ENV
+    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = -1;
+#else
+    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = 
+	(afs_int32) ((long)sbrk(0) >> 10);
+#endif
+    FS_UNLOCK;
+    h_GetWorkStats((int *)&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
+                   (int *)&(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]), 
+		   (int *)0,
+                   (afs_int32) (FT_ApproxTime()) - (15 * 60));
+
+
+
+    /* this works on all system types */
+    TM_GetTimeOfDay(&time, 0);
+    Statistics->ViceStatistics64_val[STATS64_CURRENTTIME] = time.tv_sec;
+
+  Bad_GetStatistics64:
     code = CallPostamble(tcon, code, thost);
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
@@ -5749,7 +5750,7 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 static void
 FillPerfValues(struct afs_PerfStats *a_perfP)
 {				/*FillPerfValues */
-
+    afs_uint32 hi, lo;
     int dir_Buffers;		/*# buffers in use by dir package */
     int dir_Calls;		/*# read calls in dir package */
     int dir_IOs;		/*# I/O ops in dir package */
@@ -5767,9 +5768,11 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->vcache_S_Gets = VnodeClassInfo[vSmall].gets;
     a_perfP->vcache_S_Reads = VnodeClassInfo[vSmall].reads;
     a_perfP->vcache_S_Writes = VnodeClassInfo[vSmall].writes;
-    a_perfP->vcache_H_Entries = VolumeCacheSize;
-    a_perfP->vcache_H_Gets = VolumeGets;
-    a_perfP->vcache_H_Replacements = VolumeReplacements;
+    a_perfP->vcache_H_Entries = VStats.hdr_cache_size;
+    SplitInt64(VStats.hdr_gets, hi, lo);
+    a_perfP->vcache_H_Gets = lo;
+    SplitInt64(VStats.hdr_loads, hi, lo);
+    a_perfP->vcache_H_Replacements = lo;
 
     /*
      * Directory section.
@@ -6217,12 +6220,19 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) malloc(dataBytes);
-    dataBuffP[0] = CAPABILITY_ERRORTRANS | CAPABILITY_WRITELOCKACL;
+    dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
+#if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
+    dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
+#endif
+    if (saneacls)
+	dataBuffP[0] |= VICED_CAPABILITY_SANEACLS;
+
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
   Bad_GetCaps:
     code = CallPostamble(tcon, code, thost);
+
 
     return 0;
 }
@@ -7527,30 +7537,32 @@ init_sys_error_to_et(void)
     sys2et[EIO] = UAEIO;
 }
 
-/* NOTE:  2006-03-01
- *  SRXAFS_CallBackRxConnAddr should be re-written as follows:
- *  - pass back the connection, client, and host from CallPreamble
- *  - keep a ref on the client, which we don't now
- *  - keep a hold on the host, which we already do
- *  - pass the connection, client, and host down into SAFSS_*, and use
- *    them instead of independently discovering them via rx_ConnectionOf
- *    (safe) and rx_GetSpecific (not so safe)
+/* NOTE:  2006-03-01                                                     
+ *  SRXAFS_CallBackRxConnAddr should be re-written as follows:           
+ *  - pass back the connection, client, and host from CallPreamble       
+ *  - keep a ref on the client, which we don't now                       
+ *  - keep a hold on the host, which we already do                       
+ *  - pass the connection, client, and host down into SAFSS_*, and use   
+ *    them instead of independently discovering them via rx_ConnectionOf 
+ *    (safe) and rx_GetSpecific (not so safe)                            
  *  The idea being that we decide what client and host we're going to use
  *  when CallPreamble is called, and stay consistent throughout the call.
- *  This change is too invasive for 1.4.1 but should be made in 1.5.x.
- */
+ *  This change is too invasive for 1.4.1 but should be made in 1.5.x.   
+ */                                                                      
 
 afs_int32
 SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 {
     Error errorCode = 0;
+    struct rx_connection *tcon;
+    struct host *tcallhost;
+#ifdef __EXPERIMENTAL_CALLBACK_CONN_MOVING
     struct host *thost;
     struct client *tclient;
-    struct host *tcallhost;
     static struct rx_securityClass *sc = 0;
     int i,j;
-    struct rx_connection *tcon;
     struct rx_connection *conn;
+#endif
     
     if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &tcallhost))
 	    goto Bad_CallBackRxConnAddr1;

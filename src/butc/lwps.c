@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.12.2.7 2008/04/09 16:40:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/lwps.c,v 1.14.4.5 2008/04/09 16:39:59 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>

@@ -25,7 +25,7 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
 INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
-CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
+CFLAGS =  ${PAM_DBG} ${PAM_OPTMZ} ${INCLUDES} ${PAM_CFLAGS}
 
 all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 

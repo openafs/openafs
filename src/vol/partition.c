@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  *
  * Portions Copyright (c) 2003 Apple Computer, Inc.
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -21,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.6 2007/11/29 21:40:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.33.2.6 2008/06/12 19:18:49 shadow Exp $");
 
 #include <ctype.h>
 #include <string.h>
@@ -180,7 +181,15 @@ RCSID
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 int aixlow_water = 8;		/* default 8% */
-struct DiskPartition *DiskPartitionList;
+struct DiskPartition64 *DiskPartitionList;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+static struct DiskPartition64 *DiskPartitionTable[VOLMAXPARTS+1];
+
+static struct DiskPartition64 * VLookupPartition_r(char * path);
+static void AddPartitionToTable_r(struct DiskPartition64 *);
+static void DeletePartitionFromTable_r(struct DiskPartition64 *);
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 /* Verify that the on disk XFS inodes on the partition are large enough to
@@ -218,14 +227,22 @@ VerifyXFSInodeSize(char *part, char *fstype)
     }
     return code;
 }
-#endif
+#endif /* AFS_SGI_XFS_IOPS_ENV */
 
+int
+VInitPartitionPackage(void)
+{
+#ifdef AFS_DEMAND_ATTACH_ENV
+    memset(&DiskPartitionTable, 0, sizeof(DiskPartitionTable));
+#endif /* AFS_DEMAND_ATTACH_ENV */
+    return 0;
+}
 
 static void
 VInitPartition_r(char *path, char *devname, Device dev)
 {
-    struct DiskPartition *dp, *op;
-    dp = (struct DiskPartition *)malloc(sizeof(struct DiskPartition));
+    struct DiskPartition64 *dp, *op;
+    dp = (struct DiskPartition64 *)malloc(sizeof(struct DiskPartition64));
     /* Add it to the end, to preserve order when we print statistics */
     for (op = DiskPartitionList; op; op = op->next) {
 	if (!op->next)
@@ -238,6 +255,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     dp->next = 0;
     dp->name = (char *)malloc(strlen(path) + 1);
     strncpy(dp->name, path, strlen(path) + 1);
+    dp->index = volutil_GetPartitionID(path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
     dp->devName = (char *)malloc(2 * strlen(path) + 6);
@@ -247,7 +265,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
     close(afs_open(dp->devName, O_RDWR | O_CREAT, 0600));
-    dp->device = volutil_GetPartitionID(path);
+    dp->device = dp->index;
 #else
     dp->devName = (char *)malloc(strlen(devname) + 1);
     strncpy(dp->devName, devname, strlen(devname) + 1);
@@ -261,6 +279,13 @@ VInitPartition_r(char *path, char *devname, Device dev)
 	(void)namei_ViceREADME(VPartitionPath(dp));
 #endif
     VSetPartitionDiskUsage_r(dp);
+#ifdef AFS_DEMAND_ATTACH_FS
+    AddPartitionToTable_r(dp);
+    queue_Init(&dp->vol_list.head);
+    assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
+    dp->vol_list.len = 0;
+    dp->vol_list.busy = 0;
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 static void
@@ -345,7 +370,7 @@ VCheckPartition(char *part, char *devname)
 	return -1;
 #endif
 #endif /* AFS_NAMEI_ENV */
-#endif
+#endif /* !AFS_LINUX20_ENV && !AFS_NT40_ENV */
 
 #if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)
     if (status.st_ino != ROOTINO) {
@@ -710,7 +735,7 @@ VCheckPartition(char *partName)
 int
 VAttachPartitions(void)
 {
-    struct DiskPartition *partP, *prevP, *nextP;
+    struct DiskPartition64 *partP, *prevP, *nextP;
     struct vpt_iter iter;
     struct vptab entry;
 
@@ -811,7 +836,7 @@ VAttachPartitions(void)
  * is required. The canonical name is still in part->name.
  */
 char *
-VPartitionPath(struct DiskPartition *part)
+VPartitionPath(struct DiskPartition64 *part)
 {
 #ifdef AFS_NT40_ENV
     return part->devName;
@@ -821,23 +846,27 @@ VPartitionPath(struct DiskPartition *part)
 }
 
 /* get partition structure, abortp tells us if we should abort on failure */
-struct DiskPartition *
+struct DiskPartition64 *
 VGetPartition_r(char *name, int abortp)
 {
-    register struct DiskPartition *dp;
+    register struct DiskPartition64 *dp;
+#ifdef AFS_DEMAND_ATTACH_FS
+    dp = VLookupPartition_r(name);
+#else /* AFS_DEMAND_ATTACH_FS */
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	if (strcmp(dp->name, name) == 0)
 	    break;
     }
+#endif /* AFS_DEMAND_ATTACH_FS */
     if (abortp)
 	assert(dp != NULL);
     return dp;
 }
 
-struct DiskPartition *
+struct DiskPartition64 *
 VGetPartition(char *name, int abortp)
 {
-    struct DiskPartition *retVal;
+    struct DiskPartition64 *retVal;
     VOL_LOCK;
     retVal = VGetPartition_r(name, abortp);
     VOL_UNLOCK;
@@ -846,7 +875,7 @@ VGetPartition(char *name, int abortp)
 
 #ifdef AFS_NT40_ENV
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
+VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 {
     ULARGE_INTEGER free_user, total, free_total;
     int ufree, tot, tfree;
@@ -870,9 +899,10 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 
 #else
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
+VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 {
-    int fd, totalblks, free, used, availblks, bsize, code;
+    int fd, bsize, code;
+    afs_int64 totalblks, free, used, availblks;
     int reserved;
 #ifdef afs_statvfs
     struct afs_statvfs statbuf;
@@ -935,7 +965,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 #endif /* AFS_NT40_ENV */
 
 void
-VSetPartitionDiskUsage(register struct DiskPartition *dp)
+VSetPartitionDiskUsage(register struct DiskPartition64 *dp)
 {
     VOL_LOCK;
     VSetPartitionDiskUsage_r(dp);
@@ -945,7 +975,7 @@ VSetPartitionDiskUsage(register struct DiskPartition *dp)
 void
 VResetDiskUsage_r(void)
 {
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	VSetPartitionDiskUsage_r(dp);
 #ifndef AFS_PTHREAD_ENV
@@ -1034,7 +1064,7 @@ VDiskUsage(Volume * vp, afs_sfsize_t blocks)
 void
 VPrintDiskStats_r(void)
 {
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	Log("Partition %s: %d available 1K blocks (minfree=%d), ", dp->name,
 	    dp->totalUsable, dp->minFree);
@@ -1059,7 +1089,7 @@ VPrintDiskStats(void)
 void
 VLockPartition_r(char *name)
 {
-    struct DiskPartition *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
 
     if (!dp)
@@ -1084,7 +1114,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition *dp = VGetPartition_r(name, 0);
+    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
 
     if (!dp)
@@ -1107,7 +1137,7 @@ VUnlockPartition_r(char *name)
 void
 VLockPartition_r(char *name)
 {
-    register struct DiskPartition *dp = VGetPartition_r(name, 0);
+    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     char *partitionName;
     int retries, code;
     struct timeval pausing;
@@ -1210,7 +1240,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition *dp = VGetPartition_r(name, 0);
+    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     if (!dp)
 	return;			/* no partition, will fail later */
     close(dp->lock_fd);
@@ -1234,3 +1264,92 @@ VUnlockPartition(char *name)
     VUnlockPartition_r(name);
     VOL_UNLOCK;
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+
+/* XXX not sure this will work on AFS_NT40_ENV
+ * needs to be tested!
+ */
+
+/**
+ * lookup a disk partition object by its index number.
+ *
+ * @param[in] id      partition index number
+ * @param[in] abortp  see abortp usage note below
+ *
+ * @return disk partition object
+ *   @retval NULL no such disk partition
+ *
+ * @note when abortp is non-zero, lookups which would return
+ *       NULL will result in an assertion failure
+ *
+ * @pre VOL_LOCK must be held
+ *
+ * @internal volume package internal use only
+ */
+
+struct DiskPartition64 * 
+VGetPartitionById_r(afs_int32 id, int abortp)
+{
+    struct DiskPartition64 *dp = NULL;
+
+    if ((id >= 0) && (id <= VOLMAXPARTS)) {
+	dp = DiskPartitionTable[id];
+    }
+
+    if (abortp) {
+	assert(dp != NULL);
+    }
+    return dp;
+}
+
+/**
+ * lookup a disk partition object by its index number.
+ *
+ * @param[in] id      partition index number
+ * @param[in] abortp  see abortp usage note below
+ *
+ * @return disk partition object
+ *   @retval NULL no such disk partition
+ *
+ * @note when abortp is non-zero, lookups which would return
+ *       NULL will result in an assertion failure
+ */
+
+struct DiskPartition64 *
+VGetPartitionById(afs_int32 id, int abortp)
+{
+    struct Diskpartition64 * dp;
+
+    VOL_LOCK;
+    dp = VGetPartitionById_r(id, abortp);
+    VOL_UNLOCK;
+
+    return dp;
+}
+
+static struct DiskPartition64 * 
+VLookupPartition_r(char * path)
+{
+    afs_int32 id = volutil_GetPartitionID(path);
+
+    if (id < 0 || id > VOLMAXPARTS)
+	return NULL;
+
+    return DiskPartitionTable[id];
+}
+
+static void 
+AddPartitionToTable_r(struct DiskPartition64 *dp)
+{
+    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    DiskPartitionTable[dp->index] = dp;
+}
+
+static void 
+DeletePartitionFromTable_r(struct DiskPartition64 *dp)
+{
+    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    DiskPartitionTable[dp->index] = NULL;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */

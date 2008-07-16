@@ -37,7 +37,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_config.c,v 1.8.2.2 2005/09/21 00:03:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_config.c,v 1.10 2005/09/21 00:02:42 shadow Exp $");
 
 #include "sys/limits.h"
 #include "sys/types.h"

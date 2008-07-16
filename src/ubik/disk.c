@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/disk.c,v 1.14.2.1 2007/10/30 15:24:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/disk.c,v 1.15.4.2 2008/04/02 19:51:56 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -128,7 +128,7 @@ udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
     /* setup data and do write */
     aopcode = htonl(aopcode);
     code =
-	(*adbase->write) (adbase, LOGFILE, &aopcode, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)&aopcode, ustat.size,
 			  sizeof(afs_int32));
     if (code != sizeof(afs_int32))
 	return UIOERROR;
@@ -161,7 +161,7 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
 			  3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
@@ -192,7 +192,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
 			  3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
@@ -223,7 +223,7 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer,
 
     /* write header */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, lpos, 4 * sizeof(afs_int32));
+	(*adbase->write) (adbase, LOGFILE, (char *)data, lpos, 4 * sizeof(afs_int32));
     if (code != 4 * sizeof(afs_int32))
 	return UIOERROR;
     lpos += 4 * sizeof(afs_int32);
@@ -512,7 +512,7 @@ DRelease(char *ap, int flag)
 
     if (!ap)
 	return;
-    index = (ap - (char *)BufferData) >> UBIK_LOGPAGESIZE;
+    index = (int)(ap - (char *)BufferData) >> UBIK_LOGPAGESIZE;
     bp = &(Buffers[index]);
     bp->lockers--;
     if (flag)
@@ -798,8 +798,11 @@ udisk_commit(struct ubik_trans *atrans)
 	}
 
 	dbase->version.counter++;	/* bump commit count */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
+#else
 	LWP_NoYieldSignal(&dbase->version);
-
+#endif
 	code = udisk_LogEnd(dbase, &dbase->version);
 	if (code) {
 	    dbase->version.counter--;
@@ -915,6 +918,10 @@ udisk_end(struct ubik_trans *atrans)
     free(atrans);
 
     /* Wakeup any writers waiting in BeginTrans() */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&dbase->flags_cond) == 0);
+#else
     LWP_NoYieldSignal(&dbase->flags);
+#endif
     return 0;
 }

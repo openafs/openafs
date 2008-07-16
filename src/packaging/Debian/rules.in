@@ -1,0 +1,235 @@
+#!/usr/bin/make -f
+# Based on the sample debian/rules that uses debhelper. 
+# GNU copyright 1997 by Joey Hess.
+
+# Use quilt to manage patches.
+include /usr/share/quilt/quilt.make
+
+# Uncomment this to turn on verbose mode. 
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+# Tell Autoconf the correct system types.
+DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
+else
+    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
+# Determine whether we're building with optimization.  This doesn't really
+# work at the moment due to upstream problems.
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
+    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+else
+    DEBIAN_OPT_FLAGS =
+    DEBIAN_KERN_FLAGS =
+endif
+
+SYS_NAME  := $(shell sh debian/sysname)
+
+package    = openafs
+srcpkg     = openafs-modules-source
+
+# These packages have lintian overrides.
+LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
+
+# The /usr/share/doc directory for these packages should be a symlink to
+# /usr/share/doc/openafs-client.  Any package on this list must depend on
+# openafs-client.
+DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
+	openafs-kpasswd
+
+# These variable is used only by get-orig-source, which will normally only be
+# run by maintainers.
+VERSION   = @VERSION@
+DEBVERS   = @VERSION@.dfsg1
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+
+# Download the upstream source, merge in the doc tarball, and do the
+# repackaging that we have to do for DFSG reasons.  This assumes AFS is
+# mounted, as it's generally only used by the package maintainers.
+get-orig-source:
+	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
+	tar xjf openafs-$(VERSION)-src.tar.bz2
+	rm openafs-$(VERSION)-src.tar.bz2
+	cp $(UPSTREAM)/openafs-$(VERSION)-doc.tar.bz2 .
+	tar xjf openafs-$(VERSION)-doc.tar.bz2
+	rm openafs-$(VERSION)-doc.tar.bz2
+	rm -r openafs-$(VERSION)/src/packaging/MacOS
+	rm -r openafs-$(VERSION)/src/platform/DARWIN
+	rm -r openafs-$(VERSION)/src/WINNT
+	rm openafs-$(VERSION)/src/afs/sysctl.h
+	rm openafs-$(VERSION)/src/util/fstab.c
+	mv openafs-$(VERSION) openafs_$(DEBVERS).orig
+	tar cf openafs_$(DEBVERS).orig.tar openafs_$(DEBVERS).orig
+	rm -r openafs_$(DEBVERS).orig
+	gzip -9 openafs_$(DEBVERS).orig.tar
+
+configure: configure-stamp
+configure-stamp: patch
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
+	dh_testdir
+	sh regen.sh
+	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
+	    sh configure \
+	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
+	    --prefix=/usr --mandir=\$${prefix}/share/man \
+	    --sysconfdir=/etc --libexecdir=/usr/lib \
+	    --localstatedir=/var/lib --with-krb5-conf=/usr/bin/krb5-config \
+	    --enable-supergroups --enable-largefile-fileserver \
+	    --enable-bos-new-config \
+	    --enable-debug --enable-lwp-debug \
+	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	chmod a+x src/libafs/make_kbuild_makefile.pl         
+	touch configure-stamp
+
+build: build-arch build-indep
+build-arch: configure-stamp build-stamp
+build-indep:
+build-stamp:
+	dh_testdir
+	mkdir -p $(CURDIR)/debian/tmp
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	chmod +x debian/afs-rootvol debian/afs-newcell
+	touch build-stamp
+
+clean: unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp install-stamp
+	[ ! -f Makefile ] || $(MAKE) distclean
+	dh_clean
+
+install: install-stamp
+install-stamp: DH_OPTIONS=
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_installdirs
+	dh_install
+
+	set -e; for pkg in $(LINTIAN_PACKAGES) ; do \
+	    install -d debian/$$pkg/usr/share/lintian/overrides; \
+	    install -m 644 -c debian/$$pkg.lintian \
+	        debian/$$pkg/usr/share/lintian/overrides/$$pkg; \
+	done
+	set -e; for pkg in $(DOC_PACKAGES) ; do \
+	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
+	done
+
+	mv debian/openafs-client/usr/bin/pagsh \
+	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
+	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
+	mv debian/openafs-client/usr/bin/up \
+	    debian/openafs-client/usr/bin/afs-up
+	mv debian/openafs-client/usr/share/man/man1/up.1 \
+	    debian/openafs-client/usr/share/man/man1/afs-up.1
+
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
+
+	install -d debian/openafs-dbserver/usr/share/man/man8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-rootvol ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-newcell ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
+
+	touch install-stamp
+
+# Rules for building the openafs-modules-source package.
+binary-source:
+	dh_testdir
+	dh_testroot
+	-rm -rf debian/$(srcpkg) debian/substvars
+	install -d debian/$(srcpkg)/usr/src/modules/$(package)
+	find . \( -name \*.o -o -path ./debian -o -path \*/.svn \
+	    -o -path ./src/WINNT -o -path ./doc -o -path ./obj \
+	    -o -path ./$(SYS_NAME) -o -path ./.pc \) -prune -o -print | \
+	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
+	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
+	cp debian/changelog debian/copyright debian/module/* \
+	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
+	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
+	rm -f debian/$(srcpkg)/usr/src/modules/$(package)/*-stamp
+	cd debian/$(srcpkg)/usr/src/modules/$(package) && \
+	    $(MAKE) distclean
+	-cd debian/$(srcpkg)/usr/src/modules/$(package) && \
+	    rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint
+	chown -R root.src debian/$(srcpkg)
+	find debian/$(srcpkg) -type d | xargs chmod 755
+	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
+	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
+	chmod 775 debian/$(srcpkg)/usr/src/modules
+	cd debian/$(srcpkg)/usr/src && \
+	    tar cf $(package).tar modules && \
+	    rm -r modules
+	gzip -9 debian/$(srcpkg)/usr/src/$(package).tar
+	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
+
+# Build architecture-independent files here.  Pass -i to all debhelper
+# commands in this target to reduce clutter.
+#
+# Also install debian/openafs-client.NEWS in the openafs-modules-source
+# package.
+binary-indep: DH_OPTIONS=-i
+binary-indep: install-stamp binary-source
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs NEWS
+	install -m 644 debian/openafs-client.NEWS \
+	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
+	dh_installdocs -XAdminReference -XQuickStartWindows -Xwinnotes
+	dh_installexamples
+	dh_link
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+# Build architecture-dependent files here.  Pass -a to all debhelper commands
+# in this target to reduce clutter.
+#
+# We would like to install debugging information for everything, but currently
+# OpenAFS's makefiles strip all binaries when installed except for the
+# fileserver and the volserver.  This is fixed in OpenAFS's development
+# branch.  Until that's released, only retain debugging information for the
+# fileserver and the volserver.
+binary-arch: DH_OPTIONS=-a
+binary-arch: install-stamp
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs NEWS
+	dh_installdocs
+	dh_installdebconf
+	DH_OPTIONS= dh_installinit -popenafs-client -r -- defaults 25 18
+	DH_OPTIONS= dh_installinit -popenafs-fileserver -r
+	dh_link
+	dh_strip --dbg-package=openafs-dbg
+	dh_compress
+	dh_fixperms
+	chmod 700 debian/openafs-client/var/cache/openafs
+	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
+	chmod 700 debian/openafs-fileserver/etc/openafs/server
+	dh_perl
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+
+.PHONY: binary binary-arch binary-indep binary-source build build-arch
+.PHONY: build-indep clean configure install

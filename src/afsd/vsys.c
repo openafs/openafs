@@ -18,7 +18,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/vsys.c,v 1.6.2.1 2007/10/30 15:23:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/vsys.c,v 1.6.14.1 2007/10/30 15:16:33 shadow Exp $");
 
 #include <afs/afs_args.h>
 

@@ -145,6 +145,9 @@ int ntoh_syserr_conv(int error);
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
+/* Define error to return in server connections when failing to answer */
+#define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
+
 /* Define procedures for getting and setting before and after execute-request procs */
 #define rx_SetAfterProc(service,proc) ((service)->afterProc = (proc))
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
@@ -165,6 +168,7 @@ int ntoh_syserr_conv(int error);
 /* Set connection hard and idle timeouts for a connection */
 #define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
 #define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
+#define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -206,6 +210,20 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
+/* Macros to set max connection clones (each allows RX_MAXCALLS 
+ * outstanding calls */
+
+#define rx_SetMaxCalls(v) \
+do {\
+	rx_SetCloneMax(v/4); \
+} while(0);
+
+#define rx_SetCloneMax(v) \
+do {\
+	if(v < RX_HARD_MAX_CLONES) \
+		rx_max_clones_per_connection = v; \
+} while(0);
+
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
 /* A connection is an authenticated communication path, allowing 
@@ -216,7 +234,9 @@ struct rx_connection_rx_lock {
     struct rx_peer_rx_lock *peer;
 #else
 struct rx_connection {
-    struct rx_connection *next;	/*  on hash chain _or_ free list */
+    struct rx_connection *next;	/* on hash chain _or_ free list */
+    struct rx_connection *parent; /* primary connection, if this is a clone */
+    struct rx_connection *next_clone; /* next in list of clones */
     struct rx_peer *peer;
 #endif
 #ifdef	RX_ENABLE_LOCKS
@@ -224,6 +244,7 @@ struct rx_connection {
     afs_kcondvar_t conn_call_cv;
     afs_kmutex_t conn_data_lock;	/* locks packet data */
 #endif
+    afs_uint32 nclones; /* count of clone connections (if not a clone) */
     afs_uint32 epoch;		/* Process start time of client side of connection */
     afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
     afs_int32 error;		/* If this connection is in error, this is it */
@@ -233,6 +254,8 @@ struct rx_connection {
     struct rx_call *call[RX_MAXCALLS];
 #endif
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
+    afs_uint32 rwind[RX_MAXCALLS];
+    u_short twind[RX_MAXCALLS];
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
@@ -263,6 +286,7 @@ struct rx_connection {
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
+    afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };
@@ -307,6 +331,7 @@ struct rx_service {
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
+    afs_int32 idleDeadErr;
 };
 
 #endif /* KDUMP_RX_LOCK */
@@ -419,6 +444,7 @@ struct rx_peer {
 #define RX_CONN_RESET		   16	/* connection is reset, remove */
 #define RX_CONN_BUSY               32	/* connection is busy; don't delete */
 #define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
+#define RX_CLONED_CONNECTION	  128   /* connection is a clone */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
@@ -503,6 +529,7 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
+    u_int lastSendData;		/* Last time a nonping was sent on this call */
     void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
@@ -1047,7 +1074,58 @@ typedef struct rx_interface_stat {
 
 #define RX_STATS_SERVICE_ID 409
 
-
+#ifdef AFS_NT40_ENV
+#define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
+#define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
+#define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        InterlockedIncrement(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        InterlockedDecrement(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#else
+#define rx_MutexIncrement(object, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object++; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd(object, addend, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object += addend; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        object2++; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        object2--; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexDecrement(object, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object--; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#endif 
 
 #endif /* _RX_   End of rx.h */
 

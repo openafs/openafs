@@ -5,7 +5,7 @@
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously arm specific, use that
+ * it's a judgment call. If something is obviously i386 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
@@ -19,14 +19,13 @@
 #define AFS_ARM_LINUX22_ENV   1
 #define AFS_ARM_LINUX24_ENV   1
 #define AFS_ARM_LINUX26_ENV   1
-#define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 137
+#define AFS_64BIT_IOPS_ENV  1
 #ifndef __NR_afs_syscall
 #define __NR_afs_syscall 137
 #endif
-#define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
@@ -96,7 +95,7 @@
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously arm specific, use that
+ * it's a judgment call. If something is obviously i386 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.

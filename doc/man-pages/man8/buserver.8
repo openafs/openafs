@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH buserver 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH buserver 8 "OpenAFS" "2/Apr/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,8 +192,9 @@ buserver \- Initializes the Backup Server
 .SH "SYNOPSIS"
 \fBbuserver\fR <<\ [\fB\-database\fR\ <\fIdatabase\ directory\fR] >>>
     <<\ [\fB\-cellservdb\fR\ <\fIcell\ configuration\ directory\fR] >>> [\fB\-resetdb\fR]
-    [\fB\-noauth\fR] [\fB\-smallht\fR] [\-servers <\fIlist of ubik database servers\fR>+]
-    [\fB\-enable_peer_stats\fR]  [\-enable_process_stats] [\fB\-help\fR]
+    [\fB\-noauth\fR] [\fB\-smallht\fR] [\fB\-servers\fR <\fIlist of ubik database servers\fR>+]
+    [\fB\-enable_peer_stats\fR]  [\fB\-enable_process_stats\fR] [\fB\-rxbind\fR]
+    [\fB\-p\fR <\fInumber of threads\fR>] [\fB\-help\fR]
 .SH "DESCRIPTION"
 The \fBbuserver\fR command initializes the Backup Server, which runs on
 database server machines and maintains the Backup Database. In the
@@ -271,6 +272,12 @@ storage. A separate record is kept for each type of \s-1RPC\s0 (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring \s-1API\s0.
+.Ip "\fB\-rxbind\fR" 4
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
+.Ip "\fB\-p\fR <\fInumber of threads\fR>" 4
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide a positive integer from the range 3 to 16. The default value is 3.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -332,6 +339,10 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-enable_peer_stats\fR"
 
 .IX Item "\fB\-enable_process_stats\fR"
+
+.IX Item "\fB\-rxbind\fR"
+
+.IX Item "\fB\-p\fR <\fInumber of threads\fR>"
 
 .IX Item "\fB\-help\fR"
 

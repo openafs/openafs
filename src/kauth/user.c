@@ -18,7 +18,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/user.c,v 1.11.2.3 2007/10/30 15:23:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/user.c,v 1.12.8.2 2007/10/30 15:16:39 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"

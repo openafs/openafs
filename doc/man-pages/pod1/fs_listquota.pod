@@ -30,14 +30,7 @@ To set volume quota, use the B<fs setquota> or B<fs setvol> command.
 
 =head1 CAUTIONS
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
-and the maximum size of a /vicepX partition on a fileserver is also 2
-terabytes. The fileserver will not report an error when it has access
-to a partition larger than 2 terabytes, but it will probably fail if
-the administrator attempts to use more than 2 terabytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-B<vos partinfo> or other OpenAFS disk reporting tools are used with
-partitions larger than 2 terabytes.
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 
 =head1 OPTIONS
 
@@ -102,10 +95,10 @@ The following example shows the output for the volume C<user.smith>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the C<l> (lookup) permission on the ACL of the root
+The issuer must have the C<r> (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-B<-path> argument, and on the ACL of each directory that precedes it in
-the pathname.
+B<-path> argument, and C<l> (list) permission on the ACL of each 
+directory that precedes it in the pathname.
 
 =head1 SEE ALSO
 

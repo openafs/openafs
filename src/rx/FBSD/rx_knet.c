@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.14.2.1 2005/04/14 02:31:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.15 2005/04/14 02:25:16 shadow Exp $");
 
 #ifdef AFS_FBSD40_ENV
 #include <sys/malloc.h>

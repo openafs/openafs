@@ -197,6 +197,7 @@ bos_salvage \- Restores internal consistency to a file system or volume
     <<\ [\fB\-parallel\fR\ <\fI#\ of\ max\ parallel\ partition\ salvaging\fR] >>>
     <<\ [\fB\-tmpdir\fR\ <\fIdirectory\ to\ place\ tmp\ files\fR] >>>
     <<\ [\fB\-orphans\fR\ (ignore\ |\ remove\ |\ attach)]\ >> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-forceDAFS\fR]\ >>
     [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-help\fR]
 .PP
 \fBbos sa\fR <<\ \fB\-se\fR\ <\fImachine\ name\fR >>> <<\ [\fB\-part\fR\ <\fIsalvage\ partition\fR] >>>
@@ -205,6 +206,7 @@ bos_salvage \- Restores internal consistency to a file system or volume
     [<\-para> <\fI# of max parallel partition salvaging\fR>]
     <<\ [\fB\-t\fR\ <\fIdirectory\ to\ place\ tmp\ files\fR] >>>
     <<\ [\fB\-o\fR\ (ignore\ |\ remove\ |\ attach)]\ >> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR]
+    <<\ [\fB\-force\fR]\ >>
     [\fB\-l\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBbos salvage\fR command salvages (restores internal consistency to) one
@@ -390,6 +392,9 @@ where \fIindex\fR is a two-digit number that uniquely identifies each
 object. The orphans are charged against the volume's quota and appear in
 the output of the \fBls\fR command issued against the volume's root
 directory.
+.Ip "\fB\-forceDAFS\fR" 4
+If the fileserver is a Demand Attach File Server, then the \fB\-forceDAFS\fR
+flag must be provided in order for the \fBsalvager\fR to run.
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIbos(8)\fR manpage.
@@ -437,6 +442,7 @@ the \fISalvageLog(5)\fR manpage,
 the \fIUserList(5)\fR manpage,
 the \fIbos(8)\fR manpage,
 the \fIsalvager(8)\fR manpage,
+the \fIsalvagserver(8)\fR manpage,
 the \fIvos_backup(1)\fR manpage,
 the \fIvos_release(1)\fR manpage,
 the \fIvos_remove(1)\fR manpage,
@@ -507,6 +513,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\(bu"
 
 .IX Item "\(bu"
+
+.IX Item "\fB\-forceDAFS\fR"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
 

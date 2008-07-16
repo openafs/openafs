@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/db_lock.c,v 1.6 2003/07/15 23:14:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/db_lock.c,v 1.6.14.1 2007/02/09 01:00:19 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -22,7 +22,6 @@ RCSID
 #endif
 #include <afs/afsutil.h>
 #include <ubik.h>
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"

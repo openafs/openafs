@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9.2.1 2007/10/30 15:23:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <io.h>

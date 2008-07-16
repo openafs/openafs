@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.22.2.2 2007/04/18 18:04:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.23.8.1 2007/04/18 18:02:47 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

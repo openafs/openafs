@@ -1,0 +1,13 @@
+The Admin Reference has now been completely replaced by the man pages, so
+don't refer to it since we'll no longer bother to install it.
+
+--- openafs.orig/doc/html/index.htm
++++ openafs/doc/html/index.htm
+@@ -24,7 +24,6 @@
+ <P>Included:
+ <DL COMPACT>
+ <DD><A HREF="AdminGuide/auagd000.htm">AFS Administrator's Guide</A>
+-<DD><A HREF="AdminReference/auarf000.htm">AFS Administration Reference</A>
+ <DD><A HREF="QuickStartUnix/auqbg000.htm">AFS Quick Start Guide for UNIX</A>
+ <DD><A HREF="QuickStartWindows/awqbg000.htm">AFS Quick Start Guide for Windows NT/2000</A>
+ <DD><A HREF="UserGuide/auusg000.htm">AFS User's Guide</A>

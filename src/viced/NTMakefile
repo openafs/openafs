@@ -5,6 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_AUXCDEFINES = -DFSSYNC_BUILD_SERVER
+
 RELDIR=viced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
@@ -25,14 +27,15 @@ INCFILES =\
 
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
+EXERES = $(OUT)\fileserver.res
+
 EXEOBJS =\
 	$(OUT)\afsfileprocs.obj \
 	$(OUT)\callback.obj \
 	$(OUT)\host.obj \
 	$(OUT)\physio.obj \
 	$(OUT)\viced.obj \
-	$(OUT)\AFS_component_version_number.obj \
-	$(OUT)\fileserver.res
+	$(OUT)\AFS_component_version_number.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -57,25 +60,37 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib
 
-$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
-
-############################################################################
-# generate versioninfo resources
-$(OUT)\fileserver.res: AFS_component_version_number.h
-
-install:  $(INCFILES) $(OUT)\fileserver.res
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build cbd - not generally distributed debugging program
-CBD = $(OUT)\cbd.exe
+CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
-$(OUT)\cbd.obj: callback.c
-	$(C2OBJ) $** -DINTERPRET_DUMP
+CBDRES = $(OUT)\cbd.res
 
-$(CBD): $(OUT)\cbd.obj 
+$(OUT)\cbd.obj: callback.c AFS_component_version_number.h
+	$(C2OBJ) callback.c -DINTERPRET_DUMP
+
+$(CBD): $(OUT)\cbd.obj $(CBDRES)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
+
+############################################################################
+# generate versioninfo resources
+$(EXERES): fileserver.rc AFS_component_version_number.h
+
+$(CBDRES): cbd.rc AFS_component_version_number.h
+
+install:  $(INCFILES) $(CBD)
 
 mkdir:
 	
+clean::
+	$(DEL) $(EXERES)
+	$(DEL) $(CBDRES)
+

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH bos_create 8 "OpenAFS" "11/Nov/2007" "AFS Command Reference"
+.TH bos_create 8 "OpenAFS" "14/Mar/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -216,10 +216,15 @@ fully-qualified or abbreviated unambiguously). For details, see the \fIbos(8)\fR
 .Ip "\fB\-instance\fR <\fIserver process name\fR>" 4
 Names the process to define and start. Any name is acceptable, but for the
 sake of simplicity it is best to use the last element of the process's
-binary file pathname, and to use the same name on every server
-machine. The conventional names, as used in all \s-1AFS\s0 documentation, are:
+binary file pathname (or the instance type for \fBfs\fR and \fBdafs\fR), and to
+use the same name on every server machine. The conventional names, as used
+in all \s-1AFS\s0 documentation, are:
 .Ip "buserver" 8
 The Backup Server process.
+.Ip "dafs" 8
+The process that combines the Demand Attach File Server, Volume Server, 
+Salvageserver and Salvager processes (\fBfileserver\fR, \fBvolserver\fR, 
+\fBsalvageserver\fR, and \fBsalvager\fR).
 .Ip "fs" 8
 The process that combines the File Server, Volume Server, and Salvager
 processes (\fBfileserver\fR, \fBvolserver\fR, and \fBsalvager\fR).
@@ -228,7 +233,7 @@ The Authentication Server process.
 .Ip "ptserver" 8
 The Protection Server process.
 .Ip "runntp" 8
-The controller process for the Network Time Protocol Daemon.
+The controller process for the Network Time Protocol Daemon (obsolete).
 .Ip "upclientbin" 8
 The client portion of the Update Server process that retrieves binary
 files from the \fI/usr/afs/bin\fR directory of the binary distribution
@@ -253,6 +258,12 @@ process has terminated. \s-1AFS\s0 does not define any such processes by default
 but makes this value available for administrator use. Define the time for
 command execution as part of the \fB\-cmd\fR argument to the \fBbos create\fR
 command.
+.Ip "dafs" 8
+Use this value only for the dafs process, which combines the File Server,
+Volume Server, Salvageserver, and Salvager processes in order to operate
+as a Demand Attach File Server.  If one of the component processes
+terminates, the \s-1BOS\s0 Server shuts down and restarts the process in the
+appropriate order.
 .Ip "fs" 8
 Use this value only for the fs process, which combines the File Server,
 Volume Server and Salvager processes. If one of the component processes
@@ -260,9 +271,9 @@ terminates, the \s-1BOS\s0 Server shuts down and restarts the processes in the
 appropriate order.
 .Ip "simple" 8
 Use this value for all processes listed as acceptable values to the
-\fB\-instance\fR argument, except for the \fBfs\fR process.  There are no
-interdependencies between simple processes, so the \s-1BOS\s0 Server can stop and
-start them independently as necessary.
+\fB\-instance\fR argument, except for the \fBfs\fR and \fBdafs\fR processes.  
+There are no interdependencies between simple processes, so the 
+\s-1BOS\s0 Server can stop and start them independently as necessary.
 .Ip "\fB\-cmd\fR <\fIcommand lines\fR>+" 4
 Specifies each command the \s-1BOS\s0 Server runs to start the process.  Specify
 no more than six commands (which can include the command's options, in
@@ -355,6 +366,14 @@ The following command creates the fs process fs on the machine
 \&   % bos create -server fs4.abc.com -instance fs -type fs \e
 \&                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \e
 \&                /usr/afs/bin/salvager
+.Ve
+The following command creates the dafs process dafs on the machine
+\f(CWfs4.abc.com\fR. Type the command on a single line.
+.PP
+.Vb 3
+\&   % bos create -server fs4.abc.com -instance dafs -type dafs \e
+\&                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \e
+\&                /usr/afs/bin/salvageserver /usr/afs/bin/salvager
 .Ve
 The following command creates a cron process called \f(CWuserbackup\fR on the
 machine \f(CWfs5.abc.com\fR, so that the BOS Server issues the indicated \fBvos
@@ -482,6 +501,7 @@ the \fIfileserver(8)\fR manpage,
 the \fIkaserver(8)\fR manpage,
 the \fIptserver(8)\fR manpage,
 the \fIsalvager(8)\fR manpage,
+the \fIsalvageserver(8)\fR manpage,
 the \fIupclient(8)\fR manpage,
 the \fIupserver(8)\fR manpage,
 the \fIvlserver(8)\fR manpage,
@@ -512,6 +532,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "buserver"
 
+.IX Item "dafs"
+
 .IX Item "fs"
 
 .IX Item "kaserver"
@@ -531,6 +553,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-type\fR <\fIserver type\fR>"
 
 .IX Item "cron"
+
+.IX Item "dafs"
 
 .IX Item "fs"
 

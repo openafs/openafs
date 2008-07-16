@@ -23,7 +23,7 @@
 #include <string.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.13.2.6 2007/11/13 22:15:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.16.4.6 2008/03/05 21:53:30 shadow Exp $");
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
@@ -1642,6 +1642,7 @@ getDevName(char *pbuffer, char *wpath)
         return NULL;
 }
 
+#ifdef FSSYNC_BUILD_CLIENT
 int
 inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 {
@@ -1651,7 +1652,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     char *name;
     int fd, err, forcep, len, j, code;
     struct dirent *dp;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     IHandle_t *ih, *ih2;
@@ -1677,7 +1678,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
         return EIO;
     }
     close(fd);
-    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 
     /* now do the work */
 	   
@@ -1783,8 +1784,9 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     if (unlink(oldpath) < 0) {
         Log("1 inode_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
     }
-    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
-    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
+    FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
     return 0;
 }
+#endif /* FSSYNC_BUILD_CLIENT */
 #endif /* AFS_NAMEI_ENV */

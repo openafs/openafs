@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.13.2.5 2007/10/31 12:36:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.14.8.4 2007/10/31 12:36:18 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

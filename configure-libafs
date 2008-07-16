@@ -683,6 +683,8 @@ host
 host_cpu
 host_vendor
 host_os
+LINUX_KERNEL_PACKAGING
+LINUX_LIBAFS_NAME
 CPP
 GREP
 EGREP
@@ -700,8 +702,10 @@ RHCONFIG_SP
 RHCONFIG_MP
 MPS
 PTHREAD_LIBS
+DEMAND_ATTACH
 USE_UNIX_SOCKETS
 XBSA_CFLAGS
+XBSA_XLIBS
 HAVE_PAM
 BUILD_LOGIN
 afsconfdir
@@ -718,8 +722,10 @@ afsbosconfigdir
 AFS_SYSNAME
 AFS_PARAM_COMMON
 ENABLE_KERNEL_MODULE
+ENABLE_PTHREADED_UBIK
 LIB_AFSDB
 LINUX_KERNEL_PATH
+HOST_CPU
 BSD_KERNEL_PATH
 BSD_KERNEL_BUILD
 LINUX_VERSION
@@ -767,6 +773,8 @@ NO_STRIP_KRB
 OPTMZ
 PAM_CFLAGS
 PAM_LIBS
+PAM_DBG
+PAM_OPTMZ
 PINSTALL_LIBS
 REGEX_OBJ
 SHLIB_CFLAGS
@@ -1380,48 +1388,92 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)
-  --disable-afsdb 			disable AFSDB RR support
-  --disable-pam 			disable PAM support
-  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality
-  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts
-  --disable-largefile-fileserver       disable large file support in fileserver
-  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver
-  --enable-supergroups 		enable support for nested pts groups
-  --enable-fast-restart 		enable fast startup of file server without salvaging
-  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed
-  --enable-unix-sockets               enable use of unix domain sockets for fssync
-  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output
-  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)
-  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)
-  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice
-  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support
-  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)
-  --disable-optimize-kernel		disable compilation of the kernel module with optimization (defaults based on platform)
-  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)
-  --disable-strip-binaries             disable stripping of symbol information from binaries (defaults to enabled)
-  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)
-  --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)
-  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)
-  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)
-  --enable-bigendian	the target is big endian
-  --enable-littleendian	the target is little endian
+  --disable-afsdb         disable AFSDB DNS RR support
+  --enable-obsolete       enable obsolete portions of AFS (mpp and package)
+  --disable-pam           disable PAM support
+  --enable-bos-restricted-mode
+                          enable bosserver restricted mode which disables
+                          certain bosserver functionality
+  --enable-bos-new-config enable bosserver pickup of BosConfig.new on restarts
+  --disable-largefile-fileserver
+                          disable large file support in fileserver
+  --enable-namei-fileserver
+                          force compilation of namei fileserver in preference
+                          to inode fileserver
+  --enable-supergroups    enable support for nested pts groups
+  --enable-fast-restart   enable fast startup of file server without salvaging
+  --enable-bitmap-later   enable fast startup of file server by not reading
+                          bitmap till needed
+  --enable-demand-attach-fs
+                          enable Demand Attach Fileserver (please see
+                          documentation)
+  --enable-disconnected   enable disconnected support in cache manager
+                          (experimental)
+  --enable-unix-sockets   enable use of unix domain sockets for fssync
+  --disable-full-vos-listvol-switch
+                          disable vos full listvol switch for formatted output
+  --enable-icmp-pmtu-discovery
+                          enable path MTU discovery by decoding ICMP
+                          unreachable replies
+  --enable-tivoli-tsm     enable use of the Tivoli TSM API libraries for butc
+                          support
+  --enable-pthreaded-ubik enable installation of pthreaded ubik applications
+                          (defaults to disabled)
+  --disable-kernel-module disable compilation of the kernel module (defaults
+                          to enabled)
+  --enable-redhat-buildsys
+                          enable compilation of the redhat build system kernel
+                          (defaults to disabled)
+  --enable-transarc-paths use Transarc style paths like /usr/afs and /usr/vice
+  --disable-strip-binaries
+                          disable stripping of symbol information from
+                          binaries (defaults to enabled)
+  --enable-debug          enable compilation of the user space code with
+                          debugging information (defaults to disabled)
+  --disable-optimize      disable optimization for compilation of the user
+                          space code (defaults to enabled)
+  --enable-warnings       enable compilation warnings when building with gcc
+                          (defaults to disabled)
+  --enable-debug-kernel   enable compilation of the kernel module with
+                          debugging information (defaults to disabled)
+  --disable-optimize-kernel
+                          disable compilation of the kernel module with
+                          optimization (defaults based on platform)
+  --enable-debug-lwp      enable compilation of the LWP code with debugging
+                          information (defaults to disabled)
+  --disable-optimize-lwp  disable optimization for compilation of the LWP code
+                          (defaults to enabled)
+  --enable-debug-pam      enable compilation of the PAM code with debugging
+                          information (defaults to disabled)
+  --disable-optimize-pam  disable optimization for compilation of the PAM code
+                          (defaults to enabled)
+  --enable-bigendian      the target is big endian
+  --enable-littleendian   the target is little endian
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-afs-sysname=sys    use sys for the afs sysname
-
-  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)
-
-  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)
-
-  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)
-
-  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)
-
---with-krb5-conf=krb5-config-location    Use a krb5-config script to configure Kerberos
---with-krb5 Support for Kerberos 5 (manual configuration)
+  --with-afs-sysname=sys  use sys for the afs sysname
+  --with-dux-kernel-headers=path
+                          use the kernel headers found at path (optional,
+                          defaults to first match in /usr/sys)
+  --with-linux-kernel-headers=path
+                          use the kernel headers found at path (optional,
+                          defaults to /usr/src/linux-2.4, then /usr/src/linux)
+  --with-bsd-kernel-headers=path
+                          use the kernel headers found at path (optional,
+                          defaults to /usr/src/sys)
+  --with-bsd-kernel-build=path
+                          use the kernel build found at path (optional,
+                          defaults to KSRC/i386/compile/GENERIC)
+  --with-linux-kernel-packaging
+                          use standard naming conventions to aid Linux kernel
+                          build packaging (disables MPS, sets the kernel
+                          module name to openafs.ko, and installs kernel
+                          modules into the standard Linux location)
+  --with-krb5-conf=[krb5-config-location]
+                          use a krb5-config script to configure Kerberos
+  --with-krb5             support for Kerberos 5 (manual configuration)
 
 Some influential environment variables:
   CC          C compiler command
@@ -2176,7 +2228,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.4.7
+ VERSION=1.5.50
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2324,8 +2376,8 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.7
-LINUX_PKGVER=1.4.7
+MACOS_VERSION=1.5.50
+LINUX_PKGVER=1.5.50
 #LINUX_PKGREL=0.pre0
 LINUX_PKGREL=1.1
 
@@ -4637,9 +4689,18 @@ SRCDIR_PARENT=`pwd`
 
 #BOZO_SAVE_CORES pam sia
 
+
 # Check whether --with-afs-sysname was given.
 if test "${with_afs_sysname+set}" = set; then
   withval=$with_afs_sysname;
+fi
+
+
+# Check whether --enable-afsdb was given.
+if test "${enable_afsdb+set}" = set; then
+  enableval=$enable_afsdb;
+else
+  enable_afsdb="yes"
 fi
 
 # Check whether --enable-obsolete was given.
@@ -4647,13 +4708,6 @@ if test "${enable_obsolete+set}" = set; then
   enableval=$enable_obsolete;
 else
   enable_obsolete="no"
-fi
-
-# Check whether --enable-afsdb was given.
-if test "${enable_afsdb+set}" = set; then
-  enableval=$enable_afsdb;
-else
-  enable_afsdb="yes"
 fi
 
 # Check whether --enable-pam was given.
@@ -4712,6 +4766,20 @@ else
   enable_bitmap_later="no"
 fi
 
+# Check whether --enable-demand-attach-fs was given.
+if test "${enable_demand_attach_fs+set}" = set; then
+  enableval=$enable_demand_attach_fs;
+else
+  enable_demand_attach_fs="no"
+fi
+
+# Check whether --enable-disconnected was given.
+if test "${enable_disconnected+set}" = set; then
+  enableval=$enable_disconnected;
+else
+  enable_disconnected="no"
+fi
+
 # Check whether --enable-unix-sockets was given.
 if test "${enable_unix_sockets+set}" = set; then
   enableval=$enable_unix_sockets;
@@ -4725,6 +4793,28 @@ if test "${enable_full_vos_listvol_switch+set}" = set; then
 else
   enable_full_vos_listvol_switch="yes"
 fi
+
+# Check whether --enable-icmp-pmtu-discovery was given.
+if test "${enable_icmp_pmtu_discovery+set}" = set; then
+  enableval=$enable_icmp_pmtu_discovery;
+else
+  enable_icmp_pmtu_discovery="no"
+fi
+
+# Check whether --enable-tivoli-tsm was given.
+if test "${enable_tivoli_tsm+set}" = set; then
+  enableval=$enable_tivoli_tsm;
+else
+  enable_tivoli_tsm="no"
+fi
+
+# Check whether --enable-pthreaded-ubik was given.
+if test "${enable_pthreaded_ubik+set}" = set; then
+  enableval=$enable_pthreaded_ubik;
+else
+  enable_pthreaded_ubik="no"
+fi
+
 
 
 # Check whether --with-dux-kernel-headers was given.
@@ -4750,12 +4840,23 @@ if test "${with_bsd_kernel_build+set}" = set; then
   withval=$with_bsd_kernel_build;
 fi
 
+
+# Check whether --with-linux-kernel-packaging was given.
+if test "${with_linux_kernel_packaging+set}" = set; then
+  withval=$with_linux_kernel_packaging; LINUX_KERNEL_PACKAGING="yes"
+
+     LINUX_LIBAFS_NAME="openafs"
+
+else
+  LINUX_LIBAFS_NAME="libafs"
+
+fi
+
 # Check whether --enable-kernel-module was given.
 if test "${enable_kernel_module+set}" = set; then
   enableval=$enable_kernel_module;
 else
   enable_kernel_module="yes"
-
 fi
 
 # Check whether --enable-redhat-buildsys was given.
@@ -4763,39 +4864,22 @@ if test "${enable_redhat_buildsys+set}" = set; then
   enableval=$enable_redhat_buildsys;
 else
   enable_redhat_buildsys="no"
-
 fi
+
 
 # Check whether --enable-transarc-paths was given.
 if test "${enable_transarc_paths+set}" = set; then
   enableval=$enable_transarc_paths;
 else
   enable_transarc_paths="no"
-
 fi
 
-# Check whether --enable-tivoli-tsm was given.
-if test "${enable_tivoli_tsm+set}" = set; then
-  enableval=$enable_tivoli_tsm;
+
+# Check whether --enable-strip-binaries was given.
+if test "${enable_strip_binaries+set}" = set; then
+  enableval=$enable_strip_binaries;
 else
-  enable_tivoli_tsm="no"
-
-fi
-
-# Check whether --enable-debug-kernel was given.
-if test "${enable_debug_kernel+set}" = set; then
-  enableval=$enable_debug_kernel;
-else
-  enable_debug_kernel="no"
-
-fi
-
-# Check whether --enable-optimize-kernel was given.
-if test "${enable_optimize_kernel+set}" = set; then
-  enableval=$enable_optimize_kernel;
-else
-  enable_optimize_kernel="yes"
-
+  enable_strip_binaries="maybe"
 fi
 
 # Check whether --enable-debug was given.
@@ -4803,15 +4887,6 @@ if test "${enable_debug+set}" = set; then
   enableval=$enable_debug;
 else
   enable_debug="no"
-
-fi
-
-# Check whether --enable-strip-binaries was given.
-if test "${enable_strip_binaries+set}" = set; then
-  enableval=$enable_strip_binaries;
-else
-  enable_strip_binaries="maybe"
-
 fi
 
 # Check whether --enable-optimize was given.
@@ -4819,23 +4894,6 @@ if test "${enable_optimize+set}" = set; then
   enableval=$enable_optimize;
 else
   enable_optimize="yes"
-
-fi
-
-# Check whether --enable-debug-lwp was given.
-if test "${enable_debug_lwp+set}" = set; then
-  enableval=$enable_debug_lwp;
-else
-  enable_debug_lwp="no"
-
-fi
-
-# Check whether --enable-optimize-lwp was given.
-if test "${enable_optimize_lwp+set}" = set; then
-  enableval=$enable_optimize_lwp;
-else
-  enable_optimize_lwp="yes"
-
 fi
 
 # Check whether --enable-warnings was given.
@@ -4843,8 +4901,50 @@ if test "${enable_warnings+set}" = set; then
   enableval=$enable_warnings;
 else
   enable_warnings="no"
-
 fi
+
+# Check whether --enable-debug-kernel was given.
+if test "${enable_debug_kernel+set}" = set; then
+  enableval=$enable_debug_kernel;
+else
+  enable_debug_kernel="no"
+fi
+
+# Check whether --enable-optimize-kernel was given.
+if test "${enable_optimize_kernel+set}" = set; then
+  enableval=$enable_optimize_kernel;
+else
+  enable_optimize_kernel="yes"
+fi
+
+# Check whether --enable-debug-lwp was given.
+if test "${enable_debug_lwp+set}" = set; then
+  enableval=$enable_debug_lwp;
+else
+  enable_debug_lwp="no"
+fi
+
+# Check whether --enable-optimize-lwp was given.
+if test "${enable_optimize_lwp+set}" = set; then
+  enableval=$enable_optimize_lwp;
+else
+  enable_optimize_lwp="yes"
+fi
+
+# Check whether --enable-debug-pam was given.
+if test "${enable_debug_pam+set}" = set; then
+  enableval=$enable_debug_pam;
+else
+  enable_debug_pam="no"
+fi
+
+# Check whether --enable-optimize-pam was given.
+if test "${enable_optimize_pam+set}" = set; then
+  enableval=$enable_optimize_pam;
+else
+  enable_optimize_pam="yes"
+fi
+
 
 
 enable_login="no"
@@ -5709,6 +5809,7 @@ if test "${enable_littleendian+set}" = set; then
   enableval=$enable_littleendian; openafs_cv_c_bigendian=no
 fi
 
+
 { echo "$as_me:$LINENO: checking whether byte order is known at compile time" >&5
 echo $ECHO_N "checking whether byte order is known at compile time... $ECHO_C" >&6; }
 if test "${openafs_cv_c_bigendian_compile+set}" = set; then
@@ -6345,6 +6446,12 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
+		sparc64-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="sparc64_obsd${vM}${vm}"
+			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
 			vM=${v%.*}
@@ -6501,7 +6608,7 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
 			;;
-		powerpc-apple-darwin8*)
+		powerpc-apple-darwin8.0*)
 			AFS_SYSNAME="ppc_darwin_80"
 			;;
 		powerpc-apple-darwin8.*)
@@ -7368,6 +7475,256 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
   { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 
+  { echo "$as_me:$LINENO: checking if find_task_by_pid is usable" >&5
+echo $ECHO_N "checking if find_task_by_pid is usable... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_exports_find_task_by_pid+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/sched.h>
+
+void conftest(void)
+{
+pid_t p;
+find_task_by_pid(p);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_exports_find_task_by_pid=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_exports_find_task_by_pid=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/sched.h>
+int
+main ()
+{
+pid_t p;
+find_task_by_pid(p);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_exports_find_task_by_pid=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_exports_find_task_by_pid=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_find_task_by_pid" >&5
+echo "${ECHO_T}$ac_cv_linux_exports_find_task_by_pid" >&6; }
+  if test "x$ac_cv_linux_exports_find_task_by_pid" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define EXPORTED_FIND_TASK_BY_PID 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking if proc_root_fs is defined and exported" >&5
+echo $ECHO_N "checking if proc_root_fs is defined and exported... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_exports_proc_root_fs+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/proc_fs.h>
+
+void conftest(void)
+{
+struct proc_dir_entry *p = proc_root_fs;
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_exports_proc_root_fs=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_exports_proc_root_fs=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/proc_fs.h>
+int
+main ()
+{
+struct proc_dir_entry *p = proc_root_fs;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_exports_proc_root_fs=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_exports_proc_root_fs=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_exports_proc_root_fs" >&5
+echo "${ECHO_T}$ac_cv_linux_exports_proc_root_fs" >&6; }
+  if test "x$ac_cv_linux_exports_proc_root_fs" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define EXPORTED_PROC_ROOT_FS 1
+_ACEOF
+
+  fi
+
   { echo "$as_me:$LINENO: checking for current_kernel_time()" >&5
 echo $ECHO_N "checking for current_kernel_time()... $ECHO_C" >&6; }
   if test "${ac_cv_linux_have_current_kernel_time+set}" = set; then
@@ -7842,6 +8199,258 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_kmem_cache_create_takes_dtor" >&5
 echo "${ECHO_T}$ac_cv_linux_kmem_cache_create_takes_dtor" >&6; }
 
+  { echo "$as_me:$LINENO: checking if d_path() takes a struct path argument" >&5
+echo $ECHO_N "checking if d_path() takes a struct path argument... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_d_path_takes_struct_path+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/dcache.h>
+
+void conftest(void)
+{
+struct path *p;
+d_path(p, NULL, 0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_d_path_takes_struct_path=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_d_path_takes_struct_path=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/dcache.h>
+int
+main ()
+{
+struct path *p;
+d_path(p, NULL, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_d_path_takes_struct_path=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_d_path_takes_struct_path=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_d_path_takes_struct_path" >&5
+echo "${ECHO_T}$ac_cv_linux_d_path_takes_struct_path" >&6; }
+  if test "x$ac_cv_linux_d_path_takes_struct_path" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define D_PATH_TAKES_STRUCT_PATH 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking if kernel uses new export ops" >&5
+echo $ECHO_N "checking if kernel uses new export ops... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_new_export_ops+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/exportfs.h>
+
+void conftest(void)
+{
+struct export_operations _eops;
+_eops.fh_to_parent(NULL, NULL, 0, 0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_new_export_ops=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_new_export_ops=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/exportfs.h>
+int
+main ()
+{
+struct export_operations _eops;
+_eops.fh_to_parent(NULL, NULL, 0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_new_export_ops=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_new_export_ops=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_new_export_ops" >&5
+echo "${ECHO_T}$ac_cv_linux_new_export_ops" >&6; }
+  if test "x$ac_cv_linux_new_export_ops" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define NEW_EXPORT_OPS 1
+_ACEOF
+
+  fi
+
   { echo "$as_me:$LINENO: checking for linux/config.h existance" >&5
 echo $ECHO_N "checking for linux/config.h existance... $ECHO_C" >&6; }
   if test "${ac_cv_linux_config_h_exists+set}" = set; then
@@ -8090,6 +8699,123 @@ fi
 
   { echo "$as_me:$LINENO: result: $ac_cv_linux_completion_h_exists" >&5
 echo "${ECHO_T}$ac_cv_linux_completion_h_exists" >&6; }
+
+  { echo "$as_me:$LINENO: checking for linux/exportfs.h existence" >&5
+echo $ECHO_N "checking for linux/exportfs.h existence... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_exportfs_h_exists+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/exportfs.h>
+
+void conftest(void)
+{
+return;
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_exportfs_h_exists=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_exportfs_h_exists=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/exportfs.h>
+int
+main ()
+{
+return;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_exportfs_h_exists=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_exportfs_h_exists=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_exportfs_h_exists" >&5
+echo "${ECHO_T}$ac_cv_linux_exportfs_h_exists" >&6; }
 
   { echo "$as_me:$LINENO: checking for defined for_each_process" >&5
 echo $ECHO_N "checking for defined for_each_process... $ECHO_C" >&6; }
@@ -12059,6 +12785,126 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_kernel_page_follow_link" >&5
 echo "${ECHO_T}$ac_cv_linux_kernel_page_follow_link" >&6; }
 
+  { echo "$as_me:$LINENO: checking for hlist_unhashed" >&5
+echo $ECHO_N "checking for hlist_unhashed... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_kernel_hlist_unhashed+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/list.h>
+
+void conftest(void)
+{
+hlist_unhashed(0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_kernel_hlist_unhashed=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_kernel_hlist_unhashed=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/list.h>
+int
+main ()
+{
+hlist_unhashed(0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_kernel_hlist_unhashed=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_kernel_hlist_unhashed=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+    CPPFLAGS="$save_CPPFLAGS"
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_kernel_hlist_unhashed" >&5
+echo "${ECHO_T}$ac_cv_linux_kernel_hlist_unhashed" >&6; }
+
   { echo "$as_me:$LINENO: checking for linux/key-type.h existance" >&5
 echo $ECHO_N "checking for linux/key-type.h existance... $ECHO_C" >&6; }
   if test "${ac_cv_linux_key_type_h_exists+set}" = set; then
@@ -14125,6 +14971,123 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   fi
+
+  { echo "$as_me:$LINENO: checking whether svc_addr_in exists" >&5
+echo $ECHO_N "checking whether svc_addr_in exists... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_have_svc_addr_in+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/sunrpc/svc.h>
+
+void conftest(void)
+{
+svc_addr_in(NULL);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_PATH M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_have_svc_addr_in=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_have_svc_addr_in=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/sunrpc/svc.h>
+int
+main ()
+{
+svc_addr_in(NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_have_svc_addr_in=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_have_svc_addr_in=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_have_svc_addr_in" >&5
+echo "${ECHO_T}$ac_cv_linux_have_svc_addr_in" >&6; }
 		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -16108,6 +17071,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   fi
+		 if test "x$with_linux_kernel_packaging" = "xno" ; then
 
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
@@ -16258,6 +17222,10 @@ echo "${ECHO_T}$MPS" >&6; }
 fi
 
 
+		 else
+		   MPS='SP'
+
+		 fi
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    { echo "$as_me:$LINENO: WARNING: Cannot determine sys_call_table status. assuming it isn't exported" >&5
 echo "$as_me: WARNING: Cannot determine sys_call_table status. assuming it isn't exported" >&2;}
@@ -16855,6 +17823,13 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 		 fi
+		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define EXPORTFS_H_EXISTS 1
+_ACEOF
+
+		 fi
 		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -17013,6 +17988,13 @@ _ACEOF
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_KERNEL_PAGE_FOLLOW_LINK 1
+_ACEOF
+
+		 fi
+		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_KERNEL_HLIST_UNHASHED 1
 _ACEOF
 
 		 fi
@@ -17278,6 +18260,13 @@ _ACEOF
 		  { echo "$as_me:$LINENO: WARNING: your kernel does not have a usable symlink cache API" >&5
 echo "$as_me: WARNING: your kernel does not have a usable symlink cache API" >&2;}
 		 fi
+		 if test "x$ac_cv_linux_have_svc_addr_in" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_SVC_ADDR_IN 1
+_ACEOF
+
+                 fi
                 :
 		fi
 esac
@@ -18341,8 +19330,91 @@ echo "${ECHO_T}yes" >&6; }
 
 fi
 
+if test "${ac_cv_setsockopt_iprecverr+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+{ echo "$as_me:$LINENO: checking for setsockopt(, SOL_IP, IP_RECVERR)" >&5
+echo $ECHO_N "checking for setsockopt(, SOL_IP, IP_RECVERR)... $ECHO_C" >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+int
+main ()
+{
+int on=1;
+setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_setsockopt_iprecverr=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_setsockopt_iprecverr=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ echo "$as_me:$LINENO: result: $ac_cv_setsockopt_iprecverr" >&5
+echo "${ECHO_T}$ac_cv_setsockopt_iprecverr" >&6; }
+fi
+
+if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define ADAPT_PMTU_RECVERR 1
+_ACEOF
+
+fi
+
 PTHREAD_LIBS=error
-{ echo "$as_me:$LINENO: checking for pthread_attr_init in -lpthread" >&5
+if test "x$MKAFS_OSTYPE" = OBSD; then
+        PTHREAD_LIBS="-pthread"
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        { echo "$as_me:$LINENO: checking for pthread_attr_init in -lpthread" >&5
 echo $ECHO_N "checking for pthread_attr_init in -lpthread... $ECHO_C" >&6; }
 if test "${ac_cv_lib_pthread_pthread_attr_init+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -18423,6 +19495,7 @@ if test $ac_cv_lib_pthread_pthread_attr_init = yes; then
   PTHREAD_LIBS="-lpthread"
 fi
 
+fi
 if test "x$PTHREAD_LIBS" = xerror; then
         { echo "$as_me:$LINENO: checking for pthread_attr_init in -lpthreads" >&5
 echo $ECHO_N "checking for pthread_attr_init in -lpthreads... $ECHO_C" >&6; }
@@ -18787,6 +19860,8 @@ if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
+HOST_CPU="$host_cpu"
+
 if test "x$with_bsd_kernel_headers" != "x"; then
 	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
 else
@@ -18797,11 +19872,11 @@ if test "x$with_bsd_kernel_build" != "x"; then
 	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
 else
 	case $AFS_SYSNAME in
-		i386_fbsd_4?)
+		*_fbsd_4?)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
 			;;
-		i386_fbsd_5?)
-			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
+		*_fbsd_*)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/${HOST_CPU}/compile/GENERIC"
 			;;
 	esac
 fi
@@ -18831,17 +19906,45 @@ _ACEOF
 
 fi
 
+if test "$enable_demand_attach_fs" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define DEMAND_ATTACH_ENABLE 1
+_ACEOF
+
+	DEMAND_ATTACH="yes"
+else
+	DEMAND_ATTACH="no"
+fi
+
+
+if test "$enable_disconnected" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define AFS_DISCON_ENV 1
+_ACEOF
+
+fi
+
 if test "$enable_unix_sockets" = "yes"; then
 
 cat >>confdefs.h <<\_ACEOF
 #define USE_UNIX_SOCKETS 1
 _ACEOF
 
-       USE_UNIX_SOCKETS="yes"
+	USE_UNIX_SOCKETS="yes"
 else
-       USE_UNIX_SOCKETS="no"
+	USE_UNIX_SOCKETS="no"
 fi
 
+
+if test "$enable_fast_restart" = "yes" &&
+   test "$enable_demand_attach_fs" = "yes" ; then
+	{ { echo "$as_me:$LINENO: error: The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless." >&5
+echo "$as_me: error: The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless." >&2;}
+   { (exit 1); exit 1; }; }
+	exit 1
+fi
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 
@@ -18849,6 +19952,16 @@ cat >>confdefs.h <<\_ACEOF
 #define FULL_LISTVOL_SWITCH 1
 _ACEOF
 
+fi
+
+if test "$enable_icmp_pmtu_discovery" = "yes"; then
+   if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define ADAPT_PMTU 1
+_ACEOF
+
+   fi
 fi
 
 if test "$enable_bos_restricted_mode" = "yes"; then
@@ -18898,23 +20011,38 @@ XBSA_CFLAGS=""
 if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
+	XBSADIR3=/usr/tivoli/tsm/client/api/bin/sample
+	XBSADIR4=/opt/tivoli/tsm/client/api/bin/sample
 
 	if test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
+		XBSA_XLIBS=""
 		{ echo "$as_me:$LINENO: result: yes, $XBSA_CFLAGS" >&5
 echo "${ECHO_T}yes, $XBSA_CFLAGS" >&6; }
 	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
+		XBSA_XLIBS=""
+		{ echo "$as_me:$LINENO: result: yes, $XBSA_CFLAGS" >&5
+echo "${ECHO_T}yes, $XBSA_CFLAGS" >&6; }
+	elif test -r "$XBSADIR3/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR3"
+		XBSA_XLIBS="-ldl"
+		{ echo "$as_me:$LINENO: result: yes, $XBSA_CFLAGS" >&5
+echo "${ECHO_T}yes, $XBSA_CFLAGS" >&6; }
+	elif test -r "$XBSADIR4/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR4"
+		XBSA_XLIBS="-ldl"
 		{ echo "$as_me:$LINENO: result: yes, $XBSA_CFLAGS" >&5
 echo "${ECHO_T}yes, $XBSA_CFLAGS" >&6; }
 	else
-		{ echo "$as_me:$LINENO: result: no, missing xbsa.h header file" >&5
-echo "${ECHO_T}no, missing xbsa.h header file" >&6; }
+		{ echo "$as_me:$LINENO: result: no, missing xbsa.h and dsmapifp.h header files" >&5
+echo "${ECHO_T}no, missing xbsa.h and dsmapifp.h header files" >&6; }
 	fi
 else
 	{ echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
 fi
+
 
 
 { echo "$as_me:$LINENO: checking for ANSI C header files" >&5
@@ -19488,7 +20616,8 @@ fi
 
 
 
-for ac_header in stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h
+
+for ac_header in stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -20329,7 +21458,8 @@ done
 
 
 
-for ac_header in security/pam_modules.h siad.h usersec.h ucontext.h regex.h
+
+for ac_header in security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -20483,6 +21613,81 @@ ac_res=`eval echo '${'$as_ac_Header'}'`
 echo "${ECHO_T}$ac_res" >&6; }
 
 fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+for ac_header in linux/errqueue.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+{ echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6; }
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/types.h>
+
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_Header=yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	eval "$as_ac_Header=no"
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+ac_res=`eval echo '${'$as_ac_Header'}'`
+	       { echo "$as_me:$LINENO: result: $ac_res" >&5
+echo "${ECHO_T}$ac_res" >&6; }
 if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
@@ -22096,6 +23301,9 @@ if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
 
+if test "x$enable_pthreaded_ubik" = "xyes"; then
+ENABLE_PTHREADED_UBIK=yes
+fi
 
 
 
@@ -22116,21 +23324,27 @@ fi
 
 
 
+
+
+
+CFLAGS=
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
 CC="cc"
 CCOBJ="cc"
 MT_CC="cc"
-XLIBS="${LIB_AFSDB}"
+XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
 
 KERN_DBG=-g
 KERN_OPTMZ=-O
 DBG=-g
 OPTMZ=-O
 LWP_DBG=-g
-LWP_OPTMZ=-O
 NO_STRIP_BIN=-ns
 NO_STRIP_KRB=-ns
+LWP_OPTMZ=-O
+PAM_DBG=-g
+PAM_OPTMZ=
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
@@ -22579,7 +23793,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		CSTATIC="-non_shared"
 		DBG="-g3"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -22590,7 +23804,7 @@ case $AFS_SYSNAME in
 		LEX="flex -l"
 		DBG="-g3"
 		CSTATIC="-non_shared"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -22602,7 +23816,7 @@ case $AFS_SYSNAME in
 		DBG="-g3"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -22612,13 +23826,14 @@ case $AFS_SYSNAME in
 	alpha_linux_22)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -22627,13 +23842,14 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -22642,13 +23858,14 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -22693,7 +23910,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
 		MT_CC="/opt/ansic/bin/cc -Ae"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-L/opt/dce/lib -ldce"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -22722,7 +23939,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
 		MT_CC="$CC"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -22739,7 +23956,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -22754,7 +23970,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ=""
 		MT_CC="$CC"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -22771,32 +23987,33 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0}"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
 
 	*fbsd_*)
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="byacc"
 		;;
 
 	*nbsd2*|*nbsd3*|*nbsd4*)
 		LEX="flex -l"
-		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
+		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="yacc"
 		;;
 
@@ -22804,24 +24021,26 @@ case $AFS_SYSNAME in
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS}'
 		MT_LIBS=""
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="bison -y"
 		;;
 
 	ia64_linux24|ia64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -G0"
+		XCFLAGS="-D_LARGEFILE64_SOURCE -G0"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -22829,39 +24048,42 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc64_linux24)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="/usr/lib64/libncurses.so"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -fPIC"
+		XCFLAGS="-D_LARGEFILE64_SOURCE -fPIC"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -22872,13 +24094,14 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -22889,18 +24112,18 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -22910,18 +24133,19 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -22931,18 +24155,19 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -22950,27 +24175,29 @@ case $AFS_SYSNAME in
 		KRB5CFLAGS="-I/usr/include/kerberosV"
 		KRB5LIBS="-lkrb5 -lcrypto"
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
-		PAM_CFLAGS="-O2 -pipe -fpic"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.a"
-		XCFLAGS="-O2"
+		XCFLAGS=
 		YACC="yacc"
 		;;
 
 	parisc_linux24)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23018,7 +24245,7 @@ case $AFS_SYSNAME in
 	ppc_darwin_70)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
@@ -23033,7 +24260,7 @@ case $AFS_SYSNAME in
 	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		KERN_OPTMZ="-Os"
@@ -23050,7 +24277,7 @@ case $AFS_SYSNAME in
 	*_darwin_90)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
@@ -23068,13 +24295,14 @@ case $AFS_SYSNAME in
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23084,7 +24312,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -23100,7 +24328,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -23115,7 +24343,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -23130,7 +24358,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -23147,13 +24375,15 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		OPTMZ=-O
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23165,13 +24395,14 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23183,13 +24414,15 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
+		OPTMZ=-O
+		XCFLAGS="-D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23199,7 +24432,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
@@ -23214,7 +24447,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
@@ -23228,7 +24461,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
@@ -23246,7 +24479,7 @@ case $AFS_SYSNAME in
 		LD="/usr/bin/ld"
 		LEX="lex"
 		MT_CC="/usr/bin/cc"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
@@ -23256,32 +24489,19 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	sparc64_linux*)
+	sparc*_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
+		XCFLAGS64="-D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	sparc_linux22)
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -23305,7 +24525,7 @@ case $AFS_SYSNAME in
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		SHLIB_CFLAGS="-KPIC"
 		TXLIBS="-lcurses"
@@ -23323,7 +24543,7 @@ case $AFS_SYSNAME in
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23345,7 +24565,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23367,7 +24587,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23389,7 +24609,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23411,14 +24631,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -23433,14 +24653,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -m64'
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -23455,7 +24675,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23476,7 +24696,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23497,7 +24717,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -23518,14 +24738,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=amd64'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -23539,14 +24759,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -m64'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -23673,6 +24893,15 @@ echo "${ECHO_T}$ac_cv_irix_sys_systm_h_has_mem_funcs" >&6; }
 	;;
 esac
 
+
+
+case $AFS_SYSNAME in
+	*linux*)
+		MT_CFLAGS="${MT_CFLAGS} -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+	;;
+esac
+
+
 if test "x$enable_debug_kernel" = "xno"; then
   KERN_DBG=
 fi
@@ -23768,10 +24997,13 @@ fi
 
 
 
+
+
 # Check whether --with-krb5-conf was given.
 if test "${with_krb5_conf+set}" = set; then
   withval=$with_krb5_conf;
 fi
+
 
 if test X$with_krb5_conf != X; then
 		conf_krb5=YES
@@ -25630,6 +26862,8 @@ host!$host$ac_delim
 host_cpu!$host_cpu$ac_delim
 host_vendor!$host_vendor$ac_delim
 host_os!$host_os$ac_delim
+LINUX_KERNEL_PACKAGING!$LINUX_KERNEL_PACKAGING$ac_delim
+LINUX_LIBAFS_NAME!$LINUX_LIBAFS_NAME$ac_delim
 CPP!$CPP$ac_delim
 GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
@@ -25640,8 +26874,6 @@ YFLAGS!$YFLAGS$ac_delim
 LEX!$LEX$ac_delim
 LEXLIB!$LEXLIB$ac_delim
 LEX_OUTPUT_ROOT!$LEX_OUTPUT_ROOT$ac_delim
-HEADER_RT!$HEADER_RT$ac_delim
-P5PLUS_KOPTS!$P5PLUS_KOPTS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -25683,13 +26915,17 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+HEADER_RT!$HEADER_RT$ac_delim
+P5PLUS_KOPTS!$P5PLUS_KOPTS$ac_delim
 LINUX_GCC_KOPTS!$LINUX_GCC_KOPTS$ac_delim
 RHCONFIG_SP!$RHCONFIG_SP$ac_delim
 RHCONFIG_MP!$RHCONFIG_MP$ac_delim
 MPS!$MPS$ac_delim
 PTHREAD_LIBS!$PTHREAD_LIBS$ac_delim
+DEMAND_ATTACH!$DEMAND_ATTACH$ac_delim
 USE_UNIX_SOCKETS!$USE_UNIX_SOCKETS$ac_delim
 XBSA_CFLAGS!$XBSA_CFLAGS$ac_delim
+XBSA_XLIBS!$XBSA_XLIBS$ac_delim
 HAVE_PAM!$HAVE_PAM$ac_delim
 BUILD_LOGIN!$BUILD_LOGIN$ac_delim
 afsconfdir!$afsconfdir$ac_delim
@@ -25706,8 +26942,10 @@ afsbosconfigdir!$afsbosconfigdir$ac_delim
 AFS_SYSNAME!$AFS_SYSNAME$ac_delim
 AFS_PARAM_COMMON!$AFS_PARAM_COMMON$ac_delim
 ENABLE_KERNEL_MODULE!$ENABLE_KERNEL_MODULE$ac_delim
+ENABLE_PTHREADED_UBIK!$ENABLE_PTHREADED_UBIK$ac_delim
 LIB_AFSDB!$LIB_AFSDB$ac_delim
 LINUX_KERNEL_PATH!$LINUX_KERNEL_PATH$ac_delim
+HOST_CPU!$HOST_CPU$ac_delim
 BSD_KERNEL_PATH!$BSD_KERNEL_PATH$ac_delim
 BSD_KERNEL_BUILD!$BSD_KERNEL_BUILD$ac_delim
 LINUX_VERSION!$LINUX_VERSION$ac_delim
@@ -25755,6 +26993,8 @@ NO_STRIP_KRB!$NO_STRIP_KRB$ac_delim
 OPTMZ!$OPTMZ$ac_delim
 PAM_CFLAGS!$PAM_CFLAGS$ac_delim
 PAM_LIBS!$PAM_LIBS$ac_delim
+PAM_DBG!$PAM_DBG$ac_delim
+PAM_OPTMZ!$PAM_OPTMZ$ac_delim
 PINSTALL_LIBS!$PINSTALL_LIBS$ac_delim
 REGEX_OBJ!$REGEX_OBJ$ac_delim
 SHLIB_CFLAGS!$SHLIB_CFLAGS$ac_delim
@@ -25772,15 +27012,9 @@ XLIBKVM!$XLIBKVM$ac_delim
 XLIBS!$XLIBS$ac_delim
 KRB5_CONFIG!$KRB5_CONFIG$ac_delim
 BUILD_KRB5!$BUILD_KRB5$ac_delim
-KRB5CFLAGS!$KRB5CFLAGS$ac_delim
-KRB5LIBS!$KRB5LIBS$ac_delim
-HELPER_SPLINT!$HELPER_SPLINT$ac_delim
-HELPER_SPLINTCFG!$HELPER_SPLINTCFG$ac_delim
-LIBOBJS!$LIBOBJS$ac_delim
-LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 95; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -25799,6 +27033,53 @@ fi
 
 cat >>$CONFIG_STATUS <<_ACEOF
 cat >"\$tmp/subs-2.sed" <<\CEOF$ac_eof
+/@[a-zA-Z_][a-zA-Z_0-9]*@/!b
+_ACEOF
+sed '
+s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g
+s/^/s,@/; s/!/@,|#_!!_#|/
+:n
+t n
+s/'"$ac_delim"'$/,g/; t
+s/$/\\/; p
+N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
+' >>$CONFIG_STATUS <conf$$subs.sed
+rm -f conf$$subs.sed
+cat >>$CONFIG_STATUS <<_ACEOF
+CEOF$ac_eof
+_ACEOF
+
+
+ac_delim='%!_!# '
+for ac_last_try in false false false false false :; do
+  cat >conf$$subs.sed <<_ACEOF
+KRB5CFLAGS!$KRB5CFLAGS$ac_delim
+KRB5LIBS!$KRB5LIBS$ac_delim
+HELPER_SPLINT!$HELPER_SPLINT$ac_delim
+HELPER_SPLINTCFG!$HELPER_SPLINTCFG$ac_delim
+LIBOBJS!$LIBOBJS$ac_delim
+LTLIBOBJS!$LTLIBOBJS$ac_delim
+_ACEOF
+
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 6; then
+    break
+  elif $ac_last_try; then
+    { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
+echo "$as_me: error: could not make $CONFIG_STATUS" >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
+  fi
+done
+
+ac_eof=`sed -n '/^CEOF[0-9]*$/s/CEOF/0/p' conf$$subs.sed`
+if test -n "$ac_eof"; then
+  ac_eof=`echo "$ac_eof" | sort -nru | sed 1q`
+  ac_eof=`expr $ac_eof + 1`
+fi
+
+cat >>$CONFIG_STATUS <<_ACEOF
+cat >"\$tmp/subs-3.sed" <<\CEOF$ac_eof
 /@[a-zA-Z_][a-zA-Z_0-9]*@/!b end
 _ACEOF
 sed '
@@ -26061,7 +27342,7 @@ s&@abs_builddir@&$ac_abs_builddir&;t t
 s&@abs_top_builddir@&$ac_abs_top_builddir&;t t
 s&@INSTALL@&$ac_INSTALL&;t t
 $ac_datarootdir_hack
-" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed -f "$tmp/subs-2.sed" >$tmp/out
+" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed -f "$tmp/subs-2.sed" | sed -f "$tmp/subs-3.sed" >$tmp/out
 
 test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
   { ac_out=`sed -n '/\${datarootdir}/p' "$tmp/out"`; test -n "$ac_out"; } &&

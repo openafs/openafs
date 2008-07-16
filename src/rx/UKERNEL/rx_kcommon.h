@@ -36,6 +36,8 @@ typedef char *rxk_portRocks_t[MAXRXPORTS];
 extern rxk_ports_t rxk_ports;
 extern rxk_portRocks_t rxk_portRocks;
 
+#ifndef ifnet_flags
 #define ifnet_flags(x) (x?(x)->if_flags:0)
+#endif
 
 #endif /* _RX_KCOMMON_H_ */

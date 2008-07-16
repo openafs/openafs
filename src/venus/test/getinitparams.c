@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/test/getinitparams.c,v 1.5.2.1 2007/10/31 04:13:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/test/getinitparams.c,v 1.5.14.1 2007/10/31 04:09:42 shadow Exp $");
 
 #include <afs/param.h>
 #include <stdio.h>

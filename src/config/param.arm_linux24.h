@@ -5,7 +5,7 @@
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously arm specific, use that
+ * it's a judgment call. If something is obviously i386 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
@@ -92,7 +92,7 @@
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously arm specific, use that
+ * it's a judgment call. If something is obviously i386 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.

@@ -1,5 +1,5 @@
 /*
- * internal include file for com_err package
+ * internal include file for afs_com_err package
  *
  */
 #include "mit-sipb-cr.h"

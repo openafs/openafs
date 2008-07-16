@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.7 2007/01/25 11:24:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.31.2.6 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -40,6 +40,7 @@ RCSID
 
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
+#include "afs/afs_dynroot.h"
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
@@ -432,7 +433,7 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
     tv = afs_FindVolume(afid, locktype);
     if (!tv) {
-	if (afs_IsDynrootFid(afid)) {
+	if (afs_IsDynrootAnyFid(afid)) {
 	    tv = afs_NewDynrootVolume(afid);
 	} else {
 	    bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
@@ -523,6 +524,11 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	} else {
 	    tv->vtix = -1;
 	    tv->rootVnode = tv->rootUnique = 0;
+            afs_GetDynrootMountFid(&tv->dotdot);
+            afs_GetDynrootMountFid(&tv->mtpoint);
+            tv->mtpoint.Fid.Vnode =
+              VNUM_FROM_TYPEID(VN_TYPE_MOUNT, tcell->cellIndex << 2);
+            tv->mtpoint.Fid.Unique = volid;
 	}
     }
     tv->refCount++;
@@ -571,6 +577,9 @@ afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
     }
 
     ReleaseWriteLock(&afs_xvolume);
+
+    if (AFS_IS_DISCONNECTED)
+        return NULL;
 
     tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
     return (tv);

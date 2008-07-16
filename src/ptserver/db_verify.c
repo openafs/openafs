@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.2.5 2007/10/31 04:13:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.14.5 2007/10/31 04:09:32 shadow Exp $");
 
 /*
  *                      (3) Define a structure, idused, instead of an

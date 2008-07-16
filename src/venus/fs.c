@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.12 2008/03/08 01:15:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.30.2.16 2008/05/23 14:25:12 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -36,7 +36,6 @@ RCSID
 #undef VICE
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <rx/rxkad.h>
@@ -1203,7 +1202,7 @@ GetCallerAccess(struct cmd_syndesc *as, void *arock)
         struct vcxstat2 stat;
         blob.out_size = sizeof(struct vcxstat2);
         blob.in_size = 0;
-        blob.out = &stat;
+        blob.out = (void *)&stat;
         code = pioctl(ti->data, VIOC_GETVCXSTATUS2, &blob, 1);
         if (code) {
             Die(errno, ti->data);
@@ -1997,6 +1996,39 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
+PreCacheCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    afs_int32 temp;
+    
+    if (!as->parms[0].items && !as->parms[1].items) {
+	fprintf(stderr, "%s: syntax error in precache cmd.\n", pn);
+	return 1;
+    }
+    if (as->parms[0].items) {
+	code = util_GetInt32(as->parms[0].items->data, &temp);
+	if (code) {
+	    fprintf(stderr, "%s: bad integer specified for precache size.\n",
+		    pn);
+	    return 1;
+	}
+    } else
+	temp = 0;
+    blob.in = (char *)&temp;
+    blob.in_size = sizeof(afs_int32);
+    blob.out_size = 0;
+    code = pioctl(0, VIOCPRECACHE, &blob, 1);
+    if (code) {
+	Die(errno, NULL);
+	return 1;
+    }
+    
+    printf("New precache size set.\n");
+    return 0;
+}
+
+static int
 SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -2038,13 +2070,28 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
 static int
 GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 code;
+    afs_int32 code, filesUsed;
     struct ViceIoctl blob;
     afs_int32 parms[MAXGCSIZE];
+    double percentFiles, percentBlocks;
+    afs_int32 flags = 0;
+
+    if (as->parms[0].items){ /* -files */
+	flags = 1;
+    } else if (as->parms[1].items){ /* -excessive */
+	flags = 2;
+    } else {
+	flags = 0;
+    }
 
     memset(parms, '\0', sizeof parms);	/* avoid Purify UMR error */
-    blob.in = NULL;
-    blob.in_size = 0;
+    if (flags){
+	blob.in = (char *)&flags;
+	blob.in_size = sizeof(afs_int32);
+    } else {	/* be backward compatible */
+	blob.in = NULL;
+	blob.in_size = 0;
+    }
     blob.out_size = sizeof(parms);
     blob.out = (char *)parms;
     code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
@@ -2052,11 +2099,45 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, NULL);
 	return 1;
     }
-    printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
-	   parms[1], parms[0]);
-    if (parms[1] > parms[0])
-	printf
-	    ("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
+
+    if (!flags){
+	printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
+		parms[1], parms[0]);
+	if (parms[1] > parms[0])
+		printf("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
+	return 0;
+    }
+
+    percentBlocks = ((double)parms[1]/parms[0]) * 100;
+    printf("AFS using %5.0f%% of cache blocks (%d of %d 1k blocks)\n",
+	   percentBlocks, parms[1], parms[0]);
+
+    filesUsed = parms[2] - parms[3];
+    percentFiles = ((double)filesUsed/parms[2]) * 100;
+    printf("          %5.0f%% of the cache files (%d of %d files)\n",
+	    percentFiles, filesUsed, parms[2]);
+    if (flags == 2){
+	printf("	afs_cacheFiles: %10d\n", parms[2]);
+	printf("	IFFree:         %10d\n", parms[3]); 
+	printf("	IFEverUsed:     %10d\n", parms[4]); 
+	printf("	IFDataMod:      %10d\n", parms[5]); 
+	printf("	IFDirtyPages:   %10d\n", parms[6]);
+	printf("	IFAnyPages:     %10d\n", parms[7]); 
+	printf("	IFDiscarded:    %10d\n", parms[8]);
+	printf("	DCentries:  %10d\n", parms[9]);
+	printf("	  0k-   4K: %10d\n", parms[10]); 
+	printf("	  4k-  16k: %10d\n", parms[11]); 
+	printf("	 16k-  64k: %10d\n", parms[12]); 
+	printf("	 64k- 256k: %10d\n", parms[13]); 
+	printf("	256k-   1M: %10d\n", parms[14]); 
+	printf("	      >=1M: %10d\n", parms[15]); 
+    }
+
+    if (percentBlocks > 90)
+	printf("[cache size usage over 90%, consider increasing cache size]\n");
+    if (percentFiles > 90)
+	printf("[cache file usage over 90%, consider increasing '-files' argument to afsd]\n");
+	 
     return 0;
 }
 
@@ -2173,6 +2254,37 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     blob.out = (char *) &hostAddr;
     
     code = pioctl(0, VIOC_CBADDR, &blob, 1);
+    if (code < 0) {
+	Die(errno, 0);
+	return 1;
+    }
+    return 0;
+}
+
+static int
+NukeNFSCredsCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    afs_int32 hostAddr;
+    struct hostent *thp;
+    
+    ti = as->parms[0].items;
+    thp = hostutil_GetHostByName(ti->data);
+    if (!thp) {
+	fprintf(stderr, "host %s not found in host table.\n", ti->data);
+	return 1;
+    }
+    else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
+    
+    /* now do operation */
+    blob.in_size = sizeof(afs_int32);
+    blob.out_size = sizeof(afs_int32);
+    blob.in = (char *) &hostAddr;
+    blob.out = (char *) &hostAddr;
+    
+    code = pioctl(0, VIOC_NFS_NUKE_CREDS, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
 	return 1;
@@ -2504,7 +2616,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     struct cmd_item *ti;
     int export = 0, type = 0, mode = 0, exp = 0, exportcall, pwsync =
-	0, smounts = 0;
+	0, smounts = 0, clipags = 0, pagcb = 0;
 
     ti = as->parms[0].items;
     if (strcmp(ti->data, "nfs") == 0)
@@ -2557,8 +2669,29 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
+    if (ti = as->parms[5].items) {	/* -clipags */
+	if (strcmp(ti->data, "on") == 0)
+	    clipags = 3;
+	else if (strcmp(ti->data, "off") == 0)
+	    clipags = 2;
+	else {
+	    fprintf(stderr, "Illegal argument %s\n", ti->data);
+	    return 1;
+	}
+    }
+    if (ti = as->parms[6].items) {	/* -pagcb */
+	if (strcmp(ti->data, "on") == 0)
+	    pagcb = 3;
+	else if (strcmp(ti->data, "off") == 0)
+	    pagcb = 2;
+	else {
+	    fprintf(stderr, "Illegal argument %s\n", ti->data);
+	    return 1;
+	}
+    }
     exportcall =
-	(type << 24) | (mode << 6) | (pwsync << 4) | (smounts << 2) | export;
+	(type << 24) | (pagcb << 10) | (clipags << 8) |
+	(mode << 6) | (pwsync << 4) | (smounts << 2) | export;
     type &= ~0x70;
     /* make the call */
     blob.in = (char *)&exportcall;
@@ -2589,6 +2722,13 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	printf("\t%s\n",
 	       (exportcall & 8 ? "Allow mounts of /afs/.. subdirs" :
 		"Only mounts to /afs allowed"));
+	printf("\t%s\n",
+	       (exportcall & 16 ? "Client-assigned PAG's are used" :
+		"Client-assigned PAG's are not used"));
+	printf("\t%s\n",
+	       (exportcall & 32 ?
+		"Callbacks are made to get creds from new clients" :
+		"Callbacks are not made to get creds from new clients"));
     } else {
 	printf("'%s' translator is disabled\n", exported_types[type]);
     }
@@ -3163,6 +3303,61 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#ifdef AFS_DISCON_ENV
+static char *modenames[] = {
+    "readonly",
+    "fetchonly", /* Not currently supported */
+    "partial",   /* Not currently supported */
+    "nat",
+    "full",
+    NULL
+};
+
+static int
+DisconCmd(struct cmd_syndesc *as, void *arock)
+{
+    struct cmd_item *ti;
+    char *modename;
+    int modelen;
+    afs_int32 mode, code;
+    struct ViceIoctl blob;
+
+    blob.in = NULL;
+    blob.in_size = 0;
+
+    ti = as->parms[0].items;
+    if (ti) {
+	modename = ti->data;
+	modelen = strlen(modename);
+	for (mode = 0; modenames[mode] != NULL; mode++)
+	    if (!strncasecmp(modename, modenames[mode], modelen))
+		break;
+	if (modenames[mode] == NULL)
+	    printf("Unknown discon mode \"%s\"\n", modename);
+	else {
+	    memcpy(space, &mode, sizeof mode);
+	    blob.in = space;
+	    blob.in_size = sizeof mode;
+	}
+    }
+
+    blob.out_size = sizeof(mode);
+    blob.out = space;
+    code = pioctl(0, VIOC_DISCON, &blob, 1);
+    if (code)
+	Die(errno, NULL);
+    else {
+	memcpy(&mode, space, sizeof mode);
+	if (mode < sizeof modenames / sizeof (char *))
+	    printf("Discon mode is now \"%s\"\n", modenames[mode]);
+	else
+	    printf("Unknown discon mode %d\n", mode);
+    }
+
+    return 0;
+}
+#endif
+
 #include "AFS_component_version_number.c"
 
 int
@@ -3347,17 +3542,19 @@ defect 3069
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL,
 		"reset size back to boot value");
 
-    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, 0,
+    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL,
 			  "get cache usage info");
+    cmd_AddParm(ts, "-files", CMD_FLAG, CMD_OPTIONAL, "Show cach files used as well");
+    cmd_AddParm(ts, "-excessive", CMD_FLAG, CMD_OPTIONAL, "excessively verbose cache stats");
 
-    ts = cmd_CreateSyntax("listcells", ListCellsCmd, 0,
+    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL,
 			  "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
-    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, 0,
+    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL,
 			  "list configured cell aliases");
 
-    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, 0, "set volume quota");
+    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
 #ifdef notdef
@@ -3435,6 +3632,10 @@ defect 3069
 		"run on strict 'uid check' mode (on | off)");
     cmd_AddParm(ts, "-submounts", CMD_SINGLE, CMD_OPTIONAL,
 		"allow nfs mounts to subdirs of /afs/.. (on  | off)");
+    cmd_AddParm(ts, "-clipags", CMD_SINGLE, CMD_OPTIONAL,
+		"enable use of client-assigned PAG's (on  | off)");
+    cmd_AddParm(ts, "-pagcb", CMD_SINGLE, CMD_OPTIONAL,
+		"enable callbacks to get creds from new clients (on  | off)");
 
 
     ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL,
@@ -3447,35 +3648,49 @@ defect 3069
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "show status");
     cmd_CreateAlias(ts, "sb");
 
-    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, 0,
+    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL,
 			  "set cache manager encryption flag");
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
-    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, 0,
+    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL,
 			  "get cache manager encryption flag");
 
-    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
+    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL,
 			  "Manage per process RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, 0,
+    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL,
 			  "Manage per peer RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, 0, "configure callback connection address");
+    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 
     /* try to find volume location information */
-    ts = cmd_CreateSyntax("getfid", GetFidCmd, 0,
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("uuid", UuidCmd, 0, "manage the UUID for the cache manager");
+#ifdef AFS_DISCON_ENV
+    ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
+			  "disconnection mode");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "readonly | nat | full");
+#endif
+
+    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
+    cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
+
+    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, "manage the UUID for the cache manager");
     cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_REQUIRED, "generate a new UUID");
+
+    ts = cmd_CreateSyntax("precache", PreCacheCmd, 0,
+			  "set precache size");
+    cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
+		"size in 1K byte blocks (0 => disable)");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)

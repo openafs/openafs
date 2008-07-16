@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_QUOTA 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
+.TH FS_QUOTA 1 "OpenAFS" "13/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -202,14 +202,7 @@ resides on, use the \fBfs examine\fR and \fBfs listquota\fR commands.
 .PP
 To set volume quota, use the \fBfs setquota\fR or \fBfs setvol\fR command.
 .SH "CAUTIONS"
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
-and the maximum size of a /vicepX partition on a fileserver is also 2
-terabytes. The fileserver will not report an error when it has access
-to a partition larger than 2 terabytes, but it will probably fail if
-the administrator attempts to use more than 2 terabytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
-partitions larger than 2 terabytes.
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 .SH "OPTIONS"
 .Ip "\fB\-path\fR <\fIdir/file path\fR>" 4
 Names each file or directory for which to display the quota consumed in
@@ -244,10 +237,10 @@ housing the directory \fI/afs/abc.com/usr/smith\fR:
 \&   92% of quota used.
 .Ve
 .SH "PRIVILEGE REQUIRED"
-The issuer must have the \f(CWl\fR (lookup) permission on the ACL of the root
+The issuer must have the \f(CWr\fR (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-\fB\-path\fR argument, and on the ACL of each directory that precedes it in
-the pathname.
+\fB\-path\fR argument, and \f(CWl\fR (list) permission on the ACL of each 
+directory that precedes it in the pathname.
 .SH "SEE ALSO"
 the \fIfs_examine(1)\fR manpage,
 the \fIfs_listquota(1)\fR manpage,

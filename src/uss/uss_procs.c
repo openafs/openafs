@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_procs.c,v 1.9.2.1 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/uss/uss_procs.c,v 1.9.14.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_procs.h"		/*Module interface */
 #include "uss_common.h"		/*Common defs & operations */

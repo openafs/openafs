@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.2 2007/10/30 15:24:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.14.2 2007/10/30 15:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV

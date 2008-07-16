@@ -30,7 +30,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_callback.c,v 1.13.2.2 2007/10/30 15:24:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/xstat/xstat_fs_callback.c,v 1.15.2.1 2007/10/30 15:16:59 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>		/*Standard I/O stuff */
@@ -781,4 +781,16 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
      * Return successfully.
      */
     return (0);
+}
+
+int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
+     struct rx_call *a_call;
+     afs_int32 a_index;
+     afs_int32 addr;
+     afs_int32 inode;
+     afs_int32 flags;
+     afs_int32 time;
+     char ** fileName;
+{
+    return RXGEN_OPCODE;
 }

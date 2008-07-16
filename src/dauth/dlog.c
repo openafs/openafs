@@ -72,7 +72,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dauth/Attic/dlog.c,v 1.9.2.2 2007/04/10 18:43:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dauth/Attic/dlog.c,v 1.9.14.2 2007/04/10 18:39:51 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

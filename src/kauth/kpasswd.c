@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.14.2.4 2007/10/31 04:13:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.15.8.3 2007/10/31 04:09:30 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.6.2.1 2007/11/26 21:21:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.6.14.1 2007/11/26 21:08:42 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

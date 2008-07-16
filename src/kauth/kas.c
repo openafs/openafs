@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kas.c,v 1.7.2.2 2007/10/30 15:23:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kas.c,v 1.7.14.2 2007/10/30 15:16:39 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV

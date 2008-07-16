@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.9.2.6 2008/03/27 18:40:22 shadow Exp $ */
+/* $Id: pt_util.c,v 1.11.4.6 2008/07/01 05:57:35 rra Exp $ */
 
 /*
  *
@@ -23,9 +23,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9.2.6 2008/03/27 18:40:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.11.4.6 2008/07/01 05:57:35 rra Exp $");
 
 #include <afs/cmd.h>		/*Command line parsing */
+#include <afs/afsutil.h>
 #include <errno.h>
 #include <lock.h>
 #include <netinet/in.h>
@@ -137,7 +138,9 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
-    char *pfile = "/usr/afs/db/prdb.DB0";
+    char *pbase = AFSDIR_SERVER_PRDB_FILEPATH;
+    char *pfile = NULL;
+    char pbuffer[1028];
     struct cmd_parmdesc *tparm;
 
     tparm = a_as->parms;
@@ -170,6 +173,10 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 	dfile = tparm[8].items->data;
     }
 
+    if (pfile == NULL) {
+        afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
+        pfile = pbuffer;
+    }
     if ((dbase_fd = open(pfile, (wflag ? O_RDWR : O_RDONLY) | O_CREAT, 0600))
 	< 0) {
 	fprintf(stderr, "pt_util: cannot open %s: %s\n", pfile,
@@ -321,8 +328,16 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
     } else {
 	for (i = 0; i < HASHSIZE; i++) {
 	    upos = nflag ? ntohl(prh.nameHash[i]) : ntohl(prh.idHash[i]);
-	    while (upos)
-		upos = display_entry(upos);
+	    while (upos) {
+		long newpos;
+		newpos = display_entry(upos);
+		if (newpos == upos) {
+		    fprintf(stderr, "pt_util: hash error in %s chain %d\n", 
+			    nflag ? "name":"id", i);
+		    exit(1);
+		} else
+		    upos = newpos;
+	    }
 	}
 	if (flags & DO_GRP)
 	    display_groups();

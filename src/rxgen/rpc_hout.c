@@ -36,7 +36,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_hout.c,v 1.7.2.4 2008/02/05 18:53:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxgen/rpc_hout.c,v 1.10.4.3 2008/02/05 17:18:42 jaltman Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -192,7 +192,7 @@ define_printed(proc_list * stop, version_list * start)
 	}
     }
     abort();
-    /* NOTREACHED */
+    return 0;/* NOTREACHED */
 }
 
 

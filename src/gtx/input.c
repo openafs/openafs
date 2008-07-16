@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/input.c,v 1.7.2.2 2008/03/10 22:35:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/input.c,v 1.7.14.2 2008/03/10 22:32:33 shadow Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>

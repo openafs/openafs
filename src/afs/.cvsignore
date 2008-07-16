@@ -5,3 +5,4 @@ afs_trace.msf
 afszcm.cat
 unified_afs.c
 unified_afs.h
+_locks_

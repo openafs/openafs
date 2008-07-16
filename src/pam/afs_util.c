@@ -25,7 +25,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.2.6 2007/12/13 18:54:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.14.4 2007/12/13 18:53:52 shadow Exp $");
 
 #include "afs_util.h"
 

@@ -2,24 +2,27 @@
 AC_DEFUN([OPENAFS_OSCONF], [
 
 dnl defaults, override in case below as needed
+CFLAGS=
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
 CC="cc"
 CCOBJ="cc"
 MT_CC="cc"
-XLIBS="${LIB_AFSDB}"
+XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
-dnl the arch cases below do not override
+dnl the arch cases below do override as needed
 KERN_DBG=-g
 KERN_OPTMZ=-O
 DBG=-g
 OPTMZ=-O
 LWP_DBG=-g
-LWP_OPTMZ=-O
 NO_STRIP_BIN=-ns
 NO_STRIP_KRB=-ns
+LWP_OPTMZ=-O
+PAM_DBG=-g
+PAM_OPTMZ=
 
 dnl standard programs
 AC_PROG_RANLIB
@@ -39,7 +42,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		CSTATIC="-non_shared"
 		DBG="-g3"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -50,7 +53,7 @@ case $AFS_SYSNAME in
 		LEX="flex -l"
 		DBG="-g3"
 		CSTATIC="-non_shared"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -62,7 +65,7 @@ case $AFS_SYSNAME in
 		DBG="-g3"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
@@ -72,13 +75,14 @@ case $AFS_SYSNAME in
 	alpha_linux_22)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -87,13 +91,14 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -102,13 +107,14 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -153,7 +159,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
 		MT_CC="/opt/ansic/bin/cc -Ae"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-L/opt/dce/lib -ldce"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -182,7 +188,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
 		MT_CC="$CC"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -199,7 +205,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -214,7 +219,7 @@ case $AFS_SYSNAME in
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ=""
 		MT_CC="$CC"
-		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -231,32 +236,33 @@ case $AFS_SYSNAME in
 		XCFLAGS="${XCFLAGS0}"
 		XLIBELFA="-lelf"
 		#XLIBS="${LIB_AFSDB} -lnsl"
-		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
 
 	*fbsd_*)
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="byacc"
 		;;
 
 	*nbsd2*|*nbsd3*|*nbsd4*)
 		LEX="flex -l"
-		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
+		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="yacc"
 		;;
 
@@ -264,24 +270,26 @@ case $AFS_SYSNAME in
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS}'
 		MT_LIBS=""
-		PAM_CFLAGS="-O2 -pipe -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
-		XCFLAGS="-O2 -pipe"
+		XCFLAGS="-pipe"
 		YACC="bison -y"
 		;;
 
 	ia64_linux24|ia64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -G0"
+		XCFLAGS="-D_LARGEFILE64_SOURCE -G0"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -289,39 +297,42 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc64_linux24)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="/usr/lib64/libncurses.so"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -fPIC"
+		XCFLAGS="-D_LARGEFILE64_SOURCE -fPIC"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -332,13 +343,14 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -349,18 +361,18 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -370,18 +382,19 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -391,18 +404,19 @@ case $AFS_SYSNAME in
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
 		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
-		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -410,27 +424,29 @@ case $AFS_SYSNAME in
 		KRB5CFLAGS="-I/usr/include/kerberosV"
 		KRB5LIBS="-lkrb5 -lcrypto"
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
-		PAM_CFLAGS="-O2 -pipe -fpic"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.a"
-		XCFLAGS="-O2"
+		XCFLAGS=
 		YACC="yacc"
 		;;
 
 	parisc_linux24)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -478,7 +494,7 @@ case $AFS_SYSNAME in
 	ppc_darwin_70)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
@@ -493,7 +509,7 @@ case $AFS_SYSNAME in
 	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		KERN_OPTMZ="-Os"
@@ -510,7 +526,7 @@ case $AFS_SYSNAME in
 	*_darwin_90)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
@@ -528,13 +544,14 @@ case $AFS_SYSNAME in
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -544,7 +561,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -560,7 +577,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -575,7 +592,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -590,7 +607,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
@@ -607,13 +624,15 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		OPTMZ=-O
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -625,13 +644,14 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -643,13 +663,15 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
+		OPTMZ=-O
+		XCFLAGS="-D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -659,7 +681,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
@@ -674,7 +696,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
@@ -688,7 +710,7 @@ case $AFS_SYSNAME in
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
@@ -706,7 +728,7 @@ case $AFS_SYSNAME in
 		LD="/usr/bin/ld"
 		LEX="lex"
 		MT_CC="/usr/bin/cc"
-		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
@@ -716,32 +738,19 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	sparc64_linux*)
+	sparc*_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
+		XCFLAGS="-D_LARGEFILE64_SOURCE"
+		XCFLAGS64="-D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	sparc_linux22)
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -765,7 +774,7 @@ case $AFS_SYSNAME in
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		SHLIB_CFLAGS="-KPIC"
 		TXLIBS="-lcurses"
@@ -783,7 +792,7 @@ case $AFS_SYSNAME in
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -805,7 +814,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -827,7 +836,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -849,7 +858,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -871,14 +880,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -893,14 +902,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -m64'
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -915,7 +924,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -936,7 +945,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -957,7 +966,7 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -978,14 +987,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=amd64'
+		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -999,14 +1008,14 @@ case $AFS_SYSNAME in
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
-		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV -DUBIK_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -m64'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -1050,6 +1059,18 @@ case $AFS_SYSNAME in
 		AC_SUBST(dest_FS_CONV_OSF40D)
 	;;
 esac
+
+
+
+dnl pthreads fixes
+case $AFS_SYSNAME in
+dnl we'll go ahead and turn on XOPEN2K and ISO_C99
+dnl if this causes problems, we should scale back to _XOPEN_SOURCE=500
+	*linux*)
+		MT_CFLAGS="${MT_CFLAGS} -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+	;;
+esac
+
 
 dnl Disable the default for debugging/optimization if not enabled
 if test "x$enable_debug_kernel" = "xno"; then
@@ -1122,6 +1143,8 @@ AC_SUBST(NO_STRIP_KRB)
 AC_SUBST(OPTMZ)
 AC_SUBST(PAM_CFLAGS)
 AC_SUBST(PAM_LIBS)
+AC_SUBST(PAM_DBG)
+AC_SUBST(PAM_OPTMZ)
 AC_SUBST(PINSTALL_LIBS)
 AC_SUBST(RANLIB)
 AC_SUBST(REGEX_OBJ)

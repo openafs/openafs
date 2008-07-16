@@ -1,8 +1,8 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.4.7)
+AM_INIT_AUTOMAKE(openafs,1.5.50)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.4.7
-LINUX_PKGVER=1.4.7
+MACOS_VERSION=1.5.50
+LINUX_PKGVER=1.5.50
 #LINUX_PKGREL=0.pre0
 LINUX_PKGREL=1.1
 
@@ -11,7 +11,8 @@ AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
 AC_PROG_CC
-AC_CHECK_PROGS(CPP,[/lib/cpp /usr/bin/cpp /usr/ccs/lib/cpp cpp],,[$PATH:/])
+AC_PATH_PROGS([PATH_CPP], [cpp], , [$PATH:/lib:/usr/ccs/lib])
+AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
 
 if test -d 'doc/man-pages' ; then
@@ -37,6 +38,7 @@ src/bu_utils/Makefile \
 src/bubasics/Makefile \
 src/bucoord/Makefile \
 src/budb/Makefile \
+src/tbudb/Makefile \
 src/butc/Makefile \
 src/butm/Makefile \
 src/cmd/Makefile \
@@ -88,6 +90,7 @@ src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
+src/packaging/Debian/rules \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
 src/packaging/MacOS/buildpkg.sh \
@@ -100,6 +103,7 @@ src/platform/${MKAFS_OSTYPE}/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
+src/tptserver/Makefile \
 src/rx/Makefile \
 src/rx/bulk.example/Makefile \
 src/rx/bulktest/Makefile \
@@ -120,10 +124,12 @@ src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \
 src/tests/run-tests \
+src/tsalvaged/Makefile \
 src/tsm41/Makefile \
 src/tviced/Makefile \
 src/tvolser/Makefile \
 src/ubik/Makefile \
+src/tubik/Makefile \
 src/update/Makefile \
 src/usd/Makefile \
 src/usd/test/Makefile \
@@ -135,6 +141,7 @@ src/venus/test/Makefile \
 src/vfsck/Makefile \
 src/viced/Makefile \
 src/vlserver/Makefile \
+src/tvlserver/Makefile \
 src/vol/Makefile \
 src/vol/test/Makefile \
 src/volser/Makefile \

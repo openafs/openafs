@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.8 2007/10/31 04:13:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.38.4.3 2007/10/31 04:09:41 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>

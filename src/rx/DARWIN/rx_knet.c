@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_knet.c,v 1.10.2.3 2006/09/16 00:11:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_knet.c,v 1.12.4.1 2006/09/16 00:11:55 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 

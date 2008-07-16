@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.19 2008/04/09 16:40:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.56.2.8 2008/04/09 16:40:00 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -408,11 +408,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
-#ifdef AFS_DARWIN80_ENV
-    ifnet_t ifn;
-#else
-    struct ifnet *ifn;
-#endif
+    AFS_IFNET_T ifn;
 
 #if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)

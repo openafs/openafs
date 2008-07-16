@@ -26,7 +26,7 @@ Creation date:
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/test/testcellconf.c,v 1.7.2.1 2007/10/31 22:32:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/test/testcellconf.c,v 1.7.14.1 2007/10/31 22:31:59 shadow Exp $");
 
 #include <sys/types.h>
 #include <stddef.h>

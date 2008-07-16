@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/tsm41/aix_aklog.c,v 1.1.4.6 2008/01/03 18:05:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/tsm41/aix_aklog.c,v 1.1.2.6 2008/01/03 18:03:46 shadow Exp $");
 
 #if defined(AFS_AIX51_ENV)
 #include <sys/types.h>

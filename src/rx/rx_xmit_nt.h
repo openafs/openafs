@@ -29,10 +29,8 @@ struct msghdr {
     int msg_accrightslen;
 };
 
-extern int rxi_sendmsg(int socket, struct msghdr *msgP, int flags);
+extern int rxi_sendmsg(osi_socket socket, struct msghdr *msgP, int flags);
 #define sendmsg rxi_sendmsg
-extern int rxi_recvmsg(int socket, struct msghdr *msgP, int flags);
+extern int rxi_recvmsg(osi_socket socket, struct msghdr *msgP, int flags);
 #define recvmsg rxi_recvmsg
-
-
 #endif /* _RX_XMIT_NT_H_ */

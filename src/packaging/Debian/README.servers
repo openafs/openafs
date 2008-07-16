@@ -19,7 +19,7 @@ Introduction
   traditional paths, and in the second column, the Debian paths:
 
       /usr/afs/etc        /etc/openafs/server
-      /usr/afs/local      /etc/openafs/server-local
+      /usr/afs/local      /var/lib/openafs/local
       /usr/afs/db         /var/lib/openafs/db
       /usr/afs/logs       /var/log/openafs
       /usr/afs/bin        /usr/lib/openafs
@@ -65,10 +65,6 @@ Creating a New Cell
       The name of your Kerberos realm should, for various reasons, be in
       all uppercase and be a domain name that you control, although
       neither is technically required.
-
-      Right now, for the aklog from openafs-krb5 to work, you need to
-      enable krb4 support (either full or nopreauth) and run krb524d.
-      Eventually this will no longer be necessary.
 
   2.  It is traditional (and recommended) in AFS (and for Kerberos) to
       give administrators two separate Kerberos principals, one regular
@@ -321,7 +317,17 @@ Adding Additional Servers
               -cmd /usr/lib/openafs/volserver \
               -cmd /usr/lib/openafs/salvager -localauth
 
-      For a file server, this is all you have to do.
+      For a file server, this is all you have to do.  The above uses the
+      default fileserver options, however, which are not particularly
+      well-tuned for modern systems.  afs-newcell uses the following
+      parameters from Harald Barth:
+
+          -p 23 -busyat 600 -rxpck 400 -s 1200 -l 1200 -cb 65535
+          -b 240 -vc 1200
+
+      If you want to add any additional fileserver options, enclose
+      /usr/lib/openafs/fileserver and the following options in double
+      quotes when giving the bos create command.
 
   4.  For database servers, also install openafs-dbserver and then use bos
       addhost to add the new server to /etc/openafs/server/CellServDB:

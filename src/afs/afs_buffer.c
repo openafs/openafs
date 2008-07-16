@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.7 2007/12/13 19:18:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.22.4.1 2007/12/13 19:18:29 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

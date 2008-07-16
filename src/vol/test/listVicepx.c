@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/test/listVicepx.c,v 1.6 2003/07/15 23:17:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/test/listVicepx.c,v 1.7 2006/03/17 19:54:54 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -102,6 +102,7 @@ RCSID
 #include "afs/assert.h"
 #include "filesignal.h"
 #include "vutils.h"
+#include "daemon_com.h"
 #include "fssync.h"
 #include <afs/auxinode.h>
 #include <afs/dir.h>

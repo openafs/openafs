@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.16 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.32.2.10 2008/03/10 22:32:32 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -39,7 +39,7 @@ RCSID
 #include "bosint.h"
 #include "bnode.h"
 #include "bosprototypes.h"
-#include <afs/auth.h>
+#include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
@@ -52,10 +52,10 @@ RCSID
 #define BOZO_LWP_STACKSIZE	16000
 extern int BOZO_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
-extern struct bnode_ops fsbnode_ops, ezbnode_ops, cronbnode_ops;
+extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
-static char *bozo_pid;
+static PROCESS bozo_pid;
 struct rx_securityClass *bozo_rxsc[3];
 const char *bozo_fileName;
 FILE *bozo_logFile;
@@ -164,7 +164,7 @@ bozo_ReBozo()
 
 /* make sure a dir exists */
 static int
-MakeDir(register char *adir)
+MakeDir(const char *adir)
 {
     struct stat tstat;
     register afs_int32 code;
@@ -721,7 +721,6 @@ main(int argc, char **argv, char **envp)
     register afs_int32 code;
     struct afsconf_dir *tdir;
     int noAuth = 0;
-    struct ktc_encryptionKey tkey;
     int i;
     char namebuf[AFSDIR_PATH_MAX];
     int rxMaxMTU = -1;
@@ -908,6 +907,7 @@ main(int argc, char **argv, char **envp)
     }
 
     bnode_Register("fs", &fsbnode_ops, 3);
+    bnode_Register("dafs", &dafsbnode_ops, 4);
     bnode_Register("simple", &ezbnode_ops, 1);
     bnode_Register("cron", &cronbnode_ops, 2);
 
@@ -1019,7 +1019,6 @@ main(int argc, char **argv, char **envp)
 
     /* opened the cell databse */
     bozo_confdir = tdir;
-    code = afsconf_GetKey(tdir, 999, &tkey);
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(bozo_rxstat_userok);
@@ -1085,7 +1084,7 @@ main(int argc, char **argv, char **envp)
 void
 bozo_Log(char *format, ...)
 {
-    char tdate[26];
+    char tdate[27];
     time_t myTime;
     va_list ap;
 
@@ -1093,7 +1092,7 @@ bozo_Log(char *format, ...)
 
     if (DoSyslog) {
 #ifndef AFS_NT40_ENV
-	vsyslog(LOG_INFO, format, ap);
+        vsyslog(LOG_INFO, format, ap);
 #endif
     } else {
 	myTime = time(0);
@@ -1104,20 +1103,17 @@ bozo_Log(char *format, ...)
 
 	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
 	if (bozo_logFile == NULL) {
-	    printf("bosserver: WARNING: problem with %s",
+	    printf("bosserver: WARNING: problem with %s\n",
 		   AFSDIR_SERVER_BOZLOG_FILEPATH);
-	    fflush(stdout);
-	}
-
-	if (bozo_logFile) {
-	    fprintf(bozo_logFile, "%s ", tdate);
-	    vfprintf(bozo_logFile, format, ap);
-	    fflush(bozo_logFile);
-	    /* close so rm BosLog works */
-	    fclose(bozo_logFile);
-	} else {
 	    printf("%s ", tdate);
 	    vprintf(format, ap);
+	    fflush(stdout);
+	} else {
+	    fprintf(bozo_logFile, "%s ", tdate);
+	    vfprintf(bozo_logFile, format, ap);
+
+	    /* close so rm BosLog works */
+	    fclose(bozo_logFile);
 	}
     }
 }

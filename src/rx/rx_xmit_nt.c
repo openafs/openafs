@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.7.2.3 2006/02/16 21:49:34 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.11 2006/02/16 21:48:50 jaltman Exp $");
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 
@@ -45,7 +45,7 @@ typedef int SOCKET;
 #include <errno.h>
 
 int
-recvmsg(int socket, struct msghdr *msgP, int flags)
+recvmsg(osi_socket socket, struct msghdr *msgP, int flags)
 {
     char rbuf[RX_MAX_PACKET_SIZE];
     int size;
@@ -93,7 +93,7 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 }
 
 int
-sendmsg(int socket, struct msghdr *msgP, int flags)
+sendmsg(osi_socket socket, struct msghdr *msgP, int flags)
 {
     char buf[RX_MAX_PACKET_SIZE];
     char *sbuf = buf;

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/curseswindows.c,v 1.10.2.2 2008/03/10 22:35:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/curseswindows.c,v 1.10.14.2 2008/03/10 22:32:33 shadow Exp $");
 
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)

@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.3 2007/10/30 15:24:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.11.8.3 2007/10/30 15:16:59 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
@@ -51,7 +51,6 @@ RCSID
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <rx/rx.h>

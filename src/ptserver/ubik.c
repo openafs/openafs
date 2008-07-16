@@ -1,10 +1,10 @@
-/* $Id: ubik.c,v 1.7.2.2 2007/10/30 15:24:03 shadow Exp $ */
+/* $Id: ubik.c,v 1.8.2.1 2007/10/30 15:16:43 shadow Exp $ */
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ubik.c,v 1.7.2.2 2007/10/30 15:24:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ubik.c,v 1.8.2.1 2007/10/30 15:16:43 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>

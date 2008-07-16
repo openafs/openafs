@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/server.c,v 1.14.2.9 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/server.c,v 1.16.2.10 2008/05/29 04:04:25 jaltman Exp $");
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -37,7 +37,6 @@ RCSID
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
@@ -71,6 +70,10 @@ char dbDir[AFSDIR_PATH_MAX], cellConfDir[AFSDIR_PATH_MAX];
 int debugging = 0;
 
 int rxBind = 0;
+int lwps   = 3;
+
+#define MINLWP  3
+#define MAXLWP 16
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -168,6 +171,12 @@ initializeArgHandler()
     cmd_AddParm(cptr, "-auditlog", CMD_SINGLE, CMD_OPTIONAL,
 		"audit log path");
 
+    cmd_AddParm(cptr, "-p", CMD_SINGLE, CMD_OPTIONAL,
+		"number of processes");
+
+    cmd_AddParm(cptr, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+		"bind the Rx socket (primary interface only)");
+
 }
 
 int
@@ -247,6 +256,26 @@ argHandler(struct cmd_syndesc *as, void *arock)
 		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else
 	    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+    }
+
+    /* user provided the number of threads    */
+    if (as->parms[8].items != 0) {
+	lwps = atoi(as->parms[8].items->data);
+	if (lwps > MAXLWP) {
+	    printf ("Warning: '-p %d' is too big; using %d instead\n",
+		lwps, MAXLWP);
+	    lwps = MAXLWP;
+	}
+	if (lwps < MINLWP) {
+	    printf ("Warning: '-p %d' is too small; using %d instead\n",
+		lwps, MINLWP);
+	    lwps = MINLWP;
+	}
+    }
+
+    /* user provided rxbind option    */
+    if (as->parms[9].items != 0) {
+	rxBind = 1;
     }
 
     return 0;
@@ -563,7 +592,7 @@ main(argc, argv)
 	BUDB_EXIT(3);
     }
     rx_SetMinProcs(tservice, 1);
-    rx_SetMaxProcs(tservice, 3);
+    rx_SetMaxProcs(tservice, lwps);
     rx_SetStackSize(tservice, 10000);
 
     /* allow super users to manage RX statistics */
@@ -632,7 +661,7 @@ TimeStamp(time_t t)
     static char timestamp[20];
 
     lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %T", lt);
+    strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
     return timestamp;
 }
 

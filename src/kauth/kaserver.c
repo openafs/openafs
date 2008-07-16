@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.8 2008/03/10 22:35:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.19.2.6 2008/03/10 22:32:33 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

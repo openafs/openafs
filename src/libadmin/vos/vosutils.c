@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.10.2.4 2007/10/30 15:23:58 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.12.4.3 2007/10/30 15:16:41 shadow Exp $");
 
 #include "vosutils.h"
 #include "vsprocs.h"
@@ -614,7 +614,7 @@ badaddr_once(void)
 
 #ifdef AFS_NT40_ENV
 
-#define cszREG_IGNORE_KEY "Software\\TransarcCorporation\\AFS Control Center"
+#define cszREG_IGNORE_KEY "Software\\OpenAFS\\AFS Control Center"
 #define cszREG_IGNORE_VALUE "IgnoreBadAddrs"
 
     /*

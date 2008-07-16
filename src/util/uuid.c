@@ -50,7 +50,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.16.2.2 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.17.4.1 2007/10/30 15:16:48 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"

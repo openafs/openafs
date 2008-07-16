@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/check_sysid.c,v 1.6.2.1 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/check_sysid.c,v 1.6.14.1 2007/11/26 21:08:45 shadow Exp $");
 
 #include <fcntl.h>
 #include <errno.h>

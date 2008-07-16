@@ -5,7 +5,12 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
+
+#ifndef _AFS_VICED_HOST_H
+#define _AFS_VICED_HOST_H
 
 #include "fs_stats.h"		/*File Server stats package */
 
@@ -61,6 +66,7 @@ struct Interface {
     struct AddrPort interface[1];/* there are actually more than one here */
     /* in network byte order */
 };
+
 struct host {
     struct host *next, *prev;	/* linked list of all hosts */
     struct rx_connection *callback_rxcon;	/* rx callback connection */
@@ -87,7 +93,7 @@ struct host {
     struct client *FirstClient;	/* first connection from host */
     afs_uint32 cpsCall;		/* time of last cps call from this host */
     struct Interface *interface;	/* all alternate addr for client */
-    afs_uint32 cblist;		/* Call back list for this host */
+    afs_uint32 cblist;		/* index of a cb in the per-host circular CB list */
     /*
      * These don't get zeroed, keep them at the end. If index doesn't
      * follow an unsigned short then we need to pad to ensure that
@@ -147,6 +153,7 @@ struct client {
 /* Don't zero the lock */
 #define CLIENT_TO_ZERO(C)	((int)(((char *)(&((C)->lock))-(char *)(C))))
 
+
 /*
  * key for the client structure stored in connection specific data
  */
@@ -203,14 +210,30 @@ extern int h_Lock_r(register struct host *host);
 				( h == hostList )? (hostList = h->next):0;
 
 extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
+extern int DeleteCallBack(struct host *host, AFSFid * fid);
+extern int MultiProbeAlternateAddress_r(struct host *host);
+extern int BreakDelayedCallBacks_r(struct host *host);
+extern int AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
+	     int locked);
+extern int BreakCallBack(struct host *xhost, AFSFid * fid, int flag);
+extern int DeleteFileCallBacks(AFSFid * fid);
+extern int CleanupTimedOutCallBacks(void);
+extern int CleanupTimedOutCallBacks_r(void);
+extern int MultiBreakCallBackAlternateAddress(struct host *host, struct AFSCBFids *afidp);
+extern int MultiBreakCallBackAlternateAddress_r(struct host *host,
+				     struct AFSCBFids *afidp);
+extern int DumpCallBackState(void);
+extern int PrintCallBackStats(void);
+extern void *ShutDown(void *);
+extern void ShutDownAndCore(int dopanic);
+
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
-			       int *heldp, struct host **hostp);
-extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
-			   struct host* host);
+		      int *heldp, struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (), char *param);
+extern void h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
@@ -222,17 +245,34 @@ extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
 			   register afs_uint16 hport);
-extern void hashInsertUuid_r(struct afsUUID *uuid, struct host *host);
-extern void hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host);
-extern int hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
+		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
+extern int h_NBLock_r(register struct host *host);
+extern void h_DumpHosts();
+extern void h_InitHostPackage();
+extern void h_CheckHosts();
+struct Interface *MultiVerifyInterface_r();
+extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
+extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
+extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
+extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
-extern int removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 
-extern void *ShutDown(void *);
 
-struct Interface *MultiVerifyInterface_r();
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * state serialization
+ */
+extern int h_SaveState(void);
+extern int h_RestoreState(void);
+#endif
+
+#define H_ENUMERATE_BAIL(held)        ((held)|0x80000000)
+#define H_ENUMERATE_ISSET_BAIL(held)  ((held)&0x80000000)
+#define H_ENUMERATE_ISSET_HELD(held)  ((held)&0x7FFFFFFF)
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */
@@ -258,3 +298,4 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define HFE_LATER                       0x80	/* host has FE_LATER callbacks */
 #define HERRORTRANS                    0x100	/* do error translation */
 #define HWHO_INPROGRESS                0x200    /* set when WhoAreYou running */
+#endif /* _AFS_VICED_HOST_H */

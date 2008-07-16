@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/knfs.c,v 1.8.2.2 2007/10/31 04:13:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/knfs.c,v 1.8.14.2 2007/10/31 04:09:30 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>

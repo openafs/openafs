@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/inode.c,v 1.5.2.1 2005/10/03 02:46:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/inode.c,v 1.6 2005/10/03 02:44:56 shadow Exp $");
 
 #define VICE			/* control whether AFS changes are present */
 #include <stdio.h>

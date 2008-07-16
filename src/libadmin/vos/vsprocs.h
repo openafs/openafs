@@ -26,7 +26,6 @@
 #include <rx/rx.h>
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -106,6 +105,10 @@ extern int UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
 			     struct volintXInfo **a_resultPP,
 			     afs_status_p st);
 
+extern int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
+		  afs_int32 a_volID, struct volintInfo **a_resultPP,
+		  afs_status_p st);
+			    
 extern int UV_SyncVldb(afs_cell_handle_p cellHandle,
 		       struct rx_connection *server, afs_int32 apart,
 		       int flags, int force, afs_status_p st);

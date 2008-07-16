@@ -28,4 +28,7 @@ typedef struct ViceIoctl {
 extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob,
 		   int follow);
 
+extern long pioctl_utf8(char *pathp, long opcode, struct ViceIoctl *blob,
+                        int follow);
+
 #endif /* OPENAFS_AFS_PIOCTL_H */

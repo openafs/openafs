@@ -27,19 +27,38 @@ extern cred_t *crdup(cred_t * cr);
 extern cred_t *crref(void);
 extern void crset(cred_t * cr);
 
+/* osi_nfssrv.c */
+extern int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr,
+                                 int *code);
+extern void osi_linux_nfssrv_init(void);
+extern void osi_linux_nfssrv_shutdown(void);
+extern afs_rwlock_t afs_xnfssrv;
+
 /* osi_file.c */
 extern afs_rwlock_t afs_xosi;
-
-/* osi_misc.c */
-extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+
+/* osi_ioctl.c */
+extern void osi_ioctl_init(void);
+extern void osi_ioctl_clean(void);
+
+/* osi_misc.c */
 extern void afs_osi_SetTime(osi_timeval_t * tvp);
-extern void osi_linux_free_inode_pages(void);
+extern int osi_lookupname_internal(char *aname, int followlink,
+				   struct vfsmount **mnt, struct dentry **dpp);
+extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
+			  struct dentry **dpp);
+extern int osi_abspath(char *aname, char *buf, int buflen,
+		       int followlink, char **pathp);
+extern void afs_start_thread(void (*proc)(void), char *name);
 
 /* osi_probe.c */
 extern void *osi_find_syscall_table(int which);
+
+/* osi_proc.c */
+extern void osi_proc_init(void);
+extern void osi_proc_clean(void);
 
 /* osi_syscall.c */
 extern int osi_syscall_init(void);
@@ -63,6 +82,7 @@ extern void osi_VM_Truncate(struct vcache *avc, int alen,
 extern void vattr2inode(struct inode *ip, struct vattr *vp);
 extern int afs_init_inodecache(void);
 extern void afs_destroy_inodecache(void);
+extern void osi_linux_free_inode_pages(void);
 
 /* osi_vnodeops.c */
 extern void afs_fill_inode(struct inode *ip, struct vattr *vattr);

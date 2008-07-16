@@ -215,7 +215,14 @@ EXPORTS
         rx_StartClientThread                    @220
 	rxkad_global_stats_lock			@221 DATA
 	rxkad_stats_key				@222 DATA
+	rx_DebugOnOff				@223
 	rx_InitHost				@224
 	rx_NewServiceHost			@225
-        
-
+        osi_AssertFailU				@226
+	DllMain					@227
+        rx_SetSecurityConfiguration             @228
+;        RXAFSCB_ExecuteRequest                  @229
+        EndRXAFS_GetTime                        @230
+        StartRXAFS_GetTime                      @231
+        EndRXAFS_GetCapabilities                @232
+        StartRXAFS_GetCapabilities              @233

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/read_tape.c,v 1.7.2.3 2007/11/26 21:21:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/read_tape.c,v 1.7.14.3 2007/11/26 21:08:41 shadow Exp $");
 
 #include <afs/cmd.h>
 #include <lock.h>

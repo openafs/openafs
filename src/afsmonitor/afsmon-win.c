@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-win.c,v 1.10.2.2 2007/11/26 21:21:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-win.c,v 1.10.14.2 2007/11/26 21:08:40 shadow Exp $");
 
 #include <stdio.h>
 #include <signal.h>
@@ -1580,7 +1580,7 @@ display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
 	    }
 	}
     }
-    return 0;
+
 }				/* display_Server_label */
 
 

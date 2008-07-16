@@ -25,7 +25,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/fsprobe/fsprobe_callback.c,v 1.12 2003/07/15 23:15:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/fsprobe/fsprobe_callback.c,v 1.13 2005/10/07 20:11:05 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>		/*Standard I/O stuff */
@@ -760,4 +760,16 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
      * Return successfully.
      */
     return (0);
+}
+
+int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
+    struct rx_call *a_call;
+    afs_int32 a_index;
+    afs_int32 addr;
+    afs_int32 inode;
+    afs_int32 flags;
+    afs_int32 time;
+    char ** fileName;
+{
+    return RXGEN_OPCODE;
 }

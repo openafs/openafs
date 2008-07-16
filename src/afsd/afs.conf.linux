@@ -61,8 +61,8 @@ ENABLE_DYNROOT=on
 #      -files_per_subdir [n]   number of files per cache subdir. (def=2048)
 #      -shutdown  Shutdown afs daemons
 # ---------------------------------------------------------------------------
-XXLARGE="-fakestat -stat 4000 -dcache 4000 -daemons 6 -volumes 256 -files 50000"
-XLARGE="-fakestat -stat 3600 -dcache 3600 -daemons 5 -volumes 196 -files 50000"
+XXLARGE="-fakestat -stat 4000 -dcache 4000 -daemons 6 -volumes 256"
+XLARGE="-fakestat -stat 3600 -dcache 3600 -daemons 5 -volumes 196"
 LARGE="-fakestat -stat 2800 -dcache 2400 -daemons 5 -volumes 128"
 MEDIUM="-fakestat -stat 2000 -dcache 800 -daemons 3 -volumes 70"
 SMALL="-fakestat -stat 300 -dcache 100 -daemons 2 -volumes 50"

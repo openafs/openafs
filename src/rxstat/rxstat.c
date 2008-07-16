@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxstat/rxstat.c,v 1.7 2003/07/15 23:16:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxstat/rxstat.c,v 1.8 2005/11/05 06:48:22 jaltman Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
@@ -52,7 +52,7 @@ MRXSTATS_RetrieveProcessRPCStats(struct rx_call *call,
     rc = rx_RetrieveProcessRPCStats(clientVersion, serverVersion, clock_sec,
 				    clock_usec, &allocSize, stat_count,
 				    &stats->rpcStats_val);
-    stats->rpcStats_len = allocSize / sizeof(afs_uint32);
+    stats->rpcStats_len = (u_int)(allocSize / sizeof(afs_uint32));
     return rc;
 }
 
@@ -72,7 +72,7 @@ MRXSTATS_RetrievePeerRPCStats(struct rx_call * call,
     rc = rx_RetrievePeerRPCStats(clientVersion, serverVersion, clock_sec,
 				 clock_usec, &allocSize, stat_count,
 				 &stats->rpcStats_val);
-    stats->rpcStats_len = allocSize / sizeof(afs_uint32);
+    stats->rpcStats_len = (u_int)(allocSize / sizeof(afs_uint32));
     return rc;
 }
 

@@ -11,14 +11,25 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/volparse.c,v 1.11.2.1 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/volparse.c,v 1.11.14.3 2008/07/01 18:33:38 shadow Exp $");
 
 #include <string.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-/* map a partition id from any partition-style name */
+/**
+ * map a partition id from any partition-style name.
+ *
+ * @param[in] aname  partition name string
+ *
+ * @return partition index number
+ *   @retval -1  invalid partition name
+ *
+ * @see volutil_PartitionName2_r
+ * @see volutil_PartitionName_r
+ * @see volutil_PartitionName
+ */
 afs_int32
 volutil_GetPartitionID(char *aname)
 {
@@ -69,40 +80,102 @@ volutil_GetPartitionID(char *aname)
     }
 }
 
-/* map a partition number back into a partition string */
-#define BAD_VID "BAD VOLUME ID"
-#define BAD_VID_LEN (sizeof(BAD_VID))
-char *
-volutil_PartitionName_r(int avalue, char *tbuffer, int buflen)
+/**
+ * convert a partition index number into a partition name string (/vicepXX).
+ *
+ * @param[in]  part     partition index number
+ * @param[out] tbuffer  buffer in which to store name
+ * @param[in]  buflen   length of tbuffer
+ *
+ * @return operation status
+ *   @retval 0   success
+ *   @retval -1  buffer too short
+ *   @retval -2  invalid partition id
+ *
+ * @see volutil_PartitionName_r
+ * @see volutil_PartitionName
+ * @see volutil_GetPartitionID
+ */
+afs_int32
+volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen)
 {
     char tempString[3];
     register int i;
 
+    if (part < 0 || part >= (26 * 26 + 26)) {
+	return -2;
+    }
+
+    tempString[1] = tempString[2] = 0;
+    strncpy(tbuffer, "/vicep", buflen);
+    if (part <= 25) {
+	tempString[0] = 'a' + part;
+    } else {
+	part -= 26;
+	i = (part / 26);
+	tempString[0] = i + 'a';
+	tempString[1] = (part % 26) + 'a';
+    }
+    if (strlcat(tbuffer, tempString, buflen) >= buflen) {
+	return -1;
+    }
+    return 0;
+}
+
+#define BAD_VID "BAD VOLUME ID"
+#define BAD_VID_LEN (sizeof(BAD_VID))
+/**
+ * convert a partition index number into a partition name string (/vicepXX).
+ *
+ * @param[in]  part     partition index number
+ * @param[out] tbuffer  buffer in which to store name
+ * @param[in]  buflen   length of tbuffer
+ *
+ * @return partition name string
+ *   @retval ""               buffer too short
+ *   @retval "SPC"            buffer too short
+ *   @retval "BAD VOLUME ID"  avalue contains an invalid partition index
+ *
+ * @note you may wish to consider using volutil_PartitionName2_r, as its
+ *       error handling is more standard
+ *
+ * @see volutil_PartitionName2_r
+ * @see volutil_PartitionName
+ * @see volutil_GetPartitionID
+ */
+char *
+volutil_PartitionName_r(int part, char *tbuffer, int buflen)
+{
+    afs_int32 code;
+
     if (buflen < BAD_VID_LEN) {
-	if (buflen > 3)
-	    (void)strcpy(tbuffer, "SPC");
-	else
-	    tbuffer[0] = '\0';
+	strlcpy(tbuffer, "SPC", buflen);
 	return tbuffer;
     }
-    memset(tbuffer, 0, buflen);
-    tempString[1] = tempString[2] = 0;
-    strcpy(tbuffer, "/vicep");
-    if (avalue < 0 || avalue >= (26 * 26 + 26)) {
-	strcpy(tbuffer, "BAD VOLUME ID");
-    } else if (avalue <= 25) {
-	tempString[0] = 'a' + avalue;
-	strcat(tbuffer, tempString);
-    } else {
-	avalue -= 26;
-	i = (avalue / 26);
-	tempString[0] = i + 'a';
-	tempString[1] = (avalue % 26) + 'a';
-	strcat(tbuffer, tempString);
+
+    code = volutil_PartitionName2_r(part, tbuffer, buflen);
+
+    if (code == -2) {
+	strlcpy(tbuffer, BAD_VID, buflen);
     }
+
     return tbuffer;
 }
 
+/**
+ * convert a partition index number into a partition name string (/vicepXX).
+ *
+ * @param[in] avalue  partition index number
+ *
+ * @return partition name string
+ *   @retval "BAD VOLUME ID"  avalue contains an invalid partition index
+ *
+ * @warning this interface is not re-entrant
+ *
+ * @see volutil_PartitionName2_r
+ * @see volutil_PartitionName_r
+ * @see volutil_GetPartitionID
+ */
 char *
 volutil_PartitionName(int avalue)
 {

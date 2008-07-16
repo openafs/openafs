@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_auth.c,v 1.12.2.1 2005/05/30 03:37:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_auth.c,v 1.13 2005/05/30 03:35:52 shadow Exp $");
 
 #include <syslog.h>
 #include <stdlib.h>

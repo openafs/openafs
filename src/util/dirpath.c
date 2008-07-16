@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/dirpath.c,v 1.15.2.1 2006/11/20 23:47:24 rra Exp $");
+    ("$Header: /cvs/openafs/src/util/dirpath.c,v 1.19.2.2 2008/02/02 02:48:14 jaltman Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -135,7 +135,7 @@ initDirPathArray(void)
     FilepathNormalize(ntServerInstallDirShort);
 
     /* get the afs client configuration directory (/usr/vice/etc equivalent) */
-    if (afssw_GetClientInstallDir(&buf)) {
+    if (afssw_GetClientCellServDBDir(&buf)) {
         /* failed */
         status = GetWindowsDirectory(ntClientConfigDirLong, AFSDIR_PATH_MAX);
         if (status == 0 || status > AFSDIR_PATH_MAX) {
@@ -292,9 +292,16 @@ initDirPathArray(void)
     pathp = dirPathArray[AFSDIR_SERVER_SLVGLOG_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_SLVGLOG_FILE);
 
+    pathp = dirPathArray[AFSDIR_SERVER_SALSRVLOG_FILEPATH_ID];
+    AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_SALSRVLOG_FILE);
+
     pathp = dirPathArray[AFSDIR_SERVER_SALVAGER_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_BIN_DIR,
 			   AFSDIR_SALVAGER_FILE);
+
+    pathp = dirPathArray[AFSDIR_SERVER_SALSRV_FILEPATH_ID];
+    AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_BIN_DIR,
+			   AFSDIR_SALSRV_FILE);
 
     pathp = dirPathArray[AFSDIR_SERVER_SLVGLOCK_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_SLVGLOCK_FILE);
@@ -365,6 +372,11 @@ initDirPathArray(void)
     pathp = dirPathArray[AFSDIR_SERVER_MIGRATELOG_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_MIGR_DIR, AFSDIR_MIGRATE_LOGNAME);
 
+    pathp = dirPathArray[AFSDIR_SERVER_KRB_EXCL_FILEPATH_ID];
+    AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_KRB_EXCL_FILE);
+
+    pathp = dirPathArray[AFSDIR_SERVER_FSSTATE_FILEPATH_ID];
+    AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_FSSTATE_FILE);
 
     /* client file paths */
 #ifdef AFS_NT40_ENV
@@ -456,27 +468,27 @@ static struct canonmapping CanonicalTranslations[] = {
 static void
 LocalizePathHead(const char **path, const char **relativeTo)
 {
-    struct canonmapping *map;
+     struct canonmapping *map;
  
-    if (**path == '/') {
-	for (map = CanonicalTranslations; map->local != NULL; map++) {
-	    int canonlength = strlen(map->canonical);
-	    if (strncmp(*path, map->canonical, canonlength) == 0) {
-		(*path) += canonlength;
-		if (**path == '/')
-		    (*path)++;
-		*relativeTo = map->local;
-		return;
-	    }
-	}
-    } else {
-	for (map = CanonicalTranslations; map->local != NULL; map++) {
-	    if (strcmp(*relativeTo, map->canonical) == 0) {
-		*relativeTo = map->local;
-		return;
-	    }
-	}
-    }
+     if (**path == '/') {
+	 for (map = CanonicalTranslations; map->local != NULL; map++) {
+	     int canonlength = strlen(map->canonical);
+	     if (strncmp(*path, map->canonical, canonlength) == 0) {
+		 (*path) += canonlength;
+		 if (**path == '/')
+		     (*path)++;
+		 *relativeTo = map->local;
+		 return;
+	     }
+	 }
+     } else {
+	 for (map = CanonicalTranslations; map->local != NULL; map++) {
+	     if (strcmp(*relativeTo, map->canonical) == 0) {
+		 *relativeTo = map->local;
+		 return;
+	     }
+	 }
+     }
 }
 
 
@@ -659,7 +671,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 int
 ConstructLocalBinPath(const char *cpath, char **fullPathBufp)
 {
-    return ConstructLocalPath(cpath, AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,
+    return ConstructLocalPath(cpath, AFSDIR_SERVER_BIN_DIRPATH,
 			      fullPathBufp);
 }
 
@@ -672,6 +684,6 @@ ConstructLocalBinPath(const char *cpath, char **fullPathBufp)
 int
 ConstructLocalLogPath(const char *cpath, char **fullPathBufp)
 {
-    return ConstructLocalPath(cpath, AFSDIR_CANONICAL_SERVER_LOGS_DIRPATH,
+    return ConstructLocalPath(cpath, AFSDIR_SERVER_LOGS_DIRPATH,
 			      fullPathBufp);
 }

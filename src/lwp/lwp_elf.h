@@ -35,7 +35,7 @@
  * This file is mis-named. It is used by both a.out and elf platforms.
  * It either adds the leading underscore or not as needed.
  *
- * $Id: lwp_elf.h,v 1.3.2.2 2004/12/07 22:27:16 shadow Exp $
+ * $Id: lwp_elf.h,v 1.8 2004/12/07 22:26:46 shadow Exp $
  */
 
 #ifndef _C_LABEL

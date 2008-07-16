@@ -1,6 +1,6 @@
 #!/bin/sh
 # Small helper script for parsing kernel versions and types
-# $Revision: 1.1.2.2 $
+# $Revision: 1.2.2.3 $
 
 if [ "$1" = "parsev" ] ; then
   #logger "parsing version from $2"

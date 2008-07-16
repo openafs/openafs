@@ -20,7 +20,7 @@
 #include <security/pam_modules.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_setcred.c,v 1.13.2.2 2007/12/10 18:29:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_setcred.c,v 1.14.4.1 2007/12/10 18:28:07 shadow Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>

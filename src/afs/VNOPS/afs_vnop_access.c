@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.10.2.2 2008/03/07 17:34:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.11.8.6 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -118,6 +118,16 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 
     if ((vType(avc) == VDIR) || (avc->states & CForeign)) {
 	/* rights are just those from acl */
+	if (afs_InReadDir(avc)) {
+	    /* if we are already in readdir, then they may have read and
+	     * lookup, and nothing else, and nevermind the real ACL.
+	     * Otherwise we might end up with problems trying to call
+	     * FetchStatus on the vnode readdir is working on, and that
+	     * would be a real mess.
+	     */
+	    dirBits = PRSFS_LOOKUP | PRSFS_READ;
+	    return (arights == (dirBits & arights));
+	}
 	return (arights == afs_GetAccessBits(avc, arights, areq));
     } else {
 	/* some rights come from dir and some from file.  Specifically, you 
@@ -199,10 +209,13 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
+    AFS_DISCON_LOCK();
+
     if (afs_fakestat_enable && avc->mvstat == 1) {
 	code = afs_TryEvalFakeStat(&avc, &fakestate, &treq);
         if (code == 0 && avc->mvstat == 1) {
 	    afs_PutFakeStat(&fakestate);
+	    AFS_DISCON_UNLOCK();
 	    return 0;
         }
     } else {
@@ -211,21 +224,35 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 
     if (code) {
 	afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
 	return code;
     }
 
-    code = afs_VerifyVCache(avc, &treq);
-    if (code) {
-	afs_PutFakeStat(&fakestate);
-	code = afs_CheckCode(code, &treq, 16);
-	return code;
+    if (vType(avc) != VDIR || !afs_InReadDir(avc)) {
+	code = afs_VerifyVCache(avc, &treq);
+	if (code) {
+	    afs_PutFakeStat(&fakestate);
+	    AFS_DISCON_UNLOCK();
+	    code = afs_CheckCode(code, &treq, 16);
+	    return code;
+	}
     }
 
     /* if we're looking for write access and we have a read-only file system, report it */
     if ((amode & VWRITE) && (avc->states & CRO)) {
 	afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
 	return EROFS;
     }
+    
+    /* If we're looking for write access, and we're disconnected without logging, forget it */
+    if ((amode & VWRITE) && (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)) {
+        afs_PutFakeStat(&fakestate);
+	AFS_DISCON_UNLOCK();
+	/*printf("Network is down in afs_vnop_access\n");*/
+        return ENETDOWN;
+    }
+    
     code = 1;			/* Default from here on in is access ok. */
     if (avc->states & CForeign) {
 	/* In the dfs xlator the EXEC bit is mapped to LOOKUP */
@@ -304,6 +331,9 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 	}
     }
     afs_PutFakeStat(&fakestate);
+
+    AFS_DISCON_UNLOCK();
+    
     if (code) {
 	return 0;		/* if access is ok */
     } else {

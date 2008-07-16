@@ -84,7 +84,7 @@ By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
 user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
-between principal names may disabled this check by starting the server
+between principal names may disable this check by starting the server
 with this option.
 
 =item B<-help>

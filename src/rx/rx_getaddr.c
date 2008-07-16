@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.13 2006/10/11 11:29:02 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.23.4.5 2006/10/11 11:31:38 jaltman Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL

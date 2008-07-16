@@ -44,6 +44,11 @@ pragma Off(Prototype_override_warnings);
 #error We require size of long and pointers to be equal
 #endif */
 
+#define MAX_AFS_INT32 0x7FFFFFFF
+#define MAX_AFS_UINT32 0xFFFFFFFF
+#define MAX_AFS_INT64 0x7FFFFFFFFFFFFFFFL
+#define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
+
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV
@@ -56,8 +61,16 @@ typedef unsigned __int64 afs_uint64;
 typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
 #endif
-#define ZeroInt64(a)       (a) = 0
+#define ZeroInt64(a)       (a = 0)
 #define AssignInt64(a, b) *(b) = (a) 
+#define IncInt64(a) (*(a))++
+#define IncUInt64(a) (*(a))++
+#define DecInt64(a) (*(a))--
+#define DecUInt64(a) (*(a))--
+#define GTInt64(a,b) ((a) > (b))
+#define GEInt64(a,b) ((a) >= (b))
+#define LEInt64(a,b) ((a) <= (b))
+#define LTInt64(a,b) ((a) < (b))
 #define AddInt64(a,b,c) *(c) = (afs_int64)(a) + (afs_int64)(b)
 #define AddUInt64(a,b,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b)
 #define SubtractInt64(a,b,c) *(c) = (afs_int64)(a) - (afs_int64)(b)
@@ -65,9 +78,11 @@ typedef unsigned long long afs_uint64;
 #define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
-#define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
+#define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
 #define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
-#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
+#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & MAX_AFS_UINT32;
+#define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
+#define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a;
 #else /* AFS_64BIT_ENV */
 typedef long afs_int32;
 typedef unsigned long afs_uint32;
@@ -83,8 +98,16 @@ struct u_Int64 {
     afs_uint32 low;
 };
 typedef struct u_Int64 afs_uint64;
-#define ZeroInt64(a) (a).high = (a).low = 0
+#define ZeroInt64(a) ((a).high = (a).low = 0)
 #define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
+#define IncInt64(a) ((++((a)->low)) ? 0 : (a)->high++ )
+#define IncUInt64(a) ((++((a)->low)) ? 0 : (a)->high++ )
+#define DecInt64(a) (((a)->low)-- ? 0 : (a)->high-- )
+#define DecUInt64(a) (((a)->low)-- ? 0 : (a)->high-- )
+#define GTInt64(a,b) (((a).high > (b).high) || (((a).high == (b).high) && ((a).low > (b).low)))
+#define GEInt64(a,b) (((a).high > (b).high) || (((a).high == (b).high) && ((a).low >= (b).low)))
+#define LEInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low <= (b).low)))
+#define LTInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low < (b).low)))
 #define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
 #define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
 #define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
@@ -95,6 +118,8 @@ typedef struct u_Int64 afs_uint64;
 #define Int64ToInt32(a)    (a).low
 #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
 #define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
+#define RoundInt64ToInt32(a)    (a.high > 0) ? MAX_AFS_UINT32 : a.low;
+#define RoundInt64ToInt31(a)    (a.high > 0) ? MAX_AFS_INT32 : a.low;
 #endif /* AFS_64BIT_ENV */
 
 /* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */
@@ -245,5 +270,10 @@ struct afsUUID {
     char node[6];
 };
 typedef struct afsUUID afsUUID;
+
+/* for now, demand attach fileserver is only support on unix pthreads builds */
+#if defined(DEMAND_ATTACH_ENABLE) && defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+#define AFS_DEMAND_ATTACH_FS 1
+#endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

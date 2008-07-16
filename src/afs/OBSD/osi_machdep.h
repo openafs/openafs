@@ -16,7 +16,7 @@
  * afs_osi.h.
  */
 
-/* $Id: osi_machdep.h,v 1.16.2.9 2008/01/04 17:53:37 rees Exp $ */
+/* $Id: osi_machdep.h,v 1.27.2.1 2006/11/10 00:11:07 shadow Exp $ */
 
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
@@ -69,7 +69,7 @@
 /* time */
 #define	afs_hz		hz
 #define osi_GetTime(x)	microtime(x)
-extern time_t osi_Time();
+#define osi_Time()	(time.tv_sec)
 
 /* str */
 #define afs_strcasecmp(s1, s2)	strncasecmp((s1), (s2), 65535)

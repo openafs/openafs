@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vfsops.c,v 1.18.2.2 2005/03/11 06:50:43 shadow Exp $
+ * $Id: osi_vfsops.c,v 1.20 2005/03/08 21:58:04 shadow Exp $
  */
 
 /*
@@ -94,7 +94,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.18.2.2 2005/03/11 06:50:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.20 2005/03/08 21:58:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -457,7 +457,7 @@ afs_vfs_load(struct lkm_table *lkmtp, int cmd)
     if (memname[M_AFSBUFFER] == NULL)
 	memname[M_AFSBUFFER] = afsbfrmem;
     lkmid = lkmtp->id;
-    printf("OpenAFS ($Revision: 1.18.2.2 $) lkm loaded\n");
+    printf("OpenAFS ($Revision: 1.20 $) lkm loaded\n");
     return 0;
 }
 

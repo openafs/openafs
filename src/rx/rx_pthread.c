@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.17.2.9 2008/03/10 22:35:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.24.4.6 2008/05/20 21:59:02 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -146,7 +146,9 @@ event_handler(void *argp)
     unsigned long rx_pthread_n_event_expired = 0;
     unsigned long rx_pthread_n_event_waits = 0;
     long rx_pthread_n_event_woken = 0;
+    unsigned long rx_pthread_n_event_error = 0;
     struct timespec rx_pthread_next_event_time = { 0, 0 };
+    int error;
 
     assert(pthread_mutex_lock(&event_handler_mutex) == 0);
 
@@ -171,16 +173,25 @@ event_handler(void *argp)
 	rx_pthread_next_event_time.tv_sec = cv.sec;
 	rx_pthread_next_event_time.tv_nsec = cv.usec * 1000;
 	rx_pthread_n_event_waits++;
-	if (pthread_cond_timedwait
+	error = pthread_cond_timedwait
 	    (&rx_event_handler_cond, &event_handler_mutex,
-	     &rx_pthread_next_event_time) == -1) {
-#ifdef notdef
-	    assert(errno == EAGAIN);
-#endif
+	     &rx_pthread_next_event_time);
+        if (error == 0) {
+	    rx_pthread_n_event_woken++;
+        } 
+#ifdef AFS_NT40_ENV        
+        else if (error == ETIMEDOUT) {
 	    rx_pthread_n_event_expired++;
 	} else {
-	    rx_pthread_n_event_woken++;
-	}
+            rx_pthread_n_event_error++;
+        }
+#else
+        else if (errno == ETIMEDOUT) {
+            rx_pthread_n_event_expired++;
+        } else {
+            rx_pthread_n_event_error++;
+        }
+#endif
 	rx_pthread_event_rescheduled = 0;
     }
 }
@@ -202,7 +213,7 @@ rxi_ReScheduleEvents(void)
 /* Loop to listen on a socket. Return setting *newcallp if this
  * thread should become a server thread.  */
 static void
-rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
+rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 {
     unsigned int host;
     u_short port;
@@ -248,7 +259,7 @@ static void *
 rx_ListenerProc(void *argp)
 {
     int threadID;
-    int sock = (int)argp;
+    osi_socket sock = (osi_socket)argp;
     struct rx_call *newcall;
 
     while (1) {
@@ -271,7 +282,7 @@ rx_ListenerProc(void *argp)
 void *
 rx_ServerProc(void * dummy)
 {
-    int sock;
+    osi_socket sock;
     int threadID;
     struct rx_call *newcall = NULL;
 
@@ -398,9 +409,13 @@ rxi_Listen(osi_socket sock)
  *
  */
 int
-rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
+rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+    while((rxi_HandleSocketError(socket)) > 0)
+      ;
+#endif
     ret = recvmsg(socket, msg_p, flags);
     return ret;
 }

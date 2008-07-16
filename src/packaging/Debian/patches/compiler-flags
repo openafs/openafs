@@ -1,0 +1,213 @@
+Use $CC for the compiler instead of forcing cc or gcc and add -fPIC in
+a few more places.  The latter should be committed upstream.  The former
+is waiting for upstream work to separate the kernel compiler from the
+userspace compiler, since $CC should only be used for the latter on other
+platforms.
+
+Also combines the sparc sysnames together, which is suitable upstream.
+
+--- openafs.orig/src/cf/osconf.m4
++++ openafs/src/cf/osconf.m4
+@@ -4,9 +4,8 @@
+ dnl defaults, override in case below as needed
+ XCFLAGS='${DBG} ${OPTMZ}'
+ SHLIB_SUFFIX="so"
+-CC="cc"
+-CCOBJ="cc"
+-MT_CC="cc"
++CCOBJ=$CC
++MT_CC=$CC
+ XLIBS="${LIB_AFSDB}"
+ 
+ dnl debugging and optimization flag defaults
+@@ -244,6 +243,7 @@
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -G0"
+@@ -271,6 +271,7 @@
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
++		SHLIB_CFLAGS="-fPIC"
+ 		TXLIBS="/usr/lib64/libncurses.so"
+ 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+ 		SHLIB_LINKER="${MT_CC} -shared"
+@@ -291,14 +292,14 @@
+ 		;;
+ 
+ 	i386_umlinux22)
+-		CC="gcc -pipe"
+-		CCOBJ="gcc -pipe"
+-		MT_CC="gcc -pipe"
++		CCOBJ="${CC} -pipe"
++		MT_CC="${CC} -pipe"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+@@ -307,9 +308,8 @@
+ 		;;
+ 
+ 	i386_linux*)
+-		CC="gcc -pipe"
+-		CCOBJ="gcc -pipe"
+-		MT_CC="gcc -pipe"
++		CCOBJ="${CC} -pipe"
++		MT_CC="${CC} -pipe"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+@@ -320,6 +320,7 @@
+ 		LWP_OPTMZ=-O2
+ 		OPTMZ=-O2
+ 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+@@ -327,9 +328,8 @@
+ 		;;
+ 
+ 	i386_umlinux24)
+-		CC="gcc -pipe"
+-		CCOBJ="gcc -pipe"
+-		MT_CC="gcc -pipe"
++		CCOBJ="${CC} -pipe"
++		MT_CC="${CC} -pipe"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+@@ -340,6 +340,7 @@
+ 		LWP_OPTMZ=-O2
+ 		OPTMZ=-O2
+ 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+@@ -347,9 +348,8 @@
+ 		;;
+ 
+ 	i386_umlinux26)
+-		CC="gcc -pipe"
+-		CCOBJ="gcc -pipe"
+-		MT_CC="gcc -pipe"
++		CCOBJ="${CC} -pipe"
++		MT_CC="${CC} -pipe"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+@@ -360,6 +360,7 @@
+ 		LWP_OPTMZ=-O2
+ 		OPTMZ=-O2
+ 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+@@ -385,6 +386,7 @@
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+@@ -557,8 +559,7 @@
+ 		;;
+ 
+ 	s390_linux22)
+-		CC="gcc"
+-		CCOBJ="gcc"
++		CCOBJ="$CC"
+ 		LD="ld"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+@@ -566,6 +567,7 @@
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+@@ -574,8 +576,7 @@
+ 		;;
+ 
+ 	s390_linux24|s390_linux26)
+-		CC="gcc"
+-		CCOBJ="gcc"
++		CCOBJ="$CC"
+ 		LD="ld"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+@@ -583,6 +584,7 @@
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+@@ -591,8 +593,7 @@
+ 		;;
+ 
+ 	s390x_linux24|s390x_linux26)
+-		CC="gcc"
+-		CCOBJ="gcc -fPIC"
++		CCOBJ="$CC"
+ 		LD="ld"
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+@@ -600,6 +601,7 @@
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
+@@ -669,12 +671,13 @@
+ 		SHLIB_LINKER="${CC} -shared"
+ 		;;
+ 
+-	sparc64_linux*)
++	sparc*_linux*)
+ 		KERN_OPTMZ=-O2
+ 		LEX="flex -l"
+ 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+ 		MT_LIBS="-lpthread"
+ 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
+ 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+ 		TXLIBS="-lncurses"
+ 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+@@ -684,19 +687,6 @@
+ 		SHLIB_LINKER="${MT_CC} -shared"
+ 		;;
+ 
+-	sparc_linux22)
+-		KERN_OPTMZ=-O2
+-		LEX="flex -l"
+-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+-		MT_LIBS="-lpthread"
+-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+-		SHLIB_LDFLAGS="-shared -Xlinker -x"
+-		TXLIBS="-lncurses"
+-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+-		YACC="bison -y"
+-		SHLIB_LINKER="${MT_CC} -shared"
+-		;;
+-
+ 	sun4_413)
+ 		CCXPG2="/usr/xpg2bin/cc"
+ 		CC="gcc"

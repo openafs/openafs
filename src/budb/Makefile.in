@@ -117,7 +117,11 @@ ${DEST}/include/afs/budb_client.h: budb_client.h
 	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/buserver: budb_server
-	${INSTALL} -f $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install buserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} -f $? $@ ; \
+	fi
 
 #
 # Misc targets
@@ -152,7 +156,11 @@ ${TOP_INCDIR}/afs/budb_client.h: budb_client.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
-	${INSTALL} -f $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install buserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} -f $? $@ ; \
+	fi
 
 dest: \
 	${DEST}/lib/afs/libbudb.a \

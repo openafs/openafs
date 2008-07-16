@@ -177,18 +177,35 @@ install: \
 	${DESTDIR}${includedir}/afs/ptserver.h
 
 ${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install ptserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install pts for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install pt_util for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DEST}/lib/afs/libprot.a: libprot.a
 	${INSTALL} $? $@
 
 ${DEST}/etc/prdb_check: db_verify
+	if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install db_verify for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 	${INSTALL} -f $? $@
 
 ${DEST}/include/afs/prclient.h: ptclient.h
@@ -228,19 +245,39 @@ clean:
 
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install ptserver for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${afssrvbindir}/pts: pts
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install pts for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${bindir}/pts: pts
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install pts for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	${INSTALL} $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install pt_util for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	${INSTALL} -f $? $@
+	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
+	  echo "Don't install db_verify for ${SYS_NAME}" ; \
+	else \
+	  ${INSTALL} $? $@ ; \
+	fi
 
 ${DESTDIR}${libdir}/afs/libprot.a: libprot.a
 	${INSTALL} $? $@

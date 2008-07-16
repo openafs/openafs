@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/readdir_nt.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/readdir_nt.c,v 1.7 2005/11/05 06:48:27 jaltman Exp $");
 
 #include <errno.h>
 #include <afs/errmap_nt.h>
@@ -59,7 +59,7 @@ opendir(const char *path)
 	     */
 	    {
 		struct stat status;
-		int len = strlen(tPath) - 1;
+		size_t len = strlen(tPath) - 1;
 		tPath[len] = '\0';
 		if (len >= 2 && tPath[len - 2] != ':') {
 		    tPath[len - 1] = '\0';

@@ -75,6 +75,22 @@ struct AFSDBLock {
     struct AFSDBLockDesc lock;
 };
 
+struct AFSDEntry {
+    afs_int32 addr;
+    afs_int32 cell;				/*Cell part of the fid*/
+    AFSFid netFid;			/*Network part of the fid*/
+    afs_int32 Length;
+    afs_int32 DataVersion;
+    struct AFSDBLockDesc lock;
+    afs_int32 callback;
+    afs_int32 cbExpires;
+    short refCount;
+    short opens;
+    short writers;
+    char mvstat;
+    char states;
+};
+
 /*
  * Callback types.
  */
@@ -158,6 +174,15 @@ typedef afs_int32 serverList<AFSMAXCELLHOSTS>;
 typedef afs_uint32 cacheConfig<>;
 
 const AFSCAPABILITIESMAX = 196;
-typedef afs_int32 Capabilities<AFSCAPABILITIESMAX>;
+typedef afs_uint32 Capabilities<AFSCAPABILITIESMAX>;
+
+/* Viced Capability Flags */
+const VICED_CAPABILITY_ERRORTRANS	= 0x0001;
+const VICED_CAPABILITY_64BITFILES	= 0x0002;
+const VICED_CAPABILITY_WRITELOCKACL     = 0x0004;
+const VICED_CAPABILITY_SANEACLS         = 0x0008;
+
+/* Cache Manager Capability Flags */
+const CLIENT_CAPABILITY_ERRORTRANS	= 0x0001;
 
 %#endif /* FSINT_COMMON_XG */

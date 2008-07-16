@@ -1,0 +1,58 @@
+/*
+ * Copyright 2006, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
+ * pagcb.xg:
+ *	Definition of the PAG Manager callback RPC interface.
+ */
+
+package PAGCB_
+prefix S
+statindex 21
+%#define PAGCB_SERVICEID 2
+
+const PAGCB_MAXREALMLEN = 256;
+const PAGCB_MAXTICKETLEN = 12000;
+const PAGCB_MAXCREDS = 256;
+const PAGCB_MAXSYSNAMELEN = 128;
+const PAGCB_MAXSYSNAMES = 16;
+
+struct PAGCB_ClearToken {
+  afs_int32 AuthHandle;
+  char HandShakeKey[8];
+  afs_int32 ViceId;
+  afs_int32 BeginTimestamp;
+  afs_int32 EndTimestamp;
+};
+
+struct CredInfo {
+  string cellname<PAGCB_MAXREALMLEN>;
+  afs_int32 vid;
+  afs_int32 states;
+  PAGCB_ClearToken ct;
+  opaque st<PAGCB_MAXTICKETLEN>;
+};
+
+typedef CredInfo CredInfos<PAGCB_MAXCREDS>;
+
+struct SysNameEnt {
+  string sysname<PAGCB_MAXSYSNAMELEN>;
+};
+
+typedef SysNameEnt SysNameList<PAGCB_MAXSYSNAMES>;
+
+proc GetCreds(
+  IN  afs_int32 uid,
+  OUT CredInfos *creds
+) = 1;
+
+proc GetSysName(
+  IN afs_int32 uid,
+  OUT SysNameList *sysnames
+) = 2;

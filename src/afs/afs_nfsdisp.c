@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.18.2.3 2005/10/13 18:26:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.21 2005/10/13 18:25:05 shadow Exp $");
 
 /* Ugly Ugly Ugly  but precludes conflicting XDR macros; We want kernel xdr */
 #define __XDR_INCLUDE__

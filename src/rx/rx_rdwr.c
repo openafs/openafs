@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.9 2008/03/17 15:38:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.29.2.4 2008/05/08 21:25:58 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -71,14 +71,16 @@ RCSID
 #endif /* AFS_OSF_ENV */
 #else /* KERNEL */
 # include <sys/types.h>
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+# include <winsock2.h>
+#else /* !AFS_NT40_ENV */
 # include <sys/socket.h>
 # include <sys/file.h>
 # include <netdb.h>
 # include <netinet/in.h>
 # include <sys/stat.h>
 # include <sys/time.h>
-#endif
+#endif /* !AFS_NT40_ENV */
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -364,17 +366,13 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
      */
     tcurlen = call->curlen;
     tnLeft = call->nLeft;
-    if (!call->error && tcurlen > sizeof(afs_int32)
-	&& tnLeft > sizeof(afs_int32)) {
+    if (!call->error && tcurlen >= sizeof(afs_int32)
+	&& tnLeft >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
-	    *value = *((afs_int32 *) (tcurpos));
-	} else {
-	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
-	}
+	memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - sizeof(afs_int32);
-	call->nLeft = tnLeft - sizeof(afs_int32);
+	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->nLeft = (u_short)(tnLeft - sizeof(afs_int32));
 	return sizeof(afs_int32);
     }
 
@@ -702,7 +700,7 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    }
 	    /* Wait for transmit window to open up */
 	    while (!call->error
-		   && call->tnext + 1 > call->tfirst + call->twind) {
+		   && call->tnext + 1 > call->tfirst + (2 * call->twind)) {
 		clock_NewTime();
 		call->startWait = clock_Sec();
 
@@ -772,8 +770,8 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    buf += t;
 	    nbytes -= t;
 	    call->curpos += t;
-	    call->curlen -= t;
-	    call->nFree -= t;
+	    call->curlen -= (u_short)t;
+	    call->nFree -= (u_short)t;
 
 	    if (!call->curlen) {
 		/* need to get another struct iov */
@@ -829,8 +827,8 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 	tcurpos = call->curpos;
 	memcpy(tcurpos, buf, nbytes);
 	call->curpos = tcurpos + nbytes;
-	call->curlen = tcurlen - nbytes;
-	call->nFree = tnFree - nbytes;
+	call->curlen = (u_short)(tcurlen - nbytes);
+	call->nFree = (u_short)(tnFree - nbytes);
 	return nbytes;
     }
 
@@ -870,19 +868,19 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
      *
      * We are relying on nFree being zero unless the call is in send mode.
      */
-    tcurlen = (int)call->curlen;
-    tnFree = (int)call->nFree;
+    tcurlen = call->curlen;
+    tnFree = call->nFree;
     if (!call->error && tcurlen >= sizeof(afs_int32)
 	&& tnFree >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
+	if (!((size_t)tcurpos & (sizeof(afs_int32) - 1))) {
 	    *((afs_int32 *) (tcurpos)) = *value;
 	} else {
 	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - sizeof(afs_int32);
-	call->nFree = tnFree - sizeof(afs_int32);
+	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->nFree = (u_short)(tnFree - sizeof(afs_int32));
 	return sizeof(afs_int32);
     }
 
@@ -1140,7 +1138,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     }
 
     /* Wait for the length of the transmit queue to fall below call->twind */
-    while (!call->error && call->tnext + 1 > call->tfirst + call->twind) {
+    while (!call->error && call->tnext + 1 > call->tfirst + (2 * call->twind)) {
 	clock_NewTime();
 	call->startWait = clock_Sec();
 #ifdef	RX_ENABLE_LOCKS

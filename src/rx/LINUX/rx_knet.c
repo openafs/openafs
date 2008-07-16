@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.15 2008/01/30 17:26:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.32.2.7 2008/05/20 21:59:04 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -25,6 +25,10 @@ RCSID
 #include "h/smp_lock.h"
 #endif
 #include <asm/uaccess.h>
+#ifdef ADAPT_PMTU
+#include <linux/errqueue.h>
+#include <linux/icmp.h>
+#endif
 
 /* rxk_NewSocket
  * open and bind RX socket
@@ -36,8 +40,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct sockaddr_in myaddr;
     int code;
     KERNEL_SPACE_DECL;
+#ifdef ADAPT_PMTU
+    int pmtu = IP_PMTUDISC_WANT;
+    int do_recverr = 1;
+#else
     int pmtu = IP_PMTUDISC_DONT;
-
+#endif
 
     /* We need a better test for this. if you need it back, tell us
      * how to detect it. 
@@ -69,6 +77,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     TO_USER_SPACE();
     sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
                            sizeof(pmtu));
+#ifdef ADAPT_PMTU
+    sockp->ops->setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
+                           sizeof(do_recverr));
+#endif
     TO_KERNEL_SPACE();
     return (osi_socket *)sockp;
 }
@@ -87,6 +99,65 @@ rxk_FreeSocket(register struct socket *asocket)
     return 0;
 }
 
+#ifdef ADAPT_PMTU
+void
+handle_socket_error(osi_socket so)
+{
+    KERNEL_SPACE_DECL;
+    struct msghdr msg;
+    struct cmsghdr *cmsg;
+    struct sock_extended_err *err;
+    struct sockaddr_in addr;
+    struct sockaddr *offender;
+    char *controlmsgbuf;
+    int code;
+    struct socket *sop = (struct socket *)so;
+
+    if (!(controlmsgbuf=rxi_Alloc(256)))
+	return;
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = NULL;
+    msg.msg_iovlen = 0;
+    msg.msg_control = controlmsgbuf;
+    msg.msg_controllen = 256;
+    msg.msg_flags = 0;
+
+    TO_USER_SPACE();
+    code = sock_recvmsg(sop, &msg, 256, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
+    TO_KERNEL_SPACE();
+
+    if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
+	goto out;
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+	if (CMSG_OK(&msg, cmsg) && cmsg->cmsg_level == SOL_IP &&
+	    cmsg->cmsg_type == IP_RECVERR)
+	    break;
+    }
+    if (!cmsg)
+	goto out;
+    err = CMSG_DATA(cmsg);
+    offender = SO_EE_OFFENDER(err);
+    
+    if (offender->sa_family != AF_INET)
+       goto out;
+
+    memcpy(&addr, offender, sizeof(addr));
+
+    if (err->ee_origin == SO_EE_ORIGIN_ICMP &&
+	err->ee_type == ICMP_DEST_UNREACH &&
+	err->ee_code == ICMP_FRAG_NEEDED) {
+	rxi_SetPeerMtu(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
+		       err->ee_info);
+    }
+    /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
+
+out:
+    rxi_Free(controlmsgbuf, 256);
+    return;
+}
+#endif
 
 /* osi_NetSend
  *
@@ -100,7 +171,22 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 {
     KERNEL_SPACE_DECL;
     struct msghdr msg;
-    int code;
+    int code, sockerr;
+    size_t esize;
+
+#ifdef ADAPT_PMTU
+    while (1) {
+	sockerr=0;
+	esize = sizeof(sockerr);
+	TO_USER_SPACE();
+	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
+			   &esize);
+	TO_KERNEL_SPACE();
+	if (sockerr == 0)
+	   break;
+	handle_socket_error(sop);
+    }
+#endif
 
     msg.msg_iovlen = iovcnt;
     msg.msg_iov = iovec;
@@ -144,13 +230,27 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 {
     KERNEL_SPACE_DECL;
     struct msghdr msg;
-    int code;
+    int code, sockerr;
+    size_t esize;
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
 
     if (iovcnt > RX_MAXWVECS + 2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
+#ifdef ADAPT_PMTU
+    while (1) {
+	sockerr=0;
+	esize = sizeof(sockerr);
+ 	TO_USER_SPACE();
+	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
+			   &esize);
+	TO_KERNEL_SPACE();
+	if (sockerr == 0)
+	   break;
+	handle_socket_error(so);
+    }
+#endif
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
     msg.msg_name = from;
     msg.msg_iov = tmpvec;

@@ -1,0 +1,16 @@
+Patch pt_util to use the correct Debian patch for the Protection Server
+database.  Not suitable upstream in its current form, but will be
+obsolete if upstream uses the standard functions to figure out the
+database path.
+
+--- openafs.orig/src/ptserver/pt_util.c
++++ openafs/src/ptserver/pt_util.c
+@@ -136,7 +136,7 @@
+     struct prentry uentry, gentry;
+     struct ubik_hdr *uh;
+     char *dfile = 0;
+-    char *pfile = "/usr/afs/db/prdb.DB0";
++    char *pfile = "/var/lib/openafs/db/prdb.DB0";
+     struct cmd_parmdesc *tparm;
+ 
+     tparm = a_as->parms;

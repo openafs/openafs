@@ -40,7 +40,6 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/cmd.h>
-#include <afs/auth.h>
 #include <afs/bnode.h>
 #include <afs/cellconfig.h>
 #include <afs/kautils.h>

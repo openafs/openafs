@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.12 2008/04/01 16:55:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.22.2.9 2008/04/02 19:51:57 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -74,7 +74,11 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 static void
 CheckSignal_Signal()
 {
+#if defined(AFS_PTHREAD_ENV)
+    CheckSignal(0);
+#else
     IOMGR_SoftSig(CheckSignal, 0);
+#endif
 }
 
 static void *

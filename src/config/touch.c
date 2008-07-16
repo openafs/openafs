@@ -7,14 +7,19 @@
 	directory or online at http://www.openafs.org/dl/license10.html
 */
 
+#include <windows.h>
 #include "io.h"
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <process.h>
 
+#ifndef intptr_t
+#define intptr_t INT_PTR
+#endif
+
 void
-usuage()
+usage()
 {
     printf("touch filename/Wildcard \n");
     exit(1);
@@ -23,12 +28,13 @@ usuage()
 int
 main(int argc, char *argv[])
 {
-    int fh, fs;
+    int fh;
+    intptr_t fs;
     long pos;
     char buffer[1];
     struct _finddata_t finfo;
     if (argc < 2)
-	usuage();
+	usage();
     fs = _findfirst(argv[1], &finfo);
     if (fs == -1)
 	return 0;

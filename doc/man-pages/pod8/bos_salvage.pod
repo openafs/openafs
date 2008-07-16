@@ -14,6 +14,7 @@ B<bos salvage> S<<< B<-server> <I<machine name>> >>>
     S<<< [B<-parallel> <I<# of max parallel partition salvaging>>] >>>
     S<<< [B<-tmpdir> <I<directory to place tmp files>>] >>>
     S<<< [B<-orphans> (ignore | remove | attach)] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-forceDAFS>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos sa> S<<< B<-se> <I<machine name>> >>> S<<< [B<-part> <I<salvage partition>>] >>>
@@ -22,6 +23,7 @@ B<bos sa> S<<< B<-se> <I<machine name>> >>> S<<< [B<-part> <I<salvage partition>
     [<-para> <I<# of max parallel partition salvaging>>]
     S<<< [B<-t> <I<directory to place tmp files>>] >>>
     S<<< [B<-o> (ignore | remove | attach)] >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>]
+    S<<< [B<-force>] >>>
     [B<-l>] [B<-h>]
 
 =for html
@@ -278,6 +280,11 @@ directory.
 
 =back
 
+=item B<-forceDAFS>
+
+If the fileserver is a Demand Attach File Server, then the B<-forceDAFS>
+flag must be provided in order for the B<salvager> to run.
+
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this argument
@@ -336,6 +343,7 @@ L<SalvageLog(5)>,
 L<UserList(5)>,
 L<bos(8)>,
 L<salvager(8)>,
+L<salvagserver(8)>,
 L<vos_backup(1)>,
 L<vos_release(1)>,
 L<vos_remove(1)>,

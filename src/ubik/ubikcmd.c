@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikcmd.c,v 1.7.2.1 2007/10/30 15:24:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubikcmd.c,v 1.7.14.1 2007/10/30 15:16:47 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

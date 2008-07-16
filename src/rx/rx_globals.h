@@ -22,6 +22,7 @@
 #ifndef GLOBALSINIT
 #define GLOBALSINIT(x)
 #if defined(AFS_NT40_ENV)
+#define RX_STATS_INTERLOCKED 1
 #if defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllimport) extern
 #else
@@ -68,6 +69,7 @@ EXT struct clock rx_softAckDelay;
 /* Variable to allow introduction of network unreliability */
 #ifdef RXDEBUG
 EXT int rx_intentionallyDroppedPacketsPer100 GLOBALSINIT(0);	/* Dropped on Send */
+EXT int rx_intentionallyDroppedOnReadPer100  GLOBALSINIT(0);	/* Dropped on Read */
 #endif
 
 /* extra packets to add to the quota */
@@ -117,9 +119,9 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 
 EXT int rx_minWindow GLOBALSINIT(1);
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
-EXT int rx_initSendWindow GLOBALSINIT(8);
-EXT int rx_maxSendWindow GLOBALSINIT(32);
+EXT int rx_maxReceiveWindow GLOBALSINIT(64);	/* how much to accept */
+EXT int rx_initSendWindow GLOBALSINIT(16);
+EXT int rx_maxSendWindow GLOBALSINIT(64);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
 					 * packets per datagram */
@@ -395,7 +397,7 @@ EXT int rx_packetReclaims GLOBALSINIT(0);
  * This is provided for backward compatibility with peers which may be unable
  * to swallow anything larger. THIS MUST NEVER DECREASE WHILE AN APPLICATION
  * IS RUNNING! */
-EXT afs_uint32 rx_maxReceiveSize GLOBALSINIT(OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
+EXT afs_uint32 rx_maxReceiveSize GLOBALSINIT(_OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
 				      UDP_HDR_SIZE * (RX_MAX_FRAGS - 1));
 
 /* this is the maximum packet size that the user wants us to receive */
@@ -433,9 +435,9 @@ EXT u_short rx_port;
 #if !defined(KERNEL) && !defined(AFS_PTHREAD_ENV)
 /* 32-bit select Mask for rx_Listener. */
 EXT fd_set rx_selectMask;
-EXT int rx_maxSocketNumber;	/* Maximum socket number in the select mask. */
+EXT osi_socket rx_maxSocketNumber;	/* Maximum socket number in the select mask. */
 /* Minumum socket number in the select mask. */
-EXT int rx_minSocketNumber GLOBALSINIT(0x7fffffff);
+EXT osi_socket rx_minSocketNumber GLOBALSINIT(0x7fffffff);
 #endif
 
 /* This is actually the minimum number of packets that must remain free,
@@ -516,7 +518,12 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 
 #define rx_Log rx_debugFile
 #ifdef AFS_NT40_ENV
-#define dpf(args) rxi_DebugPrint args; 
+EXT int rxdebug_active;
+#if !defined(_WIN64)
+#define dpf(args) if (rxdebug_active) rxi_DebugPrint args;
+#else
+#define dpf(args)
+#endif
 #else
 #ifdef DPF_FSLOG
 #define dpf(args) FSLog args
@@ -584,4 +591,19 @@ EXT2 int rx_enable_stats GLOBALSINIT(0);
  */
 EXT int rx_enable_hot_thread GLOBALSINIT(0);
 
+/*
+ * Set rx_max_clones_per_connection to a value > 0 to enable connection clone 
+ * workaround to RX_MAXCALLS limit.
+ */
+ 
+#define RX_HARD_MAX_CLONES 10
+
+/* Should be syncd before 1.6.0 */
+#if defined(AFS_NT40_ENV)
+EXT int rx_max_clones_per_connection GLOBALSINIT(0);
+#else
+EXT int rx_max_clones_per_connection GLOBALSINIT(2);
+#endif
+
+EXT int RX_IPUDP_SIZE GLOBALSINIT(_RX_IPUDP_SIZE);
 #endif /* AFS_RX_GLOBALS_H */

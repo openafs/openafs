@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH ptserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH ptserver 8 "OpenAFS" "5/Jun/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -190,9 +190,14 @@
 .SH "NAME"
 ptserver \- Initializes the Protection Server
 .SH "SYNOPSIS"
-\fBptserver\fR <<\ [\fB\-database\fR\ <\fIdb\ path\fR] >>> <<\ [\fB\-p\fR\ <\fInumber\ of\ processes\fR] >>>
-    [\fB\-rebuildDB\fR] [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR]
-    [\fB\-allow-dotted-principal\fR] [\fB\-help\fR]
+\fBptserver\fR <<\ [\fB\-database\fR\ |\ \fB\-db\fR\ <\fIdb\ path\fR] >>> <<\ [\fB\-p\fR\ <\fInumber\ of\ threads\fR] >>>
+    [\fB\-rebuildDB\fR] <<\ [\fB\-groupdepth\fR\ <\fI#\ of\ nested\ groups\fR] >>>
+    <<\ [\fB\-default_access\fR\ <\fIuser\ access\ mask\fR <\fIgroup access mask\fR>] >>>
+    [\fB\-restricted\fR] [\fB\-enable_peer_stats\fR]
+    [\fB\-enable_process_stats\fR] [\fB\-allow-dotted-principal\fR]
+    [\fB\-rxbind\fR] <<\ [\fB\-auditlog\fR\ <\fIfile\ path\fR] >>>
+    <<\ [\fB\-syslog\fR[=<\fIFACILITY\fR]] >>> <<\ [\fB\-rxmaxmtu\fR\ <\fIbytes\fR] >>>
+    [\fB\-help\fR]
 .SH "DESCRIPTION"
 The \fBptserver\fR command initializes the Protection Server, which must run
 on every database server machine. In the conventional configuration, its
@@ -216,22 +221,43 @@ to the corresponding name.
 Generates a current protection subgroup (\s-1CPS\s0) at the File Server's
 request. The \s-1CPS\s0 lists all groups to which a user or machine belongs.
 .PP
+When using Kerberos 5, cross-realm authentication is possible. If the
+special pts group system:authuser@\s-1FOREIGN\s0.\s-1REALM\s0 exists and its group quota
+is greater than zero, \fBaklog\fR will automatically create an entry for the
+foreign user in the local \s-1PTS\s0 database and add the foreign user to the
+system:authuser@\s-1FOREIGN\s0.\s-1REALM\s0 \s-1PTS\s0 group.  Each time a foreign user is
+created in the local \s-1PTS\s0 database, the group quota for the
+system:authuser@\s-1FOREIGN\s0.\s-1REALM\s0 \s-1PTS\s0 group is decremented by one.
+.PP
 This command does not use the syntax conventions of the \s-1AFS\s0 command
 suites. Provide the command name and all option names in full.
 .SH "OPTIONS"
-.Ip "\fB\-database\fR <\fIdb path\fR>" 4
+.Ip "\fB\-database\fR <\fIdb path\fR>, \fB\-db\fR <\fIdb path\fR>" 4
 Specifies the pathname of an alternate directory in which the Protection
 Database files reside. Provide the complete pathname, ending in the base
 filename to which the \f(CW.DB0\fR and \f(CW.DBSYS1\fR extensions are appended. For
 example, the appropriate value for the default database files is
 \fI/usr/afs/db/prdb\fR.
-.Ip "\fB\-p\fR <\fInumber of processes\fR>" 4
-Sets the number of server lightweight processes (LWPs) to run.  Provide a
-positive integer from the range \f(CW3\fR to \f(CW16\fR. The default value is \f(CW3\fR.
+.Ip "\fB\-p\fR <\fInumber of threads\fR>" 4
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide a positive integer from the range \f(CW3\fR to \f(CW16\fR. The default
+value is \f(CW3\fR.
 .Ip "\fB\-rebuildDB\fR" 4
 Rebuilds the Protection Database at the beginning of Protection Server
 initialization. Use this argument only in consultation with \s-1AFS\s0
 Development or Product Support.
+.Ip "\fB\-groupdepth\fR <\fI# of nested groups\fR>, \fB\-depth\fR <\fI# of nested groups\fR>" 4
+Specifies the group depth for nested groups when \fBptserver\fR is compiled
+with the \s-1SUPERGROUPS\s0 option enabled.  The default depth for nested groups
+is 5.  This option may be shortened to \fB\-depth\fR.
+.Ip "\fB\-default_access\fR <\fIuser access\fR> <\fIgroup access\fR>" 4
+Specifies the default user and group privacy flags to apply to each
+entry. Provide a string of five characters, one for each of the
+permissions. See the \fIpts_examine(1)\fR manpage or the \fIpts_setfields(1)\fR manpage for more
+information on the flags.
+.Ip "\fB\-restricted\fR" 4
+Run the \s-1PT\s0 Server in restricted mode. While in restricted mode, only
+members of the system:administrators \s-1PTS\s0 group may make any \s-1PTS\s0 changes.
 .Ip "\fB\-enable_peer_stats\fR" 4
 Activates the collection of Rx statistics and allocates memory for their
 storage. For each connection with a specific \s-1UDP\s0 port on another machine,
@@ -246,11 +272,23 @@ other machines. To display or otherwise access the records, use the Rx
 Monitoring \s-1API\s0.
 .Ip "\fB\-allow-dotted-principal\fR" 4
 By default, the \s-1RXKAD\s0 security layer will disallow access by Kerberos
-principals with a dot in the first component of their name. This is to avoid
-the confusion where principals user/admin and user.admin are both mapped to the
-user.admin \s-1PTS\s0 entry. Sites whose Kerberos realms don't have these collisions 
-between principal names may disabled this check by starting the server
-with this option.
+principals with a dot in the first component of their name. This is to
+avoid the confusion where principals user/admin and user.admin are both
+mapped to the user.admin \s-1PTS\s0 entry. Sites whose Kerberos realms don't have
+these collisions between principal names may disable this check by
+starting the server with this option.
+.Ip "\fB\-rxbind\fR" 4
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
+.Ip "\fB\-syslog\fR[=<\fIsyslog facility\fR>]" 4
+Specifies that logging output should go to syslog instead of the normal
+log file.  \fB\-syslog\fR=\fI\s-1FACILITY\s0\fR can be used to specify to which facility
+the log message should be sent.  Logging message sent to syslog are tagged
+with the string \*(L"ptserver\*(R".
+.Ip "\fB\-auditlog\fR <\fIfile path\fR>" 4
+Specifies the full pathname for the \fBAuditLog\fR file.
+.Ip "\fB\-rxmaxmtu\fR <\fIbytes\fR>" 4
+Sets the maximum transmission unit for the \s-1RX\s0 protocol.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -299,17 +337,31 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Header "OPTIONS"
 
-.IX Item "\fB\-database\fR <\fIdb path\fR>"
+.IX Item "\fB\-database\fR <\fIdb path\fR>, \fB\-db\fR <\fIdb path\fR>"
 
-.IX Item "\fB\-p\fR <\fInumber of processes\fR>"
+.IX Item "\fB\-p\fR <\fInumber of threads\fR>"
 
 .IX Item "\fB\-rebuildDB\fR"
+
+.IX Item "\fB\-groupdepth\fR <\fI# of nested groups\fR>, \fB\-depth\fR <\fI# of nested groups\fR>"
+
+.IX Item "\fB\-default_access\fR <\fIuser access\fR> <\fIgroup access\fR>"
+
+.IX Item "\fB\-restricted\fR"
 
 .IX Item "\fB\-enable_peer_stats\fR"
 
 .IX Item "\fB\-enable_process_stats\fR"
 
 .IX Item "\fB\-allow-dotted-principal\fR"
+
+.IX Item "\fB\-rxbind\fR"
+
+.IX Item "\fB\-syslog\fR[=<\fIsyslog facility\fR>]"
+
+.IX Item "\fB\-auditlog\fR <\fIfile path\fR>"
+
+.IX Item "\fB\-rxmaxmtu\fR <\fIbytes\fR>"
 
 .IX Item "\fB\-help\fR"
 

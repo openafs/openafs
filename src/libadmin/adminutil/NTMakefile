@@ -143,8 +143,10 @@ DLLLIBS =\
         $(DESTDIR)\lib\afs\afsreg.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afsadminutil.def
+	$(DLLCONLINK) /DEF:afsadminutil.def shell32.lib
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
 

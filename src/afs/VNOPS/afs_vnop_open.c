@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_open.c,v 1.10.2.1 2005/04/03 18:15:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_open.c,v 1.11.6.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -59,12 +59,29 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_OPEN, ICL_TYPE_POINTER, tvc,
 	       ICL_TYPE_INT32, aflags);
     afs_InitFakeStat(&fakestate);
+
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
     if (code)
 	goto done;
     code = afs_VerifyVCache(tvc, &treq);
     if (code)
 	goto done;
+
+    ObtainReadLock(&tvc->lock);
+
+#ifdef AFS_DISCON_ENV
+    if (AFS_IS_DISCONNECTED && (afs_DCacheMissingChunks(tvc) != 0)) {
+       ReleaseReadLock(&tvc->lock);
+       /*printf("Network is down in afs_open: missing chunks\n");*/
+       code = ENETDOWN;
+       goto done;
+    }
+#endif
+
+    ReleaseReadLock(&tvc->lock);
+
     if (aflags & (FWRITE | FTRUNC))
 	writing = 1;
     else
@@ -150,8 +167,39 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     }
 #endif
     ReleaseReadLock(&tvc->lock);
+    if ((afs_preCache != 0) && (writing == 0) && (vType(tvc) != VDIR) && 
+	(!afs_BBusy())) {
+	register struct dcache *tdc;
+	afs_size_t offset, len, totallen = 0;
+
+	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
+
+	ObtainSharedLock(&tdc->mflock, 865);
+	if (!(tdc->mflags & DFFetchReq)) {
+	    struct brequest *bp;
+
+	    /* start the daemon (may already be running, however) */
+	    UpgradeSToWLock(&tdc->mflock, 666);
+	    tdc->mflags |= DFFetchReq;  /* guaranteed to be cleared by BKG or 
+					   GetDCache */
+	    /* last parm (1) tells bkg daemon to do an afs_PutDCache when it 
+	       is done, since we don't want to wait for it to finish before 
+	       doing so ourselves.
+	    */
+	    bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
+			    (afs_size_t) 0, (afs_size_t) 1, tdc);
+	    if (!bp) {
+		tdc->mflags &= ~DFFetchReq;
+	    }
+	    ReleaseWriteLock(&tdc->mflock);
+	} else {
+	    ReleaseSharedLock(&tdc->mflock);
+	}
+    }	
   done:
     afs_PutFakeStat(&fakestate);
+    AFS_DISCON_UNLOCK();
+
     code = afs_CheckCode(code, &treq, 4);	/* avoid AIX -O bug */
 
     afs_Trace2(afs_iclSetp, CM_TRACE_OPEN, ICL_TYPE_POINTER, tvc,

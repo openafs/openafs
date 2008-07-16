@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dbentries.c,v 1.8.2.5 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/dbentries.c,v 1.8.14.5 2008/03/10 22:32:33 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

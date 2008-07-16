@@ -4,7 +4,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/snprintf.c,v 1.21.2.5 2007/12/14 13:09:26 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/snprintf.c,v 1.24.4.3 2007/12/14 13:19:43 jaltman Exp $");
 
 #include <sys/types.h>
 #include <stdarg.h>
@@ -40,7 +40,7 @@ mkint(char *buf, afs_uintmax_t val, int base, int uc, unsigned prec)
     int len = 0, dig, i;
 
     while (val) {
-	dig = val % base;
+	dig = (int) (val % base);
 	val = (val - dig) / base;
 	if (dig < 10)
 	    dig = dig + '0';
@@ -134,7 +134,8 @@ mkint(char *buf, afs_uintmax_t val, int base, int uc, unsigned prec)
 int
 afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 {
-    unsigned int width, precision, haveprec, len;
+    unsigned int width, precision, haveprec;
+    size_t len;
     int ljust, plsign, spsign, altform, zfill;
     int hflag, lflag, count, *countp, j;
     char *x, *y, xbuf[MAXPREC + 21], fbuf[20];
@@ -405,7 +406,7 @@ afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 				 * if spsign specified, IPaddr fields are space-filled to 3 digits
 				 */
 	    UVAL = va_arg(ap, unsigned long);
-	    ia.s_addr = UVAL;
+	    ia.s_addr = (unsigned long)UVAL;
 	    if (haveprec && !precision)
 		he = 0;
 	    else
@@ -425,7 +426,7 @@ afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 			    *y = toupper(*y);
 		}
 	    } else {
-		UVAL = ntohl(UVAL);
+		UVAL = ntohl((unsigned long)UVAL);
 		if (zfill) {
 		    x = "%03u.%03u.%03u.%03u";
 		} else if (spsign) {
@@ -517,7 +518,7 @@ vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 {
     int result;
     result = afs_vsnprintf(p, avail, fmt, ap);
-#ifdef AFS_AIX51_ENV
+#if defined(AFS_AIX51_ENV) || defined(AFS_NT40_ENV)
     return result;
 #endif
 }

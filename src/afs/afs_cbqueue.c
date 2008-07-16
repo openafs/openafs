@@ -75,7 +75,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_cbqueue.c,v 1.9.2.4 2006/03/02 06:44:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_cbqueue.c,v 1.13 2006/03/02 06:42:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */

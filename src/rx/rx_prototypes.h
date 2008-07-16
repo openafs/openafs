@@ -14,6 +14,9 @@
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
+#ifdef AFS_NT40_ENV
+extern void rx_DebugOnOff(int on);
+#endif
 #ifndef KERNEL
 extern void rxi_StartServerProcs(int nExistingProcs);
 #endif
@@ -80,6 +83,8 @@ extern void rxi_FreeCall(register struct rx_call *call);
 
 extern char *rxi_Alloc(register size_t size);
 extern void rxi_Free(void *addr, register size_t size);
+extern void rxi_SetPeerMtu(register afs_uint32 host, register afs_uint32 port,
+            int mtu);
 extern struct rx_peer *rxi_FindPeer(register afs_uint32 host,
 				    register u_short port,
 				    struct rx_peer *origPeer, int create);
@@ -581,6 +586,7 @@ extern osi_socket rxi_GetUDPSocket(u_short port);
 extern void osi_AssertFailU(const char *expr, const char *file, int line);
 extern int rx_getAllAddr(afs_int32 * buffer, int maxSize);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
+extern int rxi_HandleSocketError(int socket);
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)
 extern void *osi_Alloc(afs_int32 x);

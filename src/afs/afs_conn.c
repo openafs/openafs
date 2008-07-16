@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.13.2.2 2007/02/26 22:18:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.14.8.3 2008/05/23 14:25:15 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -83,7 +83,9 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 
     /* First is always lowest rank, if it's up */
     if ((tv->status[0] == not_busy) && tv->serverHost[0]
-	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN))
+	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN) &&
+	!(((areq->idleError > 0) || (areq->tokenError > 0))
+	  && (areq->skipserver[0] == 1)))
 	lowp = tv->serverHost[0]->addr;
 
     /* Otherwise we look at all of them. There are seven levels of
@@ -95,6 +97,9 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
      */
     for (notbusy = not_busy; (!lowp && (notbusy <= end_not_busy)); notbusy++) {
 	for (i = 0; i < MAXHOSTS && tv->serverHost[i]; i++) {
+	    if (((areq->tokenError > 0)||(areq->idleError > 0)) 
+		&& (areq->skipserver[i] == 1))
+		continue;
 	    if (tv->status[i] != notbusy) {
 		if (tv->status[i] == rd_busy || tv->status[i] == rdwr_busy) {
 		    if (!areq->busyCount)
@@ -152,6 +157,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     if (!tc && !create) {
 	ReleaseSharedLock(&afs_xconn);
 	return NULL;
+    }
+    
+    if (AFS_IS_DISCONNECTED) {
+        afs_warnuser("afs_ConnBySA: disconnected\n");
+        ReleaseSharedLock(&afs_xconn);
+        return NULL;
     }
 
     if (!tc) {
@@ -234,6 +245,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
+	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)
@@ -263,6 +275,12 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     struct srvAddr *sa = 0;
 
     AFS_STATCNT(afs_ConnByHost);
+
+    if (AFS_IS_DISCONNECTED) {
+        afs_warnuser("afs_ConnByHost: disconnected\n");
+        return NULL;
+    }
+
 /* 
   1.  look for an existing connection
   2.  create a connection at an address believed to be up

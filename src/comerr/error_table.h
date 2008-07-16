@@ -29,7 +29,7 @@ extern char const *afs_error_table_name(afs_int32 num);
 extern void afs_add_to_error_table(struct et_list *new_table);
 #ifdef AFS_OLD_COM_ERR
 #define error_table_name        afs_error_table_name
-#define add_to_error_table(X)   afs_add_to_error_table(X)
+#define add_to_error_table(X) afs_add_to_error_table(X)
 #endif /* AFS_OLD_COM_ERR */
 #define _AFS_ET_H
 #endif

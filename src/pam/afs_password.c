@@ -19,7 +19,7 @@
 #include <security/pam_modules.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_password.c,v 1.10.2.1 2005/05/30 03:37:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_password.c,v 1.11 2005/05/30 03:35:52 shadow Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>

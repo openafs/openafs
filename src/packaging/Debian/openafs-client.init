@@ -1,0 +1,248 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:             openafs-client
+# Required-Start:       $network $time
+# Required-Stop:        $local_fs $remote_fs $network
+# Should-Start:         $local_fs $remote_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    OpenAFS client
+# Description:          Starts or stops the OpenAFS client, loading the
+#                       OpenAFS kernel module as necessary.
+### END INIT INFO
+#
+# Modified by Sam Hartman <hartmans@mit.edu> for Debian
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# This init script bears little resemblence to the regular upstream init
+# script at this point and is therefore maintained as a Debian-specific file.
+# The upstream init script assumes Red Hat paths and uses insmod to load the
+# module directly rather than using modprobe.
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
+MODULEDIR=${MODULEDIR:-/lib/modules/`uname -r`/fs}
+
+exec 3>/dev/null
+exec </dev/null
+
+# Gather up options and post startup script name, if present
+if [ -f /etc/openafs/afs.conf ]; then
+    . /etc/openafs/afs.conf
+fi
+
+# Return 1 if the argument is "true".
+is_on() {
+    if [ x"$1" = x"true" ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# If choose_client can't correctly determine which client to use, set
+# LIBAFS manually.
+choose_client() {
+    # Use the second field of the uname -v output instead of just doing a
+    # match on the whole thing to protect against matching a timezone named
+    # SMP -- I don't know of one, but let's be paranoid.
+    set X `uname -v`; shift
+    case $2 in
+    SMP) MP=.mp ;;      # MP system
+    *)   MP=    ;;      # SP system
+    esac
+
+    # The Debian OpenAFS packages do not add the .mp by default as of 1.3, but
+    # modules obtained from other sources may.  If a module with the .mp
+    # exists and this is an SMP system, use it; otherwise, use the default
+    # value.  Unset $MP if not using it so that we can use it later in the
+    # call to modprobe.
+    if [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
+        LIBAFS=openafs${MP}.o
+    elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.ko" ] ; then
+        LIBAFS=openafs${MP}.ko
+    elif [ -f "$MODULEDIR/openafs.ko" ] ; then
+        MP=
+        LIBAFS=openafs.ko
+    else
+        MP=
+        LIBAFS=openafs.o
+    fi
+}
+
+# Load the AFS client module if it's not already loaded.  Set $MODULEDIR and
+# $LIBAFS to override the default location and module name.
+load_client() {
+    if [ -z "$LIBAFS" ] ; then
+        choose_client
+    fi
+    if [ ! -f "$MODULEDIR/$LIBAFS" ] ; then
+        echo ""
+        cat <<EOF >&2
+AFS module $MODULEDIR/$LIBAFS does not exist.
+Not starting AFS.  Please consider building kernel modules using
+instructions in /usr/share/doc/openafs-client/README.modules
+EOF
+        # We must exit successfully here or openafs-client will fail on
+        # installation unless a module is installed.
+        exit 0
+    fi
+    LOADED=`/sbin/lsmod | fgrep openafs`
+    if [ -z "$LOADED" ] ; then
+        modprobe openafs
+        status=$?
+        if [ $status = 0 ] ; then
+            echo -n " openafs"
+        fi
+        return $status
+    fi
+    return 0
+}
+
+# Determine which afsd options to use.  /etc/openafs/afs.conf contains the
+# settings that are checked here.
+choose_afsd_options() {
+    if [ -z "$OPTIONS" ] || [ "$OPTIONS" = "AUTOMATIC" ] ; then
+        AFSD_OPTIONS="$VERBOSE"
+    else
+        AFSD_OPTIONS="$OPTIONS $VERBOSE"
+    fi
+
+    # These variables are from /etc/openafs/afs.conf.client and are managed
+    # automatically by debconf.
+    if is_on $AFS_AFSDB ; then
+        AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
+    fi
+    if is_on $AFS_DYNROOT ; then
+        AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
+    fi
+    if is_on $AFS_FAKESTAT ; then
+        AFSD_OPTIONS="$AFSD_OPTIONS -fakestat"
+    fi
+}
+
+# Start afsd.  Be careful not to start it if another one is already running,
+# as that has a bad tendency to hang the system.  Earlier versions of the
+# openafs-client package put afsd in /usr/sbin.
+start_client() {
+    if pidof /sbin/afsd >/dev/null || pidof /usr/sbin/afsd >/dev/null ; then
+        echo "."
+    else
+        choose_afsd_options
+        echo " afsd."
+        start-stop-daemon --start --quiet --exec /sbin/afsd -- $AFSD_OPTIONS
+    fi
+
+    # From /etc/openafs/afs.conf.client, whether to enable fcrypt encryption.
+    if is_on $AFS_CRYPT ; then
+        fs setcrypt on
+    fi
+
+    # From /etc/openafs/afs.conf, set a sysname list if one was configured.
+    if [ -n "$AFS_SYSNAME" ] ; then
+        fs sysname $AFS_SYSNAME
+    fi
+}
+
+# Kill all processes that are accessing AFS.  Not enabled by default, and
+# normally called via kill_all_afs.  Warns and does nothing if lsof is not
+# installed.
+kill_afs() {
+    signal=$1
+    pids=`/usr/bin/lsof -Fp /afs | sed 's/p//'`
+    if [ -n "$pids" ] ; then
+        kill -$signal $pids > /dev/null 2>&1
+        sleep 1
+    fi
+}
+
+# Repeatedly call kill_afs for a series of signals to give AFS-using processes
+# a hope of shutting down cleanly if the system is shutting down.  Not enabled
+# by default.  Enable this in /etc/openafs/afs.conf.
+kill_all_afs() {
+    runlevel=`runlevel | sed 's/^. //'`
+    if [ "$runlevel" -eq 0 ] || [ "$runlevel" -eq 6 ] ; then
+        if [ -x /usr/bin/lsof ] ; then
+            echo -n "Killing processes with AFS files open: "
+            kill_afs HUP
+            kill_afs TERM
+            kill_afs ABRT
+            kill_afs KILL
+            echo "done."
+        else
+            echo '/usr/bin/lsof not found, not killing processes' >&2
+        fi
+    fi
+}
+
+
+case "$1" in 
+start)
+    if is_on $AFS_CLIENT && test -x /sbin/afsd ; then
+        echo -n "Starting AFS services:"
+        if load_client ; then
+            start_client
+            $AFS_POST_INIT
+        else
+            echo ""
+            echo "Failed to load AFS kernel module, not starting AFS" >&2
+            exit 1
+        fi
+    fi
+    ;;
+
+force-start)
+    if test -x /sbin/afsd ; then
+        echo -n "Starting AFS services:"
+        if load_client ; then
+            start_client
+            $AFS_POST_INIT
+        else
+            echo ""
+            echo "Failed to load AFS kernel module, not starting AFS" >&2
+            exit 1
+        fi
+    fi
+    ;;
+
+stop|force-stop)
+    $AFS_PRE_SHUTDOWN
+    echo -n "Stopping AFS services:"
+    if mount | grep -q '^AFS' ; then
+        umount /afs
+        echo -n " afsd"
+    fi
+    if pidof /usr/sbin/afsd >/dev/null || pidof /sbin/afsd >/dev/null ; then
+         afsd -shutdown
+    fi
+
+    # If running with the -rmtsys option, afsd doesn't kill the rmtsys helper
+    # on afsd -shutdown.  Run start-stop-daemon to make sure that everything
+    # is dead.
+    start-stop-daemon --stop --quiet --name afsd
+
+    LIBAFS=`/sbin/lsmod | awk 'BEGIN { FS = " " } /openafs/ { print $1 }'`
+    if [ -n "$LIBAFS" ] ; then
+        /sbin/rmmod $LIBAFS
+        echo -n " openafs"
+    fi
+    echo "."
+    ;;
+
+restart|force-reload)
+    "$0" stop
+    "$0" start
+    ;;
+
+*)
+    echo Usage: \
+        'openafs-client {start|force-start|stop|restart|force-reload}' >&2
+    exit 1
+
+esac

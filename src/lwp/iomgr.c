@@ -36,7 +36,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.13.2.2 2008/03/10 22:35:35 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.16.2.1 2008/03/10 22:32:33 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,7 +129,9 @@ struct IoRequest {
     struct TM_Elem	timeout;
 
     /* Result of select call */
-    long			result;
+    int			result;
+
+    struct IoRequest    *next;	/* for iorFreeList */
 
 #ifdef AFS_DJGPP_ENV
     NCB                  *ncbp;
@@ -228,14 +230,14 @@ fd_set *IOMGR_AllocFDSet(void)
     }
 }
 
-#define FreeRequest(x) ((x)->result = (long) iorFreeList, iorFreeList = (x))
+#define FreeRequest(x) ((x)->next = iorFreeList, iorFreeList = (x))
 
 static struct IoRequest *NewRequest(void)
 {
     struct IoRequest *request;
 
     if ((request=iorFreeList))
-	iorFreeList = (struct IoRequest *) (request->result);
+	iorFreeList = (struct IoRequest *) (request->next);
     else request = (struct IoRequest *) malloc(sizeof(struct IoRequest));
 
     memset((char*)request, 0, sizeof(struct IoRequest));
@@ -304,7 +306,10 @@ static int FDSetCmp(int nfds, fd_set *fd_set1, fd_set *fd_set2)
  */
 static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
 {
-    unsigned int i, n;
+    unsigned int i;
+#ifndef AFS_NT40_ENV
+    unsigned int n;
+#endif
 
     if (fd_set1 == (fd_set*)0 || fd_set2 == (fd_set*)0)
 	return;

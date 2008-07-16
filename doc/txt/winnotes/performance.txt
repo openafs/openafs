@@ -25,6 +25,32 @@ write/clear   2.927 MB/sec    7.123 MB/sec      143.4%
 read/clear    2.065 MB/sec    5.991 MB/sec      190.1%
 
 
+lxiv.mit.edu with 1.5.1407 client
+171,194,368 byte file.  "fs flush" before each command
+1260 MaxMTU
+
+write/crypt   2.050 MB/sec
+read/crypt    2.596 MB/sec
+
+write/clear   2.574 MB/sec
+read/clear    7.371 MB/sec
+
+No MaxMTU
+
+                      1.5.14		1.5.1408	 change
+                    --------------    -------------    ----------
+
+write/crypt/flush     3.146 MB/sec     2.659 MB/sec	  -15.5%
+read/crypt/noflush    2.951 MB/sec    54.421 MB/sec     +1844.2%
+read/crypt/flush      2.946 MB/sec     2.925 MB/sec	  - 0.7%
+		            
+write/clear/flush     8.221 MB/sec     5.542 MB/sec	  -32.6%
+read/clear/noflush   10.493 MB/sec    54.421 MB/sec	 +518.6%
+read/clear/flush     10.385 MB/sec    10.741 MB/sec	   +3.4%
+
+
+
+
 
 mitz@ANDREW.CMU.EDU tested the 1.3.73 client on his machine
 against his cell copying a 367181824 byte file.  "fs flush"

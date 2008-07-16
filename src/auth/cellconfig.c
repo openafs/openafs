@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.19 2007/11/02 18:26:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.47.2.15 2008/06/26 16:48:30 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -62,6 +62,7 @@ RCSID
 #ifdef AFS_NT40_ENV
 #ifdef AFS_AFSDB_ENV
 /* cm_dns.h depends on cellconfig.h */
+#include <cm_nls.h>
 #include <cm_dns.h>
 #endif /* AFS_AFSDB_ENV */
 #endif
@@ -326,7 +327,7 @@ afsconf_Check(register struct afsconf_dir *adir)
 	} else {
 	    int len;
 	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
-	    len = strlen(tbuffer);
+	    len = (int)strlen(tbuffer);
 	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
 		strncat(tbuffer, "\\", sizeof(tbuffer));
 	    }
@@ -376,7 +377,7 @@ afsconf_Touch(register struct afsconf_dir *adir)
 		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
 	    free(p);
 	} else {
-	    int len = strlen(tbuffer);
+	    int len = (int)strlen(tbuffer);
 	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
 		strncat(tbuffer, "\\", sizeof(tbuffer));
 	    }
@@ -537,7 +538,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     char tbuffer[256], tbuf1[256];
     struct stat tstat;
 
-    /* figure out the cell name */
+    /* figure out the local cell name */
 #ifdef AFS_NT40_ENV
     i = GetCellNT(adir);
 #else
@@ -567,7 +568,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	} else {
 	    int len;
 	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
-	    len = strlen(tbuffer);
+	    len = (int)strlen(tbuffer);
 	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
 		strncat(tbuffer, "\\", sizeof(tbuffer));
 	    }
@@ -1043,7 +1044,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     register afs_int32 i;
     int tservice;
     char *tcell;
-    size_t cnLen;
+    int cnLen;
     int ambig;
     char tbuffer[64];
 
@@ -1052,7 +1053,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	afsconf_Check(adir);
     if (acellName) {
 	tcell = acellName;
-	cnLen = strlen(tcell) + 1;
+	cnLen = (int)(strlen(tcell) + 1);
 	lcstring(tcell, tcell, cnLen);
 	afsconf_SawCell = 1;	/* will ignore the AFSCELL switch on future */
 	/* call to afsconf_GetLocalCell: like klog  */

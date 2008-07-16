@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.4 2006/05/31 16:01:45 rees Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.14 2006/03/02 22:42:56 rees Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"

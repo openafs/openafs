@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.8 2005/11/19 04:35:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.33.4.1 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -634,9 +634,11 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     if (eofp)
 	*eofp = 0;
 #endif
+#ifndef AFS_64BIT_CLIENT
     if (AfsLargeFileUio(auio)	/* file is large than 2 GB */
 	||AfsLargeFileSize(AFS_UIO_OFFSET(auio), AFS_UIO_RESID(auio)))
 	return EFBIG;
+#endif
 
     if ((code = afs_InitReq(&treq, acred))) {
 #ifdef	AFS_HPUX_ENV
@@ -646,6 +648,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     }
     /* update the cache entry */
     afs_InitFakeStat(&fakestate);
+
+    AFS_DISCON_LOCK();
+
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code)
 	goto done;
@@ -908,6 +913,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #ifdef	AFS_HPUX_ENV
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 28);
     return code;
@@ -955,11 +961,13 @@ afs1_readdir(avc, auio, acred)
 	return code;
     }
     afs_InitFakeStat(&fakestate);
+    AFS_DISCON_LOCK();
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+	AFS_DISCON_UNLOCK();
 	afs_PutFakeStat(&fakestate);
 	return code;
     }
@@ -1175,6 +1183,7 @@ afs1_readdir(avc, auio, acred)
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 29);
     return code;

@@ -1,0 +1,109 @@
+#
+# This is a dot (http://www.graphviz.org) description of the various
+# states volumes can be in for DAFS (Demand Attach File Server).
+#
+# Author: Steven Jenkins
+# Date: 2007-05-24
+#
+
+digraph VolumeStates {
+	size="11,17"
+	graph [
+		rankdir = "TB"
+	];
+
+	subgraph clusterKey {
+		rankdir="LR";
+		shape = "rectangle";
+
+	s1 [ shape=plaintext, label = "VPut after VDetach in brown",
+			fontcolor="brown" ];
+	s2 [ shape=plaintext, label = "VAttach in blue",
+			fontcolor="blue" ];
+	s3 [ shape=plaintext, label = "VGet/VHold in purple",
+			fontcolor="purple" ];
+	s4 [ shape=plaintext, label = "Error States in red",
+			fontcolor="red" ];
+	s5 [ shape=plaintext, label = "VPut after VOffline in green",
+			fontcolor="green" ];
+	s6 [ shape=ellipse, label = "re-entrant" ];
+	s7 [ shape=ellipse, peripheries=2, label="non re-entrant" ];
+	s8 [ shape=ellipse, color="red", label="Error States" ];
+
+	s6->s7->s8->s1->s2->s3->s4->s5 [style="invis"];
+
+	}
+
+	node [ peripheries = "2" ] ATTACHING \
+		LOADING_VNODE_BITMAPS HDR_LOADING_FROM_DISK \
+		HDR_ATTACHING_LRU_PULL \
+		"UPDATING\nSYNCING_VOL_HDR_TO_DISK" \
+		OFFLINING DETACHING;
+	node [ shape = "ellipse", peripheries = "1" ];
+	node [ color = "red" ] HARD_ERROR SALVAGE_REQUESTED SALVAGING;
+
+	node [ color = "black" ]; // default back to black
+
+	UNATTACHED->Exclusive_vol_op_executing [label = "controlled by FSSYNC" ];
+	Exclusive_vol_op_executing->UNATTACHED  [label = "controlled by FSSYNC" ];
+	UNATTACHED->FREED [ label = "VCancelReservation_r() after a\nVDetach() or FreeVolume() will\ncause CheckDetach() or CheckFree() to fire" ];
+	OFFLINING->UNATTACHED;
+	UNATTACHED->PREATTACHED [ color = "orange", label = "PreAttach()" ];
+	PREATTACHED->UNATTACHED [ color = "orange", label = "VOffline()"];
+	HARD_ERROR->PREATTACHED [ color = "orange", label = "operator intervention via FSSYNC" ];
+
+	PREATTACHED->Exclusive_vol_op_executing [color = "orange", label = "controlled by FSSYNC" ];
+	Exclusive_vol_op_executing->PREATTACHED [color = "orange", label = "controlled by FSSYNC" ];
+	PREATTACHED->FREED [ color = "orange", label = "VCancelReservation_r() after a\nVDetach() or FreeVolume() will\ncause CheckDetach() or CheckFree() to fire" ];
+	PREATTACHED->ATTACHING [ color = "blue", weight = "8" ];
+	SALVAGING->PREATTACHED [ label = "controlled via FSSYNC" ];	
+
+	DETACHING->FREED ;
+	SHUTTING_DOWN->DETACHING [ color = "brown" ];
+	ATTACHED_nUsers_GT_0->SHUTTING_DOWN [ color = "orange", label = "VDetach()" ];
+
+	DETACHING->"UPDATING\nSYNCING_VOL_HDR_TO_DISK" [ color = "brown" ];
+	"UPDATING\nSYNCING_VOL_HDR_TO_DISK"->DETACHING [ color = "brown" ];
+	OFFLINING->"UPDATING\nSYNCING_VOL_HDR_TO_DISK" [ color = "green" ];
+	"UPDATING\nSYNCING_VOL_HDR_TO_DISK"->OFFLINING [ color = "green" ];
+	GOING_OFFLINE->OFFLINING [ color = "green" ];
+
+	"UPDATING\nSYNCING_VOL_HDR_TO_DISK"->SALVAGE_REQUESTED [ color = "red" ];	
+	"UPDATING\nSYNCING_VOL_HDR_TO_DISK"->ATTACHING [ color = "blue" ];	
+	ATTACHING->"UPDATING\nSYNCING_VOL_HDR_TO_DISK" [ color = "blue" ];
+
+	ATTACHED_nUsers_GT_0->GOING_OFFLINE [ color = "orange", label = "VOffline" ];	
+	ATTACHED_nUsers_GT_0->ATTACHED_nUsers_EQ_0 [ color = "orange", label = "VPut" ];	
+
+	ATTACHED_nUsers_GT_0->SALVAGE_REQUESTED [ color = "red" ];
+
+	LOADING_VNODE_BITMAPS->ATTACHING [ color = "blue" ];
+	ATTACHING->LOADING_VNODE_BITMAPS [ color = "blue" ] ;
+	LOADING_VNODE_BITMAPS->SALVAGE_REQUESTED [ color = "red" ];
+	HDR_LOADING_FROM_DISK->SALVAGE_REQUESTED [ color = "red" ];
+	HDR_LOADING_FROM_DISK->ATTACHING [ color = "blue" ] ;
+	HDR_LOADING_FROM_DISK->ATTACHED_nUsers_GT_0 [ color = "purple" ];
+
+	SALVAGE_REQUESTED->SALVAGING [ label = "controlled via FSSYNC" ];
+	SALVAGE_REQUESTED->HARD_ERROR [ color = "red", 
+		label = "After hard salvage limit reached,\n hard error state is in effect\nuntil there is operator intervention" ];
+	
+	HDR_ATTACHING_LRU_PULL->HDR_LOADING_FROM_DISK [ color = "blue" ];
+	HDR_ATTACHING_LRU_PULL->HDR_LOADING_FROM_DISK [ color = "purple" ];
+	HDR_ATTACHING_LRU_PULL->ATTACHED_nUsers_GT_0 [ color = "purple", label = "header can be in LRU\nand not have been reclaimed\nthus skipping disk I/O" ];
+
+	ATTACHING->HDR_ATTACHING_LRU_PULL [ color = "blue" ];
+	ATTACHING->ATTACHED_nUsers_EQ_0 [ color = "blue" ];
+
+	ATTACHING->SALVAGE_REQUESTED [ color = "red" ];
+	ATTACHED_nUsers_EQ_0->HDR_ATTACHING_LRU_PULL [ color = "purple" ];
+	
+	ATTACHED_nUsers_EQ_0->SALVAGE_REQUESTED [ color = "red" ];
+
+	// Various loopback transitions
+	GOING_OFFLINE->GOING_OFFLINE [ label = "VPut when (nUsers > 1)" ];
+	SHUTTING_DOWN->SHUTTING_DOWN 
+		[ label = "VPut when ((nUsers > 1) ||\n((nUsers == 1) && (nWaiters > 0)))" ];
+	SHUTTING_DOWN->SHUTTING_DOWN
+		[ label = "VCancelReservation_r when ((nWaiters > 1)\n|| ((nWaiters == 1) && (nUsers > 0)))"];	
+} 

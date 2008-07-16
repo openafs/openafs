@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.14 2007/10/23 00:03:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.43.2.5 2008/05/23 14:25:15 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -46,14 +46,35 @@ afs_int32 afs_gcpags = AFS_GCPAGS;
 afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
-#ifdef DEFAULT_PROBE_INTERVAL
-afs_int32 PROBE_INTERVAL = DEFAULT_PROBE_INTERVAL;	/* overridding during compile */
-#else
-afs_int32 PROBE_INTERVAL = 30;	/* default to 3 min */
+#ifndef DEFAULT_PROBE_INTERVAL
+#define DEFAULT_PROBE_INTERVAL 30	/* default to 3 min */
 #endif
+afs_int32 afs_probe_interval = DEFAULT_PROBE_INTERVAL;
+afs_int32 afs_probe_all_interval = 600;
+afs_int32 afs_nat_probe_interval = 60;
+afs_int32 afs_preCache = 0;
 
-#define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
-		      % (PROBE_INTERVAL/2))))
+#define PROBE_WAIT() (1000 * (afs_probe_interval - ((afs_random() & 0x7fffffff) \
+		      % (afs_probe_interval/2))))
+
+void
+afs_SetCheckServerNATmode(int isnat)
+{
+    static afs_int32 old_intvl, old_all_intvl;
+    static int wasnat;
+
+    if (isnat && !wasnat) {
+	old_intvl = afs_probe_interval;
+	old_all_intvl = afs_probe_all_interval;
+	afs_probe_interval = afs_nat_probe_interval;
+	afs_probe_all_interval = afs_nat_probe_interval;
+	afs_osi_CancelWait(&AFS_CSWaitHandler);
+    } else if (!isnat && wasnat) {
+	afs_probe_interval = old_intvl;
+	afs_probe_all_interval = old_all_intvl;
+    }
+    wasnat = isnat;
+}
 
 void
 afs_CheckServerDaemon(void)
@@ -75,13 +96,13 @@ afs_CheckServerDaemon(void)
 	}
 
 	now = osi_Time();
-	if (PROBE_INTERVAL + lastCheck <= now) {
+	if (afs_probe_interval + lastCheck <= now) {
 	    afs_CheckServers(1, NULL);	/* check down servers */
 	    lastCheck = now = osi_Time();
 	}
 
-	if (600 + last10MinCheck <= now) {
-	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, 600);
+	if (afs_probe_all_interval + last10MinCheck <= now) {
+	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, afs_probe_all_interval);
 	    afs_CheckServers(0, NULL);
 	    last10MinCheck = now = osi_Time();
 	}
@@ -93,9 +114,9 @@ afs_CheckServerDaemon(void)
 	}
 
 	/* Compute time to next probe. */
-	delay = PROBE_INTERVAL + lastCheck;
-	if (delay > 600 + last10MinCheck)
-	    delay = 600 + last10MinCheck;
+	delay = afs_probe_interval + lastCheck;
+	if (delay > afs_probe_all_interval + last10MinCheck)
+	    delay = afs_probe_all_interval + last10MinCheck;
 	delay -= now;
 	if (delay < 1)
 	    delay = 1;
@@ -103,12 +124,9 @@ afs_CheckServerDaemon(void)
     }
     afs_CheckServerDaemonStarted = 0;
 }
-#define RECURSIVE_VFS_CONTEXT 1
-#if RECURSIVE_VFS_CONTEXT
+
 extern int vfs_context_ref;
-#else
-#define vfs_context_ref 1
-#endif
+
 void
 afs_Daemon(void)
 {
@@ -133,10 +151,8 @@ afs_Daemon(void)
         osi_Panic("vfs context already initialized");
     while (afs_osi_ctxtp && vfs_context_ref)
         afs_osi_Sleep(&afs_osi_ctxtp);
-#if RECURSIVE_VFS_CONTEXT
     if (afs_osi_ctxtp && !vfs_context_ref)
        vfs_context_rele(afs_osi_ctxtp);
-#endif
     afs_osi_ctxtp = vfs_context_create(NULL);
     afs_osi_ctxtp_initialized = 1;
 #endif
@@ -179,8 +195,10 @@ afs_Daemon(void)
 	    afs_FlushReclaimedVcaches();
 	    ReleaseWriteLock(&afs_xvcache);
 	    afs_FlushActiveVcaches(1);	/* keep flocks held & flush nfs writes */
+#if 0
 #ifdef AFS_DISCON_ENV
 	    afs_StoreDirtyVcaches();
+#endif
 #endif
 	    afs_CheckRXEpoch();
 	    last1MinCheck = now;
@@ -197,7 +215,7 @@ afs_Daemon(void)
 		cs_warned = 1;
 		printf("Please install afsd with check server daemon.\n");
 	    }
-	    if (lastNMinCheck + PROBE_INTERVAL < now) {
+	    if (lastNMinCheck + afs_probe_interval < now) {
 		/* only check down servers */
 		afs_CheckServers(1, NULL);
 		lastNMinCheck = now;
@@ -463,17 +481,22 @@ BPrefetch(register struct brequest *ab)
 {
     register struct dcache *tdc;
     register struct vcache *tvc;
-    afs_size_t offset, len;
+    afs_size_t offset, len, abyte, totallen = 0;
     struct vrequest treq;
 
     AFS_STATCNT(BPrefetch);
     if ((len = afs_InitReq(&treq, ab->cred)))
 	return;
+    abyte = ab->size_parm[0];
     tvc = ab->vc;
-    tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
-    if (tdc) {
-	afs_PutDCache(tdc);
-    }
+    do {
+	tdc = afs_GetDCache(tvc, abyte, &treq, &offset, &len, 1);
+	if (tdc) {
+	    afs_PutDCache(tdc);
+	}
+	abyte+=len; 
+	totallen += len;
+    } while ((totallen < afs_preCache) && tdc && (len > 0));
     /* now, dude may be waiting for us to clear DFFetchReq bit; do so.  Can't
      * use tdc from GetDCache since afs_GetDCache may fail, but someone may
      * be waiting for our wakeup anyway.

@@ -32,9 +32,7 @@
  * SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <afsconfig.h>
 
 /* 
 nn * We are using getopt since we want it to be possible to link to
@@ -42,7 +40,7 @@ nn * We are using getopt since we want it to be possible to link to
  */
 
 #ifdef RCSID
-RCSID("$Id: rxperf.c,v 1.2 2003/07/15 23:16:12 shadow Exp $");
+RCSID("$Id: rxperf.c,v 1.2.14.1 2008/05/20 21:59:02 shadow Exp $");
 #endif
 
 #include <stdarg.h>
@@ -57,9 +55,17 @@ RCSID("$Id: rxperf.c,v 1.2 2003/07/15 23:16:12 shadow Exp $");
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
+#endif
 #include <assert.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <signal.h>
 #ifdef HAVE_ERRX
 #include <err.h>		/* not stricly right, but if we have a errx() there
@@ -311,7 +317,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 
     DBFPRINT(("got a request\n"));
 
-    if (rx_Read(call, &version, 4) != 4) {
+    if (rx_Read32(call, &version) != 4) {
 	warn("rx_Read failed to read version");
 	return -1;
     }
@@ -321,13 +327,13 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	return -1;
     }
 
-    if (rx_Read(call, &command, 4) != 4) {
+    if (rx_Read32(call, &command) != 4) {
 	warnx("rx_Read failed to read command");
 	return -1;
     }
     command = ntohl(command);
 
-    if (rx_Read(call, &data, 4) != 4) {
+    if (rx_Read32(call, &data) != 4) {
 	warnx("rx_Read failed to read size");
 	return -1;
     }
@@ -337,7 +343,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	return -1;
     }
 
-    if (rx_Read(call, &data, 4) != 4) {
+    if (rx_Read32(call, &data) != 4) {
 	warnx("rx_Read failed to write size");
 	return -1;
     }
@@ -351,7 +357,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
     case RX_PERF_SEND:
 	DBFPRINT(("got a send request\n"));
 
-	if (rx_Read(call, &bytes, 4) != 4) {
+	if (rx_Read32(call, &bytes) != 4) {
 	    warnx("rx_Read failed to read bytes");
 	    return -1;
 	}
@@ -361,7 +367,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	readbytes(call, bytes);
 
 	data = htonl(RXPERF_MAGIC_COOKIE);
-	if (rx_Write(call, &data, 4) != 4) {
+	if (rx_Write32(call, &data) != 4) {
 	    warnx("rx_Write failed when sending back result");
 	    return -1;
 	}
@@ -371,12 +377,12 @@ rxperf_ExecuteRequest(struct rx_call *call)
     case RX_PERF_RPC:
 	DBFPRINT(("got a rpc request, reading commands\n"));
 
-	if (rx_Read(call, &recvb, 4) != 4) {
+	if (rx_Read32(call, &recvb) != 4) {
 	    warnx("rx_Read failed to read recvbytes");
 	    return -1;
 	}
 	recvb = ntohl(recvb);
-	if (rx_Read(call, &sendb, 4) != 4) {
+	if (rx_Read32(call, &sendb) != 4) {
 	    warnx("rx_Read failed to read sendbytes");
 	    return -1;
 	}
@@ -396,14 +402,14 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	DBFPRINT(("done\n"));
 
 	data = htonl(RXPERF_MAGIC_COOKIE);
-	if (rx_Write(call, &data, 4) != 4) {
+	if (rx_Write32(call, &data) != 4) {
 	    warnx("rx_Write failed when sending back magic cookie");
 	    return -1;
 	}
 
 	break;
     case RX_PERF_FILE:
-	if (rx_Read(call, &data, 4) != 4)
+	if (rx_Read32(call, &data) != 4)
 	    errx(1, "failed to read num from client");
 	num = ntohl(data);
 
@@ -436,7 +442,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
     case RX_PERF_RECV:
 	DBFPRINT(("got a recv request\n"));
 
-	if (rx_Read(call, &bytes, 4) != 4) {
+	if (rx_Read32(call, &bytes) != 4) {
 	    warnx("rx_Read failed to read bytes");
 	    return -1;
 	}
@@ -446,7 +452,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	sendbytes(call, bytes);
 
 	data = htonl(RXPERF_MAGIC_COOKIE);
-	if (rx_Write(call, &data, 4) != 4) {
+	if (rx_Write32(call, &data) != 4) {
 	    warnx("rx_Write failed when sending back result");
 	    return -1;
 	}
@@ -467,7 +473,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
  */
 
 static void
-do_server(int port)
+do_server(int port, int nojumbo, int maxmtu)
 {
     struct rx_service *service;
     struct rx_securityClass *secureobj;
@@ -478,6 +484,10 @@ do_server(int port)
     if (ret)
 	errx(1, "rx_Init failed");
 
+    if (nojumbo)
+      rx_SetNoJumbo();
+    if (maxmtu)
+      rx_SetMaxMTU(maxmtu);
     get_sec(1, &secureobj, &secureindex);
 
     service =
@@ -547,7 +557,8 @@ readfile(const char *filename, u_int32_t ** readwrite, u_int32_t * size)
 
 static void
 do_client(const char *server, int port, char *filename, int32_t command,
-	  int32_t times, int32_t bytes, int32_t sendtimes, int32_t recvtimes)
+	  int32_t times, int32_t bytes, int32_t sendtimes, int32_t recvtimes,
+          int dumpstats, int nojumbo, int maxmtu)
 {
     struct rx_connection *conn;
     struct rx_call *call;
@@ -568,6 +579,10 @@ do_client(const char *server, int port, char *filename, int32_t command,
     if (ret)
 	errx(1, "rx_Init failed");
 
+    if (nojumbo)
+      rx_SetNoJumbo();
+    if (maxmtu)
+      rx_SetMaxMTU(maxmtu);
     get_sec(0, &secureobj, &secureindex);
 
     conn = rx_NewConnection(addr, port, RX_SERVER_ID, secureobj, secureindex);
@@ -587,19 +602,19 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    errx(1, "rx_NewCall failed");
 
 	data = htonl(RX_PERF_VERSION);
-	if (rx_Write(call, &data, 4) != 4)
-	    errx(1, "rx_Write failed to send version");
+	if (rx_Write32(call, &data) != 4)
+	    errx(1, "rx_Write failed to send version (err %d)", rx_Error(call));
 
 	data = htonl(command);
-	if (rx_Write(call, &data, 4) != 4)
-	    errx(1, "rx_Write failed to send command");
+	if (rx_Write32(call, &data) != 4)
+	    errx(1, "rx_Write failed to send command (err %d)", rx_Error(call));
 
 	data = htonl(rxread_size);
-	if (rx_Write(call, &data, 4) != 4)
-	    errx(1, "rx_Write failed to send read size");
+	if (rx_Write32(call, &data) != 4)
+	    errx(1, "rx_Write failed to send read size (err %d)", rx_Error(call));
 	data = htonl(rxwrite_size);
-	if (rx_Write(call, &data, 4) != 4)
-	    errx(1, "rx_Write failed to send write read");
+	if (rx_Write32(call, &data) != 4)
+	    errx(1, "rx_Write failed to send write read (err %d)", rx_Error(call));
 
 
 	switch (command) {
@@ -607,15 +622,15 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    DBFPRINT(("command "));
 
 	    data = htonl(bytes);
-	    if (rx_Write(call, &data, 4) != 4)
-		errx(1, "rx_Write failed to send size");
+	    if (rx_Write32(call, &data) != 4)
+		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
 	    DBFPRINT(("sending(%d) ", bytes));
 	    if (readbytes(call, bytes))
-		errx(1, "sendbytes");
+		errx(1, "sendbytes (err %d)", rx_Error(call));
 
-	    if (rx_Read(call, &data, 4) != 4)
-		errx(1, "failed to read result from server");
+	    if (rx_Read32(call, &data) != 4)
+		errx(1, "failed to read result from server (err %d)", rx_Error(call));
 
 	    if (data != htonl(RXPERF_MAGIC_COOKIE))
 		warn("server send wrong magic cookie in responce");
@@ -627,15 +642,15 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    DBFPRINT(("command "));
 
 	    data = htonl(bytes);
-	    if (rx_Write(call, &data, 4) != 4)
-		errx(1, "rx_Write failed to send size");
+	    if (rx_Write32(call, &data) != 4)
+		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
 	    DBFPRINT(("sending(%d) ", bytes));
 	    if (sendbytes(call, bytes))
-		errx(1, "sendbytes");
+		errx(1, "sendbytes (err %d)", rx_Error(call));
 
-	    if (rx_Read(call, &data, 4) != 4)
-		errx(1, "failed to read result from server");
+	    if (rx_Read32(call, &data) != 4)
+		errx(1, "failed to read result from server (err %d)", rx_Error(call));
 
 	    if (data != htonl(RXPERF_MAGIC_COOKIE))
 		warn("server send wrong magic cookie in responce");
@@ -647,21 +662,23 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    DBFPRINT(("commands "));
 
 	    data = htonl(sendtimes);
-	    if (rx_Write(call, &data, 4) != 4)
-		errx(1, "rx_Write failed to send command");
+	    if (rx_Write32(call, &data) != 4)
+		errx(1, "rx_Write failed to send command (err %d)", rx_Error(call));
 
 	    data = htonl(recvtimes);
-	    if (rx_Write(call, &data, 4) != 4)
-		errx(1, "rx_Write failed to send command");
+	    if (rx_Write32(call, &data) != 4)
+		errx(1, "rx_Write failed to send command (err %d)", rx_Error(call));
 
 	    DBFPRINT(("send(%d) ", sendtimes));
-	    sendbytes(call, sendtimes);
+	    if (sendbytes(call, sendtimes))
+		errx(1, "sendbytes (err %d)", rx_Error(call));
 
 	    DBFPRINT(("recv(%d) ", recvtimes));
-	    readbytes(call, recvtimes);
+	    if (readbytes(call, recvtimes))
+		errx(1, "sendbytes (err %d)", rx_Error(call));
 
-	    if (rx_Read(call, &bytes, 4) != 4)
-		errx(1, "failed to read result from server");
+	    if (rx_Read32(call, &bytes) != 4)
+		errx(1, "failed to read result from server (err %d)", rx_Error(call));
 
 	    if (bytes != htonl(RXPERF_MAGIC_COOKIE))
 		warn("server send wrong magic cookie in responce");
@@ -673,12 +690,12 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    readfile(filename, &readwrite, &num);
 
 	    data = htonl(num);
-	    if (rx_Write(call, &data, sizeof(data)) != 4)
-		errx(1, "rx_Write failed to send size");
+	    if (rx_Write32(call, &data) != 4)
+		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
 	    if (rx_Write(call, readwrite, num * sizeof(u_int32_t))
 		!= num * sizeof(u_int32_t))
-		errx(1, "rx_Write failed to send list");
+		errx(1, "rx_Write failed to send list (err %d)", rx_Error(call));
 
 	    for (i = 0; i < num; i++) {
 		if (readwrite[i] == 0)
@@ -687,10 +704,12 @@ do_client(const char *server, int port, char *filename, int32_t command,
 		size = ntohl(readwrite[i]) * sizeof(u_int32_t);
 
 		if (readp) {
-		    readbytes(call, size);
+		    if (readbytes(call, size))
+			errx(1, "sendbytes (err %d)", rx_Error(call));
 		    DBFPRINT(("read\n"));
 		} else {
-		    sendbytes(call, size);
+		    if (sendbytes(call, size))
+			errx(1, "sendbytes (err %d)", rx_Error(call));
 		    DBFPRINT(("send\n"));
 		}
 	    }
@@ -705,6 +724,10 @@ do_client(const char *server, int port, char *filename, int32_t command,
     end_and_print_timer(stamp);
     DBFPRINT(("done for good\n"));
 
+    if (dumpstats) {
+	rx_PrintStats(stdout);
+	rx_PrintPeerStats(stdout, conn->peer);
+    }
     rx_Finalize();
 }
 
@@ -721,7 +744,7 @@ usage()
     fprintf(stderr, "usage: %s client -c file -f filename\n", __progname);
     fprintf(stderr,
 	    "%s: usage:	common option to the client "
-	    "-w <write-bytes> -r <read-bytes> -T times -p port -s server\n",
+	    "-w <write-bytes> -r <read-bytes> -T times -p port -s server -D\n",
 	    __progname);
     fprintf(stderr, "usage: %s server -p port\n", __progname);
 #undef COMMMON
@@ -736,10 +759,12 @@ static int
 rxperf_server(int argc, char **argv)
 {
     int port = DEFAULT_PORT;
+    int nojumbo = 0;
+    int maxmtu = 0;
     char *ptr;
     int ch;
 
-    while ((ch = getopt(argc, argv, "r:d:p:w:")) != -1) {
+    while ((ch = getopt(argc, argv, "r:d:p:w:jm:4")) != -1) {
 	switch (ch) {
 	case 'd':
 #ifdef RXDEBUG
@@ -771,6 +796,17 @@ rxperf_server(int argc, char **argv)
 		errx(1, "%d > sizeof(somebuf) (%d)", rxwrite_size,
 		     sizeof(somebuf));
 	    break;
+	case 'j':
+	  nojumbo=1;
+	  break;
+	case 'm':
+	  maxmtu = strtol(optarg, &ptr, 0);
+	  if (ptr && *ptr != '\0')
+	    errx(1, "can't resolve rx maxmtu to use");
+	    break;
+	case '4':
+	  RX_IPUDP_SIZE = 28;
+	  break;
 	default:
 	    usage();
 	}
@@ -779,7 +815,7 @@ rxperf_server(int argc, char **argv)
     if (optind != argc)
 	usage();
 
-    do_server(htons(port));
+    do_server(htons(port), nojumbo, maxmtu);
 
     return 0;
 }
@@ -799,12 +835,15 @@ rxperf_client(int argc, char **argv)
     int sendtimes = 3;
     int recvtimes = 30;
     int times = 100;
+    int dumpstats = 0;
+    int nojumbo = 0;
+    int maxmtu = 0;
     char *ptr;
     int ch;
 
     cmd = RX_PERF_UNKNOWN;
 
-    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:r:s:w:f:")) != -1) {
+    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:r:s:w:f:Djm:4")) != -1) {
 	switch (ch) {
 	case 'b':
 	    bytes = strtol(optarg, &ptr, 0);
@@ -876,6 +915,24 @@ rxperf_client(int argc, char **argv)
 	case 'f':
 	    filename = optarg;
 	    break;
+	case 'D':
+#ifdef RXDEBUG
+	    dumpstats = 1;
+#else
+	    errx(1, "compiled without RXDEBUG");
+#endif
+	    break;
+	case 'j':
+	  nojumbo=1;
+	  break;
+	case 'm':
+	  maxmtu = strtol(optarg, &ptr, 0);
+	  if (ptr && *ptr != '\0')
+	    errx(1, "can't resolve rx maxmtu to use");
+	    break;
+	case '4':
+	  RX_IPUDP_SIZE = 28;
+	  break;
 	default:
 	    usage();
 	}
@@ -888,7 +945,7 @@ rxperf_client(int argc, char **argv)
 	errx(1, "no command given to the client");
 
     do_client(host, htons(port), filename, cmd, times, bytes, sendtimes,
-	      recvtimes);
+	      recvtimes, dumpstats, nojumbo, maxmtu);
 
     return 0;
 }

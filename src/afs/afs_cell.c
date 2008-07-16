@@ -14,13 +14,14 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_cell.c,v 1.30.2.6 2007/12/04 20:33:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_cell.c,v 1.34.4.7 2008/01/28 01:39:18 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/afs_osi.h"
+#include "afs/afs_md5.h"
 
 /* Local variables. */
 afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
@@ -156,6 +157,7 @@ afs_GetCellHostsAFSDB(char *acellName)
 	afs_osi_Sleep(&afsdb_req);
 	ObtainReadLock(&afsdb_req_lock);
     };
+
     ReleaseReadLock(&afsdb_req_lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
@@ -174,9 +176,8 @@ afs_LookupAFSDB(char *acellName)
     char *cellName = afs_strdup(acellName);
 
     code = afs_GetCellHostsAFSDB(cellName);
-
     afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, cellName, 
-	       ICL_TYPE_INT32, code);
+               ICL_TYPE_INT32, code);
     afs_osi_FreeStr(cellName);
 #endif
 }
@@ -551,6 +552,17 @@ afs_choose_cell_by_name(struct cell *cell, void *arg)
 }
 
 static void *
+afs_choose_cell_by_handle(struct cell *cell, void *arg)
+{
+    if (!arg) {
+	/* Safety net */
+	return cell;
+    } else {
+	return memcmp(cell->cellHandle, (char *)arg, 16) ? NULL : cell;
+    }
+}
+
+static void *
 afs_choose_cell_by_num(struct cell *cell, void *arg)
 {
     return (cell->cellNum == *((afs_int32 *) arg)) ? cell : NULL;
@@ -637,6 +649,17 @@ afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
 }
 
 struct cell *
+afs_GetCellByHandle(void *handle, afs_int32 locktype)
+{
+    struct cell *tc;
+
+    tc = afs_TraverseCells(&afs_choose_cell_by_handle, handle);
+    if (tc)
+	afs_UpdateCellLRU(tc);
+    return tc;
+}
+
+struct cell *
 afs_GetPrimaryCell(afs_int32 locktype)
 {
     return afs_GetCellByName(afs_thiscell, locktype);
@@ -705,6 +728,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
+	AFS_MD5_String(tc->cellHandle, tc->cellName, strlen(tc->cellName));
 	RWLOCK_INIT(&tc->lock, "cell lock");
 	newc = 1;
 	aflags |= CNoSUID;

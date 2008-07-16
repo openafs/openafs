@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.4 2008/03/17 15:38:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.18.4.1 2008/03/17 15:38:28 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -218,10 +218,10 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
     if (rx_Log_event) {
 	struct clock now1;
 	clock_GetTime(&now1);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lx, %lx, %lx, %d)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lp, %lp, %lp, %d)\n",
 		(int)now1.sec, (int)now1.usec, (int)when->sec, (int)when->usec,
-		(unsigned long)func, (unsigned long)arg,
-		(unsigned long)arg1, arg2);
+		func, arg,
+		arg1, arg2);
     }
 #endif
     /* If a time was provided, check for consistency */
@@ -369,10 +369,10 @@ rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %lx, %lx)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %lp, %lp)\n",
 		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
-		(int)ev->eventTime.usec, (unsigned long)ev->func,
-		(unsigned long)ev->arg);
+		(int)ev->eventTime.usec, ev->func,
+		ev->arg);
     }
 #endif
     /* Append it to the free list (rather than prepending) to keep the free

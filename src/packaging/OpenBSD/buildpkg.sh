@@ -1,4 +1,4 @@
-# $Id: buildpkg.sh,v 1.3.2.3 2008/01/03 02:30:37 rees Exp $
+# $Id: buildpkg.sh,v 1.4 2006/04/21 14:58:38 rees Exp $
 
 # This doesn't actually build a package any more
 
@@ -13,7 +13,7 @@ ln -s \
   $SRC/comerr/compile_et \
   $SRC/venus/fs \
   $SRC/kauth/kas \
-  $SRC/aklog/klog \
+  $SRC/kauth/klog \
   $SRC/sys/pagsh \
   $SRC/ptserver/pts \
   $SRC/log/tokens \
@@ -21,6 +21,7 @@ ln -s \
   $SRC/volser/vos \
   $SRC/bozo/bos \
   usr/vice/bin
+ln -s $SRC/pinstall/pinstall usr/vice/bin/install
 
 ln -s \
   $SRC/afsd/afsd \

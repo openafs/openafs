@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/devname.c,v 1.13.2.1 2007/10/30 15:24:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/devname.c,v 1.13.14.1 2007/10/30 15:16:57 shadow Exp $");
 
 #include <afs/param.h>
 #include <rx/xdr.h>

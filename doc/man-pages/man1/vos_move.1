@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_MOVE 1 "OpenAFS" "19/Jan/2008" "AFS Command Reference"
+.TH VOS_MOVE 1 "OpenAFS" "13/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -255,14 +255,7 @@ confirmation of the kill signal:
 To confirm termination of the operation, press Ctrl-C a second time; press
 any other key to continue the operation.
 .PP
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
-and the maximum size of a /vicepX partition on a fileserver is also 2
-terabytes. The fileserver will not report an error when it has access
-to a partition larger than 2 terabytes, but it will probably fail if
-the administrator attempts to use more than 2 terabytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
-partitions larger than 2 terabytes.
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 .SH "OPTIONS"
 .Ip "\fB\-id\fR <\fIvolume name or \s-1ID\s0\fR>" 4
 Specifies either the complete name or volume \s-1ID\s0 number of a read/write

@@ -67,12 +67,14 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\cm_dns.obj
+	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
-
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build bos.exe
@@ -102,12 +104,15 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\cm_dns.obj
+	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
+        $(CODESIGN_USERLAND)
 
 $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)
 	$(COPY) $** $@

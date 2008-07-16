@@ -43,7 +43,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/restorevol.c,v 1.13.2.3 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/restorevol.c,v 1.14.4.3 2007/11/26 21:08:46 shadow Exp $");
 
 #include <afs/afsint.h>
 #include <afs/nfs.h>
@@ -218,6 +218,7 @@ struct volumeHeader {
     int inService;
     int blessed;
     char message[1024];
+    afs_int32 volUpdateCounter;
 };
 
 afs_int32
@@ -343,6 +344,9 @@ ReadVolumeHeader(count)
 
 	case 'Z':
 	    vh.dayUse = ntohl(readvalue(4));
+	    break;
+	case 'V':
+            vh.volUpdateCounter = ntohl(readvalue(4));
 	    break;
 
 	default:

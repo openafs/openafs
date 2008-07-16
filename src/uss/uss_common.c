@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_common.c,v 1.6.2.1 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/uss/uss_common.c,v 1.6.14.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_common.h"		/*Interface definitions */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */

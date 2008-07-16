@@ -5,6 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_AUXCDEFINES = -DFSSYNC_BUILD_CLIENT
+
 RELDIR=volser
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
@@ -16,6 +18,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES = \
 	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\vsutils_prototypes.h \
+	$(INCFILEDIR)\lockprocs_prototypes.h \
 	$(INCFILEDIR)\volser.h \
 	$(INCFILEDIR)\volint.h
 
@@ -66,7 +70,8 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-     $(DESTDIR)\lib\cm_dns.obj
+        $(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 
 ############################################################################
@@ -93,8 +98,10 @@ VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
 
 $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 ############################################################################
 # Build vos
@@ -118,8 +125,10 @@ VOS_EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
 $(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
 
 $(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)
 	$(COPY)  $** $@

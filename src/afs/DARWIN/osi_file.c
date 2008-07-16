@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.8.2.8 2007/12/13 19:18:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.12.2.4 2007/12/13 19:18:32 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */

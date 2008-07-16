@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/utst_server.c,v 1.8.2.1 2007/10/30 15:24:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/utst_server.c,v 1.8.14.2 2008/04/02 19:51:57 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -62,7 +62,11 @@ SAMPLE_Inc(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
     }
     /* read the original value */
     code = ubik_Read(tt, &temp, sizeof(afs_int32));
@@ -118,7 +122,11 @@ SAMPLE_Get(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
     }
     /* read the value */
     code = ubik_Read(tt, &temp, sizeof(afs_int32));
@@ -161,7 +169,11 @@ SAMPLE_QGet(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
     }
     /* read the value */
     code = ubik_Read(tt, &temp, sizeof(afs_int32));
@@ -201,7 +213,11 @@ SAMPLE_Trun(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
     }
     /* shrink the file */
     code = ubik_Truncate(tt, 0);
@@ -242,7 +258,11 @@ SAMPLE_Test(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
     }
     /* read the original value */
     code = ubik_Read(tt, &temp, sizeof(afs_int32));

@@ -19,13 +19,13 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.11.2.6 2008/01/04 18:08:24 rees Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.15.2.1 2007/10/30 15:16:46 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
 #ifndef UKERNEL
 #include "h/types.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #endif
 #include "rx/rx.h"

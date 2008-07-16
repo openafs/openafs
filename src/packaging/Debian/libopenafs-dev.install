@@ -5,4 +5,4 @@ debian/tmp/usr/include                  usr
 debian/tmp/usr/lib/*.a                  usr/lib
 debian/tmp/usr/lib/afs                  usr/lib
 
-debian/doc/man1/rxgen.1                 usr/share/man/man1
+debian/tmp/usr/share/man/man1/rxgen.1   usr/share/man/man1

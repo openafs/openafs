@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.11.2.1 2007/10/30 15:23:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.11.14.1 2007/10/30 15:16:40 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>

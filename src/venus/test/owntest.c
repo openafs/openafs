@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/test/owntest.c,v 1.8.2.1 2007/11/26 21:21:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/test/owntest.c,v 1.8.14.1 2007/11/26 21:08:45 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>

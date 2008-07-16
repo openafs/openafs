@@ -7,7 +7,7 @@ vlserver - Initializes the Volume Location Server
 =for html
 <div class="synopsis">
 
-B<vlserver> S<<< [B<-p> <I<lwp processes>>] >>> [B<-nojumbo>]
+B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-rxbind>]
     [B<-allow-dotted-principal>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
     [B<-help>]
 
@@ -55,10 +55,10 @@ suites. Provide the command name and all option names in full.
 
 =over 4
 
-=item B<-p> <I<lwp processes>>
+=item B<-p> <I<number of threads>>
 
-Sets the number of server lightweight processes (LWPs) to run.  Provide an
-integer between C<4> and C<16>. The default is C<9>.
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide an integer between C<3> and C<16>. The default is C<9>.
 
 =item B<-nojumbo>
 
@@ -90,8 +90,13 @@ By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
 user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
-between principal names may disabled this check by starting the server
+between principal names may disable this check by starting the server
 with this option.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
 
 =item B<-help>
 

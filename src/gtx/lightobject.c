@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/lightobject.c,v 1.6.2.1 2007/10/30 15:23:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/lightobject.c,v 1.6.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #include "gtxlightobj.h"	/*Interface for this module */
 #include <stdio.h>		/*Standard I/O stuff */

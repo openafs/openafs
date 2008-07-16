@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.11 2008/01/04 18:40:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.29.4.12 2008/01/04 18:38:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -429,9 +429,20 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+    int code;
+
     AFS_STATCNT(afs_InitReq);
+    memset(av, 0, sizeof(*av));
     if (afs_shuttingdown)
 	return EIO;
+
+#ifdef AFS_LINUX26_ENV
+#if !defined(AFS_NONFSTRANS)
+    if (osi_linux_nfs_initreq(av, acred, &code))
+	return code;
+#endif
+#endif
+
     av->uid = PagInCred(acred);
     if (av->uid == NOPAG) {
 	/* Afs doesn't use the unix uid for anuthing except a handle
@@ -551,11 +562,7 @@ PagInCred(const struct AFS_UCRED *cred)
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
 #else
-#if defined(AFS_AIX51_ENV)
-    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
-	pag = NOPAG;
-    return pag;
-#elif defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV)
     if (cred->cr_ngrps < 2) {
 	return NOPAG;
     }
@@ -596,7 +603,7 @@ PagInCred(const struct AFS_UCRED *cred)
 #endif
 out:
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG) {
+    if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
 	struct key *key;
 	afs_uint32 upag, newpag;
 

@@ -21,10 +21,10 @@
 #     AFSROOT - ROOT Directory so that $(AFSROOT)\scr is location of source
 #
 ############################################################################
-#		Optional compliation flags
-#		NO_CRTDBG - used to disable some builds for CFTDBG allocate mapping
-#     	_CRTDBG_MAP_ALLOC = <utilize crt debug C runtime if define> (default is null)
-#		VADUMP - define VADUMP=1 if you are going to use the vadump utility and you are using V6.0
+# Optional compliation flags
+#     NO_CRTDBG - used to disable some builds for CFTDBG allocate mapping
+#     _CRTDBG_MAP_ALLOC = <utilize crt debug C runtime if define> (default is null)
+#     VADUMP - define VADUMP=1 if you are going to use the vadump utility and you are using V6.0
 #
 ####### Special optional defines
 
@@ -36,6 +36,10 @@
 #######
 
 #sanity checks 
+
+!IF ("$(CPU)" != "AMD64")
+!ERROR Platform SDK not configured for AMD64
+!ENDIF
 
 !IF EXISTS("TOOLS.INI")
 !MESSAGE ************CAUTION TOOLS.INI IN EFFECT**********
@@ -79,8 +83,8 @@ LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
-AFSPRODUCT_VER_MINOR=4
-AFSPRODUCT_VER_PATCH=400
+AFSPRODUCT_VER_MINOR=5
+AFSPRODUCT_VER_PATCH=5000
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -99,11 +103,11 @@ OBJ=obj
 !IF ("$(AFS_OBJDIR)"=="") 
 #########  AFS_OBJDIR is NOT used use default locations
 !  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(DEST)\checked
-OJT=$(AFSROOT)\$(OBJ)\checked
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\checked
 !  ELSE
-DESTDIR=$(AFSROOT)\$(DEST)\free
-OJT=$(AFSROOT)\$(OBJ)\free
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\free
 !  ENDIF
 UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !ELSE
@@ -112,21 +116,21 @@ UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !  IF (EXIST($(AFSROOT)\$(AFS_OBJDIR)))
 #  AFS_OBJDIR is relative path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !    ELSE
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\free\config
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\free
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\free\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
 !    ENDIF
 !  ELSE
 !    IF (EXIST($(AFS_OBJDIR)))
 #   AFS_OBJDIR is full path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !      ELSE
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\free
-OJT=$(AFS_OBJDIR)\free\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\free\config
 !      ENDIF
 !    ELSE
 !ERROR Can't find location of DEST directory!
@@ -164,15 +168,9 @@ OUT=$(OJT)\$(RELDIR)
 # WIN32.MAK, and this nmake file, are targeted to the MSVC compiler;
 # port this nmake file if additional compiler support is required.
 
-# !IF ("$(AFSVER_CL)"=="1300")
-# afslflags = $(afslflags) /DEBUG
-# !ENDIF
-
 !IF ("$(APPVER)" == "")
-APPVER=5.0
+APPVER=5.02
 !ENDIF
-
-
 
 !INCLUDE <WIN32.MAK>
 
@@ -210,14 +208,20 @@ afscdefs =\
 	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
 	-DSTRICT \
-	-D_WIN32_IE=0x0500 \
-	-D_WIN32_WINNT=0x0500 \
-    -DWINVER=0x0500 \
-    -DREGISTER_POWER_NOTIFICATIONS \
-    -DAFS_AFSDB_ENV \
-    -DAFS_FREELANCE_CLIENT \
-    -DAFS_64BIT_ENV \
+	-D_WIN32_IE=0x0502 \
+	-D_WIN32_WINNT=0x0502 \
+    	-DWINVER=0x0502 \
+    	-DREGISTER_POWER_NOTIFICATIONS \
+    	-DAFS_AFSDB_ENV \
+    	-DAFS_FREELANCE_CLIENT \
+    	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
+	-DAFS_LARGEFILE_ENV \
+	-D_USE_DECLSPECS_FOR_SAL=0 \
+	-D_USE_ATTRIBUTES_FOR_SAL=0 \
+	-D_ATL_SECURE_NO_DEPRECATE \
+	-D_AFX_DISABLE_DEPRECATED \
+	-D_AFX_SECURE_NO_WARNINGS \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
@@ -228,19 +232,17 @@ afscdefs =\
 # /GF   pool strings and place in read-only memory
 # /Gd   use cdecl calling convention by default
 # /Gy   enable function-level linking
-# /GX   enable C++ exceptions (assumes extern C funcs never throw exceptions)
+# /EHsc enable C++ exceptions (assumes extern C funcs never throw exceptions)
 # /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
-# /Wp64 64-bit porting warnings
 
 afscflags =\
         /Oy- \
 	/GF \
 	/Gd \
 	/Gy \
-	/Os \
-        /Wp64
+	/Os
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 afscflags = $(afscflags) /EHsc /wd4996
 !ELSE
 afscflags = $(afscflags) /GX
@@ -249,7 +251,7 @@ afscflags = $(afscflags) /GX
 !IF ("$(AFSVER_CL)"!="1200")
 afscflags = $(afscflags) /GT /GS
 #/Wp64
-!IF ("$(AFSVER_CL)"!="1400")
+!IF ("$(AFSVER_CL)"!="1400" && "$(AFSVER_CL)"!="1500")
 afscflags = $(afscflags) /G7
 !ENDIF
 !ENDIF
@@ -259,12 +261,11 @@ afscdefs = $(afscdefs) -DAFSIFS
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
-
 afscflags = $(afscflags) /Ox /Zi
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
-
+_VC_MANIFEST_BASENAME = __OAFW
 !ELSE		# CHECKED BUILD
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 
@@ -279,6 +280,25 @@ afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 !ENDIF
 
 !UNDEF NODEBUG
+_VC_MANIFEST_BASENAME = __OAFW.Debug
+!ENDIF
+
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
+_VC_MANIFEST_EMBED_EXE= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;1
+
+_VC_MANIFEST_EMBED_DLL= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;2
+!ELSE
+_VC_MANIFEST_EMBED_EXE=
+_VC_MANIFEST_EMBED_DLL=
+!ENDIF
+
+!IF DEFINED(CODESIGN_DESC) && DEFINED(CODESIGN_URL) && DEFINED(CODESIGN_TIMESTAMP)
+CODESIGN_USERLAND= signtool.exe sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) \
+        /t $(CODESIGN_TIMESTAMP) /v $@
+!ELSE
+CODESIGN_USERLAND=
 !ENDIF
 
 # Set compiler warning level
@@ -293,6 +313,9 @@ AFSDEV_WARNLEVEL = 3
      "$(AFSDEV_WARNLEVEL)" != "4")
 !ERROR Must define AFSDEV_WARNLEVEL to be one of 0 through 4.
 !ENDIF
+!ENDIF
+!IF ("$(AFSDEV_WARNLEVEL)" == "4" && "$(AFSVER_CL)" == "1500")
+_AFSDEV_WARNLEVEL=3
 !ENDIF
 
 afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
@@ -316,10 +339,6 @@ CPP2OBJ = $(C2OBJ)
 
 .rc{$(OUT)\}.res:
 	$(RC) /fo$(OUT)\$(<B).res $<
-
-# Compile .rc (resource) files
-#.rc.res:
-#	$(RC) $*.rc
 
 .SUFFIXES: .h
 
@@ -352,8 +371,17 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 
 #################### Link optional build flags set ###########
 
-afslflags =\
-	/FIXED:NO /VERBOSE:LIB
+afslflags = $(afslflags) /FIXED:NO /VERBOSE:LIB 
+!IF ("$(AFSVER_CL)"=="1500")
+afslflags = $(afslflags) /MACHINE:AMD64
+!ELSE
+afslflags = $(afslflags) /MACHINE:X64
+!ENDIF
+
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
+afslflags = $(afslflags) /MANIFEST
+!ENDIF
+
 
 mfclflags = $(guilflags)
 mfclflags = $(mfclflags:/NODEFAULTLIB=)
@@ -413,9 +441,8 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 
 !ENDIF #CHECKED BUILD
 
-
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $** 
 
 # EXE link macro for GUI applications
 EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
@@ -428,11 +455,13 @@ DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $
 
 # DLL link macro for GUI applications
 DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
+
 EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
+
 DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for resource-only DLLs
-DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**
+DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup=-noentry) $(afslflags) $**
 
 # Library archive macro
 LIBARCH = $(implib) /NOLOGO /OUT:$@ $**
@@ -442,9 +471,7 @@ NTLANG = $(DESTDIR)\bin\NTLang.bat
 
 ######### MIDL FLAGS
 
-!IFDEF OSISXP
-AFSDEV_AUXMIDLFLAGS=/Oi
-!ENDIF
+AFSDEV_AUXMIDLFLAGS=/env x64 /x64 /Oicf
 
 # Lex/Yacc macros
 LEX = flex -l

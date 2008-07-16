@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.11.2.8 2007/10/30 15:24:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.18.2.2 2007/10/30 15:16:46 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.10 2008/01/21 14:11:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.29.2.10 2008/03/05 21:53:31 shadow Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -45,6 +45,7 @@ RCSID
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include "dump.h"
+#include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include "volser.h"
@@ -76,7 +77,7 @@ struct iod {
     struct rx_call *call;	/* call to which to write, might be an array */
     int device;			/* dump device ID for volume */
     int parentId;		/* dump parent ID for volume */
-    struct DiskPartition *dumpPartition;	/* Dump partition. */
+    struct DiskPartition64 *dumpPartition;	/* Dump partition. */
     struct rx_call **calls;	/* array of pointers to calls */
     int ncalls;			/* how many calls/codes in array */
     int *codes;			/* one return code for each call */
@@ -383,6 +384,10 @@ ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
 	    if (!ReadInt32(iodp, (afs_uint32 *) & vol->dayUse))
 		return VOLSERREAD_DUMPERROR;
 	    break;
+	case 'V':
+	    if (!ReadInt32(iodp, (afs_uint32 *) & vol->volUpdateCounter))
+		return VOLSERREAD_DUMPERROR;
+	    break;
 	}
     }
     iod_ungetc(iodp, tag);
@@ -516,7 +521,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     int code = 0, error = 0;
     afs_int32 pad = 0, offset;
     afs_sfsize_t n, nbytes, howMany, howBig;
-    afs_foff_t lcode = 0;
+    afs_foff_t lcode;
     byte *p;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
@@ -554,6 +559,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	return VOLSERDUMPERROR;
     }
     howMany = (afs_sfsize_t) tstatfs.f_bsize;
+    Log("DumpFile: fstatfs returned block size of %lld; howMany=%lld", tstatfs.f_bsize, howMany);
 #else
     howMany = status.st_blksize;
 #endif /* AFS_AIX_ENV */
@@ -721,6 +727,8 @@ DumpVolumeHeader(register struct iod *iodp, register Volume * vp)
 	code = DumpInt32(iodp, 'D', V_dayUseDate(vp));
     if (!code)
 	code = DumpInt32(iodp, 'Z', V_dayUse(vp));
+    if (!code)
+	code = DumpInt32(iodp, 'V', V_volUpCounter(vp));
     return code;
 }
 
@@ -980,6 +988,10 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
+	    if (DoLogging) {
+		Log("RestoreVolume ProcessIndex: Set up %d inodes for volume %d\n",
+		    nVnodes, V_id(vp));
+	    }
 	    Buf = (afs_int32 *) malloc(nVnodes * sizeof(afs_int32));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
@@ -998,6 +1010,9 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 		    cnt++;
 		}
 		offset += vcp->diskSize;
+	    }
+	    if (DoLogging) {
+		Log("RestoreVolume ProcessIndex: found %d inodes\n", cnt);
 	    }
 	    *Bufp = Buf;
 	    *sizep = nVnodes;
@@ -1139,6 +1154,10 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 
 	if (!ReadInt32(iodp, &vnode->uniquifier))
 	    return VOLSERREAD_DUMPERROR;
+
+	if (DoLogging) {
+	    Log("ReadVnodes: setup %d/%d\n", vnodeNumber, vnode->uniquifier);
+	}
 	while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
 	    haveStuff = 1;
 	    switch (tag) {
@@ -1491,6 +1510,9 @@ SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
     FillInt64(addvar,0, 5);
     AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'Z', V_dayUse(vp)); */
+    FillInt64(addvar,0, 5);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
+/*     if (!code) code = DumpInt32(iodp, 'V', V_volUpCounter(vp)); */
     FillInt64(addvar,0, 5);
     AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     return code;

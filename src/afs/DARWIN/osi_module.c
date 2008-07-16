@@ -2,7 +2,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_module.c,v 1.10.2.3 2005/11/19 04:35:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_module.c,v 1.15 2005/11/19 04:32:59 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

@@ -37,7 +37,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.6 2007/07/03 04:24:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/des.c,v 1.19.4.1 2007/07/03 04:23:12 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>

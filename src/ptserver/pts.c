@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.7 2008/03/18 15:59:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.15.2.6 2008/04/02 19:51:56 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -57,7 +57,7 @@ struct authstate {
 };
 
 int
-pts_Interactive(register struct cmd_syndesc *as)
+pts_Interactive(struct cmd_syndesc *as, void *arock)
 {
     source = stdin;
     finished = 0;
@@ -65,14 +65,14 @@ pts_Interactive(register struct cmd_syndesc *as)
 }
 
 int
-pts_Quit(register struct cmd_syndesc *as)
+pts_Quit(struct cmd_syndesc *as, void *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-pts_Source(register struct cmd_syndesc *as)
+pts_Source(struct cmd_syndesc *as, void *arock)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -100,7 +100,7 @@ pts_Source(register struct cmd_syndesc *as)
 }
 
 int
-pts_Sleep(register struct cmd_syndesc *as)
+pts_Sleep(struct cmd_syndesc *as, void *arock)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -108,7 +108,11 @@ pts_Sleep(register struct cmd_syndesc *as)
 	return 1;
     }
     delay = atoi(as->parms[0].items->data);
+#ifdef AFS_PTHREAD_ENV
+    sleep(delay);
+#else
     IOMGR_Sleep(delay);
+#endif
     return 0;
 }
 
@@ -176,13 +180,13 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
 	sec = 1;
     }
-    if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
+    if (as->parms[18].items || as->parms[20].items) { /* -test, -localauth */
 	changed = 1;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
     } else {
 	if (sec == 2)
 	    confdir = AFSDIR_SERVER_ETC_DIRPATH;
-	else 
+	else
 	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
     }
     if (changed) {
@@ -198,7 +202,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     state->sec = sec;
     state->confdir = confdir;
     if (cell && cell != state->cell)
-	strncpy(state->cell, cell, MAXCELLCHARS-1);
+        strncpy(state->cell, cell, MAXCELLCHARS-1);
 
     force = 0;
     if (as->parms[19].items)
@@ -208,7 +212,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 }
 
 int
-CleanUp(register struct cmd_syndesc *as, void *arock)
+CleanUp(struct cmd_syndesc *as, void *arock)
 {
     if (as && !strcmp(as->name, "help"))
 	return 0;
@@ -221,7 +225,7 @@ CleanUp(register struct cmd_syndesc *as, void *arock)
 }
 
 int
-CreateGroup(register struct cmd_syndesc *as)
+CreateGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -281,7 +285,7 @@ CreateGroup(register struct cmd_syndesc *as)
 }
 
 int
-CreateUser(register struct cmd_syndesc *as)
+CreateUser(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -506,7 +510,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 
 
 int
-AddToGroup(register struct cmd_syndesc *as)
+AddToGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -527,7 +531,7 @@ AddToGroup(register struct cmd_syndesc *as)
 }
 
 int
-RemoveFromGroup(register struct cmd_syndesc *as)
+RemoveFromGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -548,7 +552,7 @@ RemoveFromGroup(register struct cmd_syndesc *as)
 }
 
 int
-ListMembership(register struct cmd_syndesc *as)
+ListMembership(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -593,7 +597,7 @@ ListMembership(register struct cmd_syndesc *as)
 }
 
 int
-Delete(register struct cmd_syndesc *as)
+Delete(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -632,7 +636,7 @@ char *flags_dncase = "s mar";	/* legal member acces values */
 int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 
 int
-CheckEntry(register struct cmd_syndesc *as)
+CheckEntry(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 rcode = 1;
@@ -731,7 +735,7 @@ CheckEntry(register struct cmd_syndesc *as)
 }
 
 int
-ListEntries(struct cmd_syndesc *as)
+ListEntries(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     afs_int32 flag, startindex, nentries, nextstartindex;
@@ -768,7 +772,7 @@ ListEntries(struct cmd_syndesc *as)
 }
 
 int
-ChownGroup(register struct cmd_syndesc *as)
+ChownGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char *name;
@@ -784,7 +788,7 @@ ChownGroup(register struct cmd_syndesc *as)
 }
 
 int
-ChangeName(register struct cmd_syndesc *as)
+ChangeName(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     char *oldname;
@@ -800,7 +804,7 @@ ChangeName(register struct cmd_syndesc *as)
 }
 
 int
-ListMax(register struct cmd_syndesc *as)
+ListMax(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 maxUser, maxGroup;
@@ -821,7 +825,7 @@ ListMax(register struct cmd_syndesc *as)
 }
 
 int
-SetMax(register struct cmd_syndesc *as)
+SetMax(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 maxid;
@@ -861,7 +865,7 @@ SetMax(register struct cmd_syndesc *as)
 }
 
 int
-SetFields(register struct cmd_syndesc *as)
+SetFields(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -956,7 +960,7 @@ SetFields(register struct cmd_syndesc *as)
 }
 
 int
-ListOwned(register struct cmd_syndesc *as)
+ListOwned(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -1217,4 +1221,3 @@ main(int argc, char **argv)
     CleanUp(NULL, NULL);
     exit(0);
 }
-

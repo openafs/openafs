@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/authcon.c,v 1.13.2.3 2007/11/01 16:09:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/authcon.c,v 1.14.8.2 2007/11/01 16:09:32 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"

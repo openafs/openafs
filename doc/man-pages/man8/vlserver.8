@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH vlserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH vlserver 8 "OpenAFS" "2/Apr/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -190,7 +190,7 @@
 .SH "NAME"
 vlserver \- Initializes the Volume Location Server
 .SH "SYNOPSIS"
-\fBvlserver\fR <<\ [\fB\-p\fR\ <\fIlwp\ processes\fR] >>> [\fB\-nojumbo\fR]
+\fBvlserver\fR <<\ [\fB\-p\fR\ <\fInumber\ of\ threads\fR] >>> [\fB\-nojumbo\fR] [\fB\-rxbind\fR]
     [\fB\-allow-dotted-principal\fR] [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR] 
     [\fB\-help\fR]
 .SH "DESCRIPTION"
@@ -229,9 +229,9 @@ change the number, use the \fB\-p\fR argument.
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
 .SH "OPTIONS"
-.Ip "\fB\-p\fR <\fIlwp processes\fR>" 4
-Sets the number of server lightweight processes (LWPs) to run.  Provide an
-integer between \f(CW4\fR and \f(CW16\fR. The default is \f(CW9\fR.
+.Ip "\fB\-p\fR <\fInumber of threads\fR>" 4
+Sets the number of server lightweight processes (LWPs or pthreads) to run.
+Provide an integer between \f(CW3\fR and \f(CW16\fR. The default is \f(CW9\fR.
 .Ip "\fB\-nojumbo\fR" 4
 Prohibits the server from sending or receiving jumbograms. A jumbogram is
 a large-size packet composed of 2 to 4 normal Rx data packets that share
@@ -255,8 +255,11 @@ By default, the \s-1RXKAD\s0 security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
 user.admin \s-1PTS\s0 entry. Sites whose Kerberos realms don't have these collisions 
-between principal names may disabled this check by starting the server
+between principal names may disable this check by starting the server
 with this option.
+.Ip "\fB\-rxbind\fR" 4
+Bind the Rx socket to the primary interface only.  (If not specified, the
+Rx socket will listen on all interfaces.)
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -299,7 +302,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Header "OPTIONS"
 
-.IX Item "\fB\-p\fR <\fIlwp processes\fR>"
+.IX Item "\fB\-p\fR <\fInumber of threads\fR>"
 
 .IX Item "\fB\-nojumbo\fR"
 
@@ -308,6 +311,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-enable_process_stats\fR"
 
 .IX Item "\fB\-allow-dotted-principal\fR"
+
+.IX Item "\fB\-rxbind\fR"
 
 .IX Item "\fB\-help\fR"
 

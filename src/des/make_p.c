@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/make_p.c,v 1.5.2.1 2006/03/09 06:41:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/make_p.c,v 1.6 2006/03/09 06:34:36 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

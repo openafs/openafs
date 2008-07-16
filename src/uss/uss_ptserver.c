@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_ptserver.c,v 1.7.2.1 2007/04/10 18:43:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/uss/uss_ptserver.c,v 1.7.14.1 2007/04/10 18:39:55 shadow Exp $");
 
 #include "uss_ptserver.h"	/*Module interface */
 #include <afs/ptclient.h>	/*Protection Server client interface */

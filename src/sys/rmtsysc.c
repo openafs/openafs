@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/rmtsysc.c,v 1.11.2.5 2007/11/28 05:08:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/rmtsysc.c,v 1.11.14.5 2007/11/28 05:04:51 shadow Exp $");
 
 #include <errno.h>
 #include <limits.h>

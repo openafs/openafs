@@ -13,6 +13,7 @@
 #include <afs/param.h>
 #include <afs/afs_Admin.h>
 #include <sys/types.h>
+#include <afs/volint.h>
 #ifdef AFS_NT40_ENV
 #ifndef _MFC_VER
 #include <winsock2.h>
@@ -465,5 +466,18 @@ extern int ADMINAPI vos_VolumeQuotaChange(const void *cellHandle,
 					  unsigned int volumeId,
 					  unsigned int volumeQuota,
 					  afs_status_p st);
+
+extern int ADMINAPI vos_VolumeGet2(const void *cellHandle,
+				  const void *serverHandle,
+				  vos_MessageCallBack_t callBack,
+				  unsigned int partition,
+				  unsigned int volumeId,
+				  volintInfo* pinfo, afs_status_p st);
+
+extern int ADMINAPI vos_ClearVolUpdateCounter(const void *cellHandle,
+				  const void *serverHandle,
+				  unsigned int partition,
+				  unsigned int volumeId,
+				  afs_status_p st);				  
 
 #endif /* OPENAFS_VOS_ADMIN_H */

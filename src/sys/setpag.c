@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/setpag.c,v 1.1.2.2 2005/10/15 15:21:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/setpag.c,v 1.1 2005/10/15 15:19:38 shadow Exp $");
 
 #include <afs/afs_args.h>
 #if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)

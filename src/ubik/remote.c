@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.7 2008/04/28 21:48:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.15.4.6 2008/04/28 21:48:11 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -452,7 +452,7 @@ SDISK_GetFile(rxcall, file, version)
     }
     length = ubikstat.size;
     tlen = htonl(length);
-    code = rx_Write(rxcall, &tlen, sizeof(afs_int32));
+    code = rx_Write(rxcall, (char *)&tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
 	DBRELE(dbase);
 	ubik_dprint("Rx-write length error=%d\n", code);
@@ -566,7 +566,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
-#if !defined(OLD_URECOVERY) && defined(AFS_PTHREAD_ENV)
+#if !defined(OLD_URECOVERY) && !defined(AFS_PTHREAD_ENV)
 	if (pass % 4 == 0)
 	    IOMGR_Poll();
 #endif
@@ -628,7 +628,11 @@ SDISK_SendFile(rxcall, file, length, avers)
 #endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));
     udisk_Invalidate(dbase, file);	/* new dbase, flush disk buffers */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+    assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
+#else
     LWP_NoYieldSignal(&dbase->version);
+#endif
     DBRELE(dbase);
   failed:
     if (code) {

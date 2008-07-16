@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.64 2008/04/15 12:29:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.126.2.28 2008/07/07 16:53:59 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -50,8 +50,6 @@ RCSID
 #endif
 
 extern struct vcache *afs_globalVp;
-
-
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
@@ -197,7 +195,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	code = -ENOENT;
 	goto out;
     }
-    ObtainReadLock(&avc->lock);
+    ObtainSharedLock(&avc->lock, 810);
+    UpgradeSToWLock(&avc->lock, 811);
     ObtainReadLock(&tdc->lock);
     /*
      * Make sure that the data in the cache is current. There are two
@@ -209,18 +208,26 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	   && (tdc->dflags & DFFetching)
 	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseReadLock(&avc->lock);
+	ReleaseSharedLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
-	ObtainReadLock(&avc->lock);
+	ObtainSharedLock(&avc->lock, 812);
 	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->states & CStatd)
 	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseReadLock(&avc->lock);
+	ReleaseSharedLock(&avc->lock);
 	afs_PutDCache(tdc);
 	goto tagain;
     }
+
+    /* Set the readdir-in-progress flag, and downgrade the lock
+     * to shared so others will be able to acquire a read lock.
+     */
+    avc->states |= CReadDir;
+    avc->dcreaddir = tdc;
+    avc->readdir_pid = MyPidxx;
+    ConvertWToSLock(&avc->lock);
 
     /* Fill in until we get an error or we're done. This implementation
      * takes an offset in units of blobs, rather than bytes.
@@ -236,16 +243,16 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!de)
 	    break;
 
-	ino = (avc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
-	ino &= 0x7fffffff;	/* Assumes 32 bit ino_t ..... */
+	ino = afs_calc_inum (avc->fid.Fid.Volume, ntohl(de->fid.vnode));
+
 	if (de->name)
 	    len = strlen(de->name);
 	else {
 	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %lx, dirpos %d)\n", 
 		   (unsigned long)&tdc->f.inode, dirpos);
 	    DRelease((struct buffer *) de, 0);
+	    ReleaseSharedLock(&avc->lock);
 	    afs_PutDCache(tdc);
-	    ReleaseReadLock(&avc->lock);
 	    code = -ENOENT;
 	    goto out;
 	}
@@ -282,7 +289,14 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 		/* clean up from afs_FindVCache */
 		afs_PutVCache(tvc);
 	    }
+	    /* 
+	     * If this is NFS readdirplus, then the filler is going to
+	     * call getattr on this inode, which will deadlock if we're
+	     * holding the GLOCK.
+	     */
+	    AFS_GUNLOCK();
 	    code = (*filldir) (dirbuf, de->name, len, offset, ino, type);
+	    AFS_GLOCK();
 	}
 #else
 	code = (*filldir) (dirbuf, de->name, len, offset, ino);
@@ -299,7 +313,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
-    ReleaseReadLock(&avc->lock);
+    UpgradeSToWLock(&avc->lock, 813);
+    avc->states &= ~CReadDir;
+    avc->dcreaddir = 0;
+    avc->readdir_pid = 0;
+    ReleaseSharedLock(&avc->lock);
     code = 0;
 
 out:
@@ -472,21 +490,21 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
 #ifdef AFS_LINUX24_ENV
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
-        (cmd == F_SETLK || cmd == F_SETLKW)) {
+	(cmd == F_SETLK || cmd == F_SETLKW)) {
 #ifdef POSIX_LOCK_FILE_WAIT_ARG
-	code = posix_lock_file(fp, flp, 0);
+        code = posix_lock_file(fp, flp, 0);
 #else
-	flp->fl_flags &=~ FL_SLEEP;
-	code = posix_lock_file(fp, flp);
-#endif 
-	if (code && flp->fl_type != F_UNLCK) {
-	    struct AFS_FLOCK flock2;
-	    flock2 = flock;
-	    flock2.l_type = F_UNLCK;
-	    AFS_GLOCK();
-	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
-	    AFS_GUNLOCK();
-	}
+        flp->fl_flags &=~ FL_SLEEP;
+        code = posix_lock_file(fp, flp);
+#endif
+       if (code && flp->fl_type != F_UNLCK) {
+           struct AFS_FLOCK flock2;
+           flock2 = flock;
+           flock2.l_type = F_UNLCK;
+           AFS_GLOCK();
+           afs_lockctl(vcp, &flock2, F_SETLK, credp);
+           AFS_GUNLOCK();
+       }
     }
 #endif
     /* Convert flock back to Linux's file_lock */
@@ -998,6 +1016,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
     struct inode *ip = NULL;
+#if defined(AFS_LINUX26_ENV)
+    struct dentry *newdp = NULL;
+#endif
     int code;
 
 #if defined(AFS_LINUX26_ENV)
@@ -1012,7 +1033,15 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
-	if (hlist_unhashed(&ip->i_hash))
+	if (
+#ifdef HAVE_KERNEL_HLIST_UNHASHED
+	    hlist_unhashed(&ip->i_hash)
+#elif defined(AFS_LINUX26_ENV)
+	    ip->i_hash.pprev == NULL
+#else
+	    ip->i_hash.prev == NULL
+#endif
+	    )
 	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
@@ -1023,8 +1052,14 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     if (ip && S_ISDIR(ip->i_mode)) {
 	struct dentry *alias;
 
+        /* Try to invalidate an existing alias in favor of our new one */
 	alias = d_find_alias(ip);
+#if defined(AFS_LINUX26_ENV)
+        /* But not if it's disconnected; then we want d_splice_alias below */
+	if (alias && !(alias->d_flags & DCACHE_DISCONNECTED)) {
+#else
 	if (alias) {
+#endif
 	    if (d_invalidate(alias) == 0) {
 		dput(alias);
 	    } else {
@@ -1038,7 +1073,11 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	}
     }
 #endif
+#if defined(AFS_LINUX26_ENV)
+    newdp = d_splice_alias(ip, dp);
+#else
     d_add(dp, ip);
+#endif
 
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
@@ -1049,8 +1088,13 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
      * seeing that the dp->d_inode field is NULL.
      */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
+#if defined(AFS_LINUX26_ENV)
+    if (!code || code == ENOENT)
+	return newdp;
+#else
     if (code == ENOENT)
 	return ERR_PTR(0);
+#endif
     else
 	return ERR_PTR(-code);
 #else
@@ -1263,13 +1307,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 #if defined(AFS_LINUX26_ENV)
     /* Prevent any new references during rename operation. */
     lock_kernel();
-#endif
-    /* Remove old and new entries from name hash. New one will change below.
-     * While it's optimal to catch failures and re-insert newdp into hash,
-     * it's also error prone and in that case we're already dealing with error
-     * cases. Let another lookup put things right, if need be.
-     */
-#if defined(AFS_LINUX26_ENV)
+
     if (!d_unhashed(newdp)) {
 	d_drop(newdp);
 	rehash = newdp;
@@ -1289,6 +1327,9 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     AFS_GLOCK();
     code = afs_rename(VTOAFS(oldip), oldname, VTOAFS(newip), newname, credp);
     AFS_GUNLOCK();
+
+    if (!code)
+	olddp->d_time = 0;      /* force to revalidate */
 
     if (rehash)
 	d_rehash(rehash);

@@ -15,6 +15,8 @@
 #include <pthread.h>
 #endif
 
+#include <afs/voldefs.h>
+
 /* vflags, representing state of the volume */
 #define	VTDeleteOnSalvage	1	/* delete on next salvage */
 #define	VTOutOfService		2	/* never put this volume online */
@@ -110,7 +112,6 @@ extern struct volser_trans *QI_GlobalWriteTrans;
 #define INVALID_BID 0
 #define VOLSER_MAXVOLNAME 65
 #define VOLSER_OLDMAXVOLNAME 32
-#define	VOLMAXPARTS	255
 
 /*flags used for interfacing with the  backup system */
 struct volDescription {		/*used for interfacing with the backup system */

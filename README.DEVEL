@@ -1,12 +1,14 @@
 Notes on Coding Standards/Requirements for OpenAFS Source
 ---------------------------------------------------------
 
+We have an official style.  Please use it.  If you have gnu indent 2.2.9 or
+later you can reformat for this style with the following option:
+
+-npro -nbad -bap -nbc -bbo -br -ce -cdw -brs -ncdb -cp1 -ncs -di2 -ndj -nfc1
+-nfca -i4 -lp -npcs -nprs -psl -sc -nsob -ts8
+
 Do not use $< in any cross-platform dir as it requires a reasonable
 make that is not available on all systems.
-
-Be careful with prototypes/ANSI-C in code that will be compiled for
-kernel source.  In general, avoid them until we have figured out
-exactly when/where they can be used safely.
 
 Do not have build rules that build multiple targets. Make doesn't seem able
 to handle this, and it interferes with -j builds. (In particular, build the
@@ -67,6 +69,9 @@ Compiles on gcc-using machines should strive to handle using
 
 Routines shall be defined in source prior to use if possible, and 
 prototyped in block at top of file if static.
+
+API documentation in the code should be done using Qt-style Doxygen
+comments.
 
 If you make a routine or variable static, be sure and remove it from
 the AIX .exp files.

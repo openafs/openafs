@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.11 2007/10/30 15:24:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.29.2.2 2007/10/30 15:16:46 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL

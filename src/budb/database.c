@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/database.c,v 1.7.2.2 2007/10/30 15:23:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/database.c,v 1.7.14.4 2008/04/02 19:51:55 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -21,7 +21,6 @@ RCSID
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <ubik.h>
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"
@@ -90,7 +89,9 @@ dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;
@@ -122,7 +123,9 @@ dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;
@@ -155,7 +158,9 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
 
   error_exit:
     if (((++pollCount) % 4) == 0) {	/* Poll every 4 reads/writes */
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
 	pollCount = 0;
     }
     return code;

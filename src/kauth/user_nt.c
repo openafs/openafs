@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/user_nt.c,v 1.12.2.1 2004/08/25 07:09:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/user_nt.c,v 1.13 2004/08/19 01:07:47 kolya Exp $");
 
 #include <afs/stds.h>
 

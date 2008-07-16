@@ -18,7 +18,8 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_groups.c,v 1.5.2.2 2005/11/29 05:02:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_groups.c,v 1.7 2005/11/29 04:58:49 shadow Exp $");
+
 /* We should be doing something better anyway */
 #ifdef AFS_DARWIN80_ENV
 int
@@ -29,7 +30,7 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
      afs_uint32 *newpag;
      afs_uint32 change_parent;
 { 
-  return -1;
+    return -1;
 }
 #else
 #include "afs/sysincludes.h"

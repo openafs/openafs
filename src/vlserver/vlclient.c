@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.12.2.3 2007/10/31 04:13:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.16.2.3 2007/10/31 04:09:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -45,7 +45,6 @@ RCSID
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/cmd.h>
@@ -1315,8 +1314,9 @@ dump_stats(stats, vital_header)
 {
     int i;
     char strg[30];
+    time_t start_time = stats->start_time;
 
-    strncpy(strg, ctime((time_t *) & stats->start_time), sizeof(strg));
+    strncpy(strg, ctime(&start_time), sizeof(strg));
     strg[strlen(strg) - 1] = 0;
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");

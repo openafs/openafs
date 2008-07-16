@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13.2.1 2007/10/30 15:23:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13.14.1 2007/10/30 15:16:42 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

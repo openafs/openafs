@@ -19,14 +19,13 @@
 #include "malloc.h"
 #include "time.h"
 #include "stdlib.h"
-#include "windows.h"
 
 #ifndef  intptr_t
-#define intptr_t long
+#define intptr_t INT_PTR
 #endif
 
 void
-usuage()
+usage()
 {
     printf("util_cr file ;remove cr (from crlf)\n\
 	OR util_cr } ProductVersion in_filename out_filename ; substitute for %%1-%%5 in file\n\
@@ -115,7 +114,7 @@ Addkey(const char *hkey, const char *subkey, const char *stag,
     if (strcmp(hkey, "HKEY_LOCAL_MACHINE") == 0)
 	kHkey = HKEY_LOCAL_MACHINE;
     if (kHkey == 0)
-	usuage();
+	usage();
     result = (RegCreateKeyEx(kHkey	/*HKEY_LOCAL_MACHINE */
 			     , subkey, 0, NULL, REG_OPTION_NON_VOLATILE,
 			     KEY_ALL_ACCESS, NULL, &kPkey,
@@ -130,11 +129,11 @@ Addkey(const char *hkey, const char *subkey, const char *stag,
 	if (*stag == '@')
 	    result =
 		RegSetValueEx(kPkey, "", 0, REG_SZ, (CONST BYTE *) sval,
-			      strlen(sval));
+			      (DWORD)strlen(sval));
 	else
 	    result =
 		RegSetValueEx(kPkey, stag, 0, REG_SZ, (CONST BYTE *) sval,
-			      strlen(sval));
+			      (DWORD)strlen(sval));
     } else {
 
 	if (*stag == '@')
@@ -162,7 +161,7 @@ Subkey(const char *hkey, const char *subkey)
     if (strcmp(hkey, "HKEY_LOCAL_MACHINE") == 0)
 	kHkey = HKEY_LOCAL_MACHINE;
     if (kHkey == 0)
-	usuage();
+	usage();
     result = RegDeleteKey(kHkey, subkey);
     if (result != ERROR_SUCCESS) {
 	printf("AFS Error - Could Not create a registration key\n");
@@ -319,7 +318,7 @@ isequal(char *msg1, char *msg2, char *disp)
 int
 SetSysEnv(int argc, char *argv[])
 {
-    DWORD dwResult;
+    DWORD_PTR dwResult;
     printf("assignment %s %s\n", argv[2], argv[3]);
     Addkey("HKEY_LOCAL_MACHINE",
 	   "System\\CurrentControlSet\\Control\\Session Manager\\Environment",
@@ -334,28 +333,27 @@ SetSysEnv(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-/*	typedef char * CHARP;*/
     char fname[128];
     FILE *file;
-    int l, i;
+    int i;
     char **pvar, *ch, *save;
-    long len;
+    size_t len;
     BOOL bRecurse = FALSE;
     BOOL bQuiet = FALSE;
     if (argc < 2)
-	usuage();
+	usage();
 
    /* RSM4: Add an "ECHO" that doesn't append a new line... */
    if (strcmp(argv[1], "_echo") == 0) {
       if(argc<3)
-         usuage();
+         usage();
       printf("%s",argv[2]);
       return 0;
    }
 
     if (strcmp(argv[1], "_sysvar") == 0) {
 	if (argc < 4)
-	    usuage();
+	    usage();
 	return (SetSysEnv(argc, argv));
 
     }
@@ -390,7 +388,7 @@ main(int argc, char *argv[])
 	return _MSC_VER;
     }
     if (argc < 3)
-	usuage();
+	usage();
     if (strcmp(argv[1], "_isOS") == 0)
 	return CheckVersion(argc, argv);
     if (strcmp(argv[1], "}") == 0) {
@@ -403,7 +401,7 @@ main(int argc, char *argv[])
 	int pat, pat2;
 	strcpy(v5, argv[2]);
 	if (argc < 5)
-	    usuage();
+	    usage();
 	if ((ptr = strtok(argv[2], ". \n")) == NULL)
 	    return 0;
 	maj = atoi(ptr);
@@ -415,15 +413,15 @@ main(int argc, char *argv[])
 	pat2 = -1;
 	switch (strlen(ptr)) {
 	case 0:
-	    usuage();
+	    usage();
 	case 1:
 	    pat = atoi(ptr);
 	    if (isdigit(*ptr) != 0)
 		break;
-	    usuage();
+	    usage();
 	case 2:		//ONLY 1.0.44 is interpreted as 1.0.4.4 or 1.0.4a as 1.0.4.a
 	    if (isdigit(*ptr) == 0)
-		usuage();
+		usage();
 	    pat = *ptr - '0';
 	    ptr++;
 	    if (isalpha(*ptr) == 0) {
@@ -431,14 +429,14 @@ main(int argc, char *argv[])
 	    } else if (isalpha(*ptr) != 0) {
 		pat2 = tolower(*ptr) - 'a' + 1;
 	    } else
-		usuage();
+		usage();
 	    break;
 	case 3:		//1.0.401 or 1.0.40a are the same; 
 	    if ((isdigit(*ptr) == 0)	// first 2 must be digit
 		|| (isdigit(*(ptr + 1)) == 0)
 		|| (*(ptr + 1) != '0' && isdigit(*(ptr + 2)) == 0)	// disallow 1.0.4b0  or 1.0.41a 
 		)
-		usuage();
+		usage();
 	    pat = *ptr - '0';
 	    ptr++;
 	    pat2 = atoi(ptr);
@@ -447,28 +445,28 @@ main(int argc, char *argv[])
 		pat2 = tolower(*ptr) - 'a' + 1;
 	    break;
 	default:
-	    usuage();
+	    usage();
 	}
 	// last can be 1-2 digits or one alpha (if pat2 hasn't been set)
 	if ((ptr = strtok(NULL, ". \n")) != NULL) {
 	    if (pat2 >= 0)
-		usuage();
+		usage();
 	    switch (strlen(ptr)) {
 	    case 1:
 		pat2 = (isdigit(*ptr)) ? atoi(ptr) : tolower(*ptr) - 'a' + 1;
 		break;
 	    case 2:
 		if (isdigit(*ptr) == 0 || isdigit(*(ptr + 1)) == 0)
-		    usuage();
+		    usage();
 		pat2 = atoi(ptr);
 		break;
 	    default:
-		usuage();
+		usage();
 	    }
 	}
 	file = fopen(argv[3], "r");
 	if (file == NULL)
-	    usuage();
+	    usage();
 	len = filelength(_fileno(file));
 	save = (char *)malloc(len + 1);
 	buf = save;
@@ -477,7 +475,7 @@ main(int argc, char *argv[])
 	fclose(file);
 	file = fopen(argv[4], "w");
 	if (file == NULL)
-	    usuage();
+	    usage();
 	sprintf(v1, "%i", maj);
 	sprintf(v2, "%i", min);
 	sprintf(v3, "%i", pat);
@@ -530,7 +528,7 @@ main(int argc, char *argv[])
     }
     if (strcmp(argv[1], "*") == 0) {	/* "[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}]  @=AFS Client Shell Extension" */
 	if (argc < 3)
-	    usuage();
+	    usage();
 	for (i = 2; argc >= 3; i++) {
 	    char *ssub = strtok(argv[i], "[");
 	    BOOL option;
@@ -569,7 +567,7 @@ main(int argc, char *argv[])
 	char msg[256], msgt[256];
 	char *ptr;
 	if (argc < 4)
-	    usuage();
+	    usage();
 	for (i = 3; argc >= 4; i++) {
 
 	    char *ssect = strstr(argv[i], "[");

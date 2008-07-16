@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.9 2006/02/27 20:37:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.50.2.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -382,6 +382,9 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (avc->vc_error)
 	return avc->vc_error;
 
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)
+	return ENETDOWN;
+    
     startDate = osi_Time();
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
@@ -873,15 +876,6 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
 	return 0;
     }
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-    if (count > 1) {
-	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
-	afs_PutFakeStat(&fakestat);
-	return 0;
-    }
-#endif
-#ifndef	AFS_SUN5_ENV
-#if defined(AFS_SGI_ENV)
     /* unlock any locks for pid - could be wrong for child .. */
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #ifdef AFS_SGI65_ENV
@@ -898,6 +892,12 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+#elif	defined(AFS_SUN5_ENV)
+    if (count > 1) {
+	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
+	afs_PutFakeStat(&fakestat);
+	return 0;
+    }
 #else /* AFS_SGI_ENV */
     if (avc->flockCount) {	/* Release Lock */
 #if	defined(AFS_OSF_ENV) 
@@ -907,9 +907,8 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif
     }
 #endif /* AFS_SGI_ENV */
-#endif /* AFS_SUN5_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
-	if (afs_BBusy()) {
+	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred))) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
 	    code = afs_StoreOnLastReference(avc, &treq);

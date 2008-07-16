@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_MINIDUMP 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
+.TH FS_MINIDUMP 1 "OpenAFS" "13/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -196,6 +196,16 @@ fs_minidump \- Generate a minidump from the current afsd service
 of the afsd_service.exe process.  This output can be very helpful when
 debugging the AFS Client Service when it is unresponsive to SMB/CIFS
 requests.
+.PP
+If the AFS Client Service becomes unresponsive to any form of
+communication there may be a serious error that can only be diagnosed
+by someone with access to the source code and a debugger.  The \*(L"fs
+minidump\*(R" command can be used to force the generation of a MiniDump
+file containing the state of all of the threads in the AFS Client
+Service process.
+.PP
+The \*(L"MiniDumpType\*(R" registry value can be used to adjust the scope of the
+process information included within the dump file.
 .SH "CAUTIONS"
 This command is only available in OpenAFS for Windows version 1.4 and later.
 .SH "OPTIONS"

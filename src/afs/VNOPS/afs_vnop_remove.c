@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.17 2007/12/19 20:59:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.52.2.5 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -104,26 +104,29 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	  register struct vcache *tvc, char *aname, struct AFS_UCRED *acred,
 	  struct vrequest *treqp)
 {
-    register afs_int32 code;
+    register afs_int32 code = 0;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
-    do {
-	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
-	if (tc) {
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
-				 aname, &OutDirStatus, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
-	      SHARED_LOCK, NULL));
+    
+    if (!AFS_IS_DISCONNECTED) {
+        do {
+	    tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
+	    if (tc) {
+	        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
+	        RX_AFS_GUNLOCK();
+	        code =
+		    RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		  		     aname, &OutDirStatus, &tsync);
+	        RX_AFS_GLOCK();
+	        XSTATS_END_TIME;
+	    } else
+	        code = -1;
+        } while (afs_Analyze
+	         (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	          SHARED_LOCK, NULL));
+    }
 
     osi_dnlc_remove(adp, aname, tvc);
 
@@ -263,6 +266,9 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
 	return code;
     }
+    if (afs_IsDynrootMount(adp)) {
+	return ENOENT;
+    }
 
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
@@ -301,6 +307,16 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	return code;
     }
 
+    /* If we're running disconnected without logging, go no further... */
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(tvc);
+#endif
+        code = ENETDOWN;
+        afs_PutFakeStat(&fakestate);
+        return code;
+    }
+    
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
     if (tdc)
@@ -393,7 +409,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsrename(adp, aname, adp, unlname, acred, &treq);
 	Tnam1 = unlname;
 	if (!code) {
-	    char *oldmvid = NULL;
+	    struct VenusFid *oldmvid = NULL;
 	    if (tvc->mvid) 
 		oldmvid = tvc->mvid;
 	    tvc->mvid = (struct VenusFid *)unlname;

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5.2.2 2007/04/10 18:43:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.6.8.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>

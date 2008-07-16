@@ -42,7 +42,9 @@
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
+#ifdef MULTIPROCESSOR
 #define AFS_GLOBAL_SUNLOCK	1
+#endif
 #define	AFS_SHORTGID		0	/* are group id's short? */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)

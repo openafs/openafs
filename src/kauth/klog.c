@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/klog.c,v 1.8.2.3 2007/10/31 04:13:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/klog.c,v 1.8.14.4 2007/10/31 04:09:30 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -26,7 +26,6 @@ RCSID
 #include <stdio.h>
 #include <pwd.h>
 #include <afs/com_err.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include "kauth.h"

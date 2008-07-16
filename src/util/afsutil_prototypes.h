@@ -74,7 +74,8 @@ extern int64_t flipbase64_to_int64(char *s);
 
 /* get_krbrlm.c */
 extern int afs_krb_get_lrealm(char *r, int n);
-
+extern int afs_krb_exclusion(char *name);
+extern int afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localrealm);
 /* hostparse.c */
 extern struct hostent *hostutil_GetHostByName(register char *ahost);
 extern char *hostutil_GetNameByINet(afs_uint32 addr);
@@ -172,6 +173,9 @@ extern size_t strlcpy(char *dst, const char *src, size_t siz);
 extern size_t strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+/* strn */
+extern size_t afs_strnlen(char * buf, size_t len);
+
 
 /* sys.c */
 
@@ -183,6 +187,10 @@ extern void afs_htonuuid(afsUUID * uuidp);
 extern void afs_ntohuuid(afsUUID * uuidp);
 extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
+#if !defined(KERNEL) && !defined(UKERNEL)
+extern int afsUUID_from_string(const char *str, afsUUID * uuid);
+extern int afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz);
+#endif
 
 /* volparse.c */
 extern afs_int32 volutil_GetPartitionID(char *aname);

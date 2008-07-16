@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dsstub.c,v 1.6.2.3 2007/11/26 21:21:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dsstub.c,v 1.7.6.2 2007/11/26 21:08:41 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>

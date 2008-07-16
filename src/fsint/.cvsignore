@@ -4,6 +4,10 @@ Kcallback.ss.c
 Kvice.cs.c
 Kvice.h
 Kvice.xdr.c
+Kpagcb.cs.c
+Kpagcb.ss.c
+Kpagcb.h
+Kpagcb.xdr.c
 Makefile
 afscbint.cs.c
 afscbint.h
@@ -13,3 +17,4 @@ afsint.cs.c
 afsint.h
 afsint.ss.c
 afsint.xdr.c
+pagcb.h

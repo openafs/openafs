@@ -13,7 +13,7 @@
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/compile_et.c,v 1.14.2.1 2007/04/10 18:43:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/compile_et.c,v 1.14.14.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>

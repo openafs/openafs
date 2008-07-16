@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -83,7 +85,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.27 2008/03/11 17:40:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.77.2.15 2008/02/18 19:20:53 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -114,94 +116,24 @@ RCSID
 
 #include <afs/ptclient.h>	/* need definition of prlist for host.h */
 #include "host.h"
+#include "callback.h"
+#ifdef AFS_DEMAND_ATTACH_FS
+#include "../tviced/serialize_state.h"
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 
 extern afsUUID FS_HostUUID;
 extern int hostCount;
-int ShowProblems = 1;
-
-/* Maximum number of call backs to break at once, single fid */
-/* There is some debate as to just how large this value should be */
-/* Ideally, it would be very very large, but I am afraid that the */
-/* cache managers will all send in their responses simultaneously, */
-/* thereby swamping the file server.  As a result, something like */
-/* 10 or 15 might be a better bet. */
-#define MAX_CB_HOSTS	10
-
-/* max time to break a callback, otherwise client is dead or net is hosed */
-#define MAXCBT 25
-
-#define u_byte	unsigned char
+static int ShowProblems = 1;
 
 struct cbcounters cbstuff;
 
-struct cbstruct {
-    struct host *hp;
-    afs_uint32 thead;
-};
+static struct FileEntry * FE = NULL;    /* don't use FE[0] */
+static struct CallBack * CB = NULL;     /* don't use CB[0] */
 
-struct FileEntry {
-    afs_uint32 vnode;
-    afs_uint32 unique;
-    afs_uint32 volid;
-    afs_uint32 fnext;
-    afs_uint32 ncbs;
-    afs_uint32 firstcb;
-    afs_uint32 status;
-    afs_uint32 spare;
-} *FE;				/* Don't use FE[0] */
-#define FE_LATER 0x1
+static struct CallBack * CBfree = NULL;
+static struct FileEntry * FEfree = NULL;
 
-struct CallBack {
-    afs_uint32 cnext;		/* Next call back entry */
-    afs_uint32 fhead;		/* Head of this call back chain */
-    u_byte thead;		/* Head of timeout chain */
-    u_byte status;		/* Call back status; see definitions, below */
-    afs_uint32 hhead;		/* Head of host table chain */
-    afs_uint32 tprev, tnext;	/* Timeout chain */
-    afs_uint32 hprev, hnext;	/* Chain from host table */
-    unsigned short spare;	/* make it a multiple of 32 bits. */
-} *CB;				/* Don't use CB[0] */
-
-/* status values for status field of CallBack structure */
-#define CB_NORMAL   1		/* Normal call back */
-#define CB_DELAYED  2		/* Delayed call back due to rpc problems.
-				 * The call back entry will be added back to the
-				 * host list at the END of the list, so that
-				 * searching backwards in the list will find all
-				 * the (consecutive)host. delayed call back entries */
-#define CB_VOLUME   3		/* Callback for a volume */
-#define CB_BULK     4		/* Normal callbacks, handed out from FetchBulkStatus */
-
-/* call back indices to pointers, and vice-versa */
-#define itocb(i)    ((i)?CB+(i):0)
-#define cbtoi(cbp)  (!(cbp)?0:(cbp)-CB)
-
-/* file entry indices to pointers, and vice-versa */
-#define itofe(i)    ((i)?FE+(i):0)
-#define fetoi(fep)  (!(fep)?0:(fep)-FE)
-
-/* Timeouts:  there are 128 possible timeout values in effect at any
- * given time.  Each timeout represents timeouts in an interval of 128
- * seconds.  So the maximum timeout for a call back is 128*128=16384
- * seconds, or 4 1/2 hours.  The timeout cleanup stuff is called only
- * if space runs out or by the file server every 5 minutes.  This 5
- * minute slack should be allowed for--so a maximum time of 4 hours
- * is safer.
- *
- * Timeouts must be chosen to correspond to an exact multiple
- * of 128, because all times are truncated to a 128 multiple, and
- * timed out if the current truncated time is <= to the truncated time
- * corresponding to the timeout queue.
- */
-
-/* Unix time to Call Back time, and vice-versa.  Call back time is
-   in units of 128 seconds, corresponding to time queues. */
-#define CBtime(uxtime)	((uxtime)>>7)
-#define UXtime(cbtime)	((cbtime)<<7)
-
-/* Given a Unix time, compute the closest Unix time that corresponds to
-   a time queue, rounding up */
-#define TimeCeiling(uxtime)	(((uxtime)+127)&~127)
 
 /* Time to live for call backs depends upon number of users of the file.
  * TimeOuts is indexed by this number/8 (using TimeOut macro).  Times
@@ -223,51 +155,16 @@ static int TimeOuts[] = {
 /* minimum time given for a call back */
 static int MinTimeOut = (7 * 60);
 
-#define TimeOutCutoff   ((sizeof(TimeOuts)/sizeof(TimeOuts[0]))*8)
-#define TimeOut(nusers)  ((nusers)>=TimeOutCutoff? MinTimeOut: TimeOuts[(nusers)>>3])
-
-/* time out at server is 3 minutes more than ws */
-#define ServerBias	  (3*60)
-
 /* Heads of CB queues; a timeout index is 1+index into this array */
-static afs_uint32 timeout[128];
-
-/* Convert cbtime to timeout queue index */
-#define TIndex(cbtime)  (((cbtime)&127)+1)
-
-/* Convert cbtime to pointer to timeout queue head */
-#define THead(cbtime)	(&timeout[TIndex(cbtime)-1])
+static afs_uint32 timeout[CB_NUM_TIMEOUT_QUEUES];
 
 static afs_int32 tfirst;	/* cbtime of oldest unexpired call back time queue */
 
-/* Normalize index into timeout array so that two such indices will be
-   ordered correctly, so that they can be compared to see which times
-   sooner, or so that the difference in time out times between them
-   can be computed. */
-#define TNorm(index)   ((index)<TIndex(tfirst)?(index)+128:(index))
-
-/* This converts a timeout index into the actual time it will expire */
-#define TIndexToTime(index) (UXtime(TNorm(index) - TIndex(tfirst) + tfirst))
-
-
-/* Convert pointer to timeout queue head to index, and vice versa */
-#define ttoi(t)		((t-timeout)+1)
-#define itot(i)		((timeout)+(i-1))
 
 /* 16 byte object get/free routines */
 struct object {
     struct object *next;
 };
-
-struct VCBParams {
-    struct cbstruct cba[MAX_CB_HOSTS];	/* re-entrant storage */
-    unsigned int ncbas;
-    afs_uint32 thead;		/* head of timeout queue for youngest callback */
-    struct AFSFid *fid;
-};
-
-struct CallBack *CBfree = 0;
-struct FileEntry *FEfree = 0;
 
 /* Prototypes for static routines */
 static struct FileEntry *FindFE(register AFSFid * fid);
@@ -294,8 +191,6 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld,
 				    struct VCBParams *parms);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 struct VCBParams *parms);
-static int lih_r(register struct host *host, register int held,
-		 register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
 
@@ -304,9 +199,11 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 #define FreeCB(cb) iFreeCB((struct CallBack *)cb, &cbstuff.nCBs)
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
 
-#define VHASH 512		/* Power of 2 */
-static afs_uint32 HashTable[VHASH];	/* File entry hash table */
-#define VHash(volume, unique) (((volume)+(unique))&(VHASH-1))
+
+/* Other protos - move out sometime */
+void PrintCB(register struct CallBack *cb, afs_uint32 now);
+
+static afs_uint32 HashTable[FEHASH_SIZE];	/* File entry hash table */
 
 static struct FileEntry *
 FindFE(register AFSFid * fid)
@@ -315,7 +212,7 @@ FindFE(register AFSFid * fid)
     register int fei;
     register struct FileEntry *fe;
 
-    hash = VHash(fid->Volume, fid->Unique);
+    hash = FEHash(fid->Volume, fid->Unique);
     for (fei = HashTable[hash]; fei; fei = fe->fnext) {
 	fe = itofe(fei);
 	if (fe->volid == fid->Volume && fe->unique == fid->Unique
@@ -414,11 +311,11 @@ HAdd(register struct CallBack *cb, register struct host *host)
     if (!host->cblist) {
 	host->cblist = cb->hnext = cb->hprev = cbtoi(cb);
     } else {
-	register struct CallBack *hhp = itocb(host->cblist);
+	register struct CallBack *fcb = itocb(host->cblist);
 
-	cb->hprev = hhp->hprev;
-	cb->hnext = host->cblist;
-	hhp->hprev = (itocb(hhp->hprev)->hnext = cbtoi(cb));
+	cb->hprev = fcb->hprev;
+	cb->hnext = cbtoi(fcb);
+	fcb->hprev = (itocb(fcb->hprev)->hnext = cbtoi(cb));
     }
     return 0;
 }
@@ -468,7 +365,7 @@ CDel(struct CallBack *cb, int deletefe)
 /* N.B.  This one also deletes the CB, and also possibly parent FE, so
  * make sure that it is not on any other list before calling this
  * routine */
-int Ccdelpt = 0, CcdelB = 0;
+static int Ccdelpt = 0, CcdelB = 0;
 
 static int
 CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
@@ -515,7 +412,7 @@ static int
 FDel(register struct FileEntry *fe)
 {
     register int fei = fetoi(fe);
-    register afs_uint32 *p = &HashTable[VHash(fe->volid, fe->unique)];
+    register afs_uint32 *p = &HashTable[FEHash(fe->volid, fe->unique)];
 
     while (*p && *p != fei)
 	p = &itofe(*p)->fnext;
@@ -525,6 +422,7 @@ FDel(register struct FileEntry *fe)
     return 0;
 }
 
+/* initialize the callback package */
 int
 InitCallBack(int nblks)
 {
@@ -532,19 +430,21 @@ InitCallBack(int nblks)
     tfirst = CBtime(FT_ApproxTime());
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
-    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry)))) - 1;
+    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
     if (!FE) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    FE--;  /* FE[0] is supposed to point to junk */
     cbstuff.nFEs = nblks;
     while (cbstuff.nFEs)
 	FreeFE(&FE[cbstuff.nFEs]);	/* This is correct */
-    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack)))) - 1;
+    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
     if (!CB) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    CB--;  /* CB[0] is supposed to point to junk */
     cbstuff.nCBs = nblks;
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
@@ -691,7 +591,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	fe->unique = fid->Unique;
 	fe->ncbs = 0;
 	fe->status = 0;
-	hash = VHash(fid->Volume, fid->Unique);
+	hash = FEHash(fid->Volume, fid->Unique);
 	fe->fnext = HashTable[hash];
 	HashTable[hash] = fetoi(fe);
     }
@@ -827,10 +727,11 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
 			if (ShowProblems) {
 			    ViceLog(7,
-				    ("BCB: Failed on file %u.%u.%u, Host %s:%d is down\n",
+				    ("BCB: Failed on file %u.%u.%u, Host %x (%s:%d) is down\n",
 				     afidp->AFSCBFids_val->Volume,
 				     afidp->AFSCBFids_val->Vnode,
 				     afidp->AFSCBFids_val->Unique,
+                                     hp,
 				     afs_inet_ntoa_r(hp->host, hoststr),
 				     ntohs(hp->port)));
 			}
@@ -897,8 +798,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     char hoststr[16];
 
     ViceLog(7,
-	    ("BCB: BreakCallBack(all but %s:%d, (%u,%u,%u))\n",
-	     afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
+	    ("BCB: BreakCallBack(Host %x all but %s:%d, (%u,%u,%u))\n",
+	     xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
 	     fid->Volume, fid->Vnode, fid->Unique));
 
     H_LOCK;
@@ -927,8 +828,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 		    ViceLog(0, ("BCB: BOGUS! cb->hhead is NULL!\n"));
 		} else if (thishost->hostFlags & VENUSDOWN) {
 		    ViceLog(7,
-			    ("BCB: %s:%d is down; delaying break call back\n",
-			     afs_inet_ntoa_r(thishost->host, hoststr),
+			    ("BCB: %x (%s:%d) is down; delaying break call back\n",
+			     thishost, afs_inet_ntoa_r(thishost->host, hoststr),
 			     ntohs(thishost->port)));
 		    cb->status = CB_DELAYED;
 		} else {
@@ -989,8 +890,8 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
 	ViceLog(8,
-		("DCB: No call back for host %s:%d, (%u, %u, %u)\n",
-		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+		("DCB: No call back for host %x (%s:%d), (%u, %u, %u)\n",
+		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
 		 fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
 	H_UNLOCK;
@@ -1111,15 +1012,15 @@ BreakDelayedCallBacks_r(struct host *host)
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
-			("CB: Call back connect back failed (in break delayed) for Host %s:%d\n",
-			 afs_inet_ntoa_r(host->host, hoststr),
+			("CB: Call back connect back failed (in break delayed) for Host %x (%s:%d)\n",
+			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 	    }
 	    host->hostFlags |= VENUSDOWN;
 	} else {
 	    ViceLog(25,
-		    ("InitCallBackState success on %s\n",
-		     afs_inet_ntoa_r(host->host, hoststr)));
+		    ("InitCallBackState success on %x (%s:%d)\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	    /* reset was done successfully */
 	    host->hostFlags |= RESETDONE;
 	    host->hostFlags &= ~VENUSDOWN;
@@ -1158,15 +1059,15 @@ BreakDelayedCallBacks_r(struct host *host)
 		int i;
 		if (ShowProblems) {
 		    ViceLog(0,
-			    ("CB: XCallBackBulk failed, Host %s:%d; callback list follows:\n",
-			     afs_inet_ntoa_r(host->host, hoststr),
+			    ("CB: XCallBackBulk failed, Host %x (%s:%d); callback list follows:\n",
+                             host, afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port)));
 		}
 		for (i = 0; i < nfids; i++) {
 		    if (ShowProblems) {
 			ViceLog(0,
-				("CB: Host %s:%d, file %u.%u.%u (part of bulk callback)\n",
-				 afs_inet_ntoa_r(host->host, hoststr),
+				("CB: Host %x (%s:%d), file %u.%u.%u (part of bulk callback)\n",
+				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port), fids[i].Volume,
 				 fids[i].Vnode, fids[i].Unique));
 		    }
@@ -1213,12 +1114,12 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	    return 0;		/* Release hold */
 	}
 	ViceLog(8,
-		("BVCB: volume call back for Host %s:%d failed\n",
-		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+		("BVCB: volume call back for Host %x (%s:%d) failed\n",
+                 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for Host %s:%d failed\n",
-		     afs_inet_ntoa_r(host->host, hoststr),
+		    ("CB: volume callback for Host %x (%s:%d) failed\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
 	DeleteAllCallBacks_r(host, deletefe);	/* Delete all callback state 
@@ -1309,7 +1210,7 @@ BreakVolumeCallBacks(afs_uint32 volume)
 
     H_LOCK;
     fid.Volume = volume, fid.Vnode = fid.Unique = 0;
-    for (hash = 0; hash < VHASH; hash++) {
+    for (hash = 0; hash < FEHASH_SIZE; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
@@ -1367,7 +1268,7 @@ int
 BreakVolumeCallBacksLater(afs_uint32 volume)
 {
     int hash;
-    afs_int32 *feip;
+    afs_uint32 *feip;
     struct FileEntry *fe;
     struct CallBack *cb;
     struct host *host;
@@ -1375,8 +1276,8 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 
     ViceLog(25, ("Setting later on volume %u\n", volume));
     H_LOCK;
-    for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+    for (hash = 0; hash < FEHASH_SIZE; hash++) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -1388,7 +1289,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 		FSYNC_LOCK;
 		fe->status |= FE_LATER;
 		FSYNC_UNLOCK;
-		found++;
+		found = 1;
 	    }
 	    feip = &fe->fnext;
 	}
@@ -1415,7 +1316,7 @@ BreakLaterCallBacks(void)
 {
     struct AFSFid fid;
     int hash;
-    afs_int32 *feip;
+    afs_uint32 *feip;
     struct CallBack *cb;
     struct FileEntry *fe = NULL;
     struct FileEntry *myfe = NULL;
@@ -1431,8 +1332,8 @@ BreakLaterCallBacks(void)
     /* Pick the first volume we see to clean up */
     fid.Volume = fid.Vnode = fid.Unique = 0;
 
-    for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+    for (hash = 0; hash < FEHASH_SIZE; hash++) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe && (fe->status & FE_LATER)
 		&& (fid.Volume == 0 || fid.Volume == fe->volid)) {
 		/* Ugly, but used to avoid left side casting */
@@ -1476,8 +1377,8 @@ BreakLaterCallBacks(void)
 		/* leave hold for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
-			("Found host %s:%d non-DELAYED cb for %u:%u:%u\n", 
-			 afs_inet_ntoa_r(host->host, hoststr),
+			("Found host %x (%s:%d) non-DELAYED cb for %u:%u:%u\n", 
+			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), fe->vnode, fe->unique, fe->volid));
 	    }
 	}
@@ -1539,8 +1440,9 @@ CleanupTimedOutCallBacks_r(void)
 		cb = itocb(cbi);
 		cbi = cb->tnext;
 		ViceLog(8,
-			("CCB: deleting timed out call back %s:%d, (%u,%u,%u)\n",
-			 afs_inet_ntoa_r(h_itoh(cb->hhead)->host, hoststr),
+			("CCB: deleting timed out call back %x (%s:%d), (%u,%u,%u)\n",
+                         h_itoh(cb->hhead)->host,
+                         afs_inet_ntoa_r(h_itoh(cb->hhead)->host, hoststr),
 			 h_itoh(cb->hhead)->port, itofe(cb->fhead)->volid,
 			 itofe(cb->fhead)->vnode, itofe(cb->fhead)->unique));
 		HDel(cb);
@@ -1563,23 +1465,6 @@ CleanupTimedOutCallBacks_r(void)
 
 static struct host *lih_host;
 static int lih_host_held;
-
-static int
-lih_r(register struct host *host, register int held,
-      register struct host *hostp)
-{
-    if (host->cblist
-	&& ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall)) {
-	if (lih_host != NULL && lih_host_held) {
-	    h_Release_r(lih_host);
-	}
-	lih_host = host;
-	lih_host_held = !held;
-	held = 1;
-    }
-    return held;
-}
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
  * is newer than 'hostp' which is the host with the oldest ActiveCall from
@@ -1714,8 +1599,8 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     struct rx_connection *cb_conn = NULL;
 
     ViceLog(5,
-	    ("GSS: Delete longest inactive host %s\n",
-	     afs_inet_ntoa_r(hp->host, hoststr)));
+	    ("GSS: Delete longest inactive host %x (%s:%d)\n",
+             hp, afs_inet_ntoa_r(hp->host, hoststr), ntohs(hp->port)));
     if (!(held = h_Held_r(hp)))
 	h_Hold_r(hp);
 
@@ -1800,6 +1685,971 @@ PrintCallBackStats(void)
 
 #ifndef INTERPRET_DUMP
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * callback state serialization
+ */
+static int cb_stateSaveTimeouts(struct fs_dump_state * state);
+static int cb_stateSaveFEHash(struct fs_dump_state * state);
+static int cb_stateSaveFEs(struct fs_dump_state * state);
+static int cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe);
+static int cb_stateRestoreTimeouts(struct fs_dump_state * state);
+static int cb_stateRestoreFEHash(struct fs_dump_state * state);
+static int cb_stateRestoreFEs(struct fs_dump_state * state);
+static int cb_stateRestoreFE(struct fs_dump_state * state);
+static int cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe, 
+			      struct iovec * iov, int niovecs);
+
+static int cb_stateVerifyFEHash(struct fs_dump_state * state);
+static int cb_stateVerifyFE(struct fs_dump_state * state, struct FileEntry * fe);
+static int cb_stateVerifyFCBList(struct fs_dump_state * state, struct FileEntry * fe);
+static int cb_stateVerifyTimeoutQueues(struct fs_dump_state * state);
+
+static int cb_stateFEToDiskEntry(struct FileEntry *, struct FEDiskEntry *);
+static int cb_stateDiskEntryToFE(struct fs_dump_state * state,
+				 struct FEDiskEntry *, struct FileEntry *);
+
+static int cb_stateCBToDiskEntry(struct CallBack *, struct CBDiskEntry *);
+static int cb_stateDiskEntryToCB(struct fs_dump_state * state,
+				 struct CBDiskEntry *, struct CallBack *);
+
+static int cb_stateFillHeader(struct callback_state_header * hdr);
+static int cb_stateCheckHeader(struct callback_state_header * hdr);
+
+static int cb_stateAllocMap(struct fs_dump_state * state);
+
+int
+cb_stateSave(struct fs_dump_state * state)
+{
+    int ret = 0;
+
+    AssignInt64(state->eof_offset, &state->hdr->cb_offset);
+
+    /* invalidate callback state header */
+    memset(state->cb_hdr, 0, sizeof(struct callback_state_header));
+    if (fs_stateWriteHeader(state, &state->hdr->cb_offset, state->cb_hdr,
+			    sizeof(struct callback_state_header))) {
+	ret = 1;
+	goto done;
+    }
+
+    fs_stateIncEOF(state, sizeof(struct callback_state_header));
+
+    /* dump timeout state */
+    if (cb_stateSaveTimeouts(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    /* dump fe hashtable state */
+    if (cb_stateSaveFEHash(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    /* dump callback state */
+    if (cb_stateSaveFEs(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    /* write the callback state header to disk */
+    cb_stateFillHeader(state->cb_hdr);
+    if (fs_stateWriteHeader(state, &state->hdr->cb_offset, state->cb_hdr,
+			    sizeof(struct callback_state_header))) {
+	ret = 1;
+	goto done;
+    }
+    
+ done:
+    return ret;
+}
+
+int
+cb_stateRestore(struct fs_dump_state * state)
+{
+    int ret = 0;
+
+    if (fs_stateReadHeader(state, &state->hdr->cb_offset, state->cb_hdr,
+			   sizeof(struct callback_state_header))) {
+	ret = 1;
+	goto done;
+    }
+
+    if (cb_stateCheckHeader(state->cb_hdr)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (cb_stateAllocMap(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (cb_stateRestoreTimeouts(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (cb_stateRestoreFEHash(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    /* restore FEs and CBs from disk */
+    if (cb_stateRestoreFEs(state)) {
+	ret = 1;
+	goto done;
+    }
+
+    /* restore the timeout queue heads */
+    tfirst = state->cb_hdr->tfirst;
+
+ done:
+    return ret;
+}
+
+int
+cb_stateRestoreIndices(struct fs_dump_state * state)
+{
+    int i, ret = 0;
+    struct FileEntry * fe;
+    struct CallBack * cb;
+
+    /* restore indices in the FileEntry structures */
+    for (i = 1; i < state->fe_map.len; i++) {
+	if (state->fe_map.entries[i].new_idx) {
+	    fe = itofe(state->fe_map.entries[i].new_idx);
+
+	    /* restore the fe->fnext entry */
+	    if (fe_OldToNew(state, fe->fnext, &fe->fnext)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the fe->firstcb entry */
+	    if (cb_OldToNew(state, fe->firstcb, &fe->firstcb)) {
+		ret = 1;
+		goto done;
+	    }
+	}
+    }
+    
+    /* restore indices in the CallBack structures */
+    for (i = 1; i < state->cb_map.len; i++) {
+	if (state->cb_map.entries[i].new_idx) {
+	    cb = itocb(state->cb_map.entries[i].new_idx);
+
+	    /* restore the cb->cnext entry */
+	    if (cb_OldToNew(state, cb->cnext, &cb->cnext)) {
+		ret = 1;
+		goto done;
+	    }
+	    
+	    /* restore the cb->fhead entry */
+	    if (fe_OldToNew(state, cb->fhead, &cb->fhead)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the cb->hhead entry */
+	    if (h_OldToNew(state, cb->hhead, &cb->hhead)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the cb->tprev entry */
+	    if (cb_OldToNew(state, cb->tprev, &cb->tprev)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the cb->tnext entry */
+	    if (cb_OldToNew(state, cb->tnext, &cb->tnext)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the cb->hprev entry */
+	    if (cb_OldToNew(state, cb->hprev, &cb->hprev)) {
+		ret = 1;
+		goto done;
+	    }
+
+	    /* restore the cb->hnext entry */
+	    if (cb_OldToNew(state, cb->hnext, &cb->hnext)) {
+		ret = 1;
+		goto done;
+	    }
+	}
+    }
+
+    /* restore the timeout queue head indices */
+    for (i = 0; i < state->cb_timeout_hdr->records; i++) {
+	if (cb_OldToNew(state, timeout[i], &timeout[i])) {
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+    /* restore the FE hash table queue heads */
+    for (i = 0; i < state->cb_fehash_hdr->records; i++) {
+	if (fe_OldToNew(state, HashTable[i], &HashTable[i])) {
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+int
+cb_stateVerify(struct fs_dump_state * state)
+{
+    int ret = 0;
+
+    if (cb_stateVerifyFEHash(state)) {
+	ret = 1;
+    }
+
+    if (cb_stateVerifyTimeoutQueues(state)) {
+	ret = 1;
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateVerifyFEHash(struct fs_dump_state * state)
+{
+    int ret = 0, i;
+    struct FileEntry * fe;
+    afs_uint32 fei, chain_len;
+
+    for (i = 0; i < FEHASH_SIZE; i++) {
+	chain_len = 0;
+	for (fei = HashTable[i], fe = itofe(fei);
+	     fe;
+	     fei = fe->fnext, fe = itofe(fei)) {
+	    if (fei > cbstuff.nblks) {
+		ViceLog(0, ("cb_stateVerifyFEHash: error: index out of range (fei=%d)\n", fei));
+		ret = 1;
+		break;
+	    }
+	    if (cb_stateVerifyFE(state, fe)) {
+		ret = 1;
+	    }
+	    if (chain_len > FS_STATE_FE_MAX_HASH_CHAIN_LEN) {
+		ViceLog(0, ("cb_stateVerifyFEHash: error: hash chain %d length exceeds %d; assuming there's a loop\n",
+			    i, FS_STATE_FE_MAX_HASH_CHAIN_LEN));
+		ret = 1;
+		break;
+	    }
+	    chain_len++;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateVerifyFE(struct fs_dump_state * state, struct FileEntry * fe)
+{
+    int ret = 0;
+
+    if ((fe->firstcb && !fe->ncbs) ||
+	(!fe->firstcb && fe->ncbs)) {
+	ViceLog(0, ("cb_stateVerifyFE: error: fe->firstcb does not agree with fe->ncbs (fei=%d, fe->firstcb=%d, fe->ncbs=%d)\n",
+		    fetoi(fe), fe->firstcb, fe->ncbs));
+	ret = 1;
+    }
+    if (cb_stateVerifyFCBList(state, fe)) {
+	ViceLog(0, ("cb_stateVerifyFE: error: FCBList failed verification (fei=%d)\n", fetoi(fe)));
+	ret = 1;
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateVerifyFCBList(struct fs_dump_state * state, struct FileEntry * fe)
+{
+    int ret = 0;
+    afs_uint32 cbi, fei, chain_len = 0;
+    struct CallBack * cb;
+
+    fei = fetoi(fe);
+
+    for (cbi = fe->firstcb, cb = itocb(cbi);
+	 cb;
+	 cbi = cb->cnext, cb = itocb(cbi)) {
+	if (cbi > cbstuff.nblks) {
+	    ViceLog(0, ("cb_stateVerifyFCBList: error: list index out of range (cbi=%d, ncbs=%d)\n",
+			cbi, cbstuff.nblks));
+	    ret = 1;
+	    goto done;
+	}
+	if (cb->fhead != fei) {
+	    ViceLog(0, ("cb_stateVerifyFCBList: error: cb->fhead != fei (fei=%d, cb->fhead=%d)\n",
+			fei, cb->fhead));
+	    ret = 1;
+	}
+	if (chain_len > FS_STATE_FCB_MAX_LIST_LEN) {
+	    ViceLog(0, ("cb_stateVerifyFCBList: error: list length exceeds %d (fei=%d); assuming there's a loop\n",
+			FS_STATE_FCB_MAX_LIST_LEN, fei));
+	    ret = 1;
+	    goto done;
+	}
+	chain_len++;
+    }
+
+    if (fe->ncbs != chain_len) {
+	ViceLog(0, ("cb_stateVerifyFCBList: error: list length mismatch (len=%d, fe->ncbs=%d)\n",
+		    chain_len, fe->ncbs));
+	ret = 1;
+    }
+
+ done:
+    return ret;
+}
+
+int
+cb_stateVerifyHCBList(struct fs_dump_state * state, struct host * host)
+{
+    int ret = 0;
+    afs_uint32 hi, chain_len, cbi;
+    struct CallBack *cb, *ncb;
+
+    hi = h_htoi(host);
+    chain_len = 0;
+
+    for (cbi = host->cblist, cb = itocb(cbi);
+	 cb;
+	 cbi = cb->hnext, cb = ncb) {
+	if (chain_len && (host->cblist == cbi)) {
+	    /* we've wrapped around the circular list, and everything looks ok */
+	    break;
+	}
+	if (cb->hhead != hi) {
+	    ViceLog(0, ("cb_stateVerifyHCBList: error: incorrect cb->hhead (cbi=%d, h->index=%d, cb->hhead=%d)\n",
+			cbi, hi, cb->hhead));
+	    ret = 1;
+	}
+	if (!cb->hprev || !cb->hnext) {
+	    ViceLog(0, ("cb_stateVerifyHCBList: error: null index in circular list (cbi=%d, h->index=%d)\n",
+			cbi, hi));
+	    ret = 1;
+	    goto done;
+	}
+	if ((cb->hprev > cbstuff.nblks) ||
+	    (cb->hnext > cbstuff.nblks)) {
+	    ViceLog(0, ("cb_stateVerifyHCBList: error: list index out of range (cbi=%d, h->index=%d, cb->hprev=%d, cb->hnext=%d, nCBs=%d)\n",
+			cbi, hi, cb->hprev, cb->hnext, cbstuff.nblks));
+	    ret = 1;
+	    goto done;
+	}
+	ncb = itocb(cb->hnext);
+	if (cbi != ncb->hprev) {
+	    ViceLog(0, ("cb_stateVerifyHCBList: error: corrupt linked list (cbi=%d, h->index=%d)\n",
+			cbi, hi));
+	    ret = 1;
+	    goto done;
+	}
+	if (chain_len > FS_STATE_HCB_MAX_LIST_LEN) {
+	    ViceLog(0, ("cb_stateVerifyFCBList: error: list length exceeds %d (h->index=%d); assuming there's a loop\n",
+			FS_STATE_HCB_MAX_LIST_LEN, hi));
+	    ret = 1;
+	    goto done;
+	}
+	chain_len++;
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateVerifyTimeoutQueues(struct fs_dump_state * state)
+{
+    int ret = 0, i;
+    afs_uint32 cbi, chain_len;
+    struct CallBack *cb, *ncb;
+
+    for (i = 0; i < CB_NUM_TIMEOUT_QUEUES; i++) {
+	chain_len = 0;
+	for (cbi = timeout[i], cb = itocb(cbi);
+	     cb;
+	     cbi = cb->tnext, cb = ncb) {
+	    if (chain_len && (cbi == timeout[i])) {
+		/* we've wrapped around the circular list, and everything looks ok */
+		break;
+	    }
+	    if (cbi > cbstuff.nblks) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: error: list index out of range (cbi=%d, tindex=%d)\n",
+			    cbi, i));
+		ret = 1;
+		break;
+	    }
+	    if (itot(cb->thead) != &timeout[i]) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: error: cb->thead points to wrong timeout queue (tindex=%d, cbi=%d, cb->thead=%d)\n",
+			    i, cbi, cb->thead));
+		ret = 1;
+	    }
+	    if (!cb->tprev || !cb->tnext) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: null index in circular list (cbi=%d, tindex=%d)\n",
+			    cbi, i));
+		ret = 1;
+		break;
+	    }
+	    if ((cb->tprev > cbstuff.nblks) ||
+		(cb->tnext > cbstuff.nblks)) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: list index out of range (cbi=%d, tindex=%d, cb->tprev=%d, cb->tnext=%d, nCBs=%d)\n",
+			    cbi, i, cb->tprev, cb->tnext, cbstuff.nblks));
+		ret = 1;
+		break;
+	    }
+	    ncb = itocb(cb->tnext);
+	    if (cbi != ncb->tprev) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: corrupt linked list (cbi=%d, tindex=%d)\n",
+			    cbi, i));
+		ret = 1;
+		break;
+	    }
+	    if (chain_len > FS_STATE_TCB_MAX_LIST_LEN) {
+		ViceLog(0, ("cb_stateVerifyTimeoutQueues: list length exceeds %d (tindex=%d); assuming there's a loop\n",
+			    FS_STATE_TCB_MAX_LIST_LEN, i));
+		ret = 1;
+		break;
+	    }
+	    chain_len++;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateSaveTimeouts(struct fs_dump_state * state)
+{
+    int ret = 0;
+    struct iovec iov[2];
+
+    AssignInt64(state->eof_offset, &state->cb_hdr->timeout_offset);
+
+    memset(state->cb_timeout_hdr, 0, sizeof(struct callback_state_fehash_header));
+    state->cb_timeout_hdr->magic = CALLBACK_STATE_TIMEOUT_MAGIC;
+    state->cb_timeout_hdr->records = CB_NUM_TIMEOUT_QUEUES;
+    state->cb_timeout_hdr->len = sizeof(struct callback_state_timeout_header) +
+	(state->cb_timeout_hdr->records * sizeof(afs_uint32));
+
+    iov[0].iov_base = (char *)state->cb_timeout_hdr;
+    iov[0].iov_len = sizeof(struct callback_state_timeout_header);
+    iov[1].iov_base = (char *)timeout;
+    iov[1].iov_len = sizeof(timeout);
+
+    if (fs_stateSeek(state, &state->cb_hdr->timeout_offset)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (fs_stateWriteV(state, iov, 2)) {
+	ret = 1;
+	goto done;
+    }
+
+    fs_stateIncEOF(state, state->cb_timeout_hdr->len);
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateRestoreTimeouts(struct fs_dump_state * state)
+{
+    int ret = 0, len;
+
+    if (fs_stateReadHeader(state, &state->cb_hdr->timeout_offset,
+			   state->cb_timeout_hdr, 
+			   sizeof(struct callback_state_timeout_header))) {
+	ret = 1;
+	goto done;
+    }
+
+    if (state->cb_timeout_hdr->magic != CALLBACK_STATE_TIMEOUT_MAGIC) {
+	ret = 1;
+	goto done;
+    }
+    if (state->cb_timeout_hdr->records != CB_NUM_TIMEOUT_QUEUES) {
+	ret = 1;
+	goto done;
+    }
+
+    len = state->cb_timeout_hdr->records * sizeof(afs_uint32);
+
+    if (state->cb_timeout_hdr->len !=
+	(sizeof(struct callback_state_timeout_header) + len)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (fs_stateRead(state, timeout, len)) {
+	ret = 1;
+	goto done;
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateSaveFEHash(struct fs_dump_state * state)
+{
+    int ret = 0;
+    struct iovec iov[2];
+
+    AssignInt64(state->eof_offset, &state->cb_hdr->fehash_offset);
+
+    memset(state->cb_fehash_hdr, 0, sizeof(struct callback_state_fehash_header));
+    state->cb_fehash_hdr->magic = CALLBACK_STATE_FEHASH_MAGIC;
+    state->cb_fehash_hdr->records = FEHASH_SIZE;
+    state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header) +
+	(state->cb_fehash_hdr->records * sizeof(afs_uint32));
+
+    iov[0].iov_base = (char *)state->cb_fehash_hdr;
+    iov[0].iov_len = sizeof(struct callback_state_fehash_header);
+    iov[1].iov_base = (char *)HashTable;
+    iov[1].iov_len = sizeof(HashTable);
+
+    if (fs_stateSeek(state, &state->cb_hdr->fehash_offset)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (fs_stateWriteV(state, iov, 2)) {
+	ret = 1;
+	goto done;
+    }
+
+    fs_stateIncEOF(state, state->cb_fehash_hdr->len);
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateRestoreFEHash(struct fs_dump_state * state)
+{
+    int ret = 0, len;
+
+    if (fs_stateReadHeader(state, &state->cb_hdr->fehash_offset,
+			   state->cb_fehash_hdr, 
+			   sizeof(struct callback_state_fehash_header))) {
+	ret = 1;
+	goto done;
+    }
+
+    if (state->cb_fehash_hdr->magic != CALLBACK_STATE_FEHASH_MAGIC) {
+	ret = 1;
+	goto done;
+    }
+    if (state->cb_fehash_hdr->records != FEHASH_SIZE) {
+	ret = 1;
+	goto done;
+    }
+
+    len = state->cb_fehash_hdr->records * sizeof(afs_uint32);
+
+    if (state->cb_fehash_hdr->len !=
+	(sizeof(struct callback_state_fehash_header) + len)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (fs_stateRead(state, HashTable, len)) {
+	ret = 1;
+	goto done;
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateSaveFEs(struct fs_dump_state * state)
+{
+    int ret = 0;
+    register int fei, hash;
+    register struct FileEntry *fe;
+
+    AssignInt64(state->eof_offset, &state->cb_hdr->fe_offset);
+
+    for (hash = 0; hash < FEHASH_SIZE ; hash++) {
+	for (fei = HashTable[hash]; fei; fei = fe->fnext) {
+	    fe = itofe(fei);
+	    if (cb_stateSaveFE(state, fe)) {
+		ret = 1;
+		goto done;
+	    }
+	}
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateRestoreFEs(struct fs_dump_state * state)
+{
+    int count, nFEs, ret = 0;
+
+    nFEs = state->cb_hdr->nFEs;
+
+    for (count = 0; count < nFEs; count++) {
+	if (cb_stateRestoreFE(state)) {
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
+{
+    int ret = 0, iovcnt, cbi, written = 0;
+    afs_uint32 fei;
+    struct callback_state_entry_header hdr;
+    struct FEDiskEntry fedsk;
+    struct CBDiskEntry cbdsk[16];
+    struct iovec iov[16];
+    struct CallBack *cb;
+
+    fei = fetoi(fe);
+    if (fei > state->cb_hdr->fe_max) {
+	state->cb_hdr->fe_max = fei;
+    }
+
+    memset(&hdr, 0, sizeof(struct callback_state_entry_header));
+
+    if (cb_stateFEToDiskEntry(fe, &fedsk)) {
+	ret = 1;
+	goto done;
+    }
+
+    iov[0].iov_base = (char *)&hdr;
+    iov[0].iov_len = sizeof(hdr);
+    iov[1].iov_base = (char *)&fedsk;
+    iov[1].iov_len = sizeof(struct FEDiskEntry);
+    iovcnt = 2;
+
+    for (cbi = fe->firstcb, cb = itocb(cbi); 
+	 cb != NULL; 
+	 cbi = cb->cnext, cb = itocb(cbi), hdr.nCBs++) {
+	if (cbi > state->cb_hdr->cb_max) {
+	    state->cb_hdr->cb_max = cbi;
+	}
+	if (cb_stateCBToDiskEntry(cb, &cbdsk[iovcnt])) {
+	    ret = 1;
+	    goto done;
+	}
+	cbdsk[iovcnt].index = cbi;
+	iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
+	iovcnt++;
+	if ((iovcnt == 16) || (!cb->cnext)) {
+	    if (fs_stateWriteV(state, iov, iovcnt)) {
+		ret = 1;
+		goto done;
+	    }
+	    written = 1;
+	    iovcnt = 0;
+	}
+    }
+
+    hdr.magic = CALLBACK_STATE_ENTRY_MAGIC;
+    hdr.len = sizeof(hdr) + sizeof(struct FEDiskEntry) + 
+	(hdr.nCBs * sizeof(struct CBDiskEntry));
+
+    if (!written) {
+	if (fs_stateWriteV(state, iov, iovcnt)) {
+	    ret = 1;
+	    goto done;
+	}
+    } else {
+	if (fs_stateWriteHeader(state, &state->eof_offset, &hdr, sizeof(hdr))) {
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+    fs_stateIncEOF(state, hdr.len);
+
+    if (written) {
+	if (fs_stateSeek(state, &state->eof_offset)) {
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+    state->cb_hdr->nFEs++;
+    state->cb_hdr->nCBs += hdr.nCBs;
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateRestoreFE(struct fs_dump_state * state)
+{
+    int ret = 0, iovcnt, nCBs;
+    struct callback_state_entry_header hdr;
+    struct FEDiskEntry fedsk;
+    struct CBDiskEntry cbdsk[16];
+    struct iovec iov[16];
+    struct FileEntry * fe;
+    struct CallBack * cb;
+
+    iov[0].iov_base = (char *)&hdr;
+    iov[0].iov_len = sizeof(hdr);
+    iov[1].iov_base = (char *)&fedsk;
+    iov[1].iov_len = sizeof(fedsk);
+    iovcnt = 2;
+
+    if (fs_stateReadV(state, iov, iovcnt)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (hdr.magic != CALLBACK_STATE_ENTRY_MAGIC) {
+	ret = 1;
+	goto done;
+    }
+
+    fe = GetFE();
+    if (fe == NULL) {
+	ViceLog(0, ("cb_stateRestoreFE: ran out of free FileEntry structures\n"));
+	ret = 1;
+	goto done;
+    }
+
+    if (cb_stateDiskEntryToFE(state, &fedsk, fe)) {
+	ret = 1;
+	goto done;
+    }
+
+    if (hdr.nCBs) {
+	for (iovcnt = 0, nCBs = 0;
+	     nCBs < hdr.nCBs;
+	     nCBs++) {
+	    iov[iovcnt].iov_base = (char *)&cbdsk[iovcnt];
+	    iov[iovcnt].iov_len = sizeof(struct CBDiskEntry);
+	    iovcnt++;
+	    if ((iovcnt == 16) || (nCBs == hdr.nCBs - 1)) {
+		if (fs_stateReadV(state, iov, iovcnt)) {
+		    ret = 1;
+		    goto done;
+		}
+		if (cb_stateRestoreCBs(state, fe, iov, iovcnt)) {
+		    ret = 1;
+		    goto done;
+		}
+		iovcnt = 0;
+	    }
+	}
+    }
+    
+ done:
+    return ret;
+}
+
+static int
+cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe, 
+		   struct iovec * iov, int niovecs)
+{
+    int ret = 0, idx;
+    register struct CallBack * cb;
+    struct CBDiskEntry * cbdsk;
+    afs_uint32 fei;
+
+    fei = fetoi(fe);
+
+    for (idx = 0; idx < niovecs; idx++) {
+	cbdsk = (struct CBDiskEntry *) iov[idx].iov_base;
+	if ((cb = GetCB()) == NULL) {
+	    ViceLog(0, ("cb_stateRestoreCBs: ran out of free CallBack structures\n"));
+	    ret = 1;
+	    goto done;
+	}
+	if (cb_stateDiskEntryToCB(state, cbdsk, cb)) {
+	    ViceLog(0, ("cb_stateRestoreCBs: corrupt CallBack disk entry\n"));
+	    ret = 1;
+	    goto done;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+
+static int
+cb_stateFillHeader(struct callback_state_header * hdr)
+{
+    hdr->stamp.magic = CALLBACK_STATE_MAGIC;
+    hdr->stamp.version = CALLBACK_STATE_VERSION;
+    hdr->tfirst = tfirst;
+    return 0;
+}
+
+static int
+cb_stateCheckHeader(struct callback_state_header * hdr)
+{
+    int ret = 0;
+
+    if (hdr->stamp.magic != CALLBACK_STATE_MAGIC) {
+	ret = 1;
+    } else if (hdr->stamp.version != CALLBACK_STATE_VERSION) {
+	ret = 1;
+    } else if ((hdr->nFEs > cbstuff.nblks) || (hdr->nCBs > cbstuff.nblks)) {
+	ViceLog(0, ("cb_stateCheckHeader: saved callback state larger than callback memory allocation\n"));
+	ret = 1;
+    }
+    return ret;
+}
+
+/* disk entry conversion routines */
+static int
+cb_stateFEToDiskEntry(struct FileEntry * in, struct FEDiskEntry * out)
+{
+    memcpy(&out->fe, in, sizeof(struct FileEntry));
+    out->index = fetoi(in);
+    return 0;
+}
+
+static int
+cb_stateDiskEntryToFE(struct fs_dump_state * state, 
+		      struct FEDiskEntry * in, struct FileEntry * out)
+{
+    int ret = 0;
+
+    memcpy(out, &in->fe, sizeof(struct FileEntry));
+
+    /* setup FE map entry */
+    if (!in->index || (in->index >= state->fe_map.len)) {
+	ViceLog(0, ("cb_stateDiskEntryToFE: index (%d) out of range",
+		    in->index));
+	ret = 1;
+	goto done;
+    }
+    state->fe_map.entries[in->index].old_idx = in->index;
+    state->fe_map.entries[in->index].new_idx = fetoi(out);
+
+ done:
+    return ret;
+}
+
+static int
+cb_stateCBToDiskEntry(struct CallBack * in, struct CBDiskEntry * out)
+{
+    memcpy(&out->cb, in, sizeof(struct CallBack));
+    out->index = cbtoi(in);
+    return 0;
+}
+
+static int
+cb_stateDiskEntryToCB(struct fs_dump_state * state,
+		      struct CBDiskEntry * in, struct CallBack * out)
+{
+    int ret = 0;
+
+    memcpy(out, &in->cb, sizeof(struct CallBack));
+
+    /* setup CB map entry */
+    if (!in->index || (in->index >= state->cb_map.len)) {
+	ViceLog(0, ("cb_stateDiskEntryToCB: index (%d) out of range\n",
+		    in->index));
+	ret = 1;
+	goto done;
+    }
+    state->cb_map.entries[in->index].old_idx = in->index;
+    state->cb_map.entries[in->index].new_idx = cbtoi(out);
+
+ done:
+    return ret;
+}
+
+/* index map routines */
+static int
+cb_stateAllocMap(struct fs_dump_state * state)
+{
+    state->fe_map.len = state->cb_hdr->fe_max + 1;
+    state->cb_map.len = state->cb_hdr->cb_max + 1;
+    state->fe_map.entries = (struct idx_map_entry_t *)
+	calloc(state->fe_map.len, sizeof(struct idx_map_entry_t));
+    state->cb_map.entries = (struct idx_map_entry_t *)
+	calloc(state->cb_map.len, sizeof(struct idx_map_entry_t));
+    return ((state->fe_map.entries != NULL) && (state->cb_map.entries != NULL)) ? 0 : 1;
+}
+
+int
+fe_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
+{
+    int ret = 0;
+
+    /* FEs use a one-based indexing system, so old==0 implies no mapping */
+    if (!old) {
+	*new = 0;
+	goto done;
+    }
+
+    if (old >= state->fe_map.len) {
+	ViceLog(0, ("fe_OldToNew: index %d is out of range\n", old));
+	ret = 1;
+    } else if (state->fe_map.entries[old].old_idx != old) { /* sanity check */
+	ViceLog(0, ("fe_OldToNew: index %d points to an invalid FileEntry record\n", old));
+	ret = 1;
+    } else {
+	*new = state->fe_map.entries[old].new_idx;
+    }
+
+ done:
+    return ret;
+}
+
+int
+cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
+{
+    int ret = 0;
+
+    /* CBs use a one-based indexing system, so old==0 implies no mapping */
+    if (!old) {
+	*new = 0;
+	goto done;
+    }
+
+    if (old >= state->cb_map.len) {
+	ViceLog(0, ("cb_OldToNew: index %d is out of range\n", old));
+	ret = 1;
+    } else if (state->cb_map.entries[old].old_idx != old) { /* sanity check */
+	ViceLog(0, ("cb_OldToNew: index %d points to an invalid CallBack record\n", old));
+	ret = 1;
+    } else {
+	*new = state->cb_map.entries[old].new_idx;
+    }
+
+ done:
+    return ret;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 int
 DumpCallBackState(void)
 {
@@ -1835,7 +2685,7 @@ DumpCallBackState(void)
     return 0;
 }
 
-#endif
+#endif /* !INTERPRET_DUMP */
 
 #ifdef INTERPRET_DUMP
 
@@ -1889,7 +2739,11 @@ ReadDump(char *file)
     return now;
 }
 
+#ifdef AFS_NT40_ENV
+#include "AFS_component_version_number.h"
+#else
 #include "AFS_component_version_number.c"
+#endif
 
 int
 main(int argc, char **argv)
@@ -1958,12 +2812,12 @@ main(int argc, char **argv)
 	PrintCallBackStats();
     }
     if (all || vol) {
-	register hash;
-	register afs_uint32 *feip;
-	register struct CallBack *cb;
-	register struct FileEntry *fe;
+	int hash;
+	afs_uint32 *feip;
+	struct CallBack *cb;
+	struct FileEntry *fe;
 
-	for (hash = 0; hash < VHASH; hash++) {
+	for (hash = 0; hash < FEHASH_SIZE; hash++) {
 	    for (feip = &HashTable[hash]; fe = itofe(*feip);) {
 		if (!vol || (fe->volid == vol)) {
 		    register struct CallBack *cbnext;
@@ -1999,26 +2853,27 @@ main(int argc, char **argv)
 	}
     }
     if (raw) {
-	struct FileEntry *fe;
 	afs_int32 *p, i;
 	for (i = 1; i < cbstuff.nblks; i++) {
 	    p = (afs_int32 *) & FE[i];
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
-    return 0;
+    exit(0);
 }
 
-int
+void
 PrintCB(register struct CallBack *cb, afs_uint32 now)
 {
     struct FileEntry *fe = itofe(cb->fhead);
     time_t expires = TIndexToTime(cb->thead);
 
+    if (fe == NULL)
+	return;
+
     printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
 	   expires - now, ctime(&expires));
-    return 0;
 }
 
 #endif
@@ -2089,8 +2944,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multibreakcall back on all addr for host %s\n",
-	     afs_inet_ntoa_r(host->host, hoststr)));
+	    ("Starting multibreakcall back on all addr for host %x (%s:%d)\n",
+             host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_CallBack(afidp, &tc);
@@ -2100,16 +2955,17 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-            hashDelete_r(host->host, host->port, host);
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            hashInsert_r(host->host, host->port, host);
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
-		    ("multibreakcall success with addr %s\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
+		    ("multibreakcall success with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
 	    H_UNLOCK;
 	    multi_Abort;
 	}
@@ -2183,8 +3039,9 @@ MultiProbeAlternateAddress_r(struct host *host)
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multiprobe on all addr for host %s\n",
-	     afs_inet_ntoa_r(host->host, hoststr)));
+	    ("Starting multiprobe on all addr for host %x (%s:%d)\n",
+             host, afs_inet_ntoa_r(host->host, hoststr),
+             ntohs(host->port)));
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_ProbeUuid(&host->interface->uuid);
@@ -2193,18 +3050,18 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    H_LOCK;
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
-            hashDelete_r(host->host, host->port, host);
 	    host->callback_rxcon = conns[multi_i];
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            hashInsert_r(host->host, host->port, host);
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
-		    ("multiprobe success for host %x; new primary addr %s:%d\n",
-		     host, afs_inet_ntoa_r(host->host, hoststr),
-                     ntohs(host->port)));
+		    ("multiprobe success with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
+                     ntohs(interfaces[multi_i].port)));
 	    H_UNLOCK;
 	    multi_Abort;
 	} else {
@@ -2227,6 +3084,15 @@ MultiProbeAlternateAddress_r(struct host *host)
                 H_UNLOCK;
             }
         }
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* try to bail ASAP if the fileserver is shutting down */
+	FS_STATE_RDLOCK;
+	if (fs_state.mode == FS_MODE_SHUTDOWN) {
+	    FS_STATE_UNLOCK;
+	    multi_Abort;
+	}
+	FS_STATE_UNLOCK;
+#endif
     }
     multi_End_Ignore;
     H_LOCK;

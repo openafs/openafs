@@ -45,7 +45,8 @@ EXPORTS
 	vos_PartitionIdToName					@43
 	vos_VolumeQuotaChange					@44
 	vos_VLDBUnlock						@45
-
+	vos_VolumeGet2						@46
+	vos_ClearVolUpdateCounter			@47
 
 
 

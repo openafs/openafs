@@ -168,6 +168,12 @@
 /* Define if you have the <winsock2.h> header file.  */
 #define HAVE_WINSOCK2_H
 
+/* Define if you have vsnprintf */
+#define HAVE_VSNPRINTF 1
+
+/* Define if you have snprintf */
+#define HAVE_SNPRINTF 1
+
 /* Name of package */
 #undef PACKAGE
 

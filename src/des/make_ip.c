@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/make_ip.c,v 1.7.2.1 2006/03/09 06:41:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/make_ip.c,v 1.8 2006/03/09 06:34:36 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

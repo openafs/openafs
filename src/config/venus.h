@@ -181,6 +181,11 @@ struct cm_initparams {
 #define VIOC_NEWALIAS		_CVICEIOCTL(1)	/* create new cell alias */
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
-#define VIOC_NEWUUID		_CVICEIOCTL(9)	/* new uuid */
+#define VIOC_DISCON		_CVICEIOCTL(5)	/* set/get discon mode */
+#define VIOC_NEWUUID            _CVICEIOCTL(9)  /* new uuid */
+#define VIOCPRECACHE            _CVICEIOCTL(12)  /* precache size */
+
+/* OpenAFS-specific 'O' pioctl's */
+#define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
 
 #endif /* AFS_VENUS_H */

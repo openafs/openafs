@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.2 2007/10/30 15:23:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.14.3 2008/04/02 19:51:55 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -1094,9 +1094,10 @@ verifyMapBits()
 
 	/* check each entry */
 	for (entryIndex = 0; entryIndex < blockMap[blockIndex]->nEntries; entryIndex++) {	/*f */
+#ifndef AFS_PTHREAD_ENV
 	    if ((entryIndex % 1024) == 0)
 		IOMGR_Poll();
-
+#endif
 	    bits = blockMap[blockIndex]->entries[entryIndex];
 
 	    for (i = 0; i < NMAPCs; i++)

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_PARTINFO 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
+.TH VOS_PARTINFO 1 "OpenAFS" "13/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -203,14 +203,7 @@ size on either all of the partitions on the indicated file server machine
 that file server machine. The Volume Location Database (VLDB) is not
 consulted.
 .SH "CAUTIONS"
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
-and the maximum size of a /vicepX partition on a fileserver is also 2
-terabytes. The fileserver will not report an error when it has access
-to a partition larger than 2 terabytes, but it will probably fail if
-the administrator attempts to use more than 2 terabytes of space. In
-addition, there are reports of erroneous disk usage numbers when
-\fBvos partinfo\fR or other OpenAFS disk reporting tools are used with
-partitions larger than 2 terabytes.
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 .SH "OPTIONS"
 .Ip "\fB\-server\fR <\fIserver name\fR>" 4
 Identifies the file server machine for which to display partition

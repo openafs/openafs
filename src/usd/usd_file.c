@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/usd/usd_file.c,v 1.14.2.1 2007/10/30 15:24:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/usd/usd_file.c,v 1.14.14.1 2007/10/30 15:16:47 shadow Exp $");
 
 #include <errno.h>
 #include <fcntl.h>

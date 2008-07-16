@@ -37,6 +37,14 @@
 
 #sanity checks 
 
+!IF ("$(CPU)" == "x86")
+CPU=i386
+!ENDIF
+
+!IF ("$(CPU)" != "i386")
+!ERROR Platform SDK not configured for i386
+!ENDIF
+
 !IF EXISTS("TOOLS.INI")
 !MESSAGE ************CAUTION TOOLS.INI IN EFFECT**********
 !ENDIF
@@ -79,8 +87,8 @@ LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
-AFSPRODUCT_VER_MINOR=4
-AFSPRODUCT_VER_PATCH=400
+AFSPRODUCT_VER_MINOR=5
+AFSPRODUCT_VER_PATCH=5000
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -99,11 +107,11 @@ OBJ=obj
 !IF ("$(AFS_OBJDIR)"=="") 
 #########  AFS_OBJDIR is NOT used use default locations
 !  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(DEST)\checked
-OJT=$(AFSROOT)\$(OBJ)\checked
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\checked
 !  ELSE
-DESTDIR=$(AFSROOT)\$(DEST)\free
-OJT=$(AFSROOT)\$(OBJ)\free
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\free
 !  ENDIF
 UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !ELSE
@@ -112,21 +120,21 @@ UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !  IF (EXIST($(AFSROOT)\$(AFS_OBJDIR)))
 #  AFS_OBJDIR is relative path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !    ELSE
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\free\config
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\free
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\free\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
 !    ENDIF
 !  ELSE
 !    IF (EXIST($(AFS_OBJDIR)))
 #   AFS_OBJDIR is full path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !      ELSE
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\free
-OJT=$(AFS_OBJDIR)\free\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\free\config
 !      ENDIF
 !    ELSE
 !ERROR Can't find location of DEST directory!
@@ -212,12 +220,13 @@ afscdefs =\
 	-DSTRICT \
 	-D_WIN32_IE=0x0500 \
 	-D_WIN32_WINNT=0x0500 \
-    -DWINVER=0x0500 \
-    -DREGISTER_POWER_NOTIFICATIONS \
-    -DAFS_AFSDB_ENV \
-    -DAFS_FREELANCE_CLIENT \
-    -DAFS_64BIT_ENV \
+    	-DWINVER=0x0500 \
+    	-DREGISTER_POWER_NOTIFICATIONS \
+    	-DAFS_AFSDB_ENV \
+    	-DAFS_FREELANCE_CLIENT \
+    	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
+	-DAFS_LARGEFILE_ENV \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
@@ -230,15 +239,17 @@ afscdefs =\
 # /Gy   enable function-level linking
 # /GX   enable C++ exceptions (assumes extern C funcs never throw exceptions)
 # /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
+# /Wp64 enable 64-bit porting warnings (conflicts with warnings as errors
+#         due to SDK mapping of Get/SetWindowLongPtr to Get/SetWindowLong
 
 afscflags =\
-    /Oy- \
+	/Oy- \
 	/GF \
 	/Gd \
 	/Gy \
 	/Os
 
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1500")
 afscflags = $(afscflags) /EHsc /wd4996
 !ELSE
 afscflags = $(afscflags) /GX
@@ -247,7 +258,7 @@ afscflags = $(afscflags) /GX
 !IF ("$(AFSVER_CL)"!="1200")
 afscflags = $(afscflags) /GT /GS
 #/Wp64
-!IF ("$(AFSVER_CL)"!="1400")
+!IF ("$(AFSVER_CL)"!="1400" && "$(AFSVER_CL)"!="1500")
 afscflags = $(afscflags) /G7
 !ENDIF
 !ENDIF
@@ -262,6 +273,7 @@ afscflags = $(afscflags) /Ox /Zi
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
+_VC_MANIFEST_BASENAME = __OAFW
 
 !ELSE		# CHECKED BUILD
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
@@ -277,6 +289,25 @@ afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 !ENDIF
 
 !UNDEF NODEBUG
+_VC_MANIFEST_BASENAME = __OAFW.Debug
+!ENDIF
+
+!IF ("$(AFSVER_CL)"=="1500"|| "$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)" == "1310")
+_VC_MANIFEST_EMBED_EXE= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;1
+
+_VC_MANIFEST_EMBED_DLL= \
+if exist $@.manifest mt.exe -manifest $@.manifest -outputresource:$@;2
+!ELSE
+_VC_MANIFEST_EMBED_EXE=
+_VC_MANIFEST_EMBED_DLL=
+!ENDIF
+
+!IF DEFINED(CODESIGN_DESC) && DEFINED(CODESIGN_URL) && DEFINED(CODESIGN_TIMESTAMP)
+CODESIGN_USERLAND= signtool.exe sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) \
+        /t $(CODESIGN_TIMESTAMP) /v $@
+!ELSE
+CODESIGN_USERLAND=
 !ENDIF
 
 # Set compiler warning level
@@ -351,7 +382,11 @@ RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(
 #################### Link optional build flags set ###########
 
 afslflags =\
-	/FIXED:NO /VERBOSE:LIB
+	/FIXED:NO /VERBOSE:LIB /MACHINE:I386
+
+!IF ("$(AFSVER_CL)"=="1500" || "$(AFSVER_CL)"=="1400" || "$(AFSVER_CL)"=="1310")
+afslflags = $(afslflags) /MANIFEST
+!ENDIF
 
 mfclflags = $(guilflags)
 mfclflags = $(mfclflags:/NODEFAULTLIB=)
@@ -440,9 +475,7 @@ NTLANG = $(DESTDIR)\bin\NTLang.bat
 
 ######### MIDL FLAGS
 
-!IFDEF OSISXP
-AFSDEV_AUXMIDLFLAGS=/Oi
-!ENDIF
+AFSDEV_AUXMIDLFLAGS=/env win32 /win32 /no_robust /Oicf 
 
 # Lex/Yacc macros
 LEX = flex -l

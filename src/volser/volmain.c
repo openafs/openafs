@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.14 2008/03/10 22:35:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.22.2.11 2008/03/27 16:20:39 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -49,7 +49,6 @@ RCSID
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <afs/auth.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -85,7 +84,7 @@ extern void RXSTATS_ExecuteRequest();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
-#define MAXLWP 16
+#define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
@@ -518,12 +517,10 @@ main(int argc, char **argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(service, lwps);
-#if defined(AFS_XBSD_ENV)
-    rx_SetStackSize(service, (128 * 1024));
-#elif defined(AFS_SGI_ENV)
-    rx_SetStackSize(service, (48 * 1024));
+#ifdef AFS_SGI_ENV
+    rx_SetStackSize(service, 49152);
 #else
-    rx_SetStackSize(service, (32 * 1024));
+    rx_SetStackSize(service, 32768);
 #endif
 
     if (rxkadDisableDotCheck) {

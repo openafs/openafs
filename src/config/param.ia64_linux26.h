@@ -30,7 +30,6 @@
 #define AFS_IA64_LINUX24_ENV	1
 #define AFS_IA64_LINUX26_ENV	1
 #define AFS_LINUX_64BIT_KERNEL 1
-#define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 1141
@@ -96,7 +95,6 @@
 #endif
 #endif /* KERNEL */
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* _PARAM_IA64_LINUX20_H_ */
 
@@ -168,7 +166,6 @@
 #define CMSERVERPREF
 #endif
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */
 

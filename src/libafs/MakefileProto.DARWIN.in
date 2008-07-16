@@ -4,7 +4,7 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
-# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21.2.7 2007/10/09 21:32:01 shadow Exp $
+# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.27.2.2 2007/10/09 21:30:02 shadow Exp $
 # 
 # MakefileProto for Digital Unix systems
 #

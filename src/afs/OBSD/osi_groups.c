@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_groups.c,v 1.5.2.1 2006/06/23 14:21:12 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_groups.c,v 1.6 2006/03/13 16:26:27 rees Exp $");
 
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"

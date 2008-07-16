@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/purge.c,v 1.9.2.3 2007/10/30 15:24:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/purge.c,v 1.12.2.5 2008/06/12 19:18:49 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -46,11 +46,16 @@ RCSID
 #include "volume.h"
 #include "viceinode.h"
 #include "partition.h"
+#include "daemon_com.h"
 #include "fssync.h"
 
 /* forward declarations */
-void PurgeIndex_r(Volume * vp, VnodeClass class);
-void PurgeHeader_r(Volume * vp);
+static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
+			    afs_int32 * aoffset);
+static void PurgeIndex(Volume * vp, VnodeClass class);
+static void PurgeIndex_r(Volume * vp, VnodeClass class);
+static void PurgeHeader_r(Volume * vp);
+static void PurgeHeader(Volume * vp);
 
 /* No lock needed. Only the volserver will call this, and only one transaction
  * can have a given volume (volid/partition pair) in use at a time 
@@ -58,8 +63,12 @@ void PurgeHeader_r(Volume * vp);
 void
 VPurgeVolume(Error * ec, Volume * vp)
 {
-    struct DiskPartition *tpartp = vp->partition;
+    struct DiskPartition64 *tpartp = vp->partition;
     char purgePath[MAXPATHLEN];
+
+    /* so VCheckDetach doesn't try to update the volume header and
+     * dump spurious errors into the logs */
+    V_inUse(vp) = 0;
 
     /* N.B.  it's important here to use the partition pointed to by the
      * volume header. This routine can, under some circumstances, be called
@@ -75,7 +84,7 @@ VPurgeVolume(Error * ec, Volume * vp)
     /*
      * Call the fileserver to break all call backs for that volume
      */
-    FSYNC_askfs(V_id(vp), tpartp->name, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(V_id(vp), tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
 }
 
 #define MAXOBLITATONCE	200
@@ -150,7 +159,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     return -1;
 }
 
-void
+static void
 PurgeIndex(Volume * vp, VnodeClass class)
 {
     VOL_LOCK;
@@ -158,7 +167,7 @@ PurgeIndex(Volume * vp, VnodeClass class)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeIndex_r(Volume * vp, VnodeClass class)
 {
     StreamHandle_t *ifile;
@@ -188,7 +197,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     FDH_CLOSE(fdP);
 }
 
-void
+static void
 PurgeHeader(Volume * vp)
 {
     VOL_LOCK;
@@ -196,7 +205,7 @@ PurgeHeader(Volume * vp)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeHeader_r(Volume * vp)
 {
     IH_REALLYCLOSE(V_diskDataHandle(vp));

@@ -1,7 +1,17 @@
 /* src/config/afsconfig.h.in.  Generated from configure.in by autoheader.  */
 
+/* define if you want to decode icmp unreachable packets to discover path mtu
+   */
+#undef ADAPT_PMTU
+
+/* define if asynchronous socket errors can be received */
+#undef ADAPT_PMTU_RECVERR
+
 /* define if you want to want search afsdb rr */
 #undef AFS_AFSDB_ENV
+
+/* define if you want support for disconnected operation */
+#undef AFS_DISCON_ENV
 
 /* define if you want large file fileserver */
 #undef AFS_LARGEFILE_ENV
@@ -37,11 +47,17 @@
 /* define if prev_task defined */
 #undef DEFINED_PREV_TASK
 
+/* define if you want the demand attach fileserver */
+#undef DEMAND_ATTACH_ENABLE
+
 /* define if your dops.d_revalidate takes a nameidata argument */
 #undef DOP_REVALIDATE_TAKES_NAMEIDATA
 
 /* define if your kernel has do_sync_read() */
 #undef DO_SYNC_READ
+
+/* define if d_path() takes a struct path argument */
+#undef D_PATH_TAKES_STRUCT_PATH
 
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
@@ -49,8 +65,14 @@
 /* define if sys/param.h defines the endiness */
 #undef ENDIANESS_IN_SYS_PARAM_H
 
+/* define if find_task_by_pid() is usable */
+#undef EXPORTED_FIND_TASK_BY_PID
+
 /* define if your kernel exports init_mm */
 #undef EXPORTED_INIT_MM
+
+/* define if proc_root_fs is exported */
+#undef EXPORTED_PROC_ROOT_FS
 
 /* define if rcu_read_lock() is usable */
 #undef EXPORTED_RCU_READ_LOCK
@@ -69,6 +91,9 @@
 
 /* define if tasklist_lock exported */
 #undef EXPORTED_TASKLIST_LOCK
+
+/* define if linux/exportfs.h exists */
+#undef EXPORTFS_H_EXISTS
 
 /* define if you want to have fast restart */
 #undef FAST_RESTART
@@ -152,6 +177,9 @@
 /* Define to 1 if you have the <kerberosV/heim_err.h> header file. */
 #undef HAVE_KERBEROSV_HEIM_ERR_H
 
+/* define if your linux kernel provides hlist_unhashed */
+#undef HAVE_KERNEL_HLIST_UNHASHED
+
 /* define if your linux kernel has linux/seq_file.h */
 #undef HAVE_KERNEL_LINUX_SEQ_FILE_H
 
@@ -199,6 +227,9 @@
 
 /* define if krb5_prompt has type */
 #undef HAVE_KRB5_PROMPT_TYPE
+
+/* Define to 1 if you have the <linux/errqueue.h> header file. */
+#undef HAVE_LINUX_ERRQUEUE_H
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -308,6 +339,9 @@
 /* define if you have a struct buf */
 #undef HAVE_STRUCT_BUF
 
+/* define if svc_add_in exists */
+#undef HAVE_SVC_ADDR_IN
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
@@ -379,6 +413,9 @@
 /* Define to 1 if you have the `utimes' function. */
 #undef HAVE_UTIMES
 
+/* Define to 1 if you have the <values.h> header file. */
+#undef HAVE_VALUES_H
+
 /* define if struct ufsvfs has vfs_dqrwlock */
 #undef HAVE_VFS_DQRWLOCK
 
@@ -435,6 +472,9 @@
 
 /* define if your refrigerator takes PF_FREEZE */
 #undef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+
+/* define if kernel uses new export ops */
+#undef NEW_EXPORT_OPS
 
 /* Name of package */
 #undef PACKAGE

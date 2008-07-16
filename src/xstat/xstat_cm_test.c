@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_cm_test.c,v 1.8.2.6 2007/11/26 21:22:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/xstat/xstat_cm_test.c,v 1.11.2.3 2007/11/26 21:08:47 shadow Exp $");
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <cmd.h>		/*Command line interpreter */
@@ -126,13 +126,13 @@ PrintCallInfo()
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
     char *printableTime;	/*Ptr to printable time string */
-
+    time_t probeTime = xstat_cm_Results.probeTime;
     /*
      * Just print out the results of the particular probe.
      */
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     currInt32 = (afs_int32 *) (xstat_cm_Results.data.AFSCB_CollData_val);
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
     printf
@@ -158,8 +158,9 @@ print_cmCallStats()
     static char rn[] = "print_cmCallStats";	/*Routine name */
     char *printableTime;	/*Ptr to printable time string */
     struct afs_CMStats *cmp;
+    time_t probeTime = xstat_cm_Results.probeTime;
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
     printf
@@ -750,6 +751,10 @@ PrintOverallPerfInfo(a_ovP)
     printf("\t%10d srvMaxChainLengthHWM\n", a_ovP->srvMaxChainLengthHWM);
     printf("\t%10d srvRecordsHWM\n", a_ovP->srvRecordsHWM);
 
+    printf("\t%10d cacheBucket0_Discarded\n",  a_ovP->cacheBucket0_Discarded);
+    printf("\t%10d cacheBucket1_Discarded\n",  a_ovP->cacheBucket1_Discarded);
+    printf("\t%10d cacheBucket2_Discarded\n",  a_ovP->cacheBucket2_Discarded);
+
     printf("\t%10d sysName_ID\n", a_ovP->sysName_ID);
 
     printf("\tFile Server up/downtimes, same cell:\n");
@@ -796,6 +801,7 @@ PrintPerfInfo()
     afs_int32 numInt32s;	/*# int32words received */
     struct afs_stats_CMPerf *perfP;	/*Ptr to performance stats */
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_cm_Results.probeTime;
 
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     if (numInt32s != perfInt32s) {
@@ -805,7 +811,7 @@ PrintPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     perfP = (struct afs_stats_CMPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);
@@ -1027,6 +1033,7 @@ PrintFullPerfInfo()
     struct afs_stats_CMFullPerf *fullP;	/*Ptr to full perf info */
 
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_cm_Results.probeTime;
 
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     if (numInt32s != fullPerfInt32s) {
@@ -1036,7 +1043,7 @@ PrintFullPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullP = (struct afs_stats_CMFullPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);

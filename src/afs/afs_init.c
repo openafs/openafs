@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.7 2007/10/10 17:43:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.37.4.7 2008/06/12 17:24:38 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -39,10 +39,14 @@ char *afs_sysname = 0;		/* So that superuser may change the
 				 * local value of @sys */
 char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
 int afs_sysnamecount = 0;
+int afs_sysnamegen = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
 #if defined(AFS_XBSD_ENV)
 static struct vnode *volumeVnode;
+#endif
+#if defined(AFS_DISCON_ENV)
+afs_rwlock_t afs_discon_lock;
 #endif
 
 /*
@@ -109,6 +113,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
     RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
+#ifdef AFS_DISCON_ENV
+    RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
+#endif
     osi_dnlc_init();
 
     /* 
@@ -116,8 +123,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
      */
     if (aVolumes < 50)
 	aVolumes = 50;
-    else if (aVolumes > 3000)
-	aVolumes = 3000;
+    else if (aVolumes > 32767)
+	aVolumes = 32767;
 
     tv = (struct volume *)afs_osi_Alloc(aVolumes * sizeof(struct volume));
     for (i = 0; i < aVolumes - 1; i++)
@@ -502,6 +509,7 @@ afs_ResourceInit(int preallocs)
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;
+	afs_sysnamegen++;
     }
 
     secobj = rxnull_NewServerSecurityObject();

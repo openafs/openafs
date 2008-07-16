@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.11 2006/11/10 00:08:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.41.2.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -105,14 +105,17 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 	/* The mount point's vnode. */
 	if (tvp) {
 	    attrs->va_nodeid =
-		tvp->mtpoint.Fid.Vnode + (tvp->mtpoint.Fid.Volume << 16);
+	      afs_calc_inum (tvp->mtpoint.Fid.Volume,
+			      tvp->mtpoint.Fid.Vnode);
 	    if (FidCmp(&afs_rootFid, &avc->fid) && !attrs->va_nodeid)
 		attrs->va_nodeid = 2;
 	    afs_PutVolume(tvp, READ_LOCK);
 	} else
 	    attrs->va_nodeid = 2;
     } else
-	attrs->va_nodeid = avc->fid.Fid.Vnode + (avc->fid.Fid.Volume << 16);
+	attrs->va_nodeid = 
+	      afs_calc_inum (avc->fid.Fid.Volume,
+			      avc->fid.Fid.Vnode);
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
     attrs->va_nlink = fakedir ? 100 : avc->m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->m.Length;
@@ -227,6 +230,8 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     }
 #endif
 
+    AFS_DISCON_LOCK();
+
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);
 #endif
@@ -325,6 +330,9 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 	    }
 	}
     }
+
+    AFS_DISCON_UNLOCK();
+
     if (!code)
 	return 0;
     code = afs_CheckCode(code, &treq, 14);
@@ -460,6 +468,8 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
+    AFS_DISCON_LOCK();
+
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code)
@@ -497,6 +507,11 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    code = EACCES;
 	    goto done;
 	}
+    }
+
+    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+        code = ENETDOWN;
+        goto done;
     }
 
     afs_VAttrToAS(avc, attrs, &astat);	/* interpret request */
@@ -548,19 +563,25 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	hzero(avc->flushDV);
 	osi_FlushText(avc);	/* do this after releasing all locks */
     }
-    if (code == 0) {
-	ObtainSharedLock(&avc->lock, 16);	/* lock entry */
-	code = afs_WriteVCache(avc, &astat, &treq);	/* send request */
-	ReleaseSharedLock(&avc->lock);	/* release lock */
-    }
-    if (code) {
-	ObtainWriteLock(&afs_xcbhash, 487);
-	afs_DequeueCallback(avc);
-	avc->states &= ~CStatd;
-	ReleaseWriteLock(&afs_xcbhash);
-	if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	    osi_dnlc_purgedp(avc);
-	/* error?  erase any changes we made to vcache entry */
+    
+    if (!AFS_IS_DISCONNECTED) {
+        if (code == 0) {
+	    ObtainSharedLock(&avc->lock, 16);	/* lock entry */
+	    code = afs_WriteVCache(avc, &astat, &treq);	/* send request */
+	    ReleaseSharedLock(&avc->lock);	/* release lock */
+        }
+        if (code) {
+	    ObtainWriteLock(&afs_xcbhash, 487);
+	    afs_DequeueCallback(avc);
+	    avc->states &= ~CStatd;
+	    ReleaseWriteLock(&afs_xcbhash);
+	    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+	        osi_dnlc_purgedp(avc);
+	    /* error?  erase any changes we made to vcache entry */
+        }
+    } else {
+        /* Must be logging - but not implemented yet ... */
+        code = ENETDOWN;
     }
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
@@ -575,6 +596,8 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #endif
   done:
     afs_PutFakeStat(&fakestate);
+
+    AFS_DISCON_UNLOCK();
     code = afs_CheckCode(code, &treq, 15);
     return code;
 }

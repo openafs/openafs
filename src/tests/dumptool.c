@@ -1,5 +1,5 @@
 /*
- * $Id: dumptool.c,v 1.3.2.1 2004/12/17 14:39:31 shadow Exp $
+ * $Id: dumptool.c,v 1.5 2006/04/04 20:51:18 shadow Exp $
  *
  * dumptool - A tool to manage MR-AFS dump files
  *
@@ -314,6 +314,7 @@ main(int argc, char *argv[])
     struct winsize win;
     FILE *f;
     int fd;
+    time_t tmv;
 
 #ifdef RESIDENCY
     for (i = 0; i < RS_MAXRESIDENCIES; i++) {
@@ -486,9 +487,12 @@ main(int argc, char *argv[])
 	    printf(" needsSalvaged");
 	printf("\n");
 	printf("\tuniquifier = %lu\n", vol.uniquifier);
-	printf("\tCreation date = %s", ctime((time_t *) & vol.creationDate));
-	printf("\tLast access date = %s", ctime((time_t *) & vol.accessDate));
-	printf("\tLast update date = %s", ctime((time_t *) & vol.updateDate));
+	tmv = vol.creationDate;
+	printf("\tCreation date = %s", ctime(&tmv));
+	tmv = vol.accessDate;
+	printf("\tLast access date = %s", ctime(&tmv));
+	tmv = vol.updateDate;
+	printf("\tLast update date = %s", ctime(&tmv));
 	printf("\tVolume owner = %lu\n", vol.owner);
     }
 

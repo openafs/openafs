@@ -29,7 +29,7 @@
 #include "des_prototypes.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/cbc_encrypt.c,v 1.9.2.1 2004/10/18 07:11:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/cbc_encrypt.c,v 1.10 2004/10/05 20:40:59 rees Exp $");
 
 
 #define XPRT_CBC_ENCRYPT

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/up.c,v 1.13.2.4 2007/12/11 16:36:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/up.c,v 1.17.2.3 2007/11/26 21:08:45 shadow Exp $");
 
 /* missing type from C language */
 

@@ -106,6 +106,7 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         } \
         rxkad_stats->stats_elem--; \
     END
+#ifndef AFS_OBSD38_ENV
 #define ADD_RXKAD_STATS(stats_elem, inc_value) \
     BEGIN \
         rxkad_stats_t * rxkad_stats; \
@@ -124,6 +125,11 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         } \
         rxkad_stats->stats_elem -= dec_value; \
     END
+#else /* AFS_OBSD38_ENV */
+/* segfaults but we don't know why */
+#define ADD_RXKAD_STATS(stats_elem, inc_value)
+#define SUB_RXKAD_STATS(stats_elem, dec_value)
+#endif /* AFS_OBSD38_ENV */
 #else /* AFS_PTHREAD_ENV */
 #define INC_RXKAD_STATS(stats_elem) rxkad_stats.stats_elem++
 #define DEC_RXKAD_STATS(stats_elem) rxkad_stats.stats_elem--

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10.2.4 2007/10/30 15:24:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.13.6.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>

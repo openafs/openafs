@@ -1,0 +1,11 @@
+Document: openafs-quick
+Title: AFS Quick Start Guide for UNIX
+Author: IBM
+Abstract: Initial setup and configuration documentation for AFS on Unix
+ platforms.  Debian users can ignore most of the installation information,
+ but the configuration information is still useful.
+Section: Apps/Net
+
+Format: HTML
+Index: /usr/share/doc/openafs-doc/html/QuickStartUnix/auqbg000.htm
+Files: /usr/share/doc/openafs-doc/html/QuickStartUnix/*

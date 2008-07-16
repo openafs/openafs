@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlprocs.c,v 1.13.2.4 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlprocs.c,v 1.15.4.3 2008/04/02 19:51:57 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -1135,7 +1135,9 @@ SVL_ListAttributes(rxcall, attributes, nentries, vldbentries)
 	while (nextblockindex =
 	       NextEntry(trans, nextblockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 	    match = 0;
@@ -1273,7 +1275,9 @@ SVL_ListAttributesN(rxcall, attributes, nentries, vldbentries)
 	while (nextblockindex =
 	       NextEntry(trans, nextblockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 
@@ -1455,7 +1459,9 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 	blockindex = startindex;
 	while (blockindex = NextEntry(trans, blockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 
@@ -1677,7 +1683,9 @@ SVL_LinkedList(rxcall, attributes, nentries, vldbentries)
 	    match = 0;
 
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 
@@ -1803,7 +1811,9 @@ SVL_LinkedListN(rxcall, attributes, nentries, vldbentries)
 	    match = 0;
 
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 
@@ -3190,7 +3200,9 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
 	for (blockindex = NextEntry(atrans, 0, &tentry, &count); blockindex;
 	     blockindex = NextEntry(atrans, blockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
+#ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
+#endif
 		pollcount = 0;
 	    }
 	    for (j = 0; j < NMAXNSERVERS; j++) {

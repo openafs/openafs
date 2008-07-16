@@ -13,7 +13,7 @@
 #include <afs/stds.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.2.2 2007/04/10 18:43:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.14.2 2007/04/10 18:39:50 shadow Exp $");
 
 #include <sys/types.h>
 #include <fcntl.h>

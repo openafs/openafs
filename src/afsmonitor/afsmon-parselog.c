@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-parselog.c,v 1.5 2003/07/15 23:14:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmon-parselog.c,v 1.6 2006/04/04 20:51:13 shadow Exp $");
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>
@@ -320,7 +320,7 @@ Print_fs_FullPerfInfo(a_fs_Results)
     long numLongs;		/*# longwords received */
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
     char *printableTime;	/*Ptr to printable time string */
-
+    time_t probeTime;
 
     numLongs = a_fs_Results->data.AFS_CollData_len;
     if (numLongs != fullPerfLongs) {
@@ -329,7 +329,8 @@ Print_fs_FullPerfInfo(a_fs_Results)
 	return;
     }
 
-    printableTime = ctime(&(a_fs_Results->probeTime));
+    probeTime = a_fs_Results->probeTime;
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullPerfP = (struct fs_stats_FullPerfStats *)
 	(a_fs_Results->data.AFS_CollData_val);

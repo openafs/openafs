@@ -50,6 +50,7 @@ headers=${TOP_INCDIR}/lwp.h		\
 	${TOP_INCDIR}/afs/afsint.h	\
 	viced.h				\
 	host.h				\
+	callback.h			\
 	fs_stats.h
 
 objects=viced.o		\

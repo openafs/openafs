@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/test/selsubs.c,v 1.8.2.1 2006/03/20 13:41:32 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/lwp/test/selsubs.c,v 1.9 2006/03/20 13:41:03 jaltman Exp $");
 
 
 #include "lwp.h"

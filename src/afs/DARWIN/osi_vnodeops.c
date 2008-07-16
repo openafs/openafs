@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.29 2007/11/27 20:04:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.41.2.11 2008/02/11 04:00:48 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -651,7 +651,7 @@ afs_vop_access(ap)
     if (code) {
         code= 0;               /* if access is ok */
     } else {
-        code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
+	    code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
      afs_PutFakeStat(&fakestate);
@@ -1420,8 +1420,18 @@ afs_vop_rename(ap)
 #if !defined(AFS_DARWIN80_ENV) 
     VOP_UNLOCK(fvp, 0, p);
 #endif
-    FREE(fname, M_TEMP);
-    FREE(tname, M_TEMP);
+#ifdef notdef
+    if (error == EXDEV) {
+	/* The idea would be to have a userspace handler like afsdb to
+	 * run mv as the user, thus:
+	 */
+	printf("su %d -c /bin/mv /afs/.:mount/%d:%d:%d:%d/%s /afs/.:mount/%d:%d:%d:%d/%s\n",
+	       (cn_cred(tcnp))->cr_uid, fvc->fid.Cell, fvc->fid.Fid.Volume,
+	       fvc->fid.Fid.Vnode, fvc->fid.Fid.Unique, fname, 
+	       tvc->fid.Cell, tvc->fid.Fid.Volume, tvc->fid.Fid.Vnode, 
+	       tvc->fid.Fid.Unique, tname);
+    }
+#endif
 #ifdef AFS_DARWIN80_ENV
     cache_purge(fdvp);
     cache_purge(fvp);
@@ -1446,6 +1456,8 @@ afs_vop_rename(ap)
     vrele(fdvp);
     vrele(fvp);
 #endif
+    FREE(fname, M_TEMP);
+    FREE(tname, M_TEMP);
     return error;
 }
 

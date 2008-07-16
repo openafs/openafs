@@ -43,7 +43,9 @@ DLLLIBS =\
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:bosadmin.def
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
+        $(CODESIGN_USERLAND)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
 

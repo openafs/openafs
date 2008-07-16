@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.3 2006/07/31 17:07:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.10.8.1 2006/07/03 19:07:15 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"

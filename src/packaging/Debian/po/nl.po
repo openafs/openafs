@@ -1,0 +1,156 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-01-30 04:32+0100\n"
+"PO-Revision-Date: 2007-02-28 02:09+0100\n"
+"Last-Translator: Bart Cornelis <cobaco@skolelinux.no>\n"
+"Language-Team: debian-l10n-dutch <debian-l10n-dutch@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: nl\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "DB server host names for your home cell:"
+msgstr "Computernamen van de DB-servers voor uw thuiscel:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "AFS uses the file /etc/openafs/CellServDB to hold the list of servers that should be contacted to find parts of a cell.  The cell you claim this workstation belongs to is not in that file.  Enter the host names of the database servers separated by spaces. IMPORTANT: If you are creating a new cell and this machine is to be a database server in that cell, only enter this machine's name; add the other servers later after they are functioning. Also, do not enable the AFS client to start at boot on this server until the cell is configured.  When you are ready you can edit /etc/openafs/afs.conf.client to enable the client."
+msgstr "AFS houdt in het bestand '/etc/openafs/CellServDB een lijst bij van servers die gecontacteerd moeten worden bij het zoeken naar delen van een cel. De cel waartoe dit werkstation volgens wat u aangaf behoort, is niet terug te vinden in dit bestand. Gelieve dus de computernamen van de databaseservers op te geven, gescheiden met spaties. OPGELET: als bezig bent een nieuwe cel op te zetten en deze machine als databaseserver voor deze cel zal fungeren dient u hier enkel de naam van deze machine in te geven; u kunt verdere servers dan later toevoegen eens alles functioneert. Zorg er ook voor dat u het opstarten van de AFS-client tijdens het opstarten van de machine niet activeert voordat de cel geconfigureerd is, zodra u daarmee klaar bent kunt u /etc/openafs/afs.conf.client aanpassen om het automatisch opstarten van de client tijdens de machinestart te activeren."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS cell this workstation belongs to:"
+msgstr "Tot welke AFS-cel behoort dit werkstation?"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS filespace is organized into cells or administrative domains. Each workstation belongs to one cell.  Usually the cell is the DNS domain name of the site."
+msgstr "Een AFS-bestandsruimte is georganiseerd in cellen of administratieve domeinen. Elk werkstation behoort tot 1 cel. Gewoonlijk is deze cel de DNS-domeinnaam van de site."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "Size of AFS cache in kB:"
+msgstr "Grootte van de AFS-cache in kB:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "AFS uses an area of the disk to cache remote files for faster access.  This cache will be mounted on /var/cache/openafs.  It is important that the cache not overfill the partition it is located on.  Often, people find it useful to dedicate a partition to their AFS cache."
+msgstr "AFS gebruikt ruimte op de schijf als cache, zodat toegang tot bestanden op andere systemen sneller werkt. Deze cache wordt aangekoppeld in /var/cache/openafs. Het is belangrijk dat de cache niet groter wordt dan de partitie waarop deze zich bevindt. Vaak is het handig om een partititie te hebben met enkel de AFS-cache."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Run Openafs client now and at boot?"
+msgstr "Wilt u de Openafs-client nu en tijdens het opstarten draaien?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Normally, most users who install the openafs-client package expect AFS to be mounted automatically at boot.  However, if you are planning on setting up a new cell or are on a laptop, you may not want it started at boot time.  If you choose not to start AFS at boot, run /etc/init.d/openafs-client force-start to start the client when you wish to run it."
+msgstr "Gebruikers die het 'openafs-client'-pakket installeren verwachten meestal dat AFS automatisch aangekoppeld wordt tijdens het opstarten. Als u echter van plan bent een nieuwe cel op te zetten, of als deze machine een laptop is, wilt u wellicht niet dat AFS tijdens het opstarten aangekoppeld wordt. U kunt AFS op elk moment starten met het commando '/etc/init.d/openafs-client force-start."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "Look up AFS cells in DNS?"
+msgstr "AFS-cellen opzoeken in DNS?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "In order to contact an AFS cell, you need the IP addresses of the cell's database servers.  Normally, this information is read from /etc/openafs/CellServDB.  However, if Openafs cannot find a cell in that file, it can use DNS to look for AFSDB records that contain the information."
+msgstr "Om een AFS-cel te contacteren dient u het IP-adres van de databaseserver voor die cel te hebben. Normaal is deze informatie beschikbaar in /etc/openafs/CellServDB. Openafs biedt de mogelijkheid om de AFSDB-records op te zoeken via DNS wanneer dit bestand niet aanwezig is."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "Wilt u dat geauthenticeerd verkeer met de AFS-bestandsserver versleuteld word?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "AFS provides a weak form of encryption that can optionally be used between a client and the fileservers.  While this encryption is weaker than DES and thus is not sufficient for highly confidential data, it does provide some confidentiality and is likely to make the job of a casual attacker significantly more difficult."
+msgstr "AFS biedt een zwakke encryptievorm aan die optioneel kan gebruikt worden bij de communicatie tussen de client en bestandsservers. Hoewel deze encryptie zwakker is dan DES, en dus niet voldoende is voor hoogvertrouwelijke data, biedt het enige betrouwbaarheid daar het de taak van een niet-gerichte aanval significant moeilijker maakt. "
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "Dynamically generate the contents of /afs?"
+msgstr "Wilt u de inhoud van /afs dynamisch genereren?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "/afs generally contains an entry for each cell that a client can talk to. Traditionally, these entries were generated by servers in the client's home cell.  However, OpenAFS clients can generate the contents of /afs dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr "/afs bevat een ingang voor elke cel waarmee een client kan communiceren. Traditioneel worden deze ingangen aangemaakt door de servers van de thuiscel van de client. OpenAFS-clients zijn echter in staat om de inhoud van /afs dynamisch te genereren, uitgaande van de data in /etc/openafs/CellServDB en DNS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "If you generate /afs dynamically, you may need to create /etc/openafs/CellAlias to include aliases for common cells.  (The syntax of this file is one line per alias, with the cell name, a space, and then the alias for that cell.)"
+msgstr "Als u ervoor kiest om /afs dynamisch te genereren kan het noodzakelijk zijn om /etc/openafs/CellAlias aan te maken met daarin de aliases voor veelgebruikte cellen. (de syntax van dit bestand is 1 regel per alias, waarbij elke regel bestaat uit een celnaam gevolgd door een spatie en de alias voor die cel)"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr "Wilt u fakestat gebruiken om vasthangen tijdens het weergeven van de inhoud van /afs tegen te gaan?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Because AFS is a global file space, operations on the /afs directory can generate significant network traffic.  If some AFS cells are unavailable then looking at /afs using ls or a graphical file browser may hang your machine for minutes.  AFS has an option to simulate answers to these operations locally to avoid these hangs.  You want this option under most circumstances."
+msgstr "Omdat AFS een globale bestandsruimte is kunnen operaties op de '/afs'-map flink wat netwerkverkeer veroorzaken. Wanneer sommige AFS-cellen onbeschikbaar zijn kan het weergeven van /afs in een grafische browser uw machine enkele minuten vasthangen. AFS heeft een optie die antwoorden voor deze operaties lokaal simuleert en zo dit vasthangen vermijdt. Onder de meeste omstandigheden kunt u dit best activeren."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "Cell this server serves files for:"
+msgstr "Voor welke cellen biedt deze server bestanden aan?"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "AFS fileservers belong to a cell.  They have the key for that cell's Kerberos service and serve volumes into that cell.  Normally, this cell is the same cell as the workstation's client belongs to."
+msgstr "AFS-bestandsservers maken deel uit van een cel. Ze beschikken over de sleutel voor de Kerberos-dienst van die cel, en ondersteunen volumes binnen die cel. Normaal is dit dezelfde cel als waartoe de client op het werkstation behoort."
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "Upgrading will move files to new locations; continue?"
+msgstr "Opwaarderen verplaatst bestanden naar nieuwe locaties, wilt u doorgaan?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, files in /etc/openafs/server-local have been distributed to other locations.  The BosConfig file is now located in /etc/openafs and the other files are located in /var/lib/openafs.  If you continue with this upgrade, these files will be moved.  You should use the bos restart command to reload your servers.  Any configuration changes made before you do so will be lost."
+msgstr "Tijdens de overgang van Openafs 1.1 naar Openafs 1.2 zijn verschillende bestanden verplaatst. Meer precies zijn de bestanden uit /etc/openafs/server-local verplaatst naar andere locaties. Het bestand BosConfig bevindt zich nu in /etc/openafs en de andere bestanden vindt u terug in /var/lib/openafs. Als u doorgaat met deze opwaardering zullen deze bestanden verplaatst worden, u dient dan het bos herstart commando te gebruiken om uw servers te herladen. Als u configuratieaanpassingen doet voor dit gebeurd is gaan deze bij de volgende herstart verloren."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:3001
+msgid "OpenAFS file server probably does not work!"
+msgstr "De OpenAFS bestandsserver werkt waarschijnlijk niet!"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:3001
+msgid "You are running the OpenAFS file server package on an alpha.  This probably doesn't work; the DES code is flaky on the alpha, along with the threaded file server.  Likely, the fileserver will simply fail to start, but if it does load, data corruption may result.  You have been warned."
+msgstr "U draait het OpenAFS bestandsserver pakket op een alpha. Dit werkt waarschijnlijk niet; de DES-code, en de 'threaded' bestandsserver zijn onbetrouwbaar op alpha. In alle waarschijnlijkheid zal de bestandsserver weigeren op te starten, maar als deze toch start is data corruptie waarschijnlijk. U bent gewaarschuwd. "
+

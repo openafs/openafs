@@ -11,3 +11,6 @@ rmtsys.xdr.c
 rmtsysd
 afs.exp
 afsl.exp
+Krmtsys.cs.c
+Krmtsys.h
+Krmtsys.xdr.c

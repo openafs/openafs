@@ -17,3 +17,6 @@ afs
 afsint
 config
 rx
+export.exp
+export.h
+export64.exp

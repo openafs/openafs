@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.21.2.7 2007/10/30 15:23:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.24.4.4 2007/10/30 15:16:39 shadow Exp $");
 
 #ifdef KERNEL
 #if !defined(UKERNEL)

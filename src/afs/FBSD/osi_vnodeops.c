@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.4 2005/05/23 21:26:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.22.6.1 2008/01/15 06:09:11 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -746,7 +746,11 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * now tell them that it is ok to use.
 	     */
 	    if (!code) {
+#if defined(AFS_FBSD70_ENV)
+		if(0) /* XXXX fixme for 7.0 */
+#else
 		if (m->flags & PG_WANTED)
+#endif
 		    vm_page_activate(m);
 		else
 		    vm_page_deactivate(m);

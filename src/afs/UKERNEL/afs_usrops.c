@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.7 2008/01/31 20:18:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.30.6.8 2008/07/01 20:56:38 shadow Exp $");
 
 
 #ifdef	UKERNEL
@@ -987,10 +987,9 @@ shutdown_osifile(void)
     return;
 }
 
-int
+void
 afs_nfsclient_init(void)
 {
-    return 0;
 }
 
 void
@@ -1638,11 +1637,6 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	    printf("%s: My home cell is '%s'\n", rn, afs_LclCellName);
     }
 
-    /*
-     * Set the primary cell name.
-     */
-    call_syscall(AFSOP_SET_THISCELL, (long)afs_LclCellName, 0, 0, 0, 0);
-
     if ((logfd = fopen(fullpn_AFSLogFile, "r+")) == 0) {
 	if (afsd_verbose)
 	    printf("%s: Creating '%s'\n", rn, fullpn_AFSLogFile);
@@ -1678,24 +1672,6 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     sprintf(fullpn_VFile, "%s/V", cacheBaseDir);
     vFileNumber = fullpn_VFile + strlen(fullpn_VFile);
 
-    /*
-     * Start the RX listener.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_RXLISTENER_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE);
-
-    /*
-     * Start the RX event handler.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_RXEVENT_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXEVENT_DAEMON, FALSE);
-
-    /*
-     * Set up all the kernel processes needed for AFS.
-     */
-
     /* initialize AFS callback interface */
     {
 	/* parse multihomed address files */
@@ -1714,12 +1690,30 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	}
     }
 
+    /*
+     * Start the RX listener.
+     */
+    if (afsd_debug)
+	printf("%s: Calling AFSOP_RXLISTENER_DAEMON\n", rn);
+    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE);
+
     if (afsd_verbose)
 	printf("%s: Forking rx callback listener.\n", rn);
     /* Child */
     if (preallocs < cacheStatEntries + 50)
 	preallocs = cacheStatEntries + 50;
     fork_syscall(AFSCALL_CALL, AFSOP_START_RXCALLBACK, preallocs);
+
+    /*
+     * Start the RX event handler.
+     */
+    if (afsd_debug)
+	printf("%s: Calling AFSOP_RXEVENT_DAEMON\n", rn);
+    fork_syscall(AFSCALL_CALL, AFSOP_RXEVENT_DAEMON, FALSE);
+
+    /*
+     * Set up all the kernel processes needed for AFS.
+     */
 
     if (afsd_verbose)
 	printf("%s: Initializing AFS daemon.\n", rn);
@@ -1815,6 +1809,11 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     afsconf_CellApply(afs_cdir, ConfigCell, NULL);
     afsconf_CellAliasApply(afs_cdir, ConfigCellAlias, NULL);
 
+    /*
+     * Set the primary cell name.
+     */
+    call_syscall(AFSCALL_CALL, AFSOP_SET_THISCELL, (long)afs_LclCellName, 0, 0, 0);
+
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);
     fork_syscall(AFSCALL_CALL, AFSOP_START_AFS);
@@ -1870,7 +1869,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	rc = lpioctl(0, _VICEIOCTL(8), &iob, 0);
 #endif
 	if (rc < 0) {
-	    usr_assert(errno == EDOM || errno == ENOSYS);
+	    usr_assert(errno == EDOM || errno == ENOSYS || errno == ERANGE);
 	    break;
 	}
 

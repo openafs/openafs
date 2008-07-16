@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/test/stress.c,v 1.9.2.2 2007/10/31 04:13:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/test/stress.c,v 1.9.14.2 2007/10/31 04:09:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

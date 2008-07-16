@@ -1,5 +1,5 @@
 /*
- * $Id: asetkey.c,v 1.4.2.10 2008/04/01 17:44:52 shadow Exp $
+ * $Id: asetkey.c,v 1.4.4.5 2008/04/01 17:44:40 shadow Exp $
  *
  * asetkey - Manipulates an AFS KeyFile
  *
@@ -7,10 +7,10 @@
  */
 
 #include <afsconfig.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -23,9 +23,7 @@
 #include <afs/stds.h>
 #include <krb5.h>
 
-#ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
-#endif
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/dirpath.h>

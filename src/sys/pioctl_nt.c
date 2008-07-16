@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.13 2007/06/10 05:54:10 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.34.4.15 2008/07/05 15:51:22 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -29,12 +29,14 @@ RCSID
 #include <osi.h>
 
 #include <cm.h>
-#include <cm_dir.h>
+#include <cm_nls.h>
+#include <cm_server.h>
 #include <cm_cell.h>
 #include <cm_user.h>
 #include <cm_conn.h>
 #include <cm_scache.h>
 #include <cm_buf.h>
+#include <cm_dir.h>
 #include <cm_utils.h>
 #include <cm_ioctl.h>
 
@@ -47,6 +49,9 @@ RCSID
 #include <krb5.h>
 
 static char AFSConfigKeyName[] = AFSREG_CLT_SVC_PARAM_SUBKEY;
+
+static const char utf8_prefix[] = UTF8_PREFIX;
+static const int  utf8_prefix_size = sizeof(utf8_prefix) -  sizeof(char);
 
 #define FS_IOCTLREQUEST_MAXSIZE	8192
 /* big structure for representing and storing an IOCTL request */
@@ -65,12 +70,15 @@ CMtoUNIXerror(int cm_code)
     case CM_ERROR_NOACCESS:
 	return EACCES;
     case CM_ERROR_NOSUCHFILE:
+    case CM_ERROR_NOSUCHPATH:
+    case CM_ERROR_BPLUS_NOMATCH:
 	return ENOENT;
     case CM_ERROR_INVAL:
 	return EINVAL;
     case CM_ERROR_BADFD:
 	return EBADF;
     case CM_ERROR_EXISTS:
+    case CM_ERROR_INEXACT_MATCH:
 	return EEXIST;
     case CM_ERROR_CROSSDEVLINK:
 	return EXDEV;
@@ -90,6 +98,12 @@ CMtoUNIXerror(int cm_code)
 	return EDOM;		/* hack */
     case CM_ERROR_TOOMANYBUFS:
 	return EFBIG;		/* hack */
+    case CM_ERROR_ALLBUSY:
+        return EBUSY;
+    case CM_ERROR_ALLDOWN:
+        return ENOSYS;          /* hack */
+    case CM_ERROR_ALLOFFLINE:
+        return ENXIO;           /* hack */
     default:
 	if (cm_code > 0 && cm_code < EILSEQ)
 	    return cm_code;
@@ -129,6 +143,85 @@ IoctlDebug(void)
     return debug;
 }
 
+static BOOL
+DisableServiceManagerCheck(void)
+{
+    static int init = 0;
+    static BOOL smcheck = 0;
+
+    if ( !init ) {
+        HKEY hk;
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+                         TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(BOOL);
+            DWORD dwType = REG_DWORD;
+            RegQueryValueEx (hk, TEXT("DisableIoctlSMCheck"), NULL, &dwType, (PBYTE)&smcheck, &dwSize);
+            RegCloseKey (hk);
+        }
+
+        init = 1;
+    }
+
+    return smcheck;
+}
+
+static DWORD 
+GetServiceStatus(
+    LPSTR lpszMachineName, 
+    LPSTR lpszServiceName,
+    DWORD *lpdwCurrentState) 
+{ 
+    DWORD           hr               = NOERROR; 
+    SC_HANDLE       schSCManager     = NULL; 
+    SC_HANDLE       schService       = NULL; 
+    DWORD           fdwDesiredAccess = 0; 
+    SERVICE_STATUS  ssServiceStatus  = {0}; 
+    BOOL            fRet             = FALSE; 
+
+    *lpdwCurrentState = 0; 
+ 
+    fdwDesiredAccess = GENERIC_READ; 
+ 
+    schSCManager = OpenSCManager(lpszMachineName,  
+                                 NULL,
+                                 fdwDesiredAccess); 
+ 
+    if(schSCManager == NULL) 
+    { 
+        hr = GetLastError();
+        goto cleanup; 
+    } 
+ 
+    schService = OpenService(schSCManager,
+                             lpszServiceName,
+                             fdwDesiredAccess); 
+ 
+    if(schService == NULL) 
+    { 
+        hr = GetLastError();
+        goto cleanup; 
+    } 
+ 
+    fRet = QueryServiceStatus(schService,
+                              &ssServiceStatus); 
+ 
+    if(fRet == FALSE) 
+    { 
+        hr = GetLastError(); 
+        goto cleanup; 
+    } 
+ 
+    *lpdwCurrentState = ssServiceStatus.dwCurrentState; 
+ 
+cleanup: 
+ 
+    CloseServiceHandle(schService); 
+    CloseServiceHandle(schSCManager); 
+ 
+    return(hr); 
+} 
 
 // krb5 functions
 DECL_FUNC_PTR(krb5_cc_default_name);
@@ -231,8 +324,11 @@ LoadFuncs(
     if (error) return 0;
     return 1;
 }
-
+#if defined(_IA64_) || defined(_AMD64_)
+#define KERB5DLL "krb5_64.dll"
+#else
 #define KERB5DLL "krb5_32.dll"
+#endif
 static BOOL
 IsKrb5Available()
 {
@@ -284,7 +380,7 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
         szUser[*dwSize-1] = '\0';
         success = 1;
     }
-    *dwSize = strlen(pname);
+    *dwSize = (DWORD)strlen(pname);
 
   cleanup:
     if (pname)
@@ -306,6 +402,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
     char *drivep;
     char netbiosName[MAX_NB_NAME_LENGTH];
+    DWORD CurrentState = 0;
+    char  HostName[64] = "";
     char tbuffer[256]="";
     HANDLE fh;
     HKEY hk;
@@ -317,6 +415,14 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
+    int saveerrno;
+
+    memset(HostName, '\0', sizeof(HostName));
+    gethostname(HostName, sizeof(HostName));
+    if (!DisableServiceManagerCheck() &&
+        GetServiceStatus(HostName, TEXT("TransarcAFSDaemon"), &CurrentState) == NOERROR &&
+	CurrentState != SERVICE_RUNNING)
+	return -1;
 
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
@@ -378,14 +484,17 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
-    fflush(stdout);
+
+	fflush(stdout);
+
     if (fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
-
+            
+            saveerrno = errno;
             if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                NULL,
                                gle,
@@ -398,6 +507,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                         tbuffer,gle,buf);
             }
+            errno = saveerrno;
         }
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
@@ -411,9 +521,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         }
 
         if ( szUser[0] ) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl Explorer logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -422,8 +534,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -432,8 +546,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -450,6 +566,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -462,6 +579,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
                 }
             }
         }
@@ -473,9 +591,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
         dwSize = sizeof(szUser);
         if (GetLSAPrincipalName(szUser, &dwSize)) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl LSA Principal logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -484,8 +604,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -494,8 +616,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 gonext = 1;
             }
@@ -512,6 +636,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -524,6 +649,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
+
                 }
             }
         }
@@ -533,9 +660,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     if ( fh == INVALID_HANDLE_VALUE ) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
-            if ( ioctlDebug )
+            if ( ioctlDebug ) {
+                saveerrno = errno;
                 fprintf(stderr, "pioctl SamCompatible logon user: [%s]\r\n",szUser);
-
+                errno = saveerrno;
+            }
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
             nr.dwType=RESOURCETYPE_DISK;
@@ -544,8 +673,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
             }
 
@@ -553,8 +684,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             res = WNetAddConnection2(&nr,NULL,szUser,0);
             if (res) {
                 if ( ioctlDebug ) {
+                    saveerrno = errno;
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
+                    errno = saveerrno;
                 }
                 return -1;
             }
@@ -568,6 +701,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (gle && ioctlDebug ) {
                     char buf[4096];
 
+                    saveerrno = errno;
                     if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                         NULL,
                                         gle,
@@ -580,6 +714,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
+                    errno = saveerrno;
                 }
                 return -1;
             }
@@ -600,11 +735,16 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     long rcount;
     long ioCount;
     DWORD gle;
+    DWORD ioctlDebug = IoctlDebug();
+    int save;
 
-    rcount = reqp->mp - reqp->data;
+    rcount = (long)(reqp->mp - reqp->data);
     if (rcount <= 0) {
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive rcount <= 0: %d\r\n",rcount);
+            errno = save;
+        }
 	return EINVAL;		/* not supposed to happen */
     }
 
@@ -612,8 +752,11 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 	/* failed to write */
 	gle = GetLastError();
 
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive WriteFile failed: 0x%X\r\n",gle);
+            errno = save;
+        }
         return gle;
     }
 
@@ -621,8 +764,11 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 	/* failed to read */
 	gle = GetLastError();
 
-        if ( IoctlDebug() )
+        if ( ioctlDebug ) {
+            save = errno;
             fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
+            errno = save;
+        }
         return gle;
     }
 
@@ -644,11 +790,16 @@ MarshallLong(fs_ioctlRequest_t * reqp, long val)
 static long
 UnmarshallLong(fs_ioctlRequest_t * reqp, long *valp)
 {
+    int save;
+
     /* not enough data left */
     if (reqp->nbytes < 4) {
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl UnmarshallLong reqp->nbytes < 4: %d\r\n",
                      reqp->nbytes);
+            errno = save;
+        }
 	return -1;
     }
 
@@ -660,20 +811,34 @@ UnmarshallLong(fs_ioctlRequest_t * reqp, long *valp)
 
 /* includes marshalling NULL pointer as a null (0 length) string */
 static long
-MarshallString(fs_ioctlRequest_t * reqp, char *stringp)
+MarshallString(fs_ioctlRequest_t * reqp, char *stringp, int is_utf8)
 {
     int count;
+    int save;
 
     if (stringp)
-	count = strlen(stringp) + 1;	/* space required including null */
+	count = (int)strlen(stringp) + 1;/* space required including null */
     else
 	count = 1;
 
+    if (is_utf8) {
+        count += utf8_prefix_size;
+    }
+
     /* watch for buffer overflow */
     if ((reqp->mp - reqp->data) + count > sizeof(reqp->data)) {
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl MarshallString buffer overflow\r\n");
+            errno = save;
+        }
 	return -1;
+    }
+
+    if (is_utf8) {
+        memcpy(reqp->mp, utf8_prefix, utf8_prefix_size);
+        reqp->mp += utf8_prefix_size;
+        count -= utf8_prefix_size;
     }
 
     if (stringp)
@@ -698,7 +863,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     int pathHasDrive;
     int doSwitch;
     char newPath[3];
-    char *p;
+    char * p;
+    int save;
 
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */
@@ -753,9 +919,12 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	if (!SetCurrentDirectory(newPath)) {
 	    code = GetLastError();
 
-            if ( IoctlDebug() )
+            if ( IoctlDebug() ) {
+                save = errno;
                 fprintf(stderr, "pioctl fs_GetFullPath SetCurrentDirectory(%s) failed: 0x%X\r\n",
                          newPath, code);
+                errno = save;
+            }
 	    return code;
 	}
     }
@@ -785,7 +954,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
-        int len = strlen(outPathp);
+        int len = (int)strlen(outPathp);
         if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
             strcat(outPathp, "\\");
         strcat(outPathp, firstp);
@@ -803,14 +972,15 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     return 0;
 }
 
-long
-pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
+static long
+pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is_utf8)
 {
     fs_ioctlRequest_t preq;
     long code;
     long temp;
     char fullPath[1000];
     HANDLE reqHandle;
+    int save;
 
     code = GetIoctlHandle(pathp, &reqHandle);
     if (code) {
@@ -842,7 +1012,7 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
 	strcpy(fullPath, "");
     }
 
-    MarshallString(&preq, fullPath);
+    MarshallString(&preq, fullPath, is_utf8);
     if (blobp->in_size) {
         if (blobp->in_size > sizeof(preq.data) - (preq.mp - preq.data)*sizeof(char)) {
             errno = E2BIG;
@@ -868,8 +1038,11 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
     if (temp != 0) {
 	CloseHandle(reqHandle);
 	errno = CMtoUNIXerror(temp);
-        if ( IoctlDebug() )
+        if ( IoctlDebug() ) {
+            save = errno;
             fprintf(stderr, "pioctl temp != 0: 0x%X\r\n",temp);
+            errno = save;
+        }
 	return -1;
     }
 
@@ -886,3 +1059,16 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
     CloseHandle(reqHandle);
     return 0;
 }
+
+long
+pioctl_utf8(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+{
+    return pioctl_int(pathp, opcode, blobp, follow, TRUE);
+}
+
+long
+pioctl(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+{
+    return pioctl_int(pathp, opcode, blobp, follow, FALSE);
+}
+

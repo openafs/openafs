@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17.2.3 2008/03/10 22:35:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.19.4.3 2008/05/20 21:59:02 shadow Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -166,7 +166,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
     afs_uint32 host;
     u_short port;
     register struct rx_packet *p = (struct rx_packet *)0;
-    int socket;
+    osi_socket socket;
     struct clock cv;
     afs_int32 nextPollTime;	/* time to next poll FD before sleeping */
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
@@ -224,10 +224,10 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	    nextPollTime = clock_Sec() + 4;	/* try again in 4 seconds no matter what */
 	    tv.tv_sec = tv.tv_usec = 0;	/* make sure we poll */
 	    tvp = &tv;
-	    code = select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
+	    code = select((int)(rx_maxSocketNumber + 1), rfds, 0, 0, tvp);
 	} else {
 	    doingPoll = 0;
-	    code = IOMGR_Select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
+	    code = IOMGR_Select((int)(rx_maxSocketNumber + 1), rfds, 0, 0, tvp);
 	}
 	lastPollWorked = 0;	/* default is that it didn't find anything */
 
@@ -324,7 +324,7 @@ static void *
 rx_ListenerProc(void *dummy)
 {
     int threadID;
-    int sock;
+    osi_socket sock;
     struct rx_call *newcall;
     fd_set *rfds;
 
@@ -352,7 +352,7 @@ rx_ListenerProc(void *dummy)
 void *
 rx_ServerProc(void * unused)
 {
-    int sock;
+    osi_socket sock;
     int threadID;
     struct rx_call *newcall = NULL;
     fd_set *rfds;
@@ -426,9 +426,13 @@ rxi_Listen(osi_socket sock)
  * Recvmsg
  */
 int
-rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
+rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
-    return recvmsg((int)socket, msg_p, flags);
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+    while((rxi_HandleSocketError(socket)) > 0)
+	;
+#endif
+    return recvmsg(socket, msg_p, flags);
 }
 
 /*
@@ -451,6 +455,10 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    }
 	    FD_SET(socket, sfds);
 	}
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+	while((rxi_HandleSocketError(socket)) > 0)
+	  ;
+#endif
 #ifdef AFS_NT40_ENV
 	if (WSAGetLastError())
 #elif defined(AFS_LINUX22_ENV)

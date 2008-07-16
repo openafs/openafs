@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: run-tests.in,v 1.5.8.2 2008/03/31 15:53:48 shadow Exp $
+# $Id: run-tests.in,v 1.5.20.2 2008/03/31 15:54:02 shadow Exp $
 #
 
 # Directory paths configured during the build.
@@ -327,7 +327,7 @@ do
   -help|--help) echo $usage; 
 	echo "tests available: $linebreak"; for a in "$ALL_TESTS"; do echo $a ; done;
 	exit 0;;
-  -version|--version) echo "$0 $Id: run-tests.in,v 1.5.8.2 2008/03/31 15:53:48 shadow Exp $"; exit 0;;
+  -version|--version) echo "$0 $Id: run-tests.in,v 1.5.20.2 2008/03/31 15:54:02 shadow Exp $"; exit 0;;
   -*) echo "$0: Bad option $1"; echo $usage; exit 1;;
   *) break;;
   esac

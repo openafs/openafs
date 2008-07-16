@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.16 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.28.2.16 2008/03/05 21:53:30 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -41,8 +41,8 @@ RCSID
 #include "viceinode.h"
 #include "voldefs.h"
 #include "partition.h"
-#include <afs/errors.h>
 #include "fssync.h"
+#include <afs/errors.h>
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -1547,6 +1547,7 @@ convertVolumeInfo(fdr, fdw, vid)
 int
 namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 {
+#ifdef FSSYNC_BUILD_CLIENT
     namei_t n;
     char dir_name[512], oldpath[512], newpath[512];
     char smallName[64];
@@ -1563,7 +1564,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     DIR *dirp;
     Inode ino;
     struct dirent *dp;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     char volname[20];
@@ -1583,7 +1584,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
         return EIO;
     }
     close(fd);
-    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 
     for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
          partP = partP->next);
@@ -1737,8 +1738,9 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     if (unlink(oldpath) < 0) {
         Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
     }
-    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
-    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
+    FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
+#endif
     return 0;
 }
 

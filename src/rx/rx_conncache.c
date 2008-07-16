@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.9.2.1 2004/08/25 07:09:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.10 2004/08/19 00:41:54 kolya Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"

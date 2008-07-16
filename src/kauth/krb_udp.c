@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23.2.5 2008/03/10 22:35:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/krb_udp.c,v 1.23.14.5 2008/03/10 22:32:33 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

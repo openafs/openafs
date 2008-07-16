@@ -1,7 +1,7 @@
 /*
  * osi_sysctl.c: Linux sysctl interface to OpenAFS
  *
- * $Id: osi_sysctl.c,v 1.7.2.6 2007/11/23 13:45:04 shadow Exp $
+ * $Id: osi_sysctl.c,v 1.9.2.6 2008/06/12 20:08:33 shadow Exp $
  *
  * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
  */
@@ -18,10 +18,18 @@
 #include <linux/config.h>
 #endif
 
+/* From afs_util.c */
+extern afs_int32 afs_new_inum;
+
 /* From afs_analyze.c */
 extern afs_int32 hm_retry_RO;
 extern afs_int32 hm_retry_RW;
 extern afs_int32 hm_retry_int;
+extern afs_int32 afs_blocksUsed_0;
+extern afs_int32 afs_blocksUsed_1;
+extern afs_int32 afs_blocksUsed_2;
+extern afs_int32 afs_pct1;
+extern afs_int32 afs_pct2;
 
 #ifdef CONFIG_SYSCTL
 static struct ctl_table_header *afs_sysctl = NULL;
@@ -98,6 +106,102 @@ static ctl_table afs_sysctl_table[] = {
 	.maxlen		= sizeof(afs_int32), 
 	.mode		= 0644,
 	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 7, 
+#endif
+	.procname	= "afs_blocksUsed",
+	.data		= &afs_blocksUsed,
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0444,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 8, 
+#endif
+	.procname	= "afs_blocksUsed_0",
+	.data		= &afs_blocksUsed_0,
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 9, 
+#endif
+	.procname	= "afs_blocksUsed_1",
+	.data		= &afs_blocksUsed_1, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 10, 
+#endif
+	.procname	= "afs_blocksUsed_2",
+	.data		= &afs_blocksUsed_2, 
+	.maxlen		= sizeof(afs_int32), 
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 11, 
+#endif
+	.procname	= "afs_pct1",
+	.data		= &afs_pct1, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 12, 
+#endif
+	.procname	= "afs_pct2",
+	.data		= &afs_pct2, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler   = &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 13,
+#endif
+	.procname	= "afs_cacheBlocks",
+	.data		= &afs_cacheBlocks,
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+    	.proc_handler	= &proc_dointvec
+    },
+    {
+#if defined(SYSCTL_TABLE_CHECKING)
+	.ctl_name 	= CTL_UNNUMBERED, 
+#else
+	.ctl_name	= 14, 
+#endif
+	.procname	= "md5inum",
+	.data		= &afs_new_inum, 
+	.maxlen		= sizeof(afs_int32),
+	.mode		= 0644,
+     	.proc_handler	= &proc_dointvec
     },
     {0}
 };

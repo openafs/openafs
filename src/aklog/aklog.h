@@ -1,5 +1,5 @@
 /* 
- * $Id: aklog.h,v 1.1.2.7 2008/04/01 17:44:52 shadow Exp $
+ * $Id: aklog.h,v 1.5.2.2 2008/04/01 17:44:40 shadow Exp $
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"

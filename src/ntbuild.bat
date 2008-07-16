@@ -39,7 +39,7 @@ REM                  "1200" for VC6
 REM                  "1300" for VC7 (.NET)
 REM                  "1310" for .NET 2003
 REM                  "1400" for VC8
-set AFSVER_CL=1310
+set AFSVER_CL=1400
 
 REM Location of Microsoft Visual C++ development folder (8.3 short name)
 set MSVCDIR=c:\progra~1\micros~2\vc98
@@ -47,11 +47,11 @@ set MSVCDIR=c:\progra~1\micros~2\vc98
 REM Location of Microsoft Platform SDK (8.3 short name)
 set MSSDKDIR=c:\progra~1\micros~4
 
-REM Location of npapi.h (from DDK or Platform SDK samples - 8.3 short name)
+REM Location of WDK/DDK (8.3 short name)
 set NTDDKDIR=c:\progra~1\micros~5
 
-REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
-SET W9XDDKDIR=c:\progra~1\micros~6
+REM Location of Microsoft IDN Normalization SDK
+set MSIDNNLS=C:\progra~1\MI5913~1
 
 REM ########################################################################
 REM NTMakefile optional definitions:
@@ -113,7 +113,7 @@ REM     AFSDEV_BIN = default build binary directories
 
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
-set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include
+set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSIDNNLS%\include
 IF "%AFSVER_CL%" == "1400" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1300" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include

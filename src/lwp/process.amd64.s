@@ -1,4 +1,4 @@
-/* $Id: process.amd64.s,v 1.1.2.1 2005/02/21 01:12:10 shadow Exp $ */
+/* $Id: process.amd64.s,v 1.1 2005/02/13 00:23:52 shadow Exp $ */
 
 /*
  * Copyright (c) 2003,2005 Kungliga Tekniska Högskolan

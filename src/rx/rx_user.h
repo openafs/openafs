@@ -33,8 +33,13 @@ error - foo error - foo error - foo
 typedef void *osi_socket;
 #define	OSI_NULLSOCKET	((osi_socket) 0)
 #else /* UAFS_CLIENT */
+#ifdef AFS_NT40_ENV
+typedef SOCKET osi_socket;
+#define OSI_NULLSOCKET INVALID_SOCKET
+#else /* !AFS_NT40_ENV */
 typedef afs_int32 osi_socket;
 #define	OSI_NULLSOCKET	((osi_socket) -1)
+#endif /* !AFS_NT40_ENV */
 #endif /* UAFS_CLIENT */
 
 #define	osi_rxSleep(x)		    rxi_Sleep(x)

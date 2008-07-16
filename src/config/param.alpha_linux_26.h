@@ -23,7 +23,6 @@
 #define AFS_ALPHA_LINUX26_ENV  1
 #define __alpha        1
 #define AFS_LINUX_64BIT_KERNEL 1
-#define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 338
@@ -80,7 +79,11 @@
 #define SYS_NAME       "alpha_linux_26"
 #define SYS_NAME_ID    SYS_NAME_ID_alpha_linux_26
 
-
+#ifdef __GLIBC__
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
+#define USE_UCONTEXT
+#endif
+#endif
 #endif /* AFS_PARAM_H */
 				     
 #else /* !defined(UKERNEL) */

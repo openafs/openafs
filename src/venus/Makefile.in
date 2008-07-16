@@ -66,6 +66,8 @@ ${DEST}/etc/fstrace: fstrace
 ${DEST}/bin/cmdebug: cmdebug
 	${INSTALL} $? $@
 
+${DEST}/bin/dedebug: dedebug
+	${INSTALL} $? $@
 
 
 up.o: up.c AFS_component_version_number.c
@@ -123,6 +125,11 @@ cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 cmdebug: cmdebug.o ${CMLIBS}
 	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
 
+dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
+
+dedebug: dedebug.o ${CMLIBS}
+	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+
 
 
 #
@@ -173,7 +180,7 @@ kdump: kdump.o
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
 		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
 	ncrx86_* ) ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
-	*bsd*) touch kdump ;; \
+	*nbsd*) touch kdump ;; \
 	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	esac
 
@@ -219,7 +226,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				esac || exit $$?; \
 			done \
 			;; \
-		*bsd*) \
+		*nbsd*) \
 			touch kdump.o ;; \
 		*) \
 			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
@@ -290,7 +297,7 @@ ${DEST}/etc/kdump: kdump-build
 	hp_ux11* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.hp_ux11 ${DEST}/etc/kdump; \
 		${INSTALL} -f $? ${DEST}/etc/kdump32;; \
-	*bsd*) \
+	*nbsd*) \
 		;; \
 	*) \
 		${INSTALL} $? $@ ;; \
@@ -320,7 +327,7 @@ install: \
 #
 
 clean:
-	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys dedebug
 
 test:
 	cd test; $(MAKE)
@@ -343,6 +350,9 @@ ${DESTDIR}${sbindir}/fstrace: fstrace
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/cmdebug: cmdebug
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/dedebug: dedebug
 	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/kdump: kdump-build

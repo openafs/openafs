@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/recovery.c,v 1.13.2.6 2008/04/28 21:48:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/recovery.c,v 1.14.4.7 2008/04/28 21:48:11 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -72,7 +72,10 @@ int
 urecovery_ResetState(void)
 {
     urecovery_state = 0;
+#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+    /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
+#endif
     return 0;
 }
 
@@ -83,8 +86,11 @@ urecovery_ResetState(void)
 int
 urecovery_LostServer(void)
 {
+#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+    /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
     return 0;
+#endif
 }
 
 /* return true iff we have a current database (called by both sync
@@ -205,7 +211,7 @@ ReplayLog(register struct ubik_dbase *adbase)
     /* for now, assume that all ops in log pertain to one transaction; see if there's a commit */
     while (1) {
 	code =
-	    (*adbase->read) (adbase, LOGFILE, &opcode, tpos,
+	    (*adbase->read) (adbase, LOGFILE, (char *)&opcode, tpos,
 			     sizeof(afs_int32));
 	if (code != sizeof(afs_int32))
 	    break;
@@ -220,7 +226,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	} else if (opcode == LOGTRUNCATE) {
 	    tpos += 4;
 	    code =
-		(*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				 2 * sizeof(afs_int32));
 	    if (code != 2 * sizeof(afs_int32))
 		break;		/* premature eof or io error */
@@ -228,7 +234,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	} else if (opcode == LOGDATA) {
 	    tpos += 4;
 	    code =
-		(*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				 3 * sizeof(afs_int32));
 	    if (code != 3 * sizeof(afs_int32))
 		break;
@@ -248,7 +254,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	syncFile = -1;
 	while (1) {
 	    code =
-		(*adbase->read) (adbase, LOGFILE, &opcode, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)&opcode, tpos,
 				 sizeof(afs_int32));
 	    if (code != sizeof(afs_int32))
 		break;
@@ -260,11 +266,11 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    else if (opcode == LOGEND) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    return UBADLOG;
-		code = (*adbase->setlabel) (adbase, 0, buffer);
+		code = (*adbase->setlabel) (adbase, 0, (ubik_version *)buffer);
 		if (code)
 		    return code;
 		logIsGood = 1;
@@ -272,7 +278,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    } else if (opcode == LOGTRUNCATE) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    break;	/* premature eof or io error */
@@ -285,7 +291,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    } else if (opcode == LOGDATA) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     3 * sizeof(afs_int32));
 		if (code != 3 * sizeof(afs_int32))
 		    break;
@@ -308,12 +314,12 @@ ReplayLog(register struct ubik_dbase *adbase)
 		    thisSize = (len > sizeof(data) ? sizeof(data) : len);
 		    /* copy sizeof(data) buffer bytes at a time */
 		    code =
-			(*adbase->read) (adbase, LOGFILE, data, tpos,
+			(*adbase->read) (adbase, LOGFILE, (char *)data, tpos,
 					 thisSize);
 		    if (code != thisSize)
 			return UBADLOG;
 		    code =
-			(*adbase->write) (adbase, tfile, data, filePos,
+			(*adbase->write) (adbase, tfile, (char *)data, filePos,
 					  thisSize);
 		    if (code != thisSize)
 			return UBADLOG;
@@ -363,7 +369,11 @@ InitializeDB(register struct ubik_dbase *adbase)
 	    adbase->version.counter = 0;
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	assert(pthread_cond_broadcast(&adbase->version_cond) == 0);
+#else
 	LWP_NoYieldSignal(&adbase->version);
+#endif
     }
     return 0;
 }
@@ -443,7 +453,11 @@ urecovery_Interact(void *dummy)
 	/* Run through this loop every 4 seconds */
 	tv.tv_sec = 4;
 	tv.tv_usec = 0;
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	select(0, 0, 0, 0, &tv);
+#else
 	IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
 
 	ubik_dprint("recovery running in state %x\n", urecovery_state);
 
@@ -552,7 +566,7 @@ urecovery_Interact(void *dummy)
 		ubik_dprint("StartDiskGetFile failed=%d\n", code);
 		goto FetchEndCall;
 	    }
-	    nbytes = rx_Read(rxcall, &length, sizeof(afs_int32));
+	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
 		ubik_dprint("Rx-read length error=%d\n", code = BULK_ERROR);
@@ -680,7 +694,11 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
+#else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
+#endif
 	    DBRELE(ubik_dbase);
 	}
 #if defined(UBIK_PAUSE)
@@ -704,7 +722,11 @@ urecovery_Interact(void *dummy)
 	    code =
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
+#else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
+#endif
 	    DBRELE(ubik_dbase);
 	}
 
@@ -733,7 +755,11 @@ urecovery_Interact(void *dummy)
 		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
+#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+		    select(0, 0, 0, 0, &tv);
+#else
 		    IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
 		    tv.tv_usec += 10000;
 		    safety++;
 		    DBHOLD(ubik_dbase);

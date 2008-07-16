@@ -16,32 +16,37 @@ LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a
 
-CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
 
-PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h\
-	fssync.h ihandle.h namei_ops.h
+PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h volume_inline.h voldefs.h partition.h \
+	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h vnode_inline.h
 
-VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
-	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
-	 namei_ops.o
+VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-server.o fssync-client.o \
+	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o purge.o \
+	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
 
-OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o
+OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o fssync-debug.o
 
 all: gi \
 	${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/libvlib.a \
 	salvager \
 	volinfo \
+	fssync-debug \
 	$(FS_CONV_OSF40D) \
 	$(XFS_SIZE_CHECK) \
 	$(FS_CONV_SOL26) \
 	${TOP_INCDIR}/afs/nfs.h \
 	${TOP_INCDIR}/afs/vnode.h \
+	${TOP_INCDIR}/afs/vnode_inline.h \
 	${TOP_INCDIR}/afs/viceinode.h \
 	${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/volume_inline.h \
 	${TOP_INCDIR}/afs/voldefs.h \
 	${TOP_INCDIR}/afs/partition.h \
 	${TOP_INCDIR}/afs/fssync.h \
+	${TOP_INCDIR}/afs/salvsync.h \
+	${TOP_INCDIR}/afs/daemon_com.h \
 	${TOP_INCDIR}/afs/ihandle.h \
 	${TOP_INCDIR}/afs/namei_ops.h
 
@@ -53,16 +58,21 @@ install: \
 	${DESTDIR}${libdir}/afs/libvlib.a \
 	${DESTDIR}${afssrvlibexecdir}/salvager \
 	${DESTDIR}${afssrvsbindir}/volinfo \
+	${DESTDIR}${afssrvsbindir}/fssync-debug \
 	$(install_FS_CONV_OSF40D) \
 	$(install_XFS_SIZE_CHECK) \
 	$(install_FS_CONV_SOL26) \
 	${DESTDIR}${includedir}/afs/nfs.h \
 	${DESTDIR}${includedir}/afs/vnode.h \
+	${DESTDIR}${includedir}/afs/vnode_inline.h \
 	${DESTDIR}${includedir}/afs/viceinode.h \
 	${DESTDIR}${includedir}/afs/volume.h \
+	${DESTDIR}${includedir}/afs/volume_inline.h \
 	${DESTDIR}${includedir}/afs/voldefs.h \
 	${DESTDIR}${includedir}/afs/partition.h \
 	${DESTDIR}${includedir}/afs/fssync.h \
+	${DESTDIR}${includedir}/afs/salvsync.h \
+	${DESTDIR}${includedir}/afs/daemon_com.h \
 	${DESTDIR}${includedir}/afs/ihandle.h \
 	${DESTDIR}${includedir}/afs/namei_ops.h
 
@@ -71,6 +81,11 @@ ${DEST}/root.server/usr/afs/bin/salvager: salvager
 
 ${DEST}/root.server/usr/afs/bin/volinfo: volinfo
 	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
+	if test "@DEMAND_ATTACH@" = "no"; then \
+		${INSTALL} $? $@ ; \
+	fi
 
 ${DEST}/lib/afs/vlib.a: vlib.a
 	${INSTALL} $? $@
@@ -102,10 +117,16 @@ ${DEST}/include/afs/nfs.h: nfs.h
 ${DEST}/include/afs/vnode.h: vnode.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
 ${DEST}/include/afs/viceinode.h: viceinode.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/volume.h: volume.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/volume_inline.h: volume_inline.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/voldefs.h: voldefs.h
@@ -115,6 +136,12 @@ ${DEST}/include/afs/partition.h: partition.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/fssync.h: fssync.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/salvsync.h: salvsync.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/daemon_com.h: daemon_com.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/ihandle.h: ihandle.h
@@ -129,6 +156,8 @@ ${DEST}/include/afs/namei_ops.h: namei_ops.h
 ${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h vutils.h salvage.h AFS_component_version_number.c
 
 vol-salvage.o vutil.o: volinodes.h
+vol-salvage.o salvager.o: vol-salvage.h
+vol-salvage.o: salvsync.h daemon_com.h
 
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@
@@ -136,8 +165,8 @@ vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 # new salvager:  remove references to /vice by linking with novice.o
-salvager: vol-salvage.o physio.o vlib.a
-	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o ${LIBS} ${XLIBS}
+salvager: vol-salvage.o physio.o vlib.a salvager.o ${LIBS}
+	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o salvager.o ${LIBS} ${XLIBS}
 
 vol-salvage: vol-salvage.o
 vol-info: vol-info.o physio.o ihandle.o
@@ -170,13 +199,16 @@ volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
 		ihandle.o ${LIBS} ${XLIBS}
 
+fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
+	${CC} ${LDFLAGS} -o fssync-debug fssync-debug.o physio.o ${LIBS} ${XLIBS}
+
 vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}
 
-fs_conv_dux40D: fs_conv_411.o
+fs_conv_dux40D: fs_conv_411.o ${LIBS}
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}
 
-fs_conv_sol26: fs_conv_411.o vlib.a 
+fs_conv_sol26: fs_conv_411.o ${LIBS}
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} ${XLIBS}
 
 fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
@@ -214,6 +246,11 @@ ${DESTDIR}${afssrvlibexecdir}/salvager: salvager
 ${DESTDIR}${afssrvsbindir}/volinfo: volinfo
 	${INSTALL} $? $@
 
+${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
+	if test "@DEMAND_ATTACH@" = "no" ; then \
+		${INSTALL} $? $@ ; \
+	fi
+
 ${DESTDIR}${includedir}/afs/nfs.h: nfs.h
 	${INSTALL} $? $@
 
@@ -226,6 +263,12 @@ ${DESTDIR}${includedir}/afs/vnode.h: vnode.h
 ${TOP_INCDIR}/afs/vnode.h: vnode.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/vnode_inline.h: vnode_inline.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/viceinode.h: viceinode.h
 	${INSTALL} $? $@
 
@@ -236,6 +279,12 @@ ${DESTDIR}${includedir}/afs/volume.h: volume.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/volume.h: volume.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/volume_inline.h: volume_inline.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/volume_inline.h: volume_inline.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/voldefs.h: voldefs.h
@@ -256,6 +305,18 @@ ${DESTDIR}${includedir}/afs/fssync.h: fssync.h
 ${TOP_INCDIR}/afs/fssync.h: fssync.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/salvsync.h: salvsync.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/salvsync.h: salvsync.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/daemon_com.h: daemon_com.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/daemon_com.h: daemon_com.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/ihandle.h: ihandle.h
 	${INSTALL} $? $@
 
@@ -268,27 +329,44 @@ ${DESTDIR}${includedir}/afs/namei_ops.h: namei_ops.h
 ${TOP_INCDIR}/afs/namei_ops.h: namei_ops.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/salvage.h: salvage.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/salvage.h: salvage.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/vol-salvage.h: vol-salvage.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/vol-salvage.h: vol-salvage.h
+	${INSTALL} $? $@
+
 dest: \
 	${DEST}/lib/afs/vlib.a \
 	${DEST}/lib/afs/libvlib.a \
 	${DEST}/root.server/usr/afs/bin/salvager \
 	${DEST}/root.server/usr/afs/bin/volinfo \
+	${DEST}/root.server/usr/afs/bin/fssync-debug \
 	$(dest_FS_CONV_OSF40D) \
 	$(dest_XFS_SIZE_CHECK) \
 	$(dest_FS_CONV_SOL26) \
 	${DEST}/include/afs/nfs.h \
 	${DEST}/include/afs/vnode.h \
+	${DEST}/include/afs/vnode_inline.h \
 	${DEST}/include/afs/viceinode.h \
 	${DEST}/include/afs/volume.h \
+	${DEST}/include/afs/volume_inline.h \
 	${DEST}/include/afs/voldefs.h \
 	${DEST}/include/afs/partition.h \
 	${DEST}/include/afs/fssync.h \
+	${DEST}/include/afs/salvsync.h \
+	${DEST}/include/afs/daemon_com.h \
 	${DEST}/include/afs/ihandle.h \
 	${DEST}/include/afs/namei_ops.h
 
 check-splint::
 	sh $(HELPER_SPLINT) $(CFLAGS) \
-	    vnode.c volume.c vutil.c partition.c fssync.c purge.c \
+	    vnode.c volume.c vutil.c partition.c fssync-server.c fssync-client.c \
 	    clone.c nuke.c devname.c listinodes.c common.c ihandle.c \
-	    namei_ops.c \
-	    physio.c vol-salvage.c vol-info.c vol-bless.c
+	    namei_ops.c salvsync-server.c salvsync-client.c daemon_com.c purge.c \
+	    physio.c vol-salvage.c vol-info.c vol-bless.c fssync-debug.c

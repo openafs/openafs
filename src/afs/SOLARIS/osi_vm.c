@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vm.c,v 1.8.2.1 2005/04/03 18:15:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vm.c,v 1.9 2005/04/03 18:09:12 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */

@@ -41,6 +41,15 @@ lose
       ac_cv_linux_completion_h_exists=no)])
   AC_MSG_RESULT($ac_cv_linux_completion_h_exists)])
 
+AC_DEFUN([LINUX_EXPORTFS_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/exportfs.h existence])
+  AC_CACHE_VAL([ac_cv_linux_exportfs_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/exportfs.h>],
+[return;],
+      ac_cv_linux_exportfs_h_exists=yes,
+      ac_cv_linux_exportfs_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_exportfs_h_exists)])
 
 AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
   AC_MSG_CHECKING([for defined for_each_process])
@@ -502,6 +511,18 @@ AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK], [
     CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)])
 
+AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
+  AC_MSG_CHECKING([for hlist_unhashed])
+  AC_CACHE_VAL([ac_cv_linux_kernel_hlist_unhashed], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/list.h>],
+[hlist_unhashed(0);],
+      ac_cv_linux_kernel_hlist_unhashed=yes,
+      ac_cv_linux_kernel_hlist_unhashed=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
 
 AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
   AC_MSG_CHECKING([for gfp_mask in struct address_space])
@@ -910,6 +931,16 @@ _fop.sendfile(NULL, NULL, 0, 0, NULL);],
       ac_cv_linux_fs_struct_fop_has_sendfile=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
 
+AC_DEFUN([LINUX_HAVE_SVC_ADDR_IN], [
+  AC_MSG_CHECKING([whether svc_addr_in exists])
+  AC_CACHE_VAL([ac_cv_linux_have_svc_addr_in], [
+    AC_TRY_KBUILD(
+[#include <linux/sunrpc/svc.h>],
+[svc_addr_in(NULL);],
+      ac_cv_linux_have_svc_addr_in=yes,
+      ac_cv_linux_have_svc_addr_in=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_svc_addr_in)])
+
 AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
   AC_MSG_CHECKING([for splice_write and splice_read in struct file_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_splice], [
@@ -991,5 +1022,60 @@ AC_DEFUN([LINUX_EXPORTS_RCU_READ_LOCK], [
   AC_MSG_RESULT($ac_cv_linux_exports_rcu_read_lock)
   if test "x$ac_cv_linux_exports_rcu_read_lock" = "xyes"; then
     AC_DEFINE([EXPORTED_RCU_READ_LOCK], 1, [define if rcu_read_lock() is usable])
+  fi])
+ 
+AC_DEFUN([LINUX_EXPORTS_FIND_TASK_BY_PID], [
+  AC_MSG_CHECKING([if find_task_by_pid is usable])
+  AC_CACHE_VAL([ac_cv_linux_exports_find_task_by_pid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[pid_t p;
+find_task_by_pid(p);],
+      ac_cv_linux_exports_find_task_by_pid=yes,
+      ac_cv_linux_exports_find_task_by_pid=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_find_task_by_pid)
+  if test "x$ac_cv_linux_exports_find_task_by_pid" = "xyes"; then
+    AC_DEFINE([EXPORTED_FIND_TASK_BY_PID], 1, [define if find_task_by_pid() is usable])
+  fi])
+ 
+AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
+  AC_MSG_CHECKING([if proc_root_fs is defined and exported])
+  AC_CACHE_VAL([ac_cv_linux_exports_proc_root_fs], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry *p = proc_root_fs;],
+      ac_cv_linux_exports_proc_root_fs=yes,
+      ac_cv_linux_exports_proc_root_fs=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_proc_root_fs)
+  if test "x$ac_cv_linux_exports_proc_root_fs" = "xyes"; then
+    AC_DEFINE([EXPORTED_PROC_ROOT_FS], 1, [define if proc_root_fs is exported])
+  fi])
+ 
+AC_DEFUN([LINUX_D_PATH_TAKES_STRUCT_PATH], [
+  AC_MSG_CHECKING([if d_path() takes a struct path argument])
+  AC_CACHE_VAL([ac_cv_linux_d_path_takes_struct_path], [
+    AC_TRY_KBUILD(
+[#include <linux/dcache.h>],
+[struct path *p;
+d_path(p, NULL, 0);],
+      ac_cv_linux_d_path_takes_struct_path=yes,
+      ac_cv_linux_d_path_takes_struct_path=no)])
+  AC_MSG_RESULT($ac_cv_linux_d_path_takes_struct_path)
+  if test "x$ac_cv_linux_d_path_takes_struct_path" = "xyes"; then
+    AC_DEFINE([D_PATH_TAKES_STRUCT_PATH], 1, [define if d_path() takes a struct path argument])
+  fi])
+ 
+AC_DEFUN([LINUX_NEW_EXPORT_OPS], [
+  AC_MSG_CHECKING([if kernel uses new export ops])
+  AC_CACHE_VAL([ac_cv_linux_new_export_ops], [
+    AC_TRY_KBUILD(
+[#include <linux/exportfs.h>],
+[struct export_operations _eops;
+_eops.fh_to_parent(NULL, NULL, 0, 0);],
+      ac_cv_linux_new_export_ops=yes,
+      ac_cv_linux_new_export_ops=no)])
+  AC_MSG_RESULT($ac_cv_linux_new_export_ops)
+  if test "x$ac_cv_linux_new_export_ops" = "xyes"; then
+    AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  

@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/fsint/afsaux.c,v 1.12.2.1 2005/04/03 18:15:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/fsint/afsaux.c,v 1.13 2005/04/03 18:09:29 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)

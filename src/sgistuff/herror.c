@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sgistuff/herror.c,v 1.1.2.2 2005/08/16 18:00:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sgistuff/herror.c,v 1.1 2005/08/16 17:58:27 shadow Exp $");
 
 #ifndef AFS_DARWIN_ENV
 #include <sys/types.h>

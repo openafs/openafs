@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.12.2.6 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.14.6.5 2008/03/10 22:32:33 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -35,7 +35,6 @@ RCSID
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -316,7 +315,7 @@ afs_int32
 STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *arestores, afs_int32 *taskID)
 {
     struct dumpNode *newNode;
-    statusP statusPtr = 0;
+    statusP statusPtr;
     afs_int32 code = 0;
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -421,7 +420,7 @@ STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 #else
     PROCESS pid;
 #endif
-    statusP statusPtr = 0;
+    statusP statusPtr;
     afs_int32 code = 0;
 
     extern statusP createStatusNode();
@@ -573,7 +572,7 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
     PROCESS pid;
 #endif
     struct scanTapeIf *ptr;
-    statusP statusPtr = 0;
+    statusP statusPtr;
     afs_int32 code = 0;
 
     extern afs_int32 allocTaskId();

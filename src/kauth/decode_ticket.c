@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/decode_ticket.c,v 1.6.2.1 2007/04/10 18:43:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/decode_ticket.c,v 1.6.14.1 2007/04/10 18:39:52 shadow Exp $");
 
 #include <des.h>
 #include <afs/com_err.h>

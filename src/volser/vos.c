@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.25 2008/02/11 03:46:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.55.2.17 2008/05/22 03:51:46 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -39,7 +39,6 @@ RCSID
 #include <rx/rx_globals.h>
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/afsutil.h>
@@ -47,7 +46,6 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 #include <afs/usd.h>
-#include <rx/rxkad.h>
 #include "volser.h"
 #include "volint.h"
 #include <afs/ihandle.h>
@@ -60,10 +58,17 @@ RCSID
 #include <signal.h>
 #endif
 #include "volser_prototypes.h"
+#include "vsutils_prototypes.h"
+#include "lockprocs_prototypes.h"
 
 #ifdef HAVE_POSIX_REGEX
 #include <regex.h>
 #endif
+
+/* Local Prototypes */
+int PrintDiagnostics(char *astring, afs_int32 acode);
+int GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, 
+                  afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
     afs_int32 volid;
@@ -81,10 +86,10 @@ cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
 cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
+cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
-extern int verbose;
 int rxInitDone = 0;
 struct rx_connection *tconn;
 afs_int32 tserver;
@@ -282,7 +287,11 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 	FD_ZERO(&in);
 	FD_SET((int)(ufd->handle), &in);
 	/* don't timeout if read blocks */
+#if defined(AFS_PTHREAD_ENV)
+	select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
+#else
 	IOMGR_Select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
+#endif
 #endif
 	error = USD_READ(ufd, buffer, blksize, &nbytes);
 	if (error) {
@@ -340,7 +349,7 @@ WriteData(struct rx_call *call, char *rock)
 	USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
 	hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
 	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
-	USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
+	USD_READ(ufd, (char *)&buffer, sizeof(afs_uint32), &got);
 	if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
 	    fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
 	    error = VOLSERBADOP;
@@ -392,7 +401,11 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 	    FD_ZERO(&out);
 	    FD_SET((int)(ufd->handle), &out);
 	    /* don't timeout if write blocks */
+#if defined(AFS_PTHREAD_ENV)
+	    select(((int)(ufd->handle)) + 1, &out, 0, 0, 0);
+#else
 	    IOMGR_Select(((int)(ufd->handle)) + 1, 0, &out, 0, 0);
+#endif
 #endif
 	    error =
 		USD_WRITE(ufd, &buffer[bytesread - bytesleft], bytesleft, &w);
@@ -1384,8 +1397,7 @@ GetServerAndPart(entry, voltype, server, part, previdx)
 }
 
 static void
-PostVolumeStats(entry)
-     struct nvldbentry *entry;
+PostVolumeStats(struct nvldbentry *entry)
 {
     SubEnumerateEntry(entry);
     /* Check for VLOP_ALLOPERS */
@@ -1443,11 +1455,8 @@ XVolumeStats(a_xInfoP, a_entryP, a_srvID, a_partID, a_volType)
 }				/*XVolumeStats */
 
 static void
-VolumeStats(pntr, entry, server, part, voltype)
-     volintInfo *pntr;
-     struct nvldbentry *entry;
-     int voltype;
-     afs_int32 server, part;
+VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_int32 server, 
+	     afs_int32 part, int voltype)
 {
     int totalOK, totalNotOK, totalBusy;
 
@@ -1629,7 +1638,7 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 		EnumerateEntry(&entry);
 	    } else
 #endif /* FULL_LISTVOL_SWITCH */
-		VolumeStats(pntr, &entry, aserver, apart, voltype);
+		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
 
 	    if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
 		/* The VLDB says there is no backup volume yet we found one on disk */
@@ -1726,6 +1735,10 @@ SetFields(register struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	/* -clearuse */
 	info.dayUse = 0;
+    }
+    if (as->parms[3].items) {
+	/* -clearVolUpCounter */
+	info.spare2 = 0;
     }
     code = UV_SetVolumeInfo(aserver, apart, volid, &info);
     if (code)
@@ -2100,7 +2113,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
 
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2169,7 +2182,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2225,7 +2238,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 volid, fromserver, toserver, frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2320,7 +2333,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2371,8 +2384,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 volid, fromserver, toserver, frompart, topart, tovolid;
     afs_int32 code, err, flags;
     char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
-    struct nvldbentry entry;
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p, *q;
 
     p = (volintInfo *) 0;
@@ -2505,7 +2517,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -4075,9 +4087,9 @@ RenameVolume(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-GetVolumeInfo(volid, server, part, voltype, rentry)
-     afs_int32 *server, volid, *part, *voltype;
-     register struct nvldbentry *rentry;
+int
+GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *voltype, 
+              struct nvldbentry *rentry)
 {
     afs_int32 vcode;
     int i, index = -1;
@@ -4992,11 +5004,11 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
     afs_int32 apart;
     afs_int32 aserver, code;
     char pname[10];
-    struct diskPartition partition;
+    struct diskPartition64 partition;
     struct partList dummyPartList;
     int i, cnt;
     int printSummary=0, sumPartitions=0;
-    afs_uint64 sumFree, sumStorage, tmp;
+    afs_uint64 sumFree, sumStorage;
 
     ZeroInt64(sumFree);
     ZeroInt64(sumStorage);
@@ -5041,7 +5053,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
     for (i = 0; i < cnt; i++) {
 	if (dummyPartList.partFlags[i] & PARTVALID) {
 	    MapPartIdIntoName(dummyPartList.partId[i], pname);
-	    code = UV_PartitionInfo(aserver, pname, &partition);
+	    code = UV_PartitionInfo64(aserver, pname, &partition);
 	    if (code) {
 		fprintf(STDERR, "Could not get information on partition %s\n",
 			pname);
@@ -5049,13 +5061,11 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	    fprintf(STDOUT,
-		    "Free space on partition %s: %d K blocks out of total %d\n",
+		    "Free space on partition %s: %lld K blocks out of total %lld\n",
 		    pname, partition.free, partition.minFree);
 	    sumPartitions++;
-            FillInt64(tmp,0,partition.free);
-            AddUInt64(sumFree,tmp,&sumFree);
-            FillInt64(tmp,0,partition.minFree);
-            AddUInt64(sumStorage,tmp,&sumStorage);
+            AddUInt64(sumFree,partition.free,&sumFree);
+            AddUInt64(sumStorage,partition.minFree,&sumStorage);
 	}
     }
     if (printSummary) {
@@ -5134,7 +5144,7 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 
 static void
 print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
-	    int print, int noresolve)
+	    int print)
 {
     afs_int32 vcode;
     afs_int32 i, j;
@@ -5172,7 +5182,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
-				      &vlcb, &m_nentries, &m_addrs);
+				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5222,7 +5232,7 @@ static int
 ListAddrs(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 vcode;
-    afs_int32 i, noresolve = 0, printuuid = 0;
+    afs_int32 i, printuuid = 0;
     struct VLCallBack vlcb;
     afs_int32 nentries;
     bulkaddrs m_addrs;
@@ -5260,9 +5270,6 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	m_attrs.ipaddr = ntohl(saddr);
     }
     if (as->parms[2].items) {
-	noresolve = 1;
-    }
-    if (as->parms[3].items) {
 	printuuid = 1;
     }
 
@@ -5315,7 +5322,7 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	    return (vcode);
 	}
 
-	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid, noresolve);
+	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
 	i++;
 
 	if ((as->parms[1].items) || (as->parms[0].items) || (i > nentries))
@@ -5599,9 +5606,8 @@ Sizes(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-PrintDiagnostics(astring, acode)
-     char *astring;
-     afs_int32 acode;
+int
+PrintDiagnostics(char *astring, afs_int32 acode)
 {
     if (acode == EACCES) {
 	fprintf(STDERR,
@@ -5646,6 +5652,10 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	verbose = 1;
     else
 	verbose = 0;
+    if (as->parms[17].items)	/* -noresolve flag set */
+	noresolve = 1;
+    else
+	noresolve = 0;
     return 0;
 }
 
@@ -5899,6 +5909,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL, "quota (KB)");
     cmd_AddParm(ts, "-clearuse", CMD_FLAG, CMD_OPTIONAL, "clear dayUse");
+    cmd_AddParm(ts, "-clearVolUpCounter", CMD_FLAG, CMD_OPTIONAL, "clear volUpdateCounter");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("offline", volOffline, NULL, (char *)CMD_HIDDEN);
@@ -6002,8 +6013,6 @@ main(argc, argv)
 			  "list the IP address of all file servers registered in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, CMD_OPTIONAL, "uuid of server");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_OPTIONAL, "address of host");
-    cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL,
-		"don't resolve addresses");
     cmd_AddParm(ts, "-printuuid", CMD_FLAG, CMD_OPTIONAL,
 		"print uuid of hosts");
     COMMONPARMS;
