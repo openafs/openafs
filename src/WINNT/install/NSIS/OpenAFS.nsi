@@ -1239,6 +1239,9 @@ DoControl:
 
 DoCommon:
   SetOutPath "$INSTDIR\Common"
+!IFDEF CL_1500
+  ; Do nothing
+!ELSE
 !IFDEF CL_1400
   ; Do nothing
 !ELSE
@@ -1255,6 +1258,7 @@ DoCommon:
    File "${SYSTEMDIR}\mfc42d.pdb"
    File "${SYSTEMDIR}\msvcp60d.pdb"
    File "${SYSTEMDIR}\msvcrtd.pdb"
+!ENDIF
 !ENDIF
 !ENDIF
 !ENDIF
@@ -1721,72 +1725,89 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
 !IFDEF DEBUG
-!IFDEF CL_1400
-   SetOutPath "$INSTDIR\bin"
-   File "${AFS_WININSTALL_DIR}\vcruntime.msi"
-   nsExec::Exec 'msiexec /x "$INSTDIR\bin\vcruntime.msi" /passive'
-   Delete "$INSTDIR\bin\vcruntime.msi"
-!ELSE
-!IFDEF CL_1310
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71d.pdb"
-!ELSE
-!IFDEF CL_1300
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70d.pdb"
-!ELSE
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
-!ENDIF
-!ENDIF
-!ENDIF
+!IFDEF CL_1500
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1400
-   ; Do nothing
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71KOR.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71d.pdb"
 !ELSE
 !IFDEF CL_1300
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70KOR.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70d.pdb"
 !ELSE
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrt.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
+!ENDIF
+!ENDIF
+!ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1500
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
+!ELSE
+!IFDEF CL_1400
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
+!ELSE
+!IFDEF CL_1310
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71KOR.DLL"
+!ELSE
+!IFDEF CL_1300
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70KOR.DLL"
+!ELSE
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
+!ENDIF
 !ENDIF
 !ENDIF
 !ENDIF
@@ -1897,69 +1918,89 @@ StartRemove:
   RMDir  "$INSTDIR\Client"
 
 !IFDEF DEBUG  
-!IFDEF CL_1400
-   ; Do nothing
-!ELSE
-!IFDEF CL_1310
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71d.pdb"
-!ELSE
-!IFDEF CL_1300
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70d.pdb"
-!ELSE
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.pdb"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
-!ENDIF
-!ENDIF
-!ENDIF
+!IFDEF CL_1500
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1400
-   ; Do nothing
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
-   Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp71.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC71KOR.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71d.pdb"
 !ELSE
 !IFDEF CL_1300
-   Delete /REBOOTOK "$INSTDIR\bin\mfc70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcr70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp70.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70CHS.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70CHT.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70DEU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ENU.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ESP.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70FRA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70ITA.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70JPN.DLL"
-   Delete /REBOOTOK "$INSTDIR\bin\MFC70KOR.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70d.pdb"
 !ELSE
-   Delete /REBOOTOK "$INSTDIR\bin\mfc42.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcp60.dll"
-   Delete /REBOOTOK "$INSTDIR\bin\msvcrt.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60d.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
+!ENDIF
+!ENDIF
+!ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1500
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
+!ELSE
+!IFDEF CL_1400
+   SetOutPath "$INSTDIR\Common"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /x "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
+!ELSE
+!IFDEF CL_1310
+   Delete /REBOOTOK "$INSTDIR\Common\mfc71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp71.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC71KOR.DLL"
+!ELSE
+!IFDEF CL_1300
+   Delete /REBOOTOK "$INSTDIR\Common\mfc70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp70.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\Common\MFC70KOR.DLL"
+!ELSE
+   Delete /REBOOTOK "$INSTDIR\Common\mfc42.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcp60.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
+!ENDIF
 !ENDIF
 !ENDIF
 !ENDIF
@@ -2751,9 +2792,14 @@ Function AFSLangFiles
  SetOutPath "$INSTDIR\Common"
 
 !IFDEF DEBUG
+!IFDEF CL_1500
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
+!ELSE
 !IFDEF CL_1400
-   File "${AFS_WININSTALL_DIR}\vcruntime.msi"
-   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive'
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
    Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
@@ -2790,11 +2836,17 @@ Function AFSLangFiles
 !ENDIF
 !ENDIF
 !ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1500
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1400
-  File "${AFS_WININSTALL_DIR}\${VCREDISTNAME}"
-  nsExec::Exec '"$INSTDIR\Common\${VCREDISTNAME}" /Q'
-  Delete "$INSTDIR\Common\${VCREDISTNAME}"
+   File /oname=vcruntime.msi "${MSVCMSI}"
+   nsExec::Exec 'msiexec /i "$INSTDIR\Common\vcruntime.msi" /passive /norestart'
+   Delete "$INSTDIR\Common\vcruntime.msi"
 !ELSE
 !IFDEF CL_1310
    !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71.dll" "$INSTDIR\Common\mfc71.dll" "$INSTDIR"
@@ -2830,6 +2882,7 @@ Function AFSLangFiles
 !ENDIF
 !ENDIF
 !ENDIF   
+!ENDIF
 !ENDIF
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish

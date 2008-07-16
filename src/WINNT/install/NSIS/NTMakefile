@@ -71,6 +71,23 @@ IDNMREDIST=$(MSIDNNLS)\REDIST\idndl.amd64.exe
 ! error Unknown CPU value
 !ENDIF
 
+!if ("$(AFSVER_CL)"=="1400") || ("$(AFSVER_CL)"=="1500")
+MSVCMSI=$(EXEDIR)\vcruntime-$(AFSVER_CL)$(AFSDEV_BUILDTYPE).msi
+
+$(MSVCMSI): $(OUT)\vcruntime.wixobj
+	light -out $@ $**
+	$(CODESIGN_USERLAND)
+
+$(OUT)\vcruntime.wixobj: vcruntime.wxs
+	candle -out $@ $** -dPlatform=$(ARCH) -dConfig=Debug -dVCVer=$(AFSVER_CL)
+
+!else
+MSVCMSI=
+!endif
+
+runtime: $(MSVCMSI)
+
+
 prebuild:
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 !IF ("$(AFSVER_CL)"=="1400")
@@ -89,7 +106,9 @@ prebuild:
 !ERROR Unknown Compiler Version
 !ENDIF
 !ELSE # NOT FREE - CHECKED
-!IF ("$(AFSVER_CL)"=="1400")
+!IF ("$(AFSVER_CL)"=="1500")
+# Do nothing
+!ELSE IF ("$(AFSVER_CL)"=="1400")
 # Do nothing.
 !ELSE IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71d.dll $(EXEDIR)
@@ -122,9 +141,12 @@ prebuild:
    $(DESTDIR)\bin\util_cr.exe _echo "!define " >>$(OUT)\nsi-includes.nsi 
    "$(NSISDIR)\makensis.exe" /VERSION >>$(OUT)\nsi-includes.nsi          
    echo. >>$(OUT)\nsi-includes.nsi                                       
-!if ("$(AFSVER_CL)" == "1400")
+!if ("$(AFSVER_CL)" == "1500")
+   echo !define CL_1500 1 >> $(OUT)\nsi-includes.nsi
+   echo !define MSVCMSI "$(MSVCMSI)" >> $(OUT)\nsi-includes.nsi
+!else if ("$(AFSVER_CL)" == "1400")
    echo !define CL_1400 1 >> $(OUT)\nsi-includes.nsi
-   echo !define VCREDISTNAME vcredist_$(ARCH).exe >> $(OUT)\nsi-includes.nsi
+   echo !define MSVCMSI "$(MSVCMSI)" >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1310")
    echo !define CL_1310 1 >> $(OUT)\nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1300")
@@ -137,29 +159,13 @@ prebuild:
    echo !define DEBUG 1 >>$(OUT)\nsi-includes.nsi
 !endif
 
-!if ("$(AFSVER_CL)"=="1400") && ("$(AFSDEV_BUILDTYPE)"!="FREE")
-MSVCMSI=$(EXEDIR)\vcruntime.msi
-
-$(MSVCMSI): $(OUT)\vcruntime.wixobj
-	light -out $@ $**
-	$(CODESIGN_USERLAND)
-
-$(OUT)\vcruntime.wixobj: vcruntime.wxs
-	candle -out $@ $** -dPlatform=$(ARCH) -dConfig=Debug
-
-!else
-MSVCMSI=
-!endif
-
-runtime: $(MSVCMSI)
-
 !if ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 NSISEXE=$(DESTDIR)\WinInstall\OpenAFSforWindows-DEBUG.exe
 !else
 NSISEXE=$(DESTDIR)\WinInstall\OpenAFSforWindows.exe
 !endif
 
-$(NSISEXE): prebuild
+$(NSISEXE): prebuild $(MSVCMSI)
 	"$(NSISDIR)\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
 	$(CODESIGN_USERLAND)
 
