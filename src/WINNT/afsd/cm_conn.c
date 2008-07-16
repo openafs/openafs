@@ -76,34 +76,40 @@ void cm_InitConn(void)
 	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
-	    if (code == ERROR_SUCCESS)
+	    if (code == ERROR_SUCCESS) {
                 ConnDeadtimeout = (unsigned short)dwValue;
-
+                afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+            }
 	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
-	    if (code == ERROR_SUCCESS)
+	    if (code == ERROR_SUCCESS) {
                 HardDeadtimeout = (unsigned short)dwValue;
-	    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-
+                afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+            }
 	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, "IdleDeadTimeout", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
-	    if (code == ERROR_SUCCESS)
+	    if (code == ERROR_SUCCESS) {
                 IdleDeadtimeout = (unsigned short)dwValue;
-	    afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
-
+                afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+            }
             RegCloseKey(parmKey);
 	}
 
 	afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
-	if (ConnDeadtimeout == 0)
+	if (ConnDeadtimeout == 0) {
 	    ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
-	afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
-	if (HardDeadtimeout == 0)
+            afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+        }
+	if (HardDeadtimeout == 0) {
 	    HardDeadtimeout = (unsigned short) RDRtimeout;
-	afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-
+            afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+        }
+	if (ConnDeadtimeout == 0) {
+	    IdleDeadtimeout = (unsigned short) RDRtimeout;
+            afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+        }
 	osi_EndOnce(&once);
     }
 }
@@ -764,8 +770,9 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     cm_server_t *tsp;
     long firstError = 0;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+#ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
     long timeUsed, timeLeft, hardTimeLeft;
-
+#endif
     *connpp = NULL;
 
     if (serversp == NULL) {
@@ -773,11 +780,13 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	return CM_ERROR_ALLDOWN;
     }
 
+#ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
         
     /* leave 5 seconds margin of safety */
     timeLeft =  ConnDeadtimeout - timeUsed - 5;
     hardTimeLeft = HardDeadtimeout - timeUsed - 5;
+#endif
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
@@ -811,6 +820,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 code = cm_ConnByServer(tsp, usersp, connpp);
                 if (code == 0) {        /* cm_CBS only returns 0 */
                     cm_PutServer(tsp);
+#ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
                     /* Set RPC timeout */
                     if (timeLeft > ConnDeadtimeout)
                         timeLeft = ConnDeadtimeout;
@@ -822,6 +832,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                     rx_SetConnDeadTime((*connpp)->callp, timeLeft);
                     rx_SetConnHardDeadTime((*connpp)->callp, (u_short) hardTimeLeft);
                     lock_ReleaseMutex(&(*connpp)->mx);
+#endif
                     return 0;
                 }
                 
