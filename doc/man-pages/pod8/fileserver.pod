@@ -50,7 +50,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-fs-state-verify>] (none | save | restore | both)] >>>
     S<<< [B<-vhashsize> <I<log(2) of number of volume hash buckets>>] >>>
     S<<< [B<-vlrudisable>] >>>
-    S<<< [B<-vlruthresh> <I<minutes before unused volumes become eligible for soft detach>>] >>>
+    S<<< [B<-vlruthresh> <I<minutes before eligibility for soft detach>>] >>>
     S<<< [B<-vlruinterval> <I<seconds between VLRU scans>>] >>>
     S<<< [B<-vlrumax> <I<max volumes to soft detach in one VLRU scan>>] >>>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
