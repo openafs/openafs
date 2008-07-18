@@ -84,7 +84,7 @@ install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	cd src/libafs && make install
+	cd src/libafs && make install DESTDIR=$(CURDIR)/debian/tmp
 	install -d -g root -o root -m 755 $(moduledir)
 	install -g root -o root -m 644 \
 	    debian/tmp/lib/modules/*/extra/openafs/*o $(moduledir)/
