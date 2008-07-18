@@ -269,7 +269,7 @@ extern struct dcache *afs_UFSGetDSlot(register afs_int32 aslot,
 extern int afs_WriteDCache(register struct dcache *adc, int atime);
 extern int afs_wakeup(register struct vcache *avc);
 extern int afs_InitCacheFile(char *afile, ino_t ainode);
-extern int afs_DCacheHasAllChunks(struct vcache *avc);
+extern int afs_DCacheMissingChunks(struct vcache *avc);
 
 /* afs_disconnected.c */
 
