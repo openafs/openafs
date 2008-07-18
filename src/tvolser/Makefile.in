@@ -233,7 +233,7 @@ volserver: ${objects} ${LIBS}
 install: volserver vos
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
-	${INSTALL} vos ${DESTDIR}${afssrvlibexecdir}/vos
+	${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos
 	${INSTALL} vos ${DESTDIR}${sbindir}/vos
 
 dest: volserver vos
