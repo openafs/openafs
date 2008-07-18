@@ -233,7 +233,7 @@ ${DEST}/root.server/usr/afs/bin/volserver: volserver
 ${DEST}/root.server/usr/afs/bin/vos: vos
 	${INSTALL} -ns $? $@
 
-install: ${DESTDIR}${afssrvlibexecdir}/volserver ${DESTDIR}${afssrvlibexecdir}/vos
+install: ${DESTDIR}${afssrvlibexecdir}/volserver ${DESTDIR}${afssrvsbindir}/vos
 clean:
 	$(RM) -f *.o volserver vos core AFS_component_version_number.c
 
@@ -242,7 +242,7 @@ include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/volserver: volserver
 	${INSTALL} -ns $? $@
 
-${DESTDIR}${afssrvlibexecdir}/vos: vos
+${DESTDIR}${afssrvsbindir}/vos: vos
 	${INSTALL} -ns $? $@
 
 dest: ${DEST}/root.server/usr/afs/bin/volserver ${DEST}/root.server/usr/afs/bin/vos
