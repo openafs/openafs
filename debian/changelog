@@ -5,6 +5,8 @@ openafs (1.4.7.dfsg1-5) unstable; urgency=low
     and builds without UCONTEXT fail.  The binaries we were building
     before didn't work and no one reported a bug, indicating no one was
     attempting to use OpenAFS on hppa.
+  * Add Jason Edgecomb's copyright and license for man pages to
+    debian/copyright.
 
  -- Russ Allbery <rra@debian.org>  Fri, 18 Jul 2008 20:34:04 -0700
 
