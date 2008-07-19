@@ -24,7 +24,7 @@ RCSID
 #endif
 #include <sys/stat.h>
 
-/* #if defined (AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV) */
+/* #ifdef AFS_PTHREAD_ENV */
 #if 0   /* temporary hack - klm */
 /* nothing */
 #else

@@ -189,7 +189,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 {
     register struct ubik_dbase *tdb;
     register afs_int32 code;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     pthread_t rxServerThread;        /* pthread variables */
     pthread_t ubeacon_InteractThread;
     pthread_t urecovery_InteractThread;
@@ -290,7 +290,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
      * UpdateInterfaceAddr RPC that occurs in ubeacon_InitServerList. This avoids
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
     assert(pthread_attr_init(&rxServer_tattr) == 0);
     assert(pthread_attr_setdetachstate(&rxServer_tattr, PTHREAD_CREATE_DETACHED) == 0);
@@ -317,7 +317,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 	return code;
 
     /* now start up async processes */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
     assert(pthread_attr_init(&ubeacon_Interact_tattr) == 0);
     assert(pthread_attr_setdetachstate(&ubeacon_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
@@ -334,7 +334,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 	return code;
 #endif
 
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
     assert(pthread_attr_init(&urecovery_Interact_tattr) == 0);
     assert(pthread_attr_setdetachstate(&urecovery_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
@@ -427,7 +427,7 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 #endif
 		return UNOQUORUM;	/* a white lie */
 	    }
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    sleep(2);
 #else
 	    IOMGR_Sleep(2);
@@ -449,7 +449,7 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 	/* if we're writing already, wait */
 	while (dbase->flags & DBWRITING) {
 	    DBRELE(dbase);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_mutex_lock(&dbase->flags_mutex) == 0);
 	    assert(pthread_cond_wait(&dbase->flags_cond, &dbase->flags_mutex) == 0);
 	    assert(pthread_mutex_unlock(&dbase->flags_mutex) == 0);
@@ -644,7 +644,7 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
 		code = 1;
 		tv.tv_sec = 1;	/* try again after a while (ha ha) */
 		tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		select(0, 0, 0, 0, &tv);
 #else
 		IOMGR_Select(0, 0, 0, 0, &tv);	/* poll, should we wait on something? */
@@ -952,7 +952,7 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
 	/* wait until version # changes, and then return */
 	if (vcmp(*aversion, adatabase->version) != 0)
 	    return 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	assert(pthread_mutex_lock(&adatabase->version_mutex) == 0);
 	assert(pthread_cond_wait(&adatabase->version_cond,&adatabase->version_mutex) == 0);
 	assert(pthread_mutex_unlock(&adatabase->version_mutex) == 0);

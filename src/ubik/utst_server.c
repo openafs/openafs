@@ -62,7 +62,7 @@ SAMPLE_Inc(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -122,7 +122,7 @@ SAMPLE_Get(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -169,7 +169,7 @@ SAMPLE_QGet(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -213,7 +213,7 @@ SAMPLE_Trun(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -258,7 +258,7 @@ SAMPLE_Test(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);

@@ -330,7 +330,7 @@ ubeacon_Interact(void *dummy)
 		temp = POLLTIME;
 	    tt.tv_sec = temp;
 	    tt.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    code = select(0, 0, 0, 0, &tt);
 #else
 	    code = IOMGR_Select(0, 0, 0, 0, &tt);
@@ -451,11 +451,9 @@ ubeacon_Interact(void *dummy)
 	    ubik_amSyncSite = 1;
 	    syncSiteUntil = oldestYesVote + SMALLTIME;
 #ifndef AFS_PTHREAD_ENV
-#ifndef UBIK_PTHREAD_ENV
 		/* I did not find a corresponding LWP_WaitProcess(&ubik_amSyncSite) --
 		   this may be a spurious signal call -- sjenkins */
 		LWP_NoYieldSignal(&ubik_amSyncSite);
-#endif
 #endif
 	} else {
 	    if (ubik_amSyncSite)

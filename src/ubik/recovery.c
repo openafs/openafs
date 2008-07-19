@@ -72,7 +72,7 @@ int
 urecovery_ResetState(void)
 {
     urecovery_state = 0;
-#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+#if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
 #endif
@@ -86,7 +86,7 @@ urecovery_ResetState(void)
 int
 urecovery_LostServer(void)
 {
-#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+#if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
     return 0;
@@ -369,7 +369,7 @@ InitializeDB(register struct ubik_dbase *adbase)
 	    adbase->version.counter = 0;
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&adbase->version_cond) == 0);
 #else
 	LWP_NoYieldSignal(&adbase->version);
@@ -453,7 +453,7 @@ urecovery_Interact(void *dummy)
 	/* Run through this loop every 4 seconds */
 	tv.tv_sec = 4;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -694,7 +694,7 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
@@ -722,7 +722,7 @@ urecovery_Interact(void *dummy)
 	    code =
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
@@ -755,7 +755,7 @@ urecovery_Interact(void *dummy)
 		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		    select(0, 0, 0, 0, &tv);
 #else
 		    IOMGR_Select(0, 0, 0, 0, &tv);
