@@ -124,6 +124,7 @@ extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
+struct ktc_encryptionKey;
 extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
 				      afs_int32 * avno, 
 				      struct ktc_encryptionKey *akey);
