@@ -628,7 +628,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 #endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));
     udisk_Invalidate(dbase, file);	/* new dbase, flush disk buffers */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
 #else
     LWP_NoYieldSignal(&dbase->version);

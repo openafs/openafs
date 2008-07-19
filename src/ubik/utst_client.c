@@ -149,7 +149,7 @@ main(argc, argv)
 
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		select(0, 0, 0, 0, &tv);
 #else
 		IOMGR_Select(0, 0, 0, 0, &tv);
@@ -176,7 +176,7 @@ main(argc, argv)
 
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		select(0, 0, 0, 0, &tv);
 #else
 		IOMGR_Select(0, 0, 0, 0, &tv);

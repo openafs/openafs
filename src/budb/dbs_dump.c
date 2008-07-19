@@ -115,11 +115,10 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
      charListT *charListPtr;
      afs_int32 *done;
 {
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     pthread_t dumperPid, watcherPid;
     pthread_attr_t dumperPid_tattr;
     pthread_attr_t watcherPid_tattr;
-
 #else
     PROCESS dumperPid, watcherPid;
 #endif
@@ -162,7 +161,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	if (code)
 	    ERROR(errno);
 
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	/* Initialize the condition variables and the mutexes we use
 	 * to signal and synchronize the reader and writer threads.
 	 */
@@ -189,7 +188,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	dumpSyncPtr->dumperPid = dumperPid;
 	dumpSyncPtr->timeToLive = time(0) + DUMP_TTL_INC;
 
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	/* Initialize the thread attributes and launch the thread */
 
 	assert(pthread_attr_init(&watcherPid_tattr) == 0);
@@ -217,7 +216,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	if (dumpSyncPtr->ds_writerStatus == DS_WAITING) {
 	    LogDebug(6, "wakup writer\n");
 	    dumpSyncPtr->ds_writerStatus = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
@@ -228,7 +227,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	LogDebug(6, "wait for writer\n");
 	dumpSyncPtr->ds_readerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
         assert(pthread_mutex_lock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
         assert(pthread_cond_wait(&dumpSyncPtr->ds_readerStatus_cond, &dumpSyncPtr->ds_readerStatus_mutex) == 0);
         assert(pthread_mutex_unlock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
@@ -259,7 +258,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
     dumpSyncPtr->ds_bytes -= readSize;
     if (dumpSyncPtr->ds_writerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_writerStatus = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
@@ -359,7 +358,7 @@ dumpWatcher(void *unused)
 
 	    close(dumpSyncPtr->pipeFid[0]);
 	    close(dumpSyncPtr->pipeFid[1]);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
 #else
 	    code = LWP_DestroyProcess(dumpSyncPtr->dumperPid);
@@ -378,7 +377,7 @@ dumpWatcher(void *unused)
 	}
 	/*i */
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	sleep(5);
 #else
 	IOMGR_Sleep(5);

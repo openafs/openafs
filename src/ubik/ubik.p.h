@@ -172,7 +172,7 @@ struct ubik_dbase {
     int (*getnfiles) (struct ubik_dbase * adbase);	/* find out number of files */
     short readers;		/* number of current read transactions */
     struct ubik_version cachedVersion;	/* version of caller's cached data */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /* condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /* condition variable to manage changes to flags */
   pthread_mutex_t version_mutex;
