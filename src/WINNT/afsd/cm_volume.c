@@ -338,7 +338,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             rwID = uvldbEntry.volumeId[0];
             roID = uvldbEntry.volumeId[1];
             bkID = uvldbEntry.volumeId[2];
-            for ( i=0, j=0; i<nServers && j<NMAXNSERVERS; i++ ) {
+            for ( i=0, j=0; code == 0 && i<nServers && j<NMAXNSERVERS; i++ ) {
                 if ( !(uvldbEntry.serverFlags[i] & VLSERVER_FLAG_UUID) ) {
                     serverFlags[j] = uvldbEntry.serverFlags[i];
                     serverNumber[j] = uvldbEntry.serverNumber[i].time_low;
@@ -361,13 +361,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                             continue;
                    
                         code = VL_GetAddrsU(connp->callp, &attrs, &uuid, &unique, &nentries, &addrs);
-
-                        if (code == 0 && nentries == 0)
-                            code = VL_NOENT;
                     } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
-                    code = cm_MapVLRPCError(code, reqp);
-                    if (code)
-                        return code;
+
+                    if ( code ) {
+                        code = cm_MapVLRPCError(code, reqp);
+                        osi_Log2(afsd_logp, "CALL VL_GetAddrsU serverNumber %u FAILURE, code 0x%x", 
+                                 i, code);
+                        continue;
+                    } 
+                    osi_Log1(afsd_logp, "CALL VL_GetAddrsU serverNumber %u SUCCESS", i);
 
                     addrp = addrs.bulkaddrs_val;
                     for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
@@ -376,6 +378,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     }
 
                     free(addrs.bulkaddrs_val);  /* This is wrong */
+
+                    if (nentries == 0)
+                        code = CM_ERROR_INVAL;
                 }
             }
             nServers = j;					/* update the server count */
@@ -567,6 +572,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         volp->vol[BACKVOL].state = bkNewstate;
     }
 
+    if (code == 0)
+        volp->flags &= ~CM_VOLUMEFLAG_RESET;
+
     volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
     osi_Wakeup((LONG_PTR) &volp->flags);
 
@@ -682,8 +690,6 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
         code = 0;
         if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
             code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
-            if (code == 0)
-                volp->flags &= ~CM_VOLUMEFLAG_RESET;
         }
         lock_ReleaseWrite(&volp->rw);
         if (code == 0) {
@@ -844,8 +850,6 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     /* if we get here we are holding the mutex */
     if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
         code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
-        if (code == 0)
-            volp->flags &= ~CM_VOLUMEFLAG_RESET;
     }	
     lock_ReleaseWrite(&volp->rw);
 
@@ -947,8 +951,6 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
      * occur.
      */
     code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
-    if (code == 0)
-	volp->flags &= ~CM_VOLUMEFLAG_RESET;
 #endif
     lock_ReleaseWrite(&volp->rw);
 
@@ -1079,8 +1081,6 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     if (volp->flags & CM_VOLUMEFLAG_RESET) {
         cm_InitReq(&req);
         code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
-        if (code == 0)
-            volp->flags &= ~CM_VOLUMEFLAG_RESET;
     }
 
     if (volp->vol[RWVOL].ID != 0 && (!volID || volID == volp->vol[RWVOL].ID) &&
