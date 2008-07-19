@@ -188,7 +188,7 @@ ubik: cmd comerr auth ubik_depinstall
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
 tubik: ubik libafsrpc
-	case ${SYS_NAME} in \
+	[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tubik ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
@@ -205,7 +205,7 @@ ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
 
 tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
-	case ${SYS_NAME} in \
+	[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tptserver ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
@@ -260,7 +260,7 @@ vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
 tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent tvlserver_depinstall
-	case ${SYS_NAME} in \
+	[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
