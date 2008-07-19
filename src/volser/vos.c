@@ -472,16 +472,12 @@ DumpFunction(struct rx_call *call, char *filename)
     return (error);
 }
 
-#if SIZEOF_TIME_T!=4
 static char *
 vos_ctime(afs_int32 *timep)
 {
     time_t foo = *timep;
     return ctime(&foo);
 }
-#else
-#define vos_ctime ctime
-#endif
 
 static void
 DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
