@@ -102,6 +102,7 @@ void cm_InitVolume(int newFile, long maxVols)
 
                 lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
                 volp->flags |= CM_VOLUMEFLAG_RESET;
+                volp->flags &= CM_VOLUMEFLAG_UPDATING_VL;
                 for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
                     volp->vol[volType].state = vl_unknown;
                     volp->vol[volType].serversp = NULL;
@@ -184,12 +185,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     afs_uint32 volType;
 
-    /* clear out old bindings */
-    for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
-        if (volp->vol[volType].serversp)
-            cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
-    }
-
 #ifdef AFS_FREELANCE_CLIENT
     if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
@@ -203,11 +198,24 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     {
         while (volp->flags & CM_VOLUMEFLAG_UPDATING_VL) {
+            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation sleeping name %s:%s flags 0x%x", 
+                     volp->cellp->name, volp->namep, volp->flags);
             osi_SleepW((LONG_PTR) &volp->flags, &volp->rw);
             lock_ObtainWrite(&volp->rw);
-
-            if (!(volp->flags & CM_VOLUMEFLAG_RESET))
+            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation awake name %s:%s flags 0x%x", 
+                     volp->cellp->name, volp->namep, volp->flags);
+            if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
+                osi_Log3(afsd_logp, "cm_UpdateVolumeLocation nothing to do, waking others name %s:%s flags 0x%x", 
+                         volp->cellp->name, volp->namep, volp->flags);
+                osi_Wakeup((LONG_PTR) &volp->flags);
                 return 0;
+            }
+        }
+
+        /* clear out old bindings */
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            if (volp->vol[volType].serversp)
+                cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
         }
 
         volp->flags |= CM_VOLUMEFLAG_UPDATING_VL;
@@ -576,6 +584,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         volp->flags &= ~CM_VOLUMEFLAG_RESET;
 
     volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
+    osi_Log4(afsd_logp, "cm_UpdateVolumeLocation done, waking others name %s:%s flags 0x%x code 0x%x", 
+             volp->cellp->name, volp->namep, volp->flags, code);
     osi_Wakeup((LONG_PTR) &volp->flags);
 
     return code;
