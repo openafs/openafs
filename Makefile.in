@@ -291,7 +291,7 @@ volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
-	case ${SYS_NAME} in                                             \
+	[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in	\
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
 	*_darwin_[1-6][0-9])                                            \
@@ -507,7 +507,7 @@ budb: cmd comerr bubasics uss
 	${COMPILE_PART1} budb ${COMPILE_PART2}
 
 tbudb: budb
-	case ${SYS_NAME} in \
+	[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
