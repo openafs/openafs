@@ -31,13 +31,6 @@ arm|armel)
         ;;
     esac
     ;;
-hppa)
-    case $KVERS in
-    2.4*)
-        echo parisc_linux24
-        ;;
-    esac
-    ;;
 i[3456]86|lpia)
     case $KVERS in
     2.2*)

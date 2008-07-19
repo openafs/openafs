@@ -15,9 +15,6 @@ arm|armel)
 amd64)
     echo amd64_linux26
     ;;
-hppa)
-    echo parisc_linux24
-    ;;
 i[3456]86|lpia)
     echo i386_linux26
     ;;

@@ -11,7 +11,7 @@ Vcs-Git: git://git.debian.org/git/pkg-k5-afs/openafs.git
 Vcs-Browser: http://git.debian.org/?p=pkg-k5-afs/openafs.git
 
 Package: openafs-client
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2, lsof
 Suggests: openafs-doc, openafs-krb5
@@ -27,7 +27,7 @@ Description: AFS distributed filesystem client support
 
 Package: openafs-kpasswd
 Priority: extra
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, openafs-client
 Conflicts: krb5-user, heimdal-clients, kerberos4kth-clients
 Description: AFS distributed filesystem old password changing
@@ -41,7 +41,7 @@ Description: AFS distributed filesystem old password changing
  package for new cells or for cells using Kerberos v5.
 
 Package: openafs-fileserver
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client, lsb-base
 Recommends: ntp
 Suggests: openafs-doc
@@ -54,7 +54,7 @@ Description: AFS distributed filesystem file server
  installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${perl:Depends}, openafs-fileserver, openafs-client
 Suggests: openafs-doc
 Conflicts: openafs-ptutil
@@ -81,7 +81,7 @@ Description: AFS distributed filesystem documentation
  protocol documentation, and other OpenAFS documentation.
 
 Package: openafs-krb5
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}
 Conflicts: openafs-client (<< 1.4.7.dfsg1-1)
 Description: AFS distributed filesystem Kerberos 5 integration
@@ -96,7 +96,7 @@ Description: AFS distributed filesystem Kerberos 5 integration
 
 Package: libopenafs-dev
 Section: libdevel
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Priority: extra
 Depends: ${shlibs:Depends}
 Suggests: openafs-doc
@@ -121,7 +121,7 @@ Description: AFS distributed filesystem kernel module source
  This package provides source to the AFS kernel modules.
 
 Package: libpam-openafs-kaserver
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Priority: extra
 Depends: ${shlibs:Depends}, openafs-client
 Description: AFS distributed filesystem kaserver PAM module
@@ -136,7 +136,7 @@ Description: AFS distributed filesystem kaserver PAM module
 Package: openafs-dbg
 Section: libdevel
 Priority: extra
-Architecture: alpha amd64 arm armel hppa i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
 Depends: openafs-fileserver (= ${binary:Version})
  | libpam-openafs-kaserver (= ${binary:Version})
 Description: AFS distributed filesystem debugging information
