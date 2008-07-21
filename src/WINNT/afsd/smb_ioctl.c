@@ -1121,19 +1121,7 @@ smb_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
     cm_InitReq(&req);
 
-    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
-    if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
-        flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
-
-    if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
-        cm_fid_t fid;
-        cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
-                  optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
-    } else {
-        code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
-    }
+    code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     if (code) 
         return code;
 
