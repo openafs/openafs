@@ -1492,7 +1492,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     int sflags;
     AFSFetchStatus newDirStatus;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
     int free_fnamep = FALSE;
@@ -1545,10 +1545,10 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
         if (code)
             continue;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_RemoveFile(callp, &afsFid, fnamep,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_RemoveFile(rxconnp, &afsFid, fnamep,
                                 &newDirStatus, &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp, &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
@@ -2230,7 +2230,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
     long j;
     cm_scache_t *scp;
     cm_fid_t tfid;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     int inlinebulk = 0;		/* Did we use InlineBulkStatus RPC or not? */
         
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
@@ -2255,9 +2255,9 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
             if (code) 
                 continue;
 
-            callp = cm_GetRxConn(connp);
+            rxconnp = cm_GetRxConn(connp);
 	    if (!(connp->serverp->flags & CM_SERVERFLAG_NOINLINEBULK)) {
-		code = RXAFS_InlineBulkStatus(callp, &fidStruct,
+		code = RXAFS_InlineBulkStatus(rxconnp, &fidStruct,
                                      &statStruct, &callbackStruct, &volSync);
 		if (code == RXGEN_OPCODE) {
 		    cm_SetServerNoInlineBulk(connp->serverp, 0);
@@ -2266,10 +2266,10 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 		}
 	    }
 	    if (!inlinebulk) {
-		code = RXAFS_BulkStatus(callp, &fidStruct,
+		code = RXAFS_BulkStatus(rxconnp, &fidStruct,
 					&statStruct, &callbackStruct, &volSync);
 	    }
-            rx_PutConnection(callp);
+            rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(connp, userp, reqp, &dscp->fid,
                              &volSync, NULL, &cbReq, code));
@@ -2526,7 +2526,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     cm_conn_t *connp;
     AFSFid tfid;
     AFSStoreStatus afsInStatus;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
 
     /* handle file length setting */
     if (attrp->mask & CM_ATTRMASK_LENGTH)
@@ -2556,10 +2556,10 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         if (code) 
             continue;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_StoreStatus(callp, &tfid,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_StoreStatus(rxconnp, &tfid,
                                   &afsInStatus, &afsOutStatus, &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
                          &scp->fid, &volSync, NULL, NULL, code));
@@ -2601,7 +2601,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     AFSFetchStatus newFileStatus;
     AFSCallBack newFileCallback;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
 
@@ -2655,12 +2655,12 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_CreateFile(connp->callp, &dirAFSFid, fnamep,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_CreateFile(connp->rxconnp, &dirAFSFid, fnamep,
                                  &inStatus, &newAFSFid, &newFileStatus,
                                  &updatedDirStatus, &newFileCallback,
                                  &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, &cbReq, code));
@@ -2762,7 +2762,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     AFSFetchStatus newDirStatus;
     AFSCallBack newDirCallback;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
 
@@ -2815,12 +2815,12 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_MakeDir(connp->callp, &dirAFSFid, fnamep,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_MakeDir(connp->rxconnp, &dirAFSFid, fnamep,
                               &inStatus, &newAFSFid, &newDirStatus,
                               &updatedDirStatus, &newDirCallback,
                               &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
                         &dscp->fid, &volSync, NULL, &cbReq, code));
@@ -2892,7 +2892,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
 
@@ -2927,10 +2927,10 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         existingAFSFid.Vnode = sscp->fid.vnode;
         existingAFSFid.Unique = sscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_Link(callp, &dirAFSFid, fnamep, &existingAFSFid,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_Link(rxconnp, &dirAFSFid, fnamep, &existingAFSFid,
             &newLinkStatus, &updatedDirStatus, &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
         osi_Log1(afsd_logp,"  RXAFS_Link returns 0x%x", code);
 
     } while (cm_Analyze(connp, userp, reqp,
@@ -2982,7 +2982,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t *fnamep = NULL;
 
@@ -3015,11 +3015,11 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_Symlink(callp, &dirAFSFid, fnamep, contentsp,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_Symlink(rxconnp, &dirAFSFid, fnamep, contentsp,
                               &inStatus, &newAFSFid, &newLinkStatus,
                               &updatedDirStatus, &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, NULL, code));
@@ -3105,7 +3105,7 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     int didEnd;
     AFSFetchStatus updatedDirStatus;
     AFSVolSync volSync;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
     int free_fnamep = FALSE;
@@ -3154,10 +3154,10 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_RemoveDir(callp, &dirAFSFid, fnamep,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_RemoveDir(rxconnp, &dirAFSFid, fnamep,
                                &updatedDirStatus, &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
                         &dscp->fid, &volSync, NULL, NULL, code));
@@ -3262,7 +3262,7 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     AFSFetchStatus updatedNewDirStatus;
     AFSVolSync volSync;
     int oneDir;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_dirOp_t oldDirOp;
     cm_fid_t   fileFid;
     int        diropCode = -1;
@@ -3409,12 +3409,12 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         newDirAFSFid.Vnode = newDscp->fid.vnode;
         newDirAFSFid.Unique = newDscp->fid.unique;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_Rename(callp, &oldDirAFSFid, oldNamep,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_Rename(rxconnp, &oldDirAFSFid, oldNamep,
                             &newDirAFSFid, newNamep,
                             &updatedOldDirStatus, &updatedNewDirStatus,
                             &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp, &oldDscp->fid,
                          &volSync, NULL, NULL, code));
@@ -4022,7 +4022,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     AFSFid tfid;
     cm_fid_t cfid;
     cm_conn_t * connp;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     AFSVolSync volSync;
     afs_uint32 reqflags = reqp->flags;
 
@@ -4041,10 +4041,10 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
         if (code) 
             break;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_SetLock(callp, &tfid, lockType,
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_SetLock(rxconnp, &tfid, lockType,
                              &volSync);
-        rx_PutConnection(callp);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp, &cfid, &volSync,
                         NULL, NULL, code));
@@ -4068,7 +4068,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     AFSFid tfid;
     cm_fid_t cfid;
     cm_conn_t * connp;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     AFSVolSync volSync;
 
     tfid.Volume = scp->fid.volume;
@@ -4085,9 +4085,9 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
         if (code) 
             break;
 
-        callp = cm_GetRxConn(connp);
-        code = RXAFS_ReleaseLock(callp, &tfid, &volSync);
-        rx_PutConnection(callp);
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_ReleaseLock(rxconnp, &tfid, &volSync);
+        rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp, &cfid, &volSync,
                         NULL, NULL, code));
@@ -4977,7 +4977,7 @@ void cm_CheckLocks()
     AFSVolSync volSync;
     cm_conn_t *connp;
     long code;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     cm_scache_t * scp;
 
     cm_InitReq(&req);
@@ -5079,10 +5079,10 @@ void cm_CheckLocks()
                         if (code) 
                             break;
 
-                        callp = cm_GetRxConn(connp);
-                        code = RXAFS_ExtendLock(callp, &tfid,
+                        rxconnp = cm_GetRxConn(connp);
+                        code = RXAFS_ExtendLock(rxconnp, &tfid,
                                                 &volSync);
-                        rx_PutConnection(callp);
+                        rx_PutConnection(rxconnp);
 
                         osi_Log1(afsd_logp, "   ExtendLock returns %d", code);
 

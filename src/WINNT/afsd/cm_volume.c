@@ -1075,7 +1075,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     char *OfflineMsg;
     char *MOTD;
     cm_req_t req;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     char volName[32];
     char offLineMsg[256];
     char motd[256];
@@ -1112,10 +1112,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 if (code) 
                     continue;
 
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->vol[RWVOL].ID,
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[RWVOL].ID,
                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);            
+                rx_PutConnection(rxconnp);            
 
             } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);
@@ -1152,10 +1152,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 if (code) 
                     continue;
 
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->vol[ROVOL].ID,
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[ROVOL].ID,
                                               &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);        
+                rx_PutConnection(rxconnp);        
 
             } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);
@@ -1192,10 +1192,10 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
                 if (code) 
                     continue;
 
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->vol[BACKVOL].ID,
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[BACKVOL].ID,
                                               &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);        
+                rx_PutConnection(rxconnp);        
 
             } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);

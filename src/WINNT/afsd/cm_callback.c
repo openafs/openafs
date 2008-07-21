@@ -1671,7 +1671,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     cm_callbackRequest_t cbr;
     int mustCall;
     cm_fid_t sfid;
-    struct rx_connection * callp = NULL;
+    struct rx_connection * rxconnp = NULL;
     int syncop_done = 0;
 
     osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
@@ -1745,10 +1745,10 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             if (code) 
                 continue;
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_FetchStatus(callp, &tfid,
+            rxconnp = cm_GetRxConn(connp);
+            code = RXAFS_FetchStatus(rxconnp, &tfid,
                                      &afsStatus, &callback, &volSync);
-            rx_PutConnection(callp);
+            rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
                             &cbr, code));

@@ -62,7 +62,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     osi_hyper_t thyper;
     AFSVolSync volSync;
     AFSFid tfid;
-    struct rx_call *callp;
+    struct rx_call *rxcallp;
     struct rx_connection *rxconnp;
     osi_queueData_t *qdp;
     cm_buf_t *bufp;
@@ -153,7 +153,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     retry:
         rxconnp = cm_GetRxConn(connp);
-        callp = rx_NewCall(rxconnp);
+        rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
 #ifdef AFS_LARGEFILES
@@ -161,7 +161,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData64 scp 0x%p, offset 0x%x:%08x, length 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
-            code = StartRXAFS_StoreData64(callp, &tfid, &inStatus,
+            code = StartRXAFS_StoreData64(rxcallp, &tfid, &inStatus,
                                           biod.offset.QuadPart,
                                           nbytes,
                                           truncPos.QuadPart);
@@ -177,7 +177,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
                          scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
-                code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
+                code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
                                             biod.offset.LowPart, nbytes, truncPos.LowPart);
 		if (code)
 		    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
@@ -189,7 +189,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
                  scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
-        code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
+        code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
                                     biod.offset.LowPart, nbytes, truncPos.LowPart);
 	if (code)
 	    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
@@ -213,7 +213,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                     wbytes = cm_data.buf_blockSize;
 
                 /* write out wbytes of data from bufferp */
-                temp = rx_Write(callp, bufferp, wbytes);
+                temp = rx_Write(rxcallp, bufferp, wbytes);
                 if (temp != wbytes) {
                     osi_Log3(afsd_logp, "rx_Write failed bp 0x%p, %d != %d",bufp,temp,wbytes);
                     code = -1;
@@ -227,13 +227,13 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
         if (code == 0) {
             if (SERVERHAS64BIT(connp)) {
-                code = EndRXAFS_StoreData64(callp, &outStatus, &volSync);
+                code = EndRXAFS_StoreData64(rxcallp, &outStatus, &volSync);
                 if (code)
                     osi_Log2(afsd_logp, "EndRXAFS_StoreData64 FAILURE scp 0x%p code %lX", scp, code);
 		else
 		    osi_Log0(afsd_logp, "EndRXAFS_StoreData64 SUCCESS");
             } else {
-                code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
+                code = EndRXAFS_StoreData(rxcallp, &outStatus, &volSync);
                 if (code)
                     osi_Log2(afsd_logp, "EndRXAFS_StoreData FAILURE scp 0x%p code %lX",scp,code);
 		else
@@ -241,7 +241,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             }
         }
 
-        code = rx_EndCall(callp, code);
+        code = rx_EndCall(rxcallp, code);
 
 #ifdef AFS_LARGEFILES
         if (code == RXGEN_OPCODE && SERVERHAS64BIT(connp)) {
@@ -322,7 +322,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     long code;
     osi_hyper_t truncPos;
     cm_conn_t *connp;
-    struct rx_call *callp;
+    struct rx_call *rxcallp;
     struct rx_connection *rxconnp;
     int require_64bit_ops = 0;
 
@@ -360,33 +360,33 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     retry:	
         rxconnp = cm_GetRxConn(connp);
-        callp = rx_NewCall(rxconnp);
+        rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
 #ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
-            code = StartRXAFS_StoreData64(callp, &tfid, &inStatus,
+            code = StartRXAFS_StoreData64(rxcallp, &tfid, &inStatus,
                                           0, 0, truncPos.QuadPart);
         } else {
             if (require_64bit_ops) {
                 code = CM_ERROR_TOOBIG;
             } else {
-                code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
+                code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
                                             0, 0, truncPos.LowPart);
             }
         }
 #else
-        code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
+        code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
                                     0, 0, truncPos.LowPart);
 #endif
 
         if (code == 0) {
             if (SERVERHAS64BIT(connp))
-                code = EndRXAFS_StoreData64(callp, &outStatus, &volSync);
+                code = EndRXAFS_StoreData64(rxcallp, &outStatus, &volSync);
             else
-                code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
+                code = EndRXAFS_StoreData(rxcallp, &outStatus, &volSync);
         }
-        code = rx_EndCall(callp, code);
+        code = rx_EndCall(rxcallp, code);
 
 #ifdef AFS_LARGEFILES
         if (code == RXGEN_OPCODE && SERVERHAS64BIT(connp)) {
@@ -1344,7 +1344,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     cm_buf_t *tbufp;		        /* buf we're filling */
     osi_queueData_t *qdp;		/* q element we're scanning */
     AFSFid tfid;
-    struct rx_call *callp;
+    struct rx_call *rxcallp;
     struct rx_connection *rxconnp;
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     cm_conn_t *connp;
@@ -1499,7 +1499,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             continue;
 
         rxconnp = cm_GetRxConn(connp);
-        callp = rx_NewCall(rxconnp);
+        rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
 #ifdef AFS_LARGEFILES
@@ -1509,17 +1509,17 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             osi_Log4(afsd_logp, "CALL FetchData64 scp 0x%p, off 0x%x:%08x, size 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, biod.length);
 
-            code = StartRXAFS_FetchData64(callp, &tfid, biod.offset.QuadPart, biod.length);
+            code = StartRXAFS_FetchData64(rxcallp, &tfid, biod.offset.QuadPart, biod.length);
 
             if (code == 0) {
-                temp = rx_Read(callp, (char *) &nbytes_hi, sizeof(afs_int32));
+                temp = rx_Read(rxcallp, (char *) &nbytes_hi, sizeof(afs_int32));
                 if (temp == sizeof(afs_int32)) {
                     nbytes_hi = ntohl(nbytes_hi);
                 } else {
                     nbytes_hi = 0;
-		    code = callp->error;
-                    rx_EndCall(callp, code);
-                    callp = NULL;
+		    code = rxcallp->error;
+                    rx_EndCall(rxcallp, code);
+                    rxcallp = NULL;
                 }
             }
         }
@@ -1529,16 +1529,16 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 osi_Log0(afsd_logp, "Skipping FetchData.  Operation requires FetchData64");
                 code = CM_ERROR_TOOBIG;
             } else {
-                if (!callp) {
+                if (!rxcallp) {
                     rxconnp = cm_GetRxConn(connp);
-                    callp = rx_NewCall(rxconnp);
+                    rxcallp = rx_NewCall(rxconnp);
                     rx_PutConnection(rxconnp);
                 }
 
                 osi_Log3(afsd_logp, "CALL FetchData scp 0x%p, off 0x%x, size 0x%x",
                          scp, biod.offset.LowPart, biod.length);
 
-                code = StartRXAFS_FetchData(callp, &tfid, biod.offset.LowPart,
+                code = StartRXAFS_FetchData(rxcallp, &tfid, biod.offset.LowPart,
                                             biod.length);
 
                 SET_SERVERHASNO64BIT(connp);
@@ -1546,14 +1546,14 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         }
 
         if (code == 0) {
-            temp  = rx_Read(callp, (char *)&nbytes, sizeof(afs_int32));
+            temp  = rx_Read(rxcallp, (char *)&nbytes, sizeof(afs_int32));
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
                 FillInt64(length_found, nbytes_hi, nbytes);
                 if (length_found > biod.length) 
-                    code = (callp->error < 0) ? callp->error : -1;
+                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
             } else {
-                code = (callp->error < 0) ? callp->error : -1;
+                code = (rxcallp->error < 0) ? rxcallp->error : -1;
             }
         }
         /* for the moment, nbytes_hi will always be 0 if code == 0
@@ -1562,19 +1562,19 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         osi_Log3(afsd_logp, "CALL FetchData scp 0x%p, off 0x%x, size 0x%x",
                  scp, biod.offset.LowPart, biod.length);
 
-        code = StartRXAFS_FetchData(callp, &tfid, biod.offset.LowPart,
+        code = StartRXAFS_FetchData(rxcallp, &tfid, biod.offset.LowPart,
                                     biod.length);
 
         /* now copy the data out of the pipe and put it in the buffer */
         if (code == 0) {
-            temp  = rx_Read(callp, (char *)&nbytes, sizeof(afs_int32));
+            temp  = rx_Read(rxcallp, (char *)&nbytes, sizeof(afs_int32));
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
                 if (nbytes > biod.length) 
-                    code = (callp->error < 0) ? callp->error : -1;
+                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
             }
             else 
-                code = (callp->error < 0) ? callp->error : -1;
+                code = (rxcallp->error < 0) ? rxcallp->error : -1;
         }
 #endif
 
@@ -1602,9 +1602,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
                 /* read rbytes of data */
                 rbytes = (nbytes > cm_data.buf_blockSize? cm_data.buf_blockSize : nbytes);
-                temp = rx_Read(callp, bufferp, rbytes);
+                temp = rx_Read(rxcallp, bufferp, rbytes);
                 if (temp < rbytes) {
-                    code = (callp->error < 0) ? callp->error : -1;
+                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
                     break;
                 }
 
@@ -1669,9 +1669,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
         if (code == 0) {
             if (SERVERHAS64BIT(connp))
-                code = EndRXAFS_FetchData64(callp, &afsStatus, &callback, &volSync);
+                code = EndRXAFS_FetchData64(rxcallp, &afsStatus, &callback, &volSync);
             else
-                code = EndRXAFS_FetchData(callp, &afsStatus, &callback, &volSync);
+                code = EndRXAFS_FetchData(rxcallp, &afsStatus, &callback, &volSync);
         } else {
             if (SERVERHAS64BIT(connp))
                 osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData64 skipped due to error %d", code);
@@ -1679,8 +1679,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error %d", code);
         }
 
-        if (callp)
-            code = rx_EndCall(callp, code);
+        if (rxcallp)
+            code = rx_EndCall(rxcallp, code);
 
         if (code == RXKADUNKNOWNKEY)
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
