@@ -381,7 +381,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
     AFSVolSync volSync;
     AFSFid afid;
     int tlen;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
 
     /* now make the get acl call */
 #ifdef AFS_FREELANCE_CLIENT
@@ -401,9 +401,9 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
             if (code) 
                 continue;
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_FetchACL(callp, &afid, &acl, &fileStatus, &volSync);
-            rx_PutConnection(callp);
+            rxconnp = cm_GetRxConn(connp);
+            code = RXAFS_FetchACL(rxconnp, &afid, &acl, &fileStatus, &volSync);
+            rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
@@ -474,7 +474,7 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
     AFSFetchStatus fileStatus;
     AFSVolSync volSync;
     AFSFid fid;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
@@ -493,9 +493,9 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
             if (code) 
                 continue;
 
-            callp = cm_GetRxConn(connp);
-            code = RXAFS_StoreACL(callp, &fid, &acl, &fileStatus, &volSync);
-            rx_PutConnection(callp);
+            rxconnp = cm_GetRxConn(connp);
+            code = RXAFS_StoreACL(rxconnp, &fid, &acl, &fileStatus, &volSync);
+            rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
@@ -607,7 +607,7 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     cm_cell_t *cellp;
     char *cp;
     clientchar_t *strp;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
@@ -661,10 +661,10 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
             if (code)
                 continue;
 
-            callp = cm_GetRxConn(tcp);
-            code = RXAFS_SetVolumeStatus(callp, scp->fid.volume,
+            rxconnp = cm_GetRxConn(tcp);
+            code = RXAFS_SetVolumeStatus(rxconnp, scp->fid.volume,
                                          &storeStat, volName, offLineMsg, motd);
-            rx_PutConnection(callp);
+            rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(tcp, userp, reqp, &scp->fid, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
@@ -714,7 +714,7 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     char *Name;
     char *OfflineMsg;
     char *MOTD;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
@@ -737,10 +737,10 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
 	    code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
 	    if (code) continue;
 
-	    callp = cm_GetRxConn(connp);
-	    code = RXAFS_GetVolumeStatus(callp, scp->fid.volume,
+	    rxconnp = cm_GetRxConn(connp);
+	    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
 					 &volStat, &Name, &OfflineMsg, &MOTD);
-	    rx_PutConnection(callp);
+	    rx_PutConnection(rxconnp);
 
 	} while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, reqp);
