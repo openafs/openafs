@@ -22,7 +22,7 @@ extern DWORD          RDRtimeout;
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */
 	struct cm_server *serverp;	/* locked by cm_serverLock */
-        struct rx_connection *callp;	/* locked by mx */
+        struct rx_connection *rxconnp;	/* locked by mx */
         struct cm_user *userp;		/* locked by mx; a held reference */
         osi_mutex_t mx;			/* mutex for some of these fields */
         afs_int32 refCount;		/* Interlocked */
