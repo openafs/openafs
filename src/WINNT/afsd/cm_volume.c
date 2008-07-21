@@ -227,22 +227,27 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         /* now we have volume structure locked and held; make RPC to fill it */
 	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, volp->namep);
         do {
+            struct rx_connection * rxconnp;
+
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
             if (code) 
                 continue;
+
+            rxconnp = cm_GetRxConn(connp);
 #ifdef MULTIHOMED
-            code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
+            code = VL_GetEntryByNameU(rxconnp, volp->namep, &uvldbEntry);
             method = 2;
             if ( code == RXGEN_OPCODE ) 
 #endif
             {
-                code = VL_GetEntryByNameN(connp->callp, volp->namep, &nvldbEntry);
+                code = VL_GetEntryByNameN(rxconnp, volp->namep, &nvldbEntry);
                 method = 1;
             }
             if ( code == RXGEN_OPCODE ) {
-                code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
+                code = VL_GetEntryByNameO(rxconnp, volp->namep, &vldbEntry);
                 method = 0;
             }
+            rx_PutConnection(rxconnp);
         } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
@@ -267,22 +272,27 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, 
                  osi_LogSaveString(afsd_logp,name));
         do {
+            struct rx_connection * rxconnp;
+
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
             if (code) 
                 continue;
+
+            rxconnp = cm_GetRxConn(connp);
 #ifdef MULTIHOMED
-            code = VL_GetEntryByNameU(connp->callp, name, &uvldbEntry);
+            code = VL_GetEntryByNameU(connp->rxconnp, name, &uvldbEntry);
             method = 2;
             if ( code == RXGEN_OPCODE ) 
 #endif
             {
-                code = VL_GetEntryByNameN(connp->callp, name, &nvldbEntry);
+                code = VL_GetEntryByNameN(connp->rxconnp, name, &nvldbEntry);
                 method = 1;
             }
             if ( code == RXGEN_OPCODE ) {
-                code = VL_GetEntryByNameO(connp->callp, name, &vldbEntry);
+                code = VL_GetEntryByNameO(connp->rxconnp, name, &vldbEntry);
                 method = 0;
             }
+            rx_PutConnection(rxconnp);
         } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
@@ -364,11 +374,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     memset((char *)&addrs, 0, sizeof(addrs));
 
                     do {
+                        struct rx_connection *rxconnp;
+
                         code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
                         if (code) 
                             continue;
                    
-                        code = VL_GetAddrsU(connp->callp, &attrs, &uuid, &unique, &nentries, &addrs);
+                        rxconnp = cm_GetRxConn(connp);
+                        code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
+                        rx_PutConnection(rxconnp);
                     } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
 
                     if ( code ) {
