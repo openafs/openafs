@@ -829,8 +829,8 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                         hardTimeLeft = HardDeadtimeout;
 
                     lock_ObtainMutex(&(*connpp)->mx);
-                    rx_SetConnDeadTime((*connpp)->callp, timeLeft);
-                    rx_SetConnHardDeadTime((*connpp)->callp, (u_short) hardTimeLeft);
+                    rx_SetConnDeadTime((*connpp)->rxconnp, timeLeft);
+                    rx_SetConnHardDeadTime((*connpp)->rxconnp, (u_short) hardTimeLeft);
                     lock_ReleaseMutex(&(*connpp)->mx);
 #endif
                     return 0;
@@ -880,7 +880,7 @@ void cm_GCConnections(cm_server_t *serverp)
             cm_PutServer(tcp->serverp);
             cm_ReleaseUser(userp);
             *lcpp = tcp->nextp;
-            rx_DestroyConnection(tcp->callp);
+            rx_DestroyConnection(tcp->rxconnp);
             lock_FinalizeMutex(&tcp->mx);
             free(tcp);
         }
@@ -926,14 +926,14 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         secObjp = rxnull_NewClientSecurityObject();
     }
     osi_assertx(secObjp != NULL, "null rx_securityClass");
-    tcp->callp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
+    tcp->rxconnp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
                                   port,
                                   serviceID,
                                   secObjp,
                                   secIndex);
-    rx_SetConnDeadTime(tcp->callp, ConnDeadtimeout);
-    rx_SetConnHardDeadTime(tcp->callp, HardDeadtimeout);
-    rx_SetConnIdleDeadTime(tcp->callp, IdleDeadtimeout);
+    rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
+    rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
+    rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
     tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
@@ -998,7 +998,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
 	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
-            rx_DestroyConnection(tcp->callp);
+            rx_DestroyConnection(tcp->rxconnp);
             cm_NewRXConnection(tcp, ucellp, serverp);
         }
         lock_ReleaseMutex(&tcp->mx);
@@ -1099,12 +1099,12 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
 extern struct rx_connection *
 cm_GetRxConn(cm_conn_t *connp)
 {
-    struct rx_connection * rxconn;
+    struct rx_connection * rxconnp;
     lock_ObtainMutex(&connp->mx);
-    rxconn = connp->callp;
-    rx_GetConnection(rxconn);
+    rxconnp = connp->rxconnp;
+    rx_GetConnection(rxconnp);
     lock_ReleaseMutex(&connp->mx);
-    return rxconn;
+    return rxconnp;
 }
 
 void cm_ForceNewConnections(cm_server_t *serverp)
