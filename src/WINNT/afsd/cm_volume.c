@@ -102,7 +102,7 @@ void cm_InitVolume(int newFile, long maxVols)
 
                 lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
                 volp->flags |= CM_VOLUMEFLAG_RESET;
-                volp->flags &= CM_VOLUMEFLAG_UPDATING_VL;
+                volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
                 for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
                     volp->vol[volType].state = vl_unknown;
                     volp->vol[volType].serversp = NULL;
