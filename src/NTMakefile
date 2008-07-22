@@ -47,14 +47,7 @@ config:
 	$(NTMAKE)
 	$(CD) ..\..
 
-man-pages: config
-     echo ***** $@
-        $(DOCD) $(DOC)\man-pages
-        $(CD) $(DOC)\man-pages
-        $(NTMAKE)
-        $(CD) ..\..
-
-procmgmt_headers: man-pages
+procmgmt_headers: config
      echo ***** $@
 	$(DOCD) $(SRC)\procmgmt
 	$(CD) $(SRC)\procmgmt
@@ -653,14 +646,21 @@ loopback:
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-NSIS: loopback
+man-pages: 
+   echo ***** $@
+   $(DOCD) $(DOC)\man-pages
+   $(CD) $(DOC)\man-pages
+   $(NTMAKE)
+   $(CD) ..\..
+
+NSIS: loopback man-pages
    echo ***** Making NSIS Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-wix: loopback
+wix: loopback man-pages
    echo ***** Making Wix MSI Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
