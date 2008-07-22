@@ -210,20 +210,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
-/* Macros to set max connection clones (each allows RX_MAXCALLS 
- * outstanding calls */
-
-#define rx_SetMaxCalls(v) \
-do {\
-	rx_SetCloneMax(v/4); \
-} while(0);
-
-#define rx_SetCloneMax(v) \
-do {\
-	if(v < RX_HARD_MAX_CLONES) \
-		rx_max_clones_per_connection = v; \
-} while(0);
-
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
 /* A connection is an authenticated communication path, allowing 
@@ -234,9 +220,7 @@ struct rx_connection_rx_lock {
     struct rx_peer_rx_lock *peer;
 #else
 struct rx_connection {
-    struct rx_connection *next;	/* on hash chain _or_ free list */
-    struct rx_connection *parent; /* primary connection, if this is a clone */
-    struct rx_connection *next_clone; /* next in list of clones */
+    struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
 #endif
 #ifdef	RX_ENABLE_LOCKS
@@ -244,7 +228,6 @@ struct rx_connection {
     afs_kcondvar_t conn_call_cv;
     afs_kmutex_t conn_data_lock;	/* locks packet data */
 #endif
-    afs_uint32 nclones; /* count of clone connections (if not a clone) */
     afs_uint32 epoch;		/* Process start time of client side of connection */
     afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
     afs_int32 error;		/* If this connection is in error, this is it */
@@ -444,7 +427,6 @@ struct rx_peer {
 #define RX_CONN_RESET		   16	/* connection is reset, remove */
 #define RX_CONN_BUSY               32	/* connection is busy; don't delete */
 #define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
-#define RX_CLONED_CONNECTION	  128   /* connection is a clone */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
