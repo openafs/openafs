@@ -1651,7 +1651,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     rootShares.cShare = 0;
     rootShares.shares = malloc( sizeof(smb_rap_share_info_0_t) * SMB_RAP_MAX_SHARES );
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     userp = smb_GetTran2User(vcp,p);
 
@@ -1773,7 +1773,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     cm_user_t   *userp;
     cm_req_t    req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     tp = p->parmsp + 1; /* skip over function number (always 1) */
 
@@ -2249,7 +2249,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     cm_req_t req;
     int created = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     scp = NULL;
         
@@ -2856,7 +2856,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     clientchar_t *lastComp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     infoLevel = p->parmsp[0];
     if (infoLevel == SMB_INFO_IS_NAME_VALID) 
@@ -3160,7 +3160,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     clientchar_t *tidPathp;
     clientchar_t *lastComp;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     infoLevel = p->parmsp[0];
     osi_Log1(smb_logp,"ReceiveTran2SetPathInfo type 0x%x", infoLevel);
@@ -3386,7 +3386,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     int  readlock = 0;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = p->parmsp[0];
     fidp = smb_FindFID(vcp, fid, 0);
@@ -3529,7 +3529,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     cm_scache_t *scp = NULL;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = p->parmsp[0];
     fidp = smb_FindFID(vcp, fid, 0);
@@ -3791,7 +3791,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     int i, nbnLen, reqLen, refLen;
     int idx;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     maxReferralLevel = p->parmsp[0];
 
@@ -4283,7 +4283,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     void * attrp = NULL;
     smb_tran2Find_t * fp;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     eos = 0;
     osi_assertx(p->opcode == 1, "invalid opcode");
@@ -4751,7 +4751,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     char * s;
     smb_tran2Find_t * fp;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     eos = 0;
     if (p->opcode == 1) {
@@ -5535,7 +5535,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_req_t req;
     int created = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     scp = NULL;
         
@@ -5878,7 +5878,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_key_t key;
     unsigned int pid;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = smb_GetSMBParm(inp, 2);
     fid = smb_ChainFID(fid, inp);
@@ -6164,7 +6164,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     cm_req_t req;
     int readlock = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = smb_GetSMBParm(inp, 0);
     fid = smb_ChainFID(fid, inp);
@@ -6253,7 +6253,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     cm_attr_t attrs;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = smb_GetSMBParm(inp, 0);
     fid = smb_ChainFID(fid, inp);
@@ -6642,7 +6642,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int created = 0;
     cm_lock_data_t *ldp = NULL;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     /* This code is very long and has a lot of if-then-else clauses
      * scp and dscp get reused frequently and we need to ensure that 
@@ -7488,7 +7488,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     int created = 0;
     cm_lock_data_t *ldp = NULL;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     foundscp = FALSE;
     scp = NULL;

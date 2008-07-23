@@ -1086,7 +1086,7 @@ smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1119,7 +1119,7 @@ smb_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     if (code) 
@@ -1140,7 +1140,7 @@ smb_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1170,7 +1170,7 @@ smb_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     cm_SkipIoctlPath(&ioctlp->ioctl);	/* we don't care about the path */
 
@@ -1186,7 +1186,7 @@ smb_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1220,7 +1220,7 @@ smb_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1251,7 +1251,7 @@ smb_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *scp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, 0);
     if (code) return code;
@@ -1271,7 +1271,7 @@ smb_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     afs_uint32 flags = 0;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1305,7 +1305,7 @@ smb_IoctlGetFid(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t * optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1331,7 +1331,7 @@ smb_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t * optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1365,7 +1365,7 @@ smb_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1399,7 +1399,7 @@ smb_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1432,7 +1432,7 @@ smb_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
     if (code)
@@ -1452,7 +1452,7 @@ smb_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
     if (code) 
@@ -1593,7 +1593,7 @@ smb_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     clientchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
         
     code = smb_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
     if (code)
@@ -1613,7 +1613,7 @@ smb_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     clientchar_t leaf[LEAF_SIZE];
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
     if (code) return code;
@@ -1632,7 +1632,7 @@ smb_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
     if (code) return code;
@@ -1650,7 +1650,7 @@ smb_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
     if (code) return code;
@@ -1669,7 +1669,7 @@ smb_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *dscp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
     if (code) return code;
@@ -1791,7 +1791,7 @@ smb_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1819,7 +1819,7 @@ smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
