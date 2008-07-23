@@ -777,6 +777,10 @@ skipremove:
   nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultInstall 128 $INSTDIR\Client\Program\AFSRedirInstall.inf'
   Push "AFSRedirector"
   Call AddProvider
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\AFSRDFSProvider.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Provider"
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Class" 1
 
   SetRebootFlag true
   
