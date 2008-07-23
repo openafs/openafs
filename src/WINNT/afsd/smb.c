@@ -190,6 +190,12 @@ int smb_ServerLanManagerLength = lengthof(smb_ServerLanManager);
 /* Faux server GUID. This is never checked. */
 GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
 
+void smb_InitReq(cm_req_t *reqp)
+{
+    cm_InitReq(reqp);
+    reqp->flags |= CM_REQ_SOURCE_SMB;
+}
+
 void smb_ResetServerPriority()
 {
     void * p = TlsGetValue(smb_TlsRequestSlot);
@@ -1801,7 +1807,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         /*  attempt to locate a partial match in root.afs.  This is because
             when using the ANSI RAP calls, the share name is limited to 13 chars
             and hence is truncated. Of course we prefer exact matches. */
-        cm_InitReq(&req);
+        smb_InitReq(&req);
         thyper.HighPart = 0;
         thyper.LowPart = 0;
 
@@ -3797,7 +3803,7 @@ void smb_WaitingLocksDaemon()
                 scp = wlRequest->scp;
 		osi_Log2(smb_logp,"smb_WaitingLocksDaemon wlRequest 0x%p scp 0x%p", wlRequest, scp);
 
-                cm_InitReq(&req);
+                smb_InitReq(&req);
 
                 lock_ObtainWrite(&scp->rw);
 
@@ -4250,7 +4256,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_fid_t fid;
     int fileType;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     maxCount = smb_GetSMBParm(inp, 0);
 
@@ -4772,7 +4778,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_req_t req;
     char * pdata;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     pdata = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, pdata, NULL, SMB_STRF_ANSIPATH);
@@ -4856,7 +4862,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     char * datap;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     /* decode basic attributes we're passed */
     attribute = smb_GetSMBParm(inp, 0);
@@ -4972,7 +4978,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     char * datap;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     datap = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
@@ -5158,7 +5164,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     char * datap;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     datap = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
@@ -5361,7 +5367,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     clientchar_t *tidPathp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     attribute = smb_GetSMBParm(inp, 0);
         
@@ -5552,7 +5558,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
         return CM_ERROR_NOSUCHPATH;
     }
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
 
@@ -5760,7 +5766,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t
         return CM_ERROR_NOSUCHPATH;
     }
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
 
@@ -5970,7 +5976,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     clientchar_t *tidPathp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
@@ -6077,7 +6083,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long code = 0;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     fid = smb_GetSMBParm(inp, 0);
 
@@ -6208,7 +6214,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 	lock_ReleaseMutex(&fidp->mx);
     }
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     lock_ObtainWrite(&smb_rctLock);
     if (fidp->deleteOk) {
@@ -6448,7 +6454,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char 
         goto done2;
     }
     
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     bufferp = NULL;
     offset = *offsetp;
@@ -6619,7 +6625,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
         goto done2;
     }
     
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     scp = fidp->scp;
     cm_HoldSCache(scp);
@@ -6929,7 +6935,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	osi_Log1(smb_logp, "smb_ReceiveCoreWrite truncation to length 0x%x", offset.LowPart);
         
-        cm_InitReq(&req);
+        smb_InitReq(&req);
 
         truncAttr.mask = CM_ATTRMASK_LENGTH;
         truncAttr.length.LowPart = offset.LowPart;
@@ -7348,7 +7354,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     clientchar_t *tidPathp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     scp = NULL;
         
@@ -7471,7 +7477,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_req_t req;
     int created = 0;			/* the file was new */
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
 
     scp = NULL;
     excl = (inp->inCom == 0x03)? 0 : 1;
@@ -7660,7 +7666,7 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_user_t *userp;
     cm_req_t req;
 
-    cm_InitReq(&req);
+    smb_InitReq(&req);
         
     fd = smb_GetSMBParm(inp, 0);
     whence = smb_GetSMBParm(inp, 1);
