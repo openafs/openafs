@@ -893,6 +893,12 @@
                   Name="afsredir.sys" LongName="AFSRedir.sys" Vital="yes"
                   Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRedir.sys"
                   DiskId="1" />
+
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Rdr01" />
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Id="reg_Rdr02" />
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[#file_AFSRDFSProvider.dll]" Id="reg_Rdr03" />
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Class" Type="integer" Value="1" Id="reg_Rdr04" />
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Name" Type="string" Value="OpenAFS Provider" Id="reg_Rdr05" />
           </Component>
 
           <Component Id="Drv_FSRDR_Debug"
