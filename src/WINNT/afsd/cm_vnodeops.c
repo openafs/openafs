@@ -3270,6 +3270,11 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     fschar_t * newNamep = NULL;
     int free_oldNamep = FALSE;
 
+    if (cOldNamep == NULL || cNewNamep == NULL ||
+        cm_ClientStrLen(cOldNamep) == 0 ||
+        cm_ClientStrLen(cNewNamep) == 0)
+        return CM_ERROR_INVAL;
+
     if (oldNamep == NULL) {
         code = -1;
 #ifdef USE_BPLUS
@@ -3281,8 +3286,11 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             cm_EndDirOp(&oldDirOp);
         }
 #endif
-        if (code)
+        if (code) {
+            osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p cOldName %S Original Name lookup failed", 
+                      oldDscp, osi_LogSaveStringW(afsd_logp, cOldNamep));
             goto done;
+        }
     }
 
 
@@ -3294,6 +3302,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     if (oldDscp == newDscp) {
         /* check for identical names */
         if (cm_ClientStrCmp(cOldNamep, cNewNamep) == 0) {
+            osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p newDscp 0x%p CM_ERROR_RENAME_IDENTICAL", 
+                      oldDscp, newDscp);
             code = CM_ERROR_RENAME_IDENTICAL;
             goto done;
         }
@@ -3315,6 +3325,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         oneDir = 0;
         if (oldDscp->fid.cell != newDscp->fid.cell ||
              oldDscp->fid.volume != newDscp->fid.volume) {
+            osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p newDscp 0x%p CM_ERROR_CROSSDEVLINK", 
+                      oldDscp, newDscp);
             code = CM_ERROR_CROSSDEVLINK;
             goto done;
         }
@@ -3324,6 +3336,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
          * stale info.  Avoid deadlocks and quit now.
          */
         if (oldDscp->fid.vnode == newDscp->fid.vnode) {
+            osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p newDscp 0x%p vnode collision", 
+                      oldDscp, newDscp);
             code = CM_ERROR_CROSSDEVLINK;
             goto done;
         }
