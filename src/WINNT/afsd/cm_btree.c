@@ -2336,11 +2336,11 @@ cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp
 long 
 cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {	
-    if (enump == NULL || entrypp == NULL || enump->next > enump->count) {
+    if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
 	if (entrypp)
 	    *entrypp = NULL;
 	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry invalid input");
-	return CM_ERROR_INVAL;			      \
+	return CM_ERROR_INVAL;
     }
 
     *entrypp = &enump->entry[enump->next++];
