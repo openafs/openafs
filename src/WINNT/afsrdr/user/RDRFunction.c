@@ -69,9 +69,11 @@ RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, OUT DWORD * pCacheFil
     err = mbstowcs((*ppCacheFileInfo)->CacheFileName, cm_CachePath, (cm_CachePathLen + 1) *sizeof(WCHAR));
     if (err == -1) {
         free(*ppCacheFileInfo);
+        osi_Log0(afsd_logp, "RDR_SetInitParams Invalid Object Name");
         return STATUS_OBJECT_NAME_INVALID;
     }
 
+    osi_Log0(afsd_logp,"RDR_SetInitParams Success");
     return 0;
 }
 
@@ -108,6 +110,9 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
     }
 
   done:
+    osi_Log2(afsd_logp, "RDR_UserFromCommRequest %S userp = 0x%p", 
+             osi_LogSaveStringW(afsd_logp, secSidString), userp);
+
     if (secSidString)
         LocalFree(secSidString);
     if (pSid)
@@ -116,12 +121,14 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
         CloseHandle(hToken);
     if (hProcess)
         CloseHandle(hProcess);
+
     return userp;
 }
 
 void
 RDR_ReleaseUser( IN cm_user_t *userp )
 {
+    osi_Log1(afsd_logp, "RDR_ReleaseUser userp = 0x%p", userp);
     cm_ReleaseUser(userp);
 }
 
@@ -141,13 +148,20 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     WCHAR *  wname, *wtarget;
     size_t   len;
     DWORD      dwEntryLength;
-    afs_uint32 code;
+    afs_uint32 code, code2;
 
-    if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + MAX_PATH * sizeof(wchar_t)) {
+    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry dscp=0x%p scp=0x%p name=%S short=%S", 
+             dscp, scp, osi_LogSaveStringW(afsd_logp, name), 
+             osi_LogSaveStringW(afsd_logp, shortName));
+    osi_Log1(afsd_logp, "... maxLength=%d", dwMaxEntryLength);
+
+    if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
         if (ppNextEntry)
             *ppNextEntry = pCurrentEntry;
         if (pdwRemainingLength)
             *pdwRemainingLength = dwMaxEntryLength;
+        osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry Not Enough Room for Entry %d < %d",
+                 dwMaxEntryLength, sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t));
         return;
     }
 
@@ -161,6 +175,14 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp( scp, NULL, userp, reqp, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_SyncOp failed for scp=0x%p code=0x%x", 
+                 scp, code);
+        return;
+    }
+
     pCurrentEntry->FileId.Cell = scp->fid.cell;
     pCurrentEntry->FileId.Volume = scp->fid.volume;
     pCurrentEntry->FileId.Vnode = scp->fid.vnode;
@@ -198,11 +220,12 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     if (code == 0)
         cm_SyncOpDone( scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
+    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry scp=0x%p fileType=%d", 
+              scp, scp->fileType);
 
     switch (scp->fileType) {
     case CM_SCACHETYPE_MOUNTPOINT:
-        if (cm_ReadMountPoint(scp, userp, reqp) == 0) {
-            afs_uint32 code2;
+        if ((code2 = cm_ReadMountPoint(scp, userp, reqp)) == 0) {
             cm_scache_t *targetScp = NULL;
 
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
@@ -228,8 +251,18 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
                 pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
 
+                osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                          pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
+                          pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
+
                 cm_ReleaseSCache(targetScp);
+            } else {
+                osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_FollowMountPoint failed scp=0x%p code=0x%x", 
+                          scp, code2);
             }
+        } else {
+            osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_ReadMountPoint failed scp=0x%p code=0x%x", 
+                      scp, code2);
         }
         break;
     case CM_SCACHETYPE_SYMLINK:
@@ -262,7 +295,14 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
                 pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
 
+                osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                          pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
+                          pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
+
                 cm_ReleaseSCache(targetScp);
+            } else {
+                osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
+                          scp, code2);
             }
         }
         break;
@@ -278,6 +318,9 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
         *ppNextEntry = (AFSDirEnumEntry *)((PBYTE)pCurrentEntry + dwEntryLength);
     if (pdwRemainingLength)
         *pdwRemainingLength = dwMaxEntryLength - dwEntryLength;
+
+    osi_Log3(afsd_logp, "RDR_PopulateCurrentEntry Success FileNameLength=%d TargetNameLength=%d RemainingLength=%d",
+              pCurrentEntry->FileNameLength, pCurrentEntry->TargetNameLength, *pdwRemainingLength);
 }
 
 void
@@ -300,13 +343,19 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_EnumerateDirectory parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
+
     *ResultCB = (AFSCommResult *)malloc(size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_EnumerateDirectory Out of Memory");
 	return;
+    }
 
     memset(*ResultCB, 0, size);
 
     if (QueryCB->EnumHandle == (ULONG_PTR)-1) {
+        osi_Log0(afsd_logp, "RDR_EnumerateDirectory No More Entries");
         (*ResultCB)->ResultStatus = STATUS_NO_MORE_ENTRIES;
         (*ResultCB)->ResultBufferLength = 0;
         return;
@@ -315,7 +364,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     (*ResultCB)->ResultBufferLength = dwMaxEntryLength = ResultBufferLength;
 
     pDirEnumResp = (AFSDirEnumResp *)&(*ResultCB)->ResultData;
-    pCurrentEntry = (AFSDirEnumEntry *)QuadAlign(&pDirEnumResp->Entry);
+    pCurrentEntry = (AFSDirEnumEntry *)&pDirEnumResp->Entry;
+    dwMaxEntryLength -= FIELD_OFFSET( AFSDirEnumResp, Entry);      /* AFSDirEnumResp */
 
     if (ParentID.Cell != 0) {
         fid.cell   = ParentID.Cell;
@@ -328,6 +378,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         if (code) {
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
+            osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure code=0x%x status=0x%x",
+                      code, status);
             return;
         }
     } else {
@@ -345,6 +397,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
+        osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_SyncOp failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -354,6 +408,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_EnumerateDirectory Not a Directory dscp=0x%p",
+                 dscp);
         return;
     }
 
@@ -363,21 +419,24 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
      */
     if (QueryCB->EnumHandle == (ULONG_PTR)NULL) {
         cm_dirOp_t    dirop;
-        LARGE_INTEGER thyper;
-
-        thyper.HighPart = thyper.LowPart = 0;
 
         code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
         if (code == 0) {
             code = cm_BPlusDirEnumerate(dscp, TRUE, NULL, &enump);
-
             if (code == 0) {
-                lock_ObtainWrite(&dscp->rw);
-                code = cm_TryBulkStat(dscp, &thyper, userp, &req);
-                lock_ReleaseWrite(&dscp->rw);
+                code = cm_BPlusDirEnumBulkStat(dscp, enump, userp, &req);
+                if (code) {
+                    osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumBulkStat failure code=0x%x",
+                              code);
+                }
+            } else {
+                osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumerate failure code=0x%x",
+                          code);
             }
-
             cm_EndDirOp(&dirop);
+        } else {
+            osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BeginDirOp failure code=0x%x",
+                      code);
         }
     } else {
         enump = (cm_direnum_t *)QueryCB->EnumHandle;
@@ -387,16 +446,23 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         cm_direnum_entry_t * entryp = NULL;
 
       getnextentry:
-        if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + MAX_PATH * sizeof(wchar_t))
+        if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
+            osi_Log0(afsd_logp, "RDR_EnumerateDirectory out of space, returning");
             goto outofspace;
+        }
 
         code = cm_BPlusDirNextEnumEntry(enump, &entryp);
 
-        if (code == 0 && entryp) {
+        if ((code == 0 || code == CM_ERROR_STOPNOW) && entryp) {
             cm_scache_t *scp;
+            int stopnow = (code == CM_ERROR_STOPNOW);
 
-            if ( !wcscmp(L".", entryp->name) || !wcscmp(L"..", entryp->name) )
+            if ( !wcscmp(L".", entryp->name) || !wcscmp(L"..", entryp->name) ) {
+                osi_Log0(afsd_logp, "RDR_EnumerateDirectory skipping . or ..");
+                if (stopnow)
+                    goto outofspace;
                 goto getnextentry;
+            }
 
             code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
             if (!code) {
@@ -404,8 +470,14 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                                          dscp, scp, userp, &req, entryp->name, entryp->shortName,
                                          &pCurrentEntry, &dwMaxEntryLength);
                 cm_ReleaseSCache(scp);
+                if (stopnow)
+                    goto outofspace;
                 goto getnextentry;
             } else {
+                osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure scp=0x%p code=0x%x",
+                         scp, code);
+                if (stopnow)
+                    goto outofspace;
                 goto getnextentry;
             }
         }
@@ -417,11 +489,14 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         enump = (cm_direnum_t *)(ULONG_PTR)-1;
     } 
 
-    if (code == 0 || code == CM_ERROR_STOPNOW)
+    if (code == 0 || code == CM_ERROR_STOPNOW) {
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
-    else {
+        osi_Log0(afsd_logp, "RDR_EnumerateDirectory SUCCESS");
+    } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_EnumerateDirectory Failure code=0x%x status=0x%x",
+                  code, status);
     }
 
     (*ResultCB)->ResultBufferLength = ResultBufferLength - dwMaxEntryLength;
@@ -455,9 +530,15 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_EvaluateNodeByName parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
+    osi_Log1(afsd_logp, "... name=%S", osi_LogSaveStringW(afsd_logp, Name));
+
     *ResultCB = (AFSCommResult *)malloc(size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_EvaluateNodeByName Out of Memory");
 	return;
+    }
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
@@ -474,6 +555,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         if (code) {
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
+            osi_Log2(afsd_logp, "RDR_EvaluateNodeByName cm_GetSCache parentFID failure code=0x%x status=0x%x",
+                      code, status);
             return;
         }
     } else {
@@ -491,6 +574,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_EvaluateNodeByName cm_SyncOp failure dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
         return;
     }
 
@@ -500,6 +585,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_EvaluateNodeByName Not a Directory dscp=0x%p",
+                 dscp);
         return;
     }
 
@@ -521,6 +608,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
             lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
             cm_ReleaseSCache(dscp);
+            osi_Log3(afsd_logp, "RDR_EvaluateNodeByName cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                     scp, code, status);
             return;
         }
 
@@ -535,12 +624,16 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+        osi_Log0(afsd_logp, "RDR_EvaluateNodeByName SUCCESS");
     } else if (code) {
         DWORD status;
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_EvaluateNodeByName FAILURE code=0x%x status=0x%x",
+                 code, status);
     } else {
         (*ResultCB)->ResultStatus = STATUS_NO_SUCH_FILE;
+        osi_Log0(afsd_logp, "RDR_EvaluateNodeByName No Such File");
     }
     cm_ReleaseSCache(dscp);
 
@@ -565,9 +658,16 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     DWORD         status;
     DWORD         dwRemaining;
 
+    osi_Log4(afsd_logp, "RDR_EvaluateNodeByID parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
+    osi_Log4(afsd_logp, "... source FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              SourceID.Cell, SourceID.Volume, SourceID.Vnode, SourceID.Unique);
+
     *ResultCB = (AFSCommResult *)malloc(size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_EvaluateNodeByID Out of Memory");
 	return;
+    }
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
@@ -587,11 +687,14 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         if (code) {
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
+            osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache parentFID failure code=0x%x status=0x%x",
+                      code, status);
             return;
         }
     } else {
         if (SourceID.Cell == 0) {
             (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+            osi_Log0(afsd_logp, "RDR_EvaluateNodeByID Object Name Invalid - Cell = 0");
             return;
         }
 
@@ -613,6 +716,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
             cm_ReleaseSCache(dscp);
+            osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache SourceFID failure code=0x%x status=0x%x",
+                      code, status);
             return;
         }
     } else {
@@ -632,6 +737,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_EvaluateNodeByID cm_SyncOp failure dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
         return;
     }
 
@@ -642,6 +749,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
         cm_ReleaseSCache(scp);
+        osi_Log1(afsd_logp, "RDR_EvaluateNodeByID Not a Directory dscp=0x%p", dscp);
         return;
     }
 
@@ -656,6 +764,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(dscp);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_EvaluateNodeByID cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
 
@@ -670,12 +780,13 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     cm_ReleaseSCache(dscp);
     (*ResultCB)->ResultStatus = STATUS_SUCCESS;
     (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+    osi_Log0(afsd_logp, "RDR_EvaluateNodeByID SUCCESS");
     return;
 }
 
 void
 RDR_CreateFileEntry( IN cm_user_t *userp,
-                     IN WCHAR *FileName,
+                     IN WCHAR *FileNameCounted,
                      IN DWORD FileNameLength,
                      IN AFSFileCreateCB *CreateCB,
                      IN DWORD ResultBufferLength,
@@ -691,13 +802,23 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     cm_scache_t *       scp = NULL;
     cm_req_t            req;
     DWORD               status;
+    wchar_t             FileName[260];
+
+    StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
+
+    osi_Log4(afsd_logp, "RDR_CreateFileEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              CreateCB->ParentId.Cell, CreateCB->ParentId.Volume, 
+              CreateCB->ParentId.Vnode, CreateCB->ParentId.Unique);
+    osi_Log1(afsd_logp, "... name=%S", osi_LogSaveStringW(afsd_logp, FileName));
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc(size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_CreateFileEntry out of memory");
 	return;
+    }
 
     memset( *ResultCB,
             '\0',
@@ -713,6 +834,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_CreateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -724,6 +847,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_CreateFileEntry cm_SyncOp failure dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
         return;
     }
 
@@ -733,6 +858,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_CreateFileEntry Not a Directory dscp=0x%p",
+                 dscp);
         return;
     }
 
@@ -771,10 +898,13 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
 
         cm_ReleaseSCache(scp);
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+        osi_Log0(afsd_logp, "RDR_CreateFileEntry SUCCESS");
     } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_CreateFileEntry FAILURE code=0x%x status=0x%x",
+                  code, status);
     }
 
     cm_ReleaseSCache(dscp);
@@ -806,9 +936,18 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
+    osi_Log4(afsd_logp, "RDR_UpdateFileEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              UpdateCB->ParentId.Cell, UpdateCB->ParentId.Volume, 
+              UpdateCB->ParentId.Vnode, UpdateCB->ParentId.Unique);
+    osi_Log4(afsd_logp, "... object FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
     *ResultCB = (AFSCommResult *)malloc( size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_UpdateFileEntry Out of Memory");
 	return;
+    }
 
     memset( *ResultCB,
             '\0',
@@ -824,6 +963,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_UpdateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -835,6 +976,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_UpdateFileEntry cm_SyncOp failure dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
         return;
     }
 
@@ -844,6 +987,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_UpdateFileEntry Not a Directory dscp=0x%p",
+                 dscp);
         return;
     }
 
@@ -858,6 +1003,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         cm_ReleaseSCache(dscp);
+        osi_Log2(afsd_logp, "RDR_UpdateFileEntry cm_GetSCache object FID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -865,13 +1012,14 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
     if (code) {
-        DWORD NTStatus;
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         cm_ReleaseSCache(dscp);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_UpdateFileEntry cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -923,10 +1071,13 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
                                  dscp, scp, userp, &req, NULL, NULL,
                                  NULL, &dwRemaining);
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+        osi_Log0(afsd_logp, "RDR_UpdateFileEntry SUCCESS");
     } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_UpdateFileEntry FAILURE code=0x%x status=0x%x",
+                  code, status);
     }
     cm_ReleaseSCache(scp);
     cm_ReleaseSCache(dscp);
@@ -937,7 +1088,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 void
 RDR_DeleteFileEntry( IN cm_user_t *userp,
                      IN AFSFileID ParentId,
-                     IN WCHAR *FileName,
+                     IN WCHAR *FileNameCounted,
                      IN DWORD FileNameLength,
                      IN DWORD ResultBufferLength, 
                      IN OUT AFSCommResult **ResultCB)
@@ -953,13 +1104,23 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     cm_attr_t           setAttr;
     cm_req_t            req;
     DWORD               status;
+    wchar_t             FileName[260];
+
+    StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
+
+    osi_Log4(afsd_logp, "RDR_DeleteFileEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              ParentId.Cell,  ParentId.Volume, 
+              ParentId.Vnode, ParentId.Unique);
+    osi_Log1(afsd_logp, "... name=%S", osi_LogSaveStringW(afsd_logp, FileName));
 
     cm_InitReq(&req);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc( size);
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_DeleteFileEntry out of memory");
 	return;
+    }
 
     memset( *ResultCB,
             '\0',
@@ -975,6 +1136,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_DeleteFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -987,6 +1150,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultBufferLength = 0;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_DeleteFileEntry cm_SyncOp failure dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
         return;
     }
 
@@ -996,6 +1161,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_DeleteFileEntry Not a Directory dscp=0x%p",
+                 dscp);
         return;
     }
 
@@ -1005,6 +1172,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         cm_ReleaseSCache(dscp);
+        osi_Log2(afsd_logp, "RDR_DeleteFileEntry cm_Lookup failure code=0x%x status=0x%x",
+                 code, status);
         return;
     }
 
@@ -1018,6 +1187,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_DeleteFileEntry cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
 
@@ -1037,11 +1208,13 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         pResultCB = (AFSFileDeleteResultCB *)(*ResultCB)->ResultData;
 
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
-
+        osi_Log0(afsd_logp, "RDR_DeleteFileEntry SUCCESS");
     } else {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_DeleteFileEntry FAILURE code=0x%x status=0x%x",
+                  code, status);
     }
 
     cm_ReleaseSCache(dscp);
@@ -1052,7 +1225,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
 
 void
 RDR_RenameFileEntry( IN cm_user_t *userp,
-                     IN WCHAR    *SourceFileName,
+                     IN WCHAR    *SourceFileNameCounted,
                      IN DWORD     SourceFileNameLength,
                      IN AFSFileID SourceFileId,
                      IN AFSFileRenameCB *pRenameCB,
@@ -1064,19 +1237,33 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     AFSFileID              SourceParentId   = pRenameCB->SourceParentId;
     AFSFileID              TargetParentId   = pRenameCB->TargetParentId;
-    WCHAR *                TargetFileName       = pRenameCB->TargetName;
+    WCHAR *                TargetFileNameCounted = pRenameCB->TargetName;
     DWORD                  TargetFileNameLength = pRenameCB->TargetNameLength;
     cm_fid_t               SourceParentFid;
     cm_fid_t               TargetParentFid;
     cm_scache_t *          oldDscp;
     cm_scache_t *          newDscp;
     wchar_t                shortName[13];
+    wchar_t                SourceFileName[260];
+    wchar_t                TargetFileName[260];
     cm_dirFid_t            dfid;
     cm_req_t               req;
     afs_uint32             code;
     DWORD                  status;
 
     cm_InitReq(&req);
+
+    StringCchCopyNW(SourceFileName, 260, SourceFileNameCounted, SourceFileNameLength / sizeof(WCHAR));
+    StringCchCopyNW(TargetFileName, 260, TargetFileNameCounted, TargetFileNameLength / sizeof(WCHAR));
+
+    osi_Log4(afsd_logp, "RDR_RenameFileEntry Source Parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              SourceParentId.Cell,  SourceParentId.Volume, 
+              SourceParentId.Vnode, SourceParentId.Unique);
+    osi_Log2(afsd_logp, "... Source Name=%S Length %u", osi_LogSaveStringW(afsd_logp, SourceFileName), SourceFileNameLength);
+    osi_Log4(afsd_logp, "... Target Parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              TargetParentId.Cell,  TargetParentId.Volume, 
+              TargetParentId.Vnode, TargetParentId.Unique);
+    osi_Log2(afsd_logp, "... Target Name=%S Length %u", osi_LogSaveStringW(afsd_logp, TargetFileName), TargetFileNameLength);
 
     *ResultCB = (AFSCommResult *)malloc( size);
     if (!(*ResultCB))
@@ -1102,6 +1289,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&SourceParentFid, &oldDscp, userp, &req);
     if (code) {
+        osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache source parent failed code 0x%x", code);
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         return;
@@ -1110,7 +1298,8 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     lock_ObtainWrite(&oldDscp->rw);
     code = cm_SyncOp(oldDscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {     
+    if (code) { 
+        osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp oldDscp 0x%p failed code 0x%x", oldDscp, code);
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&oldDscp->rw);
@@ -1123,6 +1312,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         
 
     if (oldDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        osi_Log1(afsd_logp, "RDR_RenameFileEntry oldDscp 0x%p not a directory", oldDscp);
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(oldDscp);
         return;
@@ -1130,16 +1320,18 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&TargetParentFid, &newDscp, userp, &req);
     if (code) {
+        osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target parent failed code 0x%x", code);
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
-        return;
         cm_ReleaseSCache(oldDscp);
+        return;
     }
 
     lock_ObtainWrite(&newDscp->rw);
     code = cm_SyncOp(newDscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
+        osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp newDscp 0x%p failed code 0x%x", newDscp, code);
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&newDscp->rw);
@@ -1153,6 +1345,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         
 
     if (newDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        osi_Log1(afsd_logp, "RDR_RenameFileEntry newDscp 0x%p not a directory", newDscp);
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseSCache(newDscp);
@@ -1174,25 +1367,31 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         pResultCB->SourceParentDataVersion.QuadPart = oldDscp->dataVersion;
         pResultCB->TargetParentDataVersion.QuadPart = newDscp->dataVersion;
 
+        osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_Rename oldDscp 0x%p newDscp 0x%p SUCCESS", 
+                 oldDscp, newDscp);
+
         code = cm_BeginDirOp( newDscp, userp, &req, CM_DIRLOCK_READ, &dirop);
         if (code == 0) {
             code = cm_BPlusDirLookup(&dirop, TargetFileName, &targetFid);
-#ifdef COMMENT
-            if (code == EINVAL)
-                code = cm_DirLookup(&dirop, utf8(TargetFileName), &targetFid);
-#endif
             cm_EndDirOp(&dirop);
         }
 
         if (code != 0) {
+            osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_BPlusDirLookup failed code 0x%x", 
+                     code);
             (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
             cm_ReleaseSCache(oldDscp);
             cm_ReleaseSCache(newDscp);
             return;
         } 
 
+        osi_Log4(afsd_logp, "RDR_RenameFileEntry Target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                  targetFid.cell,  targetFid.volume, 
+                  targetFid.vnode, targetFid.unique);
+
         code = cm_GetSCache(&targetFid, &scp, userp, &req);
         if (code) {
+            osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target failed code 0x%x", code);
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
             cm_ReleaseSCache(oldDscp);
@@ -1205,6 +1404,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (code) {       
+            osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp scp 0x%p failed code 0x%x", scp, code);
             smb_MapNTError(code, &status);
             (*ResultCB)->ResultStatus = status;
             lock_ReleaseWrite(&scp->rw);
@@ -1227,10 +1427,13 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                                  NULL, &dwRemaining);
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         cm_ReleaseSCache(scp);
+
+        osi_Log0(afsd_logp, "RDR_RenameFileEntry SUCCESS");
     } else {
-        DWORD NTStatus;
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        osi_Log3(afsd_logp, "RDR_RenameFileEntry cm_Rename oldDscp 0x%p newDscp 0x%p failed code 0x%x", 
+                 oldDscp, newDscp, code);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
     }
 
@@ -1253,9 +1456,15 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_FlushFileEntry File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_FlushFileEntry out of memory");
 	return;
+    }
 
     memset( *ResultCB,
             '\0',
@@ -1272,6 +1481,8 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_FlushFileEntry cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -1283,6 +1494,8 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_FlushFileEntry cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
 
@@ -1295,9 +1508,12 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
-    } else
+        osi_Log2(afsd_logp, "RDR_FlushFileEntry FAILURE code=0x%x status=0x%x",
+                  code, status);
+    } else {
         (*ResultCB)->ResultStatus = 0;
-
+        osi_Log0(afsd_logp, "RDR_FlushFileEntry SUCCESS");
+    }
     (*ResultCB)->ResultBufferLength = 0;
     
     return;
@@ -1375,8 +1591,12 @@ RDR_CheckAccess( IN cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
             *granted |= 0;
 
         *granted |= SYNCHRONIZE | READ_CONTROL;
-    }
-    return 0;
+        osi_Log2(afsd_logp, "RDR_CheckAccess SUCCESS scp=0x%p granted=0x%x", scp, *granted);
+    } else
+        osi_Log2(afsd_logp, "RDR_CheckAccess FAILURE scp=0x%p code=0x%x",
+                 scp, code);
+
+    return code;
 }
 
 void
@@ -1396,9 +1616,15 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_OpenFileEntry File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof( AFSFileOpenResultCB));
-    if (!(*ResultCB))
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_OpenFileEntry out of memory");
 	return;
+    }
 
     memset( *ResultCB,
             '\0',
@@ -1417,6 +1643,8 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_OpenFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -1428,6 +1656,8 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_OpenFileEntry cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
 
@@ -1445,9 +1675,12 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_OpenFileEntry FAILURE code=0x%x status=0x%x",
+                  code, status);
     } else {
         (*ResultCB)->ResultStatus = 0;
         (*ResultCB)->ResultBufferLength = sizeof( AFSFileOpenResultCB);
+        osi_Log0(afsd_logp, "RDR_FlushFileEntry SUCCESS");
     }
     return;
 }
@@ -1469,9 +1702,13 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     osi_hyper_t thyper;
     LARGE_INTEGER ByteOffset, EndOffset;
     cm_req_t    req;
-    DWORD               NTStatus;
+    DWORD               status;
 
     cm_InitReq(&req);
+
+    osi_Log4(afsd_logp, "RDR_RequestFileExtentsSync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
 
     Length = sizeof( AFSCommResult) + sizeof( AFSRequestExtentsResultCB) * (RequestExtentsCB->Length / cm_data.blockSize + 1);
     if (Length > ResultBufferLength) {
@@ -1500,9 +1737,11 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_RequestFileExtentsSync cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -1513,9 +1752,11 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &NTStatus);
-        (*ResultCB)->ResultStatus = NTStatus;
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
+        osi_Log3(afsd_logp, "RDR_RequestFileExtentsSync cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -1574,6 +1815,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
 
     (*ResultCB)->ResultStatus = 0;
     (*ResultCB)->ResultBufferLength = sizeof( AFSRequestExtentsResultCB);
+    osi_Log0(afsd_logp, "RDR_RequestFileExtentsSync SUCCESS");
     return;
 }
 
@@ -1597,6 +1839,9 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_RequestFileExtentsAsync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
     Length = sizeof( AFSSetFileExtentsCB) + sizeof( AFSRequestExtentsResultCB) * (RequestExtentsCB->Length / cm_data.blockSize + 1);
 
     *ResultCB = (AFSSetFileExtentsCB *)malloc( Length );
@@ -1619,6 +1864,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         free(*ResultCB);
         *ResultCB = NULL;
         *ResultBufferLength = 0;
+        osi_Log1(afsd_logp, "RDR_RequestFileExtentsAsync cm_GetSCache FID failure code=0x%x",
+                  code);
         return;
     }
 
@@ -1633,6 +1880,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         *ResultBufferLength = 0;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
+        osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
+                 scp, code);
         return;
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -1691,6 +1940,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
+    osi_Log0(afsd_logp, "RDR_RequestFileExtentsAsync SUCCESS");
     return;
 }
 
@@ -1715,6 +1965,11 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
+    osi_Log4(afsd_logp, "RDR_ReleaseFileExtents File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
+
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
 	return;
@@ -1734,6 +1989,8 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_ReleaseFileExtents cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
         return;
     }
 
@@ -1745,6 +2002,8 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_ReleaseFileExtents cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
         return;
     }
 
@@ -1778,9 +2037,12 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
-    } else
+        osi_Log2(afsd_logp, "RDR_ReleaseFileExtents FAILURE code=0x%x status=0x%x",
+                  code, status);
+    } else {
         (*ResultCB)->ResultStatus = 0;
-
+        osi_Log0(afsd_logp, "RDR_ReleaseFileExtents SUCCESS");
+    }
     (*ResultCB)->ResultBufferLength = 0;
 
     return;

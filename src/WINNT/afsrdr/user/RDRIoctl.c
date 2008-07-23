@@ -812,12 +812,12 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
             /* SMB user name with which to associate tokens */
             smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
             tp += strlen(tp) + 1;
-            osi_Log2(afsd_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
+            osi_Log2(afsd_logp,"RDR_IoctlSetToken for user [%S] smbname [%S]",
                      osi_LogSaveStringW(afsd_logp,uname), 
                      osi_LogSaveStringW(afsd_logp,smbname));
             fprintf(stderr, "SMB name = %S\n", smbname);
         } else {
-            osi_Log1(afsd_logp,"cm_IoctlSetToken for user [%S]",
+            osi_Log1(afsd_logp,"RDR_IoctlSetToken for user [%S]",
                      osi_LogSaveStringW(afsd_logp, uname));
         }
 
@@ -937,19 +937,7 @@ RDR_IoctlSetACL(RDR_ioctl_t *ioctlp, cm_user_t *userp)
 
     cm_InitReq(&req);
 
-    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
-    if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
-        flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
-
-    if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
-        cm_fid_t fid;
-        cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
-                  optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
-    } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
-    }
+    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     if (code) 
         return code;
 

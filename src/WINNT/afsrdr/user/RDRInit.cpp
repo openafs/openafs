@@ -471,9 +471,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSFileRenameCB *pFileRenameCB = (AFSFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S\n", 
 		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                      RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name);
 
             OutputDebugString( wchBuffer);
 
