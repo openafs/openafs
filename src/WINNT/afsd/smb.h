@@ -745,6 +745,7 @@ extern long smb_IsNetworkStarted(void);
 extern void smb_LanAdapterChange(int);
 extern void smb_SetLanAdapterChangeDetected(void);
 
+extern void smb_InitReq(cm_req_t *reqp);
 
 #define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0
