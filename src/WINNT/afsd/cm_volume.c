@@ -481,10 +481,13 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
-            if (!tsp)
-                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE,
-                                    cellp, 0);
-
+            if (!tsp) {
+                /* cm_NewServer will probe the server which in turn will
+                 * update the state on the volume group object */
+                lock_ReleaseWrite(&volp->rw);
+                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, 0);
+                lock_ObtainWrite(&volp->rw);
+            }
             /* if this server was created by fs setserverprefs */
             if ( !tsp->cellp ) 
                 tsp->cellp = cellp;
