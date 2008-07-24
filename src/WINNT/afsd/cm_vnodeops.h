@@ -124,7 +124,8 @@ extern long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                         cm_scache_t **retscp);
 
 extern long cm_MakeDir(cm_scache_t *dscp, clientchar_t *lastNamep, long flags,
-                       cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
+                       cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp, 
+                       cm_scache_t **scpp);
 
 extern long cm_RemoveDir(cm_scache_t *dscp, fschar_t *lastNamep, clientchar_t *originalNamep,
                          cm_user_t *userp, cm_req_t *reqp);

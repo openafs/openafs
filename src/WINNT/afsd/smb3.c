@@ -7368,7 +7368,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 continue; /* the supplied path can't have consecutive slashes either , but */
 
             /* cp is the next component to be created. */
-            code = cm_MakeDir(tscp1, cp, 0, &setAttr, userp, &req);
+            code = cm_MakeDir(tscp1, cp, 0, &setAttr, userp, &req, NULL);
             if (code == 0 && (tscp1->flags & CM_SCACHEFLAG_ANYWATCH))
                 smb_NotifyChange(FILE_ACTION_ADDED,
                                  FILE_NOTIFY_CHANGE_DIR_NAME,
@@ -8064,7 +8064,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         openAction = 2;		/* created directory */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
-        code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req);
+        code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req, NULL);
         if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
             smb_NotifyChange(FILE_ACTION_ADDED,
                               FILE_NOTIFY_CHANGE_DIR_NAME,
