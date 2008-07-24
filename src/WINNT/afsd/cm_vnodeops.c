@@ -2701,7 +2701,6 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
                 didEnd = 1;     
             }       
             lock_ReleaseWrite(&scp->rw);
-            *scpp = scp;
         }
     }
 
@@ -2720,6 +2719,12 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     if (fnamep)
         free(fnamep);
 
+    if (scp) {
+        if (scpp)
+            *scpp = scp;
+        else
+            cm_ReleaseSCache(scp);
+    }
     return code;
 }       
 
@@ -2747,7 +2752,7 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *attrp,
-                 cm_user_t *userp, cm_req_t *reqp)
+                cm_user_t *userp, cm_req_t *reqp, cm_scache_t **scpp)
 {
     cm_conn_t *connp;
     long code;
@@ -2860,7 +2865,6 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
                 didEnd = 1;             
             }
             lock_ReleaseWrite(&scp->rw);
-            cm_ReleaseSCache(scp);
         }
     }
 
@@ -2877,6 +2881,13 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     cm_EndDirOp(&dirop);
 
     free(fnamep);
+
+    if (scp) {
+        if (scpp)
+            *scpp = scp;
+        else
+            cm_ReleaseSCache(scp);
+    }
 
     /* and return error code */
     return code;

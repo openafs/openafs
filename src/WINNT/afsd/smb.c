@@ -7419,7 +7419,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
     setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
     setAttr.clientModTime = time(NULL);
-    code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req);
+    code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req, NULL);
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                          FILE_NOTIFY_CHANGE_DIR_NAME,
