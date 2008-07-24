@@ -7,7 +7,7 @@ if [ x"$KVERS" = x ] ; then
     exit 1
 fi
 
-case `uname -m` in
+case ${ARCH:-`uname -m`} in
 alpha)
     case $KVERS in
     2.2*)

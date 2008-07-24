@@ -41,7 +41,8 @@ export KSRC
 export KVERS
 export KPKG_DEST_DIR
 
-SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
+SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" ARCH="$(ARCH)" \
+		sh debian/sysname)
 
 package    = openafs
 modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}

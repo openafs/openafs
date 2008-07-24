@@ -5,6 +5,9 @@ openafs (1.4.7.dfsg1-5) unstable; urgency=low
     and builds without UCONTEXT fail.  The binaries we were building
     before didn't work and no one reported a bug, indicating no one was
     attempting to use OpenAFS on hppa.
+  * When building the kernel module, use the setting of the ARCH
+    environment or make variable, if present, in preference to uname -m to
+    allow cross-compiles.  Thanks, Jose Calhariz.  (Closes: #492232)
   * Add Jason Edgecomb's copyright and license for man pages to
     debian/copyright.
 
