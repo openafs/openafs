@@ -49,6 +49,8 @@ NPIsRedirectorStarted( void);
 
 #define NOTHING
 
+//#define OPENAFS_TRACE         1
+
 typedef struct _UNICODE_STRING {
     USHORT Length;
     USHORT MaximumLength;
@@ -162,8 +164,6 @@ NPAddConnection3( HWND            hwndOwner,
     __Enter
     {
 
-        OutputDebugString(L"NPAddConnection3 Entry\n");
-
         if ((lpNetResource->lpRemoteName == NULL) ||
             (lpNetResource->lpRemoteName[0] != L'\\') ||
             (lpNetResource->lpRemoteName[1] != L'\\') ||
@@ -177,12 +177,6 @@ NPAddConnection3( HWND            hwndOwner,
 
         if( lpNetResource->lpLocalName != NULL)
         {
-
-            swprintf( wszScratch, L"NPAddConnection3 Local Name %s Remove Name %s\n",
-                                            lpNetResource->lpLocalName,
-                                            lpNetResource->lpRemoteName);
-
-            OutputDebugString(wszScratch);
 
             wchLocalName[0] = (WCHAR) CharUpper( (PWCHAR) MAKELONG( (USHORT) lpNetResource->lpLocalName[0], 0 ) );
             wchLocalName[1] = L':';
@@ -260,13 +254,6 @@ NPAddConnection3( HWND            hwndOwner,
         // The status returned from the driver will indicate how it was handled
         //
 
-        swprintf( wszScratch,
-                    L"NPAddConnection3 Local Name %s Remote Name %s Status %08lX\n", 
-                    wchLocalName, wchRemoteName, dwStatus);
-        wszScratch[SCRATCHSZ-1] = L'\0';
-
-        OutputDebugString( wszScratch);
-
         if( dwStatus == WN_SUCCESS &&
             lpNetResource->lpLocalName != NULL)
         {
@@ -342,8 +329,6 @@ NPAddConnection3( HWND            hwndOwner,
                     else
                     {
 
-                        OutputDebugString(L"NPAddConnection3 Successfully added connection\n");
-
                         dwStatus = WN_SUCCESS;
                     }
 
@@ -360,8 +345,6 @@ NPAddConnection3( HWND            hwndOwner,
         }
 
 try_exit:
-
-        OutputDebugString(L"NPAddConnection3 Exit\n");
 
         if( pConnectCB != NULL)
         {
@@ -392,8 +375,6 @@ NPCancelConnection( LPWSTR  lpName,
 
     __Enter
     {
-
-        OutputDebugString(L"NPCancelConnection Entry\n");
 
         if( *lpName == L'\\' && 
             *(lpName + 1) == L'\\')
@@ -542,10 +523,6 @@ NPCancelConnection( LPWSTR  lpName,
 
             wcscat( uniConnectionName.Buffer, wchRemoteName);
 
-            swprintf( wszScratch, L"NPCancelConnection delete name %s Local %s\n", uniConnectionName.Buffer, lpName);
-
-            OutputDebugString( wszScratch);
-
             DefineDosDevice( DDD_REMOVE_DEFINITION | DDD_RAW_TARGET_PATH | DDD_EXACT_MATCH_ON_REMOVE,
                              lpName,
                              uniConnectionName.Buffer);
@@ -565,8 +542,6 @@ try_exit:
 
             HeapFree( GetProcessHeap( ), 0, (PVOID) pConnectCB);
         }
-
-        OutputDebugString(L"NPCancelConnection Exit\n");
     }
 
     return dwStatus;
@@ -589,8 +564,6 @@ NPGetConnection( LPWSTR  lpLocalName,
 
     __Enter
     {
-
-        OutputDebugString(L"NPGetConnection Entry\n");
 
         if( lstrlen( lpLocalName) == 0 ||
             *lpBufferSize == 0)
@@ -651,16 +624,10 @@ NPGetConnection( LPWSTR  lpLocalName,
 
             lpRemoteName[ *lpBufferSize/sizeof( WCHAR)] = L'\0';
 
-            swprintf( wszScratch, L"NPGetConnection Local Name %S Remote Name %s\n", wchLocalName, lpRemoteName);
-
-            OutputDebugString( wszScratch);
-
             dwStatus = WN_SUCCESS;
         }
 
 try_exit:
-
-        OutputDebugString(L"NPGetConnection Exit\n");
 
         if( pConnectCB != NULL)
         {
@@ -738,8 +705,6 @@ NPEnumResource( HANDLE  hEnum,
     __Enter
     {
 
-        OutputDebugString(L"NPEnumResource Entry\n");
-
         pNetResource = (LPNETRESOURCE) lpBuffer;
         SpaceAvailable = *lpBufferSize;
         EntriesCopied = 0;
@@ -782,8 +747,6 @@ NPEnumResource( HANDLE  hEnum,
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
-        OutputDebugString(L"NPEnumResource Back from filter call\n");
-
         if( dwCopyBytes == 0)
         {
 
@@ -800,13 +763,6 @@ NPEnumResource( HANDLE  hEnum,
         uniRemoteName.MaximumLength = uniRemoteName.Length;
         uniRemoteName.Buffer = pConnectionCB->RemoteName;
 
-        swprintf( wchOutputBuffer, L"NPEnumResource Back from query Length %08lX Local %wZ Remote %wZ\n", 
-                                                 dwCopyBytes,
-                                                 &uniLocalName,
-                                                 &uniRemoteName);
-
-        OutputDebugString( wchOutputBuffer);
-
         //
         // Get to where we need to be in the lsit
         //
@@ -815,8 +771,6 @@ NPEnumResource( HANDLE  hEnum,
 
         if( dwIndex > 0)
         {
-
-            OutputDebugString(L"NPEnumResource Enumerating list from prior query\n");
 
             while( dwCopyBytes > 0)
             {
@@ -830,12 +784,6 @@ NPEnumResource( HANDLE  hEnum,
                 uniRemoteName.Length = pConnectionCB->RemoteNameLength;
                 uniRemoteName.MaximumLength = uniRemoteName.Length;
                 uniRemoteName.Buffer = pConnectionCB->RemoteName;
-
-                swprintf( wchOutputBuffer, L"NPEnumResource Skipping Local %wZ Remote %wZ\n", 
-                                                    &uniLocalName,
-                                                    &uniRemoteName);
-
-                OutputDebugString( wchOutputBuffer);
 
                 pConnectionCB = (RedirConnectionCB *)((char *)pConnectionCB + 
                                                                 FIELD_OFFSET( RedirConnectionCB, RemoteName) +
@@ -864,8 +812,6 @@ NPEnumResource( HANDLE  hEnum,
         while( TRUE)
         {
 
-            OutputDebugString(L"NPEnumResource Enumeration cycle\n");
-
             if( pConnectionCB->LocalName == 0)
             {
 
@@ -881,12 +827,6 @@ NPEnumResource( HANDLE  hEnum,
             uniRemoteName.Length = pConnectionCB->RemoteNameLength;
             uniRemoteName.MaximumLength = uniRemoteName.Length;
             uniRemoteName.Buffer = pConnectionCB->RemoteName;
-
-            swprintf( wchOutputBuffer, L"NPEnumResource Copying Local %wZ Remote %wZ\n", 
-                                                &uniLocalName,
-                                                &uniRemoteName);
-
-            OutputDebugString( wchOutputBuffer);
                             
             // Determine the space needed for this entry...
 
@@ -975,8 +915,6 @@ NPEnumResource( HANDLE  hEnum,
         *(PULONG)hEnum = dwIndex;
 
 try_exit:
-
-        OutputDebugString(L"NPEnumResource Exit\n");
 
         if( pConnectionCB != NULL)
         {
@@ -1077,8 +1015,6 @@ NPGetResourceParent( LPNETRESOURCE   lpNetResource,
                      LPDWORD lpBufferSize )
 {
 
-    OutputDebugString(L"NPGetResourceParent\n");
-
     return WN_NOT_SUPPORTED;
 }
 
@@ -1089,8 +1025,6 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
                           LPWSTR  *lplpSystem )
 {
 
-    OutputDebugString(L"NPGetResourceInformation\n");
-
     return WN_NOT_SUPPORTED;
 }
 
@@ -1100,8 +1034,6 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
                     LPVOID  lpBuffer,
                     LPDWORD lpBufferSize )
 {
-
-    OutputDebugString(L"NPGetUniversalName\n");
 
     return WN_NOT_SUPPORTED;
 }
