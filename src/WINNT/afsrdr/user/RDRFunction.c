@@ -863,16 +863,19 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         return;
     }
 
-    setAttr.mask = CM_ATTRMASK_LENGTH;
-    setAttr.length.LowPart = CreateCB->AllocationSize.LowPart;
-    setAttr.length.HighPart = CreateCB->AllocationSize.HighPart;
     if (CreateCB->FileAttributes & FILE_ATTRIBUTE_READONLY) {
         setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
         setAttr.unixModeBits = 0222;
     }
 
-    code = cm_Create(dscp, FileName, flags, &setAttr, &scp, userp, &req);
-
+    if (CreateCB->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        code = cm_MakeDir(dscp, FileName, flags, &setAttr, userp, &req, &scp);
+    } else {
+        setAttr.mask |= CM_ATTRMASK_LENGTH;
+        setAttr.length.LowPart = CreateCB->AllocationSize.LowPart;
+        setAttr.length.HighPart = CreateCB->AllocationSize.HighPart;
+        code = cm_Create(dscp, FileName, flags, &setAttr, &scp, userp, &req);
+    }
     if (code == 0) {
         wchar_t shortName[13];
         cm_dirFid_t dfid;
