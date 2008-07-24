@@ -39,6 +39,8 @@ extern AFSFcb             *AFSAllRoot;
 
 extern UNICODE_STRING      AFSPIOCtlName;
 
+extern ULONG               AFSAllocationMemoryLevel;
+
 }
 
 #endif /* _AFS_EXTERN_H */

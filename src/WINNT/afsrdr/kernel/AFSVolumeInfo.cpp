@@ -258,7 +258,7 @@ AFSQueryFsDeviceInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= (LONG)sizeof( FILE_FS_DEVICE_INFORMATION))
     {
 
-        Buffer->DeviceType = FILE_DEVICE_NETWORK_REDIRECTOR;
+        Buffer->DeviceType = FILE_DEVICE_DISK;
 
         Buffer->Characteristics = VolumeInfo->Characteristics;
 

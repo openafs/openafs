@@ -34,8 +34,6 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
         if( DeviceObject == AFSDeviceObject)
         {
 
-            AFSPrint("AFSClose Closing control handle\n");
-
             try_return( ntStatus);
         }
 
@@ -189,7 +187,9 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                  TRUE);
+                                TRUE);
+
+                KeQueryTickCount( &pFcb->LastAccessCount);
 
                 //
                 // If this node is deleted then we will need to drop
@@ -259,20 +259,10 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     }
 
                     //
-                    // Remove the node from the Fcb tree
+                    // Send the notification for the delete
                     //
 
-                    /*
-                    AFSRemoveFcbEntry( pDeviceExt->Specific.Volume.Vcb->RootDcb,
-                                         pFcb);
-                    */
-
-                    //
-                    // Send the notification for teh delete
-                    //
-
-                    ntStatus = AFSNotifyDelete( DeviceObject,
-                                                  pFcb->DirEntry);
+                    ntStatus = AFSNotifyDelete( pFcb);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
@@ -287,10 +277,10 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     //
 
                     AFSDeleteDirEntry( pFcb->ParentFcb,
-                                         pFcb->DirEntry);
+                                       pFcb->DirEntry);
 
                     //
-                    // Remove teh DirEntry reference from teh Fcb
+                    // Remove the DirEntry reference from the Fcb
                     //
 
                     pFcb->DirEntry = NULL;

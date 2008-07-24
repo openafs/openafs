@@ -4,6 +4,8 @@
 
 #include "AFSCommon.h"
 
+static AFSExtent *NextExtent(AFSExtent *Extent);
+
 //
 // Called in the paging or non cached read and write paths to get the
 // first and last extent in a span.  We also the count of how many
@@ -14,41 +16,30 @@ NTSTATUS
 AFSGetExtents( IN AFSFcb *Fcb,
                IN PLARGE_INTEGER Offset,
                IN ULONG Length,
-               OUT AFSExtent **From,
-               OUT AFSExtent **To,
+               OUT AFSExtent *From,
                OUT ULONG *ExtentCount)
 {
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     ULONG              extentsCount = 0;
-    AFSExtent         *pStartExtent = NULL;
     AFSExtent         *pEndExtent = NULL;
     LARGE_INTEGER      liLastCacheOffset;
 
-    *From = NULL;
-    *To = NULL;
     *ExtentCount = 0;
 
     __Enter
     {
+        ASSERT(AFSExtentContains(From, Offset));
 
-        pStartExtent = AFSExtentForOffset( Fcb, Offset );
-
-        if (NULL == pStartExtent) {
-
-            ASSERT( NULL != pStartExtent);
-            try_return ( ntStatus = STATUS_UNSUCCESSFUL );
-        }
-
-        pEndExtent = pStartExtent;
+        pEndExtent = From;
         extentsCount = 1;
         liLastCacheOffset.QuadPart = pEndExtent->CacheOffset.QuadPart + pEndExtent->Size;
 
         while ((Offset->QuadPart + Length) > 
                pEndExtent->FileOffset.QuadPart + pEndExtent->Size) {
 
-            pEndExtent = (AFSExtent*) pEndExtent->List.fLink;
+            pEndExtent = NextExtent(pEndExtent);
 
-            if (liLastCacheOffset.QuadPart != pEndExtent->FileOffset.QuadPart) {
+            if (liLastCacheOffset.QuadPart != pEndExtent->CacheOffset.QuadPart) {
                 //
                 // Discontiguous (in the cache)
                 //
@@ -58,8 +49,6 @@ AFSGetExtents( IN AFSFcb *Fcb,
             liLastCacheOffset.QuadPart = pEndExtent->CacheOffset.QuadPart + pEndExtent->Size;
         }
 
-        *From = pStartExtent;
-        *To = pEndExtent;
         *ExtentCount = extentsCount;
         ntStatus = STATUS_SUCCESS;
 
@@ -78,7 +67,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                IN PLARGE_INTEGER Start,
                IN ULONG          Length,
                IN AFSExtent     *From,
-               IN ULONG          ExtentsCount)
+               IN OUT ULONG     *ExtentsCount)
 {
     //
     // Do all the work which can file prior to firing off the IRP
@@ -108,13 +97,13 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
 
             ulCurrLength = 0;
 
-            while ( (pExtent->FileOffset.QuadPart + pExtent->Size) <=
+            while ( (pExtent->FileOffset.QuadPart + pExtent->Size) <
                     (Start->QuadPart + Length) )
             {
                 //
                 // Collapse the read if we can
                 //
-                pNextExtent = CONTAINING_RECORD( pExtent->List.fLink, AFSExtent, List );
+                pNextExtent = NextExtent( pExtent );
 
                 if (pNextExtent->CacheOffset.QuadPart != 
                     (pExtent->CacheOffset.QuadPart + pExtent->Size)) 
@@ -184,17 +173,19 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                 liFileOffset = pExtent->FileOffset;
             }
         }
-        ASSERT(ulCurrRun == ExtentsCount);
+        ASSERT(ulCurrRun <= *ExtentsCount);
 try_exit:
         if (!NT_SUCCESS(ntStatus)) 
         {
-            for (ulCurrRun = 0 ; ulCurrRun < ExtentsCount; ulCurrRun++) 
+            for (ulCurrRun = 0 ; ulCurrRun < *ExtentsCount; ulCurrRun++) 
             {
                 if (IoRuns[ulCurrRun].ChildIrp) {
                     IoFreeIrp( IoRuns[ulCurrRun].ChildIrp );
                     IoRuns[ulCurrRun].ChildIrp = NULL;
                 }
             }
+        } else {
+            *ExtentsCount = ulCurrRun;
         }
     }
     return ntStatus;
@@ -307,7 +298,7 @@ AFSCompleteIo( IN AFSGatherIo *Gather, NTSTATUS Status )
         if (!NT_SUCCESS(Gather->Status))
         {
             Gather->MasterIrp->IoStatus.Status = Gather->Status;
-            Gather->MasterIrp->IoStatus.Information = TRUE;
+            Gather->MasterIrp->IoStatus.Information = 0;
         }
 
         AFSCompleteRequest(Gather->MasterIrp, Gather->Status);
@@ -327,4 +318,14 @@ AFSCompleteIo( IN AFSGatherIo *Gather, NTSTATUS Status )
             ExFreePoolWithTag( Gather, AFS_GATHER_TAG );
         }
     }
+}
+
+static AFSExtent *ExtentFor(PLIST_ENTRY le) 
+{
+    return CONTAINING_RECORD( le, AFSExtent, Lists[AFS_EXTENTS_LIST] );
+}
+
+static AFSExtent *NextExtent(AFSExtent *Extent)
+{
+    return ExtentFor(Extent->Lists[AFS_EXTENTS_LIST].Flink);
 }

@@ -105,12 +105,10 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
                           IN AFSFcb *Fcb);
 
 NTSTATUS
-AFSNotifyDelete( IN PDEVICE_OBJECT DeviceObject,
-                 IN AFSDirEntryCB *DirEntry);
+AFSNotifyDelete( IN AFSFcb *Fcb);
 
 NTSTATUS
-AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
-                 IN AFSFcb *Fcb,
+AFSNotifyRename( IN AFSFcb *Fcb,
                  IN AFSFcb *ParentDcb,
                  IN AFSFcb *TargetDcb,
                  IN UNICODE_STRING *TargetName);
@@ -227,19 +225,31 @@ AFSLockForExtentsTrim( IN AFSFcb *Fcb);
 
 PAFSExtent
 AFSExtentForOffset( IN AFSFcb *Fcb, 
-                    IN PLARGE_INTEGER Offset);
+                    IN PLARGE_INTEGER Offset,
+                    IN BOOLEAN ReturnPrevious);
+BOOLEAN
+AFSExtentContains( IN AFSExtent *Extent, IN PLARGE_INTEGER Offset);
+
 
 NTSTATUS
 AFSRequestExtents( IN  AFSFcb *Fcb, 
                    IN  PLARGE_INTEGER Offset, 
                    IN  ULONG Size,
-                   OUT BOOLEAN *FullyMapped);
+                   OUT BOOLEAN *FullyMapped,
+                   OUT AFSExtent **FirstExtent);
     
 NTSTATUS
 AFSWaitForExtentMapping ( IN AFSFcb *Fcb );
 
 NTSTATUS
 AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents );
+
+NTSTATUS
+AFSProcessReleaseFileExtents( IN AFSReleaseFileExtentsCB *SetExtents );
+
+NTSTATUS
+AFSProcessReleaseFileExtentsByFcb( IN AFSReleaseFileExtentsCB *Extents,
+                                   IN AFSFcb *Fcb);
 
 
 NTSTATUS
@@ -254,6 +264,10 @@ VOID
 AFSMarkDirty( IN AFSFcb *pFcb,
               IN PLARGE_INTEGER Offset,
               IN ULONG   Count);
+
+NTSTATUS
+AFSTearDownFcbExtents( IN AFSFcb *Fcb ) ;
+
 //
 //
 // AFSIoSupp.cpp Prototypes
@@ -262,8 +276,7 @@ NTSTATUS
 AFSGetExtents( IN  AFSFcb *pFcb,
                IN  PLARGE_INTEGER Offset,
                IN  ULONG Length,
-               OUT AFSExtent **From,
-               OUT AFSExtent **To,
+               IN  AFSExtent *From,
                OUT ULONG *Count);
 
 NTSTATUS
@@ -274,7 +287,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                IN PLARGE_INTEGER Start,
                IN ULONG          Length,
                IN AFSExtent     *From,
-               IN ULONG          Count);
+               IN OUT ULONG     *Count);
 
 NTSTATUS 
 AFSStartIos( IN PFILE_OBJECT     CacheFileObject,
@@ -781,6 +794,16 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
 
 BOOLEAN
 AFSCheckForReadOnlyAccess( IN ACCESS_MASK DesiredAccess);
+
+NTSTATUS
+AFSEvaluateNode( IN AFSFcb *Fcb);
+
+NTSTATUS
+AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB);
+
+BOOLEAN
+AFSIsChildOfParent( IN AFSFcb *Dcb,
+                    IN AFSFcb *Fcb);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp

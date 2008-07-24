@@ -82,6 +82,8 @@ static inline void AFSBreakPoint() {
 #define AFS_EXTENT_RELEASE_TAG       'LSFA'
 #define AFS_IO_RUN_TAG               'iSFA'
 #define AFS_GATHER_TAG               'gSFA'
+#define AFS_RENMAME_RESULT_TAG       'RRFA'
+#define AFS_UPDATE_RESULT_TAG        'RUFA'
 
 #define __Enter
 
@@ -179,6 +181,7 @@ static inline void AFSBreakPoint() {
 #define AFS_FILE_MODIFIED                                    0x00000008
 #define AFS_FCB_DELETED                                      0x00000010
 #define AFS_UPDATE_WRITE_TIME                                0x00000020
+#define AFS_FCB_INSERTED_ID_TREE                             0x00000040
 
 //
 // Fcb lifetime in seconds
@@ -219,6 +222,8 @@ static inline void AFSBreakPoint() {
 
 #define AFS_ONE_SECOND          10000000
 
+#define AFS_SERVER_FLUSH_DELAY  30
+
 //
 // Read ahead granularity
 //
@@ -250,6 +255,7 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_DIR_RELEASE_NAME_BUFFER      0x00000001
+#define AFS_DIR_ENTRY_NOT_EVALUATED      0x00000002
 
 //
 // Vcb flags
@@ -279,5 +285,41 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_EXTENT_DIRTY                0x00000001
+
+
+// 
+// Extent skip list sizes
+// 
+#define AFS_NUM_EXTENT_LISTS    3
+
+//
+// Extents skip lists
+//
+// We use constant sizes.
+//
+#define AFS_EXTENT_SIZE         (4*1024)
+#define AFS_EXTENTS_LIST        0
+//
+// A max of 64 extents in ther first skip list
+// #define AFS_EXTENT_SKIP1_BITS   6
+#define AFS_EXTENT_SKIP1_BITS   1
+
+//
+// Then 128 bits in the second skip list
+// #define AFS_EXTENT_SKIP2_BITS   7
+#define AFS_EXTENT_SKIP2_BITS   1
+
+//
+// This means that the top list skips in steps of 2^25 (=12+6+7) which
+// is 32 Mb.  It is to be expected that files which are massively
+// larger that this will not be fully mapped.
+//
+#define AFS_EXTENT_SKIP1_SIZE (AFS_EXTENT_SIZE << AFS_EXTENT_SKIP1_BITS)
+#define AFS_EXTENT_SKIP2_SIZE (AFS_EXTENT_SKIP1_SIZE << AFS_EXTENT_SKIP2_BITS)
+
+#define AFS_EXTENTS_MASKS { (AFS_EXTENT_SIZE-1),       \
+                            (AFS_EXTENT_SKIP1_SIZE-1), \
+                            (AFS_EXTENT_SKIP2_SIZE-1) }
+
 
 #endif /* _AFS_DEFINES_H */

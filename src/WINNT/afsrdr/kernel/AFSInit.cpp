@@ -39,17 +39,26 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         AFSPrint("AFS DriverEntry Initialization build %s:%s\n", __DATE__, __TIME__);
         AFSBreakPoint();
 
-        if( bExit)
-        {
-
-            try_return( ntStatus);
-        }
-
         //
         // Initialize some local variables for easier processing
         //
 
         uniSymLinkName.Buffer = NULL;
+
+        //
+        // Our backdoor to not let the driver load
+        //
+
+        if( bExit)
+        {
+
+            //
+            // Return a failure so we can update the binary and manually start it without
+            // having to do a reboot
+            //
+
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
 
         //
         // Perform some initialization
@@ -172,12 +181,13 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         }
 
         //
-        // Calculate the time count lifetime for Fcbs
+        // Calculate the time count lifetime and delay time for Fcbs
         //
 
         ulTimeIncrement = KeQueryTimeIncrement();
-
+        
         pDeviceExt->FcbLifeTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_FCB_LIFETIME / (ULONGLONG)ulTimeIncrement);
+        pDeviceExt->FcbFlushTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)(AFS_ONE_SECOND * AFS_SERVER_FLUSH_DELAY) / (ULONGLONG)ulTimeIncrement);
 
         //
         // Fill in the dispatch table
@@ -315,7 +325,11 @@ try_exit:
 
             AFSPrint("AFS Driver Entry failed to initialize %08lX\n", ntStatus);
 
-            AFSRemoveWorkerPool();
+            if( AFSDeviceObject != NULL)
+            {
+
+                AFSRemoveWorkerPool();
+            }
 
             if( AFSRegistryPath.Buffer != NULL)
             {

@@ -73,10 +73,6 @@ AFSAddConnection( IN RedirConnectionCB *ConnectCB,
             uniRemoteName.Length -= (2 * sizeof( WCHAR));
         }
 
-        AFSPrint("AFSAddConnection Adding Local %S Remote %wZ\n",
-                                                &ConnectCB->LocalName,
-                                                &uniRemoteName);
-
         if( uniRemoteName.Length >= AFSServerName.Length + sizeof( WCHAR))
         {
 

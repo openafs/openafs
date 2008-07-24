@@ -881,6 +881,8 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSAllocationMemoryLevel += ulEntryLength;
+
         RtlZeroMemory( pDirNode,
                        ulEntryLength);
 
@@ -896,6 +898,8 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
         {
 
             ExFreePool( pDirNode);
+
+            AFSAllocationMemoryLevel -= ulEntryLength;
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -981,7 +985,17 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
         // If this is a symlink then we need to add in the directory attribute
         //
 
-        ASSERT( pDirNode->DirectoryEntry.FileType != 0);
+        if( pDirNode->DirectoryEntry.FileType == 0)
+        {
+
+            //
+            // Set this node as a directory and set the AFS_DIR_ENTRY_NOT_EVALUATED flag
+            //
+            
+            pDirNode->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
+
+            SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
+        }
 
         if( pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
             pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
@@ -1053,4 +1067,315 @@ AFSCheckForReadOnlyAccess( IN ACCESS_MASK DesiredAccess)
     }
 
     return bReturn;
+}
+
+NTSTATUS
+AFSEvaluateNode( IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    AFSFileID stParentFileId;
+
+    __Enter
+    {
+
+        if( Fcb->ParentFcb != NULL)
+        {
+
+            stParentFileId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            RtlZeroMemory( &stParentFileId,
+                           sizeof( AFSFileID));           
+        }
+
+        ntStatus = AFSEvaluateTargetByID( &stParentFileId,
+                                          &Fcb->DirEntry->DirectoryEntry.FileId,
+                                          &pDirEntry);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pDirEntry->FileType == 0)
+        {
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
+        }
+
+        Fcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+        Fcb->DirEntry->DirectoryEntry.Expiration = pDirEntry->Expiration;
+
+        Fcb->DirEntry->DirectoryEntry.DataVersion = pDirEntry->DataVersion;
+
+        Fcb->DirEntry->DirectoryEntry.FileType = pDirEntry->FileType;
+
+        Fcb->DirEntry->DirectoryEntry.CreationTime = pDirEntry->CreationTime;
+
+        Fcb->DirEntry->DirectoryEntry.LastAccessTime = pDirEntry->LastAccessTime;
+
+        Fcb->DirEntry->DirectoryEntry.LastWriteTime = pDirEntry->LastWriteTime;
+
+        Fcb->DirEntry->DirectoryEntry.ChangeTime = pDirEntry->ChangeTime;
+
+        Fcb->DirEntry->DirectoryEntry.EndOfFile = pDirEntry->EndOfFile;
+
+        Fcb->DirEntry->DirectoryEntry.AllocationSize = pDirEntry->AllocationSize;
+
+        Fcb->DirEntry->DirectoryEntry.FileAttributes = pDirEntry->FileAttributes;
+
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
+            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
+            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            AFSFileID stFileId;
+
+            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+
+            if( !BooleanFlagOn( Fcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED))
+            {
+
+                if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                {
+
+                    stFileId = Fcb->DirEntry->DirectoryEntry.FileId;
+                }
+                else
+                {
+
+                    stFileId = Fcb->DirEntry->DirectoryEntry.TargetFileId;
+                }
+
+                if( stFileId.Hash != 0)
+                {
+
+                    ntStatus = AFSEnumerateDirectory( &Fcb->DirEntry->DirectoryEntry.FileId,
+                                                      &Fcb->Specific.Directory.DirectoryNodeHdr,
+                                                      &Fcb->Specific.Directory.DirectoryNodeListHead,
+                                                      &Fcb->Specific.Directory.DirectoryNodeListTail,
+                                                      &Fcb->Specific.Directory.ShortNameTree,
+                                                      NULL);
+                                                
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
+
+                    SetFlag( Fcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+                }
+            }
+        }
+
+        Fcb->DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
+
+        Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
+
+try_exit:
+
+        if( pDirEntry != NULL)
+        {
+
+            ExFreePool( pDirEntry);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb      *pDcb = NULL, *pFcb = NULL, *pNextFcb = NULL;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    AFSDirEntryCB *pCurrentDirEntry = NULL;
+
+    __Enter
+    {
+
+        //
+        // If this is for the entire volume then flush the root directory
+        //
+
+        if( InvalidateCB->WholeVolume)
+        {
+
+            AFSRemoveAFSRoot();
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Need to locate the Fcb for the directory to purge
+        //
+    
+        AFSAcquireShared( &pDevExt->Specific.RDR.FileIDTreeLock, TRUE);
+    
+        ntStatus = AFSLocateFileIDEntry( pDevExt->Specific.RDR.FileIDTree.TreeHead,
+                                         InvalidateCB->FileID.Hash,
+                                         &pDcb);
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.FileIDTreeLock );
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pDcb == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        AFSAcquireExcl( &pDcb->NPFcb->Resource,
+                        TRUE);
+
+        AFSAcquireExcl( pDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        //
+        // Tear down the directory information
+        //
+
+        pDcb->Specific.Directory.DirectoryNodeHdr.TreeHead = NULL;
+
+        //
+        // Reset the directory list information
+        //
+
+        pCurrentDirEntry = pDcb->Specific.Directory.DirectoryNodeListHead;
+
+        while( pCurrentDirEntry != NULL)
+        {
+
+            pFcb = pCurrentDirEntry->Fcb;
+
+            if( pFcb != NULL)
+            {
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
+
+                if( pFcb->DirEntry != NULL)
+                {
+
+                    pFcb->DirEntry->Fcb = NULL;
+                }
+
+                SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                AFSAcquireExcl( pDevExt->Specific.RDR.FileIDTree.TreeLock,
+                                TRUE);
+
+                AFSRemoveFileIDEntry( &pDevExt->Specific.RDR.FileIDTree.TreeHead,
+                                      &pFcb->FileIDTreeEntry);
+
+                AFSReleaseResource( pDevExt->Specific.RDR.FileIDTree.TreeLock);
+
+                ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+                    
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+            }
+
+            AFSDeleteDirEntry( pDcb,
+                               pCurrentDirEntry);
+
+            pCurrentDirEntry = pDcb->Specific.Directory.DirectoryNodeListHead;
+        }
+
+        pDcb->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        pDcb->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        //
+        // Indicate the node is NOT initialized
+        //
+
+        ClearFlag( pDcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+
+        //
+        // Indicate we need to re-evaluate it on next access
+        //
+
+        SetFlag( pDcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
+
+        AFSReleaseResource( pDcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+        //
+        // Tag the Fcbs as invalid so they are torn down
+        // Do this for any which has this node as a parent or
+        // this parent somewhere in the chain
+        //
+
+        AFSAcquireShared( &pDevExt->Specific.RDR.FcbListLock,
+                          TRUE);
+
+        pFcb = pDevExt->Specific.RDR.FcbListHead;
+
+        while( pFcb != NULL)
+        {
+
+            AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                            TRUE);
+
+            if( AFSIsChildOfParent( pDcb,
+                                    pFcb))
+            {
+
+                SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                AFSAcquireExcl( pDevExt->Specific.RDR.FileIDTree.TreeLock,
+                                TRUE);
+
+                AFSRemoveFileIDEntry( &pDevExt->Specific.RDR.FileIDTree.TreeHead,
+                                      &pFcb->FileIDTreeEntry);
+
+                AFSReleaseResource( pDevExt->Specific.RDR.FileIDTree.TreeLock);
+
+                ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+            }
+
+            pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+            
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+            pFcb = pNextFcb;
+        }
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.FcbListLock);
+
+        AFSReleaseResource( &pDcb->NPFcb->Resource);
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+BOOLEAN
+AFSIsChildOfParent( IN AFSFcb *Dcb,
+                    IN AFSFcb *Fcb)
+{
+
+    BOOLEAN bIsChild = FALSE;
+    AFSFcb *pCurrentFcb = Fcb;
+
+    while( pCurrentFcb != NULL)
+    {
+
+        if( pCurrentFcb->ParentFcb == Dcb)
+        {
+
+            bIsChild = TRUE;
+
+            break;
+        }
+
+        pCurrentFcb = pCurrentFcb->ParentFcb;
+    }
+
+    return bIsChild;
 }

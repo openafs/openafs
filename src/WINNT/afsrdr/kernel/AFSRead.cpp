@@ -19,13 +19,15 @@ CachedRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            mapped = FALSE;
+    AFSExtent         *pExtent = NULL;
 
     __Enter
     {
         //
         // Provoke a get of the extents - if we need to.
         //
-        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &mapped );
+        pExtent = NULL;
+        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &mapped, &pExtent);
 
         if (!NT_SUCCESS(ntStatus)) {
             try_return( ntStatus );
@@ -181,8 +183,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     AFSIoRun          *pIoRuns = NULL;
     AFSIoRun           stIoRuns[AFS_MAX_STACK_IO_RUNS];
     ULONG              extentsCount = 0;
-    AFSExtent         *pStartExtent;
-    AFSExtent         *pEndExtent;
+    AFSExtent         *pStartExtent = NULL;
     BOOLEAN            bExtentsMapped = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     ULONG              ulReadByteCount;
@@ -230,9 +231,13 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         // TODO - right now we wait for the extents to be there.  We should 
         // Post if we can or return STATUS_FILE_LOCKED otherwise
         //
+        //
+        // prime the pump for the hint to getting the extents
+        //
+        pStartExtent = NULL;
         while (TRUE) 
         {
-            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ulReadByteCount, &bExtentsMapped );
+            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ulReadByteCount, &bExtentsMapped, &pStartExtent );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
@@ -243,7 +248,10 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
             {
                 break;
             }
-
+            //
+            // Note that if we are not full mapped then pStartExtent
+            // is the next best place to start looking next time
+            //
             ntStatus =  AFSWaitForExtentMapping ( pFcb );
 
             if (!NT_SUCCESS(ntStatus)) 
@@ -267,8 +275,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         ntStatus = AFSGetExtents( pFcb, 
                                   &StartingByte, 
                                   ulReadByteCount, 
-                                  &pStartExtent, 
-                                  &pEndExtent, 
+                                  pStartExtent, 
                                   &extentsCount);
         
         if (!NT_SUCCESS(ntStatus)) 
@@ -300,7 +307,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                                   &StartingByte, 
                                   ulReadByteCount, 
                                   pStartExtent, 
-                                  extentsCount );
+                                  &extentsCount );
 
         if (!NT_SUCCESS(ntStatus)) 
         {
@@ -431,6 +438,7 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN bReleasePaging = FALSE;
     BOOLEAN bPagingIo = FALSE;
     BOOLEAN bNonCachedIo = FALSE;
+    BOOLEAN bCompleteIrp = TRUE;
     PFILE_OBJECT pFileObject = NULL;
     LARGE_INTEGER liStartingByte;
     ULONG ulByteCount;
@@ -523,11 +531,10 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         ulByteCount = pIrpSp->Parameters.Read.Length;
 
         //
-        // TODO
         // If we get a non cached IO for a cached file we should do a purge.  
         // For now we will just promote to cached
         //
-        if (CcIsFileCached(pFileObject) && !bPagingIo) {
+        if (NULL != pFileObject->SectionObjectPointer->DataSectionObject && !bPagingIo) {
             bNonCachedIo = FALSE;
         }
 
@@ -613,15 +620,15 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // We must now handle this request as a 'typical' read. 
+        // We must now handle this request as a 'typical' read.  The
+        // called request completes the IRP for us.
         //
+        bCompleteIrp = FALSE;
 
         if( !bPagingIo &&
             !bNonCachedIo)
         {
             ntStatus = CachedRead( DeviceObject, Irp, liStartingByte, ulByteCount);
-
-            try_return( ntStatus );
         }
         else
         {
@@ -647,6 +654,12 @@ try_exit:
 
             AFSDereferenceExtents( pFcb);
         }
+
+        if ( bCompleteIrp )
+        {
+            AFSCompleteRequest( Irp, ntStatus);
+        }
+            
 
         ObDereferenceObject( pFileObject);
     }
@@ -776,13 +789,6 @@ try_exit:
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
         }
-
-        //
-        // Complete the request
-        //
-
-        AFSCompleteRequest( Irp,
-                            ntStatus);
     }
 
     return ntStatus;

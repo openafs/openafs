@@ -53,6 +53,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSAllocationMemoryLevel += usFcbLength;
+
         RtlZeroMemory( pFcb,
                        usFcbLength);
 
@@ -127,7 +129,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         if( DirEntry != NULL)
         {
 
-            DirEntry->Type.Data.Fcb = pFcb;
+            DirEntry->Fcb = pFcb;
 
             //
             // Set the index for the file id tree entry
@@ -177,18 +179,24 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 pFcb->Header.FileSize.QuadPart = pFcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
                 pFcb->Header.ValidDataLength.QuadPart = pFcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
                 //
-                // Initialize the Extents resources and so forth
+                // Initialize the Extents resources and so forth.  The
+                // quiescent state is that no one has the extents for
+                // IO (do the extents are not busy) and there is no
+                // extents request outstanding (and hence the "last
+                // one" is complete).
                 //
                 ExInitializeResourceLite( &pNPFcb->Specific.File.ExtentsResource );
                 KeInitializeEvent( &pNPFcb->Specific.File.ExtentsNotBusy, 
                                    NotificationEvent, 
-                                   FALSE );
+                                   TRUE );
                 KeInitializeEvent( &pNPFcb->Specific.File.ExtentsRequestComplete, 
                                    NotificationEvent, 
                                    TRUE );
 
-                pFcb->Specific.File.ExtentsList.bLink = &pFcb->Specific.File.ExtentsList;
-                pFcb->Specific.File.ExtentsList.fLink = &pFcb->Specific.File.ExtentsList;
+                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i++) 
+                {
+                    InitializeListHead(&pFcb->Specific.File.ExtentsLists[i]);
+                }
             }
 
             //
@@ -214,6 +222,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
             AFSAcquireExcl( &pDeviceExt->Specific.RDR.FcbListLock,
                             TRUE);
+
+            DbgPrint("AFSInitFcb Inserting Fcb %08lX into list\n", pFcb);
 
             if( pDeviceExt->Specific.RDR.FcbListHead == NULL)
             {
@@ -253,6 +263,12 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 ASSERT( NT_SUCCESS( ntStatus));
             }
 
+            //
+            // Tag the entry as being in the FileID tree
+            //
+
+            SetFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
             AFSReleaseResource( pDeviceExt->Specific.RDR.FileIDTree.TreeLock);
         }
 
@@ -289,6 +305,8 @@ try_exit:
                 }
 
                 ExFreePool( pFcb);
+
+                AFSAllocationMemoryLevel -= sizeof( AFSFcb);
             }
 
             if( pNPFcb != NULL)
@@ -347,6 +365,8 @@ AFSInitAFSRoot()
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
+            AFSAllocationMemoryLevel += sizeof( AFSDirEntryCB);
+
             RtlZeroMemory( pVolumeDirEntry,
                            sizeof( AFSDirEntryCB));
 
@@ -385,6 +405,8 @@ AFSInitAFSRoot()
 
                 ExFreePool( pVolumeDirEntry);
 
+                AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB);
+
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
@@ -409,6 +431,8 @@ AFSInitAFSRoot()
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
+
+            AFSAllocationMemoryLevel += sizeof( AFSFcb);
 
             RtlZeroMemory( pFcb,
                            sizeof( AFSFcb)); 
@@ -479,12 +503,16 @@ AFSInitAFSRoot()
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
+            AFSAllocationMemoryLevel += sizeof( AFSDirEntryCB) + sizeof( WCHAR);
+
             RtlZeroMemory( pFcb->DirEntry,
                            sizeof( AFSDirEntryCB) + sizeof( WCHAR));
 
             pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
             pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
             pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = pVolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
+
+            pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
             pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
@@ -500,38 +528,6 @@ AFSInitAFSRoot()
 
             AFSAllRoot = pFcb;
         }
-
-        AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                        TRUE);
-
-        //
-        // Initialize the root information
-        //
-
-        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
-
-        //
-        // Enumerate the shares in the volume
-        //
-
-        ntStatus = AFSEnumerateDirectory( &AFSAllRoot->DirEntry->DirectoryEntry.FileId,
-                                          &AFSAllRoot->Specific.Directory.DirectoryNodeHdr,
-                                          &AFSAllRoot->Specific.Directory.DirectoryNodeListHead,
-                                          &AFSAllRoot->Specific.Directory.DirectoryNodeListTail,
-                                          NULL,
-                                          NULL);
-
-        if( NT_SUCCESS( ntStatus))
-        {
-
-            //
-            // Indicate the node is initialized
-            //
-
-            SetFlag( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
-        }
-
-        AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
 try_exit:
 
@@ -556,6 +552,7 @@ AFSRemoveAFSRoot()
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDirEntryCB *pCurrentDirEntry = NULL;
+    AFSFcb *pFcb = NULL, *pNextFcb = NULL;
 
     __Enter
     {
@@ -598,6 +595,27 @@ AFSRemoveAFSRoot()
         while( pCurrentDirEntry != NULL)
         {
 
+            pFcb = pCurrentDirEntry->Fcb;
+
+            if( pFcb != NULL)
+            {
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
+
+                if( pFcb->DirEntry != NULL)
+                {
+
+                    pFcb->DirEntry->Fcb = NULL;
+                }
+
+                SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+                    
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+            }
+
             AFSDeleteDirEntry( AFSAllRoot,
                                pCurrentDirEntry);
 
@@ -617,6 +635,34 @@ AFSRemoveAFSRoot()
         AFSReleaseResource( &AFSAllRoot->NPFcb->Resource);
 
         AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+        //
+        // Tag the Fcbs as invalid so they are torn down
+        //
+
+        AFSAcquireShared( &pDevExt->Specific.RDR.FcbListLock,
+                          TRUE);
+
+        pFcb = pDevExt->Specific.RDR.FcbListHead;
+
+        while( pFcb != NULL)
+        {
+
+            AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                            TRUE);
+
+            SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+            ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
+            pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+            
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+            pFcb = pNextFcb;
+        }
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.FcbListLock);
 
 try_exit:
 
@@ -667,6 +713,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *VolumeDirEntry)
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+        AFSAllocationMemoryLevel += sizeof( AFSFcb);
 
         RtlZeroMemory( pFcb,
                        sizeof( AFSFcb)); 
@@ -737,6 +785,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *VolumeDirEntry)
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSAllocationMemoryLevel += sizeof( AFSDirEntryCB) + sizeof( WCHAR);
+
         RtlZeroMemory( pFcb->DirEntry,
                        sizeof( AFSDirEntryCB) + sizeof( WCHAR));
 
@@ -745,6 +795,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *VolumeDirEntry)
         pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = VolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
         pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = VolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
         pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = VolumeDirEntry->DirectoryEntry.CreationTime.QuadPart;
+
+        pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
         pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
@@ -821,7 +873,7 @@ AFSInitRootFcb( IN AFSDirEntryCB *VolumeDirEntry)
         // Set the root node in the passed in entry
         //
 
-        VolumeDirEntry->Type.Volume.RootFcb = pFcb;
+        VolumeDirEntry->Fcb = pFcb;
 
 
         //
@@ -890,6 +942,8 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb)
     {
 
         ExFreePool( RootFcb->DirEntry);
+
+        AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB) + sizeof( WCHAR);
     }
 
     //
@@ -897,6 +951,8 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb)
     //
 
     ExFreePool( RootFcb);
+
+    AFSAllocationMemoryLevel -= sizeof( AFSFcb);
 
     return;
 }
@@ -925,6 +981,15 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     {
 
         FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
+        //
+        // Do the extent tear down thing
+        //
+        (VOID) AFSTearDownFcbExtents(Fcb);
+
+        //
+        // And the resource we allocated
+        //
+        ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource );
     }
     else if( Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
     {
@@ -963,6 +1028,8 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     //
 
     ExFreePool( Fcb);
+
+    AFSAllocationMemoryLevel -= sizeof( AFSFcb);
 
     return;
 }

@@ -549,9 +549,9 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 try_return( ntStatus);
             }
-            else if( pDirEntry->Type.Data.Fcb != NULL &&
-                     ( BooleanFlagOn( pDirEntry->Type.Data.Fcb->Flags, AFS_FCB_PENDING_DELETE) ||
-                       BooleanFlagOn( pDirEntry->Type.Data.Fcb->Flags, AFS_FCB_DELETED)))
+            else if( pDirEntry->Fcb != NULL &&
+                     ( BooleanFlagOn( pDirEntry->Fcb->Flags, AFS_FCB_PENDING_DELETE) ||
+                       BooleanFlagOn( pDirEntry->Fcb->Flags, AFS_FCB_DELETED)))
             {
     
                 pCcb->CurrentDirIndex = pDirEntry->DirectoryEntry.FileIndex;

@@ -5,7 +5,7 @@
 #include "AFSCommon.h"
 
 NTSTATUS
-AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
+AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                        IN OUT AFSDirHdr      *DirectoryHdr,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
@@ -74,7 +74,7 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
                                           pBuffer,
                                           &ulResultLen);
 
-            if( !NT_SUCCESS( ntStatus) ||
+            if( ntStatus != STATUS_SUCCESS ||
                 ulResultLen == 0)
             {
 
@@ -84,6 +84,11 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
 
                     ntStatus = STATUS_SUCCESS;
                 }
+                else
+                {
+
+                    ntStatus = STATUS_CANCELLED;
+                }
 
                 break;
             }
@@ -91,6 +96,12 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
             pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
 
             pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
+
+            //
+            // Remvoe the leading header from the processed length
+            //
+
+            ulResultLen -= FIELD_OFFSET( AFSDirEnumResp, Entry);
 
             while( ulResultLen > 0)
             {
@@ -120,6 +131,14 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
 
                     break;
                 }
+
+                //
+                // Set up the entry length
+                //
+
+                ulEntryLength = QuadAlign( sizeof( AFSDirEnumEntry) +
+                                                    pCurrentDirEntry->FileNameLength +
+                                                    pCurrentDirEntry->TargetNameLength);
 
                 //
                 // Init the short name if we have one
@@ -216,28 +235,16 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
                     }
                 }
 
-                break;
-
                 //
                 // Next dir entry
                 //
 
-                //pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+                pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
 
-                //ulResultLen -= ulEntryLength;
+                ASSERT( ulResultLen >= ulEntryLength);
+
+                ulResultLen -= ulEntryLength;
             }
-
-            //
-            // If the query was successful then get out since we are done
-            //
-
-            if( ntStatus == STATUS_SUCCESS)
-            {
-
-                break;
-            }
-
-            ASSERT( ntStatus == STATUS_MORE_ENTRIES);
 
             ulResultLen = AFS_DIR_ENUM_BUFFER_LEN;
 
@@ -247,6 +254,21 @@ AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
             //
 
             pDirQueryCB->EnumHandle = pDirEnumResponse->EnumHandle;
+
+            //
+            // Something deeply wrong with enumeration.  Break now
+            //
+            //            break;
+
+            //
+            // If the enumeration handle is -1 then we are done
+            //
+
+            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
+            {
+
+                break;
+            }
         }
 
 try_exit:
@@ -411,8 +433,6 @@ try_exit:
     return ntStatus;
 }
 
-WCHAR big[1024];
-
 NTSTATUS
 AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
                           IN AFSFcb *Fcb)
@@ -422,6 +442,7 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     AFSFileUpdateCB stUpdateCB;
     ULONG ulResultLen = 0;
+    AFSFileUpdateResultCB *pUpdateResultCB = NULL;
 
     __Enter
     {
@@ -437,7 +458,7 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
 
         stUpdateCB.FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
 
-        DbgPrint("Setting %wZ attrib %08lX EOF %08lX\n", 
+        DbgPrint("AFSUpdateFileInformation Setting %wZ attrib %08lX EOF %08lX\n", 
                                         &Fcb->DirEntry->DirectoryEntry.FileName,
                                         Fcb->DirEntry->DirectoryEntry.FileAttributes,
                                         Fcb->DirEntry->DirectoryEntry.EndOfFile.LowPart);
@@ -446,17 +467,27 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
 
         stUpdateCB.ParentId = Fcb->DirEntry->DirectoryEntry.ParentId;
 
-        ULONG sz = sizeof(big);
+        pUpdateResultCB = (AFSFileUpdateResultCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                          PAGE_SIZE,
+                                                                          AFS_UPDATE_RESULT_TAG);
+
+        if( pUpdateResultCB == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        ulResultLen = PAGE_SIZE;
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_UPDATE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
                                       0,
-                                      NULL,
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
                                       &Fcb->DirEntry->DirectoryEntry.FileId,
                                       &stUpdateCB,
                                       sizeof( AFSFileUpdateCB),
-                                      big,
-                                      &sz);
+                                      pUpdateResultCB,
+                                      &ulResultLen);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -464,40 +495,69 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
+        //
+        // Update the data version
+        //
+
+        Fcb->DirEntry->DirectoryEntry.DataVersion = pUpdateResultCB->DirEnum.DataVersion;
+
 try_exit:
 
-        NOTHING;
+        if( pUpdateResultCB != NULL)
+        {
+
+            ExFreePool( pUpdateResultCB);
+        }
     }
 
     return ntStatus;
 }
 
 NTSTATUS
-AFSNotifyDelete( IN PDEVICE_OBJECT DeviceObject,
-                 IN AFSDirEntryCB *DirEntry)
+AFSNotifyDelete( IN AFSFcb *Fcb)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     ULONG ulResultLen = 0;
+    AFSFileDeleteCB stDelete;
+    AFSFileDeleteResultCB stDeleteResult;
 
     __Enter
     {
 
+        if( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            stDelete.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            stDelete.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
+
+        ulResultLen = sizeof( AFSFileDeleteResultCB);
+
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DELETE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
                                       0,
-                                      NULL,
-                                      &DirEntry->DirectoryEntry.FileId,
-                                      NULL,
-                                      0,
-                                      NULL,
-                                      0);
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                                      &Fcb->DirEntry->DirectoryEntry.FileId,
+                                      &stDelete,
+                                      sizeof( AFSFileDeleteCB),
+                                      &stDeleteResult,
+                                      &ulResultLen);
 
         if( !NT_SUCCESS( ntStatus))
         {
 
             try_return( ntStatus);
         }
+
+        //
+        // Update the parent data version
+        //
+
+        Fcb->ParentFcb->DirEntry->DirectoryEntry.DataVersion = stDeleteResult.ParentDataVersion;
 
 try_exit:
 
@@ -508,30 +568,27 @@ try_exit:
 }
 
 NTSTATUS
-AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
-                 IN AFSFcb *Fcb,
+AFSNotifyRename( IN AFSFcb *Fcb,
                  IN AFSFcb *ParentDcb,
                  IN AFSFcb *TargetDcb,
                  IN UNICODE_STRING *TargetName)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     AFSFileRenameCB *pRenameCB = NULL;
-    AFSFileRenameResultCB stResultCB;
+    AFSFileRenameResultCB *pRenameResultCB = NULL;
     ULONG ulResultLen = 0;
 
     __Enter
     {
 
-        /*
         //
         // Init the control block for the request
         //
 
         pRenameCB = (AFSFileRenameCB *)ExAllocatePoolWithTag( PagedPool,
-                                                                sizeof( AFSFileRenameCB) + TargetName->Length,
-                                                                AFS_RENAME_REQUEST_TAG);
+                                                              PAGE_SIZE,
+                                                              AFS_RENAME_REQUEST_TAG);
 
         if( pRenameCB == NULL)
         {
@@ -540,11 +597,29 @@ AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
         }
 
         RtlZeroMemory( pRenameCB,
-                       sizeof( AFSFileRenameCB) + TargetName->Length);
+                       PAGE_SIZE);
 
-        pRenameCB->ParentId = ParentDcb->DirEntry->FileId;
+        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
 
-        pRenameCB->TargetId = TargetDcb->DirEntry->FileId;
+            pRenameCB->SourceParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            pRenameCB->SourceParentId = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
+
+        if( TargetDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            pRenameCB->TargetParentId = TargetDcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            pRenameCB->TargetParentId = TargetDcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
 
         pRenameCB->TargetNameLength = TargetName->Length;
 
@@ -552,20 +627,23 @@ AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
                        TargetName->Buffer,
                        TargetName->Length);
 
-        RtlZeroMemory( &stResultCB,
-                       sizeof( AFSFileRenameResultCB));
+        //
+        // Use the same buffer for the result control block
+        //
 
-        ulResultLen = sizeof( AFSFileRenameResultCB);
+        pRenameResultCB = (AFSFileRenameResultCB *)pRenameCB;
+
+        ulResultLen = PAGE_SIZE;
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RENAME_FILE,
-                                        AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                        0,
-                                        NULL,
-                                        &Fcb->DirEntry->FileId,
-                                        pRenameCB,
-                                        sizeof( AFSFileRenameCB) + TargetName->Length,
-                                        &stResultCB,
-                                        &ulResultLen);
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                                      &Fcb->DirEntry->DirectoryEntry.FileId,
+                                      pRenameCB,
+                                      sizeof( AFSFileRenameCB) + TargetName->Length,
+                                      pRenameResultCB,
+                                      &ulResultLen);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -574,11 +652,18 @@ AFSNotifyRename( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Update the passed back FileIndex for the entry
+        // Update the information from the returned data
         //
 
-        Fcb->DirEntry->FileIndex = stResultCB.FileIndex;
-        */
+        ParentDcb->DirEntry->DirectoryEntry.DataVersion = pRenameResultCB->SourceParentDataVersion;
+
+        TargetDcb->DirEntry->DirectoryEntry.DataVersion = pRenameResultCB->TargetParentDataVersion;
+
+        //
+        // Move over the FID information and the short name
+        //
+
+        Fcb->DirEntry->DirectoryEntry.FileId = pRenameResultCB->DirEnum.FileId;
 
 try_exit:
 
@@ -1183,9 +1268,11 @@ AFSProcessControlRequest( IN PIRP Irp)
                 // count invalid we will not Accvio
                 //
 
-                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( RedirConnectionCB) ||
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
+                    ( FIELD_OFFSET( AFSSetFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
                     pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-                    (sizeof( RedirConnectionCB) + (sizeof (AFSFileExtentCB) * (pExtents->ExtentCount - 1 ))))
+                    ( FIELD_OFFSET( AFSSetFileExtentsCB, ExtentCount) + sizeof(ULONG) +
+                      sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
                 {
 
                     ntStatus = STATUS_INVALID_PARAMETER;
@@ -1200,6 +1287,52 @@ AFSProcessControlRequest( IN PIRP Irp)
                       
                 break;
             }
+
+            case IOCTL_AFS_RELEASE_FILE_EXTENTS:
+            {
+                AFSReleaseFileExtentsCB *pExtents = (AFSReleaseFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
+
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
+                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
+                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
+                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
+                      sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSProcessReleaseFileExtents( pExtents );
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = ntStatus;
+                      
+                break;
+            }
+
+            case IOCTL_AFS_INVALIDATE_CACHE:
+            {
+
+                AFSInvalidateCacheCB *pInvalidate = (AFSInvalidateCacheCB*)Irp->AssociatedIrp.SystemBuffer;
+
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSInvalidateCacheCB))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSInvalidateCache( pInvalidate);
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = ntStatus;
+
+                break;
+            }
+
             default:
             {
 

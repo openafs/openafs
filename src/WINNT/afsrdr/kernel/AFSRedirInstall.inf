@@ -60,7 +60,7 @@ HKLM,%AFSRegistry%,%AFSDebugLevel%,0x00010001 ,0x0001
 HKLM,%AFSRegistry%,%AFSDebugFlags%,0x00010001 ,0x0000
 HKLM,%AFSRegistry%,%AFSSystemFlags%,0x00010001 ,0x0000
 HKR,%AFSProvider%,%AFSRDRDeviceName%,0x00000000 ,"\Device\AFSRedirector"
-HKR,%AFSProvider%,%AFSDRDRName%,0x00000000 ,"OpenAFS Network"
+HKR,%AFSProvider%,%AFSRDRName%,0x00000000 ,"OpenAFS Network"
 HKR,%AFSProvider%,%AFSRDRPath%,0x00020000 ,"%SystemRoot%\System32\AFSRDFSProvider.dll"
 
 [AFS.DelRegistry]
@@ -80,16 +80,16 @@ AFSRedir.sys
 ;;
 
 [Strings]
-AFS					= "OpenAFS"
+AFS		    = "OpenAFS"
 AFSServiceDesc	    = "OpenAFS Reddirector"
 AFSServiceName	    = "AFSRedirector"
-AFSRegistry		    = "system\currentcontrolset\services\AFSRedirector\Parameters"
-AFSDebugLevel		= "DebugLevel"
-AFSDebugFlags		= "DebugFlags"
+AFSRegistry	    = "system\currentcontrolset\services\AFSRedirector\Parameters"
+AFSDebugLevel	    = "DebugLevel"
+AFSDebugFlags	    = "DebugFlags"
 AFSSystemFlags	    = "Flags"
-Disk1				= "OpenAFS Media"
+Disk1		    = "OpenAFS Media"
 AFSProvider         = "NetworkProvider"
-AFSRDRDeviceName	= "DeviceName"
-AFSRDRName		    = "Name"
-AFSRDRPath		    = "ProviderPath"
+AFSRDRDeviceName    = "DeviceName"
+AFSRDRName	    = "Name"
+AFSRDRPath	    = "ProviderPath"
 

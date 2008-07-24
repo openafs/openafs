@@ -117,6 +117,72 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         uniFileName.Buffer = NULL;
 
         //
+        // Validate that the AFS Root has been initialized
+        //
+
+        if( AFSAllRoot == NULL ||
+            !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED))
+        {
+
+            //
+            // If we have a root node then try to enumerate it
+            //
+
+            if( AFSAllRoot != NULL)
+            {
+
+                AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                TRUE);
+
+                //
+                // Check again in case we raced with another request
+                //
+
+                if( !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED))
+                {
+
+                    //
+                    // Initialize the root information
+                    //
+
+                    AFSAllRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
+
+                    //
+                    // Enumerate the shares in the volume
+                    //
+
+                    ntStatus = AFSEnumerateDirectory( &AFSAllRoot->DirEntry->DirectoryEntry.FileId,
+                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeHdr,
+                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeListHead,
+                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeListTail,
+                                                      NULL,
+                                                      NULL);
+
+                    if( NT_SUCCESS( ntStatus))
+                    {
+
+                        //
+                        // Indicate the node is initialized
+                        //
+
+                        SetFlag( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+                    }
+                }
+
+                AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+            }
+
+            if( AFSAllRoot == NULL ||
+                !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_INITIALIZED))
+            {
+
+                DbgPrint("AFSCommonCreate Failed to init root\n");
+
+                try_return( ntStatus = STATUS_DEVICE_NOT_READY);
+            }
+        }
+
+        //
         // Go and parse the name for processing
         //
 
@@ -280,9 +346,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( bOpenTargetDirectory)
         {
 
-            /*
             AFSFixupTargetName( &uniFileName,
-                                  &uniTargetName);
+                                &uniTargetName);
 
             //
             // Adjust the length in the fileobject so we process it
@@ -291,128 +356,60 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             pFileObject->FileName.Length -= uniTargetName.Length;
 
-            if( uniFileName.Length > sizeof( WCHAR))
+            //
+            // If only the root remains then update the parent
+            //
+
+            if( uniFileName.Length == sizeof( WCHAR))
+            {
+
+                pFcb = pRootFcb;
+
+                bReleaseFcb = TRUE;
+            }
+        }
+
+        //
+        // Attempt to locate the node in the name tree if this is not a target
+        // open and the target is not the root
+        //
+
+        if( uniFileName.Length > sizeof( WCHAR))
+        {
+
+            ntStatus = AFSLocateNameEntry( pRootFcb,
+                                           pFileObject,
+                                           &uniFileName,
+                                           &pParentDcb,
+                                           &pFcb,
+                                           &uniComponentName);
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
             {
 
                 //
-                // Attempt to locate the node in the name tree
+                // The routine above released the root while walking the
+                // branch
                 //
 
-                ntStatus = AFSLocateNameEntry( DeviceObject,
-                                                 pFileObject,
-                                                 &pParentDcb,
-                                                 &pFcb,
-                                                 &uniFileName,
-                                                 &uniComponentName);
+                bReleaseRootFcb = FALSE;
 
-                if( !NT_SUCCESS( ntStatus) &&
-                    ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
-                {
+                try_return( ntStatus);
+            }
 
-                    try_return( ntStatus);
-                }
+            //
+            // If the parent is not the root then we'll release the parent
+            // not the root since it was already released
+            //
+
+            if( pParentDcb != pRootFcb)
+            {
 
                 bReleaseParent = TRUE;
 
-                if( pFcb != NULL)
-                {
-
-                    bReleaseFcb = TRUE;
-
-                    //
-                    // Is the node pending delete?
-                    //
-
-                    if( BooleanFlagOn( pFcb->Flags, AFS_FSD_FCB_PENDING_DELETE))
-                    {
-
-                        try_return( ntStatus = STATUS_FILE_DELETED);
-                    }
-
-                    ASSERT( !BooleanFlagOn( pFcb->Flags, AFS_FSD_FCB_DELETED));
-                }
+                bReleaseRootFcb = FALSE;
             }
-            else
-            {
-
-                //
-                // Open on the root node
-                //
-
-                ntStatus = AFSOpenRoot( Irp,
-                                          pRootFcb,
-                                          &pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    try_return( ntStatus);
-                }
-
-                pFcb = pRootFcb;
-            }
-
-            //
-            // If the target directory is not found then get out
-            //
-
-            if( pFcb == NULL)
-            {
-
-                try_return( ntStatus = STATUS_OBJECT_PATH_NOT_FOUND);
-            }
-
-            //
-            // OK, open the target directory
-            //
-
-            ntStatus = AFSOpenTargetDirectory( DeviceObject,
-                                                 Irp,
-                                                 pFcb,
-                                                 &uniTargetName,
-                                                 &pCcb);
-
-                                                 */
-
-            try_return( ntStatus = STATUS_UNSUCCESSFUL);
-        }
-
-        //
-        // Attempt to locate the node in the name tree
-        //
-
-        ntStatus = AFSLocateNameEntry( pRootFcb,
-                                       pFileObject,
-                                       &uniFileName,
-                                       &pParentDcb,
-                                       &pFcb,
-                                       &uniComponentName);
-
-        if( !NT_SUCCESS( ntStatus) &&
-            ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
-        {
-
-            //
-            // The routine above released the root while walking the
-            // branch
-            //
-
-            bReleaseRootFcb = FALSE;
-
-            try_return( ntStatus);
-        }
-
-        //
-        // If the parent is not the root then we'll release the parent
-        // not the root sicne it was already released
-        //
-
-        if( pParentDcb != pRootFcb)
-        {
-
-            bReleaseParent = TRUE;
-
-            bReleaseRootFcb = FALSE;
         }
 
         if( pFcb != NULL)
@@ -429,9 +426,22 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 try_return( ntStatus = STATUS_FILE_DELETED);
             }
+        }
 
-            ASSERT( !BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED));
+        if( bOpenTargetDirectory)
+        {
 
+            //
+            // OK, open the target directory
+            //
+
+            ntStatus = AFSOpenTargetDirectory( DeviceObject,
+                                               Irp,
+                                               pFcb,
+                                               &uniTargetName,
+                                               &pCcb);
+
+            try_return( ntStatus);
         }
 
         //
@@ -474,33 +484,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
             
-        if( ulCreateDisposition == FILE_OVERWRITE ||
-            ulCreateDisposition == FILE_SUPERSEDE ||
-            ulCreateDisposition == FILE_OVERWRITE_IF)
-        {
-
-            if( pFcb == NULL)
-            {
-
-                //
-                // Not found
-                //
-
-                try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
-            }
-
-            //
-            // Go process a file for overwrite or supersede.
-            //
-
-            ntStatus = AFSProcessOverwriteSupersede( Irp,
-                                                     pParentDcb,
-                                                     pFcb,
-                                                     &pCcb);
-
-            try_return( ntStatus);
-        }
-
         if( pFcb == NULL)
         {
 
@@ -526,6 +509,33 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             //
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
+        }
+
+        //
+        // If we have a component name then fail the request
+        //
+
+        if( uniComponentName.Length > 0)
+        {
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
+        }
+
+        if( ulCreateDisposition == FILE_OVERWRITE ||
+            ulCreateDisposition == FILE_SUPERSEDE ||
+            ulCreateDisposition == FILE_OVERWRITE_IF)
+        {
+
+            //
+            // Go process a file for overwrite or supersede.
+            //
+
+            ntStatus = AFSProcessOverwriteSupersede( Irp,
+                                                     pParentDcb,
+                                                     pFcb,
+                                                     &pCcb);
+
+            try_return( ntStatus);
         }
 
         //
@@ -705,7 +715,7 @@ AFSOpenRoot( IN PIRP Irp,
         if( RootFcb->DirEntry->DirectoryEntry.FileId.Hash == 0)
         {
 
-            AFSDirEnumEntry *pDirEnumCB = NULL;
+            AFSDirEnumEntry *pDirEnumCB = NULL;            
 
             ntStatus = AFSEvaluateTargetByID( &RootFcb->VolumeNode->DirectoryEntry.ParentId,
                                               &RootFcb->VolumeNode->DirectoryEntry.FileId,
@@ -736,6 +746,8 @@ AFSOpenRoot( IN PIRP Irp,
             RootFcb->VolumeNode->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
                 
             RootFcb->DirEntry->DirectoryEntry.FileId = pDirEnumCB->TargetFileId;
+
+            RootFcb->DirEntry->DirectoryEntry.DataVersion = pDirEnumCB->DataVersion;
 
             ExFreePool( pDirEnumCB);
         }
@@ -1206,14 +1218,13 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        /*
         pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
         usShareAccess = pIrpSp->Parameters.Create.ShareAccess;
 
         pFileObject = pIrpSp->FileObject;
 
-        if( Fcb->Header.NodeTypeCode != AFS_FSD_DIRECTORY_FCB &&
-            Fcb->Header.NodeTypeCode != AFS_FSD_ROOT_FCB)
+        if( Fcb->Header.NodeTypeCode != AFS_DIRECTORY_FCB &&
+            Fcb->Header.NodeTypeCode != AFS_ROOT_FCB)
         {
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
@@ -1246,7 +1257,7 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
         //
 
         ntStatus = AFSInitCcb( Fcb,
-                                 Ccb);
+                               Ccb);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1264,9 +1275,9 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
 
         ulFileIndex = AFSGenerateCRC( TargetName);
 
-        AFSLocateDirEntry( Fcb->Specific.Directory.DirectoryNodeTree,
-                             ulFileIndex,
-                             &pDirEntry);
+        AFSLocateDirEntry( Fcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
+                           ulFileIndex,
+                           &pDirEntry);
 
         if( pDirEntry != NULL)       
         {
@@ -1324,7 +1335,6 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
 
         InterlockedIncrement( &Fcb->OpenHandleCount);
 
-        */
 try_exit:
 
         if( !NT_SUCCESS( ntStatus))
@@ -1395,7 +1405,7 @@ AFSProcessOpen( IN PIRP Irp,
             if( ulOptions & FILE_DIRECTORY_FILE)
             {
 
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+                try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
             }
         }
         else
@@ -1448,7 +1458,18 @@ AFSProcessOpen( IN PIRP Irp,
 
                         AFSDirEnumEntry *pDirEntry = NULL;
 
-                        ntStatus = AFSEvaluateTargetByID( &ParentDcb->DirEntry->DirectoryEntry.FileId,
+                        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                        {
+
+                            stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
+                        }
+                        else
+                        {
+
+                            stFileID = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+                        }
+
+                        ntStatus = AFSEvaluateTargetByID( &stFileID,
                                                           &Fcb->DirEntry->DirectoryEntry.FileId,
                                                           &pDirEntry);
 

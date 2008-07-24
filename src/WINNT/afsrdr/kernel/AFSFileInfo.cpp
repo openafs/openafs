@@ -1168,14 +1168,13 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
     __Enter
     {
 
-        /*
         bReplaceIfExists = pIrpSp->Parameters.SetFile.ReplaceIfExists;
 
         pSrcFcb = (AFSFcb *)pSrcFileObj->FsContext;
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
         //
-        // Perform some basic checks to insure FS integrity
+        // Perform some basic checks to ensure FS integrity
         //
 
         if( pSrcFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
@@ -1263,281 +1262,128 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         // Extract off the final component name from the Fcb
         //
 
-        uniSourceName.Length = (USHORT)pSrcFcb->DirEntry->FileNameLength;
+        uniSourceName.Length = (USHORT)pSrcFcb->DirEntry->DirectoryEntry.FileName.Length;
         uniSourceName.MaximumLength = uniSourceName.Length;
 
-        uniSourceName.Buffer = pSrcFcb->DirEntry->FileName;
+        uniSourceName.Buffer = pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer;
 
         //
         // The quick check to see if they are not really performing a rename
+        // Do the names match?
         //
 
-        if( pTargetDcb == pSrcFcb->ParentFcb) 
+        if( FsRtlAreNamesEqual( &uniTargetName,
+                                &uniSourceName,
+                                TRUE,
+                                NULL)) 
         {
 
             //
-            // Do the names match?
+            // Check for case only rename
             //
 
-            if( FsRtlAreNamesEqual( &uniTargetName,
-                                    &uniSourceName,
-                                    TRUE,
-                                    NULL)) 
+            if( !FsRtlAreNamesEqual( &uniTargetName,
+                                     &uniSourceName,
+                                     FALSE,
+                                     NULL)) 
             {
 
                 //
-                // Check for case only rename
+                // Just move in the new case form of the name
                 //
 
-                if( !FsRtlAreNamesEqual( &uniTargetName,
-                                         &uniSourceName,
-                                         FALSE,
-                                         NULL)) 
-                {
-
-                    //
-                    // Just move in the new case form of the name
-                    //
-
-                    RtlCopyMemory( pSrcFcb->DirEntry->FileName,
-                                   uniTargetName.Buffer,
-                                   uniTargetName.Length);
-                }
-
-                try_return( ntStatus = STATUS_SUCCESS);
+                RtlCopyMemory( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer,
+                               uniTargetName.Buffer,
+                               uniTargetName.Length);
             }
-
-            //
-            // OK, this is a simple rename. Issue the rename
-            // request to the service.
-            //
-
-            ntStatus = AFSNotifyRename( DeviceObject,
-                                          pSrcFcb,
-                                          pSrcFcb->ParentFcb,
-                                          pTargetDcb,
-                                          &uniTargetName);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-
-            //
-            // If the name can fit into the current space in the
-            // dir entry then just push it in, otherwise we need
-            // to re-allocate the name buffer for the dir entry
-            //
-
-            if( uniTargetName.Length > pSrcFcb->DirEntry->FileNameLength)
-            {
-
-                WCHAR *pTmpBuffer = NULL;
-
-                if( BooleanFlagOn( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
-                {
-
-                    ExFreePool( pSrcFcb->DirEntry->FileName);
-
-                    ClearFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
-                }
-
-                //
-                // OK, we need to allocate a new name buffer
-                //
-
-                pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                             uniTargetName.Length,
-                                                             AFS_NAME_BUFFER_TAG);
-
-                if( pTmpBuffer == NULL)
-                {
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                pSrcFcb->DirEntry->FileName = pTmpBuffer;
-
-                SetFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
-            }
-
-            pSrcFcb->DirEntry->FileNameLength = uniTargetName.Length;
-
-            RtlCopyMemory( pSrcFcb->DirEntry->FileName,
-                           uniTargetName.Buffer,
-                           uniTargetName.Length);
-
-            //
-            // We need to remove the DirEntry from the parent node, update the index
-            // and reinsert it into the parent tree
-            //
-
-            AFSRemoveDirEntry( &pSrcFcb->ParentFcb->Specific.Directory.DirectoryNodeTree,
-                                 pSrcFcb->DirEntry);
-
-            pSrcFcb->DirEntry->TreeEntry.Index = AFSGenerateCRC( &uniTargetName);
-
-            if( pSrcFcb->ParentFcb->Specific.Directory.DirectoryNodeTree == NULL)
-            {
-
-                pSrcFcb->ParentFcb->Specific.Directory.DirectoryNodeTree = pSrcFcb->DirEntry;
-            }
-            else
-            {
-
-                AFSInsertDirEntry( pSrcFcb->ParentFcb->Specific.Directory.DirectoryNodeTree,
-                                     pSrcFcb->DirEntry);
-            }                      
-
-            //
-            // Do teh same for the short name
-            //
-
-            AFSRemoveShortNameDirEntry( &pSrcFcb->ParentFcb->Specific.Directory.ShortNameTree,
-                                          pSrcFcb->DirEntry);
-
-            if( !RtlIsNameLegalDOS8Dot3( &uniTargetName,
-                                         NULL,
-                                         NULL))
-            {
-
-                //
-                // Generate a new short name
-                //
-
-                AFSGenerateShortName( pSrcFcb->ParentFcb,
-                                        pSrcFcb->DirEntry);
-
-                uniShortName.Length = pSrcFcb->DirEntry->ShortNameLength;
-                uniShortName.Buffer = pSrcFcb->DirEntry->ShortName;
-            
-                pSrcFcb->DirEntry->ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
-            }
-            else
-            {
-
-                pSrcFcb->DirEntry->ShortNameLength = 0;
-
-                pSrcFcb->DirEntry->ShortNameTreeEntry.Index = AFSGenerateCRC( &uniTargetName);
-            }
-
-            if( pSrcFcb->ParentFcb->Specific.Directory.ShortNameTree == NULL)
-            {
-
-                pSrcFcb->ParentFcb->Specific.Directory.ShortNameTree = pSrcFcb->DirEntry;
-            }
-            else
-            {
-
-                AFSInsertShortNameDirEntry( pSrcFcb->ParentFcb->Specific.Directory.ShortNameTree,
-                                              pSrcFcb->DirEntry);
-            }                      
 
             try_return( ntStatus = STATUS_SUCCESS);
-        } 
-        else 
+        }
+
+        //
+        // We need to remove the DirEntry from the parent node, update the index
+        // and reinsert it into the parent tree
+        //
+
+        AFSRemoveDirNodeFromParent( pSrcFcb->ParentFcb,
+                                    pSrcFcb->DirEntry);
+
+        //
+        // OK, this is a simple rename. Issue the rename
+        // request to the service.
+        //
+
+        ntStatus = AFSNotifyRename( pSrcFcb,
+                                    pSrcFcb->ParentFcb,
+                                    pTargetDcb,
+                                    &uniTargetName);
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
             //
-            // Issue the rename request to the service.
+            // Attempt to re-insert the directory entry
             //
 
-            ntStatus = AFSNotifyRename( DeviceObject,
-                                          pSrcFcb,
-                                          pSrcFcb->ParentFcb,
-                                          pTargetDcb,
-                                          &uniTargetName);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-
-            //
-            // OK, performing a cross directory rename
-            // We'll remove it from the current parent first
-            //
-
-            AFSRemoveDirNodeFromParent( pSrcFcb->ParentFcb,
-                                          pSrcFcb->DirEntry);
-
-            //
-            // Add in the new name
-            //
-
-            if( uniTargetName.Length > pSrcFcb->DirEntry->FileNameLength)
-            {
-
-                WCHAR *pTmpBuffer = NULL;
-
-                if( BooleanFlagOn( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
-                {
-
-                    ExFreePool( pSrcFcb->DirEntry->FileName);
-
-                    ClearFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
-                }
-
-                //
-                // OK, we need to allocate a new name buffer
-                //
-
-                pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                             uniTargetName.Length,
-                                                             AFS_NAME_BUFFER_TAG);
-
-                if( pTmpBuffer == NULL)
-                {
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                pSrcFcb->DirEntry->FileName = pTmpBuffer;
-
-                SetFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
-            }
-
-            pSrcFcb->DirEntry->FileNameLength = uniTargetName.Length;
-
-            RtlCopyMemory( pSrcFcb->DirEntry->FileName,
-                           uniTargetName.Buffer,
-                           uniTargetName.Length);
-
-            pSrcFcb->DirEntry->TreeEntry.Index = AFSGenerateCRC( &uniTargetName);
-
-            if( !RtlIsNameLegalDOS8Dot3( &uniTargetName,
-                                         NULL,
-                                         NULL))
-            {
-
-                AFSGenerateShortName( pSrcFcb->ParentFcb,
-                                        pSrcFcb->DirEntry);
-
-                uniShortName.Length = pSrcFcb->DirEntry->ShortNameLength;
-                uniShortName.Buffer = pSrcFcb->DirEntry->ShortName;
-
-                pSrcFcb->DirEntry->ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName);
-            }
-            else
-            {
-
-                pSrcFcb->DirEntry->ShortNameLength = 0;
-
-                pSrcFcb->DirEntry->ShortNameTreeEntry.Index = AFSGenerateCRC( &uniTargetName);
-            }
-
-            //
-            // Now add it back to teh new parent
-            //
-
-            AFSInsertDirectoryNode( pTargetDcb,
-                                      pSrcFcb->DirEntry);
+            AFSInsertDirectoryNode( pSrcFcb->ParentFcb,
+                                    pSrcFcb->DirEntry);
 
             try_return( ntStatus);
         }
-        */
+
+        //
+        // If the name can fit into the current space in the
+        // dir entry then just push it in, otherwise we need
+        // to re-allocate the name buffer for the dir entry
+        //
+
+        if( uniTargetName.Length > pSrcFcb->DirEntry->DirectoryEntry.FileName.Length)
+        {
+
+            WCHAR *pTmpBuffer = NULL;
+
+            if( BooleanFlagOn( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
+            {
+
+                ExFreePool( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer);
+
+                ClearFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
+            }
+
+            //
+            // OK, we need to allocate a new name buffer
+            //
+
+            pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                         uniTargetName.Length,
+                                                         AFS_NAME_BUFFER_TAG);
+
+            if( pTmpBuffer == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer = pTmpBuffer;
+
+            pSrcFcb->DirEntry->DirectoryEntry.FileName.MaximumLength = uniTargetName.Length;
+
+            SetFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
+        }
+
+        pSrcFcb->DirEntry->DirectoryEntry.FileName.Length = uniTargetName.Length;
+
+        RtlCopyMemory( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer,
+                       uniTargetName.Buffer,
+                       uniTargetName.Length);
+
+        //
+        // Re-insert the directory entry
+        // It has been updated in the above routine
+        //
+
+        AFSInsertDirectoryNode( pSrcFcb->ParentFcb,
+                                pSrcFcb->DirEntry);
 
 try_exit:
 

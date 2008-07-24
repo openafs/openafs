@@ -136,13 +136,45 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
+    AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
 
     __Enter
     {
 
         switch( pIrpSp->Parameters.DeviceIoControl.IoControlCode)
         {
+#if DBG
+            //
+            // DEBUG only support to sent a release_file_extents to
+            // a file
+            //
+            case IOCTL_AFS_RELEASE_FILE_EXTENTS:
+            {
+                AFSReleaseFileExtentsCB *pExtents;
+                pExtents = (AFSReleaseFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
 
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
+                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
+                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
+                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
+                      sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSProcessReleaseFileExtentsByFcb( pExtents, pFcb );
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = ntStatus;
+                      
+                break;
+            }
+#endif
+                
             case IOCTL_REDIR_QUERY_PATH:
             {
 

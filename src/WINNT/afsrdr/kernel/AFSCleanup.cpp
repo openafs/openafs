@@ -54,6 +54,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
             if( FlagOn( (ULONG_PTR)pFileObject->FsContext, AFS_REDIRECTOR_INSTANCE))
             {
 
+                DbgPrint("AFSCleanup Closing redirector\n");
+
                 //
                 // Close the redirector
                 //

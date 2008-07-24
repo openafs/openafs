@@ -60,7 +60,10 @@ typedef struct _AFS_NONPAGED_FCB
 
     USHORT          Size;
     USHORT          Type;
-
+    
+    //
+    // Ranking - File Resource first, then Paging Resource
+    //
 
     ERESOURCE       Resource;
 
@@ -75,8 +78,7 @@ typedef struct _AFS_NONPAGED_FCB
     FAST_MUTEX      AdvancedHdrMutex;
 
     //
-    // Notificaiton informaiton. This is used for change notification
-    // Notificaiton informaiton. This is used for change notification
+    // Notificaiton information. This is used for change notification
     //
 
     LIST_ENTRY          DirNotifyList;
@@ -128,15 +130,9 @@ typedef struct _AFS_NONPAGED_FCB
 typedef struct _AFS_FSD_EXTENT
 {
     //
-    // Linked list first
+    // Linked list first - the extents and then the skip list
     //
-    AFSListEntry    List;
-
-    //
-    // Skip forward lists
-    //
-    AFSListEntry         Skip1;
-    AFSListEntry         Skip2;
+    LIST_ENTRY          Lists[AFS_NUM_EXTENT_LISTS];
 
     //
     // And the extent itself
@@ -178,7 +174,7 @@ typedef struct AFS_FCB
     // The NP portion of the Fcb
     //
 
-    AFSNonPagedFcb    *NPFcb;
+ AFSNonPagedFcb    *NPFcb;
 
     //
     // Fcb flags
@@ -235,13 +231,19 @@ typedef struct AFS_FCB
 
         struct
         {
+            //
+            // We set this when a flush has been sent to the 
+            // server sucessfully.  We use this to influence when we 
+            // write the flush.
+            //
+            LARGE_INTEGER       LastServerFlush;
 
             FILE_LOCK           FileLock;
 
             //
             // The extents
             //
-            AFSListEntry        ExtentsList;
+            LIST_ENTRY          ExtentsLists[AFS_NUM_EXTENT_LISTS];
 
             //
             // There is only ever one request active, so we embed it
@@ -254,6 +256,11 @@ typedef struct AFS_FCB
             //
 
             HANDLE              ModifyProcessId;
+
+            //
+            // Set if there is any dirty data. Set pessimistically
+            //
+            BOOLEAN             ExtentsDirty;
 
         } File;
 
@@ -521,7 +528,7 @@ typedef struct _AFS_DIR_NODE_CB
                                     // MP and SL nodes, the Index is the Cell, Volume
                                     // For all others it is the vnode, uniqueid
 
-    ULONG           Flags;
+    ULONG            Flags;
 
     //
     // Directory entry information
@@ -542,6 +549,12 @@ typedef struct _AFS_DIR_NODE_CB
     AFSListEntry     ListEntry;
 
     //
+    // The Fcb for this entry if it has one
+    //
+    
+    AFSFcb          *Fcb;
+
+    //
     // Type specific information
     //
 
@@ -552,8 +565,6 @@ typedef struct _AFS_DIR_NODE_CB
         {
 
             AFSBTreeEntry    ShortNameTreeEntry;
-
-            AFSFcb          *Fcb;
 
         } Data;
 
@@ -573,8 +584,6 @@ typedef struct _AFS_DIR_NODE_CB
 
         struct
         {
-
-            AFSFcb                *RootFcb;
 
             AFSVolumeInfoCB        VolumeInformation;
 
@@ -606,10 +615,11 @@ typedef struct _AFS_DEVICE_EXTENSION
     ULONG            Flags;
 
     //
-    // Fcb lifetime tickcount. This is calculated in DriverEntry() for the control device.
+    // Fcb lifetime & flush time tickcount. This is calculated in DriverEntry() for the control device.
     //
 
     LARGE_INTEGER           FcbLifeTimeCount;
+    LARGE_INTEGER           FcbFlushTimeCount;
 
     union
     {

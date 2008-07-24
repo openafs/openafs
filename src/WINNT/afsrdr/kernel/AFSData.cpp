@@ -40,4 +40,6 @@ AFSFcb             *AFSAllRoot = NULL;
 
 UNICODE_STRING      AFSPIOCtlName;
 
+ULONG               AFSAllocationMemoryLevel = 0;
+
 }

@@ -9,7 +9,8 @@ NTSTATUS
 CachedWrite( IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp,
              IN LARGE_INTEGER StartingByte,
-             IN ULONG ByteCount);
+             IN ULONG ByteCount,
+             IN BOOLEAN ForceFlush);
 static
 NTSTATUS
 NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
@@ -45,15 +46,18 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp;
     AFSFcb            *pFcb = NULL;
     AFSNonPagedFcb    *pNPFcb = NULL;
-    BOOLEAN            bPagingIo = FALSE;
-    BOOLEAN            bNonCachedIo = FALSE;
     ULONG              ulByteCount = 0;
     LARGE_INTEGER      liStartingByte;
     PFILE_OBJECT       pFileObject;
+    BOOLEAN            bPagingIo = FALSE;
+    BOOLEAN            bNonCachedIo = FALSE;
     BOOLEAN            bReleaseMain = FALSE;    
     BOOLEAN            bReleasePaging = FALSE;    
     BOOLEAN            bExtendingWrite = FALSE;
-    BOOLEAN            bSynchronousIo = FALSE, bCanQueueRequest = FALSE;
+    BOOLEAN            bSynchronousIo = FALSE;
+    BOOLEAN            bCanQueueRequest = FALSE;
+    BOOLEAN            bCompleteIrp = TRUE;
+    BOOLEAN            bForceFlush = FALSE;
     ULONG              ulExtensionLength = 0;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -142,7 +146,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
 
             //
             // OK, this Fcb was probably deleted then renamed into but we re-used the source fcb
-            // hence this flush is bogus. Drop it
+            // hence this is bogus. Drop it?
             //
 
             Irp->IoStatus.Information = ulByteCount;
@@ -173,12 +177,12 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
 
 
         //
-        // TODO
         // If we get a non cached IO for a cached file we should do a purge.  
         // For now we will just promote to cached
         //
-        if( CcIsFileCached(pFileObject) && !bPagingIo) {
-            bNonCachedIo = TRUE;
+        if( NULL != pFileObject->SectionObjectPointer->DataSectionObject && !bPagingIo && bNonCachedIo) {
+            bNonCachedIo = FALSE;
+            bForceFlush = TRUE;
         }
 
         //
@@ -282,22 +286,24 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             }
         }
 
+        //
+        // Fire off the request as appropriate
+        //
+        bCompleteIrp = FALSE;
+
         if( !bPagingIo &&
             !bNonCachedIo)
         {
-            ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount);
+            ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
 
             if( NT_SUCCESS( ntStatus))
             {
-
                 //
                 // Save off the last writer
                 //
 
                 pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
             }
-
-            try_return( ntStatus );
         }
         else
         {
@@ -323,6 +329,12 @@ try_exit:
         {
 
             AFSReleaseResource( &pNPFcb->PagingResource);
+        }
+
+        if (bCompleteIrp) {
+            Irp->IoStatus.Information = 0;
+
+            AFSCompleteRequest( Irp, ntStatus );
         }
     }
 
@@ -451,13 +463,6 @@ try_exit:
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
         }
-
-        //
-        // Complete the request
-        //
-
-        AFSCompleteRequest( Irp,
-                            ntStatus);
     }
 
     return ntStatus;
@@ -481,8 +486,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     AFSIoRun          *pIoRuns = NULL;
     AFSIoRun           stIoRuns[AFS_MAX_STACK_IO_RUNS];
     ULONG              extentsCount = 0;
-    AFSExtent         *pStartExtent;
-    AFSExtent         *pEndExtent;
+    AFSExtent         *pStartExtent = NULL;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
@@ -513,9 +517,12 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         // TODO - right now we wait for the extents to be there.  We should 
         // Post if we can or return STATUS_FILE_LOCKED otherwise
         //
+        // Just as in the read case we could avoid a traverse by getting the first extent from
+        // AFSRequestExtents
+        //
         while (TRUE) 
         {
-            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bExtentsMapped );
+            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bExtentsMapped, &pStartExtent );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
@@ -545,8 +552,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         ntStatus = AFSGetExtents( pFcb, 
                                   &StartingByte, 
                                   ByteCount, 
-                                  &pStartExtent, 
-                                  &pEndExtent, 
+                                  pStartExtent, 
                                   &extentsCount);
         
         if (!NT_SUCCESS(ntStatus)) 
@@ -578,7 +584,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                                   &StartingByte, 
                                   ByteCount, 
                                   pStartExtent, 
-                                  extentsCount );
+                                  &extentsCount );
 
         if (!NT_SUCCESS(ntStatus)) 
         {
@@ -664,15 +670,19 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // Since this is dirty we can mark the extents dirty now
-        // (asynch we would fire off a thread to wait for the event)
+        // (asynch we would fire off a thread to wait for the event and the mark it dirty)
         //
 
         AFSMarkDirty( pFcb, &StartingByte, ByteCount);
 
-        //
-        // Equally we can flush them
-        //
-        ntStatus = AFSFlushExtents( pFcb);
+        if (!bPagingIo) 
+        {
+            //
+            // This was an uncached user write - tell the server to do
+            // the flush when the worker thread next wakes up
+            //
+            pFcb->Specific.File.LastServerFlush.QuadPart = 0;
+        }
 
         //
         // All done
@@ -718,15 +728,18 @@ NTSTATUS
 CachedWrite( IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp,
              IN LARGE_INTEGER StartingByte,
-             IN ULONG ByteCount)
+             IN ULONG ByteCount,
+             IN BOOLEAN ForceFlush)
 {
     PVOID              pSystemBuffer = NULL;
     NTSTATUS           ntStatus = STATUS_SUCCESS;
+    IO_STATUS_BLOCK    iosbFlush;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     BOOLEAN            bMapped = FALSE; 
+    AFSExtent         *pExtent = NULL;
 
     Irp->IoStatus.Information = 0;
     __Enter
@@ -734,7 +747,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         // Provoke a get of the extents - if we need to.
         //
-        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bMapped );
+        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bMapped, &pExtent );
 
         if (!NT_SUCCESS(ntStatus)) {
             try_return( ntStatus );
@@ -777,14 +790,38 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
-            Irp->IoStatus.Information = ByteCount;
-            ntStatus = STATUS_SUCCESS;
+
+            if (ForceFlush)
+            {
+                static int i = 1; if (i) DbgBreakPoint(); 
+                //
+                // We have detected a file we do a write through with.
+                //
+                CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
+                             &StartingByte,
+                             ByteCount,
+                             &iosbFlush);
+
+                ntStatus = iosbFlush.Status;
+            }
+            else 
+            {
+                ntStatus = STATUS_SUCCESS;
+            }
+
         }
         __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
         {
-            try_return( ntStatus = GetExceptionCode());
+            ntStatus = GetExceptionCode() ;
+        }
+        
+        if (!NT_SUCCESS(ntStatus))
+        {
+            try_return ( ntStatus );
         }
 
+        Irp->IoStatus.Information = ByteCount;
+        
         if( bSynchronousIo)
         {
 
@@ -792,7 +829,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // If this extended the Vdl, then update it accordinly
+        // If this extended the Vdl, then update it accordingly
         //
 
         if( StartingByte.QuadPart + ByteCount > pFcb->Header.ValidDataLength.QuadPart)
@@ -801,9 +838,17 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
             pFcb->Header.ValidDataLength.QuadPart = StartingByte.QuadPart + ByteCount;
         }
 
+        if (BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
+        {
+            //
+            // Write through asked for... Set things so that we get 
+            // flush when the worker thread next wakes up
+            //
+            pFcb->Specific.File.LastServerFlush.QuadPart = 0;
+        }
+
+
         SetFlag( pFcb->Flags, AFS_UPDATE_WRITE_TIME);
-
-
 
     try_exit:
         ;
