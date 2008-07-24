@@ -1240,7 +1240,7 @@ void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp, afs_uint32 locked)
  *
  * The buffer must be locked before calling this routine.
  */
-void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
+void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t *userp)
 {
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
     osi_assertx(bp->refCount > 0, "cm_buf_t refcount 0");
@@ -1298,6 +1298,14 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length)
             bp->flags |= CM_BUF_INDL;
         }
         lock_ReleaseWrite(&buf_globalLock);
+    }
+
+    /* and record the last writer */
+    if (bp->userp != userp) {
+        cm_HoldUser(userp);
+        if (bp->userp) 
+            cm_ReleaseUser(bp->userp);
+        bp->userp = userp;
     }
 }
 

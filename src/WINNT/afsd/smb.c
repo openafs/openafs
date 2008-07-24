@@ -6787,15 +6787,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
         /* now copy the data */
 	memcpy(bufferp->datap + bufIndex, op, nbytes);
-        buf_SetDirty(bufferp, bufIndex, nbytes);
-
-        /* and record the last writer */
-        if (bufferp->userp != userp) {
-            cm_HoldUser(userp);
-            if (bufferp->userp) 
-                cm_ReleaseUser(bufferp->userp);
-            bufferp->userp = userp;
-        }
+        buf_SetDirty(bufferp, bufIndex, nbytes, userp);
 
         /* adjust counters, pointers, etc. */
         op += nbytes;
