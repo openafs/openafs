@@ -2023,7 +2023,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_RELEASE )
                     bufp->flags &= ~CM_BUF_REDIR;
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_DIRTY ) {
-                    buf_SetDirty(bufp, 0, cm_data.blockSize);
+                    buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
                     dirty = 1;
                 }
                 lock_ReleaseMutex(&bufp->mx);
