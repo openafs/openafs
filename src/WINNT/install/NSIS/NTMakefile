@@ -47,20 +47,22 @@ $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
 
 !IF ("$(AFSDEV_BUILDTYPE)"=="FREE")
 !IF ("$(CPU)" == "i386")
-ARCH=x86
+MSI_PLATFORM=Intel
 !ELSE IF ("$(CPU)" == "amd64")
-ARCH=x64
+MSI_PLATFORM=x64
 !ELSE
-ARCH=$(CPU)
+MSI_PLATFORM=$(CPU)
 !ENDIF
+MSI_CONFIG=Retail
 !ELSE
 !IF ("$(CPU)" == "i386")
-ARCH=Intel
+MSI_PLATFORM=Intel
 !ELSE IF ("$(CPU)" == "amd64")
-ARCH=x64
+MSI_PLATFORM=x64
 !ELSE
-ARCH=$(CPU)
+MSI_PLATFORM=$(CPU)
 !ENDIF
+MSI_CONFIG=Debug
 !ENDIF
 
 !IF ("$(CPU)" == "i386")
@@ -79,7 +81,7 @@ $(MSVCMSI): $(OUT)\vcruntime.wixobj
 	$(CODESIGN_USERLAND)
 
 $(OUT)\vcruntime.wixobj: vcruntime.wxs
-	candle -out $@ $** -dPlatform=$(ARCH) -dConfig=Debug -dVCVer=$(AFSVER_CL)
+	candle -out $@ $** -dPlatform=$(MSI_PLATFORM) -dConfig=$(MSI_CONFIG) -dVCVer=$(AFSVER_CL)
 
 !else
 MSVCMSI=
