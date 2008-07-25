@@ -3,9 +3,9 @@ License.  For details, see the LICENSE file in the top-level source
 directory or on-line at http://www.openafs.org/dl/license10.html
 
 The document now provides a step by step procedure that takes the user 
-from a basic Windows 2000/XP/2003 workstation to an OpenAFS development 
-environment.   Details are provided so that a 'beginning' windows 
-developer can build an OpenAFS installable package for Windows 
+from a basic Windows 2000/XP/2003/Vista/2008 workstation to an OpenAFS 
+development environment.   Details are provided so that a 'beginning' 
+windows developer can build an OpenAFS installable package for Windows 
 2000/XP/2003/Vista/2008.
 
 NOTE 1:
@@ -68,7 +68,7 @@ versions are supported:
 
 The following Microsoft SDK is required:
 
-    Microsoft Platform SDK for Windows XP SP2 or Server 2003 SP1 or Vista or 2008
+    Microsoft Platform SDK for Windows Server 2003 SP1 or Vista or 2008
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/downlevel.htm [IE required]
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
@@ -98,10 +98,6 @@ version is supported:
     Wix 2.0.5325.0
       http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
 
-The InstallShield scripts (although not supported) require version 5.5
-of InstallShiled. Version 6.0 or higher of InstallShield are not 
-compatible.
-
 The OpenAFS Source directory requires about 360 MB storage. The Source
 directory size includes additional space for files that will be
 generated during the build process.
@@ -113,13 +109,13 @@ Transfer OpenAFS source tree onto your hardrive.  The source can be
 downloaded from the OpenAFS web site:
 	http://www.OpenAFS.org/release/snapindex.html.
 
-For this example, download source for version 1.3.74 using the
+For this example, download source for version 1.5.51 using the
 following URL:
-http://www.openafs.org/dl/openafs/1.3.74/openafs-1.3.74-src.tar
+http://www.openafs.org/dl/openafs/1.5.51/openafs-1.5.51-src.tar
 
 HINT: DailySnapShots are pre-release source trees and much more
 likely to have compilation errors. If this is your first attempt, do
-your build based on a release version of the source, e.g. 1.3.74. Once
+your build based on a release version of the source, e.g. 1.5.51. Once
 you have completed a build process successfully, you can experiment with
 other source trees.
 
@@ -127,24 +123,24 @@ You will need an unzip utility that can expand compressed tar files.
 For example "Pkzip for Windows" from Pkware will uncompress tar files.
 (http://www.pkware.com/)
 
-Expand the downloaded tar file (openafs-1.3.74-src.tar) into target
+Expand the downloaded tar file (openafs-1.5.51-src.tar) into target
 directory (c:\OpenAFS), the unzip routine will expand the source into a
 subdirectory tree:
-    c:\OpenAFS\OpenAFS-1.3.74\src
+    c:\OpenAFS\OpenAFS-1.5.51\src
 
 Copy the files 'NTMakefile' and 'ntbuild.bat' from 'src' to the OpenAFS 
 base directory (aka %AFSROOT%):
 
   From a DOS command prompt window, enter the following copy commands:
 
-    cd c:\OpenAFS\OpenAFS-1.3.74
+    cd c:\OpenAFS\OpenAFS-1.5.51
     copy src\NTMakefile .
     copy src\ntbuild.bat .
 
 
 The OpenAFS base directory should look something like the following:
 
-  c:\OpenAFS\OpenAFS-1.3.74\
+  c:\OpenAFS\OpenAFS-1.5.51\
     NTMakefile
     ntbuild.bat
     src
@@ -153,7 +149,9 @@ The OpenAFS base directory should look something like the following:
 STEP B. Install compiler and development tools.
 
 Install a copy of Microsoft Visual Studio .NET, Visual Studio .NET 2003, 
-or Visual Studio .NET 2005.  The "Typical" install setting is sufficient.
+or Visual Studio .NET 2005.  Visual Studio 2008 has not been sufficiently
+tested to be considered "supported".  The "Typical" install setting is 
+sufficient.
 
 (1) You can reduce the installation size by selecting "Custom" install
 and remove all but the following Options:
@@ -166,16 +164,22 @@ and remove all but the following Options:
 
 STEP C. Install SDK header files.
 
-Files from Microsoft's Platform SDK for Windows XP SP2 or Server 2003 are
-required to complete a build on Windows 2000/XP/2003.   You can install 
-the "Core, Data Access and Installer SDKs" from
+Files from Microsoft's Platform SDK for Windows Server 2003 SP1 are
+required to complete a build on Windows 2000/XP/2003.   At a minimum the
+following componets are known to be required: 
+
+  * Core
+  * Data Access
+  * Installer
+  * Windows Management Instrumentation
+  * Web Workshop (IE)
+
+It is advised that you install the entire SDK.  The SDK can be obtained
+from:
 
   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
 
 by using Internet Explorer 5.x or higher.  (Active X controls are required)
-If you do not which to use IE a complete SDK package is available from
-
-  http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
 The header files that are required from a Microsoft SDK/DDK are:
 
@@ -192,7 +196,6 @@ These files come from the following Microsoft DDKs/SDKs:
    netcfgn.h, netcfgx.h:
         Windows XP/2003 DDK - inc/wxp/
 
-
    normalization.h:
         Microsoft IDN Mitigation APIs 1.1 - include/
 
@@ -206,6 +209,7 @@ must be defined to match your configuration:
              Set to 1300 if using MS Visual Studio .NET
              Set to 1310 if using MS Visual Studio .NET 2003
              Set to 1400 if using MS Visual Studio .NET 2005
+             Set to 1500 if using MS Visual Studio 2008
 
   MSVCDIR: Set to the short name version of the directory into which
            the visual C++ compiler was installed regardless of version
@@ -230,6 +234,12 @@ must be defined to match your configuration:
 
   MSVCVer:  Set to 8.0 if using Visual Studio 8
 
+  CODESIGN_DESC: Product Name
+  
+  CODESIGN_TIMESTAMP: Time Stamp Service for Code Signing Certificate
+   
+  CODESIGN_URL: Support URL Displayed to End Users
+
 
 STEP E. Set version and installation options (optional)
 
@@ -249,12 +259,12 @@ Edit file %AFSROOT%\src\config\NTMakefile.i386_w2k
     CELLNAME_DEFAULT     - The default home cell name.
     CELLSERVDB_WEB       - The default web address to obtain CellServDB
 
-For example: in the file %AFSROOT%\src\config\NTMakefile.i386_nt40 you would
+For example: in the file %AFSROOT%\src\config\NTMakefile.i386_w2k you would
 see the following:
 
    AFSPRODUCT_VER_MAJOR=1
-   AFSPRODUCT_VER_MINOR=3
-   AFSPRODUCT_VER_PATCH=7400
+   AFSPRODUCT_VER_MINOR=5
+   AFSPRODUCT_VER_PATCH=5100
    AFSPRODUCT_VER_BUILD=0
    CELLNAME_DEFAULT=openafs.org
    CELLSERVDB_INSTALL=CellServDB.GrandCentral
