@@ -1,3 +1,16 @@
+Since 1.5.50
+ * Fix "fs setacl" broken in 1.5.50
+
+ * Fix installation of VC8 Runtime library in the EXE
+   Retail installer. (broken in 1.5.50)
+
+ * Avoid a potential deadlock during Volume Location 
+   updates if all the file servers are unreachable at 
+   the time the VL update succeeds.
+
+ * Ensure that rx connection object is references 
+   during VL RPCs.
+
 Since 1.5.39 [1.5.50 released 16 July 2008]
  * There were no releases between 1.5.39 and 1.5.50.
 
