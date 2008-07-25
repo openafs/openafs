@@ -20,6 +20,11 @@
 #include "..\\Common\\AFSUserCommon.h"
 #include <RDRPrototypes.h>
 
+extern "C" {
+#include <osilog.h>
+extern osi_log_t *afsd_logp;
+}
+
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
 #endif
@@ -338,11 +343,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSDirQueryCB *pQueryCB = (AFSDirQueryCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
             
-            swprintf( wchBuffer,
-                      L"ProcessRequest Processing AFS_REQUEST_TYPE_DIR_ENUM Index %08lX\n",
-                      RequestBuffer->RequestIndex);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer,
+                          L"ProcessRequest Processing AFS_REQUEST_TYPE_DIR_ENUM Index %08lX\n",
+                          RequestBuffer->RequestIndex);
                         
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             //
             // Here is where the content of the specific directory is enumerated.
@@ -359,12 +366,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
             AFSEvalTargetCB *pEvalTargetCB = (AFSEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer,
-                      L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID Index %08lX\n",
-                      RequestBuffer->RequestIndex);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer,
+                          L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID Index %08lX\n",
+                          RequestBuffer->RequestIndex);
                         
-            OutputDebugString( wchBuffer);
-
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
             //
             // Here is where the specified node is evaluated.
             //
@@ -380,12 +388,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
             AFSEvalTargetCB *pEvalTargetCB = (AFSEvalTargetCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer,
-                      L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME Index %08lX\n",
-                      RequestBuffer->RequestIndex);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer,
+                          L"ProcessRequest Processing AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME Index %08lX\n",
+                          RequestBuffer->RequestIndex);
 
-            OutputDebugString( wchBuffer);
-
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
             //
             // Here is where the specified node is evaluated.
             //
@@ -406,15 +415,17 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     
             WCHAR wchFileName[ 256];
 
-            memset( wchFileName, '\0', 256 * sizeof( WCHAR));
+            if (afsd_logp->enabled) {
+                memset( wchFileName, '\0', 256 * sizeof( WCHAR));
 
-            memcpy( wchFileName,
-                    RequestBuffer->Name,
-                    RequestBuffer->NameLength);
+                memcpy( wchFileName,
+                        RequestBuffer->Name,
+                        RequestBuffer->NameLength);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_FILE File %s\n", wchFileName);
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_FILE File %s\n", wchFileName);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_CreateFileEntry( userp, 
                                  RequestBuffer->Name,
@@ -431,11 +442,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSFileUpdateCB *pUpdateCB = (AFSFileUpdateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_UPDATE_FILE File %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_UPDATE_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_UpdateFileEntry( userp, RequestBuffer->FileId,
 				 pUpdateCB,
@@ -450,11 +463,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSFileDeleteCB *pDeleteCB = (AFSFileDeleteCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
     
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_DeleteFileEntry( userp, 
                                  pDeleteCB->ParentId,
@@ -471,12 +486,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSFileRenameCB *pFileRenameCB = (AFSFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
-                      RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                          RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_RenameFileEntry( userp, 
                                  RequestBuffer->Name,
@@ -494,11 +511,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSRequestExtentsCB *pFileRequestExtentsCB = (AFSRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             if (BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
                 RDR_RequestFileExtentsSync( userp, RequestBuffer->FileId,
@@ -519,11 +538,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             AFSReleaseExtentsCB *pFileReleaseExtentsCB = (AFSReleaseExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_ReleaseFileExtents( userp, RequestBuffer->FileId,
 				    pFileReleaseExtentsCB,
@@ -537,11 +558,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
 //            AFSFileFlushCB *pFileFlushCB = (AFSFileFlushCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_FLUSH_FILE File %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_FLUSH_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_FlushFileEntry( userp, RequestBuffer->FileId,
                                 // pFileFlushCB,
@@ -554,11 +577,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
             AFSFileOpenCB *pFileOpenCB = (AFSFileOpenCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_OPEN_FILE File %08lX.%08lX.%08lX.%08lX\n", 
-		      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-		      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_OPEN_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_OpenFileEntry( userp, RequestBuffer->FileId,
                                pFileOpenCB,
@@ -572,11 +597,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
             AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_OPEN Parent %08lX.%08lX.%08lX.%08lX\n", 
-                      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-                      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_OPEN Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_PioctlOpen( userp, 
                             RequestBuffer->FileId,
@@ -590,11 +617,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         {
             AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-            swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_WRITE Parent %08lX.%08lX.%08lX.%08lX\n", 
-                      RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-                      RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_WRITE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-            OutputDebugString( wchBuffer);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             RDR_PioctlWrite( userp, 
                              RequestBuffer->FileId,
@@ -608,11 +637,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             {
                 AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Parent %08lX.%08lX.%08lX.%08lX\n", 
-                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Parent %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-                OutputDebugString( wchBuffer);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
 
                 RDR_PioctlRead( userp, 
                                 RequestBuffer->FileId,
@@ -626,11 +657,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             {
                 AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Parent %08lX.%08lX.%08lX.%08lX\n", 
-                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-                OutputDebugString( wchBuffer);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
 
                 RDR_PioctlClose( userp, 
                                 RequestBuffer->FileId,
@@ -665,12 +698,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
         pResultCB->RequestIndex = RequestBuffer->RequestIndex;
 
-        swprintf( wchBuffer,
-                  L"ProcessRequest Responding to request index %08lX Length %08lX\n",
-                  pResultCB->RequestIndex,
-                  pResultCB->ResultBufferLength);
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"ProcessRequest Responding to request index %08lX Length %08lX\n",
+                      pResultCB->RequestIndex,
+                      pResultCB->ResultBufferLength);
                         
-        OutputDebugString( wchBuffer);
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
 
         //
         // Now post the result back to the driver.
@@ -692,11 +727,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     }
     else if (RequestBuffer->RequestType == AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS) {
 
-        swprintf( wchBuffer,
-                  L"ProcessRequest Responding Asynchronously to REQUEST_FILE_EXTENTS request index %08lX\n",
-                  RequestBuffer->RequestIndex);
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"ProcessRequest Responding Asynchronously to REQUEST_FILE_EXTENTS request index %08lX\n",
+                      RequestBuffer->RequestIndex);
                         
-        OutputDebugString( wchBuffer);
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
+
 
         if( !DeviceIoControl( glDevHandle,
 			      IOCTL_AFS_SET_FILE_EXTENTS,
@@ -715,11 +753,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     } 
     else {
 
-        swprintf( wchBuffer,
-                  L"ProcessRequest Not responding to async request index %08lX\n",
-                  RequestBuffer->RequestIndex);
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"ProcessRequest Not responding to async request index %08lX\n",
+                      RequestBuffer->RequestIndex);
                         
-        OutputDebugString( wchBuffer);
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
     }
 
     if( pResultCB && pResultCB != &stResultCB)
