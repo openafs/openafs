@@ -108,7 +108,7 @@ smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
     }
     if (prefix) {
         copyPrefix = cm_GetSpace();
-        StringCbCopy(copyPrefix->data, CM_UTILS_SPACESIZE, prefix->data);
+        memcpy(copyPrefix->data, prefix->data, CM_UTILS_SPACESIZE);
         fidp->ioctlp->prefix = copyPrefix;
     }
     lock_ReleaseMutex(&fidp->mx);
@@ -1116,7 +1116,6 @@ smb_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     cm_scache_t *scp;
     afs_int32 code;
     cm_req_t req;
-    cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
 
     smb_InitReq(&req);
