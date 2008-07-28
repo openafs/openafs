@@ -1,5 +1,8 @@
 Since 1.5.50
- * Fix "fs setacl" broken in 1.5.50
+ * Fix "fs setacl" (broken in 1.5.50)
+
+ * Fix pioctl path evaluation of drive letter
+   mapped paths. (broken in 1.5.50)
 
  * Fix installation of VC8 Runtime library in the EXE
    Retail installer. (broken in 1.5.50)
