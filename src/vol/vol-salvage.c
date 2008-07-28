@@ -1788,7 +1788,8 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 			|| vsp->header.parent == singleVolumeNumber)) {
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
 				       VFORMAT, vsp->header.id);
-		    if (singleVolumeNumber)
+		    if (singleVolumeNumber
+			&& vsp->header.id != singleVolumeNumber)
 			AskOffline(vsp->header.id);
 		    if (strcmp(nameShouldBe, dp->d_name)) {
 			if (!Showmode)
@@ -2812,10 +2813,12 @@ CopyAndSalvage(register struct DirSummary *dir)
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     Inode oldinode, newinode;
     DirHandle newdir;
+    FdHandle_t *fdP;
     afs_int32 code;
     afs_sfsize_t lcode;
     afs_int32 parentUnique = 1;
     struct VnodeEssence *vnodeEssence;
+    afs_size_t length;
 
     if (Testing)
 	return;
@@ -2870,7 +2873,8 @@ CopyAndSalvage(register struct DirSummary *dir)
     }
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
-    VNDISK_SET_LEN(&vnode, Length(&newdir));
+    length = Length(&newdir);
+    VNDISK_SET_LEN(&vnode, length);
     lcode =
 	IH_IWRITE(vnodeInfo[vLarge].handle,
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
@@ -2887,6 +2891,10 @@ CopyAndSalvage(register struct DirSummary *dir)
 #else
     vnodeInfo[vLarge].handle->ih_synced = 1;
 #endif
+    /* make sure old directory file is really closed */
+    fdP = IH_OPEN(dir->dirHandle.dirh_handle);
+    FDH_REALLYCLOSE(fdP);
+    
     code = IH_DEC(dir->ds_linkH, oldinode, dir->rwVid);
     assert(code == 0);
     dir->dirHandle = newdir;
