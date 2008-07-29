@@ -18,9 +18,6 @@
 
 #include <cm_nls.h>
 
-/* Support largefiles by default */
-#define AFS_LARGEFILES
-
 /* basic core protocol SMB structure */
 #pragma pack(push, 1)
 typedef struct smb {
