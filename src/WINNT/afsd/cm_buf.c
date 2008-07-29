@@ -676,7 +676,9 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	 * because we aren't going to be able to write this data to the file
 	 * server.
 	 */
-	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS){
+	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS || 
+            code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG || 
+            code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH){
 	    bp->flags &= ~CM_BUF_DIRTY;
 	    bp->flags |= CM_BUF_ERROR;
             bp->dirty_offset = 0;
@@ -684,6 +686,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	    bp->error = code;
 	    bp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 	    bp->dirtyCounter++;
+            break;
 	}
 
 #ifdef DISKCACHE95
