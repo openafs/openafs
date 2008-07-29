@@ -1,4 +1,6 @@
 Since 1.5.50
+ * Fix Large File Support (broken in 1.5.50)
+
  * Fix "fs setacl" (broken in 1.5.50)
 
  * Fix pioctl path evaluation of drive letter
@@ -13,6 +15,9 @@ Since 1.5.50
 
  * Ensure that rx connection object is references 
    during VL RPCs.
+
+ * Fix propagation of over quota errors during cm_FSync()
+   calls.
 
 Since 1.5.39 [1.5.50 released 16 July 2008]
  * There were no releases between 1.5.39 and 1.5.50.
