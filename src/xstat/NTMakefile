@@ -47,7 +47,9 @@ FSINCLS= $(INCDIR)\xstat_fs.h $(RPCINCLS)
 $(LIBDIR)\afs_xstat_fs.lib: $(OUT)\xstat_fs.obj $(OUT)\xstat_fs_callback.obj $(OUT)\AFS_component_version_number.obj
 	$(LIBARCH)
 
-$(BINDIR)\xstat_fs_test.exe: $(OUT)\xstat_fs_test.obj $(LIBDIR)\afs_xstat_fs.lib $(LIBS)
+$(OUT)\xstat_fs_test.res: xstat_fs_test.rc AFS_component_version_number.h
+
+$(BINDIR)\xstat_fs_test.exe: $(OUT)\xstat_fs_test.obj $(OUT)\xstat_fs_test.res $(LIBDIR)\afs_xstat_fs.lib $(LIBS)
 	$(EXECONLINK) rpcrt4.lib
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -61,7 +63,9 @@ CMINCLS=$(INCDIR)\xstat_cm.h $(RPCINCLS)
 $(LIBDIR)\afs_xstat_cm.lib: $(OUT)\xstat_cm.obj $(OUT)\AFS_component_version_number.obj
 	$(LIBARCH)
 
-$(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(LIBDIR)\afs_xstat_cm.lib $(LIBS)
+$(OUT)\xstat_cm_test.res: xstat_cm_test.rc AFS_component_version_number.h
+
+$(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(OUT)\xstat_cm_test.res $(LIBDIR)\afs_xstat_cm.lib $(LIBS)
 	$(EXECONLINK) 
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -72,6 +76,7 @@ $(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(LIBDIR)\afs_xstat_cm.lib
 #
 clean::
 	$(DEL) -f $(OUT)\*.obj
+	$(DEL) -f $(OUT)\*.res
 	$(DEL) -f $(OUT)\*.pdb
 	$(DEL) -f $(OUT)\*.ilk
  	$(DEL) -f $(INCDIR)\afs\xstat_fs.h
@@ -80,4 +85,4 @@ clean::
 	$(DEL) -f $(LIBDIR)\afs_xstat_cm.lib
 	$(DEL) -f $(BINDIR)\xstat_cm_test.exe
 	$(DEL) -f $(BINDIR)\xstat_fs_test.exe
-	$(DEL) -f AFS_component_version_number.c
+	$(DEL) -f AFS_component_version_number.?
