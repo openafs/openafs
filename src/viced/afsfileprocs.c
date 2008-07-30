@@ -1757,7 +1757,6 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
                  !(rights & PRSFS_WRITE) &&
                  !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
                     return(EACCES);
-            return(EACCES);
 
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
