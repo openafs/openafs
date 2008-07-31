@@ -684,7 +684,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
             bp->dirty_offset = 0;
             bp->dirty_length = 0;
 	    bp->error = code;
-	    bp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
+	    bp->dataVersion = CM_BUF_VERSION_BAD;
 	    bp->dirtyCounter++;
             break;
 	}
@@ -1687,13 +1687,38 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                         cm_ReleaseUser(bp->userp);
                     bp->userp = userp;
                 }   
-                wasDirty = buf_CleanAsyncLocked(bp, reqp);
-                buf_CleanWait(scp, bp, TRUE);
-                if (bp->flags & CM_BUF_ERROR) {
-                    code = bp->error;
-                    if (code == 0) 
-                        code = -1;
+
+                switch (code) {
+                case CM_ERROR_NOSUCHFILE:
+                case CM_ERROR_BADFD:
+                case CM_ERROR_NOACCESS:
+                case CM_ERROR_QUOTA:
+                case CM_ERROR_SPACE:
+                case CM_ERROR_TOOBIG:
+                case CM_ERROR_READONLY:
+                case CM_ERROR_NOSUCHPATH:
+                    /* 
+                     * Apply the previous fatal error to this buffer.
+                     * Do not waste the time attempting to store to
+                     * the file server when we know it will fail.
+                     */
+                    bp->flags &= ~CM_BUF_DIRTY;
+                    bp->flags |= CM_BUF_ERROR;
+                    bp->dirty_offset = 0;
+                    bp->dirty_length = 0;
+                    bp->error = code;
+                    bp->dataVersion = CM_BUF_VERSION_BAD;
+                    bp->dirtyCounter++;
+                    break;
+                default:
+                    wasDirty = buf_CleanAsyncLocked(bp, reqp);
+                    if (bp->flags & CM_BUF_ERROR) {
+                        code = bp->error;
+                        if (code == 0)
+                            code = -1;
+                    }
                 }
+                buf_CleanWait(scp, bp, TRUE);
             }
             lock_ReleaseMutex(&bp->mx);
         }
