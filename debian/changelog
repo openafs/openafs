@@ -1,3 +1,10 @@
+openafs (1.4.7.dfsg1-6) UNRELEASED; urgency=low
+
+  * Translation updates:
+    - Swedish, thanks Martin Bagge.  (Closes: #493120)
+
+ -- Russ Allbery <rra@debian.org>  Thu, 31 Jul 2008 14:35:05 -0700
+
 openafs (1.4.7.dfsg1-5) unstable; urgency=low
 
   * Drop support for hppa.  We only have a param file for a 2.4 kernel,
