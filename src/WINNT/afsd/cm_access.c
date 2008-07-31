@@ -12,7 +12,6 @@
 
 #include <windows.h>
 #include <winsock2.h>
-#include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <nb30.h>
