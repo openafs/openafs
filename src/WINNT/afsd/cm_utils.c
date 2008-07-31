@@ -330,7 +330,7 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
 
     if (error < 0) 
 	error = CM_ERROR_TIMEDOUT;
-    else if (error == VL_NOENT) 
+    else if (error == VL_NOENT || error == VL_BADNAME) 
 	error = CM_ERROR_NOSUCHVOLUME;
     return error;
 }
