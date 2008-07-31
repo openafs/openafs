@@ -13,7 +13,6 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 
 #include "afsd.h"
 #include <osisleep.h>
