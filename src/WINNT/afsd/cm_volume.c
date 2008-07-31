@@ -795,6 +795,13 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         afs_uint32 volType;
         /* otherwise, get from VLDB */
 
+        /* 
+         * Change to a write lock so that we have exclusive use of
+         * the first cm_volume_t with a refCount of 0 so that we 
+         * have time to increment it.
+         */
+        lock_ConvertRToW(&cm_volumeLock);
+
 	if ( cm_data.currentVolumes >= cm_data.maxVolumes ) {
 #ifdef RECYCLE_FROM_ALL_VOLUMES_LIST
 	    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
@@ -817,7 +824,8 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	    if (!volp)
 		osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
 
-            lock_ReleaseRead(&cm_volumeLock);
+            InterlockedIncrement(&volp->refCount);
+            lock_ReleaseWrite(&cm_volumeLock);
             lock_ObtainWrite(&volp->rw);
             lock_ObtainWrite(&cm_volumeLock);
 
@@ -844,14 +852,14 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	    volp->allNextp = cm_data.allVolumesp;
 	    cm_data.allVolumesp = volp;
 	    lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
-            lock_ReleaseRead(&cm_volumeLock);
+            lock_ReleaseWrite(&cm_volumeLock);
             lock_ObtainWrite(&volp->rw);
             lock_ObtainWrite(&cm_volumeLock);
+            volp->refCount = 1;	/* starts off held */
         }
 	volp->cellp = cellp;
 	strncpy(volp->namep, name, VL_MAXNAMELEN);
 	volp->namep[VL_MAXNAMELEN-1] = '\0';
-        volp->refCount = 1;	/* starts off held */
 	volp->flags = CM_VOLUMEFLAG_RESET;
     
         for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
