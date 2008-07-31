@@ -1,6 +1,7 @@
 /*
 
 Copyright 2004 by the Massachusetts Institute of Technology
+Copyright 2008 by Secure Endpoints Inc.
 
 All rights reserved.
 
@@ -96,9 +97,9 @@ MSIDLLEXPORT AbortMsiImmediate( MSIHANDLE hInstall ) {
 	MsiProcessMessage(hInstall, INSTALLMESSAGE_ERROR, hRecord);
 
 _cleanup:
-	if(sFormatted) delete sFormatted;
+	if(sFormatted) delete[] sFormatted;
 	if(hRecord) MsiCloseHandle( hRecord );
-	if(sReason) delete sReason;
+	if(sReason) delete[] sReason;
 
 	return ~ERROR_SUCCESS;
 }
@@ -213,7 +214,7 @@ _cleanup:
         ShowMsiError( hInstall, ERR_NPI_FAILED, rv );
     }
     
-    if(strOrder) delete strOrder;
+    if(strOrder) delete[] strOrder;
     
     return rv;
 }
@@ -267,8 +268,8 @@ int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
 
 cleanup:
 
-    delete target;
-    delete charset;
+    delete[] target;
+    delete[] charset;
     return ret;
 }
 
@@ -377,7 +378,7 @@ _cleanup:
 	if(pInfo.hProcess)	CloseHandle( pInfo.hProcess );
 	if(pInfo.hThread) 	CloseHandle( pInfo.hThread );
 	if(hJob) CloseHandle(hJob);
-	if(strPathUninst) delete strPathUninst;
+	if(strPathUninst) delete[] strPathUninst;
 
 	if(rv != ERROR_SUCCESS) {
         ShowMsiError( hInstall, ERR_NSS_FAILED, rv );
