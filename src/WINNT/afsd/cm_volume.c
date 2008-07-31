@@ -559,7 +559,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
         roNewstate = roServers_alldown ? vl_alldown : vl_online;
         bkNewstate = bkServers_alldown ? vl_alldown : vl_online;
-    } else if (code == CM_ERROR_NOSUCHVOLUME || code == VL_NOENT) {
+    } else if (code == CM_ERROR_NOSUCHVOLUME || code == VL_NOENT || code == VL_BADNAME) {
         /* this volume does not exist - we should discard it */
         if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
             cm_RemoveVolumeFromNameHashTable(volp);
