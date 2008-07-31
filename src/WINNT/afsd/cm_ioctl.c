@@ -1733,7 +1733,8 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     clientchar_t volume[VL_MAXNAMELEN];
     clientchar_t *mpp = NULL;
     clientchar_t *cell = NULL;
-    int ttl;
+    cm_volume_t *volp = NULL;
+    cm_cell_t *cellp = NULL;
 
    /* 
      * The fs command allows the user to specify partial cell names on NT.  These must
@@ -1754,12 +1755,8 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         fsvolume = cm_ClientStringToFsStringAlloc(volume, -1, NULL);
 
         /* Get the full name for this cell */
-        code = cm_SearchCellFile(fscell, fullCell, 0, 0);
-#ifdef AFS_AFSDB_ENV
-        if (code && cm_dnsEnabled)
-            code = cm_SearchCellByDNS(fscell, fullCell, &ttl, 0, 0);
-#endif
-        if (code) {
+        cellp = cm_GetCell_Gen(fscell, fullCell, CM_FLAG_NOPROBE);
+        if (!cellp) {
             code = CM_ERROR_NOSUCHCELL;
             goto done;
         }
@@ -1771,7 +1768,19 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         /* No cell name specified, so cell points at the volume instead. */
         fsvolume = cm_ClientStringToFsStringAlloc(cell, -1, NULL);
         cm_ClientStringToFsString(mpp, -1, mpInfo, lengthof(mpInfo));
+        cellp = cm_FindCellByID(dscp->fid.cell, CM_FLAG_NOPROBE);
     }
+
+    /* validate the target info */
+    if (cm_VolNameIsID(fsvolume)) {
+        code = cm_FindVolumeByID(cellp, atoi(fsvolume), userp, reqp, 
+                                CM_GETVOL_FLAG_CREATE, &volp);
+    } else {
+        code = cm_FindVolumeByName(cellp, fsvolume, userp, reqp, 
+                                  CM_GETVOL_FLAG_CREATE, &volp);
+    }
+    if (code)
+        goto done;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
@@ -1800,6 +1809,8 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
                          dscp, leaf, NULL, TRUE);
 
   done:
+    if (volp)
+        cm_PutVolume(volp);
     if (mpp)
         free(mpp);
     if (fscell)
