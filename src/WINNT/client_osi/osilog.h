@@ -20,7 +20,7 @@
 
 #define OSI_LOG_DEFAULTSIZE	1000
 #define OSI_LOG_STRINGSIZE	256
-#define OSI_LOG_MAXPARMS	4	/* max # of int parms */
+#define OSI_LOG_MAXPARMS	5	/* max # of int parms */
 
 typedef struct osi_logEntry {
 	size_t tid;			/* thread ID */
@@ -59,7 +59,7 @@ extern osi_log_t *osi_LogCreate(char *, size_t);
 
 extern void osi_LogFree(osi_log_t *);
 
-extern void osi_LogAdd(osi_log_t *, char *, size_t, size_t, size_t, size_t);
+extern void osi_LogAdd(osi_log_t *, char *, size_t, size_t, size_t, size_t, size_t);
 
 extern void osi_LogReset(osi_log_t *);
 
@@ -87,11 +87,11 @@ extern void osi_LogEvent(char *a,char *b,char *c,...);
 extern char *osi_HexifyString(char *s);
 
 /* define macros */
-#define osi_Log0(l,f)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), 0, 0, 0, 0)
-#define osi_Log1(l,f,a)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0)
-#define osi_Log2(l,f,a,b)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0)
-#define osi_Log3(l,f,a,b,c)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0)
-#define osi_Log4(l,f,a,b,c,d)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d))
+#define osi_Log0(l,f)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), 0, 0, 0, 0, 0)
+#define osi_Log1(l,f,a)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0, 0)
+#define osi_Log2(l,f,a,b)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0, 0)
+#define osi_Log3(l,f,a,b,c)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0, 0)
+#define osi_Log4(l,f,a,b,c,d)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), 0)
 #define osi_Log5(l,f,a,b,c,d,e)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
 
 #ifdef DEBUG_VERBOSE

@@ -141,9 +141,9 @@ void osi_LogPanic(char *filep, size_t lineNumber)
 
 		/* otherwise, proceed */
 		if (filep)
-	                osi_LogAdd(tlp, "**PANIC** (file %s:%d)", (size_t) filep, lineNumber, 0, 0);
+	                osi_LogAdd(tlp, "**PANIC** (file %s:%d)", (size_t) filep, lineNumber, 0, 0, 0);
 		else
-			osi_LogAdd(tlp, "**PANIC**", 0, 0, 0, 0);
+			osi_LogAdd(tlp, "**PANIC**", 0, 0, 0, 0, 0);
 		
                 /* should grab lock for this, but we're in panic, and better safe than
                  * sorry.
@@ -176,7 +176,7 @@ void osi_LogFree(osi_log_t *logp)
 }
 
 /* add an element to a log */
-void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2, size_t p3)
+void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2, size_t p3, size_t p4)
 {
 	osi_logEntry_t *lep;
         long ix;
@@ -218,10 +218,10 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
         lep->parms[1] = p1;
         lep->parms[2] = p2;
         lep->parms[3] = p3;
-
+        lep->parms[4] = p4;
 #ifdef NOTSERVICE
         printf( "%9ld:", lep->micros );
-        printf( formatp, p0, p1, p2, p3);
+        printf( formatp, p0, p1, p2, p3, p4);
         printf( "\n" );
 #endif
 
@@ -229,7 +229,7 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
 	    char wholemsg[1024], msg[1000];
 
 	    StringCbPrintfA(msg, sizeof(msg), formatp,
-                            p0, p1, p2, p3);
+                            p0, p1, p2, p3, p4);
 	    StringCbPrintfA(wholemsg, sizeof(wholemsg), 
                             "tid[%d] %s\n",
                             lep->tid, msg);
@@ -255,7 +255,8 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 		lep = logp->datap + ix;		/* pointer arithmetic */
 		StringCbPrintfA(msg, sizeof(msg), lep->formatp,
                                 lep->parms[0], lep->parms[1],
-                                lep->parms[2], lep->parms[3]);
+                                lep->parms[2], lep->parms[3],
+                                lep->parms[4]);
 		StringCbPrintfA(wholemsg, sizeof(wholemsg),
                                 "time %d.%06d, tid %d %s\r\n",
                                 lep->micros / 1000000,
@@ -371,7 +372,7 @@ long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
     lep = logp->datap + ix;	/* ptr arith to current index */
 
     StringCbPrintfA(tbuffer, sizeof(tbuffer), lep->formatp, lep->parms[0], lep->parms[1],
-                    lep->parms[2], lep->parms[3]);
+                    lep->parms[2], lep->parms[3], lep->parms[4]);
 
     /* now copy out info */
     StringCbCopyA(outp->sdata[0], sizeof(outp->sdata[0]), tbuffer);
