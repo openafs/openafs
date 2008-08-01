@@ -9913,7 +9913,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=0x%x, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
@@ -9922,7 +9922,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                     fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
@@ -9943,7 +9943,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=0x%x, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
@@ -9952,7 +9952,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                     fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
