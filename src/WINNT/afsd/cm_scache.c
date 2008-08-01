@@ -1821,19 +1821,18 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
     afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, refCount);
 #endif
 
-    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+    if (refCount == 0 && (scp->flags & CM_SCACHEFLAG_DELETED)) {
         int deleted = 0;
+        if (lockstate != OSI_RWLOCK_WRITEHELD) 
+            lock_ConvertRToW(&cm_scacheLock);
         lock_ObtainWrite(&scp->rw);
         if (scp->flags & CM_SCACHEFLAG_DELETED)
             deleted = 1;
         lock_ReleaseWrite(&scp->rw);
-        if (deleted) {
-            if (lockstate != OSI_RWLOCK_WRITEHELD) 
-                lock_ConvertRToW(&cm_scacheLock);
+        if (refCount == 0 && deleted)
             cm_RecycleSCache(scp, 0);
-            if (lockstate != OSI_RWLOCK_WRITEHELD) 
-                lock_ConvertWToR(&cm_scacheLock);
-        }
+        if (lockstate != OSI_RWLOCK_WRITEHELD) 
+            lock_ConvertWToR(&cm_scacheLock);
     }
 }
 
