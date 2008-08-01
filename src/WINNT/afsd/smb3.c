@@ -8207,10 +8207,12 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
      * notification if in the future a matching change is detected.
      */
     savedPacketp = smb_CopyPacket(inp);
-    smb_HoldVC(vcp);
-    if (savedPacketp->vcp)
-	smb_ReleaseVC(savedPacketp->vcp);
-    savedPacketp->vcp = vcp;
+    if (vcp != savedPacketp->vcp) {
+        smb_HoldVC(vcp);
+        if (savedPacketp->vcp)
+            smb_ReleaseVC(savedPacketp->vcp);
+        savedPacketp->vcp = vcp;
+    }
 
     /* Add the watch to the list of events to send notifications for */
     lock_ObtainMutex(&smb_Dir_Watch_Lock);
