@@ -1888,7 +1888,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
 
         if (cm_ClientStrCmpN(p, cm_mountRootC, cm_mountRootCLen) == 0) {
             p += cm_mountRootCLen;  /* skip mount path */
-            cchlen -= (p - pathName);
+            cchlen -= (DWORD)(p - pathName);
         }
 
         q = p;
@@ -1993,8 +1993,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         if (code == 0) {
             clientchar_t temp[1024];
 
-            cm_FsStringToClientString(ftemp, cm_FsStrLen(ftemp), temp, 1024);
-            cm_ClientStrPrintfN(pathName, lengthof(pathName),
+            cm_FsStringToClientString(ftemp, (int)cm_FsStrLen(ftemp), temp, 1024);
+            cm_ClientStrPrintfN(pathName, (int)lengthof(pathName),
                                 rw ? _C("/.%S/") : _C("/%S/"), temp);
             *pathNamep = cm_ClientStrDup(cm_ClientStrLwr(pathName));
             return 1;
@@ -2725,7 +2725,7 @@ smb_ParseStringBuf(const unsigned char * bufbase,
         *stringspp = spacep;
 
         cchdest = lengthof(spacep->wdata);
-        cm_Utf8ToUtf16(inp, *pcb_max, spacep->wdata, cchdest);
+        cm_Utf8ToUtf16(inp, (int)*pcb_max, spacep->wdata, cchdest);
 
         return spacep->wdata;
 #ifdef SMB_UNICODE
@@ -2761,11 +2761,11 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         {
             /* Storing ANSI */
 
-            int cch_str;
-            int cch_dest;
+            size_t cch_str;
+            size_t cch_dest;
 
             cch_str = cm_ClientStrLen(str);
-            cch_dest = cm_ClientStringToUtf8(str, cch_str, NULL, 0);
+            cch_dest = cm_ClientStringToUtf8(str, (int)cch_str, NULL, 0);
 
             if (plen)
                 *plen = ((flags & SMB_STRF_IGNORENULL)? cch_dest: cch_dest+1);
@@ -2786,11 +2786,11 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
 
     */
     if (outp >= pktp->data && outp < pktp->data + sizeof(pktp->data)) {
-        align = ((outp - pktp->data) % 2);
+        align = (int)((outp - pktp->data) % 2);
         buffersize = (pktp->data + sizeof(pktp->data)) - ((char *) outp);
     } else {
-        align = (((size_t) outp) % 2);
-        buffersize = sizeof(pktp->data);
+        align = (int)(((size_t) outp) % 2);
+        buffersize = (int)sizeof(pktp->data);
     }
 
 #ifdef SMB_UNICODE
@@ -2812,7 +2812,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
             return outp + sizeof(wchar_t);
         }
 
-        nchars = cm_ClientStringToUtf16(str, -1, (wchar_t *) outp, buffersize / sizeof(wchar_t));
+        nchars = cm_ClientStringToUtf16(str, -1, (wchar_t *) outp, (int)(buffersize / sizeof(wchar_t)));
         if (nchars == 0) {
             osi_Log2(smb_logp, "UnparseString: Can't convert string to Unicode [%S], GLE=%d",
                      osi_LogSaveClientString(smb_logp, str),
@@ -2831,7 +2831,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         /* Storing ANSI */
         size_t cch_dest;
 
-        cch_dest = cm_ClientStringToUtf8(str, -1, outp, buffersize);
+        cch_dest = cm_ClientStringToUtf8(str, -1, outp, (int)buffersize);
 
         if (plen)
             *plen += ((flags & SMB_STRF_IGNORENULL)? cch_dest - 1: cch_dest);
@@ -3660,7 +3660,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             /* and the faux domain name */
             cm_ClientStringToUtf8(smb_ServerDomainName, -1,
                                   datap + MSV1_0_CHALLENGE_LENGTH,
-                                  sizeof(outp->data)/sizeof(char) - (datap - outp->data));
+                                  (int)(sizeof(outp->data)/sizeof(char) - (datap - outp->data)));
         } else if ( smb_authType == SMB_AUTH_EXTENDED ) {
             void * secBlob;
             int secBlobLength;
@@ -3724,7 +3724,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             /* and the faux domain name */
             cm_ClientStringToUtf8(smb_ServerDomainName, -1,
                                   datap + MSV1_0_CHALLENGE_LENGTH,
-                                  sizeof(outp->data)/sizeof(char) - (datap - outp->data));
+                                  (int)(sizeof(outp->data)/sizeof(char) - (datap - outp->data)));
         } else {
             smb_SetSMBParm(outp, 11, 0); /* encryption key length */
             smb_SetSMBParm(outp, 12, 0); /* resvd */
@@ -9815,7 +9815,7 @@ void smb_Shutdown(void)
 char *smb_GetSharename()
 {
     char *name;
-    int len;
+    size_t len;
 
     /* Make sure we have been properly initialized. */
     if (smb_localNamep == NULL)
