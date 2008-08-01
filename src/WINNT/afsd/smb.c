@@ -941,30 +941,32 @@ void smb_ReleaseVCInternal(smb_vc_t *vcp)
                     break;
             }
             osi_Log3(smb_logp,"VCP not dead and %sin smb_allVCsp vcp %x ref %d",
-                      avcp?"not ":"",vcp, vcp->refCount);
-#ifdef DEBUG
-            GenerateMiniDump(NULL);
-#endif
+                      avcp?"":"not ",vcp, vcp->refCount);
+
             /* This is a wrong.  However, I suspect that there is an undercount
              * and I don't want to release 1.4.1 in a state that will allow
              * smb_vc_t objects to be deallocated while still in the
              * smb_allVCsp list.  The list is supposed to keep a reference
              * to the smb_vc_t.  Put it back.
-             */
-            vcp->refCount++;
+             */   
+            if (avcp)
+                vcp->refCount++;
         }
     } else if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
         /* The reference count is non-zero but the VC is dead.
          * This implies that some FIDs, TIDs, etc on the VC have yet to 
-         * be cleaned up.  Add a reference that will be dropped by
+         * be cleaned up.  If we were not called by smb_CleanupDeadVC(),
+         * add a reference that will be dropped by
          * smb_CleanupDeadVC() and try to cleanup the VC again.
          * Eventually the refCount will drop to zero when all of the
          * active threads working with the VC end their task.
          */
-        vcp->refCount++;        /* put the refCount back */
-        lock_ReleaseWrite(&smb_rctLock);
-        smb_CleanupDeadVC(vcp);
-        lock_ObtainWrite(&smb_rctLock);
+        if (!(vcp->flags & SMB_VCFLAG_CLEAN_IN_PROGRESS)) {
+            vcp->refCount++;        /* put the refCount back */
+            lock_ReleaseWrite(&smb_rctLock);
+            smb_CleanupDeadVC(vcp);
+            lock_ObtainWrite(&smb_rctLock);
+        }
     }
 }
 
