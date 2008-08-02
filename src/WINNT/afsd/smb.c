@@ -4271,7 +4271,7 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 }       
 
 static long 
-smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
+smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
                         clientchar_t * tidPathp, clientchar_t * relPathp,
                         cm_user_t *userp, cm_req_t *reqp)
 {
@@ -4284,6 +4284,70 @@ smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
     clientchar_t path[AFSPATHMAX];
+    afs_uint32 rights;
+    afs_int32 mustFake = 0;
+
+    code = cm_FindACLCache(dscp, userp, &rights);
+    if (code == 0 && !(rights & PRSFS_READ))
+        mustFake = 1;
+    else if (code == -1) {
+        lock_ObtainWrite(&dscp->rw);
+        code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&dscp->rw);
+        if (code == CM_ERROR_NOACCESS) {
+            mustFake = 1;
+            code = 0;
+        }
+    }
+    if (code)
+        goto cleanup;
+
+    if (!mustFake) {    /* Bulk Stat */
+        afs_uint32 count;
+        cm_bulkStat_t *bsp = malloc(sizeof(cm_bulkStat_t));
+
+        memset(bsp, 0, sizeof(cm_bulkStat_t));
+
+        for (patchp = *dirPatchespp, count=0; 
+             patchp; 
+             patchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
+            cm_scache_t *tscp = cm_FindSCache(&patchp->fid);
+            int i;
+
+            if (tscp) {
+                if (lock_TryWrite(&tscp->rw)) {
+                    /* we have an entry that we can look at */
+                    if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                        /* we have a callback on it.  Don't bother
+                        * fetching this stat entry, since we're happy
+                        * with the info we have.
+                        */
+                        lock_ReleaseWrite(&tscp->rw);
+                        cm_ReleaseSCache(tscp);
+                        continue;
+                    }
+                    lock_ReleaseWrite(&tscp->rw);
+                } /* got lock */
+                cm_ReleaseSCache(tscp);
+            }	/* found entry */
+
+            i = bsp->counter++;
+            bsp->fids[i].Volume = patchp->fid.volume;
+            bsp->fids[i].Vnode = patchp->fid.vnode;
+            bsp->fids[i].Unique = patchp->fid.unique;
+
+            if (bsp->counter == AFSCBMAX) {
+                code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+                memset(bsp, 0, sizeof(cm_bulkStat_t));
+            }
+        }
+
+        if (bsp->counter > 0)
+            code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+
+        free(bsp);
+    }
 
     for (patchp = *dirPatchespp; patchp; patchp =
          (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
@@ -4304,42 +4368,74 @@ smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
             continue;
         }
         lock_ObtainWrite(&scp->rw);
-        code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code) {	
+        if (mustFake || (scp->flags & CM_SCACHEFLAG_EACCESS) || !cm_HaveCallback(scp)) {
             lock_ReleaseWrite(&scp->rw);
-            cm_ReleaseSCache(scp);
+
+            /* set the attribute */
+            switch (scp->fileType) {
+            case CM_SCACHETYPE_DIRECTORY:
+            case CM_SCACHETYPE_MOUNTPOINT:
+            case CM_SCACHETYPE_SYMLINK:
+            case CM_SCACHETYPE_INVALID:
+                attr = SMB_ATTR_DIRECTORY;
+                break;
+            default:
+                /* if we get here we either have a normal file
+                * or we have a file for which we have never 
+                * received status info.  In this case, we can
+                * check the even/odd value of the entry's vnode.
+                * even means it is to be treated as a directory
+                * and odd means it is to be treated as a file.
+                */
+                if (mustFake && (scp->fid.vnode & 0x1))
+                    attr = SMB_ATTR_DIRECTORY;
+                else
+                    attr = SMB_ATTR_NORMAL;
+            }
+            *dptr++ = attr;
+
+            /* 1969-12-31 23:59:58 +00*/
+            dosTime = 0xEBBFBF7D;
+
+            /* copy out time */
+            shortTemp = (unsigned short) (dosTime & 0xffff);
+            *((u_short *)dptr) = shortTemp;
+            dptr += 2;
+
+            /* and copy out date */
+            shortTemp = (unsigned short) ((dosTime>>16) & 0xffff);
+            *((u_short *)dptr) = shortTemp;
+            dptr += 2;
+                
+            /* copy out file length */
+            *((u_long *)dptr) = 0;
+            dptr += 4;
+        } else {
+            lock_ConvertWToR(&scp->rw);
+            attr = smb_Attributes(scp);
+            /* check hidden attribute (the flag is only ON when dot file hiding is on ) */
             if (patchp->flags & SMB_DIRLISTPATCH_DOTFILE)
-                *dptr++ = SMB_ATTR_HIDDEN;
-            continue;
+                attr |= SMB_ATTR_HIDDEN;
+            *dptr++ = attr;
+
+            /* get dos time */
+            smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+                
+            /* copy out time */
+            shortTemp = (unsigned short) (dosTime & 0xffff);
+            *((u_short *)dptr) = shortTemp;
+            dptr += 2;
+
+            /* and copy out date */
+            shortTemp = (unsigned short) ((dosTime>>16) & 0xffff);
+            *((u_short *)dptr) = shortTemp;
+            dptr += 2;
+                
+            /* copy out file length */
+            *((u_long *)dptr) = scp->length.LowPart;
+            dptr += 4;
+            lock_ReleaseRead(&scp->rw);
         }
-
-	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-
-        lock_ConvertWToR(&scp->rw);
-        attr = smb_Attributes(scp);
-        /* check hidden attribute (the flag is only ON when dot file hiding is on ) */
-        if (patchp->flags & SMB_DIRLISTPATCH_DOTFILE)
-            attr |= SMB_ATTR_HIDDEN;
-        *dptr++ = attr;
-
-        /* get dos time */
-        smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
-                
-        /* copy out time */
-        shortTemp = (unsigned short) (dosTime & 0xffff);
-        *((u_short *)dptr) = shortTemp;
-        dptr += 2;
-
-        /* and copy out date */
-        shortTemp = (unsigned short) ((dosTime>>16) & 0xffff);
-        *((u_short *)dptr) = shortTemp;
-        dptr += 2;
-                
-        /* copy out file length */
-        *((u_long *)dptr) = scp->length.LowPart;
-        dptr += 4;
-        lock_ReleaseRead(&scp->rw);
         cm_ReleaseSCache(scp);
     }
         
@@ -4352,6 +4448,7 @@ smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     /* and mark the list as empty */
     *dirPatchespp = NULL;
 
+  cleanup:
     return code;
 }
 
@@ -4534,12 +4631,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              */
             cm_HoldSCache(scp);
             lock_ObtainWrite(&scp->rw);
-            if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0
-                 && LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
-                scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
-                dsp->flags |= SMB_DIRSEARCH_BULKST;
-		dsp->scp->bulkStatProgress = hzero;
-            }
+            dsp->flags |= SMB_DIRSEARCH_BULKST;
             lock_ReleaseWrite(&scp->rw);
         }
     }
@@ -4642,16 +4734,9 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             /* now, if we're doing a star match, do bulk fetching of all of 
              * the status info for files in the dir.
              */
-            if (starPattern) {
-                lock_ObtainWrite(&scp->rw);
-                if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
-                     LargeIntegerGreaterThanOrEqualTo(thyper, 
-                                                      scp->bulkStatProgress)) {
-                    code = cm_TryBulkStat(scp, &thyper, userp, &req);
-                }
-                lock_ReleaseWrite(&scp->rw);
-                smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
-            }
+            if (starPattern)
+                smb_ApplyDirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
+
             lock_ObtainWrite(&scp->rw);
             lock_ReleaseMutex(&dsp->mx);
             if (code) {
@@ -4845,14 +4930,6 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         curOffset = LargeIntegerAdd(thyper, curOffset);
     }		/* while copying data for dir listing */
 
-    /* If there is anything left to bulk stat ... */
-    if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
-         LargeIntegerGreaterThanOrEqualTo(thyper, 
-                                           scp->bulkStatProgress)) {
-        thyper.LowPart = curOffset.LowPart & ~(cm_data.buf_blockSize-1);
-        code = cm_TryBulkStat(scp, &thyper, userp, &req);
-    }
-
     /* release the mutex */
     lock_ReleaseWrite(&scp->rw);
     if (bufferp) {
@@ -4863,7 +4940,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
+    smb_ApplyDirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
 
     /* special return code for unsuccessful search */
     if (code == 0 && dataLength < 21 && returnedNames == 0)
