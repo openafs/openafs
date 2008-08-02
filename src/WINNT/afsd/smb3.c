@@ -3989,10 +3989,9 @@ smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_
 }
 
 static long 
-smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp, 
+smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp, 
                           clientchar_t * tidPathp, clientchar_t * relPathp, 
-                          int infoLevel, cm_user_t *userp,
-                          cm_req_t *reqp)
+                          int infoLevel, cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
     cm_scache_t *scp;
@@ -4021,10 +4020,57 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
         }
     }
     if (code)
-        return code;
+        goto cleanup;
 
-    for(patchp = *dirPatchespp; patchp; patchp =
-         (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
+    if (!mustFake) {    /* Bulk Stat */
+        afs_uint32 count;
+        cm_bulkStat_t *bsp = malloc(sizeof(cm_bulkStat_t));
+
+        memset(bsp, 0, sizeof(cm_bulkStat_t));
+
+        for (patchp = *dirPatchespp, count=0; 
+             patchp; 
+             patchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
+            cm_scache_t *tscp = cm_FindSCache(&patchp->fid);
+            int i;
+
+            if (tscp) {
+                if (lock_TryWrite(&tscp->rw)) {
+                    /* we have an entry that we can look at */
+                    if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                        /* we have a callback on it.  Don't bother
+                        * fetching this stat entry, since we're happy
+                        * with the info we have.
+                        */
+                        lock_ReleaseWrite(&tscp->rw);
+                        cm_ReleaseSCache(tscp);
+                        continue;
+                    }
+                    lock_ReleaseWrite(&tscp->rw);
+                } /* got lock */
+                cm_ReleaseSCache(tscp);
+            }	/* found entry */
+
+            i = bsp->counter++;
+            bsp->fids[i].Volume = patchp->fid.volume;
+            bsp->fids[i].Vnode = patchp->fid.vnode;
+            bsp->fids[i].Unique = patchp->fid.unique;
+
+            if (bsp->counter == AFSCBMAX) {
+                code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+                memset(bsp, 0, sizeof(cm_bulkStat_t));
+            }
+        }
+
+        if (bsp->counter > 0)
+            code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+
+        free(bsp);
+    }
+
+    for( patchp = *dirPatchespp; 
+         patchp; 
+         patchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
         cm_ClientStrPrintfN(path, lengthof(path),_C("%s\\%S"),
                             relPathp ? relPathp : _C(""), patchp->dep->name);
         reqp->relPathp = path;
@@ -4036,10 +4082,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
             continue;
 
         lock_ObtainWrite(&scp->rw);
-        if (mustFake == 0)
-            code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-                             CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (mustFake || code) { 
+        if (mustFake || (scp->flags & CM_SCACHEFLAG_EACCESS) || !cm_HaveCallback(scp)) {
             lock_ReleaseWrite(&scp->rw);
 
             /* Plug in fake timestamps. A time stamp of 0 causes 'invalid parameter'
@@ -4112,6 +4155,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
                     else
                         fa->attributes = SMB_ATTR_NORMAL;
                 }
+
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
                     fa->attributes |= SMB_ATTR_HIDDEN;
@@ -4122,8 +4166,6 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
             continue;
         }
         
-	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-
         /* now watch for a symlink */
         code = 0;
         while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
@@ -4223,6 +4265,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,smb_dirListPatch_t **dirPatchespp,
     /* and mark the list as empty */
     *dirPatchespp = NULL;
 
+  cleanup:
     return code;
 }
 
@@ -4373,11 +4416,6 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     maxReturnData = p->maxReturnData;
     maxReturnParms = 10;	/* return params for findfirst, which
                                    is the only one we handle.*/
-
-#ifndef CM_CONFIG_MULTITRAN2RESPONSES
-    if (maxReturnData > 6000) 
-        maxReturnData = 6000;
-#endif /* CM_CONFIG_MULTITRAN2RESPONSES */
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
                                       maxReturnData);
@@ -4884,11 +4922,6 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else    
         maxReturnParms = 8;	/* bytes */
 
-#ifndef CM_CONFIG_MULTITRAN2RESPONSES
-    if (maxReturnData > 6000) 
-        maxReturnData = 6000;
-#endif /* CM_CONFIG_MULTITRAN2RESPONSES */
-
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
                                       maxReturnData);
 
@@ -4969,13 +5002,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * and so we do another hold now.
              */
             cm_HoldSCache(scp);
-            lock_ObtainWrite(&scp->rw);
-            if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
-                 LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
-                scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
-                dsp->flags |= SMB_DIRSEARCH_BULKST;
-            }
-            lock_ReleaseWrite(&scp->rw);
+            dsp->flags |= SMB_DIRSEARCH_BULKST;
         } 
     }
     lock_ReleaseMutex(&dsp->mx);
@@ -5067,6 +5094,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             break;
         }
 
+        if (GetTickCount() - req.startTime > RDRtimeout * 1000) {
+            osi_Log0(smb_logp, "T2 search dir RDRtimeout exceeded");
+            break;
+        }
+
         /* see if we can use the bufferp we have now; compute in which
          * page the current offset would be, and check whether that's
          * the offset of the buffer we have.  If not, get the buffer.
@@ -5087,23 +5119,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * of all of the status info for files in the dir.
              */
             if (starPattern) {
-                code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, infoLevel, userp, &req);
-                
-                lock_ObtainWrite(&scp->rw);
-                if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
-                    LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
-                    /* Don't bulk stat if risking timeout */
-                    DWORD now = GetTickCount();
-                    if (now - req.startTime > RDRtimeout * 1000) {
-                        scp->bulkStatProgress = thyper;
-                        scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
-                        dsp->flags &= ~SMB_DIRSEARCH_BULKST;
-                    } else
-                        code = cm_TryBulkStat(scp, &thyper, userp, &req);
-                }
-            } else {
-                lock_ObtainWrite(&scp->rw);
+                code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, infoLevel, 
+                                                  userp, &req);
             }
+            lock_ObtainWrite(&scp->rw);
             lock_ReleaseMutex(&dsp->mx);
             if (code) {
                 osi_Log2(smb_logp, "T2 search dir buf_Get scp %x failed %d", scp, code);
@@ -5415,7 +5434,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, 
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath,
                                       dsp->relPath, infoLevel, userp, &req);
 
     /* now put out the final parameters */

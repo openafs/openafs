@@ -1692,13 +1692,15 @@ void smb_ReleaseFID(smb_fid_t *fidp)
             lock_ReleaseMutex(&fidp->mx);
             lock_FinalizeMutex(&fidp->mx);
             free(fidp);
+            fidp = NULL;
 
             if (vcp)
                 smb_ReleaseVCNoLock(vcp);
-        } else {
-            lock_ReleaseMutex(&fidp->mx);
         }
     }
+    if (fidp)
+        lock_ReleaseMutex(&fidp->mx);
+
     lock_ReleaseWrite(&smb_rctLock);
 
     /* now release the scache structure */
@@ -4641,24 +4643,16 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * the status info for files in the dir.
              */
             if (starPattern) {
-                smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
                 lock_ObtainWrite(&scp->rw);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                      LargeIntegerGreaterThanOrEqualTo(thyper, 
                                                       scp->bulkStatProgress)) {
-                    /* Don't bulk stat if risking timeout */
-                    int now = GetTickCount();
-                    if (now - req.startTime > RDRtimeout * 1000) {
-                        scp->bulkStatProgress = thyper;
-                        scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
-                        dsp->flags &= ~SMB_DIRSEARCH_BULKST;
-			dsp->scp->bulkStatProgress = hzero;
-                    } else
-                        code = cm_TryBulkStat(scp, &thyper, userp, &req);
+                    code = cm_TryBulkStat(scp, &thyper, userp, &req);
                 }
-            } else {
-                lock_ObtainWrite(&scp->rw);
+                lock_ReleaseWrite(&scp->rw);
+                smb_ApplyDirListPatches(&dirListPatchesp, dsp->tidPath, dsp->relPath, userp, &req);
             }
+            lock_ObtainWrite(&scp->rw);
             lock_ReleaseMutex(&dsp->mx);
             if (code) {
                 osi_Log2(smb_logp, "SMB search dir buf_Get scp %x failed %d", scp, code);
@@ -4850,6 +4844,14 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
         curOffset = LargeIntegerAdd(thyper, curOffset);
     }		/* while copying data for dir listing */
+
+    /* If there is anything left to bulk stat ... */
+    if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
+         LargeIntegerGreaterThanOrEqualTo(thyper, 
+                                           scp->bulkStatProgress)) {
+        thyper.LowPart = curOffset.LowPart & ~(cm_data.buf_blockSize-1);
+        code = cm_TryBulkStat(scp, &thyper, userp, &req);
+    }
 
     /* release the mutex */
     lock_ReleaseWrite(&scp->rw);
