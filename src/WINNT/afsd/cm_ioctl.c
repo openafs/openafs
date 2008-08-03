@@ -364,6 +364,37 @@ cm_NormalizeAfsPath(clientchar_t *outpathp, long cchlen, clientchar_t *inpathp)
     }
 }
 
+void cm_NormalizeAfsPathAscii(char *outpathp, long outlen, char *inpathp)
+{
+    char *cp;
+    char bslash_mountRoot[256];
+       
+    strncpy(bslash_mountRoot, cm_mountRoot, sizeof(bslash_mountRoot) - 1);
+    bslash_mountRoot[0] = '\\';
+       
+    if (!strnicmp (inpathp, cm_mountRoot, strlen(cm_mountRoot)))
+        StringCbCopy(outpathp, outlen, inpathp);
+    else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
+        StringCbCopy(outpathp, outlen, inpathp);
+    else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
+        StringCbPrintfA(outpathp, outlen, "%s%s", cm_mountRoot, inpathp);
+    else // inpathp looks like "<cell>/usr"
+        StringCbPrintfA(outpathp, outlen, "%s/%s", cm_mountRoot, inpathp);
+
+    for (cp = outpathp; *cp != 0; ++cp) {
+        if (*cp == '\\')
+            *cp = '/';
+    }       
+
+    if (strlen(outpathp) && (outpathp[strlen(outpathp)-1] == '/')) {
+        outpathp[strlen(outpathp)-1] = 0;
+    }
+
+    if (!strcmpi (outpathp, cm_mountRoot)) {
+        StringCbCopy(outpathp, outlen, cm_mountRoot);
+    }
+}
+
 
 /* 
  * VIOCGETAL internals.
@@ -2592,6 +2623,7 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
     /* Parse the input parameters--first the required afs path,
      * then the requested submount name (which may be "").
      */
+    cm_NormalizeAfsPathAscii(afspath, sizeof(afspath), ioctlp->inDatap);
     submountreqp = ioctlp->inDatap + (strlen(ioctlp->inDatap)+1);
 
     /* If the caller supplied a suggested submount name, see if
