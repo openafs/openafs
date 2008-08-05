@@ -4925,6 +4925,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
                                       maxReturnData);
 
+    if (maxCount > 500)
+        maxCount = 500;
+
     osi_Log2(smb_logp, "T2 receive search dir count %d [%S]",
              maxCount, osi_LogSaveClientString(smb_logp, pathp));
         
@@ -5094,7 +5097,18 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             break;
         }
 
-        if (GetTickCount() - req.startTime > RDRtimeout * 1000) {
+        /* when we have obtained as many entries as can be processed in 
+         * a single Bulk Status call to the file server, apply the dir listing
+         * patches.
+         */
+        if (returnedNames > 0 && returnedNames % AFSCBMAX == 0) {
+            lock_ReleaseWrite(&scp->rw);
+            code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath,
+                                               dsp->relPath, infoLevel, userp, &req);
+            lock_ObtainWrite(&scp->rw);
+        }
+        /* Then check to see if we have time left to process more entries */
+        if (GetTickCount() - req.startTime > (RDRtimeout - 15) * 1000) {
             osi_Log0(smb_logp, "T2 search dir RDRtimeout exceeded");
             break;
         }
@@ -5113,17 +5127,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }       
             lock_ReleaseWrite(&scp->rw);
             code = buf_Get(scp, &thyper, &bufferp);
-            lock_ObtainMutex(&dsp->mx);
-
-            /* now, if we're doing a star match, do bulk fetching
-             * of all of the status info for files in the dir.
-             */
-            if (starPattern) {
-                code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath, dsp->relPath, infoLevel, 
-                                                  userp, &req);
-            }
             lock_ObtainWrite(&scp->rw);
-            lock_ReleaseMutex(&dsp->mx);
             if (code) {
                 osi_Log2(smb_logp, "T2 search dir buf_Get scp %x failed %d", scp, code);
                 break;
@@ -5142,16 +5146,16 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     break;
                 }
                        
-		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
-
                 if (cm_HaveBuffer(scp, bufferp, 0)) {
                     osi_Log2(smb_logp, "T2 search dir !HaveBuffer scp %x bufferp %x", scp, bufferp);
+                    cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
                     break;
                 }
 
                 /* otherwise, load the buffer and try again */
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                     &req);
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
                 if (code) {
                     osi_Log3(smb_logp, "T2 search dir cm_GetBuffer failed scp %x bufferp %x code %d", 
                               scp, bufferp, code);
@@ -5431,8 +5435,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	bufferp = NULL;
     }
 
-    /* apply and free last set of patches; if not doing a star match, this
-     * will be empty, but better safe (and freeing everything) than sorry.
+    /* 
+     * Finally, process whatever entries we have left.
      */
     code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, dsp->tidPath,
                                       dsp->relPath, infoLevel, userp, &req);
