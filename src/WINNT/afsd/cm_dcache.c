@@ -1694,8 +1694,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
     lock_ObtainWrite(&scp->rw);
     
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS);
-
     /* we know that no one else has changed the buffer, since we still have
      * the fetching flag on the buffers, and we have the scp locked again.
      * Copy in the version # into the buffer if we got code 0 back from the
