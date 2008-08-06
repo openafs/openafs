@@ -111,11 +111,13 @@ IsWindowsModule(const char * name)
  * If the caller wants the "real" cell name, it puts a non-null pointer in
  * newCellNamep.  Anomaly:  if cellNamep is ambiguous, we may modify
  * newCellNamep but return an error code.
+ *
+ * newCellNamep is required to be CELL_MAXNAMELEN+1 in size.
  */
 long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                        cm_configProc_t *procp, void *rockp)
 {
-    char wdir[257];
+    char wdir[MAX_PATH]="";
     FILE *tfilep = NULL, *bestp, *tempp;
     char *tp;
     char lineBuffer[257];
@@ -131,7 +133,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	return -3;
 
     cm_GetCellServDB(wdir, sizeof(wdir));
-    tfilep = fopen(wdir, "r");
+    if (*wdir)
+        tfilep = fopen(wdir, "r");
 
     if (!tfilep) 
         return -2;
@@ -148,7 +151,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
         if (tracking)
 	    (void) fgets(lineBuffer, sizeof(lineBuffer), bestp);
-        if (	tp == NULL) {
+        if (tp == NULL) {
 	    if (feof(tfilep)) {
 		/* hit EOF */
 		if (partial) {
@@ -193,7 +196,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
 		/* found the cell we're looking for */
 		if (newCellNamep) {
-		    strcpy(newCellNamep, lineBuffer+1);
+		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN+1);
+                    newCellNamep[CELL_MAXNAMELEN] = '\0';
                     strlwr(newCellNamep);
                 }
                 inRightCell = 1;
@@ -211,7 +215,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    return -5;
 		}
 		if (newCellNamep) {
-		    strcpy(newCellNamep, lineBuffer+1);
+		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN+1);
+                    newCellNamep[CELL_MAXNAMELEN] = '\0';
                     strlwr(newCellNamep);
                 }
 		inRightCell = 0;
@@ -285,6 +290,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     return (foundCell) ? 0 : -11;
 }
 
+/* newCellNamep is required to be CELL_MAXNAMELEN+1 in size */
 long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                cm_configProc_t *procp, void *rockp)
 {
@@ -310,7 +316,8 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
             if (procp)
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i]);
             if (newCellNamep) {
-                strcpy(newCellNamep,cellNamep);
+                strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN+1);
+                newCellNamep[CELL_MAXNAMELEN] = '\0';
                 strlwr(newCellNamep);
             }
         }
@@ -329,19 +336,21 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
  */
 long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
 {
-    int tlen;
+    size_t tlen;
     
     cm_GetConfigDir(cellNamep, len);
 
     /* add trailing backslash, if required */
     tlen = (int)strlen(cellNamep);
-    if (cellNamep[tlen-1] != '\\') {
-        strncat(cellNamep, "\\", len);
+    if (tlen) {
+        if (cellNamep[tlen-1] != '\\') {
+            strncat(cellNamep, "\\", len);
+            cellNamep[len-1] = '\0';
+        }
+        
+        strncat(cellNamep, AFS_CELLSERVDB, len);
         cellNamep[len-1] = '\0';
     }
-        
-    strncat(cellNamep, AFS_CELLSERVDB, len);
-    cellNamep[len-1] = '\0';
     return 0;
 }
 
@@ -368,16 +377,16 @@ long cm_GetRootCellName(char *cellNamep)
 
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
-    char wdir[256];
-    FILE *tfilep;
+    char wdir[MAX_PATH]="";
+    FILE *tfilep = NULL;
 
     cm_GetConfigDir(wdir, sizeof(wdir));
-
-    strncat(wdir, namep, sizeof(wdir));
-    wdir[sizeof(wdir)-1] = '\0';
+    if (*wdir) {
+        strncat(wdir, namep, sizeof(wdir));
+        wdir[sizeof(wdir)-1] = '\0';
         
-    tfilep = fopen(wdir, rwp);
-
+        tfilep = fopen(wdir, rwp);
+    }
     return ((cm_configFile_t *) tfilep);        
 }	
 
@@ -512,8 +521,8 @@ long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep)
 
 long cm_CloseCellFile(cm_configFile_t *filep)
 {
-    char wdir[260];
-    char sdir[260];
+    char wdir[MAX_PATH];
+    char sdir[MAX_PATH];
     long code;
     long closeCode;
     closeCode = fclose((FILE *)filep);

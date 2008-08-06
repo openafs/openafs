@@ -137,7 +137,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 {
     cm_cell_t *cp, *cp2;
     long code;
-    char fullname[200]="";
+    char fullname[CELL_MAXNAMELEN]="";
     int  hasWriteLock = 0;
     afs_uint32 hash;
     cm_cell_rock_t rock;
@@ -158,7 +158,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     if (!cp) {
         for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
             if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
-                strcpy(fullname, cp->name);
+                strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+                fullname[CELL_MAXNAMELEN-1] = '\0';
                 break;
             }
         }   
@@ -177,7 +178,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          */
         for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
             if (cm_stricmp_utf8(namep, cp->name) == 0) {
-                strcpy(fullname, cp->name);
+                strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+                fullname[CELL_MAXNAMELEN-1] = '\0';
                 break;
             }
         }   
@@ -187,7 +189,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 
         for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
             if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
-                strcpy(fullname, cp->name);
+                strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+                fullname[CELL_MAXNAMELEN-1] = '\0';
                 break;
             }
         }   
@@ -289,9 +292,10 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         lock_ReleaseWrite(&cm_cellLock);
     
     /* fullname is not valid if cp == NULL */
-    if (cp && newnamep)
-        strcpy(newnamep, fullname);
-    
+    if (cp && newnamep) {
+        strncpy(newnamep, fullname, CELL_MAXNAMELEN);
+        newnamep[CELL_MAXNAMELEN-1]='\0';
+    }
     return cp;
 }
 
@@ -387,6 +391,7 @@ void cm_InitCell(int newFile, long maxCells)
 
             /* copy in name */
             strncpy(cellp->name, "Freelance.Local.Cell", CELL_MAXNAMELEN); /*safe*/
+            cellp->name[CELL_MAXNAMELEN-1] = '\0';
 
             /* thread on global list */
             cellp->allNextp = cm_data.allCellsp;

@@ -533,8 +533,8 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
       fprintf(stderr, "processRep_AFSDB: resolved name %s to addr %x\n", hostName, addr);
 #endif /* DEBUG */
       memcpy(&cellHostAddrs[srvCount], &addr.s_addr, sizeof(addr.s_addr));
-	  strncpy(cellHostNames[srvCount], hostName, MAXCELLCHARS);
-	  cellHostNames[srvCount][MAXCELLCHARS-1] = '\0';
+	  strncpy(cellHostNames[srvCount], hostName, CELL_MAXNAMELEN);
+	  cellHostNames[srvCount][CELL_MAXNAMELEN-1] = '\0';
       srvCount++;
     }
     else {

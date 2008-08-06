@@ -42,7 +42,7 @@
 #define	MAXSIZE	2048
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 #define VMSGSIZE 128      /* size of msg buf in volume hdr */
-#define MAXCELLCHARS		64
+#define CELL_MAXNAMELEN		256
 #define MAXHOSTCHARS		64
 
 static char space[MAXSIZE];
@@ -1155,7 +1155,7 @@ GetCell(char *fname, char *cellname)
     struct ViceIoctl blob;
 
     blob.in_size = 0;
-    blob.out_size = MAXCELLCHARS;
+    blob.out_size = CELL_MAXNAMELEN;
     blob.out = cellname;
 
     code = pioctl_utf8(fname, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -1171,7 +1171,7 @@ BadName(char *aname, char *fname)
 {
     afs_int32 tc, code, id;
     char *nm;
-    char cell[MAXCELLCHARS];
+    char cell[CELL_MAXNAMELEN];
     char confDir[257];
 
     for ( nm = aname; tc = *nm; nm++) {
@@ -1604,7 +1604,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         cm_fid_t fid;
         afs_uint32 filetype;
 	afs_uint32 owner[2];
-	char cell[MAXCELLCHARS];
+	char cell[CELL_MAXNAMELEN];
 
         /* once per file */
         memset(&fid, 0, sizeof(fid));
@@ -1632,7 +1632,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
 
-        blob.out_size = MAXCELLCHARS;
+        blob.out_size = CELL_MAXNAMELEN;
         blob.out = cell;
 
         code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -2750,7 +2750,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
         afs_uint32 filetype;
-	char cell[MAXCELLCHARS];
+	char cell[CELL_MAXNAMELEN];
 
         /* once per file */
         memset(&fid, 0, sizeof(fid));
@@ -2778,7 +2778,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
 
-        blob.out_size = MAXCELLCHARS;
+        blob.out_size = CELL_MAXNAMELEN;
         blob.out = cell;
 
         code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
