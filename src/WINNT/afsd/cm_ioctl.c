@@ -1758,7 +1758,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     cm_attr_t tattr;
     clientchar_t *cp;
     fschar_t mpInfo[512];           /* mount point string */
-    fschar_t fullCell[MAXCELLCHARS];
+    fschar_t fullCell[CELL_MAXNAMELEN];
     fschar_t *fscell = NULL;
     fschar_t *fsvolume = NULL;
     clientchar_t volume[VL_MAXNAMELEN];

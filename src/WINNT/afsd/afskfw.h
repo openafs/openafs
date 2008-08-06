@@ -40,7 +40,7 @@ extern "C" {
 #include <cm_config.h>
 #include <rxkad.h>
 
-#define MAXCELLCHARS   64
+#define CELL_MAXNAMELEN 256
 #define MAXHOSTCHARS   64
 #define MAXHOSTSPERCELL 8
 #define TRANSARCAFSDAEMON "TransarcAFSDaemon"

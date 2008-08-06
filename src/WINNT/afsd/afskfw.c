@@ -1324,7 +1324,7 @@ KFW_AFS_get_cred( char * username,
     krb5_principal principal = NULL;
     char * pname = NULL;
     krb5_error_code code;
-    char local_cell[MAXCELLCHARS+1];
+    char local_cell[CELL_MAXNAMELEN+1];
     char **cells = NULL;
     int  cell_count=0;
     struct afsconf_cell cellconfig;
@@ -1614,7 +1614,7 @@ KFW_AFS_renew_expiring_tokens(void)
     int cell_count;
     char ** cells=NULL;
     const char * realm = NULL;
-    char local_cell[MAXCELLCHARS+1]="";
+    char local_cell[CELL_MAXNAMELEN+1]="";
     struct afsconf_cell cellconfig;
 
     if (!pkrb5_init_context)
@@ -1742,7 +1742,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
         krb5_ccache			cc  = 0;
         const char * realm = NULL;
         struct afsconf_cell cellconfig;
-        char local_cell[MAXCELLCHARS+1];
+        char local_cell[CELL_MAXNAMELEN+1];
 
         while ( count-- ) {
             code = pkrb5_parse_name(ctx, principals[count], &princ);
@@ -2658,7 +2658,7 @@ ViceIDToUsername(char *username,
                  struct ktc_principal *aserver, 
                  struct ktc_token *atoken)
 {
-    static char lastcell[MAXCELLCHARS+1] = { 0 };
+    static char lastcell[CELL_MAXNAMELEN+1] = { 0 };
     static char confdir[512] = { 0 };
 #ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
@@ -2773,8 +2773,8 @@ KFW_AFS_klog(
     struct ktc_principal	aclient;
     char	realm_of_user[REALM_SZ]; /* Kerberos realm of user */
     char	realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
-    char	local_cell[MAXCELLCHARS+1];
-    char	Dmycell[MAXCELLCHARS+1];
+    char	local_cell[CELL_MAXNAMELEN+1];
+    char	Dmycell[CELL_MAXNAMELEN+1];
     struct ktc_token	atoken;
     struct ktc_token	btoken;
     struct afsconf_cell	ak_cellconfig; /* General information about the cell */
@@ -3364,7 +3364,7 @@ int
 KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell)
 {
     int	rc;
-    char newcell[MAXCELLCHARS+1];
+    char newcell[CELL_MAXNAMELEN+1];
 
     local_cell[0] = (char)0;
     memset(cellconfig, 0, sizeof(*cellconfig));
