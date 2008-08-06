@@ -196,8 +196,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
 		/* found the cell we're looking for */
 		if (newCellNamep) {
-		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN+1);
-                    newCellNamep[CELL_MAXNAMELEN] = '\0';
+		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
+                    newCellNamep[CELL_MAXNAMELEN-1] = '\0';
                     strlwr(newCellNamep);
                 }
                 inRightCell = 1;
@@ -215,8 +215,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    return -5;
 		}
 		if (newCellNamep) {
-		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN+1);
-                    newCellNamep[CELL_MAXNAMELEN] = '\0';
+		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
+                    newCellNamep[CELL_MAXNAMELEN-1] = '\0';
                     strlwr(newCellNamep);
                 }
 		inRightCell = 0;
@@ -316,8 +316,8 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
             if (procp)
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i]);
             if (newCellNamep) {
-                strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN+1);
-                newCellNamep[CELL_MAXNAMELEN] = '\0';
+                strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN);
+                newCellNamep[CELL_MAXNAMELEN-1] = '\0';
                 strlwr(newCellNamep);
             }
         }
