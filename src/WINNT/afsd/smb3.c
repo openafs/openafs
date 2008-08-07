@@ -4007,9 +4007,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
     clientchar_t path[AFSPATHMAX];
 
     code = cm_FindACLCache(dscp, userp, &rights);
-    if (code == 0 && !(rights & PRSFS_READ))
-        mustFake = 1;
-    else if (code == -1) {
+    if (code == -1) {
         lock_ObtainWrite(&dscp->rw);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -4031,12 +4029,25 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
         for (patchp = *dirPatchespp, count=0; 
              patchp; 
              patchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
-            cm_scache_t *tscp = cm_FindSCache(&patchp->fid);
+            cm_scache_t *tscp = NULL;
             int i;
-
-            if (tscp) {
+            
+            code = cm_GetSCache(&patchp->fid, &tscp, userp, reqp);
+            if (code == 0) {
                 if (lock_TryWrite(&tscp->rw)) {
                     /* we have an entry that we can look at */
+#ifdef AFS_FREELANCE_CLIENT
+                    if (dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID && dscp->fid.volume == AFS_FAKE_ROOT_VOL_ID) {
+                        code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
+                                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                        if (code == 0) 
+                            cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+                        lock_ReleaseWrite(&tscp->rw);
+                        cm_ReleaseSCache(tscp);
+                        continue;
+                    }
+#endif /* AFS_FREELANCE_CLIENT */
                     if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
                         /* we have a callback on it.  Don't bother
                         * fetching this stat entry, since we're happy
@@ -4617,11 +4628,11 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 #ifdef SMB_UNICODE
             int nchars;
 
-            nchars = cm_ClientStringToUtf16(shortName, -1,
+            nchars = cm_ClientStringToUtf16(shortName, cm_ClientStrLen(shortName),
                                             fp->u.FfileBothDirectoryInfo.shortName,
                                             sizeof(fp->u.FfileBothDirectoryInfo.shortName)/sizeof(wchar_t));
             if (nchars > 0)
-                fp->u.FfileBothDirectoryInfo.shortNameLength = (nchars - 1)*sizeof(wchar_t);
+                fp->u.FfileBothDirectoryInfo.shortNameLength = nchars*sizeof(wchar_t);
             else
                 fp->u.FfileBothDirectoryInfo.shortNameLength = 0;
             fp->u.FfileBothDirectoryInfo.reserved = 0;
@@ -5315,11 +5326,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #ifdef SMB_UNICODE
                     int nchars;
 
-                    nchars = cm_ClientStringToUtf16(shortName, -1,
+                    nchars = cm_ClientStringToUtf16(shortName, cm_ClientStrLen(shortName),
                                                     fp->u.FfileBothDirectoryInfo.shortName,
                                                     sizeof(fp->u.FfileBothDirectoryInfo.shortName)/sizeof(wchar_t));
                     if (nchars > 0)
-                        fp->u.FfileBothDirectoryInfo.shortNameLength = (nchars - 1)*sizeof(wchar_t);
+                        fp->u.FfileBothDirectoryInfo.shortNameLength = nchars*sizeof(wchar_t);
                     else
                         fp->u.FfileBothDirectoryInfo.shortNameLength = 0;
                     fp->u.FfileBothDirectoryInfo.reserved = 0;
