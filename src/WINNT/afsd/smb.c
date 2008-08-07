@@ -4288,9 +4288,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
     afs_int32 mustFake = 0;
 
     code = cm_FindACLCache(dscp, userp, &rights);
-    if (code == 0 && !(rights & PRSFS_READ))
-        mustFake = 1;
-    else if (code == -1) {
+    if (code == -1) {
         lock_ObtainWrite(&dscp->rw);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);

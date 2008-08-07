@@ -1245,7 +1245,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             /* can't check access rights without a callback */
             osi_assertx(flags & CM_SCACHESYNC_NEEDCALLBACK, "!CM_SCACHESYNC_NEEDCALLBACK");
 
-            if ((rights & PRSFS_WRITE) && (scp->flags & CM_SCACHEFLAG_RO))
+            if ((rights & (PRSFS_WRITE|PRSFS_DELETE)) && (scp->flags & CM_SCACHEFLAG_RO))
                 return CM_ERROR_READONLY;
 
             if (cm_HaveAccessRights(scp, userp, rights, &outRights) || !getAccessRights) {
