@@ -948,7 +948,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     FILE *fp;
     char hfile[260];
     char line[512];
-    char fullname[200];
+    char fullname[CELL_MAXNAMELEN];
     int n;
     int alias = 0;
     HKEY hkFreelance = 0;
@@ -1177,7 +1177,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 {
     char line[512];
-    char fullname[200];
+    char fullname[CELL_MAXNAMELEN];
     int alias = 0;
     HKEY hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
