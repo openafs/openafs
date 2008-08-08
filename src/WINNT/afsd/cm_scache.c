@@ -1047,6 +1047,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     int wakeupCycle;
     int getAccessRights = 1;
 
+    lock_AssertWrite(&scp->rw);
+
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
 

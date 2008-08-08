@@ -185,6 +185,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     afs_uint32 volType;
 
+    lock_AssertWrite(&volp->rw);
+
 #ifdef AFS_FREELANCE_CLIENT
     if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
