@@ -2753,7 +2753,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         if (WANTS_UNICODE(pktp) && !(flags & SMB_STRF_FORCEASCII)) {
 
             StringCbLengthW(str, SMB_STRINGBUFSIZE * sizeof(wchar_t), plen);
-            if (!(flags & SMB_STRF_IGNORENULL))
+            if (!(flags & SMB_STRF_IGNORENUL))
                 *plen += sizeof(wchar_t);
 
             return (unsigned char *) 1; /* return TRUE if we are using unicode */
@@ -2770,7 +2770,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
             cch_dest = cm_ClientStringToUtf8(str, (int)cch_str, NULL, 0);
 
             if (plen)
-                *plen = ((flags & SMB_STRF_IGNORENULL)? cch_dest: cch_dest+1);
+                *plen = ((flags & SMB_STRF_IGNORENUL)? cch_dest: cch_dest+1);
 
             return NULL;
         }
@@ -2809,7 +2809,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
                 return NULL;
 
             *((wchar_t *) outp) = L'\0';
-            if (plen && !(flags & SMB_STRF_IGNORENULL))
+            if (plen && !(flags & SMB_STRF_IGNORENUL))
                 *plen += sizeof(wchar_t);
             return outp + sizeof(wchar_t);
         }
@@ -2823,7 +2823,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         }
 
         if (plen)
-            *plen += sizeof(wchar_t) * ((flags & SMB_STRF_IGNORENULL)? nchars - 1: nchars);
+            *plen += sizeof(wchar_t) * ((flags & SMB_STRF_IGNORENUL)? nchars - 1: nchars);
 
         return outp + sizeof(wchar_t) * nchars;
     }
@@ -2836,7 +2836,7 @@ unsigned char * smb_UnparseString(smb_packet_t * pktp, unsigned char * outp,
         cch_dest = cm_ClientStringToUtf8(str, -1, outp, (int)buffersize);
 
         if (plen)
-            *plen += ((flags & SMB_STRF_IGNORENULL)? cch_dest - 1: cch_dest);
+            *plen += ((flags & SMB_STRF_IGNORENUL)? cch_dest - 1: cch_dest);
 
         return outp + cch_dest;
     }

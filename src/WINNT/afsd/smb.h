@@ -648,7 +648,7 @@ extern void smb_StripLastComponent(clientchar_t *outPathp, clientchar_t **lastCo
 
 #define SMB_STRF_FORCEASCII (1<<0)
 #define SMB_STRF_ANSIPATH   (1<<1)
-#define SMB_STRF_IGNORENULL (1<<2)
+#define SMB_STRF_IGNORENUL  (1<<2)
 
 extern clientchar_t *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
                                          char **chainpp, int flags);
