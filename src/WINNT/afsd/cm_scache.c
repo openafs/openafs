@@ -704,13 +704,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         char mp[MOUNTPOINTLEN] = "";
         afs_uint32 fileType;
 
+        lock_ReleaseWrite(&cm_scacheLock);
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
 
         if (cm_getLocalMountPointChange()) {	// check for changes
             cm_clearLocalMountPointChange();    // clear the changefile
-		    lock_ReleaseWrite(&cm_scacheLock);
             cm_reInitLocalMountPoints();	// start reinit
-			lock_ObtainWrite(&cm_scacheLock);
         }
 
         lock_ObtainMutex(&cm_Freelance_Lock);
@@ -726,7 +725,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
         }
         lock_ReleaseMutex(&cm_Freelance_Lock);
-
+        lock_ObtainWrite(&cm_scacheLock);
         if (scp == NULL)
             scp = cm_GetNewSCache();
 	if (scp == NULL) {
