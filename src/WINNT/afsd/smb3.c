@@ -2710,7 +2710,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 #ifdef SMB_UNICODE
         }
 #endif
-        smb_UnparseString(op, qi.u.FSattributeInfo.FSname, _C("AFS"), &sz, 0);
+        smb_UnparseString(op, qi.u.FSattributeInfo.FSname, _C("AFS"), &sz, SMB_STRF_IGNORENUL);
         qi.u.FSattributeInfo.FSnameLength = sz;
 
 	responseSize =
@@ -3037,13 +3037,13 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             goto done;
         }
 
-        smb_UnparseString(opx, qpi.u.QPfileAltNameInfo.fileName, shortName, &len, 0);
+        smb_UnparseString(opx, qpi.u.QPfileAltNameInfo.fileName, shortName, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileAltNameInfo.fileNameLength = len;
 
         goto done;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
-        smb_UnparseString(opx, qpi.u.QPfileNameInfo.fileName, lastComp, &len, 0);
+        smb_UnparseString(opx, qpi.u.QPfileNameInfo.fileName, lastComp, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileNameInfo.fileNameLength = len;
 
         goto done;
@@ -3121,7 +3121,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPfileAllInfo.mode = 0;
 	qpi.u.QPfileAllInfo.alignmentRequirement = 0;
 
-        smb_UnparseString(opx, qpi.u.QPfileAllInfo.fileName, lastComp, &len, 0);
+        smb_UnparseString(opx, qpi.u.QPfileAllInfo.fileName, lastComp, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileAllInfo.fileNameLength = len;
     }
 
@@ -3500,7 +3500,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             name = _C("\\");	/* probably can't happen */
 	lock_ReleaseMutex(&fidp->mx);
 
-        smb_UnparseString(opx, qfi.u.QFfileNameInfo.fileName, name, &len, 0);
+        smb_UnparseString(opx, qfi.u.QFfileNameInfo.fileName, name, &len, SMB_STRF_IGNORENUL);
         outp->totalData = len + 4;	/* this is actually what we want to return */
         qfi.u.QFfileNameInfo.fileNameLength = len;
     }
@@ -4582,7 +4582,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     /* add header to name & term. null */
     onbytes = 0;
-    smb_UnparseString(opx, NULL, maskp, &onbytes, SMB_STRF_ANSIPATH);
+    smb_UnparseString(opx, NULL, maskp, &onbytes, SMB_STRF_ANSIPATH|SMB_STRF_IGNORENUL);
     orbytes = ohbytes + onbytes;
 
     /* now, we round up the record to a 4 byte alignment, and we make
@@ -4614,7 +4614,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     memset(origOp, 0, orbytes);
 
     onbytes = 0;
-    smb_UnparseString(opx, origOp + ohbytes, maskp, &onbytes, SMB_STRF_ANSIPATH);
+    smb_UnparseString(opx, origOp + ohbytes, maskp, &onbytes, SMB_STRF_ANSIPATH|SMB_STRF_IGNORENUL);
 
     switch (infoLevel) {
     case SMB_INFO_STANDARD:
@@ -5284,7 +5284,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
             /* finally check if this name will fit */
             onbytes = 0;
-            smb_UnparseString(opx, NULL, cfileName, &onbytes, SMB_STRF_ANSIPATH);
+            smb_UnparseString(opx, NULL, cfileName, &onbytes, SMB_STRF_ANSIPATH|SMB_STRF_IGNORENUL);
             orbytes = ohbytes + onbytes;
 
             /* now, we round up the record to a 4 byte alignment,
@@ -5312,7 +5312,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             memset(origOp, 0, orbytes);
 
             onbytes = 0;
-            smb_UnparseString(opx, origOp + ohbytes, cfileName, &onbytes, SMB_STRF_ANSIPATH);
+            smb_UnparseString(opx, origOp + ohbytes, cfileName, &onbytes, SMB_STRF_ANSIPATH|SMB_STRF_IGNORENUL);
 
             switch (infoLevel) {
             case SMB_INFO_STANDARD:
