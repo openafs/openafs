@@ -560,6 +560,7 @@ int afsd_InitCM(char **reasonP)
     DWORD dwValue;
     DWORD rx_enable_peer_stats;
     DWORD rx_enable_process_stats;
+    DWORD rx_udpbufsize = -1;
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
@@ -1062,6 +1063,15 @@ int afsd_InitCM(char **reasonP)
     if (rx_extraPackets)
         afsi_log("RX extraPackets is %d", rx_extraPackets);
 
+    dummyLen = sizeof(rx_udpbufsize);
+    code = RegQueryValueEx(parmKey, "RxUdpBufSize", NULL, NULL,
+                           (BYTE *) &rx_udpbufsize, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        rx_udpbufsize = 256*1024;
+    }
+    if (rx_udpbufsize)
+        afsi_log("RX udpbufsize is %d", rx_udpbufsize);
+
     dummyLen = sizeof(rx_mtu);
     code = RegQueryValueEx(parmKey, "RxMaxMTU", NULL, NULL,
                            (BYTE *) &rx_mtu, &dummyLen);
@@ -1284,6 +1294,11 @@ int afsd_InitCM(char **reasonP)
 
         rx_SetMaxMTU(rx_mtu);
         afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
+    }
+
+    if ( rx_udpbufsize != -1 ) {
+        rx_SetUdpBufSize(rx_udpbufsize);
+        afsi_log("rx_SetUdpBufSize %d", rx_udpbufsize);
     }
 
     /* initialize RX, and tell it to listen to the callbackport, 
