@@ -1423,7 +1423,6 @@ AFSSetAllocationInfo( IN PIRP Irp,
     BOOLEAN bReleasePaging = FALSE;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT pFileObject = pIrpSp->FileObject;
-    LARGE_INTEGER liAllocationSize;
     LARGE_INTEGER liSave = Fcb->Header.AllocationSize;
 
     pBuffer = (PFILE_ALLOCATION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
@@ -1441,48 +1440,30 @@ AFSSetAllocationInfo( IN PIRP Irp,
         bReleasePaging = TRUE;
     }
 
+    //
+    // Note we handle the EOF and AllocSize the same since the server only knows one size
+    //
+
     if( Fcb->Header.AllocationSize.QuadPart != pBuffer->AllocationSize.QuadPart &&
         !pIrpSp->Parameters.SetFile.AdvanceOnly)
     {
 
-        liAllocationSize.QuadPart = pBuffer->AllocationSize.QuadPart;
+        Fcb->Header.AllocationSize = pBuffer->AllocationSize;
 
-        if( (liAllocationSize.QuadPart % 512) > 0)
+        Fcb->DirEntry->DirectoryEntry.AllocationSize = pBuffer->AllocationSize;
+
+        //
+        // Tell the MM about the new size if we are truncating
+        //
+
+        if( Fcb->Header.AllocationSize.QuadPart < liSave.QuadPart &&
+            CcIsFileCached( pFileObject)) 
         {
 
-            liAllocationSize.QuadPart = ((liAllocationSize.QuadPart/512) + 1) * 512;
+            CcSetFileSizes( pFileObject, 
+                            (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
         }
-
-        Fcb->Header.AllocationSize = liAllocationSize;
-
-        Fcb->DirEntry->DirectoryEntry.AllocationSize = liAllocationSize;
-
-        ntStatus = AFSUpdateFileInformation( AFSRDRDeviceObject, Fcb);
-
-        if (NT_SUCCESS(ntStatus)) {
-
-            //
-            // Tell the MM about the new size if we are truncating
-            //
-
-            if( Fcb->Header.AllocationSize.QuadPart > liAllocationSize.QuadPart &&
-                CcIsFileCached( pFileObject)) 
-            {
-
-                CcSetFileSizes( pFileObject, 
-                                (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
-            }
-            SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
-        } 
-        else 
-        {
-            //
-            // Put things back
-            //
-            Fcb->Header.AllocationSize = liSave;
-
-            Fcb->DirEntry->DirectoryEntry.AllocationSize = liSave;
-        }
+        SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
     }
 
     if( bReleasePaging)
@@ -1545,6 +1526,10 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
             Fcb->DirEntry->DirectoryEntry.EndOfFile = pBuffer->EndOfFile;
 
+            Fcb->Header.AllocationSize = pBuffer->EndOfFile;
+
+            Fcb->DirEntry->DirectoryEntry.AllocationSize = pBuffer->EndOfFile;
+
             bModified = TRUE;
         }
     }
@@ -1558,6 +1543,9 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         if (NT_SUCCESS(ntStatus))
         {
         
+            CcSetFileSizes( pFileObject,
+                            (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+
             SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
         } 
         else 

@@ -202,25 +202,44 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     UNICODE_STRING uniFullFileName;
 
-                    SetFlag( pFcb->Flags, AFS_FCB_DELETED);
+                    //
+                    // Try and notify the service about the delete
+                    //
 
-                    ASSERT( pFcb->ParentFcb != NULL);
+                    ntStatus = AFSNotifyDelete( pFcb);
 
-                    if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                      &uniFullFileName)))
+                    if( !NT_SUCCESS( ntStatus))
                     {
 
-						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-													 &pFcb->ParentFcb->NPFcb->DirNotifyList,
-													 (PSTRING)&uniFullFileName,
-													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													 (PSTRING)NULL,
-													 (PSTRING)NULL,
-													 (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-													 (ULONG)FILE_ACTION_REMOVED,
-													 (PVOID)NULL );
+                        AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
 
-                        ExFreePool( uniFullFileName.Buffer);
+                        ntStatus = STATUS_SUCCESS;
+
+                        ClearFlag( pFcb->Flags, AFS_FCB_PENDING_DELETE);
+                    }
+                    else
+                    {
+
+                        SetFlag( pFcb->Flags, AFS_FCB_DELETED);
+
+                        ASSERT( pFcb->ParentFcb != NULL);
+
+                        if( NT_SUCCESS( AFSGetFullName( pFcb,
+                                                          &uniFullFileName)))
+                        {
+
+						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
+													     (PSTRING)&uniFullFileName,
+													     (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+													     (PSTRING)NULL,
+													     (PSTRING)NULL,
+													     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+													     (ULONG)FILE_ACTION_REMOVED,
+													     (PVOID)NULL );
+
+                            ExFreePool( uniFullFileName.Buffer);
+                        }
                     }
                 }
 
@@ -354,27 +373,46 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     UNICODE_STRING uniFullFileName;                  
 
-                    SetFlag( pFcb->Flags, AFS_FCB_DELETED);
+                    //
+                    // Try and notify the service about the delete
+                    //
 
-                    ASSERT( pFcb->ParentFcb != NULL);
+                    ntStatus = AFSNotifyDelete( pFcb);
 
-                    if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                      &uniFullFileName)))
+                    if( !NT_SUCCESS( ntStatus))
                     {
 
-						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-													 &pFcb->ParentFcb->NPFcb->DirNotifyList,
-													 (PSTRING)&uniFullFileName,
-													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													 (PSTRING)NULL,
-													 (PSTRING)NULL,
-													 (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-													 (ULONG)FILE_ACTION_REMOVED,
-													 (PVOID)NULL );
+                        AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
 
-                        ASSERT( pFcb->Header.NodeTypeCode != AFS_ROOT_FCB);
+                        ntStatus = STATUS_SUCCESS;
 
-                        ExFreePool( uniFullFileName.Buffer);
+                        ClearFlag( pFcb->Flags, AFS_FCB_PENDING_DELETE);
+                    }
+                    else
+                    {
+
+                        SetFlag( pFcb->Flags, AFS_FCB_DELETED);
+
+                        ASSERT( pFcb->ParentFcb != NULL);
+
+                        if( NT_SUCCESS( AFSGetFullName( pFcb,
+                                                          &uniFullFileName)))
+                        {
+
+						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
+													     (PSTRING)&uniFullFileName,
+													     (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+													     (PSTRING)NULL,
+													     (PSTRING)NULL,
+													     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+													     (ULONG)FILE_ACTION_REMOVED,
+													     (PVOID)NULL );
+
+                            ASSERT( pFcb->Header.NodeTypeCode != AFS_ROOT_FCB);
+
+                            ExFreePool( uniFullFileName.Buffer);
+                        }
                     }
                 }
 

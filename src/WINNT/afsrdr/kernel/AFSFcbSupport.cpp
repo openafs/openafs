@@ -251,7 +251,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
             if( pDeviceExt->Specific.RDR.FileIDTree.TreeHead == NULL)
             {
-                pFcb->FileIDTreeEntry.parentLink = NULL;
+                
                 pDeviceExt->Specific.RDR.FileIDTree.TreeHead = &pFcb->FileIDTreeEntry;
             }
             else
@@ -1026,6 +1026,8 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     //
     // And the Fcb itself, which includes the name
     //
+
+    ASSERT( !BooleanFlagOn( Fcb->Flags, AFS_FCB_INSERTED_ID_TREE));
 
     ExFreePool( Fcb);
 

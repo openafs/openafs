@@ -604,18 +604,43 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                     pFcb->Specific.File.ExtentsDirty &&
                     (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
-                                                        >= pControlDeviceExt->FcbLifeTimeCount.QuadPart) 
+                                        >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart) 
                 {
 
-                    AFSFlushExtents( pFcb);
+                    //
+                    // Don't flush the extents of the Fcb is invalid
+                    //
 
+                    if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
+                    {
+
+                        AFSFlushExtents( pFcb);
+                    }
+                    AFSTearDownFcbExtents( pFcb );
+
+                }
+#if 0
+                //
+                // If the extents haven't been used recently *and*
+                // are not being used
+                //
+                if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                    0 != pFcb->Specific.File.LastServerFlush.QuadPart &&
+                    (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) 
+                    >= 
+                    (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
+                {
+                    static int i = 1; if (i) DbgBreakPoint();
                     //
                     // That may have taken time, so collect the time again
                     //
+                    AFSTearDownFcbExtents( pFcb );
                 }
+#endif
 
                 //
-                // If we are below our threshold for memory allocations then just continue on
+                // If we are below our threshold for memory
+                // allocations then just continue on
                 //
 
                 if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
@@ -653,7 +678,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     //
 
                     if( pFcb->OpenReferenceCount == 0 &&
-                        ((liTime.QuadPart - pFcb->LastAccessCount.QuadPart) >= pControlDeviceExt->FcbLifeTimeCount.QuadPart) ||
+                        ((liTime.QuadPart - pFcb->LastAccessCount.QuadPart) 
+                                        >= pControlDeviceExt->Specific.Control.FcbLifeTimeCount.QuadPart) ||
                         BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
                     {
 
@@ -703,7 +729,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                 //
 
                                 if( pFcb->OpenReferenceCount == 0 &&
-                                    ((liTime.QuadPart - pFcb->LastAccessCount.QuadPart) >= pControlDeviceExt->FcbLifeTimeCount.QuadPart) ||
+                                    ((liTime.QuadPart - pFcb->LastAccessCount.QuadPart) 
+                                                    >= pControlDeviceExt->Specific.Control.FcbLifeTimeCount.QuadPart) ||
                                     BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
                                 {
 

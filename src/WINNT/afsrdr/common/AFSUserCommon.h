@@ -104,6 +104,8 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define IOCTL_AFS_RELEASE_FILE_EXTENTS          CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1006, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_AFS_INVALIDATE_CACHE              CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1007, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 //
 // Request types
 //
@@ -142,7 +144,7 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 // Status codes that can returned for various requests
 //
 
-#ifndef AFS_KERNEL_MODE
+#if !defined(AFS_KERNEL_MODE) && !defined(STATUS_SUCCESS)
 
 #define STATUS_SUCCESS                   0x00000000
 #define STATUS_MORE_ENTRIES              0x00000105
@@ -466,6 +468,35 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
 } AFSReleaseFileExtentsCB;
 
 //
+// These are the control structures that the filesystem returns from a
+// IOCTL_AFS_RELEASE_FILE_EXTENTS
+//
+
+typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_FILE_CB
+{
+    AFSFileID       FileID;
+
+    ULONG           Flags;
+
+    ULONG           ProcessId;
+
+    ULONG           ExtentCount;
+
+    AFSFileExtentCB FileExtents[ 1];
+
+} AFSReleaseFileExtentsResultFileCB;
+
+typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_CB
+{
+    ULONG                             Flags;
+
+    ULONG                             FileCount;
+
+    AFSReleaseFileExtentsResultFileCB Files[ 1];
+
+} AFSReleaseFileExtentsResultCB;
+
+//
 // File update CB
 //
 
@@ -610,5 +641,18 @@ typedef struct _AFS_PIOCTL_OPEN_CLOSE_CB
     AFSFileID   RootId;
 
 } AFSPIOCtlOpenCloseRequestCB;
+
+//
+// Cache invalidation control block
+//
+
+typedef struct _AFS_INVALIDATE_CACHE_CB
+{
+
+    AFSFileID       FileID;
+
+    BOOLEAN         WholeVolume;
+
+} AFSInvalidateCacheCB;
 
 #endif

@@ -312,7 +312,16 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         RtlZeroMemory( &stCreateCB,
                        sizeof( AFSFileCreateCB));
 
-        stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
+        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
 
         stCreateCB.AllocationSize = *FileSize;
 
@@ -465,7 +474,16 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
 
         stUpdateCB.EaSize = Fcb->DirEntry->DirectoryEntry.EaSize;
 
-        stUpdateCB.ParentId = Fcb->DirEntry->DirectoryEntry.ParentId;
+        if( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            stUpdateCB.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            stUpdateCB.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
 
         pUpdateResultCB = (AFSFileUpdateResultCB *)ExAllocatePoolWithTag( PagedPool,
                                                                           PAGE_SIZE,
@@ -1047,10 +1065,26 @@ AFSProcessRequest( IN ULONG RequestType,
             // Process the result of the request
             //
 
-            if( NT_SUCCESS( ntStatus))
+            if( ntStatus == STATUS_SUCCESS)
             {
 
                 ntStatus = pPoolEntry->ResultStatus;
+
+                //
+                // Check for a timed out status
+                //
+
+                if( NT_SUCCESS( ntStatus) &&
+                    ntStatus != STATUS_SUCCESS)
+                {
+
+                    ntStatus = STATUS_DEVICE_NOT_READY;
+                }
+            }
+            else
+            {
+
+                ntStatus = STATUS_DEVICE_NOT_READY;
             }
         }
 
@@ -1290,23 +1324,8 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_RELEASE_FILE_EXTENTS:
             {
-                AFSReleaseFileExtentsCB *pExtents = (AFSReleaseFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
+                ntStatus = AFSProcessReleaseFileExtents( Irp, FALSE );
 
-                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
-                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
-                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
-                      sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
-                {
-
-                    ntStatus = STATUS_INVALID_PARAMETER;
-
-                    break;
-                }
-
-                ntStatus = AFSProcessReleaseFileExtents( pExtents );
-
-                Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = ntStatus;
                       
                 break;

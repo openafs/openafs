@@ -628,10 +628,12 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         if( !bPagingIo &&
             !bNonCachedIo)
         {
+
             ntStatus = CachedRead( DeviceObject, Irp, liStartingByte, ulByteCount);
         }
         else
         {
+
             ntStatus = NonCachedRead( DeviceObject, Irp,  liStartingByte);
         }
 

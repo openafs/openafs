@@ -245,12 +245,7 @@ NTSTATUS
 AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents );
 
 NTSTATUS
-AFSProcessReleaseFileExtents( IN AFSReleaseFileExtentsCB *SetExtents );
-
-NTSTATUS
-AFSProcessReleaseFileExtentsByFcb( IN AFSReleaseFileExtentsCB *Extents,
-                                   IN AFSFcb *Fcb);
-
+AFSProcessReleaseFileExtents( IN PIRP Irp, IN BOOLEAN CallBack);
 
 NTSTATUS
 AFSProcessSetExtents( IN AFSFcb *pFcb,

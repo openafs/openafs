@@ -186,8 +186,11 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
         ulTimeIncrement = KeQueryTimeIncrement();
         
-        pDeviceExt->FcbLifeTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_FCB_LIFETIME / (ULONGLONG)ulTimeIncrement);
-        pDeviceExt->FcbFlushTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)(AFS_ONE_SECOND * AFS_SERVER_FLUSH_DELAY) / (ULONGLONG)ulTimeIncrement);
+        pDeviceExt->Specific.Control.FcbLifeTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_FCB_LIFETIME / (ULONGLONG)ulTimeIncrement);
+        pDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart = AFS_ONE_SECOND;
+        pDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart *= AFS_SERVER_PURGE_DELAY;
+        pDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart /= ulTimeIncrement;
+        pDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)(AFS_ONE_SECOND * AFS_SERVER_FLUSH_DELAY) / (ULONGLONG)ulTimeIncrement);
 
         //
         // Fill in the dispatch table

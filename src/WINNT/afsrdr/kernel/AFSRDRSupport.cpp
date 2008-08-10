@@ -151,24 +151,8 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
             //
             case IOCTL_AFS_RELEASE_FILE_EXTENTS:
             {
-                AFSReleaseFileExtentsCB *pExtents;
-                pExtents = (AFSReleaseFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
+                ntStatus = AFSProcessReleaseFileExtents( Irp, TRUE );
 
-                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
-                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
-                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-                    ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
-                      sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
-                {
-
-                    ntStatus = STATUS_INVALID_PARAMETER;
-
-                    break;
-                }
-
-                ntStatus = AFSProcessReleaseFileExtentsByFcb( pExtents, pFcb );
-
-                Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = ntStatus;
                       
                 break;
@@ -469,7 +453,7 @@ AFSShutdownRedirector()
 
         ExDeleteResourceLite( &pDevExt->Specific.RDR.FcbListLock);
 
-try_exit:
+        //try_exit:
 
         NOTHING;
     }

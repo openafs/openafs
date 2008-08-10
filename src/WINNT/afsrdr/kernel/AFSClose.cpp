@@ -259,20 +259,6 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     }
 
                     //
-                    // Send the notification for the delete
-                    //
-
-                    ntStatus = AFSNotifyDelete( pFcb);
-
-                    if( !NT_SUCCESS( ntStatus))
-                    {
-
-                        AFSPrint("AFSClose Failed to notify service of deleted file %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
-
-                        ntStatus = STATUS_SUCCESS;
-                    }
-
-                    //
                     // Now remove the directory entry
                     //
 

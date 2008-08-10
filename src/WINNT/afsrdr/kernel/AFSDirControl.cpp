@@ -54,20 +54,18 @@ AFSDirControl( IN PDEVICE_OBJECT DeviceObject,
                 
                 break;
         }
-
-//try_exit:
-
-        if( ntStatus != STATUS_PENDING)
-        {
-
-            AFSCompleteRequest( Irp,
-                                  ntStatus);
-        }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSPrint("EXCEPTION - AFSDirControl\n");
+    }
+
+    if( ntStatus != STATUS_PENDING)
+    {
+
+        AFSCompleteRequest( Irp,
+                            ntStatus);
     }
 
     return ntStatus;
@@ -275,7 +273,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 
             pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
 
-            while( TRUE)
+            while( pDirEntry != NULL)
             {
 
                 if( pDirEntry->DirectoryEntry.FileIndex == pCcb->CurrentDirIndex)
@@ -295,14 +293,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
                         pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                     }
-
-                    break;
-                }
-
-                if( pDirEntry->ListEntry.fLink == NULL)
-                {
-
-                    pDirEntry = NULL;
 
                     break;
                 }
@@ -356,7 +346,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
 
-                while( TRUE)
+                while( pDirEntry != NULL)
                 {
 
                     if( pDirEntry->DirectoryEntry.FileIndex == pCcb->CurrentDirIndex)
@@ -376,14 +366,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
                             pDirEntry = (AFSDirEntryCB *)pDirEntry->ListEntry.fLink;
                         }
-
-                        break;
-                    }
-
-                    if( pDirEntry->ListEntry.fLink == NULL)
-                    {
-
-                        pDirEntry = NULL;
 
                         break;
                     }

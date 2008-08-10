@@ -834,7 +834,8 @@ AFSParseName( IN PIRP Irp,
     UNICODE_STRING      uniCurrentPath;
     BOOLEAN             bAddTrailingSlash = FALSE;
     USHORT              usIndex = 0;
-    UNICODE_STRING      uniAFSAllName;
+    UNICODE_STRING      uniAFSAllName, uniRelatedFullName;
+    BOOLEAN             bFreeRelatedName = FALSE;
 
     __Enter
     {
@@ -857,13 +858,39 @@ AFSParseName( IN PIRP Irp,
             }
 
             AFSAcquireShared( &pRelatedFcb->NPFcb->Resource,
-                                TRUE);
+                              TRUE);
 
+            //
+            // Get the related full name
+            //
+
+            if( pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
+            {
+
+                uniRelatedFullName = pRelatedFcb->DirEntry->DirectoryEntry.FileName;
+            }
+            else
+            {
+
+                ntStatus = AFSGetFullName( pRelatedFcb,
+                                           &uniRelatedFullName);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
+
+                bFreeRelatedName = TRUE;            
+            }
+            
             uniFullName.MaximumLength = uniFullName.Length = 0;
 
             uniFullName.Buffer = NULL;
 
-            uniFullName.MaximumLength = pRelatedFcb->DirEntry->DirectoryEntry.FileName.Length;
+            uniFullName.MaximumLength = uniRelatedFullName.Length;
 
             //
             // By definition of the names, they do not contain a trailing slash
@@ -894,19 +921,25 @@ AFSParseName( IN PIRP Irp,
 
                 AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
 
+                if( bFreeRelatedName)
+                {
+
+                    ExFreePool( uniRelatedFullName.Buffer);
+                }
+
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
             *FreeNameString = TRUE;
 
-            if( pRelatedFcb->DirEntry->DirectoryEntry.FileName.Buffer != NULL)
+            if( uniRelatedFullName.Buffer != NULL)
             {
 
                 RtlCopyMemory( uniFullName.Buffer,
-                               pRelatedFcb->DirEntry->DirectoryEntry.FileName.Buffer,
-                               pRelatedFcb->DirEntry->DirectoryEntry.FileName.Length);
+                               uniRelatedFullName.Buffer,
+                               uniRelatedFullName.Length);
 
-                uniFullName.Length = pRelatedFcb->DirEntry->DirectoryEntry.FileName.Length;
+                uniFullName.Length = uniRelatedFullName.Length;
             }
 
             if( bAddTrailingSlash)
@@ -932,6 +965,12 @@ AFSParseName( IN PIRP Irp,
             *FileName = uniFullName;
 
             AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
+
+            if( bFreeRelatedName)
+            {
+
+                ExFreePool( uniRelatedFullName.Buffer);
+            }
 
             //
             // Grab the root node exclusive before returning

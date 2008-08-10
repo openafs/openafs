@@ -455,17 +455,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         {
 
             //
-            // If we located and Fcb above then we need to bail since the file already exists
+            // If this is a create request and we have an Fcb then
+            // fail it
             //
 
             if( pFcb != NULL)
             {
-
-                //
-                // The file exists and the request is to create it. Fail this with name collision
-                //
-
-                AFSPrint("AFSCommonCreate Fcb exists but request is to CREATE\n");
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
@@ -1378,7 +1373,7 @@ AFSProcessOpen( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
-    BOOLEAN bRemoveFcb = FALSE, bAllocatedCcb = FALSE;
+    BOOLEAN bAllocatedCcb = FALSE;
     ULONG ulAdditionalFlags = 0, ulOptions = 0;
 
     __Enter
@@ -1394,6 +1389,28 @@ AFSProcessOpen( IN PIRP Irp,
         //
 
         ulOptions = pIrpSp->Parameters.Create.Options;
+
+        //
+        // If there are current opens on the Fcb, check the access. 
+        //
+
+        if( Fcb->OpenHandleCount > 0)
+        {
+
+            ntStatus = IoCheckShareAccess( *pDesiredAccess,
+                                           usShareAccess,
+                                           pFileObject,
+                                           &Fcb->ShareAccess,
+                                           FALSE);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSPrint("AFSProcessOpen Access check failure Status %08lX\n", ntStatus);
+
+                try_return( ntStatus);
+            }
+        }
 
         //
         // Initialize the Fcb
@@ -1525,10 +1542,24 @@ AFSProcessOpen( IN PIRP Irp,
         // Save off the access for the open
         //
 
-        IoSetShareAccess( *pDesiredAccess,
-                          usShareAccess,
-                          pFileObject,
-                          &Fcb->ShareAccess);
+        if( Fcb->OpenHandleCount > 0)
+        {
+
+            IoUpdateShareAccess( pFileObject, 
+                                 &Fcb->ShareAccess);
+        }
+        else
+        {
+
+            //
+            // Set the access
+            //
+
+            IoSetShareAccess( *pDesiredAccess,
+                              usShareAccess,
+                              pFileObject,
+                              &Fcb->ShareAccess);
+        }
 
         //
         // Increment the open count on this Fcb
@@ -1578,25 +1609,11 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            if( bRemoveFcb)
+            if( bAllocatedCcb)
             {
 
-                if( bAllocatedCcb)
-                {
-
-                    //
-                    // De-allocate the Ccb.
-                    //
-
-                    AFSRemoveCcb( Fcb,
-                                    *Ccb);
-                }
-
-                //
-                // Mark the Fcb as invalid so our workler thread will clean it up
-                //
-
-                Fcb->Header.NodeTypeCode = AFS_INVALID_FCB;
+                AFSRemoveCcb( Fcb,
+                              *Ccb);
             }
 
             *Ccb = NULL;
@@ -1621,16 +1638,39 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
     ULONG   ulAttributes = 0;
     LARGE_INTEGER liTime;
     ULONG ulCreateDisposition = 0;
+    BOOLEAN bAllocatedCcb = FALSE;
+    PACCESS_MASK pDesiredAccess = NULL;
+    USHORT usShareAccess;
 
-
-    __try
+    __Enter
     {
+
+        pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
+        usShareAccess = pIrpSp->Parameters.Create.ShareAccess;
 
         pFileObject = pIrpSp->FileObject;
 
         ulAttributes = pIrpSp->Parameters.Create.FileAttributes;
 
         ulCreateDisposition = (pIrpSp->Parameters.Create.Options >> 24) & 0x000000ff;
+
+        if( Fcb->OpenHandleCount > 0)
+        {
+
+            ntStatus = IoCheckShareAccess( *pDesiredAccess,
+                                           usShareAccess,
+                                           pFileObject,
+                                           &Fcb->ShareAccess,
+                                           FALSE);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSPrint("AFSProcessOverwriteSupersede Access check failure Status %08lX\n", ntStatus);
+
+                try_return( ntStatus);
+            }
+        }
 
         //
         //  Before we actually truncate, check to see if the purge
@@ -1643,6 +1683,27 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
 
             try_return( ntStatus = STATUS_USER_MAPPED_FILE);
         }
+
+        //
+        // Initialize the Ccb for the file.
+        //
+
+        ntStatus = AFSInitCcb( Fcb,
+                               Ccb);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSPrint("AFSProcessOverwriteSupersede Failed to initialize Ccb Status %08lX\n", ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        bAllocatedCcb = TRUE;
+
+        //
+        // Need to purge any data currently in the cache
+        //
 
         CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers, 
                              NULL, 
@@ -1660,6 +1721,12 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
 
         Fcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart = 0;
         Fcb->DirEntry->DirectoryEntry.AllocationSize.QuadPart = 0;
+
+        pFileObject->SectionObjectPointer = &Fcb->NPFcb->SectionObjectPointers;
+
+        pFileObject->FsContext = (void *)Fcb;
+
+        pFileObject->FsContext2 = (void *)*Ccb;
 
         //
         // Set the update flag accordingly
@@ -1696,6 +1763,29 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
         Fcb->DirEntry->DirectoryEntry.LastAccessTime = Fcb->DirEntry->DirectoryEntry.LastWriteTime;
 
         //
+        // Save off the access for the open
+        //
+
+        if( Fcb->OpenHandleCount > 0)
+        {
+
+            IoUpdateShareAccess( pFileObject, 
+                                 &Fcb->ShareAccess);
+        }
+        else
+        {
+
+            //
+            // Set the access
+            //
+
+            IoSetShareAccess( *pDesiredAccess,
+                              usShareAccess,
+                              pFileObject,
+                              &Fcb->ShareAccess);
+        }
+
+        //
         // Return teh correct action
         //
 
@@ -1712,16 +1802,24 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
 
 try_exit:
 
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( bAllocatedCcb)
+            {
+
+                AFSRemoveCcb( Fcb,
+                              *Ccb);
+
+                *Ccb = NULL;
+            }
+        }
+
         if( bReleasePaging)
         {
 
             AFSReleaseResource( Fcb->Header.PagingIoResource);
         }
-    }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
-    {
-
-        AFSPrint("EXCEPTION - AFSProcessOverwriteSupersede\n");
     }
 
     return ntStatus;

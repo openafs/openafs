@@ -59,6 +59,8 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
     ULONG              ulExtensionLength = 0;
+    BOOLEAN            bRetry = FALSE;
+
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -185,6 +187,29 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             bForceFlush = TRUE;
         }
 
+        if( !bNonCachedIo && pFileObject->PrivateCacheMap == NULL)
+        {
+
+            CcInitializeCacheMap( pFileObject,
+                                  (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                  FALSE,
+                                  &AFSCacheManagerCallbacks,
+                                  pFcb);
+
+            CcSetReadAheadGranularity( pFileObject, 
+                                       READ_AHEAD_GRANULARITY);
+        }
+
+        while (!bNonCachedIo && !CcCanIWrite( pFileObject,
+                                              ulByteCount,
+                                              FALSE,
+                                              bRetry))
+        {
+            static const LONGLONG llWriteDelay = (LONGLONG)-100000;
+            bRetry = TRUE;
+            KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
+        }
+
         //
         // Take locks 
         //
@@ -261,19 +286,6 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_FILE_LOCK_CONFLICT);
         }
 
-        if( !bNonCachedIo && pFileObject->PrivateCacheMap == NULL)
-        {
-
-            CcInitializeCacheMap( pFileObject,
-                                  (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
-                                  FALSE,
-                                  &AFSCacheManagerCallbacks,
-                                  pFcb);
-
-            CcSetReadAheadGranularity( pFileObject, 
-                                       READ_AHEAD_GRANULARITY);
-        }
-
         if ( bExtendingWrite)
         {
 
@@ -294,6 +306,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         if( !bPagingIo &&
             !bNonCachedIo)
         {
+            
             ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
 
             if( NT_SUCCESS( ntStatus))
@@ -307,6 +320,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
+
             ntStatus = NonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
         }
 
@@ -876,36 +890,17 @@ ExtendingWrite( IN AFSFcb *Fcb,
     if( NewLength > Fcb->Header.AllocationSize.QuadPart)
     {
 
-        //
-        // Adjust the allocation size. For now we utilize a 512 byte sector for allocation, this will change.
-        //
-
-        if( (NewLength % 512) > 0)
-        {
-
-            Fcb->Header.AllocationSize.QuadPart = ((NewLength / 512) + 1) * 512;
-        }
-        else
-        {
-
-            Fcb->Header.AllocationSize.QuadPart = NewLength;
-        }
+        Fcb->Header.AllocationSize.QuadPart = NewLength;
         
         Fcb->DirEntry->DirectoryEntry.AllocationSize = Fcb->Header.AllocationSize;
-
     }
 
     if( NewLength > Fcb->Header.FileSize.QuadPart)
     {
         
-        //
-        // Adjust the file size
-        //
-
         Fcb->Header.FileSize.QuadPart = NewLength;
 
         Fcb->DirEntry->DirectoryEntry.EndOfFile = Fcb->Header.FileSize;
-
     }
 
     //

@@ -174,7 +174,7 @@ typedef struct AFS_FCB
     // The NP portion of the Fcb
     //
 
- AFSNonPagedFcb    *NPFcb;
+    AFSNonPagedFcb    *NPFcb;
 
     //
     // Fcb flags
@@ -237,6 +237,12 @@ typedef struct AFS_FCB
             // write the flush.
             //
             LARGE_INTEGER       LastServerFlush;
+            
+            //
+            // We set this when the extent ref count goes to zero.
+            // we use this to influence which files to purge
+            //
+            LARGE_INTEGER       LastExtentAccess;
 
             FILE_LOCK           FileLock;
 
@@ -614,13 +620,6 @@ typedef struct _AFS_DEVICE_EXTENSION
 
     ULONG            Flags;
 
-    //
-    // Fcb lifetime & flush time tickcount. This is calculated in DriverEntry() for the control device.
-    //
-
-    LARGE_INTEGER           FcbLifeTimeCount;
-    LARGE_INTEGER           FcbFlushTimeCount;
-
     union
     {
 
@@ -632,6 +631,15 @@ typedef struct _AFS_DEVICE_EXTENSION
             //
 
             ULONG            WorkerCount;
+
+            //
+            // Fcb lifetime & flush time tickcount. This is calculated
+            // in DriverEntry() for the control device.
+            //
+
+            LARGE_INTEGER           FcbLifeTimeCount;
+            LARGE_INTEGER           FcbFlushTimeCount;
+            LARGE_INTEGER           FcbPurgeTimeCount;
 
             struct _AFS_WORKER_QUEUE_HDR *PoolHead;
 

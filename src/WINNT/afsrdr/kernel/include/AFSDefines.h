@@ -84,6 +84,7 @@ static inline void AFSBreakPoint() {
 #define AFS_GATHER_TAG               'gSFA'
 #define AFS_RENMAME_RESULT_TAG       'RRFA'
 #define AFS_UPDATE_RESULT_TAG        'RUFA'
+#define AFS_EXTENTS_RESULT_TAG       'XEFA'
 
 #define __Enter
 
@@ -223,6 +224,14 @@ static inline void AFSBreakPoint() {
 #define AFS_ONE_SECOND          10000000
 
 #define AFS_SERVER_FLUSH_DELAY  30
+#define AFS_SERVER_PURGE_DELAY  3000
+//
+// PURGE_SLEEP is the number of PURGE_DELAYS we wait before we will unilaterally 
+// give back extents.
+//
+// If the Server asks us, we will start at PURGE_SLEEP of delays and then work back
+//
+#define AFS_SERVER_PURGE_SLEEP  6
 
 //
 // Read ahead granularity
@@ -321,5 +330,10 @@ static inline void AFSBreakPoint() {
                             (AFS_EXTENT_SKIP1_SIZE-1), \
                             (AFS_EXTENT_SKIP2_SIZE-1) }
 
+//
+// Maximum count to release at a time
+//
+
+#define AFS_MAXIMUM_EXTENT_RELEASE_COUNT        100
 
 #endif /* _AFS_DEFINES_H */
