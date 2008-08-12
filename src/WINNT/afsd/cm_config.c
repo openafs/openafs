@@ -112,7 +112,7 @@ IsWindowsModule(const char * name)
  * newCellNamep.  Anomaly:  if cellNamep is ambiguous, we may modify
  * newCellNamep but return an error code.
  *
- * newCellNamep is required to be CELL_MAXNAMELEN+1 in size.
+ * newCellNamep is required to be CELL_MAXNAMELEN in size.
  */
 long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                        cm_configProc_t *procp, void *rockp)
@@ -175,15 +175,22 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         }	
 
         /* turn trailing cr or lf into null */
-        tp = strchr(lineBuffer, '\r');
+        tp = strrchr(lineBuffer, '\r');
         if (tp) *tp = 0;
-        tp = strchr(lineBuffer, '\n');
+        tp = strrchr(lineBuffer, '\n');
         if (tp) *tp = 0;
 
 	/* skip blank lines */
         if (lineBuffer[0] == 0) continue;
 
         if (lineBuffer[0] == '>') {
+            if (inRightCell) {
+                /* no addresses for cell */
+                fclose(tfilep);
+                fclose(bestp);
+                return -6;
+            }
+
 	    /* trim off at white space or '#' chars */
             tp = strchr(lineBuffer, ' ');
             if (tp) *tp = 0;
@@ -259,28 +266,29 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                     foundCell = 1;
 		}
                 if (!thp) {
-                    long ip_addr;
+                    afs_uint32 ip_addr;
 		    int c1, c2, c3, c4;
-		    char aname[241] = "";                    
                     
                     /* Since there is no gethostbyname() data 
 		     * available we will read the IP address
 		     * stored in the CellServDB file
                      */
-                    code = sscanf(lineBuffer, "%d.%d.%d.%d #%s",
-                                   &c1, &c2, &c3, &c4, aname);
-                    tp = (char *) &ip_addr;
-                    *tp++ = c1;
-                    *tp++ = c2;
-                    *tp++ = c3;
-                    *tp++ = c4;
-                    memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
-                            sizeof(long));
-                    vlSockAddr.sin_family = AF_INET;
-                    /* sin_port supplied by connection code */
-                    if (procp)
-                        (*procp)(rockp, &vlSockAddr, valuep);
-                    foundCell = 1;
+                    code = sscanf(lineBuffer, " %d.%d.%d.%d",
+                                   &c1, &c2, &c3, &c4);
+                    if (code == 4) {
+                        tp = (char *) &ip_addr;
+                        *tp++ = c1;
+                        *tp++ = c2;
+                        *tp++ = c3;
+                        *tp++ = c4;
+                        memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
+                                sizeof(long));
+                        vlSockAddr.sin_family = AF_INET;
+                        /* sin_port supplied by connection code */
+                        if (procp)
+                            (*procp)(rockp, &vlSockAddr, valuep);
+                        foundCell = 1;
+                    }
                 }
             }
         }	/* a vldb line */
@@ -290,7 +298,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     return (foundCell) ? 0 : -11;
 }
 
-/* newCellNamep is required to be CELL_MAXNAMELEN+1 in size */
+/* newCellNamep is required to be CELL_MAXNAMELEN in size */
 long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                cm_configProc_t *procp, void *rockp)
 {
