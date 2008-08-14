@@ -646,6 +646,13 @@ mkdir:
 	-mkdir $(DESTDIR)\free\bin
 	-@copy $(SRC)\config\NTLANG.BAT .
 
+man-pages:
+   echo ***** $@
+   $(DOCD) $(DOC)\man-pages
+   $(CD) $(DOC)\man-pages
+   $(NTMAKE)
+   $(CD) ..\..
+
 loopback:
    echo ***** Making Loopback Adapter Utility DLL
    $(DOCD) $(SRC)\WINNT\install\$@
@@ -674,10 +681,10 @@ wix: loopback man-pages
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-media: install NSIS wix
+media: install man-pages NSIS wix
 
-install-nsis: install NSIS
+install-nsis: install man-pages NSIS
 
-install-wix: install wix
+install-wix: install man-pages wix
 
 
