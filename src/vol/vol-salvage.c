@@ -2818,7 +2818,7 @@ CopyAndSalvage(register struct DirSummary *dir)
     afs_sfsize_t lcode;
     afs_int32 parentUnique = 1;
     struct VnodeEssence *vnodeEssence;
-    afs_size_t length;
+    afs_fsize_t length;
 
     if (Testing)
 	return;

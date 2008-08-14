@@ -66,8 +66,8 @@ typedef unsigned long long afs_uint64;
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
 #define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
-#define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
-#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
+#define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l);
+#define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & 0xFFFFFFFF;
 #else /* AFS_64BIT_ENV */
 typedef long afs_int32;
 typedef unsigned long afs_uint32;
