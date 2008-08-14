@@ -124,7 +124,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     struct hostent *thp;
     char *valuep;
     struct sockaddr_in vlSockAddr;
-    int inRightCell;
+    int inRightCell = 0;
     int foundCell = 0;
     long code;
     int tracking = 1, partial = 0;
@@ -146,7 +146,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	     osi_LogSaveString(afsd_logp,wdir));
 #endif
     /* have we seen the cell line for the guy we're looking for? */
-    inRightCell = 0;
     while (1) {
         tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
         if (tracking)
@@ -185,10 +184,9 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 
         if (lineBuffer[0] == '>') {
             if (inRightCell) {
-                /* no addresses for cell */
                 fclose(tfilep);
                 fclose(bestp);
-                return -6;
+                return(foundCell ? 0 : -6);
             }
 
 	    /* trim off at white space or '#' chars */
