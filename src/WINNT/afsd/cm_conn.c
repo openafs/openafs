@@ -802,47 +802,49 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 reqp->tokenIdleErrorServp = NULL;
             continue;
         }
-        cm_GetServerNoLock(tsp);
-        lock_ReleaseRead(&cm_serverLock);
-        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-	    allDown = 0;
-            if (tsrp->status == srv_deleted) {
-                /* skip this entry.  no longer valid. */;
-            } else if (tsrp->status == srv_busy) {
-		allOffline = 0;
-                someBusy = 1;
-            } else if (tsrp->status == srv_offline) {
-		allBusy = 0;
-		someOffline = 1;
-            } else {
-		allOffline = 0;
-                allBusy = 0;
-                code = cm_ConnByServer(tsp, usersp, connpp);
-                if (code == 0) {        /* cm_CBS only returns 0 */
-                    cm_PutServer(tsp);
+        if (tsp) {
+            cm_GetServerNoLock(tsp);
+            lock_ReleaseRead(&cm_serverLock);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                allDown = 0;
+                if (tsrp->status == srv_deleted) {
+                    /* skip this entry.  no longer valid. */;
+                } else if (tsrp->status == srv_busy) {
+                    allOffline = 0;
+                    someBusy = 1;
+                } else if (tsrp->status == srv_offline) {
+                    allBusy = 0;
+                    someOffline = 1;
+                } else {
+                    allOffline = 0;
+                    allBusy = 0;
+                    code = cm_ConnByServer(tsp, usersp, connpp);
+                    if (code == 0) {        /* cm_CBS only returns 0 */
+                        cm_PutServer(tsp);
 #ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
-                    /* Set RPC timeout */
-                    if (timeLeft > ConnDeadtimeout)
-                        timeLeft = ConnDeadtimeout;
+                        /* Set RPC timeout */
+                        if (timeLeft > ConnDeadtimeout)
+                            timeLeft = ConnDeadtimeout;
 
-                    if (hardTimeLeft > HardDeadtimeout) 
-                        hardTimeLeft = HardDeadtimeout;
+                        if (hardTimeLeft > HardDeadtimeout) 
+                            hardTimeLeft = HardDeadtimeout;
 
-                    lock_ObtainMutex(&(*connpp)->mx);
-                    rx_SetConnDeadTime((*connpp)->rxconnp, timeLeft);
-                    rx_SetConnHardDeadTime((*connpp)->rxconnp, (u_short) hardTimeLeft);
-                    lock_ReleaseMutex(&(*connpp)->mx);
+                        lock_ObtainMutex(&(*connpp)->mx);
+                        rx_SetConnDeadTime((*connpp)->rxconnp, timeLeft);
+                        rx_SetConnHardDeadTime((*connpp)->rxconnp, (u_short) hardTimeLeft);
+                        lock_ReleaseMutex(&(*connpp)->mx);
 #endif
-                    return 0;
+                        return 0;
+                    }
+
+                    /* therefore, this code is never executed */
+                    if (firstError == 0)
+                        firstError = code;
                 }
-                
-                /* therefore, this code is never executed */
-                if (firstError == 0)
-                    firstError = code;
             }
+            lock_ObtainRead(&cm_serverLock);
+            cm_PutServerNoLock(tsp);
         }
-        lock_ObtainRead(&cm_serverLock);
-        cm_PutServerNoLock(tsp);
     }   
     lock_ReleaseRead(&cm_serverLock);
 
