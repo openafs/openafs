@@ -9976,37 +9976,119 @@ void smb_LogPacket(smb_packet_t *packet)
 int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 {
     int zilch;
-    char output[1024];
+    char output[4196];
   
     smb_vc_t *vcp;
-  
+    smb_username_t *unp;
+    smb_waitingLockRequest_t *wlrp;
+
     if (lock)
         lock_ObtainRead(&smb_rctLock);
   
+    sprintf(output, "begin dumping smb_username_t\r\n");
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    for (unp = usernamesp; unp; unp=unp->nextp) 
+    {
+        cm_ucell_t *ucellp;
+
+        sprintf(output, "%s -- smb_unp=0x%p, refCount=%d, cm_userp=0x%p, flags=0x%x, logoff=%u, name=%S, machine=%S\r\n", 
+                cookie, unp, unp->refCount, unp->userp, unp->flags, unp->last_logoff_t,
+                unp->name ? unp->name : _C("NULL"), 
+                unp->machine ? unp->machine : _C("NULL"));
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        sprintf(output, "  begin dumping cm_ucell_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        for ( ucellp = unp->userp->cellInfop; ucellp; ucellp = ucellp->nextp ) {
+            sprintf(output, "  %s -- ucellp=0x%p, cellp=0x%p, flags=0x%x, tktLen=%04u, kvno=%03u, expires=%I64u, gen=%d, name=%s, cellname=%s\r\n", 
+                     cookie, ucellp, ucellp->cellp, ucellp->flags, ucellp->ticketLen, ucellp->kvno, 
+                     ucellp->expirationTime, ucellp->gen, 
+                     ucellp->userName,
+                     ucellp->cellp->name);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+
+        sprintf(output, "  done dumping cm_ucell_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    }
+    sprintf(output, "done dumping smb_username_t\r\n");
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+
+    sprintf(output, "begin dumping smb_waitingLockRequest_t\r\n");
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+
+    for ( wlrp = smb_allWaitingLocks; wlrp; wlrp = (smb_waitingLockRequest_t *) osi_QNext(&wlrp->q)) {
+        smb_waitingLock_t *lockp;
+
+        sprintf(output, "%s wlrp=0x%p vcp=0x%p, scp=0x%p, type=0x%x, start_t=0x%I64u msTimeout=0x%x\r\n",
+                 cookie, wlrp, wlrp->vcp, wlrp->scp, wlrp->lockType, wlrp->start_t, wlrp->msTimeout);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+      
+        sprintf(output, "  begin dumping smb_waitingLock_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        for (lockp = wlrp->locks; lockp; lockp = (smb_waitingLock_t *) osi_QNext(&lockp->q)) {
+            sprintf(output, "  %s -- waitlockp=0x%p lockp=0x%p key=0x%I64x offset=0x%I64x length=0x%I64x state=0x%x\r\n", 
+                    cookie, lockp, lockp->lockp, lockp->key, lockp->LOffset.QuadPart, lockp->LLength.QuadPart, lockp->state);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+        sprintf(output, "  done dumping smb_waitingLock_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+
+    sprintf(output, "done dumping smb_waitingLockRequest_t\r\n");
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
     sprintf(output, "begin dumping smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
+        smb_tid_t *tidp;
+        smb_user_t *userp;
       
         sprintf(output, "%s vcp=0x%p, refCount=%d, flags=0x%x, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\r\n");
+        sprintf(output, "  begin dumping smb_user_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        for (userp = vcp->usersp; userp; userp = userp->nextp) {
+            sprintf(output, "  %s -- smb_userp=0x%p, refCount=%d, uid=%d, vcp=0x%p, unp=0x%p, flags=0x%x, delOk=%d\r\n", 
+                    cookie, userp, userp->refCount, userp->userID, userp->vcp, userp->unp, userp->flags, userp->deleteOk);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+        sprintf(output, "  done dumping smb_user_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        sprintf(output, "  begin dumping smb_tid_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        for (tidp = vcp->tidsp; tidp; tidp = tidp->nextp) {
+            sprintf(output, "  %s -- smb_tidp=0x%p, refCount=%d, tid=%d, vcp=0x%p, cm_userp=0x%p, flags=0x%x, delOk=%d, path=%S\r\n", 
+                    cookie, tidp, tidp->refCount, tidp->tid, tidp->vcp, tidp->userp, tidp->flags, tidp->deleteOk,
+                    tidp->pathname ? tidp->pathname : _C("NULL"));
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+        sprintf(output, "  done dumping smb_tid_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        sprintf(output, "  begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
-                     cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
+            sprintf(output, "  %s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, userp=0x%p, ioctlp=0x%p, flags=0x%x, delOk=%d, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
+                    cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->userp, fidp->ioctlp, fidp->flags, fidp->deleteOk,
                     fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\r\n");
+        sprintf(output, "  done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
@@ -10019,24 +10101,47 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     for (vcp = smb_deadVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
-      
+        smb_tid_t *tidp;
+        smb_user_t *userp;
+
         sprintf(output, "%s vcp=0x%p, refCount=%d, flags=0x%x, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
-                 cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
+                cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\r\n");
+        sprintf(output, "  begin dumping smb_user_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        for (userp = vcp->usersp; userp; userp = userp->nextp) {
+            sprintf(output, "  %s -- smb_userp=0x%p, refCount=%d, uid=%d, vcp=0x%p, unp=0x%p, flags=0x%x, delOk=%d\r\n", 
+                    cookie, userp, userp->refCount, userp->userID, userp->vcp, userp->unp, userp->flags, userp->deleteOk);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+        sprintf(output, "  done dumping smb_user_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        sprintf(output, "  begin dumping smb_tid_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        for (tidp = vcp->tidsp; tidp; tidp = tidp->nextp) {
+            sprintf(output, "  %s -- smb_tidp=0x%p, refCount=%d, tid=%d, vcp=0x%p, cm_userp=0x%p, flags=0x%x, delOk=%d, path=%S\r\n", 
+                    cookie, tidp, tidp->refCount, tidp->tid, tidp->vcp, tidp->userp, tidp->flags, tidp->deleteOk,
+                    tidp->pathname ? tidp->pathname : _C("NULL"));
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+        }
+        sprintf(output, "  done dumping smb_tid_t\r\n");
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        sprintf(output, "  begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
-                     cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
+            sprintf(output, "  %s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, userp=0x%p, ioctlp=0x%p, flags=0x%x, delOk=%d, NTopen_pathp=%S, NTopen_wholepathp=%S\r\n", 
+                    cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->userp, fidp->ioctlp, fidp->flags, fidp->deleteOk,
                     fidp->NTopen_pathp ? fidp->NTopen_pathp : _C("NULL"), 
                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : _C("NULL"));
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\r\n");
+        sprintf(output, "  done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
