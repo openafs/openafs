@@ -1,3 +1,91 @@
+Since 1.5.51
+ * Optimize the assignment of write errors to dirty 
+   buffers by applying the first error to all buffers 
+   belonging to the same object instead of trying each 
+   buffer in turn.
+
+ * Add resource version info to xstat_fs_test and xstat_cm_test
+ 
+ * Fix a delete vs delete[] usage problem in the WiX custom 
+   handler dll
+ 
+ * When creating a mount point, validate the volume name to 
+   make sure it exists.
+
+ * When processing a mount point, pay attention to VL_BADNAME 
+   errors.
+
+ * Remove a race condition from cm_volume_t recycling that could 
+   have resulted in two threads making use of the same object at 
+   the same time.
+
+ * Fix a reference count leak on smb_vc_t objects introduced in 
+   1.5.50.  Permit the objects to be freed once again.
+
+ * Fix the output of "fs memdump" for smb_vc_t objects that was 
+   broken in 1.5.50.
+
+ * Add routines for debugging smb refcount errors.
+
+ * When shutting down the cache manager, do not permit AFS 
+   callback requests to be processed. Doing so can result in 
+   invalid memory accesses.
+
+ * Do not recycle a deleted cm_scache_t object unless the 
+   refCount is 0.  Doing so can result in a deadlock and 
+   invalid memory access.
+
+ * Minimize the number of RPCs sent to the file server for 
+   directory bulk status requests. Only request status for 
+   objects that we are actually reporting on and only if we 
+   do not already have status for the object and then make 
+   sure that we return as much as we can at once via the SMB 
+   interface but not so much that it exceeds the RDR timeout
+
+ * Enable bos restricted operations
+
+ * Fix the creation of submounts used by the afscreds and afs_config 
+   drive mapping tabs.
+ 
+ * Avoid repeated retries when attempting to obtain access rights.  
+   If the access rights were obtained successfully but do not 
+   satisfy the request, fail the request.
+
+ * Fix error code reported when attempting delete a file on a 
+   readonly volume or one that is marked with the readonly DOS 
+   attribute.
+
+ * Fix a short name truncation bug.
+
+ * Fix a heap corruption error when reading the CellServDB file 
+   location.
+
+ * Fix directory listings when the directory has "lookup" permission 
+   only and the directory has never been previously accessed.
+
+ * Fix several tracking issues for cm_scache_t rw locks.
+
+ * Ensure that all buffers used to store cell names are the
+   correct length.
+
+ * Restore Windows 2000 support (broken in 1.5.50).   
+   LOCALE_INVARIANT was introduced in XP.
+
+ * Add RxUdpBufSize registry value.  Default is 256K.
+
+ * Avoid a deadlock between cm_freelanceLock and cm_scacheLock
+
+ * Do not include trailing NULs when returning file names in 
+   a directory search response.
+
+ * Prevent RX from crashing the afsd_service by attempting
+   to allocate to many buffers at once when memory is fragmented.
+
+ * Avoid a deadlock when freeing cm_server_t objects
+
+ * Optimize search cell file.  Do not search to end of file
+   if the cell has already been found.
+
 Since 1.5.50
  * Fix Large File Support (broken in 1.5.50)
 
