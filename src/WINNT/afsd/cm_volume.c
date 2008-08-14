@@ -1284,21 +1284,23 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
     lock_ObtainWrite(&cm_serverLock);
     for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        cm_GetServerNoLock(tsp);
-        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-	    allDown = 0;
-            if (tsrp->status == srv_busy) {
-		allOffline = 0;
-                someBusy = 1;
-            } else if (tsrp->status == srv_offline) {
-		allBusy = 0;
-		someOffline = 1;
-            } else {
-		allOffline = 0;
-                allBusy = 0;
+        if (tsp) {
+            cm_GetServerNoLock(tsp);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                allDown = 0;
+                if (tsrp->status == srv_busy) {
+                    allOffline = 0;
+                    someBusy = 1;
+                } else if (tsrp->status == srv_offline) {
+                    allBusy = 0;
+                    someOffline = 1;
+                } else {
+                    allOffline = 0;
+                    allBusy = 0;
+                }
             }
+            cm_PutServerNoLock(tsp);
         }
-        cm_PutServerNoLock(tsp);
     }   
     lock_ReleaseWrite(&cm_serverLock);
 

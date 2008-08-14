@@ -1913,6 +1913,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
 {
     int zilch;
     cm_scache_t *scp;
+    osi_queue_t *q;
     char output[2048];
     int i;
   
@@ -1932,9 +1933,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         if (scp->fileLocksH) {
-            osi_queue_t *q;
-
-            sprintf(output, "  %s - begin dumping all locks\r\n", cookie);
+            sprintf(output, "  %s - begin dumping scp locks\r\n", cookie);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
             for (q = scp->fileLocksH; q; q = osi_QNext(q)) {
@@ -1945,7 +1944,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
                 WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
             }       
 
-            sprintf(output, "  %s - done dumping all locks\r\n", cookie);
+            sprintf(output, "  %s - done dumping scp locks\r\n", cookie);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
@@ -1968,8 +1967,19 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
     sprintf(output, "%s - Done dumping cm_data.scacheHashTable\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
+    sprintf(output, "%s - begin dumping all file locks\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
+    for (q = cm_allFileLocks; q; q = osi_QNext(q)) {
+        cm_file_lock_t * lockp = (cm_file_lock_t *)q;
+        sprintf(output, "%s filelockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x key=0x%I64x flags=0x%x update=0x%I64u\r\n", 
+                 cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length, 
+                 lockp->lockType, lockp->key, lockp->flags, (afs_uint64)lockp->lastUpdate);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }       
 
+    sprintf(output, "%s - done dumping all file locks\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     if (lock)
         lock_ReleaseRead(&cm_scacheLock);       
