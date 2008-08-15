@@ -381,40 +381,42 @@ int cm_reInitLocalMountPoints() {
 
     osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-    cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, 1, 1);
 
     lock_ObtainWrite(&cm_scacheLock);
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
-    for (i=0; i<cm_noLocalMountPoints; i++) {
+    for (i=1; i<=cm_noLocalMountPoints; i++) {
+        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, i, 1);
         hash = CM_SCACHE_HASH(&aFid);
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp != cm_data.rootSCachep && cm_FidCmp(&scp->fid, &aFid) == 0) {
                 // mark the scp to be reused
                 cm_HoldSCacheNoLock(scp);
+                lock_ReleaseWrite(&cm_Freelance_Lock);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainWrite(&scp->rw);
                 cm_DiscardSCache(scp);
-                lock_ReleaseWrite(&scp->rw);
-                cm_CallbackNotifyChange(scp);
-                lock_ObtainWrite(&cm_scacheLock);
-                cm_ReleaseSCacheNoLock(scp);
 
                 // take the scp out of the hash
+                lock_ObtainWrite(&cm_scacheLock);
                 for (lscpp = &cm_data.scacheHashTablep[hash], tscp = cm_data.scacheHashTablep[hash]; 
                      tscp; 
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
                         scp->nextp = NULL;
-			lock_ObtainWrite(&scp->rw);
                         scp->flags &= ~CM_SCACHEFLAG_INHASH;
-			lock_ReleaseWrite(&scp->rw);
                         break;
                     }
                 }
+
+                lock_ReleaseWrite(&scp->rw);
+                lock_ReleaseWrite(&cm_scacheLock);
+                cm_CallbackNotifyChange(scp);
+                lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
+                lock_ObtainMutex(&cm_Freelance_Lock);
             }
         }
-        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, aFid.vnode + 1, 1);
     }
     lock_ReleaseWrite(&cm_scacheLock);
     osi_Log0(afsd_logp,"\tall old scp cleared!");
