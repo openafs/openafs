@@ -1058,7 +1058,7 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "RxExtraPackets", NULL, NULL,
                            (BYTE *) &rx_extraPackets, &dummyLen);
     if (code != ERROR_SUCCESS) {
-        rx_extraPackets = 120;
+        rx_extraPackets = (numBkgD + numSvThreads + 5) * 64;
     }
     if (rx_extraPackets)
         afsi_log("RX extraPackets is %d", rx_extraPackets);
