@@ -1032,3 +1032,16 @@ AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
     AC_DEFINE([EXPORTED_PROC_ROOT_FS], 1, [define if proc_root_fs is exported])
   fi])
  
+AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/semaphore.h existance])
+  AC_CACHE_VAL([ac_cv_linux_semaphore_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/semaphore.h>],
+[return;],
+      ac_cv_linux_semaphore_h_exists=yes,
+      ac_cv_linux_semaphore_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_semaphore_h_exists)
+  if test "x$ac_cv_linux_semaphore_h_exists" = "xyes"; then
+    AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
+  fi])
+
