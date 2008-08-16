@@ -400,11 +400,11 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
-    char *drivep;
+    char *drivep = NULL;
     char netbiosName[MAX_NB_NAME_LENGTH];
     DWORD CurrentState = 0;
     char  HostName[64] = "";
-    char tbuffer[256]="";
+    char tbuffer[MAX_PATH]="";
     HANDLE fh;
     HKEY hk;
     char szUser[128] = "";
@@ -427,9 +427,21 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
+            UINT driveType;
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
-            strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+            tbuffer[2] = '\\';
+            tbuffer[3] = '\0';
+
+            driveType = GetDriveType(tbuffer);
+            switch (driveType) {
+            case DRIVE_UNKNOWN:
+            case DRIVE_REMOTE:
+                strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                break;
+            default:
+                return -1;
+            }
         } else if (fileNamep[0] == fileNamep[1] && 
 		   (fileNamep[0] == '\\' || fileNamep[0] == '/'))
         {
@@ -447,7 +459,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[i] = 0;
             strcat(tbuffer, SMB_IOCTL_FILENAME);
         } else {
-            char curdir[256]="";
+            char curdir[MAX_PATH]="";
 
             GetCurrentDirectory(sizeof(curdir), curdir);
             if ( curdir[1] == ':' ) {
