@@ -108,7 +108,11 @@ struct xfs_inode_info {
 #include <linux/mm.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#if defined(LINUX_SEMAPHORE_H)
+#include <linux/semaphore.h>
+#else
 #include <asm/semaphore.h>
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 #include <linux/mutex.h>
 #endif

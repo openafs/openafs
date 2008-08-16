@@ -1079,3 +1079,16 @@ _eops.fh_to_parent(NULL, NULL, 0, 0);],
     AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  
+AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/semaphore.h existance])
+  AC_CACHE_VAL([ac_cv_linux_semaphore_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/semaphore.h>],
+[return;],
+      ac_cv_linux_semaphore_h_exists=yes,
+      ac_cv_linux_semaphore_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_semaphore_h_exists)
+  if test "x$ac_cv_linux_semaphore_h_exists" = "xyes"; then
+    AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
+  fi])
+
