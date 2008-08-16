@@ -446,7 +446,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	return EIO;
     }
     V_uniquifier(vp) = 1;
-    V_creationDate(vp) = V_copyDate(vp);
+    V_updateDate(vp) = V_creationDate(vp) = V_copyDate(vp);
     V_inService(vp) = V_blessed(vp) = 1;
     V_type(vp) = atype;
     AssignVolumeName(&V_disk(vp), aname, 0);
