@@ -24,8 +24,8 @@ extern struct rx_connection *UV_Bind(afs_int32 aserver, afs_int32 port);
 extern void SubEnumerateEntry(struct nvldbentry *entry);
 extern void EnumerateEntry(struct nvldbentry *entry);
 extern int UV_NukeVolume(afs_int32 server, afs_int32 partid, afs_int32 volid);
-extern int UV_PartitionInfo(afs_int32 server, char *pname,
-			    struct diskPartition *partition);
+extern int UV_PartitionInfo64(afs_int32 server, char *pname,
+			    struct diskPartition64 *partition);
 extern int UV_CreateVolume(afs_int32 aserver, afs_int32 apart, char *aname,
 			   afs_int32 * anewid);
 extern int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,

@@ -2100,7 +2100,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
 
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2169,7 +2169,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2225,7 +2225,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 volid, fromserver, toserver, frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2320,7 +2320,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2372,7 +2372,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 code, err, flags;
     char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
     struct nvldbentry entry;
-    struct diskPartition partition;	/* for space check */
+    struct diskPartition64 partition;	/* for space check */
     volintInfo *p, *q;
 
     p = (volintInfo *) 0;
@@ -2505,7 +2505,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -4992,7 +4992,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
     afs_int32 apart;
     afs_int32 aserver, code;
     char pname[10];
-    struct diskPartition partition;
+    struct diskPartition64 partition;
     struct partList dummyPartList;
     int i, cnt;
     int printSummary=0, sumPartitions=0;
@@ -5041,7 +5041,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
     for (i = 0; i < cnt; i++) {
 	if (dummyPartList.partFlags[i] & PARTVALID) {
 	    MapPartIdIntoName(dummyPartList.partId[i], pname);
-	    code = UV_PartitionInfo(aserver, pname, &partition);
+	    code = UV_PartitionInfo64(aserver, pname, &partition);
 	    if (code) {
 		fprintf(STDERR, "Could not get information on partition %s\n",
 			pname);
@@ -5049,13 +5049,11 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	    fprintf(STDOUT,
-		    "Free space on partition %s: %d K blocks out of total %d\n",
+		    "Free space on partition %s: %lld K blocks out of total %lld\n",
 		    pname, partition.free, partition.minFree);
 	    sumPartitions++;
-            FillInt64(tmp,0,partition.free);
-            AddUInt64(sumFree,tmp,&sumFree);
-            FillInt64(tmp,0,partition.minFree);
-            AddUInt64(sumStorage,tmp,&sumStorage);
+            AddUInt64(sumFree,partition.free,&sumFree);
+            AddUInt64(sumStorage,partition.minFree,&sumStorage);
 	}
     }
     if (printSummary) {

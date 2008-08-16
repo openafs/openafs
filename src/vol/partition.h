@@ -48,14 +48,14 @@
  * variant for VGetPartition as well. Also, the VolPartitionInfo RPC does
  * a swap before sending the data out on the wire.
  */
-struct DiskPartition {
-    struct DiskPartition *next;
+struct DiskPartition64 {
+    struct DiskPartition64 *next;
     char *name;			/* Mounted partition name */
     char *devName;		/* Device mounted on */
     Device device;		/* device number */
     int lock_fd;		/* File descriptor of this partition if locked; otherwise -1;
 				 * Not used by the file server */
-    int free;			/* Total number of blocks (1K) presumed
+    afs_int64 free;			/* Total number of blocks (1K) presumed
 				 * available on this partition (accounting
 				 * for the minfree parameter for the
 				 * partition).  This is adjusted
@@ -65,7 +65,7 @@ struct DiskPartition {
 				 * this is recomputed.  This number can
 				 * be negative, if the partition starts
 				 * out too full */
-    int totalUsable;		/* Total number of blocks available on this
+    afs_int64 totalUsable;		/* Total number of blocks available on this
 				 * partition, taking into account the minfree
 				 * parameter for the partition (see the
 				 * 4.2bsd command tunefs, but note that the
@@ -73,10 +73,10 @@ struct DiskPartition {
 				 * is not reread--does not apply here.  The
 				 * superblock is re-read periodically by
 				 * VSetPartitionDiskUsage().) */
-    int minFree;		/* Number blocks to be kept free, as last read
+    afs_int64 minFree;		/* Number blocks to be kept free, as last read
 				 * from the superblock */
     int flags;
-    int f_files;		/* total number of files in this partition */
+    afs_int64 f_files;		/* total number of files in this partition */
 };
 #define	PART_DONTUPDATE	1
 #define PART_DUPLICATE  2	/* NT - used if we find more than one partition 
@@ -92,8 +92,8 @@ extern int VValidVPTEntry(struct vptab *vptp);
 
 struct Volume;			/* Potentially forward definition */
 
-extern struct DiskPartition *DiskPartitionList;
-extern struct DiskPartition *VGetPartition();
+extern struct DiskPartition64 *DiskPartitionList;
+extern struct DiskPartition64 *VGetPartition();
 extern int VAttachPartitions(void);
 extern void VLockPartition(char *name);
 extern void VLockPartition_r(char *name);
@@ -101,9 +101,9 @@ extern void VUnlockPartition(char *name);
 extern void VUnlockPartition_r(char *name);
 extern void VResetDiskUsage(void);
 extern void VResetDiskUsage_r(void);
-extern void VSetPartitionDiskUsage(register struct DiskPartition *dp);
-extern void VSetPartitionDiskUsage_r(register struct DiskPartition *dp);
-extern char *VPartitionPath(struct DiskPartition *p);
+extern void VSetPartitionDiskUsage(register struct DiskPartition64 *dp);
+extern void VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp);
+extern char *VPartitionPath(struct DiskPartition64 *p);
 extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 			     afs_sfsize_t blocks, afs_sfsize_t checkBlocks);
 extern int VDiskUsage(struct Volume *vp, afs_sfsize_t blocks);

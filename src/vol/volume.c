@@ -164,7 +164,7 @@ extern void *calloc(), *realloc();
 /* Forward declarations */
 static Volume *attach2(Error * ec, char *path,
 		       register struct VolumeHeader *header,
-		       struct DiskPartition *partp, int isbusy);
+		       struct DiskPartition64 *partp, int isbusy);
 static void FreeVolume(Volume * vp);
 static void VScanUpdateList(void);
 static void InitLRU(int howMany);
@@ -213,7 +213,7 @@ ffs(x)
 #include "rx/rx_queue.h"
 typedef struct diskpartition_queue_t {
     struct rx_queue queue;
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
 } diskpartition_queue_t;
 typedef struct vinitvolumepackage_thread_t {
     struct rx_queue queue;
@@ -300,7 +300,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	return -1;
 
     if (programType == fileServer) {
-	struct DiskPartition *diskP;
+	struct DiskPartition64 *diskP;
 #ifdef AFS_PTHREAD_ENV
 	struct vinitvolumepackage_thread_t params;
 	struct diskpartition_queue_t * dpq;
@@ -396,7 +396,7 @@ VInitVolumePackageThread(void * args) {
 
     DIR *dirp;
     struct dirent *dp;
-    struct DiskPartition *diskP;
+    struct DiskPartition64 *diskP;
     struct vinitvolumepackage_thread_t * params;
     struct diskpartition_queue_t * dpq;
 
@@ -697,7 +697,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
-    struct DiskPartition *partp;
+    struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
     *ec = 0;
@@ -838,7 +838,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
 private Volume *
 attach2(Error * ec, char *path, register struct VolumeHeader * header,
-	struct DiskPartition * partp, int isbusy)
+	struct DiskPartition64 * partp, int isbusy)
 {
     register Volume *vp;
 
@@ -1355,7 +1355,7 @@ void
 VDetachVolume_r(Error * ec, Volume * vp)
 {
     VolumeId volume;
-    struct DiskPartition *tpartp;
+    struct DiskPartition64 *tpartp;
     int notifyServer, useDone;
 
     *ec = 0;			/* always "succeeds" */
@@ -1676,7 +1676,7 @@ GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];
     int found = 0;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
 
     *ec = 0;
     name[0] = '/';

@@ -87,10 +87,10 @@ int VolumeChanged;
 /* Forward Declarations */
 void PrintHeader(register Volume * vp);
 void HandleAllPart(void);
-void HandlePart(struct DiskPartition *partP);
-void HandleVolume(struct DiskPartition *partP, char *name);
-struct DiskPartition *FindCurrentPartition(void);
-Volume *AttachVolume(struct DiskPartition *dp, char *volname,
+void HandlePart(struct DiskPartition64 *partP);
+void HandleVolume(struct DiskPartition64 *partP, char *name);
+struct DiskPartition64 *FindCurrentPartition(void);
+Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     register struct VolumeHeader *header);
 #if defined(AFS_NAMEI_ENV)
 void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
@@ -169,7 +169,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 
 
 Volume *
-AttachVolume(struct DiskPartition * dp, char *volname,
+AttachVolume(struct DiskPartition64 * dp, char *volname,
 	     register struct VolumeHeader * header)
 {
     register Volume *vp;
@@ -223,7 +223,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     int err = 0;
     int volumeId = 0;
     char *partName = 0;
-    struct DiskPartition *partP = NULL;
+    struct DiskPartition64 *partP = NULL;
 
 
 #ifndef AFS_NT40_ENV
@@ -333,11 +333,11 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #ifdef AFS_NT40_ENV
 #include <direct.h>
-struct DiskPartition *
+struct DiskPartition64 *
 FindCurrentPartition()
 {
     int dr = _getdrive();
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
 
     dr--;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
@@ -350,13 +350,13 @@ FindCurrentPartition()
     return dp;
 }
 #else
-struct DiskPartition *
+struct DiskPartition64 *
 FindCurrentPartition()
 {
     char partName[1024];
     char tmp = '\0';
     char *p;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
 
     if (!getcwd(partName, 1023)) {
 	perror("pwd");
@@ -380,7 +380,7 @@ FindCurrentPartition()
 void
 HandleAllPart(void)
 {
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
 
 
     for (partP = DiskPartitionList; partP; partP = partP->next) {
@@ -400,7 +400,7 @@ HandleAllPart(void)
 
 
 void
-HandlePart(struct DiskPartition *partP)
+HandlePart(struct DiskPartition64 *partP)
 {
     int nvols = 0;
     DIR *dirp;
@@ -445,7 +445,7 @@ HandlePart(struct DiskPartition *partP)
 
 
 void
-HandleVolume(struct DiskPartition *dp, char *name)
+HandleVolume(struct DiskPartition64 *dp, char *name)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;

@@ -76,7 +76,7 @@ struct iod {
     struct rx_call *call;	/* call to which to write, might be an array */
     int device;			/* dump device ID for volume */
     int parentId;		/* dump parent ID for volume */
-    struct DiskPartition *dumpPartition;	/* Dump partition. */
+    struct DiskPartition64 *dumpPartition;	/* Dump partition. */
     struct rx_call **calls;	/* array of pointers to calls */
     int ncalls;			/* how many calls/codes in array */
     int *codes;			/* one return code for each call */

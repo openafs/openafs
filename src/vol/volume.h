@@ -301,7 +301,7 @@ typedef struct Volume {
     VolumeId hashid;		/* Volume number -- for hash table lookup */
     struct volHeader *header;	/* Cached disk data */
     Device device;		/* Unix device for the volume */
-    struct DiskPartition
+    struct DiskPartition64
      *partition;		/* Information about the Unix partition */
     struct vnodeIndex {
 	IHandle_t *handle;	/* Unix inode holding this index */
@@ -455,8 +455,8 @@ extern void VSetDiskUsage(void);
 extern void VPrintCacheStats(void);
 extern void VReleaseVnodeFiles_r(Volume * vp);
 extern void VCloseVnodeFiles_r(Volume * vp);
-extern struct DiskPartition *VGetPartition(char *name, int abortp);
-extern struct DiskPartition *VGetPartition_r(char *name, int abortp);
+extern struct DiskPartition64 *VGetPartition(char *name, int abortp);
+extern struct DiskPartition64 *VGetPartition_r(char *name, int abortp);
 extern int VInitVolumePackage(ProgramType pt, int nLargeVnodes,
 			      int nSmallVnodes, int connect, int volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);

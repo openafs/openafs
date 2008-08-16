@@ -123,7 +123,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     int fd, i;
     char headerName[32], volumePath[64];
     Device device;
-    struct DiskPartition *partition;
+    struct DiskPartition64 *partition;
     struct VolumeDiskHeader diskHeader;
     IHandle_t *handle;
     FdHandle_t *fdP;
