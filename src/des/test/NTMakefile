@@ -10,12 +10,15 @@ RELDIR=des\test
 
 $(OUT)\testit.exe: $(OUT)\testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\verify.exe: $(OUT)\verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\key_test.exe: $(OUT)\key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\tests: $(OUT)\testit.exe $(OUT)\verify.exe $(OUT)\key_test.exe
 
