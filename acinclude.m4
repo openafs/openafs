@@ -50,7 +50,7 @@ AC_ARG_ENABLE([namei-fileserver],
         [force compilation of namei fileserver in preference to inode
          fileserver])],
     , 
-    [enable_namei_fileserver="no"])
+    [enable_namei_fileserver="default"])
 AC_ARG_ENABLE([supergroups],
     [AS_HELP_STRING([--enable-supergroups],
         [enable support for nested pts groups])],
@@ -1337,6 +1337,21 @@ fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+else
+	if test "$enable_namei_fileserver" = "default"; then
+		case $host in
+			*-solaris2.10*)
+				AC_MSG_WARN(Some Solaris 10 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
+				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				;;
+			*-solaris2.11*)
+				AC_MSG_WARN(Solaris 11 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
+				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				;;
+			*)
+				;;
+		esac
+	fi
 fi
 
 if test "$enable_afsdb" = "yes"; then
