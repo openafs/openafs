@@ -73,7 +73,7 @@ Since 1.5.51
 
  * Add RxUdpBufSize registry value.  Default is 256K.
 
- * Avoid a deadlock between cm_freelanceLock and cm_scacheLock
+ * Avoid multiple deadlocks between cm_freelanceLock and cm_scacheLock
 
  * Do not include trailing NULs when returning file names in 
    a directory search response.
@@ -85,6 +85,13 @@ Since 1.5.51
 
  * Optimize search cell file.  Do not search to end of file
    if the cell has already been found.
+
+ * Remove explorer shell extension delay on local disks.
+
+ * Automatically pre-allocate 64 Rx packets per thread
+
+ * Add smb lock requests and stat cache lock allocations to
+   the output from fs memdump.
 
 Since 1.5.50
  * Fix Large File Support (broken in 1.5.50)
