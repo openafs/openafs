@@ -646,13 +646,6 @@ mkdir:
 	-mkdir $(DESTDIR)\free\bin
 	-@copy $(SRC)\config\NTLANG.BAT .
 
-man-pages:
-   echo ***** $@
-   $(DOCD) $(DOC)\man-pages
-   $(CD) $(DOC)\man-pages
-   $(NTMAKE)
-   $(CD) ..\..
-
 loopback:
    echo ***** Making Loopback Adapter Utility DLL
    $(DOCD) $(SRC)\WINNT\install\$@
