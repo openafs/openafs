@@ -59,11 +59,18 @@ RCSID
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#include "volser_prototypes.h"
+#include <volser_prototypes.h>
+#include <vsutils_prototypes.h>
+#include <lockprocs_prototypes.h>
 
 #ifdef HAVE_POSIX_REGEX
 #include <regex.h>
 #endif
+
+/* Local Prototypes */
+int PrintDiagnostics(char *astring, afs_int32 acode);
+int GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, 
+                  afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
     afs_int32 volid;
@@ -81,10 +88,10 @@ cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
 cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
+cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
-extern int verbose;
 int rxInitDone = 0;
 struct rx_connection *tconn;
 afs_int32 tserver;
@@ -340,7 +347,7 @@ WriteData(struct rx_call *call, char *rock)
 	USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
 	hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
 	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
-	USD_READ(ufd, &buffer, sizeof(afs_uint32), &got);
+	USD_READ(ufd, (char *)&buffer, sizeof(afs_uint32), &got);
 	if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
 	    fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
 	    error = VOLSERBADOP;
@@ -1384,8 +1391,7 @@ GetServerAndPart(entry, voltype, server, part, previdx)
 }
 
 static void
-PostVolumeStats(entry)
-     struct nvldbentry *entry;
+PostVolumeStats(struct nvldbentry *entry)
 {
     SubEnumerateEntry(entry);
     /* Check for VLOP_ALLOPERS */
@@ -4075,9 +4081,9 @@ RenameVolume(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-GetVolumeInfo(volid, server, part, voltype, rentry)
-     afs_int32 *server, volid, *part, *voltype;
-     register struct nvldbentry *rentry;
+int
+GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *voltype, 
+              struct nvldbentry *rentry)
 {
     afs_int32 vcode;
     int i, index = -1;
@@ -5132,7 +5138,7 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 
 static void
 print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
-	    int print, int noresolve)
+	    int print)
 {
     afs_int32 vcode;
     afs_int32 i, j;
@@ -5170,7 +5176,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
-				      &vlcb, &m_nentries, &m_addrs);
+				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5220,7 +5226,7 @@ static int
 ListAddrs(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 vcode;
-    afs_int32 i, noresolve = 0, printuuid = 0;
+    afs_int32 i, printuuid = 0;
     struct VLCallBack vlcb;
     afs_int32 nentries;
     bulkaddrs m_addrs;
@@ -5258,9 +5264,6 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	m_attrs.ipaddr = ntohl(saddr);
     }
     if (as->parms[2].items) {
-	noresolve = 1;
-    }
-    if (as->parms[3].items) {
 	printuuid = 1;
     }
 
@@ -5313,7 +5316,7 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	    return (vcode);
 	}
 
-	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid, noresolve);
+	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
 	i++;
 
 	if ((as->parms[1].items) || (as->parms[0].items) || (i > nentries))
@@ -5597,9 +5600,8 @@ Sizes(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-PrintDiagnostics(astring, acode)
-     char *astring;
-     afs_int32 acode;
+int
+PrintDiagnostics(char *astring, afs_int32 acode)
 {
     if (acode == EACCES) {
 	fprintf(STDERR,
@@ -5644,6 +5646,10 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	verbose = 1;
     else
 	verbose = 0;
+    if (as->parms[17].items)	/* -noresolve flag set */
+	noresolve = 1;
+    else
+	noresolve = 0;
     return 0;
 }
 
@@ -6000,8 +6006,6 @@ main(argc, argv)
 			  "list the IP address of all file servers registered in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, CMD_OPTIONAL, "uuid of server");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_OPTIONAL, "address of host");
-    cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL,
-		"don't resolve addresses");
     cmd_AddParm(ts, "-printuuid", CMD_FLAG, CMD_OPTIONAL,
 		"print uuid of hosts");
     COMMONPARMS;

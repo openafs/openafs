@@ -40,6 +40,9 @@ extern void sigint_handler(int x);
 extern int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 			 afs_int32 afrompart, afs_int32 atoserver,
 			 afs_int32 atopart);
+extern int UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, 
+                          afs_int32 afrompart, afs_int32 atoserver, 
+                          afs_int32 atopart, int flags);
 extern int UV_BackupVolume(afs_int32 aserver, afs_int32 apart,
 			   afs_int32 avolid);
 extern int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
@@ -49,8 +52,11 @@ extern int UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver,
 			 afs_int32 afrompart, afs_int32 fromdate,
 			 afs_int32(*DumpFunction) (), char *rock, afs_int32 flags);
 extern int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart,
-			    afs_int32 tovolid, char tovolname[], int flags,
+			    afs_int32 tovolid, char tovolname[], int restoreflags,
 			    afs_int32(*WriteData) (), char *rock);
+extern int UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
+                            afs_int32 toparentid, char tovolname[], int flags,
+                            afs_int32(*WriteData) (), char *rock);
 extern int UV_LockRelease(afs_int32 volid);
 extern int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid, afs_int32 valid);
 extern int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid);
@@ -99,5 +105,20 @@ extern int UV_SetVolumeInfo(afs_int32 server, afs_int32 partition,
 			    afs_int32 volid, volintInfo * infop);
 extern void MapNetworkToHost(struct nvldbentry *old, struct nvldbentry *new);
 extern void MapHostToNetwork(struct nvldbentry *entry);
+extern int UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, 
+                          afs_int32 afrompart, char *atovolname, 
+                          afs_int32 atoserver, afs_int32 atopart,
+                          afs_int32 atovolid, int flags);
+extern int UV_CloneVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid,
+                          afs_int32 acloneid, char *aname, int flags);
+extern int UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
+                               afs_int32 afrompart, afs_int32 fromdate,
+                               afs_int32(*DumpFunction) (), char *rock, 
+                               afs_int32 flags);
+extern int UV_GetSize(afs_int32 afromvol, afs_int32 afromserver, 
+                      afs_int32 afrompart, afs_int32 fromdate, 
+                      struct volintSize *vol_size);
 
+extern int verbose;
+extern int noresolve;
 #endif
