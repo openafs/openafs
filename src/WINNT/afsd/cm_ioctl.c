@@ -1959,16 +1959,20 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
     code = cm_AssembleLink(scp, "", &newRootScp, &spacep, userp, reqp);
     cm_ReleaseSCache(scp);
     if (code == 0) {
+        char * linkstr;
         cp = ioctlp->outDatap;
         if (newRootScp != NULL) {
             StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), cm_mountRoot);
             StringCbCatA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), "/");
             cp += strlen(cp);
         }
-        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), spacep->data);
+
+        linkstr = cm_ClientStringToFsStringAlloc(spacep->wdata, -1, NULL);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), linkstr);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
         cm_FreeSpace(spacep);
+        free(linkstr);
         if (newRootScp != NULL)
             cm_ReleaseSCache(newRootScp);
         code = 0;
