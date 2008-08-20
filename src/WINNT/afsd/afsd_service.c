@@ -34,6 +34,7 @@ extern void afsi_log(char *pattern, ...);
 
 static SERVICE_STATUS		ServiceStatus;
 static SERVICE_STATUS_HANDLE	StatusHandle;
+static BOOL bRunningAsService = TRUE;
 
 HANDLE hAFSDMainThread = NULL;
 
@@ -98,13 +99,14 @@ static void afsd_notifier(char *msgp, char *filep, long line)
         longjmp(notifier_jmp, 1);
 #endif /* JUMP */
 
-    ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-    ServiceStatus.dwWin32ExitCode = NO_ERROR;
-    ServiceStatus.dwCheckPoint = 0;
-    ServiceStatus.dwWaitHint = 0;
-    ServiceStatus.dwControlsAccepted = 0;
-    SetServiceStatus(StatusHandle, &ServiceStatus);
-
+    if (bRunningAsService) {
+        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 0;
+        ServiceStatus.dwWaitHint = 0;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+    }
     exit(1);
 }
 
@@ -1125,26 +1127,28 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         return;
     }
 
-    pRegisterServiceCtrlHandlerEx = (RegisterServiceCtrlHandlerExFunc)GetProcAddress(hAdvApi32, "RegisterServiceCtrlHandlerExA");
-    if (pRegisterServiceCtrlHandlerEx)
-    {
-        afsi_log("running on 2000+ - using RegisterServiceCtrlHandlerEx");
-        StatusHandle = RegisterServiceCtrlHandlerEx(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandlerEx, NULL );
-    }
-    else
-    {
-        StatusHandle = RegisterServiceCtrlHandler(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandler);
-    }
+    if (bRunningAsService) {
+        pRegisterServiceCtrlHandlerEx = (RegisterServiceCtrlHandlerExFunc)GetProcAddress(hAdvApi32, "RegisterServiceCtrlHandlerExA");
+        if (pRegisterServiceCtrlHandlerEx)
+        {
+            afsi_log("running on 2000+ - using RegisterServiceCtrlHandlerEx");
+            StatusHandle = RegisterServiceCtrlHandlerEx(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandlerEx, NULL );
+        }
+        else
+        {
+            StatusHandle = RegisterServiceCtrlHandler(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandler);
+        }
 
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-    ServiceStatus.dwServiceSpecificExitCode = 0;
-    ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
-    ServiceStatus.dwWin32ExitCode = NO_ERROR;
-    ServiceStatus.dwCheckPoint = 1;
-    ServiceStatus.dwWaitHint = 120000;
-    /* accept Power Events */
-    ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
-    SetServiceStatus(StatusHandle, &ServiceStatus);
+        ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+        ServiceStatus.dwServiceSpecificExitCode = 0;
+        ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 1;
+        ServiceStatus.dwWaitHint = 120000;
+        /* accept Power Events */
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+    }
 #endif
 
     LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_START_PENDING);
@@ -1179,13 +1183,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     /* Verify the versions of the DLLs which were loaded */
     if (!AFSModulesVerify()) {
-        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-        ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 0;
-        ServiceStatus.dwWaitHint = 0;
-        ServiceStatus.dwControlsAccepted = 0;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
-
+        if (bRunningAsService) {
+            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 0;
+            ServiceStatus.dwWaitHint = 0;
+            ServiceStatus.dwControlsAccepted = 0;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+        }
 	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_INCORRECT_VERSIONS);
 
         /* exit if initialization failed */
@@ -1207,28 +1212,31 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
         if (hookRc == FALSE)
         {
-            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = NO_ERROR;
-            ServiceStatus.dwCheckPoint = 0;
-            ServiceStatus.dwWaitHint = 0;
-            ServiceStatus.dwControlsAccepted = 0;
-            SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
+            if (bRunningAsService) {
+                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                ServiceStatus.dwCheckPoint = 0;
+                ServiceStatus.dwWaitHint = 0;
+                ServiceStatus.dwControlsAccepted = 0;
+                SetServiceStatus(StatusHandle, &ServiceStatus);
+            }       
             /* exit if initialization failed */
             return;
         }
         else
         {
             /* allow another 120 seconds to start */
-            ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-            ServiceStatus.dwServiceSpecificExitCode = 0;
-            ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
-            ServiceStatus.dwWin32ExitCode = NO_ERROR;
-            ServiceStatus.dwCheckPoint = 2;
-            ServiceStatus.dwWaitHint = 120000;
-            /* accept Power Events */
-            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
-            SetServiceStatus(StatusHandle, &ServiceStatus);
+            if (bRunningAsService) {
+                ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+                ServiceStatus.dwServiceSpecificExitCode = 0;
+                ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+                ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                ServiceStatus.dwCheckPoint = 2;
+                ServiceStatus.dwWaitHint = 120000;
+                /* accept Power Events */
+                ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
+                SetServiceStatus(StatusHandle, &ServiceStatus);
+            }
         }
     }
 
@@ -1249,9 +1257,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint = 3;
-        ServiceStatus.dwWaitHint = 30000;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
+        if (bRunningAsService) {
+            ServiceStatus.dwCheckPoint = 3;
+            ServiceStatus.dwWaitHint = 30000;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+        }
 #endif
         code = afsd_InitDaemons(&reason);
         if (code != 0) {
@@ -1274,22 +1284,25 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
             if (hookRc == FALSE)
             {
-                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-                ServiceStatus.dwWin32ExitCode = NO_ERROR;
-                ServiceStatus.dwCheckPoint = 0;
-                ServiceStatus.dwWaitHint = 0;
-                ServiceStatus.dwControlsAccepted = 0;
-                SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
+                if (bRunningAsService) {
+                    ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                    ServiceStatus.dwCheckPoint = 0;
+                    ServiceStatus.dwWaitHint = 0;
+                    ServiceStatus.dwControlsAccepted = 0;
+                    SetServiceStatus(StatusHandle, &ServiceStatus);
+                }   
                 /* exit if initialization failed */
                 return;
             }
         }
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCheckPoint = 4;
-        ServiceStatus.dwWaitHint = 15000;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
+        if (bRunningAsService) {
+            ServiceStatus.dwCheckPoint = 4;
+            ServiceStatus.dwWaitHint = 15000;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+        }
 #endif
 
         /* Notify any volume status handlers that the cache manager has started */
@@ -1319,13 +1332,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
             if (hookRc == FALSE)
             {
-                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-                ServiceStatus.dwWin32ExitCode = NO_ERROR;
-                ServiceStatus.dwCheckPoint = 0;
-                ServiceStatus.dwWaitHint = 0;
-                ServiceStatus.dwControlsAccepted = 0;
-                SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
+                if (bRunningAsService) {
+                    ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                    ServiceStatus.dwCheckPoint = 0;
+                    ServiceStatus.dwWaitHint = 0;
+                    ServiceStatus.dwControlsAccepted = 0;
+                    SetServiceStatus(StatusHandle, &ServiceStatus);
+                }   
                 /* exit if initialization failed */
                 return;
             }
@@ -1334,14 +1348,16 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         MountGlobalDrives();
 
 #ifndef NOTSERVICE
-        ServiceStatus.dwCurrentState = SERVICE_RUNNING;
-        ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 5;
-        ServiceStatus.dwWaitHint = 0;
+        if (bRunningAsService) {
+            ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 5;
+            ServiceStatus.dwWaitHint = 0;
 
-        /* accept Power events */
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
+            /* accept Power events */
+            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+        }
 #endif  
 
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
@@ -1362,13 +1378,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
         if (hookRc == FALSE)
         {
-            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = NO_ERROR;
-            ServiceStatus.dwCheckPoint = 0;
-            ServiceStatus.dwWaitHint = 0;
-            ServiceStatus.dwControlsAccepted = 0;
-            SetServiceStatus(StatusHandle, &ServiceStatus);
-                       
+            if (bRunningAsService) {
+                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                ServiceStatus.dwCheckPoint = 0;
+                ServiceStatus.dwWaitHint = 0;
+                ServiceStatus.dwControlsAccepted = 0;
+                SetServiceStatus(StatusHandle, &ServiceStatus);
+            }                       
             /* exit if initialization failed */
             return;
         }
@@ -1376,13 +1393,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     WaitForSingleObject(WaitToTerminate, INFINITE);
 
-    ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-    ServiceStatus.dwWin32ExitCode = NO_ERROR;
-    ServiceStatus.dwCheckPoint = 6;
-    ServiceStatus.dwWaitHint = 120000;
-    ServiceStatus.dwControlsAccepted = 0;
-    SetServiceStatus(StatusHandle, &ServiceStatus);
-
+    if (bRunningAsService) {
+        ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 6;
+        ServiceStatus.dwWaitHint = 120000;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+    }
     afsi_log("Received Termination Signal, Stopping Service");
 
     if ( GlobalStatus )
@@ -1470,12 +1488,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     /* Remove the ExceptionFilter */
     SetUnhandledExceptionFilter(NULL);
 
-    ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-    ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
-    ServiceStatus.dwCheckPoint = 7;
-    ServiceStatus.dwWaitHint = 0;
-    ServiceStatus.dwControlsAccepted = 0;
-    SetServiceStatus(StatusHandle, &ServiceStatus);
+    if (bRunningAsService) {
+        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+        ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
+        ServiceStatus.dwCheckPoint = 7;
+        ServiceStatus.dwWaitHint = 0;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+    }
 }       
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
@@ -1519,6 +1539,9 @@ main(int argc, char * argv[])
         if (status == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
         {
             DWORD tid;
+
+            bRunningAsService = FALSE;
+
             hAFSDMainThread = CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
 		
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
