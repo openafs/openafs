@@ -19,6 +19,7 @@
 %define kernvers_on_cmdline %{?kernvers:1}%{!?kernvers:0}
 %define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
+%define build_authlibs_on_cmdline %{?build_authlibs:1}%{!?build_authlibs:0}
 
 # Determine the version of the kernel to build against
 # - automatically select running kernel if there are sources in /lib/modules
@@ -228,6 +229,14 @@
 %endif
 %if !%{build_modules_on_cmdline}
 %define build_modules 0
+%endif
+%endif
+
+%if !%{build_authlibs_on_cmdline}
+%if %{build_userspace_on_cmdline}
+%define build_authlibs 1
+%else
+%define build_authlibs 0
 %endif
 %endif
 
