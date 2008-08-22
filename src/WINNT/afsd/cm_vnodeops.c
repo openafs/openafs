@@ -1127,7 +1127,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
                  cm_ClientStrCmpI(cnamep, _C("ipc$"))) 
         {
             /* nonexistent dir on freelance root, so add it */
-            fschar_t fullname[200] = ".";
+            fschar_t fullname[CELL_MAXNAMELEN] = ".";
             int  found = 0;
 
             osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %S", 
