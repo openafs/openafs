@@ -1367,6 +1367,8 @@ int afsd_ShutdownCM(void)
 {
     cm_ReleaseSCache(cm_data.rootSCachep);
 
+    cm_shutdown = 1;
+
     return 0;
 }
 

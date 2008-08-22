@@ -75,4 +75,6 @@ extern void cm_GiveUpAllCallbacksAllServers(afs_int32 markDown);
 extern afs_int32 cm_OfflineROIsValid;
 
 extern afs_int32 cm_giveUpAllCBs;
+
+extern afs_int32 cm_shutdown;
 #endif /*  _CM_CALLBACK_H_ENV__ */

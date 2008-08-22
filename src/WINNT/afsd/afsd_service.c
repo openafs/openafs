@@ -1427,9 +1427,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     buf_Shutdown();                      
     afsi_log("Buffer shutdown complete");
                                          
-    rx_Finalize();                       
-    afsi_log("rx finalization complete");
-                                         
     smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
     
@@ -1440,10 +1437,10 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     cm_ReleaseAllLocks();
 
+    cm_ShutdownMappedMemory();           
+
     rx_Finalize();
     afsi_log("rx finalization complete");
-
-    cm_ShutdownMappedMemory();           
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
     /* terminate thread used to flush cache */
