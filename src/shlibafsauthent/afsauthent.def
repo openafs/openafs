@@ -86,3 +86,4 @@ EXPORTS
 	VOTE_function_names				@84 DATA
 	rx_Finalize					@85
 	pr_End						@86
+	pioctl_utf8             			@87
