@@ -119,10 +119,10 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
         return logp;
 }
 
-/* we just panic'd.  Turn off all logging adding special log record
- * to all enabled logs.  Be careful not to wait for a lock.
+/* we just panic'd.  Log the error to all enabled log files.
+ * Be careful not to wait for a lock.
  */
-void osi_LogPanic(char *filep, size_t lineNumber)
+void osi_LogPanic(char *msgp, char *filep, size_t lineNumber)
 {
 	osi_log_t *tlp;
 
@@ -131,9 +131,9 @@ void osi_LogPanic(char *filep, size_t lineNumber)
 
 		/* otherwise, proceed */
 		if (filep)
-	                osi_LogAdd(tlp, "**PANIC** (file %s:%d)", (size_t) filep, lineNumber, 0, 0, 0);
+	                osi_LogAdd(tlp, "**PANIC** \"%s\" (file %s:%d)", (size_t)msgp, (size_t) filep, lineNumber, 0, 0);
 		else
-			osi_LogAdd(tlp, "**PANIC**", 0, 0, 0, 0, 0);
+			osi_LogAdd(tlp, "**PANIC** \"%s\"", (size_t)msgp, 0, 0, 0, 0);
 		
                 /* should grab lock for this, but we're in panic, and better safe than
                  * sorry.

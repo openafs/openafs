@@ -601,7 +601,8 @@ void cm_InitDaemon(int nDaemons)
     cm_nDaemons = (nDaemons > CM_MAX_DAEMONS) ? CM_MAX_DAEMONS : nDaemons;
     
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
+        lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock", 
+                               LOCK_HIERARCHY_DAEMON_GLOBAL);
         osi_EndOnce(&once);
 
 	/* creating IP Address Change monitor daemon */

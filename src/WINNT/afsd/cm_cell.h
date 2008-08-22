@@ -25,7 +25,7 @@ typedef struct cm_cell {
     cm_serverRef_t *vlServersp;         /* locked by cm_serverLock */
     osi_mutex_t mx;			/* mutex locking fields (flags) */
     long flags;			        /* locked by mx */
-    time_t timeout;                     /* if dns, time at which the server addrs expire */
+    time_t timeout;                     /* if dns, time at which the server addrs expire (mx) */
 } cm_cell_t;
 
 /* These are bit flag values */

@@ -1683,8 +1683,8 @@ OpenDumpFile(void)
 void 
 GenerateMiniDump(PEXCEPTION_POINTERS ep)
 {
-	if (IsDebuggerPresent())
-		return;
+    if (IsDebuggerPresent())
+        return;
 
     if (ep == NULL) 
     {

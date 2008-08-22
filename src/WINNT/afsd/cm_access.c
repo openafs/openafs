@@ -39,12 +39,6 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     long trights;
     int release = 0;    /* Used to avoid a call to cm_HoldSCache in the directory case */
 
-#if 0
-    if (scp->flags & CM_SCACHEFLAG_EACCESS) {
-    	*outRightsp = 0;
-	return 1;
-    }
-#endif
     didLock = 0;
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
         aclScp = scp;   /* not held, not released */
@@ -54,12 +48,11 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         if (!aclScp) 
             return 0;
         if (aclScp != scp) {
-            code = lock_TryRead(&aclScp->rw);
-            if (code == 0) {
-                /* can't get lock safely and easily */
-                cm_ReleaseSCache(aclScp);
-                return 0;
-            }
+            if (aclScp->fid.vnode < scp->fid.vnode)
+                lock_ReleaseWrite(&scp->rw);
+            lock_ObtainRead(&aclScp->rw);
+            if (aclScp->fid.vnode < scp->fid.vnode)
+                lock_ObtainWrite(&scp->rw);
 
 	    /* check that we have a callback, too */
             if (!cm_HaveCallback(aclScp)) {
@@ -167,6 +160,8 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (!code) 
 	    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    else
+        osi_Log3(afsd_logp, "GetAccessRights syncop failure scp %x user %x code %x", scp, userp, code);
     } else {
         /* not a dir, use parent dir's acl */
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
@@ -184,6 +179,8 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 	if (!code)
 	    cm_SyncOpDone(aclScp, NULL, 
 			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    else 
+        osi_Log3(afsd_logp, "GetAccessRights parent syncop failure scp %x user %x code %x", aclScp, userp, code);
 	lock_ReleaseWrite(&aclScp->rw);
         cm_ReleaseSCache(aclScp);
         lock_ObtainWrite(&scp->rw);

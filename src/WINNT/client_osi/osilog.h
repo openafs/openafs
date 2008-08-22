@@ -71,7 +71,7 @@ extern void osi_LogEnable(osi_log_t *);
 
 extern void osi_LogDisable(osi_log_t *);
 
-extern void osi_LogPanic(char *filep, size_t line);
+extern void osi_LogPanic(char *msgp, char *filep, size_t line);
 
 extern void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle);
 
