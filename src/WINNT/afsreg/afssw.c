@@ -12,6 +12,7 @@
 
 #include <windows.h>
 #include <shlobj.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -87,16 +88,16 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
     if (cbPath) {
         cbPath += 2;
         path = malloc(cbPath);
-    }
-    if (path) {
-        GetEnvironmentVariable("AFSCONF", path, cbPath);
-        tlen = (int)strlen(path);
-        if (path[tlen-1] != '\\') {
-            strncat(path, "\\", cbPath);
-            path[cbPath-1] = '\0';
+        if (path) {
+            GetEnvironmentVariable("AFSCONF", path, cbPath);
+            tlen = (int)strlen(path);
+            if (path[tlen-1] != '\\') {
+                strncat(path, "\\", cbPath);
+                path[cbPath-1] = '\0';
+            }
+            *bufPP = path;
+            return 0;
         }
-        *bufPP = path;
-        return 0;
     }
 
     if (!StringDataRead(AFSREG_CLT_OPENAFS_KEY,
@@ -104,8 +105,12 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
                          &path)) {
         tlen = (int)strlen(path);
         if (path[tlen-1] != '\\') {
-            strncat(path, "\\", cbPath);
-            path[cbPath-1] = '\0';
+            char * newPath = malloc(tlen+2);
+            if (newPath) {
+                snprintf(newPath,tlen+2,"%s\\",path);
+                free(path);
+                path = newPath;
+            }
         }
         *bufPP = path;
         return 0;
@@ -115,6 +120,7 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
      * Try to find the All Users\Application Data\OpenAFS\Client directory.
      * If it exists and it contains a CellServDB file, return that. 
      * Otherwise, return the Install Directory for backward compatibility.
+     * SHGetFolderPath requires wdir to be of length MAX_PATH which is 260.
      */
     if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 
                                     SHGFP_TYPE_CURRENT, wdir)))
