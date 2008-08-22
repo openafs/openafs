@@ -729,10 +729,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
     pp->natMTU = MIN((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->maxDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->ifDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
     /* Initialize slow start parameters */
     pp->MTU = MIN(pp->natMTU, pp->maxMTU);
