@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <strsafe.h>
+#include <stdio.h>
 #include <errno.h>
 
 #include "cm_nls.h"
@@ -60,6 +61,35 @@ BOOL
 
 #define AFS_NORM_FORM NormalizationC
 
+static LCID nls_lcid = LOCALE_INVARIANT;
+
+static int nls_init = 0;
+
+static BOOL
+is_windows_2000 (void)
+{
+   static BOOL fChecked = FALSE;
+   static BOOL fIsWin2K = FALSE;
+
+   if (!fChecked)
+   {
+       OSVERSIONINFO Version;
+
+       memset (&Version, 0x00, sizeof(Version));
+       Version.dwOSVersionInfoSize = sizeof(Version);
+
+       if (GetVersionEx (&Version))
+       {
+           if (Version.dwPlatformId == VER_PLATFORM_WIN32_NT &&
+                Version.dwMajorVersion >= 5)
+               fIsWin2K = TRUE;
+       }
+       fChecked = TRUE;
+   }
+
+   return fIsWin2K;
+}
+
 long cm_InitNormalization(void)
 {
     HMODULE h_Nls;
@@ -81,6 +111,11 @@ long cm_InitNormalization(void)
         (BOOL
          (WINAPI *)( NORM_FORM, LPCWSTR, int ))
         GetProcAddress(h_Nls, "IsNormalizedString");
+
+    if (is_windows_2000())
+        nls_lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+
+    nls_init = 1;
 
     return (pNormalizeString && pIsNormalizedString);
 }
@@ -114,6 +149,9 @@ long cm_InitNormalization(void)
 static wchar_t * 
 NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *pcch_dest)
 {
+    if (!nls_init)
+        cm_InitNormalization();
+
 #ifdef DEBUG_UNICODE
     assert (pNormalizeString != NULL && pIsNormalizedString != NULL);
 #endif
@@ -243,6 +281,9 @@ cm_normchar_t * cm_NormalizeStringAlloc(const cm_unichar_t * s, int cch_src, int
     int cch_dest = 0;
     cm_normchar_t * r;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     if (s == NULL || cch_src == 0 || *s == L'\0') {
         if (pcch_dest)
             *pcch_dest = ((cch_src != 0)? 1: 0);
@@ -262,6 +303,9 @@ int cm_NormalizeString(const cm_unichar_t * s, int cch_src,
 {
     int tcch = cch_dest;
     cm_normchar_t * r;
+
+    if (!nls_init)
+        cm_InitNormalization();
 
     r = NormalizeUtf16String(s, cch_src, dest, &tcch);
 
@@ -292,6 +336,9 @@ cm_utf8char_t * cm_Utf16ToUtf8Alloc(const cm_unichar_t * s, int cch_src, int *pc
     int cch_dest;
     cm_utf8char_t * dest;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     if (s == NULL || cch_src == 0 || *s == L'\0') {
         if (pcch_dest)
             *pcch_dest = ((cch_src != 0)?1:0);
@@ -320,12 +367,18 @@ cm_utf8char_t * cm_Utf16ToUtf8Alloc(const cm_unichar_t * s, int cch_src, int *pc
 int cm_Utf16ToUtf8(const cm_unichar_t * src, int cch_src,
                    cm_utf8char_t * dest, int cch_dest)
 {
+    if (!nls_init)
+        cm_InitNormalization();
+
     return WideCharToMultiByte(CP_UTF8, 0, src, cch_src, dest, cch_dest, NULL, FALSE);
 }
 
 int cm_Utf16ToUtf16(const cm_unichar_t * src, int cch_src,
                     cm_unichar_t * dest, int cch_dest)
 {
+    if (!nls_init)
+        cm_InitNormalization();
+
     if (cch_src == -1) {
         StringCchCopyW(dest, cch_dest, src);
         return wcslen(dest) + 1;
@@ -356,6 +409,9 @@ int cm_Utf16ToUtf16(const cm_unichar_t * src, int cch_src,
 long cm_NormalizeUtf16StringToUtf8(const wchar_t * src, int cch_src,
                                    char * adest, int cch_adest)
 {
+    if (!nls_init)
+        cm_InitNormalization();
+
     if (cch_src < 0) {
         size_t cch;
 
@@ -454,6 +510,10 @@ static int sanitize_bytestring(const char * src, int cch_src,
                                char * odest, int cch_dest)
 {
     char * dest = odest;
+
+    if (!nls_init)
+        cm_InitNormalization();
+
     while (cch_src > 0 && *src && cch_dest > 0) {
 
         unsigned short rc;
@@ -501,6 +561,9 @@ long cm_NormalizeUtf8StringToUtf16(const char * src, int cch_src,
     wchar_t *wnorm;
     int cch;
     int cch_norm;
+
+    if (!nls_init)
+        cm_InitNormalization();
 
     /* Get some edge cases out first, so we don't have to worry about
        cch_src being 0 etc. */
@@ -584,6 +647,9 @@ cm_normchar_t *cm_NormalizeUtf8StringToUtf16Alloc(const cm_utf8char_t * src, int
     int cch;
     int cch_norm;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     /* Get some edge cases out first, so we don't have to worry about
        cch_src being 0 etc. */
     if (cch_src == 0 || src == NULL || *src == '\0') {
@@ -654,6 +720,9 @@ int cm_Utf8ToUtf16(const cm_utf8char_t * src, int cch_src,
 {
     int cch;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     if (cch_src == -1) {
         cch_src = strlen(src) + 1;
     }
@@ -706,6 +775,9 @@ cm_unichar_t  * cm_Utf8ToUtf16Alloc(const cm_utf8char_t * src, int cch_src, int 
 {
     cm_unichar_t * ustr = NULL;
     int cch;
+
+    if (!nls_init)
+        cm_InitNormalization();
 
     if (cch_src == 0 || src == NULL || *src == '\0') {
         if (pcch_dest)
@@ -805,6 +877,9 @@ long cm_NormalizeUtf8String(const char * src, int cch_src,
     int cch;
     int cch_norm;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     /* Get some edge cases out first, so we don't have to worry about
        cch_src being 0 etc. */
     if (cch_src == 0) {
@@ -893,6 +968,9 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
     wchar_t wstr2[NLSMAXCCH];
     int rv;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     /* first check for NULL pointers (assume NULL < "") */
     if (str1 == NULL) {
         if (str2 == NULL)
@@ -919,7 +997,7 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
         wstr2[0] = L'\0';
     }
 
-    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, wstr1, len1, wstr2, len2);
+    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, wstr1, len1, wstr2, len2);
     if (rv > 0)
         return (rv - 2);
     else {
@@ -935,6 +1013,9 @@ int cm_strnicmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2, int 
     int rv;
     size_t cch1;
     size_t cch2;
+
+    if (!nls_init)
+        cm_InitNormalization();
 
     /* first check for NULL pointers */
     if (str1 == NULL) {
@@ -952,7 +1033,7 @@ int cm_strnicmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2, int 
     if (FAILED(StringCchLengthW(str2, len, &cch2)))
         cch2 = len;
 
-    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, str1, cch1, str2, cch2);
+    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, str1, cch1, str2, cch2);
     if (rv > 0)
         return (rv - 2);
     else {
@@ -967,6 +1048,9 @@ int cm_stricmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2)
 {
     int rv;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     /* first check for NULL pointers */
     if (str1 == NULL) {
         if (str2 == NULL)
@@ -977,7 +1061,7 @@ int cm_stricmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2)
         return 1;
     }
 
-    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, str1, -1, str2, -1);
+    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, str1, -1, str2, -1);
     if (rv > 0)
         return (rv - 2);
     else {
@@ -993,8 +1077,11 @@ cm_unichar_t *cm_strlwr_utf16(cm_unichar_t * str)
     int rv;
     int len;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     len = wcslen(str) + 1;
-    rv = LCMapStringW(LOCALE_INVARIANT, LCMAP_LOWERCASE, str, len, str, len);
+    rv = LCMapStringW(nls_lcid, LCMAP_LOWERCASE, str, len, str, len);
 #ifdef DEBUG
     if (rv == 0) {
         DebugBreak();
@@ -1009,8 +1096,11 @@ cm_unichar_t *cm_strupr_utf16(cm_unichar_t * str)
     int rv;
     int len;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     len = wcslen(str) + 1;
-    rv = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, str, len, str, len);
+    rv = LCMapStringW(nls_lcid, LCMAP_UPPERCASE, str, len, str, len);
 #ifdef DEBUG
     if (rv == 0) {
         DebugBreak();
@@ -1028,6 +1118,9 @@ int cm_stricmp_utf8(const char * str1, const char * str2)
     int len2;
     wchar_t wstr2[NLSMAXCCH];
     int rv;
+
+    if (!nls_init)
+        cm_InitNormalization();
 
     /* first check for NULL pointers */
     if (str1 == NULL) {
@@ -1055,7 +1148,7 @@ int cm_stricmp_utf8(const char * str1, const char * str2)
         wstr2[0] = L'\0';
     }
 
-    rv = CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, wstr1, len1, wstr2, len2);
+    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, wstr1, len1, wstr2, len2);
     if (rv > 0)
         return (rv - 2);
     else {
@@ -1072,8 +1165,11 @@ wchar_t * strupr_utf16(wchar_t * wstr, size_t cbstr)
     wchar_t wstrd[NLSMAXCCH];
     int len;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     len = cbstr / sizeof(wchar_t);
-    len = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, wstr, len, wstrd, NLSMAXCCH);
+    len = LCMapStringW(nls_lcid, LCMAP_UPPERCASE, wstr, len, wstrd, NLSMAXCCH);
     StringCbCopyW(wstr, cbstr, wstrd);
 
     return wstr;
@@ -1086,11 +1182,14 @@ char * strupr_utf8(char * str, size_t cbstr)
     wchar_t wstrd[NLSMAXCCH];
     int len;
 
+    if (!nls_init)
+        cm_InitNormalization();
+
     len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, wstr, NLSMAXCCH);
     if (len == 0)
         return str;
 
-    len = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, wstr, len, wstrd, NLSMAXCCH);
+    len = LCMapStringW(nls_lcid, LCMAP_UPPERCASE, wstr, len, wstrd, NLSMAXCCH);
 
     len = WideCharToMultiByte(CP_UTF8, 0, wstrd, -1, str, cbstr, NULL, FALSE);
 
