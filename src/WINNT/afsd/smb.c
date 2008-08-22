@@ -819,7 +819,11 @@ void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
     *unixTimep = dosTime + smb_localZero;
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+smb_vc_t *smb_FindVCDbg(unsigned short lsn, int flags, int lana, char *file, long line)
+#else
 smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
+#endif
 {
     smb_vc_t *vcp;
 
@@ -898,6 +902,12 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
             osi_Log0(smb_logp, "WARNING: numVCs wrapping around");
         }
     }
+#ifdef DEBUG_SMB_REFCOUNT
+    if (vcp) {
+        afsi_log("%s:%d smb_FindVC vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+        osi_Log4(smb_logp,"%s:%d smb_FindVC vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+    }
+#endif
     lock_ReleaseWrite(&smb_rctLock);
     lock_ReleaseWrite(&smb_globalLock);
     return vcp;
@@ -916,15 +926,25 @@ int smb_IsStarMask(clientchar_t *maskp)
     return 0;
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_ReleaseVCInternalDbg(smb_vc_t *vcp, char * file, long line)
+#define smb_ReleaseVCInternal(a) smb_ReleaseVCInternalDbg(a, file, line)
+#else
 void smb_ReleaseVCInternal(smb_vc_t *vcp)
+#endif
 {
     smb_vc_t **vcpp;
     smb_vc_t * avcp;
 
+    lock_AssertWrite(&smb_rctLock);
     vcp->refCount--;
 
     if (vcp->refCount == 0) {
         if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
+#ifdef DEBUG_SMB_REFCOUNT
+            afsi_log("%s:%d smb_ReleaseVCInternal vcp 0x%p is dead ref %d", file, line, vcp, vcp->refCount);
+            osi_Log4(smb_logp,"%s:%d smb_ReleaseVCInternal vcp 0x%p is dead ref %d", file, line, vcp, vcp->refCount);
+#endif
             /* remove VCP from smb_deadVCsp */
             for (vcpp = &smb_deadVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
                 if (*vcpp == vcp) {
@@ -936,6 +956,9 @@ void smb_ReleaseVCInternal(smb_vc_t *vcp)
             memset(vcp,0,sizeof(smb_vc_t));
             free(vcp);
         } else {
+#ifdef DEBUG_SMB_REFCOUNT
+            afsi_log("%s:%d smb_ReleaseVCInternal vcp 0x%p is alive ref %d", file, line, vcp, vcp->refCount);
+#endif
             for (avcp = smb_allVCsp; avcp; avcp = avcp->nextp) {
                 if (avcp == vcp)
                     break;
@@ -948,9 +971,14 @@ void smb_ReleaseVCInternal(smb_vc_t *vcp)
              * smb_vc_t objects to be deallocated while still in the
              * smb_allVCsp list.  The list is supposed to keep a reference
              * to the smb_vc_t.  Put it back.
-             */   
-            if (avcp)
+             */
+            if (avcp) {
                 vcp->refCount++;
+#ifdef DEBUG_SMB_REFCOUNT
+                afsi_log("%s:%d smb_ReleaseVCInternal vcp 0x%p is in smb_allVCsp ref %d", file, line, vcp, vcp->refCount);
+                osi_Log4(smb_logp,"%s:%d smb_ReleaseVCInternal vcp 0x%p is in smb_allVCsp ref %d", file, line, vcp, vcp->refCount);
+#endif
+            }
         }
     } else if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
         /* The reference count is non-zero but the VC is dead.
@@ -965,18 +993,36 @@ void smb_ReleaseVCInternal(smb_vc_t *vcp)
             vcp->refCount++;        /* put the refCount back */
             lock_ReleaseWrite(&smb_rctLock);
             smb_CleanupDeadVC(vcp);
+#ifdef DEBUG_SMB_REFCOUNT
+            afsi_log("%s:%d smb_ReleaseVCInternal vcp 0x%p after CleanupDeadVC ref %d", file, line, vcp, vcp->refCount);
+            osi_Log4(smb_logp,"%s:%d smb_ReleaseVCInternal vcp 0x%p after CleanupDeadVC ref %d", file, line, vcp, vcp->refCount);
+#endif
             lock_ObtainWrite(&smb_rctLock);
         }
+    } else {
+#ifdef DEBUG_SMB_REFCOUNT
+        afsi_log("%s:%d smb_ReleaseVCInternal vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+        osi_Log4(smb_logp,"%s:%d smb_ReleaseVCInternal vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+#endif
     }
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_ReleaseVCNoLockDbg(smb_vc_t *vcp, char * file, long line)
+#else
 void smb_ReleaseVCNoLock(smb_vc_t *vcp)
+#endif
 {
+    lock_AssertWrite(&smb_rctLock);
     osi_Log2(smb_logp,"smb_ReleaseVCNoLock vcp %x ref %d",vcp, vcp->refCount);
     smb_ReleaseVCInternal(vcp);
 }       
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_ReleaseVCDbg(smb_vc_t *vcp, char * file, long line)
+#else
 void smb_ReleaseVC(smb_vc_t *vcp)
+#endif
 {
     lock_ObtainWrite(&smb_rctLock);
     osi_Log2(smb_logp,"smb_ReleaseVC       vcp %x ref %d",vcp, vcp->refCount);
@@ -984,17 +1030,36 @@ void smb_ReleaseVC(smb_vc_t *vcp)
     lock_ReleaseWrite(&smb_rctLock);
 }       
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_HoldVCNoLockDbg(smb_vc_t *vcp, char * file, long line)
+#else
 void smb_HoldVCNoLock(smb_vc_t *vcp)
+#endif
 {
+    lock_AssertWrite(&smb_rctLock);
     vcp->refCount++;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_HoldVCNoLock vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+    osi_Log4(smb_logp,"%s:%d smb_HoldVCNoLock vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+#else
     osi_Log2(smb_logp,"smb_HoldVCNoLock vcp %x ref %d",vcp, vcp->refCount);
+#endif
 }       
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_HoldVCDbg(smb_vc_t *vcp, char * file, long line)
+#else
 void smb_HoldVC(smb_vc_t *vcp)
+#endif
 {
     lock_ObtainWrite(&smb_rctLock);
     vcp->refCount++;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_HoldVC       vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+    osi_Log4(smb_logp,"%s:%d smb_HoldVC       vcp 0x%p ref %d", file, line, vcp, vcp->refCount);
+#else
     osi_Log2(smb_logp,"smb_HoldVC       vcp %x ref %d",vcp, vcp->refCount);
+#endif
     lock_ReleaseWrite(&smb_rctLock);
 }       
 
@@ -1086,15 +1151,14 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     }
 
     /* The vcp is now on the deadVCsp list.  We intentionally drop the
-     * reference so that the refcount can reach 0 and we can delete it */
-    refCount = vcp->refCount;
-    smb_ReleaseVCNoLock(vcp);
-
-    /* 
+     * reference so that the refcount can reach 0 and we can delete it 
+     *
      * If the refCount == 1 going into the ReleaseVCNoLock call 
      * the object will be freed and it won't be safe to clear 
      * the flag.
      */
+    refCount = vcp->refCount;
+    smb_ReleaseVCNoLock(vcp);
     if (refCount > 1) {
         lock_ObtainMutex(&vcp->mx);
         vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
@@ -1105,7 +1169,11 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+smb_tid_t *smb_FindTIDDbg(smb_vc_t *vcp, unsigned short tid, int flags, char * file, long line)
+#else
 smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
+#endif
 {
     smb_tid_t *tidp;
 
@@ -1134,43 +1202,74 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
         lock_InitializeMutex(&tidp->mx, "tid_t mutex");
         tidp->tid = tid;
     }
+#ifdef DEBUG_SMB_REFCOUNT
+    if (tidp) {
+        afsi_log("%s:%d smb_FindTID tidp 0x%p ref %d", file, line, tidp, tidp->refCount);
+        osi_Log4(smb_logp,"%s:%d smb_FindTID tidp 0x%p ref %d", file, line, tidp, tidp->refCount);
+    }
+#endif
     lock_ReleaseWrite(&smb_rctLock);
     return tidp;
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_HoldTIDNoLockDbg(smb_tid_t *tidp, char * file, long line)
+#else
 void smb_HoldTIDNoLock(smb_tid_t *tidp)
+#endif
 {
+    lock_AssertWrite(&smb_rctLock);
     tidp->refCount++;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_HoldTIDNoLock tidp 0x%p ref %d", file, line, tidp, tidp->refCount);
+    osi_Log4(smb_logp,"%s:%d smb_HoldTIDNoLock tidp 0x%p ref %d", file, line, tidp, tidp->refCount);
+#endif
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_ReleaseTIDDbg(smb_tid_t *tidp, afs_uint32 locked, char *file, long line)
+#else
 void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked)
+#endif
 {
     smb_tid_t *tp;
     smb_tid_t **ltpp;
-    cm_user_t *userp;
+    cm_user_t *userp = NULL;
+    smb_vc_t  *vcp = NULL;
 
-    userp = NULL;
     if (!locked)
         lock_ObtainWrite(&smb_rctLock);
+    else
+        lock_AssertWrite(&smb_rctLock);
+
     osi_assertx(tidp->refCount-- > 0, "smb_tid_t refCount 0");
-    if (tidp->refCount == 0 && (tidp->deleteOk)) {
-        ltpp = &tidp->vcp->tidsp;
-        for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
-            if (tp == tidp) 
-                break;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_ReleaseTID tidp 0x%p ref %d deleteOk %d", file, line, tidp, tidp->refCount, tidp->deleteOk);
+    osi_Log5(smb_logp,"%s:%d smb_ReleaseTID tidp 0x%p ref %d deleteOk %d", file, line, tidp, tidp->refCount, tidp->deleteOk);
+#endif
+    if (tidp->refCount == 0) {
+        if (tidp->deleteOk) {
+            ltpp = &tidp->vcp->tidsp;
+            for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
+                if (tp == tidp) 
+                    break;
+            }
+            osi_assertx(tp != NULL, "null smb_tid_t");
+            *ltpp = tp->nextp;
+            lock_FinalizeMutex(&tidp->mx);
+            userp = tidp->userp;	/* remember to drop ref later */
+            tidp->userp = NULL;
+            vcp = tidp->vcp;
+            tidp->vcp = NULL;
+            free(tidp);
         }
-        osi_assertx(tp != NULL, "null smb_tid_t");
-        *ltpp = tp->nextp;
-        lock_FinalizeMutex(&tidp->mx);
-        userp = tidp->userp;	/* remember to drop ref later */
-        tidp->userp = NULL;
-        smb_ReleaseVCNoLock(tidp->vcp);
-        tidp->vcp = NULL;
     }
     if (!locked)
         lock_ReleaseWrite(&smb_rctLock);
     if (userp)
         cm_ReleaseUser(userp);
+    if (vcp)
+        smb_ReleaseVCNoLock(vcp);
 }	        
 
 smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
@@ -1287,6 +1386,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
 
 void smb_HoldUIDNoLock(smb_user_t *uidp)
 {
+    lock_AssertWrite(&smb_rctLock);
     uidp->refCount++;
 }
 
@@ -1406,7 +1506,11 @@ int smb_SUser(cm_user_t *userp)
  * If the SMB_FLAG_CREATE flag is set, we allocate a new  
  * smb_fid_t data structure if desired File ID cannot be found.
  */
+#ifdef DEBUG_SMB_REFCOUNT
+smb_fid_t *smb_FindFIDDbg(smb_vc_t *vcp, unsigned short fid, int flags, char *file, long line)
+#else
 smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
+#endif
 {
     smb_fid_t *fidp;
     int newFid = 0;
@@ -1481,11 +1585,21 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 	}
     }
 
+#ifdef DEBUG_SMB_REFCOUNT
+    if (fidp) {
+        afsi_log("%s:%d smb_FindFID fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+        osi_Log4(smb_logp,"%s:%d smb_FindFID fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+    }
+#endif
     lock_ReleaseWrite(&smb_rctLock);
     return fidp;
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+smb_fid_t *smb_FindFIDByScacheDbg(smb_vc_t *vcp, cm_scache_t * scp, char *file, long line)
+#else
 smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
+#endif
 {
     smb_fid_t *fidp = NULL;
     int newFid = 0;
@@ -1500,19 +1614,38 @@ smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
             break;
         }
     }
+#ifdef DEBUG_SMB_REFCOUNT
+    if (fidp) {
+        afsi_log("%s:%d smb_FindFIDByScache fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+        osi_Log4(smb_logp,"%s:%d smb_FindFIDByScache fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+      }
+#endif
     lock_ReleaseWrite(&smb_rctLock);
     return fidp;
 }
 
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_HoldFIDNoLockDbg(smb_fid_t *fidp, char *file, long line)
+#else
 void smb_HoldFIDNoLock(smb_fid_t *fidp)
+#endif
 {
+    lock_AssertWrite(&smb_rctLock);
     fidp->refCount++;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_HoldFIDNoLock fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+    osi_Log4(smb_logp,"%s:%d smb_HoldFIDNoLock fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
+#endif
 }
 
 
 /* smb_ReleaseFID cannot be called while an cm_scache_t mutex lock is held */
 /* the sm_fid_t->mx and smb_rctLock must not be held */
+#ifdef DEBUG_SMB_REFCOUNT
+void smb_ReleaseFIDDbg(smb_fid_t *fidp, char *file, long line)
+#else
 void smb_ReleaseFID(smb_fid_t *fidp)
+#endif
 {
     cm_scache_t *scp = NULL;
     cm_user_t *userp = NULL;
@@ -1522,43 +1655,49 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     lock_ObtainMutex(&fidp->mx);
     lock_ObtainWrite(&smb_rctLock);
     osi_assertx(fidp->refCount-- > 0, "smb_fid_t refCount 0");
-    if (fidp->refCount == 0 && (fidp->deleteOk)) {
-        vcp = fidp->vcp;
-        fidp->vcp = NULL;
-        scp = fidp->scp;    /* release after lock is released */
-	if (scp) {
-	    lock_ObtainWrite(&scp->rw);
-	    scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
-	    lock_ReleaseWrite(&scp->rw);
-	    osi_Log2(smb_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
-	    fidp->scp = NULL;
-	}
-        userp = fidp->userp;
-        fidp->userp = NULL;
+#ifdef DEBUG_SMB_REFCOUNT
+    afsi_log("%s:%d smb_ReleaseFID fidp 0x%p ref %d deleteOk %d", file, line, fidp, fidp->refCount, fidp->deleteOk);
+    osi_Log5(smb_logp,"%s:%d smb_ReleaseFID fidp 0x%p ref %d deleteOk %d", file, line, fidp, fidp->refCount, fidp->deleteOk);
+#endif
+    if (fidp->refCount == 0) {
+        if (fidp->deleteOk) {
+            vcp = fidp->vcp;
+            fidp->vcp = NULL;
+            scp = fidp->scp;    /* release after lock is released */
+            if (scp) {
+                lock_ObtainWrite(&scp->rw);
+                scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+                lock_ReleaseWrite(&scp->rw);
+                osi_Log2(smb_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
+                fidp->scp = NULL;
+            }
+            userp = fidp->userp;
+            fidp->userp = NULL;
 
-	if (vcp->fidsp) 
-	    osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
-        thrd_CloseHandle(fidp->raw_write_event);
+            if (vcp->fidsp) 
+                osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
+            thrd_CloseHandle(fidp->raw_write_event);
 
-        /* and see if there is ioctl stuff to free */
-        ioctlp = fidp->ioctlp;
-        if (ioctlp) {
-            if (ioctlp->prefix)
+            /* and see if there is ioctl stuff to free */
+            ioctlp = fidp->ioctlp;
+            if (ioctlp) {
+                if (ioctlp->prefix)
                 cm_FreeSpace(ioctlp->prefix);
-            if (ioctlp->ioctl.inAllocp)
-                free(ioctlp->ioctl.inAllocp);
-            if (ioctlp->ioctl.outAllocp)
-                free(ioctlp->ioctl.outAllocp);
-            free(ioctlp);
-        }       
-	lock_ReleaseMutex(&fidp->mx);
-	lock_FinalizeMutex(&fidp->mx);
-        free(fidp);
+                if (ioctlp->ioctl.inAllocp)
+                    free(ioctlp->ioctl.inAllocp);
+                if (ioctlp->ioctl.outAllocp)
+                    free(ioctlp->ioctl.outAllocp);
+                free(ioctlp);
+            }       
+            lock_ReleaseMutex(&fidp->mx);
+            lock_FinalizeMutex(&fidp->mx);
+            free(fidp);
 
-	if (vcp)
-	    smb_ReleaseVCNoLock(vcp);
-    } else {
-	lock_ReleaseMutex(&fidp->mx);
+            if (vcp)
+                smb_ReleaseVCNoLock(vcp);
+        } else {
+            lock_ReleaseMutex(&fidp->mx);
+        }
     }
     lock_ReleaseWrite(&smb_rctLock);
 
@@ -2123,7 +2262,7 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
     return dsp;
 }
 
-static smb_packet_t *GetPacket(void)
+static smb_packet_t *smb_GetPacket(void)
 {
     smb_packet_t *tbp;
 
@@ -2156,7 +2295,7 @@ static smb_packet_t *GetPacket(void)
 smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
 {
     smb_packet_t *tbp;
-    tbp = GetPacket();
+    tbp = smb_GetPacket();
     memcpy(tbp, pkt, sizeof(smb_packet_t));
     tbp->wctp = tbp->data + (unsigned int)(pkt->wctp - pkt->data);
     tbp->stringsp = NULL;
@@ -2165,7 +2304,7 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
     return tbp;
 }
 
-static NCB *GetNCB(void)
+static NCB *smb_GetNCB(void)
 {
     smb_ncb_t *tbp;
     NCB *ncbp;
@@ -2226,7 +2365,7 @@ void smb_FreePacket(smb_packet_t *tbp)
         smb_ReleaseVC(vcp);
 }
 
-static void FreeNCB(NCB *bufferp)
+static void smb_FreeNCB(NCB *bufferp)
 {
     smb_ncb_t *tbp;
         
@@ -2792,7 +2931,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
         
     ncbp = inp->ncbp;
     if (ncbp == NULL) {
-        ncbp = GetNCB();
+        ncbp = smb_GetNCB();
         localNCB = 1;
     }
  
@@ -2832,7 +2971,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
     }
 
     if (localNCB)
-        FreeNCB(ncbp);
+        smb_FreeNCB(ncbp);
 }
 
 void smb_MapNTError(long code, unsigned long *NTStatusp)
@@ -3602,7 +3741,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 void smb_CheckVCs(void)
 {
     smb_vc_t * vcp, *nextp;
-    smb_packet_t * outp = GetPacket();
+    smb_packet_t * outp = smb_GetPacket();
     smb_t *smbp;
             
     lock_ObtainWrite(&smb_rctLock);
@@ -3838,7 +3977,7 @@ void smb_WaitingLocksDaemon()
             vcp = wlRequest->vcp;
             inp = wlRequest->inp;
             outp = wlRequest->outp;
-            ncbp = GetNCB();
+            ncbp = smb_GetNCB();
             ncbp->ncb_length = inp->ncb_length;
             inp->spacep = cm_GetSpace();
 
@@ -3862,7 +4001,7 @@ void smb_WaitingLocksDaemon()
             smb_FreePacket(outp);
             smb_ReleaseVC(vcp);
             cm_ReleaseSCache(wlRequest->scp);
-            FreeNCB(ncbp);
+            smb_FreeNCB(ncbp);
             free(wlRequest);
         } while (nwlRequest && smbShutdownFlag == 0);
         thrd_Sleep(1000);
@@ -8162,8 +8301,8 @@ void smb_Server(VOID *parmp)
 
     rx_StartClientThread();
 
-    outncbp = GetNCB();
-    outbufp = GetPacket();
+    outncbp = smb_GetNCB();
+    outbufp = smb_GetPacket();
     outbufp->ncbp = outncbp;
 
     while (1) {
@@ -8253,12 +8392,12 @@ void smb_Server(VOID *parmp)
 		    lock_ObtainWrite(&smb_globalLock);
 		    dead_sessions[vcp->session] = TRUE;
 		    lock_ReleaseWrite(&smb_globalLock);
-		    smb_CleanupDeadVC(vcp);
-		    smb_ReleaseVC(vcp);
-		    vcp = NULL;
                 } else {
 		    lock_ReleaseMutex(&vcp->mx);
 		}
+                smb_CleanupDeadVC(vcp);
+                smb_ReleaseVC(vcp);
+                vcp = NULL;
             }
             goto doneWithNCB;
 
@@ -8285,31 +8424,33 @@ void smb_Server(VOID *parmp)
         default:
             /* A weird error code.  Log it, sleep, and continue. */
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
-	    if (vcp) 
+	    if (vcp) {
 		lock_ObtainMutex(&vcp->mx);
-            if (vcp && vcp->errorCount++ > 3) {
-                osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
-		if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-		    osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
-			     vcp, vcp->usersp);
-  		    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-  		    lock_ReleaseMutex(&vcp->mx);
-		    lock_ObtainWrite(&smb_globalLock);
-		    dead_sessions[vcp->session] = TRUE;
- 		    lock_ReleaseWrite(&smb_globalLock);
- 		    smb_CleanupDeadVC(vcp);
- 		    smb_ReleaseVC(vcp);
- 		    vcp = NULL;
- 		} else {
-  		    lock_ReleaseMutex(&vcp->mx);
-		}
-		goto doneWithNCB;
-            }
-            else {
-		if (vcp)
+                if (vcp->errorCount++ > 3) {
+                    osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
+                    if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+                        osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
+                                 vcp, vcp->usersp);
+                        vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+                        lock_ReleaseMutex(&vcp->mx);
+                        lock_ObtainWrite(&smb_globalLock);
+                        dead_sessions[vcp->session] = TRUE;
+                        lock_ReleaseWrite(&smb_globalLock);
+                    } else {
+                        lock_ReleaseMutex(&vcp->mx);
+                    }
+                    smb_CleanupDeadVC(vcp);
+                    smb_ReleaseVC(vcp);
+                    vcp = NULL;
+                    goto doneWithNCB;
+                }
+                else {
 		    lock_ReleaseMutex(&vcp->mx);
-                thrd_Sleep(1000);
-		thrd_SetEvent(SessionEvents[idx_session]);
+                    smb_ReleaseVC(vcp);
+                    vcp = NULL;
+                    Sleep(10);
+                    thrd_SetEvent(SessionEvents[idx_session]);
+                }
             }
 	    continue;
         }
@@ -8418,6 +8559,10 @@ void smb_Server(VOID *parmp)
     }
     if (vcp)
         smb_ReleaseVC(vcp);
+    if (outbufp)
+        smb_FreePacket(outbufp);
+    if (outncbp)
+        smb_FreeNCB(outncbp);
 }
 
 /*
@@ -8452,7 +8597,7 @@ void InitNCBslot(int idx)
 
     osi_assertx( idx < (sizeof(NCBs) / sizeof(NCBs[0])), "invalid index" );
 
-    NCBs[idx] = GetNCB();
+    NCBs[idx] = smb_GetNCB();
     sprintf(eventName,"NCBavails[%d]", idx);
     NCBavails[idx] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -8467,7 +8612,7 @@ void InitNCBslot(int idx)
         osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
     for (i=0; i<smb_NumServerThreads; i++)
         NCBreturns[i][idx] = retHandle;
-    bufp = GetPacket();
+    bufp = smb_GetPacket();
     bufp->spacep = cm_GetSpace();
     bufs[idx] = bufp;
 }
@@ -8493,7 +8638,7 @@ void smb_Listener(void *parmp)
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         thrd_ResetEvent(ListenerShutdown[lana]);
 
-    ncbp = GetNCB();
+    ncbp = smb_GetNCB();
 
     /* retrieve computer name */
     GetComputerName(cname, &cnamelen);
@@ -8675,7 +8820,7 @@ void smb_Listener(void *parmp)
 
         if (session >= SESSION_MAX - 1  || numNCBs >= NCB_MAX - 1) {
             unsigned long code = CM_ERROR_ALLBUSY;
-            smb_packet_t * outp = GetPacket();
+            smb_packet_t * outp = smb_GetPacket();
             unsigned char *outWctp;
             smb_t *smbp;
             
@@ -8776,7 +8921,7 @@ void smb_Listener(void *parmp)
     }	/* dispatch while loop */
 
 exit_thread:
-    FreeNCB(ncbp);
+    smb_FreeNCB(ncbp);
     thrd_SetEvent(ListenerShutdown[lana]);
     return;
 }
@@ -8835,7 +8980,7 @@ void smb_LanAdapterChange(int locked) {
              strcmp(cm_NetbiosName, NetbiosName) ) {
             change = 1;
         } else {
-            NCB *ncbp = GetNCB();
+            NCB *ncbp = smb_GetNCB();
             ncbp->ncb_command = NCBENUM;
             ncbp->ncb_buffer = (PUCHAR)&temp_list;
             ncbp->ncb_length = sizeof(temp_list);
@@ -8852,7 +8997,7 @@ void smb_LanAdapterChange(int locked) {
                     }
                 }
             }
-	    FreeNCB(ncbp);
+	    smb_FreeNCB(ncbp);
         }
     } 
 
@@ -8887,7 +9032,7 @@ int smb_NetbiosInit(int locked)
         return 0;
     }
     /* setup the NCB system */
-    ncbp = GetNCB();
+    ncbp = smb_GetNCB();
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
     if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
@@ -9039,7 +9184,7 @@ int smb_NetbiosInit(int locked)
     }
         
     /* we're done with the NCB now */
-    FreeNCB(ncbp);
+    smb_FreeNCB(ncbp);
 
     afsi_log("smb_NetbiosInit smb_LANadapter=%d",smb_LANadapter);
     if (lana_list.length > 0)
@@ -9159,7 +9304,7 @@ void smb_StopListeners(int locked)
 #endif
                                   );
 
-    ncbp = GetNCB();
+    ncbp = smb_GetNCB();
 
     /* Unregister the SMB name */
     for (l = 0; l < lana_list.length; l++) {
@@ -9176,7 +9321,7 @@ void smb_StopListeners(int locked)
     /* force a re-evaluation of the network adapters */
     lana_list.length = 0;
     smb_LANadapter = LANA_INVALID;
-    FreeNCB(ncbp);
+    smb_FreeNCB(ncbp);
     if (!locked)
         lock_ReleaseMutex(&smb_StartedLock);
 }
@@ -9558,7 +9703,7 @@ void smb_Shutdown(void)
     /*fprintf(stderr, "Entering smb_Shutdown\n");*/
         
     /* setup the NCB system */
-    ncbp = GetNCB();
+    ncbp = smb_GetNCB();
 
     /* Block new sessions by setting shutdown flag */
     smbShutdownFlag = 1;
@@ -9659,7 +9804,7 @@ void smb_Shutdown(void)
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
-    FreeNCB(ncbp);
+    smb_FreeNCB(ncbp);
     TlsFree(smb_TlsRequestSlot);
 }
 

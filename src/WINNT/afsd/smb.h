@@ -10,6 +10,8 @@
 #ifndef __SMB_H_ENV__
 #define __SMB_H_ENV__ 1
 
+/* #define DEBUG_SMB_REFCOUNT 1 */
+
 #if _WIN32_WINNT < 0x0501
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
@@ -515,19 +517,51 @@ extern void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosUTime);
 
 extern void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *dosTimep);
 
+#ifdef DEBUG_SMB_REFCOUNT
+extern smb_vc_t *smb_FindVCDbg(unsigned short lsn, int flags, int lana, char *, long);
+#define smb_FindVC(a,b,c) smb_FindVCDbg(a,b,c,__FILE__,__LINE__);
+
+extern void smb_HoldVCDbg(smb_vc_t *vcp, char *, long);
+#define smb_HoldVC(a) smb_HoldVCDbg(a,__FILE__,__LINE__);
+
+extern void smb_HoldVCNoLockDbg(smb_vc_t *vcp, char *, long);
+#define smb_HoldVCNoLock(a) smb_HoldVCNoLockDbg(a,__FILE__,__LINE__);
+
+extern void smb_ReleaseVCDbg(smb_vc_t *vcp, char *, long);
+#define smb_ReleaseVC(a) smb_ReleaseVCDbg(a,__FILE__,__LINE__);
+
+extern void smb_ReleaseVCNoLockDbg(smb_vc_t *vcp, char *, long);
+#define smb_ReleaseVCNoLock(a) smb_ReleaseVCNoLockDbg(a,__FILE__,__LINE__);
+#else
 extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
-extern void smb_CleanupDeadVC(smb_vc_t *vcp);
+extern void smb_HoldVC(smb_vc_t *vcp);
+
+extern void smb_HoldVCNoLock(smb_vc_t *vcp);
 
 extern void smb_ReleaseVC(smb_vc_t *vcp);
 
 extern void smb_ReleaseVCNoLock(smb_vc_t *vcp);
+#endif
 
+extern void smb_CleanupDeadVC(smb_vc_t *vcp);
+
+#ifdef DEBUG_SMB_REFCOUNT
+extern smb_tid_t *smb_FindTIDDbg(smb_vc_t *vcp, unsigned short tid, int flags, char *, long);
+#define smb_FindTID(a,b,c) smb_FindTIDDbg(a,b,c,__FILE__,__LINE__);
+
+extern void smb_HoldTIDNoLockDbg(smb_tid_t *tidp, char *, long);
+#define smb_HoldTIDNoLock(a) smb_HoldTIDNoLockDbg(a,__FILE__,__LINE__);
+
+extern void smb_ReleaseTIDDbg(smb_tid_t *tidp, afs_uint32 locked, char *, long);
+#define smb_ReleaseTID(a,b) smb_ReleaseTIDDbg(a,b,__FILE__,__LINE__);
+#else
 extern smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags);
 
 extern void smb_HoldTIDNoLock(smb_tid_t *tidp);
 
 extern void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked);
+#endif
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 
@@ -549,6 +583,19 @@ extern cm_user_t *smb_GetUserFromUID(smb_user_t *uidp);
 
 extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, clientchar_t ** tidPathp);
 
+#ifdef DEBUG_SMB_REFCOUNT
+extern smb_fid_t *smb_FindFIDDbg(smb_vc_t *vcp, unsigned short fid, int flags, char *, long);
+#define smb_FindFID(a,b,c) smb_FindFIDDbg(a,b,c,__FILE__,__LINE__);
+
+extern smb_fid_t *smb_FindFIDByScacheDbg(smb_vc_t *vcp, cm_scache_t * scp, char *, long);
+#define smb_FindFIDByScache(a,b) smb_FindFIDByScacheDbg(a,b,__FILE__,__LINE__);
+
+extern void smb_HoldFIDNoLockDbg(smb_fid_t *fidp, char *, long);
+#define smb_HoldFIDNoLock(a) smb_HoldFIDNoLockDbg(a,__FILE__,__LINE__);
+
+extern void smb_ReleaseFIDDbg(smb_fid_t *fidp, char *, long);
+#define smb_ReleaseFID(a) smb_ReleaseFIDDbg(a,__FILE__,__LINE__);
+#else
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 
 extern smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp);
@@ -556,6 +603,7 @@ extern smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp);
 extern void smb_HoldFIDNoLock(smb_fid_t *fidp);
 
 extern void smb_ReleaseFID(smb_fid_t *fidp);
+#endif
 
 extern long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
                          afs_uint32 dosTime);
@@ -637,10 +685,6 @@ extern void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 	unsigned char *classp);
 
 extern void smb_MapNTError(long code, unsigned long *NTStatusp);
-
-extern void smb_HoldVC(smb_vc_t *vcp);
-
-extern void smb_HoldVCNoLock(smb_vc_t *vcp);
 
 /* some globals, too */
 extern char *smb_localNamep;
