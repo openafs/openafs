@@ -12,9 +12,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#endif /* !DJGPP */
 #include "osi.h"
 #include <stdlib.h>
 

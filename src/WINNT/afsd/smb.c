@@ -851,7 +851,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
         vcp->uidCounter = 1;  	/* UID 0 is reserved for blank user */
         vcp->nextp = smb_allVCsp;
         smb_allVCsp = vcp;
-        lock_InitializeMutex(&vcp->mx, "vc_t mutex");
+        lock_InitializeMutex(&vcp->mx, "vc_t mutex", LOCK_HIERARCHY_SMB_VC);
         vcp->lsn = lsn;
         vcp->lana = lana;
         vcp->secCtx = NULL;
@@ -1199,7 +1199,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
         tidp->vcp = vcp;
         smb_HoldVCNoLock(vcp);
         vcp->tidsp = tidp;
-        lock_InitializeMutex(&tidp->mx, "tid_t mutex");
+        lock_InitializeMutex(&tidp->mx, "tid_t mutex", LOCK_HIERARCHY_SMB_TID);
         tidp->tid = tid;
     }
 #ifdef DEBUG_SMB_REFCOUNT
@@ -1294,7 +1294,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         uidp->vcp = vcp;
         smb_HoldVCNoLock(vcp);
         vcp->usersp = uidp;
-        lock_InitializeMutex(&uidp->mx, "user_t mutex");
+        lock_InitializeMutex(&uidp->mx, "user_t mutex", LOCK_HIERARCHY_SMB_UID);
         uidp->userID = uid;
         osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] new-uid[%d] name[%S]",
 		 vcp, uidp->userID,
@@ -1325,7 +1325,7 @@ smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine,
         unp->name = cm_ClientStrDup(usern);
         unp->machine = cm_ClientStrDup(machine);
         usernamesp = unp;
-        lock_InitializeMutex(&unp->mx, "username_t mutex");
+        lock_InitializeMutex(&unp->mx, "username_t mutex", LOCK_HIERARCHY_SMB_USERNAME);
 	if (flags & SMB_FLAG_AFSLOGON)
 	    unp->flags = SMB_USERNAMEFLAG_AFSLOGON;
     }
@@ -1571,7 +1571,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
         fidp->refCount = 1;
         fidp->vcp = vcp;
         smb_HoldVCNoLock(vcp);
-        lock_InitializeMutex(&fidp->mx, "fid_t mutex");
+        lock_InitializeMutex(&fidp->mx, "fid_t mutex", LOCK_HIERARCHY_SMB_FID);
         fidp->fid = fid;
         fidp->curr_chunk = fidp->prev_chunk = -2;
         fidp->raw_write_event = event;
@@ -2250,7 +2250,7 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
         dsp->cookie = smb_dirSearchCounter;
         ++smb_dirSearchCounter;
         dsp->refCount = 1;
-        lock_InitializeMutex(&dsp->mx, "cm_dirSearch_t");
+        lock_InitializeMutex(&dsp->mx, "cm_dirSearch_t", LOCK_HIERARCHY_SMB_DIRSEARCH);
         dsp->lastTime = osi_Time();
         osi_QAdd((osi_queue_t **) &smb_firstDirSearchp, &dsp->q);
         if (!smb_lastDirSearchp) 
@@ -2631,7 +2631,8 @@ clientchar_t *smb_ParseString(smb_packet_t * pktp, unsigned char * inp,
 #endif
         cb = sizeof(pktp->data);
     }
-    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
+    return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp,
+                              flags | SMB_STRF_SRCNULTERM);
 }
 
 clientchar_t *smb_ParseStringCb(smb_packet_t * pktp, unsigned char * inp,
@@ -2727,7 +2728,8 @@ smb_ParseStringBuf(const unsigned char * bufbase,
         *stringspp = spacep;
 
         cchdest = lengthof(spacep->wdata);
-        cm_Utf8ToUtf16(inp, (int)*pcb_max, spacep->wdata, cchdest);
+        cm_Utf8ToUtf16(inp, (int)((flags & SMB_STRF_SRCNULTERM)? -1 : *pcb_max),
+                       spacep->wdata, cchdest);
 
         return spacep->wdata;
 #ifdef SMB_UNICODE
@@ -5917,6 +5919,8 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
         /* if the call worked, stop doing the search now, since we
          * really only want to rename one file.
          */
+    if (code)
+        osi_Log0(smb_logp, "cm_Rename failure");
 	osi_Log1(smb_logp, "cm_Rename returns %ld", code);
     } else if (code == 0) {
         code = CM_ERROR_NOSUCHFILE;
@@ -9449,14 +9453,14 @@ void smb_Init(osi_log_t *logp, int useV3, int nThreads, void *aMBfunc)
     smb_logp = logp;
         
     /* and the global lock */
-    lock_InitializeRWLock(&smb_globalLock, "smb global lock");
-    lock_InitializeRWLock(&smb_rctLock, "smb refct and tree struct lock");
+    lock_InitializeRWLock(&smb_globalLock, "smb global lock", LOCK_HIERARCHY_SMB_GLOBAL);
+    lock_InitializeRWLock(&smb_rctLock, "smb refct and tree struct lock", LOCK_HIERARCHY_SMB_RCT_GLOBAL);
 
     /* Raw I/O data structures */
-    lock_InitializeMutex(&smb_RawBufLock, "smb raw buffer lock");
+    lock_InitializeMutex(&smb_RawBufLock, "smb raw buffer lock", LOCK_HIERARCHY_SMB_RAWBUF);
 
-    lock_InitializeMutex(&smb_ListenerLock, "smb listener lock");
-    lock_InitializeMutex(&smb_StartedLock, "smb started lock");
+    lock_InitializeMutex(&smb_ListenerLock, "smb listener lock", LOCK_HIERARCHY_SMB_LISTENER);
+    lock_InitializeMutex(&smb_StartedLock, "smb started lock", LOCK_HIERARCHY_SMB_STARTED);
 	
     /* 4 Raw I/O buffers */
     smb_RawBufs = calloc(65536,1);

@@ -139,7 +139,7 @@ void cm_InitFreelance() {
     thread_t phandle;
     int lpid;
 
-    lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
+    lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock", LOCK_HIERARCHY_FREELANCE_GLOBAL);
 
     // yj: first we make a call to cm_initLocalMountPoints
     // to read all the local mount points from the registry
@@ -391,7 +391,7 @@ int cm_reInitLocalMountPoints() {
             if (scp != cm_data.rootSCachep && cm_FidCmp(&scp->fid, &aFid) == 0) {
                 // mark the scp to be reused
                 cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_Freelance_Lock);
+                lock_ReleaseMutex(&cm_Freelance_Lock);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainWrite(&scp->rw);
                 cm_DiscardSCache(scp);

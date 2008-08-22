@@ -17,15 +17,11 @@
 /* misc definitions */
 
 /* large int */
-#ifndef DJGPP
 #include <rpc.h>
 #if !defined(_MSC_VER) || (_MSC_VER < 1300)
 #include "largeint.h"
 #endif
 #include "osithrdnt.h"
-#else /* DJGPP */
-#include "largeint95.h"
-#endif /* !DJGPP */
 
 typedef LARGE_INTEGER osi_hyper_t;
 #if _MSC_VER >= 1300
@@ -62,15 +58,9 @@ LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a);
 
 #define LargeIntegerNotEqualToZero(a) ((a).HighPart || (a).LowPart)
 #endif
-#ifndef DJGPP
 typedef GUID osi_uid_t;
-#else /* DJGPP */
-typedef int osi_uid_t;
-#endif /* !DJGPP */
-
 typedef int int32;
 
-#ifndef DJGPP
 /* basic util functions */
 #include "osiutils.h"
 
@@ -79,12 +69,10 @@ typedef int int32;
 
 /* lock type definitions */
 #include "osiltype.h"
-#endif /* !DJGPP */
 
 /* basic sleep operations */
 #include "osisleep.h"
 
-#ifndef DJGPP
 /* base lock definitions */
 #include "osibasel.h"
 
@@ -93,9 +81,6 @@ typedef int int32;
 
 /* RPC debug stuff */
 #include "osidb.h"
-#else /* DJGPP */
-#include "osithrd95.h"
-#endif /* !DJGPP */
 
 /* log stuff */
 #include "osilog.h"

@@ -389,7 +389,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
 
     if (osi_Once(&once)) {
         /* initialize global locks */
-        lock_InitializeRWLock(&buf_globalLock, "Global buffer lock");
+        lock_InitializeRWLock(&buf_globalLock, "Global buffer lock", LOCK_HIERARCHY_BUF_GLOBAL);
 
         if ( newFile ) {
             /* remember this for those who want to reset it */
@@ -424,7 +424,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 
                 osi_QAdd((osi_queue_t **)&cm_data.buf_freeListp, &bp->q);
                 bp->flags |= CM_BUF_INLRU;
-                lock_InitializeMutex(&bp->mx, "Buffer mutex");
+                lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
                 
                 /* grab appropriate number of bytes from aligned zone */
                 bp->datap = data;
@@ -448,7 +448,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             data = cm_data.bufDataBaseAddress;
             
             for (i=0; i<cm_data.buf_nbuffers; i++) {
-                lock_InitializeMutex(&bp->mx, "Buffer mutex");
+                lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
                 bp->userp = NULL;
                 bp->waitCount = 0;
                 bp->waitRequests = 0;
@@ -516,7 +516,7 @@ long buf_AddBuffers(afs_uint64 nbuffers)
     for (i=0; i<nbuffers; i++) {
         memset(bp, 0, sizeof(*bp));
         
-        lock_InitializeMutex(&bp->mx, "cm_buf_t");
+        lock_InitializeMutex(&bp->mx, "cm_buf_t", LOCK_HIERARCHY_BUFFER);
 
         /* grab appropriate number of bytes from aligned zone */
         bp->datap = data;
@@ -998,24 +998,25 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
             bp->flags &= ~CM_BUF_INLRU;
 
+            /* prepare to return it.  Give it a refcount */
+            bp->refCount = 1;
+#ifdef DEBUG_REFCOUNT
+            osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, 1);
+            afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, 1);
+#endif
             /* grab the mutex so that people don't use it
              * before the caller fills it with data.  Again, no one	
              * should have been able to get to this dude to lock it.
              */
 	    if (!lock_TryMutex(&bp->mx)) {
 	    	osi_Log2(afsd_logp, "buf_GetNewLocked bp 0x%p cannot be mutex locked.  refCount %d should be 0",
-			 bp, bp->refCount);
+                         bp, bp->refCount);
 		osi_panic("buf_GetNewLocked: TryMutex failed",__FILE__,__LINE__);
 	    }
 
-	    /* prepare to return it.  Give it a refcount */
-            bp->refCount = 1;
-#ifdef DEBUG_REFCOUNT
-            osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, 1);
-            afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, 1);
-#endif
             lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
+
             *bufpp = bp;
 
 #ifdef TESTING

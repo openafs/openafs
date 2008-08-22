@@ -891,6 +891,8 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     size_t vnLength;
     int targetType;
 
+    *outScpp = NULL;
+
     if (scp->mountRootFid.cell != 0 && scp->mountRootGen >= cm_data.mountRootGen) {
         tfid = scp->mountRootFid;
         lock_ReleaseWrite(&scp->rw);
@@ -1013,7 +1015,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 }       
 
 long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_user_t *userp,
-                       cm_req_t *reqp, cm_scache_t **outpScpp)
+                       cm_req_t *reqp, cm_scache_t **outScpp)
 {
     long code;
     int dnlcHit = 1;	/* did we hit in the dnlc? yes, we did */
@@ -1023,6 +1025,8 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     int getroot;
     normchar_t *nnamep = NULL;
     fschar_t *fnamep = NULL;
+
+    *outScpp = NULL;
 
     memset(&rock, 0, sizeof(rock));
 
@@ -1222,7 +1226,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     }
 
     /* copy back pointer */
-    *outpScpp = tscp;
+    *outScpp = tscp;
 
     /* insert scache in dnlc */
     if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
@@ -1281,7 +1285,7 @@ int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, uns
 }   
 
 long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * userp,
-                                cm_req_t *reqp, cm_scache_t ** outpScpp)
+                                cm_req_t *reqp, cm_scache_t ** outScpp)
 {
     afs_uint32    code = 0;
     fschar_t      cellName[CELL_MAXNAMELEN];
@@ -1370,7 +1374,7 @@ long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * us
 
     cm_SetFid(&fid, cellp->cellID, volume, 1, 1);
 
-    code = cm_GetSCache(&fid, outpScpp, userp, reqp);
+    code = cm_GetSCache(&fid, outScpp, userp, reqp);
 
   _exit_cleanup:
     if (fnamep)
@@ -1391,10 +1395,10 @@ long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * us
 
 #ifdef DEBUG_REFCOUNT
 long cm_LookupDbg(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *userp,
-               cm_req_t *reqp, cm_scache_t **outpScpp, char * file, long line)
+               cm_req_t *reqp, cm_scache_t **outScpp, char * file, long line)
 #else
 long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *userp,
-               cm_req_t *reqp, cm_scache_t **outpScpp)
+               cm_req_t *reqp, cm_scache_t **outScpp)
 #endif
 {
     long code;
@@ -1416,7 +1420,7 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
 
     if (dscp == cm_data.rootSCachep &&
         cm_ClientStrCmpNI(namep, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH) == 0) {
-        return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outpScpp);
+        return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outScpp);
     }
 
     if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
@@ -1430,7 +1434,7 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
 #endif
 
                 if (code == 0) {
-                    *outpScpp = scp;
+                    *outScpp = scp;
                     return 0;
                 }
                 if (scp) {
@@ -1443,7 +1447,7 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
                 afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
                 osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
-                *outpScpp = scp;
+                *outScpp = scp;
                 return code;
             }
         }
@@ -1453,7 +1457,7 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
         afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
         osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
-        *outpScpp = scp;
+        *outScpp = scp;
         return code;
     }
 
@@ -1804,10 +1808,12 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
     int fid_count = 0;          /* number of fids processed in this path walk */
     int i;
 
+    *outScpp = NULL;
+
 #ifdef DEBUG_REFCOUNT
     afsi_log("%s:%d cm_NameI rootscp 0x%p ref %d", file, line, rootSCachep, rootSCachep->refCount);
     osi_Log4(afsd_logp,"cm_NameI rootscp 0x%p path %S tidpath %S flags 0x%x",
-             rootSCachep, pathp ? pathp : "<NULL>", tidPathp ? tidPathp : "<NULL>", 
+             rootSCachep, pathp ? pathp : L"<NULL>", tidPathp ? tidPathp : L"<NULL>", 
              flags);
 #endif
 
@@ -2073,7 +2079,7 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
         cm_ReleaseSCache(tscp);
 
 #ifdef DEBUG_REFCOUNT
-    afsi_log("%s:%d cm_NameI code 0x%x outScpp 0x%p ref %d", file, line, code, *outScpp, (*outScpp)->refCount);
+    afsi_log("%s:%d cm_NameI code 0x%x outScpp 0x%p ref %d", file, line, code, *outScpp, (*outScpp) ? (*outScpp)->refCount : 0);
 #endif
     osi_Log2(afsd_logp,"cm_NameI code 0x%x outScpp 0x%p", code, *outScpp);
     return code;
@@ -2100,6 +2106,8 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
     long code;
     cm_space_t *spacep;
     cm_scache_t *newRootScp;
+
+    *outScpp = NULL;
 
     osi_Log1(afsd_logp, "Evaluating symlink scp 0x%p", linkScp);
 

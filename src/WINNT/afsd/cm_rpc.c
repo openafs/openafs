@@ -209,7 +209,8 @@ long RpcInit()
     ULONG listenThreadID = 0;
     char * name = "afsd_rpc_ShutdownEvent";
 
-    lock_InitializeMutex(&tokenEventLock, "token event lock");
+    lock_InitializeMutex(&tokenEventLock, "token event lock",
+                          LOCK_HIERARCHY_TOKEN_EVENT_GLOBAL);
 
     rpc_ShutdownEvent = thrd_CreateEvent(NULL, FALSE, FALSE, name);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )

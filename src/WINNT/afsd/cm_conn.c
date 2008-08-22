@@ -49,7 +49,8 @@ void cm_InitConn(void)
     HKEY parmKey;
         
     if (osi_Once(&once)) {
-	lock_InitializeRWLock(&cm_connLock, "connection global lock");
+	lock_InitializeRWLock(&cm_connLock, "connection global lock",
+                               LOCK_HIERARCHY_CONN_GLOBAL);
 
         /* keisa - read timeout value for lanmanworkstation  service.
          * jaltman - as per 
@@ -392,11 +393,13 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             if (tsrp->server == serverp && tsrp->status == srv_not_busy) {
                 tsrp->status = srv_busy;
                 if (fidp) { /* File Server query */
+                    lock_ReleaseWrite(&cm_serverLock);
                     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
                     if (code == 0)
                         statep = cm_VolumeStateByID(volp, fidp->volume);
+                    lock_ObtainWrite(&cm_serverLock);
                 }
                 break;
             }
@@ -484,11 +487,13 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 }
 
                 if (fidp) { /* File Server query */
+                    lock_ReleaseWrite(&cm_serverLock);
                     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
                     if (code == 0)
                         cm_VolumeStateByID(volp, fidp->volume);
+                    lock_ObtainWrite(&cm_serverLock);
                 }   
             }
         }   
@@ -977,7 +982,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         serverp->connsp = tcp;
         cm_HoldUser(userp);
         tcp->userp = userp;
-        lock_InitializeMutex(&tcp->mx, "cm_conn_t mutex");
+        lock_InitializeMutex(&tcp->mx, "cm_conn_t mutex", LOCK_HIERARCHY_CONN);
         lock_ObtainMutex(&tcp->mx);
         tcp->serverp = serverp;
         tcp->cryptlevel = rxkad_clear;

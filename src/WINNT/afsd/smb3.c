@@ -3070,7 +3070,11 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPfileBasicInfo.reserved = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
-	smb_fid_t *fidp = smb_FindFIDByScache(vcp, scp);
+	smb_fid_t * fidp;
+            
+        lock_ReleaseRead(&scp->rw);
+        scp_rw_held = 0;
+        fidp = smb_FindFIDByScache(vcp, scp);
 
         qpi.u.QPfileStandardInfo.allocationSize = scp->length;
         qpi.u.QPfileStandardInfo.endOfFile = scp->length;
@@ -3082,8 +3086,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileStandardInfo.reserved = 0;
 
     	if (fidp) {
-	    lock_ReleaseRead(&scp->rw);
-	    scp_rw_held = 0;
 	    lock_ObtainMutex(&fidp->mx);
 	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
 	    lock_ReleaseMutex(&fidp->mx);
@@ -7505,15 +7507,14 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     unsigned int extendedRespRequired;
     int realDirFlag;
     unsigned int desiredAccess;
-#ifdef DEBUG_VERBOSE    
     unsigned int allocSize;
-#endif
     unsigned int shareAccess;
     unsigned int extAttributes;
     unsigned int createDisp;
-#ifdef DEBUG_VERBOSE
     unsigned int sdLen;
-#endif
+    unsigned int eaLen;
+    unsigned int impLevel;
+    unsigned int secFlags;
     unsigned int createOptions;
     int initialModeBits;
     unsigned short baseFid;
@@ -7558,23 +7559,16 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         return CM_ERROR_INVAL;
     baseFid = (unsigned short)lparmp[1];
     desiredAccess = lparmp[2];
-#ifdef DEBUG_VERBOSE
     allocSize = lparmp[3];
-#endif /* DEBUG_VERSOSE */
     extAttributes = lparmp[5];
     shareAccess = lparmp[6];
     createDisp = lparmp[7];
     createOptions = lparmp[8];
-#ifdef DEBUG_VERBOSE
     sdLen = lparmp[9];
-#endif
-    nameLength = lparmp[11];
-
-#ifdef DEBUG_VERBOSE
-    osi_Log4(smb_logp,"NTTranCreate with da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
-    osi_Log3(smb_logp,"... co[%x],sdl[%x],as[%x]",createOptions,sdLen,allocSize);
-    osi_Log1(smb_logp,"... flags[%x]",flags);
-#endif
+    eaLen = lparmp[10];
+    nameLength = lparmp[11];    /* spec says chars but appears to be bytes */
+    impLevel = lparmp[12];
+    secFlags = lparmp[13];
 
     /* mustBeDir is never set; createOptions directory bit seems to be
      * more important
@@ -7594,14 +7588,19 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (extAttributes & SMB_ATTR_READONLY) 
         initialModeBits &= ~0222;
 
-    pathp = smb_ParseStringCch(inp, (parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR)),
+    pathp = smb_ParseStringCb(inp, (parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR)),
                                nameLength, NULL, SMB_STRF_ANSIPATH);
-    /* Sometimes path is not null-terminated, so we make a copy. */
-    realPathp = malloc((nameLength+1) * sizeof(clientchar_t));
-    memcpy(realPathp, pathp, nameLength * sizeof(clientchar_t));
-    realPathp[nameLength] = 0;
+    /* Sometimes path is not nul-terminated, so we make a copy. */
+    realPathp = malloc(nameLength+sizeof(clientchar_t));
+    memcpy(realPathp, pathp, nameLength);
+    realPathp[nameLength/sizeof(clientchar_t)] = 0;
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->wdata, &lastNamep, realPathp);
+
+    osi_Log1(smb_logp,"NTTranCreate %S",osi_LogSaveStringW(smb_logp,realPathp));
+    osi_Log4(smb_logp,"... da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
+    osi_Log4(smb_logp,"... co[%x],sdl[%x],eal[%x],as[%x],flags[%x]",createOptions,sdLen,eaLen,allocSize);
+    osi_Log3(smb_logp,"... imp[%x],sec[%x],flags[%x]", impLevel, secFlags, flags);
 
     /*
      * Nothing here to handle SMB_IOCTL_FILENAME.
@@ -8511,12 +8510,13 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             (!isDirectParent && !wtree)) 
         {
             osi_Log1(smb_logp," skipping fidp->scp[%x]", fidp->scp);
-            smb_ReleaseFID(fidp);
             lastWatch = watch;
             watch = watch->nextp;
+            lock_ReleaseMutex(&smb_Dir_Watch_Lock);
+            smb_ReleaseFID(fidp);
+            lock_ObtainMutex(&smb_Dir_Watch_Lock);
             continue;
         }
-        smb_ReleaseFID(fidp);
 
         osi_Log4(smb_logp,
                   "Sending Change Notification for fid %d filter 0x%x wtree %d file %S",
@@ -8552,6 +8552,9 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             smb_Directory_Watches = nextWatch;
         else
             lastWatch->nextp = nextWatch;
+
+        /* The watch is off the list, its ours now, safe to drop the lock */
+        lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
         /* Turn off WATCHED flag in dscp */
         lock_ObtainWrite(&dscp->rw);
@@ -8653,6 +8656,9 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 
         smb_SendPacket(watch->vcp, watch);
         smb_FreePacket(watch);
+
+        smb_ReleaseFID(fidp);
+        lock_ObtainMutex(&smb_Dir_Watch_Lock);
         watch = nextWatch;
     }
     lock_ReleaseMutex(&smb_Dir_Watch_Lock);
@@ -8763,19 +8769,20 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log3(smb_logp, "NTRename for [%S]->[%S] type [%s]",
              osi_LogSaveClientString(smb_logp, oldPathp),
              osi_LogSaveClientString(smb_logp, newPathp),
-             ((rename_type==RENAME_FLAG_RENAME)?"rename":"hardlink"));
+             ((rename_type==RENAME_FLAG_RENAME)?"rename":(rename_type==RENAME_FLAG_HARD_LINK)?"hardlink":"other"));
 
     if (rename_type == RENAME_FLAG_RENAME) {
         code = smb_Rename(vcp,inp,oldPathp,newPathp,attrs);
-    } else { /* RENAME_FLAG_HARD_LINK */
+    } else if (rename_type == RENAME_FLAG_HARD_LINK) { /* RENAME_FLAG_HARD_LINK */
         code = smb_Link(vcp,inp,oldPathp,newPathp);
-    }
+    } else 
+        code = CM_ERROR_BADOP;
     return code;
 }
 
 void smb3_Init()
 {
-    lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
+    lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock", LOCK_HIERARCHY_SMB_DIRWATCH);
 }
 
 cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags)

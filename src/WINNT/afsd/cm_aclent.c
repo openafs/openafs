@@ -257,7 +257,7 @@ long cm_InitACLCache(int newFile, long size)
     static osi_once_t once;
 
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_aclLock, "cm_aclLock");
+        lock_InitializeRWLock(&cm_aclLock, "cm_aclLock", LOCK_HIERARCHY_ACL_GLOBAL);
         osi_EndOnce(&once);
     }
 

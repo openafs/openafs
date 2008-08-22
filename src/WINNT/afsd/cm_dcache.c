@@ -26,7 +26,6 @@
 extern void afsi_log(char *pattern, ...);
 #endif
 
-osi_mutex_t cm_bufGetMutex;
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -483,7 +482,6 @@ long cm_ShutdownDCache(void)
 
 int cm_InitDCache(int newFile, long chunkSize, afs_uint64 nbuffers)
 {
-    lock_InitializeMutex(&cm_bufGetMutex, "buf_Get mutex");
     return buf_Init(newFile, &cm_bufOps, nbuffers);
 }
 
@@ -1092,7 +1090,6 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
      * sequence at a time.
      */
 
-    // lock_ObtainMutex(&cm_bufGetMutex);
     /* first hold all buffers, since we can't hold any locks in buf_Get */
     while (1) {
         /* stop at chunk boundary */
@@ -1105,7 +1102,6 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 
         code = buf_Get(scp, &pageBase, &tbp);
         if (code) {
-            //lock_ReleaseMutex(&cm_bufGetMutex);
             lock_ObtainWrite(&scp->rw);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
             return code;
@@ -1120,8 +1116,6 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 
     /* reserve a chunk's worth of buffers if possible */
     reserving = buf_TryReserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
-
-    // lock_ReleaseMutex(&cm_bufGetMutex);
 
     pageBase = *offsetp;
     collected = pageBase.LowPart & (cm_chunkSize - 1);

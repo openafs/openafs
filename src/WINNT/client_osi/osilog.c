@@ -12,15 +12,11 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <rpc.h>
-#endif /* !DJGPP */
 #include <malloc.h>
 #include "osi.h"
-#ifndef DJGPP
 #include "dbrpc.h"
-#endif /* !DJGPP */
 #include <stdio.h>
 #include <assert.h>
 #include <WINNT\afsreg.h>
@@ -48,9 +44,7 @@ DWORD osi_TraceOption=0;
 
 osi_fdOps_t osi_logFDOps = {
 	osi_LogFDCreate,
-#ifndef DJGPP
         osi_LogFDGetInfo,
-#endif
         osi_LogFDClose
 };
 
@@ -64,7 +58,6 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
         LARGE_INTEGER bigTemp;
         LARGE_INTEGER bigJunk;
 	
-#ifndef DJGPP
 	if (osi_Once(&osi_logOnce)) {
 		QueryPerformanceFrequency(&bigFreq);
                 if (bigFreq.LowPart == 0 && bigFreq.HighPart == 0)
@@ -86,7 +79,6 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 		/* done with init */
 		osi_EndOnce(&osi_logOnce);
         }
-#endif /* !DJGPP */
 
         logp = malloc(sizeof(osi_log_t));
         memset(logp, 0, sizeof(osi_log_t));
@@ -116,7 +108,6 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 	StringCbCopyA(tbuffer, sizeof(tbuffer), "log:");
         StringCbCatA(tbuffer, sizeof(tbuffer), namep);
 	typep = osi_RegisterFDType(tbuffer, &osi_logFDOps, logp);
-#ifndef DJGPP
 	if (typep) {
 		/* add formatting info */
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 0,
@@ -124,15 +115,14 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONSTRING, 1,
 			"Time (mics)", 0);
 	}
-#endif
 	
         return logp;
 }
 
-/* we just panic'd.  Turn off all logging adding special log record
- * to all enabled logs.  Be careful not to wait for a lock.
+/* we just panic'd.  Log the error to all enabled log files.
+ * Be careful not to wait for a lock.
  */
-void osi_LogPanic(char *filep, size_t lineNumber)
+void osi_LogPanic(char *msgp, char *filep, size_t lineNumber)
 {
 	osi_log_t *tlp;
 
@@ -141,9 +131,9 @@ void osi_LogPanic(char *filep, size_t lineNumber)
 
 		/* otherwise, proceed */
 		if (filep)
-	                osi_LogAdd(tlp, "**PANIC** (file %s:%d)", (size_t) filep, lineNumber, 0, 0, 0);
+	                osi_LogAdd(tlp, "**PANIC** \"%s\" (file %s:%d)", (size_t) msgp, (size_t) filep, lineNumber, 0, 0);
 		else
-			osi_LogAdd(tlp, "**PANIC**", 0, 0, 0, 0, 0);
+			osi_LogAdd(tlp, "**PANIC** \"%s\"", (size_t)msgp, 0, 0, 0, 0);
 		
                 /* should grab lock for this, but we're in panic, and better safe than
                  * sorry.
@@ -203,15 +193,11 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
         lep->tid = thrd_Current();
 
 	/* get the time, using the high res timer if available */
-#ifndef DJGPP
         if (osi_logFreq) {
 		QueryPerformanceCounter(&bigTime);
 		lep->micros = (bigTime.LowPart / osi_logFreq) * osi_logTixToMicros;
         }
         else lep->micros = GetCurrentTime() * 1000;
-#else
-        lep->micros = gettime_us();
-#endif /* !DJGPP */                
 
         lep->formatp = formatp;
         lep->parms[0] = p0;

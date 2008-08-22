@@ -37,7 +37,9 @@ cm_ForceNewConnectionsAllServers(void)
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
+        lock_ReleaseRead(&cm_serverLock);
 	cm_ForceNewConnections(tsp);
+        lock_ObtainRead(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }
     lock_ReleaseRead(&cm_serverLock);
@@ -155,9 +157,11 @@ cm_PingServer(cm_server_t *tsp)
             tsp->flags |= CM_SERVERFLAG_DOWN;
             tsp->downTime = time(NULL);
         }
-	if (code != VRESTARTING)
+	if (code != VRESTARTING) {
+            lock_ReleaseMutex(&tsp->mx);
 	    cm_ForceNewConnections(tsp);
-
+            lock_ObtainMutex(&tsp->mx);
+        }
 	osi_Log3(afsd_logp, "cm_PingServer server %s (%s) is down with caps 0x%x",
 		  osi_LogSaveString(afsd_logp, hoststr), 
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
@@ -418,9 +422,11 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                     tsp->flags |= CM_SERVERFLAG_DOWN;
                     tsp->downTime = time(NULL);
                 }
-                if (code != VRESTARTING)
+                if (code != VRESTARTING) {
+                    lock_ReleaseMutex(&tsp->mx);
                     cm_ForceNewConnections(tsp);
-
+                    lock_ObtainMutex(&tsp->mx);
+                }
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
@@ -547,9 +553,11 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                     tsp->flags |= CM_SERVERFLAG_DOWN;
                     tsp->downTime = time(NULL);
                 }
-                if (code != VRESTARTING)
+                if (code != VRESTARTING) {
+                    lock_ReleaseMutex(&tsp->mx);
                     cm_ForceNewConnections(tsp);
-
+                    lock_ObtainMutex(&tsp->mx);
+                }
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
@@ -702,9 +710,11 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                     tsp->flags |= CM_SERVERFLAG_DOWN;
                     tsp->downTime = time(NULL);
                 }
-                if (code != VRESTARTING)
+                if (code != VRESTARTING) {
+                    lock_ReleaseMutex(&tsp->mx);
                     cm_ForceNewConnections(tsp);
-
+                    lock_ObtainMutex(&tsp->mx);
+                }
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
                           osi_LogSaveString(afsd_logp, hoststr), 
@@ -762,8 +772,8 @@ void cm_InitServer(void)
     static osi_once_t once;
         
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_serverLock, "cm_serverLock");
-        lock_InitializeRWLock(&cm_syscfgLock, "cm_syscfgLock");
+        lock_InitializeRWLock(&cm_serverLock, "cm_serverLock", LOCK_HIERARCHY_SERVER_GLOBAL);
+        lock_InitializeRWLock(&cm_syscfgLock, "cm_syscfgLock", LOCK_HIERARCHY_SYSCFG_GLOBAL);
         osi_EndOnce(&once);
     }
 }
@@ -905,7 +915,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         tsp->type = type;
         tsp->cellp = cellp;
         tsp->refCount = 1;
-        lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
+        lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
 
         cm_SetServerPrefs(tsp); 

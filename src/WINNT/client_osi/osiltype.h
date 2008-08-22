@@ -30,8 +30,8 @@ typedef struct osi_lockOps {
 	void (*SleepRProc)(LONG_PTR, struct osi_rwlock *);
 	void (*SleepWProc)(LONG_PTR, struct osi_rwlock *);
 	void (*SleepMProc)(LONG_PTR, struct osi_mutex *);
-	void (*InitializeMutexProc)(struct osi_mutex *, char *);
-	void (*InitializeRWLockProc)(struct osi_rwlock *, char *);
+	void (*InitializeMutexProc)(struct osi_mutex *, char *, unsigned short);
+	void (*InitializeRWLockProc)(struct osi_rwlock *, char *, unsigned short);
 	void (*FinalizeMutexProc)(struct osi_mutex *);
 	void (*FinalizeRWLockProc)(struct osi_rwlock *);
         void (*ConvertWToRProc)(struct osi_rwlock *);

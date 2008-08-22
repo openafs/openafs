@@ -83,7 +83,7 @@ void cm_InitVolume(int newFile, long maxVols)
     static osi_once_t once;
 
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_volumeLock, "cm global volume lock");
+        lock_InitializeRWLock(&cm_volumeLock, "cm global volume lock", LOCK_HIERARCHY_VOLUME_GLOBAL);
 
         if ( newFile ) {
             cm_data.allVolumesp = NULL;
@@ -100,7 +100,7 @@ void cm_InitVolume(int newFile, long maxVols)
             for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
                 afs_uint32 volType;
 
-                lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
+                lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock", LOCK_HIERARCHY_VOLUME);
                 volp->flags |= CM_VOLUMEFLAG_RESET;
                 volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
                 for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
@@ -853,7 +853,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	    volp->magic = CM_VOLUME_MAGIC;
 	    volp->allNextp = cm_data.allVolumesp;
 	    cm_data.allVolumesp = volp;
-	    lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock");
+	    lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock", LOCK_HIERARCHY_VOLUME);
             lock_ReleaseWrite(&cm_volumeLock);
             lock_ObtainWrite(&volp->rw);
             lock_ObtainWrite(&cm_volumeLock);

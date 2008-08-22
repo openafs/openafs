@@ -87,7 +87,10 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
         || (cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) &&
          ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
 #endif
-            ) {
+            ) 
+    {
+        lock_ReleaseMutex(&cp->mx);
+
         /* must empty cp->vlServersp */
         if (cp->vlServersp) {
             cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
@@ -104,9 +107,11 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 
                 code = cm_SearchCellByDNS(cp->name, NULL, &ttl, cm_AddCellProc, &rock);
                 if (code == 0) {   /* got cell from DNS */
+                    lock_ObtainMutex(&cp->mx);
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
 		    cp->timeout = time(0) + ttl;
+                    lock_ReleaseMutex(&cp->mx);
 #ifdef DEBUG
                     fprintf(stderr, "cell %s: ttl=%d\n", cp->name, ttl);
 #endif
@@ -114,16 +119,21 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                     /* if we fail to find it this time, we'll just do nothing and leave the
                      * current entry alone 
 		     */
+                    lock_ObtainMutex(&cp->mx);
                     cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+                    lock_ReleaseMutex(&cp->mx);
                 }
 	    }
 	} else 
 #endif /* AFS_AFSDB_ENV */
 	{
+            lock_ObtainMutex(&cp->mx);
 	    cp->timeout = time(0) + 7200;
+            lock_ReleaseMutex(&cp->mx);
 	}	
+    } else {
+        lock_ReleaseMutex(&cp->mx);
     }
-    lock_ReleaseMutex(&cp->mx);
     return code ? NULL : cp;
 }
 
@@ -166,12 +176,11 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }   
     }
 
-    lock_ReleaseRead(&cm_cellLock);
-
     if (cp) {
+        lock_ReleaseRead(&cm_cellLock);
         cm_UpdateCell(cp, flags);
     } else if (flags & CM_FLAG_CREATE) {
-        lock_ObtainWrite(&cm_cellLock);
+        lock_ConvertRToW(&cm_cellLock);
         hasWriteLock = 1;
 
         /* when we dropped the lock the cell could have been added
@@ -208,7 +217,18 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         cp = &cm_data.cellBaseAddress[cm_data.currentCells];
         memset(cp, 0, sizeof(cm_cell_t));
         cp->magic = CM_CELL_MAGIC;
-        
+
+        /* the cellID cannot be 0 */
+        cp->cellID = ++cm_data.currentCells;
+
+        /* otherwise we found the cell, and so we're nearly done */
+        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
+
+        cp->name[0] = '\0';     /* No name yet */
+
+        lock_ReleaseWrite(&cm_cellLock);
+        hasWriteLock = 0;
+
         rock.cellp = cp;
         rock.flags = flags;
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, &rock);
@@ -227,6 +247,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                     cp = NULL;
                     goto done;
                 } else {   /* got cell from DNS */
+                    lock_ObtainWrite(&cm_cellLock);
+                    hasWriteLock = 1;
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
                     cp->timeout = time(0) + ttl;
@@ -239,6 +261,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 	    }
 #endif
         } else {
+            lock_ObtainWrite(&cm_cellLock);
+            hasWriteLock = 1;
 	    cp->timeout = time(0) + 7200;	/* two hour timeout */
 	}
 
@@ -264,17 +288,11 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
-        /* otherwise we found the cell, and so we're nearly done */
-        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
-
         /* copy in name */
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
 
-        /* the cellID cannot be 0 */
-        cp->cellID = ++cm_data.currentCells;
-
-		/* append cell to global list */
+        /* append cell to global list */
         if (cm_data.allCellsp == NULL) {
             cm_data.allCellsp = cp;
         } else {
@@ -286,16 +304,21 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 
         cm_AddCellToNameHashTable(cp);
         cm_AddCellToIDHashTable(cp);           
+    } else {
+        lock_ReleaseRead(&cm_cellLock);
     }
-
   done:
     if (hasWriteLock)
         lock_ReleaseWrite(&cm_cellLock);
     
     /* fullname is not valid if cp == NULL */
-    if (cp && newnamep) {
-        strncpy(newnamep, fullname, CELL_MAXNAMELEN);
-        newnamep[CELL_MAXNAMELEN-1]='\0';
+    if (newnamep) {
+        if (cp) {
+            strncpy(newnamep, fullname, CELL_MAXNAMELEN);
+            newnamep[CELL_MAXNAMELEN-1]='\0';
+        } else {
+            newnamep[0] = '\0';
+        }
     }
     return cp;
 }
@@ -370,7 +393,7 @@ void cm_InitCell(int newFile, long maxCells)
     if (osi_Once(&once)) {
         cm_cell_t * cellp;
 
-        lock_InitializeRWLock(&cm_cellLock, "cell global lock");
+        lock_InitializeRWLock(&cm_cellLock, "cell global lock", LOCK_HIERARCHY_CELL_GLOBAL);
 
         if ( newFile ) {
             cm_data.allCellsp = NULL;
@@ -388,7 +411,7 @@ void cm_InitCell(int newFile, long maxCells)
             memset(cellp, 0, sizeof(cm_cell_t));
             cellp->magic = CM_CELL_MAGIC;
 
-            lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex");
+            lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
 
             /* copy in name */
             strncpy(cellp->name, "Freelance.Local.Cell", CELL_MAXNAMELEN); /*safe*/
@@ -407,7 +430,7 @@ void cm_InitCell(int newFile, long maxCells)
 #endif  
         } else {
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
-                lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex");
+                lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
                 cellp->vlServersp = NULL;
                 cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
             }
