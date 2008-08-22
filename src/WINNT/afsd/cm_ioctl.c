@@ -1766,6 +1766,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     clientchar_t *cell = NULL;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp = NULL;
+    size_t len;
 
    /* 
      * The fs command allows the user to specify partial cell names on NT.  These must
@@ -1801,6 +1802,11 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         cm_ClientStringToFsString(mpp, -1, mpInfo, lengthof(mpInfo));
         cellp = cm_FindCellByID(dscp->fid.cell, CM_FLAG_NOPROBE);
     }
+
+    /* remove the trailing dot if it is present */
+    len = strlen(fsvolume);
+    if (len > 1 && fsvolume[len-1] == '.')
+        fsvolume[len-1] = '\0';
 
     /* validate the target info */
     if (cm_VolNameIsID(fsvolume)) {
