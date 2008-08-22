@@ -598,7 +598,7 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	return shouldRetry;	/* should retry */
     }
 
-    if (!aconn) {
+    if (!aconn || !aconn->srvr) {
 	if (!areq->volumeError) {
 	    if (aerrP)
 		(aerrP->err_Network)++;
