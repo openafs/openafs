@@ -1046,6 +1046,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     afs_uint32 sleep_buf_cmflags = 0;
     afs_uint32 sleep_scp_bufs = 0;
     int wakeupCycle;
+    int getAccessRights = 1;
 
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
@@ -1248,7 +1249,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             if ((rights & PRSFS_WRITE) && (scp->flags & CM_SCACHEFLAG_RO))
                 return CM_ERROR_READONLY;
 
-            if (cm_HaveAccessRights(scp, userp, rights, &outRights)) {
+            if (cm_HaveAccessRights(scp, userp, rights, &outRights) || !getAccessRights) {
                 if (~outRights & rights) 
 		    return CM_ERROR_NOACCESS;
             }
@@ -1263,6 +1264,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 }
                 if (code) 
                     return code;
+                getAccessRights = 0;    /* do not repeat */
                 continue;
             }
         }
@@ -1726,6 +1728,13 @@ void cm_MergeStatus(cm_scache_t *dscp,
         scp->bufDataVersionLow = dataVersion;
     
     scp->dataVersion = dataVersion;
+
+    /* 
+     * If someone is waiting for status information, we can wake them up
+     * now even though the entity that issued the FetchStatus may not 
+     * have completed yet.
+     */
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS);
 }
 
 /* note that our stat cache info is incorrect, so force us eventually
