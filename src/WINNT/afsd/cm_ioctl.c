@@ -60,7 +60,8 @@ extern void afsi_log(char *pattern, ...);
 
 void cm_InitIoctl(void)
 {
-    lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
+    lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock",
+                          LOCK_HIERARCHY_AFSDBSBMT_GLOBAL);
 }
 
 /* 
@@ -984,7 +985,8 @@ cm_IoctlStatMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache
     clientchar_t *cp;
 
     cp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
-    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+
+    code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     if (code) 
         goto done_2;
 
@@ -1039,7 +1041,7 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
 
     cp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
 
-    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
         
     /* if something went wrong, bail out now */
     if (code)
@@ -1406,10 +1408,12 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
     for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) 
     {
         afs_int32 code;
-	lock_ObtainMutex(&cp->mx);
+
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
         cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
         cp->vlServersp = NULL;
+        lock_ReleaseWrite(&cm_cellLock);
+
         rock.cellp = cp;
         rock.flags = 0;
         code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, &rock);
@@ -1419,26 +1423,34 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
                 int ttl;
                 code = cm_SearchCellByDNS(cp->name, cp->name, &ttl, cm_AddCellProc, &rock);
                 if ( code == 0 ) { /* got cell from DNS */
+                    lock_ObtainMutex(&cp->mx);
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
                     cp->timeout = time(0) + ttl;
+                    lock_ReleaseMutex(&cp->mx);
                 }
             }
         } 
         else {
+            lock_ObtainMutex(&cp->mx);
             cp->flags &= ~CM_CELLFLAG_DNS;
+            lock_ReleaseMutex(&cp->mx);
         }
 #endif /* AFS_AFSDB_ENV */
         if (code) {
+            lock_ObtainMutex(&cp->mx);
             cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+            lock_ReleaseMutex(&cp->mx);
+            lock_ObtainWrite(&cm_cellLock);
         }
         else {
+            lock_ObtainMutex(&cp->mx);
             cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+            lock_ReleaseMutex(&cp->mx);
+            lock_ObtainWrite(&cm_cellLock);
             cm_RandomizeServer(&cp->vlServersp);
         }
-	lock_ReleaseMutex(&cp->mx);
     }
-    
     lock_ReleaseWrite(&cm_cellLock);
     return 0;       
 }
@@ -1943,7 +1955,7 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
     cp = ioctlp->inDatap;
 
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
-    code = cm_Lookup(dscp, clientp, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     free(clientp);
     if (code) 
         return code;
@@ -2013,7 +2025,7 @@ cm_IoctlIslink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp
     osi_LogEvent("cm_IoctlListlink",NULL," name[%s]",cp);
 
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
-    code = cm_Lookup(dscp, clientp, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     free(clientp);
     if (code)
         return code;
@@ -2050,7 +2062,7 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     cp = ioctlp->inDatap;
 
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
-    code = cm_Lookup(dscp, clientp, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* if something went wrong, bail out now */
     if (code)

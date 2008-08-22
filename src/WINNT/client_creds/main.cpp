@@ -257,8 +257,8 @@ BOOL InitApp (LPSTR pszCmdLineA)
    InitCommonControls();
    RegisterCheckListClass();
    osi_Init();
-   lock_InitializeMutex(&g.expirationCheckLock, "expiration check lock");
-   lock_InitializeMutex(&g.credsLock, "global creds lock");
+   lock_InitializeMutex(&g.expirationCheckLock, "expiration check lock", 0);
+   lock_InitializeMutex(&g.credsLock, "global creds lock", 0);
 
    KFW_AFS_wait_for_service_start();
 

@@ -28,16 +28,17 @@
  * lock using an atomic increment operation.
  */
 typedef struct osi_mutex {
-	char type;			/* for all types; type 0 uses atomic count */
-	char flags;			/* flags for base type */
-	unsigned short atomicIndex;	/* index of lock for low-level sync */
-        DWORD tid;			/* tid of thread that owns the lock */
-	unsigned short waiters;		/* waiters */
-        unsigned short pad;
-	union {
-		void *privateDatap;	/* data pointer for non-zero types */
-                osi_turnstile_t turn;	/* turnstile */
-	} d;
+    char type;			/* for all types; type 0 uses atomic count */
+    char flags;			/* flags for base type */
+    unsigned short atomicIndex;	/* index of lock for low-level sync */
+    DWORD tid;			/* tid of thread that owns the lock */
+    unsigned short waiters;	/* waiters */
+    unsigned short pad;
+    union {
+        void *privateDatap;	/* data pointer for non-zero types */
+        osi_turnstile_t turn;	/* turnstile */
+    } d;
+    unsigned short level;       /* locking hierarchy level */
 } osi_mutex_t;
 
 /* a read/write lock.  This structure has two forms.  In the
@@ -53,17 +54,36 @@ typedef struct osi_mutex {
  * This type of lock has N readers or one writer.
  */
 typedef struct osi_rwlock {
-	char type;			/* for all types; type 0 uses atomic count */
-	char flags;			/* flags for base type */
-        unsigned short atomicIndex;	/* index into hash table for low-level sync */
-        DWORD tid;			/* writer's tid */
-        unsigned short waiters;		/* waiters */
-	unsigned short readers;		/* readers */
-	union {
-		void *privateDatap;	/* data pointer for non-zero types */
-                osi_turnstile_t turn;	/* turnstile */
-	} d;
+    char type;			/* for all types; type 0 uses atomic count */
+    char flags;			/* flags for base type */
+    unsigned short atomicIndex;	/* index into hash table for low-level sync */
+    DWORD tid;			/* writer's tid */
+    unsigned short waiters;	/* waiters */
+    unsigned short readers;	/* readers */
+    union {
+        void *privateDatap;	/* data pointer for non-zero types */
+        osi_turnstile_t turn;	/* turnstile */
+    } d;
+    unsigned short level;       /* locking hierarchy level */
 } osi_rwlock_t;
+
+
+/* 
+ * a lock reference is a queue object that maintains a reference to a 
+ * mutex or read/write lock object.  Its intended purpose is for 
+ * maintaining lists of lock objects on a per thread basis.
+ */
+typedef struct osi_lock_ref {
+    osi_queue_t q;
+    char type;
+    union {
+        osi_rwlock_t *rw;
+        osi_mutex_t  *mx;
+    };
+} osi_lock_ref_t;
+
+#define OSI_LOCK_MUTEX  1
+#define OSI_LOCK_RW     2
 
 extern void lock_ObtainRead (struct osi_rwlock *);
 
@@ -101,9 +121,9 @@ extern CRITICAL_SECTION osi_baseAtomicCS[];
 
 /* and define the functions that create basic locks and mutexes */
 
-extern void lock_InitializeRWLock(struct osi_rwlock *, char *);
+extern void lock_InitializeRWLock(struct osi_rwlock *, char *, unsigned short level);
 
-extern void lock_InitializeMutex(struct osi_mutex *, char *);
+extern void lock_InitializeMutex(struct osi_mutex *, char *, unsigned short level);
 
 extern void osi_Init (void);
 
@@ -122,6 +142,8 @@ extern int lock_GetMutexState(struct osi_mutex *);
 extern void osi_BaseInit(void);
 
 /* and friendly macros */
+
+#define lock_AssertNone(x) osi_assertx(lock_GetRWLockState(x) == 0, "(OSI_RWLOCK_READHELD | OSI_RWLOCK_WRITEHELD)")
 
 #define lock_AssertRead(x) osi_assertx(lock_GetRWLockState(x) & OSI_RWLOCK_READHELD, "!OSI_RWLOCK_READHELD")
 

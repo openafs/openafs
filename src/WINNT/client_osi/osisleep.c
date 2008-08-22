@@ -674,10 +674,10 @@ void osi_InitPanic(void *anotifFunc)
 
 void osi_panic(char *msgp, char *filep, long line)
 {
-	osi_LogPanic(filep, line);
+    if (notifFunc)
+        (*notifFunc)(msgp, filep, line);
 
-	if (notifFunc)
-       		(*notifFunc)(msgp, filep, line);
+    osi_LogPanic(msgp, filep, line);
 }
 
 /* get time in seconds since some relatively recent time */

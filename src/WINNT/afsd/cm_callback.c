@@ -588,7 +588,6 @@ extern osi_rwlock_t smb_globalLock;
 extern osi_rwlock_t smb_rctLock;
 
 extern osi_mutex_t cm_Freelance_Lock;
-extern osi_mutex_t cm_bufGetMutex;
 extern osi_mutex_t cm_Afsdsbmt_Lock;
 extern osi_mutex_t tokenEventLock;
 extern osi_mutex_t  smb_ListenerLock;
@@ -618,7 +617,6 @@ static struct _ltable {
     {"smb_globalLock",   (char*)&smb_globalLock,        LOCKTYPE_RW},
     {"smb_rctLock",      (char*)&smb_rctLock,           LOCKTYPE_RW},
     {"cm_Freelance_Lock",(char*)&cm_Freelance_Lock,     LOCKTYPE_MUTEX},
-    {"cm_bufGetMutex",   (char*)&cm_bufGetMutex,        LOCKTYPE_MUTEX},
     {"cm_Afsdsbmt_Lock", (char*)&cm_Afsdsbmt_Lock,      LOCKTYPE_MUTEX},
     {"tokenEventLock",   (char*)&tokenEventLock,        LOCKTYPE_MUTEX},
     {"smb_ListenerLock", (char*)&smb_ListenerLock,      LOCKTYPE_MUTEX},
@@ -1437,7 +1435,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
 /* called by afsd without any locks to initialize this module */
 void cm_InitCallback(void)
 {
-    lock_InitializeRWLock(&cm_callbackLock, "cm_callbackLock");
+    lock_InitializeRWLock(&cm_callbackLock, "cm_callbackLock", LOCK_HIERARCHY_CALLBACK_GLOBAL);
     cm_activeCallbackGrantingCalls = 0;
 }
 

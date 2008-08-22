@@ -672,7 +672,7 @@ cm_dnlcInit(int newFile)
 
     memset (&dnlcstats, 0, sizeof(dnlcstats));
 
-    lock_InitializeRWLock(&cm_dnlcLock, "cm_dnlcLock");
+    lock_InitializeRWLock(&cm_dnlcLock, "cm_dnlcLock", LOCK_HIERARCHY_DNLC_GLOBAL);
     if ( newFile ) {
         lock_ObtainWrite(&cm_dnlcLock);
         cm_data.ncfreelist = (cm_nc_t *) 0;

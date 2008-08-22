@@ -75,7 +75,7 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
     }
 }
 
-/* called with cm_scacheLock write-locked; recycles an existing scp. 
+/* called with cm_scacheLock and scp write-locked; recycles an existing scp. 
  *
  * this function ignores all of the locking hierarchy.  
  */
@@ -93,9 +93,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
-    lock_ObtainWrite(&scp->rw);
     cm_RemoveSCacheFromHashTable(scp);
-    lock_ReleaseWrite(&scp->rw);
 
 #if 0
     if (flags & CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS) {
@@ -226,8 +224,10 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 }
 
 
-/* called with cm_scacheLock write-locked; find a vnode to recycle.
+/* 
+ * called with cm_scacheLock write-locked; find a vnode to recycle.
  * Can allocate a new one if desperate, or if below quota (cm_data.maxSCaches).
+ * returns scp->mx held.
  */
 cm_scache_t *cm_GetNewSCache(void)
 {
@@ -246,6 +246,9 @@ cm_scache_t *cm_GetNewSCache(void)
 
 	if (scp->refCount == 0) {
 	    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+                if (!lock_TryWrite(&scp->rw))
+                    continue;
+
 		osi_Log1(afsd_logp, "GetNewSCache attempting to recycle deleted scp 0x%x", scp);
 		if (!cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS)) {
 
@@ -258,8 +261,12 @@ cm_scache_t *cm_GetNewSCache(void)
 		    /* and we're done */
 		    return scp;
 		} 
+                lock_ReleaseWrite(&scp->rw);
 		osi_Log1(afsd_logp, "GetNewSCache recycled failed scp 0x%x", scp);
 	    } else if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
+                if (!lock_TryWrite(&scp->rw))
+                    continue;
+
 		/* we found an entry, so return it */
 		/* now remove from the LRU queue and put it back at the
 		* head of the LRU queue.
@@ -287,6 +294,9 @@ cm_scache_t *cm_GetNewSCache(void)
              * we must not recycle the scp. */
             if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
                 if (!buf_DirtyBuffersExist(&scp->fid)) {
+                    if (!lock_TryWrite(&scp->rw))
+                        continue;
+
                     if (!cm_RecycleSCache(scp, 0)) {
                         /* we found an entry, so return it */
                         /* now remove from the LRU queue and put it back at the
@@ -297,6 +307,7 @@ cm_scache_t *cm_GetNewSCache(void)
                         /* and we're done */
                         return scp;
                     }
+                    lock_ReleaseWrite(&scp->rw);
                 } else {
                     osi_Log1(afsd_logp,"GetNewSCache dirty buffers exist scp 0x%x", scp);
                 }
@@ -315,10 +326,11 @@ cm_scache_t *cm_GetNewSCache(void)
                 "invalid cm_scache_t address");
     memset(scp, 0, sizeof(cm_scache_t));
     scp->magic = CM_SCACHE_MAGIC;
-    lock_InitializeRWLock(&scp->rw, "cm_scache_t rw");
-    lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
+    lock_InitializeRWLock(&scp->rw, "cm_scache_t rw", LOCK_HIERARCHY_SCACHE);
+    osi_assertx(lock_TryWrite(&scp->rw), "cm_scache_t rw held after allocation");
+    lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock", LOCK_HIERARCHY_SCACHE_BUFCREATE);
 #ifdef USE_BPLUS
-    lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
+    lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock", LOCK_HIERARCHY_SCACHE_DIRLOCK);
 #endif
     scp->serverLock = -1;
 
@@ -371,7 +383,7 @@ void cm_fakeSCacheInit(int newFile)
         cm_data.fakeSCache.linkCount = 1;
         cm_data.fakeSCache.refCount = 1;
     }
-    lock_InitializeRWLock(&cm_data.fakeSCache.rw, "cm_scache_t rw");
+    lock_InitializeRWLock(&cm_data.fakeSCache.rw, "cm_scache_t rw", LOCK_HIERARCHY_SCACHE);
 }
 
 long
@@ -523,7 +535,9 @@ cm_ShutdownSCache(void)
     for ( scp = cm_data.allSCachesp; scp;
           scp = scp->allNextp ) {
         if (scp->randomACLp) {
+            lock_ReleaseWrite(&cm_scacheLock);
             lock_ObtainWrite(&scp->rw);
+            lock_ObtainWrite(&cm_scacheLock);
             cm_FreeAllACLEnts(scp);
             lock_ReleaseWrite(&scp->rw);
         }
@@ -557,7 +571,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
     static osi_once_t once;
         
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_scacheLock, "cm_scacheLock");
+        lock_InitializeRWLock(&cm_scacheLock, "cm_scacheLock", LOCK_HIERARCHY_SCACHE_GLOBAL);
         if ( newFile ) {
             memset(cm_data.scacheHashTablep, 0, sizeof(cm_scache_t *) * cm_data.scacheHashTableSize);
             cm_data.allSCachesp = NULL;
@@ -569,10 +583,10 @@ void cm_InitSCache(int newFile, long maxSCaches)
 
             for ( scp = cm_data.allSCachesp; scp;
                   scp = scp->allNextp ) {
-                lock_InitializeRWLock(&scp->rw, "cm_scache_t rw");
-                lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
+                lock_InitializeRWLock(&scp->rw, "cm_scache_t rw", LOCK_HIERARCHY_SCACHE);
+                lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock", LOCK_HIERARCHY_SCACHE_BUFCREATE);
 #ifdef USE_BPLUS
-                lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock");
+                lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock", LOCK_HIERARCHY_SCACHE_DIRLOCK);
 #endif
                 scp->cbServerp = NULL;
                 scp->cbExpires = 0;
@@ -667,8 +681,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_GetSCache (1) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
-	    osi_Log1(afsd_logp,"cm_GetSCache (1) outScpp 0x%p", scp);
+	    afsi_log("%s:%d cm_GetSCache (1) scp 0x%p ref %d", file, line, scp, scp->refCount);
+	    osi_Log1(afsd_logp,"cm_GetSCache (1) scp 0x%p", scp);
 #endif
 #ifdef AFS_FREELANCE_CLIENT
             if (cm_freelanceEnabled && special && 
@@ -727,23 +741,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         lock_ReleaseMutex(&cm_Freelance_Lock);
         lock_ObtainWrite(&cm_scacheLock);
         if (scp == NULL)
-            scp = cm_GetNewSCache();
+            scp = cm_GetNewSCache();    /* returns scp->mx held */
 	if (scp == NULL) {
 	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
             lock_ReleaseWrite(&cm_scacheLock);
 	    return CM_ERROR_WOULDBLOCK;
 	}
 
-#if not_too_dangerous
-	/* dropping the cm_scacheLock allows more than one thread
-	 * to obtain the same cm_scache_t from the LRU list.  Since
-	 * the refCount is known to be zero at this point we have to
-	 * assume that no one else is using the one this is returned.
-	 */
-	lock_ReleaseWrite(&cm_scacheLock);
-	lock_ObtainWrite(&scp->rw);
-	lock_ObtainWrite(&cm_scacheLock);
-#endif
         scp->fid = *fidp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
@@ -771,15 +775,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->dataVersion=cm_data.fakeDirVersion;
         scp->bufDataVersionLow=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
-#if not_too_dangerous
 	lock_ReleaseWrite(&scp->rw);
-#endif
 	*outScpp = scp;
-        lock_ReleaseWrite(&cm_scacheLock);
 #ifdef DEBUG_REFCOUNT
-	afsi_log("%s:%d cm_GetSCache (2) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
-	osi_Log1(afsd_logp,"cm_GetSCache (2) outScpp 0x%p", scp);
+	afsi_log("%s:%d cm_GetSCache (2) scp 0x%p ref %d", file, line, scp, scp->refCount);
+	osi_Log1(afsd_logp,"cm_GetSCache (2) scp 0x%p", scp);
 #endif
+        lock_ReleaseWrite(&cm_scacheLock);
         return 0;
     }
     // end of yj code
@@ -804,8 +806,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_GetSCache (3) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
-	    osi_Log1(afsd_logp,"cm_GetSCache (3) outScpp 0x%p", scp);
+	    afsi_log("%s:%d cm_GetSCache (3) scp 0x%p ref %d", file, line, scp, scp->refCount);
+	    osi_Log1(afsd_logp,"cm_GetSCache (3) scp 0x%p", scp);
 #endif
             cm_HoldSCacheNoLock(scp);
             cm_AdjustScacheLRU(scp);
@@ -818,7 +820,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
         
     /* now, if we don't have the fid, recycle something */
-    scp = cm_GetNewSCache();
+    scp = cm_GetNewSCache();    /* returns scp->mx held */
     if (scp == NULL) {
 	osi_Log0(afsd_logp,"cm_GetNewSCache unable to obtain *new* scache entry");
 	lock_ReleaseWrite(&cm_scacheLock);
@@ -826,20 +828,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	    cm_PutVolume(volp);
 	return CM_ERROR_WOULDBLOCK;
     }
-    osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%x flags 0x%x", scp, scp->flags);
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_GetNewSCache returns scp 0x%p flags 0x%x", file, line, scp, scp->flags);
+#endif
+    osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%p flags 0x%x", scp, scp->flags);
 
     osi_assertx(!(scp->flags & CM_SCACHEFLAG_INHASH), "CM_SCACHEFLAG_INHASH set");
 
-#if not_too_dangerous
-    /* dropping the cm_scacheLock allows more than one thread
-     * to obtain the same cm_scache_t from the LRU list.  Since
-     * the refCount is known to be zero at this point we have to
-     * assume that no one else is using the one this is returned.
-     */
-    lock_ReleaseWrite(&cm_scacheLock);
-    lock_ObtainWrite(&scp->rw);
-    lock_ObtainWrite(&cm_scacheLock);
-#endif
     scp->fid = *fidp;
     if (!cm_freelanceEnabled || !isRoot) {
         /* if this scache entry represents a volume root then we need 
@@ -864,11 +859,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     scp->nextp = cm_data.scacheHashTablep[hash];
     cm_data.scacheHashTablep[hash] = scp;
     scp->flags |= CM_SCACHEFLAG_INHASH;
-    scp->refCount = 1;
-    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
-#if not_too_dangerous
     lock_ReleaseWrite(&scp->rw);
+    scp->refCount = 1;
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_GetSCache sets refCount to 1 scp 0x%x", file, line, scp);
 #endif
+    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
 
     /* XXX - The following fields in the cm_scache are 
      * uninitialized:
@@ -876,14 +872,14 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
      *   parentVnode
      *   parentUnique
      */
-    lock_ReleaseWrite(&cm_scacheLock);
         
     /* now we have a held scache entry; just return it */
     *outScpp = scp;
 #ifdef DEBUG_REFCOUNT
-    afsi_log("%s:%d cm_GetSCache (4) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
-    osi_Log1(afsd_logp,"cm_GetSCache (4) outScpp 0x%p", scp);
+    afsi_log("%s:%d cm_GetSCache (4) scp 0x%p ref %d", file, line, scp, scp->refCount);
+    osi_Log1(afsd_logp,"cm_GetSCache (4) scp 0x%p", scp);
 #endif
+    lock_ReleaseWrite(&cm_scacheLock);
     return 0;
 }
 
@@ -1044,7 +1040,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     afs_uint32 sleep_buf_cmflags = 0;
     afs_uint32 sleep_scp_bufs = 0;
     int wakeupCycle;
-    int getAccessRights = 1;
 
     lock_AssertWrite(&scp->rw);
 
@@ -1249,7 +1244,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             if ((rights & (PRSFS_WRITE|PRSFS_DELETE)) && (scp->flags & CM_SCACHEFLAG_RO))
                 return CM_ERROR_READONLY;
 
-            if (cm_HaveAccessRights(scp, userp, rights, &outRights) || !getAccessRights) {
+            if (cm_HaveAccessRights(scp, userp, rights, &outRights)) {
                 if (~outRights & rights) 
 		    return CM_ERROR_NOACCESS;
             }
@@ -1264,7 +1259,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 }
                 if (code) 
                     return code;
-                getAccessRights = 0;    /* do not repeat */
                 continue;
             }
         }
@@ -1814,12 +1808,10 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 #endif
 {
     afs_int32 refCount;
-    long      lockstate;
 
     osi_assertx(scp != NULL, "null cm_scache_t");
     lock_AssertAny(&cm_scacheLock);
 
-    lockstate = lock_GetRWLockState(&cm_scacheLock);
     refCount = InterlockedDecrement(&scp->refCount);
 #ifdef DEBUG_REFCOUNT
     if (refCount < 0)
@@ -1833,16 +1825,30 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 
     if (refCount == 0 && (scp->flags & CM_SCACHEFLAG_DELETED)) {
         int deleted = 0;
+        long      lockstate;
+
+        lockstate = lock_GetRWLockState(&cm_scacheLock);
         if (lockstate != OSI_RWLOCK_WRITEHELD) 
-            lock_ConvertRToW(&cm_scacheLock);
+            lock_ReleaseRead(&cm_scacheLock);
+        else
+            lock_ReleaseWrite(&cm_scacheLock);
+
         lock_ObtainWrite(&scp->rw);
         if (scp->flags & CM_SCACHEFLAG_DELETED)
             deleted = 1;
-        lock_ReleaseWrite(&scp->rw);
-        if (refCount == 0 && deleted)
+
+        if (refCount == 0 && deleted) {
+            lock_ObtainWrite(&cm_scacheLock);
             cm_RecycleSCache(scp, 0);
-        if (lockstate != OSI_RWLOCK_WRITEHELD) 
-            lock_ConvertWToR(&cm_scacheLock);
+            if (lockstate != OSI_RWLOCK_WRITEHELD) 
+                lock_ConvertWToR(&cm_scacheLock);
+        } else {
+            if (lockstate != OSI_RWLOCK_WRITEHELD) 
+                lock_ObtainRead(&cm_scacheLock);
+            else
+                lock_ObtainWrite(&cm_scacheLock);
+        }
+        lock_ReleaseWrite(&scp->rw);
     }
 }
 
@@ -1866,21 +1872,20 @@ void cm_ReleaseSCache(cm_scache_t *scp)
     osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp, refCount);
     afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, refCount);
 #endif
+    lock_ReleaseRead(&cm_scacheLock);
 
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
         int deleted = 0;
         lock_ObtainWrite(&scp->rw);
         if (scp->flags & CM_SCACHEFLAG_DELETED)
             deleted = 1;
-        lock_ReleaseWrite(&scp->rw);
         if (deleted) {
-            lock_ConvertRToW(&cm_scacheLock);
+            lock_ObtainWrite(&cm_scacheLock);
             cm_RecycleSCache(scp, 0);
-            lock_ConvertWToR(&cm_scacheLock);
+            lock_ReleaseWrite(&cm_scacheLock);
         }
+        lock_ReleaseWrite(&scp->rw);
     }
-
-    lock_ReleaseRead(&cm_scacheLock);
 }
 
 /* just look for the scp entry to get filetype */

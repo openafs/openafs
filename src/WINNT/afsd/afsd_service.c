@@ -53,11 +53,15 @@ extern HANDLE afsi_file;
 static int powerEventsRegistered = 0;
 extern int powerStateSuspended = 0;
 
+static VOID (WINAPI* pRtlCaptureContext)(PCONTEXT ContextRecord) = NULL;
+
 /*
  * Notifier function for use by osi_panic
  */
 static void afsd_notifier(char *msgp, char *filep, long line)
 {
+    CONTEXT context;
+
     if (!msgp)
         msgp = "unspecified assert";
 
@@ -74,15 +78,17 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     afsd_ForceTrace(TRUE);
     buf_ForceTrace(TRUE);
 
+    if (pRtlCaptureContext) {
+        pRtlCaptureContext(&context);
+        afsd_printStack(GetCurrentThread(), &context);
+    }
+
     afsi_log("--- begin dump ---");
     cm_MemDumpDirStats(afsi_file, "a", 0);
     cm_MemDumpBPlusStats(afsi_file, "a", 0);
     cm_DumpCells(afsi_file, "a", 0);
     cm_DumpVolumes(afsi_file, "a", 0);
     cm_DumpSCache(afsi_file, "a", 0);
-#ifdef keisa
-    cm_dnlcDump(afsi_file, "a");
-#endif
     cm_DumpBufHashTable(afsi_file, "a", 0);
     smb_DumpVCP(afsi_file, "a", 0);			
     afsi_log("--- end   dump ---");
@@ -91,6 +97,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     if (IsDebuggerPresent())
         DebugBreak();	
 #endif
+
+    GenerateMiniDump(NULL);
 
     SetEvent(WaitToTerminate);
 
@@ -1097,6 +1105,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     HMODULE hHookDll;
     HMODULE hAdvApi32;
+    HMODULE hKernel32;
 
 #ifdef _DEBUG
     void afsd_DbgBreakAllocInit();
@@ -1110,6 +1119,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
        
     osi_InitPanic(afsd_notifier);
     osi_InitTraceOption();
+
+    hKernel32 = LoadLibrary("kernel32.dll");
+    if (hKernel32 == NULL)
+    {
+        afsi_log("Fatal: cannot load kernel32.dll");
+        return;
+    }
+    pRtlCaptureContext = GetProcAddress(hKernel32, "RtlCaptureContext");
 
     GlobalStatus = 0;
 

@@ -340,7 +340,7 @@ cm_space_t *cm_GetSpace(void)
 	cm_space_t *tsp;
 
 	if (osi_Once(&cm_utilsOnce)) {
-		lock_InitializeRWLock(&cm_utilsLock, "cm_utilsLock");
+		lock_InitializeRWLock(&cm_utilsLock, "cm_utilsLock", LOCK_HIERARCHY_UTILS_GLOBAL);
 		osi_EndOnce(&cm_utilsOnce);
         }
         

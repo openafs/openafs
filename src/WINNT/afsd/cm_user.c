@@ -29,7 +29,7 @@ void cm_InitUser(void)
     static osi_once_t once;
         
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_userLock, "cm_userLock");
+        lock_InitializeRWLock(&cm_userLock, "cm_userLock", LOCK_HIERARCHY_USER_GLOBAL);
         osi_EndOnce(&once);
     }
         
@@ -43,7 +43,7 @@ cm_user_t *cm_NewUser(void)
     userp = malloc(sizeof(*userp));
     memset(userp, 0, sizeof(*userp));
     userp->refCount = 1;
-    lock_InitializeMutex(&userp->mx, "cm_user_t");
+    lock_InitializeMutex(&userp->mx, "cm_user_t", LOCK_HIERARCHY_USER);
     return userp;
 }
 
