@@ -128,6 +128,8 @@ extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 
 extern void cm_SetLanAdapterChangeDetected(void);
 
+extern void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID);
+
 /* Protected by cm_syscfgLock (rw) */
 extern int cm_noIPAddr;         /* number of client network interfaces */
 extern int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */

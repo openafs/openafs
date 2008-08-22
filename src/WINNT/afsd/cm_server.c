@@ -1191,16 +1191,32 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 void cm_FreeServer(cm_server_t* serverp)
 {
     cm_server_vols_t * tsrvp, *nextp;
+    int delserver = 0;
 
     cm_PutServerNoLock(serverp);
     if (serverp->refCount == 0)
     {
-        /* we need to check to ensure that all of the connections
+        /* 
+         * we need to check to ensure that all of the connections
          * for this server have a 0 refCount; otherwise, they will
          * not be garbage collected 
+         *
+         * must drop the cm_serverLock because cm_GCConnections
+         * obtains the cm_connLock and that comes first in the 
+         * lock hierarchy.  
          */
+        lock_ReleaseWrite(&cm_serverLock);
         cm_GCConnections(serverp);  /* connsp */
+        lock_ObtainWrite(&cm_serverLock);
+    }
 
+
+    /* 
+     * Once we have the cm_serverLock locked check to make
+     * sure the refCount is still zero before removing the 
+     * server entirely.
+     */
+    if (serverp->refCount == 0) {
 	if (!(serverp->flags & CM_SERVERFLAG_PREF_SET)) {
             switch (serverp->type) {
             case CM_SERVER_VLDB:
