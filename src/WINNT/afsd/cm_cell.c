@@ -448,8 +448,8 @@ int cm_DumpCells(FILE *outputFile, char *cookie, int lock)
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
-        sprintf(output, "%s cellp=0x%p,name=%s ID=%d flags=0x%x\r\n", 
-                cookie, cellp, cellp->name, cellp->cellID, cellp->flags);
+        sprintf(output, "%s cellp=0x%p,name=%s ID=%d flags=0x%x timeout=%I64u\r\n", 
+                cookie, cellp, cellp->name, cellp->cellID, cellp->flags, cellp->timeout);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
