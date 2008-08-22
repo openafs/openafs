@@ -150,7 +150,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     lock_ObtainRead(&cm_cellLock);
     for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
         if (cm_stricmp_utf8(namep, cp->name) == 0) {
-            strcpy(fullname, cp->name);
+            strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+            fullname[CELL_MAXNAMELEN-1] = '\0';
             break;
         }
     }
