@@ -383,7 +383,7 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
 	abp->f_ffree = 
 #ifdef AFS_DARWIN80_ENV
-	2147483648
+	0xffffffffffffffff
 #else
 	2000000
 #endif
