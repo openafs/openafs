@@ -213,7 +213,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 /*#undef AFS_AFSDB_ENV*/
 #define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
-#undef BOS_RESTRICTED_MODE
+#define BOS_RESTRICTED_MODE
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
