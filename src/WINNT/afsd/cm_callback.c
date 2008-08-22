@@ -34,6 +34,8 @@ afs_int32 cm_OfflineROIsValid = 0;
 
 afs_int32 cm_giveUpAllCBs = 0;
 
+afs_int32 cm_shutdown = 0;
+
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -347,6 +349,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
     cm_server_t *tsp = NULL;
     cm_cell_t* cellp = NULL;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -417,6 +422,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -535,6 +543,9 @@ SRXAFSCB_Probe(struct rx_call *callp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -637,6 +648,9 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -693,6 +707,9 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -805,6 +822,9 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -920,6 +940,9 @@ SRXAFSCB_XStatsVersion(struct rx_call *callp, long *vp)
     unsigned long host = 0;
     unsigned short port = 0;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -942,6 +965,9 @@ SRXAFSCB_GetXStats(struct rx_call *callp, long cvn, long coln, long *srvp, long 
     unsigned long host = 0;
     unsigned short port = 0;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -956,6 +982,9 @@ SRXAFSCB_GetXStats(struct rx_call *callp, long cvn, long coln, long *srvp, long 
 int
 SRXAFSCB_InitCallBackState2(struct rx_call *callp, struct interfaceAddr* addr)
 {
+    if (cm_shutdown)
+        return 1;
+
     osi_Log0(afsd_logp, "SRXAFSCB_InitCallBackState2 ->");
 
     return SRXAFSCB_InitCallBackState(callp);
@@ -971,6 +1000,9 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -1015,6 +1047,9 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 {
     char *p = NULL;
 
+    if (cm_shutdown)
+        return 1;
+
     if (UuidToString((UUID *)serverUuid, &p) == RPC_S_OK) {
         osi_Log1(afsd_logp, "SRXAFSCB_InitCallBackState3 %s ->",osi_LogSaveString(afsd_logp,p));
         RpcStringFree(&p);
@@ -1034,6 +1069,9 @@ SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
     unsigned short port = 0;
     char *p,*q;
     int code = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -1106,6 +1144,9 @@ SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
     unsigned short port = 0;
     int rc;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1137,6 +1178,9 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -1214,6 +1258,9 @@ int SRXAFSCB_GetServerPrefs(
     unsigned long host = 0;
     unsigned short port = 0;
 
+    if (cm_shutdown)
+        return 1;
+
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
@@ -1259,6 +1306,9 @@ int SRXAFSCB_GetCellServDB(struct rx_call *callp, afs_int32 index, char **a_name
     unsigned long host = 0;
     unsigned short port = 0;
     int rc;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -1306,6 +1356,9 @@ int SRXAFSCB_GetLocalCell(struct rx_call *callp, char **a_name)
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
@@ -1401,6 +1454,9 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+
+    if (cm_shutdown)
+        return 1;
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
