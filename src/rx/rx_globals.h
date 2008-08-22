@@ -245,22 +245,17 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
 #define RX_TS_FPQ_FLUSH_GLOBAL 1
 #define RX_TS_FPQ_PULL_GLOBAL 1
 #define RX_TS_FPQ_ALLOW_OVERCOMMIT 1
-/*
- * compute the localmax and globsize values from rx_TSFPQMaxProcs and rx_nPackets.
- * arbitarily set local max so that all threads consume 90% of packets, if all local queues are full.
- * arbitarily set transfer glob size to 20% of max local packet queue length.
- * also set minimum values of 15 and 3.  Given the algorithms, the number of buffers allocated
- * by each call to AllocPacketBufs() will increase indefinitely without a cap on the transfer
- * glob size.  A cap of 64 is selected because that will produce an allocation of greater than
- * three times that amount which is greater than half of ncalls * maxReceiveWindow. 
- */
+/* compute the localmax and globsize values from rx_TSFPQMaxProcs and rx_nPackets.
+   arbitarily set local max so that all threads consume 90% of packets, if all local queues are full.
+   arbitarily set transfer glob size to 20% of max local packet queue length.
+   also set minimum values of 15 and 3. */
 #define RX_TS_FPQ_COMPUTE_LIMITS \
     do { \
         register int newmax, newglob; \
         newmax = (rx_nPackets * 9) / (10 * rx_TSFPQMaxProcs); \
         newmax = (newmax >= 15) ? newmax : 15; \
         newglob = newmax / 5; \
-        newglob = (newglob >= 3) ? (newglob < 64 ? newglob : 64) : 3; \
+        newglob = (newglob >= 3) ? newglob : 3; \
         rx_TSFPQLocalMax = newmax; \
         rx_TSFPQGlobSize = newglob; \
     } while(0)
@@ -330,12 +325,10 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
 /* same as above, except user has direct control over number to transfer */
 #define RX_TS_FPQ_GTOL2(rx_ts_info_p,num_transfer) \
     do { \
-        register int i, tsize; \
+        register int i; \
         register struct rx_packet * p; \
-        tsize = (num_transfer); \
-        if (tsize > rx_nFreePackets) tsize = rx_nFreePackets; \
         for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
-             i < tsize; i++,p=queue_Next(p, rx_packet)); \
+             i < (num_transfer); i++,p=queue_Next(p, rx_packet)); \
         queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \

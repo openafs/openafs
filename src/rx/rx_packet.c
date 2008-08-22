@@ -285,7 +285,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 	    /* alloc enough for us, plus a few globs for other threads */
 	    alloc = transfer + (3 * rx_TSFPQGlobSize) - rx_nFreePackets;
 	    rxi_MorePacketsNoLock(MAX(alloc, rx_initSendWindow));
-	    transfer = rx_TSFPQGlobSize;
+	    transfer += rx_TSFPQGlobSize;
 	}
 
 	RX_TS_FPQ_GTOL2(rx_ts_info, transfer);
@@ -654,14 +654,9 @@ rxi_MorePacketsNoLock(int apackets)
      * to hold maximal amounts of data */
     apackets += (apackets / 4)
 	* ((rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE) / RX_CBUFFERSIZE);
-    do {
-        getme = apackets * sizeof(struct rx_packet);
-        p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
-	if (p == NULL) {
-            apackets -= apackets / 4;
-            osi_Assert(apackets > 0);
-        }
-    } while(p == NULL);
+    getme = apackets * sizeof(struct rx_packet);
+    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+
     memset((char *)p, 0, getme);
 
     for (e = p + apackets; p < e; p++) {
