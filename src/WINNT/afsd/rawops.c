@@ -342,8 +342,9 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
 
     if (code == 0 && doWriteBack) {
         lock_ObtainWrite(&scp->rw);
-        cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
+        code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
         lock_ReleaseWrite(&scp->rw);
+        if (code == 0)
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
     }   

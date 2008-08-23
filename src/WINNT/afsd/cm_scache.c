@@ -739,26 +739,15 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
         }
         lock_ReleaseMutex(&cm_Freelance_Lock);
-
+        lock_ObtainWrite(&cm_scacheLock);
         if (scp == NULL) 
-            scp = cm_GetNewSCache();
-
+            scp = cm_GetNewSCache();    /* returns scp->mx held */
 	if (scp == NULL) {
 	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
             lock_ReleaseWrite(&cm_scacheLock);
 	    return CM_ERROR_WOULDBLOCK;
 	}
 
-#if not_too_dangerous
-	/* dropping the cm_scacheLock allows more than one thread
-	 * to obtain the same cm_scache_t from the LRU list.  Since
-	 * the refCount is known to be zero at this point we have to
-	 * assume that no one else is using the one this is returned.
-	 */
-	lock_ReleaseWrite(&cm_scacheLock);
-	lock_ObtainWrite(&scp->rw);
-	lock_ObtainWrite(&cm_scacheLock);
-#endif
         scp->fid = *fidp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
@@ -1051,6 +1040,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     afs_uint32 sleep_buf_cmflags = 0;
     afs_uint32 sleep_scp_bufs = 0;
     int wakeupCycle;
+
+    lock_AssertWrite(&scp->rw);
 
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;

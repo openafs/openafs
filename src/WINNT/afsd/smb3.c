@@ -3015,7 +3015,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_user_t *userp;
     cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
-    int scp_mx_held = 0;
+    int scp_rw_held = 0;
     int delonclose = 0;
     long code = 0;
     clientchar_t *pathp;
@@ -3179,14 +3179,16 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #endif /* DFS_SUPPORT */
 
     lock_ObtainWrite(&scp->rw);
-    scp_mx_held = 1;
+    scp_rw_held = 2;
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) goto done;
+    if (code)
+        goto done;
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         
     lock_ConvertWToR(&scp->rw);
+    scp_rw_held = 1;
 
     len = 0;
 
@@ -3251,8 +3253,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileStandardInfo.reserved = 0;
 
     	if (fidp) {
-	    lock_ReleaseRead(&scp->rw);
-	    scp_mx_held = 0;
 	    lock_ObtainMutex(&fidp->mx);
 	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
 	    lock_ReleaseMutex(&fidp->mx);
@@ -3296,8 +3296,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     /* send and free the packets */
   done:
-    if (scp_mx_held)
+    switch (scp_rw_held) {
+    case 1:
 	lock_ReleaseRead(&scp->rw);
+        break;
+    case 2:
+        lock_ReleaseWrite(&scp->rw);
+        break;
+    }
+    scp_rw_held = 0;
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     if (code == 0) {
@@ -4182,6 +4189,8 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
         lock_ObtainWrite(&dscp->rw);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code == 0) 
+            cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseWrite(&dscp->rw);
         if (code == CM_ERROR_NOACCESS) {
             mustFake = 1;
@@ -6408,6 +6417,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     lock_ConvertWToR(&scp->rw);
+    readlock = 1;
 
     /* decode times.  We need a search time, but the response to this
      * call provides the date first, not the time, as returned in the

@@ -2734,6 +2734,25 @@ ViceIDToUsername(char *username,
 }
 
 
+static void
+copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_creds *v5cred) {
+    krb5_error_code code;
+    krb5_ticket *ticket;
+    size_t len;
+
+    code = pkrb5_decode_ticket(&v5cred->ticket, &ticket);
+    if (code == 0) {
+        len = krb5_princ_realm(context, ticket->server)->length;
+        if (len > destlen - 1)
+            len = destlen - 1;
+
+        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
+        dest[len] = '\0';
+
+        pkrb5_free_ticket(context, ticket);
+    }
+}
+
 int
 KFW_AFS_klog(
     krb5_context alt_ctx,
@@ -2881,6 +2900,7 @@ KFW_AFS_klog(
     else
         strcpy(CellName, cell);
 
+    /* This is for Kerberos v4 only */
     if (strlen(realm) == 0)
         strcpy(RealmName, realm_of_cell);
     else
@@ -2890,24 +2910,26 @@ KFW_AFS_klog(
 
     if ( try_krb5 ) {
         int len;
+        code = KRB5KRB_ERR_GENERIC;
 
-        /* First try service/cell@REALM */
-        if (code = pkrb5_build_principal(ctx, &increds.server,
-                                          (int)strlen(RealmName),
-                                          RealmName,
-                                          ServiceName,
-                                          CellName,
-                                          0)) 
-        {
-            goto cleanup;
-        }
 
         increds.client = client_principal;
         increds.times.endtime = 0;
         /* Ask for DES since that is what V4 understands */
         increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
-
+        /* If there was a specific realm we are supposed to try
+         * then use it 
+         */
+        if (strlen(realm) != 0) {
+            /* service/cell@REALM */
+            increds.server = 0;
+            code = pkrb5_build_principal(ctx, &increds.server,
+                                         (int)strlen(realm),
+                                         realm,
+                                         ServiceName,
+                                         CellName,
+                                         0);
         if ( IsDebuggerPresent() ) {
             char * cname, *sname;
             pkrb5_unparse_name(ctx, increds.client, &cname);
@@ -2921,16 +2943,19 @@ KFW_AFS_klog(
             pkrb5_free_unparsed_name(ctx,sname);
         }
 
+            if (!code)
         code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+
         if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+                code == KRB5_ERR_HOST_REALM_UNKNOWN ||
              code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
              code == KRB5KRB_AP_ERR_MSG_TYPE) {
             /* Or service@REALM */
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
             code = pkrb5_build_principal(ctx, &increds.server,
-                                          (int)strlen(RealmName),
-                                          RealmName,
+                                              (int)strlen(realm),
+                                              realm,
                                           ServiceName,
                                           0);
 
@@ -2952,21 +2977,58 @@ KFW_AFS_klog(
                 code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
         }
 
+            if (code == 0) {
+                /* we have a local realm for the cell */
+                strcpy(realm_of_cell, realm);
+            }
+        } else {
+            /* Otherwise, first try service/cell@CLIENT_REALM */
+            if (code = pkrb5_build_principal(ctx, &increds.server,
+                                              (int)strlen(realm_of_user),
+                                              realm_of_user,
+                                              ServiceName,
+                                              CellName,
+                                              0)) 
+            {
+                goto cleanup;
+            }
+
+            if ( IsDebuggerPresent() ) {
+                char * cname, *sname;
+                pkrb5_unparse_name(ctx, increds.client, &cname);
+                pkrb5_unparse_name(ctx, increds.server, &sname);
+                OutputDebugString("Getting tickets for \"");
+                OutputDebugString(cname);
+                OutputDebugString("\" and service \"");
+                OutputDebugString(sname);
+                OutputDebugString("\"\n");
+                pkrb5_free_unparsed_name(ctx,cname);
+                pkrb5_free_unparsed_name(ctx,sname);
+            }
+
+            code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+            if (code == 0) {
+                /* The client's realm is a local realm for the cell.
+                 * Save it so that later the pts registration will not
+                 * be performed.
+                 */
+                strcpy(realm_of_cell, realm_of_user);
+            }
+
         if ((code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+                 code == KRB5_ERR_HOST_REALM_UNKNOWN ||
               code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
               code == KRB5KRB_AP_ERR_MSG_TYPE) &&
-             strcmp(RealmName, realm_of_cell)) {
-            /* Or service/cell@REALM_OF_CELL */
-            strcpy(RealmName, realm_of_cell);
+                 strcmp(realm_of_user, realm_of_cell)) {
+                /* Then service/cell@CELL_REALM */
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
             code = pkrb5_build_principal(ctx, &increds.server,
-                                         (int)strlen(RealmName),
-                                         RealmName,
+                                              (int)strlen(realm_of_cell),
+                                              realm_of_cell,
                                          ServiceName,
                                          CellName,
                                          0);
-
             if ( IsDebuggerPresent() ) {
                 char * cname, *sname;
                 pkrb5_unparse_name(ctx, increds.client, &cname);
@@ -2984,16 +3046,20 @@ KFW_AFS_klog(
             if (!code)
                 code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
 
+                if (!code && !strlen(realm_of_cell)) 
+                    copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
+            }
         
             if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+                code == KRB5_ERR_HOST_REALM_UNKNOWN ||
                  code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
 				 code == KRB5KRB_AP_ERR_MSG_TYPE) {
-                /* Or service@REALM_OF_CELL */
+                /* Finally service@CELL_REALM */
                 pkrb5_free_principal(ctx,increds.server);
                 increds.server = 0;
                 code = pkrb5_build_principal(ctx, &increds.server,
-                                              (int)strlen(RealmName),
-                                              RealmName,
+                                              (int)strlen(realm_of_cell),
+                                              realm_of_cell,
                                               ServiceName,
                                               0);
 
@@ -3013,6 +3079,8 @@ KFW_AFS_klog(
 
                 if (!code)
                     code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                if (!code && !strlen(realm_of_cell)) 
+                    copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
             }
         }
 
