@@ -254,7 +254,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 	    (*ldpp) = (cm_lock_data_t *)malloc(sizeof(cm_lock_data_t));
 	    if (!*ldpp) {
 		code = ENOMEM;
-		goto _syncopdone;
+		goto _done;
 	    }
 
 	    (*ldpp)->key = key;
@@ -288,9 +288,6 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         goto _done;
     }
 
-  _syncopdone:
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
-
  _done:
     lock_ReleaseWrite(&scp->rw);
 
@@ -302,14 +299,15 @@ extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *req
 			       cm_lock_data_t ** ldpp)
 {
     osi_Log2(afsd_logp,"cm_CheckNTOpenDone scp 0x%p ldp 0x%p", scp, *ldpp);
+    lock_ObtainWrite(&scp->rw);
     if (*ldpp) {
-	lock_ObtainWrite(&scp->rw);
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 
 		  (*ldpp)->key, userp, reqp);
-	lock_ReleaseWrite(&scp->rw);
 	free(*ldpp);
 	*ldpp = NULL;
     }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+    lock_ReleaseWrite(&scp->rw);
     return 0;
 }
 /*
