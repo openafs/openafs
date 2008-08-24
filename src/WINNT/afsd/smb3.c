@@ -6856,6 +6856,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_req_t req;
     int created = 0;
     int prefetch = 0;
+    int checkDoneRequired = 0;
     cm_lock_data_t *ldp = NULL;
 
     smb_InitReq(&req);
@@ -7248,6 +7249,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == 0 && !treeCreate) {
         code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
         if (code) {
+            cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
             if (scp)
@@ -7256,6 +7258,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             free(realPathp);
             return code;
         }
+        checkDoneRequired = 1;
 
 	if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
@@ -7293,6 +7296,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     scp = targetScp;
 		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
 		    if (code) {
+                        cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 			if (dscp)
 			    cm_ReleaseSCache(dscp);
 			if (scp)
@@ -7457,7 +7461,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (code) {
         /* something went wrong creating or truncating the file */
-	if (ldp)
+	if (checkDoneRequired)
 	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         if (scp) 
             cm_ReleaseSCache(scp);
@@ -7481,15 +7485,17 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 * we'll just use the symlink anyway.
                 */
                 osi_Log2(smb_logp, "symlink vp %x to vp %x", scp, targetScp);
-		if (ldp)
+		if (checkDoneRequired) {
 		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+                    checkDoneRequired = 0;
+                }
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
-	    if (ldp)
+	    if (checkDoneRequired)
 		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
@@ -7502,7 +7508,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* (only applies to single component case) */
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
-	if (ldp)
+	if (checkDoneRequired)
 	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         cm_ReleaseSCache(scp);
         if (dscp)
@@ -7551,7 +7557,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lock_ReleaseWrite(&scp->rw);
 
         if (code) {
-	    if (ldp)
+	    if (checkDoneRequired)
 		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             if (dscp)
@@ -7566,8 +7572,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     /* Now its safe to release the file server lock obtained by cm_CheckNTOpen() */
-    if (ldp)
+    if (checkDoneRequired) {
 	cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+        checkDoneRequired = 0;
+    }
 
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
@@ -7707,6 +7715,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     int created = 0;
     int prefetch = 0;
     cm_lock_data_t *ldp = NULL;
+    int checkDoneRequired = 0;
 
     smb_InitReq(&req);
 
@@ -7991,6 +8000,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (code == 0) {
         code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
         if (code) {     
+            cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp) 
                 cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
@@ -7998,6 +8008,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             free(realPathp);
             return code;
         }
+        checkDoneRequired = 1;
 
         if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
@@ -8033,6 +8044,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                     scp = targetScp;
 		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
 		    if (code) {
+                        cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 			if (dscp)
 			    cm_ReleaseSCache(dscp);
 			if (scp)
@@ -8135,7 +8147,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     if (code) {
         /* something went wrong creating or truncating the file */
-	if (ldp)
+	if (checkDoneRequired)
 	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 	if (scp) 
             cm_ReleaseSCache(scp);
@@ -8158,15 +8170,17 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 */
                 osi_Log2(smb_logp, "symlink vp %x to vp %x",
                           scp, targetScp);
-		if (ldp)
+		if (checkDoneRequired) {
 		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+                    checkDoneRequired = 0;
+                }
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
-	    if (ldp)
+	    if (checkDoneRequired)
 		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
@@ -8176,7 +8190,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
-	if (ldp)
+	if (checkDoneRequired)
 	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
@@ -8221,7 +8235,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseWrite(&scp->rw);
 
         if (code) {
-	    if (ldp)
+	    if (checkDoneRequired)
 		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
@@ -8234,8 +8248,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 
     /* Now its safe to drop the file server lock obtained by cm_CheckNTOpen() */
-    if (ldp)
+    if (checkDoneRequired) {
 	cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+        checkDoneRequired = 0;
+    }
 
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
