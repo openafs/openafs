@@ -6688,6 +6688,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     BOOL foundscp;
     cm_req_t req;
     int created = 0;
+    int prefetch = 0;
     cm_lock_data_t *ldp = NULL;
 
     smb_InitReq(&req);
@@ -7463,11 +7464,15 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
         LargeIntegerGreaterThanZero(fidp->scp->length) && 
         !(scp->flags & CM_SCACHEFLAG_PREFETCHING)) {
+        prefetch = 1;
+    }
+    lock_ReleaseRead(&scp->rw);
+
+    if (prefetch)
         cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
-    }
-    lock_ReleaseRead(&scp->rw);
+
 
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %S", fidp->fid,
               osi_LogSaveClientString(smb_logp, realPathp));
@@ -7533,6 +7538,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     char *outData;
     cm_req_t req;
     int created = 0;
+    int prefetch = 0;
     cm_lock_data_t *ldp = NULL;
 
     smb_InitReq(&req);
@@ -8205,11 +8211,14 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
          LargeIntegerGreaterThanZero(fidp->scp->length) && 
          !(scp->flags & CM_SCACHEFLAG_PREFETCHING)) {
+        prefetch = 1;
+    }
+    lock_ReleaseRead(&scp->rw);
+
+    if (prefetch)
         cm_QueueBKGRequest(fidp->scp, cm_BkgPrefetch, 0, 0,
                            fidp->scp->length.LowPart, fidp->scp->length.HighPart, 
                            userp);
-    }
-    lock_ReleaseRead(&scp->rw);
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
