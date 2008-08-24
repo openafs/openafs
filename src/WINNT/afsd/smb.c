@@ -2071,9 +2071,7 @@ smb_dirSearch_t *smb_FindDirSearchNoLock(long cookie)
                 if (!smb_lastDirSearchp)
                     smb_lastDirSearchp = (smb_dirSearch_t *) &dsp->q;
             }
-            lock_ObtainMutex(&dsp->mx);
             dsp->refCount++;
-            lock_ReleaseMutex(&dsp->mx);
             break;
         }
     }
@@ -2089,7 +2087,6 @@ smb_dirSearch_t *smb_FindDirSearchNoLock(long cookie)
 
 void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
 {
-    lock_ObtainWrite(&smb_globalLock);
     lock_ObtainMutex(&dsp->mx);
     osi_Log3(smb_logp,"smb_DeleteDirSearch cookie %d dsp 0x%p scp 0x%p", 
 	      dsp->cookie, dsp, dsp->scp);
@@ -2104,7 +2101,6 @@ void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
         lock_ReleaseWrite(&dsp->scp->rw);
     }	
     lock_ReleaseMutex(&dsp->mx);
-    lock_ReleaseWrite(&smb_globalLock);
 }               
 
 /* Must be called with the smb_globalLock held */
@@ -2112,20 +2108,22 @@ void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
 {
     cm_scache_t *scp = NULL;
 
-    lock_ObtainMutex(&dsp->mx);
     osi_assertx(dsp->refCount-- > 0, "cm_scache_t refCount 0");
-    if (dsp->refCount == 0 && (dsp->flags & SMB_DIRSEARCH_DELETE)) {
-        if (&dsp->q == (osi_queue_t *) smb_lastDirSearchp)
-            smb_lastDirSearchp = (smb_dirSearch_t *) osi_QPrev(&smb_lastDirSearchp->q);
-        osi_QRemove((osi_queue_t **) &smb_firstDirSearchp, &dsp->q);
-        lock_ReleaseMutex(&dsp->mx);
-        lock_FinalizeMutex(&dsp->mx);
-        scp = dsp->scp;
-	osi_Log3(smb_logp,"smb_ReleaseDirSearch cookie %d dsp 0x%p scp 0x%p", 
-		 dsp->cookie, dsp, scp);
-        free(dsp);
-    } else {
-        lock_ReleaseMutex(&dsp->mx);
+    if (dsp->refCount == 0) {
+        lock_ObtainMutex(&dsp->mx);
+        if (dsp->flags & SMB_DIRSEARCH_DELETE) {
+            if (&dsp->q == (osi_queue_t *) smb_lastDirSearchp)
+                smb_lastDirSearchp = (smb_dirSearch_t *) osi_QPrev(&smb_lastDirSearchp->q);
+            osi_QRemove((osi_queue_t **) &smb_firstDirSearchp, &dsp->q);
+            lock_ReleaseMutex(&dsp->mx);
+            lock_FinalizeMutex(&dsp->mx);
+            scp = dsp->scp;
+            osi_Log3(smb_logp,"smb_ReleaseDirSearch cookie %d dsp 0x%p scp 0x%p", 
+                     dsp->cookie, dsp, scp);
+            free(dsp);
+        } else {
+            lock_ReleaseMutex(&dsp->mx);
+        }
     }
     /* do this now to avoid spurious locking hierarchy creation */
     if (scp) 
@@ -2157,28 +2155,28 @@ smb_dirSearch_t *smb_FindDirSearch(long cookie)
 void smb_GCDirSearches(int isV3)
 {
     smb_dirSearch_t *prevp;
-    smb_dirSearch_t *tp;
+    smb_dirSearch_t *dsp;
     smb_dirSearch_t *victimsp[SMB_DIRSEARCH_GCMAX];
     int victimCount;
     int i;
         
     victimCount = 0;	/* how many have we got so far */
-    for (tp = smb_lastDirSearchp; tp; tp=prevp) {
+    for (dsp = smb_lastDirSearchp; dsp; dsp=prevp) {
         /* we'll move tp from queue, so
          * do this early.
          */
-        prevp = (smb_dirSearch_t *) osi_QPrev(&tp->q);	
+        prevp = (smb_dirSearch_t *) osi_QPrev(&dsp->q);	
         /* if no one is using this guy, and we're either in the new protocol,
          * or we're in the old one and this is a small enough ID to be useful
          * to the old protocol, GC this guy.
          */
-        if (tp->refCount == 0 && (isV3 || tp->cookie <= 255)) {
+        if (dsp->refCount == 0 && (isV3 || dsp->cookie <= 255)) {
             /* hold and delete */
-	    lock_ObtainMutex(&tp->mx);
-            tp->flags |= SMB_DIRSEARCH_DELETE;
-	    lock_ReleaseMutex(&tp->mx);
-            victimsp[victimCount++] = tp;
-            tp->refCount++;
+	    lock_ObtainMutex(&dsp->mx);
+            dsp->flags |= SMB_DIRSEARCH_DELETE;
+	    lock_ReleaseMutex(&dsp->mx);
+            victimsp[victimCount++] = dsp;
+            dsp->refCount++;
         }
 
         /* don't do more than this */
@@ -2238,9 +2236,7 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
             /* don't need to watch for refcount zero and deleted, since
             * we haven't dropped the global lock.
             */
-            lock_ObtainMutex(&dsp->mx);
             dsp->refCount--;
-            lock_ReleaseMutex(&dsp->mx);
             ++smb_dirSearchCounter;
             continue;
         }	
@@ -7030,12 +7026,15 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
     lock_ObtainMutex(&fidp->mx);
     if (code == 0 && filter != 0 && (fidp->flags & SMB_FID_NTOPEN)
-         && (fidp->NTopen_dscp->flags & CM_SCACHEFLAG_ANYWATCH)) {
+         && (fidp->NTopen_dscp->flags & CM_SCACHEFLAG_ANYWATCH)) 
+    {
+        lock_ReleaseMutex(&fidp->mx);
         smb_NotifyChange(FILE_ACTION_MODIFIED, filter,
                           fidp->NTopen_dscp, fidp->NTopen_pathp,
                           NULL, TRUE);
-    }       
-    lock_ReleaseMutex(&fidp->mx);
+    } else {
+        lock_ReleaseMutex(&fidp->mx);
+    }
 
     if (code == 0) {
         if (smb_AsyncStore > 0) {
