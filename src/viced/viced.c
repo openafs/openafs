@@ -162,7 +162,7 @@ int SawSpare;
 int SawPctSpare;
 int debuglevel = 0;
 int printBanner = 0;
-int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
+int rxJumbograms = 0;		/* default is to not send and receive jumbograms. */
 int rxBind = 0;		/* don't bind */
 int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */ 
 int rxMaxMTU = -1;
@@ -922,6 +922,8 @@ FlagMsg()
     fputs("[-udpsize <size of socket buffer in bytes>] ", stdout);
     fputs("[-sendsize <size of send buffer in bytes>] ", stdout);
     fputs("[-abortthreshold <abort threshold>] ", stdout);
+    fputs("[-nojumbo (disable jumbogram network packets - deprecated)] ", stdout);
+    fputs("[-jumbo (enable jumbogram network packets)] ", stdout);
 /*   fputs("[-enable_peer_stats] ", stdout); */
 /*   fputs("[-enable_process_stats] ", stdout); */
     fputs("[-help]\n", stdout);
@@ -1272,6 +1274,8 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-nojumbo")) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[i], "-jumbo")) {
+	    rxJumbograms = 1;
 	} else if (!strcmp(argv[i], "-rxbind")) {
 	    rxBind = 1;
 	} else if (!strcmp(argv[i], "-allow-dotted-principals")) {

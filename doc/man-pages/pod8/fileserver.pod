@@ -30,6 +30,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-rxdbge>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     S<<< [B<-nojumbo> >>>
+    S<<< [B<-jumbo> >>>
     S<<< [B<-rxbind> >>>
     S<<< [B<-allow-dotted-principals>] >>>
     S<<< [B<-L>] >>>
@@ -384,9 +385,17 @@ retransmissions) to the file F</usr/afs/logs/rx_dbg>.
 Defines the maximum size of an MTU.  The value must be between the
 minimum and maximum packet data sizes for Rx.
 
+=item B<-jumbo>
+
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The fileserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+
 =item B<-nojumbo>
 
-Do not send, and do not accept, jumbograms.
+Deprecated; jumbograms are disabled by default.
 
 =item B<-rxbind>
 
