@@ -160,6 +160,7 @@ extern int afsconf_CheckAuth();
 int pr_realmNameLen;
 char *pr_realmName;
 
+int debuglevel = 0;
 int restricted = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
@@ -280,6 +281,13 @@ main(int argc, char **argv)
 	if ((strncmp(arg, "-database", alen) == 0)
 	    || (strncmp(arg, "-db", alen) == 0)) {
 	    pr_dbaseName = argv[++a];	/* specify a database */
+	} else if (strcmp(argv[a], "-d") == 0) {
+	    if ((a + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++a]);
+	    LogLevel = debuglevel;
 	} else if (strncmp(arg, "-p", alen) == 0) {
 	    lwps = atoi(argv[++a]);
 	    if (lwps > 16) {	/* maximum of 16 */
@@ -378,7 +386,7 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
-		   "[-syslog[=FACILITY]] "
+		   "[-syslog[=FACILITY]] [-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
@@ -388,7 +396,7 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] [-rxbind] "
 		   "[-allow-dotted-principals] "
 		   "[-default_access default_user_access default_group_access] "
@@ -398,7 +406,7 @@ main(int argc, char **argv)
 #else
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-d <debug level>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -408,7 +416,7 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-d <debug level>] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-allow-dotted-principals] "

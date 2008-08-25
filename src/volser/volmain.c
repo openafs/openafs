@@ -84,6 +84,7 @@ extern void RXSTATS_ExecuteRequest();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
+int debuglevel = 0; 
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
@@ -242,7 +243,7 @@ main(int argc, char **argv)
     int rxpackets = 100;
     char commandLine[150];
     int i;
-    int rxJumbograms = 1;	/* default is to send and receive jumbograms. */
+    int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
     int rxMaxMTU = -1;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
@@ -294,6 +295,13 @@ main(int argc, char **argv)
 	    rxBind = 1;
 	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
 	    rxkadDisableDotCheck = 1;
+	} else if (strcmp(argv[code], "-d") == 0) {
+	    if ((code + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++code]);
+	    LogLevel = debuglevel;
 	} else if (strcmp(argv[code], "-p") == 0) {
 	    lwps = atoi(argv[++code]);
 	    if (lwps > MAXLWP) {
@@ -333,6 +341,8 @@ main(int argc, char **argv)
 		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(argv[code], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
+	} else if (strcmp(argv[code], "-jumbo") == 0) {
+	    rxJumbograms = 1;
 	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -384,16 +394,16 @@ main(int argc, char **argv)
 	  usage:
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
+		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
+		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");

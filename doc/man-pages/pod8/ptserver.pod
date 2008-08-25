@@ -7,7 +7,7 @@ ptserver - Initializes the Protection Server
 =for html
 <div class="synopsis">
 
-B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>>
+B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
     [B<-rebuildDB>] S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
     [B<-restricted>] [B<-enable_peer_stats>]
@@ -67,6 +67,13 @@ suites. Provide the command name and all option names in full.
 =head1 OPTIONS
 
 =over 4
+
+=item B<-d> <I<debug level>>
+
+Sets the detail level for the debugging trace written to the
+F</usr/afs/logs/PtLog> file. Provide one of the following values, each
+of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
+and C<125>. 
 
 =item B<-database> <I<db path>>, B<-db> <I<db path>>
 

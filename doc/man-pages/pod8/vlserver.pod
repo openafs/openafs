@@ -7,7 +7,7 @@ vlserver - Initializes the Volume Location Server
 =for html
 <div class="synopsis">
 
-B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-rxbind>]
+B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
     [B<-allow-dotted-principal>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
     [B<-help>]
 
@@ -55,18 +55,29 @@ suites. Provide the command name and all option names in full.
 
 =over 4
 
+=item B<-d> <I<debug level>>
+
+Sets the detail level for the debugging trace written to the
+F</usr/afs/logs/VLLog> file. Provide one of the following values, each
+of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
+and C<125>. 
+
 =item B<-p> <I<number of threads>>
 
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
 Provide an integer between C<3> and C<16>. The default is C<9>.
 
-=item B<-nojumbo>
+=item B<-jumbo>
 
-Prohibits the server from sending or receiving jumbograms. A jumbogram is
+Allows the server to send and receive jumbograms. A jumbogram is
 a large-size packet composed of 2 to 4 normal Rx data packets that share
-the same header. The VL Server uses jumbograms by default, but some
+the same header. The VL Server does not use jumbograms by default, as some
 routers are not capable of properly breaking the jumbogram into smaller
 packets and reassembling them.
+
+=item B<-nojumbo>
+
+Deprecated; Jumbograms are disabled by default. 
 
 =item B<-enable_peer_stats>
 
