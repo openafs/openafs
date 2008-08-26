@@ -740,13 +740,15 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         }
         lock_ReleaseMutex(&cm_Freelance_Lock);
         lock_ObtainWrite(&cm_scacheLock);
-        if (scp == NULL)
-            scp = cm_GetNewSCache();    /* returns scp->mx held */
-	if (scp == NULL) {
-	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
-            lock_ReleaseWrite(&cm_scacheLock);
-	    return CM_ERROR_WOULDBLOCK;
-	}
+        if (scp == NULL) {
+            scp = cm_GetNewSCache();    /* returns scp->rw held */
+            if (scp == NULL) {
+                osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
+                lock_ReleaseWrite(&cm_scacheLock);
+                return CM_ERROR_WOULDBLOCK;
+            }
+        } else
+            lock_ObtainWrite(&scp->rw);
 
         scp->fid = *fidp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
@@ -775,7 +777,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->dataVersion=cm_data.fakeDirVersion;
         scp->bufDataVersionLow=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
-	lock_ReleaseWrite(&scp->rw);
+        lock_ReleaseWrite(&scp->rw);
 	*outScpp = scp;
 #ifdef DEBUG_REFCOUNT
 	afsi_log("%s:%d cm_GetSCache (2) scp 0x%p ref %d", file, line, scp, scp->refCount);
@@ -820,7 +822,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
         
     /* now, if we don't have the fid, recycle something */
-    scp = cm_GetNewSCache();    /* returns scp->mx held */
+    scp = cm_GetNewSCache();    /* returns scp->rw held */
     if (scp == NULL) {
 	osi_Log0(afsd_logp,"cm_GetNewSCache unable to obtain *new* scache entry");
 	lock_ReleaseWrite(&cm_scacheLock);
