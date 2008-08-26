@@ -387,6 +387,11 @@ afs_GetDownD(int anumber, int *aneedSpace)
     afs_hyper_t maxVictimTime;	/* youngest (largest LRU time) victim */
     afs_uint32 maxVictimPtr;	/* where it is */
     int discard;
+    int vfslocked;
+
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+    vfslocked = VFS_LOCK_GIANT(afs_globalVFS);
+#endif
 
     AFS_STATCNT(afs_GetDownD);
     if (CheckLock(&afs_xdcache) != -1)
@@ -396,9 +401,14 @@ afs_GetDownD(int anumber, int *aneedSpace)
      * because we should try to free space even if anumber <=0 */
     if (!aneedSpace || *aneedSpace <= 0) {
 	anumber -= afs_freeDCCount;
-	if (anumber <= 0)
+	if (anumber <= 0) {
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+	  VFS_UNLOCK_GIANT(vfslocked);
+#endif
 	    return;		/* enough already free */
+	}
     }
+
     /* bounds check parameter */
     if (anumber > MAXATONCE)
 	anumber = MAXATONCE;	/* all we can do */
@@ -657,6 +667,11 @@ afs_GetDownD(int anumber, int *aneedSpace)
 		break;
 	}
     }				/* big while loop */
+
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+    VFS_UNLOCK_GIANT(vfslocked);
+#endif
+
     return;
 
 }				/*afs_GetDownD */

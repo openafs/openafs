@@ -19,7 +19,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#ifndef AFS_FBSD_ENV
+
 
 #ifdef AFS_AIX41_ENV
 #include "sys/lockl.h"
@@ -170,4 +170,4 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
-#endif
+

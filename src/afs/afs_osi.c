@@ -58,6 +58,11 @@ osi_Init(void)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t) 0;
 #elif defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV) && defined(WITNESS)
+    /* "lock_initalized" (sic) can panic, checks a flag bit
+     * is unset _before_ init */
+    memset(&afs_global_mtx, 0, sizeof(struct mtx));
+#endif
     mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if !defined(AFS_DARWIN80_ENV)
@@ -134,6 +139,7 @@ osi_Active(register struct vcache *avc)
 void
 osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
+    int vfslocked;
     afs_hyper_t origDV;
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
@@ -164,9 +170,19 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->m.Length);
 
     ReleaseWriteLock(&avc->lock);
+#ifdef AFS_FBSD70_ENV
+    vfslocked = VFS_LOCK_GIANT(AFSTOV(avc)->v_mount);
+#endif
+#ifndef AFS_FBSD70_ENV
     AFS_GUNLOCK();
+#endif
     osi_VM_FlushPages(avc, credp);
+#ifndef AFS_FBSD70_ENV
     AFS_GLOCK();
+#endif
+#ifdef AFS_FBSD70_ENV
+    VFS_UNLOCK_GIANT(vfslocked);
+#endif
     ObtainWriteLock(&avc->lock, 88);
 
     /* do this last, and to original version, since stores may occur
