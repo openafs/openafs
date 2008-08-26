@@ -216,6 +216,7 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
     }
 
     if (lockp->level != 0) {
+        int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
@@ -223,9 +224,11 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
                 free(lockRefp);
+                found = 1;
                 break;
             }
         }
+        osi_assertx(found, "read lock not found in TLS queue");
 
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
@@ -261,6 +264,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
     }
 
     if (lockp->level != 0) {
+        int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
@@ -268,9 +272,11 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
                 free(lockRefp);
+                found = 1;
                 break;
             }
         }
+        osi_assertx(found, "write lock not found in TLS queue");
 
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
@@ -281,6 +287,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
     EnterCriticalSection(csp);
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "write lock not held");
+    osi_assertx(lockp->tid == thrd_Current(), "write lock not held by current thread");
 
     lockp->tid = 0;
 
@@ -310,6 +317,7 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
     EnterCriticalSection(csp);
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "write lock not held");
+    osi_assertx(lockp->tid == thrd_Current(), "write lock not held by current thread");
 
     /* convert write lock to read lock */
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
@@ -415,6 +423,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
     }
 
     if (lockp->level != 0) {
+        int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
@@ -422,10 +431,12 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
             if (lockRefp->type == OSI_LOCK_MUTEX && lockRefp->mx == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
                 free(lockRefp);
+                found = 1;
                 break;
             }
         }
     
+        osi_assertx(found, "mutex lock not found in TLS queue");
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
     }
@@ -435,6 +446,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
     EnterCriticalSection(csp);
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "mutex not held");
+    osi_assertx(lockp->tid == thrd_Current(), "mutex not held by current thread");
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
     lockp->tid = 0;
