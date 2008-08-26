@@ -1232,8 +1232,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     afs_InitFakeStat(&fakestate);
 
     AFS_DISCON_LOCK();
-
-    /*printf("Looking up %s\n", aname);*/
     
     if ((code = afs_InitReq(&treq, acred)))
 	goto done;
@@ -1431,7 +1429,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     if (tvc) {
 	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
 	    /* need read access on dir to stat non-directory / non-link */
+#ifndef AFS_FBSD80_ENV
 	    afs_PutVCache(tvc);
+#endif
 	    *avcp = NULL;
 	    code = EACCES;
 	    goto done;
@@ -1588,7 +1588,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 
 	    /* if the vcache isn't usable, release it */
 	    if (tvc && !(tvc->states & CStatd)) {
-		afs_PutVCache(tvc);
+#ifndef  AFS_FBSD80_ENV
+	      afs_PutVCache(tvc);
+#endif
 		tvc = NULL;
 	    }
 	} else {
@@ -1651,7 +1653,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		ReleaseWriteLock(&tvc->lock);
 
 		if (code) {
+#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(tvc);
+#endif
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    goto done;
@@ -1673,7 +1677,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		    } else {
 			tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
 		    }
+#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(uvc);	/* we're done with it */
+#endif
 
 		    if (!tvc) {
 			code = ENOENT;
@@ -1698,7 +1704,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    }
 		} else {
+#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(tvc);
+#endif
 		    code = ENOENT;
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);

@@ -2206,6 +2206,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	call->conn = conn;
 	rxi_ResetCall(call, 1);
     } else {
+
 	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
 
 	MUTEX_EXIT(&rx_freeCallQueue_lock);
@@ -2314,8 +2315,13 @@ rxi_Alloc(register size_t size)
     register char *p;
 
     rx_MutexAdd1Increment2(rxi_Allocsize, (afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
-    p = (char *)osi_Alloc(size);
 
+p = (char *)
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+  afs_osi_Alloc_NoSleep(size);
+#else
+  osi_Alloc(size);
+#endif
     if (!p)
 	osi_Panic("rxi_Alloc error");
     memset(p, 0, size);
@@ -5260,7 +5266,12 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		xmitList = (struct rx_packet **)
-		    osi_Alloc(maxXmitPackets * sizeof(struct rx_packet *));
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+		    /* XXXX else we must drop any mtx we hold */
+		    afs_osi_Alloc_NoSleep(maxXmitPackets * sizeof(struct rx_packet *));
+#else
+		osi_Alloc(maxXmitPackets * sizeof(struct rx_packet *));
+#endif
 		if (xmitList == NULL)
 		    osi_Panic("rxi_Start, failed to allocate xmit list");
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {

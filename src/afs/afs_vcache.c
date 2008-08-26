@@ -1122,6 +1122,11 @@ restart:
     insmntque(tvc, afs_globalVFS);
 #endif /* AFS_OSF_ENV */
 #endif /* AFS_DUX40_ENV */
+#ifdef AFS_FBSD70_ENV
+#ifndef AFS_FBSD80_ENV /* yup.  they put it back. */
+    insmntque(AFSTOV(tvc), afs_globalVFS);
+#endif
+#endif
 #if defined(AFS_SGI_ENV)
     VN_SET_DPAGES(&(tvc->v), (struct pfdat *)NULL);
     osi_Assert((tvc->v.v_flag & VINACT) == 0);
@@ -1822,6 +1827,20 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
+#elif defined(AFS_FBSD80_ENV)
+	iheldthelock = VOP_ISLOCKED(vp);
+	if (!iheldthelock) {
+	    /* nosleep/sleep lock order reversal */
+	    int glocked = ISAFS_GLOCK();
+	    if (glocked)
+		AFS_GUNLOCK();
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+	    if (glocked)
+		AFS_GLOCK();
+	}
+	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, 0);
 #elif defined(AFS_FBSD60_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
