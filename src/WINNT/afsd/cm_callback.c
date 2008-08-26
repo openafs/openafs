@@ -1949,13 +1949,13 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
             cm_volume_t * volp;
             int i;
 
+            cm_ForceNewConnections(tsp);
+
             lock_ObtainMutex(&tsp->mx);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 tsp->flags |= CM_SERVERFLAG_DOWN;
                 tsp->downTime = time(NULL);
             }
-            cm_ForceNewConnections(tsp);
-
             /* Now update the volume status */
             for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
                 for (i=0; i<NUM_SERVER_VOLS; i++) {
