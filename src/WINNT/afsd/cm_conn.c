@@ -658,6 +658,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    case UAEACCES 	   : s = "UAEACCES";           break;
 	    case ENOENT            : s = "ENOENT"; 	       break;
 	    case UAENOENT          : s = "UAENOENT";           break;
+            case EEXIST            : s = "EEXIST";             break;
+            case UAEEXIST          : s = "UAEEXIST";           break;
 	    case VICECONNBAD	   : s = "VICECONNBAD";	       break;
 	    case VICETOKENDEAD     : s = "VICETOKENDEAD";      break;
             case WSAEWOULDBLOCK    : s = "WSAEWOULDBLOCK";     break;
