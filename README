@@ -43,8 +43,8 @@ A  Configuring
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
          i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
          i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61,
-         i386_fbsd_62, i386_fbsd_70
-         (client does not work)
+         i386_fbsd_62, i386_fbsd_70, i386_fbsd_80
+         (client may work on 70)
       i386_linux22, i386_linux24, i386_linux26
       i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
          i386_nbsd40
@@ -228,9 +228,9 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client does not currently work.  The remaining problems
-   mostly have to do with locking, vnode refcounting, and packaging.  The
-   server should work.
+   The FreeBSD client may now work; It is tested on 7.0 and on current
+   as of the commit date.
+
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
@@ -238,7 +238,10 @@ G  FreeBSD Notes
 
    You also need access to your kernel build directory for the opt_global.h
    include file.  Use the --with-bsd-kernel-build= configure option if your
-   kernel build is not GENERIC in the standard place.
+   kernel build is not GENERIC in the standard place. If 
+   /usr/src/sys/i386/compile/GENERIC does not point to 
+   /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the 
+   build.
 
    There is no server package, but I am told that "make install" will put
    server binaries in /usr/afs.

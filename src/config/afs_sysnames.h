@@ -186,6 +186,7 @@
 #define SYS_NAME_ID_i386_fbsd_61        2113
 #define SYS_NAME_ID_i386_fbsd_62        2114
 #define SYS_NAME_ID_i386_fbsd_70        2115
+#define SYS_NAME_ID_i386_fbsd_80        2116
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201
