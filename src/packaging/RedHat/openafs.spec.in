@@ -1362,7 +1362,7 @@ dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 
 %preun -n dkms-%{name}
-dkms remove -m %{namee} -v %{dkms_version} --rpm_safe_upgrade --all ||:
+dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %endif
 
