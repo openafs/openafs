@@ -192,6 +192,8 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 #else
 #if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
+#elif   defined(_POSIX_PTHREAD_SEMANTICS) && defined(AFS_SUN5_ENV)
+    getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
 #endif
