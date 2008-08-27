@@ -747,9 +747,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
                 lock_ReleaseWrite(&cm_scacheLock);
                 return CM_ERROR_WOULDBLOCK;
             }
-        } else
+        } else {
+            lock_ReleaseWrite(&cm_scacheLock);
             lock_ObtainWrite(&scp->rw);
-
+            lock_ObtainWrite(&cm_scacheLock);
+        }
         scp->fid = *fidp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
@@ -778,12 +780,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->bufDataVersionLow=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
         lock_ReleaseWrite(&scp->rw);
+        lock_ReleaseWrite(&cm_scacheLock);
 	*outScpp = scp;
 #ifdef DEBUG_REFCOUNT
 	afsi_log("%s:%d cm_GetSCache (2) scp 0x%p ref %d", file, line, scp, scp->refCount);
 	osi_Log1(afsd_logp,"cm_GetSCache (2) scp 0x%p", scp);
 #endif
-        lock_ReleaseWrite(&cm_scacheLock);
         return 0;
     }
     // end of yj code
