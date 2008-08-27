@@ -1963,13 +1963,14 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                         cm_req_t req;
 
                         cm_InitReq(&req);
-
+                        lock_ReleaseMutex(&tsp->mx);
                         code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                  &req, CM_GETVOL_FLAG_NO_LRU_UPDATE | CM_GETVOL_FLAG_NO_RESET, &volp);
+                        lock_ObtainMutex(&tsp->mx);
                         if (code == 0) {    
                             cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
                             cm_PutVolume(volp);
-                        }
+                        }       
                     }
                 }
             }
