@@ -290,6 +290,9 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     cm_InitReq(&req);
 
     maxconns = max(cm_numFileServers,cm_numVldbServers);
+    if (maxconns == 0)
+        return;
+
     conns = (cm_conn_t **)malloc(maxconns * sizeof(cm_conn_t *));
     rxconns = (struct rx_connection **)malloc(maxconns * sizeof(struct rx_connection *));
     conntimer = (afs_int32 *)malloc(maxconns * sizeof (afs_int32));
