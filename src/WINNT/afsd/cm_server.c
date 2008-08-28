@@ -305,7 +305,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     {
         lock_ObtainRead(&cm_serverLock);
         nconns = 0;
-        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp, nconns++) {
+        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
             if (tsp->type != CM_SERVER_FILE || 
                 tsp->cellp == NULL ||           /* SetPref only */
                 cellp && cellp != tsp->cellp)
@@ -340,6 +340,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             if (conntimer[nconns] = (isDown ? 1 : 0))
                 rx_SetConnDeadTime(rxconns[nconns], 10);
+
+            nconns++;
         }
         lock_ReleaseRead(&cm_serverLock);
 
@@ -602,7 +604,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
-        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp, nconns++) {
+        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
             if (tsp->type != CM_SERVER_VLDB ||
                 tsp->cellp == NULL ||           /* SetPref only */
                 cellp && cellp != tsp->cellp)
@@ -638,6 +640,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             conntimer[nconns] = (isDown ? 1 : 0);
             if (isDown)
                 rx_SetConnDeadTime(rxconns[nconns], 10);
+
+            nconns++;
         }
         lock_ReleaseRead(&cm_serverLock);
 
