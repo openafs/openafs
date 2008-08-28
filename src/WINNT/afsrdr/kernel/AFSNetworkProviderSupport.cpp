@@ -5,7 +5,7 @@
 #include "AFSCommon.h"
 
 NTSTATUS
-AFSAddConnection( IN RedirConnectionCB *ConnectCB,
+AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT PULONG ResultStatus,
                   IN OUT PULONG ReturnOutputBufferLength)
 {
@@ -34,12 +34,10 @@ AFSAddConnection( IN RedirConnectionCB *ConnectCB,
         while( pConnection != NULL)
         {
 
-            if( ( ConnectCB->LocalName != L'\0' &&
-                  pConnection->LocalName == ConnectCB->LocalName) 
-                            ||
-                ( RtlCompareUnicodeString( &uniRemoteName,
-                                           &pConnection->RemoteName,
-                                           TRUE) == 0))
+            if( pConnection->LocalName == ConnectCB->LocalName &&
+                RtlCompareUnicodeString( &uniRemoteName,
+                                         &pConnection->RemoteName,
+                                         TRUE) == 0)
             {
 
                 break;
@@ -48,16 +46,19 @@ AFSAddConnection( IN RedirConnectionCB *ConnectCB,
             pConnection = pConnection->fLink;
         }
 
-        if( pConnection != NULL &&
-            pConnection->LocalName == ConnectCB->LocalName)
+        if( pConnection != NULL)
         {
 
             *ResultStatus = WN_ALREADY_CONNECTED;
 
             *ReturnOutputBufferLength = sizeof( ULONG);
 
+            DbgPrint("AddConnection Already connected remote %wZ Local %S\n", &uniRemoteName, &ConnectCB->LocalName);
+
             try_return( ntStatus);
         }
+
+        DbgPrint("AddConnection Adding remote %wZ Local %S\n", &uniRemoteName, &ConnectCB->LocalName);
 
         //
         // Validate the remote name
@@ -165,7 +166,7 @@ try_exit:
 }
 
 NTSTATUS
-AFSCancelConnection( IN RedirConnectionCB *ConnectCB,
+AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                      IN OUT PULONG ResultStatus,
                      IN OUT PULONG ReturnOutputBufferLength)
 {
@@ -219,7 +220,6 @@ AFSCancelConnection( IN RedirConnectionCB *ConnectCB,
         if( pConnection == NULL)
         {
 
-
             *ResultStatus = WN_NOT_CONNECTED;
 
             *ReturnOutputBufferLength = sizeof( ULONG);
@@ -253,7 +253,7 @@ try_exit:
 }
 
 NTSTATUS
-AFSGetConnection( IN RedirConnectionCB *ConnectCB,
+AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT WCHAR *RemoteName,
                   IN ULONG RemoteNameBufferLength,
                   IN OUT PULONG ReturnOutputBufferLength)
@@ -316,7 +316,7 @@ try_exit:
 }
 
 NTSTATUS
-AFSListConnections( IN OUT RedirConnectionCB *ConnectCB,
+AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                     IN ULONG ConnectionBufferLength,
                     IN OUT PULONG ReturnOutputBufferLength)
 {
@@ -357,11 +357,11 @@ AFSListConnections( IN OUT RedirConnectionCB *ConnectCB,
                            pConnection->RemoteName.Buffer,
                            pConnection->RemoteName.Length);
 
-            ulCopiedLength = FIELD_OFFSET( AFSProviderConnectionCB, RemoteName) +
+            ulCopiedLength = FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
                                                     pConnection->RemoteName.Length;
 
-            ConnectCB = (RedirConnectionCB *)((char *)ConnectCB + 
-                                                            FIELD_OFFSET( AFSProviderConnectionCB, RemoteName) +
+            ConnectCB = (AFSNetworkProviderConnectionCB *)((char *)ConnectCB + 
+                                                            FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
                                                             pConnection->RemoteName.Length);
 
             pConnection = pConnection->fLink;

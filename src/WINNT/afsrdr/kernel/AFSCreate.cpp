@@ -462,7 +462,29 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( pFcb != NULL)
             {
 
-                try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
+                //
+                // Check if the returned Fcb is an exact match on the name. If it is
+                // then fail with a collision otherwise we will insert the new entry
+                // as a case sensitive entry
+                //
+
+                if( RtlCompareUnicodeString( &pFcb->DirEntry->DirectoryEntry.FileName,
+                                             &uniComponentName,
+                                             FALSE) == 0)
+                {
+
+                    try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
+                }
+
+                //
+                // Drop the Fcb and attmept to create the new entry
+                //
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                bReleaseFcb = FALSE;
+
+                pFcb = NULL;
             }
 
             //
@@ -502,16 +524,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             //
             // Not found
             //
-
-            try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
-        }
-
-        //
-        // If we have a component name then fail the request
-        //
-
-        if( uniComponentName.Length > 0)
-        {
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -1052,14 +1064,18 @@ AFSProcessCreate( IN PIRP             Irp,
 
                 pParentNode = (AFSDirEntryCB *)pParentNode->ListEntry.fLink;
 
-                KeQuerySystemTime( &pParentNode->DirectoryEntry.LastWriteTime);
+                if( pParentNode != NULL)
+                {
 
-                //
-                // Convert it to a local time
-                //
+                    KeQuerySystemTime( &pParentNode->DirectoryEntry.LastWriteTime);
 
-                ExSystemTimeToLocalTime( &pParentNode->DirectoryEntry.LastWriteTime,
-                                         &pParentNode->DirectoryEntry.LastWriteTime);
+                    //
+                    // Convert it to a local time
+                    //
+
+                    ExSystemTimeToLocalTime( &pParentNode->DirectoryEntry.LastWriteTime,
+                                             &pParentNode->DirectoryEntry.LastWriteTime);
+                }
             }
 
             //
@@ -1268,11 +1284,12 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
         // We do a quick check to see if the target name is currently active
         //
 
-        ulFileIndex = AFSGenerateCRC( TargetName);
+        ulFileIndex = AFSGenerateCRC( TargetName,
+                                      FALSE);
 
-        AFSLocateDirEntry( Fcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
-                           ulFileIndex,
-                           &pDirEntry);
+        AFSLocateCaseSensitiveDirEntry( Fcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                        ulFileIndex,
+                                        &pDirEntry);
 
         if( pDirEntry != NULL)       
         {
@@ -1286,7 +1303,23 @@ AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
         else
         {
 
-            Irp->IoStatus.Information = FILE_DOES_NOT_EXIST;
+            ulFileIndex = AFSGenerateCRC( TargetName,
+                                          TRUE);
+
+            AFSLocateCaseInsensitiveDirEntry( Fcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                              ulFileIndex,
+                                              &pDirEntry);
+
+            if( pDirEntry != NULL)
+            {
+
+                Irp->IoStatus.Information = FILE_EXISTS;
+            }
+            else
+            {
+
+                Irp->IoStatus.Information = FILE_DOES_NOT_EXIST;
+            }
         }
 
         //
@@ -1375,6 +1408,7 @@ AFSProcessOpen( IN PIRP Irp,
     USHORT usShareAccess;
     BOOLEAN bAllocatedCcb = FALSE;
     ULONG ulAdditionalFlags = 0, ulOptions = 0;
+    BOOLEAN bDecrementOpenRefCount = FALSE;
 
     __Enter
     {
@@ -1407,6 +1441,31 @@ AFSProcessOpen( IN PIRP Irp,
             {
 
                 AFSPrint("AFSProcessOpen Access check failure Status %08lX\n", ntStatus);
+
+                try_return( ntStatus);
+            }
+        }
+
+        //
+        // If the caller is asking for write access then try to flush the image section
+        //
+
+        if( FlagOn( *pDesiredAccess, FILE_WRITE_DATA) || 
+            (ulOptions & FILE_DELETE_ON_CLOSE)) 
+        {
+
+            InterlockedIncrement( &Fcb->OpenReferenceCount);
+
+            bDecrementOpenRefCount = TRUE;
+
+            if( !MmFlushImageSection( &Fcb->NPFcb->SectionObjectPointers,
+                                      MmFlushForWrite)) 
+            {
+
+                ntStatus = (ulOptions & FILE_DELETE_ON_CLOSE) ? STATUS_CANNOT_DELETE :
+                                                                        STATUS_SHARING_VIOLATION;
+
+                AFSPrint("AFSProcessOpen Failed to purge image section Status %08lX\n", ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1605,6 +1664,12 @@ AFSProcessOpen( IN PIRP Irp,
         Irp->IoStatus.Information = FILE_OPENED;
 
 try_exit:
+
+        if( bDecrementOpenRefCount)
+        {
+
+            InterlockedDecrement( &Fcb->OpenReferenceCount);
+        }
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1857,6 +1922,8 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     BOOLEAN bRemoveFcb = FALSE, bAllocatedCcb = FALSE;
     UNICODE_STRING uniFullFileName;
     AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
+    AFSFileID stFileID;
+    AFSFcb *pGrandParentFcb = NULL;
 
     __Enter
     {
@@ -1918,14 +1985,92 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         }
 
         //
+        // Be sure to get the correct fid for the parent
+        //
+
+        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            //
+            // Just the FID of the node
+            //
+
+            stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
+        }
+        else
+        {
+
+            //
+            // MP or SL
+            //
+
+            stFileID = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+
+            //
+            // If this is zero then we need to evaluate it
+            //
+
+            if( stFileID.Hash == 0)
+            {
+
+                AFSDirEnumEntry *pDirEntry = NULL;
+                AFSFcb *pGrandParentDcb = NULL;
+
+                if( ParentDcb->ParentFcb == NULL ||
+                    ParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                {
+
+                    stFileID = ParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+                }
+                else
+                {
+
+                    stFileID = ParentDcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+                }
+
+                ntStatus = AFSEvaluateTargetByID( &stFileID,
+                                                  &ParentDcb->DirEntry->DirectoryEntry.FileId,
+                                                  &pDirEntry);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    try_return( ntStatus);
+                }
+
+                ParentDcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+                stFileID = pDirEntry->TargetFileId;
+
+                ExFreePool( pDirEntry);
+            }
+        }
+
+        //
         // Issue the open request to the service
         //
+
+        DbgPrint("AFSCreate performing PIOCtl open on path %wZ for parent fid %08lX-%08lX-%08lX-%08lX tid %08lX-%08lX-%08lX-%08lX Passed FID %08lX-%08lX-%08lX-%08lX\n",
+                                                            &pIrpSp->FileObject->FileName,
+                                                            ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                                            ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                                            ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                                            ParentDcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                                            ParentDcb->DirEntry->DirectoryEntry.TargetFileId.Cell,
+                                                            ParentDcb->DirEntry->DirectoryEntry.TargetFileId.Volume,
+                                                            ParentDcb->DirEntry->DirectoryEntry.TargetFileId.Vnode,
+                                                            ParentDcb->DirEntry->DirectoryEntry.TargetFileId.Unique,
+                                                            stFileID.Cell,
+                                                            stFileID.Volume,
+                                                            stFileID.Vnode,
+                                                            stFileID.Unique);
+
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_OPEN,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
                                       0,
                                       NULL,
-                                      &ParentDcb->DirEntry->DirectoryEntry.FileId,
+                                      &stFileID,
                                       (void *)&stPIOCtlOpen,
                                       sizeof( AFSPIOCtlOpenCloseRequestCB),
                                       NULL,

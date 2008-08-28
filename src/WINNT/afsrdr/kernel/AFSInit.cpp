@@ -61,6 +61,12 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         }
 
         //
+        // Initialize the debug log
+        //
+
+        AFSInitializeDbgLog();
+
+        //
         // Perform some initialization
         //
 
@@ -108,16 +114,33 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
                        RegistryPath->Length);
 
         RtlInitUnicodeString( &uniDeviceName, 
-                              AFS_DEVICE_NAME);
-        
+                              AFS_CONTROL_DEVICE_NAME);
+
+#ifdef NO_SECURE_CREATE
+
         ntStatus = IoCreateDevice( DriverObject,
                                    sizeof( AFSDeviceExt),
                                    &uniDeviceName,
-                                   DEVICE_AFS,
+                                   FILE_DEVICE_NETWORK_FILE_SYSTEM,
                                    0,
                                    FALSE,
                                    &AFSDeviceObject);
         
+#endif
+
+//#ifdef SECURE_CREATE
+
+        ntStatus = IoCreateDeviceSecure( DriverObject,
+                                         sizeof( AFSDeviceExt),
+                                         &uniDeviceName,
+                                         FILE_DEVICE_NETWORK_FILE_SYSTEM,
+                                         0,
+                                         FALSE, 
+                                         &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX,
+                                         (LPCGUID)&GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
+                                         &AFSDeviceObject);
+//#endif
+
         if( !NT_SUCCESS( ntStatus))
         {
 
@@ -327,6 +350,8 @@ try_exit:
         {
 
             AFSPrint("AFS Driver Entry failed to initialize %08lX\n", ntStatus);
+
+            AFSTearDownDbgLog();
 
             if( AFSDeviceObject != NULL)
             {

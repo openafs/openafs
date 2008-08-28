@@ -41,6 +41,20 @@ extern UNICODE_STRING      AFSPIOCtlName;
 
 extern ULONG               AFSAllocationMemoryLevel;
 
+#ifdef AFS_DEBUG_LOG
+
+extern ERESOURCE           AFSDbgLogLock;
+
+extern ULONG               AFSDbgLogRemainingLength;
+
+extern char               *AFSDbgCurrentBuffer;
+
+extern char               *AFSDbgBuffer;
+
+extern ULONG               AFSDbgLogCounter;
+
+#endif
+
 }
 
 #endif /* _AFS_EXTERN_H */

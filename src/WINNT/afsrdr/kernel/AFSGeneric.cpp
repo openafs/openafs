@@ -229,7 +229,8 @@ AFSBuildCRCTable()
 //
 
 ULONG
-AFSGenerateCRC( IN PUNICODE_STRING FileName)
+AFSGenerateCRC( IN PUNICODE_STRING FileName,
+                IN BOOLEAN UpperCaseName)
 {
 
     ULONG crc;
@@ -245,13 +246,24 @@ AFSGenerateCRC( IN PUNICODE_STRING FileName)
 
     crc = 0xFFFFFFFFL;
 
-    RtlUpcaseUnicodeString( &UpcaseString,
-                            FileName,
-                            TRUE);
+    if( UpperCaseName)
+    {
 
-    lpbuffer = UpcaseString.Buffer;
+        RtlUpcaseUnicodeString( &UpcaseString,
+                                FileName,
+                                TRUE);
 
-    size = (UpcaseString.Length/sizeof( WCHAR));
+        lpbuffer = UpcaseString.Buffer;
+
+        size = (UpcaseString.Length/sizeof( WCHAR));
+    }
+    else
+    {
+
+        lpbuffer = FileName->Buffer;
+
+        size = (FileName->Length/sizeof( WCHAR));
+    }
 
     while (size--) 
     {
@@ -260,7 +272,11 @@ AFSGenerateCRC( IN PUNICODE_STRING FileName)
         crc = temp1 ^ temp2;
     }
 
-    RtlFreeUnicodeString( &UpcaseString);
+    if( UpperCaseName)
+    {
+
+        RtlFreeUnicodeString( &UpcaseString);
+    }
 
     crc ^= 0xFFFFFFFFL;
 
@@ -650,14 +666,22 @@ AFSInitializeControlFilter()
 
         ExInitializeResourceLite( &pDeviceExt->Specific.Control.CommServiceCB.ResultPoolLock);
 
+        ExInitializeResourceLite( &pDeviceExt->Specific.Control.ExtentReleaseResource);
+
+
         //
-        // And the event
+        // And the events
         //
 
         KeInitializeEvent( &pDeviceExt->Specific.Control.CommServiceCB.IrpPoolHasEntries,
                            NotificationEvent,
                            FALSE);
 
+        KeInitializeEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent,
+                           NotificationEvent,
+                           FALSE);
+
+        pDeviceExt->Specific.Control.ExtentReleaseSequence = 0;
         //
         // Set the initial state of the irp pool
         //
@@ -744,10 +768,10 @@ AFSInitializeDirectory( IN AFSFcb *Dcb)
         //
 
         pDirNode = AFSInitDirEntry( &Dcb->ParentFcb->DirEntry->DirectoryEntry.FileId,
-                                      &uniDirName,
-                                      NULL,
-                                      &stDirEnumEntry,
-                                      (ULONG)-1);
+                                    &uniDirName,
+                                    NULL,
+                                    &stDirEnumEntry,
+                                    (ULONG)-1);
 
         if( pDirNode == NULL)
         {
@@ -763,6 +787,8 @@ AFSInitializeDirectory( IN AFSFcb *Dcb)
         Dcb->Specific.Directory.DirectoryNodeListHead = pDirNode;
 
         Dcb->Specific.Directory.DirectoryNodeListTail = pDirNode;
+
+        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
         //
         // And the .. entry
@@ -800,6 +826,8 @@ AFSInitializeDirectory( IN AFSFcb *Dcb)
         pDirNode->ListEntry.bLink = (void *)Dcb->Specific.Directory.DirectoryNodeListTail;
 
         Dcb->Specific.Directory.DirectoryNodeListTail = pDirNode;
+
+        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
 try_exit:
 
@@ -947,7 +975,11 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
         // Create a CRC for the file
         //
 
-        pDirNode->TreeEntry.Index = AFSGenerateCRC( &pDirNode->DirectoryEntry.FileName);
+        pDirNode->CaseSensitiveTreeEntry.Index = AFSGenerateCRC( &pDirNode->DirectoryEntry.FileName,
+                                                                 FALSE);
+
+        pDirNode->CaseInsensitiveTreeEntry.Index = AFSGenerateCRC( &pDirNode->DirectoryEntry.FileName,
+                                                                   TRUE);
 
         pDirNode->DirectoryEntry.FileIndex = FileIndex; 
 
@@ -1193,6 +1225,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
     AFSFcb      *pDcb = NULL, *pFcb = NULL, *pNextFcb = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSDirEntryCB *pCurrentDirEntry = NULL;
+    BOOLEAN     bIsChild = FALSE;
 
     __Enter
     {
@@ -1238,7 +1271,9 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         // Tear down the directory information
         //
 
-        pDcb->Specific.Directory.DirectoryNodeHdr.TreeHead = NULL;
+        pDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = NULL;
+
+        pDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = NULL;
 
         //
         // Reset the directory list information
@@ -1253,6 +1288,30 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
             if( pFcb != NULL)
             {
+
+                //
+                // Do this prior to blocking the Fcb since there could be a thread
+                // holding the Fcb waiting for an extent
+                //
+
+                if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                {
+
+                    //
+                    // Clear out the extents
+                    //
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                    TRUE);
+
+                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                0,
+                                FALSE);
+
+                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+                }
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -1274,7 +1333,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                 AFSReleaseResource( pDevExt->Specific.RDR.FileIDTree.TreeLock);
 
                 ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
-                    
+
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
             }
 
@@ -1316,12 +1375,32 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         while( pFcb != NULL)
         {
 
-            AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                            TRUE);
+            bIsChild = AFSIsChildOfParent( pDcb,
+                                           pFcb);
 
-            if( AFSIsChildOfParent( pDcb,
-                                    pFcb))
+            if( bIsChild)
             {
+                if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                {
+
+                    //
+                    // Clear out the extents
+                    //
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                    TRUE);
+
+                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                0,
+                                FALSE);
+
+                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+                }
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
 
                 SetFlag( pFcb->Flags, AFS_FCB_INVALID);
 
@@ -1334,12 +1413,12 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                 AFSReleaseResource( pDevExt->Specific.RDR.FileIDTree.TreeLock);
 
                 ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
             }
 
             pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
             
-            AFSReleaseResource( &pFcb->NPFcb->Resource);
-
             pFcb = pNextFcb;
         }
 

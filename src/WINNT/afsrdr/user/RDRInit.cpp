@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #include <devioctl.h>
 
@@ -769,3 +770,121 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     }
     return;
 }
+
+
+
+DWORD 
+RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSReleaseFileExtentsCB *requestBuffer = NULL;
+    AFSReleaseFileExtentsResultCB *responseBuffer = NULL;
+    AFSReleaseFileExtentsResultDoneCB * doneBuffer = NULL;
+    DWORD responseBufferLen;
+    bool bError = false;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_RELEASE_FILE_EXTENTS request - number %08lX\n",
+                  numOfExtents);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    requestBuffer = (AFSReleaseFileExtentsCB *)malloc( sizeof( AFSReleaseFileExtentsCB));
+    responseBufferLen = (sizeof( AFSReleaseFileExtentsResultCB) + sizeof( AFSReleaseFileExtentsResultFileCB)) * numOfExtents;
+    responseBuffer = (AFSReleaseFileExtentsResultCB *)malloc( responseBufferLen);
+
+
+    if( requestBuffer && responseBuffer)
+    {
+
+	memset( requestBuffer, '\0', sizeof( AFSReleaseFileExtentsCB));
+	memset( responseBuffer, '\0', responseBufferLen);
+
+        // Set the number of extents to be freed
+        // Leave the rest of the structure as zeros to indicate free anything
+        requestBuffer->ExtentCount = numOfExtents;
+
+        requestBuffer->HeldExtentCount = numOfHeldExtents;
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_RELEASE_FILE_EXTENTS,
+                              (void *)requestBuffer,
+                              sizeof( AFSReleaseFileExtentsCB),
+                              (void *)responseBuffer,
+                              responseBufferLen,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+
+        //
+        // Go process the request
+        //
+
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"IOCTL_AFS_RELEASE_FILE_EXTENTS returns - serial number %08lX flags %lX FileCount %lX\n",
+                      responseBuffer->SerialNumber, responseBuffer->Flags, responseBuffer->FileCount);
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
+
+        rc = RDR_ProcessReleaseFileExtentsResult( responseBuffer, bytesReturned);
+
+        doneBuffer = (AFSReleaseFileExtentsResultDoneCB *)(void *)requestBuffer;
+	memset( requestBuffer, '\0', sizeof( AFSReleaseFileExtentsResultDoneCB));
+        doneBuffer->SerialNumber = responseBuffer->SerialNumber;
+
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE - serial number %08lX\n",
+                      doneBuffer->SerialNumber);
+                        
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE,
+                              (void *)doneBuffer,
+                              sizeof( AFSReleaseFileExtentsResultDoneCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            // log the error, nothing to do
+        }
+
+        
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+    if (responseBuffer)
+        free( responseBuffer);
+
+    return rc;
+}
+

@@ -22,6 +22,9 @@
 #include "afsd.h"
 #include "cm_memmap.h"
 
+/* From RDR Prototypes.h */
+extern DWORD RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents);
+
 #ifdef DEBUG
 #define TRACE_BUFFER 1
 #endif
@@ -453,6 +456,14 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->waitCount = 0;
                 bp->waitRequests = 0;
                 bp->flags &= ~CM_BUF_WAITING;
+                if (bp->flags & CM_BUF_REDIR) {
+                    /* 
+                     * extent was not returned by the file system driver.
+                     * clean up the mess.
+                     */
+                    bp->dataVersion = CM_BUF_VERSION_BAD;
+                    bp->flags &= ~CM_BUF_REDIR;
+                }
                 bp++;
             }       
         }
@@ -803,6 +814,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
     afs_uint32 i;	/* temp */
     cm_req_t req;
+    afs_uint64 n_bufs, n_nonzero, n_redir, n_busy, n_dirty;
 
     cm_InitReq(&req);	/* just in case */
 
@@ -812,6 +824,12 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
     while(1) {
       retry:
+        n_bufs = 0;
+        n_nonzero = 0;
+        n_redir = 0;
+        n_busy = 0;
+        n_dirty = 0;
+
         lock_ObtainRead(&scp->bufCreateLock);
         lock_ObtainWrite(&buf_globalLock);
         /* check to see if we lost the race */
@@ -855,12 +873,16 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
          * a clean buffer, we rehash it, lock it and return it.
          */
         for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+            n_bufs++;
+
             /* check to see if it really has zero ref count.  This
              * code can bump refcounts, at least, so it may not be
              * zero.
              */
-            if (bp->refCount > 0) 
+            if (bp->refCount > 0) {
+                n_nonzero++;
                 continue;
+            }
                         
             /* we don't have to lock buffer itself, since the ref
              * count is 0 and we know it will stay zero as long as
@@ -868,8 +890,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
              */
 
             /* Don't recycle a buffer held by the redirector. */
-            if (bp->flags & CM_BUF_REDIR)
+            if (bp->flags & CM_BUF_REDIR) {
+                n_redir++;
                 continue;
+            }
 
             /* don't recycle someone in our own chunk */
             if (!cm_FidCmp(&bp->fid, &scp->fid)
@@ -886,6 +910,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                  * holding the big lock?  Watch for contention
                  * here.
                  */
+                n_busy++;
                 continue;
             }
                         
@@ -909,7 +934,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
                 /* now put it back and go around again */
                 buf_Release(bp);
-                goto retry;
+                n_dirty++;
+                continue;
             }
 
             /* if we get here, we know that the buffer still has a 0
@@ -988,7 +1014,16 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
         lock_ReleaseRead(&scp->bufCreateLock);
-	osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List has no buffers with a zero refcount - sleeping 100ms");
+	osi_Log1(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free", n_bufs);
+        osi_Log4(afsd_logp, "... nonzero %u; redir %u; busy %u; dirty %u", n_nonzero, n_redir, n_busy, n_dirty);
+
+        if (n_bufs / n_redir < 2) {
+            LARGE_INTEGER heldExtents;
+            heldExtents.QuadPart = n_redir;
+            if (RDR_RequestExtentRelease(1024, heldExtents) == 0)
+                goto retry;
+        }
+
 	Sleep(100);		/* give some time for a buffer to be freed */
     }	/* while loop over everything */
     /* not reached */

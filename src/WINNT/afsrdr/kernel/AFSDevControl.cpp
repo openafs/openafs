@@ -73,6 +73,5 @@ try_exit:
 
         AFSPrint("EXCEPTION - AFSDevControl\n");
     }
-
     return ntStatus;
 }

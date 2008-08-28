@@ -43,7 +43,7 @@ RDR_InitIoctl(void)
 {
     int i;
 
-    lock_InitializeRWLock(&RDR_globalLock, "RDR global lock");
+    lock_InitializeRWLock(&RDR_globalLock, "RDR global lock", LOCK_HIERARCHY_RDR_GLOBAL);
 
     for (i=0; i<CM_IOCTL_MAXPROCS; i++)
         RDR_ioctlProcsp[i] = NULL;
@@ -362,7 +362,7 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     /* setup the next data value for the caller to use */
     ioctlp->ioctl.inDatap += (long)strlen(ioctlp->ioctl.inDatap) + 1;;
 
-    osi_Log1(afsd_logp, "RDR_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,inPath));
+    osi_Log1(afsd_logp, "RDR_ParseIoctlPath inPath %s", osi_LogSaveString(afsd_logp,inPath));
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
     /* ioctlp->inDatap can be either of the form:
@@ -395,6 +395,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
         relativePath = cm_Utf8ToClientStringAlloc(inPath, -1, NULL);
+        osi_Log1(afsd_logp, "RDR_ParseIoctlPath UTF8 relativePath %S", 
+                 osi_LogSaveStringW(afsd_logp,relativePath));
     } else {
         int cch;
         /* Not a UTF-8 string */
@@ -416,6 +418,8 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             relativePath = malloc(cch * sizeof(clientchar_t));
             cm_OemToClientString(inPath, -1, relativePath, cch);
         }
+        osi_Log1(afsd_logp, "RDR_ParseIoctlPath ASCII relativePath %S", 
+                 osi_LogSaveStringW(afsd_logp,relativePath));
     }
 
     if (relativePath[0] == relativePath[1] &&
@@ -610,6 +614,8 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_USEUTF8;
 
         inpathp = cm_Utf8ToClientStringAlloc(inpathdatap, -1, NULL);
+        osi_Log1(afsd_logp, "RDR_ParseIoctlParent UTF8 inpathp %S", 
+                  osi_LogSaveStringW(afsd_logp, inpathp));
     } else {
         int cch;
 
@@ -633,6 +639,8 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             inpathp = malloc(cch * sizeof(clientchar_t));
             cm_OemToClientString(inpathdatap, -1, inpathp, cch);
         }
+        osi_Log1(afsd_logp, "RDR_ParseIoctlParent ASCII inpathp %S", 
+                 osi_LogSaveStringW(afsd_logp, inpathp));
     }
 
     cm_ClientStrCpy(tbuffer, lengthof(tbuffer), inpathp);
@@ -688,12 +696,17 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, &substRootp);
             free(sharePath);
-            if (code) return code;
-
+            if (code) {
+		osi_Log1(afsd_logp,"RDR_ParseIoctlParent [1] code 0x%x", code);
+                return code;
+            }
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
 	    cm_ReleaseSCache(substRootp);
-            if (code) return code;
+            if (code) {
+		osi_Log1(afsd_logp,"RDR_ParseIoctlParent [2] code 0x%x", code);
+                return code;
+            }
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
              * This requires that we reconstruct the shareName string with 
@@ -714,21 +727,31 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             code = cm_NameI(cm_data.rootSCachep, shareName,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, &substRootp);
-            if (code) return code;
-
+            if (code) {
+		osi_Log1(afsd_logp,"RDR_ParseIoctlParent [3] code 0x%x", code);
+                return code;
+            }
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, NULL, reqp, scpp);
 	    cm_ReleaseSCache(substRootp);
-            if (code) return code;
+            if (code) {
+		osi_Log1(afsd_logp,"RDR_ParseIoctlParent [4] code 0x%x", code);
+                return code;
+            }
         }
     } else {
         code = cm_GetSCache(&ioctlp->rootFid, &substRootp, userp, reqp);
-        if (code) return code;
-
+        if (code) {
+            osi_Log1(afsd_logp,"RDR_ParseIoctlParent [5] code 0x%x", code);
+            return code;
+        }
         code = cm_NameI(substRootp, tbuffer, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, NULL, reqp, scpp);
 	cm_ReleaseSCache(substRootp);
-        if (code) return code;
+        if (code) {
+            osi_Log1(afsd_logp,"RDR_ParseIoctlParent [6] code 0x%x", code);
+            return code;
+        }
     }
 
     /* # of bytes of path */
@@ -736,6 +759,7 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     ioctlp->ioctl.inDatap += code;
 
     /* and return success */
+    osi_Log1(afsd_logp,"RDR_ParseIoctlParent [7] code 0x%x", code);
     return 0;
 }
 
@@ -932,7 +956,7 @@ RDR_IoctlSetACL(RDR_ioctl_t *ioctlp, cm_user_t *userp)
     cm_scache_t *scp;
     afs_int32 code;
     cm_req_t req;
-    cm_ioctlQueryOptions_t *optionsp;
+
     afs_uint32 flags = 0;
 
     cm_InitReq(&req);

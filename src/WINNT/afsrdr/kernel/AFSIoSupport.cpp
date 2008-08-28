@@ -70,7 +70,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                IN OUT ULONG     *ExtentsCount)
 {
     //
-    // Do all the work which can file prior to firing off the IRP
+    // Do all the work which we can prior to firing off the IRP
     // (allocate them, calculate offsets and so on)
     //
     LARGE_INTEGER  liCacheOffset;

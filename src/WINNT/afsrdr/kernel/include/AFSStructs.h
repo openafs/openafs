@@ -43,7 +43,9 @@ typedef struct _AFS_TREE_HDR
 typedef struct _AFS_DIR_HDR
 {
 
-    struct _AFS_DIR_NODE_CB *TreeHead;
+    struct _AFS_DIR_NODE_CB *CaseSensitiveTreeHead;
+
+    struct _AFS_DIR_NODE_CB *CaseInsensitiveTreeHead;
 
     ERESOURCE               *TreeLock;
 
@@ -112,6 +114,8 @@ typedef struct _AFS_NONPAGED_FCB
             // The 1->0 transition is protected by the ExtentsResource
             //
             LONG            ExtentsRefCount;
+
+            NTSTATUS        ExtentsRequestStatus;
 
         } File;
 
@@ -244,6 +248,14 @@ typedef struct AFS_FCB
             //
             LARGE_INTEGER       LastExtentAccess;
 
+            //
+            // If there has been a RELEASE_FILE_EXTENTS - this is
+            // where we stopped last time this stops us from
+            // constantly refreeing the same extents and then grabbing
+            // them again.
+            //
+            LARGE_INTEGER       LastPurgePoint;
+
             FILE_LOCK           FileLock;
 
             //
@@ -374,7 +386,20 @@ typedef struct _AFS_WORK_ITEM
 
     ULONG    Size;
 
-    char     Context[ 1];
+    union
+    {
+        struct
+        {
+            PIRP Irp;
+
+        } ReleaseExtents;
+
+        struct 
+        {
+            char     Context[ 1];
+        } Other;
+
+    } Specific;
 
 } AFSWorkItem, *PAFSWorkItem;
 
@@ -529,10 +554,14 @@ typedef struct _AFS_DIR_ENUM_ENTRY_CB
 typedef struct _AFS_DIR_NODE_CB
 {
 
-    AFSBTreeEntry    TreeEntry;     // For entries in the NameEntry tree, the
-                                    // Index is a CRC on the name. For Volume,
-                                    // MP and SL nodes, the Index is the Cell, Volume
-                                    // For all others it is the vnode, uniqueid
+    AFSBTreeEntry    CaseSensitiveTreeEntry;    // For entries in the NameEntry tree, the
+                                                // Index is a CRC on the name. For Volume,
+                                                // MP and SL nodes, the Index is the Cell, Volume
+                                                // For all others it is the vnode, uniqueid
+
+    AFSBTreeEntry    CaseInsensitiveTreeEntry;
+
+    AFSListEntry     CaseInsensitiveList;
 
     ULONG            Flags;
 
@@ -657,6 +686,16 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             AFSCommSrvcCB    CommServiceCB;
 
+            //
+            // Extent Release Interface
+            //
+
+            ERESOURCE        ExtentReleaseResource;
+
+            KEVENT           ExtentReleaseEvent;
+
+            ULONG            ExtentReleaseSequence;
+
             PKPROCESS        ServiceProcess;
 
         } Control;
@@ -689,6 +728,8 @@ typedef struct _AFS_DEVICE_EXTENSION
             ULONG               CacheBlockSize;
 
             UNICODE_STRING      CacheFile;
+
+            LARGE_INTEGER       CacheBlockCount; // Total number of cache blocks in the cache file
 
             //
             // Volume worker context

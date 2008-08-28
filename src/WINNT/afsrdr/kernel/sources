@@ -8,7 +8,8 @@ USE_MAPSYM=1
 
 INCLUDES=Include;..\Common;
 
-TARGETLIBS=$(DDK_LIB_PATH)\ntstrsafe.lib
+TARGETLIBS=$(DDK_LIB_PATH)\ntstrsafe.lib \
+           $(DDK_LIB_PATH)\wdmsec.lib
 
 TARGETTYPE=DRIVER
 
@@ -22,7 +23,7 @@ SOURCES= AFSInit.cpp \
 		 AFSDevControl.cpp \
 		 AFSDirControl.cpp \
 		 AFSEa.cpp \
-                 AFSExtentsSupport.cpp \
+         AFSExtentsSupport.cpp \
 		 AFSFastIoSupport.cpp \
 		 AFSFcbSupport.cpp \
 		 AFSFileInfo.cpp \
@@ -30,8 +31,9 @@ SOURCES= AFSInit.cpp \
 		 AFSFSControl.cpp \
 		 AFSGeneric.cpp \
 		 AFSInternalDevControl.cpp \
-                 AFSIoSupport.cpp \
+         AFSIoSupport.cpp \
 		 AFSLockControl.cpp \
+		 AFSLogSupport.cpp \
 		 AFSNameSupport.cpp \
 		 AFSNetworkProviderSupport.cpp \
 		 AFSQuota.cpp \
@@ -42,5 +44,7 @@ SOURCES= AFSInit.cpp \
 		 AFSSystemControl.cpp \
 		 AFSVolumeInfo.cpp \
 		 AFSWorker.cpp \
-		 AFSWrite.cpp \
-                 FileSystem.rc
+		 AFSWrite.cpp
+		 
+		 
+		 

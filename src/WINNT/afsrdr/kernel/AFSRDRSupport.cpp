@@ -5,10 +5,10 @@ NTSTATUS
 AFSInitRDRDevice()
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS       ntStatus = STATUS_SUCCESS;
     UNICODE_STRING uniDeviceName;
-    ULONG ulIndex = 0;
-    AFSDeviceExt *pDeviceExt = NULL;
+    ULONG          ulIndex = 0;
+    AFSDeviceExt  *pDeviceExt = NULL;
 
     __Enter
     {
@@ -53,7 +53,7 @@ AFSInitRDRDevice()
 
         //
         // Initialize the volume worker thread responsible for handling any volume specific
-        // work such as Fcb teear down
+        // work such as Fcb tear down
         //
 
         AFSInitVolumeWorker();
@@ -134,10 +134,11 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS           ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
+    BOOLEAN            bCompleteIrp = TRUE;
 
     __Enter
     {
@@ -151,10 +152,16 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
             //
             case IOCTL_AFS_RELEASE_FILE_EXTENTS:
             {
-                ntStatus = AFSProcessReleaseFileExtents( Irp, TRUE );
+                ntStatus = AFSProcessReleaseFileExtents( Irp, TRUE, &bCompleteIrp );
 
                 Irp->IoStatus.Status = ntStatus;
                       
+                break;
+            }
+
+            case IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE:
+            {
+                ntStatus = AFSProcessReleaseFileExtentsDone( Irp );
                 break;
             }
 #endif
@@ -210,12 +217,15 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                 break;
         }
 
-        //
-        // Complete the request
-        //
+        if (bCompleteIrp)
+        {
+            //
+            // Complete the request
+            //
 
-        AFSCompleteRequest( Irp,
-                            ntStatus);
+            AFSCompleteRequest( Irp,
+                                ntStatus);
+        }
     }
 
     return ntStatus;
@@ -238,6 +248,8 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         //
 
         pDevExt->Specific.RDR.CacheBlockSize = CacheFileInfo->CacheBlockSize;
+
+        pDevExt->Specific.RDR.CacheBlockCount = CacheFileInfo->ExtentCount;
 
         pDevExt->Specific.RDR.CacheFile.Length = 0;
 

@@ -42,4 +42,22 @@ UNICODE_STRING      AFSPIOCtlName;
 
 ULONG               AFSAllocationMemoryLevel = 0;
 
+//
+// Dbg log information
+//
+
+#ifdef AFS_DEBUG_LOG
+
+ERESOURCE           AFSDbgLogLock;
+
+ULONG               AFSDbgLogRemainingLength = 0;
+
+char               *AFSDbgCurrentBuffer = NULL;
+
+char               *AFSDbgBuffer = NULL;
+
+ULONG               AFSDbgLogCounter = 0;
+
+#endif
+
 }

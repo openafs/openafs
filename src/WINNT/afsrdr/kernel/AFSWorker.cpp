@@ -483,7 +483,11 @@ AFSWorkerThread( IN PVOID Context)
                 switch( pWorkItem->RequestType)
                 {
 
-                    case 0:
+                    case AFS_WORK_REQUEST_RELEASE:
+                        
+                        AFSReleaseExtentsWork( pWorkItem);
+                        break;
+
                     default:
 
                         AFSPrint("AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
@@ -521,7 +525,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
-    void *waitObjects[ 2];
 
     pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
@@ -543,10 +546,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
                   TimeOut,
                   NULL);
 
-    waitObjects[ 1] = &Timer;
-
-    waitObjects[ 0] = &pControlDeviceExt->Specific.Control.WorkerQueueHasItems;
-
     //
     // Indicate that we are initialized and ready
     //
@@ -564,14 +563,11 @@ AFSVolumeWorkerThread( IN PVOID Context)
     while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
     {
 
-        ntStatus = KeWaitForMultipleObjects( 2,
-                                             waitObjects,
-                                             WaitAny,
-                                             Executive,
-                                             KernelMode,
-                                             FALSE,
-                                             NULL,
-                                             NULL);
+        ntStatus = KeWaitForSingleObject( &Timer,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -602,24 +598,20 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 // First up are there dirty extents in the cache to flush?
                 //
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
                     pFcb->Specific.File.ExtentsDirty &&
                     (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
-                                        >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart) 
+                           >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
+                {
+                    AFSFlushExtents( pFcb);
+                }
+                else if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                         BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID)) 
                 {
 
-                    //
-                    // Don't flush the extents of the Fcb is invalid
-                    //
-
-                    if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
-                    {
-
-                        AFSFlushExtents( pFcb);
-                    }
                     AFSTearDownFcbExtents( pFcb );
-
                 }
-#if 0
+
                 //
                 // If the extents haven't been used recently *and*
                 // are not being used
@@ -630,13 +622,13 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     >= 
                     (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
                 {
-                    static int i = 1; if (i) DbgBreakPoint();
+                    //                    static int i = 1; if (i) DbgBreakPoint();
                     //
                     // That may have taken time, so collect the time again
                     //
                     AFSTearDownFcbExtents( pFcb );
                 }
-#endif
+
 
                 //
                 // If we are below our threshold for memory
@@ -735,7 +727,7 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                 {
 
                                     //
-                                    // Need to deallocate the Fcb and remove it from the directory entry
+                                    // Make sure the dire entry reference is removed
                                     //
 
                                     if( pFcb->DirEntry != NULL)
@@ -743,6 +735,10 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
                                         pFcb->DirEntry->Fcb = NULL;
                                     }
+
+                                    //
+                                    // Need to deallocate the Fcb and remove it from the directory entry
+                                    //
 
                                     AFSReleaseResource( &pFcb->ParentFcb->NPFcb->Resource);
 
@@ -826,6 +822,28 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                     {
 
                                         AFSPrint("AFSVolumeWorker Removing file Fcb %08lX\n", pFcb);
+
+                                        if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETE_DIR_ENTRY) &&
+                                            pFcb->DirEntry != NULL)
+                                        {
+
+                                            if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
+                                            {
+
+                                                ExFreePool( pFcb->DirEntry->DirectoryEntry.FileName.Buffer);
+                                            }
+
+                                            //
+                                            // Free up the dir entry
+                                            //
+
+                                            AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB) + 
+                                                                                pFcb->DirEntry->DirectoryEntry.FileName.Length +
+                                                                                pFcb->DirEntry->DirectoryEntry.TargetName.Length;
+                                            ExFreePool( pFcb->DirEntry);
+
+                                            pFcb->DirEntry = NULL;
+                                        }
                                     }
 
                                     AFSRemoveFcb( pFcb);

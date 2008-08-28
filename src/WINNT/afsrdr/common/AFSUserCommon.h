@@ -106,6 +106,12 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define IOCTL_AFS_INVALIDATE_CACHE              CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1007, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE     CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1008, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_NETWORK_STATUS                CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1009, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_VOLUME_STATUS                 CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100A, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 //
 // Request types
 //
@@ -158,6 +164,7 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 typedef struct _AFS_CACHE_FILE_INFO_CB
 {
+    LARGE_INTEGER  ExtentCount;         // Number of extents in the current data cache
 
     ULONG       CacheBlockSize;         // Size, in bytes, of the current cache block
 
@@ -443,7 +450,7 @@ typedef struct _AFS_RELEASE_EXTENTS_CB
 typedef struct _AFS_SET_FILE_EXTENTS_CB
 {
 
-    AFSFileID       FileID;
+    AFSFileID       FileId;
 
     ULONG           ExtentCount;
 
@@ -459,9 +466,11 @@ typedef struct _AFS_SET_FILE_EXTENTS_CB
 typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
 {
 
-    AFSFileID       FileID;
+    AFSFileID       FileId;
 
     ULONG           ExtentCount;
+
+    LARGE_INTEGER   HeldExtentCount;
 
     AFSFileExtentCB FileExtents[ 1];
 
@@ -474,7 +483,7 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_CB
 
 typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_FILE_CB
 {
-    AFSFileID       FileID;
+    AFSFileID       FileId;
 
     ULONG           Flags;
 
@@ -488,13 +497,22 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_FILE_CB
 
 typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_CB
 {
-    ULONG                             Flags;
+    ULONG           SerialNumber;
 
-    ULONG                             FileCount;
+    ULONG           Flags;
+
+    ULONG           FileCount;
 
     AFSReleaseFileExtentsResultFileCB Files[ 1];
 
 } AFSReleaseFileExtentsResultCB;
+
+
+typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_DONE_CB
+{
+    ULONG           SerialNumber;
+
+} AFSReleaseFileExtentsResultDoneCB;
 
 //
 // File update CB
@@ -649,10 +667,39 @@ typedef struct _AFS_PIOCTL_OPEN_CLOSE_CB
 typedef struct _AFS_INVALIDATE_CACHE_CB
 {
 
-    AFSFileID       FileID;
+    AFSFileID   FileID;
 
-    BOOLEAN         WholeVolume;
+    BOOLEAN     WholeVolume;
+
+    ULONG       Reason;
 
 } AFSInvalidateCacheCB;
+
+#define AFS_INVALIDATE_EXPIRED          1
+#define AFS_INVALIDATE_FLUSHED          2
+#define AFS_INVALIDATE_CALLBACK         3
+#define AFS_INVALIDATE_SMB              4
+
+//
+// Network Status Control Block
+//
+
+typedef struct _AFS_NETWORK_STATUS_CB
+{
+    BOOLEAN     Online;
+
+} AFSNetworkStatusCB;
+
+//
+// Volume Status Control Block
+// 
+
+typedef struct _AFS_VOLUME_STATUS_CB
+{
+    AFSFileID   FileID;         // only cell and volume fields are set
+
+    BOOLEAN     Online;
+
+} AFSVolumeStatusCB;
 
 #endif

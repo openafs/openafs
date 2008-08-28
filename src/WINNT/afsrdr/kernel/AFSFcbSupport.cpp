@@ -223,8 +223,6 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             AFSAcquireExcl( &pDeviceExt->Specific.RDR.FcbListLock,
                             TRUE);
 
-            DbgPrint("AFSInitFcb Inserting Fcb %08lX into list\n", pFcb);
-
             if( pDeviceExt->Specific.RDR.FcbListHead == NULL)
             {
 
@@ -584,7 +582,9 @@ AFSRemoveAFSRoot()
         AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
-        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeHead = NULL;
+        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = NULL;
+
+        AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = NULL;
 
         //
         // Reset the btree and directory list information
@@ -647,6 +647,25 @@ AFSRemoveAFSRoot()
 
         while( pFcb != NULL)
         {
+
+            if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+            {
+
+                //
+                // Clear out the extents
+                //
+
+                AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                TRUE);
+
+                pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                            0,
+                            FALSE);
+
+                AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+            }
 
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);

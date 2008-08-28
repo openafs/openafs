@@ -5,9 +5,9 @@
 #include "AFSCommon.h"
 
 NTSTATUS
-AFSLocateDirEntry( IN AFSDirEntryCB *RootNode,
-                   IN ULONG Index,
-                   IN OUT AFSDirEntryCB **DirEntry)
+AFSLocateCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                IN ULONG Index,
+                                IN OUT AFSDirEntryCB **DirEntry)
 {
     
     NTSTATUS    ntStatus = STATUS_SUCCESS;
@@ -35,7 +35,7 @@ AFSLocateDirEntry( IN AFSDirEntryCB *RootNode,
         // If the requestor is looking for the root node itself, then return it.
         //
 
-        if( RootNode->TreeEntry.Index == Index)
+        if( RootNode->CaseSensitiveTreeEntry.Index == Index)
         {
 
             *DirEntry = RootNode;
@@ -54,17 +54,17 @@ AFSLocateDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater values are to the right link.
             //
 
-            if( Index > pCurrentEntry->TreeEntry.Index)
+            if( Index > pCurrentEntry->CaseSensitiveTreeEntry.Index)
             {
 
                 //
                 // Go to the next RIGHT entry, if there is one
                 //
 
-                if( pCurrentEntry->TreeEntry.rightLink != NULL)
+                if( pCurrentEntry->CaseSensitiveTreeEntry.rightLink != NULL)
                 {
 
-                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->TreeEntry.rightLink;
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseSensitiveTreeEntry.rightLink;
                 }
                 else
                 {
@@ -78,17 +78,17 @@ AFSLocateDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( Index < pCurrentEntry->TreeEntry.Index)
+            else if( Index < pCurrentEntry->CaseSensitiveTreeEntry.Index)
             {
 
                 //
                 // Go to the next LEFT entry, if one exists
                 //
 
-                if( pCurrentEntry->TreeEntry.leftLink != NULL)
+                if( pCurrentEntry->CaseSensitiveTreeEntry.leftLink != NULL)
                 {
 
-                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->TreeEntry.leftLink;
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseSensitiveTreeEntry.leftLink;
                 }
                 else
                 {
@@ -124,8 +124,127 @@ try_exit:
 }
 
 NTSTATUS
-AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
-                   IN AFSDirEntryCB *DirEntry)
+AFSLocateCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                  IN ULONG Index,
+                                  IN OUT AFSDirEntryCB **DirEntry)
+{
+    
+    NTSTATUS    ntStatus = STATUS_SUCCESS;
+    AFSDirEntryCB   *pEntry = NULL;
+    AFSDirEntryCB   *pCurrentEntry = NULL;
+
+    pCurrentEntry = RootNode;
+
+    __Enter
+    {
+
+        *DirEntry = NULL;
+
+        //
+        // If the rootnode passed is null then the directory is empty
+        //
+
+        if( RootNode == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If the requestor is looking for the root node itself, then return it.
+        //
+
+        if( RootNode->CaseInsensitiveTreeEntry.Index == Index)
+        {
+
+            *DirEntry = RootNode;
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Loop through the nodes in the tree
+        //
+
+        while( pCurrentEntry != NULL)
+        {
+        
+            //
+            // Greater values are to the right link.
+            //
+
+            if( Index > pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            {
+
+                //
+                // Go to the next RIGHT entry, if there is one
+                //
+
+                if( pCurrentEntry->CaseInsensitiveTreeEntry.rightLink != NULL)
+                {
+
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseInsensitiveTreeEntry.rightLink;
+                }
+                else
+                {
+
+                    //
+                    // Came to the end of the branch so bail
+                    //
+
+                    pCurrentEntry = NULL;
+
+                    break;
+                }
+            }
+            else if( Index < pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            {
+
+                //
+                // Go to the next LEFT entry, if one exists
+                //
+
+                if( pCurrentEntry->CaseInsensitiveTreeEntry.leftLink != NULL)
+                {
+
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseInsensitiveTreeEntry.leftLink;
+                }
+                else
+                {
+
+                    //
+                    // End of the branch ...
+                    //
+
+                    pCurrentEntry = NULL;
+
+                    break;                
+                }
+            }
+            else
+            {
+
+                //
+                // Found the entry.
+                //
+
+                *DirEntry = pCurrentEntry;
+
+                break;
+            }
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                IN AFSDirEntryCB *DirEntry)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -143,7 +262,7 @@ AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertDirEntry Invalid root node\n");
+            AFSPrint("AFSInsertCaseSensitiveDirEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -159,16 +278,16 @@ AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater vlued indices are to the right link
             //
 
-            if( DirEntry->TreeEntry.Index > pCurrentEntry->TreeEntry.Index)
+            if( DirEntry->CaseSensitiveTreeEntry.Index > pCurrentEntry->CaseSensitiveTreeEntry.Index)
             {
             
                 //
                 // Go to the next RIGHT entry, if it exists
                 //
 
-                if( pCurrentEntry->TreeEntry.rightLink != NULL)
+                if( pCurrentEntry->CaseSensitiveTreeEntry.rightLink != NULL)
                 {
-                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->TreeEntry.rightLink;
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseSensitiveTreeEntry.rightLink;
                 }
                 else
                 {
@@ -177,23 +296,23 @@ AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
                     // Located the end of the branch line so insert the node
                     //
 
-                    pCurrentEntry->TreeEntry.rightLink = (void *)DirEntry;
+                    pCurrentEntry->CaseSensitiveTreeEntry.rightLink = (void *)DirEntry;
                         
-                    DirEntry->TreeEntry.parentLink = (void *)pCurrentEntry;
+                    DirEntry->CaseSensitiveTreeEntry.parentLink = (void *)pCurrentEntry;
 
                     break;
                 }
             }
-            else if( DirEntry->TreeEntry.Index < pCurrentEntry->TreeEntry.Index)
+            else if( DirEntry->CaseSensitiveTreeEntry.Index < pCurrentEntry->CaseSensitiveTreeEntry.Index)
             {
 
                 //
                 // Go to the next LEFT entry, if it exists
                 //
 
-                if( pCurrentEntry->TreeEntry.leftLink != NULL)
+                if( pCurrentEntry->CaseSensitiveTreeEntry.leftLink != NULL)
                 {
-                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->TreeEntry.leftLink;
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseSensitiveTreeEntry.leftLink;
                 }
                 else
                 {
@@ -202,9 +321,9 @@ AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
                     // Located the branch line end so insert the node here
                     //
 
-                    pCurrentEntry->TreeEntry.leftLink = (void *)DirEntry;
+                    pCurrentEntry->CaseSensitiveTreeEntry.leftLink = (void *)DirEntry;
                            
-                    DirEntry->TreeEntry.parentLink = (void *)pCurrentEntry;
+                    DirEntry->CaseSensitiveTreeEntry.parentLink = (void *)pCurrentEntry;
 
                     break;
                 }
@@ -212,7 +331,7 @@ AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
             else
             {
 
-                AFSPrint("AFSInsertDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->TreeEntry.Index);
+                AFSPrint("AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseSensitiveTreeEntry.Index);
 
                 ASSERT( FALSE);
 
@@ -229,8 +348,129 @@ try_exit:
 }
 
 NTSTATUS
-AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
-                   IN AFSDirEntryCB *DirEntry)
+AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                  IN AFSDirEntryCB *DirEntry)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEntryCB *pCurrentEntry = NULL;
+
+    pCurrentEntry = RootNode;
+
+    __Enter
+    {
+
+        //
+        // If we have no root node then we can;t start the search.
+        //
+
+        if( pCurrentEntry == NULL)
+        {
+
+            AFSPrint("AFSInsertCaseInsensitiveDirEntry Invalid root node\n");
+
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        //
+        // Locate the branch end to insert the node
+        //
+    
+        while( pCurrentEntry != NULL)
+        {
+        
+            //
+            // Greater vlued indices are to the right link
+            //
+
+            if( DirEntry->CaseInsensitiveTreeEntry.Index > pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            {
+            
+                //
+                // Go to the next RIGHT entry, if it exists
+                //
+
+                if( pCurrentEntry->CaseInsensitiveTreeEntry.rightLink != NULL)
+                {
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseInsensitiveTreeEntry.rightLink;
+                }
+                else
+                {
+
+                    //
+                    // Located the end of the branch line so insert the node
+                    //
+
+                    pCurrentEntry->CaseInsensitiveTreeEntry.rightLink = (void *)DirEntry;
+                        
+                    DirEntry->CaseInsensitiveTreeEntry.parentLink = (void *)pCurrentEntry;
+
+                    SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+
+                    break;
+                }
+            }
+            else if( DirEntry->CaseInsensitiveTreeEntry.Index < pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            {
+
+                //
+                // Go to the next LEFT entry, if it exists
+                //
+
+                if( pCurrentEntry->CaseInsensitiveTreeEntry.leftLink != NULL)
+                {
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseInsensitiveTreeEntry.leftLink;
+                }
+                else
+                {
+
+                    //
+                    // Located the branch line end so insert the node here
+                    //
+
+                    pCurrentEntry->CaseInsensitiveTreeEntry.leftLink = (void *)DirEntry;
+                           
+                    DirEntry->CaseInsensitiveTreeEntry.parentLink = (void *)pCurrentEntry;
+
+                    SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+
+                    break;
+                }
+            }
+            else
+            {
+
+                AFSPrint("AFSInsertCaseInsensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseInsensitiveTreeEntry.Index);
+
+                //
+                // Inser the the entry at the end of the insensitive list
+                //
+
+                while( pCurrentEntry->CaseInsensitiveList.fLink != NULL)
+                {
+
+                    pCurrentEntry = (AFSDirEntryCB *)pCurrentEntry->CaseInsensitiveList.fLink;
+                }
+
+                pCurrentEntry->CaseInsensitiveList.fLink = (void *)DirEntry;
+
+                DirEntry->CaseInsensitiveList.bLink = (void *)pCurrentEntry;
+
+                break;
+            }
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRemoveCaseSensitiveDirEntry( IN AFSDirEntryCB **RootNode,
+                                IN AFSDirEntryCB *DirEntry)
 {
 
     NTSTATUS ntStatus = STATUS_UNSUCCESSFUL;
@@ -239,9 +479,9 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
     AFSDirEntryCB *pCurrentNode = NULL;
     AFSDirEntryCB *pParentNode = NULL;
 
-    pRightNode = (AFSDirEntryCB *)DirEntry->TreeEntry.rightLink;
-    pLeftNode = (AFSDirEntryCB *)DirEntry->TreeEntry.leftLink;
-    pParentNode = (AFSDirEntryCB *)DirEntry->TreeEntry.parentLink;
+    pRightNode = (AFSDirEntryCB *)DirEntry->CaseSensitiveTreeEntry.rightLink;
+    pLeftNode = (AFSDirEntryCB *)DirEntry->CaseSensitiveTreeEntry.leftLink;
+    pParentNode = (AFSDirEntryCB *)DirEntry->CaseSensitiveTreeEntry.parentLink;
 
     __Enter
     {
@@ -252,15 +492,15 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
             if( pParentNode != NULL)
             {
 
-                if( pParentNode->TreeEntry.leftLink == DirEntry)
+                if( pParentNode->CaseSensitiveTreeEntry.leftLink == DirEntry)
                 {
 
-                    pParentNode->TreeEntry.leftLink = NULL;
+                    pParentNode->CaseSensitiveTreeEntry.leftLink = NULL;
                 }
                 else
                 {
 
-                    pParentNode->TreeEntry.rightLink = NULL;
+                    pParentNode->CaseSensitiveTreeEntry.rightLink = NULL;
                 }
             }
             else
@@ -283,15 +523,15 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
                 {
 
                     // Replace the parent node where this entry was.
-                    if( pParentNode->TreeEntry.rightLink == DirEntry)
+                    if( pParentNode->CaseSensitiveTreeEntry.rightLink == DirEntry)
                     {
 
-                        pParentNode->TreeEntry.rightLink = pRightNode;
+                        pParentNode->CaseSensitiveTreeEntry.rightLink = pRightNode;
                     }
                     else
                     {
 
-                        pParentNode->TreeEntry.leftLink = pRightNode;
+                        pParentNode->CaseSensitiveTreeEntry.leftLink = pRightNode;
                     }
                 }
                 else
@@ -299,10 +539,10 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
 
                     *RootNode = pRightNode;
 
-                    pRightNode->TreeEntry.parentLink = NULL;
+                    pRightNode->CaseSensitiveTreeEntry.parentLink = NULL;
                 }
 
-                pRightNode->TreeEntry.parentLink = pParentNode;
+                pRightNode->CaseSensitiveTreeEntry.parentLink = pParentNode;
             }
 
             if( pLeftNode != NULL)
@@ -316,15 +556,15 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
 
                     pCurrentNode = pRightNode;
 
-                    while( pCurrentNode->TreeEntry.leftLink != NULL)
+                    while( pCurrentNode->CaseSensitiveTreeEntry.leftLink != NULL)
                     {
 
-                        pCurrentNode = (AFSDirEntryCB *)pCurrentNode->TreeEntry.leftLink;
+                        pCurrentNode = (AFSDirEntryCB *)pCurrentNode->CaseSensitiveTreeEntry.leftLink;
                     }
 
-                    pCurrentNode->TreeEntry.leftLink = pLeftNode;
+                    pCurrentNode->CaseSensitiveTreeEntry.leftLink = pLeftNode;
 
-                    pLeftNode->TreeEntry.parentLink = pCurrentNode;
+                    pLeftNode->CaseSensitiveTreeEntry.parentLink = pCurrentNode;
                 }
                 else
                 {
@@ -335,25 +575,25 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
                         // This is where we have a left node with no right node.  
                         // So, attach the left node to the parent of
                         // the removed nodes branch
-                        if( pParentNode->TreeEntry.rightLink == DirEntry)
+                        if( pParentNode->CaseSensitiveTreeEntry.rightLink == DirEntry)
                         {
 
-                            pParentNode->TreeEntry.rightLink = pLeftNode;
+                            pParentNode->CaseSensitiveTreeEntry.rightLink = pLeftNode;
                         }
                         else
                         {
 
-                            pParentNode->TreeEntry.leftLink = pLeftNode;
+                            pParentNode->CaseSensitiveTreeEntry.leftLink = pLeftNode;
                         }
 
-                        pLeftNode->TreeEntry.parentLink = pParentNode;
+                        pLeftNode->CaseSensitiveTreeEntry.parentLink = pParentNode;
                     }
                     else
                     {
 
                         *RootNode = pLeftNode;
 
-                        pLeftNode->TreeEntry.parentLink = NULL;
+                        pLeftNode->CaseSensitiveTreeEntry.parentLink = NULL;
                     }
                 }
             }
@@ -363,9 +603,230 @@ AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
         // Cleanup the just removed node
         //
 
-        DirEntry->TreeEntry.leftLink = NULL;
-        DirEntry->TreeEntry.parentLink = NULL;
-        DirEntry->TreeEntry.rightLink = NULL;
+        DirEntry->CaseSensitiveTreeEntry.leftLink = NULL;
+        DirEntry->CaseSensitiveTreeEntry.parentLink = NULL;
+        DirEntry->CaseSensitiveTreeEntry.rightLink = NULL;
+
+        ntStatus = STATUS_SUCCESS;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRemoveCaseInsensitiveDirEntry( IN AFSDirEntryCB **RootNode,
+                                  IN AFSDirEntryCB *DirEntry)
+{
+
+    NTSTATUS ntStatus = STATUS_UNSUCCESSFUL;
+    AFSDirEntryCB *pRightNode = NULL;
+    AFSDirEntryCB *pLeftNode = NULL;
+    AFSDirEntryCB *pCurrentNode = NULL;
+    AFSDirEntryCB *pParentNode = NULL;
+    AFSDirEntryCB *pNewHeadEntry = NULL;
+
+    pRightNode = (AFSDirEntryCB *)DirEntry->CaseInsensitiveTreeEntry.rightLink;
+    pLeftNode = (AFSDirEntryCB *)DirEntry->CaseInsensitiveTreeEntry.leftLink;
+    pParentNode = (AFSDirEntryCB *)DirEntry->CaseInsensitiveTreeEntry.parentLink;
+
+    __Enter
+    {
+
+        //
+        // If this is not a head of list entry then just update the pointers for it
+        //
+
+        if( !BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD))
+        {
+
+            ASSERT( DirEntry->CaseInsensitiveList.bLink != NULL);
+
+            ((AFSDirEntryCB *)DirEntry->CaseInsensitiveList.bLink)->CaseInsensitiveList.fLink = DirEntry->CaseInsensitiveList.fLink;
+
+            if( DirEntry->CaseInsensitiveList.fLink != NULL)
+            {
+
+                ((AFSDirEntryCB *)DirEntry->CaseInsensitiveList.fLink)->CaseInsensitiveList.bLink = DirEntry->CaseInsensitiveList.bLink;
+            }
+
+            try_return( ntStatus);
+        }
+        else if( DirEntry->CaseInsensitiveList.fLink != NULL)
+        {
+
+            //
+            // Removing the head of a list of entries so just update pointers
+            //
+
+            pNewHeadEntry = (AFSDirEntryCB *)DirEntry->CaseInsensitiveList.fLink;
+
+            if( pParentNode != NULL)
+            {
+
+                if( pParentNode->CaseInsensitiveTreeEntry.rightLink == DirEntry)
+                {
+
+                    pParentNode->CaseInsensitiveTreeEntry.rightLink = (void *)pNewHeadEntry;
+                }
+                else
+                {
+
+                    ASSERT( pParentNode->CaseInsensitiveTreeEntry.leftLink == DirEntry);
+
+                    pParentNode->CaseInsensitiveTreeEntry.leftLink = (void *)pNewHeadEntry;
+                }
+            }
+
+            if( pRightNode != NULL)
+            {
+
+                pRightNode->CaseInsensitiveTreeEntry.parentLink = (void *)pNewHeadEntry;
+            }
+
+            if( pLeftNode != NULL)
+            {
+
+                pLeftNode->CaseInsensitiveTreeEntry.parentLink = (void *)pNewHeadEntry;
+            }
+
+            pNewHeadEntry->CaseInsensitiveList.bLink = NULL;
+
+            pNewHeadEntry->CaseInsensitiveTreeEntry.parentLink = pParentNode;
+
+            pNewHeadEntry->CaseInsensitiveTreeEntry.leftLink = pLeftNode;
+
+            pNewHeadEntry->CaseInsensitiveTreeEntry.rightLink = pRightNode;
+
+            SetFlag( ((AFSDirEntryCB *)DirEntry->CaseInsensitiveList.fLink)->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+
+            try_return( ntStatus);
+        }
+
+        if( (pRightNode == NULL) && (pLeftNode == NULL))
+        {
+
+            if( pParentNode != NULL)
+            {
+
+                if( pParentNode->CaseInsensitiveTreeEntry.leftLink == DirEntry)
+                {
+
+                    pParentNode->CaseInsensitiveTreeEntry.leftLink = NULL;
+                }
+                else
+                {
+
+                    pParentNode->CaseInsensitiveTreeEntry.rightLink = NULL;
+                }
+            }
+            else
+            {
+
+                //
+                // Removing the top node
+                //
+
+                *RootNode = NULL;
+            }
+        }
+        else
+        {
+
+            if( pRightNode != NULL)
+            {
+
+                if( pParentNode != NULL)
+                {
+
+                    // Replace the parent node where this entry was.
+                    if( pParentNode->CaseInsensitiveTreeEntry.rightLink == DirEntry)
+                    {
+
+                        pParentNode->CaseInsensitiveTreeEntry.rightLink = pRightNode;
+                    }
+                    else
+                    {
+
+                        pParentNode->CaseInsensitiveTreeEntry.leftLink = pRightNode;
+                    }
+                }
+                else
+                {
+
+                    *RootNode = pRightNode;
+
+                    pRightNode->CaseInsensitiveTreeEntry.parentLink = NULL;
+                }
+
+                pRightNode->CaseInsensitiveTreeEntry.parentLink = pParentNode;
+            }
+
+            if( pLeftNode != NULL)
+            {
+
+                // To connect the left node, we must walk the chain of the 
+                // right nodes left side until we reach the end.  
+                // At the end attach the leftNode
+                if( pRightNode != NULL)
+                {
+
+                    pCurrentNode = pRightNode;
+
+                    while( pCurrentNode->CaseInsensitiveTreeEntry.leftLink != NULL)
+                    {
+
+                        pCurrentNode = (AFSDirEntryCB *)pCurrentNode->CaseInsensitiveTreeEntry.leftLink;
+                    }
+
+                    pCurrentNode->CaseInsensitiveTreeEntry.leftLink = pLeftNode;
+
+                    pLeftNode->CaseInsensitiveTreeEntry.parentLink = pCurrentNode;
+                }
+                else
+                {
+
+                    if( pParentNode != NULL)
+                    {
+
+                        // This is where we have a left node with no right node.  
+                        // So, attach the left node to the parent of
+                        // the removed nodes branch
+                        if( pParentNode->CaseInsensitiveTreeEntry.rightLink == DirEntry)
+                        {
+
+                            pParentNode->CaseInsensitiveTreeEntry.rightLink = pLeftNode;
+                        }
+                        else
+                        {
+
+                            pParentNode->CaseInsensitiveTreeEntry.leftLink = pLeftNode;
+                        }
+
+                        pLeftNode->CaseInsensitiveTreeEntry.parentLink = pParentNode;
+                    }
+                    else
+                    {
+
+                        *RootNode = pLeftNode;
+
+                        pLeftNode->CaseInsensitiveTreeEntry.parentLink = NULL;
+                    }
+                }
+            }
+        }
+
+try_exit:
+
+        //
+        // Cleanup the just removed node
+        //
+
+        DirEntry->CaseInsensitiveTreeEntry.leftLink = NULL;
+        DirEntry->CaseInsensitiveTreeEntry.parentLink = NULL;
+        DirEntry->CaseInsensitiveTreeEntry.rightLink = NULL;
+
+        DirEntry->CaseInsensitiveList.bLink = NULL;
+        DirEntry->CaseInsensitiveList.fLink = NULL;
 
         ntStatus = STATUS_SUCCESS;
     }
@@ -512,7 +973,7 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertDirEntry Invalid root node\n");
+            AFSPrint("AFSInsertShortNameDirEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -581,9 +1042,7 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
             else
             {
 
-                AFSPrint("AFSInsertDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->Type.Data.ShortNameTreeEntry.Index);
-
-                ASSERT( FALSE);
+                AFSPrint("AFSInsertShortNameDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->Type.Data.ShortNameTreeEntry.Index);
 
                 break;
             }

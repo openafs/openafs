@@ -114,7 +114,7 @@ AFSQueryDirectory( IN PIRP Irp)
     ULONG ulBaseLength;
     ULONG ulBytesConverted;
 
-    AFSDirEntryCB *pDirEntry = NULL;
+    AFSDirEntryCB *pDirEntry = NULL, *pBestMatchDirEntry = NULL;
 
     BOOLEAN bReleaseMain = FALSE;
 
@@ -248,14 +248,21 @@ AFSQueryDirectory( IN PIRP Irp)
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
 
-                RtlUpcaseUnicodeString( &pCcb->MaskName,
-                                        puniArgFileName,
-                                        FALSE);
-
                 if( FsRtlDoesNameContainWildCards( puniArgFileName))
                 {
 
+                    RtlUpcaseUnicodeString( &pCcb->MaskName,
+                                            puniArgFileName,
+                                            FALSE);
+
                     SetFlag( pCcb->DirFlags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS);
+                }
+                else
+                {
+
+                    RtlCopyMemory( pCcb->MaskName.Buffer,
+                                   puniArgFileName->Buffer,
+                                   pCcb->MaskName.Length);
                 }
             }
 
@@ -408,6 +415,20 @@ AFSQueryDirectory( IN PIRP Irp)
                                                FileName[0] );
                 break;
 
+            case FileIdBothDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_ID_BOTH_DIR_INFORMATION,
+                                               FileName[0] );
+
+                break;
+
+            case FileIdFullDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_ID_FULL_DIR_INFORMATION,
+                                               FileName[0] );
+
+                break;
+
             default:
 
                 ntStatus = STATUS_INVALID_INFO_CLASS;
@@ -493,8 +514,20 @@ AFSQueryDirectory( IN PIRP Irp)
 
                         if( RtlCompareUnicodeString( &pDirEntry->DirectoryEntry.FileName,
                                                      &pCcb->MaskName,
-                                                     TRUE))
+                                                     FALSE))
                         {
+
+                            //
+                            // See if this is a match for a case insensitive search
+                            //
+
+                            if( RtlCompareUnicodeString( &pDirEntry->DirectoryEntry.FileName,
+                                                         &pCcb->MaskName,
+                                                         TRUE) == 0)
+                            {
+
+                                pBestMatchDirEntry = pDirEntry;
+                            }
 
                             if( pDirEntry->ListEntry.fLink != NULL)
                             {
@@ -506,7 +539,20 @@ AFSQueryDirectory( IN PIRP Irp)
                                 continue;
                             }
 
-                            pDirEntry = NULL;
+                            //
+                            // If we have reached this point then we have no matches. If we have a 
+                            // best match pointer then use it, otherwise bail
+                            //
+
+                            pDirEntry = pBestMatchDirEntry;
+
+                            if( pDirEntry != NULL)
+                            {
+
+                                DbgPrint("AFSQueryDirectory Using best match of %wZ for pattern %wZ\n", 
+                                                                    &pDirEntry->DirectoryEntry.FileName,
+                                                                    &pCcb->MaskName);
+                            }
                         }                                                    
                     }
                 }
@@ -575,6 +621,7 @@ AFSQueryDirectory( IN PIRP Irp)
             {
 
                 //  Now fill the base parts of the strucure that are applicable.
+                case FileIdBothDirectoryInformation:
                 case FileBothDirectoryInformation:
 
                     pBothDirInfo = (PFILE_BOTH_DIR_INFORMATION)&pBuffer[ ulNextEntry];
@@ -587,7 +634,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                        &pDirEntry->DirectoryEntry.ShortName[ 0],
                                        pBothDirInfo->ShortNameLength);
                     }
-
+                case FileIdFullDirectoryInformation:
                 case FileFullDirectoryInformation:
 
                     pFullDirInfo = (PFILE_FULL_DIR_INFORMATION)&pBuffer[ ulNextEntry];

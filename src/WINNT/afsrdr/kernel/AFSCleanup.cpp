@@ -196,6 +196,16 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // then delete the node
                 //
 
+                if( pFcb->OpenHandleCount > 0 &&
+                    BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
+                {
+
+                    AFSPrint("AFSCleanup OpenHandleCount %d for deleted file %wZ\n",
+                                                                               pFcb->OpenHandleCount,
+                                                                               &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                }
+
                 if( pFcb->OpenHandleCount == 0 &&
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
                 {
@@ -211,7 +221,23 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
+                        if( NT_SUCCESS( AFSGetFullName( pFcb,
+                                                          &uniFullFileName)))
+                        {
+
+                            AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
+                                                                                &uniFullFileName,
+                                                                                ntStatus);
+
+                            ExFreePool( uniFullFileName.Buffer);
+                        }
+                        else
+                        {
+
+                            AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
+                                                                                &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                                                ntStatus);
+                        }
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -228,6 +254,9 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                           &uniFullFileName)))
                         {
 
+                            AFSPrint("AFSCleanup Successfully notified service of deleted file %wZ\n", 
+                                                                                &uniFullFileName);
+
 						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
 													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
 													     (PSTRING)&uniFullFileName,
@@ -239,6 +268,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 													     (PVOID)NULL );
 
                             ExFreePool( uniFullFileName.Buffer);
+                        }
+                        else
+                        {
+
+                            AFSPrint("AFSCleanup Successfully notified service of deleted file %wZ\n", 
+                                                                                &pFcb->DirEntry->DirectoryEntry.FileName);
                         }
                     }
                 }
@@ -367,6 +402,16 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // then delete the node
                 //
 
+                if( pFcb->OpenHandleCount > 0 &&
+                    BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
+                {
+
+                    AFSPrint("AFSCleanup OpenHandleCount %d for deleted directory %wZ\n",
+                                                                               pFcb->OpenHandleCount,
+                                                                               &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                }
+
                 if( pFcb->OpenHandleCount == 0 &&
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
                 {
@@ -382,7 +427,23 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
+                        if( NT_SUCCESS( AFSGetFullName( pFcb,
+                                                          &uniFullFileName)))
+                        {
+
+                            AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
+                                                                                &uniFullFileName,
+                                                                                ntStatus);
+
+                            ExFreePool( uniFullFileName.Buffer);
+                        }
+                        else
+                        {
+
+                            AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
+                                                                                &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                                                ntStatus);
+                        }
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -399,6 +460,9 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                           &uniFullFileName)))
                         {
 
+                            AFSPrint("AFSCleanup Successfully notified service of deleted directory %wZ\n", 
+                                                                                &uniFullFileName);
+
 						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
 													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
 													     (PSTRING)&uniFullFileName,
@@ -412,6 +476,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                             ASSERT( pFcb->Header.NodeTypeCode != AFS_ROOT_FCB);
 
                             ExFreePool( uniFullFileName.Buffer);
+                        }
+                        else
+                        {
+
+                            AFSPrint("AFSCleanup Successfully notified service of deleted directory %wZ\n", 
+                                                                                &pFcb->DirEntry->DirectoryEntry.FileName);
                         }
                     }
                 }

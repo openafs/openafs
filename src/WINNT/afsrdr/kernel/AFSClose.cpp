@@ -86,7 +86,70 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
                 if( pFcb->ParentFcb != NULL)
                 {
-                    stParentFileId = pFcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+
+                    AFSFcb *pParentDcb = pFcb->ParentFcb;
+
+                    //
+                    // Be sure to get the correct fid for the parent
+                    //
+
+                    if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                    {
+
+                        //
+                        // Just the FID of the node
+                        //
+
+                        stParentFileId = pParentDcb->DirEntry->DirectoryEntry.FileId;
+                    }
+                    else
+                    {
+
+                        //
+                        // MP or SL
+                        //
+
+                        stParentFileId = pParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+
+                        //
+                        // If this is zero then we need to evaluate it
+                        //
+
+                        if( stParentFileId.Hash == 0)
+                        {
+
+                            AFSDirEnumEntry *pDirEntry = NULL;
+                            AFSFcb *pGrandParentDcb = NULL;
+
+                            if( pParentDcb->ParentFcb == NULL ||
+                                pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                            {
+
+                                stParentFileId = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+                            }
+                            else
+                            {
+
+                                stParentFileId = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+                            }
+
+                            ntStatus = AFSEvaluateTargetByID( &stParentFileId,
+                                                              &pParentDcb->DirEntry->DirectoryEntry.FileId,
+                                                              &pDirEntry);
+
+                            if( !NT_SUCCESS( ntStatus))
+                            {
+
+                                try_return( ntStatus);
+                            }
+
+                            pParentDcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+                            stParentFileId = pDirEntry->TargetFileId;
+
+                            ExFreePool( pDirEntry);
+                        }
+                    }
                 }
 
                 //
@@ -249,27 +312,35 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
                 {
 
-                    //
-                    // Add the space back in if it is a file
-                    //
-
-                    if( pFcb->DirEntry->DirectoryEntry.AllocationSize.QuadPart > 0)
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                     {
 
+                        //
+                        // Remove the dir node from the parent but don't delete it since we may need
+                        // information in the Fcb for flushing extents
+                        //
+
+                        AFSRemoveDirNodeFromParent( pFcb->ParentFcb,
+                                                    pFcb->DirEntry);
+
+                        SetFlag( pFcb->Flags, AFS_FCB_DELETE_DIR_ENTRY);
                     }
+                    else
+                    {
 
-                    //
-                    // Now remove the directory entry
-                    //
+                        //
+                        // Now remove the directory entry
+                        //
 
-                    AFSDeleteDirEntry( pFcb->ParentFcb,
-                                       pFcb->DirEntry);
+                        AFSDeleteDirEntry( pFcb->ParentFcb,
+                                           pFcb->DirEntry);
 
-                    //
-                    // Remove the DirEntry reference from the Fcb
-                    //
+                        //
+                        // Remove the DirEntry reference from the Fcb
+                        //
 
-                    pFcb->DirEntry = NULL;
+                        pFcb->DirEntry = NULL;
+                    }
                 }
 
                 //

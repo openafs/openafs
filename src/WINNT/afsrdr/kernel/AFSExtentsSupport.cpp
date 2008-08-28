@@ -3,6 +3,8 @@
 //
 #include "AFSCommon.h"
 
+#define AFS_MAX_FCBS_TO_DROP 10
+
 static AFSExtent *ExtentFor( PLIST_ENTRY le, ULONG SkipList );
 static AFSExtent *NextExtent( AFSExtent *Extent, ULONG SkipList );
 static ULONG ExtentsMasks[AFS_NUM_EXTENT_LISTS] = AFS_EXTENTS_MASKS;
@@ -37,8 +39,13 @@ AFSDereferenceExtents( IN AFSFcb *Fcb)
     // Increment and do it again with the lock Ex (guarantees only one
     // 1->0 transition)
     //
+    //
+    // We cannot have the lock SHARED at this point
+    //
+    ASSERT(ExIsResourceAcquiredExclusiveLite( &pNPFcb->Specific.File.ExtentsResource) ||
+           !ExIsResourceAcquiredExclusive( &pNPFcb->Specific.File.ExtentsResource) );
 
-    AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE );
+    AFSAcquireShared (&pNPFcb->Specific.File.ExtentsResource, TRUE );
 
     i = InterlockedDecrement( &pNPFcb->Specific.File.ExtentsRefCount );
 
@@ -139,7 +146,7 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
         return FALSE;
     }
 
-    if (!AFSAcquireExcl( &pNPFcb->Specific.File.ExtentsResource, TRUE ))
+    if (!AFSAcquireExcl( &pNPFcb->Specific.File.ExtentsResource, FALSE ))
     {
         //
         // Couldn't lock immediately
@@ -253,10 +260,10 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
             }
 
             //
-            // Send the request down.  We could send it asynchronously
-            // but in case we'll be careful.  This is usually
-            // tear down and down in a worker thread so we are not
-            // interrupting much latency after all.
+            // Send the request down.  We cannot send this down
+            // asynchronously - if we did that we could requeast them
+            // back before the service got this request and then this
+            // request would be a corruption.
             //
 
             sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
@@ -271,7 +278,7 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
                                           NULL,
                                           NULL);
 
-            ASSERT( ntStatus == STATUS_SUCCESS);
+            ASSERT( STATUS_SUCCESS == ntStatus || STATUS_DEVICE_NOT_READY == ntStatus);
 
             ulReleaseCount += ulProcessCount;
         }
@@ -448,11 +455,11 @@ AFSExtentForOffset( IN AFSFcb *Fcb,
 }
 
 
-static BOOLEAN DoExtentsMapRegion(IN AFSFcb *Fcb, 
-                                  IN PLARGE_INTEGER Offset, 
-                                  IN ULONG Size,
-                                  IN OUT AFSExtent **FirstExtent,
-                                  OUT AFSExtent **LastExtent)
+BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb, 
+                              IN PLARGE_INTEGER Offset, 
+                              IN ULONG Size,
+                              IN OUT AFSExtent **FirstExtent,
+                              OUT AFSExtent **LastExtent)
 {
     //
     // Return TRUE region is completely mapped.  FALSE
@@ -535,8 +542,7 @@ NTSTATUS
 AFSRequestExtents( IN AFSFcb *Fcb, 
                    IN PLARGE_INTEGER Offset, 
                    IN ULONG Size,
-                   OUT BOOLEAN *FullyMapped,
-                   OUT AFSExtent **FirstExtent)
+                   OUT BOOLEAN *FullyMapped)
 {
     LARGE_INTEGER        newStart;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
@@ -544,7 +550,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     AFSRequestExtentsCB  request;
     ULONG                newSize;
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
-
+    AFSExtent           *pFirstExtent;
     //
     // Check our extents, then fire off a request if we need to.
     //
@@ -553,13 +559,13 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     //
     // We start off knowing nothing about where we will go.
     //
-    *FirstExtent = NULL;
+    pFirstExtent = NULL;
 
-    *FullyMapped = DoExtentsMapRegion( Fcb, Offset, Size, FirstExtent, &pExtent );
+    *FullyMapped = AFSDoExtentsMapRegion( Fcb, Offset, Size, &pFirstExtent, &pExtent );
 
     if (*FullyMapped) 
     {
-        ASSERT(AFSExtentContains(*FirstExtent, Offset));
+        ASSERT(AFSExtentContains(pFirstExtent, Offset));
         LARGE_INTEGER end = *Offset;
         end.QuadPart += (Size-1);
         ASSERT(AFSExtentContains(pExtent, &end));
@@ -609,10 +615,10 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         // checked (note that FirstExtent may have been set up by
         // previous request and so things maybe a bunch faster
         //
-        *FullyMapped = DoExtentsMapRegion(Fcb, Offset, Size, FirstExtent, &pExtent);
+        *FullyMapped = AFSDoExtentsMapRegion(Fcb, Offset, Size, &pFirstExtent, &pExtent);
 
         if (*FullyMapped) {
-            ASSERT(AFSExtentContains(*FirstExtent, Offset));
+            ASSERT(AFSExtentContains(pFirstExtent, Offset));
             LARGE_INTEGER end = *Offset;
             end.QuadPart += (Size-1);
             ASSERT(AFSExtentContains(pExtent, &end));
@@ -936,7 +942,7 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         AFSAcquireShared( &pDevExt->Specific.RDR.FileIDTreeLock, TRUE);
 
         ntStatus = AFSLocateFileIDEntry( pDevExt->Specific.RDR.FileIDTree.TreeHead,
-                                         SetExtents->FileID.Hash,
+                                         SetExtents->FileId.Hash,
                                          &pFcb);
 
         AFSReleaseResource( &pDevExt->Specific.RDR.FileIDTreeLock );
@@ -1077,73 +1083,6 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
                 ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
             }
         }
-#if 0
-        //
-        // Now try to give back the extents
-        //
-        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
-                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      PsGetCurrentProcessId(),
-                                      NULL,
-                                      &Fcb->DirEntry->DirectoryEntry.FileId,
-                                      pReleaseExtents,
-                                      ulSz,
-                                      NULL,
-                                      NULL);
-
-        if ( !NT_SUCCESS( ntStatus))
-        {
-            try_return( ntStatus );
-        }
-
-        //
-        // Now loop again getting rid of the extents
-        //
-        pExtent = AFSExtentForOffset( Fcb,
-                                      &Extents->FileExtents[0].FileOffset,
-                                      FALSE );
-
-        if (NULL == pExtent) 
-        {
-            le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
-        } 
-        else
-        {
-            le = &pExtent->Lists[AFS_EXTENTS_LIST];
-        }
-        ulExtentCount = 0;
-
-        while (le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST] && 
-               ulExtentCount < Extents->ExtentCount) 
-        {
-            pExtent = ExtentFor( le, AFS_EXTENTS_LIST );
-            
-            if (pExtent->FileOffset.QuadPart < Extents->FileExtents[ulExtentCount].FileOffset.QuadPart) 
-            {
-                //
-                // Skip forward through the extent list until we get
-                // to the one we want
-                //
-                le = le->Flink;
-            } 
-            else if (pExtent->FileOffset.QuadPart > Extents->FileExtents[ulExtentCount].FileOffset.QuadPart) 
-            {
-                //
-                // We don't have the extent asked for (or out of order)
-                //
-                ulExtentCount ++;
-            } 
-            else 
-            {
-                //
-                // This is one to delete, move forward cursors
-                //
-                le = le->Flink;
-                ulExtentCount ++;
-
-            }
-        }
-#endif
     try_exit:
         if (locked) 
         {
@@ -1161,11 +1100,11 @@ VOID
 AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
                         OUT AFSFileExtentCB *FileExtents,
                         IN  ULONG BufferSize,
+                        IN  ULONG AskedCount,
                         OUT ULONG *ExtentCount)
 {
     AFSExtent           *pExtent;
     LIST_ENTRY          *le;
-    ULONG                ulExtentCount = 0;
     NTSTATUS             ntStatus;
     ULONG                sizeLeft = BufferSize;
     
@@ -1173,10 +1112,37 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
 
     *ExtentCount = 0;
 
-    le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+    if (0 == Fcb->Specific.File.LastPurgePoint.QuadPart) 
+    {
+        //
+        // This is the first time this file has been cleaned, or we
+        // did a full clean last time.
+        //
+        le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+    } 
+    else 
+    {
+        //
+        // start where we left off
+        //
+        pExtent = AFSExtentForOffset( Fcb, &Fcb->Specific.File.LastPurgePoint, TRUE);
+
+        if (NULL == pExtent) 
+        {
+            //
+            // Its all moved
+            //
+            le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+        } 
+        else 
+        {
+            le = &pExtent->Lists[AFS_EXTENTS_LIST];
+        }
+    }
 
     while (le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST] &&
-           sizeLeft > sizeof(AFSFileExtentCB)) 
+           sizeLeft > sizeof(AFSFileExtentCB) &&
+           *ExtentCount < AskedCount) 
     {
 
         pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
@@ -1192,8 +1158,8 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
         //
         FileExtents[*ExtentCount].Flags = AFS_EXTENT_FLAG_RELEASE;
         FileExtents[*ExtentCount].Length = pExtent->Size;
-        FileExtents[*ExtentCount].CacheOffset = pExtent->FileOffset;
-        FileExtents[*ExtentCount].FileOffset = pExtent->CacheOffset;
+        FileExtents[*ExtentCount].CacheOffset = pExtent->CacheOffset;
+        FileExtents[*ExtentCount].FileOffset = pExtent->FileOffset;
 
         le = le->Flink;
         *ExtentCount = (*ExtentCount) + 1;
@@ -1209,11 +1175,25 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
                 RemoveEntryList( &pExtent->Lists[i] );
             }
         }
+        VerifyExtentsLists(Fcb);
+
+        //
+        // Move forward last used cursor
+        //
+        Fcb->Specific.File.LastPurgePoint = pExtent->FileOffset;
+        Fcb->Specific.File.LastPurgePoint.QuadPart += pExtent->Size;
 
         //
         // and free
         //
         ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
+    }
+    if (le == &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST]) 
+    {
+        //
+        // We got to the end - reset the cursor
+        //
+        Fcb->Specific.File.LastPurgePoint.QuadPart = 0;
     }
 }
 
@@ -1295,6 +1275,8 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb)
 VOID
 AFSCleanExtentsOnVolume(IN PVOID Buffer,
                         IN ULONG BufferSize,
+                        IN ULONG AskedCount,
+                        OUT AFSFcb **Fcbs,
                         OUT ULONG *FileCount)
 {
     AFSFcb                            *pFcb;
@@ -1303,6 +1285,7 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
     ULONG                              ulBufferLeft = BufferSize;
     CHAR                              *pcBuffer = (CHAR*) Buffer;
     AFSReleaseFileExtentsResultFileCB *pFile = NULL;
+    ULONG                              ulExtentsProcessed = 0;
     ULONG                              sz;
 
     *FileCount = 0;
@@ -1312,6 +1295,7 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
     //
 
     while (slLoopCount >= 0 &&
+           *FileCount < AFS_MAX_FCBS_TO_DROP &&
            ulBufferLeft >= ( sizeof(AFSReleaseFileExtentsResultFileCB))) 
     {
         pFile = (AFSReleaseFileExtentsResultFileCB*) pcBuffer;
@@ -1344,31 +1328,34 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
         AFSReleaseCleanExtents(pFcb, 
                                pFile->FileExtents, 
                                ulBufferLeft - FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents),
+                               AskedCount - ulExtentsProcessed,
                                &pFile->ExtentCount);
+        ulExtentsProcessed += pFile->ExtentCount;
 
         //
-        // One way or another we are done with the FCB so unlock it
-        //
-        AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
-
-        //
-        // But it is referenced, pass that on to the next one
+        // Fcb it is referenced, pass that on to the next one
         //
         pLastFcb = pFcb;
 
         if (0 == pFile->ExtentCount) 
         {
             //
-            // Nothing filled in, so loop
+            // Nothing filled in, so loop - dropping this FCB lock..
             //
+            AFSReleaseResource(&pFcb->NPFcb->Specific.File.ExtentsResource);
             continue;
         }
+        //
+        // Pass control  (lock and reference)of the FCB to the array
+        //
+        Fcbs[(*FileCount)] = pFcb;
+        InterlockedIncrement( &pFcb->OpenReferenceCount);
 
         //
         // Populate the rest of the field
         //
-        pFile->FileID = pFcb->DirEntry->DirectoryEntry.FileId;
-        pFile->Flags = AFS_EXTENT_FLAG_RELEASE;;
+        pFile->FileId = pFcb->DirEntry->DirectoryEntry.FileId;
+        pFile->Flags = AFS_EXTENT_FLAG_RELEASE;
         pFile->ProcessId = (ULONG) pFcb->Specific.File.ModifyProcessId;
 
         sz = FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents) + 
@@ -1397,9 +1384,57 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
     return;
 }
 
+NTSTATUS
+AFSProcessReleaseFileExtentsDone( PIRP Irp) 
+{
+    AFSReleaseFileExtentsResultDoneCB *pResult;
+    NTSTATUS                           ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt                      *pDeviceExt = (AFSDeviceExt *) AFSDeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION                 pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+
+
+    __Enter
+    {
+        if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSReleaseFileExtentsResultDoneCB))
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        pResult = (AFSReleaseFileExtentsResultDoneCB *)  Irp->AssociatedIrp.SystemBuffer;
+
+        if ( pResult->SerialNumber == 
+             pDeviceExt->Specific.Control.ExtentReleaseSequence)
+        {
+            //
+            // Usual case - they match
+            //
+            ntStatus = STATUS_SUCCESS;
+            KeSetEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent,
+                        0,
+                        FALSE );
+        } 
+        else
+        {
+            DbgPrint("Failed Received Ack on %d\n", pResult->SerialNumber);
+            //
+            // Logic bug, so complain
+            //
+            ASSERT( pResult->SerialNumber == 
+                    pDeviceExt->Specific.Control.ExtentReleaseSequence);
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+    try_exit:
+        
+        ;
+    }
+    return ntStatus;
+}
 
 NTSTATUS
-AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
+AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack, BOOLEAN *Complete)
 {
     NTSTATUS                           ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION                 pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -1411,18 +1446,14 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
     AFSReleaseFileExtentsResultFileCB *pFile = NULL;
     ULONG                              ulSz = 0;
 
-    static int sti = 1; if (sti) DbgBreakPoint();
-
+    *Complete = TRUE;
     pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     __Enter 
     {
         pExtents = (AFSReleaseFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
 
         if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
-            ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
-            pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-            ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
-              sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
+            sizeof( AFSReleaseFileExtentsCB))
         {
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER );
@@ -1437,19 +1468,32 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
             return STATUS_BUFFER_TOO_SMALL;
         }
 
-        if (pExtents->FileID.Hash   != 0 ||
-            pExtents->FileID.Cell   != 0 ||
-            pExtents->FileID.Volume != 0 ||
-            pExtents->FileID.Vnode  != 0 ||
-            pExtents->FileID.Unique != 0)
+        if (pExtents->ExtentCount == 0)
         {
-            if (pExtents->ExtentCount == 0)
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        if (pExtents->FileId.Hash   != 0 ||
+            pExtents->FileId.Cell   != 0 ||
+            pExtents->FileId.Volume != 0 ||
+            pExtents->FileId.Vnode  != 0 ||
+            pExtents->FileId.Unique != 0)
+        {
+            //
+            // Fid Specified.  Check lengths
+            //
+            if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < 
+                ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG)) ||
+                pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
+                ( FIELD_OFFSET( AFSReleaseFileExtentsCB, ExtentCount) + sizeof(ULONG) +
+                  sizeof (AFSFileExtentCB) * pExtents->ExtentCount))
             {
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+
+                try_return( ntStatus = STATUS_INVALID_PARAMETER );
             }
 
             //
-            // Fid Specified.  If this was from the control then look
+            //If this was from the control then look
             // for the FCB, otherwise collect it fromn the FCB
             //
             if (!CallBack)
@@ -1458,7 +1502,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
                 AFSAcquireShared( &pDevExt->Specific.RDR.FileIDTreeLock, TRUE);
     
                 ntStatus = AFSLocateFileIDEntry( pDevExt->Specific.RDR.FileIDTree.TreeHead,
-                                                 pExtents->FileID.Hash,
+                                                 pExtents->FileId.Hash,
                                                  &pFcb);
 
                 AFSReleaseResource( &pDevExt->Specific.RDR.FileIDTreeLock );
@@ -1507,7 +1551,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
             // Setup the first (and only) file
             //
             pFile = pResult->Files;
-            pFile->FileID = pExtents->FileID;
+            pFile->FileId = pExtents->FileId;
             pFile->Flags = AFS_EXTENT_FLAG_RELEASE;
             pFile->ProcessId = (ULONG) pFcb->Specific.File.ModifyProcessId;
             ulSz -= FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents);
@@ -1534,76 +1578,100 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
             //
             // And fall into common path
             //
-        }
+            //
+            // Now hand back if we were told to - NOTE that this is unsafe
+            // - we should give the extents back while the lock is held.
+            // However this code path is only used in debug mode (when
+            // prodding the redirector from outside the service).
+            //
+            if (CallBack ) {
+                
+                PCHAR ptr;
+                AFSReleaseExtentsCB *pRelease = NULL;
+                
+                pFile = pResult->Files;
+            
+                for (ULONG i = 0; i < pResult->FileCount; i++) {
+                
+                    ULONG ulMySz;
+                    ulMySz = sizeof( AFSReleaseExtentsCB ) + (pFile->ExtentCount * sizeof ( AFSFileExtentCB ));
+                    
+                    pRelease = (AFSReleaseExtentsCB*) ExAllocatePoolWithTag( NonPagedPool,
+                                                                             ulMySz,
+                                                                             AFS_EXTENT_RELEASE_TAG);
+                    if (NULL == pRelease) 
+                    {
+                        try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+                    }
+
+                    pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
+                    pRelease->ExtentCount = pFile->ExtentCount;
+                    RtlCopyMemory( pRelease->FileExtents, pFile->FileExtents, pFile->ExtentCount * sizeof ( AFSFileExtentCB ));
+
+                    (VOID) AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
+                                              AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                              (HANDLE) pFile->ProcessId,
+                                              NULL,
+                                              &pFile->FileId,
+                                              pRelease,
+                                              ulMySz,
+                                              NULL,
+                                              NULL);
+                    ExFreePool(pRelease);
+
+                    ptr = (PCHAR) pFile->FileExtents;
+                    ptr += pFile->ExtentCount * sizeof ( AFSFileExtentCB );
+                    ASSERT(((PVOID)ptr) == ((PVOID)&pFile->FileExtents[pFile->ExtentCount]));
+                    pFile = (AFSReleaseFileExtentsResultFileCB*) ptr;
+                
+                }
+            }
+        } 
         else
         {
-            //
-            // Release as many as we have space for
-            //
-            pResult = (AFSReleaseFileExtentsResultCB*) Irp->AssociatedIrp.SystemBuffer;
-            ulSz = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+            AFSWorkItem *pWorkItem;
 
-            pResult->Flags = AFS_EXTENT_FLAG_RELEASE;
-            ulSz -= FIELD_OFFSET(AFSReleaseFileExtentsResultCB, Files);
-            
-            AFSCleanExtentsOnVolume(pResult->Files, ulSz, &pResult->FileCount);
-
-            ulSz = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
-        }
-
-        //
-        // TODO
-        //
-        // As a temp hack, we will *always* call to give these guys back.
-        //
-    
-        //
-        // Now hand back if we were told to
-        //
-        if (CallBack || TRUE) {
-
-            PCHAR ptr;
-            AFSReleaseExtentsCB *pRelease = NULL;
-            
-            pFile = pResult->Files;
-            
-            for (ULONG i = 0; i < pResult->FileCount; i++) {
-                
-                ULONG ulMySz;
-                ulMySz = sizeof( AFSReleaseExtentsCB ) + (pFile->ExtentCount * sizeof ( AFSFileExtentCB ));
-
-                pRelease = (AFSReleaseExtentsCB*) ExAllocatePoolWithTag( NonPagedPool,
-                                                                         ulMySz,
-                                                                         AFS_EXTENT_RELEASE_TAG);
-                if (NULL == pRelease) 
-                {
-                    try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
-                }
-
-                pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
-                pRelease->ExtentCount = pFile->ExtentCount;
-                RtlCopyMemory( pRelease->FileExtents, pFile->FileExtents, pFile->ExtentCount * sizeof ( AFSFileExtentCB ));
-
-                (VOID) AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
-                                          AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          (HANDLE) pFile->ProcessId,
-                                          NULL,
-                                          &pFile->FileID,
-                                          pRelease,
-                                          ulMySz,
-                                          NULL,
-                                          NULL);
-                ExFreePool(pRelease);
-
-                ptr = (PCHAR) pFile->FileExtents;
-                ptr += pFile->ExtentCount * sizeof ( AFSFileExtentCB );
-                ASSERT(((PVOID)ptr) == ((PVOID)&pFile->FileExtents[pFile->ExtentCount]));
-                pFile = (AFSReleaseFileExtentsResultFileCB*) ptr;
+            pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                                   sizeof(AFSWorkItem),
+                                                                   AFS_WORK_ITEM_TAG);
+            if (NULL == pWorkItem) {
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
             }
+
+            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
+
+            pWorkItem->Size = sizeof( AFSWorkItem);
+
+            pWorkItem->RequestType = AFS_WORK_REQUEST_RELEASE;
+
+            pWorkItem->Specific.ReleaseExtents.Irp = Irp;
+
+            IoMarkIrpPending(Irp);
+
+            *Complete = FALSE;
+
+            ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+            if (!NT_SUCCESS(ntStatus)) 
+            { 
+                //
+                // That failed, but we have marked the Irp pending so
+                // we gotta return pending.  Complete now
+                //
+                Irp->IoStatus.Status = ntStatus;
+                Irp->IoStatus.Information = 0;
+                    
+                AFSCompleteRequest( Irp,
+                                    ntStatus);
+            } 
+            ntStatus = STATUS_PENDING;
         }
 
     try_exit:
 
+        //
+        // Note for the below - if we have complete the irp we didn't allocate a buffer
+        //
         if (NULL != pResult &&
             Irp->AssociatedIrp.SystemBuffer != pResult) 
         {
@@ -1613,27 +1681,124 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack)
             ExFreePool(pResult);
         }
 
-        if (NT_SUCCESS(ntStatus)) 
-        {
-            Irp->IoStatus.Information = ulSz;
-        }
-        else
-        {
-            Irp->IoStatus.Information = 0;
-        }
+        if (*Complete) { 
+            if (NT_SUCCESS(ntStatus)) 
+            {
+                Irp->IoStatus.Information = ulSz;
+            }
+            else
+            {
+                Irp->IoStatus.Information = 0;
+            }
 
-        //
-        // TODO
-        //
-        if (!CallBack)
-        {
-            Irp->IoStatus.Information = 0;
-        }
+            //
+            // TODO
+            //
+            if (!CallBack)
+            {
+                Irp->IoStatus.Information = 0;
+            }
 
-        Irp->IoStatus.Status = ntStatus;
+            Irp->IoStatus.Status = ntStatus;
+        }
     }
 
     return ntStatus;
+}
+
+VOID AFSReleaseExtentsWork(AFSWorkItem *WorkItem)
+{
+    NTSTATUS                       ntStatus = STATUS_SUCCESS;
+    PIRP                           pIrp = WorkItem->Specific.ReleaseExtents.Irp;
+    PIO_STACK_LOCATION             pIrpSp = IoGetCurrentIrpStackLocation( pIrp);
+    AFSReleaseFileExtentsCB       *pExtents;
+    PFILE_OBJECT                   pFileObject = pIrpSp->FileObject;
+    ULONG                          ulSz;
+    ULONG                          ulFileCount;
+    PAFSFcb                        Fcbs[AFS_MAX_FCBS_TO_DROP] = {0};
+    AFSReleaseFileExtentsResultCB *pResult = NULL;
+    AFSDeviceExt                  *pDeviceExt = (AFSDeviceExt *) AFSDeviceObject->DeviceExtension;
+
+    pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    //
+    // We only allow one of these at one time.  This makes the
+    // acknowledge easier to detect.  This is purely a coding nicety.
+    // We can support multiple ones but then we need rarely exercised
+    // code to go from serial number to event.
+    //
+    AFSAcquireExcl( &pDeviceExt->Specific.Control.ExtentReleaseResource, TRUE);
+    //
+    // Set up Input and Output
+    //
+    pExtents = (AFSReleaseFileExtentsCB*) pIrp->AssociatedIrp.SystemBuffer;
+
+    ASSERT(pExtents->FileId.Hash    == 0 &&
+           pExtents->FileId.Cell   == 0 &&
+           pExtents->FileId.Volume == 0 &&
+           pExtents->FileId.Vnode  == 0 &&
+
+           pExtents->FileId.Unique == 0);
+
+    //
+    // Setup the result buffer
+    //
+
+    pResult = (AFSReleaseFileExtentsResultCB*) pIrp->AssociatedIrp.SystemBuffer;
+    ulSz = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+    
+    pResult->Flags = AFS_EXTENT_FLAG_RELEASE;
+    ulSz -= FIELD_OFFSET( AFSReleaseFileExtentsResultCB, Files);
+    
+    AFSCleanExtentsOnVolume( pResult->Files, 
+                             ulSz, 
+                             pExtents->ExtentCount, 
+                             Fcbs,
+                             &ulFileCount);
+
+    pResult->FileCount = ulFileCount;
+
+    //
+    // Get ready to complete the Irp
+    //
+    
+    pIrp->IoStatus.Information = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+    pIrp->IoStatus.Status = STATUS_SUCCESS;
+
+    pResult->SerialNumber = ++(pDeviceExt->Specific.Control.ExtentReleaseSequence);
+
+    //
+    // Clear the event.  When the response comes back it will be set
+    //
+    KeClearEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent);
+
+    //
+    // We are all done.  Send back the Irp
+    //
+    AFSCompleteRequest( pIrp, STATUS_SUCCESS);
+
+    //
+    // Wait for the response
+    //
+    ntStatus = KeWaitForSingleObject( &pDeviceExt->Specific.Control.ExtentReleaseEvent,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+
+    for (ULONG i = 0; i < ulFileCount; i ++) {
+        //
+        // Release the extent locks
+        //
+        AFSReleaseResource( &Fcbs[i]->NPFcb->Specific.File.ExtentsResource);
+        //
+        // Give back reference
+        //
+        InterlockedDecrement( &Fcbs[i]->OpenReferenceCount);
+    }
+    //
+    // All done
+    //
+    AFSReleaseResource( &pDeviceExt->Specific.Control.ExtentReleaseResource);    
 }
 
 NTSTATUS
@@ -1644,6 +1809,7 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
     ntStatus = KeWaitForSingleObject( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
                                       Executive,
                                       KernelMode,
+        
                                       FALSE,
                                       NULL);
     return ntStatus;
@@ -1657,6 +1823,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     LIST_ENTRY          *le;
     AFSReleaseExtentsCB *pRelease = NULL;
     ULONG                count = 0;
+    BOOLEAN              bExtentsLocked = FALSE;
     ULONG                total = 0;
     ULONG                ulCurrentCount = 0, ulProcessCount = 0;
     ULONG                sz = 0;
@@ -1686,11 +1853,17 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     __Enter
     {
         //
+        // Stop the extents going away while we call the server
+        //
+        AFSReferenceExtents( Fcb);
+
+        //
         // Lock extents while we count and set up the array to send to
         // the service
         //
         
         AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE);
+        bExtentsLocked = TRUE;
 
         le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
 
@@ -1781,6 +1954,16 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             //
 
             sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
+            //
+            // Drop the extents lock for the duration of the call to
+            // the network.  We have pinned the extents so, even
+            // though we might get extents added during this period,
+            // but none will be removed.  Hence we can carry on from
+            // le.
+            //
+
+            AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
+            bExtentsLocked = FALSE;
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
@@ -1791,6 +1974,9 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                                           sz,
                                           NULL,
                                           NULL);
+
+            AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE);
+            bExtentsLocked = TRUE;
 
             if (!NT_SUCCESS(ntStatus)) 
             {
@@ -1829,7 +2015,12 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
 try_exit:
             
-        AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
+        if (bExtentsLocked) 
+        {
+            AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
+        }
+
+        AFSDereferenceExtents( Fcb);
 
         if (pRelease) {
             ExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG );
@@ -1908,6 +2099,7 @@ static VOID VerifyExtentsLists(AFSFcb *Fcb)
     //
     ASSERT( ExIsResourceAcquiredLite( &Fcb->NPFcb->Specific.File.ExtentsResource ));
     
+    ASSERT(Fcb->Specific.File.ExtentsLists[0].Flink != &Fcb->Specific.File.ExtentsLists[1]);
 
     for (ULONG listNo = 0; listNo < AFS_NUM_EXTENT_LISTS; listNo ++)
     {
@@ -1922,6 +2114,12 @@ static VOID VerifyExtentsLists(AFSFcb *Fcb)
             AFSExtent *pExtent;
 
             pExtent = ExtentFor(pLe, listNo);
+
+            if (listNo == 0) {
+                ASSERT(pLe        != &Fcb->Specific.File.ExtentsLists[1] &&
+                       pLe->Flink !=&Fcb->Specific.File.ExtentsLists[1] &&
+                       pLe->Blink !=&Fcb->Specific.File.ExtentsLists[1]);
+            }
 
             ASSERT(pLe->Flink->Blink == pLe);
             ASSERT(pLe->Blink->Flink == pLe);

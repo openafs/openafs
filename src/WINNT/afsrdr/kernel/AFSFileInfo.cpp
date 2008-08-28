@@ -1110,6 +1110,8 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     }
 
                     SetFlag( pFcb->Flags, AFS_FCB_PENDING_DELETE);
+
+                    AFSPrint("AFSSetDispositionInfo Deleting file %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
                 }
             }
 
@@ -1376,6 +1378,31 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         RtlCopyMemory( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer,
                        uniTargetName.Buffer,
                        uniTargetName.Length);
+
+        //
+        // Update the file index values
+        //
+
+        pSrcFcb->DirEntry->CaseSensitiveTreeEntry.Index = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
+                                                                          FALSE);
+
+        pSrcFcb->DirEntry->CaseInsensitiveTreeEntry.Index = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
+                                                                            TRUE);
+
+        if( pSrcFcb->DirEntry->DirectoryEntry.ShortNameLength > 0)
+        {
+
+            uniShortName.Length = pSrcFcb->DirEntry->DirectoryEntry.ShortNameLength;
+            uniShortName.Buffer = pSrcFcb->DirEntry->DirectoryEntry.ShortName;
+
+            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName,
+                                                                                    TRUE);
+        }
+        else
+        {
+
+            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.Index = 0;
+        }
 
         //
         // Re-insert the directory entry

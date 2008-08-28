@@ -64,6 +64,7 @@ RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, OUT DWORD * pCacheFil
 
     *pCacheFileInfoLen = sizeof(AFSCacheFileInfo) + (cm_CachePathLen) * sizeof(WCHAR);
     *ppCacheFileInfo = (AFSCacheFileInfo *)malloc(*pCacheFileInfoLen);
+    (*ppCacheFileInfo)->ExtentCount.QuadPart = cm_data.buf_nbuffers;
     (*ppCacheFileInfo)->CacheBlockSize = cm_data.blockSize;
     (*ppCacheFileInfo)->CacheFileNameLength = cm_CachePathLen * sizeof(WCHAR);
     err = mbstowcs((*ppCacheFileInfo)->CacheFileName, cm_CachePath, (cm_CachePathLen + 1) *sizeof(WCHAR));
@@ -78,16 +79,16 @@ RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, OUT DWORD * pCacheFil
 }
 
 cm_user_t *
-RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
+RDR_UserFromProcessId( IN ULONG ProcessId)
 {
-    cm_user_t *userp = cm_rootUserp;
+    cm_user_t *userp = NULL;
     HANDLE hProcess = 0, hToken = 0;
     PSID        pSid = 0;
     wchar_t      *secSidString = 0;
     wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
     int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
-    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, RequestBuffer->ProcessId);
+    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, ProcessId);
     if (hProcess == NULL)
         goto done;
 
@@ -104,13 +105,14 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
     _wcsupr(cname);
 
     userp = smb_FindCMUserByName(secSidString, cname, SMB_FLAG_CREATE);
+
+  done:
     if (!userp) {
         userp = cm_rootUserp;
         cm_HoldUser(userp);
     }
 
-  done:
-    osi_Log2(afsd_logp, "RDR_UserFromCommRequest %S userp = 0x%p", 
+    osi_Log2(afsd_logp, "RDR_UserFromProcessId %S userp = 0x%p", 
              osi_LogSaveStringW(afsd_logp, secSidString), userp);
 
     if (secSidString)
@@ -123,6 +125,11 @@ RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer)
         CloseHandle(hProcess);
 
     return userp;
+}
+
+cm_user_t *
+RDR_UserFromCommRequest( IN AFSCommRequest *RequestBuffer) {
+    return RDR_UserFromProcessId(RequestBuffer->ProcessId);
 }
 
 void
@@ -593,7 +600,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     code = cm_Lookup(dscp, Name, 0, userp, &req, &scp);
 
     if (code == 0 && scp) {
-        wchar_t shortName[13];
+        wchar_t shortName[13]=L"";
         cm_dirFid_t dfid;
 
         dfid.vnode = htonl(scp->fid.vnode);
@@ -616,7 +623,10 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseWrite(&scp->rw);
         
-        cm_Gen8Dot3NameIntW(Name, &dfid, shortName, NULL);
+        if (!cm_Is8Dot3(Name))
+            cm_Gen8Dot3NameIntW(Name, &dfid, shortName, NULL);
+        else
+            shortName[0] = '\0';
         RDR_PopulateCurrentEntry(pCurrentEntry, ResultBufferLength, 
                                  dscp, scp, userp, &req, Name, shortName,
                                  NULL, &dwRemaining);
@@ -877,7 +887,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         code = cm_Create(dscp, FileName, flags, &setAttr, &scp, userp, &req);
     }
     if (code == 0) {
-        wchar_t shortName[13];
+        wchar_t shortName[13]=L"";
         cm_dirFid_t dfid;
         DWORD dwRemaining;
 
@@ -894,7 +904,10 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
-        cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
+        if (!cm_Is8Dot3(FileName))
+            cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
+        else
+            shortName[0] = '\0';
         RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining, 
                                  dscp, scp, userp, &req, FileName, shortName,
                                  NULL, &dwRemaining);
@@ -1423,8 +1436,10 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         dfid.vnode = htonl(scp->fid.vnode);
         dfid.unique = htonl(scp->fid.unique);
 
-        cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
-
+        if (!cm_Is8Dot3(TargetFileName))
+            cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
+        else
+            shortName[0] = '\0';
         RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                  newDscp, scp, userp, &req, TargetFileName, shortName,
                                  NULL, &dwRemaining);
@@ -1699,6 +1714,8 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     DWORD Length;
     DWORD count;
     cm_scache_t *scp = NULL;
+    BOOLEAN     bScpLocked = FALSE;
+    BOOLEAN     bBufLocked = FALSE;
     cm_fid_t    Fid;
     cm_buf_t    *bufp;
     afs_uint32  code;
@@ -1749,6 +1766,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     }
 
     lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -1767,41 +1785,59 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     /* the scp is now locked and current */
 
     /* Allocate the extents from the buffer package */
-    for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + Length; 
+    for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + RequestExtentsCB->Length; 
           ByteOffset.QuadPart < EndOffset.QuadPart; 
           ByteOffset.QuadPart += cm_data.blockSize)
     {
         thyper.QuadPart = ByteOffset.QuadPart;
 
-        lock_ReleaseWrite(&scp->rw);
+        if (bScpLocked) {
+            lock_ReleaseWrite(&scp->rw);
+            bScpLocked = FALSE;
+        }
+
         code = buf_Get(scp, &thyper, &bufp);
-        lock_ObtainWrite(&scp->rw);
         
         if (code == 0) {
             lock_ObtainMutex(&bufp->mx);
+            bBufLocked = TRUE;
             bufp->flags |= CM_BUF_REDIR;
-            lock_ReleaseMutex(&bufp->mx);
 
             /* now get the data in the cache */
             if (ByteOffset.QuadPart < scp->length.QuadPart) {
                 while (1) {
+                    if (!bScpLocked) {
+                        lock_ObtainWrite(&scp->rw);
+                        bScpLocked = TRUE;
+                    }
                     code = cm_SyncOp(scp, bufp, userp, &req, 0,
-                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                        CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | (bBufLocked ? CM_SCACHESYNC_BUFLOCKED : 0));
                     if (code) 
                         break;
 
-                    cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                    cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | (bBufLocked ? CM_SCACHESYNC_BUFLOCKED : 0));
 
-                    if (cm_HaveBuffer(scp, bufp, 0)) 
+                    if (cm_HaveBuffer(scp, bufp, bBufLocked)) 
                         break;
-
-                    /* otherwise, load the buffer and try again */
+        
+                    if (bBufLocked) {
+                        lock_ReleaseMutex(&bufp->mx);
+                        bBufLocked = FALSE;
+                    }
+                    /* 
+                     * otherwise, load the buffer and try again.
+                     * call with scp locked and bufp unlocked.
+                     */
                     code = cm_GetBuffer(scp, bufp, NULL, userp, &req);
                     if (code) 
                         break;
                 }
             } else {
                 memset(bufp->datap, 0, cm_data.blockSize);
+            }
+            if (bBufLocked) {
+                lock_ReleaseMutex(&bufp->mx);
+                bBufLocked = FALSE;
             }
 
             pResultCB->FileExtents[count].Flags = 0;
@@ -1813,7 +1849,10 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
         }
     }
     pResultCB->ExtentCount = count;
-    lock_ReleaseWrite(&scp->rw);
+    if (bScpLocked) {
+        lock_ReleaseWrite(&scp->rw);
+        bScpLocked = FALSE;
+    }
     cm_ReleaseSCache(scp);
 
     (*ResultCB)->ResultStatus = 0;
@@ -1839,6 +1878,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     osi_hyper_t thyper;
     LARGE_INTEGER ByteOffset, EndOffset;
     cm_req_t    req;
+    BOOLEAN     bScpLocked = FALSE;
+    BOOLEAN     bBufLocked = FALSE;
 
     cm_InitReq(&req);
 
@@ -1873,6 +1914,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     }
 
     lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -1891,38 +1933,52 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
 
     /* the scp is now locked and current */
 
-    (*ResultCB)->FileID = FileId;
+    (*ResultCB)->FileId = FileId;
 
     /* Allocate the extents from the buffer package */
-    for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + Length; 
+    for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + RequestExtentsCB->Length; 
           ByteOffset.QuadPart < EndOffset.QuadPart; 
           ByteOffset.QuadPart += cm_data.blockSize)
     {
         thyper.QuadPart = ByteOffset.QuadPart;
 
-        lock_ReleaseWrite(&scp->rw);
+        if (bScpLocked) {
+            lock_ReleaseWrite(&scp->rw);
+            bScpLocked = FALSE;
+        }
         code = buf_Get(scp, &thyper, &bufp);
-        lock_ObtainWrite(&scp->rw);
         
         if (code == 0) {
             lock_ObtainMutex(&bufp->mx);
+            bBufLocked = TRUE;
             bufp->flags |= CM_BUF_REDIR;
-            lock_ReleaseMutex(&bufp->mx);
 
             /* now get the data in the cache */
             if (ByteOffset.QuadPart < scp->length.QuadPart) {
                 while (1) {
+                    if (!bScpLocked) {
+                        lock_ObtainWrite(&scp->rw);
+                        bScpLocked = TRUE;
+                    }
                     code = cm_SyncOp(scp, bufp, userp, &req, 0,
-                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                        CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | (bBufLocked ? CM_SCACHESYNC_BUFLOCKED : 0));
                     if (code) 
                         break;
 
-                    cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                    cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | (bBufLocked ? CM_SCACHESYNC_BUFLOCKED : 0));
 
-                    if (cm_HaveBuffer(scp, bufp, 0)) 
+                    if (cm_HaveBuffer(scp, bufp, bBufLocked)) 
                         break;
 
-                    /* otherwise, load the buffer and try again */
+                    if (bBufLocked) {
+                        lock_ReleaseMutex(&bufp->mx);
+                        bBufLocked = FALSE;
+                    }
+
+                    /* 
+                     * otherwise, load the buffer and try again 
+                     * call with scp locked and bufp unlocked.
+                     */
                     code = cm_GetBuffer(scp, bufp, NULL, userp, &req);
                     if (code) 
                         break;
@@ -1931,6 +1987,10 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                 memset(bufp->datap, 0, cm_data.blockSize);
             }
 
+            if (bBufLocked) {
+                lock_ReleaseMutex(&bufp->mx);
+                bBufLocked = FALSE;
+            }
             (*ResultCB)->FileExtents[count].Flags = 0;
             (*ResultCB)->FileExtents[count].FileOffset = ByteOffset;
             (*ResultCB)->FileExtents[count].CacheOffset.QuadPart = bufp->datap - cm_data.baseAddress;
@@ -1940,7 +2000,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         }
     }
     (*ResultCB)->ExtentCount = count;
-    lock_ReleaseWrite(&scp->rw);
+    if (bScpLocked)
+        lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
     osi_Log0(afsd_logp, "RDR_RequestFileExtentsAsync SUCCESS");
@@ -2049,6 +2110,111 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     (*ResultCB)->ResultBufferLength = 0;
 
     return;
+}
+
+DWORD
+RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFileExtentsResultCB,
+                                     IN DWORD ResultBufferLength)
+{
+    afs_uint32  code = 0;
+    cm_req_t    req;
+    unsigned int fileno, extentno;
+    AFSReleaseFileExtentsResultFileCB *pNextFileCB;
+    cm_InitReq(&req);
+
+    for ( fileno = 0, pNextFileCB = &ReleaseFileExtentsResultCB->Files[0]; 
+          fileno < ReleaseFileExtentsResultCB->FileCount; fileno++ ) {
+        AFSReleaseFileExtentsResultFileCB *pFileCB = pNextFileCB;
+        cm_user_t       *userp = NULL;
+        cm_fid_t         Fid;
+        cm_scache_t *    scp = NULL;
+        int              dirty = 0;
+        char * p;
+
+        userp = RDR_UserFromProcessId( pFileCB->ProcessId);
+
+        osi_Log4(afsd_logp, "RDR_ProcessReleaseFileExtentsResult %d.%d.%d.%d",
+                  pFileCB->FileId.Cell, pFileCB->FileId.Volume, 
+                  pFileCB->FileId.Vnode, pFileCB->FileId.Unique);
+
+        /* Process the release */
+        Fid.cell = pFileCB->FileId.Cell;
+        Fid.volume = pFileCB->FileId.Volume;
+        Fid.vnode = pFileCB->FileId.Vnode;
+        Fid.unique = pFileCB->FileId.Unique;
+        Fid.hash = pFileCB->FileId.Hash;
+
+        if (Fid.cell == 0) {
+            osi_Log4(afsd_logp, "RDR_ProcessReleaseFileExtentsResult Invalid FID %d.%d.%d.%d",
+                     Fid.cell, Fid.volume, Fid.vnode, Fid.unique);
+            code = CM_ERROR_INVAL;
+            goto cleanup_file;
+        }
+
+        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        if (code) {
+            osi_Log1(afsd_logp, "RDR_ProcessReleaseFileExtentsResult cm_GetSCache FID failure code=0x%x",
+                      code);
+            goto cleanup_file;
+        }
+
+        lock_ObtainWrite(&scp->rw);
+        code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {     
+            lock_ReleaseWrite(&scp->rw);
+            osi_Log2(afsd_logp, "RDR_ProcessReleaseFileExtentsResult cm_SyncOp failure scp=0x%p code=0x%x",
+                      scp, code);
+            goto cleanup_file;
+        }
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&scp->rw);
+
+        for ( extentno = 0; extentno < pFileCB->ExtentCount; extentno++ ) {
+            osi_hyper_t thyper;
+            cm_buf_t    *bufp;
+            AFSFileExtentCB *pExtent = &pFileCB->FileExtents[extentno];
+
+            thyper.QuadPart = pExtent->FileOffset.QuadPart;
+
+            code = buf_Get(scp, &thyper, &bufp);
+            if (code == 0) {
+                if (pExtent->Flags) {
+                    lock_ObtainMutex(&bufp->mx);
+                    if (pExtent->Flags & AFS_EXTENT_FLAG_RELEASE )
+                        bufp->flags &= ~CM_BUF_REDIR;
+                    if ( pExtent->Flags & AFS_EXTENT_FLAG_DIRTY ) {
+                        buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
+                        dirty = 1;
+                    }
+                    lock_ReleaseMutex(&bufp->mx);
+                }
+                buf_Release(bufp);
+            }
+        }
+
+        if (dirty) {
+            code = cm_FSync(scp, userp, &req);
+            if (code) {
+                osi_Log1(afsd_logp, "RDR_ProcessReleaseFileExtentsResult cm_FSync failure code=0x%x",
+                          code);
+            } 
+        }
+      cleanup_file:
+        if (userp)
+            cm_ReleaseUser(userp);
+        if (scp)
+            cm_ReleaseSCache(scp);
+
+        p = (char *)pFileCB;
+        p += sizeof(AFSReleaseFileExtentsResultFileCB);
+        p += sizeof(AFSFileExtentCB) * (pFileCB->ExtentCount - 1);
+        pNextFileCB = (AFSReleaseFileExtentsResultFileCB *)p;
+    }
+
+    osi_Log1(afsd_logp, "RDR_ReleaseFileExtents DONE code=0x%x", code);
+    return code;
 }
 
 void

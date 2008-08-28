@@ -11,6 +11,8 @@ extern "C"
 #define AFS_KERNEL_MODE
 
 #include <ntifs.h>
+#include <wdmsec.h> // for IoCreateDeviceSecure
+#include <initguid.h>
 
 #include "AFSDefines.h"
 
@@ -32,17 +34,30 @@ extern "C"
 //
 
 NTSTATUS
-AFSLocateDirEntry( IN AFSDirEntryCB *RootNode,
-                   IN ULONG Index,
-                   IN OUT AFSDirEntryCB **DirEntry);
+AFSLocateCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                IN ULONG Index,
+                                IN OUT AFSDirEntryCB **DirEntry);
 
 NTSTATUS
-AFSInsertDirEntry( IN AFSDirEntryCB *RootNode,
-                   IN AFSDirEntryCB *DirEntry);
+AFSLocateCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                  IN ULONG Index,
+                                  IN OUT AFSDirEntryCB **DirEntry);
 
 NTSTATUS
-AFSRemoveDirEntry( IN AFSDirEntryCB **RootNode,
-                   IN AFSDirEntryCB *DirEntry);
+AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                IN AFSDirEntryCB *DirEntry);
+
+NTSTATUS
+AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
+                                  IN AFSDirEntryCB *DirEntry);
+
+NTSTATUS
+AFSRemoveCaseSensitiveDirEntry( IN AFSDirEntryCB **RootNode,
+                                IN AFSDirEntryCB *DirEntry);
+
+NTSTATUS
+AFSRemoveCaseInsensitiveDirEntry( IN AFSDirEntryCB **RootNode,
+                                  IN AFSDirEntryCB *DirEntry);
 
 NTSTATUS
 AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
@@ -235,8 +250,13 @@ NTSTATUS
 AFSRequestExtents( IN  AFSFcb *Fcb, 
                    IN  PLARGE_INTEGER Offset, 
                    IN  ULONG Size,
-                   OUT BOOLEAN *FullyMapped,
-                   OUT AFSExtent **FirstExtent);
+                   OUT BOOLEAN *FullyMApped);
+
+BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb, 
+                              IN PLARGE_INTEGER Offset, 
+                              IN ULONG Size,
+                              IN OUT AFSExtent **FirstExtent,
+                              OUT AFSExtent **LastExtent);
     
 NTSTATUS
 AFSWaitForExtentMapping ( IN AFSFcb *Fcb );
@@ -245,7 +265,13 @@ NTSTATUS
 AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents );
 
 NTSTATUS
-AFSProcessReleaseFileExtents( IN PIRP Irp, IN BOOLEAN CallBack);
+AFSProcessReleaseFileExtents( IN PIRP Irp, IN BOOLEAN CallBack, OUT BOOLEAN *Complete);
+
+NTSTATUS
+AFSProcessReleaseFileExtentsDone( IN PIRP Irp );
+
+VOID
+AFSReleaseExtentsWork(AFSWorkItem *WorkItem);
 
 NTSTATUS
 AFSProcessSetExtents( IN AFSFcb *pFcb,
@@ -396,23 +422,23 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
 //
 
 NTSTATUS
-AFSAddConnection( IN RedirConnectionCB *ConnectCB,
+AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT PULONG ResultStatus,
                   IN OUT PULONG ReturnOutputBufferLength);
 
 NTSTATUS
-AFSCancelConnection( IN RedirConnectionCB *ConnectCB,
+AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                      IN OUT PULONG ResultStatus,
                      IN OUT PULONG ReturnOutputBufferLength);
 
 NTSTATUS
-AFSGetConnection( IN RedirConnectionCB *ConnectCB,
+AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT WCHAR *RemoteName,
                   IN ULONG RemoteNameBufferLength,
                   IN OUT PULONG ReturnOutputBufferLength);
 
 NTSTATUS
-AFSListConnections( IN OUT RedirConnectionCB *ConnectCB,
+AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                     IN ULONG ConnectionBufferLength,
                     IN OUT PULONG ReturnOutputBufferLength);
 
@@ -736,7 +762,8 @@ void
 AFSBuildCRCTable( void);
 
 ULONG
-AFSGenerateCRC( IN PUNICODE_STRING FileName);
+AFSGenerateCRC( IN PUNICODE_STRING FileName,
+                IN BOOLEAN UpperCaseName);
 
 BOOLEAN 
 AFSAcquireForLazyWrite( IN PVOID Context,
@@ -1070,6 +1097,24 @@ AFSCloseRedirector( void);
 
 NTSTATUS
 AFSShutdownRedirector( void);
+
+//
+// AFSLogSupport.cpp
+//
+
+#ifdef AFS_DEBUG_LOG
+
+NTSTATUS
+AFSDbgLogMsg( IN PCCH Format,
+              ...);
+
+NTSTATUS
+AFSInitializeDbgLog( void);
+
+NTSTATUS
+AFSTearDownDbgLog( void);
+
+#endif
 
 };
 

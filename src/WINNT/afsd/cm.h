@@ -108,6 +108,7 @@
 
 #define LOCK_HIERARCHY_IGNORE                    0
 
+#define LOCK_HIERARCHY_RDR_GLOBAL               20
 #define LOCK_HIERARCHY_SMB_STARTED              30
 #define LOCK_HIERARCHY_SMB_LISTENER             35
 #define LOCK_HIERARCHY_SMB_GLOBAL               40

@@ -61,6 +61,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                               &uniRemainingPath);
 
             uniPathName = uniRemainingPath;
+            
+            *ComponentName = uniComponentName;
 
             //
             // Ensure the parent node has been evaluated, if not then go do it now
@@ -186,68 +188,106 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             }
 
             //
-            // Generate the CRC on the node and perform a lookup
+            // Generate the CRC on the node and perform a case sensitive lookup
             //
 
-            ulCRC = AFSGenerateCRC( &uniComponentName);
+            ulCRC = AFSGenerateCRC( &uniComponentName,
+                                    FALSE);
 
-            AFSLocateDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
-                               ulCRC,
-                               &pDirEntry);
+            AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            ulCRC,
+                                            &pDirEntry);
 
             if( pDirEntry == NULL)
             {
 
                 //
-                // OK, if this component is a valid short name then try
-                // a lookup in the short name tree
+                // Missed so perform a case insensitive lookup
                 //
 
-                if( RtlIsNameLegalDOS8Dot3( &uniComponentName,
-                                            NULL,
-                                            NULL))
-                {
+                ulCRC = AFSGenerateCRC( &uniComponentName,
+                                        TRUE);
 
-                    AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
-                                                ulCRC,
-                                                &pDirEntry);
-                }
+                AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                  ulCRC,
+                                                  &pDirEntry);
 
                 if( pDirEntry == NULL)
                 {
 
-                    if( uniRemainingPath.Length > 0)
+                    //
+                    // OK, if this component is a valid short name then try
+                    // a lookup in the short name tree
+                    //
+
+                    //if( RtlIsNameLegalDOS8Dot3( &uniComponentName,
+                    //                            NULL,
+                    //                            NULL))
+                    if( uniComponentName.Length <= 24)
                     {
 
-                        ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+                        AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
+                                                    ulCRC,
+                                                    &pDirEntry);
+                    }
+
+                    if( pDirEntry == NULL)
+                    {
+
+                        if( uniRemainingPath.Length > 0)
+                        {
+
+                            ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+
+                            //
+                            // Drop the lock on the parent
+                            //
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                        }
+                        else
+                        {
+
+                            ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+
+                            //
+                            // Pass back the parent node and the component name
+                            //
+
+                            *ParentFcb = pParentFcb;
+
+                            *Fcb = NULL;
+                        }
+
+                        //
+                        // Node name not found so get out
+                        //
+
+                        break;
+                    }
+                }
+                else
+                {
+
+                    //
+                    // Here we have a match on the case insensitive lookup for the name. If there
+                    // Is more than one link entry for this node then fail the lookup request
+                    //
+
+                    if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+                        pDirEntry->CaseInsensitiveList.fLink != NULL)
+                    {
+
+                        ntStatus = STATUS_OBJECT_NAME_COLLISION;
 
                         //
                         // Drop the lock on the parent
                         //
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        break;
                     }
-                    else
-                    {
-
-                        ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
-
-                        //
-                        // Pass back the parent node and the component name
-                        //
-
-                        *ParentFcb = pParentFcb;
-
-                        *Fcb = NULL;
-
-                        *ComponentName = uniComponentName;
-                    }
-
-                    //
-                    // Node name not found so get out
-                    //
-
-                    break;
                 }
             }
 
@@ -281,6 +321,24 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
                     break;
+                }
+
+                //
+                // If this is a directory node then initialize the directory
+                //
+
+                if( pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    ntStatus = AFSInitializeDirectory( pCurrentFcb);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        break;
+                    }
                 }
             }
             else
@@ -421,7 +479,8 @@ AFSGenerateShortName( IN AFSFcb *ParentDcb,
             // Check if the short name exists in the current directory
             //
 
-            ulCRC = AFSGenerateCRC( &uniShortName);
+            ulCRC = AFSGenerateCRC( &uniShortName,
+                                    TRUE);
 
             AFSLocateShortNameDirEntry( ParentDcb->Specific.Directory.ShortNameTree,
                                         ulCRC,
@@ -463,33 +522,51 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
         // Insert the node into the directory node tree
         //
 
-        if( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeHead == NULL)
+        if( ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead == NULL)
         {
 
-            ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeHead = DirEntry;
+            ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = DirEntry;
         }
         else
         {
 
-            AFSInsertDirEntry( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
-                               DirEntry);
+            AFSInsertCaseSensitiveDirEntry( ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            DirEntry);
+        }               
+
+        if( ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
+        {
+
+            ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = DirEntry;
+
+            SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+        }
+        else
+        {
+
+            AFSInsertCaseInsensitiveDirEntry( ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                              DirEntry);
         }               
 
         //
         // Into the shortname tree
         //
 
-        if( ParentDcb->Specific.Directory.ShortNameTree == NULL)
+        if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
         {
 
-            ParentDcb->Specific.Directory.ShortNameTree = DirEntry;
+            if( ParentDcb->Specific.Directory.ShortNameTree == NULL)
+            {
+
+                ParentDcb->Specific.Directory.ShortNameTree = DirEntry;
+            }
+            else
+            {
+
+                AFSInsertShortNameDirEntry( ParentDcb->Specific.Directory.ShortNameTree,
+                                            DirEntry);
+            }              
         }
-        else
-        {
-
-            AFSInsertShortNameDirEntry( ParentDcb->Specific.Directory.ShortNameTree,
-                                        DirEntry);
-        }              
 
         //
         // And insert the node into the directory list
@@ -566,22 +643,29 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
         AFSAcquireExcl( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
-        //
-        // Remove the entry from the parent tree
-        //
-
-        AFSRemoveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeHead,
-                           DirEntry);
-
-        if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
+        if( !BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
 
             //
-            // From the short name tree
+            // Remove the entry from the parent tree
             //
 
-            AFSRemoveShortNameDirEntry( &ParentDcb->Specific.Directory.ShortNameTree,
-                                        DirEntry);
+            AFSRemoveCaseSensitiveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            DirEntry);
+
+            AFSRemoveCaseInsensitiveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                              DirEntry);
+
+            if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
+            {
+
+                //
+                // From the short name tree
+                //
+
+                AFSRemoveShortNameDirEntry( &ParentDcb->Specific.Directory.ShortNameTree,
+                                            DirEntry);
+            }
         }
 
         //
@@ -1095,7 +1179,8 @@ AFSParseName( IN PIRP Irp,
         // Generate a CRC on the component and look it up in the name tree
         //
 
-        ulCRC = AFSGenerateCRC( &uniComponentName);
+        ulCRC = AFSGenerateCRC( &uniComponentName,
+                                FALSE);
 
         //
         // Grab our tree lock shared
@@ -1108,28 +1193,44 @@ AFSParseName( IN PIRP Irp,
         // Locate the dir entry for this node
         //
 
-        ntStatus = AFSLocateDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeHead,
-                                      ulCRC,
-                                      &pShareDirEntry);
+        ntStatus = AFSLocateCaseSensitiveDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                   ulCRC,
+                                                   &pShareDirEntry);
 
         if( pShareDirEntry == NULL ||
             !NT_SUCCESS( ntStatus))
         {
 
             //
-            // We didn't find the cell name so post it to the CM to see if it
-            // exists
+            // Perform a case insensitive search
             //
 
-            ntStatus = AFSCheckCellName( &uniComponentName,
-                                         &pShareDirEntry);
+            ulCRC = AFSGenerateCRC( &uniComponentName,
+                                    TRUE);
 
-            if( !NT_SUCCESS( ntStatus))
+            ntStatus = AFSLocateCaseInsensitiveDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                         ulCRC,
+                                                         &pShareDirEntry);
+
+            if( pShareDirEntry == NULL ||
+                !NT_SUCCESS( ntStatus))
             {
 
-                AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                //
+                // We didn't find the cell name so post it to the CM to see if it
+                // exists
+                //
 
-                try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+                ntStatus = AFSCheckCellName( &uniComponentName,
+                                             &pShareDirEntry);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+                }
             }
         }
 
@@ -1342,16 +1443,30 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
         // Insert the node into the name tree
         //
 
-        if( pDirHdr->TreeHead == NULL)
+        if( pDirHdr->CaseSensitiveTreeHead == NULL)
         {
 
-            pDirHdr->TreeHead = pDirNode;
+            pDirHdr->CaseSensitiveTreeHead = pDirNode;
         }
         else
         {
 
-            AFSInsertDirEntry( pDirHdr->TreeHead,
-                               pDirNode);
+            AFSInsertCaseSensitiveDirEntry( pDirHdr->CaseSensitiveTreeHead,
+                                            pDirNode);
+        }            
+
+        if( pDirHdr->CaseInsensitiveTreeHead == NULL)
+        {
+
+            pDirHdr->CaseInsensitiveTreeHead = pDirNode;
+
+            SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+        }
+        else
+        {
+
+            AFSInsertCaseInsensitiveDirEntry( pDirHdr->CaseInsensitiveTreeHead,
+                                              pDirNode);
         }              
 
         if( AFSAllRoot->Specific.Directory.DirectoryNodeListHead == NULL)

@@ -116,6 +116,14 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                         IN DWORD ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB);
 
+DWORD 
+RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents);
+
+DWORD
+RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFileExtentsResultCB,
+                                     IN DWORD ResultBufferLength);
+
+
 void
 RDR_PioctlOpen( IN cm_user_t *userp,
                 IN AFSFileID  ParentId,
@@ -147,6 +155,9 @@ RDR_PioctlRead( IN cm_user_t *userp,
 
 cm_user_t *
 RDR_UserFromCommRequest( IN AFSCommRequest * pRequest );
+
+cm_user_t *
+RDR_UserFromProcessId( IN ULONG ProcessId);
 
 void
 RDR_ReleaseUser( IN cm_user_t *userp);

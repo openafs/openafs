@@ -12,6 +12,8 @@
 
 #define AFSPrint        DbgPrint
 
+#define AFS_DEBUG_LOG   1
+
 static inline void AFSBreakPoint() {
 #if !defined(KD_DEBUGGER_ENABLED)
 #define KD_DEBUGGER_ENABLED DBG
@@ -105,17 +107,11 @@ static inline void AFSBreakPoint() {
 #define AFS_DBG_FLAG_BREAK_ON_ENTRY     0x00000001
 
 //
-// Device name
+// Control Device name
 //
 
-#define AFS_DEVICE_NAME     L"\\Device\\AFSDevice"
-#define AFS_SYMLINK_NAME    L"\\DosDevices\\AFSRedirector"
-
-//
-// Device type
-//
-
-#define DEVICE_AFS        FILE_DEVICE_DISK_FILE_SYSTEM
+#define AFS_CONTROL_DEVICE_NAME     L"\\Device\\AFSControlDevice"
+#define AFS_SYMLINK_NAME            L"\\??\\AFSRedirector"
 
 //
 // Device flags
@@ -135,6 +131,13 @@ static inline void AFSBreakPoint() {
 
 #define AFS_WORKER_INITIALIZED                  0x0001
 #define AFS_WORKER_PROCESS_REQUESTS             0x0002
+
+//
+// Worker Thread codes
+//
+
+#define AFS_WORK_REQUEST_RELEASE                0x0001
+
 
 //
 // Pool state
@@ -183,6 +186,7 @@ static inline void AFSBreakPoint() {
 #define AFS_FCB_DELETED                                      0x00000010
 #define AFS_UPDATE_WRITE_TIME                                0x00000020
 #define AFS_FCB_INSERTED_ID_TREE                             0x00000040
+#define AFS_FCB_DELETE_DIR_ENTRY                             0x00000080
 
 //
 // Fcb lifetime in seconds
@@ -263,8 +267,10 @@ static inline void AFSBreakPoint() {
 // DirEntry flags
 //
 
-#define AFS_DIR_RELEASE_NAME_BUFFER      0x00000001
-#define AFS_DIR_ENTRY_NOT_EVALUATED      0x00000002
+#define AFS_DIR_RELEASE_NAME_BUFFER             0x00000001
+#define AFS_DIR_ENTRY_NOT_EVALUATED             0x00000002
+#define AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD 0x00000004
+#define AFS_DIR_ENTRY_NOT_IN_PARENT_TREE        0x00000008
 
 //
 // Vcb flags
@@ -310,13 +316,11 @@ static inline void AFSBreakPoint() {
 #define AFS_EXTENTS_LIST        0
 //
 // A max of 64 extents in ther first skip list
-// #define AFS_EXTENT_SKIP1_BITS   6
-#define AFS_EXTENT_SKIP1_BITS   1
+#define AFS_EXTENT_SKIP1_BITS   6
 
 //
 // Then 128 bits in the second skip list
-// #define AFS_EXTENT_SKIP2_BITS   7
-#define AFS_EXTENT_SKIP2_BITS   1
+#define AFS_EXTENT_SKIP2_BITS   7
 
 //
 // This means that the top list skips in steps of 2^25 (=12+6+7) which
@@ -335,5 +339,15 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_MAXIMUM_EXTENT_RELEASE_COUNT        100
+
+// {41966169-3FD7-4392-AFE4-E6A9D0A92C72}  - generated using guidgen.exe
+DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
+        0x41966169, 0x3fd7, 0x4392, 0xaf, 0xe4, 0xe6, 0xa9, 0xd0, 0xa9, 0x2c, 0x72);
+
+//
+// Debug log length
+// 
+
+#define AFS_DBG_LOG_LENGTH              (256 * 1024)
 
 #endif /* _AFS_DEFINES_H */

@@ -19,15 +19,13 @@ CachedRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            mapped = FALSE;
-    AFSExtent         *pExtent = NULL;
 
     __Enter
     {
         //
         // Provoke a get of the extents - if we need to.
         //
-        pExtent = NULL;
-        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &mapped, &pExtent);
+        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &mapped);
 
         if (!NT_SUCCESS(ntStatus)) {
             try_return( ntStatus );
@@ -178,17 +176,19 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
-    BOOLEAN            locked = FALSE;
+    BOOLEAN            bLocked = FALSE;
     AFSGatherIo       *pGatherIo = NULL;
     AFSIoRun          *pIoRuns = NULL;
     AFSIoRun           stIoRuns[AFS_MAX_STACK_IO_RUNS];
     ULONG              extentsCount = 0;
     AFSExtent         *pStartExtent = NULL;
+    AFSExtent         *pIgnoreExtent = NULL;
     BOOLEAN            bExtentsMapped = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     ULONG              ulReadByteCount;
     ULONG              ulByteCount;
     AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
+    BOOLEAN            bDerefExtents = FALSE;
 
     __Enter
     {
@@ -237,7 +237,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         pStartExtent = NULL;
         while (TRUE) 
         {
-            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ulReadByteCount, &bExtentsMapped, &pStartExtent );
+            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ulReadByteCount, &bExtentsMapped );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
@@ -246,7 +246,23 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
             if (bExtentsMapped)
             {
-                break;
+                //
+                // We know that they *did* map.  Now lock up and then
+                // if we are still mapped pin the extents.
+                //
+                AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
+                bLocked = TRUE;
+                if ( AFSDoExtentsMapRegion( pFcb, &StartingByte, ulReadByteCount, &pStartExtent, &pIgnoreExtent )) {
+                    AFSReferenceExtents( pFcb ); 
+                    bDerefExtents = TRUE;
+                    break;
+                }
+                AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
+                bLocked= FALSE;
+                //
+                // Bad things happened in the interim.  Start again from the top
+                //
+                continue;
             }
             //
             // Note that if we are not full mapped then pStartExtent
@@ -262,15 +278,9 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // At this stage we know that the extents are fully mapped and
-        // that, because we too a reference they won't be unmapped.
+        // that, because we took a reference they won't be unmapped.
         // Thus the list will not move between the start and end.
-        // Hence we only actually need to lock the extents when we get
-        // the first extent inside AFSGetExtents, however unless the
-        // lock gets very hot it feels better to keep things
-        // protected.
         // 
-        AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
-        locked = TRUE;
 
         ntStatus = AFSGetExtents( pFcb, 
                                   &StartingByte, 
@@ -314,9 +324,10 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus );
         }
 
-        AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
-        locked = FALSE;
+        ASSERT(bDerefExtents);
 
+        AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
+        bLocked = FALSE;
 
         pGatherIo = (AFSGatherIo*) ExAllocatePoolWithTag( NonPagedPool,
                                                       sizeof( AFSGatherIo ),
@@ -391,7 +402,7 @@ try_exit:
             pFileObject->CurrentByteOffset.QuadPart = StartingByte.QuadPart + ulByteCount;
         }
 
-        if (locked) 
+        if (bLocked) 
         {
             AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
         }
@@ -408,6 +419,12 @@ try_exit:
             Irp->IoStatus.Information = 0;
 
             AFSCompleteRequest( Irp, ntStatus );
+        }
+
+        if( bDerefExtents)
+        {
+
+            AFSDereferenceExtents( pFcb);
         }
     }
     return ntStatus;
@@ -430,23 +447,22 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
     
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
-    IO_STACK_LOCATION *pIrpSp;
-    AFSFcb *pFcb = NULL;
-    BOOLEAN bReleaseMain = FALSE;
-    BOOLEAN bReleasePaging = FALSE;
-    BOOLEAN bPagingIo = FALSE;
-    BOOLEAN bNonCachedIo = FALSE;
-    BOOLEAN bCompleteIrp = TRUE;
-    PFILE_OBJECT pFileObject = NULL;
-    LARGE_INTEGER liStartingByte;
-    ULONG ulByteCount;
-    void *pSystemBuffer = NULL;
-    BOOLEAN bDerefExtents = FALSE;
+    NTSTATUS            ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt       *pDeviceExt;
+    IO_STACK_LOCATION  *pIrpSp;
+    AFSFcb             *pFcb = NULL;
+    BOOLEAN             bReleaseMain = FALSE;
+    BOOLEAN             bReleasePaging = FALSE;
+    BOOLEAN             bPagingIo = FALSE;
+    BOOLEAN             bNonCachedIo = FALSE;
+    BOOLEAN             bCompleteIrp = TRUE;
+    PFILE_OBJECT        pFileObject = NULL;
+    LARGE_INTEGER       liStartingByte;
+    ULONG               ulByteCount;
+    VOID               *pSystemBuffer = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-
+    pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     
     __Enter
     {
@@ -487,10 +503,6 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus);
         }
-
-        AFSReferenceExtents( pFcb );
-
-        bDerefExtents = TRUE;
 
         //
         // TODO we need some interlock to stop the cache being town
@@ -651,12 +663,6 @@ try_exit:
             AFSReleaseResource( &pFcb->NPFcb->Resource);
         } 
 
-        if( bDerefExtents)
-        {
-
-            AFSDereferenceExtents( pFcb);
-        }
-
         if ( bCompleteIrp )
         {
             AFSCompleteRequest( Irp, ntStatus);
@@ -716,9 +722,69 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->ParentFcb != NULL)
         {
 
-            RtlCopyMemory( &stParentFID,
-                           &pFcb->ParentFcb->DirEntry->DirectoryEntry.FileId,
-                           sizeof( AFSFileID));
+            AFSFcb *pParentDcb = pFcb->ParentFcb;
+
+            //
+            // Be sure to get the correct fid for the parent
+            //
+
+            if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+            {
+
+                //
+                // Just the FID of the node
+                //
+
+                stParentFID = pParentDcb->DirEntry->DirectoryEntry.FileId;
+            }
+            else
+            {
+
+                //
+                // MP or SL
+                //
+
+                stParentFID = pParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+
+                //
+                // If this is zero then we need to evaluate it
+                //
+
+                if( stParentFID.Hash == 0)
+                {
+
+                    AFSDirEnumEntry *pDirEntry = NULL;
+                    AFSFcb *pGrandParentDcb = NULL;
+
+                    if( pParentDcb->ParentFcb == NULL ||
+                        pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                    {
+
+                        stParentFID = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
+                    }
+                    else
+                    {
+
+                        stParentFID = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+                    }
+
+                    ntStatus = AFSEvaluateTargetByID( &stParentFID,
+                                                      &pParentDcb->DirEntry->DirectoryEntry.FileId,
+                                                      &pDirEntry);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
+
+                    pParentDcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+                    stParentFID = pDirEntry->TargetFileId;
+
+                    ExFreePool( pDirEntry);
+                }
+            }
         }
 
         //
