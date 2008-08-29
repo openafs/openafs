@@ -36,12 +36,10 @@ $(OUT)\ddkclean.cmd:
         echo build.exe -c -0 >> $@
         echo exit >> $@
 
-build\$(CPU)\AFSRedirInstall.inf: kernel\AFSRedirInstall.inf
-        $(COPY) kernel\AFSRedirInstall.inf $@
-
-install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd build\$(CPU)\AFSRedirInstall.inf
+install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd kernel\AFSRedirInstall.inf
         type $(OUT)\ddkbuild.cmd
         start /wait $(OUT)\ddkbuild.cmd
+        $(COPY) kernel\AFSRedirInstall.inf build\$(CPU)\AFSRedirInstall.inf
 
 clean:: 
         $(DEL) $(OUT)\ddkbuild.cmd
