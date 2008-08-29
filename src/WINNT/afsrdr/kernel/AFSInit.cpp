@@ -37,7 +37,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
     {
 
         AFSPrint("AFS DriverEntry Initialization build %s:%s\n", __DATE__, __TIME__);
-        AFSBreakPoint();
+        //AFSBreakPoint();
 
         //
         // Initialize some local variables for easier processing
@@ -66,6 +66,8 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
         AFSInitializeDbgLog();
 
+        AFSDbgLogMsg( "AFSRedirector Driver Entry build %s:%s\n", __DATE__, __TIME__);
+
         //
         // Perform some initialization
         //
@@ -85,7 +87,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_FLAG_BREAK_ON_ENTRY))
         {
 
-            AFSPrint("AFS DriverEntrty - Break on entry\n");
+            AFSPrint("AFS DriverEntry - Break on entry\n");
 
             AFSBreakPoint();
         }

@@ -827,6 +827,10 @@ BOOLEAN
 AFSIsChildOfParent( IN AFSFcb *Dcb,
                     IN AFSFcb *Fcb);
 
+NTSTATUS
+AFSRetrieveTargetFID( IN AFSFcb *Fcb,
+                      OUT AFSFileID *FileId);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //

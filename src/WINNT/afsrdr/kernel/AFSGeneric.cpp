@@ -38,7 +38,7 @@ AFSExceptionFilter( IN ULONG Code,
         
         DbgPrint("**** Exception Complete from AFS Redirector ****\n");
 
-        AFSBreakPoint();
+        //AFSBreakPoint();
     }
     __except( EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1112,17 +1112,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
     __Enter
     {
 
-        if( Fcb->ParentFcb != NULL)
-        {
-
-            stParentFileId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            RtlZeroMemory( &stParentFileId,
-                           sizeof( AFSFileID));           
-        }
+        RtlZeroMemory( &stParentFileId,
+                       sizeof( AFSFileID));           
 
         ntStatus = AFSEvaluateTargetByID( &stParentFileId,
                                           &Fcb->DirEntry->DirectoryEntry.FileId,
@@ -1157,6 +1148,10 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
         Fcb->DirEntry->DirectoryEntry.FileAttributes = pDirEntry->FileAttributes;
 
+        Fcb->DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
+
+        Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
+
         if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
             Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
             Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
@@ -1177,13 +1172,27 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                 else
                 {
 
-                    stFileId = Fcb->DirEntry->DirectoryEntry.TargetFileId;
+                    ntStatus = AFSRetrieveTargetFID( Fcb,
+                                                     &stFileId);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
                 }
 
                 if( stFileId.Hash != 0)
                 {
 
-                    ntStatus = AFSEnumerateDirectory( &Fcb->DirEntry->DirectoryEntry.FileId,
+                    DbgPrint("AFSEvaluateNode Enumerating directory of %wZ FID %08lX:%08lX:%08lX:%08lX\n",
+                                                                &Fcb->DirEntry->DirectoryEntry.FileName,
+                                                                stFileId.Cell,
+                                                                stFileId.Volume,
+                                                                stFileId.Vnode,
+                                                                stFileId.Unique);
+
+                    ntStatus = AFSEnumerateDirectory( &stFileId,
                                                       &Fcb->Specific.Directory.DirectoryNodeHdr,
                                                       &Fcb->Specific.Directory.DirectoryNodeListHead,
                                                       &Fcb->Specific.Directory.DirectoryNodeListTail,
@@ -1200,10 +1209,6 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                 }
             }
         }
-
-        Fcb->DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
-
-        Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
 
 try_exit:
 
@@ -1457,4 +1462,82 @@ AFSIsChildOfParent( IN AFSFcb *Dcb,
     }
 
     return bIsChild;
+}
+
+NTSTATUS
+AFSRetrieveTargetFID( IN AFSFcb *Fcb,
+                      OUT AFSFileID *FileId)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    AFSFileID stParentFID, stTargetFID;
+
+    __Enter
+    {
+
+        //
+        // MP or SL, need to determine what the target is
+        //
+
+        RtlZeroMemory( &stParentFID,
+                       sizeof( AFSFileID));
+
+        if( Fcb->DirEntry->DirectoryEntry.TargetFileId.Hash != 0)
+        {
+
+            //
+            // We know this is either a SL or MP so start with the target
+            //
+
+            stTargetFID = Fcb->DirEntry->DirectoryEntry.TargetFileId;
+        }
+        else
+        {
+
+            stTargetFID = Fcb->DirEntry->DirectoryEntry.FileId;
+        }
+
+        //
+        // Loop until we get to the directory of the node
+        //
+
+        while( TRUE)
+        {
+
+            ntStatus = AFSEvaluateTargetByID( &stParentFID,
+                                              &stTargetFID,
+                                              &pDirEntry);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                break;
+            }
+
+            //
+            // Is this a directory?
+            //
+
+            if( pDirEntry->FileType == AFS_FILE_TYPE_DIRECTORY)
+            {
+
+                //
+                // Found the end point
+                //
+
+                *FileId = pDirEntry->FileId;
+
+                ExFreePool( pDirEntry);
+
+                break;
+            }
+
+            stTargetFID = pDirEntry->TargetFileId;
+
+            ExFreePool( pDirEntry);
+        }
+    }
+
+    return ntStatus;
 }

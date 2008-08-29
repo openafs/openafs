@@ -41,14 +41,30 @@ AFSDbgLogMsg( IN PCCH Format,
 
         va_start( va_args, Format);
 
-        //ulBytesWritten = _vsnprintf_s( AFSDbgCurrentBuffer,
-        //                               AFSDbgLogRemainingLength,
-        //                               AFSDbgLogRemainingLength,
-        //                               Format,
-        //                               va_args);
+        ntStatus = RtlStringCbVPrintfA( AFSDbgCurrentBuffer,
+                                        AFSDbgLogRemainingLength,
+                                        Format,
+                                        va_args);
 
-        if( ulBytesWritten > 0)
+        if( ntStatus == STATUS_BUFFER_OVERFLOW)
         {
+
+            AFSDbgLogRemainingLength = AFS_DBG_LOG_LENGTH;
+
+            AFSDbgCurrentBuffer = AFSDbgBuffer;
+
+            ntStatus = RtlStringCbVPrintfA( AFSDbgCurrentBuffer,
+                                            AFSDbgLogRemainingLength,
+                                            Format,
+                                            va_args);
+        }
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            RtlStringCbLengthA( AFSDbgCurrentBuffer,
+                                AFSDbgLogRemainingLength,
+                                (size_t *)&ulBytesWritten);
 
             AFSDbgCurrentBuffer += ulBytesWritten;
 

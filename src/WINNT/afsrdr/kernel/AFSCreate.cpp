@@ -1519,49 +1519,22 @@ AFSProcessOpen( IN PIRP Irp,
                 else
                 {
 
-                    //
-                    // MP or SL
-                    //
+                    ntStatus = AFSRetrieveTargetFID( Fcb,
+                                                     &stFileID);
 
-                    stFileID = Fcb->DirEntry->DirectoryEntry.TargetFileId;
-
-                    //
-                    // If this is zero then we need to evaluate it
-                    //
-
-                    if( stFileID.Hash == 0)
+                    if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDirEnumEntry *pDirEntry = NULL;
-
-                        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                        {
-
-                            stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
-                        }
-                        else
-                        {
-
-                            stFileID = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
-                        }
-
-                        ntStatus = AFSEvaluateTargetByID( &stFileID,
-                                                          &Fcb->DirEntry->DirectoryEntry.FileId,
-                                                          &pDirEntry);
-
-                        if( !NT_SUCCESS( ntStatus))
-                        {
-
-                            try_return( ntStatus);
-                        }
-
-                        Fcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
-
-                        stFileID = pDirEntry->TargetFileId;
-
-                        ExFreePool( pDirEntry);
+                        try_return( ntStatus);
                     }
                 }
+
+                DbgPrint("AFSOpen Enumerating directory of %wZ FID %08lX:%08lX:%08lX:%08lX\n",
+                                                            &Fcb->DirEntry->DirectoryEntry.FileName,
+                                                            stFileID.Cell,
+                                                            stFileID.Volume,
+                                                            stFileID.Vnode,
+                                                            stFileID.Unique);
 
                 ntStatus = AFSEnumerateDirectory( &stFileID,
                                                   &Fcb->Specific.Directory.DirectoryNodeHdr,
@@ -1923,7 +1896,6 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     UNICODE_STRING uniFullFileName;
     AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
     AFSFileID stFileID;
-    AFSFcb *pGrandParentFcb = NULL;
 
     __Enter
     {
@@ -1984,65 +1956,36 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             stPIOCtlOpen.RootId = ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileId;
         }
 
+        RtlZeroMemory( &stFileID,
+                       sizeof( AFSFileID));
+
         //
-        // Be sure to get the correct fid for the parent
-        //
+        // The parent directory FID of the node
+        //        
 
-        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        if( ParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
         {
-
-            //
-            // Just the FID of the node
-            //
-
-            stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            //
-            // MP or SL
-            //
-
-            stFileID = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
-
-            //
-            // If this is zero then we need to evaluate it
-            //
-
-            if( stFileID.Hash == 0)
+            
+            if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
             {
 
-                AFSDirEnumEntry *pDirEntry = NULL;
-                AFSFcb *pGrandParentDcb = NULL;
+                //
+                // Just the FID of the node
+                //
 
-                if( ParentDcb->ParentFcb == NULL ||
-                    ParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                {
+                stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
+            }
+            else
+            {
 
-                    stFileID = ParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-                }
-                else
-                {
-
-                    stFileID = ParentDcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
-                }
-
-                ntStatus = AFSEvaluateTargetByID( &stFileID,
-                                                  &ParentDcb->DirEntry->DirectoryEntry.FileId,
-                                                  &pDirEntry);
+                ntStatus = AFSRetrieveTargetFID( ParentDcb,
+                                                 &stFileID);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
 
                     try_return( ntStatus);
                 }
-
-                ParentDcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
-
-                stFileID = pDirEntry->TargetFileId;
-
-                ExFreePool( pDirEntry);
             }
         }
 

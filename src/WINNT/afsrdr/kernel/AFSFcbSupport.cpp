@@ -519,7 +519,7 @@ AFSInitAFSRoot()
             pFcb->DirEntry->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pFcb->DirEntry + sizeof( AFSDirEntryCB));
 
             RtlCopyMemory( pFcb->DirEntry->DirectoryEntry.FileName.Buffer,
-                           L"&",
+                           L"\\",
                            sizeof( WCHAR));
 
             pFcb->VolumeNode = pVolumeDirEntry;

@@ -87,6 +87,8 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                 else
                 {
 
+                    DbgPrint("AFSEnumerateDirectory Failed enumeration Status %08lX\n", ntStatus);
+
                     ntStatus = STATUS_CANCELLED;
                 }
 
@@ -98,7 +100,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
             pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
 
             //
-            // Remvoe the leading header from the processed length
+            // Remove the leading header from the processed length
             //
 
             ulResultLen -= FIELD_OFFSET( AFSDirEnumResp, Entry);
@@ -335,7 +337,14 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         else
         {
 
-            stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+            ntStatus = AFSRetrieveTargetFID( ParentDcb,
+                                             &stCreateCB.ParentId);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         stCreateCB.AllocationSize = *FileSize;
@@ -499,7 +508,14 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
         else
         {
 
-            stUpdateCB.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+            ntStatus = AFSRetrieveTargetFID( Fcb->ParentFcb,
+                                             &stUpdateCB.ParentId);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         pUpdateResultCB = (AFSFileUpdateResultCB *)ExAllocatePoolWithTag( PagedPool,
@@ -573,7 +589,14 @@ AFSNotifyDelete( IN AFSFcb *Fcb)
         else
         {
 
-            stDelete.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+            ntStatus = AFSRetrieveTargetFID( Fcb->ParentFcb,
+                                             &stDelete.ParentId);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         ulResultLen = sizeof( AFSFileDeleteResultCB);
@@ -654,7 +677,14 @@ AFSNotifyRename( IN AFSFcb *Fcb,
         else
         {
 
-            pRenameCB->SourceParentId = ParentDcb->DirEntry->DirectoryEntry.TargetFileId;
+            ntStatus = AFSRetrieveTargetFID( ParentDcb,
+                                             &pRenameCB->SourceParentId);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         if( TargetDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
@@ -665,7 +695,14 @@ AFSNotifyRename( IN AFSFcb *Fcb,
         else
         {
 
-            pRenameCB->TargetParentId = TargetDcb->DirEntry->DirectoryEntry.TargetFileId;
+            ntStatus = AFSRetrieveTargetFID( TargetDcb,
+                                             &pRenameCB->TargetParentId);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         pRenameCB->TargetNameLength = TargetName->Length;
@@ -1397,6 +1434,57 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = ntStatus;
+
+                break;
+            }
+
+            case IOCTL_AFS_NETWORK_STATUS:
+            {
+
+                AFSNetworkStatusCB *pNetworkStatus = (AFSNetworkStatusCB *)Irp->AssociatedIrp.SystemBuffer;
+
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSNetworkStatusCB))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                DbgPrint("AFSCommRequest IOCTL_AFS_NETWORK_STATUS Status %s\n", pNetworkStatus->Online ? "ONLINE" : "OFFLINE");
+
+
+                //
+                // Implement the handling of this call
+                //
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+
+                break;
+            }
+
+            case IOCTL_AFS_VOLUME_STATUS:
+            {
+
+                AFSVolumeStatusCB *pVolumeStatus = (AFSVolumeStatusCB *)Irp->AssociatedIrp.SystemBuffer;
+
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSVolumeStatusCB))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                DbgPrint("AFSCommRequest IOCTL_AFS_VOLUME_STATUS Status %s\n", pVolumeStatus->Online ? "ONLINE" : "OFFLINE");
+
+                //
+                // Implement the handling of this call
+                //
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_SUCCESS;
 
                 break;
             }

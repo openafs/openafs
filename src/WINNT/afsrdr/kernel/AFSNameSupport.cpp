@@ -110,55 +110,22 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     // MP or SL
                     //
 
-                    stFileID = pParentFcb->DirEntry->DirectoryEntry.TargetFileId;
+                    ntStatus = AFSRetrieveTargetFID( pParentFcb,
+                                                     &stFileID);
 
-                    //
-                    // If this is zero then we need to evaluate it
-                    //
-
-                    if( stFileID.Hash == 0)
+                    if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDirEnumEntry *pDirEntry = NULL;
-
-                        if( pParentFcb->ParentFcb != NULL)
-                        {
-
-                            if( pParentFcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                            {
-
-                                stFileID = pParentFcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-                            }
-                            else
-                            {
-
-                                stFileID = pParentFcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
-                            }
-                        }
-                        else
-                        {
-
-                            RtlZeroMemory( &stFileID,
-                                           sizeof( AFSFileID));
-                        }
-
-                        ntStatus = AFSEvaluateTargetByID( &stFileID,
-                                                          &pParentFcb->DirEntry->DirectoryEntry.FileId,
-                                                          &pDirEntry);
-
-                        if( !NT_SUCCESS( ntStatus))
-                        {
-
-                            try_return( ntStatus);
-                        }
-
-                        pParentFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
-
-                        stFileID = pDirEntry->TargetFileId;
-
-                        ExFreePool( pDirEntry);
+                        try_return( ntStatus);
                     }
                 }
+
+                DbgPrint("AFSLocateNameEntry Enumerating directory of %wZ FID %08lX:%08lX:%08lX:%08lX\n",
+                                                                &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                                                stFileID.Cell,
+                                                                stFileID.Volume,
+                                                                stFileID.Vnode,
+                                                                stFileID.Unique);
 
                 ntStatus = AFSEnumerateDirectory( &stFileID,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeHdr,
@@ -948,7 +915,8 @@ AFSParseName( IN PIRP Irp,
             // Get the related full name
             //
 
-            if( pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
+            if( pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_FCB ||
+                pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_ALL)
             {
 
                 uniRelatedFullName = pRelatedFcb->DirEntry->DirectoryEntry.FileName;
@@ -981,6 +949,7 @@ AFSParseName( IN PIRP Irp,
             //
 
             if( pRelatedFcb->Header.NodeTypeCode != AFS_ROOT_FCB &&
+                pRelatedFcb->Header.NodeTypeCode != AFS_ROOT_ALL &&
                 pIrpSp->FileObject->FileName.Buffer != NULL &&
                 pIrpSp->FileObject->FileName.Buffer[ 0] != L'\\')
             {
@@ -1102,6 +1071,74 @@ AFSParseName( IN PIRP Irp,
             try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
         }
 
+        //
+        // Check the name to see if it is coming in like \\afs\all\something. In this
+        // case make the name \\afs\something. Though if it is \\afs\all\_._AFS_IOCTL_._
+        // then don't touch it
+        //
+
+        RtlInitUnicodeString( &uniAFSAllName,
+                              L"\\AFS\\ALL");
+
+        if( ( uniFullName.Length == uniAFSAllName.Length ||
+              ( uniFullName.Length > uniAFSAllName.Length &&
+                uniFullName.Buffer[ 8] == L'\\')) &&
+            RtlPrefixUnicodeString( &uniAFSAllName,
+                                    &uniFullName,
+                                    TRUE))
+        {
+
+            //
+            // Case out where the name is only \\afs\all or \\afs\\all\\
+            //
+
+            if( uniFullName.Length == uniAFSAllName.Length ||
+                ( uniFullName.Length == uniAFSAllName.Length + sizeof( WCHAR) &&
+                  uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] == L'\\'))
+            {
+
+                *RootFcb = NULL;
+
+                FileName->Length = 0;
+                FileName->MaximumLength = 0;
+                FileName->Buffer = NULL;
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+
+            RtlInitUnicodeString( &uniAFSAllName,
+                                  AFS_PIOCTL_FILE_INTERFACE_NAME_ROOT);
+
+            if( !RtlPrefixUnicodeString( &uniAFSAllName,
+                                         &uniFullName,
+                                         TRUE))
+            {
+                   
+                //
+                // Move the memory over
+                //
+
+                RtlMoveMemory( &uniFullName.Buffer[ 4],
+                               &uniFullName.Buffer[ 8],
+                               uniFullName.Length - 16);
+
+                uniFullName.Length -= 8;           
+            }
+            else
+            {
+
+                //
+                // Return NULL for all the information but with a success status
+                //
+
+                *RootFcb = NULL;
+
+                *FileName = AFSPIOCtlName;
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+        }
+
         FsRtlDissectName( uniFullName,
                           &uniComponentName,
                           &uniRemainingPath);
@@ -1150,29 +1187,6 @@ AFSParseName( IN PIRP Irp,
         {
 
             try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
-        }
-
-        //
-        // Special case the \\AFS\All request
-        //
-
-        RtlInitUnicodeString( &uniAFSAllName,
-                              L"ALL");
-
-        if( RtlCompareUnicodeString( &uniComponentName,
-                                     &uniAFSAllName,
-                                     TRUE) == 0)
-        {
-
-            //
-            // Return NULL for all the information but with a success status
-            //
-
-            *RootFcb = NULL;
-
-            *FileName = uniRemainingPath;  // Return any remaining portion
-
-            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //

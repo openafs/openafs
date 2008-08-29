@@ -4,9 +4,9 @@
 
 [Version]
 signature   =   "$Windows NT$"
-Class		=	"AFSRedirector"
-ClassGuid 	= 	{63EA509E-71F9-42ec-9C5E-1ECC95E3A1A0}
-Provider 	=   %AFS%
+Class	    =	"AFSRedirector"
+ClassGuid   = 	{63EA509E-71F9-42ec-9C5E-1ECC95E3A1A0}
+Provider    =   %AFS%
 DriverVer   =   04/20/2006,1.0.0.0
 
 [DestinationDirs]
@@ -59,9 +59,6 @@ AddReg           = AFS.AddRegistry
 HKLM,%AFSRegistry%,%AFSDebugLevel%,0x00010001 ,0x0001
 HKLM,%AFSRegistry%,%AFSDebugFlags%,0x00010001 ,0x0000
 HKLM,%AFSRegistry%,%AFSSystemFlags%,0x00010001 ,0x0000
-HKR,%AFSProvider%,%AFSRDRDeviceName%,0x00000000 ,"\Device\AFSRedirector"
-HKR,%AFSProvider%,%AFSDRDRName%,0x00000000 ,"OpenAFS Network"
-HKR,%AFSProvider%,%AFSRDRPath%,0x00020000 ,"%SystemRoot%\System32\AFSRDFSProvider.dll"
 
 [AFS.DelRegistry]
 HKLM,%AFSRegistry%,%AFSDebugLevel%
@@ -80,16 +77,12 @@ AFSRedir.sys
 ;;
 
 [Strings]
-AFS					= "OpenAFS"
-AFSServiceDesc	    = "OpenAFS Reddirector"
+AFS		    = "OpenAFS"
+AFSServiceDesc	    = "OpenAFS Redirector"
 AFSServiceName	    = "AFSRedirector"
-AFSRegistry		    = "system\currentcontrolset\services\AFSRedirector\Parameters"
-AFSDebugLevel		= "DebugLevel"
-AFSDebugFlags		= "DebugFlags"
+AFSRegistry	    = "system\currentcontrolset\services\AFSRedirector\Parameters"
+AFSDebugLevel	    = "DebugLevel"
+AFSDebugFlags	    = "DebugFlags"
 AFSSystemFlags	    = "Flags"
-Disk1				= "OpenAFS Media"
-AFSProvider         = "NetworkProvider"
-AFSRDRDeviceName	= "DeviceName"
-AFSRDRName		    = "Name"
-AFSRDRPath		    = "ProviderPath"
+Disk1		    = "OpenAFS Media"
 

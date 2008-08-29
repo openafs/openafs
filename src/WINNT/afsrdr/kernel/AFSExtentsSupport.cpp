@@ -615,6 +615,13 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         // checked (note that FirstExtent may have been set up by
         // previous request and so things maybe a bunch faster
         //
+        
+        //
+        // TODO - actually we haven't locked against pinning, so for
+        // the sake of sanity we will reset here.  I don't think that
+        // we can do a pin/unpin here..
+        //
+        pFirstExtent = NULL;
         *FullyMapped = AFSDoExtentsMapRegion(Fcb, Offset, Size, &pFirstExtent, &pExtent);
 
         if (*FullyMapped) {
@@ -841,14 +848,14 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 //
 
                 //
-                // And into the (upper) skip lists - we will move the cursors
+                // And into the (upper) skip lists - Again, do not move the cursor
                 //
                 for (ULONG i = AFS_NUM_EXTENT_LISTS-1; i > AFS_EXTENTS_LIST; i--)
                 {
                     if (0 == (pExtent->FileOffset.LowPart & ExtentsMasks[i]))
                     {
                         InsertHeadList(pSkipEntries[i], &pExtent->Lists[i]);
-                        pSkipEntries[i] = pSkipEntries[i]->Flink;
+                        VerifyExtentsLists(Fcb);
                     }
                 }
 
@@ -865,10 +872,36 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 }
             
                 //
-                // Move both cursors forward
+                // Move both cursors forward.
+                //
+                // First the extent pointer
                 //
                 fileExtentsUsed++;
                 le = &pExtent->Lists[AFS_EXTENTS_LIST];
+
+                //
+                // Then the skip lists cursors forward if needed
+                //
+                for (ULONG i = AFS_NUM_EXTENT_LISTS-1; i > AFS_EXTENTS_LIST; i--)
+                {
+                    if (0 == (pExtent->FileOffset.LowPart & ExtentsMasks[i]))
+                    {
+                        pSkipEntries[i] = pSkipEntries[i]->Flink;
+#if DBG
+                        //
+                        // We've moved the skiplist forward - we know that the extent is in the
+                        // list - it must therefore be in the skip list
+                        ASSERT(pSkipEntries[i] != &Fcb->Specific.File.ExtentsLists[i]);
+                        AFSExtent *pOther = ExtentFor(pSkipEntries[i], i);
+                        ASSERT (pOther == pExtent);
+#endif
+                    }
+                }
+
+                //
+                // Ans then the cursor in the supplied array
+                //
+
                 pFileExtents++;
 
                 //
@@ -905,6 +938,27 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 // Move le and pExtent forward
                 //
                 le = &pExtent->Lists[AFS_EXTENTS_LIST];
+
+                //
+                // Then the skip lists cursors forward if needed
+                //
+                for (ULONG i = AFS_NUM_EXTENT_LISTS-1; i > AFS_EXTENTS_LIST; i--)
+                {
+                    if (0 == (pExtent->FileOffset.LowPart & ExtentsMasks[i]))
+                    {
+                        pSkipEntries[i] = pSkipEntries[i]->Flink;
+#if DBG
+                        ASSERT(pSkipEntries[i] != &Fcb->Specific.File.ExtentsLists[i]);
+                        AFSExtent *pOther = ExtentFor(pSkipEntries[i], i);
+                        ASSERT (pOther == pExtent);
+#endif
+                    }
+                }
+
+                //
+                // setup pExtent if there is one
+                //
+
                 if (le->Flink != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
                 {
                     pExtent = NextExtent( pExtent, AFS_EXTENTS_LIST ) ;

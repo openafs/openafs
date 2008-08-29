@@ -90,64 +90,32 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     AFSFcb *pParentDcb = pFcb->ParentFcb;
 
                     //
-                    // Be sure to get the correct fid for the parent
-                    //
+                    // The parent directory FID of the node
+                    //        
 
-                    if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                    if( pParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
                     {
-
-                        //
-                        // Just the FID of the node
-                        //
-
-                        stParentFileId = pParentDcb->DirEntry->DirectoryEntry.FileId;
-                    }
-                    else
-                    {
-
-                        //
-                        // MP or SL
-                        //
-
-                        stParentFileId = pParentDcb->DirEntry->DirectoryEntry.TargetFileId;
-
-                        //
-                        // If this is zero then we need to evaluate it
-                        //
-
-                        if( stParentFileId.Hash == 0)
+                        
+                        if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
                         {
 
-                            AFSDirEnumEntry *pDirEntry = NULL;
-                            AFSFcb *pGrandParentDcb = NULL;
+                            //
+                            // Just the FID of the node
+                            //
 
-                            if( pParentDcb->ParentFcb == NULL ||
-                                pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                            {
+                            stParentFileId = pParentDcb->DirEntry->DirectoryEntry.FileId;
+                        }
+                        else
+                        {
 
-                                stParentFileId = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-                            }
-                            else
-                            {
-
-                                stParentFileId = pParentDcb->ParentFcb->DirEntry->DirectoryEntry.TargetFileId;
-                            }
-
-                            ntStatus = AFSEvaluateTargetByID( &stParentFileId,
-                                                              &pParentDcb->DirEntry->DirectoryEntry.FileId,
-                                                              &pDirEntry);
+                            ntStatus = AFSRetrieveTargetFID( pParentDcb,
+                                                             &stParentFileId);
 
                             if( !NT_SUCCESS( ntStatus))
                             {
 
                                 try_return( ntStatus);
                             }
-
-                            pParentDcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
-
-                            stParentFileId = pDirEntry->TargetFileId;
-
-                            ExFreePool( pDirEntry);
                         }
                     }
                 }
