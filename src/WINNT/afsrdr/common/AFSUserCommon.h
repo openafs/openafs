@@ -81,6 +81,7 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_SYMLINK_W                 L"\\\\.\\AFSRedirector"
 
 #define AFS_PIOCTL_FILE_INTERFACE_NAME  L"_._AFS_IOCTL_._"
+#define AFS_PIOCTL_FILE_INTERFACE_NAME_ROOT  L"\\AFS\\ALL\\_._AFS_IOCTL_._"
 
 //
 // Payload buffer length
@@ -111,6 +112,8 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define IOCTL_AFS_NETWORK_STATUS                CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1009, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IOCTL_AFS_VOLUME_STATUS                 CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100A, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_SHUTDOWN                      CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100B, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //
 // Request types
@@ -686,6 +689,7 @@ typedef struct _AFS_INVALIDATE_CACHE_CB
 
 typedef struct _AFS_NETWORK_STATUS_CB
 {
+
     BOOLEAN     Online;
 
 } AFSNetworkStatusCB;
@@ -696,6 +700,7 @@ typedef struct _AFS_NETWORK_STATUS_CB
 
 typedef struct _AFS_VOLUME_STATUS_CB
 {
+
     AFSFileID   FileID;         // only cell and volume fields are set
 
     BOOLEAN     Online;
