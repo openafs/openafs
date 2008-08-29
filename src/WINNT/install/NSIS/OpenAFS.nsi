@@ -50,7 +50,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2000-2007"
+VIAddVersionKey "LegalCopyright" "(C)2000-2008"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -779,7 +779,7 @@ skipremove:
   Call AddProvider
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\AFSRDFSProvider.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Provider"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Network"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Class" 1
 
   SetRebootFlag true
@@ -1163,8 +1163,10 @@ Section /o "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afscred.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.pdb"
-  File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
   File "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.pdb"
+
+  SetOutPath "$SYSDIR\Drivers"
+  File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
 
   SetOutPath "$SYSDIR"
   
@@ -1841,17 +1843,17 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.dll"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.exe"
 
-  Delete /REBOOTOK "INSTDIR\Client\Program\AFSRedir.sys"
-  Delete /REBOOTOK "INSTDIR\Client\Program\AFSRDFSProvider.dll" 
-  Delete "INSTDIR\Client\Program\AFSRedirInstall.inf"
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.sys"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\AFSRDFSProvider.dll" 
+  Delete "$INSTDIR\Client\Program\AFSRedirInstall.inf"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afs_cpa.pdb"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.pdb"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.pdb"
 
-  Delete /REBOOTOK "INSTDIR\Client\Program\AFSRedir.pdb"
-  Delete /REBOOTOK "INSTDIR\Client\Program\AFSRDFSProvider.pdb" 
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.pdb"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\AFSRDFSProvider.pdb" 
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
