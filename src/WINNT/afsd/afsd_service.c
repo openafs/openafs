@@ -1457,16 +1457,16 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     cm_DaemonShutdown();                 
     afsi_log("Daemon shutdown complete");
     
-    afsd_ShutdownCM();
+    RDR_Shutdown();
+    afsi_log("RDR shutdown complete");
 
-    buf_Shutdown();                      
-    afsi_log("Buffer shutdown complete");
-                                         
     smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
     
-    RDR_Shutdown();
-    afsi_log("RDR shutdown complete");
+    buf_Shutdown();                      
+    afsi_log("Buffer shutdown complete");
+                                         
+    afsd_ShutdownCM();
 
     RpcShutdown();                       
 
