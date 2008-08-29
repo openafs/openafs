@@ -899,6 +899,7 @@
             <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[#file_AFSRDFSProvider.dll]" Id="reg_Rdr03" />
             <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Class" Type="integer" Value="1" Id="reg_Rdr04" />
             <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Name" Type="string" Value="OpenAFS Provider" Id="reg_Rdr05" />
+            <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="DeviceName" Type="string" Value="\Device\AFSRedirector" Id="reg_Rdr06" />
           </Component>
 
           <Component Id="Drv_FSRDR_Debug"
