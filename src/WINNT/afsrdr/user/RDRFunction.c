@@ -332,7 +332,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 
 void
 RDR_EnumerateDirectory( IN cm_user_t *userp,
-                        IN AFSFileID ParentID,
+                        IN AFSFileID DirID,
                         IN AFSDirQueryCB *QueryCB,
                         IN DWORD ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB)
@@ -350,8 +350,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 
     cm_InitReq(&req);
 
-    osi_Log4(afsd_logp, "RDR_EnumerateDirectory parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
-             ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
+    osi_Log4(afsd_logp, "RDR_EnumerateDirectory FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             DirID.Cell, DirID.Volume, DirID.Vnode, DirID.Unique);
 
     *ResultCB = (AFSCommResult *)malloc(size);
     if (!(*ResultCB)) {
@@ -374,12 +374,12 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     pCurrentEntry = (AFSDirEnumEntry *)&pDirEnumResp->Entry;
     dwMaxEntryLength -= FIELD_OFFSET( AFSDirEnumResp, Entry);      /* AFSDirEnumResp */
 
-    if (ParentID.Cell != 0) {
-        fid.cell   = ParentID.Cell;
-        fid.volume = ParentID.Volume;
-        fid.vnode  = ParentID.Vnode;
-        fid.unique = ParentID.Unique;
-        fid.hash   = ParentID.Hash;
+    if (DirID.Cell != 0) {
+        fid.cell   = DirID.Cell;
+        fid.volume = DirID.Volume;
+        fid.vnode  = DirID.Vnode;
+        fid.unique = DirID.Unique;
+        fid.hash   = DirID.Hash;
 
         code = cm_GetSCache(&fid, &dscp, userp, &req);
         if (code) {

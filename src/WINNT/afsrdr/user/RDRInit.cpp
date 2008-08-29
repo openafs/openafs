@@ -773,7 +773,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
 
 
-DWORD 
+extern "C" DWORD 
 RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
 {
 
