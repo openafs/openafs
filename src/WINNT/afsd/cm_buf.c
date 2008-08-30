@@ -213,73 +213,86 @@ void buf_Release(cm_buf_t *bp)
     }
 }
 
-/* incremental sync daemon.  Writes all dirty buffers every 5000 ms */
-void buf_IncrSyncer(long parm)
+long 
+buf_Sync(int quitOnShutdown) 
 {
     cm_buf_t **bpp, *bp, *prevbp;
-    long i;				/* counter */
     long wasDirty = 0;
     cm_req_t req;
 
+    /* go through all of the dirty buffers */
+    lock_ObtainRead(&buf_globalLock);
+    for (bpp = &cm_data.buf_dirtyListp, prevbp = NULL; bp = *bpp; ) {
+        if (quitOnShutdown && buf_ShutdownFlag)
+            break;
+
+        lock_ReleaseRead(&buf_globalLock);
+        /* all dirty buffers are held when they are added to the
+        * dirty list.  No need for an additional hold.
+        */
+        lock_ObtainMutex(&bp->mx);
+
+        if (bp->flags & CM_BUF_DIRTY) {
+            /* start cleaning the buffer; don't touch log pages since
+            * the log code counts on knowing exactly who is writing
+            * a log page at any given instant.
+            */
+            cm_InitReq(&req);
+            req.flags |= CM_REQ_NORETRY;
+            wasDirty |= buf_CleanAsyncLocked(bp, &req);
+        }
+
+        /* the buffer may or may not have been dirty
+        * and if dirty may or may not have been cleaned
+        * successfully.  check the dirty flag again.  
+        */
+        if (!(bp->flags & CM_BUF_DIRTY)) {
+            /* remove the buffer from the dirty list */
+            lock_ObtainWrite(&buf_globalLock);
+#ifdef DEBUG_REFCOUNT
+            if (bp->dirtyp == NULL && bp != cm_data.buf_dirtyListEndp) {
+                osi_Log1(afsd_logp,"buf_IncrSyncer bp 0x%p list corruption",bp);
+                afsi_log("buf_IncrSyncer bp 0x%p list corruption", bp);
+            }
+#endif
+            *bpp = bp->dirtyp;
+            bp->dirtyp = NULL;
+            bp->flags &= ~CM_BUF_INDL;
+            if (cm_data.buf_dirtyListp == NULL)
+                cm_data.buf_dirtyListEndp = NULL;
+            else if (cm_data.buf_dirtyListEndp == bp)
+                cm_data.buf_dirtyListEndp = prevbp;
+            buf_ReleaseLocked(bp, TRUE);
+            lock_ConvertWToR(&buf_globalLock);
+        } else {
+            /* advance the pointer so we don't loop forever */
+            lock_ObtainRead(&buf_globalLock);
+            bpp = &bp->dirtyp;
+            prevbp = bp;
+        }
+        lock_ReleaseMutex(&bp->mx);
+    }	/* for loop over a bunch of buffers */
+    lock_ReleaseRead(&buf_globalLock);
+
+    return wasDirty;
+}
+
+/* incremental sync daemon.  Writes all dirty buffers every 5000 ms */
+void buf_IncrSyncer(long parm)
+{
+    long wasDirty = 0;
+    long i;
+
     while (buf_ShutdownFlag == 0) {
+
         if (!wasDirty) {
-            i = SleepEx(5000, 1);
-            if (i != 0) continue;
+	    i = SleepEx(5000, 1);
+	    if (i != 0) 
+                continue;
 	}
 
-	wasDirty = 0;
-
-        /* go through all of the dirty buffers */
-        lock_ObtainRead(&buf_globalLock);
-        for (bpp = &cm_data.buf_dirtyListp, prevbp = NULL; bp = *bpp; ) {
-            lock_ReleaseRead(&buf_globalLock);
-	    /* all dirty buffers are held when they are added to the
-	     * dirty list.  No need for an additional hold.
-	     */
-            lock_ObtainMutex(&bp->mx);
-
-	    if (bp->flags & CM_BUF_DIRTY) {
-		/* start cleaning the buffer; don't touch log pages since
- 		 * the log code counts on knowing exactly who is writing
-		 * a log page at any given instant.
-		 */
-		cm_InitReq(&req);
-		req.flags |= CM_REQ_NORETRY;
-		wasDirty |= buf_CleanAsyncLocked(bp, &req);
-	    }
-
-	    /* the buffer may or may not have been dirty
-	     * and if dirty may or may not have been cleaned
-	     * successfully.  check the dirty flag again.  
-	     */
-            if (!(bp->flags & CM_BUF_DIRTY)) {
-                /* remove the buffer from the dirty list */
-                lock_ObtainWrite(&buf_globalLock);
-#ifdef DEBUG_REFCOUNT
-                if (bp->dirtyp == NULL && bp != cm_data.buf_dirtyListEndp) {
-                    osi_Log1(afsd_logp,"buf_IncrSyncer bp 0x%p list corruption",bp);
-                    afsi_log("buf_IncrSyncer bp 0x%p list corruption", bp);
-                }
-#endif
-                *bpp = bp->dirtyp;
-                bp->dirtyp = NULL;
-                bp->flags &= ~CM_BUF_INDL;
-                if (cm_data.buf_dirtyListp == NULL)
-                    cm_data.buf_dirtyListEndp = NULL;
-                else if (cm_data.buf_dirtyListEndp == bp)
-                    cm_data.buf_dirtyListEndp = prevbp;
-                buf_ReleaseLocked(bp, TRUE);
-                lock_ConvertWToR(&buf_globalLock);
-            } else {
-                /* advance the pointer so we don't loop forever */
-                lock_ObtainRead(&buf_globalLock);
-                bpp = &bp->dirtyp;
-                prevbp = bp;
-            }
-            lock_ReleaseMutex(&bp->mx);
-        }	/* for loop over a bunch of buffers */
-        lock_ReleaseRead(&buf_globalLock);
-    }		/* whole daemon's while loop */
+        wasDirty = buf_Sync(1);
+    } /* whole daemon's while loop */
 }
 
 long
@@ -359,8 +372,12 @@ buf_ValidateBuffers(void)
 }
 
 void buf_Shutdown(void)  
-{                        
+{  
+    /* disable the buf_IncrSyncer() threads */
     buf_ShutdownFlag = 1;
+
+    /* then force all dirty buffers to the file servers */
+    buf_Sync(0);
 }                        
 
 /* initialize the buffer package; called with no locks
