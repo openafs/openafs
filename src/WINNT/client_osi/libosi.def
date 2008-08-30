@@ -72,3 +72,4 @@ EXPORTS
         osi_QRemoveHT           @65
 	lock_ConvertRToW	@66
         osi_LogSaveStringW      @67
+        osi_SetLockOrderValidation @68
