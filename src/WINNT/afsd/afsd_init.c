@@ -561,6 +561,7 @@ int afsd_InitCM(char **reasonP)
     DWORD rx_enable_peer_stats;
     DWORD rx_enable_process_stats;
     DWORD rx_udpbufsize = -1;
+    DWORD lockOrderValidation;
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
@@ -624,6 +625,19 @@ int afsd_InitCM(char **reasonP)
                          msgBuf);
         osi_panic(buf, __FILE__, __LINE__);
     }
+
+    dummyLen = sizeof(lockOrderValidation);
+    code = RegQueryValueEx(parmKey, "LockOrderValidation", NULL, NULL,
+                            (BYTE *) &lockOrderValidation, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+#ifdef DEBUG
+        lockOrderValidation = 1;
+#else
+        lockOrderValidation = 0;
+#endif
+    }
+    osi_SetLockOrderValidation(lockOrderValidation);
+    afsi_log("Lock Order Validation %s", lockOrderValidation ? "On" : "Off");
 
     dummyLen = sizeof(maxcpus);
     code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
