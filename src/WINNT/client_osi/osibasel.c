@@ -25,6 +25,7 @@ static long     atomicIndexCounter = 0;
 /* Thread local storage index for lock tracking */
 static DWORD tls_LockRefH = 0;
 static DWORD tls_LockRefT = 0;
+static BOOLEAN lockOrderValidation = 0;
 
 void osi_BaseInit(void)
 {
@@ -39,6 +40,11 @@ void osi_BaseInit(void)
     if ((tls_LockRefT = TlsAlloc()) == TLS_OUT_OF_INDEXES) 
         osi_panic("TlsAlloc(tls_LockRefT) failure", __FILE__, __LINE__); 
 }       
+
+void osi_SetLockOrderValidation(int on)
+{
+    lockOrderValidation = (BOOLEAN)on;
+}
 
 osi_lock_ref_t *lock_GetLockRef(void * lockp, char type)
 {
@@ -126,11 +132,13 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
         return;
     }
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) 
-        lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
+        if (lockp->level != 0) 
+            lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
+    }
 
     /* otherwise we're the fast base type */
     csp = &osi_baseAtomicCS[lockp->atomicIndex];
@@ -153,10 +161,12 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
 
     LeaveCriticalSection(csp);
 
-    lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
-    osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
-    TlsSetValue(tls_LockRefH, lockRefH);
-    TlsSetValue(tls_LockRefT, lockRefT);
+    if (lockOrderValidation) {
+        lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
+        osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
+        TlsSetValue(tls_LockRefH, lockRefH);
+        TlsSetValue(tls_LockRefT, lockRefT);
+    }
 }       
 
 void lock_ObtainRead(osi_rwlock_t *lockp)
@@ -172,11 +182,13 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
         return;
     }
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) 
-        lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
+        if (lockp->level != 0) 
+            lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
+    }
 
     /* otherwise we're the fast base type */
     csp = &osi_baseAtomicCS[lockp->atomicIndex];
@@ -196,10 +208,12 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
 
     LeaveCriticalSection(csp);
 
-    lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
-    osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
-    TlsSetValue(tls_LockRefH, lockRefH);
-    TlsSetValue(tls_LockRefT, lockRefT);
+    if (lockOrderValidation) {
+        lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
+        osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
+        TlsSetValue(tls_LockRefH, lockRefH);
+        TlsSetValue(tls_LockRefT, lockRefT);
+    }
 }
 
 void lock_ReleaseRead(osi_rwlock_t *lockp)
@@ -215,7 +229,7 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
@@ -263,7 +277,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
@@ -379,11 +393,13 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
         return;
     }
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) 
-        lock_VerifyOrderMX(lockRefH, lockRefT, lockp);
+        if (lockp->level != 0) 
+            lock_VerifyOrderMX(lockRefH, lockRefT, lockp);
+    }
 
     /* otherwise we're the fast base type */
     csp = &osi_baseAtomicCS[lockp->atomicIndex];
@@ -403,10 +419,12 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
     lockp->tid = thrd_Current();
     LeaveCriticalSection(csp);
 
-    lockRefp = lock_GetLockRef(lockp, OSI_LOCK_MUTEX);
-    osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
-    TlsSetValue(tls_LockRefH, lockRefH);
-    TlsSetValue(tls_LockRefT, lockRefT);
+    if (lockOrderValidation) {
+        lockRefp = lock_GetLockRef(lockp, OSI_LOCK_MUTEX);
+        osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
+        TlsSetValue(tls_LockRefH, lockRefH);
+        TlsSetValue(tls_LockRefT, lockRefT);
+    }
 }
 
 void lock_ReleaseMutex(struct osi_mutex *lockp)
@@ -422,7 +440,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         int found = 0;
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
@@ -470,13 +488,15 @@ int lock_TryRead(struct osi_rwlock *lockp)
         if (i >= 0 && i < OSI_NLOCKTYPES)
             return (osi_lockOps[i]->TryReadProc)(lockp);
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) {
-        for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
-            if (lockRefp->type == OSI_LOCK_RW) {
-                osi_assertx(lockRefp->rw != lockp, "RW Lock already held");
+        if (lockp->level != 0) {
+            for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
+                if (lockRefp->type == OSI_LOCK_RW) {
+                    osi_assertx(lockRefp->rw != lockp, "RW Lock already held");
+                }
             }
         }
     }
@@ -497,7 +517,7 @@ int lock_TryRead(struct osi_rwlock *lockp)
 
     LeaveCriticalSection(csp);
 
-    if (i) {
+    if (lockOrderValidation && i) {
         lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
         osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
         TlsSetValue(tls_LockRefH, lockRefH);
@@ -519,13 +539,15 @@ int lock_TryWrite(struct osi_rwlock *lockp)
         if (i >= 0 && i < OSI_NLOCKTYPES)
             return (osi_lockOps[i]->TryWriteProc)(lockp);
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) {
-        for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
-            if (lockRefp->type == OSI_LOCK_RW) {
-                osi_assertx(lockRefp->rw != lockp, "RW Lock already held");
+        if (lockp->level != 0) {
+            for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
+                if (lockRefp->type == OSI_LOCK_RW) {
+                    osi_assertx(lockRefp->rw != lockp, "RW Lock already held");
+                }
             }
         }
     }
@@ -550,7 +572,7 @@ int lock_TryWrite(struct osi_rwlock *lockp)
 
     LeaveCriticalSection(csp);
 
-    if (i) {
+    if (lockOrderValidation && i) {
         lockRefp = lock_GetLockRef(lockp, OSI_LOCK_RW);
         osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
         TlsSetValue(tls_LockRefH, lockRefH);
@@ -571,13 +593,15 @@ int lock_TryMutex(struct osi_mutex *lockp) {
         if (i >= 0 && i < OSI_NLOCKTYPES)
             return (osi_lockOps[i]->TryMutexProc)(lockp);
 
-    lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
-    lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
+    if (lockOrderValidation) {
+        lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
+        lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-    if (lockp->level != 0) {
-        for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
-            if (lockRefp->type == OSI_LOCK_MUTEX) {
-                osi_assertx(lockRefp->mx != lockp, "Mutex already held");
+        if (lockp->level != 0) {
+            for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
+                if (lockRefp->type == OSI_LOCK_MUTEX) {
+                    osi_assertx(lockRefp->mx != lockp, "Mutex already held");
+                }
             }
         }
     }
@@ -601,7 +625,7 @@ int lock_TryMutex(struct osi_mutex *lockp) {
 
     LeaveCriticalSection(csp);
 
-    if (i) {
+    if (lockOrderValidation && i) {
         lockRefp = lock_GetLockRef(lockp, OSI_LOCK_MUTEX);
         osi_QAddH(&lockRefH, &lockRefT, &lockRefp->q);
         TlsSetValue(tls_LockRefH, lockRefH);
@@ -623,7 +647,7 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
@@ -669,7 +693,7 @@ void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
@@ -713,7 +737,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
         return;
     }
 
-    if (lockp->level != 0) {
+    if (lockOrderValidation && lockp->level != 0) {
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
