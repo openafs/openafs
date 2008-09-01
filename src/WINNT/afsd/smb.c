@@ -884,7 +884,6 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 
             if (ntsEx == STATUS_SUCCESS) {
                 memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
-                LsaFreeReturnBuffer(lsaResp);
             } else {
                 /* 
                  * This will cause the subsequent authentication to fail but
@@ -893,6 +892,8 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
                  */
                 memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
             }
+            if (lsaResp)
+                LsaFreeReturnBuffer(lsaResp);
         }
         else
             memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
