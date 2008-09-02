@@ -1996,7 +1996,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         if (code == 0) {
             clientchar_t temp[1024];
 
-            cm_FsStringToClientString(ftemp, (int)cm_FsStrLen(ftemp), temp, 1024);
+            cm_FsStringToClientString(ftemp, -1, temp, 1024);
             cm_ClientStrPrintfN(pathName, (int)lengthof(pathName),
                                 rw ? _C("/.%S/") : _C("/%S/"), temp);
             *pathNamep = cm_ClientStrDup(cm_ClientStrLwr(pathName));
