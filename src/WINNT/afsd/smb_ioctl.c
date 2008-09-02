@@ -1064,8 +1064,7 @@ smb_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
         int cch;
 
         cch = cm_ClientStringToUtf8(uidp->unp->name,
-                                    cm_ClientStrLen(uidp->unp->name),
-
+                                    -1,
                                     ioctlp->ioctl.outDatap,
                                     (SMB_IOCTL_MAXDATA -
                                      (ioctlp->ioctl.outDatap - ioctlp->ioctl.outAllocp))
