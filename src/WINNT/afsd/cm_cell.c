@@ -145,7 +145,7 @@ cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
 
 cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 {
-    cm_cell_t *cp = NULL, *cp2;
+    cm_cell_t *cp, *cp2;
     long code;
     char fullname[CELL_MAXNAMELEN]="";
     int  hasWriteLock = 0;
@@ -180,8 +180,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         lock_ReleaseRead(&cm_cellLock);
         cm_UpdateCell(cp, flags);
     } else if (flags & CM_FLAG_CREATE) {
-        cm_cell_t tmpcell;
-
         lock_ConvertRToW(&cm_cellLock);
         hasWriteLock = 1;
 
@@ -210,15 +208,28 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         if (cp)
             goto done;
 
+        if ( cm_data.currentCells >= cm_data.maxCells )
+            osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
+
+        /* don't increment currentCells until we know that we 
+         * are going to keep this entry 
+         */
+        cp = &cm_data.cellBaseAddress[cm_data.currentCells];
+        memset(cp, 0, sizeof(cm_cell_t));
+        cp->magic = CM_CELL_MAGIC;
+
+        /* the cellID cannot be 0 */
+        cp->cellID = ++cm_data.currentCells;
+
+        /* otherwise we found the cell, and so we're nearly done */
+        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
+
+        cp->name[0] = '\0';     /* No name yet */
+
         lock_ReleaseWrite(&cm_cellLock);
         hasWriteLock = 0;
 
-        /* 
-         * Use a temporary cell object for the cm_SearchCellXXX calls
-         * in case the search fails and we have to discard this entry.
-         */
-        memset(&tmpcell, 0, sizeof(cm_cell_t));
-        rock.cellp = &tmpcell;
+        rock.cellp = cp;
         rock.flags = flags;
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, &rock);
         if (code) {
@@ -233,23 +244,26 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 if ( code ) {
                     osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
+                    cp = NULL;
                     goto done;
                 } else {   /* got cell from DNS */
                     lock_ObtainWrite(&cm_cellLock);
                     hasWriteLock = 1;
-                    tmpcell.flags |= CM_CELLFLAG_DNS;
-                    tmpcell.flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
-                    tmpcell.timeout = time(0) + ttl;
+                    cp->flags |= CM_CELLFLAG_DNS;
+                    cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+                    cp->timeout = time(0) + ttl;
                 }
-	    } else 
-#endif /* AFS_AFSDB_ENV */            
-            {
+            } else {
+#endif
+                cp = NULL;
                 goto done;
-            }
+#ifdef AFS_AFSDB_ENV
+	    }
+#endif
         } else {
             lock_ObtainWrite(&cm_cellLock);
             hasWriteLock = 1;
-	    tmpcell.timeout = time(0) + 7200;	/* two hour timeout */
+	    cp->timeout = time(0) + 7200;	/* two hour timeout */
 	}
 
         /* we have now been given the fullname of the cell.  It may
@@ -258,32 +272,18 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          * of a new cm_cell_t 
          */
         hash = CM_CELL_NAME_HASH(fullname);
-        for (cp = cm_data.cellNameHashTablep[hash]; cp; cp=cp->nameNextp) {
-            if (cm_stricmp_utf8(fullname, cp->name) == 0) {
+        for (cp2 = cm_data.cellNameHashTablep[hash]; cp2; cp2=cp2->nameNextp) {
+            if (cm_stricmp_utf8(fullname, cp2->name) == 0) {
                 break;
             }
         }   
 
-        if (cp) {
-            cm_FreeServerList(&tmpcell.vlServersp, CM_FREESERVERLIST_DELETE);
+        if (cp2) {
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
+            cp = cp2;
             goto done;
         }
 
-        if ( cm_data.currentCells >= cm_data.maxCells )
-            osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
-
-        /* 
-         * allocate a cell object that we can keep and initialize 
-         * it using the vldb server list obtained during the cm_SearchCellXXX 
-         * calls.
-         */
-        cp = &cm_data.cellBaseAddress[cm_data.currentCells++];
-        memcpy(cp, &tmpcell, sizeof(cm_cell_t));
-        cp->magic = CM_CELL_MAGIC;
-        cp->cellID = cm_data.currentCells;
-
-        /* otherwise we found the cell, and so we're nearly done */
-        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
 
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
