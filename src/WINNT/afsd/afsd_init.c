@@ -1067,6 +1067,8 @@ int afsd_InitCM(char **reasonP)
     }
     if (rx_nojumbo)
         afsi_log("RX Jumbograms are disabled");
+    else
+        afsi_log("RX Jumbograms are enabled");
 
     dummyLen = sizeof(rx_extraPackets);
     code = RegQueryValueEx(parmKey, "RxExtraPackets", NULL, NULL,
@@ -1083,7 +1085,7 @@ int afsd_InitCM(char **reasonP)
     if (code != ERROR_SUCCESS) {
         rx_udpbufsize = 256*1024;
     }
-    if (rx_udpbufsize)
+    if (rx_udpbufsize != -1)
         afsi_log("RX udpbufsize is %d", rx_udpbufsize);
 
     dummyLen = sizeof(rx_mtu);
