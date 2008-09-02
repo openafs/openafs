@@ -143,6 +143,16 @@ cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
     return cm_GetCell_Gen(namep, NULL, flags);
 }
 
+void cm_FreeCell(cm_cell_t *cellp)
+{
+    if (cellp->vlServersp)
+        cm_FreeServerList(&cellp->vlServersp, CM_FREESERVERLIST_DELETE);
+    cellp->name[0] = '\0';    
+
+    cellp->freeNextp = cm_data.freeCellsp;
+    cm_data.freeCellsp = cellp;
+}
+
 cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 {
     cm_cell_t *cp, *cp2;
@@ -205,26 +215,38 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             }
         }   
 
-        if (cp)
+        if (cp) {
+            lock_ObtainMutex(&cp->mx);
+            cm_AddCellToNameHashTable(cp);
+            cm_AddCellToIDHashTable(cp);           
+            lock_ReleaseMutex(&cp->mx);
             goto done;
+        }
 
-        if ( cm_data.currentCells >= cm_data.maxCells )
-            osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
+        if ( cm_data.freeCellsp != NULL ) {
+            cp = cm_data.freeCellsp;
+            cm_data.freeCellsp = cp->freeNextp;
 
-        /* don't increment currentCells until we know that we 
-         * are going to keep this entry 
-         */
-        cp = &cm_data.cellBaseAddress[cm_data.currentCells];
-        memset(cp, 0, sizeof(cm_cell_t));
-        cp->magic = CM_CELL_MAGIC;
+            /* 
+             * The magic, cellID, and mx fields are already set.
+             */
+        } else {
+            if ( cm_data.currentCells >= cm_data.maxCells )
+                osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
 
-        /* the cellID cannot be 0 */
-        cp->cellID = ++cm_data.currentCells;
+            /* don't increment currentCells until we know that we 
+             * are going to keep this entry 
+             */
+            cp = &cm_data.cellBaseAddress[cm_data.currentCells];
+            memset(cp, 0, sizeof(cm_cell_t));
+            cp->magic = CM_CELL_MAGIC;
 
-        /* otherwise we found the cell, and so we're nearly done */
-        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
+            /* the cellID cannot be 0 */
+            cp->cellID = ++cm_data.currentCells;
 
-        cp->name[0] = '\0';     /* No name yet */
+            /* otherwise we found the cell, and so we're nearly done */
+            lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
+        }
 
         lock_ReleaseWrite(&cm_cellLock);
         hasWriteLock = 0;
@@ -244,6 +266,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 if ( code ) {
                     osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
+                    cm_FreeCell(cp);
                     cp = NULL;
                     goto done;
                 } else {   /* got cell from DNS */
@@ -253,13 +276,13 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
                     cp->timeout = time(0) + ttl;
                 }
-            } else {
+            } 
 #endif
+            else {
+                cm_FreeCell(cp);
                 cp = NULL;
                 goto done;
-#ifdef AFS_AFSDB_ENV
 	    }
-#endif
         } else {
             lock_ObtainWrite(&cm_cellLock);
             hasWriteLock = 1;
@@ -279,18 +302,22 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }   
 
         if (cp2) {
-            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
+            cm_FreeCell(cp);
             cp = cp2;
             goto done;
         }
 
-
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
+        lock_ObtainMutex(&cp->mx);
         /* copy in name */
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
+
+        cm_AddCellToNameHashTable(cp);
+        cm_AddCellToIDHashTable(cp);           
+        lock_ReleaseMutex(&cp->mx);
 
         /* append cell to global list */
         if (cm_data.allCellsp == NULL) {
@@ -302,8 +329,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }
         cp->allNextp = NULL;
 
-        cm_AddCellToNameHashTable(cp);
-        cm_AddCellToIDHashTable(cp);           
     } else {
         lock_ReleaseRead(&cm_cellLock);
     }
@@ -425,8 +450,10 @@ void cm_InitCell(int newFile, long maxCells)
             cellp->vlServersp = NULL;
             cellp->flags = CM_CELLFLAG_FREELANCE;
 
-	    cm_AddCellToNameHashTable(cellp);
-	    cm_AddCellToIDHashTable(cellp);           
+            lock_ObtainMutex(&cellp->mx);
+            cm_AddCellToNameHashTable(cellp);
+            cm_AddCellToIDHashTable(cellp);           
+            lock_ReleaseMutex(&cellp->mx);
 #endif  
         } else {
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
