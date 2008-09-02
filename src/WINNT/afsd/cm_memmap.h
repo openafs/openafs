@@ -10,7 +10,7 @@
 #ifndef CM_MEMMAP_H
 #define CM_MEMMAP_H 1
 
-#define CM_CONFIG_DATA_VERSION  3
+#define CM_CONFIG_DATA_VERSION  4
 #define CM_CONFIG_DATA_MAGIC            ('A' | 'F'<<8 | 'S'<<16 | CM_CONFIG_DATA_VERSION<<24)
 
 typedef struct cm_config_data {
@@ -39,6 +39,7 @@ typedef struct cm_config_data {
     afs_uint32          maxVolumes;
 
     cm_cell_t	*       allCellsp;
+    cm_cell_t   *       freeCellsp;
     afs_uint32          currentCells;
     afs_uint32          maxCells;
 

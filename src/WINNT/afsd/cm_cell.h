@@ -21,6 +21,7 @@ typedef struct cm_cell {
     struct cm_cell *allNextp;	        /* locked by cm_cellLock */
     struct cm_cell *nameNextp;	        /* locked by cm_cellLock */
     struct cm_cell *idNextp;	        /* locked by cm_cellLock */
+    struct cm_cell *freeNextp;
     char name[CELL_MAXNAMELEN];         /* cell name; never changes */
     cm_serverRef_t *vlServersp;         /* locked by cm_serverLock */
     osi_mutex_t mx;			/* mutex locking fields (flags) */
@@ -29,7 +30,7 @@ typedef struct cm_cell {
 } cm_cell_t;
 
 /* These are bit flag values */
-#define CM_CELLFLAG_SUID	       1	/* setuid flag; not yet used */
+#define CM_CELLFLAG_SUID	       1  /* setuid flag; not yet used */
 #define CM_CELLFLAG_DNS                2  /* cell servers are from DNS */
 #define CM_CELLFLAG_VLSERVER_INVALID   4  /* cell servers are invalid */
 #define CM_CELLFLAG_FREELANCE          8  /* local freelance fake cell */
