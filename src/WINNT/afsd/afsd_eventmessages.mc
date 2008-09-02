@@ -326,6 +326,15 @@ Security Level is Clear.
 MessageId=
 Severity=Informational
 Facility=System
+SymbolicName=MSG_CRYPT_AUTH
+Language=English
+Security Level is Auth (Integrity Only).
+.
+
+
+MessageId=
+Severity=Informational
+Facility=System
 SymbolicName=MSG_CRYPT_ON
 Language=English
 Security Level is Crypt.

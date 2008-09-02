@@ -3998,8 +3998,10 @@ SetCryptCmd(struct cmd_syndesc *as, void *arock)
       flag = 1;
     else if (strcmp(tp, "off") == 0)
       flag = 0;
+    else if (strcmp(tp, "auth") == 0)
+      flag = 0;
     else {
-      fprintf (stderr, "%s: %s must be \"on\" or \"off\".\n", pn, tp);
+      fprintf (stderr, "%s: %s must be \"on\", \"auth\", or \"off\".\n", pn, tp);
       return EINVAL;
     }
 
@@ -4033,6 +4035,8 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
       memcpy(&flag, tp, sizeof(afs_int32));
       printf("Security level is currently ");
       if (flag == 1)
+          printf("auth (data integrity).\n");
+      else if (flag == 1)
         printf("crypt (data security).\n");
       else
         printf("clear.\n");
