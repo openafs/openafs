@@ -970,14 +970,16 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
                            (BYTE *) &cryptall, &dummyLen);
     if (code == ERROR_SUCCESS) {
-        afsi_log("SecurityLevel is %s", cryptall?"crypt":"clear");
+        afsi_log("SecurityLevel is %s", cryptall == 1?"crypt": cryptall == 2?"auth":"clear");
     } else {
         cryptall = 0;
         afsi_log("Default SecurityLevel is clear");
     }
 
-    if (cryptall)
+    if (cryptall == 1)
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_ON);
+    else if (cryptall == 2)
+	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_AUTH);
     else
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
 
