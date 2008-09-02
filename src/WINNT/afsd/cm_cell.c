@@ -100,8 +100,13 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
         rock.cellp = cp;
         rock.flags = flags;
         code = cm_SearchCellFile(cp->name, NULL, cm_AddCellProc, &rock);
+        if (code == 0) {
+            lock_ObtainMutex(&cp->mx);
+	    cp->timeout = time(0) + 7200;
+            lock_ReleaseMutex(&cp->mx);
+        }
 #ifdef AFS_AFSDB_ENV
-        if (code) {
+        else {
             if (cm_dnsEnabled) {
                 int ttl;
 
@@ -124,13 +129,8 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                     lock_ReleaseMutex(&cp->mx);
                 }
 	    }
-	} else 
+	}
 #endif /* AFS_AFSDB_ENV */
-	{
-            lock_ObtainMutex(&cp->mx);
-	    cp->timeout = time(0) + 7200;
-            lock_ReleaseMutex(&cp->mx);
-	}	
     } else {
         lock_ReleaseMutex(&cp->mx);
     }
@@ -277,8 +277,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                     cp->timeout = time(0) + ttl;
                 }
             } 
+            else 
 #endif
-            else {
+            {
                 cm_FreeCell(cp);
                 cp = NULL;
                 goto done;
