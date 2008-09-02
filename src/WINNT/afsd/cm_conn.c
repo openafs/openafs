@@ -920,10 +920,15 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     }
     if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
         secIndex = 2;
-        if (cryptall) {
-            tcp->cryptlevel = rxkad_crypt;
-        } else {
+        switch (cryptall) {
+        case 0:
             tcp->cryptlevel = rxkad_clear;
+            break;
+        case 2:
+            tcp->cryptlevel = rxkad_auth;
+            break;
+        default:
+            tcp->cryptlevel = rxkad_crypt;
         }
         secObjp = rxkad_NewClientSecurityObject(tcp->cryptlevel,
                                                 &ucellp->sessionKey, ucellp->kvno,
@@ -1000,7 +1005,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         lock_ObtainMutex(&tcp->mx);
         if ((tcp->flags & CM_CONN_FLAG_FORCE_NEW) ||
             (tcp->ucgen < ucellp->gen) ||
-            (tcp->cryptlevel != (cryptall ? (ucellp->flags & CM_UCELLFLAG_RXKAD ? rxkad_crypt : rxkad_clear) : rxkad_clear)))
+            (tcp->cryptlevel != (ucellp->flags & CM_UCELLFLAG_RXKAD ? (cryptall == 1 ? rxkad_crypt : (cryptall == 2 ? rxkad_auth : rxkad_clear)) : rxkad_clear)))
         {
             if (tcp->ucgen < ucellp->gen)
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to token update");

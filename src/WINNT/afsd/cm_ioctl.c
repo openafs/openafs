@@ -2823,8 +2823,10 @@ cm_IoctlSetRxkcrypt(cm_ioctl_t *ioctlp, cm_user_t *userp)
     memcpy(&cryptall, ioctlp->inDatap, sizeof(cryptall));
 
     if (c != cryptall) {
-	if (cryptall)
+	if (cryptall == 1)
             LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_ON);
+	else if (cryptall == 2)
+            LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_AUTH);
 	else
             LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
     }
