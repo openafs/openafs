@@ -79,6 +79,9 @@ cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
         lock_ReleaseWrite(&scp->rw);
+
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED);
     }
     osi_Log2(afsd_logp,"cm_CleanFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -105,6 +108,9 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
     lock_ReleaseWrite(&scp->rw);
+
+    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -536,6 +542,9 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
         lock_ReleaseWrite(&scp->rw);
+
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
     }
 
     return code;
@@ -1108,6 +1117,9 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     cm_DiscardSCache(scp);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
+
+    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
 
   done3:
     if (originalName != NULL)
@@ -2138,6 +2150,9 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     cm_DiscardSCache(scp);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
+
+    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
 
   done3:
     free(clientp);

@@ -77,4 +77,21 @@ extern afs_int32 cm_OfflineROIsValid;
 extern afs_int32 cm_giveUpAllCBs;
 
 extern afs_int32 cm_shutdown;
+
+
+DWORD 
+RDR_InvalidateVolume( IN ULONG cellID, IN ULONG volID, IN ULONG reason);
+
+DWORD 
+RDR_InvalidateObject( IN ULONG cellID, IN ULONG volID, IN ULONG vnode, 
+                      IN ULONG uniq, IN ULONG hash, IN ULONG filetype, IN ULONG reason);
+
+#define AFS_INVALIDATE_EXPIRED          1
+#define AFS_INVALIDATE_FLUSHED          2
+#define AFS_INVALIDATE_CALLBACK         3
+#define AFS_INVALIDATE_SMB              4
+#define AFS_INVALIDATE_CREDS            5
+#define AFS_INVALIDATE_DATA_VERSION     6
+#define AFS_INVALIDATE_DELETED          7
+
 #endif /*  _CM_CALLBACK_H_ENV__ */

@@ -672,6 +672,8 @@ typedef struct _AFS_INVALIDATE_CACHE_CB
 
     AFSFileID   FileID;
 
+    ULONG       FileType;
+
     BOOLEAN     WholeVolume;
 
     ULONG       Reason;
@@ -682,6 +684,9 @@ typedef struct _AFS_INVALIDATE_CACHE_CB
 #define AFS_INVALIDATE_FLUSHED          2
 #define AFS_INVALIDATE_CALLBACK         3
 #define AFS_INVALIDATE_SMB              4
+#define AFS_INVALIDATE_CREDS            5
+#define AFS_INVALIDATE_DATA_VERSION     6
+#define AFS_INVALIDATE_DELETED          7
 
 //
 // Network Status Control Block

@@ -294,8 +294,15 @@ cm_scache_t *cm_GetNewSCache(void)
              * we must not recycle the scp. */
             if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
                 if (!buf_DirtyBuffersExist(&scp->fid)) {
+                    cm_fid_t   fid;
+                    afs_uint32 fileType;
+
                     if (!lock_TryWrite(&scp->rw))
                         continue;
+
+                    /* Found a likely candidate.  Save type and fid in case we succeed */
+                    fid = scp->fid;
+                    fileType = scp->fileType;
 
                     if (!cm_RecycleSCache(scp, 0)) {
                         /* we found an entry, so return it */
@@ -303,6 +310,9 @@ cm_scache_t *cm_GetNewSCache(void)
                          * head of the LRU queue.
                          */
                         cm_AdjustScacheLRU(scp);
+
+                        RDR_InvalidateObject(fid.cell, fid.volume, fid.vnode, fid.unique, fid.hash, 
+                                              fileType, AFS_INVALIDATE_FLUSHED);
 
                         /* and we're done */
                         return scp;
@@ -1725,6 +1735,11 @@ void cm_MergeStatus(cm_scache_t *dscp,
          scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
     
+    if (scp->dataVersion != dataVersion)
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                             scp->fid.unique, scp->fid.hash,
+                             scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+
     scp->dataVersion = dataVersion;
 
     /* 

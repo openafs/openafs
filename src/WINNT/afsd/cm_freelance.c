@@ -412,6 +412,10 @@ int cm_reInitLocalMountPoints() {
                 lock_ReleaseWrite(&scp->rw);
                 lock_ReleaseWrite(&cm_scacheLock);
                 cm_CallbackNotifyChange(scp);
+
+                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
+
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainMutex(&cm_Freelance_Lock);

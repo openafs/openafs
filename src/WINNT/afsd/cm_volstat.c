@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2007 Secure Endpoints Inc.
+ * Copyright (c) 2007-2008 Secure Endpoints Inc.
  *
  * All rights reserved.
  * 
@@ -42,6 +42,10 @@
 #include "afsd.h"
 #include "smb.h"
 #include <WINNT/afsreg.h>
+
+extern DWORD RDR_NetworkAddrChange(void);
+extern DWORD RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online);
+extern DWORD RDR_NetworkStatus(BOOLEAN status);
 
 HMODULE hVolStatus = NULL;
 dll_VolStatus_Funcs_t dll_funcs;
@@ -177,6 +181,9 @@ cm_VolStatus_Network_Started(const char * netbios32)
 {
     long code = 0;
 
+    if (RDR_Initialized)
+        RDR_NetworkStatus(TRUE);
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -202,6 +209,9 @@ cm_VolStatus_Network_Stopped(const char * netbios32)
 {
     long code = 0;
 
+    if (RDR_Initialized)
+        RDR_NetworkStatus(FALSE);
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -224,6 +234,9 @@ cm_VolStatus_Network_Addr_Change(void)
 {
     long code = 0;
 
+    if (RDR_Initialized)
+        RDR_NetworkAddrChange();
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -239,6 +252,17 @@ long
 cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volstatus status)
 {
     long code = 0;
+
+    if (RDR_Initialized) {
+        switch (status) {
+        case vl_alldown:
+        case vl_offline:
+            RDR_VolumeStatus(cellID, volID, FALSE);
+            break;
+        default:
+            RDR_VolumeStatus(cellID, volID, TRUE);
+        }
+    }
 
     if (hVolStatus == NULL)
         return 0;

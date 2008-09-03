@@ -79,6 +79,33 @@ RDR_Shutdown(void)
 {
 
     DWORD dwIndex = 0;
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+
+    // 
+    // First, notify the file system driver that 
+    // we are shutting down.
+    //
+
+    if( !DeviceIoControl( hDevHandle,
+                          IOCTL_AFS_SHUTDOWN,
+                          NULL,
+                          0,
+                          NULL,
+                          0,
+                          &bytesReturned,
+                          NULL))
+    {
+        // log the error, nothing to do
+    }
+
 
     Exit = true;
 
@@ -721,8 +748,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 			      &bytesReturned,
 			      NULL))
         {
-
-            MessageBox( NULL, L"Failed to post IOCtl", L"Error", MB_OK);
+            char *pBuffer = (char *)wchBuffer;
+            sprintf( pBuffer,
+                     "Failed to post IOCTL_AFS_PROCESS_IRP_RESULT gle %X\n",
+                     GetLastError());
+            osi_panic(pBuffer, __FILE__, __LINE__);
         }
 
     }
@@ -746,8 +776,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 			      &bytesReturned,
 			      NULL))
         {
-
-            MessageBox( NULL, L"Failed to post IOCtl", L"Error", MB_OK);
+            char *pBuffer = (char *)wchBuffer;
+            sprintf( pBuffer,
+                     "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                     GetLastError());
+            osi_panic(pBuffer, __FILE__, __LINE__);
         }
 
         free(SetFileExtentsResultCB);
@@ -887,4 +920,283 @@ RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
 
     return rc;
 }
+
+
+extern "C" DWORD 
+RDR_NetworkStatus(BOOLEAN status)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSNetworkStatusCB *requestBuffer = NULL;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_NETWORK_STATUS request - status %d\n",
+                  status);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    requestBuffer = (AFSNetworkStatusCB *)malloc( sizeof( AFSNetworkStatusCB));
+
+
+    if( requestBuffer)
+    {
+
+	memset( requestBuffer, '\0', sizeof( AFSNetworkStatusCB));
+
+        // Set the number of extents to be freed
+        // Leave the rest of the structure as zeros to indicate free anything
+        requestBuffer->Online = status;
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_NETWORK_STATUS,
+                              (void *)requestBuffer,
+                              sizeof( AFSNetworkStatusCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+
+    return rc;
+}
+
+
+
+extern "C" DWORD 
+RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSVolumeStatusCB *requestBuffer = NULL;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_VOLUME_STATUS request - cell 0x%x vol 0x%x online %d\n",
+                  cellID, volID, online);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    requestBuffer = (AFSVolumeStatusCB *)malloc( sizeof( AFSVolumeStatusCB));
+
+
+    if( requestBuffer)
+    {
+
+	memset( requestBuffer, '\0', sizeof( AFSVolumeStatusCB));
+
+        requestBuffer->FileID.Cell = cellID;
+        requestBuffer->FileID.Volume = volID;
+        requestBuffer->Online = online;
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_VOLUME_STATUS,
+                              (void *)requestBuffer,
+                              sizeof( AFSVolumeStatusCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+
+    return rc;
+}
+
+extern "C" DWORD 
+RDR_NetworkAddrChange(void)
+{
+    return 0;
+}
+
+
+extern "C" DWORD 
+RDR_InvalidateVolume(ULONG cellID, ULONG volID, ULONG reason)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSInvalidateCacheCB *requestBuffer = NULL;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_INVALIDATE_CACHE (vol) request - cell 0x%x vol 0x%x reason %d\n",
+                  cellID, volID, reason);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    requestBuffer = (AFSInvalidateCacheCB *)malloc( sizeof( AFSInvalidateCacheCB));
+
+
+    if( requestBuffer)
+    {
+
+	memset( requestBuffer, '\0', sizeof( AFSInvalidateCacheCB));
+
+        requestBuffer->FileID.Cell = cellID;
+        requestBuffer->FileID.Volume = volID;
+        requestBuffer->WholeVolume = TRUE;
+        requestBuffer->Reason = reason;
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_INVALIDATE_CACHE,
+                              (void *)requestBuffer,
+                              sizeof( AFSInvalidateCacheCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+
+    return rc;
+}
+
+
+extern "C" DWORD 
+RDR_InvalidateObject(ULONG cellID, ULONG volID, ULONG vnode, ULONG uniq, ULONG hash, ULONG fileType, ULONG reason)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSInvalidateCacheCB *requestBuffer = NULL;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_INVALIDATE_CACHE (obj) request - cell 0x%x vol 0x%x vn 0x%x uniq 0x%x hash 0x%x type 0x%x reason %d\n",
+                  cellID, volID, vnode, uniq, hash, fileType, reason);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    requestBuffer = (AFSInvalidateCacheCB *)malloc( sizeof( AFSInvalidateCacheCB));
+
+
+    if( requestBuffer)
+    {
+
+	memset( requestBuffer, '\0', sizeof( AFSInvalidateCacheCB));
+
+        requestBuffer->FileID.Cell = cellID;
+        requestBuffer->FileID.Volume = volID;
+        requestBuffer->FileID.Vnode = vnode;
+        requestBuffer->FileID.Unique = uniq;
+        requestBuffer->FileID.Hash = hash;
+        requestBuffer->FileType = fileType;
+        requestBuffer->WholeVolume = FALSE;
+        requestBuffer->Reason = reason;
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_INVALIDATE_CACHE,
+                              (void *)requestBuffer,
+                              sizeof( AFSInvalidateCacheCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+
+    return rc;
+}
+
+
 

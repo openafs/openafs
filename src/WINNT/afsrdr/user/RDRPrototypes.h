@@ -13,6 +13,22 @@ RDR_Initialize( void);
 DWORD
 RDR_Shutdown( void);
 
+DWORD 
+RDR_NetworkStatus( IN BOOLEAN status);
+
+DWORD 
+RDR_VolumeStatus( IN ULONG cellID, IN ULONG volID, IN BOOLEAN online);
+
+DWORD 
+RDR_NetworkAddrChange(void);
+
+DWORD 
+RDR_InvalidateVolume( IN ULONG cellID, IN ULONG volID, IN ULONG reason);
+
+DWORD 
+RDR_InvalidateObject( IN ULONG cellID, IN ULONG volID, IN ULONG vnode, 
+                      IN ULONG uniq, IN ULONG hash, IN ULONG filetype, IN ULONG reason);
+
 DWORD
 RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, 
                    OUT DWORD * pCacheFileInfoLen );

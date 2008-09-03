@@ -890,7 +890,7 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp)
     ucellp->uid = ANONYMOUSID;
 #endif
     if (uname) {
-        cm_ClientStringToFsString(uname, MAXKTCNAMELEN, ucellp->userName, MAXKTCNAMELEN);
+        cm_ClientStringToFsString(uname, -1, ucellp->userName, MAXKTCNAMELEN);
 #ifdef QUERY_AFSID
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
 #endif

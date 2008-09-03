@@ -55,6 +55,7 @@ extern HANDLE afsi_file;
 
 static int powerEventsRegistered = 0;
 extern int powerStateSuspended = 0;
+extern int RDR_Initialized = 0;
 
 static VOID (WINAPI* pRtlCaptureContext)(PCONTEXT ContextRecord) = NULL;
 
@@ -1338,6 +1339,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
         code = RDR_Initialize();
+        RDR_Initialized = !code;
         afsi_log("RDR_Initialize returned: (code = %d)", code);
 
         /* allow an exit to be called post smb initialization */
@@ -1453,8 +1455,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     DismountGlobalDrives();
     afsi_log("Global Drives dismounted");
-                                         
-    RDR_Shutdown();
+    
+    if (RDR_Initialized)
+        RDR_Shutdown();
     afsi_log("RDR shutdown complete");
 
     smb_Shutdown();                      

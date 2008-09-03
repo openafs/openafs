@@ -543,6 +543,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
  			lock_ObtainWrite(&pscp->rw);
  			cm_DiscardSCache(pscp);
  			lock_ReleaseWrite(&pscp->rw);
+
+                        RDR_InvalidateObject(pscp->fid.cell, pscp->fid.volume, pscp->fid.vnode, pscp->fid.unique, 
+                                             pscp->fid.hash, pscp->fileType, AFS_INVALIDATE_DELETED);
+
  		    }
  		    cm_ReleaseSCache(pscp);
  		}

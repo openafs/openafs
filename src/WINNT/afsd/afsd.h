@@ -118,6 +118,8 @@ extern long rx_mtu;
 
 extern HANDLE WaitToTerminate;
 
+extern int RDR_Initialized;
+
 #define DFS_SUPPORT 1
 #define LOG_PACKET 1
 #undef  NOTSERVICE
