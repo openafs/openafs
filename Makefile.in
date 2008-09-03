@@ -327,7 +327,7 @@ bozo: cmd comerr audit auth kauth volser
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
+	sgi_* | *linux* | rs_aix* | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -366,6 +366,8 @@ aklog: comerr ptserver
 	else \
 		echo Skipping aklog for ${SYS_NAME} ; \
 	fi
+
+authtools: pam sia tsm41 sgistuff aklog
 
 platform: 
 	${COMPILE_PART1} platform ${COMPILE_PART2}
@@ -616,14 +618,14 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 	ptserver tptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs
+	platform kopenafs authtools
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs
+	platform kopenafs authtools
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
