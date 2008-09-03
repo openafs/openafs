@@ -7,7 +7,6 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include ../config/Makefile.version
 
   EXPORTS = -bexport:export.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp ${srcdir}/extras.exp
@@ -19,23 +18,21 @@ TOPEXP32  = @AIX32@${TOP_LIBDIR}/export.exp
 TOPEXP64  = @AIX64@${TOP_LIBDIR}/export64.exp
 
 all: $(TOPEXP32) $(TOPEXP64) ${TOP_LIBDIR}/extras.exp
-	${INSTALL} -d ${KERNELDIR}
-	${INSTALL} -d ${UKERNELDIR}
-	${INSTALL_DATA} ${srcdir}/export.h ${KERNELDIR}/export.h
-	@AIX32@${INSTALL_DATA} export.exp ${KERNELDIR}/export.exp
-	@AIX64@${INSTALL_DATA} export64.exp ${KERNELDIR}/export64.exp
-	${INSTALL_DATA} ${srcdir}/export.h ${UKERNELDIR}/export.h
-	@AIX32@${INSTALL_DATA} export.exp ${UKERNELDIR}/export.exp
-	@AIX64@${INSTALL_DATA} export64.exp ${UKERNELDIR}/export64.exp
+	${INSTALL} ${srcdir}/export.h ${KERNELDIR}/export.h
+	@AIX32@${INSTALL} export.exp ${KERNELDIR}/export.exp
+	@AIX64@${INSTALL} export64.exp ${KERNELDIR}/export64.exp
+	${INSTALL} ${srcdir}/export.h ${UKERNELDIR}/export.h
+	@AIX32@${INSTALL} export.exp ${UKERNELDIR}/export.exp
+	@AIX64@${INSTALL} export64.exp ${UKERNELDIR}/export64.exp
 
 ${TOP_LIBDIR}/export.exp: export.exp
-	${INSTALL_DATA} $? $@
+	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/export64.exp: export64.exp
-	${INSTALL_DATA} $? $@
+	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/extras.exp: ${srcdir}/extras.exp
-	${INSTALL_DATA} $? $@
+	${INSTALL} $? $@
 
 noversion system: install
 
@@ -141,30 +138,26 @@ clean:
 	$(RM) -f *.ext *.ext.nonfs
 
 install: $(EXPORTS32) $(EXPORTS64)
-	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} ${srcdir}/extras.exp ${DESTDIR}${libdir}/afs/extras.exp
-	@AIX32@${INSTALL_DATA} export.exp ${DESTDIR}${libdir}/afs/export.exp
-	@AIX32@${INSTALL_DATA} export.ext ${DESTDIR}${afskerneldir}/export.ext
-	@AIX32@${INSTALL_DATA} export.ext.nonfs ${DESTDIR}${afskerneldir}/export.ext.nonfs
-	@AIX32@${INSTALL_DATA} cfgexport ${DESTDIR}${afskerneldir}/cfgexport
-	@AIX32@${INSTALL_DATA} cfgafs ${DESTDIR}${afskerneldir}/cfgafs
-	@AIX64@${INSTALL_DATA} export64.exp ${DESTDIR}${libdir}/afs/export64.exp
-	@AIX64@${INSTALL_DATA} export64.ext ${DESTDIR}${afskerneldir}/export64.ext
-	@AIX64@${INSTALL_DATA} export64.ext.nonfs ${DESTDIR}${afskerneldir}/export64.ext.nonfs
-	@AIX64@${INSTALL_DATA} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64
-	@AIX64@${INSTALL_DATA} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64
+	${INSTALL} ${srcdir}/extras.exp ${DESTDIR}${libdir}/afs/extras.exp
+	@AIX32@${INSTALL} export.exp ${DESTDIR}${libdir}/afs/export.exp
+	@AIX32@${INSTALL} export.ext ${DESTDIR}${afskerneldir}/export.ext
+	@AIX32@${INSTALL} export.ext.nonfs ${DESTDIR}${afskerneldir}/export.ext.nonfs
+	@AIX32@${INSTALL} cfgexport ${DESTDIR}${afskerneldir}/cfgexport
+	@AIX32@${INSTALL} cfgafs ${DESTDIR}${afskerneldir}/cfgafs
+	@AIX64@${INSTALL} export64.exp ${DESTDIR}${libdir}/afs/export64.exp
+	@AIX64@${INSTALL} export64.ext ${DESTDIR}${afskerneldir}/export64.ext
+	@AIX64@${INSTALL} export64.ext.nonfs ${DESTDIR}${afskerneldir}/export64.ext.nonfs
+	@AIX64@${INSTALL} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64
+	@AIX64@${INSTALL} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64
 
 dest: $(EXPORTS32) $(EXPORTS64)
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload
-	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} ${srcdir}/extras.exp ${DEST}/lib/afs/extras.exp
-	@AIX32@${INSTALL_DATA} export.exp ${DEST}/lib/afs/export.exp
+	${INSTALL} ${srcdir}/extras.exp ${DEST}/lib/afs/extras.exp
+	@AIX32@${INSTALL} export.exp ${DEST}/lib/afs/export.exp
 	@AIX32@${INSTALL} export.ext ${DEST}/root.client/usr/vice/etc/dkload/export.ext
 	@AIX32@${INSTALL} export.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs
 	@AIX32@${INSTALL} cfgexport ${DEST}/root.client/usr/vice/etc/dkload/cfgexport
 	@AIX32@${INSTALL} cfgafs ${DEST}/root.client/usr/vice/etc/dkload/cfgafs
-	@AIX64@${INSTALL_DATA} export64.exp ${DEST}/lib/afs/export64.exp
+	@AIX64@${INSTALL} export64.exp ${DEST}/lib/afs/export64.exp
 	@AIX64@${INSTALL} export64.ext ${DEST}/root.client/usr/vice/etc/dkload/export64.ext
 	@AIX64@${INSTALL} export64.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs
 	@AIX64@${INSTALL} cfgexport64 ${DEST}/root.client/usr/vice/etc/dkload/cfgexport64
