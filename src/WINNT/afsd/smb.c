@@ -9863,6 +9863,7 @@ void smb_Shutdown(void)
             if (fidp->scp != NULL) {
                 cm_scache_t * scp;
 
+                lock_ReleaseWrite(&smb_rctLock);
                 lock_ObtainMutex(&fidp->mx);
                 if (fidp->scp != NULL) {
                     scp = fidp->scp;
@@ -9874,6 +9875,7 @@ void smb_Shutdown(void)
                     cm_ReleaseSCache(scp);
                 }
                 lock_ReleaseMutex(&fidp->mx);
+                lock_ObtainWrite(&smb_rctLock);
             }
         }
 
