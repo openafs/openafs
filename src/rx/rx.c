@@ -167,6 +167,7 @@ extern pthread_cond_t rx_listener_cond;
 static pthread_mutex_t epoch_mutex;
 static pthread_mutex_t rx_init_mutex;
 static pthread_mutex_t rx_debug_mutex;
+static pthread_mutex_t rx_rpc_stats;
 
 static void
 rxi_InitPthread(void)
@@ -212,6 +213,25 @@ rxi_InitPthread(void)
     assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
  
     rxkad_global_stats_init();
+
+    MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);
+#ifdef	RX_ENABLE_LOCKS
+#ifdef RX_LOCKS_DB
+    rxdb_init();
+#endif /* RX_LOCKS_DB */
+    MUTEX_INIT(&freeSQEList_lock, "freeSQEList lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_freeCallQueue_lock, "rx_freeCallQueue_lock", MUTEX_DEFAULT,
+	       0);
+    CV_INIT(&rx_waitingForPackets_cv, "rx_waitingForPackets_cv", CV_DEFAULT,
+	    0);
+    MUTEX_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
+	       0);
+    MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
+	       0);
+    MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
+#endif /* RX_ENABLE_LOCKS */
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
@@ -259,7 +279,7 @@ assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
  * to manipulate the queue.
  */
 
-#ifdef RX_ENABLE_LOCKS
+#if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 static afs_kmutex_t rx_rpc_stats;
 void rxi_StartUnlocked();
 #endif
@@ -414,7 +434,7 @@ rx_InitHost(u_int host, u_int port)
 	UNLOCK_RX_INIT;
 	return RX_ADDRINUSE;
     }
-#ifdef	RX_ENABLE_LOCKS
+#if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 #ifdef RX_LOCKS_DB
     rxdb_init();
 #endif /* RX_LOCKS_DB */
@@ -431,14 +451,11 @@ rx_InitHost(u_int host, u_int port)
     MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
-#ifndef KERNEL
-    MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
-#endif /* !KERNEL */
-#if defined(KERNEL) && defined(AFS_HPUX110_ENV)
+#if defined(AFS_HPUX110_ENV)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
-#endif /* KERNEL && AFS_HPUX110_ENV */
-#endif /* RX_ENABLE_LOCKS */
+#endif /* AFS_HPUX110_ENV */
+#endif /* RX_ENABLE_LOCKS && KERNEL */
 
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
