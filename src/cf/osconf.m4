@@ -549,6 +549,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX32=""
 		AIX64="#"
 		;;
 
@@ -565,6 +566,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX32=""
 		AIX64=""
 		;;
 
@@ -595,6 +597,24 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX32=""
+		AIX32=""
+		AIX64=""
+		;;
+
+	rs_aix61)	
+		DBG="-g"
+		LEX="lex"
+		LIBSYS_AIX_EXP="afsl.exp"
+		MT_CC="xlc_r"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthreads"
+		SHLIB_SUFFIX="o"
+		TXLIBS="-lcurses"
+		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX32="#"
 		AIX64=""
 		;;
 
@@ -1099,6 +1119,7 @@ AC_SUBST(CCXPG2)
 AC_SUBST(CCOBJ)
 AC_SUBST(AFSD_LIBS)
 AC_SUBST(AFSD_LDFLAGS)
+AC_SUBST(AIX32)
 AC_SUBST(AIX64)
 AC_SUBST(AR)
 AC_SUBST(AS)

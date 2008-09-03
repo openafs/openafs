@@ -76,6 +76,8 @@ DESTDIRS = aix_destdirs
 KMODS=32 
 <rs_aix50 rs_aix51 rs_aix52 rs_aix53>
 KMODS=32 64
+<rs_aix61>
+KMODS=64
 <all>
 
 include Makefile.common

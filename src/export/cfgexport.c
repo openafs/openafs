@@ -377,7 +377,7 @@ get_syms(conf, syms)
  *	strp	-	^ to ^ to EXPORT string table
  *	szp	-	^ to EXPORT string table size
  */
-#define SYMBUFSIZE 262144
+#define SYMBUFSIZE 1048576
 xlate_xtok(xp, kp, strp, szp)
      register struct syment *xp;
      register sym_t *kp;
@@ -420,12 +420,18 @@ xlate_xtok(xp, kp, strp, szp)
 	 */
 	len = strlen(xstrings + xp->n_offset) + 1;
 	while (len >= left) {
+	    fprintf(stderr, "cfgexport: Out of memory. Increase SYMBUFSIZE and recompile\n");
+	    exit(1);
+#if 0
+	    /* Something is broken with this code, after being here
+	       cfgexport segfaults */
 	    export_strings = (char *)realloc(*strp, sz += SYMBUFSIZE);
 	    if (!export_strings)
 		error("no memory for EXPORT string table");
 	    *strp = export_strings;
 	    left += SYMBUFSIZE;
 	    prev = "";		/* lazy */
+#endif
 	}
 
 	strcpy(prev = *strp + offset, xstrings + xp->n_offset);
