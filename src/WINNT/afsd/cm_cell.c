@@ -159,6 +159,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     long code;
     char fullname[CELL_MAXNAMELEN]="";
     int  hasWriteLock = 0;
+    int  hasMutex = 0;
     afs_uint32 hash;
     cm_cell_rock_t rock;
 
@@ -270,8 +271,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                     cp = NULL;
                     goto done;
                 } else {   /* got cell from DNS */
-                    lock_ObtainWrite(&cm_cellLock);
-                    hasWriteLock = 1;
+                    lock_ObtainMutex(&cp->mx);
+                    hasMutex = 1;
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
                     cp->timeout = time(0) + ttl;
@@ -285,8 +286,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 goto done;
 	    }
         } else {
-            lock_ObtainWrite(&cm_cellLock);
-            hasWriteLock = 1;
+            lock_ObtainMutex(&cp->mx);
+            hasMutex = 1;
 	    cp->timeout = time(0) + 7200;	/* two hour timeout */
 	}
 
@@ -303,6 +304,10 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }   
 
         if (cp2) {
+            if (hasMutex) {
+                lock_ReleaseMutex(&cp->mx);
+                hasMutex = 0;
+            }
             cm_FreeCell(cp);
             cp = cp2;
             goto done;
@@ -311,7 +316,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
-        lock_ObtainMutex(&cp->mx);
+        if (!hasMutex)
+            lock_ObtainMutex(&cp->mx);
         /* copy in name */
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
@@ -319,6 +325,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         cm_AddCellToNameHashTable(cp);
         cm_AddCellToIDHashTable(cp);           
         lock_ReleaseMutex(&cp->mx);
+        hasMutex = 0;
 
         /* append cell to global list */
         if (cm_data.allCellsp == NULL) {
@@ -334,6 +341,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         lock_ReleaseRead(&cm_cellLock);
     }
   done:
+    if (hasMutex && cp)
+        lock_ReleaseMutex(&cp->mx);
     if (hasWriteLock)
         lock_ReleaseWrite(&cm_cellLock);
     
