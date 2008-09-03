@@ -60,7 +60,7 @@ A  Configuring
          ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
       ppc_linux22, ppc_linux24, ppc_linux26
       ppc_nbsd16, ppc_nbsd20
-      rs_aix42, rs_aix51, rs_aix52, rs_aix53
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61
       s390_linux22, s390_linux24, s390_linux26
       s390x_linux24, s390x_linux26
       sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
@@ -248,7 +248,24 @@ G  FreeBSD Notes
 
    You can't run arla and OpenAFS at the same time.
 
-H  Other configure options
+H  AIX notes
+
+   Make sure that your default build environment is 32bit, ie.
+   the OBJECT_MODE environment variable is either unset or set to "32".
+
+   Verify this before doing configure and make. For example, assuming ksh/bash:
+   export OBJECT_MODE=32
+
+   To build aklog (in order to be able to get tokens from your KRB5 ticket)
+   you have to supply --with-krb5 to configure, the following example is for
+   building on AIX 6.1 with the IBM Kerberos5 (krb5.client.rte and
+   krb5.toolkit.adt on the Expansion Pack):
+
+   ./configure --with-afs-sysname=rs_aix61 --enable-transarc-paths \
+	--enable-supergroups \
+	--with-krb5 KRB5CFLAGS=-I/usr/include KRB5LIBS=-lkrb5
+
+I  Other configure options
 
    AFS has a ton of other optional features that must be enabled using
    configure options.  Here is a summary:
