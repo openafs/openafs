@@ -1573,7 +1573,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 #define	CREATE_SGUID_ADMIN_ONLY 1
 #ifdef CREATE_SGUID_ADMIN_ONLY
 	if (VanillaUser(client))
-	    modebits = modebits & 0777;
+	    modebits = modebits & 1777;
 #endif
 	if (VanillaUser(client)) {
 	    targetptr->disk.modeBits = modebits;
