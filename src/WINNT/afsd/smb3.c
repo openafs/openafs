@@ -2644,7 +2644,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
     case SMB_INFO_VOLUME: 
         /* volume info */
         qi.u.volumeInfo.vsn = 1234;  /* Volume serial number */
-        qi.u.volumeInfo.vnCount = 4; /* Number of characters in label (AFS\0)*/
+        qi.u.volumeInfo.vnCount = 3; /* Number of characters in label (AFS\0)*/
 
         /* we're supposed to pad it out with zeroes to the end */
         memset(&qi.u.volumeInfo.label, 0, sizeof(qi.u.volumeInfo.label));
@@ -2663,7 +2663,8 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
         }
 
         qi.u.FSvolumeInfo.vsn = 1234;
-        qi.u.FSvolumeInfo.vnCount = 8; /* This is always in Unicode */
+        qi.u.FSvolumeInfo.vnCount = 6; /* This is always in Unicode */
+        memset(&qi.u.FSvolumeInfo.label, 0, sizeof(qi.u.FSvolumeInfo.label));
         memcpy(qi.u.FSvolumeInfo.label, L"AFS", sizeof(L"AFS"));
         break;
 
@@ -6647,6 +6648,12 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #define FILE_RANDOM_ACCESS        0x0800
 #define FILE_DELETE_ON_CLOSE      0x1000
 #define FILE_OPEN_BY_FILE_ID      0x2000
+#define FILE_OPEN_FOR_BACKUP_INTENT             0x00004000
+#define FILE_NO_COMPRESSION                     0x00008000
+#define FILE_RESERVE_OPFILTER                   0x00100000
+#define FILE_OPEN_REPARSE_POINT                 0x00200000
+#define FILE_OPEN_NO_RECALL                     0x00400000
+#define FILE_OPEN_FOR_FREE_SPACE_QUERY          0x00800000
 
 /* SMB_COM_NT_CREATE_ANDX */
 long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -6874,6 +6881,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
 	fidflags |= SMB_FID_RANDOM;
+    if (createOptions & FILE_OPEN_REPARSE_POINT)
+        osi_Log0(smb_logp, "NTCreateX Open Reparse Point");
     if (smb_IsExecutableFileName(lastNamep))
         fidflags |= SMB_FID_EXECUTABLE;
 
@@ -7691,6 +7700,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
 	fidflags |= SMB_FID_RANDOM;
+    if (createOptions & FILE_OPEN_REPARSE_POINT)
+        osi_Log0(smb_logp, "NTTranCreate Open Reparse Point");
     if (smb_IsExecutableFileName(lastNamep))
         fidflags |= SMB_FID_EXECUTABLE;
 
