@@ -176,10 +176,9 @@ static void DeleteVolumeFromHashTable(register Volume * vp);
 static int VHold(Volume * vp);
 static int VHold_r(Volume * vp);
 static void GetBitmap(Error * ec, Volume * vp, VnodeClass class);
-static void GetVolumePath(Error * ec, VolId volumeId, char **partitionp,
-			  char **namep);
 static void VReleaseVolumeHandles_r(Volume * vp);
 static void VCloseVolumeHandles_r(Volume * vp);
+void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
@@ -1008,7 +1007,7 @@ Volume *
 VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
 {
     char *part, *name;
-    GetVolumePath(ec, volumeId, &part, &name);
+    VGetVolumePath(ec, volumeId, &part, &name);
     if (*ec) {
 	register Volume *vp;
 	Error error;
@@ -1670,8 +1669,8 @@ GetBitmap(Error * ec, Volume * vp, VnodeClass class)
 #endif /* BITMAP_LATER */
 }
 
-static void
-GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
+void 
+VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 {
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];

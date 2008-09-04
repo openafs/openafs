@@ -463,7 +463,8 @@ extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void VTakeOffline_r(register Volume * vp);
 extern void VTakeOffline(register Volume * vp);
-
+extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
+			   char **namep);
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store
