@@ -480,7 +480,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp) {
                 /* REDIRECT */
-                if (errorCode == VMOVED) {
+                if (errorCode == VMOVED || errorCode == VNOVOL) {
                     tsrp->status = srv_deleted;
                 } else {
                     tsrp->status = srv_offline;
@@ -499,7 +499,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }   
         lock_ReleaseWrite(&cm_serverLock);
 
-        if (fidp && errorCode == VMOVED)
+        if (fidp && (errorCode == VMOVED || errorCode == VNOVOL))
             cm_ForceUpdateVolume(fidp, userp, reqp);
 
         if (statep) {
