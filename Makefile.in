@@ -367,7 +367,7 @@ aklog: comerr ptserver
 		echo Skipping aklog for ${SYS_NAME} ; \
 	fi
 
-authtools: pam sia tsm41 sgistuff aklog
+authtools: pam tsm41 sgistuff aklog
 
 platform: 
 	${COMPILE_PART1} platform ${COMPILE_PART2}
