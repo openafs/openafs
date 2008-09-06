@@ -9,10 +9,10 @@ vos_syncserv - Verifies VLDB entries that mention a specified site
 
 B<vos syncserv> S<<< B<-server> <I<machine name>> >>>
     S<<< [B<-partition> <I<partition name>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
-    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
+    [B<-dryrun>] [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
 B<vos syncs> S<<< B<-s> <I<machine name>> >>> S<<< [B<-p> <I<partition name>>] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-d>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
 =for html
 </div>
@@ -59,6 +59,10 @@ details, see L<vos(1)>.
 
 Names the cell in which to run the command. Do not combine this argument
 with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-dryrun>
+
+Show the actions which would be taken, but do not make changes.
 
 =item B<-noauth>
 
