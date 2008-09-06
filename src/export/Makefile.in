@@ -39,9 +39,9 @@ noversion system: install
 export.exp: ${srcdir}/export4.exp ${srcdir}/export5.exp
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		cp -p ${srcdir}/export4.exp export.exp ; \
+		cp -p ${srcdir}/export4.exp export.exp ;; \
 	rs_aix5* ) \
-		cp -p ${srcdir}/export5.exp export.exp ; \
+		cp -p ${srcdir}/export5.exp export.exp ;; \
 	esac
 
 export64.exp: ${srcdir}/export4-64.exp ${srcdir}/export5-64.exp
