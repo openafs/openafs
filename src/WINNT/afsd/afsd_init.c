@@ -1065,7 +1065,15 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
                            (BYTE *) &rx_nojumbo, &dummyLen);
     if (code != ERROR_SUCCESS) {
-        rx_nojumbo = 0;
+        DWORD jumbo;
+        dummyLen = sizeof(jumbo);
+        code = RegQueryValueEx(parmKey, "RxJumbo", NULL, NULL,
+                                (BYTE *) &jumbo, &dummyLen);
+        if (code != ERROR_SUCCESS) {
+            rx_nojumbo = 1;
+        } else {
+            rx_nojumbo = !jumbo;
+        }
     }
     if (rx_nojumbo)
         afsi_log("RX Jumbograms are disabled");
