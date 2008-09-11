@@ -75,10 +75,25 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
     }
 }
 
-/* called with cm_scacheLock and scp write-locked; recycles an existing scp. 
- *
- * this function ignores all of the locking hierarchy.  
- */
+/* called with cm_scacheLock and scp write-locked */
+void cm_ResetSCacheDirectory(cm_scache_t *scp)
+{
+#ifdef USE_BPLUS
+    /* destroy directory Bplus Tree */
+    if (scp->dirBplus) {
+        LARGE_INTEGER start, end;
+        QueryPerformanceCounter(&start);
+        bplus_free_tree++;
+        freeBtree(scp->dirBplus);
+        scp->dirBplus = NULL;
+        QueryPerformanceCounter(&end);
+
+        bplus_free_time += (end.QuadPart - start.QuadPart);
+    }
+#endif
+}
+
+/* called with cm_scacheLock and scp write-locked; recycles an existing scp. */
 long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 {
     if (scp->refCount != 0) {
@@ -207,19 +222,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      */
     cm_FreeAllACLEnts(scp);
 
-#ifdef USE_BPLUS
-    /* destroy directory Bplus Tree */
-    if (scp->dirBplus) {
-        LARGE_INTEGER start, end;
-        QueryPerformanceCounter(&start);
-        bplus_free_tree++;
-        freeBtree(scp->dirBplus);
-        scp->dirBplus = NULL;
-        QueryPerformanceCounter(&end);
-
-        bplus_free_time += (end.QuadPart - start.QuadPart);
-    }
-#endif
+    cm_ResetSCacheDirectory(scp);
     return 0;
 }
 
