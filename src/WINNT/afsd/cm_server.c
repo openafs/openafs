@@ -19,6 +19,7 @@
 
 #include "afsd.h"
 #include <WINNT\syscfg.h>
+#include <WINNT/afsreg.h>
 #include <osi.h>
 #include <rx/rx.h>
 
@@ -199,9 +200,7 @@ cm_PingServer(cm_server_t *tsp)
     lock_ReleaseMutex(&tsp->mx);
 }
 
-#define MULTI_CHECKSERVERS 1
-#ifndef MULTI_CHECKSERVERS
-void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
+static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
 {
     /* ping all file servers, up or down, with unauthenticated connection,
      * to find out whether we have all our callbacks from the server still.
@@ -255,8 +254,8 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     }
     lock_ReleaseRead(&cm_serverLock);
 }       
-#else /* MULTI_CHECKSERVERS */
-void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
+
+static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 {
     /* 
      * The goal of this function is to probe simultaneously 
@@ -288,7 +287,6 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     char hoststr[16];
 
     cm_InitReq(&req);
-
     maxconns = max(cm_numFileServers,cm_numVldbServers);
     if (maxconns == 0)
         return;
@@ -307,7 +305,6 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
-        nconns = 0;
         for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
             if (tsp->type != CM_SERVER_FILE || 
                 tsp->cellp == NULL ||           /* SetPref only */
@@ -658,7 +655,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
             } multi_End;
         }
 
-        /* Process results of servers that support RXAFS_GetCapabilities */
+        /* Process results of servers that support VL_ProbeServer */
         for (i=0; i<nconns; i++) {
             if (conntimer[i])
                 rx_SetConnDeadTime(rxconns[i], ConnDeadtimeout);
@@ -682,30 +679,6 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
-
-                /* Now update the volume status if necessary */
-                if (wasDown) {
-                    cm_server_vols_t * tsrvp;
-                    cm_volume_t * volp;
-                    int i;
-
-                    for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
-                        for (i=0; i<NUM_SERVER_VOLS; i++) {
-                            if (tsrvp->ids[i] != 0) {
-                                cm_InitReq(&req);
-
-                                lock_ReleaseMutex(&tsp->mx);
-                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
-                                                         &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
-                                lock_ObtainMutex(&tsp->mx);
-                                if (code == 0) {
-                                    cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
-                                    cm_PutVolume(volp);
-                                }
-                            }
-                        }
-                    }
-                }
             } else {
                 /* mark server as down */
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
@@ -722,30 +695,6 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
                           osi_LogSaveString(afsd_logp, hoststr), 
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
-
-                /* Now update the volume status if necessary */
-                if (!wasDown) {
-                    cm_server_vols_t * tsrvp;
-                    cm_volume_t * volp;
-                    int i;
-
-                    for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
-                        for (i=0; i<NUM_SERVER_VOLS; i++) {
-                            if (tsrvp->ids[i] != 0) {
-                                cm_InitReq(&req);
-
-                                lock_ReleaseMutex(&tsp->mx);
-                                code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
-                                                         &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
-                                lock_ObtainMutex(&tsp->mx);
-                                if (code == 0) {
-                                    cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
-                                    cm_PutVolume(volp);
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             if (tsp->waitCount == 0)
@@ -767,7 +716,28 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     free(serversp);
     free(caps);
 }
-#endif /* MULTI_CHECKSERVERS */
+
+void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
+{
+    DWORD code;
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD multi = 1;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(multi);
+        code = RegQueryValueEx(parmKey, "MultiCheckServers", NULL, NULL,
+                                (BYTE *) &multi, &dummyLen);
+        RegCloseKey (parmKey);
+    }
+
+    if (multi)
+        cm_CheckServersMulti(flags, cellp);
+    else
+        cm_CheckServersSingular(flags, cellp);
+}
 
 void cm_InitServer(void)
 {
@@ -1264,6 +1234,7 @@ void cm_FreeServer(cm_server_t* serverp)
     }
 }
 
+/* Called with cm_serverLock write locked */
 void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID)
 {
     cm_server_vols_t * tsrvp;
