@@ -89,7 +89,7 @@ extern void cm_PutVolume(cm_volume_t *volp);
 
 extern long cm_GetROVolumeID(cm_volume_t *volp);
 
-extern void cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
+extern long cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
 
 extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume);
@@ -123,6 +123,10 @@ extern void cm_RemoveVolumeFromLRU(cm_volume_t *volp);
 extern void cm_CheckOfflineVolumes(void);
 
 extern long cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID);
+
+extern void cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, 
+                                       afs_uint32 volID,  afs_uint32 *onlinep, 
+                                       afs_uint32 *volumeUpdatedp);
 
 extern void cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 

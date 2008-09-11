@@ -266,14 +266,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
      */
     else if (errorCode == CM_ERROR_NOSUCHVOLUME) {
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_NOSUCHVOLUME.");
-        if (timeLeft > 7) {
-            thrd_Sleep(5000);
-            
-            retry = 1;
-
-            if (fidp != NULL)   /* Not a VLDB call */
-                cm_ForceUpdateVolume(fidp, userp, reqp);
-        }
+        /* 
+         * The VNOVOL or VL_NOENT error has already been translated
+         * to CM_ERROR_NOSUCHVOLUME.  There is nothing for us to do.
+         */
     }
 
     else if (errorCode == CM_ERROR_ALLDOWN) {
@@ -431,7 +427,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         switch ( errorCode ) {
         case VNOVOL:
 	    msgID = MSG_SERVER_REPORTS_VNOVOL;
-            format = "Server %s reported volume %d as not attached.";
+            format = "Server %s reported volume %d as not attached (does not exist).";
             break;
         case VMOVED:
 	    msgID = MSG_SERVER_REPORTS_VMOVED;
@@ -482,6 +478,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 /* REDIRECT */
                 if (errorCode == VMOVED || errorCode == VNOVOL) {
                     tsrp->status = srv_deleted;
+                    if (fidp)
+                        cm_RemoveVolumeFromServer(serverp, fidp->volume);
                 } else {
                     tsrp->status = srv_offline;
                 }
@@ -499,8 +497,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }   
         lock_ReleaseWrite(&cm_serverLock);
 
-        if (fidp && (errorCode == VMOVED || errorCode == VNOVOL))
-            cm_ForceUpdateVolume(fidp, userp, reqp);
+        if (fidp && (errorCode == VMOVED || errorCode == VNOVOL)) {
+            code = cm_ForceUpdateVolume(fidp, userp, reqp);
+            if (code) 
+                timeLeft = 0;   /* prevent a retry on failure */
+        }
 
         if (statep) {
             cm_UpdateVolumeStatus(volp, statep->ID);
@@ -812,11 +813,9 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
         if (tsp) {
             cm_GetServerNoLock(tsp);
             lock_ReleaseRead(&cm_serverLock);
-            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            if ((tsrp->status != srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
-                if (tsrp->status == srv_deleted) {
-                    /* skip this entry.  no longer valid. */;
-                } else if (tsrp->status == srv_busy) {
+                if (tsrp->status == srv_busy) {
                     allOffline = 0;
                     someBusy = 1;
                 } else if (tsrp->status == srv_offline) {
@@ -1044,7 +1043,7 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+        if ((tsrp->status != srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
 	    allDown = 0;
             if (tsrp->status == srv_busy) {
 		allOffline = 0;
