@@ -399,10 +399,19 @@ cm_ValidateCell(void)
         }
     }
 
+    for (cellp = cm_data.freeCellsp; cellp; cellp=cellp->freeNextp, count++) {
+        if ( count != 0 && cellp == cm_data.freeCellsp ||
+             count > cm_data.maxCells ) {
+            afsi_log("cm_ValidateCell failure: cm_data.freeCellsp infinite loop");
+            fprintf(stderr, "cm_ValidateCell failure: cm_data.freeCellsp infinite loop\n");
+            return -3;
+        }
+    }
+
     if ( count != cm_data.currentCells ) {
         afsi_log("cm_ValidateCell failure: count != cm_data.currentCells");
         fprintf(stderr, "cm_ValidateCell failure: count != cm_data.currentCells\n");
-        return -3;
+        return -4;
     }
     
     return 0;
