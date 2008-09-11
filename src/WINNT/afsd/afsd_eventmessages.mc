@@ -114,7 +114,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VNOVOL
 Language=English
-Server %1 reported volume %2 as not attached.
+Server %1 reported volume %2 as not attached (may have been moved or deleted).
 .
 
 MessageId=
