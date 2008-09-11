@@ -104,6 +104,8 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
+        cm_ResetSCacheDirectory(scp);
     lock_ReleaseWrite(&scp->rw);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
@@ -3049,7 +3051,7 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
         if (tsp = tsrp->server) {
             cm_GetServerNoLock(tsp);
             lock_ReleaseRead(&cm_serverLock);
-            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            if ((tsrp->status == srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
                     allOffline = 0;
