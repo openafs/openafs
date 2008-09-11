@@ -107,7 +107,7 @@ void cm_InitVolume(int newFile, long maxVols)
                     volp->vol[volType].state = vl_unknown;
                     volp->vol[volType].serversp = NULL;
                     if (volp->vol[volType].ID)
-                        cm_VolumeStatusNotification(volp, volp->vol[volType].ID, vl_alldown, volp->vol[volType].state);
+                        cm_VolumeStatusNotification(volp, volp->vol[volType].ID, vl_unknown, volp->vol[volType].state);
                 }
                 volp->cbExpiresRO = 0;
             }
@@ -910,7 +910,12 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     return code;
 }	
 
-void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
+/* 
+ * Only call this function in response to a VNOVOL or VMOVED error
+ * from a file server.  Do not call it in response to CM_ERROR_NOSUCHVOLUME
+ * as that can lead to recursive calls.
+ */
+long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 {
     cm_cell_t *cellp;
     cm_volume_t *volp;
@@ -918,11 +923,14 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     cm_volume_t *volp2;
 #endif
     afs_uint32  hash;
+    long code;
 
-    if (!fidp) return;
+    if (!fidp) 
+        return CM_ERROR_INVAL;
 
     cellp = cm_FindCellByID(fidp->cell, 0);
-    if (!cellp) return;
+    if (!cellp) 
+        return CM_ERROR_NOSUCHCELL;
 
     /* search for the volume */
     lock_ObtainRead(&cm_volumeLock);
@@ -970,30 +978,21 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseRead(&cm_volumeLock);
 
     if (!volp)
-        return;
+        return CM_ERROR_NOSUCHVOLUME;
 
     /* update it */
     cm_data.mountRootGen = time(NULL);
     lock_ObtainWrite(&volp->rw);
     volp->flags |= CM_VOLUMEFLAG_RESET;
-#ifdef COMMENT
-    /* Mark the volume to be updated but don't update it now.
-     * This function is called only from within cm_Analyze
-     * when cm_ConnByMServers has failed with all servers down
-     * The problem is that cm_UpdateVolume is going to call
-     * cm_ConnByMServers which may cause a recursive chain
-     * of calls each returning a retry on failure.
-     * Instead, set the flag so the next time the volume is
-     * accessed by Name or ID the UpdateVolume call will
-     * occur.
-     */
+
     code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
-#endif
     lock_ReleaseWrite(&volp->rw);
 
     lock_ObtainRead(&cm_volumeLock);
     cm_PutVolume(volp);
     lock_ReleaseRead(&cm_volumeLock);
+
+    return code;
 }
 
 /* find the appropriate servers from a volume */
@@ -1088,12 +1087,9 @@ void cm_RefreshVolumes(void)
 
 }
 
-
-/* The return code is 0 if the volume is not online and 
- * 1 if the volume is online
- */
-long
-cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
+void
+cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32 volID,
+                           afs_uint32 *onlinep, afs_uint32 *volumeUpdatedp)
 {
     cm_conn_t *connp;
     long code;
@@ -1106,139 +1102,100 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
     char volName[32];
     char offLineMsg[256];
     char motd[256];
-    long online = 0;
+    long alldown, alldeleted;
     cm_serverRef_t *serversp;
 
     Name = volName;
     OfflineMsg = offLineMsg;
     MOTD = motd;
 
+    if (statep->ID != 0 && (!volID || volID == statep->ID)) {
+        if (!statep->serversp && !(*volumeUpdatedp)) {
+            cm_InitReq(&req);
+            code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
+            *volumeUpdatedp = 1;
+        }
+
+        if (statep->serversp) {
+            alldown = 1;
+            alldeleted = 1;
+            for (serversp = statep->serversp; serversp; serversp = serversp->next) {
+                if (serversp->status != srv_deleted) {
+                    alldeleted = 0;
+                    *onlinep = 1;
+                    alldown = 0;
+                }
+                if (serversp->status == srv_busy || serversp->status == srv_offline) 
+                    serversp->status = srv_not_busy;
+            }
+
+            if (alldeleted && !(*volumeUpdatedp)) {
+                cm_InitReq(&req);
+                code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
+                *volumeUpdatedp = 1;
+            }
+
+            if (statep->state == vl_busy || statep->state == vl_offline || statep->state == vl_unknown ||
+                (!alldown && statep->state == vl_alldown)) {
+                cm_InitReq(&req);
+
+                lock_ReleaseWrite(&volp->rw);
+                do {
+                    code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
+                    if (code) 
+                        continue;
+
+                    rxconnp = cm_GetRxConn(connp);
+                    code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
+                                                 &volStat, &Name, &OfflineMsg, &MOTD);
+                    rx_PutConnection(rxconnp);            
+
+                } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+                code = cm_MapRPCError(code, &req);
+
+                lock_ObtainWrite(&volp->rw);
+                if (code == 0 && volStat.Online) {
+                    cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_online);
+                    statep->state = vl_online;
+                    *onlinep = 1;
+                } else if (code == CM_ERROR_NOACCESS) {
+                    cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_unknown);
+                    statep->state = vl_unknown;
+                    *onlinep = 1;
+                }
+            } else if (alldown && statep->state != vl_alldown) {
+                cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
+                statep->state = vl_alldown;
+            }
+        } else if (statep->state != vl_alldown) {
+            cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
+            statep->state = vl_alldown;
+        }
+    }
+}
+
+/* The return code is 0 if the volume is not online and 
+ * 1 if the volume is online
+ */
+long
+cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
+{
+    long code;
+    cm_req_t req;
+    afs_uint32 online = 0;
+    afs_uint32 volumeUpdated = 0;
+
     lock_ObtainWrite(&volp->rw);
 
     if (volp->flags & CM_VOLUMEFLAG_RESET) {
         cm_InitReq(&req);
         code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
+        volumeUpdated = 1;
     }
 
-    if (volp->vol[RWVOL].ID != 0 && (!volID || volID == volp->vol[RWVOL].ID) &&
-         volp->vol[RWVOL].serversp) {
-       
-        for (serversp = volp->vol[RWVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline) {
-                serversp->status = srv_not_busy;
-                online = 1;
-            }
-        }
-
-        if (volp->vol[RWVOL].state == vl_busy || volp->vol[RWVOL].state == vl_offline || volp->vol[RWVOL].state == vl_unknown) {
-            cm_InitReq(&req);
-
-            lock_ReleaseWrite(&volp->rw);
-            do {
-                code = cm_ConnFromVolume(volp, volp->vol[RWVOL].ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                rxconnp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[RWVOL].ID,
-                                             &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(rxconnp);            
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            lock_ObtainWrite(&volp->rw);
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_online);
-                volp->vol[RWVOL].state = vl_online;
-                online = 1;
-            } else if (code == CM_ERROR_NOACCESS) {
-                cm_VolumeStatusNotification(volp, volp->vol[RWVOL].ID, volp->vol[RWVOL].state, vl_unknown);
-                volp->vol[RWVOL].state = vl_unknown;
-                online = 1;
-            }
-        }
-    }
-
-    if (volp->vol[ROVOL].ID != 0 && (!volID || volID == volp->vol[ROVOL].ID) &&
-         volp->vol[ROVOL].serversp) {
-
-        for (serversp = volp->vol[ROVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline) {
-                serversp->status = srv_not_busy;
-                online = 1;
-            }
-        }
-
-        if (volp->vol[ROVOL].state == vl_busy || volp->vol[ROVOL].state == vl_offline || volp->vol[ROVOL].state == vl_unknown) {
-            cm_InitReq(&req);
-
-            lock_ReleaseWrite(&volp->rw);
-            do {
-                code = cm_ConnFromVolume(volp, volp->vol[ROVOL].ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                rxconnp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[ROVOL].ID,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(rxconnp);        
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            lock_ObtainWrite(&volp->rw);
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_online);
-                volp->vol[ROVOL].state = vl_online;
-                online = 1;
-            } else if (code == CM_ERROR_NOACCESS) {
-                cm_VolumeStatusNotification(volp, volp->vol[ROVOL].ID, volp->vol[ROVOL].state, vl_unknown);
-                volp->vol[ROVOL].state = vl_unknown;
-                online = 1;
-            }
-        }
-    }
-
-    if (volp->vol[BACKVOL].ID != 0 && (!volID || volID == volp->vol[BACKVOL].ID) &&
-         volp->vol[BACKVOL].serversp) {
-        
-        for (serversp = volp->vol[BACKVOL].serversp; serversp; serversp = serversp->next) {
-            if (serversp->status == srv_busy || serversp->status == srv_offline) {
-                serversp->status = srv_not_busy;
-                online = 1;
-            }
-        }
-
-        if (volp->vol[BACKVOL].state == vl_busy || volp->vol[BACKVOL].state == vl_offline || volp->vol[BACKVOL].state == vl_unknown) {
-            cm_InitReq(&req);
-
-            lock_ReleaseWrite(&volp->rw);
-            do {
-                code = cm_ConnFromVolume(volp, volp->vol[BACKVOL].ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                rxconnp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(rxconnp, volp->vol[BACKVOL].ID,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(rxconnp);        
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            lock_ObtainWrite(&volp->rw);
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_online);
-                volp->vol[BACKVOL].state = vl_online;
-                online = 1;
-            } else if (code == CM_ERROR_NOACCESS) {
-                cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, vl_unknown);
-                volp->vol[BACKVOL].state = vl_unknown;
-                online = 1;
-            }
-        }
-    }
+    cm_CheckOfflineVolumeState(volp, &volp->vol[RWVOL], volID, &online, &volumeUpdated);
+    cm_CheckOfflineVolumeState(volp, &volp->vol[ROVOL], volID, &online, &volumeUpdated);
+    cm_CheckOfflineVolumeState(volp, &volp->vol[BACKVOL], volID, &online, &volumeUpdated);
 
     lock_ReleaseWrite(&volp->rw);
     return online;
