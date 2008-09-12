@@ -1350,6 +1350,9 @@ int afsd_InitCM(char **reasonP)
         *reasonP = "unknown error";
         return -1;
     }
+    rx_SetMinProcs(serverp, 2);
+    rx_SetMaxProcs(serverp, 4);
+    rx_SetCheckReach(serverp, 1);
 
     nullServerSecurityClassp = rxnull_NewServerSecurityObject();
     serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
@@ -1359,6 +1362,8 @@ int afsd_InitCM(char **reasonP)
         *reasonP = "unknown error";
         return -1;
     }
+    rx_SetMinProcs(serverp, 2);
+    rx_SetMaxProcs(serverp, 4);
         
     /* start server threads, *not* donating this one to the pool */
     rx_StartServer(0);
