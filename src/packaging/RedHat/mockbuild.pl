@@ -68,62 +68,72 @@ my %platconf = ( "fedora-5-i386" => { osver => "fc5",
 				      kmod => '1',
 				      basearch => 'i386',
 				      updaterepo => 'updates-released',
-				      results => 'fc5/i386' },
+				      results => 'fedora-5/i386' },
 		 "fedora-5-x86_64" => { osver => "fc5",
 				       kmod => '1',
 				       basearch => 'x86_64',
 				       updaterepo => 'updates-released',
-				       results => 'fc5/x86_64' },
+				       results => 'fedora-5/x86_64' },
 		 "fedora-6-i386" => { osver => "fc6", 
 				      kmod => '1', 
 				      basearch => 'i386',
 				      updaterepo => 'updates-released',
-				      results => "fc6/i386" },
+				      results => "fedora-6/i386" },
 		 "fedora-6-x86_64" => { osver => "fc6",
 					kmod => '1',
 					basearch => 'x86_64',
 				        updaterepo => 'updates-released',
-					results => "fc6/x86_64" },
+					results => "fedora-6/x86_64" },
 		 "fedora-7-i386" => { osver => "fc7", 
 				      kmod => '1', 
 				      basearch => 'i386',
 				      updaterepo => 'updates-released',
-				      results => "fc7/i386" },
+				      results => "fedora-7/i386" },
 		 "fedora-7-x86_64" => { osver => "fc7",
 					kmod => '1',
 					basearch => 'x86_64',
 				        updaterepo => 'updates-released',
-					results => "fc7/x86_64" },
+					results => "fedora-7/x86_64" },
 		 "fedora-8-i386" => { osver => "fc8", 
 				      kmod => '1', 
 				      basearch => 'i386',
 				      updaterepo => 'updates-released',
-				      results => "fc8/i386" },
+				      results => "fedora-8/i386" },
 		 "fedora-8-x86_64" => { osver => "fc8",
 					kmod => '1',
 					basearch => 'x86_64',
 				        updaterepo => 'updates-released',
-					results => "fc8/x86_64" },
+					results => "fedora-8/x86_64" },
 		 "centos-4-i386" => { osver => "el4",
 				     kmod => '1',
 				     basearch => 'i386',
 				     updaterepo => 'update',
-				     results => 'el4/i386' },
+				     results => 'rhel4/i386' },
 		 "centos-4-x86_64" => { osver => "el4",
 				       kmod => '1',
 				       basearch => 'x86_64',
 				       updaterepo => 'update',
-				       results => "el4/x86_64" },
+				       results => "rhel4/x86_64" },
 		 "centos-5-i386" => { osver => "el5", 
 				      kmod => '1', 
 				      basearch => 'i386',
 				      updaterepo => 'update',
-				      results => "el5/i386" },
+				      results => "rhel5/i386" },
 		 "centos-5-x86_64" => { osver => "el5",
 					kmod => '1',
 				   	basearch => 'x86_64',
 				        updaterepo => 'update',
-					results => "el5/x86_64" },
+					results => "rhel5/x86_64" },
+		 "fedora-9-i386" => { osver => "fc9",
+				      kmod => '1',
+				      basearch => 'i386',
+				      updaterepo => "updates-released",
+				      results => 'fedora-9/i386' },
+		 "fedora-9-x86_64" => { osver => "fc9",
+					kmod => "1",
+					basearch => "x86_64",
+					updaterepo => "updates-released",
+					results => "fedora-9/x86_64" },
 		 "fedora-development-i386" => { osver => "fcd",
 					  kmod => '1',
 					  basearch => 'i386',
@@ -177,7 +187,7 @@ foreach my $platform (@platforms) {
   my $osver = $platconf{$platform}{'osver'};
   my $root = $rootbase.$platform."/root";
   my $mockresults = $rootbase.$platform."/result";
-  my $resultdir = $resultbase.$platconf{$platform}{'results'};
+  my $resultdir = $resultbase."/".$platconf{$platform}{'results'};
   my $basearch = $platconf{$platform}{'basearch'};
   my $rpmstashdir = $stashbase.$platconf{$platform}{'results'}."/";
 
@@ -240,17 +250,21 @@ foreach my $platform (@platforms) {
 
   print "-------------------------------------------------------------------\n";
   print "Building the userland RPMs\n";
-  my @rpms = ('', '-authlibs', '-authlibs-devel', '-client', '-compat',
-	      '-debuginfo', '-devel', '-docs', '-kernel-source', '-kpasswd',
-	      '-krb5', '-server');
+  my @rpms = ('openafs', 'openafs-authlibs', 'openafs-authlibs-devel', 
+	      'openafs-client', 'openafs-compat', 'openafs-debuginfo', 
+	      'openafs-devel', 'openafs-docs', 'openafs-kernel-source', 
+	      'openafs-kpasswd', 'openafs-krb5', 'openafs-server',
+	      'dkms-openafs');
+  my @missingrpms=();
 
   my $missing = 0;
   foreach my $rpm (@rpms) {
-    if (! -f $resultdir."/openafs".$rpm."-".$oafsversion."-".$osver.".".
+    if (! -f $resultdir."/".$rpm."-".$oafsversion."-".$osver.".".
 	     $oafsrelease.".".$basearch.".rpm") {
       $missing++;
-      print $resultdir."/openafs".$rpm."-".$oafsversion."-".$osver.".".
-	    $oafsrelease.".".$basearch.".rpm is missing!\n"
+      print $resultdir."/".$rpm."-".$oafsversion."-".$osver.".".
+	    $oafsrelease.".".$basearch.".rpm is missing!\n";
+      push @missingrpms, $rpm;
     }
   }
   if ($missing) {
@@ -263,12 +277,12 @@ foreach my $platform (@platforms) {
 		        ' --define "build_authlibs 1" '.
 		        $srpm) == 0
       or die "build failed with : $!\n";
-    foreach my $rpm (@rpms) {
-      system("cp ".$mockresults."/openafs".$rpm."-".$oafsversion."-".
+    foreach my $rpm (@missingrpms) {
+      system("cp ".$mockresults."/".$rpm."-".$oafsversion."-".
 		   $osver.".".$oafsrelease.".".$basearch.".rpm ".
 		   $resultdir) == 0
           or die "Copy failed with : $!\n";
-      push @newrpms, $mockresults."/openafs".$rpm."-".$oafsversion."-".
+      push @newrpms, $mockresults."/".$rpm."-".$oafsversion."-".
 		     $osver.".".$oafsrelease.".".$basearch.".rpm";
     }
   } else {
