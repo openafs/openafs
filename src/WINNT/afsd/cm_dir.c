@@ -1270,16 +1270,22 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                          (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                          CM_SCACHESYNC_BUFLOCKED);
 
-        if (code == 0 && bufferp->dataVersion != op->dataVersion) {
-            osi_Log2(afsd_logp, "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %d. needs %d", 
-                     bufferp->dataVersion, op->dataVersion);
+        if (code == 0) {
+            if (bufferp->dataVersion == CM_BUF_VERSION_BAD) {
+                /* This is a new buffer */
+                bufferp->dataVersion = op->dataVersion;
+            } else if (bufferp->dataVersion != op->dataVersion) {
+                osi_Log2(afsd_logp,
+                         "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %d. needs %d", 
+                         bufferp->dataVersion, op->dataVersion);
 
-            cm_SyncOpDone(op->scp, bufferp,
-                          CM_SCACHESYNC_NEEDCALLBACK |
-                         (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
-                          CM_SCACHESYNC_BUFLOCKED);
+                cm_SyncOpDone(op->scp, bufferp,
+                              CM_SCACHESYNC_NEEDCALLBACK |
+                              (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
+                              CM_SCACHESYNC_BUFLOCKED);
 
-            code = CM_ERROR_INVAL;
+                code = CM_ERROR_INVAL;
+            }
         }
 
         lock_ReleaseWrite(&op->scp->rw);
