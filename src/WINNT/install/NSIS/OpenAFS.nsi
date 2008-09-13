@@ -780,6 +780,7 @@ skipremove:
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\AFSRDFSProvider.dll"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Network"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "DeviceName" "\Device\AFSRedirector"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Class" 1
 
   SetRebootFlag true
