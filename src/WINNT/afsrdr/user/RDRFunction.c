@@ -1871,6 +1871,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     AFSSetFileExtentsCB *pResultCB = NULL;
     DWORD Length;
     DWORD count;
+    DWORD status;
     cm_scache_t *scp = NULL;
     cm_fid_t    Fid;
     cm_buf_t    *bufp;
@@ -1896,6 +1897,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     *ResultBufferLength = Length;
 
     memset( *ResultCB, '\0', Length );
+    (*ResultCB)->FileId = FileId;
 
     Fid.cell = FileId.Cell;
     Fid.volume = FileId.Volume;
@@ -1905,11 +1907,10 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        free(*ResultCB);
-        *ResultCB = NULL;
-        *ResultBufferLength = 0;
         osi_Log1(afsd_logp, "RDR_RequestFileExtentsAsync cm_GetSCache FID failure code=0x%x",
                   code);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
 
@@ -1920,20 +1921,17 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        free(*ResultCB);
-        *ResultCB = NULL;
-        *ResultBufferLength = 0;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
                  scp, code);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
         return;
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     /* the scp is now locked and current */
-
-    (*ResultCB)->FileId = FileId;
 
     /* Allocate the extents from the buffer package */
     for ( count = 0, ByteOffset = RequestExtentsCB->ByteOffset, EndOffset.QuadPart = ByteOffset.QuadPart + RequestExtentsCB->Length; 

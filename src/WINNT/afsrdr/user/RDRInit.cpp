@@ -767,23 +767,49 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         }
 
 
-        if( !DeviceIoControl( glDevHandle,
-			      IOCTL_AFS_SET_FILE_EXTENTS,
-			      (void *)SetFileExtentsResultCB,
-                              dwResultBufferLength,
-			      (void *)NULL,
-			      0,
-			      &bytesReturned,
-			      NULL))
-        {
-            char *pBuffer = (char *)wchBuffer;
-            sprintf( pBuffer,
-                     "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
-                     GetLastError());
-            osi_panic(pBuffer, __FILE__, __LINE__);
-        }
+        if (SetFileExtentsResultCB) {
+            if( !DeviceIoControl( glDevHandle,
+                                  IOCTL_AFS_SET_FILE_EXTENTS,
+                                  (void *)SetFileExtentsResultCB,
+                                  dwResultBufferLength,
+                                  (void *)NULL,
+                                  0,
+                                  &bytesReturned,
+                                  NULL))
+            {
+                char *pBuffer = (char *)wchBuffer;
+                sprintf( pBuffer,
+                         "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                         GetLastError());
+                osi_panic(pBuffer, __FILE__, __LINE__);
+            }
 
-        free(SetFileExtentsResultCB);
+            free(SetFileExtentsResultCB);
+        } else {
+            /* Must be out of memory */
+            AFSSetFileExtentsCB SetFileExtentsResultCB;
+            
+            dwResultBufferLength = sizeof(AFSSetFileExtentsCB);
+            memset( &SetFileExtentsResultCB, '\0', dwResultBufferLength );
+            SetFileExtentsResultCB.FileId = RequestBuffer->FileId;
+            SetFileExtentsResultCB.ResultStatus = STATUS_NO_MEMORY;
+
+            if( !DeviceIoControl( glDevHandle,
+                                  IOCTL_AFS_SET_FILE_EXTENTS,
+                                  (void *)&SetFileExtentsResultCB,
+                                  dwResultBufferLength,
+                                  (void *)NULL,
+                                  0,
+                                  &bytesReturned,
+                                  NULL))
+            {
+                char *pBuffer = (char *)wchBuffer;
+                sprintf( pBuffer,
+                         "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                         GetLastError());
+                osi_panic(pBuffer, __FILE__, __LINE__);
+            }
+        }
     } 
     else {
 
