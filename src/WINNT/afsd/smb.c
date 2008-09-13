@@ -3134,6 +3134,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_LOCK_NOT_GRANTED) {
         NTStatus = 0xC0000055L; /* Lock Not Granted */
     } else {
+        char foo[256];
+        sprintf(foo, "No mapping for 0x%X using 0xC0982001\r\n", code);
+        OutputDebugString(foo);
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 

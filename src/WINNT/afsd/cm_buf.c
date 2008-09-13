@@ -1941,6 +1941,28 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
     return 0;
 }
 
+long buf_ClearRDRFlag(cm_fid_t *fidp)
+{
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+    afs_uint32 i;
+
+    i = BUF_FILEHASH(fidp);
+
+    lock_ObtainRead(&buf_globalLock);
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->allp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_REDIR)) {
+            lock_ReleaseRead(&buf_globalLock);
+            lock_ObtainMutex(&bp->mx);
+            bp->flags &= ~CM_BUF_REDIR;
+            lock_ReleaseMutex(&bp->mx);
+            lock_ObtainRead(&buf_globalLock);
+        }
+    }
+    lock_ReleaseRead(&buf_globalLock);
+    return 0;
+}
+
 #if 0
 long buf_CleanDirtyBuffers(cm_scache_t *scp)
 {

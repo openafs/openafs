@@ -1122,6 +1122,7 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
 
     RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                           scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
+    buf_ClearRDRFlag(&scp->fid);
 
   done3:
     if (originalName != NULL)
@@ -2155,6 +2156,7 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
 
     RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                           scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
+    buf_ClearRDRFlag(&scp->fid);
 
   done3:
     free(clientp);
