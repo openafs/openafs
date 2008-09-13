@@ -1034,6 +1034,8 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
         if (first)
             first = 0;
         else
@@ -1258,6 +1260,9 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     cm_serverRef_t  **current = list;
     cm_serverRef_t  **nextp = 0;
     cm_serverRef_t  * next = 0;
+
+	if (*list == NULL)
+		return;
 
     lock_ObtainWrite(&cm_serverLock);
 

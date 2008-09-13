@@ -232,6 +232,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if (cellp == NULL && serversp) {
             struct cm_serverRef * refp;
             for ( refp=serversp ; cellp == NULL && refp != NULL; refp=refp->next) {
+                if (refp->status == srv_deleted)
+                    continue;
                 if ( refp->server )
                     cellp = refp->server->cellp;
             }
@@ -335,6 +337,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         }
                         lock_ObtainWrite(&cm_serverLock);
                         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                            if (tsrp->status == srv_deleted)
+                                continue;
                             if (tsrp->status == srv_busy) {
                                 tsrp->status = srv_not_busy;
                             }       
@@ -342,7 +346,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         lock_ReleaseWrite(&cm_serverLock);
                         if (free_svr_list) {
                             cm_FreeServerList(&serversp, 0);
-                            *serverspp = serversp;
+                            *serverspp = serversp = NULL;
+                            free_svr_list = 0;
                         }
 
                         cm_UpdateVolumeStatus(volp, fidp->volume);
@@ -364,6 +369,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 if (serversp) {
                     lock_ObtainWrite(&cm_serverLock);
                     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                        if (tsrp->status == srv_deleted)
+                            continue;
                         if (tsrp->status == srv_busy) {
                             tsrp->status = srv_not_busy;
                         }
@@ -386,6 +393,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+            if (tsrp->status == srv_deleted)
+                continue;
             if (tsrp->server == serverp && tsrp->status == srv_not_busy) {
                 tsrp->status = srv_busy;
                 if (fidp) { /* File Server query */
@@ -412,7 +421,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (free_svr_list) {
             cm_FreeServerList(&serversp, 0);
-            *serverspp = serversp;
+            *serverspp = serversp = NULL;
+            free_svr_list = 0;
         }
         retry = 1;
     }
@@ -467,13 +477,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if (!serversp && fidp) {
             code = cm_GetServerList(fidp, userp, reqp, &serverspp);
             if (code == 0) {
-                serversp = *serverspp;
+                serversp = *serverspp = NULL;
                 free_svr_list = 1;
             }
         }
 
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+            if (tsrp->status == srv_deleted)
+                continue;
             if (tsrp->server == serverp) {
                 /* REDIRECT */
                 if (errorCode == VMOVED || errorCode == VNOVOL) {
@@ -483,38 +495,46 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 } else {
                     tsrp->status = srv_offline;
                 }
-
-                if (fidp) { /* File Server query */
-                    lock_ReleaseWrite(&cm_serverLock);
-                    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                             CM_GETVOL_FLAG_NO_LRU_UPDATE, 
-                                             &volp);
-                    if (code == 0)
-                        cm_VolumeStateByID(volp, fidp->volume);
-                    lock_ObtainWrite(&cm_serverLock);
-                }   
             }
         }   
         lock_ReleaseWrite(&cm_serverLock);
 
-        if (fidp && (errorCode == VMOVED || errorCode == VNOVOL)) {
-            code = cm_ForceUpdateVolume(fidp, userp, reqp);
-            if (code) 
-                timeLeft = 0;   /* prevent a retry on failure */
-        }
-
-        if (statep) {
-            cm_UpdateVolumeStatus(volp, statep->ID);
-            lock_ObtainRead(&cm_volumeLock);
-            cm_PutVolume(volp);
-            lock_ReleaseRead(&cm_volumeLock);
-            volp = NULL;
-        }
-
+        /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
             cm_FreeServerList(&serversp, 0);
-            *serverspp = serversp;
+            *serverspp = serversp = NULL;
+            free_svr_list = 0;
         }
+
+        if (fidp) { /* File Server query */
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                      CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                      &volp);
+            if (code == 0)
+                statep = cm_VolumeStateByID(volp, fidp->volume);
+
+            if (errorCode == VMOVED || errorCode == VNOVOL) {
+                code = cm_ForceUpdateVolume(fidp, userp, reqp);
+                if (code) 
+                    timeLeft = 0;   /* prevent a retry on failure */
+                osi_Log3(afsd_logp, "cm_Analyze called cm_ForceUpdateVolume cell %u vol %u code 0x%x",
+                        fidp->cell, fidp->volume, code);
+            }
+
+            if (statep) {
+                cm_UpdateVolumeStatus(volp, statep->ID);
+                osi_Log3(afsd_logp, "cm_Analyze NewVolState cell %u vol %u state %u", 
+                         fidp->cell, fidp->volume, statep->state);
+            }
+
+            if (volp) {
+                lock_ObtainRead(&cm_volumeLock);
+                cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
+            }
+        }
+
         if ( timeLeft > 2 )
             retry = 1;
     } else if ( errorCode == VNOVNODE ) {
@@ -798,6 +818,9 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
+
         tsp = tsrp->server;
         if (reqp->tokenIdleErrorServp) {
             /* 
@@ -813,7 +836,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
         if (tsp) {
             cm_GetServerNoLock(tsp);
             lock_ReleaseRead(&cm_serverLock);
-            if ((tsrp->status != srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
                     allOffline = 0;
@@ -1042,8 +1065,10 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
         tsp = tsrp->server;
-        if ((tsrp->status != srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
+        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
 	    allDown = 0;
             if (tsrp->status == srv_busy) {
 		allOffline = 0;
