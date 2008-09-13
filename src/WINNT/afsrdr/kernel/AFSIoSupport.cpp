@@ -97,6 +97,9 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
 
             ulCurrLength = 0;
 
+            //
+            // While there is still data to process, loop
+            //
             while ( (pExtent->FileOffset.QuadPart + pExtent->Size) <
                     (Start->QuadPart + Length) )
             {
@@ -108,6 +111,9 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                 if (pNextExtent->CacheOffset.QuadPart != 
                     (pExtent->CacheOffset.QuadPart + pExtent->Size)) 
                 {
+                    //
+                    // This extent and the next extent are not contiguous
+                    //
                     break;
                 }
                 pExtent = pNextExtent;

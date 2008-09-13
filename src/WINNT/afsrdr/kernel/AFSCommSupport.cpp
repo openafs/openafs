@@ -25,7 +25,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
 
     __Enter
     {
-
+                                       
         //
         // Initialize the directory enumeration buffer for the directory
         //
@@ -100,7 +100,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
             pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
 
             //
-            // Remove the leading header from the processed length
+            // Remvoe the leading header from the processed length
             //
 
             ulResultLen -= FIELD_OFFSET( AFSDirEnumResp, Entry);
@@ -158,12 +158,10 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                                    pDirNode->DirectoryEntry.ShortNameLength);
 
                     //
-                    // Only perform the short work if it is a file or directory
+                    // Only perform the short work if given a short name tree
                     //
 
-                    if( ShortNameTree != NULL &&
-                        ( pCurrentDirEntry->FileType == AFS_FILE_TYPE_DIRECTORY ||
-                          pCurrentDirEntry->FileType == AFS_FILE_TYPE_FILE))
+                    if( ShortNameTree != NULL)
                     {
 
                         //
@@ -173,8 +171,8 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                         uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
                         uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
 
-                        pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName,
-                                                                                       TRUE);
+                        pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                                           TRUE);
                     }
                 }
 
@@ -232,7 +230,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                 }
 
                 if( ShortNameTree != NULL &&
-                    pDirNode->Type.Data.ShortNameTreeEntry.Index != 0)
+                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex != 0)
                 {
 
                     //
@@ -446,8 +444,8 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
             uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
             uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
 
-            pDirNode->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName,
-                                                                           TRUE);
+            pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                               TRUE);
         }
 
         //
@@ -778,8 +776,7 @@ try_exit:
 }
 
 NTSTATUS
-AFSEvaluateTargetByID( IN AFSFileID *ParentFileId,
-                       IN AFSFileID *SourceFileId,
+AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
                        OUT AFSDirEnumEntry **DirEnumEntry)
 {
 
@@ -791,7 +788,8 @@ AFSEvaluateTargetByID( IN AFSFileID *ParentFileId,
     __Enter
     {
 
-        stTargetID.ParentId = *ParentFileId;
+        RtlZeroMemory( &stTargetID,
+                       sizeof( AFSEvalTargetCB));
 
         //
         // Allocate our response buffer
@@ -1451,7 +1449,7 @@ AFSProcessControlRequest( IN PIRP Irp)
                     break;
                 }
 
-                DbgPrint("AFSCommRequest IOCTL_AFS_NETWORK_STATUS Status %s\n", pNetworkStatus->Online ? "ONLINE" : "OFFLINE");
+                //DbgPrint("AFSCommRequest IOCTL_AFS_NETWORK_STATUS Status %s\n", pNetworkStatus->Online ? "ONLINE" : "OFFLINE");
 
 
                 //
@@ -1477,7 +1475,7 @@ AFSProcessControlRequest( IN PIRP Irp)
                     break;
                 }
 
-                DbgPrint("AFSCommRequest IOCTL_AFS_VOLUME_STATUS Status %s\n", pVolumeStatus->Online ? "ONLINE" : "OFFLINE");
+                //DbgPrint("AFSCommRequest IOCTL_AFS_VOLUME_STATUS Status %s\n", pVolumeStatus->Online ? "ONLINE" : "OFFLINE");
 
                 //
                 // Implement the handling of this call

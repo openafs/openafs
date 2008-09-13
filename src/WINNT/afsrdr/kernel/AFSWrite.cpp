@@ -546,6 +546,10 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     {
         Irp->IoStatus.Information = 0;
 
+        if (ByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart) {
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
         //
         // Get the mapping for the buffer
         //
@@ -962,8 +966,16 @@ ExtendingWrite( IN AFSFcb *Fcb,
 
     //
     // Tell the server
+    // Need to drop our lock on teh Fcb while this call is made since it could
+    // result in the service invalidating the node requiring the lock
     //
+
+    AFSReleaseResource( &Fcb->NPFcb->Resource);
+
     ntStatus = AFSUpdateFileInformation( AFSRDRDeviceObject, Fcb);
+
+    AFSAcquireExcl( &Fcb->NPFcb->Resource,
+                    TRUE);
 
     if (NT_SUCCESS(ntStatus))
     {

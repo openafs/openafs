@@ -166,6 +166,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             break;
 
+        case FSCTL_GET_REPARSE_POINT:
+            AFSPrint("AFSProcessUserFsRequest Get reparse data buffer for %wZ\n", &pIrpSp->FileObject->FileName);
+            break;
+
+        case FSCTL_SET_REPARSE_POINT:
+            AFSPrint("AFSProcessUserFsRequest Get reparse data buffer for %wZ\n", &pIrpSp->FileObject->FileName);
+            break;
+
         default :
 
             AFSPrint("AFSProcessUserFsRequest Processing Default handler %08lX\n", ulFsControlCode);

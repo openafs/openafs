@@ -196,48 +196,53 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // then delete the node
                 //
 
-                if( pFcb->OpenHandleCount > 0 &&
-                    BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
-                {
-
-                    AFSPrint("AFSCleanup OpenHandleCount %d for deleted file %wZ\n",
-                                                                               pFcb->OpenHandleCount,
-                                                                               &pFcb->DirEntry->DirectoryEntry.FileName);
-
-                }
-
                 if( pFcb->OpenHandleCount == 0 &&
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
                 {
 
-                    UNICODE_STRING uniFullFileName;
+                    //
+                    // Before telling the server about the deleted file, tear down all extents for
+                    // the file
+                    //
+
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    {
+
+                        //
+                        // We will attmept to flush extents prior to tearing them down in the 
+                        // event that the delete fails to the service. And we need to do this
+                        // before telling the service the file is deleted otherwise the extent
+                        // flushing will fail
+                        //
+
+                        if( pFcb->Specific.File.ExtentsDirtyCount)
+                        {
+
+                            AFSFlushExtents( pFcb);
+                        }
+
+                        AFSTearDownFcbExtents( pFcb);
+                    }
 
                     //
                     // Try and notify the service about the delete
+                    // We need to drop teh locks on the Fcb since this may cause re-entrancy
+                    // for the invalidation of the node
                     //
 
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     ntStatus = AFSNotifyDelete( pFcb);
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                      TRUE);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                          &uniFullFileName)))
-                        {
-
-                            AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
-                                                                                &uniFullFileName,
-                                                                                ntStatus);
-
-                            ExFreePool( uniFullFileName.Buffer);
-                        }
-                        else
-                        {
-
-                            AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
-                                                                                &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                                                ntStatus);
-                        }
+                        AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
+                                                                            &pCcb->FullFileName,
+                                                                            ntStatus);
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -250,31 +255,15 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                         ASSERT( pFcb->ParentFcb != NULL);
 
-                        if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                          &uniFullFileName)))
-                        {
-
-                            AFSPrint("AFSCleanup Successfully notified service of deleted file %wZ\n", 
-                                                                                &uniFullFileName);
-
-						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
-													     (PSTRING)&uniFullFileName,
-													     (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													     (PSTRING)NULL,
-													     (PSTRING)NULL,
-													     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-													     (ULONG)FILE_ACTION_REMOVED,
-													     (PVOID)NULL );
-
-                            ExFreePool( uniFullFileName.Buffer);
-                        }
-                        else
-                        {
-
-                            AFSPrint("AFSCleanup Successfully notified service of deleted file %wZ\n", 
-                                                                                &pFcb->DirEntry->DirectoryEntry.FileName);
-                        }
+                        FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+                                                     &pFcb->ParentFcb->NPFcb->DirNotifyList,												     
+                                                     (PSTRING)&pCcb->FullFileName,
+                                                     (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+                                                     (PSTRING)NULL,
+                                                     (PSTRING)NULL,
+                                                     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                     (ULONG)FILE_ACTION_REMOVED,
+                                                     (PVOID)NULL );
                     }
                 }
 
@@ -286,7 +275,6 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 else if( BooleanFlagOn( pFcb->Flags, AFS_FILE_MODIFIED))
                 {
 
-                    UNICODE_STRING uniFullFileName;
                     ULONG ulNotifyFilter = 0;
 
                     //
@@ -295,8 +283,18 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     pFcb->DirEntry->DirectoryEntry.ChangeTime = pFcb->DirEntry->DirectoryEntry.LastAccessTime;
 
+                    //
+                    // Need to drop our lock on teh Fcb while this call is made since it could
+                    // result in the service invalidating the node requiring the lock
+                    //
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     ntStatus = AFSUpdateFileInformation( DeviceObject,
                                                            pFcb);
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                      TRUE);
 
                     if( NT_SUCCESS( ntStatus))
                     {
@@ -308,24 +306,15 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     ASSERT( pFcb->ParentFcb != NULL);
 
-                    if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                      &uniFullFileName)))
-                    {
-
-                		FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-				    								 &pFcb->ParentFcb->NPFcb->DirNotifyList,
-													 (PSTRING)&uniFullFileName,
-													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													 (PSTRING)NULL,
-													 (PSTRING)NULL,
-													 (ULONG)ulNotifyFilter,
-													 (ULONG)FILE_ACTION_MODIFIED,
-													 (PVOID)NULL);
-
-                        ExFreePool( uniFullFileName.Buffer);
-					}
-
-                    ntStatus = STATUS_SUCCESS;
+                    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+                                                 &pFcb->ParentFcb->NPFcb->DirNotifyList,
+                                                 (PSTRING)&pCcb->FullFileName,
+                                                 (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+                                                 (PSTRING)NULL,
+                                                 (PSTRING)NULL,
+                                                 (ULONG)ulNotifyFilter,
+                                                 (ULONG)FILE_ACTION_MODIFIED,
+                                                 (PVOID)NULL);
                 }
 
                 //
@@ -402,48 +391,29 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // then delete the node
                 //
 
-                if( pFcb->OpenHandleCount > 0 &&
-                    BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
-                {
-
-                    AFSPrint("AFSCleanup OpenHandleCount %d for deleted directory %wZ\n",
-                                                                               pFcb->OpenHandleCount,
-                                                                               &pFcb->DirEntry->DirectoryEntry.FileName);
-
-                }
-
                 if( pFcb->OpenHandleCount == 0 &&
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
                 {
 
-                    UNICODE_STRING uniFullFileName;                  
-
                     //
                     // Try and notify the service about the delete
+                    // Need to drop the lock so we don;t lock when the
+                    // invalidate call is made
                     //
 
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     ntStatus = AFSNotifyDelete( pFcb);
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                      TRUE);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                          &uniFullFileName)))
-                        {
-
-                            AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
-                                                                                &uniFullFileName,
-                                                                                ntStatus);
-
-                            ExFreePool( uniFullFileName.Buffer);
-                        }
-                        else
-                        {
-
-                            AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
-                                                                                &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                                                ntStatus);
-                        }
+                        AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
+                                                                            &pCcb->FullFileName,
+                                                                            ntStatus);
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -456,33 +426,15 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                         ASSERT( pFcb->ParentFcb != NULL);
 
-                        if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                          &uniFullFileName)))
-                        {
-
-                            AFSPrint("AFSCleanup Successfully notified service of deleted directory %wZ\n", 
-                                                                                &uniFullFileName);
-
-						    FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-													     &pFcb->ParentFcb->NPFcb->DirNotifyList,
-													     (PSTRING)&uniFullFileName,
-													     (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													     (PSTRING)NULL,
-													     (PSTRING)NULL,
-													     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-													     (ULONG)FILE_ACTION_REMOVED,
-													     (PVOID)NULL );
-
-                            ASSERT( pFcb->Header.NodeTypeCode != AFS_ROOT_FCB);
-
-                            ExFreePool( uniFullFileName.Buffer);
-                        }
-                        else
-                        {
-
-                            AFSPrint("AFSCleanup Successfully notified service of deleted directory %wZ\n", 
-                                                                                &pFcb->DirEntry->DirectoryEntry.FileName);
-                        }
+						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+												     &pFcb->ParentFcb->NPFcb->DirNotifyList,
+												     (PSTRING)&pCcb->FullFileName,
+												     (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+												     (PSTRING)NULL,
+												     (PSTRING)NULL,
+												     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+												     (ULONG)FILE_ACTION_REMOVED,
+												     (PVOID)NULL );
                     }
                 }
 
@@ -494,8 +446,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 else if( BooleanFlagOn( pFcb->Flags, AFS_FILE_MODIFIED))
                 {
 
-                    UNICODE_STRING uniFullFileName;
                     ULONG ulNotifyFilter = 0;
+                    AFSFcb *pParentDcb = pRootFcb;
 
                     //
                     // Update the change time
@@ -503,8 +455,18 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     pFcb->DirEntry->DirectoryEntry.ChangeTime = pFcb->DirEntry->DirectoryEntry.LastAccessTime;
 
+                    //
+                    // Need to drop our lock on teh Fcb while this call is made since it could
+                    // result in the service invalidating the node requiring the lock
+                    //
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     ntStatus = AFSUpdateFileInformation( DeviceObject,
                                                            pFcb);
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                      TRUE);
 
                     if( NT_SUCCESS( ntStatus))
                     {
@@ -512,38 +474,23 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                         ClearFlag( pFcb->Flags, AFS_FILE_MODIFIED);
                     }
 
-    				ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
+    				ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);                    
 
-                    if( NT_SUCCESS( AFSGetFullName( pFcb,
-                                                      &uniFullFileName)))
+                    if( pFcb->ParentFcb != NULL)
                     {
 
-                        AFSFcb *pParentDcb = pRootFcb;
+                        pParentDcb = pFcb->ParentFcb;
+                    }
 
-                        if( pFcb->ParentFcb != NULL)
-                        {
-
-                            pParentDcb = pFcb->ParentFcb;
-                        }
-
-                		FsRtlNotifyFullReportChange( pParentDcb->NPFcb->NotifySync,
-				    								 &pParentDcb->NPFcb->DirNotifyList,
-													 (PSTRING)&uniFullFileName,
-													 (USHORT)(uniFullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-													 (PSTRING)NULL,
-													 (PSTRING)NULL,
-													 (ULONG)ulNotifyFilter,
-													 (ULONG)FILE_ACTION_MODIFIED,
-													 (PVOID)NULL);
-
-                        if( uniFullFileName.Length > sizeof( WCHAR))
-                        {
-
-                            ExFreePool( uniFullFileName.Buffer);
-                        }
-					}
-
-                    ntStatus = STATUS_SUCCESS;
+               		FsRtlNotifyFullReportChange( pParentDcb->NPFcb->NotifySync,
+			    								 &pParentDcb->NPFcb->DirNotifyList,
+												 (PSTRING)&pCcb->FullFileName,
+												 (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+												 (PSTRING)NULL,
+												 (PSTRING)NULL,
+												 (ULONG)ulNotifyFilter,
+												 (ULONG)FILE_ACTION_MODIFIED,
+												 (PVOID)NULL);
                 }
 
                 //

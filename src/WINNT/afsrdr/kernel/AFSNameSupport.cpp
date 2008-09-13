@@ -9,8 +9,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     IN PFILE_OBJECT FileObject,
                     IN UNICODE_STRING *FullPathName,
                     IN OUT AFSFcb **ParentFcb,
-                    IN OUT AFSFcb **Fcb,
-                    IN OUT PUNICODE_STRING ComponentName)
+                    OUT AFSFcb **Fcb,
+                    OUT PUNICODE_STRING ComponentName)
 {
 
     NTSTATUS          ntStatus = STATUS_SUCCESS;
@@ -19,6 +19,9 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
     ULONG             ulCRC = 0;
     AFSDirEntryCB    *pDirEntry = NULL;
     UNICODE_STRING    uniCurrentPath;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    BOOLEAN           bReleaseRoot = FALSE;
+    ULONGLONG         ullIndex = 0;
 
     __Enter
     {
@@ -40,7 +43,21 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
         // Starting at the root node
         //
 
-        pParentFcb = RootFcb;
+        pParentFcb = *ParentFcb;
+
+        //
+        // If the root and the parent are not the same then this is a relative
+        // open so we need to drop the root lock and acquire the parent lock
+        //
+
+        if( RootFcb != *ParentFcb)
+        {
+
+            bReleaseRoot = TRUE;
+
+            AFSAcquireExcl( &pParentFcb->NPFcb->Resource,
+                            TRUE);
+        }
 
         uniPathName = *FullPathName;
 
@@ -85,49 +102,92 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             }
 
             //
-            // If the parent is not initialized then do it now
+            // If this is a mount point or sym link then go get the real directory node
             //
 
-            if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB &&
-                !BooleanFlagOn( pParentFcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED))
+            if( pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
             {
 
-                AFSFileID stFileID;
+                ASSERT( pParentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
 
-                if( pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+                //
+                // Check if we have a target Fcb for this node
+                //
+
+                if( pParentFcb->Specific.SymbolicLink.TargetFcb == NULL)
                 {
 
                     //
-                    // Just the FID of the node
+                    // Go retrieve the target entry for this node
                     //
 
-                    stFileID = pParentFcb->DirEntry->DirectoryEntry.FileId;
-                }
-                else
-                {
-
-                    //
-                    // MP or SL
-                    //
-
-                    ntStatus = AFSRetrieveTargetFID( pParentFcb,
-                                                     &stFileID);
+                    ntStatus = AFSBuildTargetDirectory( pParentFcb);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        try_return( ntStatus);
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        break;
                     }
                 }
 
-                DbgPrint("AFSLocateNameEntry Enumerating directory of %wZ FID %08lX:%08lX:%08lX:%08lX\n",
-                                                                &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                stFileID.Cell,
-                                                                stFileID.Volume,
-                                                                stFileID.Vnode,
-                                                                stFileID.Unique);
+                //
+                // Swap out where we are in the chain
+                //
 
-                ntStatus = AFSEnumerateDirectory( &stFileID,
+                AFSAcquireExcl( &pParentFcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                                TRUE);
+
+                AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                pParentFcb = pParentFcb->Specific.SymbolicLink.TargetFcb;
+            }
+            else if( pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+            {
+
+                ASSERT( pParentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
+
+                //
+                // Check if we have a target Fcb for this node
+                //
+
+                if( pParentFcb->Specific.MountPoint.TargetFcb == NULL)
+                {
+
+                    AFSAcquireShared( pDevExt->Specific.RDR.VolumeTree.TreeLock,
+                                      TRUE);
+
+                    ullIndex = AFSCreateHighIndex( &pParentFcb->DirEntry->DirectoryEntry.TargetFileId);
+
+                    AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
+                                        ullIndex,
+                                        &pParentFcb->Specific.MountPoint.TargetFcb);
+
+                    AFSReleaseResource( pDevExt->Specific.RDR.VolumeTree.TreeLock);
+                }
+
+                //
+                // Swap out where we are in the chain
+                //
+
+                AFSAcquireExcl( &pParentFcb->Specific.MountPoint.TargetFcb->NPFcb->Resource,
+                                TRUE);
+
+                AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                pParentFcb = pParentFcb->Specific.MountPoint.TargetFcb;
+            }
+
+            //
+            // If the parent is not initialized then do it now
+            //
+
+            if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB &&
+                !BooleanFlagOn( pParentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+            {
+
+                ntStatus = AFSEnumerateDirectory( &pParentFcb->DirEntry->DirectoryEntry.FileId,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeHdr,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeListHead,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeListTail,
@@ -142,7 +202,42 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     break;
                 }
 
-                SetFlag( pParentFcb->Flags, AFS_FCB_DIRECTORY_INITIALIZED);
+                SetFlag( pParentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+            }
+            else if( pParentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
+            {
+                
+                if( !BooleanFlagOn( pParentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+                {
+
+                    ntStatus = AFSEnumerateDirectory( &pParentFcb->DirEntry->DirectoryEntry.FileId,
+                                                      &pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr,
+                                                      &pParentFcb->Specific.VolumeRoot.DirectoryNodeListHead,
+                                                      &pParentFcb->Specific.VolumeRoot.DirectoryNodeListTail,
+                                                      &pParentFcb->Specific.VolumeRoot.ShortNameTree,
+                                                      NULL);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        break;
+                    }
+
+                    SetFlag( pParentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+                }
+
+                //
+                // Initialize the volume worker if it has not already
+                //
+
+                if( pParentFcb->Specific.VolumeRoot.VolumeWorkerContext.WorkerThreadObject == NULL &&
+                    !BooleanFlagOn( pParentFcb->Specific.VolumeRoot.VolumeWorkerContext.State, AFS_WORKER_INITIALIZED))
+                {
+
+                    AFSInitVolumeWorker( pParentFcb);
+                }
             }
             else if( pParentFcb->Header.NodeTypeCode == AFS_FILE_FCB)
             {
@@ -161,9 +256,20 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             ulCRC = AFSGenerateCRC( &uniComponentName,
                                     FALSE);
 
-            AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
-                                            ulCRC,
-                                            &pDirEntry);
+            if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                ulCRC,
+                                                &pDirEntry);
+            }
+            else
+            {
+
+                AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                ulCRC,
+                                                &pDirEntry);
+            }
 
             if( pDirEntry == NULL)
             {
@@ -175,9 +281,20 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 ulCRC = AFSGenerateCRC( &uniComponentName,
                                         TRUE);
 
-                AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
-                                                  ulCRC,
-                                                  &pDirEntry);
+                if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                      ulCRC,
+                                                      &pDirEntry);
+                }
+                else
+                {
+
+                    AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                      ulCRC,
+                                                      &pDirEntry);
+                }
 
                 if( pDirEntry == NULL)
                 {
@@ -193,9 +310,20 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     if( uniComponentName.Length <= 24)
                     {
 
-                        AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
-                                                    ulCRC,
-                                                    &pDirEntry);
+                        if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                        {
+
+                            AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
+                                                        ulCRC,
+                                                        &pDirEntry);
+                        }
+                        else
+                        {
+
+                            AFSLocateShortNameDirEntry( pParentFcb->Specific.VolumeRoot.ShortNameTree,
+                                                        ulCRC,
+                                                        &pDirEntry);
+                        }
                     }
 
                     if( pDirEntry == NULL)
@@ -277,27 +405,70 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             if( pDirEntry->Fcb == NULL)
             {
 
-                ntStatus = AFSInitFcb( pParentFcb,
-                                       &uniCurrentPath,
-                                       pDirEntry,
-                                       &pCurrentFcb);
+                pCurrentFcb = NULL;
 
-                if( !NT_SUCCESS( ntStatus))
+                //
+                // See if we can first locate the Fcb since this could be a stand alone node
+                //
+
+                AFSAcquireShared( pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock, 
+                                  TRUE);
+
+                ullIndex = AFSCreateLowIndex( &pDirEntry->DirectoryEntry.FileId);
+
+                AFSLocateHashEntry( pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                    ullIndex,
+                                    &pCurrentFcb);
+
+                AFSReleaseResource( pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+                if( pCurrentFcb != NULL)
                 {
 
-                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                    AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
+                                    TRUE);
 
-                    break;
+                    //
+                    // If this is a stand alone Fcb then we will need to swap out the dir entry
+                    // control block and update the DirEntry Fcb pointer
+                    //
+
+                    if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+                    {
+
+                        if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
+                        {
+
+                            ExFreePool( pCurrentFcb->DirEntry->DirectoryEntry.FileName.Buffer);
+                        }
+
+                        AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB) + 
+                                                        pCurrentFcb->DirEntry->DirectoryEntry.FileName.Length +
+                                                        pCurrentFcb->DirEntry->DirectoryEntry.TargetName.Length;
+
+                        ExFreePool( pCurrentFcb->DirEntry);
+
+                        pCurrentFcb->DirEntry = pDirEntry;
+                    }
+
+                    if( BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_STANDALONE_NODE))
+                    {
+
+                        pCurrentFcb->ParentFcb = pParentFcb;
+
+                        pCurrentFcb->RootFcb = pParentFcb->RootFcb;
+
+                        ClearFlag( pCurrentFcb->Flags, AFS_FCB_STANDALONE_NODE);
+                    }
+
+                    pDirEntry->Fcb = pCurrentFcb;
                 }
-
-                //
-                // If this is a directory node then initialize the directory
-                //
-
-                if( pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                else
                 {
 
-                    ntStatus = AFSInitializeDirectory( pCurrentFcb);
+                    ntStatus = AFSInitFcb( pParentFcb,
+                                           pDirEntry,
+                                           &pCurrentFcb);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
@@ -318,7 +489,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             }
 
             if( uniRemainingPath.Length > 0 &&
-                pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                pCurrentFcb->Header.NodeTypeCode != AFS_FILE_FCB)
             {
 
                 AFSReleaseResource( &pParentFcb->NPFcb->Resource);
@@ -333,6 +504,194 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSPrint("AFSLocateNameEntry Have a remaining component %wZ\n", &uniRemainingPath);
                 }
+                //
+                // Ensure the node has been evaluated, if not then go do it now
+                //
+
+                if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED))
+                {
+
+                    ntStatus = AFSEvaluateNode( pCurrentFcb);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        try_return( ntStatus);
+                    }
+
+                    ClearFlag( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
+                }
+
+                //
+                // If this is a mount point or sym link then go get the real directory node
+                //
+
+                if( pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+                {
+
+                    ASSERT( pCurrentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
+
+                    //
+                    // Check if we have a target Fcb for this node
+                    //
+
+                    if( pCurrentFcb->Specific.SymbolicLink.TargetFcb == NULL)
+                    {
+
+                        //
+                        // Go retrieve the target entry for this node
+                        //
+
+                        ntStatus = AFSBuildTargetDirectory( pCurrentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                            break;
+                        }
+                    }
+
+                    //
+                    // Swap out where we are in the chain, including the parent
+                    //
+
+                    if( pCurrentFcb->Specific.SymbolicLink.TargetFcb->ParentFcb != NULL)
+                    {
+
+                        AFSAcquireExcl( &pCurrentFcb->Specific.SymbolicLink.TargetFcb->ParentFcb->NPFcb->Resource,
+                                        TRUE);
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        pParentFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb->ParentFcb;
+                    }
+
+                    AFSAcquireExcl( &pCurrentFcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                    pCurrentFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
+                }
+                else if( pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+                {
+
+                    ASSERT( pCurrentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
+
+                    //
+                    // Check if we have a target Fcb for this node
+                    //
+
+                    if( pCurrentFcb->Specific.MountPoint.TargetFcb == NULL)
+                    {
+
+                        AFSAcquireShared( pDevExt->Specific.RDR.VolumeTree.TreeLock,
+                                          TRUE);
+
+                        ullIndex = AFSCreateHighIndex( &pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId);
+
+                        AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
+                                            ullIndex,
+                                            &pCurrentFcb->Specific.MountPoint.TargetFcb);
+
+                        AFSReleaseResource( pDevExt->Specific.RDR.VolumeTree.TreeLock);
+                    }
+
+                    //
+                    // Swap out where we are in the chain
+                    //
+
+                    AFSAcquireExcl( &pCurrentFcb->Specific.MountPoint.TargetFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                    //
+                    // We pass back the root of the target volume
+                    //
+
+                    pParentFcb = pCurrentFcb->Specific.MountPoint.TargetFcb;
+
+                    pCurrentFcb = pParentFcb;
+                }
+
+                //
+                // If the entry is not initialized then do it now
+                //
+
+                if( pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB &&
+                    !BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+                {
+
+                    ntStatus = AFSEnumerateDirectory( &pCurrentFcb->DirEntry->DirectoryEntry.FileId,
+                                                      &pCurrentFcb->Specific.Directory.DirectoryNodeHdr,
+                                                      &pCurrentFcb->Specific.Directory.DirectoryNodeListHead,
+                                                      &pCurrentFcb->Specific.Directory.DirectoryNodeListTail,
+                                                      &pCurrentFcb->Specific.Directory.ShortNameTree,
+                                                      NULL);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        break;
+                    }
+
+                    SetFlag( pCurrentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+                }
+                else if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB &&
+                         !BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+                {
+
+                    ntStatus = AFSEnumerateDirectory( &pCurrentFcb->DirEntry->DirectoryEntry.FileId,
+                                                      &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeHdr,
+                                                      &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeListHead,
+                                                      &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeListTail,
+                                                      &pCurrentFcb->Specific.VolumeRoot.ShortNameTree,
+                                                      NULL);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        break;
+                    }
+
+                    SetFlag( pCurrentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+                    //
+                    // Initialize the volume worker if it has not already
+                    //
+
+                    if( pParentFcb->Specific.VolumeRoot.VolumeWorkerContext.WorkerThreadObject == NULL &&
+                        !BooleanFlagOn( pParentFcb->Specific.VolumeRoot.VolumeWorkerContext.State, AFS_WORKER_INITIALIZED))
+                    {
+
+                        AFSInitVolumeWorker( pParentFcb);
+                    }
+                }
+
+                //
+                // Pass back the remaining portion of the name
+                //
+
+                *ComponentName = uniRemainingPath;
 
                 //
                 // Pass back the Parent and Fcb
@@ -340,7 +699,11 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 *ParentFcb = pParentFcb;
 
-                *Fcb = pCurrentFcb;
+                if( pParentFcb != pCurrentFcb)
+                {
+
+                    *Fcb = pCurrentFcb;
+                }
 
                 break;
             }
@@ -348,7 +711,11 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
 try_exit:
 
-        NOTHING;
+        if( bReleaseRoot)
+        {
+
+            AFSReleaseResource( &RootFcb->NPFcb->Resource);
+        }
     }
 
     return ntStatus;
@@ -373,13 +740,24 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
         //
         // OK, before inserting the node into the parent tree, issue
         // the request to the service for node creation
+        // We will need to drop the lock on the parent node since the create
+        // could cause a callback into the file system to invalidate it's cache
         //
+
+        AFSReleaseResource( &ParentDcb->NPFcb->Resource);
 
         ntStatus = AFSNotifyFileCreate( ParentDcb,
                                         &liFileSize,
                                         Attributes,
                                         ComponentName,
                                         &pDirNode);
+
+        //
+        // Grab the lock again before returning
+        //
+
+        AFSAcquireExcl( &ParentDcb->NPFcb->Resource,
+                        TRUE);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -388,11 +766,25 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
         }
 
         //
-        // Inser the directory node
+        // If we still ahve a valid parent then insert it into the tree
+        // otherwise we will re-evaluate the node on next access
         //
 
-        AFSInsertDirectoryNode( ParentDcb,
-                                pDirNode);
+        if( BooleanFlagOn( ParentDcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+        {
+
+            //
+            // Insert the directory node
+            //
+
+            AFSInsertDirectoryNode( ParentDcb,
+                                    pDirNode);
+        }
+        else
+        {
+
+            SetFlag( pDirNode->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+        }
 
         //
         // Pass back the dir entry
@@ -519,7 +911,7 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
         // Into the shortname tree
         //
 
-        if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
+        if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex != 0)
         {
 
             if( ParentDcb->Specific.Directory.ShortNameTree == NULL)
@@ -583,6 +975,14 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
             ExFreePool( DirEntry->DirectoryEntry.FileName.Buffer);
         }
 
+        if( DirEntry->NPDirNode != NULL)
+        {
+
+            ExDeleteResourceLite( &DirEntry->NPDirNode->Lock);
+
+            ExFreePool( DirEntry->NPDirNode);
+        }
+
         //
         // Free up the dir entry
         //
@@ -591,7 +991,6 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
                                             DirEntry->DirectoryEntry.FileName.Length +
                                             DirEntry->DirectoryEntry.TargetName.Length;
         ExFreePool( DirEntry);
-
     }
 
     return ntStatus;
@@ -623,7 +1022,7 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
             AFSRemoveCaseInsensitiveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                               DirEntry);
 
-            if( DirEntry->Type.Data.ShortNameTreeEntry.Index != 0)
+            if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex != 0)
             {
 
                 //
@@ -748,131 +1147,13 @@ AFSFixupTargetName( IN OUT PUNICODE_STRING FileName,
     return ntStatus;
 }
 
-NTSTATUS
-AFSGetFullName( IN AFSFcb *Fcb,
-                IN OUT PUNICODE_STRING FullFileName)
-{
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    UNICODE_STRING uniFileName;
-    AFSFcb *pCurrentFcb = NULL;
-    ULONG ulCurrentIndex = 0;
-
-    __Enter
-    {
-
-        uniFileName.Length = 0;
-        uniFileName.MaximumLength = 0;
-        uniFileName.Buffer = NULL;
-
-        //
-        // Be sure this is not the root entry
-        //
-
-        if( Fcb->Header.NodeTypeCode == AFS_ROOT_FCB)
-        {
-
-            uniFileName.Length = sizeof( WCHAR);
-            uniFileName.MaximumLength = sizeof( WCHAR);
-
-            uniFileName.Buffer = Fcb->DirEntry->DirectoryEntry.FileName.Buffer;
-
-            try_return( ntStatus);
-        }
-
-        //
-        // Get the length required
-        //
-
-        pCurrentFcb = Fcb;
-
-        while( TRUE)
-        {
-
-            uniFileName.Length += (USHORT)pCurrentFcb->DirEntry->DirectoryEntry.FileName.Length;
-
-            uniFileName.Length += sizeof( WCHAR);
-
-            pCurrentFcb = pCurrentFcb->ParentFcb;
-
-            if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
-            {               
-
-                break;
-            }
-        }
-
-        uniFileName.MaximumLength = uniFileName.Length;
-
-        //
-        // Allocate the buffer for the full name
-        //
-
-        uniFileName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                             uniFileName.Length,
-                                                             AFS_NAME_BUFFER_TAG);
-
-        if( uniFileName.Buffer == NULL)
-        {
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( uniFileName.Buffer,
-                       uniFileName.Length);
-
-        //
-        // Move in the name itself
-        //
-
-        ulCurrentIndex = uniFileName.Length / sizeof( WCHAR);
-
-        pCurrentFcb = Fcb;
-
-        while( TRUE)
-        {
-
-            ulCurrentIndex -= pCurrentFcb->DirEntry->DirectoryEntry.FileName.Length/sizeof( WCHAR);
-
-            RtlCopyMemory( &uniFileName.Buffer[ ulCurrentIndex],
-                           pCurrentFcb->DirEntry->DirectoryEntry.FileName.Buffer,
-                           pCurrentFcb->DirEntry->DirectoryEntry.FileName.Length);
-
-            ulCurrentIndex--;
-
-            uniFileName.Buffer[ ulCurrentIndex] = L'\\';
-
-            pCurrentFcb = pCurrentFcb->ParentFcb;
-
-            if( ulCurrentIndex == 0 ||
-                pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
-            {
-
-                break;
-            }
-        }
-
-        //
-        // Pass back the name
-        //
-
-        FullFileName->Length = uniFileName.Length;
-        FullFileName->MaximumLength = uniFileName.MaximumLength;
-        FullFileName->Buffer = uniFileName.Buffer;
-
-try_exit:
-
-        NOTHING;
-    }
-
-    return ntStatus;
-}
-
 NTSTATUS 
 AFSParseName( IN PIRP Irp,
               OUT PUNICODE_STRING FileName,
+              OUT PUNICODE_STRING FullFileName,
               OUT BOOLEAN *FreeNameString,
-              OUT AFSFcb **RootFcb)
+              OUT AFSFcb **RootFcb,
+              OUT AFSFcb **ParentFcb)
 {
 
     NTSTATUS            ntStatus = STATUS_SUCCESS;
@@ -887,14 +1168,19 @@ AFSParseName( IN PIRP Irp,
     USHORT              usIndex = 0;
     UNICODE_STRING      uniAFSAllName, uniRelatedFullName;
     BOOLEAN             bFreeRelatedName = FALSE;
+    AFSCcb             *pCcb = NULL;
 
     __Enter
     {
+
+        *FreeNameString = FALSE;
 
         if( pIrpSp->FileObject->RelatedFileObject != NULL)
         {
 
             pRelatedFcb = (AFSFcb *)pIrpSp->FileObject->RelatedFileObject->FsContext;
+
+            pCcb = (AFSCcb *)pIrpSp->FileObject->RelatedFileObject->FsContext2;
 
             ASSERT( pRelatedFcb != NULL);
 
@@ -908,129 +1194,68 @@ AFSParseName( IN PIRP Irp,
                 try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
             }
 
-            AFSAcquireShared( &pRelatedFcb->NPFcb->Resource,
-                              TRUE);
-
-            //
-            // Get the related full name
-            //
-
-            if( pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_FCB ||
-                pRelatedFcb->Header.NodeTypeCode == AFS_ROOT_ALL)
-            {
-
-                uniRelatedFullName = pRelatedFcb->DirEntry->DirectoryEntry.FileName;
-            }
-            else
-            {
-
-                ntStatus = AFSGetFullName( pRelatedFcb,
-                                           &uniRelatedFullName);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                bFreeRelatedName = TRUE;            
-            }
-            
-            uniFullName.MaximumLength = uniFullName.Length = 0;
-
-            uniFullName.Buffer = NULL;
-
-            uniFullName.MaximumLength = uniRelatedFullName.Length;
-
-            //
-            // By definition of the names, they do not contain a trailing slash
-            //
-
-            if( pRelatedFcb->Header.NodeTypeCode != AFS_ROOT_FCB &&
-                pRelatedFcb->Header.NodeTypeCode != AFS_ROOT_ALL &&
-                pIrpSp->FileObject->FileName.Buffer != NULL &&
-                pIrpSp->FileObject->FileName.Buffer[ 0] != L'\\')
-            {
-
-                uniFullName.MaximumLength += sizeof( WCHAR);
-
-                bAddTrailingSlash = TRUE;
-            }
-
-            uniFullName.MaximumLength += pIrpSp->FileObject->FileName.Length;
-
-            //
-            // Allocate the name buffer and build up the name
-            //
-
-            uniFullName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                                 uniFullName.MaximumLength,
-                                                                 AFS_NAME_BUFFER_TAG);
-
-            if( uniFullName.Buffer == NULL)
-            {
-
-                AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
-
-                if( bFreeRelatedName)
-                {
-
-                    ExFreePool( uniRelatedFullName.Buffer);
-                }
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
-
-            *FreeNameString = TRUE;
-
-            if( uniRelatedFullName.Buffer != NULL)
-            {
-
-                RtlCopyMemory( uniFullName.Buffer,
-                               uniRelatedFullName.Buffer,
-                               uniRelatedFullName.Length);
-
-                uniFullName.Length = uniRelatedFullName.Length;
-            }
-
-            if( bAddTrailingSlash)
-            {
-
-                uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)] = L'\\';
-
-                uniFullName.Length += sizeof( WCHAR);
-            }
-
-            if( pIrpSp->FileObject->FileName.Length > 0)
-            {
-
-                RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
-                               pIrpSp->FileObject->FileName.Buffer,
-                               pIrpSp->FileObject->FileName.Length);
-
-                uniFullName.Length += pIrpSp->FileObject->FileName.Length;
-            }
+            uniFullName = pIrpSp->FileObject->FileName;
 
             *RootFcb = pRelatedFcb->RootFcb;
 
-            *FileName = uniFullName;
+            *ParentFcb = pRelatedFcb;
 
-            AFSReleaseResource( &pRelatedFcb->NPFcb->Resource);
-
-            if( bFreeRelatedName)
-            {
-
-                ExFreePool( uniRelatedFullName.Buffer);
-            }
+            *FileName = pIrpSp->FileObject->FileName;
 
             //
             // Grab the root node exclusive before returning
             //
 
             AFSAcquireExcl( &(*RootFcb)->NPFcb->Resource,
-                              TRUE);
+                            TRUE);
+
+            //
+            // Create our full path name buffer
+            //
+
+            uniFullName.MaximumLength = pCcb->FullFileName.Length + 
+                                                    sizeof( WCHAR) + 
+                                                    pIrpSp->FileObject->FileName.Length;
+
+            uniFullName.Length = 0;
+
+            uniFullName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                 uniFullName.MaximumLength,
+                                                                 AFS_NAME_BUFFER_TAG);
+
+            if( uniFullName.Buffer != NULL)
+            {
+
+                RtlCopyMemory( uniFullName.Buffer,
+                               pCcb->FullFileName.Buffer,
+                               pCcb->FullFileName.Length);
+
+                uniFullName.Length = pCcb->FullFileName.Length;
+
+                if( uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
+                    pIrpSp->FileObject->FileName.Length > 0 &&
+                    pIrpSp->FileObject->FileName.Buffer[ 0] != L'\\')
+                {
+
+                    uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR))] = L'\\';
+
+                    uniFullName.Length += sizeof( WCHAR);
+                }
+
+                if( pIrpSp->FileObject->FileName.Length > 0)
+                {
+
+                    RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
+                                   pIrpSp->FileObject->FileName.Buffer,
+                                   pIrpSp->FileObject->FileName.Length);
+
+                    uniFullName.Length += pIrpSp->FileObject->FileName.Length;
+                }
+
+                *FullFileName = uniFullName;
+
+                *FreeNameString = TRUE;
+            }
 
             try_return( ntStatus);
         }
@@ -1042,8 +1267,6 @@ AFSParseName( IN PIRP Irp,
         //
 
         uniFullName = pIrpSp->FileObject->FileName;
-
-        *FreeNameString = FALSE;
 
         while( usIndex < uniFullName.Length/sizeof( WCHAR))
         {
@@ -1258,14 +1481,6 @@ AFSParseName( IN PIRP Irp,
         AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
         //
-        // TODO: If this is not a volume type node then we will need to walk the
-        // link to get to the volume node
-        //
-
-
-
-
-        //
         // If the root node for this entry is NULL, then we need to initialize 
         // the volume node information
         //
@@ -1273,7 +1488,9 @@ AFSParseName( IN PIRP Irp,
         if( pShareDirEntry->Fcb == NULL)
         {
 
-            ntStatus = AFSInitializeVolume( pShareDirEntry);
+            ntStatus = AFSInitFcb( AFSAllRoot,
+                                   pShareDirEntry,
+                                   NULL);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -1283,13 +1500,16 @@ AFSParseName( IN PIRP Irp,
                 try_return( ntStatus);
             }
         }
+        else
+        {
 
-        //
-        // Grab the root node exclusive before returning
-        //
+            //
+            // Grab the root node exclusive before returning
+            //
 
-        AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
-                        TRUE);
+            AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
+                            TRUE);
+        }
 
         //
         // Drop the volume lock
@@ -1318,12 +1538,150 @@ AFSParseName( IN PIRP Irp,
         }
 
         //
+        // Be sure we return a root or a directory
+        //
+
+        if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            //
+            // Check if we have a target Fcb for this node
+            //
+
+            if( pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb == NULL)
+            {
+
+                //
+                // Go retrieve the target entry for this node
+                //
+
+                ntStatus = AFSBuildTargetDirectory( pShareDirEntry->Fcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+            }
+
+            //
+            // Swap out where we are in the chain
+            //
+
+            AFSAcquireExcl( &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                            TRUE);
+
+            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+            *RootFcb = pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb;
+
+            *ParentFcb = pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb;
+        }
+        else if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            //
+            // Check if we have a target Fcb for this node
+            //
+
+            if( pShareDirEntry->Fcb->Specific.MountPoint.TargetFcb == NULL)
+            {
+
+                AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                                  TRUE);
+
+                AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
+                                    AFSCreateHighIndex( &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.TargetFileId),
+                                    &pShareDirEntry->Fcb->Specific.MountPoint.TargetFcb);
+
+                AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
+            }
+
+            //
+            // Swap out where we are in the chain
+            //
+
+            AFSAcquireExcl( &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                            TRUE);
+
+            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+            *RootFcb = pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb;
+
+            *ParentFcb = pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb;
+        }
+        else
+        {
+
+            *RootFcb = pShareDirEntry->Fcb;
+
+            *ParentFcb = pShareDirEntry->Fcb;
+        }
+
+        if( uniRemainingPath.Buffer == NULL ||
+            ( uniRemainingPath.Length == sizeof(WCHAR) &&
+              uniRemainingPath.Buffer[0] == L'\\') )
+        {
+
+            //
+            // If the entry is not initialized then do it now
+            //
+
+            if( (*RootFcb)->Header.NodeTypeCode == AFS_DIRECTORY_FCB &&
+                !BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+            {
+
+                ntStatus = AFSEnumerateDirectory( &(*RootFcb)->DirEntry->DirectoryEntry.FileId,
+                                                  &(*RootFcb)->Specific.Directory.DirectoryNodeHdr,
+                                                  &(*RootFcb)->Specific.Directory.DirectoryNodeListHead,
+                                                  &(*RootFcb)->Specific.Directory.DirectoryNodeListTail,
+                                                  &(*RootFcb)->Specific.Directory.ShortNameTree,
+                                                  NULL);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+
+                SetFlag( (*RootFcb)->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+            }
+            else if( (*RootFcb)->Header.NodeTypeCode == AFS_ROOT_FCB &&
+                     !BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+            {
+
+                ntStatus = AFSEnumerateDirectory( &(*RootFcb)->DirEntry->DirectoryEntry.FileId,
+                                                  &(*RootFcb)->Specific.VolumeRoot.DirectoryNodeHdr,
+                                                  &(*RootFcb)->Specific.VolumeRoot.DirectoryNodeListHead,
+                                                  &(*RootFcb)->Specific.VolumeRoot.DirectoryNodeListTail,
+                                                  &(*RootFcb)->Specific.VolumeRoot.ShortNameTree,
+                                                  NULL);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+
+                SetFlag( (*RootFcb)->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+            }
+        }
+
+        //
         // Return the remaining portion as the file name
         //
 
         *FileName = uniRemainingPath;
 
-        *RootFcb = pShareDirEntry->Fcb;
+        *FullFileName = uniRemainingPath;
+
+        *FreeNameString = FALSE;
 
 try_exit:
 
@@ -1510,6 +1868,174 @@ try_exit:
         {
 
             ExFreePool( pDirEnumEntry);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSBuildTargetDirectory( IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    AFSFcb *pTargetFcb = NULL, *pVcb = NULL;
+    AFSFileID stFileID;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    AFSDirEntryCB *pDirNode = NULL;
+    UNICODE_STRING uniDirName, uniTargetName;
+    ULONGLONG       ullIndex = 0;
+
+    __Enter
+    {
+
+        //
+        // Simple case is where we try to locate the target FID and 
+        // find an Fcb
+        //
+    
+        ntStatus = AFSRetrieveTargetFID( Fcb,
+                                         &stFileID);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
+
+        AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock, TRUE);
+
+        //
+        // Locate the volume node
+        //
+
+        ullIndex = AFSCreateHighIndex( &stFileID);
+
+        ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
+                                       ullIndex,
+                                       &pVcb);
+
+        if( pVcb != NULL)
+        {
+
+            AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                              TRUE);
+        }
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pVcb == NULL) 
+        {
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        //
+        // Now locate the Fcb in this volume
+        //
+
+        ullIndex = AFSCreateLowIndex( &stFileID);
+
+        ntStatus = AFSLocateHashEntry( pVcb->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                       ullIndex,
+                                       &pTargetFcb);
+
+        if( NT_SUCCESS( ntStatus) &&
+            pTargetFcb != NULL)
+        {
+
+            Fcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
+        }
+
+        AFSReleaseResource( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pTargetFcb != NULL)
+        {
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Go retrieve a dir entry for this node
+        //
+
+        ntStatus = AFSEvaluateTargetByID( &stFileID,
+                                          &pDirEntry);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Create a dir entry for this node
+        //
+
+        uniDirName.Length = (USHORT)pDirEntry->FileNameLength;
+
+        uniDirName.MaximumLength = uniDirName.Length;
+
+        uniDirName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->FileNameOffset);
+
+        uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
+
+        uniTargetName.MaximumLength = uniTargetName.Length;
+
+        uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
+
+        pDirNode = AFSInitDirEntry( NULL,
+                                    &uniDirName,
+                                    &uniTargetName,
+                                    pDirEntry,
+                                    0);
+
+        if( pDirNode == NULL)
+        {
+           
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Go initialize the Fcb
+        //
+
+        ntStatus = AFSInitFcb( Fcb->ParentFcb,
+                               pDirNode,
+                               &pTargetFcb);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
+
+        InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
+
+        Fcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
+
+        //
+        // Tag this Fcb as a 'stand alone Fcb since it is not referencing a parent Fcb
+        //
+
+        SetFlag( pTargetFcb->Flags, AFS_FCB_STANDALONE_NODE);
+
+        //
+        // Mark this directory node as requiring freeing since it is not in a parent list
+        //
+
+        SetFlag( pDirNode->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+
+        AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
+                    
+try_exit:
+
+        if( pDirEntry != NULL)
+        {
+
+            ExFreePool( pDirEntry);
         }
     }
 

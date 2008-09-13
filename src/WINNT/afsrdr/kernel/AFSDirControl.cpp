@@ -183,7 +183,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             pCcb->DirQueryMapped = TRUE;
 
-            ClearFlag( pCcb->DirFlags, CCB_FLAG_DIR_OF_DIRS_ONLY);
+            ClearFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
 
             // build mask if none
             if( puniArgFileName == NULL)
@@ -217,7 +217,7 @@ AFSQueryDirectory( IN PIRP Irp)
                  ( puniArgFileName->Buffer[0] == L'*'))) 
             {
 
-                SetFlag( pCcb->DirFlags, CCB_FLAG_FULL_DIRECTORY_QUERY);
+                SetFlag( pCcb->Flags, CCB_FLAG_FULL_DIRECTORY_QUERY);
             }
             else
             {
@@ -228,7 +228,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     ( RtlEqualMemory( puniArgFileName->Buffer, L"*.", 2*sizeof(WCHAR) ))))
                 {
 
-                    SetFlag( pCcb->DirFlags, CCB_FLAG_DIR_OF_DIRS_ONLY);
+                    SetFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
                 }
 
                 //
@@ -255,7 +255,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                             puniArgFileName,
                                             FALSE);
 
-                    SetFlag( pCcb->DirFlags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS);
+                    SetFlag( pCcb->Flags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS);
                 }
                 else
                 {
@@ -278,7 +278,16 @@ AFSQueryDirectory( IN PIRP Irp)
             // Need to set up the initial point for the query
             //
                 
-            pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+            if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+            }
+            else
+            {
+
+                pDirEntry = pFcb->Specific.VolumeRoot.DirectoryNodeListHead;
+            }
 
             while( pDirEntry != NULL)
             {
@@ -322,7 +331,16 @@ AFSQueryDirectory( IN PIRP Irp)
             // Reset the current scan processing
             //
 
-            pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+            if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+            }
+            else
+            {
+
+                pDirEntry = pFcb->Specific.VolumeRoot.DirectoryNodeListHead;
+            }
 
             pCcb->CurrentDirIndex = 0;
 
@@ -340,7 +358,16 @@ AFSQueryDirectory( IN PIRP Irp)
             if( pCcb->CurrentDirIndex == 0)
             {
 
-                pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                }
+                else
+                {
+
+                    pDirEntry = pFcb->Specific.VolumeRoot.DirectoryNodeListHead;
+                }
 
                 if( pDirEntry == NULL)
                 {
@@ -351,7 +378,16 @@ AFSQueryDirectory( IN PIRP Irp)
             else
             {
 
-                pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    pDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                }
+                else
+                {
+
+                    pDirEntry = pFcb->Specific.VolumeRoot.DirectoryNodeListHead;
+                }
 
                 while( pDirEntry != NULL)
                 {
@@ -454,14 +490,14 @@ AFSQueryDirectory( IN PIRP Irp)
             //
 
             if( pDirEntry != NULL &&
-                !BooleanFlagOn( pCcb->DirFlags, CCB_FLAG_FULL_DIRECTORY_QUERY))
+                !BooleanFlagOn( pCcb->Flags, CCB_FLAG_FULL_DIRECTORY_QUERY))
             {
 
                 //
                 // Only returning directories?
                 //
 
-                if( BooleanFlagOn( pCcb->DirFlags, CCB_FLAG_DIR_OF_DIRS_ONLY))
+                if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY))
                 {
 
                     if( !(pDirEntry->DirectoryEntry.FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -487,7 +523,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     // Are we doing a wild card search?
                     //
 
-                    if( BooleanFlagOn( pCcb->DirFlags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS))
+                    if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS))
                     {
 
                         if( !FsRtlIsNameInExpression( &pCcb->MaskName,
@@ -737,7 +773,6 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
     ULONG ulCompletionFilter;
     BOOLEAN bWatchTree;
     BOOLEAN bReleaseLock = FALSE;
-    UNICODE_STRING uniFullFileName;
 
     __Enter
     {
@@ -747,9 +782,6 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
 
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
-
-        uniFullFileName.Buffer = NULL;
-        uniFullFileName.Length = 0;
 
         if( pFcb->Header.NodeTypeCode != AFS_DIRECTORY_FCB ||
             pFcb->Header.NodeTypeCode != AFS_ROOT_FCB)
@@ -782,37 +814,17 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
             try_return( ntStatus = STATUS_DELETE_PENDING);
         }
 
-        //
-        // Grab the full name for the directory
-        //
-
-        ntStatus = AFSGetFullName( pFcb,
-                                   &uniFullFileName);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            try_return( ntStatus);
-        }
-
         //  Call the Fsrtl package to process the request.
         FsRtlNotifyFullChangeDirectory( pFcb->NPFcb->NotifySync,
 								        &pFcb->NPFcb->DirNotifyList,
 								        pCcb,
-							            (PSTRING)&uniFullFileName,
+							            (PSTRING)&pCcb->FullFileName,
 								        bWatchTree,
 								        TRUE,
 								        ulCompletionFilter,
 								        Irp,
 								        NULL,
 								        NULL);
-
-        if( uniFullFileName.Buffer != NULL &&
-            uniFullFileName.Length > sizeof( WCHAR))
-        {
-
-            ExFreePool( uniFullFileName.Buffer);
-        }
 
         ntStatus = STATUS_PENDING;
 

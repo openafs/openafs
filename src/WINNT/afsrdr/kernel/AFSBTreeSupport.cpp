@@ -35,7 +35,7 @@ AFSLocateCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
         // If the requestor is looking for the root node itself, then return it.
         //
 
-        if( RootNode->CaseSensitiveTreeEntry.Index == Index)
+        if( RootNode->CaseSensitiveTreeEntry.HashIndex == Index)
         {
 
             *DirEntry = RootNode;
@@ -54,7 +54,7 @@ AFSLocateCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater values are to the right link.
             //
 
-            if( Index > pCurrentEntry->CaseSensitiveTreeEntry.Index)
+            if( Index > pCurrentEntry->CaseSensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -78,7 +78,7 @@ AFSLocateCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( Index < pCurrentEntry->CaseSensitiveTreeEntry.Index)
+            else if( Index < pCurrentEntry->CaseSensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -154,7 +154,7 @@ AFSLocateCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
         // If the requestor is looking for the root node itself, then return it.
         //
 
-        if( RootNode->CaseInsensitiveTreeEntry.Index == Index)
+        if( RootNode->CaseInsensitiveTreeEntry.HashIndex == Index)
         {
 
             *DirEntry = RootNode;
@@ -173,7 +173,7 @@ AFSLocateCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater values are to the right link.
             //
 
-            if( Index > pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            if( Index > pCurrentEntry->CaseInsensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -197,7 +197,7 @@ AFSLocateCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( Index < pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            else if( Index < pCurrentEntry->CaseInsensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -278,7 +278,7 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater vlued indices are to the right link
             //
 
-            if( DirEntry->CaseSensitiveTreeEntry.Index > pCurrentEntry->CaseSensitiveTreeEntry.Index)
+            if( DirEntry->CaseSensitiveTreeEntry.HashIndex > pCurrentEntry->CaseSensitiveTreeEntry.HashIndex)
             {
             
                 //
@@ -303,7 +303,7 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( DirEntry->CaseSensitiveTreeEntry.Index < pCurrentEntry->CaseSensitiveTreeEntry.Index)
+            else if( DirEntry->CaseSensitiveTreeEntry.HashIndex < pCurrentEntry->CaseSensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -331,7 +331,7 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             else
             {
 
-                AFSPrint("AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseSensitiveTreeEntry.Index);
+                AFSPrint("AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseSensitiveTreeEntry.HashIndex);
 
                 ASSERT( FALSE);
 
@@ -383,7 +383,7 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater vlued indices are to the right link
             //
 
-            if( DirEntry->CaseInsensitiveTreeEntry.Index > pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            if( DirEntry->CaseInsensitiveTreeEntry.HashIndex > pCurrentEntry->CaseInsensitiveTreeEntry.HashIndex)
             {
             
                 //
@@ -410,7 +410,7 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( DirEntry->CaseInsensitiveTreeEntry.Index < pCurrentEntry->CaseInsensitiveTreeEntry.Index)
+            else if( DirEntry->CaseInsensitiveTreeEntry.HashIndex < pCurrentEntry->CaseInsensitiveTreeEntry.HashIndex)
             {
 
                 //
@@ -439,8 +439,6 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             }
             else
             {
-
-                AFSPrint("AFSInsertCaseInsensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseInsensitiveTreeEntry.Index);
 
                 //
                 // Inser the the entry at the end of the insensitive list
@@ -865,7 +863,7 @@ AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
         // If the requestor is looking for the root node itself, then return it.
         //
 
-        if( RootNode->Type.Data.ShortNameTreeEntry.Index == Index)
+        if( RootNode->Type.Data.ShortNameTreeEntry.HashIndex == Index)
         {
 
             *DirEntry = RootNode;
@@ -884,7 +882,7 @@ AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater values are to the right link.
             //
 
-            if( Index > pCurrentEntry->Type.Data.ShortNameTreeEntry.Index)
+            if( Index > pCurrentEntry->Type.Data.ShortNameTreeEntry.HashIndex)
             {
 
                 //
@@ -908,7 +906,7 @@ AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( Index < pCurrentEntry->Type.Data.ShortNameTreeEntry.Index)
+            else if( Index < pCurrentEntry->Type.Data.ShortNameTreeEntry.HashIndex)
             {
 
                 //
@@ -989,7 +987,7 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
             // Greater vlued indices are to the right link
             //
 
-            if( DirEntry->Type.Data.ShortNameTreeEntry.Index > pCurrentEntry->Type.Data.ShortNameTreeEntry.Index)
+            if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex > pCurrentEntry->Type.Data.ShortNameTreeEntry.HashIndex)
             {
             
                 //
@@ -1014,7 +1012,7 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
                     break;
                 }
             }
-            else if( DirEntry->Type.Data.ShortNameTreeEntry.Index < pCurrentEntry->Type.Data.ShortNameTreeEntry.Index)
+            else if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex < pCurrentEntry->Type.Data.ShortNameTreeEntry.HashIndex)
             {
 
                 //
@@ -1041,8 +1039,6 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
             }
             else
             {
-
-                AFSPrint("AFSInsertShortNameDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->Type.Data.ShortNameTreeEntry.Index);
 
                 break;
             }
@@ -1202,9 +1198,9 @@ AFSRemoveShortNameDirEntry( IN AFSDirEntryCB **RootNode,
 }
 
 NTSTATUS
-AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
-                      IN ULONG Index,
-                      IN OUT AFSFcb **Fcb)
+AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
+                    IN ULONGLONG HashIndex,
+                    IN OUT AFSFcb **Fcb)
 {
     
     NTSTATUS         ntStatus = STATUS_SUCCESS;
@@ -1232,10 +1228,10 @@ AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
         // If the requestor is looking for the root node itself, then return it.
         //
 
-        if( TopNode->Index == Index)
+        if( TopNode->HashIndex == HashIndex)
         {
 
-            *Fcb = (AFSFcb *)((char *)TopNode - FIELD_OFFSET( AFSFcb, FileIDTreeEntry));
+            *Fcb = (AFSFcb *)((char *)TopNode - FIELD_OFFSET( AFSFcb, TreeEntry));
 
             try_return( ntStatus);
         }
@@ -1251,7 +1247,7 @@ AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
             // Greater values are to the right link.
             //
 
-            if( Index > pCurrentEntry->Index)
+            if( HashIndex > pCurrentEntry->HashIndex)
             {
 
                 //
@@ -1275,7 +1271,7 @@ AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
                     break;
                 }
             }
-            else if( Index < pCurrentEntry->Index)
+            else if( HashIndex < pCurrentEntry->HashIndex)
             {
 
                 //
@@ -1306,7 +1302,7 @@ AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
                 // Found the entry.
                 //
 
-                *Fcb = (AFSFcb *)((char *)pCurrentEntry - FIELD_OFFSET( AFSFcb, FileIDTreeEntry));
+                *Fcb = (AFSFcb *)((char *)pCurrentEntry - FIELD_OFFSET( AFSFcb, TreeEntry));
 
                 break;
             }
@@ -1321,8 +1317,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
-                      IN AFSBTreeEntry *FileIDEntry)
+AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
+                    IN AFSBTreeEntry *FileIDEntry)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -1340,7 +1336,7 @@ AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertFileIDEntry Invalid root node\n");
+            AFSPrint("AFSInsertHashEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1356,7 +1352,7 @@ AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
             // Greater vlued indices are to the right link
             //
 
-            if( FileIDEntry->Index > pCurrentEntry->Index)
+            if( FileIDEntry->HashIndex > pCurrentEntry->HashIndex)
             {
             
                 //
@@ -1381,7 +1377,7 @@ AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
                     break;
                 }
             }
-            else if( FileIDEntry->Index < pCurrentEntry->Index)
+            else if( FileIDEntry->HashIndex < pCurrentEntry->HashIndex)
             {
 
                 //
@@ -1409,7 +1405,7 @@ AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
             else
             {
 
-                AFSPrint("AFSInsertFileIDEntry Attempt to re-insert a CRC %08lX\n", FileIDEntry->Index);
+                AFSPrint("AFSInsertHashEntry Attempt to re-insert a CRC %08lX\n", FileIDEntry->HashIndex);
 
                 ASSERT( FALSE);
 
@@ -1426,8 +1422,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSRemoveFileIDEntry( IN AFSBTreeEntry **TopNode,
-                      IN AFSBTreeEntry *FileIDEntry)
+AFSRemoveHashEntry( IN AFSBTreeEntry **TopNode,
+                    IN AFSBTreeEntry *FileIDEntry)
 {
 
     NTSTATUS ntStatus = STATUS_UNSUCCESSFUL;

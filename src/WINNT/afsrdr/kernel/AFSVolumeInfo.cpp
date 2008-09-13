@@ -26,7 +26,7 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
-        pVolumeEntry = pFcb->VolumeNode;
+        pVolumeEntry = pFcb->RootFcb->DirEntry;
 
         ulLength = pIrpSp->Parameters.QueryVolume.Length;
         FsInformationClass = pIrpSp->Parameters.QueryVolume.FsInformationClass;
@@ -224,8 +224,6 @@ AFSQueryFsSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= sizeof( FILE_FS_SIZE_INFORMATION))
     {
 
-        AFSPrint("AFSQueryFsSizeInfo Query size request\n");
-
         Buffer->TotalAllocationUnits.QuadPart = VolumeInfo->TotalAllocationUnits.QuadPart;
 
         Buffer->AvailableAllocationUnits.QuadPart = VolumeInfo->AvailableAllocationUnits.QuadPart;
@@ -287,7 +285,8 @@ AFSQueryFsAttributeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     {
 
         Buffer->FileSystemAttributes = (FILE_CASE_PRESERVED_NAMES | 
-                                                FILE_UNICODE_ON_DISK);
+                                                FILE_UNICODE_ON_DISK |
+                                                FILE_SUPPORTS_REPARSE_POINTS);
 
         Buffer->MaximumComponentNameLength = 255;
 
@@ -321,8 +320,6 @@ AFSQueryFsFullSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 
     if( *Length >= sizeof( FILE_FS_FULL_SIZE_INFORMATION))
     {
-
-        AFSPrint("AFSQueryFsFullSizeInfo Query size request\n");
 
         Buffer->TotalAllocationUnits.QuadPart = VolumeInfo->TotalAllocationUnits.QuadPart;
 

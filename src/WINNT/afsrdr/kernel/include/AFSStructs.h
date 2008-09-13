@@ -18,7 +18,7 @@ typedef struct AFS_BTREE_ENTRY
 
     void    *rightLink;
 
-    ULONG    Index;
+    ULONGLONG HashIndex;
 
 } AFSBTreeEntry, *PAFSBTreeEntry;
 
@@ -52,6 +52,23 @@ typedef struct _AFS_DIR_HDR
     LONG                     ContentIndex;
 
 } AFSDirHdr;
+
+//
+// Worker pool header
+//
+
+typedef struct _AFS_WORKER_QUEUE_HDR
+{
+
+    struct _AFS_WORKER_QUEUE_HDR    *fLink;
+
+    KEVENT           WorkerThreadReady;
+   
+    void            *WorkerThreadObject;
+
+    ULONG            State;
+
+} AFSWorkQueueContext, *PAFSWorkQueueContext;
 
 //
 // The first portion is the non-paged section of the Fcb
@@ -126,6 +143,17 @@ typedef struct _AFS_NONPAGED_FCB
 
         } Directory;
 
+        struct
+        {
+
+            ERESOURCE       DirectoryTreeLock;
+
+            ERESOURCE      FileIDTreeLock;
+
+            ERESOURCE       FcbListLock;
+
+        } VolumeRoot;
+
     } Specific;
 
 } AFSNonPagedFcb, *PAFSNonPagedFcb;
@@ -160,19 +188,13 @@ typedef struct AFS_FCB
     // Our tree entry.
     //
 
-    AFSBTreeEntry       FileIDTreeEntry;
+    AFSBTreeEntry       TreeEntry;
 
     //
     // This is the linked list of nodes processed asynchronously by the respective worker thread
     //
 
     AFSListEntry        ListEntry;
-
-    //
-    // DeviceObject pointer for this file
-    //
-
-    PDEVICE_OBJECT     DeviceObject;
 
     //
     // The NP portion of the Fcb
@@ -216,18 +238,20 @@ typedef struct AFS_FCB
 
     struct AFS_FCB  *ParentFcb;
 
+    //
+    // Pointer to this entries meta data
+    //
+
     struct _AFS_DIR_NODE_CB  *DirEntry;
 
     //
-    // Back pointer to the root Fcb for this cell/volume
+    // Back pointer to the root Fcb for this entry
     //
 
     struct AFS_FCB *RootFcb;
 
-    struct _AFS_DIR_NODE_CB *VolumeNode;
-
     //
-    // Union for file and directory specific information
+    // Union for node type specific information
     //
 
     union
@@ -278,7 +302,7 @@ typedef struct AFS_FCB
             //
             // Set if there is any dirty data. Set pessimistically
             //
-            BOOLEAN             ExtentsDirty;
+            ULONGLONG           ExtentsDirtyCount;
 
         } File;
 
@@ -309,6 +333,77 @@ typedef struct AFS_FCB
 
         } Directory;
 
+        struct
+        {
+
+            //
+            // Because a mount point contains the information in the root of the
+            // volume it duplicates the Directory information as well as more
+            // data. Do not change the fields to the PIOCtlIndex, inclusive.
+            //
+
+            LONG                ChildOpenHandleCount;
+
+            LONG                ChildOpenReferenceCount;
+
+            LONG                ChildReferenceCount;      // This controls tear down of the Fcb, it references
+                                                          // the number of allocated directory nodes in the 
+                                                          // directory
+
+            AFSDirHdr           DirectoryNodeHdr;
+
+            struct _AFS_DIR_NODE_CB  *DirectoryNodeListHead;
+
+            struct _AFS_DIR_NODE_CB  *DirectoryNodeListTail;
+
+            struct _AFS_DIR_NODE_CB  *ShortNameTree;
+
+            //
+            // Index for the PIOCtl open count
+            //
+
+            LONG                PIOCtlIndex;
+
+            //
+            // File ID and OFFLINE tree and list
+            //
+
+            AFSTreeHdr          FileIDTree;
+
+            AFSTreeHdr          OfflineFileIDTree;
+
+            //
+            // Linked list of Fcb's for asynchronous processing
+            //
+
+            struct AFS_FCB     *FcbListHead;
+
+            struct AFS_FCB     *FcbListTail;
+
+            ERESOURCE          *FcbListLock;
+
+            //
+            // Volume work thread for this mount point
+            //
+
+            AFSWorkQueueContext VolumeWorkerContext;
+
+        } VolumeRoot;
+
+        struct
+        {
+
+            struct AFS_FCB  *TargetFcb;
+
+        } MountPoint;
+
+        struct
+        {
+
+            struct AFS_FCB  *TargetFcb;
+
+        } SymbolicLink;
+
     } Specific;
 
 } AFSFcb, *PAFSFcb;
@@ -323,13 +418,13 @@ typedef struct _AFS_CCB
     USHORT        Size;
     USHORT        Type;
 
+    ULONG         Flags;
+
     //
-    // Directory enumeraiton informaiton
+    // Directory enumeration informaiton
     //
 
     BOOLEAN     DirQueryMapped;
-
-    ULONG       DirFlags;
 
     UNICODE_STRING MaskName;
 
@@ -340,6 +435,12 @@ typedef struct _AFS_CCB
     //
 
     ULONG       PIOCtlRequestID;
+
+    //
+    // Full path of how the instance was opened
+    //
+
+    UNICODE_STRING FullFileName;
 
 } AFSCcb;
 
@@ -394,6 +495,19 @@ typedef struct _AFS_WORK_ITEM
 
         } ReleaseExtents;
 
+        struct
+        {
+            AFSFcb *Fcb;
+
+        } FlushFcb;
+
+        struct
+        {
+            PIRP Irp;
+            PDEVICE_OBJECT Device;
+
+        } AsynchIo;
+
         struct 
         {
             char     Context[ 1];
@@ -402,23 +516,6 @@ typedef struct _AFS_WORK_ITEM
     } Specific;
 
 } AFSWorkItem, *PAFSWorkItem;
-
-//
-// Worker pool header
-//
-
-typedef struct _AFS_WORKER_QUEUE_HDR
-{
-
-    struct _AFS_WORKER_QUEUE_HDR    *fLink;
-
-    KEVENT           WorkerThreadReady;
-   
-    void            *WorkerThreadObject;
-
-    ULONG            State;
-
-} AFSWorkQueueContext, *PAFSWorkQueueContext;
 
 //
 // Communication service control structures
@@ -703,20 +800,6 @@ typedef struct _AFS_DEVICE_EXTENSION
         struct
         {
 
-            AFSTreeHdr          FileIDTree;
-
-            ERESOURCE           FileIDTreeLock;
-
-            //
-            // Linked list of Fcb's for asynchronous processing
-            //
-
-            AFSFcb             *FcbListHead;
-
-            AFSFcb             *FcbListTail;
-
-            ERESOURCE           FcbListLock;
-
             //
             // Cache file information
             //
@@ -732,10 +815,25 @@ typedef struct _AFS_DEVICE_EXTENSION
             LARGE_INTEGER       CacheBlockCount; // Total number of cache blocks in the cache file
 
             //
-            // Volume worker context
+            // Throttles on behavior
+            //
+            LARGE_INTEGER       MaxIo;
+
+            LARGE_INTEGER       MaxDirty;
+
+            //
+            // Volume tree
             //
 
-            AFSWorkQueueContext VolumeWorkerContext;
+            AFSTreeHdr          VolumeTree;
+
+            ERESOURCE           VolumeTreeLock;
+
+            AFSFcb             *VolumeListHead;
+
+            AFSFcb             *VolumeListTail;
+
+            ERESOURCE           VolumeListLock;
 
         } RDR;
 

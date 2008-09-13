@@ -175,12 +175,12 @@ AFSRemoveWorkerPool()
 }
 
 NTSTATUS
-AFSInitVolumeWorker()
+AFSInitVolumeWorker( IN AFSFcb *VolumeVcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSWorkQueueContext *pWorker = &pDeviceExt->Specific.RDR.VolumeWorkerContext;
+    AFSWorkQueueContext *pWorker = &VolumeVcb->Specific.VolumeRoot.VolumeWorkerContext;
     HANDLE hThread;
 
     __Enter
@@ -210,7 +210,7 @@ AFSInitVolumeWorker()
                                           NULL,
                                           NULL,
                                           AFSVolumeWorkerThread,
-                                          (void *)pWorker);
+                                          (void *)VolumeVcb);
 
         if( NT_SUCCESS( ntStatus))
         {
@@ -303,12 +303,12 @@ AFSInitWorkerThread( IN AFSWorkQueueContext *PoolContext)
 }
 
 NTSTATUS
-AFSShutdownVolumeWorker()
+AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSWorkQueueContext *pWorker = &pDeviceExt->Specific.RDR.VolumeWorkerContext;
+    AFSWorkQueueContext *pWorker = &VolumeVcb->Specific.VolumeRoot.VolumeWorkerContext;
 
     if( pWorker->WorkerThreadObject != NULL &&
         BooleanFlagOn( pWorker->State, AFS_WORKER_INITIALIZED))
@@ -488,6 +488,16 @@ AFSWorkerThread( IN PVOID Context)
                         AFSReleaseExtentsWork( pWorkItem);
                         break;
 
+                    case AFS_WORK_FLUSH_FCB:
+
+                        (VOID) AFSFlushExtents( pWorkItem->Specific.FlushFcb.Fcb);
+                        //
+                        // Give back the ref we took when we posted
+                        //
+                        InterlockedDecrement( &pWorkItem->Specific.FlushFcb.Fcb->OpenReferenceCount);
+                        break;
+
+
                     default:
 
                         AFSPrint("AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
@@ -518,7 +528,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)Context;
+    AFSFcb *pVolumeVcb = (AFSFcb * )Context;
+    AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&pVolumeVcb->Specific.VolumeRoot.VolumeWorkerContext;
     AFSDeviceExt *pControlDeviceExt = NULL;
     AFSDeviceExt *pRDRDeviceExt = NULL;
     BOOLEAN exitThread = FALSE;
@@ -584,10 +595,23 @@ AFSVolumeWorkerThread( IN PVOID Context)
             // First step is to look for potential Fcbs to be removed
             //
 
-            AFSAcquireShared( &pRDRDeviceExt->Specific.RDR.FcbListLock,
+            AFSAcquireShared( pVolumeVcb->Specific.VolumeRoot.FcbListLock,
                               TRUE);
 
-            pFcb = pRDRDeviceExt->Specific.RDR.FcbListHead;
+            pFcb = pVolumeVcb->Specific.VolumeRoot.FcbListHead;
+
+            if( pFcb == NULL &&
+                BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE))
+            {
+
+                //
+                // We are done
+                //
+
+                AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
+
+                break;
+            }
 
             while( pFcb != NULL)
             {
@@ -599,16 +623,21 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 //
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                     !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
-                    pFcb->Specific.File.ExtentsDirty &&
+                    pFcb->Specific.File.ExtentsDirtyCount &&
                     (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
                            >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
                 {
+                    //
+                    // Yup (the last flush was long enough ago)
+                    //
                     AFSFlushExtents( pFcb);
                 }
                 else if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                          BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID)) 
                 {
-
+                    //
+                    // The file has been marked as invalid.  Dump it
+                    //
                     AFSTearDownFcbExtents( pFcb );
                 }
 
@@ -622,9 +651,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     >= 
                     (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
                 {
-                    //                    static int i = 1; if (i) DbgBreakPoint();
                     //
-                    // That may have taken time, so collect the time again
+                    // Tear em down we'll not be needing them again
                     //
                     AFSTearDownFcbExtents( pFcb );
                 }
@@ -635,7 +663,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 // allocations then just continue on
                 //
 
-                if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
+                if( !BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE) &&
+                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
                     AFSAllocationMemoryLevel <= 1024000 * 5) // We keep it to 5 MB
                 {
 
@@ -645,7 +674,7 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 }
 
                 if( AFSAcquireShared( &pFcb->NPFcb->Resource,
-                                      FALSE))
+                                      BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                 {
 
                     KeQueryTickCount( &liTime);
@@ -679,11 +708,11 @@ AFSVolumeWorkerThread( IN PVOID Context)
                         // Possible candidate so drop the locks and re-acquire them excl
                         //
 
-                        AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.FcbListLock);
+                        AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
 
                         AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                        AFSAcquireExcl( &pRDRDeviceExt->Specific.RDR.FcbListLock,
+                        AFSAcquireExcl( pVolumeVcb->Specific.VolumeRoot.FcbListLock,
                                         TRUE);
 
                         //
@@ -692,11 +721,11 @@ AFSVolumeWorkerThread( IN PVOID Context)
                         //
 
                         if( AFSAcquireShared( &pFcb->ParentFcb->NPFcb->Resource,
-                                              FALSE))
+                                              BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                         {
 
                             if( AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                                FALSE))
+                                                BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                             {
 
                                 //
@@ -727,58 +756,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                 {
 
                                     //
-                                    // Make sure the dire entry reference is removed
+                                    // We do this here to ensure there isn't an outstanding link reference on the Fcb
                                     //
-
-                                    if( pFcb->DirEntry != NULL)
-                                    {
-
-                                        pFcb->DirEntry->Fcb = NULL;
-                                    }
-
-                                    //
-                                    // Need to deallocate the Fcb and remove it from the directory entry
-                                    //
-
-                                    AFSReleaseResource( &pFcb->ParentFcb->NPFcb->Resource);
-
-                                    if( pFcb->ListEntry.fLink == NULL)
-                                    {
-
-                                        pRDRDeviceExt->Specific.RDR.FcbListTail = (AFSFcb *)pFcb->ListEntry.bLink;
-
-                                        if( pRDRDeviceExt->Specific.RDR.FcbListTail != NULL)
-                                        {
-
-                                            pRDRDeviceExt->Specific.RDR.FcbListTail->ListEntry.fLink = NULL;
-                                        }
-                                    }
-                                    else
-                                    {
-
-                                        ((AFSFcb *)(pFcb->ListEntry.fLink))->ListEntry.bLink = pFcb->ListEntry.bLink;
-                                    }
-
-                                    if( pFcb->ListEntry.bLink == NULL)
-                                    {
-
-                                        pRDRDeviceExt->Specific.RDR.FcbListHead = (AFSFcb *)pFcb->ListEntry.fLink;
-
-                                        if( pRDRDeviceExt->Specific.RDR.FcbListHead != NULL)
-                                        {
-
-                                            pRDRDeviceExt->Specific.RDR.FcbListHead = NULL;
-                                        }
-                                    }
-                                    else
-                                    {
-
-                                        ((AFSFcb *)(pFcb->ListEntry.bLink))->ListEntry.fLink = pFcb->ListEntry.fLink;
-                                    }
-
-                                    InterlockedDecrement( &pFcb->ParentFcb->Specific.Directory.ChildReferenceCount);
-
-                                    pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;                                    
 
                                     if( BooleanFlagOn( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE))
                                     {
@@ -787,44 +766,61 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                         // Grab the FileID Tree lock
                                         //
 
-                                        AFSAcquireExcl( pRDRDeviceExt->Specific.RDR.FileIDTree.TreeLock,
+                                        AFSAcquireExcl( pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                                                         TRUE);
 
-                                        AFSRemoveFileIDEntry( &pRDRDeviceExt->Specific.RDR.FileIDTree.TreeHead,
-                                                              &pFcb->FileIDTreeEntry);
+                                        //
+                                        // Check if the lock count is still zero
+                                        //
 
-                                        AFSReleaseResource( pRDRDeviceExt->Specific.RDR.FileIDTree.TreeLock);
-                                    }
-
-                                    //
-                                    // If this is a directory then we will need to purge the directory entry list
-                                    //
-
-                                    if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
-                                    {
-
-                                        AFSDirEntryCB *pCurrentDirEntry = NULL;
-
-                                        AFSPrint("AFSVolumeWorker Removing Directory Fcb %08lX\n", pFcb);
-
-                                        pCurrentDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
-
-                                        while( pCurrentDirEntry != NULL)
+                                        if( pFcb->OpenReferenceCount > 0)
                                         {
 
-                                            AFSDeleteDirEntry( pFcb,
-                                                               pCurrentDirEntry);
+                                            //
+                                            // Don't touch the Fcb
+                                            //
 
-                                            pCurrentDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                                            AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+                                            AFSReleaseResource( &pFcb->ParentFcb->NPFcb->Resource);
+
+                                            AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                                            pFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+
+                                            continue;
                                         }
+
+                                        AFSRemoveHashEntry( &pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                                            &pFcb->TreeEntry);
+
+                                        ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
+                                        AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
                                     }
-                                    else
+
+                                    //
+                                    // If this is a file then tear down extents now
+                                    //
+
+                                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                                        pFcb->DirEntry != NULL &&
+                                        !BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
                                     {
 
-                                        AFSPrint("AFSVolumeWorker Removing file Fcb %08lX\n", pFcb);
+                                        (VOID)AFSTearDownFcbExtents( pFcb);
+                                    }
 
-                                        if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETE_DIR_ENTRY) &&
-                                            pFcb->DirEntry != NULL)
+                                    //
+                                    // Make sure the dire entry reference is removed
+                                    //
+
+                                    if( pFcb->DirEntry != NULL)
+                                    {
+
+                                        pFcb->DirEntry->Fcb = NULL;
+
+                                        if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
                                         {
 
                                             if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
@@ -844,6 +840,88 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
                                             pFcb->DirEntry = NULL;
                                         }
+                                    }
+
+                                    //
+                                    // Need to deallocate the Fcb and remove it from the directory entry
+                                    //
+
+                                    AFSReleaseResource( &pFcb->ParentFcb->NPFcb->Resource);
+
+                                    if( pFcb->ListEntry.fLink == NULL)
+                                    {
+
+                                        pVolumeVcb->Specific.VolumeRoot.FcbListTail = (AFSFcb *)pFcb->ListEntry.bLink;
+
+                                        if( pVolumeVcb->Specific.VolumeRoot.FcbListTail != NULL)
+                                        {
+
+                                            pVolumeVcb->Specific.VolumeRoot.FcbListTail->ListEntry.fLink = NULL;
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        ((AFSFcb *)(pFcb->ListEntry.fLink))->ListEntry.bLink = pFcb->ListEntry.bLink;
+                                    }
+
+                                    if( pFcb->ListEntry.bLink == NULL)
+                                    {
+
+                                        pVolumeVcb->Specific.VolumeRoot.FcbListHead = (AFSFcb *)pFcb->ListEntry.fLink;
+
+                                        if( pVolumeVcb->Specific.VolumeRoot.FcbListHead != NULL)
+                                        {
+
+                                            pVolumeVcb->Specific.VolumeRoot.FcbListHead = NULL;
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        ((AFSFcb *)(pFcb->ListEntry.bLink))->ListEntry.fLink = pFcb->ListEntry.fLink;
+                                    }
+
+                                    InterlockedDecrement( &pFcb->ParentFcb->Specific.Directory.ChildReferenceCount);
+
+                                    pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;                                    
+
+                                    //
+                                    // If this is a directory then we will need to purge the directory entry list
+                                    //
+
+                                    if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                                    {
+
+                                        AFSDirEntryCB *pCurrentDirEntry = NULL;
+
+                                        pCurrentDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+
+                                        while( pCurrentDirEntry != NULL)
+                                        {
+
+                                            //
+                                            // If this dir entry is a mount point then we will need to 
+                                            // dereference the target Fcb
+                                            //
+
+                                            if( pCurrentDirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT &&
+                                                pCurrentDirEntry->Fcb != NULL)
+                                            {
+
+                                                InterlockedDecrement( &pCurrentDirEntry->Fcb->OpenReferenceCount);
+                                            }
+
+                                            AFSDeleteDirEntry( pFcb,
+                                                               pCurrentDirEntry);
+
+                                            pCurrentDirEntry = pFcb->Specific.Directory.DirectoryNodeListHead;
+                                        }
+                                    }
+                                    else
+                                    {
+
+
                                     }
 
                                     AFSRemoveFcb( pFcb);
@@ -878,7 +956,7 @@ AFSVolumeWorkerThread( IN PVOID Context)
                         // Go get the listlock shared again
                         //
 
-                        AFSConvertToShared( &pRDRDeviceExt->Specific.RDR.FcbListLock);
+                        AFSConvertToShared( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
                     }
                     else
                     {
@@ -895,11 +973,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 }
             }
 
-            AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.FcbListLock);
+            AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
         }
     } // worker thread loop
 
-    AFSPrint("AFSVolumeWorkerThread Thread %08lX Ending\n", pPoolContext);
+    AFSRemoveRootFcb( pVolumeVcb,
+                      FALSE);
 
     KeCancelTimer( &Timer);
 

@@ -195,6 +195,10 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         ulByteCount = pIrpSp->Parameters.Read.Length;
 
+        if (ulByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart) {
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
         pSystemBuffer = AFSLockSystemBuffer( Irp,
                                              ulByteCount);
 

@@ -23,6 +23,10 @@ extern ULONG               AFSDebugFlags;
 
 extern ULONG               AFSDebugLevel;
 
+extern ULONG               AFSMaxDirectIo;
+
+extern ULONG               AFSMaxDirtyFile;
+
 extern CACHE_MANAGER_CALLBACKS AFSCacheManagerCallbacks;
 
 extern PEPROCESS           AFSSysProcess;

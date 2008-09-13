@@ -39,24 +39,17 @@ AFSInitRDRDevice()
         // Initialize resources
         //
 
-        pDeviceExt->Specific.RDR.FileIDTree.TreeLock = &pDeviceExt->Specific.RDR.FileIDTreeLock;
+        pDeviceExt->Specific.RDR.VolumeTree.TreeLock = &pDeviceExt->Specific.RDR.VolumeTreeLock;
 
-        ExInitializeResourceLite( pDeviceExt->Specific.RDR.FileIDTree.TreeLock);
+        ExInitializeResourceLite( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
 
-        pDeviceExt->Specific.RDR.FileIDTree.TreeHead = NULL;
+        pDeviceExt->Specific.RDR.VolumeTree.TreeHead = NULL;
 
-        ExInitializeResourceLite( &pDeviceExt->Specific.RDR.FcbListLock);
+        ExInitializeResourceLite( &pDeviceExt->Specific.RDR.VolumeListLock);
 
-        pDeviceExt->Specific.RDR.FcbListHead = NULL;
+        pDeviceExt->Specific.RDR.VolumeListHead = NULL;
 
-        pDeviceExt->Specific.RDR.FcbListTail = NULL;
-
-        //
-        // Initialize the volume worker thread responsible for handling any volume specific
-        // work such as Fcb tear down
-        //
-
-        AFSInitVolumeWorker();
+        pDeviceExt->Specific.RDR.VolumeListTail = NULL;
 
         //
         // Clear the initializing bit
@@ -164,6 +157,14 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                 ntStatus = AFSProcessReleaseFileExtentsDone( Irp );
                 break;
             }
+
+            case IOCTL_AFS_SHUTDOWN:
+            {
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = AFSCloseRedirector( );
+                ntStatus  =Irp->IoStatus.Status;
+                break;
+            }
 #endif
                 
             case IOCTL_REDIR_QUERY_PATH:
@@ -202,11 +203,6 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                     }
                 }
 
-                AFSPrint("AFSRDRDeviceControl (IOCTL_REDIR_QUERY_PATH) Request for path %wZ Status %08lX (%08lX)\n",
-                                                                               &uniPathName,
-                                                                               ntStatus,
-                                                                               pPathResponse->LengthAccepted);
-
                 break;
             }
 
@@ -236,6 +232,7 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    LARGE_INTEGER cacheSizeBytes;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     OBJECT_ATTRIBUTES   stObjectAttribs;
     IO_STATUS_BLOCK stIoStatus;
@@ -250,6 +247,9 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         pDevExt->Specific.RDR.CacheBlockSize = CacheFileInfo->CacheBlockSize;
 
         pDevExt->Specific.RDR.CacheBlockCount = CacheFileInfo->ExtentCount;
+
+        cacheSizeBytes = CacheFileInfo->ExtentCount;
+        cacheSizeBytes.QuadPart *= CacheFileInfo->CacheBlockSize;
 
         pDevExt->Specific.RDR.CacheFile.Length = 0;
 
@@ -276,6 +276,68 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
                        CacheFileInfo->CacheFileNameLength);
 
         pDevExt->Specific.RDR.CacheFile.Length += (USHORT)CacheFileInfo->CacheFileNameLength;
+
+        //
+        // Set up the Throttles.
+        //
+        // Max IO is 10% of the cache, or the value in the registry,
+        // with a minimum of 5Mb (and a maximum of 50% cache size)
+        //
+        if (AFSMaxDirectIo) 
+        {
+            //
+            // collect what the user 
+            //
+            pDevExt->Specific.RDR.MaxIo.QuadPart = AFSMaxDirectIo;
+            pDevExt->Specific.RDR.MaxIo.QuadPart *= (1024 * 1024);
+
+        } 
+        else 
+        {
+
+            pDevExt->Specific.RDR.MaxIo.QuadPart = cacheSizeBytes.QuadPart / 10;
+        }
+
+        if (pDevExt->Specific.RDR.MaxIo.QuadPart < (5 * 1024 * 1204)) 
+        {
+            
+            pDevExt->Specific.RDR.MaxIo.QuadPart = 5 * 1024 * 1204;
+
+        } 
+        
+
+        if (pDevExt->Specific.RDR.MaxIo.QuadPart > cacheSizeBytes.QuadPart / 2)
+        {
+
+            pDevExt->Specific.RDR.MaxIo.QuadPart  = cacheSizeBytes.QuadPart / 2;
+
+        }
+
+        //
+        // Maximum Dirty is 50% of the cache, or the value in the
+        // registry.  No minimum, maximum of 90% of cache size.
+        //
+        if (AFSMaxDirtyFile) 
+        {
+            
+            pDevExt->Specific.RDR.MaxDirty.QuadPart = AFSMaxDirtyFile;
+            pDevExt->Specific.RDR.MaxDirty.QuadPart *= (1024 * 1024);
+
+        } 
+        else 
+        {
+
+            pDevExt->Specific.RDR.MaxDirty.QuadPart = cacheSizeBytes.QuadPart/2;
+
+        }
+
+        cacheSizeBytes.QuadPart *= 9;
+        cacheSizeBytes.QuadPart  = cacheSizeBytes.QuadPart / 10;
+
+        if (pDevExt->Specific.RDR.MaxDirty.QuadPart > cacheSizeBytes.QuadPart) 
+        {
+            pDevExt->Specific.RDR.MaxDirty.QuadPart = cacheSizeBytes.QuadPart;
+        }
 
         //
         // Go open the cache file
@@ -452,22 +514,10 @@ AFSShutdownRedirector()
         }
 
         //
-        // Close the volume worker
-        //
-
-        AFSShutdownVolumeWorker();
-
-        //
         // Delete resources
         //
 
-        ExDeleteResourceLite( pDevExt->Specific.RDR.FileIDTree.TreeLock);
-
-        ExDeleteResourceLite( &pDevExt->Specific.RDR.FcbListLock);
-
-        //try_exit:
-
-        NOTHING;
+        ExDeleteResourceLite( pDevExt->Specific.RDR.VolumeTree.TreeLock);
     }
 
     return ntStatus;

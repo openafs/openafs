@@ -538,8 +538,13 @@ AFSQueryBasicInfo( IN PIRP Irp,
         Buffer->ChangeTime = Fcb->DirEntry->DirectoryEntry.ChangeTime;
         Buffer->FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
 
-        *Length -= sizeof( FILE_BASIC_INFORMATION);
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_ROOT_FCB)
+        {
 
+            Buffer->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
+        
+        *Length -= sizeof( FILE_BASIC_INFORMATION);
     }
     else
     {
@@ -883,6 +888,12 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
         Buffer->FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
 
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_ROOT_FCB)
+        {
+
+            Buffer->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
+
         *Length -= sizeof( FILE_NETWORK_OPEN_INFORMATION);
     }
     else
@@ -903,6 +914,7 @@ AFSSetBasicInfo( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     ULONG ulNotifyFilter = 0;
     AFSFcb *pParentFcb = Fcb->ParentFcb;
+    AFSCcb *pCcb = NULL;
 
     __Enter
     {
@@ -912,6 +924,8 @@ AFSSetBasicInfo( IN PIRP Irp,
 
             pParentFcb = Fcb->RootFcb;
         }
+
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
         pBuffer = (PFILE_BASIC_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
@@ -984,28 +998,15 @@ AFSSetBasicInfo( IN PIRP Irp,
 		if( ulNotifyFilter > 0)
 		{
 
-            UNICODE_STRING uniFullFileName;
-            
-            if( NT_SUCCESS( AFSGetFullName( Fcb,
-                                              &uniFullFileName)))
-            {
-
-				FsRtlNotifyFullReportChange( pParentFcb->NPFcb->NotifySync,
-											 &pParentFcb->NPFcb->DirNotifyList,
-											 (PSTRING)&uniFullFileName,
-											 (USHORT)(uniFullFileName.Length - Fcb->DirEntry->DirectoryEntry.FileName.Length),
-											 (PSTRING)NULL,
-											 (PSTRING)NULL,
-											 (ULONG)ulNotifyFilter,
-											 (ULONG)FILE_ACTION_MODIFIED,
-											 (PVOID)NULL);
-
-                if( uniFullFileName.Length > sizeof( WCHAR))
-                {
-
-                    ExFreePool( uniFullFileName.Buffer);
-                }
-			}
+    		FsRtlNotifyFullReportChange( pParentFcb->NPFcb->NotifySync,
+										 &pParentFcb->NPFcb->DirNotifyList,
+										 (PSTRING)&pCcb->FullFileName,
+										 (USHORT)(pCcb->FullFileName.Length - Fcb->DirEntry->DirectoryEntry.FileName.Length),
+										 (PSTRING)NULL,
+										 (PSTRING)NULL,
+										 (ULONG)ulNotifyFilter,
+										 (ULONG)FILE_ACTION_MODIFIED,
+										 (PVOID)NULL);
         }
 
 try_exit:
@@ -1110,8 +1111,6 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     }
 
                     SetFlag( pFcb->Flags, AFS_FCB_PENDING_DELETE);
-
-                    AFSPrint("AFSSetDispositionInfo Deleting file %wZ\n", &pFcb->DirEntry->DirectoryEntry.FileName);
                 }
             }
 
@@ -1243,16 +1242,6 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
             pTargetDirCcb = (AFSCcb *)pTargetFileObj->FsContext2;
 
             //
-            // Check for 'cross-volume rename operations
-            //
-
-            if( pTargetDcb->DeviceObject != pSrcFcb->DeviceObject)
-            {
-
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
-            }
-
-            //
             // Grab the target name which we setup in the IRP_MJ_CREATE handler. By how we set this up
             // it is only the target component of the rename operation
             //
@@ -1307,18 +1296,29 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         // and reinsert it into the parent tree
         //
 
-        AFSRemoveDirNodeFromParent( pSrcFcb->ParentFcb,
-                                    pSrcFcb->DirEntry);
+        if( !BooleanFlagOn( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+        {
+
+            AFSRemoveDirNodeFromParent( pSrcFcb->ParentFcb,
+                                        pSrcFcb->DirEntry);
+        }
 
         //
         // OK, this is a simple rename. Issue the rename
         // request to the service.
+        // Need to drop the Fcb lock to not cause a dead lock
+        // if the invalidate call is made
         //
+
+        AFSReleaseResource( &Fcb->NPFcb->Resource);
 
         ntStatus = AFSNotifyRename( pSrcFcb,
                                     pSrcFcb->ParentFcb,
                                     pTargetDcb,
                                     &uniTargetName);
+
+        AFSAcquireExcl( &Fcb->NPFcb->Resource,
+                        TRUE);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1383,11 +1383,11 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         // Update the file index values
         //
 
-        pSrcFcb->DirEntry->CaseSensitiveTreeEntry.Index = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
-                                                                          FALSE);
+        pSrcFcb->DirEntry->CaseSensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
+                                                                              FALSE);
 
-        pSrcFcb->DirEntry->CaseInsensitiveTreeEntry.Index = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
-                                                                            TRUE);
+        pSrcFcb->DirEntry->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
+                                                                                TRUE);
 
         if( pSrcFcb->DirEntry->DirectoryEntry.ShortNameLength > 0)
         {
@@ -1395,13 +1395,13 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
             uniShortName.Length = pSrcFcb->DirEntry->DirectoryEntry.ShortNameLength;
             uniShortName.Buffer = pSrcFcb->DirEntry->DirectoryEntry.ShortName;
 
-            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.Index = AFSGenerateCRC( &uniShortName,
-                                                                                    TRUE);
+            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                                        TRUE);
         }
         else
         {
 
-            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.Index = 0;
+            pSrcFcb->DirEntry->Type.Data.ShortNameTreeEntry.HashIndex = 0;
         }
 
         //
@@ -1561,11 +1561,21 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         }
     }
 
-    if (bModified) {
+    if (bModified) 
+    {
+        
         //
         // Tell the server
+        // Need to drop our lock on teh Fcb while this call is made since it could
+        // result in the service invalidating the node requiring the lock
         //
+
+        AFSReleaseResource( &Fcb->NPFcb->Resource);
+
         ntStatus = AFSUpdateFileInformation( AFSRDRDeviceObject, Fcb);
+
+        AFSAcquireExcl( &Fcb->NPFcb->Resource,
+                        TRUE);
 
         if (NT_SUCCESS(ntStatus))
         {

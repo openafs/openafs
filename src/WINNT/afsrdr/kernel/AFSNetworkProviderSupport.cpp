@@ -58,8 +58,6 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
             try_return( ntStatus);
         }
 
-        DbgPrint("AddConnection Adding remote %wZ Local %S\n", &uniRemoteName, &ConnectCB->LocalName);
-
         //
         // Validate the remote name
         //
@@ -267,9 +265,6 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
         AFSAcquireShared( &AFSProviderListLock,
                           TRUE);
-
-        AFSPrint("AFSGetConnection Getting Local %S\n",
-                                                &ConnectCB->LocalName);
 
         //
         // Look for the connection

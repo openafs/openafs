@@ -43,6 +43,16 @@ UNICODE_STRING      AFSPIOCtlName;
 ULONG               AFSAllocationMemoryLevel = 0;
 
 //
+// Max Length IO (Mb)
+//
+ULONG               AFSMaxDirectIo = 0;
+
+//
+// Maximum dirtiness that a file can get
+//
+ULONG               AFSMaxDirtyFile = 0;
+
+//
 // Dbg log information
 //
 

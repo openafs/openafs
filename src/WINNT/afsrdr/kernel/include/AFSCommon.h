@@ -73,17 +73,17 @@ AFSRemoveShortNameDirEntry( IN AFSDirEntryCB **RootNode,
                             IN AFSDirEntryCB *DirEntry);
 
 NTSTATUS
-AFSLocateFileIDEntry( IN AFSBTreeEntry *TopNode,
-                      IN ULONG Index,
-                      IN OUT AFSFcb **Fcb);
+AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
+                    IN ULONGLONG Index,
+                    IN OUT AFSFcb **Fcb);
 
 NTSTATUS
-AFSInsertFileIDEntry( IN AFSBTreeEntry *TopNode,
-                      IN AFSBTreeEntry *FileIDEntry);
+AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
+                    IN AFSBTreeEntry *FileIDEntry);
 
 NTSTATUS
-AFSRemoveFileIDEntry( IN AFSBTreeEntry **TopNode,
-                      IN AFSBTreeEntry *FileIDEntry);
+AFSRemoveHashEntry( IN AFSBTreeEntry **TopNode,
+                    IN AFSBTreeEntry *FileIDEntry);
 
 //
 // AFSInit.cpp Prototypes
@@ -129,8 +129,7 @@ AFSNotifyRename( IN AFSFcb *Fcb,
                  IN UNICODE_STRING *TargetName);
 
 NTSTATUS
-AFSEvaluateTargetByID( IN AFSFileID *ParentFileId,
-                       IN AFSFileID *SourceFileId,
+AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
                        OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS
@@ -192,15 +191,15 @@ AFSOpenRoot( IN PIRP Irp,
 
 NTSTATUS
 AFSProcessCreate( IN PIRP               Irp,
-                  IN AFSFcb          *ParentDcb,
+                  IN AFSFcb            *ParentDcb,
                   IN PUNICODE_STRING    FileName,
                   IN PUNICODE_STRING    ComponentName,
-                  IN OUT AFSFcb      **Fcb,
-                  IN OUT AFSCcb      **Ccb);
+                  IN PUNICODE_STRING    FullFileName,
+                  IN OUT AFSFcb       **Fcb,
+                  IN OUT AFSCcb       **Ccb);
 
 NTSTATUS
-AFSOpenTargetDirectory( IN PDEVICE_OBJECT DeviceObject,
-                        IN PIRP Irp,
+AFSOpenTargetDirectory( IN PIRP Irp,
                         IN AFSFcb *Fcb,
                         IN PUNICODE_STRING TargetName,
                         IN OUT AFSCcb **Ccb);
@@ -334,7 +333,6 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 AFSInitFcb( IN AFSFcb          *ParentFcb,
-            IN PUNICODE_STRING    FileName,
             IN AFSDirEntryCB   *DirEntry,
             IN OUT AFSFcb     **Fcb);
 
@@ -345,10 +343,11 @@ NTSTATUS
 AFSRemoveAFSRoot( void);
 
 NTSTATUS
-AFSInitRootFcb( IN PDEVICE_OBJECT DeviceObject);
+AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry);
 
 void
-AFSRemoveRootFcb( IN AFSFcb *RootFcb);
+AFSRemoveRootFcb( IN AFSFcb *RootFcb,
+                  IN BOOLEAN CloseWorkerThread);
 
 NTSTATUS
 AFSInitCcb( IN AFSFcb     *Fcb,
@@ -361,9 +360,6 @@ NTSTATUS
 AFSRemoveCcb( IN AFSFcb *Fcb,
               IN AFSCcb *Ccb);
 
-NTSTATUS
-AFSInitializeVolume( IN AFSDirEntryCB *VolumeDirEntry);
-
 //
 // AFSNameSupport.cpp Prototypes
 //
@@ -373,8 +369,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     IN PFILE_OBJECT FileObject,
                     IN UNICODE_STRING *FullPathName,
                     IN OUT AFSFcb **ParentFcb,
-                    IN OUT AFSFcb **Fcb,
-                    IN OUT PUNICODE_STRING ComponentName);
+                    OUT AFSFcb **Fcb,
+                    OUT PUNICODE_STRING ComponentName);
 
 NTSTATUS
 AFSCreateDirEntry( IN AFSFcb *ParentDcb,
@@ -403,19 +399,20 @@ NTSTATUS
 AFSFixupTargetName( IN OUT PUNICODE_STRING FileName,
                     IN OUT PUNICODE_STRING TargetFileName);
 
-NTSTATUS
-AFSGetFullName( IN AFSFcb *Fcb,
-                IN OUT PUNICODE_STRING FullFileName);
-
 NTSTATUS 
 AFSParseName( IN PIRP Irp,
               OUT PUNICODE_STRING FileName,
+              OUT PUNICODE_STRING FullFileName,
               OUT BOOLEAN *FreeNameString,
-              OUT AFSFcb **RootFcb);
+              OUT AFSFcb **RootFcb,
+              OUT AFSFcb **ParentFcb);
 
 NTSTATUS
 AFSCheckCellName( IN UNICODE_STRING *CellName,
                   OUT AFSDirEntryCB **ShareDirEntry);
+
+NTSTATUS
+AFSBuildTargetDirectory( IN AFSFcb *Fcb);
 
 //
 // AFSNetworkProviderSupport.cpp
@@ -831,6 +828,14 @@ NTSTATUS
 AFSRetrieveTargetFID( IN AFSFcb *Fcb,
                       OUT AFSFileID *FileId);
 
+inline
+ULONGLONG
+AFSCreateHighIndex( IN AFSFileID *FileID);
+
+inline
+ULONGLONG
+AFSCreateLowIndex( IN AFSFileID *FileID);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //
@@ -1074,10 +1079,10 @@ NTSTATUS
 AFSQueueWorkerRequest( IN AFSWorkItem *WorkItem);
 
 NTSTATUS
-AFSInitVolumeWorker( void);
+AFSInitVolumeWorker( IN AFSFcb *VolumeVcb);
 
 NTSTATUS
-AFSShutdownVolumeWorker( void);
+AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb);
 
 //
 // AFSRDRSupport.cpp Prototypes

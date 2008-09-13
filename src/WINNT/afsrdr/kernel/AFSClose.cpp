@@ -280,7 +280,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
                 {
 
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
                     {
 
                         //
@@ -291,23 +291,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                         AFSRemoveDirNodeFromParent( pFcb->ParentFcb,
                                                     pFcb->DirEntry);
 
-                        SetFlag( pFcb->Flags, AFS_FCB_DELETE_DIR_ENTRY);
-                    }
-                    else
-                    {
-
-                        //
-                        // Now remove the directory entry
-                        //
-
-                        AFSDeleteDirEntry( pFcb->ParentFcb,
-                                           pFcb->DirEntry);
-
-                        //
-                        // Remove the DirEntry reference from the Fcb
-                        //
-
-                        pFcb->DirEntry = NULL;
+                        SetFlag( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
                     }
                 }
 
@@ -339,9 +323,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 break;
         }
 
-
 try_exit:
-
+        
         //
         // Complete the request
         //

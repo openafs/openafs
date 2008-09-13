@@ -99,12 +99,19 @@ static inline void AFSBreakPoint() {
 #define AFS_REG_DEBUG_FLAGS              L"DebugFlags"
 #define AFS_REG_DEBUG_LEVEL              L"DebugLevel"
 #define AFS_REG_SERVER_NAME              L"Server"
+#define AFS_REG_MAX_DIRTY                L"MaxDirtyMb"
+#define AFS_REG_MAX_IO                   L"MaxIOMb"
 
 //
 // Debug information
 //
 
 #define AFS_DBG_FLAG_BREAK_ON_ENTRY     0x00000001
+
+//
+// Validation info
+//
+#define AFS_VALIDATE_EXTENTS            0
 
 //
 // Control Device name
@@ -137,7 +144,9 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_WORK_REQUEST_RELEASE                0x0001
-
+#define AFS_WORK_FLUSH_FCB                      0x0002
+#define AFS_ASYNCH_READ                         0x0003
+#define AFS_ASYNCH_WRITE                        0x0004
 
 //
 // Pool state
@@ -172,6 +181,8 @@ static inline void AFSBreakPoint() {
 #define AFS_NON_PAGED_VCB                       0x0008
 #define AFS_ROOT_ALL                            0x0009
 #define AFS_IOCTL_FCB                           0x000A
+#define AFS_MOUNT_POINT_FCB                     0x000B
+#define AFS_SYMBOLIC_LINK_FCB                   0x000C
 
 #define AFS_INVALID_FCB                         0x00FF
 
@@ -180,13 +191,15 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_FCB_INVALID                                      0x00000001
-#define AFS_FCB_DIRECTORY_INITIALIZED                        0x00000002
+#define AFS_FCB_DIRECTORY_ENUMERATED                         0x00000002
 #define AFS_FCB_PENDING_DELETE                               0x00000004
 #define AFS_FILE_MODIFIED                                    0x00000008
 #define AFS_FCB_DELETED                                      0x00000010
 #define AFS_UPDATE_WRITE_TIME                                0x00000020
 #define AFS_FCB_INSERTED_ID_TREE                             0x00000040
-#define AFS_FCB_DELETE_DIR_ENTRY                             0x00000080
+#define AFS_FCB_STANDALONE_NODE                              0x00000080
+#define AFS_FCB_VOLUME_OFFLINE                               0x00000100
+#define AFS_FCB_DELETE_FCB_ON_CLOSE                          0x00000200
 
 //
 // Fcb lifetime in seconds
@@ -262,6 +275,7 @@ static inline void AFSBreakPoint() {
 #define CCB_FLAG_DIR_OF_DIRS_ONLY           0x00000001
 #define CCB_FLAG_FULL_DIRECTORY_QUERY       0x00000002
 #define CCB_FLAG_MASK_CONTAINS_WILD_CARDS   0x00000004
+#define CCB_FLAG_FREE_FULL_PATHNAME         0x00000008
 
 //
 // DirEntry flags
@@ -271,6 +285,7 @@ static inline void AFSBreakPoint() {
 #define AFS_DIR_ENTRY_NOT_EVALUATED             0x00000002
 #define AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD 0x00000004
 #define AFS_DIR_ENTRY_NOT_IN_PARENT_TREE        0x00000008
+#define AFS_DIR_RELEASE_DIRECTORY_NODE          0x00000010
 
 //
 // Vcb flags
