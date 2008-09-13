@@ -6005,7 +6005,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             for (wlRequest = smb_allWaitingLocks; wlRequest; wlRequest = (smb_waitingLockRequest_t *) osi_QNext(&wlRequest->q))
             {
                 for (wl = wlRequest->locks; wl; wl = (smb_waitingLock_t *) osi_QNext(&wl->q)) {
-                    if (wl->key == key && LargeIntegerEqualTo(wl->LOffset, LOffset) && 
+                    if (cm_KeyEquals(&wl->key, &key, 0) && LargeIntegerEqualTo(wl->LOffset, LOffset) && 
                         LargeIntegerEqualTo(wl->LLength, LLength)) {
                         wl->state = SMB_WAITINGLOCKSTATE_CANCELLED;
                         goto found_lock_request;
