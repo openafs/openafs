@@ -1867,6 +1867,8 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
         return 1;
 
     for (found = 0,tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
         if (tsrp->server == scp->cbServerp)
             found = 1;
         if (tsrp->server->downTime > *downTime)

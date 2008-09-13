@@ -227,7 +227,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_UpdateCell(cellp, 0);
 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, volp->namep);
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", 
+                  osi_LogSaveString(afsd_logp,volp->cellp->name), 
+                  osi_LogSaveString(afsd_logp,volp->namep));
         do {
             struct rx_connection * rxconnp;
 
@@ -254,10 +256,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
 	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
-		      volp->cellp->name, volp->namep, code);
+		      osi_LogSaveString(afsd_logp,volp->cellp->name), 
+                      osi_LogSaveString(afsd_logp,volp->namep), code);
 	else
 	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
-		      volp->cellp->name, volp->namep);
+		      osi_LogSaveString(afsd_logp,volp->cellp->name), 
+                      osi_LogSaveString(afsd_logp,volp->namep));
     }
 
     /* We can end up here with code == CM_ERROR_NOSUCHVOLUME if the base volume name
@@ -271,7 +275,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
                 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, 
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", 
+                 osi_LogSaveString(afsd_logp,volp->cellp->name),
                  osi_LogSaveString(afsd_logp,name));
         do {
             struct rx_connection * rxconnp;
@@ -299,10 +304,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
 	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
-		      volp->cellp->name, osi_LogSaveString(afsd_logp,name), code);
+		     osi_LogSaveString(afsd_logp,volp->cellp->name), 
+                     osi_LogSaveString(afsd_logp,name), code);
 	else
 	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
-		      volp->cellp->name, osi_LogSaveString(afsd_logp,name));
+		     osi_LogSaveString(afsd_logp,volp->cellp->name), 
+                     osi_LogSaveString(afsd_logp,name));
     }
     
     lock_ObtainWrite(&volp->rw);
@@ -427,7 +434,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 name[len - 9] = '\0';
             }
             
-            osi_Log2(afsd_logp, "cm_UpdateVolume name %s -> %s", volp->namep, name);
+            osi_Log2(afsd_logp, "cm_UpdateVolume name %s -> %s", 
+                     osi_LogSaveString(afsd_logp,volp->namep), osi_LogSaveString(afsd_logp,name));
 
             if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
                 cm_RemoveVolumeFromNameHashTable(volp);
@@ -558,6 +566,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_RandomizeServer(&volp->vol[ROVOL].serversp);
         }
 
+
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
         roNewstate = roServers_alldown ? vl_alldown : vl_online;
         bkNewstate = bkServers_alldown ? vl_alldown : vl_online;
@@ -604,7 +613,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
     volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
     osi_Log4(afsd_logp, "cm_UpdateVolumeLocation done, waking others name %s:%s flags 0x%x code 0x%x", 
-             volp->cellp->name, volp->namep, volp->flags, code);
+             osi_LogSaveString(afsd_logp,volp->cellp->name), 
+             osi_LogSaveString(afsd_logp,volp->namep), volp->flags, code);
     osi_Wakeup((LONG_PTR) &volp->flags);
 
     return code;
@@ -846,6 +856,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
                     cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_unknown);
                 volp->vol[volType].ID = 0;
                 cm_SetFid(&volp->vol[volType].dotdotFid, 0, 0, 0, 0);
+                cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
             }
 	} else {
 	    volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
@@ -999,7 +1010,7 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
 {
     cm_serverRef_t **serverspp;
-    cm_serverRef_t *current;;
+    cm_serverRef_t *current;
 
     lock_ObtainWrite(&cm_serverLock);
 
@@ -1012,7 +1023,11 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
     else 
         osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
         
-    for (current = *serverspp; current; current = current->next)
+    /* 
+     * Increment the refCount on deleted items as well.
+     * They will be freed by cm_FreeServerList when they get to zero 
+     */
+    for (current = *serverspp; current; current = current->next) 
         current->refCount++;
 
     lock_ReleaseWrite(&cm_serverLock);
@@ -1120,12 +1135,14 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
             alldown = 1;
             alldeleted = 1;
             for (serversp = statep->serversp; serversp; serversp = serversp->next) {
-                if (serversp->status != srv_deleted) {
-                    alldeleted = 0;
-                    *onlinep = 1;
-                    alldown = 0;
-                }
-                if (serversp->status == srv_busy || serversp->status == srv_offline) 
+                if (serversp->status == srv_deleted)
+                    continue;
+
+                alldeleted = 0;
+                *onlinep = 1;
+                alldown = 0;
+                
+                if (serversp->status == srv_busy || serversp->status == srv_offline)
                     serversp->status = srv_not_busy;
             }
 
@@ -1240,6 +1257,8 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
         tsp = tsrp->server;
         if (tsp) {
             cm_GetServerNoLock(tsp);

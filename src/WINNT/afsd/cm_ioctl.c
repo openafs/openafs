@@ -3049,10 +3049,12 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
         if (tsp = tsrp->server) {
             cm_GetServerNoLock(tsp);
             lock_ReleaseRead(&cm_serverLock);
-            if ((tsrp->status == srv_deleted) && !(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
                     allOffline = 0;
