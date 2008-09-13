@@ -231,7 +231,9 @@ extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead);
 #define CM_SESSION_CMINT    0xfffd
 #define CM_SESSION_RESERVED 0xfff0
 
-extern cm_key_t cm_GenerateKey(unsigned int session, unsigned long process_id, unsigned int file_id);
+extern cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint16 file_id);
+
+extern int cm_KeyEquals(cm_key_t * k1, cm_key_t * k2, int flags);
 
 #define MAX_SYMLINK_COUNT 16
 
