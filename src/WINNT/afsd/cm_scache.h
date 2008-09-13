@@ -23,7 +23,11 @@ typedef struct cm_fid {
 
 /* Key used for byte range locking.  Each unique key identifies a
    unique client per cm_scache_t for the purpose of locking. */
-typedef afs_uint64 cm_key_t;
+typedef struct cm_key {
+    afs_offs_t process_id;      /* process IDs can be 64bit on 64bit environments */
+    afs_uint16 session_id;
+    afs_uint16 file_id;
+} cm_key_t;
 
 typedef struct cm_range {
     afs_int64 offset;

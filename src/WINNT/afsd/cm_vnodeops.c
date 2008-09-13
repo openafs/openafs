@@ -3908,7 +3908,7 @@ long cm_LockCheckRead(cm_scache_t *scp,
 
         if (INTERSECT_RANGE(range, fileLock->range)) {
             if (IS_LOCK_ACTIVE(fileLock)) {
-                if (fileLock->key == key) {
+                if (cm_KeyEquals(&fileLock->key, &key, 0)) {
 
                     /* If there is an active lock for this client, it
                        is safe to substract ranges.*/
@@ -3930,7 +3930,7 @@ long cm_LockCheckRead(cm_scache_t *scp,
                         cm_LockRangeSubtract(&range, &fileLock->range);
                 }
             } else if (IS_LOCK_LOST(fileLock) &&
-                      (fileLock->key == key || fileLock->lockType == LockWrite)) {
+                       (cm_KeyEquals(&fileLock->key, &key, 0) || fileLock->lockType == LockWrite)) {
                 code = CM_ERROR_BADFD;
                 break;
             }
@@ -3989,7 +3989,7 @@ long cm_LockCheckWrite(cm_scache_t *scp,
 
         if (INTERSECT_RANGE(range, fileLock->range)) {
             if (IS_LOCK_ACTIVE(fileLock)) {
-                if (fileLock->key == key) {
+                if (cm_KeyEquals(&fileLock->key, &key, 0)) {
                     if (fileLock->lockType == LockWrite) {
 
                         /* if there is an active lock for this client, it
@@ -4239,8 +4239,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
     osi_Log4(afsd_logp, "cm_Lock scp 0x%x type 0x%x offset %d length %d",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
-    osi_Log3(afsd_logp, "... allowWait %d key 0x%x:%x", allowWait, 
-             (unsigned long)(key >> 32), (unsigned long)(key & 0xffffffff));
+    osi_Log4(afsd_logp, "... allowWait %d key <0x%x, 0x%x, 0x%x>", allowWait, 
+             key.process_id, key.session_id, key.file_id);
 
     /*
    A client C can OBTAIN a lock L on cm_scache_t S iff (both 3 and 4):
@@ -4274,7 +4274,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
 
         if (IS_LOCK_LOST(fileLock)) {
-            if (fileLock->key == key) {
+            if (cm_KeyEquals(&fileLock->key, &key, 0)) {
                 code = CM_ERROR_BADFD;
                 break;
             } else if (fileLock->lockType == LockWrite && INTERSECT_RANGE(range, fileLock->range)) {
@@ -4587,8 +4587,6 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
     return code;
 }
 
-static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags);
-
 /* Called with scp->rw held */
 long cm_UnlockByKey(cm_scache_t * scp,
 		    cm_key_t key,
@@ -4601,11 +4599,9 @@ long cm_UnlockByKey(cm_scache_t * scp,
     osi_queue_t *q, *qn;
     int n_unlocks = 0;
 
-    osi_Log4(afsd_logp, "cm_UnlockByKey scp 0x%p key 0x%x:%x flags=0x%x",
-             scp,
-             (unsigned long)(key >> 32),
-             (unsigned long)(key & 0xffffffff),
-             flags);
+    osi_Log4(afsd_logp, "cm_UnlockByKey scp 0x%p key <0x%x,0x%x,0x%x",
+             scp, key.process_id, key.session_id, key.file_id);
+    osi_Log1(afsd_logp, "    flags=0x%x", flags);
 
     lock_ObtainWrite(&cm_scacheLock);
 
@@ -4621,9 +4617,8 @@ long cm_UnlockByKey(cm_scache_t * scp,
                  (unsigned long) fileLock->range.offset,
                  (unsigned long) fileLock->range.length,
                 fileLock->lockType);
-        osi_Log3(afsd_logp, "     key[0x%x:%x] flags[0x%x]",
-                 (unsigned long)(fileLock->key >> 32),
-                 (unsigned long)(fileLock->key & 0xffffffff),
+        osi_Log4(afsd_logp, "     key<0x%x, 0x%x, 0x%x> flags[0x%x]",
+                 fileLock->key.process_id, fileLock->key.session_id, fileLock->key.file_id,
                  fileLock->flags);
 
         if (cm_FidCmp(&fileLock->fid, &fileLock->scp->fid)) {
@@ -4643,7 +4638,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 #endif
 
         if (!IS_LOCK_DELETED(fileLock) &&
-            cm_KeyEquals(fileLock->key, key, flags)) {
+            cm_KeyEquals(&fileLock->key, &key, flags)) {
             osi_Log3(afsd_logp, "...Unlock range [%d,+%d] type %d",
                     fileLock->range.offset,
                     fileLock->range.length,
@@ -4791,8 +4786,8 @@ long cm_Unlock(cm_scache_t *scp,
 
     osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset %d length %d",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
-    osi_Log2(afsd_logp, "... key 0x%x:%x",
-             (unsigned long) (key >> 32), (unsigned long) (key & 0xffffffff));
+    osi_Log3(afsd_logp, "... key <0x%x,0x%x,0x%x>",
+             key.process_id, key.session_id, key.file_id);
 
     lock_ObtainRead(&cm_scacheLock);
 
@@ -4817,7 +4812,7 @@ long cm_Unlock(cm_scache_t *scp,
         }
 #endif
         if (!IS_LOCK_DELETED(fileLock) &&
-            fileLock->key == key &&
+            cm_KeyEquals(&fileLock->key, &key, 0) &&
             fileLock->range.offset == LOffset.QuadPart &&
             fileLock->range.length == LLength.QuadPart) {
             break;
@@ -5239,9 +5234,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
              (unsigned)(oldFileLock->range.offset & 0xffffffff),
              (unsigned)(oldFileLock->range.length >> 32),
              (unsigned)(oldFileLock->range.length & 0xffffffff));
-    osi_Log3(afsd_logp, "    key(%x:%x) flags=%x",
-             (unsigned)(oldFileLock->key >> 32),
-             (unsigned)(oldFileLock->key & 0xffffffff),
+    osi_Log4(afsd_logp, "    key<0x%x,0x%x,0x%x> flags=%x",
+             oldFileLock->key.process_id, oldFileLock->key.session_id, oldFileLock->key.file_id,
              (unsigned)(oldFileLock->flags));
 
     /* if the lock has already been granted, then we have nothing to do */
@@ -5313,7 +5307,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
                 ((char *) q - offsetof(cm_file_lock_t, fileq));
 
             if (IS_LOCK_LOST(fileLock)) {
-                if (fileLock->key == oldFileLock->key) {
+                if (cm_KeyEquals(&fileLock->key, &oldFileLock->key, 0)) {
                     code = CM_ERROR_BADFD;
                     oldFileLock->flags |= CM_FILELOCK_FLAG_LOST;
                     osi_Log1(afsd_logp, "    found lost lock %p for same key.  Marking lock as lost",
@@ -5515,27 +5509,21 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     return code;
 }
 
-cm_key_t cm_GenerateKey(unsigned int session_id, unsigned long process_id, unsigned int file_id)
+cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint16 file_id)
 {
-#ifdef DEBUG
-    osi_assertx((process_id & 0xffffffff) == process_id, "unexpected process_id");
-    osi_assertx((session_id & 0xffff) == session_id, "unexpected session_id");
-    osi_assertx((file_id & 0xffff) == file_id, "unexpected file_id");
-#endif
+    cm_key_t key;
 
-    return 
-        (((cm_key_t) (process_id & 0xffffffff)) << 32) |
-        (((cm_key_t) (session_id & 0xffff)) << 16) |
-        (((cm_key_t) (file_id & 0xffff)));
+    key.process_id = process_id;
+    key.session_id = session_id;
+    key.file_id = file_id;
+
+    return key;
 }
 
-static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags)
+int cm_KeyEquals(cm_key_t *k1, cm_key_t *k2, int flags)
 {
-    if (flags & CM_UNLOCK_BY_FID) {
-        return ((k1 & 0xffffffff) == (k2 & 0xffffffff));
-    } else {
-        return (k1 == k2);
-    }
+    return (k1->session_id == k2->session_id) && (k1->file_id == k2->file_id) &&
+        ((flags & CM_UNLOCK_BY_FID) || (k1->process_id == k2->process_id));
 }
 
 void cm_ReleaseAllLocks(void)
