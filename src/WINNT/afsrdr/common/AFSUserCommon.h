@@ -9,13 +9,13 @@ typedef struct _AFS_FILE_ID
 {
 
     ULONG    Hash;
-
+    
     ULONG    Cell;
 
     ULONG    Volume;
-   
+            
     ULONG    Vnode;
-    
+
     ULONG    Unique;
 
 } AFSFileID;
@@ -456,6 +456,8 @@ typedef struct _AFS_SET_FILE_EXTENTS_CB
     AFSFileID       FileId;
 
     ULONG           ExtentCount;
+
+    ULONG           ResultStatus;
 
     AFSFileExtentCB FileExtents[ 1];
 
