@@ -98,7 +98,7 @@ static int
 cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * buffer, int flags);
 
 static long
-cm_DirCheckStatus(cm_dirOp_t * op, afs_uint32 locked);
+cm_DirCheckStatus(cm_dirOp_t * op, int locked);
 
 static long
 cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified);
@@ -116,6 +116,8 @@ cm_DirAddPage(cm_dirOp_t * op, int pageno);
 static long
 cm_DirFreeBlobs(cm_dirOp_t * op, int firstblob, int nblobs);
 
+static long
+cm_DirPrefetchBuffers(cm_dirOp_t * op);
 
 /* compute how many 32 byte entries an AFS 3 dir requires for storing
  * the specified name.
@@ -393,6 +395,9 @@ cm_DirFindBlobs(cm_dirOp_t * op, int nblobs)
                 dhpModified = TRUE;
 	    }
 
+            /* the create flag is not set for the GetPage call below
+               since the page should have been added if necessary
+               above. */
             code = cm_DirGetPage(op, i, &pagebuf, &pp);
             if (code) {
                 cm_DirReleasePage(op, &dhpbuf, dhpModified);
@@ -603,6 +608,14 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     code = cm_DirFindItem(op, entry,
                           &itembuf, &firstitem,
                           &pibuf, &previtem);
+
+    if (code == CM_ERROR_NOTINCACHE) {
+        code = cm_DirPrefetchBuffers(op);
+        if (code == 0)
+            code = cm_DirFindItem(op, entry, &itembuf, &firstitem,
+                                  &pibuf, &previtem);
+    }
+
     if (code != 0) {
         dir_lookup_misses++;
         code = ENOENT;
@@ -1121,7 +1134,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
 }
 
 /* Check if it is safe for us to perform local directory updates.
-   Called with scp->rw unlocked. */
+   Called with op->scp->rw unlocked. */
 int
 cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 {
@@ -1194,6 +1207,7 @@ cm_EndDirOp(cm_dirOp_t * op)
          * and update the dataVersion for each. */
         lock_ObtainWrite(&op->scp->rw);
         code = buf_ForceDataVersion(op->scp, op->dataVersion, op->newDataVersion);
+        op->scp->flags |= CM_SCACHEFLAG_LOCAL;
         lock_ReleaseWrite(&op->scp->rw);
     }
 
@@ -1270,11 +1284,7 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                          (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                          CM_SCACHESYNC_BUFLOCKED);
 
-        if (code == 0) {
-            if (bufferp->dataVersion == CM_BUF_VERSION_BAD) {
-                /* This is a new buffer */
-                bufferp->dataVersion = op->dataVersion;
-            } else if (bufferp->dataVersion != op->dataVersion) {
+        if (code == 0 && bufferp->dataVersion != op->dataVersion) {
                 osi_Log2(afsd_logp,
                          "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %d. needs %d", 
                          bufferp->dataVersion, op->dataVersion);
@@ -1284,8 +1294,7 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                               (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                               CM_SCACHESYNC_BUFLOCKED);
 
-                code = CM_ERROR_INVAL;
-            }
+            code = CM_ERROR_NOTINCACHE;
         }
 
         lock_ReleaseWrite(&op->scp->rw);
@@ -1447,19 +1456,105 @@ cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
      scp->rw may be released
  */
 static long
-cm_DirCheckStatus(cm_dirOp_t * op, afs_uint32 locked)
+cm_DirCheckStatus(cm_dirOp_t * op, int scp_locked)
 {
     long code;
 
-    if (!locked)
+    if (!scp_locked)
         lock_ObtainWrite(&op->scp->rw);
     code = cm_SyncOp(op->scp, NULL, op->userp, &op->req, PRSFS_LOOKUP,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (!locked)
+    if (!scp_locked)
         lock_ReleaseWrite(&op->scp->rw);
 
     osi_Log2(afsd_logp, "cm_DirCheckStatus for op 0x%p returning code 0x%x",
              op, code);
+
+    return code;
+}
+
+/* Attempt to prefetch all the buffers for this operation.
+
+   Called with scp->rw unlocked
+ */
+static long
+cm_DirPrefetchBuffers(cm_dirOp_t * op)
+{
+    long code = 0;
+    osi_hyper_t offset;
+    cm_buf_t *bufferp = NULL;
+
+    osi_Log1(afsd_logp, "cm_DirPrefetchBuffers for op 0x%p", op);
+
+    /* prefetching is only done on read operations where we don't
+       expect the data version to change. */
+    if (op->dataVersion != op->newDataVersion) {
+        osi_Log0(afsd_logp, "Skipping prefetch for write operation.");
+        return CM_ERROR_INVAL;
+    }
+
+    lock_ObtainWrite(&op->scp->rw);
+
+    /* When we are prefetching a file, we first flush out any of its
+       contents just to make sure that we don't end up with buffers
+       that was locally modified. */
+
+    if (op->scp->flags & CM_SCACHEFLAG_LOCAL) {
+        lock_ReleaseWrite(&op->scp->rw);
+        code = cm_FlushFile(op->scp, op->userp, &op->req);
+        if (code != 0)
+            return code;
+        lock_ObtainWrite(&op->scp->rw);
+    }
+
+    offset = ConvertLongToLargeInteger(0);
+    while (LargeIntegerLessThan(offset, op->scp->length)) {
+        osi_Log2(afsd_logp, "Trying prefetch for offset %08x:%08x",
+                 offset.HighPart, offset.LowPart);
+        lock_ReleaseWrite(&op->scp->rw);
+
+        code = buf_Get(op->scp, &offset, &bufferp);
+
+        lock_ObtainWrite(&op->scp->rw);
+
+        if (code)
+            break;
+
+        while (1) {
+
+            code = cm_SyncOp(op->scp, bufferp, op->userp, &op->req, PRSFS_LOOKUP,
+                             CM_SCACHESYNC_NEEDCALLBACK |
+                             (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ));
+
+            if (code)
+                break;
+
+            cm_SyncOpDone(op->scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK |
+                          (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ));
+
+            if (cm_HaveBuffer(op->scp, bufferp, 0))
+                break;
+
+            code = cm_GetBuffer(op->scp, bufferp, NULL, op->userp, &op->req);
+            if (code)
+                break;
+        }
+
+        if (code)
+            break;
+
+        if (bufferp) {
+            buf_Release(bufferp);
+            bufferp = NULL;
+        }
+
+        offset = LargeIntegerAdd(offset, ConvertLongToLargeInteger(cm_data.buf_blockSize));
+    }
+
+ done:
+    lock_ReleaseWrite(&op->scp->rw);
+
+    osi_Log1(afsd_logp, "cm_DirPrefetchBuffers returning code 0x%x", code);
 
     return code;
 }
@@ -1502,6 +1597,9 @@ cm_DirReleasePage(cm_dirOp_t * op, cm_buf_t ** bufferpp, int modified)
    located in the specified buffer.  If not, the buffer will be
    released and a new buffer returned that contains the requested
    page.
+
+   If the specified page exists beyond the EOF for the scp, a new
+   buffer will be allocated only if create is set to TRUE.
 
    Note: If a buffer is specified on entry via bufferpp, it is assumed
    that the buffer is unmodified.  If the buffer is modified, it
@@ -1583,50 +1681,6 @@ cm_DirGetPage(cm_dirOp_t * op,
             bufferp = NULL;
             goto _exit;
         }
-
-#if 0
-        /* The code below is for making sure the buffer contains
-           current data.  This is a bad idea, since the whole point of
-           doing directory updates locally is to avoid fetching all
-           the data from the server. */
-        while (1) {
-            lock_ObtainWrite(&op->scp->rw);
-            code = cm_SyncOp(op->scp, bufferp, op->userp, &op->req, PRSFS_LOOKUP,
-                             CM_SCACHESYNC_NEEDCALLBACK |
-                             CM_SCACHESYNC_READ |
-                             CM_SCACHESYNC_BUFLOCKED);
-
-            if (code) {
-                lock_ReleaseWrite(&op->scp->rw);
-                break;
-            }
-
-            cm_SyncOpDone(op->scp, bufferp,
-                          CM_SCACHESYNC_NEEDCALLBACK |
-                          CM_SCACHESYNC_READ |
-                          CM_SCACHESYNC_BUFLOCKED);
-
-            if (cm_HaveBuffer(op->scp, bufferp, 1)) {
-                lock_ReleaseWrite(&op->scp->rw);
-                break;
-            }
-
-            lock_ReleaseMutex(&bufferp->mx);
-            code = cm_GetBuffer(op->scp, bufferp, NULL, op->userp, &op->req);
-            lock_ReleaseWrite(&op->scp->rw);
-            lock_ObtainMutex(&bufferp->mx);
-
-            if (code)
-                break;
-        }
-
-        if (code) {
-            cm_DirOpDelBuffer(op, bufferp, 0);
-            buf_Release(bufferp);
-            bufferp = NULL;
-            goto _exit;
-        }
-#endif
     }
 
  _has_buffer:

@@ -1754,7 +1754,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
 	scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
-    scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
+    scp->flags &= ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL);
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
