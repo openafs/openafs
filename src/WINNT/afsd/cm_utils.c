@@ -657,6 +657,14 @@ szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefol
                                             cm_ClientCharNext(p), FALSE))
                     return TRUE;
             } /* endfor */
+            if (*pattern == '.' && *pattern_next == '\0') {
+                for (p = name; p && *p; p = cm_ClientCharNext(p))
+                    if (*p == '.')
+                        break;
+                if (p && *p)
+                    return FALSE;
+                return TRUE;
+            }
             return FALSE;
 
         default:
@@ -681,8 +689,9 @@ szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefol
  */
 int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags) 
 {
-    clientchar_t * newmask;
-    int    i, j, star, qmark, casefold, retval;
+    clientchar_t *newmask, lastchar = _C('\0');
+    int    i, j, casefold, retval;
+    int  star = 0, qmark = 0, dot = 0;
 
     /* make sure we only match 8.3 names, if requested */
     if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
@@ -695,8 +704,9 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
      * for example  the sequence "*?*?*?*"
      * must be turned into the form "*"
      */
-    newmask = (clientchar_t *)malloc((cm_ClientStrLen(maskp)+1)*sizeof(clientchar_t));
+    newmask = (clientchar_t *)malloc((cm_ClientStrLen(maskp)+2)*sizeof(clientchar_t));
     for ( i=0, j=0, star=0, qmark=0; maskp[i]; i++) {
+        lastchar = maskp[i];
         switch ( maskp[i] ) {
         case '?':
         case '>':
@@ -706,6 +716,9 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
         case '*':
             star++;
             break;
+        case '.':
+            dot++;
+            /* fallthrough */
         default:
             if ( star ) {
                 newmask[j++] = '*';
@@ -724,6 +737,8 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
         while ( qmark-- )
             newmask[j++] = '?';
     }
+    if (dot == 0 && lastchar == '<')
+        newmask[j++] = '.';
     newmask[j++] = '\0';
 
     retval = szWildCardMatchFileName(newmask, namep, casefold) ? 1:0;
