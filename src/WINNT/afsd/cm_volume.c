@@ -856,7 +856,9 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
                     cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_unknown);
                 volp->vol[volType].ID = 0;
                 cm_SetFid(&volp->vol[volType].dotdotFid, 0, 0, 0, 0);
+                lock_ReleaseWrite(&cm_volumeLock);
                 cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
+                lock_ObtainWrite(&cm_volumeLock);
             }
 	} else {
 	    volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
