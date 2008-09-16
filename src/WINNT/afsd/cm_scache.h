@@ -261,6 +261,7 @@ typedef struct cm_scache {
 
 #define CM_SCACHEFLAG_EACCESS           0x200000 /* Bulk Stat returned EACCES */
 #define CM_SCACHEFLAG_SMB_FID	        0x400000
+#define CM_SCACHEFLAG_LOCAL             0x800000 /* Locally modified */
 
 /* sync flags for calls to the server.  The CM_SCACHEFLAG_FETCHING,
  * CM_SCACHEFLAG_STORING and CM_SCACHEFLAG_SIZESTORING flags correspond to the

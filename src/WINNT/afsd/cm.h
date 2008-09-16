@@ -99,6 +99,7 @@
 #define CM_ERROR_RANGE_NOT_LOCKED       (CM_ERROR_BASE+57)
 #define CM_ERROR_NOSUCHDEVICE           (CM_ERROR_BASE+58)
 #define CM_ERROR_LOCK_NOT_GRANTED       (CM_ERROR_BASE+59)
+#define CM_ERROR_NOTINCACHE             (CM_ERROR_BASE+60)
 
 /* Used by cm_FollowMountPoint and cm_FindVolumeByName */
 /* And as an index in cm_volume_t */
