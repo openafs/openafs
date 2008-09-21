@@ -113,7 +113,7 @@ sub read_panic {
         chomp $line;
     
         #skip lines until "Backtrace" is seen
-        $line =~ /^\s*(Backtrace,|Backtrace:)/;
+        $line =~ /^\s*(Backtrace,|Backtrace:|Backtrace \()/;
         $backtrace = $1;
         last if $backtrace;
     }
