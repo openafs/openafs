@@ -33,6 +33,11 @@ afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;	/* show all messages */
 #ifdef AFS_DISCON_ENV
 afs_int32 afs_is_disconnected;
 afs_int32 afs_is_logging;
+afs_int32 afs_is_discon_rw;
+/* On reconnection, turn this knob on until it finishes,
+ * then turn it off.
+ */
+afs_int32 afs_in_sync = 0;
 #endif
 
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
@@ -3976,32 +3981,53 @@ DECL_PIOCTL(PCallBackAddr)
 DECL_PIOCTL(PDiscon)
 {
 #ifdef AFS_DISCON_ENV
-    static afs_int32 mode = 4; /* Start up in 'full' */
+    static afs_int32 mode = 1; /* Start up in 'off' */
+    afs_int32 force = 0;
+    int code = 0;
 
-    if (ainSize == sizeof(afs_int32)) {
+    if (ainSize) {
 
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
 
-	memcpy(&mode, ain, sizeof(afs_int32));
+	if (ain[0])
+	    mode = ain[0] - 1;
+	if (ain[1])
+	    afs_ConflictPolicy = ain[1] - 1;
+	if (ain[2])
+	    force = 1;
 
 	/*
 	 * All of these numbers are hard coded in fs.c. If they
 	 * change here, they should change there and vice versa
 	 */
 	switch (mode) {
-	case 0: /* Disconnect, breaking all callbacks */
+	case 0: /* Disconnect ("offline" mode), breaking all callbacks */
 	    if (!AFS_IS_DISCONNECTED) {
 		ObtainWriteLock(&afs_discon_lock, 999);
 		afs_DisconGiveUpCallbacks();
 		afs_RemoveAllConns();
 		afs_is_disconnected = 1;
+		afs_is_discon_rw = 1;
 		ReleaseWriteLock(&afs_discon_lock);
 	    }
 	    break;
-	case 4: /* Fully connected */
+	case 1: /* Fully connected, ("online" mode). */
 	    ObtainWriteLock(&afs_discon_lock, 998);
-	    afs_is_disconnected = 0;
+
+	    afs_in_sync = 1;
+	    code = afs_ResyncDisconFiles(areq, *acred);
+	    afs_in_sync = 0;
+
+	    if (code && !force) {
+	    	printf("Files not synchronized properly, still in discon state. \
+						Please retry or use \"force\".\n");
+	    } else {
+		afs_is_disconnected = 0;
+		afs_is_discon_rw = 0;
+		printf("\nSync succeeded. You are back online.\n");
+	    }
+
 	    ReleaseWriteLock(&afs_discon_lock);
 	    break;
 	default:

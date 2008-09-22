@@ -66,6 +66,10 @@ static struct ltable {
     { "afsdb_client_lock", (char *)&afsdb_client_lock},
     { "afsdb_req_lock", (char *)&afsdb_req_lock},
 #endif
+#ifdef AFS_DISCON_ENV
+    { "afs_discon_lock", (char *)&afs_discon_lock},
+    { "afs_DDirtyVCListLock", (char *)&afs_DDirtyVCListLock},
+#endif
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;

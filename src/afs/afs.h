@@ -570,6 +570,27 @@ struct SimpleLocks {
 #define VRevokeWait   0x1
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
+#if defined(AFS_DISCON_ENV)
+
+/* Dirty disconnected vcache flags. */
+#define VDisconSetTime		0x00000001  	/* set time. */
+#define VDisconSetMode		0x00000002	/* set mode. */
+/* XXX: to be continued ? */
+#define VDisconTrunc		0x00000020	/* truncate file. */
+#define VDisconSetAttrMask	0x0000003F	/* Masks for setattr ops. */
+#define VDisconWriteClose	0x00000400	/* Write op on file close. */
+#define VDisconWriteFlush	0x00000800	/* Write op on normal fsync/flush. */
+#define VDisconWriteOsiFlush	0x00001000	/* Write op on osi flush. */
+
+#define VDisconShadowed		0x00002000	/* Shadowed dir. */
+#define VDisconRemove		0x00004000	/* Remove vnop. */
+#define VDisconCreate		0x00008000	/* Create vnop. */
+#define VDisconRename		0x00010000	/* Rename vnop. */
+#define VDisconRenameSameDir	0x00020000	/* Rename in same dir. */
+
+/*... to be continued ...  */
+#endif
+
 #define	CPSIZE	    2
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define vrefCount   v->v_usecount
@@ -634,6 +655,20 @@ struct vcache {
 #endif
     struct vcache *hnext;	/* Hash next */
     struct afs_q vhashq;	/* Hashed per-volume list */
+
+#if defined(AFS_DISCON_ENV)
+    /*! Next element in afs_DDirtyVCList. Lock it with afs_DDirtyVCListLock. */
+    struct vcache *ddirty_next;
+    /*! Disconnected flags for this vcache element. */
+    uint32_t ddirty_flags;
+    /*! Shadow vnode + unique keep the shadow dir location. */
+    afs_uint32 shVnode;
+    afs_uint32 shUnique;
+    /*! The old parent FID for renamed vnodes. */
+    afs_uint32 oldVnode;
+    afs_uint32 oldUnique;
+#endif
+
     struct VenusFid fid;
     struct mstat {
 	afs_size_t Length;

@@ -2403,7 +2403,7 @@ CopyAndSalvage(register struct DirSummary *dir)
     dir->dirHandle = newdir;
 }
 
-void
+int
 JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	   Unique unique)
 {
@@ -2421,7 +2421,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    CopyOnWrite(dir);
 	    assert(Delete(&dir->dirHandle, name) == 0);
 	}
-	return;
+	return 0;
     }
 #ifdef AFS_AIX_ENV
 #ifndef AFS_NAMEI_ENV
@@ -2435,7 +2435,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    CopyOnWrite(dir);
 	    assert(Delete(&dir->dirHandle, name) == 0);
 	}
-	return;
+	return 0;
     }
 #endif
 #endif
@@ -2453,7 +2453,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 		CopyOnWrite(dir);
 		assert(Delete(&dir->dirHandle, name) == 0);
 	    }
-	    return;
+	    return 0;
 	}
     }
 
@@ -2468,7 +2468,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	     * entry. Otherwise, it will get created in the next 
 	     * salvage and deleted again here. So Just skip it.
 	     */
-	    return;
+	    return 0;
 	}
 
 	todelete = ((!vnodeEssence->unique || dirOrphaned) ? 1 : 0);
@@ -2486,7 +2486,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 		assert(Create(&dir->dirHandle, name, &fid) == 0);
 	}
 	if (todelete)
-	    return;		/* no need to continue */
+	    return 0;		/* no need to continue */
     }
 
     if (strcmp(name, ".") == 0) {
@@ -2543,7 +2543,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	}
 	vnodeEssence->claimed = 0;	/* Not claimed: Orphaned */
 	vnodeEssence->todelete = 1;	/* Will later delete vnode and decr inode */
-	return;
+	return 0;
     } else {
 	if (ShowSuid && (vnodeEssence->modeBits & 06000))
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
@@ -2560,14 +2560,14 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    if (fdP == NULL) {
 		Log("ERROR %s could not open mount point vnode %u\n", dir->vname, vnodeNumber);
 		IH_RELEASE(ihP);
-		return;
+		return 0;
 	    }
 	    size = FDH_SIZE(fdP);
 	    if (size < 0) {
 		Log("ERROR %s mount point has invalid size %d, vnode %u\n", dir->vname, size, vnodeNumber);
 		FDH_REALLYCLOSE(fdP);
 		IH_RELEASE(ihP);
-		return;
+		return 0;
 	    }
 	
 	    if (size > 1024)
@@ -2634,13 +2634,14 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 		    CopyOnWrite(dir);
 		    assert(Delete(&dir->dirHandle, name) == 0);
 		}
-		return;
+		return 0;
 	    }
 	}
 	/* This directory claims the vnode */
 	vnodeEssence->claimed = 1;
     }
     vnodeEssence->count--;
+    return 0;
 }
 
 void

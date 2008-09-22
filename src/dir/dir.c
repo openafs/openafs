@@ -85,6 +85,11 @@ extern void *DNew();
 #define	LookupOffset	afs_dir_LookupOffset
 #define	EnumerateDir	afs_dir_EnumerateDir
 #define	IsEmpty		afs_dir_IsEmpty
+
+#if defined(AFS_DISCON_ENV)
+#define ChangeFid	afs_dir_ChangeFid
+#endif
+
 #else /* KERNEL */
 
 # ifdef HAVE_UNISTD_H
@@ -389,15 +394,19 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
 int
 EnumerateDir(void *dir, int (*hookproc) (), void *hook)
 {
-    /* Enumerate the contents of a directory. */
+    /* Enumerate the contents of a directory.
+     * Break when hook function returns non 0.
+     */
     register int i;
     int num;
     register struct DirHeader *dhp;
     register struct DirEntry *ep;
+    int code = 0;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
 	return EIO;		/* first page should be there */
+
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
@@ -413,10 +422,13 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
 		}
 		break;
 	    }
+
 	    num = ntohs(ep->next);
-	    (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
+	    code = (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
 			 ntohl(ep->fid.vunique));
 	    DRelease(ep, 0);
+	    if (code)
+	    	break;
 	}
     }
     DRelease(dhp, 0);
@@ -530,3 +542,44 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	}
     }
 }
+
+#if defined(AFS_DISCON_ENV)
+/*!
+ * Change an entry fid.
+ *
+ * \param dir
+ * \param entry The entry name.
+ * \param old_fid The old find in MKFid format (host order).
+ * It can be omitted if you don't need a safety check...
+ * \param new_fid The new find in MKFid format (host order).
+ */
+int ChangeFid(void *dir,
+		char *entry,
+		afs_uint32 *old_fid,
+		afs_uint32 *new_fid)
+{
+    struct DirEntry *firstitem;
+    unsigned short *previtem;
+    struct MKFid *fid_old = (struct MKFid *) old_fid;
+    struct MKFid *fid_new = (struct MKFid *) new_fid;
+
+    /* Find entry. */
+    firstitem = FindItem(dir, entry, &previtem);
+    if (firstitem == 0) {
+	return ENOENT;
+    }
+    DRelease(previtem, 1);
+    /* Replace fid. */
+    if (!old_fid ||
+    	((htonl(fid_old->vnode) == firstitem->fid.vnode) &&
+    	(htonl(fid_old->vunique) == firstitem->fid.vunique))) {
+
+	firstitem->fid.vnode = htonl(fid_new->vnode);
+	firstitem->fid.vunique = htonl(fid_new->vunique);
+    }
+
+    DRelease(firstitem, 1);
+
+    return 0;
+}
+#endif

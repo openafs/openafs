@@ -256,7 +256,7 @@ extern void afs_MaybeWakeupTruncateDaemon(void);
 extern void afs_CacheTruncateDaemon(void);
 extern void afs_AdjustSize(register struct dcache *adc,
 			   register afs_int32 newSize);
-extern int afs_HashOutDCache(struct dcache *adc);
+extern int afs_HashOutDCache(struct dcache *adc, int zap);
 extern int afs_MaybeFreeDiscardedDCache(void);
 extern int afs_RefDCache(struct dcache *adc);
 extern void afs_TryToSmush(register struct vcache *avc,

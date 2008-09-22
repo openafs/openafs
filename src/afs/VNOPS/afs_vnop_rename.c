@@ -37,7 +37,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	  char *aname2, struct AFS_UCRED *acred, struct vrequest *areq)
 {
     register struct conn *tc;
-    register afs_int32 code;
+    register afs_int32 code = 0;
     afs_int32 returnCode;
     int oneDir, doLocally;
     afs_size_t offset, len;
@@ -83,7 +83,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    goto done;
 	}
 	
-	if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+	if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
 	    code = ENETDOWN;
 	    goto done;
 	}
@@ -167,24 +167,90 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	goto done;
     }
 
-    do {
-	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
-	if (tc) {
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_Rename(tc->id, (struct AFSFid *)&aodp->fid.Fid, aname1,
-			     (struct AFSFid *)&andp->fid.Fid, aname2,
-			     &OutOldDirStatus, &OutNewDirStatus, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	} else
-	    code = -1;
+    if (!AFS_IS_DISCON_RW) {
+    	/* Connected. */
+	do {
+	    tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
+	    if (tc) {
+	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
+	    	RX_AFS_GUNLOCK();
+	    	code =
+		    RXAFS_Rename(tc->id,
+		    			(struct AFSFid *)&aodp->fid.Fid,
+					aname1,
+					(struct AFSFid *)&andp->fid.Fid,
+					aname2,
+					&OutOldDirStatus,
+					&OutNewDirStatus,
+					&tsync);
+	        RX_AFS_GLOCK();
+	        XSTATS_END_TIME;
+	    } else
+	    	code = -1;
 
-    } while (afs_Analyze
+	} while (afs_Analyze
 	     (tc, code, &andp->fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
 	      SHARED_LOCK, NULL));
 
+    } else {
+#if defined(AFS_DISCON_ENV)
+	/* Disconnected. */
+
+	/* Seek moved file vcache. */
+	fileFid.Cell = aodp->fid.Cell;
+	fileFid.Fid.Volume = aodp->fid.Fid.Volume;
+	ObtainSharedLock(&afs_xvcache, 754);
+	tvc = afs_FindVCache(&fileFid, 0 , 1);
+	ReleaseSharedLock(&afs_xvcache);
+
+	if (tvc) {
+	    if (!(tvc->ddirty_flags & VDisconRename)) {
+		/* We only care about vnodes that haven't been
+		 * renamed. Those that have been renamed at least once
+		 * already have an asociated shadow dir and the flags set
+		 * for the first old location, which is what interests us
+		 * when reconnecting.
+		 */
+
+	    	if (!(aodp->ddirty_flags & VDisconShadowed) &&
+			!(tvc->ddirty_flags & VDisconCreate)) {
+	    	    /*
+		     * Make shadow copy of parent dir only.
+		     * Files that are created locally and renamed,
+		     * don't need a shadow dir, so skip this step.
+		     */
+		    if (tdc1)
+	    	    	ReleaseWriteLock(&tdc1->lock);
+    	    	    afs_MakeShadowDir(aodp);
+	    	    if (tdc1)
+	    	    	ObtainWriteLock(&tdc1->lock, 753);
+	        }
+
+		if (!tvc->ddirty_flags ||
+			(tvc->ddirty_flags == VDisconShadowed)) {
+	    	    /* Add in dirty list.*/
+	 	    ObtainWriteLock(&afs_DDirtyVCListLock, 751);
+	    	    AFS_DISCON_ADD_DIRTY(tvc);
+	    	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+		}
+
+	    	ObtainWriteLock(&tvc->lock, 750);
+	    	/* Save old parent dir fid so it will be searchable
+	     	 * in the shadow dir.
+	     	 */
+    	    	tvc->oldVnode = aodp->fid.Fid.Vnode;
+	    	tvc->oldUnique = aodp->fid.Fid.Unique;
+	    	/* Set discon state flag. */
+	    	tvc->ddirty_flags |= VDisconRename;
+	    	if (oneDir)
+		    tvc->ddirty_flags |= VDisconRenameSameDir;
+	    	ReleaseWriteLock(&tvc->lock);
+	    }			/* if not previously renamed */
+	} else {
+	    code = ENOENT;
+	}			/* if (tvc) */
+#endif
+    }				/* if !(AFS_IS_DISCON_RW)*/
     returnCode = code;		/* remember for later */
 
     /* Now we try to do things locally.  This is really loathsome code. */
@@ -194,28 +260,31 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	 * in the cache; if it isn't, we won't do the update locally.  */
 	/* see if version numbers increased properly */
 	doLocally = 1;
-	if (oneDir) {
-	    /* number increases by 1 for whole rename operation */
-	    if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1)) {
-		doLocally = 0;
+	if (!AFS_IS_DISCON_RW) {
+	    if (oneDir) {
+	    	/* number increases by 1 for whole rename operation */
+	    	if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1)) {
+		    doLocally = 0;
+	    	}
+	    } else {
+	    	/* two separate dirs, each increasing by 1 */
+	    	if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1))
+		    doLocally = 0;
+	    	if (!afs_LocalHero(andp, tdc2, &OutNewDirStatus, 1))
+		    doLocally = 0;
+	    	if (!doLocally) {
+		    if (tdc1) {
+		    	ZapDCE(tdc1);
+		    	DZap(tdc1);
+		    }
+		    if (tdc2) {
+		    	ZapDCE(tdc2);
+		    	DZap(tdc2);
+		    }
+	        }
 	    }
-	} else {
-	    /* two separate dirs, each increasing by 1 */
-	    if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1))
-		doLocally = 0;
-	    if (!afs_LocalHero(andp, tdc2, &OutNewDirStatus, 1))
-		doLocally = 0;
-	    if (!doLocally) {
-		if (tdc1) {
-		    ZapDCE(tdc1);
-		    DZap(tdc1);
-		}
-		if (tdc2) {
-		    ZapDCE(tdc2);
-		    DZap(tdc2);
-		}
-	    }
-	}
+	}			/* if (!AFS_IS_DISCON_RW) */
+
 	/* now really do the work */
 	if (doLocally) {
 	    /* first lookup the fid of the dude we're moving */
@@ -247,9 +316,11 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	}
 
 	/* update dir link counts */
-	aodp->m.LinkCount = OutOldDirStatus.LinkCount;
+	aodp->m.LinkCount = AFS_IS_DISCON_RW ?
+			(aodp->m.LinkCount - 1):OutOldDirStatus.LinkCount;
 	if (!oneDir)
-	    andp->m.LinkCount = OutNewDirStatus.LinkCount;
+	    andp->m.LinkCount = AFS_IS_DISCON_RW ?
+	    		(andp->m.LinkCount + 1):OutNewDirStatus.LinkCount;
 
     } else {			/* operation failed (code != 0) */
 	if (code < 0) {
@@ -280,7 +351,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     ReleaseWriteLock(&aodp->lock);
     if (!oneDir)
 	ReleaseWriteLock(&andp->lock);
-
     if (returnCode) {
 	code = returnCode;
 	goto done;
@@ -294,6 +364,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
      * the data as having an "unknown" version (effectively discarding the ".."
      * entry */
     if (unlinkFid.Fid.Vnode) {
+
 	unlinkFid.Fid.Volume = aodp->fid.Fid.Volume;
 	unlinkFid.Cell = aodp->fid.Cell;
 	tvc = NULL;
@@ -342,15 +413,28 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    ObtainWriteLock(&tvc->lock, 152);
 	    tdc1 = afs_FindDCache(tvc, (afs_size_t) 0);
 	    if (tdc1) {
-		ObtainWriteLock(&tdc1->lock, 648);
-		ZapDCE(tdc1);	/* mark as unknown */
-		DZap(tdc1);
-		ReleaseWriteLock(&tdc1->lock);
-		afs_PutDCache(tdc1);	/* put it back */
+		if (AFS_IS_DISCON_RW) {
+#if defined(AFS_DISCON_ENV)
+		    /* If disconnected, we need to fix (not discard) the "..".*/
+		    afs_dir_ChangeFid(tdc1,
+		    	"..",
+		    	&aodp->fid.Fid.Vnode,
+			&andp->fid.Fid.Vnode);
+#endif
+		} else {
+		    ObtainWriteLock(&tdc1->lock, 648);
+		    ZapDCE(tdc1);	/* mark as unknown */
+		    DZap(tdc1);
+		    ReleaseWriteLock(&tdc1->lock);
+		    afs_PutDCache(tdc1);	/* put it back */
+		}
 	    }
 	    osi_dnlc_remove(tvc, "..", 0);
 	    ReleaseWriteLock(&tvc->lock);
 	    afs_PutVCache(tvc);
+	} else if (AFS_IS_DISCON_RW && tvc && (vType(tvc) == VREG)) {
+	    tvc->parentVnode = andp->fid.Fid.Vnode;
+	    tvc->parentUnique = andp->fid.Fid.Unique;
 	} else if (tvc) {
 	    /* True we shouldn't come here since tvc SHOULD be a dir, but we
 	     * 'syntactically' need to unless  we change the 'if' above...

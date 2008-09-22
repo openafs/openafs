@@ -64,24 +64,46 @@ afs_StoreOnLastReference(register struct vcache *avc,
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData = NULL;
     }
-    /* Now, send the file back.  Used to require 0 writers left, but now do
-     * it on every close for write, since two closes in a row are harmless
-     * since first will clean all chunks, and second will be noop.  Note that
-     * this will also save confusion when someone keeps a file open 
-     * inadvertently, since with old system, writes to the server would never
-     * happen again. 
-     */
-    code = afs_StoreAllSegments(avc, treq, AFS_LASTSTORE /*!sync-to-disk */ );
-    /*
-     * We have to do these after the above store in done: in some systems like
-     * aix they'll need to flush all the vm dirty pages to the disk via the
-     * strategy routine. During that all procedure (done under no avc locks)
-     * opens, refcounts would be zero, since it didn't reach the afs_{rd,wr}
-     * routines which means the vcache is a perfect candidate for flushing!
-     */
+
+    if (!AFS_IS_DISCONNECTED) {
+	/* Connected. */
+
+	/* Now, send the file back.  Used to require 0 writers left, but now do
+	 * it on every close for write, since two closes in a row are harmless
+	 * since first will clean all chunks, and second will be noop.  Note that
+	 * this will also save confusion when someone keeps a file open
+	 * inadvertently, since with old system, writes to the server would never
+	 * happen again.
+	 */
+	code = afs_StoreAllSegments(avc, treq, AFS_LASTSTORE /*!sync-to-disk */ );
+	/*
+	 * We have to do these after the above store in done: in some systems
+	 * like aix they'll need to flush all the vm dirty pages to the disk via
+	 * the strategy routine. During that all procedure (done under no avc
+	 * locks) opens, refcounts would be zero, since it didn't reach the
+	 * afs_{rd,wr} routines which means the vcache is a perfect candidate
+	 * for flushing!
+	 */
+
+#ifdef AFS_DISCON_ENV
+     } else if (AFS_IS_DISCON_RW) {
+	/* Disconnected. */
+
+	if (!avc->ddirty_flags ||
+		(avc->ddirty_flags == VDisconShadowed)) {
+  	    /* Add to disconnected dirty list. */
+	    AFS_DISCON_ADD_DIRTY(avc);
+  	}
+
+	/* Set disconnected write flag. */
+	avc->ddirty_flags |= VDisconWriteClose;
+#endif
+    }		/* if not disconnected */
+
 #if defined(AFS_SGI_ENV)
     osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
 #endif
+
     avc->opens--;
     avc->execsOrWriters--;
     return code;
@@ -382,7 +404,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (avc->vc_error)
 	return avc->vc_error;
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)
 	return ENETDOWN;
     
     startDate = osi_Time();
@@ -743,6 +765,7 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
     /* otherwise, call afs_StoreDCache (later try to do this async, if possible) */
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+
 #if	defined(AFS_SUN5_ENV)
     code = afs_StoreAllSegments(avc, areq, AFS_ASYNC | AFS_VMSYNC_INVAL);
 #else
@@ -872,6 +895,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
 	return code;
     }
+    AFS_DISCON_LOCK();
 #ifdef	AFS_SUN5_ENV
     if (avc->flockCount) {
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
@@ -880,6 +904,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #if defined(AFS_SGI_ENV)
     if (!lastclose) {
 	afs_PutFakeStat(&fakestat);
+        AFS_DISCON_UNLOCK();
 	return 0;
     }
     /* unlock any locks for pid - could be wrong for child .. */
@@ -902,6 +927,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
 	afs_PutFakeStat(&fakestat);
+	AFS_DISCON_UNLOCK();
 	return 0;
     }
 #else /* AFS_SGI_ENV */
@@ -914,7 +940,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     }
 #endif /* AFS_SGI_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
-	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred))) {
+	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
 	    code = afs_StoreOnLastReference(avc, &treq);
@@ -955,6 +981,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #ifdef AFS_AIX32_ENV
 	    osi_ReleaseVM(avc, acred);
 #endif
+	    printf("avc->vc_error=%d\n", avc->vc_error);
 	    code = avc->vc_error;
 	    avc->vc_error = 0;
 	}
@@ -1004,6 +1031,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestat);
     code = afs_CheckCode(code, &treq, 5);
     return code;
@@ -1042,7 +1070,7 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
-
+    AFS_DISCON_LOCK();
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
     if (flag & FSYNC_INVAL)
@@ -1052,11 +1080,37 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
     ObtainSharedLock(&avc->lock, 18);
     code = 0;
     if (avc->execsOrWriters > 0) {
-	/* put the file back */
-	UpgradeSToWLock(&avc->lock, 41);
-	code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
-	ConvertWToSLock(&avc->lock);
-    }
+
+    	if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
+		/* Your average flush. */
+
+		/* put the file back */
+		UpgradeSToWLock(&avc->lock, 41);
+		code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
+		ConvertWToSLock(&avc->lock);
+
+#if defined(AFS_DISCON_ENV)
+	} else {
+	    /* Disconnected flush. */
+	    ObtainWriteLock(&afs_DDirtyVCListLock, 708);
+
+	    if (!avc->ddirty_flags ||
+	    	(avc->ddirty_flags == VDisconShadowed)) {
+
+		/* Add to disconnected dirty list. */
+		AFS_DISCON_ADD_DIRTY(avc);
+	    }
+
+	    UpgradeSToWLock(&avc->lock, 711);
+	    /* Set disconnected write flag. */
+	    avc->ddirty_flags |= VDisconWriteFlush;
+	    ConvertWToSLock(&avc->lock);
+
+	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+#endif
+    	}		/* if not disconnected */
+    }			/* if (avc->execsOrWriters > 0) */
+
 #if defined(AFS_SGI_ENV)
     AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
     if (code == VNOVNODE) {
@@ -1066,7 +1120,7 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
 	code = ENOENT;
     }
 #endif
-
+    AFS_DISCON_UNLOCK();
     code = afs_CheckCode(code, &treq, 33);
     ReleaseSharedLock(&avc->lock);
     return code;

@@ -40,6 +40,7 @@ extern struct vcache *afs_globalVp;
 extern struct vfs *afs_globalVFS;
 #endif
 
+
 /* copy out attributes from cache entry */
 int
 afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
@@ -509,7 +510,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	}
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
         goto done;
     }
@@ -542,6 +543,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock, 128);
 	avc->states |= CDirty;
+
 	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
@@ -549,12 +551,18 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    astat.Mask |= AFS_SETMODTIME;
 	    astat.ClientModTime = osi_Time();
 	}
+
 	if (code == 0) {
 	    if (((avc->execsOrWriters <= 0) && (avc->states & CCreating) == 0)
 		|| (avc->execsOrWriters == 1 && AFS_NFSXLATORREQ(acred))) {
-		code = afs_StoreAllSegments(avc, &treq, AFS_ASYNC);
-		if (!code)
-		    avc->states &= ~CDirty;
+
+		/* Store files now if not disconnected. */
+		/* XXX: AFS_IS_DISCON_RW handled. */
+		if (!AFS_IS_DISCONNECTED) {
+			code = afs_StoreAllSegments(avc, &treq, AFS_ASYNC);
+			if (!code)
+		    		avc->states &= ~CDirty;
+		}
 	    }
 	} else
 	    avc->states &= ~CDirty;
@@ -579,10 +587,17 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	        osi_dnlc_purgedp(avc);
 	    /* error?  erase any changes we made to vcache entry */
         }
+
+#if defined(AFS_DISCON_ENV)
     } else {
-        /* Must be logging - but not implemented yet ... */
-        code = ENETDOWN;
-    }
+
+	ObtainSharedLock(&avc->lock, 712);
+	/* Write changes locally. */
+	code = afs_WriteVCacheDiscon(avc, &astat, attrs);
+	ReleaseSharedLock(&avc->lock);
+#endif
+    }		/* if (!AFS_IS_DISCONNECTED) */
+
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters--;

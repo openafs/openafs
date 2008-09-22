@@ -320,7 +320,9 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
     afs_int32 markeddown;
 
  
-    if (AFS_IS_DISCONNECTED) {
+ 
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
+	/* On reconnection, act as connected. XXX: for now.... */
         /* SXW - This may get very tired after a while. We should try and
 	 *       intercept all RPCs before they get here ... */
 	/*printf("afs_Analyze: disconnected\n");*/

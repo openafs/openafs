@@ -44,6 +44,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     register struct conn *tc;
     struct VenusFid newFid;
     register struct dcache *tdc;
+    struct dcache *new_dc;
     afs_size_t offset, len;
     register struct vcache *tvc;
     struct AFSStoreStatus InStatus;
@@ -90,55 +91,81 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
    
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)
 	/*printf("Network is down in afs_mkdir\n");*/
 	code = ENETDOWN;
-    }
-
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
     InStatus.Group = (afs_int32) acred->cr_gid;
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 153);
-    do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
-	if (tc) {
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
-	    now = osi_Time();
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_MakeDir(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
-			      &InStatus, (struct AFSFid *)&newFid.Fid,
-			      &OutFidStatus, &OutDirStatus, &CallBack,
-			      &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	    CallBack.ExpirationTime += now;
-	    /* DON'T forget to Set the callback value... */
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
-	      SHARED_LOCK, NULL));
 
-    if (code) {
-	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 490);
-	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+    if (!AFS_IS_DISCON_RW) {
+
+    	do {
+	    tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	    if (tc) {
+	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
+	    	now = osi_Time();
+	    	RX_AFS_GUNLOCK();
+	    	code =
+		    RXAFS_MakeDir(tc->id,
+		    		(struct AFSFid *)&adp->fid.Fid,
+				aname,
+				&InStatus,
+				(struct AFSFid *)&newFid.Fid,
+				&OutFidStatus,
+				&OutDirStatus,
+				&CallBack,
+				&tsync);
+	    	RX_AFS_GLOCK();
+	    	XSTATS_END_TIME;
+	    	CallBack.ExpirationTime += now;
+	    	/* DON'T forget to Set the callback value... */
+	    } else
+	    	code = -1;
+    	} while (afs_Analyze
+		    (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
+		     SHARED_LOCK, NULL));
+
+    	if (code) {
+	    if (code < 0) {
+	    	ObtainWriteLock(&afs_xcbhash, 490);
+	    	afs_DequeueCallback(adp);
+	    	adp->states &= ~CStatd;
+	    	ReleaseWriteLock(&afs_xcbhash);
+	    	osi_dnlc_purgedp(adp);
+	    }
+	    ReleaseWriteLock(&adp->lock);
+	    if (tdc)
+	    	afs_PutDCache(tdc);
+	    goto done;
+        }
+
+    } else {
+#if defined(AFS_DISCON_ENV)
+    	/* Disconnected. */
+
+	/* We have the dir entry now, we can use it while disconnected. */
+	if (adp->mvid == NULL) {
+	    /* If not mount point, generate a new fid. */
+	    newFid.Cell = adp->fid.Cell;
+    	    newFid.Fid.Volume = adp->fid.Fid.Volume;
+	    afs_GenFakeFid(&newFid, VDIR);
 	}
-	ReleaseWriteLock(&adp->lock);
-	if (tdc)
-	    afs_PutDCache(tdc);
-	goto done;
-    }
+    	/* XXX: If mount point???*/
+
+	/* Operations with the actual dir's cache entry are further
+	 * down, where the dir entry gets created.
+	 */
+#endif
+    }			/* if (!AFS_IS_DISCON_RW) */
+
     /* otherwise, we should see if we can make the change to the dir locally */
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 632);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 294);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
@@ -152,17 +179,77 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
-    adp->m.LinkCount = OutDirStatus.LinkCount;
+
+    if (AFS_IS_DISCON_RW)
+	/* We will have to settle with the local link count. */
+	adp->m.LinkCount++;
+    else
+	adp->m.LinkCount = OutDirStatus.LinkCount;
     newFid.Cell = adp->fid.Cell;
     newFid.Fid.Volume = adp->fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
-    /* now we're done with parent dir, create the real dir's cache entry */
-    tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
-    if (tvc) {
-	code = 0;
-	*avcp = tvc;
-    } else
-	code = ENOENT;
+    if (AFS_IS_DISCON_RW) {
+#if defined(AFS_DISCON_ENV)
+    	/* When disconnected, we have to create the full dir here. */
+
+	/* Generate a new vcache and fill it. */
+	tvc = afs_NewVCache(&newFid, NULL);
+	if (tvc) {
+	    code = 0;
+	    *avcp = tvc;
+	} else {
+	    code = ENOENT;
+	    goto done;
+	}
+
+	ObtainWriteLock(&tvc->lock, 738);
+	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VDIR);
+	ReleaseWriteLock(&tvc->lock);
+
+	/* And now make an empty dir, containing . and .. : */
+	/* Get a new dcache for it first. */
+	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, &treq, &offset, &len, 1);
+	if (!new_dc) {
+	    printf("afs_mkdir: can't get new dcache for dir.\n");
+	    code = ENOENT;
+	    goto done;
+	}
+
+	ObtainWriteLock(&afs_xdcache, 739);
+	code = afs_dir_MakeDir(new_dc,
+				(afs_int32 *) &newFid.Fid,
+				(afs_int32) &adp->fid.Fid);
+	ReleaseWriteLock(&afs_xdcache);
+	if (code)
+	    printf("afs_mkdir: afs_dirMakeDir code = %u\n", code);
+
+	/* Add to dirty list. */
+	if (!tvc->ddirty_flags ||
+		(tvc->ddirty_flags == VDisconShadowed)) {
+
+	    /* Put it in the list only if it's fresh. */
+	    ObtainWriteLock(&afs_DDirtyVCListLock, 730);
+	    AFS_DISCON_ADD_DIRTY(tvc);
+	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+	}
+
+	ObtainWriteLock(&tvc->lock, 731);
+	/* Update length in the vcache. */
+	tvc->m.Length = new_dc->f.chunkBytes;
+	/* Set create flag. */
+	tvc->ddirty_flags |= VDisconCreate;
+	ReleaseWriteLock(&tvc->lock);
+#endif				/* #ifdef AFS_DISCON_ENV */
+    } else {
+    	/* now we're done with parent dir, create the real dir's cache entry */
+    	tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
+    	if (tvc) {
+	    code = 0;
+	    *avcp = tvc;
+    	} else
+	    code = ENOENT;
+    }				/* if (AFS_DISCON_RW) */
+
   done:
     AFS_DISCON_UNLOCK();
   done3:
@@ -226,11 +313,12 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	goto done;
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+   if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
+    	/* Disconnected read only mode. */
         code = ENETDOWN;
         goto done;
     }
-    
+
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 154);
     if (tdc)
@@ -256,42 +344,117 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	}
     }
 
-    do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
-	if (tc) {
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_RemoveDir(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
-				&OutDirStatus, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
-	      SHARED_LOCK, NULL));
+    if (!AFS_IS_DISCON_RW) {
+	/* Not disconnected, can connect to server. */
+    	do {
+	    tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	    if (tc) {
+	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
+	    	RX_AFS_GUNLOCK();
+	    	code =
+		    RXAFS_RemoveDir(tc->id,
+		    		(struct AFSFid *)&adp->fid.Fid,
+				aname,
+				&OutDirStatus,
+				&tsync);
+	    	RX_AFS_GLOCK();
+	    	XSTATS_END_TIME;
+	    } else
+	    	code = -1;
+    	} while (afs_Analyze
+	         (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
+	         SHARED_LOCK, NULL));
 
-    if (code) {
-	if (tdc) {
+    	if (code) {
+	    if (tdc) {
+	    	ReleaseSharedLock(&tdc->lock);
+	    	afs_PutDCache(tdc);
+	    }
+
+	    if (code < 0) {
+	    	ObtainWriteLock(&afs_xcbhash, 491);
+	    	afs_DequeueCallback(adp);
+	    	adp->states &= ~CStatd;
+	    	ReleaseWriteLock(&afs_xcbhash);
+	    	osi_dnlc_purgedp(adp);
+	    }
+	    ReleaseWriteLock(&adp->lock);
+	    goto done;
+    	}
+
+    	/* here if rpc worked; update the in-core link count */
+    	adp->m.LinkCount = OutDirStatus.LinkCount;
+
+    } else {
+#if defined(AFS_DISCON_ENV)
+    	/* Disconnected. */
+
+	if (!tvc) {
+	    /* Find the vcache. */
+	    struct VenusFid tfid;
+
+	    tfid.Cell = adp->fid.Cell;
+	    tfid.Fid.Volume = adp->fid.Fid.Volume;
+	    code = afs_dir_Lookup(tdc, aname, &tfid.Fid);
+
+	    ObtainSharedLock(&afs_xvcache, 764);
+	    tvc = afs_FindVCache(&tfid, 0, 1 /* do xstats */ );
+	    ReleaseSharedLock(&afs_xvcache);
+
+	    if (!tvc) {
+		printf("afs_rmdir: Can't find dir's vcache!\n");
+		ReleaseSharedLock(&tdc->lock);
+		afs_PutDCache(tdc);	/* drop ref count */
+    		ReleaseWriteLock(&adp->lock);
+	    	goto done;
+	    }
+	}
+
+	if (tvc->m.LinkCount > 2) {
+	    /* This dir contains more than . and .., thus it can't be
+	     * deleted.
+	     */
 	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
+	    code = ENOTEMPTY;
+	    goto done;
 	}
-	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 491);
-	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+
+    	/* Make a shadow copy of the parent dir (if not done already).
+	 * There's no need to make a shadow copy of the deleted directory
+	 * because a dir must be empty in order to be rmdir'ed.
+	 * If the deleted dir has no shadow, it means that it was empty.
+	 */
+	if (!(adp->ddirty_flags & VDisconShadowed)) {
+	    /* If tdc available, then it is locked.
+	     * afs_MakeShadowDir unlocks it.
+	     */
+	    if (tdc)
+	    	ReleaseSharedLock(&tdc->lock);
+	    afs_MakeShadowDir(adp);
+	    if (tdc)
+	    	ObtainSharedLock(&tdc->lock, 732);
 	}
-	ReleaseWriteLock(&adp->lock);
-	goto done;
-    }
-    /* here if rpc worked; update the in-core link count */
-    adp->m.LinkCount = OutDirStatus.LinkCount;
+
+	if (!tvc->ddirty_flags ||
+		(tvc->ddirty_flags == VDisconShadowed)) {
+	    /* Put it in the list only if it's fresh or has only been shadowed. */
+	    ObtainWriteLock(&afs_DDirtyVCListLock, 728);
+	    AFS_DISCON_ADD_DIRTY(tvc);
+	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+	}
+
+	/* Now add the vcache to the dirty list. */
+	ObtainWriteLock(&tvc->lock, 727);
+	tvc->ddirty_flags |= VDisconRemove;
+	ReleaseWriteLock(&tvc->lock);
+
+	adp->m.LinkCount--;
+#endif				/* #ifdef AFS_DISCON_ENV */
+    }				/* if (!AFS_IS_DISCON_RW) */
+
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 634);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	code = afs_dir_Delete(tdc, aname);
 	if (code) {
@@ -314,7 +477,9 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	ObtainWriteLock(&tvc->lock, 155);
 	tvc->states &= ~CUnique;	/* For the dfs xlator */
 	ReleaseWriteLock(&tvc->lock);
-	afs_PutVCache(tvc);
+	/* If disconnected, keep this vcache around for resync. */
+	if (!AFS_IS_DISCON_RW)
+	    afs_PutVCache(tvc);
     }
     ReleaseWriteLock(&adp->lock);
     /* don't worry about link count since dirs can not be hardlinked */

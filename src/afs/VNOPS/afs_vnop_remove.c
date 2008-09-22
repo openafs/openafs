@@ -109,7 +109,6 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
-    
     if (!AFS_IS_DISCONNECTED) {
         do {
 	    tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
@@ -135,6 +134,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	}
+
 	if (tvc)
 	    afs_PutVCache(tvc);
 
@@ -151,7 +151,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     }
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 637);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	code = afs_dir_Delete(tdc, aname);
 	if (code) {
@@ -187,7 +187,11 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 #ifdef AFS_BOZONLOCK_ENV
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
-	afs_PutVCache(tvc);
+	/* Don't decrease refcount for this vcache if disconnected, we will
+	 * need it during replay.
+	 */
+	if (!AFS_IS_DISCON_RW)
+	    afs_PutVCache(tvc);
     }
     return (0);
 }
@@ -308,7 +312,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     }
 
     /* If we're running disconnected without logging, go no further... */
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
 #ifdef  AFS_OSF_ENV
         afs_PutVCache(tvc);
 #endif
@@ -319,6 +323,11 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
+#if defined(AFS_DISCON_ENV)
+    if (AFS_IS_DISCON_RW && !(adp->ddirty_flags & VDisconShadowed))
+	/* Make shadow copy of parent dir. */
+    	afs_MakeShadowDir(adp);
+#endif
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 638);
 
@@ -341,7 +350,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	tvc = osi_dnlc_lookup(adp, aname, WRITE_LOCK);
     }
     /* This should not be necessary since afs_lookup() has already
-     * done the work */
+     * done the work.
+     */
     if (!tvc)
 	if (tdc) {
 	    code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
@@ -361,6 +371,28 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 		}
 	    }
 	}
+
+#if defined(AFS_DISCON_ENV)
+    if (AFS_IS_DISCON_RW) {
+	/* Add removed file vcache to dirty list. */
+
+	if (!tvc->ddirty_flags ||
+		(tvc->ddirty_flags == VDisconShadowed)) {
+	    /* Add to list only if fresh. */
+	    ObtainWriteLock(&afs_DDirtyVCListLock, 725);
+	    AFS_DISCON_ADD_DIRTY(tvc);
+	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+	}
+
+	ObtainWriteLock(&tvc->lock, 726);
+	tvc->ddirty_flags |= VDisconRemove;
+	ReleaseWriteLock(&tvc->lock);
+
+	//ObtainWriteLock(&adp->lock, 751);
+	adp->m.LinkCount--;
+	//ReleaseWriteLock(&adp->lock);
+    }
+#endif
 
     if (tvc && osi_Active(tvc)) {
 	/* about to delete whole file, prefetch it first */
@@ -426,7 +458,11 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	}
 	if (tdc)
 	    afs_PutDCache(tdc);
-	afs_PutVCache(tvc);
+	/* Don't decrease refcount for this vcache if disconnected, we will
+	 * need it during replay.
+	 */
+	if (!AFS_IS_DISCON_RW)
+	    afs_PutVCache(tvc);
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }

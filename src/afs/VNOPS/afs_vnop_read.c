@@ -636,7 +636,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
 #ifdef AFS_DISCON_ENV
 	    if (!tdc) {
-		/*printf("Network down in afs_read");*/
+		printf("Network down in afs_read");
 	        error = ENETDOWN;
 	        break;
 	    }
