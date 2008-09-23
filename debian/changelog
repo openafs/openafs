@@ -1,5 +1,7 @@
 openafs (1.4.7.dfsg1-6) UNRELEASED; urgency=low
 
+  * Apply upstream patch to free /proc entries in the correct order.
+    Thanks, Marc Dionne.  (Closes: #493914)
   * Translation updates:
     - Swedish, thanks Martin Bagge.  (Closes: #493120)
 

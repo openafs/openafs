@@ -275,17 +275,17 @@ afsproc_exit(void)
     char path[64];
 #endif
 
-#if defined(EXPORTED_PROC_ROOT_FS)
-    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
-#else
-    sprintf(path, "fs/%s", PROC_FSDIRNAME);
-    remove_proc_entry(path, NULL);
-#endif
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
 #if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
     if (ioctl32_done)
 	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
+#endif
+#if defined(EXPORTED_PROC_ROOT_FS)
+    remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
+#else
+    sprintf(path, "fs/%s", PROC_FSDIRNAME);
+    remove_proc_entry(path, NULL);
 #endif
 }
 #endif
