@@ -1,4 +1,4 @@
-openafs (1.4.7.dfsg1-6) UNRELEASED; urgency=low
+openafs (1.4.7.dfsg1-6) unstable; urgency=low
 
   * Apply upstream patch to free /proc entries in the correct order.
     Thanks, Marc Dionne.  (Closes: #493914)
@@ -9,7 +9,7 @@ openafs (1.4.7.dfsg1-6) UNRELEASED; urgency=low
   * Translation updates:
     - Swedish, thanks Martin Bagge.  (Closes: #493120)
 
- -- Russ Allbery <rra@debian.org>  Thu, 31 Jul 2008 14:35:05 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 22 Sep 2008 19:07:02 -0700
 
 openafs (1.4.7.dfsg1-5) unstable; urgency=low
 
