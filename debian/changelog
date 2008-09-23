@@ -2,6 +2,10 @@ openafs (1.4.7.dfsg1-6) UNRELEASED; urgency=low
 
   * Apply upstream patch to free /proc entries in the correct order.
     Thanks, Marc Dionne.  (Closes: #493914)
+  * Apply upstream deltas to support 2.6.27 kernels and to stop using
+    COMMON_KERN_CFLAGS for all 2.6 kernels uniformly, which fixes
+    problems on amd64 with newer kernels.  Thanks, Björn Torkelsson.
+    (LP: #267504)
   * Translation updates:
     - Swedish, thanks Martin Bagge.  (Closes: #493120)
 
