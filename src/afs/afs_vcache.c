@@ -19,6 +19,7 @@
  * afs_FlushActiveVcaches
  * afs_VerifyVCache2
  * afs_WriteVCache
+ * afs_WriteVCacheDiscon
  * afs_SimpleVStat
  * afs_ProcessFS
  * TellALittleWhiteLie
@@ -26,6 +27,7 @@
  * afs_GetVCache
  * afs_LookupVCache
  * afs_GetRootVCache
+ * afs_UpdateStatus
  * afs_FetchStatus
  * afs_StuffVcache
  * afs_PutVCache
@@ -942,6 +944,10 @@ restart:
     tvc->Access = NULL;
     tvc->callback = serverp;    /* to minimize chance that clear
 				 * request is lost */
+#if defined(AFS_DISCON_ENV)
+    tvc->ddirty_next = NULL;
+    tvc->ddirty_flags = 0;
+#endif
 
     i = VCHash(afid);
     j = VCHashV(afid);
@@ -1507,7 +1513,6 @@ afs_WriteVCache(register struct vcache *avc,
     AFS_STATCNT(afs_WriteVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_WVCACHE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-
     do {
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
@@ -1547,6 +1552,98 @@ afs_WriteVCache(register struct vcache *avc,
     return code;
 
 }				/*afs_WriteVCache */
+#if defined(AFS_DISCON_ENV)
+
+/*!
+ * Store status info only locally, set the proper disconnection flags
+ * and add to dirty list.
+ *
+ * \param avc The vcache to be written locally.
+ * \param astatus Get attr fields from local store.
+ * \param attrs This one is only of the vs_size.
+ *
+ * \note Must be called with a shared lock on the vnode
+ */
+int afs_WriteVCacheDiscon(register struct vcache *avc,
+				register struct AFSStoreStatus *astatus,
+				struct vattr *attrs)
+{
+    afs_int32 code = 0;
+    afs_int32 flags = 0;
+
+    UpgradeSToWLock(&avc->lock, 700);
+
+    if (!astatus->Mask) {
+
+	return code;
+
+    } else {
+
+    	/* Set attributes. */
+    	if (astatus->Mask & AFS_SETMODTIME) {
+		avc->m.Date = astatus->ClientModTime;
+		flags |= VDisconSetTime;
+	}
+
+	if (astatus->Mask & AFS_SETOWNER) {
+		printf("Not allowed yet. \n");
+		//avc->m.Owner = astatus->Owner;
+	}
+
+	if (astatus->Mask & AFS_SETGROUP) {
+		printf("Not allowed yet. \n");
+		//avc->m.Group =  astatus->Group;
+	}
+
+	if (astatus->Mask & AFS_SETMODE) {
+		avc->m.Mode = astatus->UnixModeBits;
+
+#if 0 	/* XXX: Leaving this out, so it doesn't mess up the file type flag.*/
+
+		if (vType(avc) == VREG) {
+			avc->m.Mode |= S_IFREG;
+		} else if (vType(avc) == VDIR) {
+			avc->m.Mode |= S_IFDIR;
+		} else if (vType(avc) == VLNK) {
+			avc->m.Mode |= S_IFLNK;
+			if ((avc->m.Mode & 0111) == 0)
+				avc->mvstat = 1;
+		}
+#endif
+		flags |= VDisconSetMode;
+	 } 		/* if(astatus.Mask & AFS_SETMODE) */
+
+     } 			/* if (!astatus->Mask) */
+
+     if (attrs->va_size > 0) {
+     	/* XXX: Do I need more checks? */
+     	/* Truncation operation. */
+     	flags |= VDisconTrunc;
+     }
+
+    ObtainWriteLock(&afs_DDirtyVCListLock, 701);
+
+    if (flags) {
+    	/* Add to disconnected dirty list and set dirty flag.*/
+	if (!avc->ddirty_flags ||
+		(avc->ddirty_flags == VDisconShadowed)) {
+		/* Not in dirty list. */
+		AFS_DISCON_ADD_DIRTY(avc);
+	}
+
+	avc->ddirty_flags |= flags;
+    }
+
+    ReleaseWriteLock(&afs_DDirtyVCListLock);
+
+    /* XXX: How about the rest of the fields? */
+
+    ConvertWToSLock(&avc->lock);
+
+    return code;
+}
+
+#endif
 
 /*
  * afs_ProcessFS
@@ -1918,12 +2015,23 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    tvc->parentUnique = OutStatus.ParentUnique;
 	    code = 0;
 	} else {
-	    /* If we've got here and we're disconnected, then we can go
-	     * no further
-	     */
+
 	    if (AFS_IS_DISCONNECTED) {
-		code = ENETDOWN;
-		/*printf("Network is down in afs_GetCache");*/
+		if (AFS_IS_DISCON_RW) {
+		    /* Seek the vnode manually. */
+		    ObtainSharedLock(&afs_xvcache, 738);
+		    avc = afs_FindVCache(afid, NULL, 1);
+		    ReleaseSharedLock(&afs_xvcache);
+
+		    if (vType(avc) == VDIR)
+		    	OutStatus.FileType = Directory;
+
+		    code = tvc?0:ENOENT;
+		} else {
+		    /* Nothing to do otherwise...*/
+		    code = ENETDOWN;
+		    printf("Network is down in afs_GetCache");
+		}
 	    } else
 	        code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
 
@@ -2015,7 +2123,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     origCBs = afs_allCBs;	/* if anything changes, we don't have a cb */
     
     if (AFS_IS_DISCONNECTED) {
-	/*printf("Network is down in afs_LookupVcache\n");*/
+	printf("Network is down in afs_LookupVcache\n");
         code = ENETDOWN;
     } else 
         code =
@@ -2376,6 +2484,67 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 }
 
 
+/*!
+ * Update callback status and (sometimes) attributes of a vnode.
+ * Called after doing a fetch status RPC. Whilst disconnected, attributes
+ * shouldn't be written to the vcache here.
+ *
+ * \param avc
+ * \param afid
+ * \param areq
+ * \param Outsp Server status after rpc call.
+ * \param acb Callback for this vnode.
+ *
+ * \note The vcache must be write locked.
+ */
+void
+afs_UpdateStatus(struct vcache *avc,
+			struct VenusFid *afid,
+			struct vrequest *areq,
+			struct AFSFetchStatus *Outsp,
+			struct AFSCallBack *acb,
+			afs_uint32 start)
+{
+    struct volume *volp;
+
+    if (!AFS_IN_SYNC)
+	/* Dont write status in vcache if resyncing after a disconnection. */
+	afs_ProcessFS(avc, Outsp, areq);
+
+    volp = afs_GetVolume(afid, areq, READ_LOCK);
+    ObtainWriteLock(&afs_xcbhash, 469);
+    avc->states |= CTruth;
+    if (avc->callback /* check for race */ ) {
+	if (acb->ExpirationTime != 0) {
+	    avc->cbExpires = acb->ExpirationTime + start;
+	    avc->states |= CStatd;
+	    avc->states &= ~CBulkFetching;
+	    afs_QueueCallback(avc, CBHash(acb->ExpirationTime), volp);
+    	} else if (avc->states & CRO) {
+	    /* ordinary callback on a read-only volume -- AFS 3.2 style */
+	    avc->cbExpires = 3600 + start;
+	    avc->states |= CStatd;
+	    avc->states &= ~CBulkFetching;
+	    afs_QueueCallback(avc, CBHash(3600), volp);
+    	} else {
+	    afs_DequeueCallback(avc);
+	    avc->callback = NULL;
+	    avc->states &= ~(CStatd | CUnique);
+	    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+	    	osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
+    	}
+    } else {
+    	afs_DequeueCallback(avc);
+    	avc->callback = NULL;
+    	avc->states &= ~(CStatd | CUnique);
+    	if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+	    osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
+    }
+    ReleaseWriteLock(&afs_xcbhash);
+    if (volp)
+    	afs_PutVolume(volp, READ_LOCK);
+
+}
 
 /*
  * must be called with avc write-locked
@@ -2391,7 +2560,6 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
     register struct conn *tc;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
-    struct volume *volp;
     XSTATS_DECLS;
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
@@ -2415,38 +2583,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 	      SHARED_LOCK, NULL));
 
     if (!code) {
-	afs_ProcessFS(avc, Outsp, areq);
-	volp = afs_GetVolume(afid, areq, READ_LOCK);
-	ObtainWriteLock(&afs_xcbhash, 469);
-	avc->states |= CTruth;
-	if (avc->callback /* check for race */ ) {
-	    if (CallBack.ExpirationTime != 0) {
-		avc->cbExpires = CallBack.ExpirationTime + start;
-		avc->states |= CStatd;
-		avc->states &= ~CBulkFetching;
-		afs_QueueCallback(avc, CBHash(CallBack.ExpirationTime), volp);
-	    } else if (avc->states & CRO) {	/* ordinary callback on a read-only volume -- AFS 3.2 style */
-		avc->cbExpires = 3600 + start;
-		avc->states |= CStatd;
-		avc->states &= ~CBulkFetching;
-		afs_QueueCallback(avc, CBHash(3600), volp);
-	    } else {
-		afs_DequeueCallback(avc);
-		avc->callback = NULL;
-		avc->states &= ~(CStatd | CUnique);
-		if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
-		    osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
-	    }
-	} else {
-	    afs_DequeueCallback(avc);
-	    avc->callback = NULL;
-	    avc->states &= ~(CStatd | CUnique);
-	    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
-		osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
-	}
-	ReleaseWriteLock(&afs_xcbhash);
-	if (volp)
-	    afs_PutVolume(volp, READ_LOCK);
+	afs_UpdateStatus(avc, afid, areq, Outsp, &CallBack, start);
     } else {
 	/* used to undo the local callback, but that's too extreme.
 	 * There are plenty of good reasons that fetchstatus might return

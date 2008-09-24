@@ -159,7 +159,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	return NULL;
     }
     
-    if (AFS_IS_DISCONNECTED) {
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
         afs_warnuser("afs_ConnBySA: disconnected\n");
         ReleaseSharedLock(&afs_xconn);
         return NULL;
@@ -276,7 +276,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 
     AFS_STATCNT(afs_ConnByHost);
 
-    if (AFS_IS_DISCONNECTED) {
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
         afs_warnuser("afs_ConnByHost: disconnected\n");
         return NULL;
     }

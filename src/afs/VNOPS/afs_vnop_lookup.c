@@ -1744,7 +1744,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	    }
 	    code = ENOENT;
 	} else {
-	    /*printf("Network down in afs_lookup\n");*/
+	    printf("Network down in afs_lookup\n");
 	    code = ENETDOWN;
 	}
     }

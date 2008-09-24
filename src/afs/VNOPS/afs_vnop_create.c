@@ -122,7 +122,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
         goto done;
     }
@@ -260,11 +260,6 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
     }
     
-    if (AFS_IS_DISCONNECTED) {
-        /* XXX - If we get here, logging must be enabled (as we bypassed the
-         * earlier check. So - do that logging thang, then return */
-    }       
-
     /* if we create the file, we don't do any access checks, since
      * that's how O_CREAT is supposed to work */
     if (adp->states & CForeign) {
@@ -296,74 +291,88 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		attrs->va_mode = 0x1b6;	/* XXX default mode: rw-rw-rw XXX */
 	}
     }
-    InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
-    do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
-	if (tc) {
-	    hostp = tc->srvr->server;	/* remember for callback processing */
-	    now = osi_Time();
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_CreateFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+
+    if (!AFS_IS_DISCONNECTED) {
+	/* If not disconnected, connect to the server.*/
+
+    	InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
+    	do {
+	    tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	    if (tc) {
+	    	hostp = tc->srvr->server;	/* remember for callback processing */
+	    	now = osi_Time();
+	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
+	    	RX_AFS_GUNLOCK();
+	    	code =
+		    RXAFS_CreateFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
 				 aname, &InStatus, (struct AFSFid *)
 				 &newFid.Fid, &OutFidStatus, &OutDirStatus,
 				 &CallBack, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	    CallBack.ExpirationTime += now;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
-	      SHARED_LOCK, NULL));
+	    	RX_AFS_GLOCK();
+	    	XSTATS_END_TIME;
+	    	CallBack.ExpirationTime += now;
+	    } else
+	    	code = -1;
+    	} while (afs_Analyze
+	         (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
+	          SHARED_LOCK, NULL));
 
-    if ((code == EEXIST || code == UAEEXIST) &&
+	if ((code == EEXIST || code == UAEEXIST) &&
 #ifdef AFS_SGI64_ENV
-    !(flags & VEXCL)
+    	!(flags & VEXCL)
 #else /* AFS_SGI64_ENV */
-    aexcl == NONEXCL
+    	aexcl == NONEXCL
 #endif
-    ) {
-	/* if we get an EEXIST in nonexcl mode, just do a lookup */
-	if (tdc) {
-	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	}
-	ReleaseWriteLock(&adp->lock);
+    	) {
+	    /* if we get an EEXIST in nonexcl mode, just do a lookup */
+	    if (tdc) {
+	    	ReleaseSharedLock(&tdc->lock);
+	    	afs_PutDCache(tdc);
+	    }
+	    ReleaseWriteLock(&adp->lock);
 #if !(defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV))
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
-	code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp, 
-			  NULL, 0, NULL, acred);
+	    code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp,
+				  NULL, 0, NULL, acred);
 #else
-	code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
+	    code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
-	code = afs_lookup(adp, aname, avcp, acred);
+	    code = afs_lookup(adp, aname, avcp, acred);
 #endif /* SUN5 || SGI */
 #endif /* !(AFS_OSF_ENV || AFS_DARWIN_ENV) */
 	goto done;
-    }
-    if (code) {
-	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 488);
-	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
-	}
-	ReleaseWriteLock(&adp->lock);
-	if (tdc) {
-	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	}
+        }
+
+	if (code) {
+	    if (code < 0) {
+	    	ObtainWriteLock(&afs_xcbhash, 488);
+	    	afs_DequeueCallback(adp);
+	    	adp->states &= ~CStatd;
+	    	ReleaseWriteLock(&afs_xcbhash);
+	    	osi_dnlc_purgedp(adp);
+	    }
+	    ReleaseWriteLock(&adp->lock);
+	    if (tdc) {
+	    	ReleaseSharedLock(&tdc->lock);
+	    	afs_PutDCache(tdc);
+	    }
 	goto done;
-    }
+	}
+
+    } else {
+
+	/* Generate a fake FID for disconnected mode. */
+	newFid.Cell = adp->fid.Cell;
+	newFid.Fid.Volume = adp->fid.Fid.Volume;
+	afs_GenFakeFid(&newFid, VREG);
+    }				/* if (!AFS_IS_DISCON_RW) */
+
     /* otherwise, we should see if we can make the change to the dir locally */
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 631);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 291);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
@@ -436,12 +445,36 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    osi_dnlc_purgedp(tvc);
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
-	    afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	    if (!AFS_IS_DISCON_RW)
+	    	afs_ProcessFS(tvc, &OutFidStatus, &treq);
 	    tvc->parentVnode = adp->fid.Fid.Vnode;
 	    tvc->parentUnique = adp->fid.Fid.Unique;
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
+
+	    if (AFS_IS_DISCON_RW) {
+#if defined(AFS_DISCON_ENV)
+	    	/* After tvc has been created, we can do various ops on it. */
+		/* Add to dirty list. */
+		if (!tvc->ddirty_flags ||
+			(tvc->ddirty_flags == VDisconShadowed)) {
+	    	    /* Put it in the list only if it's fresh. */
+	    	    ObtainWriteLock(&afs_DDirtyVCListLock, 729);
+	    	    AFS_DISCON_ADD_DIRTY(tvc);
+	    	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+		}
+
+		/* Set create flag. */
+		ObtainWriteLock(&tvc->lock, 730);
+		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
+		tvc->ddirty_flags |= VDisconCreate;
+		ReleaseWriteLock(&tvc->lock);
+
+#endif				/* #ifdef AFS_DISCON_ENV */
+    	    }			/* if (AFS_IS_DISCON_RW) */
+
+
 	} else
 	    code = ENOENT;
     } else {

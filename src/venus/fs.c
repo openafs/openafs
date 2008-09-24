@@ -3305,11 +3305,19 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
 
 #ifdef AFS_DISCON_ENV
 static char *modenames[] = {
-    "readonly",
+    "offline",
+    "online",
+    "readonly",  /* Not currently supported */
     "fetchonly", /* Not currently supported */
     "partial",   /* Not currently supported */
-    "nat",
-    "full",
+    NULL
+};
+
+static char *policynames[] = {
+    "client",
+    "server",
+    "closer",  /* Not currently supported. */
+    "manual",  /* Not currently supported. */
     NULL
 };
 
@@ -3318,12 +3326,15 @@ DisconCmd(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     char *modename;
-    int modelen;
-    afs_int32 mode, code;
+    char *policyname;
+    int modelen, policylen;
+    afs_int32 mode, policy, code;
     struct ViceIoctl blob;
 
     blob.in = NULL;
     blob.in_size = 0;
+
+    space[0] = space[1] = space[2] = 0;
 
     ti = as->parms[0].items;
     if (ti) {
@@ -3335,11 +3346,30 @@ DisconCmd(struct cmd_syndesc *as, void *arock)
 	if (modenames[mode] == NULL)
 	    printf("Unknown discon mode \"%s\"\n", modename);
 	else {
-	    memcpy(space, &mode, sizeof mode);
-	    blob.in = space;
-	    blob.in_size = sizeof mode;
+	    space[0] = mode + 1;
 	}
     }
+    ti = as->parms[1].items;
+    if (ti) {
+	policyname = ti->data;
+	policylen = strlen(policyname);
+	for (policy = 0; policynames[policy] != NULL; policy++)
+	    if (!strncasecmp(policyname, policynames[policy], policylen))
+		break;
+	if (policynames[policy] == NULL)
+	    printf("Unknown discon mode \"%s\"\n", policyname);
+	else {
+	    space[1] = policy + 1;
+	}
+    }
+
+    if (as->parms[2].items) {
+    	space[2] = 1;
+    	printf("force on\n");
+    }
+
+    blob.in = space;
+    blob.in_size = 3 * sizeof(afs_int32);
 
     blob.out_size = sizeof(mode);
     blob.out = space;
@@ -3678,7 +3708,9 @@ defect 3069
 #ifdef AFS_DISCON_ENV
     ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
 			  "disconnection mode");
-    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "readonly | nat | full");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_REQUIRED, "offline | online");
+    cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_OPTIONAL, "client | server");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "Force reconnection, despite any synchronization issues.");
 #endif
 
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
