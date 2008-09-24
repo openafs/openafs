@@ -3025,8 +3025,6 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cm_DumpSCache(hLogFile, cookie, 1);
     cm_DumpBufHashTable(hLogFile, cookie, 1);
     smb_DumpVCP(hLogFile, cookie, 1);
-    rx_DumpCalls(hLogFile, cookie);
-    rx_DumpPackets(hLogFile, cookie);
 
     CloseHandle(hLogFile);                          
   
