@@ -219,11 +219,13 @@ rxi_GetUDPSocket(u_short port)
 }
 
 void
-osi_Panic(msg, a1, a2, a3) 
-     char *msg; 
+osi_Panic(char *msg, ...)
 {
+    va_list ap;
+    va_start(ap, msg);
     (osi_Msg "Fatal Rx error: ");
-    (osi_Msg msg, a1, a2, a3);
+    (osi_VMsg msg, ap);
+    va_end(ap);
     fflush(stderr);
     fflush(stdout);
     afs_abort();

@@ -138,6 +138,7 @@ typedef unsigned short etap_event_t;
 #include "rx/rx_globals.h"
 #include "afs/afs_stats.h"
 #include "h/errno.h"
+#include "stdarg.h"
 #ifdef KERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

@@ -6315,9 +6315,7 @@ rx_DebugOnOff(int on)
 
 /* Don't call this debugging routine directly; use dpf */
 void
-rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
-	       int a7, int a8, int a9, int a10, int a11, int a12, int a13,
-	       int a14, int a15)
+rxi_DebugPrint(char *format, ...)
 {
 #ifdef AFS_NT40_ENV
     char msg[512];
@@ -6327,9 +6325,7 @@ rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
     len = _snprintf(tformat, sizeof(tformat), "tid[%d] %s", GetCurrentThreadId(), format);
 
     if (len > 0) {
-	len = _snprintf(msg, sizeof(msg)-2, 
-			tformat, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, 
-			a11, a12, a13, a14, a15);
+	len = _vsnprintf(msg, sizeof(msg)-2, tformat, ap);
 	if (len > 0) {
 	    if (msg[len-1] != '\n') {
 		msg[len] = '\n';
@@ -6338,14 +6334,19 @@ rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
 	    OutputDebugString(msg);
 	}
     }
+    va_end(ap);
 #else
     struct clock now;
+    va_list ap;
+    
+    va_start(ap, format);
+
     clock_GetTime(&now);
     fprintf(rx_Log, " %u.%.3u:", (unsigned int)now.sec,
 	    (unsigned int)now.usec / 1000);
-    fprintf(rx_Log, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-	    a13, a14, a15);
+    vfprintf(rx_Log, format, ap);
     putc('\n', rx_Log);
+    va_end(ap);
 #endif
 }
 

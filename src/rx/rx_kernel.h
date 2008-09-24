@@ -37,6 +37,7 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailK(#e, __FILE__, __LINE__), 0))
 
 #define	osi_Msg printf)(
+#define osi_VMsg vprintf)(
 
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
