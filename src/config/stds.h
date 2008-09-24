@@ -276,4 +276,12 @@ typedef struct afsUUID afsUUID;
 #define AFS_DEMAND_ATTACH_FS 1
 #endif
 
+#ifdef AFS_HPUX_ENV
+#define static_inline static __inline
+#elif defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#define static_inline static
+#else
+#define static_inline static inline
+#endif
+
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */
