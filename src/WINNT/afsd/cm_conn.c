@@ -141,12 +141,12 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     if (code) 
         return code;
     
-    *serversppp = cm_GetVolServers(volp, fidp->volume);
+    *serversppp = cm_GetVolServers(volp, fidp->volume, userp, reqp);
 
     lock_ObtainRead(&cm_volumeLock);
     cm_PutVolume(volp);
     lock_ReleaseRead(&cm_volumeLock);
-    return 0;
+    return (*serversppp ? 0 : CM_ERROR_NOSUCHVOLUME);
 }
 
 /*
@@ -635,6 +635,19 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             reqp->tokenError = errorCode;
             retry = 1;
         }
+    } else if (errorCode >= ERROR_TABLE_BASE_U && errorCode < ERROR_TABLE_BASE_U + 256) {
+      /*
+       * We received a ubik error.  its possible that the server we are
+       * communicating with has a corrupted database or is partitioned
+       * from the rest of the servers and another server might be able
+       * to answer our query.  Therefore, we will retry the request
+       * and force the use of another server.
+       */
+      if (serverp) {
+	reqp->tokenIdleErrorServp = serverp;
+	reqp->tokenError = errorCode;
+	retry = 1;
+      }
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
 	cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
@@ -1126,7 +1139,7 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
 
     *connpp = NULL;
 
-    serverspp = cm_GetVolServers(volp, volid);
+    serverspp = cm_GetVolServers(volp, volid, userp, reqp);
 
     code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
     cm_FreeServerList(serverspp, 0);

@@ -908,7 +908,7 @@ cm_IoctlGetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *sc
 afs_int32 
 cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
-    afs_int32 code;
+    afs_int32 code = 0;
     cm_cell_t *cellp;
     cm_volume_t *tvp;
     cm_serverRef_t **tsrpp, *current;
@@ -952,16 +952,19 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
 	
         cp = ioctlp->outDatap;
         
-        tsrpp = cm_GetVolServers(tvp, volume);
-        lock_ObtainRead(&cm_serverLock);
-        for (current = *tsrpp; current; current = current->next) {
-            tsp = current->server;
-            memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
-            cp += sizeof(long);
+        tsrpp = cm_GetVolServers(tvp, volume, userp, reqp);
+        if (tsrpp == NULL) {
+            code = CM_ERROR_NOSUCHVOLUME;
+        } else {
+            lock_ObtainRead(&cm_serverLock);
+            for (current = *tsrpp; current; current = current->next) {
+                tsp = current->server;
+                memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
+                cp += sizeof(long);
+            }
+            lock_ReleaseRead(&cm_serverLock);
+            cm_FreeServerList(tsrpp, 0);
         }
-        lock_ReleaseRead(&cm_serverLock);
-        cm_FreeServerList(tsrpp, 0);
-
         /* still room for terminating NULL, add it on */
         volume = 0;	/* reuse vbl */
         memcpy(cp, (char *)&volume, sizeof(long));
@@ -970,7 +973,7 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
         ioctlp->outDatap = cp;
         cm_PutVolume(tvp);
     }
-    return 0;
+    return code;
 }       
 
 /* 
@@ -3023,6 +3026,8 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cm_DumpSCache(hLogFile, cookie, 1);
     cm_DumpBufHashTable(hLogFile, cookie, 1);
     smb_DumpVCP(hLogFile, cookie, 1);
+    rx_DumpCalls(hLogFile, cookie);
+    rx_DumpPackets(hLogFile, cookie);
 
     CloseHandle(hLogFile);                          
   
