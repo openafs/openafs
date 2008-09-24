@@ -521,7 +521,7 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 #ifdef DPF_FSLOG
 #define dpf(args) FSLog args
 #else
-#define dpf(args) if (rx_debugFile) rxi_DebugPrint args; else
+#define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
 #endif 
 #endif
 #define rx_Log_event rxevent_debugFile
