@@ -83,6 +83,8 @@ extern bool_t xdrrec_endofrecord(XDR * xdrs, bool_t sendnow);
 
 /* xdr_refernce.c */
 
+extern bool_t xdr_reference(XDR *xdrs, caddr_t *pp, u_int size, 
+			    xdrproc_t proc);
 
 /* xdr_stdio.c */
 

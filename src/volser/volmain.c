@@ -535,8 +535,7 @@ main(int argc, char **argv)
 
     if (rxkadDisableDotCheck) {
         rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-                                    NULL);
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
     }
 
     service =
