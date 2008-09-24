@@ -1009,11 +1009,13 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 /* find the appropriate servers from a volume */
-cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
+cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_t *userp, cm_req_t *reqp)
 {
     cm_serverRef_t **serverspp;
     cm_serverRef_t *current;
+    int firstTry = 1;
 
+  start:
     lock_ObtainWrite(&cm_serverLock);
 
     if (volume == volp->vol[RWVOL].ID)
@@ -1022,9 +1024,21 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume)
         serverspp = &volp->vol[ROVOL].serversp;
     else if (volume == volp->vol[BACKVOL].ID)
         serverspp = &volp->vol[BACKVOL].serversp;
-    else 
-        osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
-        
+    else {
+        lock_ReleaseWrite(&cm_serverLock);
+        if (firstTry) {
+            afs_int32 code;
+            firstTry = 0;
+            lock_ObtainWrite(&volp->rw);
+            volp->flags |= CM_VOLUMEFLAG_RESET;
+            code = cm_UpdateVolumeLocation(volp->cellp, userp, reqp, volp);
+            lock_ReleaseWrite(&volp->rw);
+            if (code == 0)
+                goto start;
+        }
+        return NULL;
+    }
+
     /* 
      * Increment the refCount on deleted items as well.
      * They will be freed by cm_FreeServerList when they get to zero 
