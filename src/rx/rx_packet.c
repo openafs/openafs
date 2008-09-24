@@ -101,7 +101,6 @@ static int rxdb_fileID = RXDB_FILE_RX_PACKET;
 struct rx_packet *rx_mallocedP = 0;
 
 extern char cml_version_number[];
-extern int (*rx_almostSent) ();
 
 static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 
@@ -112,9 +111,10 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 static int rxi_FreeDataBufsToQueue(struct rx_packet *p, 
 				   afs_uint32 first, 
 				   struct rx_queue * q);
+#ifdef RX_ENABLE_TSFPQ
 static int
 rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global);
-
+#endif
 
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
@@ -303,7 +303,10 @@ static int
 AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 {
     struct rx_packet *c;
-    int i, overq = 0;
+    int i;
+#ifdef KERNEL
+    int overq = 0;
+#endif
     SPLVAR;
 
     NETPRI;
@@ -818,6 +821,7 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
  * returns:
  *   number of continuation buffers freed
  */
+#ifndef RX_ENABLE_TSFPQ
 static int
 rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue * q)
 {
@@ -838,6 +842,7 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue *
 
     return count;
 }
+#endif
 
 /*
  * free packet continuation buffers into the global free packet pool

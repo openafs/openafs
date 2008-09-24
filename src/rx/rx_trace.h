@@ -14,7 +14,8 @@
 #define rxi_calltrace(a,b)
 #define rxi_flushtrace()
 #else
-extern void rxi_calltrace(), rxi_flushtrace();
+extern void rxi_calltrace(unsigned int event, struct rx_call *call);
+extern void rxi_flushtrace(void);
 
 #define RX_CALL_ARRIVAL 0
 #define RX_CALL_START 1

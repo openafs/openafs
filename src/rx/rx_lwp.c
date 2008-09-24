@@ -50,9 +50,6 @@ RCSID
 
 #define MAXTHREADNAMELENGTH 64
 
-extern int (*registerProgram) ();
-extern int (*swapNameProgram) ();
-
 int debugSelectFailure;		/* # of times select failed */
 
 /*
@@ -138,7 +135,7 @@ rxi_StartListener(void)
     /* Priority of listener should be high, so it can keep conns alive */
 #define	RX_LIST_STACK	24000
     LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY,
-		      (void *)0, "rx_Listener", &rx_listenerPid);
+		      NULL, "rx_Listener", &rx_listenerPid);
     if (registerProgram)
 	(*registerProgram) (rx_listenerPid, "listener");
 }
@@ -283,7 +280,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 			    rxi_FreePacket(p);
 			}
 			if (swapNameProgram) {
-			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    (*swapNameProgram) (rx_listenerPid, name, 0);
 			    rx_listenerPid = 0;
 			}
 			return;
@@ -303,7 +300,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 			    rxi_FreePacket(p);
 			}
 			if (swapNameProgram) {
-			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    (*swapNameProgram) (rx_listenerPid, name, 0);
 			    rx_listenerPid = 0;
 			}
 			return;

@@ -182,7 +182,7 @@ typedef struct rx_ts_info_t {
     } _FPQ;
     struct rx_packet * local_special_packet;
 } rx_ts_info_t;
-EXT struct rx_ts_info_t * rx_ts_info_init();   /* init function for thread-specific data struct */
+EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
 #define RX_TS_INFO_GET(ts_info_p) \
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \

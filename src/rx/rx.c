@@ -85,6 +85,7 @@ extern afs_int32 afs_termState;
 #else /* KERNEL */
 # include <sys/types.h>
 # include <string.h>
+# include <stdarg.h>
 # include <errno.h>
 #ifdef AFS_NT40_ENV
 # include <stdlib.h>
@@ -108,8 +109,15 @@ extern afs_int32 afs_termState;
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
-int (*registerProgram) () = 0;
-int (*swapNameProgram) () = 0;
+#ifndef KERNEL
+#ifdef AFS_PTHREAD_ENV
+int (*registerProgram) (pid_t, char *) = 0;
+int (*swapNameProgram) (pid_t, const char *, char *) = 0;
+#else
+int (*registerProgram) (PROCESS, char *) = 0;
+int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
+#endif
+#endif
 
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn);
@@ -286,7 +294,8 @@ assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
 
 #if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 static afs_kmutex_t rx_rpc_stats;
-void rxi_StartUnlocked();
+void rxi_StartUnlocked(struct rxevent *event, void *call,
+                       void *arg1, int istack);
 #endif
 
 /* We keep a "last conn pointer" in rxi_FindConnection. The odds are 
@@ -506,7 +515,7 @@ rx_InitHost(u_int host, u_int port)
 	rx_port = 0;
 #else
 	struct sockaddr_in addr;
-	int addrlen = sizeof(addr);
+	socklen_t addrlen = sizeof(addr);
 	if (getsockname((int)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
@@ -721,7 +730,7 @@ rx_StartServer(int donateMe)
     }
 
     /* Turn on reaping of idle server connections */
-    rxi_ReapConnections();
+    rxi_ReapConnections(NULL, NULL, NULL);
 
     USERPRI;
 
@@ -1105,6 +1114,7 @@ rx_GetConnection(register struct rx_connection *conn)
     USERPRI;
 }
 
+#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
 /* Wait for the transmit queue to no longer be busy. 
  * requires the call->lock to be held */
 static void rxi_WaitforTQBusy(struct rx_call *call) {
@@ -1123,6 +1133,8 @@ static void rxi_WaitforTQBusy(struct rx_call *call) {
 	}
     }
 }
+#endif
+
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,
@@ -2548,8 +2560,8 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
  * containing the network address.  Both can be modified.  The return value, if
  * non-zero, indicates that the packet should be dropped.  */
 
-int (*rx_justReceived) () = 0;
-int (*rx_almostSent) () = 0;
+int (*rx_justReceived) (struct rx_packet *, struct sockaddr_in *) = 0;
+int (*rx_almostSent) (struct rx_packet *, struct sockaddr_in *) = 0;
 
 /* A packet has been received off the interface.  Np is the packet, socket is
  * the socket number it was received from (useful in determining which service
@@ -3099,9 +3111,10 @@ TooLow(struct rx_packet *ap, struct rx_call *acall)
 #endif /* KERNEL */
 
 static void
-rxi_CheckReachEvent(struct rxevent *event, struct rx_connection *conn,
-		    struct rx_call *acall)
+rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2)
 {
+    struct rx_connection *conn = arg1;
+    struct rx_call *acall = arg2;
     struct rx_call *call = acall;
     struct clock when, now;
     int i, waiting;
@@ -4301,9 +4314,9 @@ rxi_AckAll(struct rxevent *event, register struct rx_call *call, char *dummy)
 }
 
 void
-rxi_SendDelayedAck(struct rxevent *event, register struct rx_call *call,
-		   char *dummy)
+rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused)
 {
+    struct rx_call *call = arg1;
 #ifdef RX_ENABLE_LOCKS
     if (event) {
 	MUTEX_ENTER(&call->lock);
@@ -5156,9 +5169,11 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 #ifdef	RX_ENABLE_LOCKS
 /* Call rxi_Start, below, but with the call lock held. */
 void
-rxi_StartUnlocked(struct rxevent *event, register struct rx_call *call,
-		  void *arg1, int istack)
+rxi_StartUnlocked(struct rxevent *event, 
+		  void *arg0, void *arg1, int istack)
 {
+    struct rx_call *call = arg0;
+    
     MUTEX_ENTER(&call->lock);
     rxi_Start(event, call, arg1, istack);
     MUTEX_EXIT(&call->lock);
@@ -5171,9 +5186,11 @@ rxi_StartUnlocked(struct rxevent *event, register struct rx_call *call,
  * better optimized for new packets, the usual case, now that we've
  * got rid of queues of send packets. XXXXXXXXXXX */
 void
-rxi_Start(struct rxevent *event, register struct rx_call *call,
-	  void *arg1, int istack)
+rxi_Start(struct rxevent *event, 
+          void *arg0, void *arg1, int istack)
 {
+    struct rx_call *call = arg0;
+    
     struct rx_packet *p;
     register struct rx_packet *nxp;	/* Next pointer for queue_Scan */
     struct rx_peer *peer = call->conn->peer;
@@ -5648,9 +5665,9 @@ rxi_CheckCall(register struct rx_call *call)
  * keep-alive packet (if we're actually trying to keep the call alive)
  */
 void
-rxi_KeepAliveEvent(struct rxevent *event, register struct rx_call *call,
-		   char *dummy)
+rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
 {
+    struct rx_call *call = arg1;
     struct rx_connection *conn;
     afs_uint32 now;
 
@@ -5719,8 +5736,10 @@ rxi_KeepAliveOn(register struct rx_call *call)
  * that have been delayed to throttle looping clients. */
 void
 rxi_SendDelayedConnAbort(struct rxevent *event,
-			 register struct rx_connection *conn, char *dummy)
+			 void *arg1, void *unused)
 {
+    struct rx_connection *conn = arg1;
+    
     afs_int32 error;
     struct rx_packet *packet;
 
@@ -5742,9 +5761,11 @@ rxi_SendDelayedConnAbort(struct rxevent *event,
 /* This routine is called to send call abort messages
  * that have been delayed to throttle looping clients. */
 void
-rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
-			 char *dummy)
+rxi_SendDelayedCallAbort(struct rxevent *event, 
+			 void *arg1, void *dummy)
 {
+    struct rx_call *call = arg1;
+    
     afs_int32 error;
     struct rx_packet *packet;
 
@@ -5768,9 +5789,11 @@ rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
  * issues a challenge to the client, which is obtained from the
  * security object associated with the connection */
 void
-rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
-		   void *arg1, int tries)
+rxi_ChallengeEvent(struct rxevent *event, 
+		   void *arg0, void *arg1, int tries)
 {
+    struct rx_connection *conn = arg0;
+    
     conn->challengeEvent = NULL;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
@@ -5931,7 +5954,7 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 /* Find all server connections that have not been active for a long time, and
  * toss them */
 void
-rxi_ReapConnections(void)
+rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 {
     struct clock now, when;
     clock_GetTime(&now);
@@ -6340,7 +6363,7 @@ rx_PrintTheseStats(FILE * file, struct rx_stats *s, int size,
 
     if (size != sizeof(struct rx_stats)) {
 	fprintf(file,
-		"Unexpected size of stats structure: was %d, expected %d\n",
+		"Unexpected size of stats structure: was %d, expected %lud\n",
 		size, sizeof(struct rx_stats));
     }
 
@@ -6466,7 +6489,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     register afs_int32 code;
     struct timeval tv_now, tv_wake, tv_delta;
     struct sockaddr_in taddr, faddr;
-    int faddrLen;
+    socklen_t faddrLen;
     fd_set imask;
     register char *tp;
 
