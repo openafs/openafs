@@ -1222,7 +1222,7 @@ rx_NewCall(register struct rx_connection *conn)
     rxi_WaitforTQBusy(call);
     if (call->flags & RX_CALL_TQ_CLEARME) {
 	rxi_ClearTransmitQueue(call, 1);
-	queue_Init(&call->tq);
+	/*queue_Init(&call->tq);*/
     }
     MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
@@ -2175,7 +2175,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	/* Now, if TQ wasn't cleared earlier, do it now. */
 	if (call->flags & RX_CALL_TQ_CLEARME) {
 	    rxi_ClearTransmitQueue(call, 1);
-	    queue_Init(&call->tq);
+	    /*queue_Init(&call->tq);*/
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	/* Bind the call to its connection structure */
@@ -2184,7 +2184,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     } else {
 
 	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
-        rx_MutexIncrement(rx_stats.nFreeCallStructs, rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.nCallStructs, rx_stats_mutex);
 	MUTEX_EXIT(&rx_freeCallQueue_lock);
 	MUTEX_INIT(&call->lock, "call lock", MUTEX_DEFAULT, NULL);
 	MUTEX_ENTER(&call->lock);

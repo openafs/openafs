@@ -728,7 +728,7 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 			      RX_CALL_FAST_RECOVER_WAIT))) {
 		    rxi_Start(0, call, 0, 0);
 		}
-	    } else else if (cp) {
+	    } else if (cp) {
 		cp->flags &= ~RX_PKTFLAG_CP;
 		rxi_FreePacket(cp);
 		cp = call->currentPacket = (struct rx_packet *)0;
