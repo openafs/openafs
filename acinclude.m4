@@ -6,9 +6,7 @@ dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 AH_VERBATIM([RCSID],
-[#undef PACKAGE
-#undef VERSION
-#define RCSID(msg) \
+[#define RCSID(msg) \
 static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_CONNECT
 #undef HAVE_GETHOSTBYNAME
