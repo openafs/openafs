@@ -77,6 +77,7 @@ AFSAOBJS = \
 	afs_analyze.o \
 	afs_axscache.o  \
 	afs_buffer.o	\
+	afs_bypasscache.o \
 	afs_callback.o	\
 	afs_cbqueue.o    \
 	afs_cell.o \
@@ -241,6 +242,8 @@ afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE_OPT)
 afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE_OPT)
+afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
 	$(CRULE_OPT)
 afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE_OPT)

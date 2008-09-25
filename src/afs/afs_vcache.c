@@ -1039,6 +1039,12 @@ restart:
     tvc->vmh = tvc->segid = NULL;
     tvc->credp = NULL;
 #endif
+
+#if defined(AFS_CACHE_BYPASS)
+    tvc->cachingStates = 0;
+    tvc->cachingTransitions = 0;
+#endif
+
 #ifdef AFS_BOZONLOCK_ENV
 #if	defined(AFS_SUN5_ENV)
     rw_init(&tvc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);

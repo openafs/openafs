@@ -1275,6 +1275,70 @@ UuidCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#if defined(AFS_CACHE_BYPASS)
+/*
+ * Set cache-bypass threshold.  Files larger than this size will not be cached.
+ * With a threshold of 0, the cache is always bypassed.  With a threshold of -1,
+ * cache bypass is disabled.
+ */
+ 
+static int
+BypassThresholdCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    afs_int32 size;
+    struct ViceIoctl blob;
+    afs_int32 threshold_i, threshold_o;
+    char *tp;	
+    
+    /* if new threshold supplied, then set and confirm, else,
+     * get current threshold and print
+     */
+	 
+    if(as->parms[0].items) {
+	int digit, ix, len;
+				
+	tp = as->parms[0].items->data;
+	len = strlen(tp);
+	digit = 1; 
+	for(ix = 0; ix < len; ++ix) {
+	    if(!isdigit(tp[0])) {
+		digit = 0;
+		break;
+	    }
+	}
+	if (digit == 0) {
+	    fprintf(stderr, "fs bypassthreshold -size: %s must be an undecorated digit string.\n", tp);
+	    return EINVAL;
+	}
+	threshold_i = atoi(tp);
+	if(ix > 9 && threshold_i < 2147483647) 
+	    threshold_i = 2147483647;
+	blob.in = (char *) &threshold_i;
+	blob.in_size = sizeof(threshold_i);
+    } else {
+	blob.in = NULL;
+	blob.in_size = 0;
+    }
+
+    blob.out = (char *) &threshold_o;
+    blob.out_size = sizeof(threshold_o);
+    code = pioctl(0, VIOC_SETBYPASS_THRESH, &blob, 1);
+    if (code) {
+	Die(errno, NULL);
+	return 1;
+    } else {		
+	printf("Cache bypass threshold %d", threshold_o);
+	if(threshold_o ==  -1)
+	    printf(" (disabled)");
+	printf("\n");
+    }
+
+    return 0;
+}
+
+#endif
+
 static int
 FlushCmd(struct cmd_syndesc *as, void *arock)
 {
@@ -3540,6 +3604,12 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-rw", CMD_FLAG, CMD_OPTIONAL, "force r/w volume");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL,
 		"don't check name with VLDB");
+
+#if defined(AFS_CACHE_BYPASS)
+	ts = cmd_CreateSyntax("bypassthreshold", BypassThresholdCmd, 0,
+		"get/set cache bypass file size threshold");
+	cmd_AddParm(ts, "-size", CMD_SINGLE, CMD_OPTIONAL, "file size");
+#endif
 
 /*
 

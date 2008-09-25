@@ -23,6 +23,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/vice.h"
+#include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 
 struct VenusFid afs_rootFid;
@@ -104,6 +105,10 @@ DECL_PIOCTL(PDiscon);
 DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
 DECL_PIOCTL(PPrecache); 
+#if defined(AFS_CACHE_BYPASS)
+DECL_PIOCTL(PSetCachingThreshold);
+DECL_PIOCTL(PSetCachingBlkSize);
+#endif
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -219,7 +224,12 @@ static int (*(CpioctlSw[])) () = {
 
 static int (*(OpioctlSw[])) () = {
     PBogus,			/* 0 */
-	PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
+    PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
+#if defined(AFS_CACHE_BYPASS)
+    PSetCachingThreshold        /* 2 -- get/set cache-bypass size threshold */
+#else
+    PNoop                       /* 2 -- get/set cache-bypass size threshold */
+#endif
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3879,6 +3889,51 @@ DECL_PIOCTL(PNewUuid)
     ForceAllNewConnections();
     return 0;
 }
+
+#if defined(AFS_CACHE_BYPASS)
+
+DECL_PIOCTL(PSetCachingThreshold)
+{
+    afs_int32 getting;
+    afs_int32 setting;
+
+    setting = getting = 1;
+
+    if (ain == NULL || ainSize < sizeof(afs_int32))
+	setting = 0;
+
+    if (aout == NULL)
+	getting = 0;
+
+    if (setting == 0 && getting == 0)
+	return EINVAL;
+	
+    /* 
+     * If setting, set first, and return the value now in effect
+     */
+    if (setting) {
+	afs_int32 threshold;
+
+	if (!afs_osi_suser(*acred))
+	    return EPERM;
+	memcpy((char *)&threshold, ain, sizeof(afs_int32));
+	cache_bypass_threshold = threshold;
+        afs_warn("Cache Bypass Threshold set to: %d\n", threshold);		
+	/* TODO:  move to separate pioctl, or enhance pioctl */
+	cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
+    }
+	
+    if (getting) {
+	/* Return the current size threshold */
+	afs_int32 oldThreshold = cache_bypass_threshold;
+	memcpy(aout, (char *)&oldThreshold, sizeof(afs_int32));
+	*aoutSize = sizeof(afs_int32);
+    }
+
+    return(0);
+}
+
+#endif /* defined(AFS_CACHE_BYPASS) */
 
 DECL_PIOCTL(PCallBackAddr)
 {

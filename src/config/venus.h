@@ -107,4 +107,9 @@ struct cm_initparams {
 
 #endif /* !defined(UKERNEL) */
 
+#if defined(AFS_CACHE_BYPASS)
+/* Uncoordinated 'O' pioctls */
+#define VIOC_SETBYPASS_THRESH	_OVICEIOCTL(2) /* cache-bypass size thresh */
+#endif
+
 #endif /* AFS_VENUS_H */

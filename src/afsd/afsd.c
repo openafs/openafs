@@ -292,7 +292,12 @@ int createAndTrunc = O_CREAT | O_TRUNC;	/*Create & truncate on open */
 int ownerRWmode = 0600;		/*Read/write OK by owner */
 static int filesSet = 0;	/*True if number of files explicitly set */
 static int nFilesPerDir = 2048;	/* # files per cache dir */
-static int nDaemons = 2;	/* Number of background daemons */
+#if defined(AFS_CACHE_BYPASS)
+#define AFSD_NDAEMONS 4
+#else
+#define AFSD_NDAEMONS 2
+#endif
+static int nDaemons = AFSD_NDAEMONS;	/* Number of background daemons */
 static int chunkSize = 0;	/* 2^chunkSize bytes per chunk */
 static int dCacheSize;		/* # of dcache entries */
 static int vCacheSize = 200;	/* # of volume cache entries */
