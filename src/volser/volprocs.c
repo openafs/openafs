@@ -230,9 +230,9 @@ ViceCreateRoot(Volume *vp)
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    assert(!(MakeDir(&dir, &did, &did)));
+    assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
-    DZap(&dir);			/* Remove all buffers for this dir */
+    DZap((afs_int32 *)&dir);			/* Remove all buffers for this dir */
     length = Length(&dir);	/* Remember size of this directory */
 
     FidZap(&dir);		/* Done with the dir handle obtained via SetSalvageDirHandle() */
@@ -1831,9 +1831,9 @@ typedef struct {
  * fill in appropriate type of on-wire volume metadata structure.
  *
  * @param vp      pointer to volume object
- * @param hdr     pointer to volume disk data object
  * @param handle  pointer to wire format handle object
  *
+ * @pre vp object must contain header & pending_vol_op structurs (populate if from RPC)
  * @pre handle object must have a valid pointer and enumeration value
  *
  * @note passing a NULL value for vp means that the fileserver doesn't
@@ -1844,12 +1844,13 @@ typedef struct {
  *   @retval 1 failure
  */
 static int
-FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
+FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 {
     unsigned int numStatBytes, now;
+    register struct VolumeDiskData *hdr = &vp->header->diskstuff;
 
     /*read in the relevant info */
-    strcpy(VOLINT_INFO_PTR(handle, name), hdr->name);
+    strcpy((char *)VOLINT_INFO_PTR(handle, name), hdr->name);
     VOLINT_INFO_STORE(handle, status, VOK);	/*its ok */
     VOLINT_INFO_STORE(handle, volid, hdr->id);
     VOLINT_INFO_STORE(handle, type, hdr->type);	/*if ro volume */
@@ -1880,21 +1881,45 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
      * along with the blessed and inService flags from the header.
      *   -- tkeiser 11/27/2007
      */
+
+    /* Conditions that offline status is based on: 
+		volume is unattached state
+		volume state is in (one of several error states)
+		volume not in service
+		volume is not marked as blessed (not on hold)
+		volume in salvage req. state
+		volume needsSalvaged 
+		next op would set volume offline
+		next op would not leave volume online (based on several conditions)
+    */
     if (!vp ||
 	(V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 	VIsErrorState(V_attachState(vp)) ||
 	!hdr->inService ||
-	!hdr->blessed) {
+	!hdr->blessed || 
+	(V_attachState(vp) == VOL_STATE_SALVSYNC_REQ) ||
+	hdr->needsSalvaged ||
+	(vp->pending_vol_op && 
+		(vp->pending_vol_op->com.command == FSYNC_VOL_OFF || 
+		!VVolOpLeaveOnline_r(vp, vp->pending_vol_op) )
+	)
+	) {
 	VOLINT_INFO_STORE(handle, inUse, 0);
     } else {
 	VOLINT_INFO_STORE(handle, inUse, 1);
     }
 #else
-    VOLINT_INFO_STORE(handle, inUse, hdr->inUse);
+    /* offline status based on program type, where != fileServer enum (1) is offline */
+    if (hdr->inUse == fileServer) {
+	VOLINT_INFO_STORE(handle, inUse, 1);
+    } else {
+	VOLINT_INFO_STORE(handle, inUse, 0);
+    }
 #endif
 
 
     switch(handle->volinfo_type) {
+	/* NOTE: VOLINT_INFO_STORE not used in this section because values are specific to one volinfo_type */
     case VOLINT_INFO_TYPE_BASE:
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -2027,7 +2052,18 @@ GetVolInfo(afs_uint32 partId,
     int reason;
     afs_int32 error;
     struct volser_trans *ttc = NULL;
-    struct Volume fs_tv_buf, *fs_tv = &fs_tv_buf, *tv = NULL;
+    struct Volume *fill_tv, *tv = NULL;
+#ifdef AFS_DEMAND_ATTACH_FS
+    struct Volume fs_tv_buf, *fs_tv = &fs_tv_buf; /* Create a structure, and a pointer to that structure */
+    SYNC_PROTO_BUF_DECL(fs_res_buf); /* Buffer for the pending_vol_op */
+    SYNC_response fs_res; /* Response handle for the pending_vol_op */
+    FSSYNC_VolOp_info pending_vol_op_res; /* Pending vol ops to full in volume */
+
+    /* Set up response handle for pending_vol_op */
+    fs_res.hdr.response_len = sizeof(fs_res.hdr);
+    fs_res.payload.buf = fs_res_buf;
+    fs_res.payload.len = SYNC_PROTO_MAX_LEN;
+#endif
 
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
@@ -2037,6 +2073,7 @@ GetVolInfo(afs_uint32 partId,
 	goto drop;
     }
 
+    /* Get volume from volserver */
     tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n", 
@@ -2070,23 +2107,40 @@ GetVolInfo(afs_uint32 partId,
 	/*this volume will be salvaged */
 	Log("1 Volser: GetVolInfo: Volume %u (%s:%s) needs to be salvaged\n", 
 	    volumeId, pname, volname);
-	goto drop;
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    /* If using DAFS, get volume from fsserver */
     if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK) {
 	goto drop;
     }
+
+    /* fs_tv is a shallow copy, must populate certain structures before passing along */
+    if (FSYNC_VolOp(volumeId, pname, FSYNC_VOL_QUERY_VOP, 0, &fs_res) == SYNC_OK) { 
+	/* If we if the pending vol op */
+	memcpy(&pending_vol_op_res, fs_res.payload.buf, sizeof(FSSYNC_VolOp_info));
+	fs_tv->pending_vol_op=&pending_vol_op_res;
+    } else {
+	fs_tv->pending_vol_op=NULL;
+    }
+
+    /* populate the header from the volserver copy */
+    fs_tv->header=tv->header;
+
+    /* When using DAFS, use the fs volume info, populated with required structures */
+    fill_tv = fs_tv;
+#else 
+    /* When not using DAFS, just use the local volume info */
+    fill_tv = tv;
 #endif
 
     /* ok, we have all the data we need; fill in the on-wire struct */
-    code = FillVolInfo(fs_tv, &tv->header->diskstuff, handle);
-
+    code = FillVolInfo(fill_tv, handle);
 
  drop:
     if (code == -1) {
 	VOLINT_INFO_STORE(handle, status, 0);
-	strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	strcpy((char *)VOLINT_INFO_PTR(handle, name), volname);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
     }
     if (tv) {
@@ -2094,7 +2148,7 @@ GetVolInfo(afs_uint32 partId,
 	tv = NULL;
 	if (error) {
 	    VOLINT_INFO_STORE(handle, status, 0);
-	    strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	    strcpy((char *)VOLINT_INFO_PTR(handle, name), volname);
 	    Log("1 Volser: GetVolInfo: Could not detach volume %u (%s:%s)\n",
 		volumeId, pname, volname);
 	}
@@ -2137,6 +2191,8 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
     volumeInfo->volEntries_val = (volintInfo *) malloc(sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
+    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
+
     pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 1;
     if (GetPartName(partid, pname))
@@ -2242,6 +2298,8 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	(volintXInfo *) malloc(sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
+    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
+
     xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 1;
     code = ENODEV;
@@ -2349,6 +2407,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	(volintInfo *) malloc(allocSize * sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
+    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
+
     pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 0;
     if (GetPartName(partid, pname))
@@ -2480,6 +2540,8 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	(volintXInfo *) malloc(allocSize * sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
+    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
+
     xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 0;
 
