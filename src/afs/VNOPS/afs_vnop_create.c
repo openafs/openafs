@@ -362,11 +362,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
 
     } else {
-
+#if defined(AFS_DISCON_ENV)
 	/* Generate a fake FID for disconnected mode. */
 	newFid.Cell = adp->fid.Cell;
 	newFid.Fid.Volume = adp->fid.Fid.Volume;
 	afs_GenFakeFid(&newFid, VREG);
+#endif
     }				/* if (!AFS_IS_DISCON_RW) */
 
     /* otherwise, we should see if we can make the change to the dir locally */
