@@ -106,6 +106,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     int withIdleThreads;
     int withWaited;
     int withPeers;
+    int withPackets;
     struct rx_debugStats tstats;
     char *portName, *hostName;
     char hoststr[20];
@@ -255,10 +256,16 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
     withWaited = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
+    withPackets = (supportedDebugValues & RX_SERVER_DEBUG_PACKETS_CNT);
 
-    printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
-	   tstats.nFreePackets, tstats.packetReclaims, tstats.callsExecuted,
-	   tstats.usedFDs);
+    if (withPackets)
+        printf("Free packets: %d/%d, packet reclaims: %d, calls: %d, used FDs: %d\n",
+               tstats.nFreePackets, tstats.nPackets, tstats.packetReclaims, 
+               tstats.callsExecuted, tstats.usedFDs);
+    else
+        printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
+               tstats.nFreePackets, tstats.packetReclaims, tstats.callsExecuted,
+               tstats.usedFDs);
     if (!tstats.waitingForPackets)
 	printf("not ");
     printf("waiting for packets.\n");
