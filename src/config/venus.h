@@ -188,4 +188,9 @@ struct cm_initparams {
 /* OpenAFS-specific 'O' pioctl's */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
 
+#if defined(AFS_CACHE_BYPASS)
+/* Uncoordinated 'O' pioctls */
+#define VIOC_SETBYPASS_THRESH	_OVICEIOCTL(2) /* cache-bypass size thresh */
+#endif
+
 #endif /* AFS_VENUS_H */

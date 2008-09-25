@@ -366,6 +366,7 @@ osi_linux_free(void *addr)
 	afs_atomlist_put(al_mem_pool, lmp);	/* return osi_linux_mem struct to pool */
 	afs_linux_cur_allocs--;
     } else {
+	BUG();
 	printf("osi_linux_free: failed to remove chunk from hashtable\n");
     }
 

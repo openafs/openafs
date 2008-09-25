@@ -90,6 +90,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_error.o \
 	$(UOBJ)/afs_axscache.o  \
 	$(UOBJ)/afs_buffer.o	\
+	$(UOBJ)/afs_bypasscache.o \
 	$(UOBJ)/afs_callback.o	\
 	$(UOBJ)/afs_cbqueue.o    \
 	$(UOBJ)/afs_cell.o \
@@ -217,6 +218,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
+	$(WEBOBJ)/afs_bypasscache.o \
 	$(WEBOBJ)/afs_callback.o \
 	$(WEBOBJ)/afs_cbqueue.o \
 	$(WEBOBJ)/afs_cell.o \
@@ -345,6 +347,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
+	$(WEBOBJ)/afs_bypasscache.o \
 	$(WEBOBJ)/afs_callback.o \
 	$(WEBOBJ)/afs_cbqueue.o \
 	$(WEBOBJ)/afs_cell.o \
@@ -468,6 +471,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_error.o \
 	$(JUAFS)/afs_axscache.o  \
 	$(JUAFS)/afs_buffer.o	\
+	$(JUAFS)/afs_bypasscache.o \
 	$(JUAFS)/afs_callback.o	\
 	$(JUAFS)/afs_cbqueue.o    \
 	$(JUAFS)/afs_cell.o \
@@ -599,6 +603,8 @@ $(UOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 $(UOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE1)
 $(UOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE1)
+$(UOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
 	$(CRULE1)
 $(UOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE1)
@@ -860,6 +866,8 @@ $(WEBOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 $(WEBOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE2)
 $(WEBOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE2)
+$(WEBOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
 	$(CRULE2)
 $(WEBOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE2)
@@ -1125,6 +1133,8 @@ $(JUAFS)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 $(JUAFS)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE1)
 $(JUAFS)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE1)
+$(JUAFS)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
 	$(CRULE1)
 $(JUAFS)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE1)

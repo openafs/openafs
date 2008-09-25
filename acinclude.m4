@@ -51,6 +51,11 @@ AC_ARG_ENABLE([namei-fileserver],
          fileserver])],
     , 
     [enable_namei_fileserver="default"])
+AC_ARG_ENABLE([cache-bypass],
+    [AS_HELP_STRING([--enable-cache-bypass],
+        [enable client support for cache bypass])],
+    , 
+    [enable_cache_bypass="no"])
 AC_ARG_ENABLE([supergroups],
     [AS_HELP_STRING([--enable-supergroups],
         [enable support for nested pts groups])],
@@ -1337,6 +1342,10 @@ fi
 
 if test "$enable_largefile_fileserver" = "yes"; then
 	AC_DEFINE(AFS_LARGEFILE_ENV, 1, [define if you want large file fileserver])
+fi
+
+if test "$enable_cache_bypass" = "yes"; then
+	AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
 fi
 
 if test "$enable_namei_fileserver" = "yes"; then

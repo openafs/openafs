@@ -121,6 +121,10 @@ struct sysname_info {
 #define	BOP_STORE	2	/* parm1 is chunk to store */
 #define	BOP_PATH	3	/* parm1 is path, parm2 is chunk to fetch */
 
+#if defined(AFS_CACHE_BYPASS)
+#define	BOP_FETCH_NOCACHE	4   /* parms are: vnode ptr, offset, segment ptr, addr, cred ptr */
+#endif
+
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
 
 /* protocol is: refCount is incremented by user to take block out of free pool.
@@ -591,6 +595,22 @@ struct SimpleLocks {
 /*... to be continued ...  */
 #endif
 
+#if defined(AFS_CACHE_BYPASS)
+/* vcache (file) cachingStates bits */
+#define FCSDesireBypass   0x1	/* This file should bypass the cache */
+#define FCSBypass         0x2	/* This file is currently NOT being cached */
+#define FCSManuallySet    0x4	/* The bypass flags were set, or reset, manually (via pioctl)
+ 				 				   and should not be overridden by the file's name */
+
+/* Flag values used by the Transition routines */
+#define TRANSChangeDesiredBit		0x1	/* The Transition routine should set or 
+										 * reset the FCSDesireBypass bit */
+#define TRANSVcacheIsLocked			0x2	/* The Transition routine does not need to
+										 * lock vcache (it's already locked) */
+#define TRANSSetManualBit		0x4	/* The Transition routine should set FCSManuallySet so that
+									 * filename checking does not override pioctl requests */	
+#endif /* AFS_CACHE_BYPASS */
+
 #define	CPSIZE	    2
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define vrefCount   v->v_usecount
@@ -740,6 +760,17 @@ struct vcache {
 				 * this file. */
     short flockCount;		/* count of flock readers, or -1 if writer */
     char mvstat;		/* 0->normal, 1->mt pt, 2->root. */
+
+#if defined(AFS_CACHE_BYPASS)
+	char cachingStates;			/* Caching policies for this file */
+	afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
+#if defined(AFS_LINUX24_ENV)
+	off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
+#else
+	off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
+#endif
+#endif		
+	
     afs_uint32 states;		/* state bits */
 #if	defined(AFS_SUN5_ENV)
     afs_uint32 vstates;		/* vstate bits */
