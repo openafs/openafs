@@ -25,6 +25,7 @@
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)
 #define MUTEX_INIT(a,b,c,d)
+#define MUTEX_ISMINE(a)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
 #define osirx_AssertMine(a, b)
