@@ -4407,7 +4407,7 @@ rxi_CallError(register struct rx_call *call, afs_int32 error)
 {
     if (call->error)
 	error = call->error;
-#ifdef RX_GLOBAL_RXLOCK_KERNEL
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (!((call->flags & RX_CALL_TQ_BUSY) || (call->tqWaiters > 0))) {
 	rxi_ResetCall(call, 0);
     }
@@ -5404,7 +5404,7 @@ rxi_CheckCall(register struct rx_call *call)
     afs_uint32 now;
     afs_uint32 deadTime;
 
-#ifdef RX_GLOBAL_RXLOCK_KERNEL
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
 	/* Call is active and will be reset by rxi_Start if it's
 	 * in an error state.
