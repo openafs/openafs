@@ -111,8 +111,10 @@ extern afs_int32 afs_termState;
 
 #ifndef KERNEL
 #ifdef AFS_PTHREAD_ENV
+#ifndef AFS_NT40_ENV
 int (*registerProgram) (pid_t, char *) = 0;
 int (*swapNameProgram) (pid_t, const char *, char *) = 0;
+#endif
 #else
 int (*registerProgram) (PROCESS, char *) = 0;
 int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
@@ -515,7 +517,11 @@ rx_InitHost(u_int host, u_int port)
 	rx_port = 0;
 #else
 	struct sockaddr_in addr;
+#ifdef AFS_NT40_ENV
+        int addrlen = sizeof(addr);
+#else
 	socklen_t addrlen = sizeof(addr);
+#endif
 	if (getsockname((int)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
@@ -2387,7 +2393,7 @@ rxi_SetPeerMtu(register afs_uint32 host, register afs_uint32 port, int mtu)
            }
        }
     } else {
-       struct rx_peer *peer, *next;
+       struct rx_peer *peer;
        hashIndex = PEER_HASH(host, port);
        for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
            if ((peer->host == host) && (peer->port == port)) {
@@ -6490,7 +6496,11 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     register afs_int32 code;
     struct timeval tv_now, tv_wake, tv_delta;
     struct sockaddr_in taddr, faddr;
+#ifdef AFS_NT40_ENV
+    int faddrLen;
+#else
     socklen_t faddrLen;
+#endif
     fd_set imask;
     register char *tp;
 
