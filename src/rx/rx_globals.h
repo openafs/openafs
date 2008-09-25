@@ -177,8 +177,10 @@ typedef struct rx_ts_info_t {
         int gtol_xfer;
         int ltog_ops;
         int ltog_xfer;
-        int alloc_ops;
-        int alloc_xfer;
+        int lalloc_ops;
+        int lalloc_xfer;
+        int galloc_ops;
+        int galloc_xfer;
     } _FPQ;
     struct rx_packet * local_special_packet;
 } rx_ts_info_t;
@@ -265,14 +267,28 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         rx_TSFPQLocalMax = newmax; \
         rx_TSFPQGlobSize = newglob; \
     } while(0)
+/* record the number of packets allocated by this thread 
+ * and stored in the thread local queue */
+#define RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info_p,num_alloc) \
+    do { \
+        (rx_ts_info_p)->_FPQ.lalloc_ops++; \
+        (rx_ts_info_p)->_FPQ.lalloc_xfer += num_alloc; \
+    } while (0)
+/* record the number of packets allocated by this thread 
+ * and stored in the global queue */
+#define RX_TS_FPQ_GLOBAL_ALLOC(rx_ts_info_p,num_alloc) \
+    do { \
+        (rx_ts_info_p)->_FPQ.galloc_ops++; \
+        (rx_ts_info_p)->_FPQ.galloc_xfer += num_alloc; \
+    } while (0)
 /* move packets from local (thread-specific) to global free packet queue.
-   rx_freePktQ_lock must be held. default is to move the difference between the current lenght, and the 
-   allowed max plus one extra glob. */
+   rx_freePktQ_lock must be held. default is to reduce the queue size to 40% ofmax */
 #define RX_TS_FPQ_LTOG(rx_ts_info_p) \
     do { \
         register int i; \
         register struct rx_packet * p; \
-        register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + rx_TSFPQGlobSize; \
+        register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize; \
+	if (tsize <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < tsize; i++,p=queue_Prev(p, rx_packet)); \
         queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
@@ -281,10 +297,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += tsize; \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            (rx_ts_info_p)->_FPQ.alloc_ops++; \
-            (rx_ts_info_p)->_FPQ.alloc_xfer += (rx_ts_info_p)->_FPQ.delta; \
             MUTEX_ENTER(&rx_stats_mutex); \
-            rx_nPackets += (rx_ts_info_p)->_FPQ.delta; \
             RX_TS_FPQ_COMPUTE_LIMITS; \
             MUTEX_EXIT(&rx_stats_mutex); \
            (rx_ts_info_p)->_FPQ.delta = 0; \
@@ -295,6 +308,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
     do { \
         register int i; \
         register struct rx_packet * p; \
+        if (num_transfer <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
 	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
         queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
@@ -303,10 +317,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += (num_transfer); \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            (rx_ts_info_p)->_FPQ.alloc_ops++; \
-            (rx_ts_info_p)->_FPQ.alloc_xfer += (rx_ts_info_p)->_FPQ.delta; \
             MUTEX_ENTER(&rx_stats_mutex); \
-            rx_nPackets += (rx_ts_info_p)->_FPQ.delta; \
             RX_TS_FPQ_COMPUTE_LIMITS; \
             MUTEX_EXIT(&rx_stats_mutex); \
             (rx_ts_info_p)->_FPQ.delta = 0; \
