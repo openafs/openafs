@@ -300,7 +300,7 @@ rxi_getaddr(void)
 ** maxSize - max number of interfaces to return.
 */
 int
-rx_getAllAddr(afs_int32 * buffer, int maxSize)
+rx_getAllAddr(afs_uint32 * buffer, int maxSize)
 {
     int count = 0, offset = 0;
 
