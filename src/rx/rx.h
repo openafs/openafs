@@ -865,7 +865,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_BADTYPE     (-8)
 
 #define RX_DEBUGI_VERSION_MINIMUM ('L')	/* earliest real version */
-#define RX_DEBUGI_VERSION     ('R')	/* Latest version */
+#define RX_DEBUGI_VERSION     ('S')    /* Latest version */
     /* first version w/ secStats */
 #define RX_DEBUGI_VERSION_W_SECSTATS ('L')
     /* version M is first supporting GETALLCONN and RXSTATS type */
@@ -878,6 +878,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_VERSION_W_NEWPACKETTYPES ('P')
 #define RX_DEBUGI_VERSION_W_GETPEER ('Q')
 #define RX_DEBUGI_VERSION_W_WAITED ('R')
+#define RX_DEBUGI_VERSION_W_PACKETS ('S')
 
 #define	RX_DEBUGI_GETSTATS	1	/* get basic rx stats */
 #define	RX_DEBUGI_GETCONN	2	/* get connection info */
@@ -896,7 +897,8 @@ struct rx_debugStats {
     afs_int32 nWaiting;
     afs_int32 idleThreads;	/* Number of server threads that are idle */
     afs_int32 nWaited;
-    afs_int32 spare2[7];
+    afs_int32 nPackets;
+    afs_int32 spare2[6];
 };
 
 struct rx_debugConn_vL {
@@ -1022,6 +1024,7 @@ extern int rx_callHoldType;
 #define RX_SERVER_DEBUG_NEW_PACKETS		0x40
 #define RX_SERVER_DEBUG_ALL_PEER		0x80
 #define RX_SERVER_DEBUG_WAITED_CNT              0x100
+#define RX_SERVER_DEBUG_PACKETS_CNT              0x200
 
 #define AFS_RX_STATS_CLEAR_ALL			0xffffffff
 #define AFS_RX_STATS_CLEAR_INVOCATIONS		0x1
