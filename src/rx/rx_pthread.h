@@ -34,7 +34,12 @@
 
 typedef pthread_mutex_t afs_kmutex_t;
 typedef pthread_cond_t afs_kcondvar_t;
-#define MUTEX_ISMINE
+#ifdef	RX_ENABLE_LOCKS
+#define MUTEX_ISMINE(l) (pthread_mutex_trylock(l) == EDEADLK)
+#else
+#define MUTEX_ISMINE(l) (1)
+#endif
+
 #define pthread_yield() Sleep(0)
 
 #else /* AFS_NT40_ENV */
