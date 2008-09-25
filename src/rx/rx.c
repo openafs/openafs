@@ -1193,7 +1193,7 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_ENTER(&call->lock);
     rxi_WaitforTQBusy(call);
     if (call->flags & RX_CALL_TQ_CLEARME) {
-	rxi_ClearTransmitQueue(call, 0);
+	rxi_ClearTransmitQueue(call, 1);
 	queue_Init(&call->tq);
     }
     MUTEX_EXIT(&call->lock);
@@ -2144,7 +2144,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* Now, if TQ wasn't cleared earlier, do it now. */
 	if (call->flags & RX_CALL_TQ_CLEARME) {
-	    rxi_ClearTransmitQueue(call, 0);
+	    rxi_ClearTransmitQueue(call, 1);
 	    queue_Init(&call->tq);
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
@@ -4482,7 +4482,6 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
-    rxi_ClearReceiveQueue(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     if (flags & RX_CALL_TQ_BUSY) {
 	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
@@ -4490,8 +4489,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     } else
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     {
-	rxi_ClearTransmitQueue(call, 0);
-	queue_Init(&call->tq);
+	rxi_ClearTransmitQueue(call, 1);
+	/* why init the queue if you just emptied it? queue_Init(&call->tq); */
 	if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
 	    dpf(("rcall %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 	}
@@ -4505,7 +4504,9 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
 	    call->tqWaiters--;
 	}
     }
-    queue_Init(&call->rq);
+
+    rxi_ClearReceiveQueue(call);
+    /* why init the queue if you just emptied it? queue_Init(&call->rq); */
     call->error = 0;
     call->rwind = rx_initReceiveWindow;
     call->twind = rx_initSendWindow;
