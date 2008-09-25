@@ -68,7 +68,7 @@ main(int argc, char *argv[])
     rxdebugHandle_p handle;
     char *srvrName;
     long srvrPort;
-    struct rx_stats stats;
+    struct rx_statistics stats;
     afs_uint32 supportedStats;
     char tstr[32];
     int i;

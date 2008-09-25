@@ -809,7 +809,7 @@ struct rx_securityClass {
  * Clearly we assume that ntohl will work on these structures so sizeof(int)
  * must equal sizeof(afs_int32). */
 
-struct rx_stats {		/* General rx statistics */
+struct rx_statistics {		/* General rx statistics */
     int packetRequests;		/* Number of packet allocation requests */
     int receivePktAllocFailures;
     int sendPktAllocFailures;
