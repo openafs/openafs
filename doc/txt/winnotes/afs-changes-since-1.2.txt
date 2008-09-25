@@ -1,3 +1,113 @@
+Since 1.5.52
+
+ * Automated lock hierarchy enforcement added to the
+   osi base lock package.  This permits detection of lock
+   violations that might but often does not result in 
+   deadlocks.  Enabled by default in the checked builds.
+   May be activated in release builds via the registry
+   value "LockOrderValidation" in the TransarcAFSDaemon
+   Parameters key.
+
+   When a violation is detection an assertion is thrown
+   generating a dump file and a message indicating which
+   locks were obtained out of order is logged to the 
+   Windows Application Event Log.
+
+ * Attempt to ensure that a dump file will be generated
+   whenever the service panics.
+
+ * Removed unused lock cm_bufGetMutex
+
+ * Many out of order lock acquisitions were detected
+   using the lock order verifier and were corrected.
+
+ * A race condition within the function path cm_GetSCache() ->
+   cm_GetNewSCache() -> cm_RecycleSCache() permitted a 
+   cm_scache_t object to be issued simultaneously to two 
+   threads.   This would eventually result in a panic due 
+   to the resulting undercount.
+
+ * Fix interpretation of the empty string as the ioctl path
+   to mean the current directory.  "fs lsm", "symlink list", 
+   etc. now return a "not a ..." error instead of "does not
+   exist".
+
+ * Add SMB_STRF_SRCNULTERM flag to smb_ParseStringXXX functions.
+   to indicate that the input string is a nul terminated string.
+   Assign ti when input strings are nul terminated instead of 
+   length counted. (from 1.5.50)
+
+ * The CIFS protocol specification for handling NT_TRANSACT_CREATE
+   does not match the observed behavor.  The 'nameLength' is specified
+   in bytes, not in characters.  Fix the implementation to match
+   the observed behavior. (1.5.50)
+
+ * The cm_HaveAccessRights() attempt at deadlock avoidance by 
+   calling lock_TryRead() on the parent directory cm_scache_t rw-lock
+   does not avoid the deadlock.  Avoid the deadlock by enforcing the
+   lock order of the lowest vnode first.  Then remove the infinite 
+   loop avoidance in cm_SyncOp() that was returning an unwarranted
+   access denied error.
+
+ * File Server lock synchronization was not propertly enforced in 
+   smb_ReceiveNTCreateX() and smb_ReceiveNTTranCreate().
+
+ * Another change to the short name generator.  Plus and equal are 
+   not valid characters in a short name according to the 
+   RtlIsNameLegalDOS8Dot3() in kernel mode.  They have been replaced
+   with left and right brace in order to minimize the impact.
+
+ * Fix a race condition that can result in a heap overwrite error if
+   the number of known file servers or vldb servers increases during
+   the preparation phase of a cm_CheckServers() operation.
+
+ * If the SMB Authentication would fail, a LSA allocated memory 
+   buffer would be leaked.
+
+ * Rewrite the cm_cell_t allocation code to permit cell vldb server
+   lookups to fail without leaking cm_cell_t objects.
+
+ * Add "fs setcrypt auth" to permit the use of rxkad authentication
+   only mode.  Not documented.
+
+ * Initialize Rx mutex and lock objects once and only once as part of
+   the DLL load process.
+
+ * When reporting the Volume Name "AFS" do not include the terminating
+   NUL in the reported length.  
+ 
+ * Refresh Volume Location information upon receipt of a VNOVOL error
+   from the file server and avoid a race condition that prevented the
+   updated volume location information from being destroyed immediately
+   after it was acquired.
+
+ * In response to VNOVOL and VMOVED, remove the volume id from the server's
+   volume list so that the volume's up and down status is not affected 
+   when the machine is shutdown.
+
+ * Many fixes to the Rx stack related to packet allocation and deallocation;
+   Rx debugging; Rx packet tracking across queues; and Rx packet loss caused
+   by overwriting the rx_call currentPacket pointer when it was already 
+   referring to a packet.  
+
+ * Rx Jumbograms are now off by default.  To re-enable, add "RxJumbo" = "1"
+   in the TransarcAFSDeamon/Parameters key.
+
+ * "fs flush", "fs flushvolume", and "fs flushall" now destroy locally 
+   constructed directory B+ trees for flushed directory objects.
+
+ * When cached pages for directory objects have been locally modified, do
+   not permit the locally modified pages to be mixed with pages subsequently
+   obtained from the file server.  Doing so can result in directory 
+   corruption.
+
+ * If Ubix errors are received in response to VL_xxx operations record
+   the error on the server instance and permit the operation request to 
+   be retried in case another server is able to answer the query.  We have
+   seen at least one instance of a cell in which a VL server returned 
+   UNOQUORUM (possible database truncation) when the other servers were
+   responding successfully.
+
 Since 1.5.51
  * Optimize the assignment of write errors to dirty 
    buffers by applying the first error to all buffers 
