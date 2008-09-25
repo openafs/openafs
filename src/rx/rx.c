@@ -457,7 +457,7 @@ rx_InitHost(u_int host, u_int port)
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
     rx_tranquil = 0;		/* reset flag */
-    memset((char *)&rx_stats, 0, sizeof(struct rx_stats));
+    memset((char *)&rx_stats, 0, sizeof(struct rx_statistics));
     htable = (char *)
 	osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */
@@ -6134,15 +6134,15 @@ rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
  * checking.
  */
 void
-rx_PrintTheseStats(FILE * file, struct rx_stats *s, int size,
+rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 		   afs_int32 freePackets, char version)
 {
     int i;
 
-    if (size != sizeof(struct rx_stats)) {
+    if (size != sizeof(struct rx_statistics)) {
 	fprintf(file,
 		"Unexpected size of stats structure: was %d, expected %d\n",
-		size, sizeof(struct rx_stats));
+		size, sizeof(struct rx_statistics));
     }
 
     fprintf(file, "rx stats: free packets %d, allocs %d, ", (int)freePackets,
@@ -6417,7 +6417,7 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 
 afs_int32
 rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
-		  afs_uint16 remotePort, struct rx_stats * stat,
+		  afs_uint16 remotePort, struct rx_statistics * stat,
 		  afs_uint32 * supportedValues)
 {
     struct rx_debugIn in;

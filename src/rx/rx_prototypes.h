@@ -168,7 +168,7 @@ extern void rxi_ComputeRoundTripTime(register struct rx_packet *p,
 extern void rxi_ReapConnections(void);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
-extern void rx_PrintTheseStats(FILE * file, struct rx_stats *s, int size,
+extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 			       afs_int32 freePackets, char version);
 extern void rx_PrintStats(FILE * file);
 extern void rx_PrintPeerStats(FILE * file, struct rx_peer *peer);
@@ -179,7 +179,7 @@ extern afs_int32 rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 				   afs_uint32 * supportedValues);
 extern afs_int32 rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 				   afs_uint16 remotePort,
-				   struct rx_stats *stat,
+				   struct rx_statistics *stat,
 				   afs_uint32 * supportedValues);
 extern afs_int32 rx_GetServerVersion(osi_socket socket, afs_uint32 remoteAddr,
 				     afs_uint16 remotePort,
