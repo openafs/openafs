@@ -5,6 +5,85 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
+AH_VERBATIM([RCSID],
+[#undef PACKAGE
+#undef VERSION
+#define RCSID(msg) \
+static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
+#undef HAVE_CONNECT
+#undef HAVE_GETHOSTBYNAME
+#undef HAVE_RES_SEARCH
+#undef HAVE_SOCKET
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if ENDIANESS_IN_SYS_PARAM_H
+#  ifndef KERNEL
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#   endif
+#  else
+#   if defined(AUTOCONF_FOUND_BIGENDIAN)
+#    define WORDS_BIGENDIAN 1
+#   else
+#    undef WORDS_BIGENDIAN
+#   endif
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  else
+#   undef WORDS_BIGENDIAN
+#  endif
+# endif
+#else
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# else
+#  undef WORDS_BIGENDIAN
+# endif
+#endif])
+
+#undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
+#undef AFS_NAMEI_ENV
+#undef BITMAP_LATER
+#undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
+#undef FAST_RESTART
+#undef FULL_LISTVOL_SWITCH
+#undef COMPLETION_H_EXISTS
+#undef DEFINED_FOR_EACH_PROCESS
+#undef DEFINED_PREV_TASK
+#undef EXPORTED_KALLSYMS_ADDRESS
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
+#undef EXPORTED_TASKLIST_LOCK
+#undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
+#undef RECALC_SIGPENDING_TAKES_VOID
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+#undef STRUCT_FS_HAS_FS_ROLLED
+#undef STRUCT_INODE_HAS_I_DEVICES
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#undef ssize_t
+#undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -881,16 +960,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
+                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE, 1, [define if your linux kernel exports sys_call_table])
                  fi
                  if test "x$ac_cv_linux_exports_ia32_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE)
+                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE, 1, [define if your linux kernel exports ia32_sys_call_table])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL)
+                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL, 1, [define if your linux kernel exports kallsyms])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
+                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS, 1, [define if your linux kernel exports kallsyms address])
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
 		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
@@ -1185,7 +1264,7 @@ else
   #include <resolv.h>
   ], [static int i; i = 0;],
   [AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H)],
+   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1, [define if arpa/nameser_compat.h exists])],
   [AC_MSG_RESULT(no)
    ])
 
