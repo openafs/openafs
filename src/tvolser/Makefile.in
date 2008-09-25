@@ -57,11 +57,12 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
 	${TOP_LIBDIR}/libafsutil.a      \
-	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libusd.a
 
-all: volserver vos
+all: volserver 
 
+all_vos: vos
+	
 COMPILE=${CC} ${CFLAGS} -c $?
 
 rx_pthread.o: ${RX}/rx_pthread.c
@@ -221,8 +222,8 @@ vos.o: ${VOLSER}/vos.c
 	${COMPILE}
 
 
-vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS}
-	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
+	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a ${MT_LIBS} ${XLIBS}
 
 volserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
@@ -233,7 +234,9 @@ ${DEST}/root.server/usr/afs/bin/volserver: volserver
 ${DEST}/root.server/usr/afs/bin/vos: vos
 	${INSTALL} -ns $? $@
 
-install: ${DESTDIR}${afssrvlibexecdir}/volserver ${DESTDIR}${afssrvsbindir}/vos
+install: ${DESTDIR}${afssrvlibexecdir}/volserver 
+install_vos: ${DESTDIR}${afssrvsbindir}/vos
+
 clean:
 	$(RM) -f *.o volserver vos core AFS_component_version_number.c
 
@@ -245,5 +248,6 @@ ${DESTDIR}${afssrvlibexecdir}/volserver: volserver
 ${DESTDIR}${afssrvsbindir}/vos: vos
 	${INSTALL} -ns $? $@
 
-dest: ${DEST}/root.server/usr/afs/bin/volserver ${DEST}/root.server/usr/afs/bin/vos
+dest: ${DEST}/root.server/usr/afs/bin/volserver 
+dest_vos: ${DEST}/root.server/usr/afs/bin/vos
 
