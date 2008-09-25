@@ -2914,7 +2914,8 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	       }
 	       *ec = VOFFLINE;
 	   }
-	   ReleaseVolumeHeader(vp->header);
+	   VChangeState_r(vp, VOL_STATE_UNATTACHED);
+	   FreeVolumeHeader(vp);
 	   vp = NULL;
 	   break;
 	}
@@ -3922,8 +3923,13 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	vp->salvage.reason = reason;
 	vp->stats.last_salvage = FT_ApproxTime();
 	if (flags & VOL_SALVAGE_INVALIDATE_HEADER) {
-	    /* XXX this should likely be changed to FreeVolumeHeader() */
-	    ReleaseVolumeHeader(vp->header);
+	    /* Instead of ReleaseVolumeHeader, we do FreeVolumeHeader() 
+               so that the the next VAttachVolumeByVp_r() invocation 
+               of attach2() will pull in a cached header 
+               entry and fail, then load a fresh one from disk and attach 
+               it to the volume.             
+	    */
+	    FreeVolumeHeader(vp);
 	}
 	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
 	    VChangeState_r(vp, VOL_STATE_SALVAGING);
@@ -6180,7 +6186,12 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
     volume_hdr_LRU.stats.used = howMany;
     volume_hdr_LRU.stats.attached = 0;
     hp = (struct volHeader *)(calloc(howMany, sizeof(struct volHeader)));
+    assert(hp != NULL);
+
     while (howMany--)
+	/* We are using ReleaseVolumeHeader to initialize the values on the header list
+ 	 * to ensure they have the right values
+ 	 */
 	ReleaseVolumeHeader(hp++);
 }
 
@@ -6377,7 +6388,7 @@ LoadVolumeHeader(Error * ec, Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	/* maintain (nUsers==0) => header in LRU invariant */
-	ReleaseVolumeHeader(vp->header);
+	FreeVolumeHeader(vp);
     }
 }
 
