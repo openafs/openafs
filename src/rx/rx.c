@@ -2005,7 +2005,8 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
      * kernel version, and may interrupt the macros rx_Read or
      * rx_Write, which run at normal priority for efficiency. */
     if (call->currentPacket) {
-	queue_Prepend(&call->iovq, call->currentPacket);
+        call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+	rxi_FreePacket(call->currentPacket);
 	call->currentPacket = (struct rx_packet *)0;
     }
 	
@@ -3275,6 +3276,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	    /* It's the next packet. Stick it on the receive queue
 	     * for this call. Set newPackets to make sure we wake
 	     * the reader once all packets have been processed */
+	    np->flags |= RX_PKTFLAG_RQ;
 	    queue_Prepend(&call->rq, np);
 	    call->nSoftAcks++;
 	    np = NULL;		/* We can't use this anymore */
@@ -3721,6 +3723,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	{
 	    queue_Remove(tp);
+	    tp->flags &= ~RX_PKTFLAG_TQ;
 	    rxi_FreePacket(tp);	/* rxi_FreePacket mustn't wake up anyone, preemptively. */
 	}
     }
@@ -4601,6 +4604,16 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
 
     rxi_ClearReceiveQueue(call);
     /* why init the queue if you just emptied it? queue_Init(&call->rq); */
+    
+    if (call->currentPacket) {
+        call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+	rxi_FreePacket(call->currentPacket);
+	call->currentPacket = (struct rx_packet *)0;
+    }
+    call->curlen = call->nLeft = call->nFree = 0;
+
+    rxi_FreePackets(0, &call->iovq);
+
     call->error = 0;
     call->twind = call->conn->twind[call->channel];
     call->rwind = call->conn->rwind[call->channel];
@@ -5369,6 +5382,7 @@ rxi_Start(struct rxevent *event,
 			if (p->header.seq < call->tfirst
 			    && (p->flags & RX_PKTFLAG_ACKED)) {
 			    queue_Remove(p);
+			    p->flags &= ~RX_PKTFLAG_TQ;
 			    rxi_FreePacket(p);
 			} else
 			    missing = 1;

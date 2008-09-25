@@ -203,6 +203,7 @@ EXT struct rx_queue rx_freePacketQueue;
         if ((p)->flags & RX_PKTFLAG_FREE) \
             osi_Panic("rx packet already free\n"); \
         (p)->flags |= RX_PKTFLAG_FREE; \
+        (p)->flags &= ~(RX_PKTFLAG_TQ|RX_PKTFLAG_IOVQ|RX_PKTFLAG_RQ|RX_PKTFLAG_CP); \
         (p)->length = 0; \
         (p)->niovecs = 0; \
     } while(0)
