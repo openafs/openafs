@@ -9,10 +9,10 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
-#ifndef UKERNEL
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #include "rx_xmit_nt.h"
 #endif
+#ifndef UKERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/uio.h>
 #endif /* !AFS_NT40_ENV */

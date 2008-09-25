@@ -266,7 +266,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 {
     register struct rx_packet *c;
     register struct rx_ts_info_t * rx_ts_info;
-    int transfer, alloc;
+    int transfer;
     SPLVAR;
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -275,16 +275,10 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
     if (transfer > 0) {
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-	
-	if ((transfer + rx_TSFPQGlobSize) <= rx_nFreePackets) {
-	    transfer += rx_TSFPQGlobSize;
-	} else if (transfer <= rx_nFreePackets) {
-	    transfer = rx_nFreePackets;
-	} else {
+	transfer = MAX(transfer, rx_TSFPQGlobSize);
+	if (transfer > rx_nFreePackets) {
 	    /* alloc enough for us, plus a few globs for other threads */
-	    alloc = transfer + (3 * rx_TSFPQGlobSize) - rx_nFreePackets;
-	    rxi_MorePacketsNoLock(MAX(alloc, rx_initSendWindow));
-	    transfer = rx_TSFPQGlobSize;
+	    rxi_MorePacketsNoLock(transfer + 4 * rx_initSendWindow);
 	}
 
 	RX_TS_FPQ_GTOL2(rx_ts_info, transfer);
@@ -345,7 +339,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
     }
 #else /* KERNEL */
     if (rx_nFreePackets < num_pkts) {
-        rxi_MorePacketsNoLock(MAX((num_pkts-rx_nFreePackets), rx_initSendWindow));
+	rxi_MorePacketsNoLock(MAX((num_pkts-rx_nFreePackets), 4 * rx_initSendWindow));
     }
 #endif /* KERNEL */
 
@@ -544,17 +538,31 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+    p = (struct rx_packet *)osi_Alloc(getme);
+    osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
+
+    RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
+    /* TSFPQ patch also needs to keep track of total packets */
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_nPackets += apackets;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_stats_mutex);
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
 	p->niovecs = 2;
 
 	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+
+        NETPRI;
+        MUTEX_ENTER(&rx_freePktQ_lock);
+        rx_mallocedP = p;
+        MUTEX_EXIT(&rx_freePktQ_lock);
+        USERPRI;
     }
     rx_ts_info->_FPQ.delta += apackets;
 
@@ -579,7 +587,8 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+    p = (struct rx_packet *)osi_Alloc(getme);
+    osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
@@ -592,7 +601,9 @@ rxi_MorePackets(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+	rx_mallocedP = p;
     }
+
     rx_nFreePackets += apackets;
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -612,17 +623,29 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+    p = (struct rx_packet *)osi_Alloc(getme);
 
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
 
+    RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
+    /* TSFPQ patch also needs to keep track of total packets */
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_nPackets += apackets;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_stats_mutex);
+
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
 	p->niovecs = 2;
-
 	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+	
+        NETPRI;
+        MUTEX_ENTER(&rx_freePktQ_lock);
+        rx_mallocedP = p;
+        MUTEX_EXIT(&rx_freePktQ_lock);
+        USERPRI;
     }
     rx_ts_info->_FPQ.delta += apackets;
 
@@ -646,6 +669,9 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 void
 rxi_MorePacketsNoLock(int apackets)
 {
+#ifdef RX_ENABLE_TSFPQ
+    register struct rx_ts_info_t * rx_ts_info;
+#endif /* RX_ENABLE_TSFPQ */
     struct rx_packet *p, *e;
     int getme;
 
@@ -655,7 +681,7 @@ rxi_MorePacketsNoLock(int apackets)
 	* ((rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE) / RX_CBUFFERSIZE);
     do {
         getme = apackets * sizeof(struct rx_packet);
-        p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+        p = (struct rx_packet *)osi_Alloc(getme);
 	if (p == NULL) {
             apackets -= apackets / 4;
             osi_Assert(apackets > 0);
@@ -663,12 +689,18 @@ rxi_MorePacketsNoLock(int apackets)
     } while(p == NULL);
     memset((char *)p, 0, getme);
 
+#ifdef RX_ENABLE_TSFPQ
+    RX_TS_INFO_GET(rx_ts_info);
+    RX_TS_FPQ_GLOBAL_ALLOC(rx_ts_info,apackets);
+#endif /* RX_ENABLE_TSFPQ */ 
+
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
 	p->flags |= RX_PKTFLAG_FREE;
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+	rx_mallocedP = p;
     }
 
     rx_nFreePackets += apackets;
@@ -716,7 +748,7 @@ rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
             if ((num_keep_local > rx_TSFPQLocalMax) && !allow_overcommit)
                 xfer = rx_TSFPQLocalMax - rx_ts_info->_FPQ.len;
             if (rx_nFreePackets < xfer) {
-                rxi_MorePacketsNoLock(xfer - rx_nFreePackets);
+		rxi_MorePacketsNoLock(MAX(xfer - rx_nFreePackets, 4 * rx_initSendWindow));
             }
             RX_TS_FPQ_GTOL2(rx_ts_info, xfer);
         }
@@ -1101,7 +1133,7 @@ rxi_AllocPacketNoLock(int class)
 	    osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
         if (queue_IsEmpty(&rx_freePacketQueue))
-	    rxi_MorePacketsNoLock(rx_initSendWindow);
+	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
 #endif /* KERNEL */
 
 
@@ -1161,7 +1193,7 @@ rxi_AllocPacketNoLock(int class)
 	osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
     if (queue_IsEmpty(&rx_freePacketQueue))
-	rxi_MorePacketsNoLock(rx_initSendWindow);
+	rxi_MorePacketsNoLock(4 * rx_initSendWindow);
 #endif /* KERNEL */
 
     rx_nFreePackets--;
@@ -1198,7 +1230,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
         MUTEX_ENTER(&rx_freePktQ_lock);
 
         if (queue_IsEmpty(&rx_freePacketQueue))
-            rxi_MorePacketsNoLock(rx_initSendWindow);
+	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
 
 	RX_TS_FPQ_GTOL(rx_ts_info);
 
@@ -1744,6 +1776,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 #endif
 	    MUTEX_ENTER(&rx_serverPool_lock);
 	    tstat.nFreePackets = htonl(rx_nFreePackets);
+	    tstat.nPackets = htonl(rx_nPackets);
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
