@@ -2508,7 +2508,7 @@ util_RXDebugBasicStats(rxdebugHandle_p handle, struct rx_debugStats *stats,
  */
 
 int ADMINAPI
-util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_stats *stats,
+util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_statistics *stats,
 		    afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;
