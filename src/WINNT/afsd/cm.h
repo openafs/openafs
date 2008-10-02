@@ -109,15 +109,15 @@
 
 #define LOCK_HIERARCHY_IGNORE                    0
 
-#define LOCK_HIERARCHY_SMB_STARTED              30
-#define LOCK_HIERARCHY_SMB_LISTENER             35
-#define LOCK_HIERARCHY_SMB_GLOBAL               40
-#define LOCK_HIERARCHY_SMB_DIRSEARCH            50
-#define LOCK_HIERARCHY_SMB_FID                  60
-#define LOCK_HIERARCHY_SMB_TID                  70
-#define LOCK_HIERARCHY_SMB_UID                  80
+#define LOCK_HIERARCHY_SMB_STARTED              20
+#define LOCK_HIERARCHY_SMB_LISTENER             30
+#define LOCK_HIERARCHY_SMB_DIRWATCH             40
+#define LOCK_HIERARCHY_SMB_GLOBAL               50
+#define LOCK_HIERARCHY_SMB_DIRSEARCH            60
+#define LOCK_HIERARCHY_SMB_FID                  70
+#define LOCK_HIERARCHY_SMB_TID                  80
+#define LOCK_HIERARCHY_SMB_UID                  90
 #define LOCK_HIERARCHY_SMB_RAWBUF              100
-#define LOCK_HIERARCHY_SMB_DIRWATCH            105
 #define LOCK_HIERARCHY_SMB_RCT_GLOBAL          110
 #define LOCK_HIERARCHY_SMB_USERNAME            115
 #define LOCK_HIERARCHY_SMB_VC                  120

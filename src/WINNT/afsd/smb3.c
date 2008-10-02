@@ -8548,9 +8548,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             osi_Log1(smb_logp," skipping fidp->scp[%x]", fidp->scp);
             lastWatch = watch;
             watch = watch->nextp;
-            lock_ReleaseMutex(&smb_Dir_Watch_Lock);
             smb_ReleaseFID(fidp);
-            lock_ObtainMutex(&smb_Dir_Watch_Lock);
             continue;
         }
 
@@ -8588,9 +8586,6 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             smb_Directory_Watches = nextWatch;
         else
             lastWatch->nextp = nextWatch;
-
-        /* The watch is off the list, its ours now, safe to drop the lock */
-        lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
         /* Turn off WATCHED flag in dscp */
         lock_ObtainWrite(&dscp->rw);
@@ -8694,7 +8689,6 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         smb_FreePacket(watch);
 
         smb_ReleaseFID(fidp);
-        lock_ObtainMutex(&smb_Dir_Watch_Lock);
         watch = nextWatch;
     }
     lock_ReleaseMutex(&smb_Dir_Watch_Lock);
