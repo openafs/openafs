@@ -1100,6 +1100,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	    hadd32(call->bytesSent, cp->length);
 	    rxi_PrepareSendPacket(call, cp, 0);
 	    queue_Append(&tmpq, cp);
+            cp = call->currentPacket = (struct rx_packet *)0;
 
 	    /* The head of the iovq is now the current packet */
 	    if (nbytes) {
