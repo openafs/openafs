@@ -1121,6 +1121,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	    rxi_PrepareSendPacket(call, cp, 0);
 	    cp->flags |= RX_PKTFLAG_TQ;
 	    queue_Append(&tmpq, cp);
+            cp = call->currentPacket = (struct rx_packet *)0;
 
 	    /* The head of the iovq is now the current packet */
 	    if (nbytes) {
@@ -1152,6 +1153,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 		if (cp) {
 		    cp->flags &= ~RX_PKTFLAG_CP;
 		    queue_Prepend(&tmpq, cp);
+                    cp = call->currentPacket = (struct rx_packet *)0;
 		}
 		rxi_FreePackets(0, &tmpq);
 		return 0;
@@ -1197,6 +1199,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	if (cp) {
 	    cp->flags &= ~RX_PKTFLAG_CP;
 	    rxi_FreePacket(cp);
+            cp = call->currentPacket = (struct rx_packet *)0;
 	}
 	return 0;
     }
