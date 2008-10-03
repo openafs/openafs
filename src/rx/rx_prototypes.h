@@ -264,19 +264,8 @@ extern afs_int32 rx_SetSecurityConfiguration(struct rx_service *service,
 					     rx_securityConfigVariables type,
 					     void *value);
 
-
-/* old style till varargs */
-#if 0
-void
-rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
-               int a7, int a8, int a9, int a10, int a11, int a12, int a13,
-	       int a14, int a15);
-void
-rxi_DebugInit(void);
-#else
-void rxi_DebugInit();
-void rxi_DebugPrint();
-#endif
+void rxi_DebugInit(void);
+void rxi_DebugPrint(char *format, ...);
 
 /* rx_clock.c */
 #if !defined(clock_Init)
@@ -373,7 +362,7 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 #define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
 #else
-extern void osi_Panic();       /* leave without args till stdarg rewrite */
+extern void osi_Panic(char *fmt, ...);
 #endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(register struct rx_peer *pp);
