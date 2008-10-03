@@ -184,7 +184,7 @@ typedef struct rx_ts_info_t {
     } _FPQ;
     struct rx_packet * local_special_packet;
 } rx_ts_info_t;
-EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
+struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
 #define RX_TS_INFO_GET(ts_info_p) \
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
@@ -242,9 +242,9 @@ EXT afs_kmutex_t rx_freePktQ_lock;
 EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
 EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
 EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
-EXT void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
-EXT void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
-EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
+void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
+void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
+void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
 #define RX_TS_FPQ_FLUSH_GLOBAL 1
 #define RX_TS_FPQ_PULL_GLOBAL 1
 #define RX_TS_FPQ_ALLOW_OVERCOMMIT 1
