@@ -541,11 +541,7 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 #define rx_Log rx_debugFile
 #ifdef AFS_NT40_ENV
 EXT int rxdebug_active;
-#if !defined(_WIN64)
-#define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
-#else
-#define dpf(args)
-#endif
+#define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
 #else
 #ifdef DPF_FSLOG
 #define dpf(args) FSLog args
