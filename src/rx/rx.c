@@ -6277,6 +6277,7 @@ rx_DebugOnOff(int on)
 void
 rxi_DebugPrint(char *format, ...)
 {
+    va_list ap;
 #ifdef AFS_NT40_ENV
     char msg[512];
     char tformat[256];
@@ -6297,7 +6298,6 @@ rxi_DebugPrint(char *format, ...)
     va_end(ap);
 #else
     struct clock now;
-    va_list ap;
     
     va_start(ap, format);
 
