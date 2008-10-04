@@ -6343,6 +6343,8 @@ rxi_DebugPrint(char *format, ...)
     char tformat[256];
     size_t len;
 
+    va_start(ap, format);
+
     len = _snprintf(tformat, sizeof(tformat), "tid[%d] %s", GetCurrentThreadId(), format);
 
     if (len > 0) {
