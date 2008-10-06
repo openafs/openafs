@@ -21,9 +21,7 @@
 
 #include "afsd.h"
 #include "cm_memmap.h"
-
-/* From RDR Prototypes.h */
-extern DWORD RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents);
+#include "cm_rdr.h"
 
 #ifdef DEBUG
 #define TRACE_BUFFER 1

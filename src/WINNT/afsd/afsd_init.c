@@ -39,6 +39,7 @@
 #ifdef DEBUG
 #include <crtdbg.h>
 #endif
+#include "cm_rdr.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
@@ -96,9 +97,10 @@ BOOL reportSessionStartups = FALSE;
 
 cm_initparams_v1 cm_initParams;
 
-clientchar_t *cm_sysName = 0;
 unsigned int  cm_sysNameCount = 0;
 clientchar_t *cm_sysNameList[MAXNUMSYSNAMES];
+unsigned int  cm_sysName64Count = 0;
+clientchar_t *cm_sysName64List[MAXNUMSYSNAMES];
 
 DWORD TraceOption = 0;
 
@@ -928,12 +930,15 @@ int afsd_InitCM(char **reasonP)
     for ( i=0; i < MAXNUMSYSNAMES; i++ ) {
         cm_sysNameList[i] = osi_Alloc(MAXSYSNAME * sizeof(clientchar_t));
         cm_sysNameList[i][0] = '\0';
+        cm_sysName64List[i] = osi_Alloc(MAXSYSNAME * sizeof(clientchar_t));
+        cm_sysName64List[i][0] = '\0';
     }
-    cm_sysName = cm_sysNameList[0];
 
+    /* Process SysName lists from the registry */
     {
         clientchar_t *p, *q;
         clientchar_t * cbuf = (clientchar_t *) buf;
+
         dummyLen = sizeof(buf);
         code = RegQueryValueExW(parmKey, L"SysName", NULL, NULL, (LPBYTE) cbuf, &dummyLen);
         if (code != ERROR_SUCCESS || !cbuf[0]) {
@@ -945,7 +950,7 @@ int afsd_InitCM(char **reasonP)
             cm_ClientStrCpy(cbuf, lengthof(buf), _C("x86_win32 i386_w2k i386_nt40"));
 #endif
         }
-        afsi_log("Sys name %S", cbuf); 
+        afsi_log("Sys name list: %S", cbuf); 
 
         /* breakup buf into individual search string entries */
         for (p = q = cbuf; p < cbuf + dummyLen; p++) {
@@ -955,16 +960,51 @@ int afsd_InitCM(char **reasonP)
                 cm_sysNameCount++;
                 do {
                     if (*p == '\0')
-                        goto done_sysname;
+                        goto done_sysname32;
                     p++;
                 } while (*p == '\0' || isspace(*p));
                 q = p;
                 p--;
             }
         }
+      done_sysname32:
+        if (cm_sysNameCount)
+            RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+
+#ifdef _WIN64
+        /* 
+         * If there is a 64-bit list, process it.  Otherwise, we will leave
+         * it undefined which implies that the 32-bit list be used for both.
+         * The 64-bit list is only used for the native file system driver.
+         * The SMB redirector interface does not provide any means of indicating
+         * the source of the request.
+         */
+        dummyLen = sizeof(buf);
+        code = RegQueryValueExW(parmKey, L"SysName64", NULL, NULL, (LPBYTE) cbuf, &dummyLen);
+        if (code == ERROR_SUCCESS && cbuf[0]) {
+            afsi_log("Sys name 64 list: %S", cbuf); 
+
+            /* breakup buf into individual search string entries */
+            for (p = q = cbuf; p < cbuf + dummyLen; p++) {
+                if (*p == '\0' || iswspace(*p)) {
+                    memcpy(cm_sysName64List[cm_sysName64Count],q,(p-q) * sizeof(clientchar_t));
+                    cm_sysName64List[cm_sysName64Count][p-q] = '\0';
+                    cm_sysName64Count++;
+                    do {
+                        if (*p == '\0')
+                            goto done_sysname64;
+                        p++;
+                    } while (*p == '\0' || isspace(*p));
+                    q = p;
+                    p--;
+                }
+            }
+        }
+      done_sysname64:
+        if (cm_sysName64Count)
+            RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+#endif
     }
-  done_sysname:
-    cm_ClientStrCpy(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
 
     dummyLen = sizeof(cryptall);
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,

@@ -1254,10 +1254,13 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     return code;
 }
 
-int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, unsigned int index)
+int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, long outSizeCch, unsigned int index)
 {
     clientchar_t *tp;
     int prefixCount;
+
+    if (reqp && !(reqp->flags & CM_REQ_SOURCE_SMB))
+        return 0;
 
     tp = cm_ClientStrRChr(inp, '@');
     if (tp == NULL) 
@@ -1421,9 +1424,9 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
         return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outScpp);
     }
 
-    if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
+    if (cm_ExpandSysName(reqp, namep, NULL, 0, 0) > 0) {
         for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
-            code = cm_ExpandSysName(namep, tname, lengthof(tname), sysNameIndex);
+            code = cm_ExpandSysName(reqp, namep, tname, lengthof(tname), sysNameIndex);
             if (code > 0) {
                 code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
@@ -2619,7 +2622,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(NULL, cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
@@ -2785,7 +2788,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(NULL, cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
