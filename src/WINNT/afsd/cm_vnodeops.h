@@ -148,7 +148,7 @@ extern long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
                             cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
                             cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch,
+extern int cm_ExpandSysName(cm_req_t *reqp, clientchar_t *inp, clientchar_t *outp, long outSizeCch,
                             unsigned int sysNameIndex);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);

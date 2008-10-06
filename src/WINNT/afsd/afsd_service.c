@@ -1329,18 +1329,21 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         /* Notify any volume status handlers that the cache manager has started */
         cm_VolStatus_Service_Started();
 
-/* the following ifdef chooses the mode of operation for the service.  to enable
- * a runtime flag (instead of compile-time), pioctl() would need to dynamically
- * determine the mode, in order to use the correct ioctl special-file path. */
+        code = RDR_Initialize();
+        RDR_Initialized = !code;
+        afsi_log("RDR_Initialize returned: (code = %d)", code);
+
+        /* 
+         * Set the default for the SMB interface based upon the state of the
+         * Redirector interface. 
+         */
+        smb_Enabled = !RDR_Initialized;
+
         code = afsd_InitSMB(&reason, MessageBox);
         if (code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
             osi_panic(reason, __FILE__, __LINE__);
         }
-
-        code = RDR_Initialize();
-        RDR_Initialized = !code;
-        afsi_log("RDR_Initialize returned: (code = %d)", code);
 
         /* allow an exit to be called post smb initialization */
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);

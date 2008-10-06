@@ -45,6 +45,8 @@ time_t smb_LogoffTransferTimeout;
 
 int smb_StoreAnsiFilenames = 0;
 
+afs_uint32 smb_Enabled = 1;
+
 DWORD last_msg_time = 0;
 
 long ongoingOps = 0;
@@ -9105,6 +9107,9 @@ int smb_NetbiosInit(int locked)
     int lana_found = 0;
     lana_number_t lanaNum;
 
+    if (!smb_Enabled)
+        return 0;
+
     if (!locked)
         lock_ObtainMutex(&smb_StartedLock);
 
@@ -9286,6 +9291,9 @@ void smb_StartListeners(int locked)
     int lpid;
     thread_t phandle;
 
+    if (!smb_Enabled)
+        return;
+
     if (!locked)
         lock_ObtainMutex(&smb_StartedLock);
 
@@ -9317,6 +9325,9 @@ void smb_StartListeners(int locked)
 
 void smb_RestartListeners(int locked)
 {
+    if (!smb_Enabled)
+        return;
+
     if (!locked)
         lock_ObtainMutex(&smb_StartedLock);
 
@@ -9371,6 +9382,9 @@ void smb_StopListeners(int locked)
     NCB *ncbp;
     int lana, l;
 
+    if (!smb_Enabled)
+        return;
+
     if (!locked)
         lock_ObtainMutex(&smb_StartedLock);
 
@@ -9423,6 +9437,9 @@ void smb_Init(osi_log_t *logp, int useV3,
     EVENT_HANDLE retHandle;
     char eventName[MAX_PATH];
     int startListeners = 0;
+
+    if (!smb_Enabled)
+        return;
 
     smb_TlsRequestSlot = TlsAlloc();
 
@@ -9784,6 +9801,9 @@ void smb_Shutdown(void)
     afs_uint32 i;
     smb_vc_t *vcp;
 
+    if (!smb_Enabled)
+        return;
+
     /*fprintf(stderr, "Entering smb_Shutdown\n");*/
         
     /* setup the NCB system */
@@ -9988,6 +10008,9 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     smb_username_t *unp;
     smb_waitingLockRequest_t *wlrp;
 
+    if (!smb_Enabled)
+        return 0;
+
     if (lock)
         lock_ObtainRead(&smb_rctLock);
   
@@ -10162,6 +10185,10 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 long smb_IsNetworkStarted(void)
 {
     long rc;
+
+    if (!smb_Enabled)
+        return 0;
+
     lock_ObtainWrite(&smb_globalLock);
     rc = (smb_ListenerState == SMB_LISTENER_STARTED && smbShutdownFlag == 0);
     lock_ReleaseWrite(&smb_globalLock);

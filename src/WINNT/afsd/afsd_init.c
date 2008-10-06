@@ -1542,7 +1542,14 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
         } else 
             smb_AsyncStoreSize = CM_CONFIGDEFAULT_ASYNCSTORESIZE;
         afsi_log("SMBAsyncStoreSize = %d", smb_AsyncStoreSize);
-        
+
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "SMBInterfaceEnabled", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            smb_Enabled = dwValue ? 1 : 0;
+        afsi_log("SMBInterfaceEnabled = %d", smb_Enabled);
+
         RegCloseKey (parmKey);
     }
 
