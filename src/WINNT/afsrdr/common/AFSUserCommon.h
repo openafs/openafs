@@ -28,7 +28,7 @@ typedef struct _AFS_FILE_ID
 typedef struct _AFS_COMM_REQUEST_BLOCK
 {
 
-    ULONG           ProcessId;          /* Session Identifier */
+    ULARGE_INTEGER  ProcessId;          /* Session Identifier */
 
     AFSFileID       FileId;             /* Initialize unused elements to 0 */
 
@@ -115,6 +115,12 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define IOCTL_AFS_SHUTDOWN                      CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100B, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_AFS_SYSNAME_NOTIFICATION          CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100C, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_STATUS_REQUEST                CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100D, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_SET_BYTE_RANGE_LOCKS          CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100E, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 //
 // Request types
 //
@@ -134,6 +140,9 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_TYPE_PIOCTL_WRITE            0x0000000D
 #define AFS_REQUEST_TYPE_PIOCTL_OPEN             0x0000000E
 #define AFS_REQUEST_TYPE_PIOCTL_CLOSE            0x0000000F
+#define AFS_REQUEST_TYPE_BYTE_RANGE_LOCK         0x00000010
+#define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK       0x00000011
+#define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL   0x00000012
 
 //
 // Request Flags
@@ -492,7 +501,7 @@ typedef struct _AFS_RELEASE_FILE_EXTENTS_RESULT_FILE_CB
 
     ULONG           Flags;
 
-    ULONG           ProcessId;
+    ULARGE_INTEGER  ProcessId;
 
     ULONG           ExtentCount;
 
@@ -713,5 +722,181 @@ typedef struct _AFS_VOLUME_STATUS_CB
     BOOLEAN     Online;
 
 } AFSVolumeStatusCB;
+
+
+#define AFS_MAX_SYSNAME_LENGTH 128
+
+typedef struct _AFS_SYSNAME 
+{
+
+    ULONG       Length;         /* bytes */
+
+    WCHAR       String[AFS_MAX_SYSNAME_LENGTH];
+
+} AFSSysName;
+
+//
+// SysName Notification Control Block
+//   Sent as the buffer with IOCTL_AFS_SYSNAME_NOTIFICATION
+//   There is no response
+//
+
+typedef struct _AFS_SYSNAME_NOTIFICATION_CB
+{
+    
+    ULONG       Architecture;
+
+    ULONG       NumberOfNames;
+
+    AFSSysName  SysNames[1];
+
+} AFSSysNameNotificationCB;
+
+#define AFS_SYSNAME_ARCH_32BIT 0
+#define AFS_SYSNAME_ARCH_64BIT 1
+
+
+//
+// File System Status Query Control Block
+//   Received as a response to IOCTL_AFS_STATUS_REQUEST
+//
+typedef struct _AFS_DRIVER_STATUS_RESPONSE_CB 
+{
+        
+    ULONG       Status;         // bit flags - see below
+
+} AFSDriverStatusRespCB;
+
+// Bit flags
+#define AFS_DRIVER_STATUS_READY         0
+#define AFS_DRIVER_STATUS_NOT_READY     1
+#define AFS_DRIVER_STATUS_NO_SERVICE    2
+
+//
+// Byte Range Lock Request
+//
+typedef struct _AFS_BYTE_RANGE_LOCK_REQUEST
+{
+    ULONG               LockType;
+
+    LARGE_INTEGER       Offset;
+
+    LARGE_INTEGER       Length;
+
+} AFSByteRangeLockRequest;
+
+#define AFS_BYTE_RANGE_LOCK_TYPE_SHARED 0
+#define AFS_BYTE_RANGE_LOCK_TYPE_EXCL   1
+
+
+//
+// Byte Range Lock Request Control Block
+//
+// Set ProcessId and FileId in the Comm Request Block
+//
+typedef struct _AFS_BYTE_RANGE_LOCK_REQUEST_CB
+{
+
+    ULONG                       Count;
+
+    AFSByteRangeLockRequest     Request[1];
+
+} AFSByteRangeLockRequestCB;
+
+
+//
+// Async Byte Range Lock Request Control Block
+//
+// Set ProcessId in the Comm Request Block
+//
+typedef struct _AFS_ASYNC_BYTE_RANGE_LOCK_REQUEST_CB
+{
+
+    ULONG                       SerialNumber;
+
+    ULONG                       Count;
+
+    AFSByteRangeLockRequest     Request[1];
+
+} AFSAsyncByteRangeLockRequestCB;
+
+
+//
+// Byte Range Lock Result
+//
+typedef struct _AFS_BYTE_RANGE_LOCK_RESULT
+{
+
+    ULONG               LockType;
+
+    LARGE_INTEGER       Offset;
+
+    LARGE_INTEGER       Length;
+
+    ULONG               Status;
+
+} AFSByteRangeLockResult;
+
+//
+// Byte Range Lock Results Control Block
+//
+
+typedef struct _AFS_BYTE_RANGE_LOCK_RESULT_CB
+{
+
+    AFSFileID                   FileId;
+
+    ULONG                       Count;
+
+    AFSByteRangeLockResult      Result[1];
+
+} AFSByteRangeLockResultCB;
+
+
+//
+// Set Byte Range Lock Results Control Block
+//
+
+typedef struct _AFS_SET_BYTE_RANGE_LOCK_RESULT_CB
+{
+
+    ULONG                       SerialNumber;
+
+    AFSFileID                   FileId;
+
+    ULONG                       Count;
+
+    AFSByteRangeLockResult      Result[1];
+
+} AFSSetByteRangeLockResultCB;
+
+
+//
+// Byte Range Unlock Request Control Block
+//
+
+typedef struct _AFS_BYTE_RANGE_UNLOCK_CB
+{
+
+    ULONG                       Count;
+
+    AFSByteRangeLockRequest     Request[1];
+        
+} AFSByteRangeUnlockRequestCB;
+
+
+//
+// Byte Range Unlock Request Control Block
+//
+
+typedef struct _AFS_BYTE_RANGE_UNLOCK_RESULT_CB
+{
+        
+    ULONG                       Count;
+
+    AFSByteRangeLockResult      Result[1];
+
+} AFSByteRangeUnlockResultCB;
+
 
 #endif
