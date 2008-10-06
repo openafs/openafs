@@ -17,6 +17,7 @@
 #include <tchar.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <strsafe.h>
 
 #include "..\\Common\\AFSUserCommon.h"
 #include <RDRPrototypes.h>
@@ -354,6 +355,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     AFSCommResult 	stResultCB;
     DWORD       	dwResultBufferLength = 0;
     AFSSetFileExtentsCB * SetFileExtentsResultCB = NULL;
+    AFSSetByteRangeLockResultCB *SetByteRangeLockResultCB = NULL;
     WCHAR 		wchBuffer[256];
     cm_user_t *         userp = NULL;
 
@@ -540,9 +542,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSRequestExtentsCB *pFileRequestExtentsCB = (AFSRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX %s\n", 
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
-                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                          BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? "Sync" : "Async");
 
                 osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
@@ -557,7 +560,6 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                              pFileRequestExtentsCB,
                                              &dwResultBufferLength,
                                              &SetFileExtentsResultCB );
-
             break;
         }
 
@@ -700,6 +702,80 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                 &pResultCB);
                 break;
             }
+                                        
+
+    case AFS_REQUEST_TYPE_BYTE_RANGE_LOCK:
+            {
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_LOCK File %08lX.%08lX.%08lX.%08lX %s\n", 
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                              BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? "Sync" : "Async");
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                if (BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS)) {
+                    AFSByteRangeLockRequestCB *pBRLRequestCB = (AFSByteRangeLockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                    RDR_ByteRangeLockSync( userp, 
+                                           RequestBuffer->ProcessId,
+                                           RequestBuffer->FileId,
+                                           pBRLRequestCB,
+                                           RequestBuffer->ResultBufferLength,
+                                           &pResultCB);
+                } else {
+                    AFSAsyncByteRangeLockRequestCB *pBRLRequestCB = (AFSAsyncByteRangeLockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                    RDR_ByteRangeLockAsync( userp, 
+                                            RequestBuffer->ProcessId,
+                                            RequestBuffer->FileId,
+                                            pBRLRequestCB,
+                                            &dwResultBufferLength,
+                                            &SetByteRangeLockResultCB );
+                }
+
+                break;
+            }
+
+    case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK:
+            {
+                AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK File %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_ByteRangeUnlock( userp, 
+                                     RequestBuffer->ProcessId,
+                                     RequestBuffer->FileId,
+                                     pBRURequestCB,
+                                     RequestBuffer->ResultBufferLength,
+                                     &pResultCB);
+                break;
+            }
+
+    case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL:
+            {
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL File %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_ByteRangeUnlockAll( userp, 
+                                        RequestBuffer->ProcessId,
+                                        RequestBuffer->FileId,
+                                        RequestBuffer->ResultBufferLength,
+                                        &pResultCB);
+                break;
+            }
 
     default:
 
@@ -806,6 +882,61 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 char *pBuffer = (char *)wchBuffer;
                 sprintf( pBuffer,
                          "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                         GetLastError());
+                osi_panic(pBuffer, __FILE__, __LINE__);
+            }
+        }
+    } 
+    else if (RequestBuffer->RequestType == AFS_REQUEST_TYPE_BYTE_RANGE_LOCK) {
+
+        if (afsd_logp->enabled) {
+            swprintf( wchBuffer,
+                      L"ProcessRequest Responding Asynchronously to REQUEST_TYPE_BYTE_RANGELOCK request index %08lX\n",
+                      RequestBuffer->RequestIndex);
+                        
+            osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+        }
+
+
+        if (SetByteRangeLockResultCB) {
+            if( !DeviceIoControl( glDevHandle,
+                                  IOCTL_AFS_SET_BYTE_RANGE_LOCKS,
+                                  (void *)SetByteRangeLockResultCB,
+                                  dwResultBufferLength,
+                                  (void *)NULL,
+                                  0,
+                                  &bytesReturned,
+                                  NULL))
+            {
+                char *pBuffer = (char *)wchBuffer;
+                sprintf( pBuffer,
+                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X\n",
+                         GetLastError());
+                osi_panic(pBuffer, __FILE__, __LINE__);
+            }
+
+            free(SetByteRangeLockResultCB);
+        } else {
+            /* Must be out of memory */
+            AFSSetByteRangeLockResultCB SetByteRangeLockResultCB;
+            
+            dwResultBufferLength = sizeof(AFSSetByteRangeLockResultCB);
+            memset( &SetByteRangeLockResultCB, '\0', dwResultBufferLength );
+            SetByteRangeLockResultCB.FileId = RequestBuffer->FileId;
+            SetByteRangeLockResultCB.Result[0].Status = STATUS_NO_MEMORY;
+
+            if( !DeviceIoControl( glDevHandle,
+                                  IOCTL_AFS_SET_BYTE_RANGE_LOCKS,
+                                  (void *)&SetByteRangeLockResultCB,
+                                  dwResultBufferLength,
+                                  (void *)NULL,
+                                  0,
+                                  &bytesReturned,
+                                  NULL))
+            {
+                char *pBuffer = (char *)wchBuffer;
+                sprintf( pBuffer,
+                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X\n",
                          GetLastError());
                 osi_panic(pBuffer, __FILE__, __LINE__);
             }
@@ -1203,6 +1334,84 @@ RDR_InvalidateObject(ULONG cellID, ULONG volID, ULONG vnode, ULONG uniq, ULONG h
                               IOCTL_AFS_INVALIDATE_CACHE,
                               (void *)requestBuffer,
                               sizeof( AFSInvalidateCacheCB),
+                              NULL,
+                              0,
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            rc = -1;
+            goto cleanup;
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (requestBuffer)
+        free( requestBuffer);
+
+    return rc;
+}
+
+
+
+extern "C" DWORD 
+RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
+{
+
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSSysNameNotificationCB *requestBuffer = NULL;
+    DWORD rc = 0;
+    WCHAR wchBuffer[256];
+    DWORD Length;
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer,
+                  L"IOCTL_AFS_SYSNAME_NOTIFICATION request - Arch %d Count %d\n",
+                  Architecture, Count);
+                        
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    if (Count <= 0 || NameList == NULL)
+        return -1;
+
+    //
+    // We use the global handle to the control device instance
+    //
+
+    hDevHandle = glDevHandle;
+
+    //
+    // Allocate a request buffer.
+    //
+
+    Length = sizeof (AFSSysNameNotificationCB) + (Count - 1) * sizeof (AFSSysName);
+    requestBuffer = (AFSSysNameNotificationCB *)malloc( Length );
+
+
+    if( requestBuffer)
+    {
+        unsigned int i;
+
+	memset( requestBuffer, '\0', Length);
+
+        requestBuffer->Architecture = Architecture;
+        requestBuffer->NumberOfNames = Count;
+        for ( i=0 ; i<Count; i++) {
+            size_t len = wcslen(NameList[i]);
+            requestBuffer->SysNames[i].Length = len * sizeof(WCHAR);
+            StringCchCopyNW(requestBuffer->SysNames[i].String, AFS_MAX_SYSNAME_LENGTH, 
+                            NameList[i], len);
+        }
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_SYSNAME_NOTIFICATION,
+                              (void *)requestBuffer,
+                              Length,
                               NULL,
                               0,
                               &bytesReturned,

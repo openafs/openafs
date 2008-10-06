@@ -79,7 +79,7 @@ RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, OUT DWORD * pCacheFil
 }
 
 cm_user_t *
-RDR_UserFromProcessId( IN ULONG ProcessId)
+RDR_UserFromProcessId( IN ULARGE_INTEGER ProcessId)
 {
     cm_user_t *userp = NULL;
     HANDLE hProcess = 0, hToken = 0;
@@ -88,7 +88,7 @@ RDR_UserFromProcessId( IN ULONG ProcessId)
     wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
     int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
-    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, ProcessId);
+    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, (ULONG)ProcessId.QuadPart);
     if (hProcess == NULL)
         goto done;
 
@@ -1544,7 +1544,7 @@ RDR_CheckAccess( IN cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 {
     ULONG afs_acc, afs_gr;
     BOOLEAN file, dir;
-    afs_uint32 code;
+    afs_uint32 code = 0;
 
     file = (scp->fileType == CM_SCACHETYPE_FILE);
     dir = !file;
@@ -1609,6 +1609,9 @@ RDR_CheckAccess( IN cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
             *granted |= 0;
 
         *granted |= SYNCHRONIZE | READ_CONTROL;
+
+        /* don't give more access than what was requested */
+        *granted &= access;
         osi_Log2(afsd_logp, "RDR_CheckAccess SUCCESS scp=0x%p granted=0x%x", scp, *granted);
     } else
         osi_Log2(afsd_logp, "RDR_CheckAccess FAILURE scp=0x%p code=0x%x",
@@ -2346,5 +2349,424 @@ RDR_PioctlRead( IN cm_user_t *userp,
     }
 
     (*ResultCB)->ResultBufferLength = sizeof( AFSPIOCtlIOResultCB);
+}
+
+void
+RDR_ByteRangeLockSync( IN cm_user_t     *userp,
+                       IN ULARGE_INTEGER ProcessId,
+                       IN AFSFileID     FileId,
+                       IN AFSByteRangeLockRequestCB *pBRLRequestCB,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB)
+{
+    AFSByteRangeLockResultCB *pResultCB = NULL;
+    DWORD       Length;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    cm_key_t    key;
+    DWORD       i;
+    DWORD       status;
+    BOOL        bScpLocked;
+
+    cm_InitReq(&req);
+
+    osi_Log4(afsd_logp, "RDR_ByteRangeLockSync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
+    Length = sizeof( AFSCommResult) + sizeof( AFSByteRangeLockResultCB) + ((pBRLRequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult));
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+
+    *ResultCB = (AFSCommResult *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+
+    pResultCB = (AFSByteRangeLockResultCB *)(*ResultCB)->ResultData;
+    pResultCB->FileId = FileId;
+    pResultCB->Count = pBRLRequestCB->Count;
+
+    /* Allocate the extents from the buffer package */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_ByteRangeLockSync cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
+
+    /* start by looking up the file's end */
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log3(afsd_logp, "RDR_ByteRangeLockSync cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        return;
+    }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    /* the scp is now locked and current */
+    for ( i=0; i<pBRLRequestCB->Count; i++ ) {
+        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+
+        pResultCB->Result[i].LockType = pBRLRequestCB->Request[i].LockType;
+        pResultCB->Result[i].Offset = pBRLRequestCB->Request[i].Offset;
+        pResultCB->Result[i].Length = pBRLRequestCB->Request[i].Length;
+
+        code = cm_Lock(scp, pBRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+                       pBRLRequestCB->Request[i].Offset, 
+                       pBRLRequestCB->Request[i].Length,
+                       key, 0, userp, &req, NULL);
+        switch (code) {
+        case 0:
+            pResultCB->Result[i].Status = 0;
+            break;
+        case CM_ERROR_WOULDBLOCK:
+            pResultCB->Result[i].Status = STATUS_FILE_LOCK_CONFLICT;
+            break;
+        default:
+            pResultCB->Result[i].Status = STATUS_LOCK_NOT_GRANTED;
+        }
+    }
+
+
+    if (bScpLocked) {
+        lock_ReleaseWrite(&scp->rw);
+        bScpLocked = FALSE;
+    }
+    cm_ReleaseSCache(scp);
+
+    (*ResultCB)->ResultStatus = 0;
+    osi_Log0(afsd_logp, "RDR_ByteRangeLockSync SUCCESS");
+    return;
+}
+
+void
+RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
+                        IN ULARGE_INTEGER ProcessId,
+                        IN AFSFileID     FileId,
+                        IN AFSAsyncByteRangeLockRequestCB *pABRLRequestCB,
+                        OUT DWORD *ResultBufferLength,
+                        IN OUT AFSSetByteRangeLockResultCB **ResultCB)
+{
+    AFSSetByteRangeLockResultCB *pResultCB = NULL;
+    DWORD       Length;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    cm_key_t    key;
+    DWORD       i;
+    DWORD       status;
+    BOOL        bScpLocked;
+
+    cm_InitReq(&req);
+
+    osi_Log4(afsd_logp, "RDR_ByteRangeLockAsync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
+    Length = sizeof( AFSSetByteRangeLockResultCB) + ((pABRLRequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
+    *ResultCB = (AFSSetByteRangeLockResultCB *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    *ResultBufferLength = Length;
+
+    pResultCB = (AFSSetByteRangeLockResultCB *)(*ResultCB);
+    pResultCB->SerialNumber = pABRLRequestCB->SerialNumber;
+    pResultCB->FileId = FileId;
+    pResultCB->Count = pABRLRequestCB->Count;
+
+    /* Allocate the extents from the buffer package */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->Result[0].Status = status;
+        (*ResultCB)->Count = 0;
+        *ResultBufferLength = sizeof(AFSSetByteRangeLockResultCB);
+        osi_Log2(afsd_logp, "RDR_ByteRangeLockAsync cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
+
+    /* start by looking up the file's end */
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->Result[0].Status = status;
+        (*ResultCB)->Count = 0;
+        *ResultBufferLength = sizeof(AFSSetByteRangeLockResultCB);
+        osi_Log3(afsd_logp, "RDR_ByteRangeLockAsync cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        return;
+    }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    /* the scp is now locked and current */
+    for ( i=0; i<pABRLRequestCB->Count; i++ ) {
+        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+
+        pResultCB->Result[i].LockType = pABRLRequestCB->Request[i].LockType;
+        pResultCB->Result[i].Offset = pABRLRequestCB->Request[i].Offset;
+        pResultCB->Result[i].Length = pABRLRequestCB->Request[i].Length;
+
+        code = cm_Lock(scp, pABRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+                       pABRLRequestCB->Request[i].Offset, 
+                       pABRLRequestCB->Request[i].Length,
+                       key, 0, userp, &req, NULL);
+        switch (code) {
+        case 0:
+            pResultCB->Result[i].Status = 0;
+            break;
+        case CM_ERROR_WOULDBLOCK:
+            pResultCB->Result[i].Status = STATUS_FILE_LOCK_CONFLICT;
+            break;
+        default:
+            pResultCB->Result[i].Status = STATUS_LOCK_NOT_GRANTED;
+        }
+    }
+
+
+    if (bScpLocked) {
+        lock_ReleaseWrite(&scp->rw);
+        bScpLocked = FALSE;
+    }
+    cm_ReleaseSCache(scp);
+    osi_Log0(afsd_logp, "RDR_ByteRangeLockAsync SUCCESS");
+    return;
+}
+
+void
+RDR_ByteRangeUnlock( IN cm_user_t     *userp,
+                     IN ULARGE_INTEGER ProcessId,
+                     IN AFSFileID     FileId,
+                     IN AFSByteRangeUnlockRequestCB *pBRURequestCB,
+                     IN DWORD ResultBufferLength,
+                     IN OUT AFSCommResult **ResultCB)
+{
+    AFSByteRangeUnlockResultCB *pResultCB = NULL;
+    DWORD       Length;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    cm_key_t    key;
+    DWORD       i;
+    DWORD       status;
+    BOOL        bScpLocked;
+
+    cm_InitReq(&req);
+
+    osi_Log4(afsd_logp, "RDR_ByteRangeUnlock File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
+    Length = sizeof( AFSCommResult) + sizeof( AFSByteRangeUnlockResultCB) + ((pBRURequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult));
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+
+    *ResultCB = (AFSCommResult *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+
+    pResultCB = (AFSByteRangeUnlockResultCB *)(*ResultCB)->ResultData;
+    pResultCB->Count = pBRURequestCB->Count;
+
+    /* Allocate the extents from the buffer package */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_ByteRangeUnlock cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
+
+    /* start by looking up the file's end */
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log3(afsd_logp, "RDR_ByteRangeUnlock cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        return;
+    }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    /* the scp is now locked and current */
+    for ( i=0; i<pBRURequestCB->Count; i++ ) {
+        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+
+        pResultCB->Result[i].LockType = pBRURequestCB->Request[i].LockType;
+        pResultCB->Result[i].Offset = pBRURequestCB->Request[i].Offset;
+        pResultCB->Result[i].Length = pBRURequestCB->Request[i].Length;
+
+        code = cm_Unlock(scp, pBRURequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+                       pBRURequestCB->Request[i].Offset, 
+                       pBRURequestCB->Request[i].Length,
+                       key, userp, &req);
+
+        smb_MapNTError(code, &status);
+        pResultCB->Result[i].Status = status;
+    }
+
+    if (bScpLocked) {
+        lock_ReleaseWrite(&scp->rw);
+        bScpLocked = FALSE;
+    }
+    cm_ReleaseSCache(scp);
+
+    (*ResultCB)->ResultStatus = 0;
+    osi_Log0(afsd_logp, "RDR_ByteRangeUnlock SUCCESS");
+    return;
+}
+
+void
+RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
+                        IN ULARGE_INTEGER ProcessId,
+                        IN AFSFileID     FileId,
+                        IN DWORD ResultBufferLength,
+                        IN OUT AFSCommResult **ResultCB)
+{
+    AFSByteRangeUnlockResultCB *pResultCB = NULL;
+    DWORD       Length;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    cm_key_t    key;
+    DWORD       status;
+    BOOL        bScpLocked;
+
+    cm_InitReq(&req);
+
+    osi_Log4(afsd_logp, "RDR_ByteRangeUnlock File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique);
+
+    Length = sizeof( AFSCommResult);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult));
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+
+    *ResultCB = (AFSCommResult *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+
+    /* Allocate the extents from the buffer package */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_ByteRangeUnlockAll cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+    bScpLocked = TRUE;
+
+    /* start by looking up the file's end */
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(code, &status);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log3(afsd_logp, "RDR_ByteRangeUnlockAll cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        return;
+    }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    /* the scp is now locked and current */
+    key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+
+    code = cm_UnlockByKey(scp, key, 0, userp, &req);
+
+    if (bScpLocked) {
+        lock_ReleaseWrite(&scp->rw);
+        bScpLocked = FALSE;
+    }
+    cm_ReleaseSCache(scp);
+
+    smb_MapNTError(code, &status);
+    (*ResultCB)->ResultStatus = status;
+    osi_Log0(afsd_logp, "RDR_ByteRangeUnlockAll SUCCESS");
+    return;
+        
 }
 

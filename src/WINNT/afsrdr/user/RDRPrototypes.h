@@ -168,12 +168,45 @@ RDR_PioctlRead( IN cm_user_t *userp,
                 IN DWORD ResultBufferLength,
                 IN OUT AFSCommResult **ResultCB);
 
+void
+RDR_ByteRangeLockSync( IN cm_user_t     *userp,
+                       IN ULARGE_INTEGER ProcessId,
+                       IN AFSFileID     FileId,
+                       IN AFSByteRangeLockRequestCB *pBRLRequestCB,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
+                        IN ULARGE_INTEGER ProcessId,
+                        IN AFSFileID     FileId,
+                        IN AFSAsyncByteRangeLockRequestCB *pABRLRequestCB,
+                        OUT DWORD *ResultBufferLength,
+                        IN OUT AFSSetByteRangeLockResultCB **ResultCB);
+
+void
+RDR_ByteRangeUnlock( IN cm_user_t     *userp,
+                     IN ULARGE_INTEGER ProcessId,
+                     IN AFSFileID     FileId,
+                     IN AFSByteRangeUnlockRequestCB *pBRURequestCB,
+                     IN DWORD ResultBufferLength,
+                     IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
+                        IN ULARGE_INTEGER ProcessId,
+                        IN AFSFileID     FileId,
+                        IN DWORD ResultBufferLength,
+                        IN OUT AFSCommResult **ResultCB);
+
+extern DWORD 
+RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList);
 
 cm_user_t *
 RDR_UserFromCommRequest( IN AFSCommRequest * pRequest );
 
 cm_user_t *
-RDR_UserFromProcessId( IN ULONG ProcessId);
+RDR_UserFromProcessId( IN ULARGE_INTEGER ProcessId);
 
 void
 RDR_ReleaseUser( IN cm_user_t *userp);
