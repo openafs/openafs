@@ -131,7 +131,8 @@ Description: AFS distributed filesystem kaserver PAM module
  .
  This package provides a PAM module for existing  sites using the AFS
  kaserver for authentication.  New sites should use a Kerberos v5
- implementation, a Kerberos v5 PAM module, and libpam-openafs-session.
+ implementation, a Kerberos v5 PAM module such as libpam-krb5, and
+ libpam-afs-session.
 
 Package: openafs-dbg
 Section: libdevel

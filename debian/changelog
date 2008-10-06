@@ -1,3 +1,11 @@
+openafs (1.4.7.dfsg1-7) UNRELEASED; urgency=low
+
+  * Mention libpam-afs-session instead of libpam-openafs-session in the
+    description of libpam-openafs-kaserver, and mention libpam-krb5 by
+    name.  Thanks, Philipp Kaluza.  (Closes: #501308)
+
+ -- Russ Allbery <rra@debian.org>  Mon, 06 Oct 2008 11:10:14 -0700
+
 openafs (1.4.7.dfsg1-6) unstable; urgency=low
 
   * Apply upstream patch to free /proc entries in the correct order.
