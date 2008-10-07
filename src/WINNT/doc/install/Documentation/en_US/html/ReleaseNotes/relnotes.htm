@@ -22,7 +22,7 @@ w\:* {behavior:url(#default#VML);}
 .shape {behavior:url(#default#VML);}
 </style>
 <![endif]-->
-<title>OpenAFS for Windows 1.5.53 Release Notes</title>
+<title>OpenAFS for Windows 1.5.54 Release Notes</title>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
  name="PostalCode"/>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
@@ -1209,7 +1209,7 @@ strict'>
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.5.53 (with Unicode Support)<br>
+<p class=MsoTitle>OpenAFS for Windows 1.5.54 (with Unicode Support)<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
@@ -2746,12 +2746,12 @@ style='mso-bookmark:_Toc115416132'>3.26. Filename Character Sets</span></span></
 
 <p class=MsoNormal>OpenAFS for Windows implements an SMB server which is used
 as a gateway to the AFS filesystem.&nbsp; Because of limitations of the SMB
-implementation, Windows stores all files into AFS using OEM code pages such as
+implementation in pre-1.5.50 releases, Windows stored all files into AFS using OEM code pages such as
 CP437 (United States) or CP850 (Western Europe).&nbsp; These code pages are
-incompatible with the ISO Latin-1 character set typically used as the default
+incompatible with the ISO Latin-1 or Unicode (UTF-8) character sets typically used as the default
 on UNIX systems in both the <st1:country-region w:st="on">United States</st1:country-region>
 and <st1:place w:st="on">Western Europe</st1:place>.&nbsp; Filenames stored by
-OpenAFS for Windows are therefore unreadable on UNIX systems if they include
+OpenAFS for Windows were therefore unreadable on UNIX systems if they include
 any of the following characters:</p>
 
 <table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0
@@ -2835,15 +2835,25 @@ any of the following characters:</p>
 
 <p class=preformattedtext>&nbsp;</p>
 
-<p class=MsoNormal>The OpenAFS Client provides an optional registry value, <i><a
+<p class=MsoNormal>The pre-1.5.50 OpenAFS Client provided an optional registry value, <i><a
 href="#_Value___:_StoreAnsiFilenames"><span class=Heading1Char><span
 style='font-size:14.0pt;mso-fareast-font-family:"MS Mincho";text-decoration:
-none;text-underline:none'>StoreAnsiFilenames</span></span></a></i>, that can be
+none;text-underline:none'>StoreAnsiFilenames</span></span></a></i>, that could be
 set to instruct OpenAFS to store filenames using the ANSI Code Page instead of
 the OEM Code Page.&nbsp; The ANSI Code Page is a compatible superset of
 Latin-1.&nbsp; This setting is not the default setting because making this
 change would prevent OpenAFS for Windows from being able to access filenames
 containing the above characters which were created without this setting.</p>
+
+<p class=MsoNormal>
+All versions of OpenAFS for Windows 1.5.50 and above exchange file names with 
+Microsoft Windows using the Unicode character set.  All file names are read from 
+and stored to AFS file servers using the UTF-8 encoding of Unicode.  As a result 
+the <i><a href="#_Value___:_StoreAnsiFilenames"><span class=Heading1Char><span
+style='font-size:14.0pt;mso-fareast-font-family:"MS Mincho";text-decoration:
+none;text-underline:none'>StoreAnsiFilenames</span></span></a></i> option is no 
+longer supported.
+</p>
 
 <h2><a name="_Toc206421277"></a><a name="_Toc193871667"></a><a
 name="_Toc193871422"></a><a name="_Toc191662100"></a><a name="_Toc152605068"></a><a
@@ -4583,6 +4593,8 @@ OpenAFS for Windows.</p>
   class=Heading1Char><span style='font-size:14.0pt;mso-fareast-font-family:
   "MS Mincho";text-decoration:none;text-underline:none'>StoreAnsiFilenames</span></span></a></p>
   <p class=MsoList>Valid values&nbsp;&nbsp;&nbsp; : '0' or '1'</p>
+  <p class=MsoNormal>This option is no longer supported as of 1.5.50 now that all file names 
+  are stored to AFS file servers using the UTF-8 encoding of Unicode.</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:13;mso-yfti-lastrow:yes'>
