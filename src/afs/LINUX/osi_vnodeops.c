@@ -831,7 +831,7 @@ afs_linux_revalidate(struct dentry *dp)
     credp = crref();
     code = afs_getattr(vcp, &vattr, credp);
     if (!code)
-        vattr2inode(AFSTOV(vcp), &vattr);
+        afs_fill_inode(AFSTOV(vcp), &vattr);
 
     AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
