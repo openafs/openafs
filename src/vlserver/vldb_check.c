@@ -21,6 +21,24 @@
 #define MHC 0x100		/* on multihomed chain */
 #define FRC 0x200		/* on free chain */
 
+#define REFRW 0x1000            /* linked from something (RW) */
+#define REFRO 0x2000            /* linked from something (RO) */
+#define REFBK 0x4000            /* linked from something (BK) */
+#define REFN  0x8000            /* linked from something (name) */
+
+#define MULTRW 0x10000         /* multiply-chained (RW) */
+#define MULTRO 0x20000         /* multiply-chained (RO) */
+#define MULTBK 0x40000         /* multiply-chained (BK) */
+#define MULTN  0x80000         /* multiply-chained (name) */
+
+#define MISRWH 0x100000          /* mischained (RW) */
+#define MISROH 0x200000          /* mischained (RO) */
+#define MISBKH 0x400000          /* mischained (BK) */
+#define MISNH  0x800000          /* mischained (name) */
+
+#define vldbread(x,y,z) vldbio(x,y,z,0)
+#define vldbwrite(x,y,z) vldbio(x,y,z,1)
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -48,8 +66,14 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/cmd.h>
 
+#define ADDR(x) (x/sizeof(struct nvlentry))
+
 int fd;
 int listentries, listservers, listheader, listuheader, verbose;
+
+int fix = 0;
+int fixed = 0;
+int passes = 0;
 
 struct er {
     long addr;
@@ -57,6 +81,13 @@ struct er {
 } *record;
 int serveraddrs[MAXSERVERID + 2];
 
+#if 0
+int
+writeUbikHeader()
+{
+    /* Bump the version number?? We could cheat and push a new db... */
+}
+#endif
 
 #define HDRSIZE 64
 int
@@ -103,10 +134,7 @@ readUbikHeader()
 }
 
 int
-vldbread(position, buffer, size)
-     int position;
-     char *buffer;
-     int size;
+vldbio(int position, char *buffer, int size, int rdwr)
 {
     int offset, r, p;
 
@@ -118,18 +146,21 @@ vldbread(position, buffer, size)
 	return (-1);
     }
 
-    /* now read the info */
-    r = read(fd, buffer, size);
+    if (rdwr == 1) 
+	r = write(fd, buffer, size);
+    else 
+	r = read(fd, buffer, size);
+
     if (r != size) {
-	printf("error: read of %d bytes failed: %d %d\n", size, r, errno);
+	printf("error: %s of %d bytes failed: %d %d\n", rdwr==1?"write":"read",
+	       size, r, errno);
 	return (-1);
     }
     return (0);
 }
 
 char *
-vtype(type)
-     int type;
+vtype(int type)
 {
     static char Type[3];
 
@@ -145,8 +176,7 @@ vtype(type)
 }
 
 afs_int32
-NameHash(volname)
-     char *volname;
+NameHash(char *volname)
 {
     unsigned int hash;
     char *vchar;
@@ -158,16 +188,14 @@ NameHash(volname)
 }
 
 afs_int32
-IdHash(volid)
-     afs_int32 volid;
+IdHash(afs_int32 volid)
 {
     return ((abs(volid)) % HASHSIZE);
 }
 
 #define LEGALCHARS ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 int
-InvalidVolname(volname)
-     char *volname;
+InvalidVolname(char *volname)
 {
     char *map;
     size_t slen;
@@ -179,8 +207,8 @@ InvalidVolname(volname)
     return (slen != strspn(volname, map));
 }
 
-readheader(headerp)
-     struct vlheader *headerp;
+void
+readheader(struct vlheader *headerp)
 {
     int i, j;
 
@@ -245,9 +273,41 @@ readheader(headerp)
     return;
 }
 
-readMH(addr, mhblockP)
-     afs_int32 addr;
-     struct extentaddr *mhblockP;
+void
+writeheader(struct vlheader *headerp)
+{
+    int i, j;
+
+    headerp->vital_header.vldbversion =
+	htonl(headerp->vital_header.vldbversion);
+    headerp->vital_header.headersize =
+	htonl(headerp->vital_header.headersize);
+    headerp->vital_header.freePtr = htonl(headerp->vital_header.freePtr);
+    headerp->vital_header.eofPtr = htonl(headerp->vital_header.eofPtr);
+    headerp->vital_header.allocs = htonl(headerp->vital_header.allocs);
+    headerp->vital_header.frees = htonl(headerp->vital_header.frees);
+    headerp->vital_header.MaxVolumeId =
+	htonl(headerp->vital_header.MaxVolumeId);
+    headerp->vital_header.totalEntries[0] =
+	htonl(headerp->vital_header.totalEntries[0]);
+    for (i = 0; i < MAXTYPES; i++)
+	headerp->vital_header.totalEntries[i] =
+	    htonl(headerp->vital_header.totalEntries[1]);
+
+    headerp->SIT = htonl(headerp->SIT);
+    for (i = 0; i < MAXSERVERID; i++)
+	headerp->IpMappedAddr[i] = htonl(headerp->IpMappedAddr[i]);
+    for (i = 0; i < HASHSIZE; i++)
+	headerp->VolnameHash[i] = htonl(headerp->VolnameHash[i]);
+    for (i = 0; i < MAXTYPES; i++)
+	for (j = 0; j < HASHSIZE; j++)
+	    headerp->VolidHash[i][j] = htonl(headerp->VolidHash[i][j]);
+
+    vldbwrite(0, headerp, sizeof(*headerp));
+}
+
+void
+readMH(afs_int32 addr, struct extentaddr *mhblockP)
 {
     int i, j;
     struct extentaddr *e;
@@ -270,10 +330,8 @@ readMH(addr, mhblockP)
     return;
 }
 
-readentry(addr, vlentryp, type)
-     afs_int32 addr;
-     struct nvlentry *vlentryp;
-     afs_int32 *type;
+void
+readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 {
     int i;
 
@@ -352,9 +410,32 @@ readentry(addr, vlentryp, type)
 }
 
 void
-readSIT(base, addr)
-     int base;
-     int addr;
+writeentry(afs_int32 addr, struct nvlentry *vlentryp)
+{
+    int i;
+
+    if (verbose)
+	printf("Writing back entry at addr %u\n", addr);
+    fixed++;
+    for (i = 0; i < MAXTYPES; i++)
+	vlentryp->volumeId[i] = htonl(vlentryp->volumeId[i]);
+    vlentryp->flags = htonl(vlentryp->flags);
+    vlentryp->LockAfsId = htonl(vlentryp->LockAfsId);
+    vlentryp->LockTimestamp = htonl(vlentryp->LockTimestamp);
+    vlentryp->cloneId = htonl(vlentryp->cloneId);
+    for (i = 0; i < MAXTYPES; i++)
+	vlentryp->nextIdHash[i] = htonl(vlentryp->nextIdHash[i]);
+    vlentryp->nextNameHash = htonl(vlentryp->nextNameHash);
+    for (i = 0; i < NMAXNSERVERS; i++) {
+	vlentryp->serverNumber[i] = htonl(vlentryp->serverNumber[i]);
+	vlentryp->serverPartition[i] = htonl(vlentryp->serverPartition[i]);
+	vlentryp->serverFlags[i] = htonl(vlentryp->serverFlags[i]);
+    }
+    vldbwrite(addr, vlentryp, sizeof(*vlentryp));
+}
+
+void
+readSIT(int base, int addr)
 {
     int i, j, a;
     char sitbuf[VL_ADDREXTBLK_SIZE];
@@ -414,8 +495,7 @@ readSIT(base, addr)
  * Remember what the maximum volume id we found is and check against the header.
  */
 void
-ReadAllEntries(header)
-     struct vlheader *header;
+ReadAllEntries(struct vlheader *header)
 {
     afs_int32 type, rindex, i, j, e;
     int freecount = 0, mhcount = 0, vlcount = 0;
@@ -453,6 +533,10 @@ ReadAllEntries(header)
 			bkcount++;
 		    continue;
 		}
+		if (!vlentry.serverFlags[j]) {
+		    /*e = 0;*/
+		    continue;
+ 		}
 		if (e) {
 		    printf
 			("VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
@@ -504,13 +588,63 @@ ReadAllEntries(header)
 }
 
 
+void
+SetHashEnd(long addr, int type, long new)
+{
+    struct nvlentry vlentry;
+    afs_int32 i, rindex, type2, next = -1;
+
+    for (; addr; addr = next) {
+	readentry(addr, &vlentry, &type2);
+	switch(type & 0xf0) {
+	case RWH:
+	    next = vlentry.nextIdHash[0];
+	    break;
+	case ROH:
+	    next = vlentry.nextIdHash[1];
+	    break;
+	case BKH:
+	    next = vlentry.nextIdHash[2];
+	    break;
+	case NH:
+	    next = vlentry.nextNameHash;
+	    break;
+	default:
+	    next = -1;
+	}
+
+	if (next < 1) {
+	    switch(type & 0xf0) {
+	    case RWH:
+	      if (vlentry.nextIdHash[0] != 0) {printf("bwoop\n");}
+		vlentry.nextIdHash[0] = new;
+		break;
+	    case ROH:
+	      if (vlentry.nextIdHash[1] != 0) {printf("bwoop\n");}
+		vlentry.nextIdHash[1] = new;
+		break;
+	    case BKH:
+	      if (vlentry.nextIdHash[2] != 0) {printf("bwoop\n");}
+		vlentry.nextIdHash[2] = new;
+		break;
+	    case NH:
+	      if (vlentry.nextNameHash != 0) {printf("bwoop\n");}
+		vlentry.nextNameHash = new;
+		break;
+	    }
+	    writeentry(addr, &vlentry);
+	    return;
+	}
+    }
+}
+
 /*
  * Follow each Name hash bucket marking it as read in the record array.
  * Record we found it in the name hash within the record array.
  * Check that the name is hashed correctly.
  */
-FollowNameHash(header)
-     struct vlheader *header;
+void
+FollowNameHash(struct vlheader *header)
 {
     int count = 0, longest = 0, shortest = -1, chainlength;
     struct nvlentry vlentry;
@@ -541,9 +675,11 @@ FollowNameHash(header)
 		printf
 		    ("Name Hash %d: Bad entry '%s': Already in the name hash\n",
 		     i, vlentry.name);
+		record[rindex].type |= MULTN;
 		break;
 	    }
 	    record[rindex].type |= NH;
+	    record[rindex].type |= REFN;
 
 	    chainlength++;
 	    count++;
@@ -553,6 +689,7 @@ FollowNameHash(header)
 		printf
 		    ("Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
 		     i, vlentry.name, NameHash(vlentry.name));
+		record[rindex].type |= MULTN;
 	    }
 	}
 	if (chainlength > longest)
@@ -573,19 +710,22 @@ FollowNameHash(header)
  * Record we found it in the id hash within the record array.
  * Check that the ID is hashed correctly.
  */
-FollowIdHash(header)
-     struct vlheader *header;
+void
+FollowIdHash(struct vlheader *header)
 {
     int count = 0, longest = 0, shortest = -1, chainlength;
     struct nvlentry vlentry;
     afs_uint32 addr;
-    afs_int32 i, j, hash, type, rindex;
+    afs_int32 i, j, hash, type, rindex, ref, badref, badhash;
 
     /* Now follow the RW, RO, and BK Hash Tables */
     if (verbose)
 	printf("Check RW, RO, and BK id Hashes\n");
     for (i = 0; i < MAXTYPES; i++) {
 	hash = ((i == 0) ? RWH : ((i == 1) ? ROH : BKH));
+	ref = ((i == 0) ? REFRW : ((i == 1) ? REFRO : REFBK));
+	badref = ((i == 0) ? MULTRW : ((i == 1) ? MULTRO : MULTBK));
+	badhash = ((i == 0) ? MULTRW : ((i == 1) ? MULTRO : MULTBK));
 	count = longest = 0;
 	shortest = -1;
 
@@ -609,11 +749,13 @@ FollowIdHash(header)
 		}
 		if (record[rindex].type & hash) {
 		    printf
-			("%s Id Hash %d: Bad entry '%s': Already in the the hash table\n",
+			("%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
 			 vtype(i), j, vlentry.name);
+		    record[rindex].type |= badref;
 		    break;
 		}
 		record[rindex].type |= hash;
+		record[rindex].type |= ref;
 
 		chainlength++;
 		count++;
@@ -624,6 +766,8 @@ FollowIdHash(header)
 			("%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
+		    record[rindex].type |= badhash;
+		    printf("%d: %x\n", rindex, record[rindex].type);
 		}
 	    }
 
@@ -646,8 +790,8 @@ FollowIdHash(header)
  * Follow the free chain.
  * Record we found it in the free chain within the record array.
  */
-FollowFreeChain(header)
-     struct vlheader *header;
+void
+FollowFreeChain(struct vlheader *header)
 {
     afs_int32 count = 0;
     struct nvlentry vlentry;
@@ -703,8 +847,8 @@ FollowFreeChain(header)
  * The code does not verify if there are duplicate IP addresses in the 
  * list. The vlserver does this when a fileserver registeres itself.
  */
-CheckIpAddrs(header)
-     struct vlheader *header;
+void
+CheckIpAddrs(struct vlheader *header)
 {
     int mhblocks = 0;
     afs_int32 i, j, m, rindex;
@@ -898,15 +1042,21 @@ CheckIpAddrs(header)
     return;
 }
 
+void 
+FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp, 
+       struct nvlentry *vlentry, afs_uint32 hash) {
+    SetHashEnd(addr, type, tmp);
+    printf("linked unlinked chain %u (index %d) to end of chain %d for %s hash\n", 
+	   tmp, ADDR(tmp), hash, type==NH?"Name":(type==RWH?"RW":(type==ROH?"RO":"BK")));
+}
+
 int
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     void *arock;
+WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
-    afs_int32 maxentries, type;
+    afs_int32 maxentries, type, tmp;
     struct vlheader header;
-    struct nvlentry vlentry;
+    struct nvlentry vlentry, vlentry2;
     int i, j, help = 0;
 
     dbfile = as->parms[0].items->data;	/* -database */
@@ -915,9 +1065,11 @@ WorkerBee(as, arock)
     listservers = (as->parms[3].items ? 1 : 0);	/* -servers  */
     listentries = (as->parms[4].items ? 1 : 0);	/* -entries  */
     verbose = (as->parms[5].items ? 1 : 0);	/* -verbose  */
+    fix = (as->parms[6].items ? 1 : 0);	/* -fix  */
 
+ restart:
     /* open the vldb database file */
-    fd = open(dbfile, O_RDONLY, 0);
+    fd = open(dbfile, (fix > 0)?O_RDWR:O_RDONLY, 0);
     if (fd < 0) {
 	printf("can't open file '%s'. error = %d\n", dbfile, errno);
 	return 0;
@@ -952,13 +1104,19 @@ WorkerBee(as, arock)
     /* Follow the chain of free entries */
     FollowFreeChain(&header);
 
-    /* Now check the record we have been keeping for inconsistancies
+    /* Now check the record we have been keeping for inconsistencies
      * For valid vlentries, also check that the server we point to is 
      * valid (the serveraddrs array).
      */
     if (verbose)
 	printf("Verify each volume entry\n");
     for (i = 0; i < maxentries; i++) {
+	int nextp;
+	int reft;
+	int hash, nexthash = 0;
+	int *nextpp;
+	char *which;
+
 	if (record[i].type == 0)
 	    continue;
 
@@ -966,27 +1124,128 @@ WorkerBee(as, arock)
 	 * on the hash chains, and its server numbers are good.
 	 */
 	if (record[i].type & VL) {
+	    int foundbad = 0;
+	    char volidbuf[256];
+
 	    readentry(record[i].addr, &vlentry, &type);
 
 	    if (InvalidVolname(vlentry.name))
 		printf("Volume '%s' at addr %u has an invalid name\n",
 		       vlentry.name, record[i].addr);
 
-	    if (!(record[i].type & NH))
-		printf("Volume '%s' not found in name hash\n", vlentry.name);
+	    if (!(record[i].type & NH)) {
+		nextp = ADDR(vlentry.nextNameHash);
+		reft = REFN;
+		hash = NameHash(vlentry.name);
+		nextpp = &vlentry.nextNameHash;
+		which = "name";
+		sprintf(volidbuf, "");
+		foundbad = 1;
+	    }
 
-	    if (vlentry.volumeId[0] && !(record[i].type & RWH))
-		printf("Volume '%s' id %u not found in RW hash chain\n",
-		       vlentry.name, vlentry.volumeId[0]);
+	    if (vlentry.volumeId[0] && !(record[i].type & RWH)) {
+		nextp = ADDR(vlentry.nextIdHash[0]);
+		reft = REFRW;
+		hash = IdHash(vlentry.volumeId[0]);
+		nextpp = &(vlentry.nextIdHash[0]);
+		which = "RW";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
+		foundbad = 1;
+	    }
 
-	    if (vlentry.volumeId[1] && !(record[i].type & ROH))
-		printf("Volume '%s' id %u not found in RO hash chain\n",
-		       vlentry.name, vlentry.volumeId[1]);
+	    if (vlentry.volumeId[1] && !(record[i].type & ROH)) {
+		nextp = ADDR(vlentry.nextIdHash[1]);
+		reft = REFRO;
+		hash = IdHash(vlentry.volumeId[1]);
+		nextpp = &(vlentry.nextIdHash[1]);
+		which = "RO";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
+		foundbad = 1;
+	    }
 
-	    if (vlentry.volumeId[2] && !(record[i].type & BKH))
-		printf("Volume '%s' id %u not found in BK hash chain\n",
-		       vlentry.name, vlentry.volumeId[2]);
+	    if (vlentry.volumeId[2] && !(record[i].type & BKH)) {
+		nextp = ADDR(vlentry.nextIdHash[2]);
+		reft = REFBK;
+		hash = IdHash(vlentry.volumeId[2]);
+		nextpp = &(vlentry.nextIdHash[2]);
+		which = "BK";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
+		foundbad = 1;
+	    }
 
+	    if (record[ADDR(vlentry.nextNameHash)].type & MULTN) {
+		nextp = ADDR(vlentry.nextNameHash);
+		reft = REFN;
+		hash = NameHash(vlentry.name);
+		nextpp = &vlentry.nextNameHash;
+		which = "name";
+		sprintf(volidbuf, "");
+		readentry(nextp, &vlentry2, &type);
+		nexthash = NameHash(vlentry2.name);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[0])].type & MULTRW)) {
+		nextp = ADDR(vlentry.nextIdHash[0]);
+		reft = REFRW;
+		hash = IdHash(vlentry.volumeId[0]);
+		nextpp = &(vlentry.nextIdHash[0]);
+		which = "RW";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[0]);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[1])].type & MULTRO)) {
+		nextp = ADDR(vlentry.nextIdHash[1]);
+		reft = REFRO;
+		hash = IdHash(vlentry.volumeId[1]);
+		nextpp = &(vlentry.nextIdHash[1]);
+		which = "RO";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[1]);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[2])].type & MULTBK)) {
+		nextp = ADDR(vlentry.nextIdHash[2]);
+		reft = REFBK;
+		hash = IdHash(vlentry.volumeId[2]);
+		nextpp = &(vlentry.nextIdHash[2]);
+		which = "BK";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[2]);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if (foundbad) {
+		printf("%d: Volume '%s' %snot found in %s hash %d", i, 
+		       vlentry.name, volidbuf, which, hash);
+		if (nextp) {
+		    printf(" (next %d", nextp);
+		    if (!(record[nextp].type & reft)) {
+			printf(" not in chain ");
+			record[nextp].type |= reft;
+		    } else if (nextp != 0) {
+			printf(" next in chain");
+			if (fix) {
+			    printf(", unchaining");
+			    *nextpp = 0;
+			    writeentry(record[i].addr, &vlentry);
+			}
+		    }
+		    printf(")");
+		}
+		printf("\n");
+	    }
+	
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if ((vlentry.serverNumber[j] != 255)
 		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
@@ -995,45 +1254,171 @@ WorkerBee(as, arock)
 			 vlentry.name, j, vlentry.serverNumber[j]);
 		}
 	    }
-
-	    if (record[i].type & 0xffffff00)
+	
+	    if (record[i].type & 0xffff0f00)
 		printf
 		    ("Volume '%s' id %u also found on other chains (0x%x)\n",
 		     vlentry.name, vlentry.volumeId[0], record[i].type);
-
+	    
 	    /* A free entry */
 	} else if (record[i].type & FR) {
 	    if (!(record[i].type & FRC))
 		printf("Free vlentry at %u not on free chain\n",
 		       record[i].addr);
-
+	    
 	    if (record[i].type & 0xfffffdf0)
 		printf
 		    ("Free vlentry at %u also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
-
+	    
 	    /* A multihomed entry */
 	} else if (record[i].type & MH) {
 	    if (!(record[i].type & MHC))
 		printf("Multihomed block at %u is orphaned\n",
 		       record[i].addr);
-
+	    
 	    if (record[i].type & 0xfffffef0)
 		printf
 		    ("Multihomed block at %u also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
-
+	    
 	} else {
 	    printf("Unknown entry type at %u (0x%x)\n", record[i].addr,
 		   record[i].type);
 	}
     }
+
+    if (verbose)
+	printf("Verify each chain head\n");
+
+    {
+	afs_uint32 addr;
+	int hash;
+
+	for (j = 0; j < HASHSIZE; j++) {
+	    for (addr = header.VolnameHash[j]; j < HASHSIZE; j++) {
+		if (record[ADDR(addr)].type & MULTN) {
+		    hash = NameHash(vlentry.name);
+		    if (hash != j) {
+			header.VolnameHash[j] = vlentry.nextNameHash;
+			vlentry.nextNameHash = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+	    }
+	}
+	for (i = 0; i <= 2; i++) {
+	    for (j = 0; j < HASHSIZE; j++) {
+		addr = header.VolidHash[i][j]; 
+		if (i == 0 && (record[ADDR(addr)].type & MULTRW)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+
+		if (i == 1 && (record[ADDR(addr)].type & MULTRO)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+
+		if (i == 2 && (record[ADDR(addr)].type & MULTBK)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+	    }
+	}
+    }
+    /* By the time we get here, unchained entries are really unchained */
+    printf("Scanning %u entries for possible repairs\n", maxentries);
+    for (i = 0; i < maxentries; i++) {
+	int *nextpp;
+	if (record[i].type & VL) {
+	    readentry(record[i].addr, &vlentry, &type);
+	    if (!(record[i].type & REFN)) {
+		printf("%d: Record %u (type 0x%x) not in a name chain\n", i, 
+		       record[i].addr, record[i].type);
+		if (strlen(vlentry.name)>0) {
+		    if (fix) {
+			if (header.VolnameHash[NameHash(vlentry.name)] == 0)
+			    header.VolnameHash[NameHash(vlentry.name)] = record[i].addr;
+			else
+			    FixBad(i, header.VolnameHash[NameHash(vlentry.name)], NH, record[i].addr, &vlentry, NameHash(vlentry.name));
+		    }
+		} else {
+		    nextpp = &vlentry.nextNameHash;
+		    if (fix && *nextpp) {
+			printf(", unchaining");
+			*nextpp = 0;
+			writeentry(record[i].addr, &vlentry);
+		    }
+		}
+	    }
+	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
+		printf("%d: Record %u (type 0x%x) not in a RW chain\n", i,
+		       record[i].addr, record[i].type);
+		if (fix) {
+		    if (header.VolidHash[0][IdHash(vlentry.volumeId[0])] == 0)
+			header.VolidHash[0][IdHash(vlentry.volumeId[0])] = record[i].addr;
+		    else
+			FixBad(i, header.VolidHash[0][IdHash(vlentry.volumeId[0])], RWH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[0]));
+		}
+	    }
+	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
+		printf("%d: Record %u (type 0x%x) not in a RO chain\n", i, 
+		       record[i].addr, record[i].type);
+		if (fix) {
+		    if (header.VolidHash[1][IdHash(vlentry.volumeId[1])] == 0)
+			header.VolidHash[1][IdHash(vlentry.volumeId[1])] = record[i].addr;
+		    else
+			FixBad(i, header.VolidHash[1][IdHash(vlentry.volumeId[1])], ROH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[1]));
+		}
+	    }
+	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
+		printf("%d: Record %u (type 0x%x) not in a BK chain\n", i, 
+		       record[i].addr, record[i].type);
+		if (fix) {
+		    if (header.VolidHash[2][IdHash(vlentry.volumeId[2])] == 0)
+			header.VolidHash[2][IdHash(vlentry.volumeId[2])] = record[i].addr;
+		    else
+			FixBad(i, header.VolidHash[2][IdHash(vlentry.volumeId[2])], BKH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[2]));
+		}
+
+	    }
+	}
+    }
+    if (fix) 
+	writeheader(&header);
+
+    close(fd);
+
+    if (fixed) {
+      fixed=0;
+      passes++;
+      if (passes < 20)
+	goto restart;
+      else
+	return 1;
+    }
     return 0;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 
@@ -1049,6 +1434,7 @@ main(argc, argv)
 		"Display server list");
     cmd_AddParm(ts, "-entries", CMD_FLAG, CMD_OPTIONAL, "Display entries");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");
+    cmd_AddParm(ts, "-fix", CMD_FLAG, CMD_OPTIONAL, "attempt to patch the database (potentially dangerous)");
 
     return cmd_Dispatch(argc, argv);
 }
