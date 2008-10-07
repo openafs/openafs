@@ -118,7 +118,7 @@ afs_mount(mp, path, data, ndp, ctx)
     afs_globalVFS = mp;
 #ifdef AFS_DARWIN80_ENV
     vfs_ioattr(mp, &ioattr);
-    ioattr.io_devblocksize = 8192;
+    ioattr.io_devblocksize = (16 * 32768);
     vfs_setioattr(mp, &ioattr);
     /* f_iosize is handled in VFS_GETATTR */
 #else
@@ -366,14 +366,15 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
 
-#if 0
-    abp->f_type = MOUNT_AFS;
-#endif
 #ifdef AFS_DARWIN80_ENV
-    abp->f_bsize = abp->f_iosize = vfs_devblocksize(mp);
+    abp->f_iosize = (256 * 1024);
+    abp->f_bsize = vfs_devblocksize(mp);
 #else
     abp->f_bsize = mp->vfs_bsize;
     abp->f_iosize = mp->vfs_bsize;
+#endif
+#if 0
+    abp->f_type = MOUNT_AFS;
 #endif
 
     /* Fake a high number below to satisfy programs that use the statfs call
@@ -381,13 +382,7 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
      * storing something there.
      */
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = 
-#ifdef AFS_DARWIN80_ENV
-	0xffffffffffffffff
-#else
-	2000000
-#endif
-	;
+	abp->f_ffree = 0x7fffffff;
 
     if (abp != sysstat) {
         abp->f_fsid.val[0] = sysstat->f_fsid.val[0];
