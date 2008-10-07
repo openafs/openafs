@@ -789,11 +789,13 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     cred_t *credp = NULL;
     struct vcache *vcp, *pvcp, *tvc = NULL;
     int valid;
+    struct afs_fakestat_state fakestate;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
     AFS_GLOCK();
+    afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
 
@@ -805,8 +807,28 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 
 	if (vcp->mvstat == 1) {         /* mount point */
 	    if (vcp->mvid && (vcp->states & CMValid)) {
-		/* a mount point, not yet replaced by its directory */
-		goto bad_dentry;
+		int tryEvalOnly = 0;
+		int code = 0;
+		struct vrequest treq;
+
+		credp = crref();
+		code = afs_InitReq(&treq, credp);
+		if (
+#ifdef AFS_DARWIN_ENV
+		    (strcmp(dp->d_name.name, ".DS_Store") == 0) ||
+		    (strcmp(dp->d_name.name, "Contents") == 0) ||
+#endif
+		    (strcmp(dp->d_name.name, ".directory") == 0)) {
+		    tryEvalOnly = 1;
+		}
+		if (tryEvalOnly)
+		    code = afs_TryEvalFakeStat(&vcp, &fakestate, &treq);
+		else
+		    code = afs_EvalFakeStat(&vcp, &fakestate, &treq);
+		if ((tryEvalOnly && vcp->mvstat == 1) || code) {
+		    /* a mount point, not yet replaced by its directory */
+		    goto bad_dentry;
+		}
 	    }
 	} else
 	    if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
@@ -870,6 +892,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     /* Clean up */
     if (tvc)
 	afs_PutVCache(tvc);
+    afs_PutFakeStat(&fakestate);
     AFS_GUNLOCK();
     if (credp)
 	crfree(credp);
@@ -884,7 +907,10 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     return valid;
 
   bad_dentry:
-    valid = 0;
+    if (have_submounts(dp))
+	valid = 1;
+    else 
+	valid = 0;
     goto done;
 }
 
