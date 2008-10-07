@@ -68,14 +68,14 @@ EXPORTS
 	xdrrx_create				@72
 	hton_syserr_conv			@73
 	rxkad_global_stats			@74 DATA
-	afs_com_err					@75
-	afs_error_message				@76
+	afs_com_err				@75
+	afs_error_message			@76
 	rx_socket				@77 DATA
 ;	AssertionFailed				@79
 	afs_winsockInit				@80
 	rxevent_debugFile			@81 DATA
 	rx_debugFile				@82 DATA
-	rx_connDeadTime				@83 DATA
+        rx_connDeadTime                         @83 DATA
 	rx_maxReceiveSize			@84 DATA
 	rx_UdpBufSize				@85 DATA
 	rx_extraQuota				@86 DATA
@@ -226,3 +226,20 @@ EXPORTS
         StartRXAFS_GetTime                      @231
         EndRXAFS_GetCapabilities                @232
         StartRXAFS_GetCapabilities              @233
+        xdr_afs_uint32                          @234
+        xdr_afs_int32                           @235
+        xdr_afs_uint64                          @236
+        xdr_afs_int64                           @237
+        clock_now                               @238
+        clock_UpdateTime                        @239
+        clock_haveCurrentTime                   @240
+
+; for performance testing
+        rx_TSFPQGlobSize                        @2001 DATA
+        rx_TSFPQLocalMax                        @2002 DATA
+        rx_TSFPQMaxProcs                        @2003 DATA
+        rx_ReadvProc                            @2004
+        rx_WritevProc                           @2005
+        rx_WritevAlloc                          @2006
+        rxi_MorePackets                         @2007
+
