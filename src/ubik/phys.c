@@ -108,7 +108,7 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     }
     if (bestfd) {		/* found a usable slot */
 	tfd = bestfd;
-	if (tfd->fd >= 0)
+	if (tfd->fd >= 0) 
 	    close(tfd->fd);
 	tfd->fd = fd;
 	tfd->refCount = 1;	/* us */
@@ -130,10 +130,22 @@ uphys_close(register int afd)
 	return EBADF;
     tfd = fdcache;
     for (i = 0; i < MAXFDCACHE; i++, tfd++) {
-	if (tfd->fd == afd && tfd->fileID != -10000) {
-	    tfd->refCount--;
-	    return 0;
-	}
+	if (tfd->fd == afd) 
+	    if (tfd->fileID != -10000) {
+		tfd->refCount--;
+		return 0;
+	    } else {
+		if (tfd->refCount > 0) {
+		    tfd->refCount--;
+		    if (tfd->refCount == 0) {
+			close(tfd->fd);
+			tfd->fd = -1;
+		    }
+		    return 0;
+		}
+		tfd->fd = -1;
+		break;
+	    }
     }
     return close(afd);
 }
@@ -293,8 +305,10 @@ uphys_invalidate(register struct ubik_dbase *adbase, afs_int32 afid)
     for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {
 	if (afid == tfd->fileID) {
 	    tfd->fileID = -10000;
-	    if (tfd->fd >= 0 && tfd->refCount == 0)
+	    if (tfd->fd >= 0 && tfd->refCount == 0) {
 		close(tfd->fd);
+		tfd->fd = -1;
+	    }
 	    return;
 	}
     }
