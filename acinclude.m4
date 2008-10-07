@@ -1458,21 +1458,21 @@ if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR3=/usr/tivoli/tsm/client/api/bin/sample
 	XBSADIR4=/opt/tivoli/tsm/client/api/bin/sample
 
-	if test -r "$XBSADIR1/xbsa.h"; then
-		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
-		XBSA_XLIBS=""
-		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
-	elif test -r "$XBSADIR2/xbsa.h"; then
-		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
-		XBSA_XLIBS=""
-		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
-	elif test -r "$XBSADIR3/dsmapifp.h"; then
+	if test -r "$XBSADIR3/dsmapifp.h"; then
 		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR3"
 		XBSA_XLIBS="-ldl"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	elif test -r "$XBSADIR4/dsmapifp.h"; then
 		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR4"
 		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR1/xbsa.h"; then
+		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
+		XBSA_XLIBS=""
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR2/xbsa.h"; then
+		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
+		XBSA_XLIBS=""
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
 		AC_MSG_RESULT([no, missing xbsa.h and dsmapifp.h header files])
