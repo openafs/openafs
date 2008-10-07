@@ -1,3 +1,17 @@
+Since 1.5.53
+
+ * Fix an Rx panic caused by an attempt to double free
+   an rx_packet when an error occurs while writing the
+   packet.
+
+ * Fix an exception cause by a race condition when 
+   processing multiple file change notifications registered
+   by the Explorer Shell or other applications.
+
+ * Modify the Rx debug interface to use var_args and 
+   permit Rx debugging to be used on 64-bit Windows 
+   which previously had it disabled.
+
 Since 1.5.52
 
  * Automated lock hierarchy enforcement added to the
