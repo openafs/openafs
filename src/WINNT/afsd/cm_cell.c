@@ -158,13 +158,29 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     cm_cell_t *cp, *cp2;
     long code;
     char fullname[CELL_MAXNAMELEN]="";
+    char name[CELL_MAXNAMELEN]="";
     int  hasWriteLock = 0;
     int  hasMutex = 0;
     afs_uint32 hash;
     cm_cell_rock_t rock;
+    size_t len;
 
-    if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
+    if (namep == NULL || !namep[0] || !strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
         return NULL;
+
+    /* 
+     * Strip off any trailing dots at the end of the cell name.
+     * Failure to do so results in an undesireable alias as the
+     * result of DNS AFSDB record lookups where a trailing dot
+     * has special meaning.
+     */
+    strncpy(name, namep, CELL_MAXNAMELEN);
+    for (len = strlen(namep); len > 0 && namep[len-1] == '.'; len--) {
+        name[len-1] = '\0';
+    }
+    if (len == 0)
+        return NULL;
+    namep = name;
 
     hash = CM_CELL_NAME_HASH(namep);
 
