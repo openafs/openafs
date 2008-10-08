@@ -76,11 +76,10 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
              $(BUTMLIBS) \
 	     $(DESTDIR)\lib\afs\afsvldb.lib \
 	     $(DESTDIR)\lib\afs\afskauth.lib \
-	     $(DESTDIR)\lib\afsubik.lib \
 	     $(DESTDIR)\lib\afs\afsauth.lib \
 	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
-             $(DESTDIR)\lib\afslwp.lib \
+	     $(DESTDIR)\lib\afsubik.lib \
              $(DESTDIR)\lib\afs\afsutil.lib \
              $(DESTDIR)\lib\afs\afsusd.lib \
 	     $(DESTDIR)\lib\afs\afspioctl.lib \

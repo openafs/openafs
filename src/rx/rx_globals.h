@@ -81,8 +81,13 @@ EXT int rx_stackSize GLOBALSINIT(RX_DEFAULT_STACK_SIZE);
 
 /* Time until an unresponsive connection is declared dead */
 EXT int rx_connDeadTime GLOBALSINIT(12);
+
 /* Set rx default connection dead time; set on both services and connections at creation time */
+#ifdef AFS_NT40_ENV
+void rx_SetRxDeadTime(int seconds);
+#else
 #define rx_SetRxDeadTime(seconds)   (rx_connDeadTime = (seconds))
+#endif
 
 /* Time until we toss an idle connection */
 EXT int rx_idleConnectionTime GLOBALSINIT(700);
@@ -94,9 +99,13 @@ EXT int rx_tranquil GLOBALSINIT(0);
 
 /* UDP rcv buffer size */
 EXT int rx_UdpBufSize GLOBALSINIT(64 * 1024);
+#ifdef AFS_NT40_ENV
+int   rx_GetMinUdpBufSize(void);
+void  rx_SetUdpBufSize(int x);
+#else
 #define rx_GetMinUdpBufSize()   (64*1024)
 #define rx_SetUdpBufSize(x)     (((x)>rx_GetMinUdpBufSize()) ? (rx_UdpBufSize = (x)):0)
-
+#endif
 /*
  * Variables to control RX overload management. When the number of calls
  * waiting for a thread exceed the threshold, new calls are aborted

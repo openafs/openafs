@@ -233,6 +233,9 @@ EXPORTS
         clock_now                               @238
         clock_UpdateTime                        @239
         clock_haveCurrentTime                   @240
+        rx_SetRxDeadTime                        @241
+        rx_GetMinUdpBufSize                     @242
+        rx_SetUdpBufSize                        @243        
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
