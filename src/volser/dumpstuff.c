@@ -521,7 +521,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     int code = 0, error = 0;
     afs_int32 pad = 0, offset;
     afs_sfsize_t n, nbytes, howMany, howBig;
-    afs_foff_t lcode;
+    afs_foff_t lcode = 0;
     byte *p;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
