@@ -32,7 +32,7 @@ RCSID
 # include <sys/ioctl.h>
 #endif
 # include <fcntl.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
 # include <sys/syscall.h>
 #endif
 #include <afs/afs_args.h>
@@ -95,10 +95,22 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
+#if defined(ADAPT_PMTU)
+    int pmtu=IP_PMTUDISC_WANT;
+    int recverr=1;
+#else
     int pmtu=IP_PMTUDISC_DONT;
 #endif
+#endif
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#include <linux/types.h>
+#include <linux/errqueue.h>
+#ifndef IP_MTU
+#define IP_MTU 14
+#endif
+#endif
 
-#if !defined(AFS_NT40_ENV) 
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
@@ -136,13 +148,14 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	(osi_Msg "%sbind failed\n", name);
 	goto error;
     }
-#if !defined(AFS_NT40_ENV) 
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     /*
      * Set close-on-exec on rx socket 
      */
     fcntl(socketFd, F_SETFD, 1);
 #endif
 
+#ifndef AFS_DJGPP_ENV
     /* Use one of three different ways of getting a socket buffer expanded to
      * a reasonable size.
      */
@@ -175,11 +188,14 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	rx_stats.socketGreedy = greedy;
 	MUTEX_EXIT(&rx_stats_mutex);
     }
+#endif /* AFS_DJGPP_ENV */
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+#if defined(ADAPT_PMTU)
+    setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
 #endif
-
+#endif
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
     }
@@ -205,11 +221,13 @@ rxi_GetUDPSocket(u_short port)
 }
 
 void
-osi_Panic(msg, a1, a2, a3) 
-     char *msg; 
+osi_Panic(char *msg, ...)
 {
+    va_list ap;
+    va_start(ap, msg);
     (osi_Msg "Fatal Rx error: ");
-    (osi_Msg msg, a1, a2, a3);
+    (osi_VMsg msg, ap);
+    va_end(ap);
     fflush(stderr);
     fflush(stdout);
     afs_abort();
@@ -261,7 +279,7 @@ static int myNetFlags[ADDRSPERSITE];
 static u_int rxi_numNetAddrs;
 static int Inited = 0;
 
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 int
 rxi_getaddr(void)
 {
@@ -284,7 +302,7 @@ rxi_getaddr(void)
 ** maxSize - max number of interfaces to return.
 */
 int
-rx_getAllAddr(afs_int32 * buffer, int maxSize)
+rx_getAllAddr(afs_uint32 * buffer, int maxSize)
 {
     int count = 0, offset = 0;
 
@@ -392,7 +410,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DJGPP_ENV)
 int
 rxi_syscall(a3, a4, a5)
      afs_uint32 a3, a4;
@@ -421,6 +439,7 @@ rx_GetIFInfo(void)
 {
     int s;
     int i, j, len, res;
+#ifndef AFS_DJGPP_ENV
     struct ifconf ifc;
     struct ifreq ifs[ADDRSPERSITE];
     struct ifreq *ifr;
@@ -428,6 +447,7 @@ rx_GetIFInfo(void)
     char buf[BUFSIZ], *cp, *cplim;
 #endif
     struct sockaddr_in *a;
+#endif /* AFS_DJGPP_ENV */
 
     LOCK_IF_INIT;
     if (Inited) {
@@ -447,6 +467,7 @@ rx_GetIFInfo(void)
     if (s < 0)
 	return;
 
+#ifndef AFS_DJGPP_ENV
 #ifdef	AFS_AIX41_ENV
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
@@ -614,6 +635,10 @@ rx_GetIFInfo(void)
 	    rxi_MorePackets(npackets * (ncbufs + 1));
 	}
     }
+#else /* AFS_DJGPP_ENV */
+    close(s);
+    return;
+#endif /* AFS_DJGPP_ENV */
 }
 #endif /* AFS_NT40_ENV */
 
@@ -630,6 +655,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
     afs_uint32 ppaddr;
     u_short rxmtu;
     int ix;
+#if defined(ADAPT_PMTU) && defined(IP_MTU)
+    int sock;
+    struct sockaddr_in addr;
+#endif
+
+
 
     LOCK_IF_INIT;
     if (!Inited) {
@@ -647,14 +678,14 @@ rxi_InitPeerParams(struct rx_peer *pp)
     /* try to second-guess IP, and identify which link is most likely to
      * be used for traffic to/from this host. */
     ppaddr = ntohl(pp->host);
-    
+
     pp->ifMTU = 0;
     pp->timeout.sec = 2;
-    pp->rateFlag = 2;         /* start timing after two full packets */
+    pp->rateFlag = 2;		/* start timing after two full packets */
     /* I don't initialize these, because I presume they are bzero'd... 
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      * pp->timeout.usec */
-    
+
     LOCK_IF;
     for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
 	if ((rxi_NetAddrs[ix] & myNetMasks[ix]) == (ppaddr & myNetMasks[ix])) {
@@ -670,7 +701,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	}
     }
     UNLOCK_IF;
-    if (!pp->ifMTU) {         /* not local */
+    if (!pp->ifMTU) {		/* not local */
 	pp->timeout.sec = 3;
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
@@ -679,6 +710,22 @@ rxi_InitPeerParams(struct rx_peer *pp)
     pp->timeout.sec = 2;
     pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
 #endif /* ADAPT_MTU */
+#if defined(ADAPT_PMTU) && defined(IP_MTU)
+    sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock >= 0) {
+      addr.sin_family = AF_INET;
+      addr.sin_addr.s_addr = pp->host;
+      addr.sin_port = pp->port;
+      if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+	int mtu=0;
+        socklen_t s = sizeof(mtu);
+	if (getsockopt(sock, SOL_IP, IP_MTU, &mtu, &s)== 0) {
+	  pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
+	}
+      }
+      close(sock);
+    }
+#endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
     pp->natMTU = MIN((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
@@ -711,3 +758,54 @@ rx_SetMaxMTU(int mtu)
 {
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
 }
+
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+int
+rxi_HandleSocketError(int socket)
+{
+    struct msghdr msg;
+    struct cmsghdr *cmsg;
+    struct sock_extended_err *err;
+    struct sockaddr_in addr;
+    struct sockaddr *offender;
+    char controlmsgbuf[256];
+    int ret=0;
+    int code;
+
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = NULL;
+    msg.msg_iovlen = 0;
+    msg.msg_control = controlmsgbuf;
+    msg.msg_controllen = 256;
+    msg.msg_flags = 0;
+    code = recvmsg(socket, &msg, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
+
+    if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
+        goto out;
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+       if ((char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(0) ||
+           (char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(cmsg->cmsg_len) ||
+	   cmsg->cmsg_len == 0) {
+	   cmsg = 0;
+           break;
+	}
+        if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
+            break;
+    }
+    if (!cmsg)
+        goto out;
+    ret=1;
+    err =(struct sock_extended_err *) CMSG_DATA(cmsg);
+    
+    if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
+        rxi_SetPeerMtu(addr.sin_addr.s_addr, addr.sin_port,
+                       err->ee_info - RX_IPUDP_SIZE);
+    }
+    /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
+    
+out:
+    return ret;
+}
+#endif

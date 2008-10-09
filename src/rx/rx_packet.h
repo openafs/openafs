@@ -9,10 +9,10 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
-#ifndef UKERNEL
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #include "rx_xmit_nt.h"
 #endif
+#ifndef UKERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/uio.h>
 #endif /* !AFS_NT40_ENV */
@@ -33,7 +33,7 @@
  */
 
 
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifndef MIN
 #define MIN(a,b)  ((a)<(b)?(a):(b))
 #endif
@@ -51,7 +51,7 @@
 #define IPv6_FRAG_HDR_SIZE	 8	/* IPv6 Fragment Header */
 #define UDP_HDR_SIZE             8	/* UDP Header */
 #define	RX_IP_SIZE		(IPv6_HDR_SIZE + IPv6_FRAG_HDR_SIZE)
-#define	RX_IPUDP_SIZE		(RX_IP_SIZE + UDP_HDR_SIZE)
+#define	_RX_IPUDP_SIZE		(RX_IP_SIZE + UDP_HDR_SIZE)
 
 /* REMOTE_PACKET_SIZE is currently the same as local.  This is because REMOTE
  * is defined much too generally for my tastes, and includes the case of 
@@ -102,11 +102,15 @@
 /* The minimum MTU for an IP network is 576 bytes including headers */
 #define RX_MIN_PACKET_SIZE      (576 - RX_IPUDP_SIZE)
 #define	RX_PP_PACKET_SIZE	RX_MIN_PACKET_SIZE
+#define _RX_MIN_PACKET_SIZE      (576 - _RX_IPUDP_SIZE)
+#define	_RX_PP_PACKET_SIZE	_RX_MIN_PACKET_SIZE
 
 #define	OLD_MAX_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
+#define	_OLD_MAX_PACKET_SIZE	(1500 - _RX_IPUDP_SIZE)
 
 /* if the other guy is not on the local net, use this size */
 #define	RX_REMOTE_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
+#define	_RX_REMOTE_PACKET_SIZE	(1500 - _RX_IPUDP_SIZE)
 
 /* for now, never send more data than this */
 #define	RX_MAX_PACKET_SIZE	16384
@@ -169,7 +173,10 @@
  */
 #define	RX_PKTFLAG_ACKED	0x01
 #define	RX_PKTFLAG_FREE		0x02
-
+#define RX_PKTFLAG_TQ           0x04
+#define RX_PKTFLAG_RQ           0x08
+#define RX_PKTFLAG_IOVQ         0x10
+#define RX_PKTFLAG_CP           0x20
 
 /* The rx part of the header of a packet, in host form */
 struct rx_header {

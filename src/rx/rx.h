@@ -48,8 +48,6 @@
 #endif
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
 # include "rx_clock.h"
@@ -147,6 +145,9 @@ int ntoh_syserr_conv(int error);
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
+/* Define error to return in server connections when failing to answer */
+#define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
+
 /* Define procedures for getting and setting before and after execute-request procs */
 #define rx_SetAfterProc(service,proc) ((service)->afterProc = (proc))
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
@@ -167,6 +168,7 @@ int ntoh_syserr_conv(int error);
 /* Set connection hard and idle timeouts for a connection */
 #define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
 #define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
+#define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -235,6 +237,8 @@ struct rx_connection {
     struct rx_call *call[RX_MAXCALLS];
 #endif
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
+    afs_uint32 rwind[RX_MAXCALLS];
+    u_short twind[RX_MAXCALLS];
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
@@ -265,6 +269,7 @@ struct rx_connection {
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
+    afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };
@@ -309,6 +314,7 @@ struct rx_service {
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
+    afs_int32 idleDeadErr;
 };
 
 #endif /* KDUMP_RX_LOCK */
@@ -505,6 +511,7 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
+    u_int lastSendData;		/* Last time a nonping was sent on this call */
     void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
@@ -782,7 +789,7 @@ struct rx_securityClass {
  * Clearly we assume that ntohl will work on these structures so sizeof(int)
  * must equal sizeof(afs_int32). */
 
-struct rx_stats {		/* General rx statistics */
+struct rx_statistics {		/* General rx statistics */
     int packetRequests;		/* Number of packet allocation requests */
     int receivePktAllocFailures;
     int sendPktAllocFailures;
@@ -838,7 +845,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_BADTYPE     (-8)
 
 #define RX_DEBUGI_VERSION_MINIMUM ('L')	/* earliest real version */
-#define RX_DEBUGI_VERSION     ('R')	/* Latest version */
+#define RX_DEBUGI_VERSION     ('S')    /* Latest version */
     /* first version w/ secStats */
 #define RX_DEBUGI_VERSION_W_SECSTATS ('L')
     /* version M is first supporting GETALLCONN and RXSTATS type */
@@ -851,6 +858,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_VERSION_W_NEWPACKETTYPES ('P')
 #define RX_DEBUGI_VERSION_W_GETPEER ('Q')
 #define RX_DEBUGI_VERSION_W_WAITED ('R')
+#define RX_DEBUGI_VERSION_W_PACKETS ('S')
 
 #define	RX_DEBUGI_GETSTATS	1	/* get basic rx stats */
 #define	RX_DEBUGI_GETCONN	2	/* get connection info */
@@ -869,7 +877,8 @@ struct rx_debugStats {
     afs_int32 nWaiting;
     afs_int32 idleThreads;	/* Number of server threads that are idle */
     afs_int32 nWaited;
-    afs_int32 spare2[7];
+    afs_int32 nPackets;
+    afs_int32 spare2[6];
 };
 
 struct rx_debugConn_vL {
@@ -995,6 +1004,7 @@ extern int rx_callHoldType;
 #define RX_SERVER_DEBUG_NEW_PACKETS		0x40
 #define RX_SERVER_DEBUG_ALL_PEER		0x80
 #define RX_SERVER_DEBUG_WAITED_CNT              0x100
+#define RX_SERVER_DEBUG_PACKETS_CNT              0x200
 
 #define AFS_RX_STATS_CLEAR_ALL			0xffffffff
 #define AFS_RX_STATS_CLEAR_INVOCATIONS		0x1

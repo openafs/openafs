@@ -48,6 +48,7 @@ multi_Init(struct rx_connection **conns, register int nConns)
     mh->nextReady = mh->firstNotReady = mh->ready = ready;
     mh->nReady = 0;
     mh->nConns = nConns;
+
 #ifdef RX_ENABLE_LOCKS
     MUTEX_INIT(&mh->lock, "rx_multi_lock", MUTEX_DEFAULT, 0);
     CV_INIT(&mh->cv, "rx_multi_cv", CV_DEFAULT, 0);
