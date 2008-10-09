@@ -390,7 +390,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                             //
 
                             if( FsRtlIsNameInExpression( &uniSysName,
-                                                         &uniSearchName,
+                                                         &uniComponentName,
                                                          TRUE,
                                                          NULL))
                             {
@@ -1146,9 +1146,9 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
         if( DirEntry->NPDirNode != NULL)
         {
 
-            //ExDeleteResourceLite( &DirEntry->NPDirNode->Lock);
+            ExDeleteResourceLite( &DirEntry->NPDirNode->Lock);
 
-            //ExFreePool( DirEntry->NPDirNode);
+            ExFreePool( DirEntry->NPDirNode);
         }
 
         //

@@ -1163,8 +1163,6 @@ try_exit:
                 if( pDirNode->NPDirNode != NULL)
                 {
 
-                    DbgPrint("AFSInitDirEntry Failure tearing down NP Dir Node %08lX\n", pDirNode->NPDirNode);
-
                     ExDeleteResourceLite( &pDirNode->NPDirNode->Lock);
 
                     ExFreePool( pDirNode->NPDirNode);
@@ -1977,13 +1975,15 @@ AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
                         TRUE);
 
         //
-        // If we already have a list, then fail the request
+        // If we already have a list, then tear it down
         //
 
         if( *pSysNameListHead != NULL)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            AFSResetSysNameList( *pSysNameListHead);
+
+            *pSysNameListHead = NULL;
         }
 
         //
@@ -2082,7 +2082,7 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
     AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     AFSSysNameCB    *pSysName = NULL;
     ERESOURCE       *pSysNameLock = NULL;
-    ULONG            ulIndex = 0;
+    ULONG            ulIndex = 1;
     USHORT           usIndex = 0;
     UNICODE_STRING   uniSysName;
 
@@ -2272,6 +2272,8 @@ AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
 
         usPrefixNameLen = (USHORT)(ComponentName->Buffer - FullPathName->Buffer);
 
+        usPrefixNameLen *= sizeof( WCHAR);
+
         RtlZeroMemory( uniPathName.Buffer,
                        uniPathName.MaximumLength);
 
@@ -2279,15 +2281,15 @@ AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
                        FullPathName->Buffer,
                        usPrefixNameLen);
 
-        RtlCopyMemory( &uniPathName.Buffer[ (usPrefixNameLen/sizeof( WCHAR)) + 1],
+        RtlCopyMemory( &uniPathName.Buffer[ (usPrefixNameLen/sizeof( WCHAR))],
                        SubstituteName->Buffer,
                        SubstituteName->Length);
 
         if( FullPathName->Length > usPrefixNameLen + ComponentName->Length)
         {
 
-            RtlCopyMemory( &uniPathName.Buffer[ ((usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)) + 1],
-                           &FullPathName->Buffer[ ((usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)) + 1],
+            RtlCopyMemory( &uniPathName.Buffer[ (usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)],
+                           &FullPathName->Buffer[ (usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)],
                            FullPathName->Length - usPrefixNameLen - ComponentName->Length);
         }
 

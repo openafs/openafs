@@ -132,6 +132,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         //
         // OK, initialize the entry
         //
+
         ExInitializeResourceLite( &pNPFcb->Resource);
 
         ExInitializeResourceLite( &pNPFcb->PagingResource);
@@ -740,6 +741,8 @@ AFSInitAFSRoot()
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
+
+            AFSPrint("AFSInitAFSRoot Allocated NP Dir %08lX\n", pFcb->DirEntry->NPDirNode);
 
             //
             // Initialize the non-paged portion of the dire entry
@@ -1441,6 +1444,8 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb,
 
         ExDeleteResourceLite( &RootFcb->NPFcb->Resource);
 
+        ExDeleteResourceLite( &RootFcb->NPFcb->PagingResource);
+
         ExDeleteResourceLite( &RootFcb->NPFcb->Specific.VolumeRoot.DirectoryTreeLock);
 
         ExDeleteResourceLite( &RootFcb->NPFcb->Specific.VolumeRoot.FileIDTreeLock);
@@ -1466,9 +1471,9 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb,
         if( RootFcb->DirEntry->NPDirNode != NULL)
         {
 
-            //ExDeleteResourceLite( &RootFcb->DirEntry->NPDirNode->Lock);
+            ExDeleteResourceLite( &RootFcb->DirEntry->NPDirNode->Lock);
 
-            //ExFreePool( RootFcb->DirEntry->NPDirNode);
+            ExFreePool( RootFcb->DirEntry->NPDirNode);
         }
 
         ExFreePool( RootFcb->DirEntry);
