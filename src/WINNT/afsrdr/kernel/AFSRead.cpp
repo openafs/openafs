@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSRead.cpp
 //
@@ -18,120 +51,54 @@ CachedRead( IN PDEVICE_OBJECT DeviceObject,
     AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     VOID              *pSystemBuffer = NULL;
-    BOOLEAN            mapped = FALSE;
 
     __Enter
     {
         //
-        // Provoke a get of the extents - if we need to.
-        //
-        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &mapped);
-
-        if (!NT_SUCCESS(ntStatus)) {
-            try_return( ntStatus );
-        }
-
-        //
-        // This is a top level irp. Init the caching if it has not yet
-        // been initialzed for this FO
-        //
-    
-        if( pFileObject->PrivateCacheMap == NULL)
-        {
-                
-            __try 
-            {
-            
-                CcInitializeCacheMap( pFileObject,
-                                      (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
-                                      FALSE,
-                                      &AFSCacheManagerCallbacks,
-                                      pFcb);
-                CcSetReadAheadGranularity( pFileObject, 
-                                           READ_AHEAD_GRANULARITY);
-            }
-            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
-            {
-                ntStatus = GetExceptionCode();
-                try_return( ntStatus );
-            }
-
-        }
-
-        //
         // Process the read 
         //
 
-        if( FlagOn( pIrpSp->MinorFunction, IRP_MN_MDL)) 
+        pSystemBuffer = AFSLockSystemBuffer( Irp,
+                                             ByteCount);
+
+        if( pSystemBuffer == NULL)
         {
-            __try 
-            {
+
+            AFSPrint("NonCachedRead Failed to retrieve system buffer\n");
             
-                CcMdlRead( pFileObject,
-                           &StartingByte,
-                           ByteCount,
-                           &Irp->MdlAddress,
-                           &Irp->IoStatus);
-                ntStatus = Irp->IoStatus.Status;
-            }
-            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
-            {
-                ntStatus = GetExceptionCode();
-            }
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
 
-            if( !NT_SUCCESS( ntStatus))
+        __try 
+        {
+            if( !CcCopyRead( pFileObject,
+                             &StartingByte,
+                             ByteCount,
+                             IoIsOperationSynchronous(Irp),
+                             pSystemBuffer,
+                             &Irp->IoStatus)) 
             {
 
-                AFSPrint("AFSCommonRead Failed to process mdl read Status %08lX\n", ntStatus);
+                //
+                // Failed to process request.
+                //
 
-                try_return( ntStatus);
+                AFSPrint("NonCachedRead Failed to issue cached read Status %08lX\n", Irp->IoStatus.Status);
+
+                try_return( ntStatus = Irp->IoStatus.Status);
             }
         }
-        else
+        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+        {
+            ntStatus = GetExceptionCode();
+        }
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            pSystemBuffer = AFSLockSystemBuffer( Irp,
-                                                 ByteCount);
+            AFSPrint("NonCachedRead Failed to process read Status %08lX\n", ntStatus);
 
-            if( pSystemBuffer == NULL)
-            {
-
-                AFSPrint("AFSCommonRead Failed to retrieve system buffer\n");
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
-
-            __try 
-            {
-                if( !CcCopyRead( pFileObject,
-                                 &StartingByte,
-                                 ByteCount,
-                                 IoIsOperationSynchronous(Irp),
-                                 pSystemBuffer,
-                                 &Irp->IoStatus)) 
-                {
-
-                    //
-                    // Failed to process request.
-                    //
-
-                    AFSPrint("AFSCommonRead Failed to issue cached read Status %08lX\n", Irp->IoStatus.Status);
-
-                    try_return( ntStatus = Irp->IoStatus.Status);
-                }
-            }
-            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
-            {
-                ntStatus = GetExceptionCode();
-            }
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSPrint("AFSCommonRead Failed to process read Status %08lX\n", ntStatus);
-
-                try_return( ntStatus);
-            }
+            try_return( ntStatus);
         }
 
         ntStatus = Irp->IoStatus.Status;
@@ -173,7 +140,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
-    BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
+    BOOLEAN            bSynchronousIo = IoIsOperationSynchronous(Irp);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
     BOOLEAN            bLocked = FALSE;
@@ -232,11 +199,6 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // Provoke a get of the extents - if we need to.
-        // TODO - right now we wait for the extents to be there.  We should 
-        // Post if we can or return STATUS_FILE_LOCKED otherwise
-        //
-        //
-        // prime the pump for the hint to getting the extents
         //
         pStartExtent = NULL;
         while (TRUE) 
@@ -352,11 +314,16 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         pGatherIo->Count = 1;
         pGatherIo->Status = STATUS_SUCCESS;
         pGatherIo->MasterIrp = Irp;
-        pGatherIo->Synchronous = TRUE;
+        pGatherIo->Synchronous = bSynchronousIo;
         bCompleteIrp = FALSE;
 
-        if (pGatherIo->Synchronous) {
+        if (pGatherIo->Synchronous) 
+        {
             KeInitializeEvent( &pGatherIo->Event, NotificationEvent, FALSE );
+        }
+        else
+        {
+            IoMarkIrpPending( Irp);
         }
 
         //
@@ -375,21 +342,33 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         // Regardless of the status we we do the complete - there may
         // be IOs in flight
         //
-        // Decrement the count - setting the event if we are done
+        // Decrement the count - setting the event if we were told
+        // to. This may trigger completion.
         //
-        AFSCompleteIo( pGatherIo, STATUS_SUCCESS );
+        AFSCompleteIo( pGatherIo, ntStatus );
 
-        //
-        // Wait for completion of All IOs we started.
-        //
-        (VOID) KeWaitForSingleObject( &pGatherIo->Event,
-                                      Executive,
-                                      KernelMode,
-                                      FALSE,
-                                      NULL);
+        if (bSynchronousIo) 
+        {
+            //
+            // Wait for completion of all IOs we started.
+            //
+            (VOID) KeWaitForSingleObject( &pGatherIo->Event,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
         
-        if (NT_SUCCESS(ntStatus)) {
-            ntStatus = pGatherIo->Status;
+            if (NT_SUCCESS(ntStatus)) {
+                ntStatus = pGatherIo->Status;
+            }
+        } 
+        else
+        {
+            //
+            // Someone else will get rid of the Gather datastructure
+            //
+            ntStatus = STATUS_PENDING;
+            pGatherIo = NULL;
         }
 
         //
@@ -398,7 +377,7 @@ NonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 try_exit:
         if (NT_SUCCESS(ntStatus) &&
             !bPagingIo &&
-            bSynchronousIo) 
+            BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO)) 
         {
             //
             // Update the CBO if this is a sync, nopaging read
@@ -433,13 +412,30 @@ try_exit:
     }
     return ntStatus;
 }
-
+//
+// Function: AFSDispatch
+//
+// Description:
+//
+// A shim around AFSCommonRead (qv)
+//
+NTSTATUS
+AFSRead( IN PDEVICE_OBJECT DeviceObject,
+         IN PIRP Irp)
+{
+    return AFSCommonRead(DeviceObject, Irp, FALSE);
+}
 //
 // Function: AFSRead
 //
 // Description:
 //
-//      This function is the dispatch handler for the IRP_MJ_READ request
+//      This function is a slightly widened Dispatch handler for the
+//      AFS Read function.  The thrid parameter is FALSE if we were called
+//      at our dispatch point and TRUE if we have been posted.
+//
+//      After doing the obvious (completing MDL writes and so forth)
+//      we then post, or not.
 //
 // Return:
 //
@@ -447,8 +443,9 @@ try_exit:
 //
 
 NTSTATUS
-AFSRead( IN PDEVICE_OBJECT DeviceObject,
-         IN PIRP Irp)
+AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
+               IN PIRP Irp,
+               BOOLEAN Posted)
 {
     
     NTSTATUS            ntStatus = STATUS_SUCCESS;
@@ -460,6 +457,9 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN             bPagingIo = FALSE;
     BOOLEAN             bNonCachedIo = FALSE;
     BOOLEAN             bCompleteIrp = TRUE;
+    BOOLEAN             bPostIrp = TRUE;
+    BOOLEAN             bMapped;
+    AFSWorkItem        *pWorkItem = NULL;
     PFILE_OBJECT        pFileObject = NULL;
     LARGE_INTEGER       liStartingByte;
     ULONG               ulByteCount;
@@ -470,7 +470,6 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
     
     __Enter
     {
-        
         //
         // Decode the fileobject
         //
@@ -482,8 +481,12 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         // close will happen and the FCB will be torn down before we
         // get to the try_exit.  Pin the file Object which will pin the FCB
         //
-
         ObReferenceObject( pFileObject);
+
+        //
+        // We will post of we haven't been posted already *and* the Irp lets us
+        //
+        bPostIrp = !Posted && !IoIsOperationSynchronous(Irp);
 
         pFcb = (AFSFcb *)pFileObject->FsContext;
 
@@ -509,8 +512,7 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // TODO we need some interlock to stop the cache being town
-        // down after this check 
+        // No fileobject yet?  Bail.
         //
         if( NULL == pDeviceExt->Specific.RDR.CacheFileObject) 
         {
@@ -636,21 +638,171 @@ AFSRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // We must now handle this request as a 'typical' read.  The
-        // called request completes the IRP for us.
+        // If this is going to be posted OR this is a cached read,
+        // then ask for the extents before we post.
         //
-        bCompleteIrp = FALSE;
-
-        if( !bPagingIo &&
-            !bNonCachedIo)
+        if (bPostIrp || (!bPagingIo && !bNonCachedIo))
         {
-
-            ntStatus = CachedRead( DeviceObject, Irp, liStartingByte, ulByteCount);
+            ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped);
+            if (!NT_SUCCESS(ntStatus)) {
+                try_return( ntStatus );
+            }
         }
-        else
+
+        //
+        // If this is an cached IO
+        //
+        if( (!bPagingIo && !bNonCachedIo)) 
+        {
+            //
+            // This is a top level irp. Init the caching if it has not yet
+            // been initialzed for this FO
+            //
+    
+            if( pFileObject->PrivateCacheMap == NULL)
+            {
+                
+                __try 
+                {
+            
+                    CcInitializeCacheMap( pFileObject,
+                                          (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                          FALSE,
+                                          &AFSCacheManagerCallbacks,
+                                          pFcb);
+                    CcSetReadAheadGranularity( pFileObject, 
+                                               READ_AHEAD_GRANULARITY);
+                }
+                __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+                {
+                    ntStatus = GetExceptionCode();
+                    try_return( ntStatus );
+                }
+            }
+
+            //
+            // And if this is MDL operation, deal with it now (yes we
+            // could post, but we are almost certainly posted
+            // already and we don't want to grow and SVA for it..)
+            //
+            if( BooleanFlagOn( pIrpSp->MinorFunction, IRP_MN_MDL)) 
+            {
+                __try 
+                {
+            
+                    CcMdlRead( pFileObject,
+                               &liStartingByte,
+                               ulByteCount,
+                               &Irp->MdlAddress,
+                               &Irp->IoStatus);
+                    ntStatus = Irp->IoStatus.Status;
+                }
+                __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+                {
+                    ntStatus = GetExceptionCode();
+                }
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSPrint("AFSCommonRead Failed to process mdl read Status %08lX\n", ntStatus);
+
+                    try_return( ntStatus);
+                }
+            }
+        }
+
+        //
+        // Are we going to post??
+        //
+        if ( bPostIrp) 
+        {
+            pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                               sizeof(AFSWorkItem),
+                                                               AFS_WORK_ITEM_TAG);
+            if (NULL == pWorkItem) {
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
+
+            pWorkItem->Size = sizeof( AFSWorkItem);
+
+            pWorkItem->RequestType = AFS_WORK_ASYNCH_READ;
+            
+            pWorkItem->Specific.AsynchIo.Device = DeviceObject;
+
+            pWorkItem->Specific.AsynchIo.Irp = Irp;
+
+            //
+            // Grow an MDL of it...
+            //
+            if (NULL == AFSLockSystemBuffer( Irp,
+                                             pIrpSp->Parameters.Read.Length))
+            {
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            //
+            // Tell the IO manage that we will be returning STATUS_PENDING
+            //
+
+            IoMarkIrpPending(Irp);
+
+            //
+            // And ourselves to not complete the Irp
+            //
+
+            bCompleteIrp = FALSE;
+
+            ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+            if (!NT_SUCCESS(ntStatus)) 
+            { 
+                //
+                // That failed, but we have marked the Irp pending so
+                // we gotta return pending.  Complete now
+                //
+                Irp->IoStatus.Status = ntStatus;
+                Irp->IoStatus.Information = 0;
+                    
+                AFSCompleteRequest( Irp,
+                                    ntStatus);
+            } 
+            else
+            {
+                //
+                // We don't own the work item
+                //
+                pWorkItem = NULL;
+            }
+             
+            //
+            // In either siutation we have marked the irp pending.  So
+            // that's what we return
+            //
+            ntStatus = STATUS_PENDING;
+        }
+        else 
         {
 
-            ntStatus = NonCachedRead( DeviceObject, Irp,  liStartingByte);
+            //
+            // Otherwise we are doing this in line
+            // The called request completes the IRP for us.
+            //
+            bCompleteIrp = FALSE;
+
+            if( !bPagingIo &&
+                !bNonCachedIo)
+            {
+
+                ntStatus = CachedRead( DeviceObject, Irp, liStartingByte, ulByteCount);
+            }
+            else
+            {
+
+                ntStatus = NonCachedRead( DeviceObject, Irp,  liStartingByte);
+            }
         }
 
 try_exit:
@@ -667,11 +819,15 @@ try_exit:
             AFSReleaseResource( &pFcb->NPFcb->Resource);
         } 
 
-        if ( bCompleteIrp )
+        if ( bCompleteIrp)
         {
             AFSCompleteRequest( Irp, ntStatus);
         }
-            
+
+        if ( pWorkItem)
+        {
+            ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+        }
 
         ObDereferenceObject( pFileObject);
     }

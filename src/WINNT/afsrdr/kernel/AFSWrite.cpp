@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSWrite.cpp
 //
@@ -35,10 +68,17 @@ ExtendingWrite( IN AFSFcb *Fcb,
 //
 //      A status is returned for the function
 //
-
 NTSTATUS
 AFSWrite( IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp)
+{
+    return AFSCommonWrite(DeviceObject, Irp, NULL);
+}
+
+NTSTATUS
+AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
+                IN PIRP Irp,
+                IN HANDLE OnBehalfOf)
 {
 
     NTSTATUS           ntStatus = STATUS_SUCCESS;
@@ -46,6 +86,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp;
     AFSFcb            *pFcb = NULL;
     AFSNonPagedFcb    *pNPFcb = NULL;
+    AFSWorkItem        *pWorkItem = NULL;
     ULONG              ulByteCount = 0;
     LARGE_INTEGER      liStartingByte;
     PFILE_OBJECT       pFileObject;
@@ -54,10 +95,12 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleaseMain = FALSE;    
     BOOLEAN            bReleasePaging = FALSE;    
     BOOLEAN            bExtendingWrite = FALSE;
-    BOOLEAN            bSynchronousIo = FALSE;
     BOOLEAN            bCanQueueRequest = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
+    BOOLEAN            bLockOK;
+    BOOLEAN            bMapped = TRUE;
+    HANDLE             hCallingUser = OnBehalfOf;
     ULONG              ulExtensionLength = 0;
     BOOLEAN            bRetry = FALSE;
 
@@ -100,8 +143,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // TODO we need some interlock to stop the cache being town
-        // down after this check 
+        // Is the Cache not there yet?  Exit.
         //
         if( NULL == pDeviceExt->Specific.RDR.CacheFileObject) 
         {
@@ -109,21 +151,34 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
-
-        bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
         bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
         bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
         ulByteCount    = pIrpSp->Parameters.Write.Length;
 
-        if( !bPagingIo)
+        //
+        // We need to know on whose behalf we have been called (which
+        // we will eventually tell to the server - for non paging
+        // writes).  If we were posted then we were told.  If this si
+        // the first time we saw the irp then we grab it now.
+        //
+        if (NULL == OnBehalfOf ) 
         {
-            bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >= 
-                                pFcb->Header.FileSize.QuadPart) ||
-                               (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                                liStartingByte.HighPart == -1)) ;
-        }
+            //
+            // This is a non posted call.
+            //
+            bCanQueueRequest = !IoIsOperationSynchronous( Irp);
 
-        bCanQueueRequest = !(IoIsOperationSynchronous( Irp));
+            hCallingUser = PsGetCurrentProcessId();
+        } 
+        else
+        {
+            //
+            // We have already been posted once
+            //
+            bCanQueueRequest = FALSE;
+
+            hCallingUser = OnBehalfOf;
+        }
 
         //
         // Check for zero length write
@@ -165,8 +220,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             //
             // Save off the last writer
             //
-
-            pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+            pFcb->Specific.File.ModifyProcessId = (ULONGLONG)hCallingUser;
 
             //
             // Mdl is now Deallocated
@@ -211,57 +265,194 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // We should be ready to go.  So first of all ask for the extents
+        //
+
+        //
+        // Provoke a get of the extents - if we need to.
+        //
+        ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped );
+
+        if (!NT_SUCCESS(ntStatus)) {
+            try_return( ntStatus );
+        }
+
+        //
+        // If they are not mapped and we are the Lazy Writer then just
+        // say "not now"
+        //
+        if (!bMapped && pFcb->Specific.File.LazyWriterThread == PsGetCurrentThread())
+        {
+            try_return ( ntStatus = STATUS_FILE_LOCK_CONFLICT);
+        }
+
+        //
+        // Now, lets post - if we can
+        //
+
+        if (bCanQueueRequest) 
+        {
+            pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                               sizeof(AFSWorkItem),
+                                                               AFS_WORK_ITEM_TAG);
+            if (NULL == pWorkItem) {
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
+
+            pWorkItem->Size = sizeof( AFSWorkItem);
+
+            pWorkItem->RequestType = AFS_WORK_ASYNCH_WRITE;
+            
+            pWorkItem->Specific.AsynchIo.Device = DeviceObject;
+
+            pWorkItem->Specific.AsynchIo.Irp = Irp;
+
+            pWorkItem->Specific.AsynchIo.CallingProcess = hCallingUser;
+
+            //
+            // Grow an MDL of it...
+            //
+            if (NULL == AFSLockSystemBuffer( Irp,
+                                             pIrpSp->Parameters.Read.Length))
+            {
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            //
+            // Tell the IO manage that we will be returning STATUS_PENDING
+            //
+
+            IoMarkIrpPending(Irp);
+
+            //
+            // And ourselves to not complete the Irp
+            //
+
+            bCompleteIrp = FALSE;
+
+            ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+            if (!NT_SUCCESS(ntStatus)) 
+            { 
+                //
+                // That failed, but we have marked the Irp pending so
+                // we gotta return pending.  Complete now
+                //
+                Irp->IoStatus.Status = ntStatus;
+                Irp->IoStatus.Information = 0;
+                    
+                AFSCompleteRequest( Irp,
+                                    ntStatus);
+            } 
+            else
+            {
+                //
+                // We don't own the work item
+                //
+                pWorkItem = NULL;
+            }
+             
+            //
+            // In either siutation we have marked the irp pending.
+            // So that's what we return
+            //
+            try_return (ntStatus = STATUS_PENDING);
+        }
+
+        //
+        // Otherwise we will be doing the work in this thread
+        //
+
+        //
         // Take locks 
         //
         //   - if Paging then we need to nothing (the precalls will
         //     have acquired the paging resource), for clarity we will collect 
         //     the paging resource 
         //   - If extending Write then take the fileresource EX (EOF will change, Allocation will only move out)
-        //   - Otherwise we collect the file shared
+        //   - Otherwise we collect the file shared, check against extending and 
         //
-        if( bPagingIo) 
-        {
-            ASSERT( ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
-    
-            AFSAcquireShared( &pNPFcb->PagingResource,
-                              TRUE);
 
-            bReleasePaging = TRUE;
-        } 
-        else if( bExtendingWrite) 
-        {
-            //
-            // Check for lock inversion
-            //
-            ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
-    
-            AFSAcquireExcl( &pNPFcb->Resource,
-                              TRUE);
+        bLockOK = FALSE;
 
-            if (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                liStartingByte.HighPart == -1)
+        do {
+
+            if( !bPagingIo)
             {
-                if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
+                bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >= 
+                                    pFcb->Header.FileSize.QuadPart) ||
+                                   (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+                                    liStartingByte.HighPart == -1)) ;
+            }
+
+            if( bPagingIo) 
+            {
+                ASSERT( NULL != OnBehalfOf || ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+    
+                AFSAcquireShared( &pNPFcb->PagingResource,
+                                  TRUE);
+
+                bReleasePaging = TRUE;
+                
+                //
+                // We have the correct lock - we cannot have the wrong one
+                //
+                bLockOK = TRUE;
+            } 
+            else if( bExtendingWrite) 
+            {
+                //
+                // Check for lock inversion
+                //
+
+                ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+    
+                AFSAcquireExcl( &pNPFcb->Resource,
+                                TRUE);
+
+                if (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+                    liStartingByte.HighPart == -1)
                 {
-                    liStartingByte = pFcb->Header.ValidDataLength;
-                } 
-                else
+                    if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
+                    {
+                        liStartingByte = pFcb->Header.ValidDataLength;
+                    } 
+                    else
+                    {
+                        liStartingByte = pFcb->Header.FileSize;
+                    }
+                }
+                bReleaseMain = TRUE;
+
+                //
+                // We have the correct lock - even if we don't end up truncating
+                //
+                bLockOK = TRUE;
+            }
+            else
+            {
+                ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+    
+                AFSAcquireShared( &pNPFcb->Resource,
+                                  TRUE);
+
+                bReleaseMain = TRUE;
+
+                //
+                // Have things moved?  Are we extending? If so, the the lock isn't OK
+                //
+                bLockOK = (liStartingByte.QuadPart + ulByteCount) < pFcb->Header.FileSize.QuadPart;
+
+                if (!bLockOK)
                 {
-                    liStartingByte = pFcb->Header.FileSize;
+                    AFSReleaseResource( &pNPFcb->Resource);
+                    bReleaseMain = FALSE;
                 }
             }
-            bReleaseMain = TRUE;
-
         }
-        else
-        {
-            ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
-    
-            AFSAcquireShared( &pNPFcb->Resource,
-                              TRUE);
-
-            bReleaseMain = TRUE;
-        }
+        while (!bLockOK);
 
         if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
         {
@@ -270,8 +461,7 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Check the BR locks on the file. TODO: Add OPLock checks and
-        // queuing mechanism
+        // Check the BR locks on the file. 
         //
 
         if( !bPagingIo && 
@@ -307,14 +497,6 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             
             ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
 
-            if( NT_SUCCESS( ntStatus))
-            {
-                //
-                // Save off the last writer
-                //
-
-                pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
-            }
         }
         else
         {
@@ -322,6 +504,14 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
             ntStatus = NonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
         }
 
+        if( !bPagingIo && NT_SUCCESS( ntStatus))
+        {
+            //
+            // Save off the last writer
+            //
+
+            pFcb->Specific.File.ModifyProcessId = (ULONGLONG)hCallingUser;
+        }
 try_exit:
 
         ObDereferenceObject(pFileObject);
@@ -337,6 +527,12 @@ try_exit:
 
             AFSReleaseResource( &pNPFcb->Resource);
         }
+
+        if ( pWorkItem)
+        {
+            ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+        }
+
         if( bReleasePaging)
         {
 
@@ -539,7 +735,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
-    BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
+    BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
 
     __Enter
@@ -559,7 +755,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         if( pSystemBuffer == NULL)
         {
                 
-            AFSPrint("AFSCommonWrite Failed to retrieve system buffer\n");
+            AFSPrint("NonCachedWrite Failed to retrieve system buffer\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -567,11 +763,6 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // Provoke a get of the extents - if we need to.
-        // TODO - right now we wait for the extents to be there.  We should 
-        // Post if we can or return STATUS_FILE_LOCKED otherwise
-        //
-        // Just as in the read case we could avoid a traverse by getting the first extent from
-        // AFSRequestExtents
         //
         while (TRUE) 
         {
@@ -594,6 +785,9 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 bLocked = TRUE;
                 if ( AFSDoExtentsMapRegion( pFcb, &StartingByte, ByteCount, &pStartExtent, &pIgnoreExtent )) 
                 {
+                    //
+                    // We are all set.  Pin the extents against being truncated
+                    //
                     AFSReferenceExtents( pFcb ); 
                     bDerefExtents = TRUE;
                     break;
@@ -604,7 +798,11 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 // Bad things happened in the interim.  Start again from the top
                 //
                 continue;
-            }    
+            }
+
+            //
+            // Wait for it
+            //
 
             ntStatus =  AFSWaitForExtentMapping ( pFcb );
 
@@ -729,16 +927,6 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if( !bPagingIo)
-        {
-
-            //
-            // Save off the last writer
-            //
-
-            pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
-        }
-
         //
         // Since this is dirty we can mark the extents dirty now
         // (asynch we would fire off a thread to wait for the event and the mark it dirty)
@@ -761,7 +949,7 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 try_exit:
         if (NT_SUCCESS(ntStatus) &&
             !bPagingIo &&
-            bSynchronousIo) 
+            bSynchronousFo) 
         {
             //
             // Update the CBO if this is a sync, nopaging read
@@ -814,26 +1002,12 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
-    BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
+    BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     BOOLEAN            bMapped = FALSE; 
 
     Irp->IoStatus.Information = 0;
     __Enter
     {
-        //
-        // Provoke a get of the extents - if we need to.
-        //
-        ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bMapped );
-
-        if (!NT_SUCCESS(ntStatus)) {
-            try_return( ntStatus );
-        }
-
-        //
-        // TODO - CcCanIwrite
-        //
-        
-
         //
         // Get the mapping for the buffer
         //
@@ -844,7 +1018,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
         if( pSystemBuffer == NULL)
         {
                 
-            AFSPrint("AFSCommonWrite Failed to retrieve system buffer\n");
+            AFSPrint("CachedWrite Failed to retrieve system buffer\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -862,7 +1036,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 // Failed to process request.
                 //
 
-                AFSPrint("AFSWrite failed to issue cached read Write %08lX\n", Irp->IoStatus.Status);
+                AFSPrint("CachedWrite failed to issue cached read Write %08lX\n", Irp->IoStatus.Status);
 
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
@@ -897,7 +1071,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         Irp->IoStatus.Information = ByteCount;
         
-        if( bSynchronousIo)
+        if( bSynchronousFo)
         {
 
             pFileObject->CurrentByteOffset.QuadPart = StartingByte.QuadPart + ByteCount;

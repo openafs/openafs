@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSNameSupport.cpp
 //
@@ -15,16 +48,23 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
     NTSTATUS          ntStatus = STATUS_SUCCESS;
     AFSFcb           *pParentFcb = NULL, *pCurrentFcb = NULL;
-    UNICODE_STRING    uniPathName, uniComponentName, uniRemainingPath;
+    UNICODE_STRING    uniPathName, uniComponentName, uniRemainingPath, uniSearchName;
     ULONG             ulCRC = 0;
     AFSDirEntryCB    *pDirEntry = NULL;
     UNICODE_STRING    uniCurrentPath;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     BOOLEAN           bReleaseRoot = FALSE;
     ULONGLONG         ullIndex = 0;
+    UNICODE_STRING    uniSysName;
+    ULONG             ulSubstituteIndex = 0;
+    BOOLEAN           bFoundComponent = FALSE;
+    BOOLEAN           bSubstituteName = FALSE;
 
     __Enter
     {
+
+        RtlInitUnicodeString( &uniSysName,
+                              L"*@SYS*");
 
         //
         // Cleanup some parameters
@@ -72,14 +112,6 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
         while( TRUE)
         {
-
-            FsRtlDissectName( uniPathName,
-                              &uniComponentName,
-                              &uniRemainingPath);
-
-            uniPathName = uniRemainingPath;
-            
-            *ComponentName = uniComponentName;
 
             //
             // Ensure the parent node has been evaluated, if not then go do it now
@@ -249,109 +281,195 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 break;
             }
 
+            bFoundComponent = FALSE;
+
+            bSubstituteName = FALSE;
+
+            uniSearchName.Buffer = NULL;
+
+            ulSubstituteIndex = 1;
+
+            ntStatus = STATUS_SUCCESS;
+
             //
-            // Generate the CRC on the node and perform a case sensitive lookup
+            // Get the next componet name
             //
 
-            ulCRC = AFSGenerateCRC( &uniComponentName,
-                                    FALSE);
+            FsRtlDissectName( uniPathName,
+                              &uniComponentName,
+                              &uniRemainingPath);
 
-            if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
-            {
+            uniSearchName = uniComponentName;
 
-                AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
-                                                ulCRC,
-                                                &pDirEntry);
-            }
-            else
-            {
-
-                AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
-                                                ulCRC,
-                                                &pDirEntry);
-            }
-
-            if( pDirEntry == NULL)
+            while( !bFoundComponent)
             {
 
                 //
-                // Missed so perform a case insensitive lookup
+                // Generate the CRC on the node and perform a case sensitive lookup
                 //
 
-                ulCRC = AFSGenerateCRC( &uniComponentName,
-                                        TRUE);
+                ulCRC = AFSGenerateCRC( &uniSearchName,
+                                        FALSE);
 
                 if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
                 {
 
-                    AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
-                                                      ulCRC,
-                                                      &pDirEntry);
+                    AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                    ulCRC,
+                                                    &pDirEntry);
                 }
                 else
                 {
 
-                    AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead,
-                                                      ulCRC,
-                                                      &pDirEntry);
+                    AFSLocateCaseSensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                    ulCRC,
+                                                    &pDirEntry);
                 }
 
                 if( pDirEntry == NULL)
                 {
 
                     //
-                    // OK, if this component is a valid short name then try
-                    // a lookup in the short name tree
+                    // Missed so perform a case insensitive lookup
                     //
 
-                    //if( RtlIsNameLegalDOS8Dot3( &uniComponentName,
-                    //                            NULL,
-                    //                            NULL))
-                    if( uniComponentName.Length <= 24)
+                    ulCRC = AFSGenerateCRC( &uniSearchName,
+                                            TRUE);
+
+                    if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
                     {
 
-                        if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
-                        {
+                        AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                          ulCRC,
+                                                          &pDirEntry);
+                    }
+                    else
+                    {
 
-                            AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
-                                                        ulCRC,
-                                                        &pDirEntry);
-                        }
-                        else
-                        {
-
-                            AFSLocateShortNameDirEntry( pParentFcb->Specific.VolumeRoot.ShortNameTree,
-                                                        ulCRC,
-                                                        &pDirEntry);
-                        }
+                        AFSLocateCaseInsensitiveDirEntry( pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                          ulCRC,
+                                                          &pDirEntry);
                     }
 
                     if( pDirEntry == NULL)
                     {
 
-                        if( uniRemainingPath.Length > 0)
+                        //
+                        // OK, if this component is a valid short name then try
+                        // a lookup in the short name tree
+                        //
+
+                        //if( RtlIsNameLegalDOS8Dot3( &uniSearchName,
+                        //                            NULL,
+                        //                            NULL))
+                        if( uniSearchName.Length <= 24)
                         {
 
-                            ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+                            if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                            {
 
-                            //
-                            // Drop the lock on the parent
-                            //
+                                AFSLocateShortNameDirEntry( pParentFcb->Specific.Directory.ShortNameTree,
+                                                            ulCRC,
+                                                            &pDirEntry);
+                            }
+                            else
+                            {
 
-                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                                AFSLocateShortNameDirEntry( pParentFcb->Specific.VolumeRoot.ShortNameTree,
+                                                            ulCRC,
+                                                            &pDirEntry);
+                            }
                         }
-                        else
+
+                        if( pDirEntry == NULL)
                         {
 
-                            ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
-
                             //
-                            // Pass back the parent node and the component name
+                            // If the component has a @SYS in it then we need to substitute
+                            // in the name
                             //
 
-                            *ParentFcb = pParentFcb;
+                            if( FsRtlIsNameInExpression( &uniSysName,
+                                                         &uniSearchName,
+                                                         TRUE,
+                                                         NULL))
+                            {
 
-                            *Fcb = NULL;
+                                //
+                                // If we already substituted a name then free up the buffer before
+                                // doing it again
+                                //
+
+                                if( bSubstituteName &&
+                                    uniSearchName.Buffer != NULL)
+                                {
+
+                                    ExFreePool( uniSearchName.Buffer);
+                                }
+
+                                ntStatus = AFSSubstituteSysName( &uniComponentName,
+                                                                 &uniSearchName,
+                                                                 ulSubstituteIndex);
+
+                                if( !NT_SUCCESS( ntStatus))
+                                {
+
+                                    bSubstituteName = FALSE;
+
+                                    if( ntStatus == STATUS_OBJECT_NAME_NOT_FOUND)
+                                    {
+
+                                        //
+                                        // Pass back the parent node and the component name
+                                        //
+
+                                        *ParentFcb = pParentFcb;
+
+                                        *Fcb = NULL;
+
+                                        *ComponentName = uniComponentName;
+                                    }
+
+                                    break;
+                                }
+
+                                //
+                                // Go reparse the name again
+                                //
+
+                                bSubstituteName = TRUE;
+
+                                ulSubstituteIndex++; // For the next entry, if needed
+
+                                continue;
+                            }
+
+                            if( uniRemainingPath.Length > 0)
+                            {
+
+                                ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+
+                                //
+                                // Drop the lock on the parent
+                                //
+
+                                AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                            }
+                            else
+                            {
+
+                                ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+
+                                //
+                                // Pass back the parent node and the component name
+                                //
+
+                                *ParentFcb = pParentFcb;
+
+                                *Fcb = NULL;
+
+                                *ComponentName = uniComponentName;
+                            }
                         }
 
                         //
@@ -360,31 +478,81 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         break;
                     }
-                }
-                else
-                {
-
-                    //
-                    // Here we have a match on the case insensitive lookup for the name. If there
-                    // Is more than one link entry for this node then fail the lookup request
-                    //
-
-                    if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
-                        pDirEntry->CaseInsensitiveList.fLink != NULL)
+                    else
                     {
 
-                        ntStatus = STATUS_OBJECT_NAME_COLLISION;
-
                         //
-                        // Drop the lock on the parent
+                        // Here we have a match on the case insensitive lookup for the name. If there
+                        // Is more than one link entry for this node then fail the lookup request
                         //
 
-                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                        if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+                            pDirEntry->CaseInsensitiveList.fLink != NULL)
+                        {
+
+                            ntStatus = STATUS_OBJECT_NAME_COLLISION;
+
+                            //
+                            // Drop the lock on the parent
+                            //
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+                        }
 
                         break;
                     }
                 }
+                else
+                {
+
+                    break;
+                }
             }
+
+            if( ntStatus != STATUS_SUCCESS)
+            {
+
+                //
+                // If we substituted a name then free up the allocated buffer
+                //
+
+                if( bSubstituteName &&
+                    uniSearchName.Buffer != NULL)
+                {
+
+                    ExFreePool( uniSearchName.Buffer);
+                }
+
+                break;
+            }
+
+            //
+            // If we ended up substituting a name in the component then update
+            // the full path and update the pointers
+            //
+
+            if( bSubstituteName)
+            {
+
+                ntStatus = AFSSubstituteNameInPath( FullPathName,
+                                                    &uniComponentName,
+                                                    &uniSearchName,
+                                                    (BOOLEAN)(FileObject->RelatedFileObject != NULL));
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    try_return( ntStatus);
+                }
+            }
+
+            //
+            // Update the search parameters
+            //
+
+            uniPathName = uniRemainingPath;
+                
+            *ComponentName = uniComponentName;
 
             //
             // Add in the component name length to the full current path
@@ -978,9 +1146,9 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
         if( DirEntry->NPDirNode != NULL)
         {
 
-            ExDeleteResourceLite( &DirEntry->NPDirNode->Lock);
+            //ExDeleteResourceLite( &DirEntry->NPDirNode->Lock);
 
-            ExFreePool( DirEntry->NPDirNode);
+            //ExFreePool( DirEntry->NPDirNode);
         }
 
         //
@@ -1191,7 +1359,7 @@ AFSParseName( IN PIRP Irp,
             if( FsRtlDoesNameContainWildCards( &pIrpSp->FileObject->FileName))
             {
 
-                try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+                try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
             }
 
             uniFullName = pIrpSp->FileObject->FileName;
@@ -1288,78 +1456,17 @@ AFSParseName( IN PIRP Irp,
         // No wild cards in the name
         //
 
-        if( FsRtlDoesNameContainWildCards( &uniFullName))
+        if( FsRtlDoesNameContainWildCards( &uniFullName) ||
+            uniFullName.Length < AFSServerName.Length)
         {
 
-            try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+            try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
         }
 
-        //
-        // Check the name to see if it is coming in like \\afs\all\something. In this
-        // case make the name \\afs\something. Though if it is \\afs\all\_._AFS_IOCTL_._
-        // then don't touch it
-        //
-
-        RtlInitUnicodeString( &uniAFSAllName,
-                              L"\\AFS\\ALL");
-
-        if( ( uniFullName.Length == uniAFSAllName.Length ||
-              ( uniFullName.Length > uniAFSAllName.Length &&
-                uniFullName.Buffer[ 8] == L'\\')) &&
-            RtlPrefixUnicodeString( &uniAFSAllName,
-                                    &uniFullName,
-                                    TRUE))
+        if( uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] == L'\\')
         {
 
-            //
-            // Case out where the name is only \\afs\all or \\afs\\all\\
-            //
-
-            if( uniFullName.Length == uniAFSAllName.Length ||
-                ( uniFullName.Length == uniAFSAllName.Length + sizeof( WCHAR) &&
-                  uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] == L'\\'))
-            {
-
-                *RootFcb = NULL;
-
-                FileName->Length = 0;
-                FileName->MaximumLength = 0;
-                FileName->Buffer = NULL;
-
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
-
-            RtlInitUnicodeString( &uniAFSAllName,
-                                  AFS_PIOCTL_FILE_INTERFACE_NAME_ROOT);
-
-            if( !RtlPrefixUnicodeString( &uniAFSAllName,
-                                         &uniFullName,
-                                         TRUE))
-            {
-                   
-                //
-                // Move the memory over
-                //
-
-                RtlMoveMemory( &uniFullName.Buffer[ 4],
-                               &uniFullName.Buffer[ 8],
-                               uniFullName.Length - 16);
-
-                uniFullName.Length -= 8;           
-            }
-            else
-            {
-
-                //
-                // Return NULL for all the information but with a success status
-                //
-
-                *RootFcb = NULL;
-
-                *FileName = AFSPIOCtlName;
-
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
+            uniFullName.Length -= sizeof( WCHAR);
         }
 
         FsRtlDissectName( uniFullName,
@@ -1377,7 +1484,25 @@ AFSParseName( IN PIRP Irp,
                                      TRUE) != 0)
         {
 
-            try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+            try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
+        }
+
+        //
+        // Check for the \\Server access and return it as though it where \\Server\Globalroot
+        //
+
+        if( uniRemainingPath.Buffer == NULL ||
+            ( uniRemainingPath.Length == sizeof( WCHAR) &&
+              uniRemainingPath.Buffer[ 0] == L'\\'))
+        {
+
+            *RootFcb = NULL;
+
+            FileName->Length = 0;
+            FileName->MaximumLength = 0;
+            FileName->Buffer = NULL;
+
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -1387,6 +1512,65 @@ AFSParseName( IN PIRP Irp,
         FsRtlDissectName( uniFullName,
                           &uniComponentName,
                           &uniRemainingPath);
+
+        //
+        // If this is the ALL access then perform some additional processing
+        //
+
+        if( RtlCompareUnicodeString( &uniComponentName,
+                                     &AFSGlobalRootName,
+                                     TRUE) == 0)
+        {
+
+            //
+            // If there is nothing else then get out
+            //
+
+            if( uniRemainingPath.Buffer == NULL ||
+                uniRemainingPath.Length == 0 ||
+                ( uniRemainingPath.Length == sizeof( WCHAR) &&
+                  uniRemainingPath.Buffer[ 0] == L'\\'))
+            {
+
+                *RootFcb = NULL;
+
+                FileName->Length = 0;
+                FileName->MaximumLength = 0;
+                FileName->Buffer = NULL;
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+
+            //
+            // Process the name again to strip off the ALL portion
+            //
+
+            uniFullName = uniRemainingPath;
+
+            FsRtlDissectName( uniFullName,
+                              &uniComponentName,
+                              &uniRemainingPath);
+
+            //
+            // Check for the PIOCtl name
+            //
+
+            if( RtlCompareUnicodeString( &uniComponentName,
+                                         &AFSPIOCtlName,
+                                         TRUE) == 0)
+            {
+
+                //
+                // Return NULL for all the information but with a success status
+                //
+
+                *RootFcb = NULL;
+
+                *FileName = AFSPIOCtlName;
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+        }
 
         if( uniRemainingPath.Buffer != NULL)
         {
@@ -1403,16 +1587,6 @@ AFSParseName( IN PIRP Irp,
         uniFullName = uniRemainingPath;
 
         //
-        // If we have no component name then get out
-        //
-
-        if( uniComponentName.Buffer == NULL)
-        {
-
-            try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
-        }
-
-        //
         // Generate a CRC on the component and look it up in the name tree
         //
 
@@ -1423,14 +1597,14 @@ AFSParseName( IN PIRP Irp,
         // Grab our tree lock shared
         //
 
-        AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+        AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
         //
         // Locate the dir entry for this node
         //
 
-        ntStatus = AFSLocateCaseSensitiveDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+        ntStatus = AFSLocateCaseSensitiveDirEntry( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                                    ulCRC,
                                                    &pShareDirEntry);
 
@@ -1445,7 +1619,7 @@ AFSParseName( IN PIRP Irp,
             ulCRC = AFSGenerateCRC( &uniComponentName,
                                     TRUE);
 
-            ntStatus = AFSLocateCaseInsensitiveDirEntry( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+            ntStatus = AFSLocateCaseInsensitiveDirEntry( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                                          ulCRC,
                                                          &pShareDirEntry);
 
@@ -1464,9 +1638,9 @@ AFSParseName( IN PIRP Irp,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                    AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                    try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+                    try_return( ntStatus);
                 }
             }
         }
@@ -1478,7 +1652,7 @@ AFSParseName( IN PIRP Irp,
         AFSAcquireExcl( &pShareDirEntry->NPDirNode->Lock,
                         TRUE);
 
-        AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
         //
         // If the root node for this entry is NULL, then we need to initialize 
@@ -1488,7 +1662,7 @@ AFSParseName( IN PIRP Irp,
         if( pShareDirEntry->Fcb == NULL)
         {
 
-            ntStatus = AFSInitFcb( AFSAllRoot,
+            ntStatus = AFSInitFcb( AFSGlobalRoot,
                                    pShareDirEntry,
                                    NULL);
 
@@ -1701,7 +1875,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
     AFSFileID stFileID;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSDirHdr *pDirHdr = &AFSAllRoot->Specific.Directory.DirectoryNodeHdr;
+    AFSDirHdr *pDirHdr = &AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr;
     AFSDirEntryCB *pDirNode = NULL;
     UNICODE_STRING uniDirName, uniTargetName;
 
@@ -1720,7 +1894,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                                      TRUE) == 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
 
         RtlInitUnicodeString( &uniName,
@@ -1731,7 +1905,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                                      TRUE) == 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
 
         RtlInitUnicodeString( &uniName,
@@ -1742,7 +1916,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                                      TRUE) == 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
 
         RtlInitUnicodeString( &uniName,
@@ -1753,7 +1927,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                                      TRUE) == 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
 
         RtlZeroMemory( &stFileID,
@@ -1841,20 +2015,20 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                                               pDirNode);
         }              
 
-        if( AFSAllRoot->Specific.Directory.DirectoryNodeListHead == NULL)
+        if( AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead == NULL)
         {
 
-            AFSAllRoot->Specific.Directory.DirectoryNodeListHead = pDirNode;
+            AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead = pDirNode;
         }
         else
         {
 
-            AFSAllRoot->Specific.Directory.DirectoryNodeListTail->ListEntry.fLink = pDirNode;
+            AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail->ListEntry.fLink = pDirNode;
 
-            pDirNode->ListEntry.bLink = AFSAllRoot->Specific.Directory.DirectoryNodeListTail;
+            pDirNode->ListEntry.bLink = AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail;
         }
 
-        AFSAllRoot->Specific.Directory.DirectoryNodeListTail = pDirNode;
+        AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail = pDirNode;
 
         //
         // Pass back the dir node

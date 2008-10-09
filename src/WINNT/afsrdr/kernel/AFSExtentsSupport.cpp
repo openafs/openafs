@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSCommSupport.cpp
 //
@@ -176,7 +209,7 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
     AFSReleaseExtentsCB *pRelease = NULL;
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus;
-    HANDLE               hModifyProcessId = PsGetCurrentProcessId();
+    ULONGLONG            hModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     __Enter
     {
@@ -649,14 +682,8 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         //
         // We have the lock Ex and there is no filling going on.
         // Check again to see whether things have moved since we last
-        // checked (note that FirstExtent may have been set up by
-        // previous request and so things maybe a bunch faster
-        //
-        
-        //
-        // TODO - actually we haven't locked against pinning, so for
-        // the sake of sanity we will reset here.  I don't think that
-        // we can do a pin/unpin here..
+        // checked.  Since we haven't locked against pinning, we will
+        // reset here.  
         //
         pFirstExtent = NULL;
         *FullyMapped = AFSDoExtentsMapRegion(Fcb, Offset, Size, &pFirstExtent, &pExtent);
@@ -1546,7 +1573,7 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
         //
         pFile->FileId = pFcb->DirEntry->DirectoryEntry.FileId;
         pFile->Flags = AFS_EXTENT_FLAG_RELEASE;
-        pFile->ProcessId = (ULONG) pFcb->Specific.File.ModifyProcessId;
+        pFile->ProcessId.QuadPart = pFcb->Specific.File.ModifyProcessId;
 
         sz = FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents) + 
             (pFile->ExtentCount * sizeof(AFSFileExtentCB));
@@ -1776,7 +1803,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack, BOOLEAN *Complete)
             pFile = pResult->Files;
             pFile->FileId = pExtents->FileId;
             pFile->Flags = AFS_EXTENT_FLAG_RELEASE;
-            pFile->ProcessId = (ULONG) pFcb->Specific.File.ModifyProcessId;
+            pFile->ProcessId.QuadPart = pFcb->Specific.File.ModifyProcessId;
             ulSz -= FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents);
 
             ntStatus = AFSReleaseSpecifiedExtents( pExtents,
@@ -1833,7 +1860,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack, BOOLEAN *Complete)
 
                     (VOID) AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                               AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                              (HANDLE) pFile->ProcessId,
+                                              pFile->ProcessId.QuadPart,
                                               NULL,
                                               &pFile->FileId,
                                               pRelease,
@@ -1855,8 +1882,8 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack, BOOLEAN *Complete)
             AFSWorkItem *pWorkItem;
 
             pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
-                                                                   sizeof(AFSWorkItem),
-                                                                   AFS_WORK_ITEM_TAG);
+                                                               sizeof(AFSWorkItem),
+                                                               AFS_WORK_ITEM_TAG);
             if (NULL == pWorkItem) {
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
             }
@@ -1914,9 +1941,6 @@ AFSProcessReleaseFileExtents( IN PIRP Irp, BOOLEAN CallBack, BOOLEAN *Complete)
                 Irp->IoStatus.Information = 0;
             }
 
-            //
-            // TODO
-            //
             if (!CallBack)
             {
                 Irp->IoStatus.Information = 0;
@@ -2065,7 +2089,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     ULONG                ulCurrentCount = 0, ulProcessCount = 0;
     ULONG                sz = 0;
     NTSTATUS             ntStatus;
-    HANDLE               hModifyProcessId = PsGetCurrentProcessId();
+    ULONGLONG            hModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
     LARGE_INTEGER        liLastFlush;
 
     ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
@@ -2204,7 +2228,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          hModifyProcessId,
+                                          (ULONGLONG)hModifyProcessId,
                                           NULL,
                                           &Fcb->DirEntry->DirectoryEntry.FileId,
                                           pRelease,

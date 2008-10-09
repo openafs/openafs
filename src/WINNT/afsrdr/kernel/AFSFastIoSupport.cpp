@@ -1,3 +1,35 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 //
 // File: AFSFastIoSupport.cpp
@@ -218,7 +250,7 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
         // Save off the last writer
         //
 
-        pFcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+        pFcb->Specific.File.ModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
     }
 
     return;
@@ -511,6 +543,9 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
     //
     // Try and acquire the Fcb resource
     //
+    ASSERT( NULL == pFcb->Specific.File.LazyWriterThread);
+
+    pFcb->Specific.File.LazyWriterThread = PsGetCurrentThread();
 
     if( AFSAcquireShared( &pFcb->NPFcb->Resource,
                           Wait))
@@ -564,6 +599,11 @@ AFSReleaseFcbFromLazyWrite( IN PVOID Fcb)
     AFSFcb *pFcb = (AFSFcb *)Fcb;
 
     IoSetTopLevelIrp( NULL);
+
+    ASSERT( PsGetCurrentThread() == pFcb->Specific.File.LazyWriterThread);
+
+    pFcb->Specific.File.LazyWriterThread = NULL;
+
 
     AFSReleaseResource( &pFcb->NPFcb->PagingResource);
 

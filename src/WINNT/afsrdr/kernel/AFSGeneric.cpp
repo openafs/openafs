@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSGeneric.cpp
 //
@@ -647,45 +680,6 @@ AFSReadRegistry( IN PUNICODE_STRING RegistryPath)
             AFSMaxDirectIo = Value;
         }
 
-        RtlZeroMemory( paramTable, 
-                       sizeof( paramTable));
-
-        Value = 0;
-
-        AFSServerName.Length = 0;
-        AFSServerName.MaximumLength = 0;
-        AFSServerName.Buffer = NULL;
-
-        //
-        // Setup the table to query the registry for the needed value
-        //
-
-        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
-        paramTable[0].Name = AFS_REG_SERVER_NAME; 
-        paramTable[0].EntryContext = &AFSServerName;
-        
-        paramTable[0].DefaultType = REG_NONE; 
-        paramTable[0].DefaultData = NULL; 
-        paramTable[0].DefaultLength = 0; 
-
-        //
-        // Query the registry
-        //
-
-        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL, 
-                                           paramPath.Buffer, 
-                                           paramTable, 
-                                           NULL, 
-                                           NULL);
-
-        if( !NT_SUCCESS( ntStatus) ||
-            AFSServerName.Length == 0)
-        {
-
-            RtlInitUnicodeString( &AFSServerName,
-                                  L"AFS");
-        }
-
         //
         // Free up the buffer
         //
@@ -736,6 +730,7 @@ AFSInitializeControlFilter()
                            FALSE);
 
         pDeviceExt->Specific.Control.ExtentReleaseSequence = 0;
+
         //
         // Set the initial state of the irp pool
         //
@@ -747,13 +742,6 @@ AFSInitializeControlFilter()
         //
 
         ExInitializeResourceLite( &AFSProviderListLock);
-
-        //
-        // Initialize the IOCtl interface file name
-        //
-
-        RtlInitUnicodeString( &AFSPIOCtlName,
-                              AFS_PIOCTL_FILE_INTERFACE_NAME);
     }
 
     return ntStatus;
@@ -764,13 +752,13 @@ AFSDefaultDispatch( IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
 
-    NTSTATUS            ntStatus = STATUS_SUCCESS;
+    NTSTATUS            ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     PIO_STACK_LOCATION  pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
-    AFSPrint("AFSDefaultDispatch Hanlding %08lX\n", pIrpSp->MajorFunction);
+    AFSPrint("AFSDefaultDispatch Handling %08lX\n", pIrpSp->MajorFunction);
 
     AFSCompleteRequest( Irp, 
-                          ntStatus);
+                        ntStatus);
 
     return ntStatus;
 }
@@ -1159,7 +1147,8 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
                 // if the target does not exist when we walk the nodes
                 //
 
-                AFSInitRootFcb( pDirNode);
+                AFSInitRootFcb( pDirNode,
+                                NULL);
             }
         }
 
@@ -1174,12 +1163,16 @@ try_exit:
                 if( pDirNode->NPDirNode != NULL)
                 {
 
+                    DbgPrint("AFSInitDirEntry Failure tearing down NP Dir Node %08lX\n", pDirNode->NPDirNode);
+
                     ExDeleteResourceLite( &pDirNode->NPDirNode->Lock);
 
                     ExFreePool( pDirNode->NPDirNode);
                 }
 
                 ExFreePool( pDirNode);
+
+                pDirNode = NULL;
 
                 AFSAllocationMemoryLevel -= ulEntryLength;
             }
@@ -1871,4 +1864,561 @@ AFSCreateLowIndex( IN AFSFileID *FileID)
     ullIndex = (((ULONGLONG)FileID->Vnode << 32) | FileID->Unique);
 
     return ullIndex;
+}
+
+BOOLEAN
+AFSCheckAccess( IN ACCESS_MASK DesiredAccess,
+                IN ACCESS_MASK GrantedAccess)
+{
+
+    BOOLEAN bAccessGranted = TRUE;
+
+    //
+    // Check if we are asking for read/write and granted only read only
+    // NOTE: There will be more checks here
+    //
+
+    if( !AFSCheckForReadOnlyAccess( DesiredAccess) &&
+        AFSCheckForReadOnlyAccess( GrantedAccess))
+    {
+
+        bAccessGranted = FALSE;
+    }
+
+    return bAccessGranted;
+}
+
+NTSTATUS
+AFSGetDriverStatus( IN AFSDriverStatusRespCB *DriverStatus)
+{
+
+    NTSTATUS         ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+
+    //
+    // Start with read
+    //
+
+    DriverStatus->Status = AFS_DRIVER_STATUS_READY;
+
+    if( AFSGlobalRoot == NULL ||
+        !BooleanFlagOn( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+    {
+
+        //
+        // We are not ready
+        //
+
+        DriverStatus->Status = AFS_DRIVER_STATUS_NOT_READY;
+    }
+
+    if( pControlDevExt->Specific.Control.CommServiceCB.IrpPoolControlFlag != POOL_ACTIVE)
+    {
+
+        //
+        // No service yet
+        //
+
+        DriverStatus->Status = AFS_DRIVER_STATUS_NO_SERVICE;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
+                          IN ULONG SysNameInfoBufferLength)
+{
+
+    NTSTATUS         ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSSysNameCB    *pSysName = NULL;
+    ERESOURCE       *pSysNameLock = NULL;
+    AFSSysNameCB   **pSysNameListHead = NULL, **pSysNameListTail = NULL;
+    ULONG            ulIndex = 0;
+    __Enter
+    {
+
+        //
+        // Depending on the architecture of the information, set up the lsit
+        //
+
+        if( SysNameInfo->Architecture == AFS_SYSNAME_ARCH_32BIT)
+        {
+
+            pSysNameLock = &pControlDevExt->Specific.Control.SysName32ListLock;
+
+            pSysNameListHead = &pControlDevExt->Specific.Control.SysName32ListHead;
+
+            pSysNameListTail = &pControlDevExt->Specific.Control.SysName32ListTail;
+        }
+        else
+        {
+
+#if defined(_WIN64)
+
+            pSysNameLock = &pControlDevExt->Specific.Control.SysName64ListLock;
+
+            pSysNameListHead = &pControlDevExt->Specific.Control.SysName64ListHead;
+
+            pSysNameListTail = &pControlDevExt->Specific.Control.SysName64ListTail;
+
+#else
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+#endif
+        }
+
+        //
+        // Process the request
+        //
+
+        AFSAcquireExcl( pSysNameLock,
+                        TRUE);
+
+        //
+        // If we already have a list, then fail the request
+        //
+
+        if( *pSysNameListHead != NULL)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // Loop through the entries adding in a node for each
+        //
+
+        while( ulIndex < SysNameInfo->NumberOfNames)
+        {
+
+            pSysName = (AFSSysNameCB *)ExAllocatePoolWithTag( PagedPool,
+                                                              sizeof( AFSSysNameCB) + 
+                                                                        SysNameInfo->SysNames[ ulIndex].Length +
+                                                                        sizeof( WCHAR),
+                                                              AFS_SYS_NAME_NODE_TAG);
+
+            if( pSysName == NULL)
+            {
+
+                //
+                // Reset the current list
+                //
+
+                AFSResetSysNameList( *pSysNameListHead);
+
+                *pSysNameListHead = NULL;
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlZeroMemory( pSysName,
+                           sizeof( AFSSysNameCB) + 
+                                   SysNameInfo->SysNames[ ulIndex].Length +
+                                   sizeof( WCHAR));
+
+            pSysName->SysName.Length = (USHORT)SysNameInfo->SysNames[ ulIndex].Length;
+
+            pSysName->SysName.MaximumLength = pSysName->SysName.Length + sizeof( WCHAR);
+
+            pSysName->SysName.Buffer = (WCHAR *)((char *)pSysName + sizeof( AFSSysNameCB));
+
+            RtlCopyMemory( pSysName->SysName.Buffer,
+                           SysNameInfo->SysNames[ ulIndex].String,
+                           pSysName->SysName.Length);
+
+            if( *pSysNameListHead == NULL)
+            {
+
+                *pSysNameListHead = pSysName;
+            }
+            else
+            {
+
+                (*pSysNameListTail)->fLink = pSysName;
+            }
+
+            *pSysNameListTail = pSysName;                               
+
+            ulIndex++;
+        }
+
+try_exit:
+
+
+        AFSReleaseResource( pSysNameLock);
+    }
+
+    return ntStatus;
+}
+
+void
+AFSResetSysNameList( IN AFSSysNameCB *SysNameList)
+{
+
+    AFSSysNameCB *pNextEntry = NULL, *pCurrentEntry = SysNameList;
+
+    while( pCurrentEntry != NULL)
+    {
+
+        pNextEntry = pCurrentEntry->fLink;
+
+        ExFreePool( pCurrentEntry);
+
+        pCurrentEntry = pNextEntry;
+    }
+
+    return;
+}
+
+NTSTATUS
+AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
+                      IN UNICODE_STRING *SubstituteName,
+                      IN ULONG StringIndex)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSSysNameCB    *pSysName = NULL;
+    ERESOURCE       *pSysNameLock = NULL;
+    ULONG            ulIndex = 0;
+    USHORT           usIndex = 0;
+    UNICODE_STRING   uniSysName;
+
+    __Enter
+    {
+
+#if defined(_WIN64)
+
+        if( IoIs32bitProcess( NULL))
+        {
+
+            pSysNameLock = &pControlDevExt->Specific.Control.SysName32ListLock;
+
+            pSysName = &pControlDevExt->Specific.Control.SysName32ListHead;
+        }
+        else
+        {
+
+            pSysNameLock = &pControlDevExt->Specific.Control.SysName64ListLock;
+
+            pSysName = &pControlDevExt->Specific.Control.SysName64ListHead;
+        }
+#else
+
+        pSysNameLock = &pControlDevExt->Specific.Control.SysName32ListLock;
+
+        pSysName = pControlDevExt->Specific.Control.SysName32ListHead;
+
+#endif
+
+        AFSAcquireShared( pSysNameLock,
+                          TRUE);
+
+        //
+        // Find where we are in the list
+        //
+
+        while( pSysName != NULL &&
+            ulIndex < StringIndex)
+        {
+
+            pSysName = pSysName->fLink;
+
+            ulIndex++;
+        }
+
+        if( pSysName == NULL)
+        {
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
+        }
+
+        RtlInitUnicodeString( &uniSysName,
+                              L"@SYS");
+        //
+        // If it is a full component of @SYS then just substitue the
+        // name in
+        //
+
+        if( RtlCompareUnicodeString( &uniSysName,
+                                     ComponentName,
+                                     TRUE) == 0)
+        {
+
+            SubstituteName->Length = pSysName->SysName.Length;
+            SubstituteName->MaximumLength = SubstituteName->Length;
+
+            SubstituteName->Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                     SubstituteName->Length,
+                                                                     AFS_NAME_BUFFER_TAG);
+
+            if( SubstituteName->Buffer == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlCopyMemory( SubstituteName->Buffer,
+                           pSysName->SysName.Buffer,
+                           pSysName->SysName.Length);
+        }
+        else
+        {
+
+            usIndex = 0;
+
+            while( ComponentName->Buffer[ usIndex] != L'@')
+            {
+
+                usIndex++;
+            }
+
+            SubstituteName->Length = (usIndex * sizeof( WCHAR)) + pSysName->SysName.Length;
+            SubstituteName->MaximumLength = SubstituteName->Length;
+
+            SubstituteName->Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                     SubstituteName->Length,
+                                                                     AFS_NAME_BUFFER_TAG);
+
+            if( SubstituteName->Buffer == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlCopyMemory( SubstituteName->Buffer,
+                           ComponentName->Buffer,
+                           usIndex * sizeof( WCHAR));
+
+            RtlCopyMemory( &SubstituteName->Buffer[ usIndex],
+                           pSysName->SysName.Buffer,
+                           pSysName->SysName.Length);
+        }
+
+try_exit:
+
+        AFSReleaseResource( pSysNameLock);
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
+                         IN UNICODE_STRING *ComponentName,
+                         IN UNICODE_STRING *SubstituteName,
+                         IN BOOLEAN FreePathName)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    UNICODE_STRING uniPathName;
+    USHORT usPrefixNameLen = 0;
+
+    __Enter
+    {
+
+        //
+        // If the passed in name can handle the additional length
+        // then just moves things around
+        //
+
+        if( FullPathName->MaximumLength > FullPathName->Length - 
+                                                    ComponentName->Length + 
+                                                    SubstituteName->Length)
+        {
+
+            usPrefixNameLen = (USHORT)(ComponentName->Buffer - FullPathName->Buffer);
+
+            if( FullPathName->Length > usPrefixNameLen + ComponentName->Length)
+            {
+
+                RtlMoveMemory( &FullPathName->Buffer[ ((usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)) + 1],
+                               &FullPathName->Buffer[ ((usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)) + 1],
+                               FullPathName->Length - usPrefixNameLen - ComponentName->Length);
+            }
+
+            RtlCopyMemory( &FullPathName->Buffer[ (usPrefixNameLen/sizeof( WCHAR)) + 1],
+                           SubstituteName->Buffer,
+                           SubstituteName->Length);
+
+            FullPathName->Length = FullPathName->Length - 
+                                          ComponentName->Length + 
+                                          SubstituteName->Length;
+
+            try_return( ntStatus);
+        }
+        
+        //
+        // Need to re-allocate the buffer
+        //
+
+        uniPathName.Length = FullPathName->Length - 
+                                         ComponentName->Length + 
+                                         SubstituteName->Length;
+
+        uniPathName.MaximumLength = FullPathName->MaximumLength + PAGE_SIZE;
+
+        uniPathName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                             uniPathName.MaximumLength,
+                                                             AFS_NAME_BUFFER_TAG);
+
+        if( uniPathName.Buffer == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        usPrefixNameLen = (USHORT)(ComponentName->Buffer - FullPathName->Buffer);
+
+        RtlZeroMemory( uniPathName.Buffer,
+                       uniPathName.MaximumLength);
+
+        RtlCopyMemory( uniPathName.Buffer,
+                       FullPathName->Buffer,
+                       usPrefixNameLen);
+
+        RtlCopyMemory( &uniPathName.Buffer[ (usPrefixNameLen/sizeof( WCHAR)) + 1],
+                       SubstituteName->Buffer,
+                       SubstituteName->Length);
+
+        if( FullPathName->Length > usPrefixNameLen + ComponentName->Length)
+        {
+
+            RtlCopyMemory( &uniPathName.Buffer[ ((usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)) + 1],
+                           &FullPathName->Buffer[ ((usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)) + 1],
+                           FullPathName->Length - usPrefixNameLen - ComponentName->Length);
+        }
+
+        if( FreePathName)
+        {
+
+            ExFreePool( FullPathName->Buffer);
+        }
+
+        *FullPathName = uniPathName;
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+void
+AFSInitServerStrings()
+{
+
+    //
+    // Initialize the server name
+    //
+
+    AFSReadServerName();
+
+    //
+    // The PIOCtl file name
+    //
+
+    RtlInitUnicodeString( &AFSPIOCtlName,
+                          AFS_PIOCTL_FILE_INTERFACE_NAME);
+
+    //
+    // And the global root share name
+    //
+
+    RtlInitUnicodeString( &AFSGlobalRootName,
+                          AFS_GLOBAL_ROOT_SHARE_NAME);
+
+    return;
+}
+
+NTSTATUS
+AFSReadServerName()
+{
+
+    NTSTATUS ntStatus        = STATUS_SUCCESS;
+    ULONG Default            = 0;
+    UNICODE_STRING paramPath;
+    RTL_QUERY_REGISTRY_TABLE paramTable[2];
+
+    __Enter
+    {
+
+        //
+        // Setup the paramPath buffer.
+        //
+
+        paramPath.MaximumLength = PAGE_SIZE; 
+        paramPath.Buffer = (PWSTR)ExAllocatePoolWithTag( PagedPool,
+                                                         paramPath.MaximumLength,
+                                                         AFS_GENERIC_MEMORY_TAG);
+     
+        //
+        // If it exists, setup the path.
+        //
+
+        if( paramPath.Buffer == NULL) 
+        { 
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+        
+        //
+        // Move in the paths
+        //
+
+        RtlCopyMemory( &paramPath.Buffer[ 0], 
+                       L"\\TransarcAFSDaemon\\Parameters", 
+                       58);
+        
+        paramPath.Length = 58; 
+
+        RtlZeroMemory( paramTable, 
+                       sizeof( paramTable));
+
+        //
+        // Setup the table to query the registry for the needed value
+        //
+
+        AFSServerName.Length = 0;
+        AFSServerName.MaximumLength = 0;
+        AFSServerName.Buffer = NULL;
+
+        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
+        paramTable[0].Name = AFS_NETBIOS_NAME; 
+        paramTable[0].EntryContext = &AFSServerName;
+        
+        paramTable[0].DefaultType = REG_NONE; 
+        paramTable[0].DefaultData = NULL; 
+        paramTable[0].DefaultLength = 0;
+
+        //
+        // Query the registry
+        //
+
+        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_SERVICES, 
+                                           paramPath.Buffer, 
+                                           paramTable, 
+                                           NULL, 
+                                           NULL);
+
+        //
+        // Free up the buffer
+        //
+
+        ExFreePool( paramPath.Buffer);
+
+try_exit:
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            RtlInitUnicodeString( &AFSServerName,
+                                  L"AFS");
+        }
+    } 
+
+    return ntStatus;
 }

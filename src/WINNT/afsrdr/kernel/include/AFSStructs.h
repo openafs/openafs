@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _AFS_STRUCTS_H
 #define _AFS_STRUCTS_H
 
@@ -297,12 +330,17 @@ typedef struct AFS_FCB
             // opened it with write priv's
             //
 
-            HANDLE              ModifyProcessId;
+            ULONGLONG              ModifyProcessId;
 
             //
             // Set if there is any dirty data. Set pessimistically
             //
             ULONGLONG           ExtentsDirtyCount;
+
+            //
+            // The Lazy writer thread
+            //
+            PETHREAD            LazyWriterThread;
 
         } File;
 
@@ -504,7 +542,10 @@ typedef struct _AFS_WORK_ITEM
         struct
         {
             PIRP Irp;
+
             PDEVICE_OBJECT Device;
+
+            HANDLE CallingProcess;
 
         } AsynchIo;
 
@@ -557,7 +598,7 @@ typedef struct _POOL_ENTRY
 
     KEVENT      Event;
 
-    HANDLE      ProcessID;
+    ULONGLONG   ProcessID;
 
     AFSFileID    FileId;
 
@@ -725,6 +766,19 @@ typedef struct _AFS_DIR_NODE_CB
 
 } AFSDirEntryCB;
 
+//
+// Sys Name Information CB
+//
+
+typedef struct _AFS_SYS_NAME_CB
+{
+
+    struct _AFS_SYS_NAME_CB     *fLink;
+
+    UNICODE_STRING      SysName;
+
+} AFSSysNameCB;
+
 typedef struct _AFS_DEVICE_EXTENSION
 {
 
@@ -795,6 +849,22 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             PKPROCESS        ServiceProcess;
 
+            //
+            // SysName information control block
+            //
+
+            ERESOURCE       SysName32ListLock;
+
+            AFSSysNameCB    *SysName32ListHead;
+
+            AFSSysNameCB    *SysName32ListTail;
+
+            ERESOURCE       SysName64ListLock;
+
+            AFSSysNameCB    *SysName64ListHead;
+
+            AFSSysNameCB    *SysName64ListTail;
+
         } Control;
 
         struct
@@ -849,6 +919,8 @@ typedef struct _AFSFSD_PROVIDER_CONNECTION_CB
 {
 
     struct _AFSFSD_PROVIDER_CONNECTION_CB *fLink;
+
+    ULONG   ResourceType;
 
     WCHAR   LocalName;
 

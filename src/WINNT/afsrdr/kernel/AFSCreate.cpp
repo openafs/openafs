@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSCreate.cpp
 //
@@ -84,6 +117,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING      uniComponentName, uniTargetName, uniPathName, uniFullFileName;
     AFSFcb             *pRootFcb = NULL;
     BOOLEAN             bReleaseRootFcb = FALSE;
+    UNICODE_STRING      uniSubstitutedPathName;
 
     __Enter
     {
@@ -102,6 +136,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
         pFileObject = pIrpSp->FileObject;
 
+        uniFileName.Length = uniFileName.MaximumLength = 0;
+        uniFileName.Buffer = NULL;
+
+        uniSubstitutedPathName.Buffer = NULL;
+        uniSubstitutedPathName.Length = 0;
+
         if( pFileObject == NULL ||
             pFileObject->FileName.Buffer == NULL)
         {
@@ -113,48 +153,45 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
         pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
 
-        uniFileName.Length = uniFileName.MaximumLength = 0;
-        uniFileName.Buffer = NULL;
-
         //
         // Validate that the AFS Root has been initialized
         //
 
-        if( AFSAllRoot == NULL ||
-            !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+        if( AFSGlobalRoot == NULL ||
+            !BooleanFlagOn( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
         {
 
             //
             // If we have a root node then try to enumerate it
             //
 
-            if( AFSAllRoot != NULL)
+            if( AFSGlobalRoot != NULL)
             {
 
-                AFSAcquireExcl( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                 TRUE);
 
                 //
                 // Check again in case we raced with another request
                 //
 
-                if( !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+                if( !BooleanFlagOn( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
                 {
 
                     //
                     // Initialize the root information
                     //
 
-                    AFSAllRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
+                    AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
 
                     //
                     // Enumerate the shares in the volume
                     //
 
-                    ntStatus = AFSEnumerateDirectory( &AFSAllRoot->DirEntry->DirectoryEntry.FileId,
-                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeHdr,
-                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeListHead,
-                                                      &AFSAllRoot->Specific.Directory.DirectoryNodeListTail,
+                    ntStatus = AFSEnumerateDirectory( &AFSGlobalRoot->DirEntry->DirectoryEntry.FileId,
+                                                      &AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr,
+                                                      &AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead,
+                                                      &AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail,
                                                       NULL,
                                                       NULL);
 
@@ -165,15 +202,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                         // Indicate the node is initialized
                         //
 
-                        SetFlag( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+                        SetFlag( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
                     }
                 }
 
-                AFSReleaseResource( AFSAllRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
             }
 
-            if( AFSAllRoot == NULL ||
-                !BooleanFlagOn( AFSAllRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+            if( AFSGlobalRoot == NULL ||
+                !BooleanFlagOn( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
             {
 
                 DbgPrint("AFSCommonCreate Failed to init root\n");
@@ -200,7 +237,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // If the returned root Fcb is NULL then we are dealing with the \\AFS\All 
+        // If the returned root Fcb is NULL then we are dealing with the \\Server\GlobalRoot 
         // name 
         //
 
@@ -251,7 +288,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 {
 
                     ntStatus = AFSOpenIOCtlFcb( Irp,
-                                                AFSAllRoot,
+                                                AFSGlobalRoot,
                                                 &pFcb,
                                                 &pCcb);
                 }
@@ -303,18 +340,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 AFSPrint("AFSCommonCreate Attempt to open root as delete on close\n");
 
                 try_return( ntStatus = STATUS_CANNOT_DELETE );
-            }
-
-            //
-            // This is the root so make sure they want to open a directory
-            //
-
-            if( BooleanFlagOn( ulOptions, FILE_NON_DIRECTORY_FILE)) 
-            {
-
-                AFSPrint("AFSCommonCreate Attempt to open root directory as NonDirectory file\n");
-
-                try_return( ntStatus = STATUS_FILE_IS_A_DIRECTORY);
             }
 
             //
@@ -391,6 +416,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( uniFileName.Length > sizeof( WCHAR))
         {
 
+            uniSubstitutedPathName = uniFileName;
+
             ntStatus = AFSLocateNameEntry( pRootFcb,
                                            pFileObject,
                                            &uniFileName,
@@ -402,6 +429,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
             {
 
+                uniSubstitutedPathName.Buffer = NULL;
+
                 //
                 // The routine above released the root while walking the
                 // branch
@@ -410,6 +439,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 bReleaseRootFcb = FALSE;
 
                 try_return( ntStatus);
+            }
+
+            //
+            // If we re-allocated the name then update our substitue name
+            //
+
+            if( uniSubstitutedPathName.Buffer != uniFileName.Buffer)
+            {
+
+                uniSubstitutedPathName = uniFileName;
+            }
+            else
+            {
+
+                uniSubstitutedPathName.Buffer = NULL;
             }
 
             //
@@ -626,14 +670,31 @@ try_exit:
             if( pCcb != NULL)
             {
 
-                pCcb->FullFileName = uniFullFileName;
+                //
+                // If we have a substitue name then use it
+                //
 
-                if( bFreeNameString)
+                if( uniSubstitutedPathName.Buffer != NULL)
                 {
+
+                    pCcb->FullFileName = uniSubstitutedPathName;
 
                     SetFlag( pCcb->Flags, CCB_FLAG_FREE_FULL_PATHNAME);
 
                     bFreeNameString = FALSE;
+                }
+                else
+                {
+
+                    pCcb->FullFileName = uniFullFileName;
+
+                    if( bFreeNameString)
+                    {
+
+                        SetFlag( pCcb->Flags, CCB_FLAG_FREE_FULL_PATHNAME);
+
+                        bFreeNameString = FALSE;
+                    }
                 }
             }
 
@@ -678,6 +739,19 @@ try_exit:
 
                     SetFlag( pFileObject->Flags, FO_FILE_FAST_IO_READ);
                 }
+            }
+        }
+        else
+        {
+
+            //
+            // Free up the sub name if we have one
+            //
+
+            if( uniSubstitutedPathName.Buffer != NULL)
+            {
+
+                ExFreePool( uniSubstitutedPathName.Buffer);
             }
         }
 
@@ -736,7 +810,7 @@ AFSOpenAFSRoot( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( AFSAllRoot,
+        ntStatus = AFSInitCcb( AFSGlobalRoot,
                                Ccb);
 
         if( !NT_SUCCESS( ntStatus))
@@ -751,11 +825,11 @@ AFSOpenAFSRoot( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &AFSAllRoot->OpenReferenceCount);
+        InterlockedIncrement( &AFSGlobalRoot->OpenReferenceCount);
 
-        InterlockedIncrement( &AFSAllRoot->OpenHandleCount);
+        InterlockedIncrement( &AFSGlobalRoot->OpenHandleCount);
 
-        *Fcb = AFSAllRoot;
+        *Fcb = AFSGlobalRoot;
 
         //
         // Return the open result for this file
@@ -820,7 +894,7 @@ AFSOpenRoot( IN PIRP Irp,
 
                 ExFreePool( pDirEnumCB);
 
-                try_return( ntStatus = STATUS_BAD_NETWORK_PATH);
+                try_return( ntStatus = STATUS_NO_SUCH_FILE);
             }
 
             //
@@ -1467,6 +1541,9 @@ AFSProcessOpen( IN PIRP Irp,
     BOOLEAN bAllocatedCcb = FALSE;
     ULONG ulAdditionalFlags = 0, ulOptions = 0;
     BOOLEAN bDecrementOpenRefCount = FALSE;
+    AFSFileOpenCB   stOpenCB;
+    AFSFileOpenResultCB stOpenResultCB;
+    ULONG       ulResultLen = 0;
 
     __Enter
     {
@@ -1561,6 +1638,53 @@ AFSProcessOpen( IN PIRP Irp,
         }
 
         //
+        // Check with the service that we can open the file
+        //
+
+        stOpenCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
+
+        stOpenCB.DesiredAccess = *pDesiredAccess;
+
+        stOpenCB.ShareAccess = usShareAccess;
+
+        stOpenResultCB.GrantedAccess = 0;
+
+        ulResultLen = sizeof( AFSFileOpenResultCB);
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_OPEN_FILE,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                                      &Fcb->DirEntry->DirectoryEntry.FileId,
+                                      (void *)&stOpenCB,
+                                      sizeof( AFSFileOpenCB),
+                                      (void *)&stOpenResultCB,
+                                      &ulResultLen);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSPrint("AFSProcessOpen Failed to open file in service Status %08lX\n", ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Check if there is a conflict
+        //
+
+        if( !AFSCheckAccess( *pDesiredAccess,
+                             stOpenResultCB.GrantedAccess))
+        {
+
+            AFSPrint("AFSProcessOpen Failed access from service Desired %08lX Granted %08lX\n", 
+                                                                    *pDesiredAccess,
+                                                                    stOpenResultCB.GrantedAccess);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
+        //
         // Initialize the Ccb for the file.
         //
 
@@ -1634,7 +1758,7 @@ AFSProcessOpen( IN PIRP Irp,
             !AFSCheckForReadOnlyAccess( *pDesiredAccess))
         {
 
-            Fcb->Specific.File.ModifyProcessId = PsGetCurrentProcessId();
+            Fcb->Specific.File.ModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
         }
 
         //

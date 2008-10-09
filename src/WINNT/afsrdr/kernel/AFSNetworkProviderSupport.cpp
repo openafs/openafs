@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 //
 // File: AFSNetworkProviderSupport.cpp
 //
@@ -7,7 +40,7 @@
 NTSTATUS
 AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT PULONG ResultStatus,
-                  IN OUT PULONG ReturnOutputBufferLength)
+                  IN OUT ULONG_PTR *ReturnOutputBufferLength)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -52,8 +85,6 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
             *ResultStatus = WN_ALREADY_CONNECTED;
 
             *ReturnOutputBufferLength = sizeof( ULONG);
-
-            DbgPrint("AddConnection Already connected remote %wZ Local %S\n", &uniRemoteName, &ConnectCB->LocalName);
 
             try_return( ntStatus);
         }
@@ -127,6 +158,8 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                        ConnectCB->RemoteName,
                        pConnection->RemoteName.Length);
 
+        pConnection->ResourceType = ConnectCB->ResourceType;
+
         if( AFSProviderConnectionList == NULL)
         {
 
@@ -166,7 +199,7 @@ try_exit:
 NTSTATUS
 AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                      IN OUT PULONG ResultStatus,
-                     IN OUT PULONG ReturnOutputBufferLength)
+                     IN OUT ULONG_PTR *ReturnOutputBufferLength)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -254,7 +287,7 @@ NTSTATUS
 AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT WCHAR *RemoteName,
                   IN ULONG RemoteNameBufferLength,
-                  IN OUT PULONG ReturnOutputBufferLength)
+                  IN OUT ULONG_PTR *ReturnOutputBufferLength)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -313,7 +346,7 @@ try_exit:
 NTSTATUS
 AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                     IN ULONG ConnectionBufferLength,
-                    IN OUT PULONG ReturnOutputBufferLength)
+                    IN OUT ULONG_PTR *ReturnOutputBufferLength)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -335,7 +368,7 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         while( pConnection != NULL)
         {
 
-            if( ulRemainingLength < (ULONG)FIELD_OFFSET( AFSProviderConnectionCB, RemoteName) +
+            if( ulRemainingLength < (ULONG)FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
                                                                pConnection->RemoteName.Length)
             {
 
@@ -352,7 +385,9 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                            pConnection->RemoteName.Buffer,
                            pConnection->RemoteName.Length);
 
-            ulCopiedLength = FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
+            ConnectCB->ResourceType = pConnection->ResourceType;
+
+            ulCopiedLength += FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
                                                     pConnection->RemoteName.Length;
 
             ConnectCB = (AFSNetworkProviderConnectionCB *)((char *)ConnectCB + 

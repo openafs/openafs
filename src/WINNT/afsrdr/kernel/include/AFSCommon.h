@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2008 Kernel Drivers, LLC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice,
+ *   this list of conditions and the following disclaimer in the
+ *   documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of Kernel Drivers, LLC nor the names of its
+ *   contributors may be
+ *   used to endorse or promote products derived from this software without
+ *   specific prior written permission from Kernel Drivers, LLC.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _AFS_COMMON_H
 #define _AFS_COMMON_H
 
@@ -140,7 +173,7 @@ AFSEvaluateTargetByName( IN AFSFileID *ParentFileId,
 NTSTATUS
 AFSProcessRequest( IN ULONG RequestType,
                    IN ULONG RequestFlags,
-                   IN HANDLE CallerProcess,
+                   IN ULONGLONG CallerProcess,
                    IN PUNICODE_STRING FileName,
                    IN AFSFileID *FileId,
                    IN void  *Data,
@@ -343,7 +376,8 @@ NTSTATUS
 AFSRemoveAFSRoot( void);
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry);
+AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
+                OUT AFSFcb **RootVcb);
 
 void
 AFSRemoveRootFcb( IN AFSFcb *RootFcb,
@@ -421,31 +455,37 @@ AFSBuildTargetDirectory( IN AFSFcb *Fcb);
 NTSTATUS
 AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT PULONG ResultStatus,
-                  IN OUT PULONG ReturnOutputBufferLength);
+                  IN OUT ULONG_PTR *ReturnOutputBufferLength);
 
 NTSTATUS
 AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                      IN OUT PULONG ResultStatus,
-                     IN OUT PULONG ReturnOutputBufferLength);
+                     IN OUT ULONG_PTR *ReturnOutputBufferLength);
 
 NTSTATUS
 AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT WCHAR *RemoteName,
                   IN ULONG RemoteNameBufferLength,
-                  IN OUT PULONG ReturnOutputBufferLength);
+                  IN OUT ULONG_PTR *ReturnOutputBufferLength);
 
 NTSTATUS
 AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                     IN ULONG ConnectionBufferLength,
-                    IN OUT PULONG ReturnOutputBufferLength);
+                    IN OUT ULONG_PTR *ReturnOutputBufferLength);
 
 //
 // AFSRead.cpp Prototypes
 //
 
 NTSTATUS
+AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
+               IN PIRP Irp,
+               BOOLEAN Posted);
+
+NTSTATUS
 AFSRead( IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp);
+
 
 NTSTATUS
 AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
@@ -456,11 +496,12 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
 //
 
 NTSTATUS
-AFSWrite( IN PDEVICE_OBJECT DeviceObject,
-          IN PIRP Irp);
+AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
+          IN PIRP Irp,
+          IN HANDLE CallingUser);
 
 NTSTATUS
-AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
+AFSWrite( IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp);
 
 NTSTATUS
@@ -835,6 +876,37 @@ AFSCreateHighIndex( IN AFSFileID *FileID);
 inline
 ULONGLONG
 AFSCreateLowIndex( IN AFSFileID *FileID);
+
+BOOLEAN
+AFSCheckAccess( IN ACCESS_MASK DesiredAccess,
+                IN ACCESS_MASK GrantedAccess);
+
+NTSTATUS
+AFSGetDriverStatus( IN AFSDriverStatusRespCB *DriverStatus);
+
+NTSTATUS
+AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
+                          IN ULONG SysNameInfoBufferLength);
+
+NTSTATUS
+AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
+                      IN UNICODE_STRING *SubstituteName,
+                      IN ULONG StringIndex);
+
+void
+AFSResetSysNameList( IN AFSSysNameCB *SysNameList);
+
+NTSTATUS
+AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
+                         IN UNICODE_STRING *ComponentName,
+                         IN UNICODE_STRING *SubstituteName,
+                         IN BOOLEAN FreePathName);
+
+void
+AFSInitServerStrings( void);
+
+NTSTATUS
+AFSReadServerName( void);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp
