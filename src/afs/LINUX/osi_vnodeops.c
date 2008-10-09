@@ -94,21 +94,24 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     if (code)
 	code = -code;
     else {
-        isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
+#if defined(AFS_CACHE_BYPASS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
         offindex = *offp >> PAGE_CACHE_SHIFT;
         if(offindex > isize) {
             code=0;
             goto done;
         }
-
-	    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
-	    AFS_GUNLOCK();
-#ifdef DO_SYNC_READ
-	    code = do_sync_read(fp, buf, count, offp);
-#else
-	    code = generic_file_read(fp, buf, count, offp);
 #endif
-	    AFS_GLOCK();
+#endif
+	osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
+	AFS_GUNLOCK();
+#ifdef DO_SYNC_READ
+	code = do_sync_read(fp, buf, count, offp);
+#else
+	code = generic_file_read(fp, buf, count, offp);
+#endif
+	AFS_GLOCK();
     }
 
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
@@ -1734,6 +1737,8 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	 set_bit(PG_locked, &pp->flags);	/* other bits? See mm.h */
 	 clear_bit(PG_error, &pp->flags);
 #endif
+#if defined(AFS_CACHE_BYPASS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	 /* If the page is past the end of the file, skip it */
 	 isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
 	 if(pp->index > isize) {
@@ -1741,6 +1746,8 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 			   UnlockPage(pp);
 		  goto done;
 	 }
+#endif
+#endif
 	 /* if bypasscache, receiver frees, else we do */
 	 auio = osi_Alloc(sizeof(uio_t));
 	 iovecp = osi_Alloc(sizeof(struct iovec));
