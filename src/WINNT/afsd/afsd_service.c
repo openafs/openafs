@@ -17,6 +17,7 @@
 #include "cm_btree.h"
 #include "cm_rpc.h"
 #include "smb.h"
+#include "cm_rdr.h"
 
 #include <osi.h>
 
@@ -1332,6 +1333,15 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         code = RDR_Initialize();
         RDR_Initialized = !code;
         afsi_log("RDR_Initialize returned: (code = %d)", code);
+
+        if (RDR_Initialized) {
+            if (cm_sysNameCount)
+                RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+#ifdef _WIN64
+            if (cm_sysName64Count)
+                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+#endif
+        }
 
         /* 
          * Set the default for the SMB interface based upon the state of the

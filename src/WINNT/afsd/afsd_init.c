@@ -968,8 +968,7 @@ int afsd_InitCM(char **reasonP)
             }
         }
       done_sysname32:
-        if (cm_sysNameCount)
-            RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+        ;
 
 #ifdef _WIN64
         /* 
@@ -1001,8 +1000,7 @@ int afsd_InitCM(char **reasonP)
             }
         }
       done_sysname64:
-        if (cm_sysName64Count)
-            RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+        ;
 #endif
     }
 
