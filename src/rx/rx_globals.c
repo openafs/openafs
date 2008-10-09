@@ -47,3 +47,23 @@ RCSID
 #endif /* KERNEL */
 
 #include "rx_globals.h"
+
+#ifdef AFS_NT40_ENV
+
+void rx_SetRxDeadTime(int seconds)
+{
+    rx_connDeadTime = seconds;
+}
+
+int rx_GetMinUdpBufSize(void)
+{
+    return 64*1024;
+}
+
+void rx_SetUdpBufSize(int x)
+{
+    if (x > rx_GetMinUdpBufSize())
+        rx_UdpBufSize = x;
+}
+
+#endif /* AFS_NT40_ENV */
