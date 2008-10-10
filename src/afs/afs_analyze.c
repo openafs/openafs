@@ -485,7 +485,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		    areq->skipserver[i] = 1;
 		}
 		if (tvp->serverHost[i] &&
-		    !(tvp->serverHost[i]->addr->sa_flags & 
+		    (tvp->serverHost[i]->addr->sa_flags & 
 		      SRVR_ISDOWN)) {
 		    areq->skipserver[i] = 1;
 		}
