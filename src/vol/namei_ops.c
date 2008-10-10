@@ -993,8 +993,10 @@ GetFreeTag(IHandle_t * ih, int vno)
 	if ((row & coldata) == 0)
 	    break;
     }
-    if (col >= NAMEI_MAXVOLS)
+    if (col >= NAMEI_MAXVOLS) {
+	errno = ENOSPC;
 	goto badGetFreeTag;
+    }
 
     coldata = 1 << (col * 3);
     row |= coldata;
