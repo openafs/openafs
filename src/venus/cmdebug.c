@@ -266,7 +266,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
     struct AFSDBCacheEntry centry;
     char *cellname;
 
-    for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 1000000; i++) {
 	code = RXAFSCB_GetCE(aconn, i, &centry);
 	if (code) {
 	    if (code == 1)
@@ -363,7 +363,7 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
     char *cellname;
     int ce64 = 0;
 
-    for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 1000000; i++) {
 	code = RXAFSCB_GetCE64(aconn, i, &centry);
 	if (code) {
 	    if (code == 1)
