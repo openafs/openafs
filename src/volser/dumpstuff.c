@@ -1225,8 +1225,8 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 				  V_parentId(vp), vnodeNumber,
 				  vnode->uniquifier, vnode->dataVersion);
 		    if (!VALID_INO(ino)) {
-			perror("unable to allocate inode");
-			Log("1 Volser: ReadVnodes: Restore aborted\n");
+			Log("1 Volser: ReadVnodes: IH_CREATE: %s - restore aborted\n",
+                            afs_error_message(errno));
 			return VOLSERREAD_DUMPERROR;
 		    }
 		    nearInode = ino;
@@ -1234,6 +1234,8 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 		    IH_INIT(tmpH, vp->device, V_parentId(vp), ino);
 		    fdP = IH_OPEN(tmpH);
 		    if (fdP == NULL) {
+			Log("1 Volser: ReadVnodes: IH_OPEN: %s - restore aborted\n",
+                            afs_error_message(errno));
 			IH_RELEASE(tmpH);
 			return VOLSERREAD_DUMPERROR;
 		    }
