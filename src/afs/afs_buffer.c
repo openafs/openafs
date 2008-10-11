@@ -429,11 +429,16 @@ DVOffset(register void *ap)
     return AFS_BUFFER_PAGESIZE * bp->page + (int)(((char *)ap) - bp->data);
 }
 
-/* 1/1/91 - I've modified the hash function to take the page as well
+/*! 
+ * Zap one dcache entry: destroy one FID's buffers.
+ *
+ * 1/1/91 - I've modified the hash function to take the page as well
  * as the *fid, so that lookup will be a bit faster.  That presents some
  * difficulties for Zap, which now has to have some knowledge of the nature
  * of the hash function.  Oh well.  This should use the list traversal 
  * method of DRead...
+ *
+ * \param adc The dcache entry to be zapped.
  */
 void
 DZap(struct dcache *adc)

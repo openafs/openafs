@@ -38,48 +38,48 @@ static afs_int32 afs_DCWhichBucket(afs_int32, afs_int32);
  * --------------------- Exported definitions ---------------------
  */
 /* For split cache */
-afs_int32 afs_blocksUsed_0;    /*1K blocks in cache - in theory is zero */
-afs_int32 afs_blocksUsed_1;    /*1K blocks in cache */
-afs_int32 afs_blocksUsed_2;    /*1K blocks in cache */
+afs_int32 afs_blocksUsed_0;    /*!< 1K blocks in cache - in theory is zero */
+afs_int32 afs_blocksUsed_1;    /*!< 1K blocks in cache */
+afs_int32 afs_blocksUsed_2;    /*!< 1K blocks in cache */
 afs_int32 afs_pct1 = -1;
 afs_int32 afs_pct2 = -1;
 afs_uint32 afs_tpct1 = 0;
 afs_uint32 afs_tpct2 = 0;
 afs_uint32 splitdcache = 0;
 
-afs_lock_t afs_xdcache;		/*Lock: alloc new disk cache entries */
-afs_int32 afs_freeDCList;	/*Free list for disk cache entries */
-afs_int32 afs_freeDCCount;	/*Count of elts in freeDCList */
-afs_int32 afs_discardDCList;	/*Discarded disk cache entries */
-afs_int32 afs_discardDCCount;	/*Count of elts in discardDCList */
-struct dcache *afs_freeDSList;	/*Free list for disk slots */
-struct dcache *afs_Initial_freeDSList;	/*Initial list for above */
-ino_t cacheInode;		/*Inode for CacheItems file */
-struct osi_file *afs_cacheInodep = 0;	/* file for CacheItems inode */
-struct afs_q afs_DLRU;		/*dcache LRU */
+afs_lock_t afs_xdcache;		/*!< Lock: alloc new disk cache entries */
+afs_int32 afs_freeDCList;	/*!< Free list for disk cache entries */
+afs_int32 afs_freeDCCount;	/*!< Count of elts in freeDCList */
+afs_int32 afs_discardDCList;	/*!< Discarded disk cache entries */
+afs_int32 afs_discardDCCount;	/*!< Count of elts in discardDCList */
+struct dcache *afs_freeDSList;	/*!< Free list for disk slots */
+struct dcache *afs_Initial_freeDSList;	/*!< Initial list for above */
+ino_t cacheInode;		/*!< Inode for CacheItems file */
+struct osi_file *afs_cacheInodep = 0;	/*!< file for CacheItems inode */
+struct afs_q afs_DLRU;		/*!< dcache LRU */
 afs_int32 afs_dhashsize = 1024;
-afs_int32 *afs_dvhashTbl;	/*Data cache hash table */
-afs_int32 *afs_dchashTbl;	/*Data cache hash table */
-afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
-afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
-struct dcache **afs_indexTable;	/*Pointers to dcache entries */
-afs_hyper_t *afs_indexTimes;	/*Dcache entry Access times */
-afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */
-unsigned char *afs_indexFlags;	/*(only one) Is there data there? */
-afs_hyper_t afs_indexCounter;	/*Fake time for marking index
+afs_int32 *afs_dvhashTbl;	/*!< Data cache hash table: hashed by FID + chunk number. */
+afs_int32 *afs_dchashTbl;	/*!< Data cache hash table: hashed by FID. */
+afs_int32 *afs_dvnextTbl;	/*!< Dcache hash table links */
+afs_int32 *afs_dcnextTbl;	/*!< Dcache hash table links */
+struct dcache **afs_indexTable;	/*!< Pointers to dcache entries */
+afs_hyper_t *afs_indexTimes;	/*!< Dcache entry Access times */
+afs_int32 *afs_indexUnique;	/*!< dcache entry Fid.Unique */
+unsigned char *afs_indexFlags;	/*!< (only one) Is there data there? */
+afs_hyper_t afs_indexCounter;	/*!< Fake time for marking index
 				 * entries */
-afs_int32 afs_cacheFiles = 0;	/*Size of afs_indexTable */
-afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
-afs_int32 afs_cacheStats;	/*Stat entries in cache */
-afs_int32 afs_blocksUsed;	/*Number of blocks in use */
-afs_int32 afs_blocksDiscarded;	/*Blocks freed but not truncated */
-afs_int32 afs_fsfragsize = 1023;	/*Underlying Filesystem minimum unit 
+afs_int32 afs_cacheFiles = 0;	/*!< Size of afs_indexTable */
+afs_int32 afs_cacheBlocks;	/*!< 1K blocks in cache */
+afs_int32 afs_cacheStats;	/*!< Stat entries in cache */
+afs_int32 afs_blocksUsed;	/*!< Number of blocks in use */
+afs_int32 afs_blocksDiscarded;	/*!<Blocks freed but not truncated */
+afs_int32 afs_fsfragsize = 1023;	/*!< Underlying Filesystem minimum unit 
 					 *of disk allocation usually 1K
 					 *this value is (truefrag -1 ) to
 					 *save a bunch of subtracts... */
 #ifdef AFS_64BIT_CLIENT
 #ifdef AFS_VM_RDWR_ENV
-afs_size_t afs_vmMappingEnd;	/* for large files (>= 2GB) the VM
+afs_size_t afs_vmMappingEnd;	/* !< For large files (>= 2GB) the VM
 				 * mapping an 32bit addressing machines
 				 * can only be used below the 2 GB
 				 * line. From this point upwards we
@@ -96,7 +96,7 @@ int afs_WaitForCacheDrain = 0;
 int afs_TruncateDaemonRunning = 0;
 int afs_CacheTooFull = 0;
 
-afs_int32 afs_dcentries;	/* In-memory dcache entries */
+afs_int32 afs_dcentries;	/*!< In-memory dcache entries */
 
 
 int dcacheDisabled = 0;
@@ -135,6 +135,13 @@ struct afs_cacheOps afs_MemCacheOps = {
 int cacheDiskType;		/*Type of backing disk for cache */
 struct afs_cacheOps *afs_cacheType;
 
+/*!
+ * Where is this vcache's entry associated dcache located/
+ * \param avc The vcache entry.
+ * \return Bucket index:
+ *  	1 : main
+ *  	2 : RO
+ */
 static afs_int32
 afs_DCGetBucket(struct vcache *avc) 
 {
@@ -153,6 +160,14 @@ afs_DCGetBucket(struct vcache *avc)
     return 1;
 }
 
+/*!
+ * Readjust a dcache's size.
+ *
+ * \param adc The dcache to be adjusted.
+ * \param oldSize Old size for the dcache.
+ * \param newSize The new size to be adjusted to.
+ *
+ */
 static void 
 afs_DCAdjustSize(struct dcache *adc, afs_int32 oldSize, afs_int32 newSize)
 {
@@ -180,12 +195,21 @@ afs_DCAdjustSize(struct dcache *adc, afs_int32 oldSize, afs_int32 newSize)
     return;
 }
 
+/*!
+ * Move a dcache from one bucket to another.
+ * 
+ * \param adc Operate on this dcache.
+ * \param size Size in bucket (?).
+ * \param newBucket Destination bucket.
+ *
+ */
 static void 
 afs_DCMoveBucket(struct dcache *adc, afs_int32 size, afs_int32 newBucket)
 {
     if (!splitdcache) 
 	return;
 
+    /* Substract size from old bucket. */	
     switch (adc->bucket) 
     {
     case 0:
@@ -199,6 +223,7 @@ afs_DCMoveBucket(struct dcache *adc, afs_int32 size, afs_int32 newBucket)
 	break;
     }
 
+    /* Set new bucket and increase destination bucket size. */
     adc->bucket = newBucket;
 
     switch (adc->bucket) 
@@ -217,12 +242,20 @@ afs_DCMoveBucket(struct dcache *adc, afs_int32 size, afs_int32 newBucket)
     return;
 }
 
+/*!
+ * Init split caches size.
+ */
 static void 
 afs_DCSizeInit(void) 
 {
     afs_blocksUsed_0 = afs_blocksUsed_1 = afs_blocksUsed_2 = 0;
 }
 
+
+/*!
+ * \param phase
+ * \param bucket
+ */
 static afs_int32
 afs_DCWhichBucket(afs_int32 phase, afs_int32 bucket) 
 {
@@ -244,21 +277,16 @@ afs_DCWhichBucket(afs_int32 phase, afs_int32 bucket)
 }
 
 
-/*
- * afs_StoreWarn
+/*!
+ * Warn about failing to store a file.
  *
- * Description:
- *	Warn about failing to store a file.
+ * \param acode Associated error code.
+ * \param avolume Volume involved.
+ * \param aflags How to handle the output:
+ *	aflags & 1: Print out on console
+ *	aflags & 2: Print out on controlling tty
  *
- * Parameters:
- *	acode   : Associated error code.
- *	avolume : Volume involved.
- *	aflags  : How to handle the output:
- *			aflags & 1: Print out on console
- *			aflags & 2: Print out on controlling tty
- *
- * Environment:
- *	Call this from close call when vnodeops is RCS unlocked.
+ * \note Environment: Call this from close call when vnodeops is RCS unlocked.
  */
 
 void
@@ -316,6 +344,9 @@ afs_StoreWarn(register afs_int32 acode, afs_int32 avolume,
     }
 }				/*afs_StoreWarn */
 
+/*!
+ * Try waking up truncation daemon, if it's worth it.
+ */
 void
 afs_MaybeWakeupTruncateDaemon(void)
 {
@@ -329,7 +360,10 @@ afs_MaybeWakeupTruncateDaemon(void)
     }
 }
 
-/* Keep statistics on run time for afs_CacheTruncateDaemon. This is a
+/*!
+ * /struct CTD_stats
+ *
+ * Keep statistics on run time for afs_CacheTruncateDaemon. This is a
  * struct so we need only export one symbol for AIX.
  */
 static struct CTD_stats {
@@ -341,6 +375,12 @@ static struct CTD_stats {
 } CTD_stats;
 
 u_int afs_min_cache = 0;
+
+/*!
+ * Keeps the cache clean and free by truncating uneeded files, when used.
+ * \param  
+ * \return 
+ */
 void
 afs_CacheTruncateDaemon(void)
 {
@@ -374,7 +414,7 @@ afs_CacheTruncateDaemon(void)
 	    }
 	    if (!afs_CacheIsTooFull())
 		afs_CacheTooFull = 0;
-	}
+	}	/* end of cache cleanup */
 	MReleaseWriteLock(&afs_xdcache);
 
 	/*
@@ -431,20 +471,17 @@ afs_CacheTruncateDaemon(void)
 }
 
 
-/*
- * afs_AdjustSize
+/*!
+ * Make adjustment for the new size in the disk cache entry
  *
- * Description:
- * 	Make adjustment for the new size in the disk cache entry
- *
- * Major Assumptions Here:
+ * \note Major Assumptions Here:
  *      Assumes that frag size is an integral power of two, less one,
  *      and that this is a two's complement machine.  I don't
  *      know of any filesystems which violate this assumption...
  *
- * Parameters:
- *	adc	 : Ptr to dcache entry.
- *	anewsize : New size desired.
+ * \param adc Ptr to dcache entry.
+ * \param anewsize New size desired.
+ *
  */
 
 void
@@ -471,18 +508,14 @@ afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize)
 }
 
 
-/*
- * afs_GetDownD
+/*!
+ * This routine is responsible for moving at least one entry (but up
+ * to some number of them) from the LRU queue to the free queue.
  *
- * Description:
- *	This routine is responsible for moving at least one entry (but up
- *	to some number of them) from the LRU queue to the free queue.
+ * \param anumber Number of entries that should ideally be moved.
+ * \param aneedSpace How much space we need (1K blocks);
  *
- * Parameters:
- *	anumber	   : Number of entries that should ideally be moved.
- *	aneedSpace : How much space we need (1K blocks);
- *
- * Environment:
+ * \note Environment:
  *	The anumber parameter is just a hint; at least one entry MUST be
  *	moved, or we'll panic.  We must be called with afs_xdcache
  *	write-locked.  We should try to satisfy both anumber and aneedspace,
@@ -491,7 +524,8 @@ afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize)
  *          the whole set of MAXATONCE.
  *      2.  dynamically choose MAXATONCE to reflect severity of
  *          demand: something like (*aneedSpace >> (logChunk - 9)) 
- *  N.B. if we're called with aneedSpace <= 0 and anumber > 0, that
+ *
+ *  \note N.B. if we're called with aneedSpace <= 0 and anumber > 0, that
  *  indicates that the cache is not properly configured/tuned or
  *  something. We should be able to automatically correct that problem.
  */
@@ -793,7 +827,7 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 		}
 	    }
 	    afs_PutDCache(tdc);
-	}
+	} 			/* end of for victims loop */
 
 	if (phase < 5) {
 	    /* Phase is 0 and no one was found, so try phase 1 (ignore
@@ -820,14 +854,14 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 }				/*afs_GetDownD */
 
 
-/*
- * Description: remove adc from any hash tables that would allow it to be located
+/*!
+ * Remove adc from any hash tables that would allow it to be located
  * again by afs_FindDCache or afs_GetDCache.
  *
- * Parameters: adc -- pointer to dcache entry to remove from hash tables.
- *	       zap -- zap the given dcache ?
+ * \param adc Pointer to dcache entry to remove from hash tables.
  *
- * Locks: Must have the afs_xdcache lock write-locked to call this function.
+ * \note Locks: Must have the afs_xdcache lock write-locked to call this function.
+ *
  */
 int
 afs_HashOutDCache(struct dcache *adc, int zap)
@@ -895,21 +929,16 @@ afs_HashOutDCache(struct dcache *adc, int zap)
     return 0;
 }				/*afs_HashOutDCache */
 
-/*
- * afs_FlushDCache
+/*!
+ * Flush the given dcache entry, pulling it from hash chains
+ * and truncating the associated cache file.
  *
- * Description:
- *	Flush the given dcache entry, pulling it from hash chains
- *	and truncating the associated cache file.
+ * \param adc Ptr to dcache entry to flush.
  *
- * Arguments:
- *	adc: Ptr to dcache entry to flush.
- *
- * Environment:
+ * \note Environment:
  *	This routine must be called with the afs_xdcache lock held
- *	(in write mode)
+ *	(in write mode).
  */
-
 void
 afs_FlushDCache(register struct dcache *adc)
 {
@@ -944,14 +973,12 @@ afs_FlushDCache(register struct dcache *adc)
 }				/*afs_FlushDCache */
 
 
-/*
- * afs_FreeDCache
+/*!
+ * Put a dcache entry on the free dcache entry list.
  *
- * Description: put a dcache entry on the free dcache entry list.
+ * \param adc dcache entry to free.
  *
- * Parameters: adc -- dcache entry to free
- *
- * Environment: called with afs_xdcache lock write-locked.
+ * \note Environment: called with afs_xdcache lock write-locked.
  */
 static void
 afs_FreeDCache(register struct dcache *adc)
@@ -974,25 +1001,21 @@ afs_FreeDCache(register struct dcache *adc)
 	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
 	}
     }
-}
+}				/* afs_FreeDCache */
 
-/*
- * afs_DiscardDCache
+/*!
+ * Discard the cache element by moving it to the discardDCList.
+ * This puts the cache element into a quasi-freed state, where
+ * the space may be reused, but the file has not been truncated.
  *
- * Description:
- * 	Discard the cache element by moving it to the discardDCList.
- *      This puts the cache element into a quasi-freed state, where
- *      the space may be reused, but the file has not been truncated.
- *
- * Major Assumptions Here:
+ * \note Major Assumptions Here:
  *      Assumes that frag size is an integral power of two, less one,
  *      and that this is a two's complement machine.  I don't
  *      know of any filesystems which violate this assumption...
  *
- * Parameters:
- *	adc	 : Ptr to dcache entry.
+ * \param adr Ptr to dcache entry.
  *
- * Environment:
+ * \note Environment:
  *	Must be called with afs_xdcache write-locked.
  */
 
@@ -1027,11 +1050,8 @@ afs_DiscardDCache(register struct dcache *adc)
 
 }				/*afs_DiscardDCache */
 
-/*
- * afs_FreeDiscardedDCache
- *
- * Description:
- *     Free the next element on the list of discarded cache elements.
+/*!
+ * Free the next element on the list of discarded cache elements.
  */
 static void
 afs_FreeDiscardedDCache(void)
@@ -1086,15 +1106,11 @@ afs_FreeDiscardedDCache(void)
     MReleaseWriteLock(&afs_xdcache);
 }
 
-/*
- * afs_MaybeFreeDiscardedDCache
+/*!
+ * Free as many entries from the list of discarded cache elements
+ * as we need to get the free space down below CM_WAITFORDRAINPCT (98%).
  *
- * Description:
- *      Free as many entries from the list of discarded cache elements
- *      as we need to get the free space down below CM_WAITFORDRAINPCT (98%).
- *
- * Parameters:
- *      None
+ * \return 0
  */
 int
 afs_MaybeFreeDiscardedDCache(void)
@@ -1110,17 +1126,14 @@ afs_MaybeFreeDiscardedDCache(void)
     return 0;
 }
 
-/*
- * afs_GetDownDSlot
+/*!
+ * Try to free up a certain number of disk slots.
  *
- * Description:
- *	Try to free up a certain number of disk slots.
+ * \param anumber Targeted number of disk slots to free up.
  *
- * Parameters:
- *	anumber : Targeted number of disk slots to free up.
- *
- * Environment:
+ * \note Environment:
  *	Must be called with afs_xdcache write-locked.
+ *
  */
 static void
 afs_GetDownDSlot(int anumber)
@@ -3166,18 +3179,14 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 
 
 
-/*
- * afs_WriteDCache
+/*!
+ * Write a particular dcache entry back to its home in the
+ * CacheInfo file.
  *
- * Description:
- *	write a particular dcache entry back to its home in the
- *	CacheInfo file.
+ * \param adc Pointer to the dcache entry to write.
+ * \param atime If true, set the modtime on the file to the current time.
  *
- * Parameters:
- *	adc   : Pointer to the dcache entry to write.
- *	atime : If true, set the modtime on the file to the current time.
- *
- * Environment:
+ * \note Environment:
  *	Must be called with the afs_xdcache lock at least read-locked,
  *	and dcache entry at least read-locked.
  *	The reference count is not changed.
@@ -3210,20 +3219,15 @@ afs_WriteDCache(register struct dcache *adc, int atime)
 
 
 
-/*
- * afs_wakeup
+/*!
+ * Wake up users of a particular file waiting for stores to take
+ * place.
  *
- * Description:
- *	Wake up users of a particular file waiting for stores to take
- *	place.
+ * \param avc Ptr to related vcache entry.
  *
- * Parameters:
- *	avc : Ptr to related vcache entry.
- *
- * Environment:
+ * \note Environment:
  *	Nothing interesting.
  */
-
 int
 afs_wakeup(register struct vcache *avc)
 {
@@ -3259,22 +3263,17 @@ afs_wakeup(register struct vcache *avc)
 }
 
 
-/*
- * afs_InitCacheFile
+/*!
+ * Given a file name and inode, set up that file to be an
+ * active member in the AFS cache.  This also involves checking
+ * the usability of its data.
  *
- * Description:
- *	Given a file name and inode, set up that file to be an
- *	active member in the AFS cache.  This also involves checking
- *	the usability of its data.
+ * \param afile Name of the cache file to initialize.
+ * \param ainode Inode of the file.
  *
- * Parameters:
- *	afile  : Name of the cache file to initialize.
- *	ainode : Inode of the file.
- *
- * Environment:
+ * \note Environment:
  *	This function is called only during initialization.
  */
-
 int
 afs_InitCacheFile(char *afile, ino_t ainode)
 {
@@ -3414,11 +3413,15 @@ afs_InitCacheFile(char *afile, ino_t ainode)
  */
 #define DDSIZE 200
 
-/* 
- * afs_dcacheInit
+/*!
+ * Initialize dcache related variables.
  *
- * Description:
- *	Initialize dcache related variables.
+ * \param afiles
+ * \param ablocks 
+ * \param aDentries
+ * \param achunk
+ * \param aflags
+ *
  */
 void
 afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
@@ -3542,8 +3545,8 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     QInit(&afs_DLRU);
 }
 
-/*
- * shutdown_dcache
+/*!
+ * Shuts down the cache.
  *
  */
 void

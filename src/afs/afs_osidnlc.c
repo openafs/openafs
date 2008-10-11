@@ -25,7 +25,7 @@ RCSID
  *    look into interactions of dnlc and readdir.
  *    cache larger names, perhaps by using a better,longer key (SHA) and discarding
  *    the actual name itself.
- *    precompute a key and stuff for @sys, and combine the HandleAtName function with
+ *    precompute a key and stuff for \sys, and combine the HandleAtName function with
  *    this, since we're looking at the name anyway.  
  */
 
@@ -412,10 +412,15 @@ osi_dnlc_remove(struct vcache *adp, char *aname, struct vcache *avc)
     return 0;
 }
 
-/* remove anything pertaining to this directory.  I can invalidate
+/*! 
+ * Remove anything pertaining to this directory.  I can invalidate
  * things without the lock, since I am just looking through the array,
  * but to move things off the lists or into the freelist, I need the
- * write lock */
+ * write lock 
+ *
+ * \param adp vcache entry for the directory to be purged.
+ * \return 0
+ */
 int
 osi_dnlc_purgedp(struct vcache *adp)
 {
@@ -454,7 +459,12 @@ osi_dnlc_purgedp(struct vcache *adp)
     return 0;
 }
 
-/* remove anything pertaining to this file */
+/*! 
+ * Remove anything pertaining to this file 
+ *
+ * \param File vcache entry.
+ * \return 0
+ */
 int
 osi_dnlc_purgevp(struct vcache *avc)
 {

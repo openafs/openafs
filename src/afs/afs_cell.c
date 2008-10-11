@@ -50,6 +50,9 @@ static struct {
     char *cellname;
 } afsdb_req;
 
+/*!
+ * Terminate the AFSDB handler, used on shutdown.
+ */
 void
 afs_StopAFSDB()
 {
@@ -61,6 +64,14 @@ afs_StopAFSDB()
     }
 }
 
+/*!
+ * \brief Entry point for user-space AFSDB request handler.
+ * Reads cell data from kerlenMsg and add new cell, or alias.
+ * \param acellName Cell name. If a cell is found, it's name will be filled in here.
+ * \param acellNameLen Cell name length.
+ * \param kernelMsg Buffer containing data about host count, time out, and cell hosts ids.
+ * \return 0 for success, < 0 for error.
+ */
 int
 afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 {
@@ -135,6 +146,11 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
     return 0;
 }
 
+/*!
+ * \brief Query the AFSDB handler and wait for response.
+ * \param  acellName
+ * \return 0 for success. < 0 is error.
+ */
 static int
 afs_GetCellHostsAFSDB(char *acellName)
 {
@@ -168,6 +184,11 @@ afs_GetCellHostsAFSDB(char *acellName)
 }
 #endif
 
+
+/*! 
+ * Look up AFSDB for given cell name and create locally.
+ * \param acellName Cell name. 
+ */
 void
 afs_LookupAFSDB(char *acellName)
 {
@@ -199,6 +220,12 @@ static int afs_cellname_inode_set;
 static int afs_cellname_dirty;
 static afs_int32 afs_cellnum_next;
 
+/*!
+ * Create a new cell name, optional cell number.
+ * \param  name Name of cell.
+ * \param cellnum Cellname number.
+ * \return Initialized structure.
+ */
 static struct cell_name *
 afs_cellname_new(char *name, afs_int32 cellnum)
 {
@@ -220,6 +247,11 @@ afs_cellname_new(char *name, afs_int32 cellnum)
     return cn;
 }
 
+/*!
+ * Look up a cell name by id.
+ * \param cellnum
+ * \return 
+ */
 static struct cell_name *
 afs_cellname_lookup_id(afs_int32 cellnum)
 {
@@ -232,6 +264,11 @@ afs_cellname_lookup_id(afs_int32 cellnum)
     return NULL;
 }
 
+/*!
+ * Look up a cell name.
+ * \param name Cell name.
+ * \return 
+ */
 static struct cell_name *
 afs_cellname_lookup_name(char *name)
 {
@@ -244,6 +281,10 @@ afs_cellname_lookup_name(char *name)
     return NULL;
 }
 
+/*!
+ * Note that this cell name was referenced somewhere.
+ * \param  cn
+ */
 static void
 afs_cellname_ref(struct cell_name *cn)
 {
@@ -253,6 +294,12 @@ afs_cellname_ref(struct cell_name *cn)
     }
 }
 
+/*!
+ * \brief Load the list of cells from given inode.
+ * \param inode Source inode.
+ * \param lookupcode 
+ * \return 0 for success. < 0 for error.
+ */
 int
 afs_cellname_init(ino_t inode, int lookupcode)
 {
@@ -331,6 +378,9 @@ afs_cellname_init(ino_t inode, int lookupcode)
     return 0;
 }
 
+/*!
+ * Write in-kernel list of cells to disk.
+ */
 int
 afs_cellname_write(void)
 {
@@ -401,6 +451,11 @@ struct cell_alias *afs_cellalias_head;	/* Export for kdump */
 static afs_int32 afs_cellalias_index;
 static int afs_CellOrAliasExists_nl(char *aname);	/* Forward declaration */
 
+/*!
+ * Look up cell alias by alias name.
+ * \param  alias 
+ * \return Found struct or NULL.
+ */
 static struct cell_alias *
 afs_FindCellAlias(char *alias)
 {
@@ -412,6 +467,11 @@ afs_FindCellAlias(char *alias)
     return tc;
 }
 
+/*!
+ * Get cell alias by index (starting at 0).
+ * \param index Cell index. 
+ * \return Found struct or null.
+ */
 struct cell_alias *
 afs_GetCellAlias(int index)
 {
@@ -426,12 +486,24 @@ afs_GetCellAlias(int index)
     return tc;
 }
 
+
+ /*!
+  * Put back a cell alias returned by Find or Get.
+  * \param a Alias. 
+  * \return 
+  */
 void
 afs_PutCellAlias(struct cell_alias *a)
 {
     return;
 }
 
+/*!
+ * Create new cell alias entry and update dynroot vnode.
+ * \param alias
+ * \param cell
+ * \return 
+ */
 afs_int32
 afs_NewCellAlias(char *alias, char *cell)
 {
@@ -485,6 +557,10 @@ struct afs_q CellLRU;		/* Export for kdump */
 static char *afs_thiscell;
 afs_int32 afs_cellindex;	/* Export for kdump */
 
+/*!
+ * Bump given cell up to the front of the LRU queue.
+ * \param c Cell to set. 
+ */
 static void
 afs_UpdateCellLRU(struct cell *c)
 {
@@ -494,6 +570,11 @@ afs_UpdateCellLRU(struct cell *c)
     ReleaseWriteLock(&afs_xcell);
 }
 
+/*!
+ * Look up cell information in AFSDB if timeout expired
+ * \param ac Cell to be refreshed.
+ * \return 
+ */
 static void
 afs_RefreshCell(struct cell *ac)
 {
@@ -503,6 +584,14 @@ afs_RefreshCell(struct cell *ac)
 	afs_LookupAFSDB(ac->cellName);
 }
 
+/*! 
+ * Execute a callback for each existing cell, without a lock on afs_xcell.
+ * Iterate on CellLRU, and execute a callback for each cell until given arguments are met.
+ * \see afs_TraverseCells
+ * \param cb Traversal callback for each cell.
+ * \param arg Callback arguments.
+ * \return Found data or NULL.
+ */
 static void *
 afs_TraverseCells_nl(void *(*cb) (struct cell *, void *), void *arg)
 {
@@ -528,6 +617,13 @@ afs_TraverseCells_nl(void *(*cb) (struct cell *, void *), void *arg)
     return ret;
 }
 
+/*!
+ * Execute a callback for each existing cell, with a lock on afs_xcell.
+ * \see afs_TraverseCells_nl
+ * \param cb Traversal callback for each cell.
+ * \param arg 
+ * \return Found data or NULL.
+ */
 void *
 afs_TraverseCells(void *(*cb) (struct cell *, void *), void *arg)
 {
@@ -540,6 +636,12 @@ afs_TraverseCells(void *(*cb) (struct cell *, void *), void *arg)
     return ret;
 }
 
+/*!
+ * Useful traversal callback: Match by name.
+ * \param cell 
+ * \param arg Cell name (compared with cell->cellName).
+ * \return Returns found cell or NULL.
+ */
 static void *
 afs_choose_cell_by_name(struct cell *cell, void *arg)
 {
@@ -551,6 +653,12 @@ afs_choose_cell_by_name(struct cell *cell, void *arg)
     }
 }
 
+/*!
+ * Useful traversal callback: Match by handle.
+ * \param cell 
+ * \param arg Cell handle (compared with cell->cellHandle).
+ * \return Returns found cell or NULL.
+ */
 static void *
 afs_choose_cell_by_handle(struct cell *cell, void *arg)
 {
@@ -562,30 +670,62 @@ afs_choose_cell_by_handle(struct cell *cell, void *arg)
     }
 }
 
+/*!
+ * Useful traversal callback: Match by cell number.
+ * \param cell 
+ * \param arg Cell number (compared with cell->cellNum).
+ * \return Returns found cell or NULL.
+ */
 static void *
 afs_choose_cell_by_num(struct cell *cell, void *arg)
 {
     return (cell->cellNum == *((afs_int32 *) arg)) ? cell : NULL;
 }
 
+/*!
+ * Useful traversal callback: Match by index.
+ * \param cell 
+ * \param arg Cell index (compared with cell->cellIndex).
+ * \return Returns found cell or NULL.
+ */
 static void *
 afs_choose_cell_by_index(struct cell *cell, void *arg)
 {
     return (cell->cellIndex == *((afs_int32 *) arg)) ? cell : NULL;
 }
 
+/*!
+ * Return a cell with a given name, if it exists. No lock version.
+ * Does not check AFSDB.
+ * \param acellName Cell name.
+ * \param locktype Type of lock to be used (not used).
+ * \return 
+ */
 static struct cell *
 afs_FindCellByName_nl(char *acellName, afs_int32 locktype)
 {
     return afs_TraverseCells_nl(&afs_choose_cell_by_name, acellName);
 }
 
+/*!
+ * Return a cell with a given name, if it exists.It uses locks.
+ * Does not check AFSDB.
+ * \param acellName Cell name.
+ * \param locktype Type of lock to be used.
+ * \return 
+ */
 static struct cell *
 afs_FindCellByName(char *acellName, afs_int32 locktype)
 {
     return afs_TraverseCells(&afs_choose_cell_by_name, acellName);
 }
 
+/*!
+ * Same as FindCellByName but tries AFSDB if not found.
+ * \param acellName Cell name.
+ * \param locktype Type of lock to be used.
+ * \return 
+ */
 struct cell *
 afs_GetCellByName(char *acellName, afs_int32 locktype)
 {
@@ -605,6 +745,12 @@ afs_GetCellByName(char *acellName, afs_int32 locktype)
     return tc;
 }
 
+/*!
+ * Return a cell with a given cell number.
+ * \param cellnum Cell number.
+ * \param locktype Lock to be used. 
+ * \return 
+ */
 struct cell *
 afs_GetCell(afs_int32 cellnum, afs_int32 locktype)
 {
@@ -624,6 +770,12 @@ afs_GetCell(afs_int32 cellnum, afs_int32 locktype)
     return tc;
 }
 
+/*!
+ * Same as GetCell, but does not try to refresh the data.
+ * \param cellnum Cell number.
+ * \param locktype What lock should be used.
+ * \return 
+ */
 struct cell *
 afs_GetCellStale(afs_int32 cellnum, afs_int32 locktype)
 {
@@ -637,6 +789,12 @@ afs_GetCellStale(afs_int32 cellnum, afs_int32 locktype)
     return tc;
 }
 
+/*!
+ * Return a cell with a given index number (starting at 0). Update CellLRU as well.
+ * \param index
+ * \param locktype Type of lock used.
+ * \return 
+ */
 struct cell *
 afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
 {
@@ -648,6 +806,12 @@ afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
     return tc;
 }
 
+/*!
+ * Return a cell with a given handle..
+ * \param index
+ * \param locktype Type of lock used.
+ * \return 
+ */
 struct cell *
 afs_GetCellByHandle(void *handle, afs_int32 locktype)
 {
@@ -659,12 +823,22 @@ afs_GetCellByHandle(void *handle, afs_int32 locktype)
     return tc;
 }
 
+/*!
+ * Return primary cell, if any.
+ * \param locktype Type of lock used.
+ * \return 
+ */
 struct cell *
 afs_GetPrimaryCell(afs_int32 locktype)
 {
     return afs_GetCellByName(afs_thiscell, locktype);
 }
 
+/*!
+ * Returns true if the given cell is the primary cell.
+ * \param cell
+ * \return 
+ */
 int
 afs_IsPrimaryCell(struct cell *cell)
 {
@@ -682,6 +856,11 @@ afs_IsPrimaryCell(struct cell *cell)
     }
 }
 
+/*!
+ * Returns afs_IsPrimaryCell(afs_GetCell(cellnum)).
+ * \param cellnum 
+ * \return 
+ */
 int
 afs_IsPrimaryCellNum(afs_int32 cellnum)
 {
@@ -697,6 +876,11 @@ afs_IsPrimaryCellNum(afs_int32 cellnum)
     return primary;
 }
 
+/*!
+ * Set the primary cell name to the given cell name.
+ * \param acellName Cell name. 
+ * \return 0 for success, < 0 for error.
+ */
 afs_int32
 afs_SetPrimaryCell(char *acellName)
 {
@@ -708,6 +892,17 @@ afs_SetPrimaryCell(char *acellName)
     return 0;
 }
 
+/*!
+ * Create or update a cell entry. 
+ * \param acellName Name of cell.
+ * \param acellHosts Array of hosts that this cell has.
+ * \param aflags Cell flags.
+ * \param linkedcname 
+ * \param fsport File server port.
+ * \param vlport Volume server port.
+ * \param timeout Cell timeout value, 0 means static AFSDB entry.
+ * \return 
+ */
 afs_int32
 afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	    char *linkedcname, u_short fsport, u_short vlport, int timeout)
@@ -780,9 +975,10 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     }
     tc->states |= aflags;
     tc->timeout = timeout;
-
+    
     memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
     for (i = 0; i < MAXCELLHOSTS; i++) {
+	/* Get server for each host and link this cell in.*/	
 	struct server *ts;
 	afs_uint32 temp = acellHosts[i];
 	if (!temp)
@@ -790,11 +986,13 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	ts = afs_GetServer(&temp, 1, 0, tc->vlport, WRITE_LOCK, NULL, 0);
 	ts->cell = tc;
 	ts->flags &= ~SRVR_ISGONE;
+	/* Set the server as a host of the new cell. */
 	tc->cellHosts[i] = ts;
 	afs_PutServer(ts, WRITE_LOCK);
     }
     afs_SortServers(tc->cellHosts, MAXCELLHOSTS);	/* randomize servers */
-
+	
+    /* New cell: Build and add to LRU cell queue. */
     if (newc) {
 	struct cell_name *cn;
 
@@ -836,6 +1034,9 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
  * afs_CellNumValid: check if a cell number is valid (also set the used flag)
  */
 
+/*!
+ * Perform whatever initialization is necessary.
+ */
 void
 afs_CellInit()
 {
@@ -850,6 +1051,9 @@ afs_CellInit()
     afs_cellalias_index = 0;
 }
 
+/*!
+ * Called on shutdown, should deallocate memory, etc.
+ */
 void
 shutdown_cell()
 {
@@ -880,6 +1084,11 @@ shutdown_cell()
 }
 }
 
+/*!
+ * Remove a server from a cell's server list.
+ * \param srvp Server to be removed.
+ * \return 
+ */
 void
 afs_RemoveCellEntry(struct server *srvp)
 {
@@ -908,6 +1117,11 @@ afs_RemoveCellEntry(struct server *srvp)
     ReleaseWriteLock(&tc->lock);
 }
 
+/*!
+ * Check if the given name exists as a cell or alias. Does not lock afs_xcell.
+ * \param aname 
+ * \return 
+ */
 static int
 afs_CellOrAliasExists_nl(char *aname)
 {
@@ -929,6 +1143,11 @@ afs_CellOrAliasExists_nl(char *aname)
     return 0;
 }
 
+/*!
+ * Check if the given name exists as a cell or alias. Locks afs_xcell.
+ * \param aname
+ * \return 
+ */
 int
 afs_CellOrAliasExists(char *aname)
 {
@@ -941,6 +1160,11 @@ afs_CellOrAliasExists(char *aname)
     return ret;
 }
 
+/*!
+ * Check if a cell number is valid (also set the used flag).
+ * \param cellnum 
+ * \return 1 - true, 0 - false
+ */
 int
 afs_CellNumValid(afs_int32 cellnum)
 {
