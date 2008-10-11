@@ -83,10 +83,10 @@ int afs_norefpanic = 0;
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
 
-/*
- * afs_HashCBRFid
- *
+/*!
  * Generate an index into the hash table for a given Fid.
+ * \param fid 
+ * \return The hash value.
  */
 static int
 afs_HashCBRFid(struct AFSFid *fid)
@@ -94,11 +94,11 @@ afs_HashCBRFid(struct AFSFid *fid)
     return (fid->Volume + fid->Vnode + fid->Unique) % CBRSIZE;
 }
 
-/*
- * afs_InsertHashCBR
- *
+/*!
  * Insert a CBR entry into the hash table.
  * Must be called with afs_xvcb held.
+ * \param cbr
+ * \return
  */
 static void
 afs_InsertHashCBR(struct afs_cbr *cbr)
@@ -113,15 +113,9 @@ afs_InsertHashCBR(struct afs_cbr *cbr)
     afs_cbrHashT[slot] = cbr;
 }
 
-/*
- * afs_FlushVCache
+/*!
  *
- * Description:
- *	Flush the given vcache entry.
- *
- * Parameters:
- *	avc : Pointer to vcache entry to flush.
- *	slept : Pointer to int to set 1 if we sleep/drop locks, 0 if we don't.
+ * Flush the given vcache entry.
  *
  * Environment:
  *	afs_xvcache lock must be held for writing upon entry to
@@ -130,8 +124,11 @@ afs_InsertHashCBR(struct afs_cbr *cbr)
  * LOCK: afs_FlushVCache afs_xvcache W
  * REFCNT: vcache ref count must be zero on entry except for osf1
  * RACE: lock is dropped and reobtained, permitting race in caller
+ *
+ * \param avc Pointer to vcache entry to flush.
+ * \param slept Pointer to int to set 1 if we sleep/drop locks, 0 if we don't.
+ *
  */
-
 int
 afs_FlushVCache(struct vcache *avc, int *slept)
 {				/*afs_FlushVCache */
@@ -279,10 +276,11 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 }				/*afs_FlushVCache */
 
 #ifndef AFS_SGI_ENV
-/*
- * afs_InactiveVCache
+/*!
+ *  The core of the inactive vnode op for all but IRIX.
  *
- * The core of the inactive vnode op for all but IRIX.
+ * \param avc 
+ * \param acred
  */
 void
 afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
@@ -305,14 +303,14 @@ afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
 }
 #endif
 
-/*
- * afs_AllocCBR
- *
- * Description: allocate a callback return structure from the
+/*!
+ *   Allocate a callback return structure from the
  * free list and return it.
  *
- * Env: The alloc and free routines are both called with the afs_xvcb lock
+ * Environment: The alloc and free routines are both called with the afs_xvcb lock
  * held, so we don't have to worry about blocking in osi_Alloc.
+ *
+ * \return The allocated afs_cbr.
  */
 static struct afs_cbr *afs_cbrSpace = 0;
 struct afs_cbr *
@@ -344,15 +342,14 @@ afs_AllocCBR(void)
     return tsp;
 }
 
-/*
- * afs_FreeCBR
- *
- * Description: free a callback return structure, removing it from all lists.
- *
- * Parameters:
- *	asp -- the address of the structure to free.
+/*!
+ * Free a callback return structure, removing it from all lists.
  *
  * Environment: the xvcb lock is held over these calls.
+ *
+ * \param asp The address of the structure to free.
+ *
+ * \rerurn 0
  */
 int
 afs_FreeCBR(register struct afs_cbr *asp)
@@ -370,15 +367,13 @@ afs_FreeCBR(register struct afs_cbr *asp)
     return 0;
 }
 
-/*
- * afs_FlushVCBs
- *
- * Description: flush all queued callbacks to all servers.
- *
- * Parameters: none.
+/*!
+ *   Flush all queued callbacks to all servers.
  *
  * Environment: holds xvcb lock over RPC to guard against race conditions
  *	when a new callback is granted for the same file later on.
+ *
+ * \return 0 for success.
  */
 afs_int32
 afs_FlushVCBs(afs_int32 lockit)
@@ -492,18 +487,15 @@ afs_FlushVCBs(afs_int32 lockit)
     return 0;
 }
 
-/*
- * afs_QueueVCB
- *
- * Description:
- *	Queue a callback on the given fid.
- *
- * Parameters:
- *	avc: vcache entry
+/*!
+ *  Queue a callback on the given fid.
  *
  * Environment:
  *	Locks the xvcb lock.
  *	Called when the xvcache lock is already held.
+ *
+ * \param avc vcache entry
+ * \return 0 for success < 0 otherwise.
  */
 
 static afs_int32
@@ -538,19 +530,16 @@ afs_QueueVCB(struct vcache *avc)
 }
 
 
-/*
- * afs_RemoveVCB
- *
- * Description:
- *	Remove a queued callback for a given Fid.
- *
- * Parameters:
- *	afid: The fid we want cleansed of queued callbacks.
+/*!
+ *   Remove a queued callback for a given Fid.
  *
  * Environment:
  *	Locks xvcb and xserver locks.
  *	Typically called with xdcache, xvcache and/or individual vcache
  *	entries locked.
+ *
+ * \param afid The fid we want cleansed of queued callbacks.
+ *
  */
 
 void
@@ -623,21 +612,19 @@ afs_FlushReclaimedVcaches(void)
 #endif
 }
 
-/*
- * afs_NewVCache
+/*!
+ *   This routine is responsible for allocating a new cache entry
+ * from the free list.  It formats the cache entry and inserts it
+ * into the appropriate hash tables.  It must be called with
+ * afs_xvcache write-locked so as to prevent several processes from
+ * trying to create a new cache entry simultaneously.
  *
- * Description:
- *	This routine is responsible for allocating a new cache entry
- *	from the free list.  It formats the cache entry and inserts it
- *	into the appropriate hash tables.  It must be called with
- *	afs_xvcache write-locked so as to prevent several processes from
- *	trying to create a new cache entry simultaneously.
+ * LOCK: afs_NewVCache  afs_xvcache W
  *
- * Parameters:
- *	afid  : The file id of the file whose cache entry is being
- *		created.
+ * \param afid The file id of the file whose cache entry is being created.
+ *
+ * \return The new vcache struct.
  */
-/* LOCK: afs_NewVCache  afs_xvcache W */
 struct vcache *
 afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 {
@@ -754,8 +741,9 @@ restart:
 		return NULL;
 	    }
 	}
-    }
+    } /* finished freeing up space */
 
+/* Alloc new vnode. */
 #if defined(AFS_LINUX22_ENV)
 {
     struct inode *ip;
@@ -870,7 +858,8 @@ restart:
 	    if (tq == uq)
 		break;
 	}
-    }
+    } /* end of if (!freeVCList) */
+
     if (!freeVCList) {
 	/* none free, making one is better than a panic */
 	afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
@@ -903,7 +892,8 @@ restart:
 	tvc = freeVCList;	/* take from free list */
 	freeVCList = tvc->nextfree;
 	tvc->nextfree = NULL;
-    }
+    } /* end of if (!freeVCList) */
+
 #endif /* AFS_OSF_ENV */
 
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
@@ -1170,16 +1160,13 @@ restart:
 }				/*afs_NewVCache */
 
 
-/*
- * afs_FlushActiveVcaches
+/*!
+ * ???
  *
- * Description:
- *	???
+ * LOCK: afs_FlushActiveVcaches afs_xvcache N
  *
- * Parameters:
- *	doflocks : Do we handle flocks?
+ * \param doflocks : Do we handle flocks?
  */
-/* LOCK: afs_FlushActiveVcaches afs_xvcache N */
 void
 afs_FlushActiveVcaches(register afs_int32 doflocks)
 {
@@ -1327,11 +1314,8 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 
 
 
-/*
- * afs_VerifyVCache
- *
- * Description:
- *	Make sure a cache entry is up-to-date status-wise.
+/*!
+ *   Make sure a cache entry is up-to-date status-wise.
  *
  * NOTE: everywhere that calls this can potentially be sped up
  *       by checking CStatd first, and avoiding doing the InitReq
@@ -1340,11 +1324,26 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
  *  Anymore, the only places that call this KNOW already that the
  *  vcache is not up-to-date, so we don't screw around.
  *
- * Parameters:
- *	avc  : Ptr to vcache entry to verify.
- *	areq : ???
+ * \param avc  : Ptr to vcache entry to verify.
+ * \param areq : ???
  */
 
+/*!
+ * 
+ *   Make sure a cache entry is up-to-date status-wise.
+ *   
+ *   NOTE: everywhere that calls this can potentially be sped up
+ *       by checking CStatd first, and avoiding doing the InitReq
+ *       if this is up-to-date.
+ *
+ *   Anymore, the only places that call this KNOW already that the
+ * vcache is not up-to-date, so we don't screw around.
+ *
+ * \param avc Pointer to vcache entry to verify.
+ * \param areq
+ *
+ * \return 0 for success or other error codes.
+ */
 int
 afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
 {
@@ -1394,20 +1393,14 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
 }				/*afs_VerifyVCache */
 
 
-/*
- * afs_SimpleVStat
+/*!
+ * Simple copy of stat info into cache.
  *
- * Description:
- *	Simple copy of stat info into cache.
+ * Callers:as of 1992-04-29, only called by WriteVCache
  *
- * Parameters:
- *	avc   : Ptr to vcache entry involved.
- *	astat : Ptr to stat info to copy.
+ * \param avc   Ptr to vcache entry involved.
+ * \param astat Ptr to stat info to copy.
  *
- * Environment:
- *	Nothing interesting.
- *
- * Callers:  as of 1992-04-29, only called by WriteVCache
  */
 static void
 afs_SimpleVStat(register struct vcache *avc,
@@ -1490,20 +1483,17 @@ afs_SimpleVStat(register struct vcache *avc,
 }				/*afs_SimpleVStat */
 
 
-/*
- * afs_WriteVCache
+/*!
+ * Store the status info *only* back to the server for a
+ * fid/vrequest.
  *
- * Description:
- *	Store the status info *only* back to the server for a
- *	fid/vrequest.
+ * Environment: Must be called with a shared lock held on the vnode.
  *
- * Parameters:
- *	avc	: Ptr to the vcache entry.
- *	astatus	: Ptr to the status info to store.
- *	areq	: Ptr to the associated vrequest.
+ * \param avc Ptr to the vcache entry.
+ * \param astatus Ptr to the status info to store.
+ * \param areq Ptr to the associated vrequest.
  *
- * Environment:
- *	Must be called with a shared lock held on the vnode.
+ * \return Operation status.
  */
 
 int
@@ -1651,23 +1641,18 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
 
 #endif
 
-/*
- * afs_ProcessFS
+/*!
+ * Copy astat block into vcache info
  *
- * Description:
- *	Copy astat block into vcache info
+ * \note This code may get dataversion and length out of sync if the file has
+ * been modified.  This is less than ideal.  I haven't thought about it sufficiently 
+ * to be certain that it is adequate.
  *
- * Parameters:
- *	avc   : Ptr to vcache entry.
- *	astat : Ptr to stat block to copy in.
- *	areq  : Ptr to associated request.
+ * \note Environment: Must be called under a write lock
  *
- * Environment:
- *	Must be called under a write lock
- *
- * Note: this code may get dataversion and length out of sync if the file has
- *       been modified.  This is less than ideal.  I haven't thought about
- *       it sufficiently to be certain that it is adequate.
+ * \param avc  Ptr to vcache entry.
+ * \param astat Ptr to stat block to copy in.
+ * \param areq Ptr to associated request.
  */
 void
 afs_ProcessFS(register struct vcache *avc,
@@ -1753,6 +1738,19 @@ afs_ProcessFS(register struct vcache *avc,
 }				/*afs_ProcessFS */
 
 
+/*!
+ * Get fid from server.
+ *
+ * \param afid 
+ * \param areq Request to be passed on.
+ * \param name Name of ?? to lookup.
+ * \param OutStatus Fetch status.
+ * \param CallBackp 
+ * \param serverp
+ * \param tsyncp
+ *
+ * \return Success status of operation.
+ */
 int
 afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 		 char *name, struct VenusFid *nfid,
@@ -1791,21 +1789,19 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 }
 
 
-/*
+/*!
  * afs_GetVCache
  *
- * Description:
- *	Given a file id and a vrequest structure, fetch the status
- *	information associated with the file.
+ * Given a file id and a vrequest structure, fetch the status
+ * information associated with the file.
  *
- * Parameters:
- *	afid : File ID.
- *	areq : Ptr to associated vrequest structure, specifying the
- *		user whose authentication tokens will be used.
- *      avc  : caller may already have a vcache for this file, which is
- *             already held.
+ * \param afid File ID.
+ * \param areq Ptr to associated vrequest structure, specifying the
+ *  user whose authentication tokens will be used.
+ * \param avc Caller may already have a vcache for this file, which is
+ *  already held.
  *
- * Environment:
+ * \note Environment:
  *	The cache entry is returned with an increased vrefCount field.
  *	The entry must be discarded by calling afs_PutVCache when you
  *	are through using the pointer to the cache entry.
@@ -1821,11 +1817,12 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
  *	of a parent dir cache entry, given a file (to check its access
  *	control list).  It also allows renames to be handled easily by
  *	locking directories in a constant order.
- * NB.  NewVCache -> FlushVCache presently (4/10/95) drops the xvcache lock.
+ * 
+ * \note NB.  NewVCache -> FlushVCache presently (4/10/95) drops the xvcache lock.
+ *
+ * \note Might have a vcache structure already, which must
+ *  already be held by the caller 
  */
-   /* might have a vcache structure already, which must
-    * already be held by the caller */
-
 struct vcache *
 afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	      afs_int32 * cached, struct vcache *avc)
@@ -2071,6 +2068,19 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 
 
 
+/*!
+ * Lookup a vcache by fid. Look inside the cache first, if not
+ * there, lookup the file on the server, and then get it's fresh
+ * cache entry.
+ * 
+ * \param afid
+ * \param areq 
+ * \param cached Is element cached? If NULL, don't answer.
+ * \param adp
+ * \param aname
+ *
+ * \return The found element or NULL.
+ */
 struct vcache *
 afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 		 afs_int32 * cached, struct vcache *adp, char *aname)
@@ -2552,8 +2562,8 @@ afs_UpdateStatus(struct vcache *avc,
 
 }
 
-/*
- * must be called with avc write-locked
+/*!
+ * Must be called with avc write-locked
  * don't absolutely have to invalidate the hint unless the dv has
  * changed, but be sure to get it right else there will be consistency bugs.
  */
@@ -2752,17 +2762,12 @@ afs_StuffVcache(register struct VenusFid *afid,
 }				/*afs_StuffVcache */
 #endif
 
-/*
- * afs_PutVCache
+/*!
+ * Decrements the reference count on a cache entry.
  *
- * Description:
- *	Decrements the reference count on a cache entry.
+ * \param avc Pointer to the cache entry to decrement.
  *
- * Parameters:
- *	avc : Pointer to the cache entry to decrement.
- *
- * Environment:
- *	Nothing interesting.
+ * \note Environment: Nothing interesting.
  */
 void
 afs_PutVCache(register struct vcache *avc)
@@ -2782,6 +2787,15 @@ afs_PutVCache(register struct vcache *avc)
 }				/*afs_PutVCache */
 
 
+/*!
+ * Sleepa when searching for a vcache. Releases all the pending locks,
+ * sleeps then obtains the previously released locks.
+ *
+ * \param vcache Enter sleep state.
+ * \param flag Determines what locks to use.
+ *
+ * \return 
+ */
 static void findvc_sleep(struct vcache *avc, int flag) {
     if (flag & IS_SLOCK) {
 	    ReleaseSharedLock(&afs_xvcache);
@@ -2803,23 +2817,18 @@ static void findvc_sleep(struct vcache *avc, int flag) {
 	}
     }
 }
-/*
- * afs_FindVCache
+/*!
+ * Find a vcache entry given a fid.
  *
- * Description:
- *	Find a vcache entry given a fid.
+ * \param afid Pointer to the fid whose cache entry we desire.
+ * \param retry (SGI-specific) tell the caller to drop the lock on xvcache,
+ *  unlock the vnode, and try again.
+ * \param flag Bit 1 to specify whether to compute hit statistics.  Not
+ *  set if FindVCache is called as part of internal bookkeeping.
  *
- * Parameters:
- *	afid : Pointer to the fid whose cache entry we desire.
- *      retry: (SGI-specific) tell the caller to drop the lock on xvcache,
- *             unlock the vnode, and try again.
- *      flags: bit 1 to specify whether to compute hit statistics.  Not
- *             set if FindVCache is called as part of internal bookkeeping.
- *
- * Environment:
- *	Must be called with the afs_xvcache lock at least held at
- *	the read level.  In order to do the VLRU adjustment, the xvcache lock
- *      must be shared-- we upgrade it here.
+ * \note Environment: Must be called with the afs_xvcache lock at least held at
+ * the read level.  In order to do the VLRU adjustment, the xvcache lock
+ * must be shared-- we upgrade it here.
  */
 
 struct vcache *
@@ -2935,28 +2944,22 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     return tvc;
 }				/*afs_FindVCache */
 
-/*
- * afs_NFSFindVCache
+/*!
+ * Find a vcache entry given a fid. Does a wildcard match on what we
+ * have for the fid. If more than one entry, don't return anything.
  *
- * Description:
- *	Find a vcache entry given a fid. Does a wildcard match on what we
- *	have for the fid. If more than one entry, don't return anything.
- *
- * Parameters:
- *	avcp : Fill in pointer if we found one and only one.
- *	afid : Pointer to the fid whose cache entry we desire.
- *      retry: (SGI-specific) tell the caller to drop the lock on xvcache,
+ * \param avcp Fill in pointer if we found one and only one.
+ * \param afid Pointer to the fid whose cache entry we desire.
+ * \param retry (SGI-specific) tell the caller to drop the lock on xvcache,
  *             unlock the vnode, and try again.
- *      flags: bit 1 to specify whether to compute hit statistics.  Not
+ * \param flags bit 1 to specify whether to compute hit statistics.  Not
  *             set if FindVCache is called as part of internal bookkeeping.
  *
- * Environment:
- *	Must be called with the afs_xvcache lock at least held at
- *	the read level.  In order to do the VLRU adjustment, the xvcache lock
- *      must be shared-- we upgrade it here.
+ * \note Environment: Must be called with the afs_xvcache lock at least held at
+ *  the read level.  In order to do the VLRU adjustment, the xvcache lock
+ *  must be shared-- we upgrade it here.
  *
- * Return value:
- *	number of matches found.
+ * \return Number of matches found.
  */
 
 int afs_duplicate_nfs_fids = 0;
@@ -3109,10 +3112,10 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 
 
 
-/*
- * afs_vcacheInit
- *
+/*!
  * Initialize vcache related variables
+ *
+ * \param astatSize
  */
 void
 afs_vcacheInit(int astatSize)
@@ -3177,9 +3180,8 @@ afs_vcacheInit(int astatSize)
 	QInit(&afs_vhashTV[i]);
 }
 
-/*
- * shutdown_vcache
- *
+/*!
+ * Shutdown vcache.
  */
 void
 shutdown_vcache(void)
