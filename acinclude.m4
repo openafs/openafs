@@ -121,6 +121,9 @@ AC_ARG_WITH(dux-kernel-headers,
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
 )
+AC_ARG_WITH(linux-kernel-build,
+[  --with-linux-kernel-build=path    	use the kernel build found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
+)
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
 )
@@ -210,15 +213,20 @@ case $system in
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
 		 fi
-               if test -f "$LINUX_KERNEL_PATH/include/linux/utsrelease.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 if test "$with_linux_kernel_build" != "x"; then
+			 LINUX_KERNEL_BUILD="$with_linux_kernel_build"
+		 else
+		   LINUX_KERNEL_BUILD=$LINUX_KERNEL_PATH
+		 fi
+               if test -f "$LINUX_KERNEL_BUILD/include/linux/utsrelease.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		 LINUX_VERSION="$linux_kvers"
                else
-		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 if test -f "$LINUX_KERNEL_BUILD/include/linux/version.h"; then
+		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		  if test "x$linux_kvers" = "x"; then
-		    if test -f "$LINUX_KERNEL_PATH/include/linux/version-up.h"; then
-		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		    if test -f "$LINUX_KERNEL_BUILD/include/linux/version-up.h"; then
+		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		      if test "x$linux_kvers" = "x"; then
 
 		        AC_MSG_ERROR(Linux headers lack version definition [2])
@@ -237,7 +245,7 @@ case $system in
                     enable_kernel_module="no"
                  fi
                fi
-		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
+		 if test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
 		 if test "x$enable_kernel_module" = "xno"; then
@@ -1395,6 +1403,7 @@ AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(LINUX_KERNEL_BUILD)
 AC_SUBST(BSD_KERNEL_PATH)
 AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)
