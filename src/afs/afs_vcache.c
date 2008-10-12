@@ -2021,12 +2021,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 
 	    if (AFS_IS_DISCONNECTED) {
 		if (AFS_IS_DISCON_RW) {
-		    /* Seek the vnode manually. */
-		    ObtainSharedLock(&afs_xvcache, 738);
-		    avc = afs_FindVCache(afid, NULL, 1);
-		    ReleaseSharedLock(&afs_xvcache);
-
-		    if (vType(avc) == VDIR)
+		    if (vType(tvc) == VDIR)
 		    	OutStatus.FileType = Directory;
 
 		    code = tvc?0:ENOENT;
