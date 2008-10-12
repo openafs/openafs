@@ -435,8 +435,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	    	ObtainSharedLock(&tdc->lock, 732);
 	}
 
-	if (!tvc->ddirty_flags ||
-		(tvc->ddirty_flags == VDisconShadowed)) {
+	if (!tvc->ddirty_flags) {
 	    /* Put it in the list only if it's fresh or has only been shadowed. */
 	    ObtainWriteLock(&afs_DDirtyVCListLock, 728);
 	    AFS_DISCON_ADD_DIRTY(tvc);
