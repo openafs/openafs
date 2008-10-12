@@ -64,6 +64,7 @@ COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
 COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 
 # System specific build commands and flags
 <linux26 linux_26>
@@ -299,7 +300,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
 .FORCE:
 ${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
 
 <all -linux26 -linux_26 -umlinux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
