@@ -213,7 +213,7 @@ case $system in
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
 		 fi
-		 if test "$with_linux_kernel_build" != "x"; then
+		 if test "x$with_linux_kernel_build" != "x"; then
 			 LINUX_KERNEL_BUILD="$with_linux_kernel_build"
 		 else
 		   LINUX_KERNEL_BUILD=$LINUX_KERNEL_PATH
