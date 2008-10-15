@@ -3752,14 +3752,24 @@ void smb_CheckVCs(void)
 	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
 		       __FILE__, __LINE__);
 
+        /* on the first pass hold 'vcp' which was not held as 'nextp' */
+        if (vcp != nextp)
+            smb_HoldVCNoLock(vcp);
+
+        /* 
+         * obtain a reference to 'nextp' now because we drop the
+         * smb_rctLock later and the list contents could change 
+         * or 'vcp' could be destroyed when released.
+         */
 	nextp = vcp->nextp;
-
-	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD)
-	    continue;
-
-	smb_HoldVCNoLock(vcp);
 	if (nextp)
 	    smb_HoldVCNoLock(nextp);
+
+	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
+            smb_ReleaseVCNoLock(vcp);
+	    continue;
+        }
+
 	smb_FormatResponsePacket(vcp, NULL, outp);
         smbp = (smb_t *)outp;
 	outp->inCom = smbp->com = 0x2b /* Echo */;
@@ -3778,8 +3788,6 @@ void smb_CheckVCs(void)
 
 	lock_ObtainWrite(&smb_rctLock);
 	smb_ReleaseVCNoLock(vcp);
-	if (nextp)
-	    smb_ReleaseVCNoLock(nextp);
     }
     lock_ReleaseWrite(&smb_rctLock);
     smb_FreePacket(outp);
