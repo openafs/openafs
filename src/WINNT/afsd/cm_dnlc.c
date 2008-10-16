@@ -114,7 +114,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
     int safety;
     int writeLocked = 0;
 
-    if (!cm_useDnlc)
+    if (!cm_useDnlc || nname == NULL)
 	return ;
 
     if (!cm_NormStrCmp(nname,_C(".")) || !cm_NormStrCmp(nname,_C("..")))
@@ -197,7 +197,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
     cm_nc_t * tnc, * tnc_begin;
     int safety, match;
   
-    if (!cm_useDnlc)
+    if (!cm_useDnlc || nname == NULL)
 	return NULL;
 
     if ( cm_debugDnlc ) 
@@ -344,7 +344,7 @@ cm_dnlcRemove (cm_scache_t *adp, normchar_t *nname)
     normchar_t *ts = nname;
     cm_nc_t *tnc, *tmp;
   
-    if (!cm_useDnlc)
+    if (!cm_useDnlc || nname == NULL)
 	return ;
 
     if ( cm_debugDnlc )
