@@ -8755,9 +8755,10 @@ void smb_Listener(void *parmp)
 
         if (code == NRC_NAMERR) {
 	  /* An smb shutdown or Vista resume must have taken place */
-	  osi_Log2(smb_logp,
+	  osi_Log1(smb_logp,
 		   "NCBLISTEN lana=%d failed with NRC_NAMERR.",
-		   ncbp->ncb_lana_num, code);
+		   ncbp->ncb_lana_num);
+	  afsi_log("NCBLISTEN lana=%d failed with NRC_NAMERR.", ncbp->ncb_lana_num);
 
             if (lock_TryMutex(&smb_StartedLock)) {
                 lana_list.lana[i] = LANA_INVALID;
@@ -8776,6 +8777,8 @@ void smb_Listener(void *parmp)
             osi_Log2(smb_logp,
                       "NCBLISTEN lana=%d failed with %s.  Listener thread exiting.",
                       ncbp->ncb_lana_num, ncb_error_string(code));
+	    afsi_log("NCBLISTEN lana=%d failed with %s.  Listener thread exiting.",
+		     ncbp->ncb_lana_num, ncb_error_string(code));
 
 	    for (i = 0; i < lana_list.length; i++) {
 		if (lana_list.lana[i] == lana) {
@@ -9350,7 +9353,7 @@ void smb_StopListener(NCB *ncbp, int lana, int wait)
     memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
     code = Netbios(ncbp);
           
-    afsi_log("Netbios NCBDELNAME lana=%d code=%d retcode=%d complete=%d",
+    afsi_log("StopListener: Netbios NCBDELNAME lana=%d code=%d retcode=%d complete=%d",
 	      lana, code, ncbp->ncb_retcode, ncbp->ncb_cmd_cplt);
 
     /* and then reset the LANA; this will cause the listener threads to exit */
@@ -9362,9 +9365,9 @@ void smb_StopListener(NCB *ncbp, int lana, int wait)
     if (code == 0) 
 	code = ncbp->ncb_retcode;
     if (code != 0) {
-	afsi_log("Netbios NCBRESET lana %d error code %d", lana, code);
+	afsi_log("StopListener: Netbios NCBRESET lana %d error code %d", lana, code);
     } else {
-	afsi_log("Netbios NCBRESET lana %d succeeded", lana);
+	afsi_log("StopListener: Netbios NCBRESET lana %d succeeded", lana);
     }
 
     if (wait)
@@ -9846,7 +9849,7 @@ void smb_Shutdown(void)
         if (code == 0) 
             code = ncbp->ncb_retcode;
         if (code != 0) {
-            fprintf(stderr, "Netbios NCBDELNAME lana %d error code %d",
+            fprintf(stderr, "Shutdown: Netbios NCBDELNAME lana %d error code %d",
                      ncbp->ncb_lana_num, code);
         }       
         fflush(stderr);
