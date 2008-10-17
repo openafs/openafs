@@ -26,3 +26,10 @@ EXPORTS
 	pthread_attr_setdetachstate			@24
 	pthread_exit					@25
 	DllMain						@26
+        pthread_rwlock_destroy                          @27
+        pthread_rwlock_init                             @28
+        pthread_rwlock_rdlock                           @29
+        pthread_rwlock_wrlock                           @30
+        pthread_rwlock_tryrdlock                        @31
+        pthread_rwlock_trywrlock                        @32
+        pthread_rwlock_unlock                           @33
