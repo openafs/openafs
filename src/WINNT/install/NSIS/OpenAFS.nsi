@@ -50,7 +50,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2000-2007"
+VIAddVersionKey "LegalCopyright" "(C)2000-2008"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -575,15 +575,12 @@ Section "!AFS Client" secClient
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.exe"
 
-!ifdef AFSIFS
-  SetOutPath "$SYSDIR"
-!ifndef DEBUG
-  !insertmacro ReplaceDLL "..\..\afsrdr\objfre_w2K_x86\i386\afsrdr.sys" "$SYSDIR\DRIVERS\afsrdr.sys" "$INSTDIR"
-!else
-  !insertmacro ReplaceDLL "..\..\afsrdr\objchk_w2K_x86\i386\afsrdr.sys" "$SYSDIR\DRIVERS\afsrdr.sys" "$INSTDIR"
-!endif
-!endif
-   
+  ; Remove the binaries from the old location if present
+  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
+  Delete "$SYSDIR\afscpcc.exe"
+  Delete "$SYSDIR\afslogon.pdb"
+  Delete "$SYSDIR\afscpcc.pdb"
+
    Call AFSLangFiles
 
   ; Get AFS CellServDB file
@@ -790,7 +787,7 @@ skipremove:
   ; WinLogon Event Notification
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
-  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logon" "AFS_Logon_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
