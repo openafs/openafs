@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <process.h>
 #include <errno.h>
 #include <sys/timeb.h>
 
@@ -212,6 +213,201 @@ int pthread_mutex_destroy(pthread_mutex_t *mp) {
 
     return rc;
 }
+
+int pthread_rwlock_destroy(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp != NULL) {
+        pthread_mutex_destroy(&rwp->read_access_completion_mutex);
+        pthread_mutex_destroy(&rwp->write_access_mutex);
+        pthread_cond_destroy(&rwp->read_access_completion_wait);
+    } else {
+#ifdef PTHREAD_DEBUG
+        DebugBreak();
+#endif
+	rc = EINVAL;
+    }
+
+    return rc;
+}
+
+int pthread_rwlock_init(pthread_rwlock_t *rwp, const pthread_rwlockattr_t *attr)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    rwp->readers = 0;
+
+    rc = pthread_mutex_init(&rwp->write_access_mutex, NULL);
+    if (rc)
+        return rc;
+
+    rc = pthread_mutex_init(&rwp->read_access_completion_mutex, NULL);
+    if (rc)
+        goto error1;
+
+    rc = pthread_cond_init(&rwp->read_access_completion_wait, NULL);
+    if (rc == 0)
+        return 0;       /* success */
+
+    pthread_mutex_destroy(&rwp->read_access_completion_mutex);
+
+  error1:
+    pthread_mutex_destroy(&rwp->write_access_mutex);
+
+    return rc;
+}
+
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    if ((rc = pthread_mutex_lock(&rwp->write_access_mutex)) != 0)
+        return rc;
+
+    if ((rc = pthread_mutex_lock(&rwp->read_access_completion_mutex)) != 0)
+    {
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+        return rc;
+    }
+
+    while (rc == 0 && rwp->readers > 0) {
+        rc = pthread_cond_wait( &rwp->read_access_completion_wait, 
+                                &rwp->read_access_completion_mutex);
+    }
+
+    pthread_mutex_unlock(&rwp->read_access_completion_mutex);
+
+    if (rc)
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+
+    return rc;
+}
+
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    if ((rc = pthread_mutex_lock(&rwp->write_access_mutex)) != 0)
+        return rc;
+
+    if ((rc = pthread_mutex_lock(&rwp->read_access_completion_mutex)) != 0)
+    {
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+        return rc;
+    }
+
+    rwp->readers++;
+
+    pthread_mutex_unlock(&rwp->read_access_completion_mutex);
+
+    pthread_mutex_unlock(&rwp->write_access_mutex);
+
+    return rc;
+        
+}
+
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    if ((rc = pthread_mutex_trylock(&rwp->write_access_mutex)) != 0)
+        return rc;
+
+    if ((rc = pthread_mutex_trylock(&rwp->read_access_completion_mutex)) != 0) {
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+        return rc;
+    }
+
+    rwp->readers++;
+
+    pthread_mutex_unlock(&rwp->read_access_completion_mutex);
+
+    pthread_mutex_unlock(&rwp->write_access_mutex);
+
+    return rc;
+}
+
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    if ((rc = pthread_mutex_trylock(&rwp->write_access_mutex)) != 0)
+        return rc;
+
+    if ((rc = pthread_mutex_trylock(&rwp->read_access_completion_mutex)) != 0)
+    {
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+        return rc;
+    }
+
+    if (rwp->readers > 0)
+        rc = EBUSY;
+
+    pthread_mutex_unlock(&rwp->read_access_completion_mutex);
+
+    if (rc)
+        pthread_mutex_unlock(&rwp->write_access_mutex);
+
+    return rc;
+}
+
+int pthread_rwlock_unlock(pthread_rwlock_t *rwp)
+{
+    int rc = 0;
+
+    if (rwp == NULL)
+        return EINVAL;
+
+    rc = pthread_mutex_trylock(&rwp->write_access_mutex);
+    if (rc != EDEADLK)
+    {
+        /* unlock a read lock */
+        if (rc == 0)
+            pthread_mutex_unlock(&rwp->write_access_mutex);
+        
+        if ((rc = pthread_mutex_lock(&rwp->read_access_completion_mutex)) != 0)
+        {
+            pthread_mutex_unlock(&rwp->write_access_mutex);
+            return rc;
+        }
+
+        if (rwp->readers <= 0)
+        {
+            rc = EINVAL;
+        }
+        else 
+        {
+            if (--rwp->readers == 0) 
+                pthread_cond_broadcast(&rwp->read_access_completion_wait);
+        }
+
+        pthread_mutex_unlock(&rwp->read_access_completion_mutex);
+    } 
+    else
+    {
+        /* unlock a write lock */
+        rc = pthread_mutex_unlock(&rwp->write_access_mutex);
+    }
+
+    return rc;
+}
+
 
 /*
  * keys is used to keep track of which keys are currently

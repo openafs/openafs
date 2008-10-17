@@ -31,6 +31,7 @@ typedef struct {
 
 typedef int pthread_condattr_t;
 typedef int pthread_mutexattr_t;
+typedef int pthread_rwlockattr_t;
 typedef int pthread_key_t;
 typedef void *pthread_t;
 
@@ -56,6 +57,13 @@ typedef struct {
     struct rx_queue waiting_threads;
 } pthread_cond_t;
 
+typedef struct {
+    pthread_mutex_t write_access_mutex;
+    pthread_mutex_t read_access_completion_mutex;
+    pthread_cond_t  read_access_completion_wait;
+    int readers;
+} pthread_rwlock_t;
+
 #define PTHREAD_ONCE_INIT {0,1}
 
 extern int pthread_cond_broadcast(pthread_cond_t *cond);
@@ -69,11 +77,21 @@ extern void *pthread_getspecific(pthread_key_t key);
 extern int pthread_join(pthread_t target_thread, void **status);
 extern int pthread_key_create(pthread_key_t *keyp, void (*destructor)(void *value));
 extern int pthread_key_delete(pthread_key_t key);
+
 extern int pthread_mutex_destroy(pthread_mutex_t *mp);
 extern int pthread_mutex_init(pthread_mutex_t *mp, const pthread_mutexattr_t *attr);
 extern int pthread_mutex_lock(pthread_mutex_t *mp);
 extern int pthread_mutex_trylock(pthread_mutex_t *mp);
 extern int pthread_mutex_unlock(pthread_mutex_t *mp);
+
+extern int pthread_rwlock_destroy(pthread_rwlock_t *rwp);
+extern int pthread_rwlock_init(pthread_rwlock_t *rwp, const pthread_rwlockattr_t *attr);
+extern int pthread_rwlock_rdlock(pthread_rwlock_t *rwp);
+extern int pthread_rwlock_wrlock(pthread_rwlock_t *rwp);
+extern int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwp);
+extern int pthread_rwlock_trywrlock(pthread_rwlock_t *rwp);
+extern int pthread_rwlock_unlock(pthread_rwlock_t *rwp);
+
 extern int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
 extern int pthread_setspecific(pthread_key_t key, const void *value);
 extern pthread_t pthread_self(void);
