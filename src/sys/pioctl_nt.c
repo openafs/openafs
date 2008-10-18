@@ -397,6 +397,96 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
     return success;
 }
 
+static BOOL
+DriveIsMappedToAFS(char *drivestr)
+{
+    HKEY hk;
+    char NetbiosName[32] = "AFS";
+    DWORD dwResult, dwResultEnum;
+    HANDLE hEnum;
+    DWORD cbBuffer = 16384;     // 16K is a good size
+    DWORD cEntries = -1;        // enumerate all possible entries
+    LPNETRESOURCE lpnrLocal;    // pointer to enumerated structures
+    DWORD i;
+    BOOL  bIsAFS = FALSE;
+
+    if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(NetbiosName);
+        DWORD dwType = REG_SZ;
+        RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)NetbiosName, &dwSize);
+        RegCloseKey (hk);
+    }
+
+    //
+    // Call the WNetOpenEnum function to begin the enumeration.
+    //
+    dwResult = WNetOpenEnum(RESOURCE_CONNECTED,
+                            RESOURCETYPE_DISK,
+                            RESOURCEUSAGE_ALL,
+                            NULL,       // NULL first time the function is called
+                            &hEnum);    // handle to the resource
+
+    if (dwResult != NO_ERROR)
+        return FALSE;
+
+    //
+    // Call the GlobalAlloc function to allocate resources.
+    //
+    lpnrLocal = (LPNETRESOURCE) GlobalAlloc(GPTR, cbBuffer);
+    if (lpnrLocal == NULL)
+        return FALSE;
+
+    do {
+        //
+        // Initialize the buffer.
+        //
+        ZeroMemory(lpnrLocal, cbBuffer);
+        //
+        // Call the WNetEnumResource function to continue
+        //  the enumeration.
+        //
+        cEntries = -1;
+        dwResultEnum = WNetEnumResource(hEnum,          // resource handle
+                                        &cEntries,      // defined locally as -1
+                                        lpnrLocal,      // LPNETRESOURCE
+                                        &cbBuffer);     // buffer size
+        //
+        // If the call succeeds, loop through the structures.
+        //
+        if (dwResultEnum == NO_ERROR) {
+            for (i = 0; i < cEntries; i++) {
+                if (toupper(lpnrLocal[i].lpLocalName[0]) == toupper(drivestr[0])) {
+                    //
+                    // Skip the two backslashes at the start of the UNC device name
+                    //
+                    if ( _strnicmp( &(lpnrLocal[i].lpRemoteName[2]), NetbiosName, strlen(NetbiosName)) == 0 )
+                    {
+                        bIsAFS = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+        // Process errors.
+        //
+        else if (dwResultEnum != ERROR_NO_MORE_ITEMS)
+            break;
+    }
+    while (dwResultEnum != ERROR_NO_MORE_ITEMS);
+    
+    //
+    // Call the GlobalFree function to free the memory.
+    //
+    GlobalFree((HGLOBAL) lpnrLocal);
+    //
+    // Call WNetCloseEnum to end the enumeration.
+    //
+    dwResult = WNetCloseEnum(hEnum);
+
+    return bIsAFS;
+}
+
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
@@ -437,7 +527,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             switch (driveType) {
             case DRIVE_UNKNOWN:
             case DRIVE_REMOTE:
-                strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                if (DriveIsMappedToAFS(tbuffer))
+                    strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                else 
+                    return -1;
                 break;
             default:
                 return -1;
