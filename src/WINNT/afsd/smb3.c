@@ -4128,17 +4128,22 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                 switch (scp->fileType) {
                 case CM_SCACHETYPE_DIRECTORY:
                 case CM_SCACHETYPE_MOUNTPOINT:
-                case CM_SCACHETYPE_SYMLINK:
                 case CM_SCACHETYPE_INVALID:
                     fa->extFileAttributes = SMB_ATTR_DIRECTORY;
+                    break;
+                case CM_SCACHETYPE_SYMLINK:
+                    if (cm_TargetPerceivedAsDirectory(scp->mountPointStringp))
+                        fa->extFileAttributes = SMB_ATTR_DIRECTORY;
+                    else
+                        fa->extFileAttributes = SMB_ATTR_NORMAL;
                     break;
                 default:
                     /* if we get here we either have a normal file
                      * or we have a file for which we have never 
                      * received status info.  In this case, we can
                      * check the even/odd value of the entry's vnode.
-                     * even means it is to be treated as a directory
-                     * and odd means it is to be treated as a file.
+                     * odd means it is to be treated as a directory
+                     * and even means it is to be treated as a file.
                      */
                     if (mustFake && (scp->fid.vnode & 0x1))
                         fa->extFileAttributes = SMB_ATTR_DIRECTORY;
@@ -4163,9 +4168,14 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                 switch (scp->fileType) {
                 case CM_SCACHETYPE_DIRECTORY:
                 case CM_SCACHETYPE_MOUNTPOINT:
-                case CM_SCACHETYPE_SYMLINK:
                 case CM_SCACHETYPE_INVALID:
                     fa->attributes = SMB_ATTR_DIRECTORY;
+                    break;
+                case CM_SCACHETYPE_SYMLINK:
+                    if (cm_TargetPerceivedAsDirectory(scp->mountPointStringp))
+                        fa->attributes = SMB_ATTR_DIRECTORY;
+                    else
+                        fa->attributes = SMB_ATTR_NORMAL;
                     break;
                 default:
                     /* if we get here we either have a normal file
@@ -4233,7 +4243,9 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
 
             /* Copy attributes */
             lattr = smb_ExtAttributes(scp);
-            if (code == CM_ERROR_NOSUCHPATH && scp->fileType == CM_SCACHETYPE_SYMLINK ||
+            if ((code == CM_ERROR_NOSUCHPATH && 
+                (scp->fileType == CM_SCACHETYPE_SYMLINK && 
+                cm_TargetPerceivedAsDirectory(scp->mountPointStringp))) ||
                 code == CM_ERROR_PATH_NOT_COVERED && scp->fileType == CM_SCACHETYPE_DFSLINK) {
                 if (lattr == SMB_ATTR_NORMAL)
                     lattr = SMB_ATTR_DIRECTORY;

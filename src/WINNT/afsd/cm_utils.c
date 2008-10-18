@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <windows.h>
+#include <shlwapi.h>
 #include <winsock2.h>
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK             WSAEWOULDBLOCK
@@ -747,3 +748,14 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
     return retval;
 }
 
+BOOL
+cm_TargetPerceivedAsDirectory(const fschar_t *target)
+{
+    char        * ext;
+
+    ext = PathFindExtension(target);
+    if (!ext[0])
+        return TRUE;
+
+    return FALSE;
+}

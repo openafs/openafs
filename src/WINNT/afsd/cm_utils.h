@@ -81,4 +81,6 @@ extern void cm_Gen8Dot3NameIntW(const clientchar_t* longname, cm_dirFid_t * pfid
 
 extern int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags);
 
+extern BOOL cm_TargetPerceivedAsDirectory(const fschar_t *target);
+
 #endif /*  __CM_UTILS_H_ENV__ */
