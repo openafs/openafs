@@ -591,6 +591,7 @@ urecovery_Interact(void *dummy)
 	    }
 #endif
 
+	    pass = 0;
 	    while (length > 0) {
 		tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
 #ifndef AFS_PTHREAD_ENV
