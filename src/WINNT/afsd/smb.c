@@ -4380,17 +4380,22 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
             switch (scp->fileType) {
             case CM_SCACHETYPE_DIRECTORY:
             case CM_SCACHETYPE_MOUNTPOINT:
-            case CM_SCACHETYPE_SYMLINK:
             case CM_SCACHETYPE_INVALID:
                 attr = SMB_ATTR_DIRECTORY;
+                break;
+            case CM_SCACHETYPE_SYMLINK:
+                if (cm_TargetPerceivedAsDirectory(scp->mountPointStringp))
+                    attr = SMB_ATTR_DIRECTORY;
+                else
+                    attr = SMB_ATTR_NORMAL;
                 break;
             default:
                 /* if we get here we either have a normal file
                 * or we have a file for which we have never 
                 * received status info.  In this case, we can
                 * check the even/odd value of the entry's vnode.
-                * even means it is to be treated as a directory
-                * and odd means it is to be treated as a file.
+                * odd means it is to be treated as a directory
+                * and even means it is to be treated as a file.
                 */
                 if (mustFake && (scp->fid.vnode & 0x1))
                     attr = SMB_ATTR_DIRECTORY;
@@ -5315,21 +5320,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     cm_SyncOpDone(newScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-#ifdef undef
-    /* use smb_Attributes instead.   Also the fact that a file is 
-     * in a readonly volume doesn't mean it shojuld be marked as RO 
-     */
-    if (newScp->fileType == CM_SCACHETYPE_DIRECTORY ||
-        newScp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
-	newScp->fileType == CM_SCACHETYPE_INVALID)
-        attrs = SMB_ATTR_DIRECTORY;
-    else
-        attrs = 0;
-    if ((newScp->unixModeBits & 0222) == 0 || (newScp->flags & CM_SCACHEFLAG_RO))
-        attrs |= SMB_ATTR_READONLY;	/* turn on read-only flag */
-#else
     attrs = smb_Attributes(newScp);
-#endif
 
     smb_SetSMBParm(outp, 0, attrs);
         
