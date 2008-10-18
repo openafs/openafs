@@ -45,10 +45,10 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
 	TCHAR pathName[1024];
 
     HKEY hkSubmounts;
-    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
-                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
                     0, 
-                    "AFS", 
+                    TEXT("AFS"), 
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ,
                     NULL, 
@@ -166,10 +166,10 @@ BOOL CSubmountsDlg::FillSubmtList()
     DWORD dwIndex;
     DWORD dwSubmounts;
 
-    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
-                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
                     0, 
-                    "AFS", 
+                    TEXT("AFS"), 
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                     NULL, 
@@ -248,10 +248,10 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
-                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
                     0, 
-                    "AFS", 
+                    TEXT("AFS"), 
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
                     NULL, 
@@ -271,10 +271,10 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyExA( HKEY_LOCAL_MACHINE, 
-                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
                     0, 
-                    "AFS", 
+                    TEXT("AFS"), 
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
                     NULL, 
