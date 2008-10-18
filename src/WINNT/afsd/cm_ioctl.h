@@ -141,8 +141,6 @@ extern const int  utf8_prefix_size;
 
 extern void cm_InitIoctl(void);
 
-extern void cm_ResetACLCache(cm_user_t *userp);
-
 extern cm_ioctlQueryOptions_t *
 cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp);
 
