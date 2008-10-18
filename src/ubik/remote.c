@@ -560,7 +560,6 @@ SDISK_SendFile(rxcall, file, length, avers)
 	close(fd);
 	goto failed;
     }
-#else
     pass = 0;
 #endif
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
