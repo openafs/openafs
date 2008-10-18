@@ -19,12 +19,12 @@
 /* Do not change AFSREG_{CLT,SVR}_SW_NAME unless the installation
  * name in the installers is also changed to match
  */
-#define AFSREG_SVR_SVC_NAME  "TransarcAFSServer"
-#define AFSREG_SVR_SW_NAME   "AFS Server"
+#define AFSREG_SVR_SVC_NAME  TEXT("TransarcAFSServer")
+#define AFSREG_SVR_SW_NAME   TEXT("AFS Server")
 
-#define AFSREG_CLT_SVC_NAME  "TransarcAFSDaemon"
-#define AFSREG_CLT_SW_NAME   	  "AFS Client"
-#define AFSREG_CLT_TOOLS_SW_NAME  "AFS Client 32-Bit Binaries"
+#define AFSREG_CLT_SVC_NAME  TEXT("TransarcAFSDaemon")
+#define AFSREG_CLT_SW_NAME   	  TEXT("AFS Client")
+#define AFSREG_CLT_TOOLS_SW_NAME  TEXT("AFS Client 32-Bit Binaries")
 
 /* ---- NT system configuration information ---- */
 
@@ -43,18 +43,18 @@
  */
 
 #define AFSREG_IPSRV_KEY \
-"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services"
+TEXT("HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services")
 
 /* Adapter list subkey  and subkey values */
-#define AFSREG_IPSRV_IFACELIST_SUBKEY         "Tcpip\\Linkage"
-#define AFSREG_IPSRV_IFACELIST_BIND_VALUE     "Bind"
+#define AFSREG_IPSRV_IFACELIST_SUBKEY         TEXT("Tcpip\\Linkage")
+#define AFSREG_IPSRV_IFACELIST_BIND_VALUE     TEXT("Bind")
 
 /* Per-adapter subkey and subkey values */
-#define AFSREG_IPSRV_ADAPTER_PARAM_SUBKEY          "Parameters\\Tcpip"
-#define AFSREG_IPSRV_ADAPTER_PARAM_ADDR_VALUE      "IPAddress"
-#define AFSREG_IPSRV_ADAPTER_PARAM_MASK_VALUE      "SubnetMask"
-#define AFSREG_IPSRV_ADAPTER_PARAM_DHCPADDR_VALUE  "DhcpIPAddress"
-#define AFSREG_IPSRV_ADAPTER_PARAM_DHCPMASK_VALUE  "DhcpSubnetMask"
+#define AFSREG_IPSRV_ADAPTER_PARAM_SUBKEY          TEXT("Parameters\\Tcpip")
+#define AFSREG_IPSRV_ADAPTER_PARAM_ADDR_VALUE      TEXT("IPAddress")
+#define AFSREG_IPSRV_ADAPTER_PARAM_MASK_VALUE      TEXT("SubnetMask")
+#define AFSREG_IPSRV_ADAPTER_PARAM_DHCPADDR_VALUE  TEXT("DhcpIPAddress")
+#define AFSREG_IPSRV_ADAPTER_PARAM_DHCPMASK_VALUE  TEXT("DhcpSubnetMask")
 
 /*
  * Event logging registry keys and values of interest:
@@ -69,14 +69,14 @@
  */
 
 #define AFSREG_APPLOG_SUBKEY \
-       "System\\CurrentControlSet\\Services\\EventLog\\Application"
-#define AFSREG_APPLOG_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_APPLOG_SUBKEY
+    TEXT("System\\CurrentControlSet\\Services\\EventLog\\Application")
+#define AFSREG_APPLOG_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_APPLOG_SUBKEY
 
 /* AFS event source subkey and subkey values -- client and server services */
 #define AFSREG_SVR_APPLOG_SUBKEY         AFSREG_SVR_SW_NAME
 #define AFSREG_CLT_APPLOG_SUBKEY         AFSREG_CLT_SW_NAME
-#define AFSREG_APPLOG_MSGFILE_VALUE  "EventMessageFile"
-#define AFSREG_APPLOG_MSGTYPE_VALUE  "TypesSupported"
+#define AFSREG_APPLOG_MSGFILE_VALUE  TEXT("EventMessageFile")
+#define AFSREG_APPLOG_MSGTYPE_VALUE  TEXT("TypesSupported")
 
 
 
@@ -93,17 +93,17 @@
  */
 
 #define AFSREG_SVR_SW_SUBKEY \
-     "Software\\TransarcCorporation\\" AFSREG_SVR_SW_NAME
-#define AFSREG_SVR_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_SVR_SW_SUBKEY
+    TEXT("Software\\TransarcCorporation\\") AFSREG_SVR_SW_NAME
+#define AFSREG_SVR_SW_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_SVR_SW_SUBKEY
 
-#define AFSREG_SVR_SW_VERSION_KEY  AFSREG_SVR_SW_KEY "\\CurrentVersion"
-#define AFSREG_SVR_SW_VERSION_SUBKEY  AFSREG_SVR_SW_SUBKEY "\\CurrentVersion"
+#define AFSREG_SVR_SW_VERSION_KEY  AFSREG_SVR_SW_KEY TEXT("\\CurrentVersion")
+#define AFSREG_SVR_SW_VERSION_SUBKEY  AFSREG_SVR_SW_SUBKEY TEXT("\\CurrentVersion")
 
 /* AFSREG_SVR_SW_VERSION_KEY values */
-#define AFSREG_SVR_SW_VERSION_DIR_VALUE   "PathName"
-#define AFSREG_SVR_SW_VERSION_MAJOR_VALUE    "MajorVersion"
-#define AFSREG_SVR_SW_VERSION_MINOR_VALUE    "MinorVersion"
-#define AFSREG_SVR_SW_VERSION_PATCH_VALUE    "PatchLevel"
+#define AFSREG_SVR_SW_VERSION_DIR_VALUE      TEXT("PathName")
+#define AFSREG_SVR_SW_VERSION_MAJOR_VALUE    TEXT("MajorVersion")
+#define AFSREG_SVR_SW_VERSION_MINOR_VALUE    TEXT("MinorVersion")
+#define AFSREG_SVR_SW_VERSION_PATCH_VALUE    TEXT("PatchLevel")
 
 
 /* HKEY_LOCAL_MACHINE\SOFTWARE\TransarcCorporation\AFSREG_CLT_SW_NAME
@@ -116,24 +116,24 @@
  */
 
 #define AFSREG_CLT_SW_SUBKEY \
-    "Software\\TransarcCorporation\\" AFSREG_CLT_SW_NAME
-#define AFSREG_CLT_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_SW_SUBKEY
+    TEXT("Software\\TransarcCorporation\\") AFSREG_CLT_SW_NAME
+#define AFSREG_CLT_SW_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_CLT_SW_SUBKEY
 
-#define AFSREG_CLT_SW_VERSION_KEY  AFSREG_CLT_SW_KEY "\\CurrentVersion"
-#define AFSREG_CLT_SW_VERSION_SUBKEY  AFSREG_CLT_SW_SUBKEY "\\CurrentVersion"
+#define AFSREG_CLT_SW_VERSION_KEY  AFSREG_CLT_SW_KEY TEXT("\\CurrentVersion")
+#define AFSREG_CLT_SW_VERSION_SUBKEY  AFSREG_CLT_SW_SUBKEY TEXT("\\CurrentVersion")
 
 #define AFSREG_CLT_TOOLS_SW_SUBKEY \
-    "Software\\TransarcCorporation\\" AFSREG_CLT_TOOLS_SW_NAME
-#define AFSREG_CLT_TOOLS_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_TOOLS_SW_SUBKEY
+    TEXT("Software\\TransarcCorporation\\") AFSREG_CLT_TOOLS_SW_NAME
+#define AFSREG_CLT_TOOLS_SW_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_CLT_TOOLS_SW_SUBKEY
 
-#define AFSREG_CLT_TOOLS_SW_VERSION_KEY  AFSREG_CLT_TOOLS_SW_KEY "\\CurrentVersion"
-#define AFSREG_CLT_TOOLS_SW_VERSION_SUBKEY  AFSREG_CLT_TOOLS_SW_SUBKEY "\\CurrentVersion"
+#define AFSREG_CLT_TOOLS_SW_VERSION_KEY  AFSREG_CLT_TOOLS_SW_KEY TEXT("\\CurrentVersion")
+#define AFSREG_CLT_TOOLS_SW_VERSION_SUBKEY  AFSREG_CLT_TOOLS_SW_SUBKEY TEXT("\\CurrentVersion")
 
 /* AFSREG_CLT_SW_VERSION_KEY values */
-#define AFSREG_CLT_SW_VERSION_DIR_VALUE   "PathName"
-#define AFSREG_CLT_SW_VERSION_MAJOR_VALUE    "MajorVersion"
-#define AFSREG_CLT_SW_VERSION_MINOR_VALUE    "MinorVersion"
-#define AFSREG_CLT_SW_VERSION_PATCH_VALUE    "PatchLevel"
+#define AFSREG_CLT_SW_VERSION_DIR_VALUE      TEXT("PathName")
+#define AFSREG_CLT_SW_VERSION_MAJOR_VALUE    TEXT("MajorVersion")
+#define AFSREG_CLT_SW_VERSION_MINOR_VALUE    TEXT("MinorVersion")
+#define AFSREG_CLT_SW_VERSION_PATCH_VALUE    TEXT("PatchLevel")
 
 
 
@@ -149,16 +149,16 @@
  *             DeviceName:REG_SZ:<device hosting device partition>
  */
 
-#define AFSREG_SVR_SVC_DISPLAYNAME_DATA  "OpenAFS Server"
-#define AFSREG_SVR_SVC_IMAGENAME_DATA "bosctlsvc.exe"
+#define AFSREG_SVR_SVC_DISPLAYNAME_DATA  TEXT("OpenAFS Server")
+#define AFSREG_SVR_SVC_IMAGENAME_DATA TEXT("bosctlsvc.exe")
 
-#define AFSREG_SVR_SVC_SUBKEY "System\\CurrentControlSet\\Services\\" AFSREG_SVR_SVC_NAME
-#define AFSREG_SVR_SVC_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_SVR_SVC_SUBKEY
+#define AFSREG_SVR_SVC_SUBKEY TEXT("System\\CurrentControlSet\\Services\\") AFSREG_SVR_SVC_NAME
+#define AFSREG_SVR_SVC_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_SVR_SVC_SUBKEY
 
-#define AFSREG_SVR_SVC_AFSTAB_KEY   AFSREG_SVR_SVC_KEY "\\Afstab"
+#define AFSREG_SVR_SVC_AFSTAB_KEY   AFSREG_SVR_SVC_KEY TEXT("\\Afstab")
 
 /* AFSREG_SVR_SVC_AFSTAB_KEY partition subkey values */
-#define AFSREG_SVR_SVC_AFSTAB_DEVNAME_VALUE      "DeviceName"
+#define AFSREG_SVR_SVC_AFSTAB_DEVNAME_VALUE      TEXT("DeviceName")
 
 
 /* HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AFSREG_CLT_SVC_NAME
@@ -170,26 +170,26 @@
  *         Cell:REG_SZ:<client cell>
  */
 
-#define AFSREG_CLT_SVC_DISPLAYNAME_DATA  "OpenAFS Client"
-#define AFSREG_CLT_SVC_IMAGENAME_DATA "afsd_service.exe"
+#define AFSREG_CLT_SVC_DISPLAYNAME_DATA  TEXT("OpenAFS Client")
+#define AFSREG_CLT_SVC_IMAGENAME_DATA TEXT("afsd_service.exe")
 
-#define AFSREG_CLT_SVC_SUBKEY "System\\CurrentControlSet\\Services\\" AFSREG_CLT_SVC_NAME
-#define AFSREG_CLT_SVC_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_SVC_SUBKEY
+#define AFSREG_CLT_SVC_SUBKEY TEXT("System\\CurrentControlSet\\Services\\") AFSREG_CLT_SVC_NAME
+#define AFSREG_CLT_SVC_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_CLT_SVC_SUBKEY
 
-#define AFSREG_CLT_SVC_PARAM_KEY   AFSREG_CLT_SVC_KEY "\\Parameters"
-#define AFSREG_CLT_SVC_PARAM_SUBKEY   AFSREG_CLT_SVC_SUBKEY "\\Parameters"
-#define AFSREG_CLT_SVC_PROVIDER_KEY AFSREG_CLT_SVC_KEY "\\NetworkProvider"
-#define AFSREG_CLT_SVC_PROVIDER_SUBKEY AFSREG_CLT_SVC_SUBKEY "\\NetworkProvider"
+#define AFSREG_CLT_SVC_PARAM_KEY   AFSREG_CLT_SVC_KEY TEXT("\\Parameters")
+#define AFSREG_CLT_SVC_PARAM_SUBKEY   AFSREG_CLT_SVC_SUBKEY TEXT("\\Parameters")
+#define AFSREG_CLT_SVC_PROVIDER_KEY AFSREG_CLT_SVC_KEY TEXT("\\NetworkProvider")
+#define AFSREG_CLT_SVC_PROVIDER_SUBKEY AFSREG_CLT_SVC_SUBKEY TEXT("\\NetworkProvider")
 
 /* AFSREG_CLT_SVC_PARAM_KEY values */
-#define AFSREG_CLT_SVC_PARAM_CELL_VALUE      "Cell"
+#define AFSREG_CLT_SVC_PARAM_CELL_VALUE      TEXT("Cell")
 
-#define AFSREG_CLT_OPENAFS_SUBKEY "Software\\OpenAFS\\Client"
-#define AFSREG_CLT_OPENAFS_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_OPENAFS_SUBKEY
-#define AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE  "CellServDBDir"
+#define AFSREG_CLT_OPENAFS_SUBKEY TEXT("Software\\OpenAFS\\Client")
+#define AFSREG_CLT_OPENAFS_KEY TEXT("HKEY_LOCAL_MACHINE\\") AFSREG_CLT_OPENAFS_SUBKEY
+#define AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE  TEXT("CellServDBDir")
 
-#define AFSREG_USER_OPENAFS_SUBKEY "Software\\OpenAFS\\Client"
-#define AFSREG_USER_OPENAFS_KEY "HKEY_CURRENT_USER" AFSREG_USER_OPENAFS_SUBKEY
+#define AFSREG_USER_OPENAFS_SUBKEY TEXT("Software\\OpenAFS\\Client")
+#define AFSREG_USER_OPENAFS_KEY TEXT("HKEY_CURRENT_USER") AFSREG_USER_OPENAFS_SUBKEY
 
 
 /* Extended (alternative) versions of registry access functions */
