@@ -89,7 +89,7 @@ NewTrans(afs_int32 avol, afs_int32 apart)
 	    return (struct volser_trans *)0;	/* volume busy */
 	}
     }
-    newtt = tt;
+    tt = newtt;
     memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
