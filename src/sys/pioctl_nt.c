@@ -398,10 +398,8 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
 }
 
 static BOOL
-DriveIsMappedToAFS(char *drivestr)
+DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
 {
-    HKEY hk;
-    char NetbiosName[32] = "AFS";
     DWORD dwResult, dwResultEnum;
     HANDLE hEnum;
     DWORD cbBuffer = 16384;     // 16K is a good size
@@ -409,14 +407,6 @@ DriveIsMappedToAFS(char *drivestr)
     LPNETRESOURCE lpnrLocal;    // pointer to enumerated structures
     DWORD i;
     BOOL  bIsAFS = FALSE;
-
-    if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
-    {
-        DWORD dwSize = sizeof(NetbiosName);
-        DWORD dwType = REG_SZ;
-        RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)NetbiosName, &dwSize);
-        RegCloseKey (hk);
-    }
 
     //
     // Call the WNetOpenEnum function to begin the enumeration.
@@ -514,6 +504,9 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 	CurrentState != SERVICE_RUNNING)
 	return -1;
 
+    // Populate the Netbios Name
+    lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
@@ -527,7 +520,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             switch (driveType) {
             case DRIVE_UNKNOWN:
             case DRIVE_REMOTE:
-                if (DriveIsMappedToAFS(tbuffer))
+                if (DriveIsMappedToAFS(tbuffer, netbiosName))
                     strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
                 else 
                     return -1;
@@ -580,7 +573,6 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
     if (!tbuffer[0]) {
         /* No file name starting with drive colon specified, use UNC name */
-        lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
