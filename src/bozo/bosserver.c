@@ -825,12 +825,12 @@ main(int argc, char **argv, char **envp)
 	else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
 	    rxkadDisableDotCheck = 1;
 	}
-	else if (!strcmp(argv[i], "-rxmaxmtu")) {
-	    if ((i + 1) >= argc) {
+	else if (!strcmp(argv[code], "-rxmaxmtu")) {
+	    if ((code + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		exit(1); 
 	    }
-	    rxMaxMTU = atoi(argv[++i]);
+	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
