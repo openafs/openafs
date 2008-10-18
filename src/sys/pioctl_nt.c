@@ -63,69 +63,6 @@ typedef struct fs_ioctlRequest {
 } fs_ioctlRequest_t;
 
 
-static BOOL
-RDR_Ready(void)
-{
-    HANDLE hDevHandle = NULL;
-    DWORD bytesReturned;
-    AFSDriverStatusRespCB *respBuffer = NULL;
-    DWORD rc = 0;
-    BOOL ready = FALSE;
-
-    hDevHandle = CreateFile( AFS_SYMLINK,
-                             GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_FLAG_OVERLAPPED,
-                             NULL);
-    if( hDevHandle == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    //
-    // Allocate a response buffer.
-    //
-    respBuffer = (AFSDriverStatusRespCB *)malloc( sizeof( AFSDriverStatusRespCB));
-    if( respBuffer)
-    {
-
-	memset( respBuffer, '\0', sizeof( AFSDriverStatusRespCB));
-
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_INVALIDATE_CACHE,
-                              NULL,
-                              0,
-                              (void *)respBuffer,
-                              sizeof( AFSDriverStatusRespCB),
-                              &bytesReturned,
-                              NULL))
-        {
-            //
-            // Error condition back from driver
-            //
-            rc = -1;
-            goto cleanup;
-        }
-
-        if (bytesReturned == sizeof(AFSDriverStatusRespCB))
-        {
-            ready = ( respBuffer->Status == AFS_DRIVER_STATUS_READY );
-        }
-    } else
-        rc = ENOMEM;
-
-  cleanup:
-    if (respBuffer)
-        free( respBuffer);
-
-    if (hDevHandle != INVALID_HANDLE_VALUE)
-        CloseHandle(hDevHandle);
-
-    return ready;
-}
-
 static int
 CMtoUNIXerror(int cm_code)
 {
@@ -206,6 +143,111 @@ IoctlDebug(void)
     }
 
     return debug;
+}
+
+static BOOL
+RDR_Ready(void)
+{
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSDriverStatusRespCB *respBuffer = NULL;
+    DWORD rc = 0;
+    BOOL ready = FALSE;
+
+    hDevHandle = CreateFileW( AFS_SYMLINK_W,
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             NULL,
+                             OPEN_EXISTING,
+                             0,
+                             NULL);
+    if( hDevHandle == INVALID_HANDLE_VALUE)
+    {
+        DWORD gle = GetLastError();
+
+        if (gle && IoctlDebug() ) {
+            char buf[4096];
+            int saveerrno;
+            
+            saveerrno = errno;
+            if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL,
+                               gle,
+                               MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                               buf,
+                               4096,
+                               (va_list *) NULL
+                               ) )
+            {
+                fprintf(stderr,"RDR_Ready CreateFile(%S) failed: 0x%X\r\n\t[%s]\r\n",
+                        AFS_SYMLINK_W,gle,buf);
+            }
+            errno = saveerrno;
+        }
+        return FALSE;
+    }
+
+    //
+    // Allocate a response buffer.
+    //
+    respBuffer = (AFSDriverStatusRespCB *)malloc( sizeof( AFSDriverStatusRespCB));
+    if( respBuffer)
+    {
+
+	memset( respBuffer, '\0', sizeof( AFSDriverStatusRespCB));
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_STATUS_REQUEST,
+                              NULL,
+                              0,
+                              (void *)respBuffer,
+                              sizeof( AFSDriverStatusRespCB),
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            DWORD gle = GetLastError();
+
+            if (gle && IoctlDebug() ) {
+                char buf[4096];
+                int saveerrno;
+            
+                saveerrno = errno;
+                if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                    NULL,
+                                    gle,
+                                    MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                    buf,
+                                    4096,
+                                    (va_list *) NULL
+                                    ) )
+                {
+                    fprintf(stderr,"RDR_Ready CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                             AFS_SYMLINK,gle,buf);
+                }
+                errno = saveerrno;
+            }
+            rc = -1;
+            goto cleanup;
+        }
+
+        if (bytesReturned == sizeof(AFSDriverStatusRespCB))
+        {
+            ready = ( respBuffer->Status == AFS_DRIVER_STATUS_READY );
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (respBuffer)
+        free( respBuffer);
+
+    if (hDevHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(hDevHandle);
+
+    return ready;
 }
 
 static BOOL
@@ -463,10 +505,8 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
 }
 
 static BOOL
-DriveIsMappedToAFS(char *drivestr)
+DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
 {
-    HKEY hk;
-    char NetbiosName[32] = "AFS";
     DWORD dwResult, dwResultEnum;
     HANDLE hEnum;
     DWORD cbBuffer = 16384;     // 16K is a good size
@@ -474,14 +514,6 @@ DriveIsMappedToAFS(char *drivestr)
     LPNETRESOURCE lpnrLocal;    // pointer to enumerated structures
     DWORD i;
     BOOL  bIsAFS = FALSE;
-
-    if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
-    {
-        DWORD dwSize = sizeof(NetbiosName);
-        DWORD dwType = REG_SZ;
-        RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)NetbiosName, &dwSize);
-        RegCloseKey (hk);
-    }
 
     //
     // Call the WNetOpenEnum function to begin the enumeration.
@@ -555,13 +587,13 @@ DriveIsMappedToAFS(char *drivestr)
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
+    HKEY hk;
     char *drivep = NULL;
     char netbiosName[MAX_NB_NAME_LENGTH]="AFS";
     DWORD CurrentState = 0;
     char  HostName[64] = "";
     char tbuffer[MAX_PATH]="";
     HANDLE fh;
-    HKEY hk;
     char szUser[128] = "";
     char szClient[MAX_PATH] = "";
     char szPath[MAX_PATH] = "";
@@ -579,6 +611,19 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 	CurrentState != SERVICE_RUNNING)
 	return -1;
 
+    if (RDR_Ready()) {
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
+        {
+            DWORD dwSize = sizeof(netbiosName);
+            DWORD dwType = REG_SZ;
+            RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)netbiosName, &dwSize);
+            RegCloseKey (hk);
+        }
+    } else {
+        if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", netbiosName, sizeof(netbiosName)))
+            lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+    }
+
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
@@ -592,7 +637,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             switch (driveType) {
             case DRIVE_UNKNOWN:
             case DRIVE_REMOTE:
-                if (DriveIsMappedToAFS(tbuffer))
+                if (DriveIsMappedToAFS(tbuffer, netbiosName))
                     strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
                 else 
                     return -1;
@@ -645,19 +690,6 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
     if (!tbuffer[0]) {
         /* No file name starting with drive colon specified, use UNC name */
-        if (RDR_Ready()) {
-            if (RegOpenKey (HKEY_LOCAL_MACHINE, 
-                             TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-            {
-                DWORD dwType = REG_SZ;
-                dwSize = sizeof(netbiosName);
-                RegQueryValueEx (hk, TEXT("NetbiosName"), NULL, &dwType, (PBYTE)netbiosName, &dwSize);
-                RegCloseKey (hk);
-            }
-        } else {
-            if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", netbiosName, sizeof(netbiosName)))
-                lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
-        }
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
