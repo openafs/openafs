@@ -164,7 +164,8 @@ bc_Restorer(aindex)
     afs_int32 tapedumpid, parent;
 
     afs_int32 nentries = 0;
-    afs_int32 last, next, ve, vecount;
+    afs_int32 last = 0;
+    afs_int32 next, ve, vecount;
     struct bc_tapeItem *ti, *pti, *nti;
     struct bc_tapeList *tapeList = (struct bc_tapeList *)0;
     struct bc_tapeList *tle, *ptle, *ntle;
