@@ -21,9 +21,6 @@
 
 #include <osi.h>
 
-extern DWORD RDR_Initialize(void);
-extern DWORD RDR_Shutdown(void);
-
 #ifdef DEBUG
 //#define NOTSERVICE
 #endif

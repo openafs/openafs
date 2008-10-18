@@ -239,6 +239,9 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
     tfid.volume = fidp->Volume;
     cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
 
+    if (cellp)
+        RDR_InvalidateVolume(cellp->cellID, fidp->Volume, AFS_INVALIDATE_CALLBACK);
+
     lock_ObtainWrite(&cm_scacheLock);
     for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
         for(scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
@@ -252,6 +255,9 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 lock_ObtainWrite(&scp->rw);
                 osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+                if (cellp == NULL)
+                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                         scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
                 cm_DiscardSCache(scp);
                 lock_ReleaseWrite(&scp->rw);
 
@@ -269,8 +275,6 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
         }	/* search one hash bucket */
     }	/* search all hash buckets */
     lock_ReleaseWrite(&cm_scacheLock);
-
-    RDR_InvalidateVolume(scp->fid.cell, scp->fid.volume, AFS_INVALIDATE_CALLBACK);
 
     osi_Log1(afsd_logp, "RevokeVolumeCallback Complete vol %d", fidp->Volume);
 }

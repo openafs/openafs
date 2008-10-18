@@ -47,4 +47,6 @@ extern long cm_ValidateACLCache(void);
 
 extern long cm_ShutdownACLCache(void);
 
+extern void cm_ResetACLCache(cm_user_t *userp);
+
 #endif  /* _CM_ACLENT_H_ */
