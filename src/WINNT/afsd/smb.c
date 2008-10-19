@@ -8056,6 +8056,39 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
             newTime = GetTickCount();
             osi_Log2(smb_logp, "Dispatch %s duration %d ms", opName, newTime - oldTime);
 
+            /* ReceiveV3Tran2A handles its own logging */
+            if (inp->inCom != 0x32 && newTime - oldTime > 45000) {
+                smb_user_t *uidp;
+                smb_fid_t *fidp;
+                clientchar_t *treepath = NULL;  /* do not free */
+                clientchar_t *pathname = NULL;
+                cm_fid_t afid = {0,0,0,0,0};
+
+                uidp = smb_FindUID(vcp, smbp->uid, 0);
+                smb_LookupTIDPath(vcp,((smb_t *)inp)->tid, &treepath);
+                fidp = smb_FindFID(vcp, inp->fid, 0);
+
+                if (fidp && fidp->NTopen_pathp)
+                    pathname = fidp->NTopen_pathp;
+                else if (inp->stringsp->wdata)
+                    pathname = inp->stringsp->wdata;
+
+                if (fidp && fidp->scp)
+                    afid = fidp->scp->fid;
+
+                afsi_log("Request %s duration %d ms user %S tid \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
+                          opName, newTime - oldTime,
+                          uidp ? uidp->unp->name : NULL,
+                          treepath,
+                          pathname, 
+                          afid.cell, afid.volume, afid.vnode, afid.unique);
+
+                if (uidp)
+                    smb_ReleaseUID(uidp);
+                if (fidp)
+                    smb_ReleaseFID(fidp);
+            }
+
             if (oldGen != sessionGen) {
 		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_WRONG_SESSION, 
 			 newTime - oldTime, ncbp->ncb_length);

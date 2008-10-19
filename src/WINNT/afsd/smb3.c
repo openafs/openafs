@@ -2116,6 +2116,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int dataCount;
     int firstPacket;
     long code = 0;
+    DWORD oldTime, newTime;
 
     /* We sometimes see 0 word count.  What to do? */
     if (*inp->wctp == 0) {
@@ -2188,6 +2189,8 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         osi_QRemove((osi_queue_t **) &smb_tran2AssemblyQueuep, &asp->q);
         lock_ReleaseWrite(&smb_globalLock);
 
+        oldTime = GetTickCount();
+
         /* now dispatch it */
         if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
             osi_Log4(smb_logp,"AFS Server - Dispatch-2 %s vcp[%p] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
@@ -2205,6 +2208,39 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          */
         if (code != 0) {
             smb_SendTran2Error(vcp, asp, outp, code);
+        }
+
+        newTime = GetTickCount();
+        if (newTime - oldTime > 45000) {
+            smb_user_t *uidp;
+            smb_fid_t *fidp;
+            clientchar_t *treepath = NULL;  /* do not free */
+            clientchar_t *pathname = NULL;
+            cm_fid_t afid = {0,0,0,0,0};
+
+            uidp = smb_FindUID(vcp, asp->uid, 0);
+            smb_LookupTIDPath(vcp, asp->tid, &treepath);
+            fidp = smb_FindFID(vcp, inp->fid, 0);
+
+            if (fidp && fidp->NTopen_pathp)
+                pathname = fidp->NTopen_pathp;
+            else if (inp->stringsp->wdata)
+                pathname = inp->stringsp->wdata;
+
+            if (fidp && fidp->scp)
+                afid = fidp->scp->fid;
+
+            afsi_log("Request %s duration %d ms user %S tid \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
+                      myCrt_2Dispatch(asp->opcode), newTime - oldTime,
+                      uidp ? uidp->unp->name : NULL,
+                      treepath,
+                      pathname, 
+                      afid.cell, afid.volume, afid.vnode, afid.unique);
+
+            if (uidp)
+                smb_ReleaseUID(uidp);
+            if (fidp)
+                smb_ReleaseFID(fidp);
         }
 
         /* free the input tran 2 packet */
