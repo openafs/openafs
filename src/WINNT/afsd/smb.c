@@ -236,43 +236,43 @@ const char * ncb_error_string(int code)
 {
     const char * s;
     switch ( code ) {
-    case 0x01: s = "llegal buffer length"; 			break; 
-    case 0x03: s = "illegal command"; 				break; 
-    case 0x05: s = "command timed out"; 			break; 
-    case 0x06: s = "message incomplete, issue another command"; break; 
-    case 0x07: s = "illegal buffer address"; 			break; 
-    case 0x08: s = "session number out of range"; 		break; 
-    case 0x09: s = "no resource available"; 			break; 
-    case 0x0a: s = "session closed"; 				break; 
-    case 0x0b: s = "command cancelled"; 			break; 
-    case 0x0d: s = "duplicate name"; 				break; 
-    case 0x0e: s = "name table full"; 				break; 
-    case 0x0f: s = "no deletions, name has active sessions"; 	break; 
-    case 0x11: s = "local session table full"; 			break; 
-    case 0x12: s = "remote session table full"; 		break; 
-    case 0x13: s = "illegal name number"; 			break; 
-    case 0x14: s = "no callname"; 				break; 
-    case 0x15: s = "cannot put * in NCB_NAME"; 			break; 
-    case 0x16: s = "name in use on remote adapter"; 		break; 
-    case 0x17: s = "name deleted"; 				break; 
-    case 0x18: s = "session ended abnormally"; 			break; 
-    case 0x19: s = "name conflict detected";	 		break; 
-    case 0x21: s = "interface busy, IRET before retrying"; 	break; 
-    case 0x22: s = "too many commands outstanding, retry later";break;
-    case 0x23: s = "ncb_lana_num field invalid"; 		break; 
-    case 0x24: s = "command completed while cancel occurring "; break; 
-    case 0x26: s = "command not valid to cancel"; 		break; 
-    case 0x30: s = "name defined by anther local process"; 	break; 
-    case 0x34: s = "environment undefined. RESET required"; 	break; 
-    case 0x35: s = "required OS resources exhausted"; 		break; 
-    case 0x36: s = "max number of applications exceeded"; 	break; 
-    case 0x37: s = "no saps available for netbios"; 		break; 
-    case 0x38: s = "requested resources are not available"; 	break; 
-    case 0x39: s = "invalid ncb address or length > segment"; 	break; 
-    case 0x3B: s = "invalid NCB DDID"; 				break; 
-    case 0x3C: s = "lock of user area failed"; 			break; 
-    case 0x3f: s = "NETBIOS not loaded"; 			break; 
-    case 0x40: s = "system error"; 				break;                 
+    case 0x01: s = "NRC_BUFLEN llegal buffer length"; 			break; 
+    case 0x03: s = "NRC_ILLCMD illegal command"; 			break; 
+    case 0x05: s = "NRC_CMDTMO command timed out"; 			break; 
+    case 0x06: s = "NRC_INCOMP message incomplete, issue another command"; break; 
+    case 0x07: s = "NRC_BADDR  illegal buffer address"; 		break; 
+    case 0x08: s = "NRC_SNUMOUT session number out of range"; 		break; 
+    case 0x09: s = "NRC_NORES no resource available"; 			break; 
+    case 0x0a: s = "NRC_SCLOSED asession closed"; 			break; 
+    case 0x0b: s = "NRC_CMDCAN command cancelled"; 			break; 
+    case 0x0d: s = "NRC_DUPNAME duplicate name"; 			break; 
+    case 0x0e: s = "NRC_NAMTFUL name table full"; 			break; 
+    case 0x0f: s = "NRC_ACTSES no deletions, name has active sessions"; break; 
+    case 0x11: s = "NRC_LOCTFUL local session table full"; 		break; 
+    case 0x12: s = "NRC_REMTFUL remote session table full"; 		break; 
+    case 0x13: s = "NRC_ILLNN illegal name number"; 			break; 
+    case 0x14: s = "NRC_NOCALL no callname"; 				break; 
+    case 0x15: s = "NRC_NOWILD cannot put * in NCB_NAME"; 		break; 
+    case 0x16: s = "NRC_INUSE name in use on remote adapter"; 		break; 
+    case 0x17: s = "NRC_NAMERR name deleted"; 				break; 
+    case 0x18: s = "NRC_SABORT session ended abnormally"; 		break; 
+    case 0x19: s = "NRC_NAMCONF name conflict detected";	 	break; 
+    case 0x21: s = "NRC_IFBUSY interface busy, IRET before retrying"; 	break; 
+    case 0x22: s = "NRC_TOOMANY too many commands outstanding, retry later";break;
+    case 0x23: s = "NRC_BRIDGE ncb_lana_num field invalid"; 		break; 
+    case 0x24: s = "NRC_CANOCCR command completed while cancel occurring "; break; 
+    case 0x26: s = "NRC_CANCEL command not valid to cancel"; 		break; 
+    case 0x30: s = "NRC_DUPENV name defined by anther local process"; 	break; 
+    case 0x34: s = "NRC_ENVNOTDEF xenvironment undefined. RESET required"; 	break; 
+    case 0x35: s = "NRC_OSRESNOTAV required OS resources exhausted"; 	break; 
+    case 0x36: s = "NRC_MAXAPPS max number of applications exceeded"; 	break; 
+    case 0x37: s = "NRC_NOSAPS no saps available for netbios"; 		break; 
+    case 0x38: s = "NRC_NORESOURCES requested resources are not available"; 	break; 
+    case 0x39: s = "NRC_INVADDRESS invalid ncb address or length > segment"; 	break; 
+    case 0x3B: s = "NRC_INVDDID invalid NCB DDID"; 			break; 
+    case 0x3C: s = "NRC_LOCKFAILlock of user area failed"; 		break; 
+    case 0x3f: s = "NRC_OPENERR NETBIOS not loaded"; 			break; 
+    case 0x40: s = "NRC_SYSTEM system error"; 				break;                 
     default:   s = "unknown error";
     }
     return s;
@@ -8712,6 +8712,8 @@ void smb_Listener(void *parmp)
     int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
     INT_PTR lana = (INT_PTR) parmp;
     char eventName[MAX_PATH];
+    int bridgeCount = 0;
+    int nowildCount = 0;
 
     sprintf(eventName,"smb_Listener_lana_%d", (unsigned char)lana);
     ListenerShutdown[lana] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
@@ -8758,6 +8760,29 @@ void smb_Listener(void *parmp)
             break;
         } else if (code ==  NRC_BRIDGE || code != 0) {
             int lanaRemaining = 0;
+
+            if (code == NRC_BRIDGE) {
+                if (++bridgeCount <= 5) {
+                    afsi_log("NCBLISTEN lana=%d failed with NRC_BRIDGE, retrying ...", ncbp->ncb_lana_num);
+                    continue;
+                }
+            } else if (code == NRC_NOWILD) {
+                if (++nowildCount <= 5) {
+                    afsi_log("NCBLISTEN lana=%d failed with NRC_NOWILD, retrying ...", ncbp->ncb_lana_num);
+
+                    if (bridgeCount > 0) {
+                        memset(ncbp, 0, sizeof(*ncbp));
+                        ncbp->ncb_command = NCBADDNAME;
+                        ncbp->ncb_lana_num = (UCHAR)lana;
+                        /* pad out with spaces instead of null termination */
+                        len = (long)strlen(smb_localNamep);
+                        strncpy(ncbp->ncb_name, smb_localNamep, NCBNAMSZ);
+                        for (i=len; i<NCBNAMSZ; i++) ncbp->ncb_name[i] = ' ';
+                        code = Netbios(ncbp);
+                    }
+                    continue;
+                }
+            }
 
             while (!lock_TryMutex(&smb_StartedLock)) {
                 if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1)
@@ -8823,6 +8848,10 @@ void smb_Listener(void *parmp)
             break;
         }
 #endif /* 0 */
+
+        /* a successful packet received.  clear bridge error count */
+        bridgeCount = 0;
+        nowildCount = 0;
 
         /* check for remote conns */
         /* first get remote name and insert null terminator */
@@ -9059,8 +9088,13 @@ void smb_LanAdapterChange(int locked) {
         SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
                                           LANA_NETBIOS_NAME_FULL)) &&
         lanaNum != LANA_INVALID && smb_LANadapter != lanaNum) {
-        if ( isGateway != bGateway ||
-             strcmp(cm_NetbiosName, NetbiosName) ) {
+        if ( isGateway != bGateway ) {
+            afsi_log("Lan Adapter Change detected (%d != %d): gateway %d != %d",
+                      smb_LANadapter, lanaNum, isGateway, bGateway);
+            change = 1;
+        } else if (strcmp(cm_NetbiosName, NetbiosName) ) {
+            afsi_log("Lan Adapter Change detected (%d != %d): name %s != %s",
+                      smb_LANadapter, lanaNum, cm_NetbiosName, NetbiosName);
             change = 1;
         } else {
             NCB *ncbp = smb_GetNCB();
@@ -9069,11 +9103,15 @@ void smb_LanAdapterChange(int locked) {
             ncbp->ncb_length = sizeof(temp_list);
             code = Netbios(ncbp);
             if (code == 0) {
-                if (temp_list.length != lana_list.length)
+                if (temp_list.length != lana_list.length) {
+                    afsi_log("Lan Adapter Change detected (%d != %d): lan list length changed %d != %d",
+                              smb_LANadapter, lanaNum, temp_list.length, lana_list.length);
                     change = 1;
-                else {
+                } else {
                     for (i=0; i<lana_list.length; i++) {
                         if ( temp_list.lana[i] != lana_list.lana[i] ) {
+                            afsi_log("Lan Adapter Change detected (%d != %d): lana[%d] %d != %d",
+                                      smb_LANadapter, lanaNum, i, temp_list.lana[i], lana_list.lana[i]);
                             change = 1;
                             break;
                         }
@@ -9085,7 +9123,6 @@ void smb_LanAdapterChange(int locked) {
     } 
 
     if (change) {
-        afsi_log("Lan Adapter Change detected");
         smb_StopListeners(1);
         smb_RestartListeners(1);
     }
