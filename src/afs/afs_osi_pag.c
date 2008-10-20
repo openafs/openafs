@@ -429,9 +429,17 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+    int i = 0;
+
     AFS_STATCNT(afs_InitReq);
     if (afs_shuttingdown)
 	return EIO;
+    av->idleError = 0;
+    av->tokenError = 0;
+    while (i < MAXHOSTS) {
+	av->skipserver[i] = 0;
+	i++;
+    }
     av->uid = PagInCred(acred);
     if (av->uid == NOPAG) {
 	/* Afs doesn't use the unix uid for anuthing except a handle

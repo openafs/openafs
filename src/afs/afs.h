@@ -183,7 +183,7 @@ struct vrequest {
     afs_int32 uid;		/* user id making the request */
     afs_int32 busyCount;	/* how many busies we've seen so far */
     afs_int32 flags;		/* things like O_SYNC, O_NONBLOCK go here */
-    char initd;			/* if non-zero, non-uid fields meaningful */
+    char initd;			/* if non-zero, Error fields meaningful */
     char accessError;		/* flags for overriding error return code */
     char volumeError;		/* encountered a missing or busy volume */
     char networkError;		/* encountered network problems */
