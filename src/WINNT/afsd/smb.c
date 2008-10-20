@@ -1763,7 +1763,11 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     smb_findShare_rock_t * vrock = (smb_findShare_rock_t *) rockp;
     normchar_t normName[MAX_PATH];
 
-    cm_FsStringToNormString(dep->name, -1, normName, sizeof(normName)/sizeof(normName[0]));
+    if (cm_FsStringToNormString(dep->name, -1, normName, sizeof(normName)/sizeof(normName[0])) == 0) {
+        osi_Log1(smb_logp, "Skipping entry [%s]. Can't normalize FS string",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
 
     if (!cm_ClientStrCmpNI(normName, vrock->shareName, 12)) {
         if(!cm_ClientStrCmpI(normName, vrock->shareName))
@@ -1956,6 +1960,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         thyper.LowPart = 0;
 
         vrock.shareName = cm_ClientStringToNormStringAlloc(shareName, -1, NULL);
+        if (vrock.shareName == NULL) 
+            return 0;
         vrock.match = NULL;
         vrock.matchType = 0;
 
@@ -1996,12 +2002,13 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         if (code == 0) {
             clientchar_t temp[1024];
 
-            cm_FsStringToClientString(ftemp, -1, temp, 1024);
+            if (cm_FsStringToClientString(ftemp, -1, temp, 1024) != 0) {
             cm_ClientStrPrintfN(pathName, (int)lengthof(pathName),
                                 rw ? _C("/.%S/") : _C("/%S/"), temp);
             *pathNamep = cm_ClientStrDup(cm_ClientStrLwr(pathName));
             return 1;
         }
+    }
     }
     /* failure */
     *pathNamep = NULL;
@@ -4686,7 +4693,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     code = 0;
     returnedNames = 0;
     while (1) {
-        clientchar_t *actualName;
+        clientchar_t *actualName = NULL;
+        int           free_actualName = 0;
         clientchar_t shortName[13];
         clientchar_t *shortNameEnd;
 
@@ -4834,6 +4842,16 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             free(actualName);
             cm_Gen8Dot3NameInt(dep->name, &dep->fid, shortName, &shortNameEnd);
             actualName = shortName;
+            free_actualName = 0;
+        } else {
+            free_actualName = 1;
+        }
+
+        if (actualName == NULL) {
+            /* Couldn't convert the name for some reason */
+            osi_Log1(smb_logp, "SMB search dir skipping entry :[%s]",
+                     osi_LogSaveString(smb_logp, dep->name));
+            goto nextEntry;
         }
 
         osi_Log3(smb_logp, "SMB search dir vn %d name %s (%S)",
@@ -4934,6 +4952,11 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         }	/* if we're including this name */
 
       nextEntry:
+        if (free_actualName && actualName) {
+            free(actualName);
+            actualName = NULL;
+        }
+
         /* and adjust curOffset to be where the new cookie is */
         thyper.HighPart = 0;
         thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
@@ -5397,6 +5420,21 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 #endif
 
+    if (!cm_IsValidClientString(pathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(pathp, -1);
+        osi_Log1(smb_logp, "CoreOpen rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
+            free(hexp);
+#else
+        osi_Log0(smb_logp, "CoreOpen rejecting invalid name");
+#endif
+        return CM_ERROR_BADNTFILENAME;
+    }
+
     share = smb_GetSMBParm(inp, 0);
     attribute = smb_GetSMBParm(inp, 1);
 
@@ -5538,7 +5576,13 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        /* Can't convert name */
+        osi_Log1(smb_logp, "Skipping entry [%s]. Can't normalize FS string.",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
+
     match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
         (rockp->flags & SMB_MASKFLAG_TILDE) &&
@@ -5584,6 +5628,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_req_t req;
 
     smb_InitReq(&req);
+    memset(&rock, 0, sizeof(rock));
 
     attribute = smb_GetSMBParm(inp, 0);
         
@@ -5632,6 +5677,10 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     rock.any = 0;
     rock.maskp = cm_ClientStringToNormStringAlloc(smb_FindMask(pathp), -1, NULL);
+    if (!rock.maskp) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
     rock.flags = ((cm_ClientStrChr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 
     thyper.LowPart = 0;
@@ -5672,6 +5721,8 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             osi_Log1(smb_logp, "Unlinking %s",
                      osi_LogSaveString(smb_logp, entry->name));
 
+            /* We assume this works because entry->name was
+               successfully converted in smb_UnlinkProc() once. */
             cm_FsStringToNormString(entry->name, -1,
                                     normalizedName, lengthof(normalizedName));
 
@@ -5686,10 +5737,14 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     cm_DirEntryListFree(&rock.matches);
 
+  done:
+    if (userp)
     cm_ReleaseUser(userp);
         
+    if (dscp)
     cm_ReleaseSCache(dscp);
 
+    if (rock.maskp)
     free(rock.maskp);
 
     if (code == 0 && !rock.any)
@@ -5721,7 +5776,13 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 
     rockp = (smb_renameRock_t *) vrockp;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        /* Can't convert string */
+        osi_Log1(smb_logp, "Skpping entry [%s]. Can't normalize FS string",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
+
     caseFold = ((rockp->flags & SMB_MASKFLAG_CASEFOLD)? CM_FLAG_CASEFOLD : 0);
     if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
         caseFold |= CM_FLAG_8DOT3;
@@ -5775,6 +5836,8 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
     }
 
     smb_InitReq(&req);
+    memset(&rock, 0, sizeof(rock));
+
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
 
@@ -5840,19 +5903,6 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
 
     /* TODO: The old name could be a wildcard.  The new name must not be */
 
-    /* do the vnode call */
-    rock.odscp = oldDscp;
-    rock.ndscp = newDscp;
-    rock.userp = userp;
-    rock.reqp = &req;
-    rock.vcp = vcp;
-    rock.maskp = cm_ClientStringToNormStringAlloc(oldLastNamep, -1, NULL);
-    rock.flags = ((cm_ClientStrChr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
-    rock.newNamep = newLastNamep;
-    rock.fsOldName[0] = '\0';
-    rock.clOldName[0] = '\0';
-    rock.any = 0;
-
     /* Check if the file already exists; if so return error */
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
     if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_BPLUS_NOMATCH) && 
@@ -5886,14 +5936,26 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
 
         if (tmpscp != NULL)
             cm_ReleaseSCache(tmpscp);
-        cm_ReleaseSCache(newDscp);
-        cm_ReleaseSCache(oldDscp);
-        cm_ReleaseUser(userp);
 
-        free(rock.maskp);
-        rock.maskp = NULL;
-        return code; 
+        goto done;
     }
+
+    /* do the vnode call */
+    rock.odscp = oldDscp;
+    rock.ndscp = newDscp;
+    rock.userp = userp;
+    rock.reqp = &req;
+    rock.vcp = vcp;
+    rock.maskp = cm_ClientStringToNormStringAlloc(oldLastNamep, -1, NULL);
+    if (!rock.maskp) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
+    rock.flags = ((cm_ClientStrChr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
+    rock.newNamep = newLastNamep;
+    rock.fsOldName[0] = '\0';
+    rock.clOldName[0] = '\0';
+    rock.any = 0;
 
     /* Now search the directory for the pattern, and do the appropriate rename when found */
     thyper.LowPart = 0;		/* search dir from here */
@@ -5946,14 +6008,17 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
         }
     }
 
+  done:
     if (tmpscp != NULL) 
         cm_ReleaseSCache(tmpscp);
+    if (userp)
     cm_ReleaseUser(userp);
+    if (oldDscp)
     cm_ReleaseSCache(oldDscp);
+    if (newDscp)
     cm_ReleaseSCache(newDscp);
-
+    if (rock.maskp)
     free(rock.maskp);
-    rock.maskp = NULL;
 
     return code;
 }       
@@ -6131,6 +6196,21 @@ smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
              osi_LogSaveClientString(smb_logp, oldPathp),
              osi_LogSaveClientString(smb_logp, newPathp));
 
+    if (!cm_IsValidClientString(newPathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(newPathp, -1);
+        osi_Log1(smb_logp, "CoreRename rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
+            free(hexp);
+#else
+        osi_Log0(smb_logp, "CoreRename rejecting invalid name");
+#endif
+        return CM_ERROR_BADNTFILENAME;
+    }
+
     code = smb_Rename(vcp,inp,oldPathp,newPathp,0);
 
     osi_Log1(smb_logp, "smb rename returns 0x%x", code);
@@ -6158,7 +6238,12 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
         
     rockp = (smb_rmdirRock_t *) vrockp;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        osi_Log1(smb_logp, "Skipping entry [%s]. Can't normalize FS string",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
+
     if (rockp->flags & SMB_MASKFLAG_CASEFOLD)
         match = (cm_ClientStrCmpI(matchName, rockp->maskp) == 0);
     else
@@ -6195,6 +6280,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     cm_req_t req;
 
     smb_InitReq(&req);
+    memset(&rock, 0, sizeof(rock));
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
@@ -6239,6 +6325,10 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 	
     rock.any = 0;
     rock.maskp = cm_ClientStringToNormStringAlloc(lastNamep, -1, NULL);
+    if (!rock.maskp) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
     rock.flags = ((cm_ClientStrChr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 
     thyper.LowPart = 0;
@@ -6263,6 +6353,8 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         for (entry = rock.matches; code == 0 && entry; entry = entry->nextp) {
             clientchar_t clientName[MAX_PATH];
 
+            /* We assume this will succeed because smb_RmdirProc()
+               successfully converted entry->name once above. */
             cm_FsStringToClientString(entry->name, -1, clientName, lengthof(clientName));
 
             osi_Log1(smb_logp, "Removing directory %s",
@@ -6277,17 +6369,21 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         }
     }
 
+  done:
+    if (rock.matches)
     cm_DirEntryListFree(&rock.matches);
 
+    if (userp)
     cm_ReleaseUser(userp);
         
+    if (dscp)
     cm_ReleaseSCache(dscp);
 
     if (code == 0 && !rock.any)
         code = CM_ERROR_NOSUCHFILE;        
 
+    if (rock.maskp)
     free(rock.maskp);
-    rock.maskp = NULL;
 
     return code;
 }
@@ -6362,7 +6458,11 @@ int smb_FullNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
     vrockp = (struct smb_FullNameRock *)rockp;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        osi_Log1(smb_logp, "Skipping entry [%s]. Can't normalize FS string",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
 
     if (!cm_Is8Dot3(matchName)) {
         clientchar_t shortName[13];
@@ -7705,6 +7805,21 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+
+    if (!cm_IsValidClientString(pathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(pathp, -1);
+        osi_Log1(smb_logp, "CoreCreate rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
+            free(hexp);
+#else
+        osi_Log0(smb_logp, "CoreCreate rejecting invalid name");
+#endif
+        return CM_ERROR_BADNTFILENAME;
+    }
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);

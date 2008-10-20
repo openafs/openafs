@@ -727,7 +727,11 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
     sp = (cm_lookupSearch_t *) rockp;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        /* Can't normalize FS string. */
+        return 0;
+    }
+
     if (sp->caseFold)
         match = cm_NormStrCmpI(matchName, sp->nsearchNamep);
     else
@@ -1040,7 +1044,15 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     }
 
     nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
+    if (!nnamep) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
     fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
+    if (!fnamep) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
 
     if (flags & CM_FLAG_NOMOUNTCHASE) {
         /* In this case, we should go and call cm_Dir* functions
@@ -1235,6 +1247,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
             if (nnamep) 
                 free(nnamep);
             nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
+            if (nnamep)
             cm_dnlcEnter(dscp, nnamep, tscp);
         }
         lock_ReleaseRead(&dscp->rw);
@@ -1755,12 +1768,19 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
         StringCchCatA(tsp->data,lengthof(tsp->data), "\\");
         StringCchCatA(tsp->data,lengthof(tsp->data), pathSuffixp);
     }
+
     if (code == 0) {
         clientchar_t * cpath = cm_FsStringToClientStringAlloc(tsp->data, -1, NULL);
+        if (cpath != NULL) {
         cm_ClientStrCpy(tsp->wdata, lengthof(tsp->wdata), cpath);
         free(cpath);
         *newSpaceBufferp = tsp;
     } else {
+            code = CM_ERROR_NOSUCHPATH;
+        }
+    } 
+
+    if (code != 0) {
         cm_FreeSpace(tsp);
 
         if (code == CM_ERROR_PATH_NOT_COVERED && reqp->tidPathp && reqp->relPathp) {

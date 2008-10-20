@@ -550,6 +550,76 @@ static int sanitize_bytestring(const char * src, int cch_src,
     return (int)(dest - odest);
 }
 
+static int sanitize_utf16char(wchar_t c, wchar_t ** pdest, size_t * pcch)
+{
+    if (*pcch >= 6) {
+        StringCchPrintfExW(*pdest, *pcch, pdest, pcch, 0, L"%%%04x", (int) c);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static int sanitize_utf16string(const wchar_t * src, size_t cch_src,
+                                wchar_t * dest, size_t cch_dest)
+{
+    int cch_dest_o = cch_dest;
+
+    if (dest == NULL) {
+        /* only estimating */
+        for (cch_dest = 0; cch_src > 0;) {
+            if (*src >= 0xd800 && *src < 0xdc00) {
+                if (cch_src <= 1 || src[1] < 0xdc00 || src[1] > 0xdfff) {
+                    /* dangling surrogate */
+                    src++;
+                    cch_src --;
+                    cch_dest += 5;
+                } else {
+                    /* surrogate pair */
+                    src += 2;
+                    cch_src -= 2;
+                    cch_dest += 2;
+                }
+            } else if (*src >= 0xdc00 && *src <= 0xdfff) {
+                /* dangling surrogate */
+                src++;
+                cch_src --;
+                cch_dest += 5;
+            } else {
+                /* normal char */
+                src++; cch_src --;
+                cch_dest++;
+            }
+        }
+
+        return cch_dest;
+    }
+
+    while (cch_src > 0 && cch_dest > 0) {
+        if (*src >= 0xd800 && *src < 0xdc00) {
+            if (cch_src <= 1 || src[1] < 0xdc00 || src[1] > 0xdfff) {
+                if (!sanitize_utf16char(*src++, &dest, &cch_dest))
+                    return 0;
+                cch_src--;
+            } else {
+                /* found a surrogate pair */
+                *dest++ = *src++;
+                *dest++ = *src++;
+                cch_dest -= 2; cch_src -= 2;
+            }
+        } else if (*src >= 0xdc00 && *src <= 0xdfff) {
+            if (!sanitize_utf16char(*src++, &dest, &cch_dest))
+                return 0;
+            cch_src--;
+        } else {
+            *dest++ = *src++;
+            cch_dest--; cch_src--;
+        }
+    }
+
+    return (cch_src == 0) ? cch_dest_o - cch_dest : 0;
+}
+
 #undef Esc
 #undef IS_ESCAPED
 #undef ESCVAL
@@ -575,12 +645,28 @@ long cm_NormalizeUtf8StringToUtf16(const char * src, int cch_src,
         return 1;
     }
 
+    if (dest && cch_dest > 0) {
+        dest[0] = L'\0';
+    }
+
     if (cch_src == -1) {
         cch_src = strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                               cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
+
+    if (cch != 0 && !cm_is_valid_utf16(wsrcbuf, cch)) {
+        wchar_t wsanitized[NLSMAXCCH];
+
+        /* We successfully converted, but the resulting UTF-16 string
+           has dangling surrogates.  We should try and escape those
+           next.  */
+        cch = sanitize_utf16string(wsrcbuf, cch, wsanitized, NLSMAXCCH);
+        if (cch != 0) {
+            memcpy(wsrcbuf, wsanitized, cch * sizeof(wchar_t));
+        }
+    }
 
     if (cch == 0) {
         if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
@@ -665,6 +751,18 @@ cm_normchar_t *cm_NormalizeUtf8StringToUtf16Alloc(const cm_utf8char_t * src, int
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                               cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
 
+    if (cch != 0 && !cm_is_valid_utf16(wsrcbuf, cch)) {
+        wchar_t wsanitized[NLSMAXCCH];
+
+        /* We successfully converted, but the resulting UTF-16 string
+           has dangling surrogates.  We should try and escape those
+           next.  */
+        cch = sanitize_utf16string(wsrcbuf, cch, wsanitized, NLSMAXCCH);
+        if (cch != 0) {
+            memcpy(wsrcbuf, wsanitized, cch * sizeof(wchar_t));
+        }
+    }
+
     if (cch == 0) {
         if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
             char sanitized[NLSMAXCCH];
@@ -720,6 +818,10 @@ int cm_Utf8ToUtf16(const cm_utf8char_t * src, int cch_src,
 {
     int cch;
 
+    if (cch_dest >= 1 && dest != NULL) {
+        dest[0] = L'\0';
+    }
+
     if (!nls_init)
         cm_InitNormalization();
 
@@ -729,6 +831,15 @@ int cm_Utf8ToUtf16(const cm_utf8char_t * src, int cch_src,
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                               cch_src * sizeof(char), dest, cch_dest);
+
+    if (cch != 0 && !cm_is_valid_utf16(dest, cch)) {
+        wchar_t wsanitized[NLSMAXCCH];
+
+        cch = sanitize_utf16string(dest, cch, wsanitized, NLSMAXCCH);
+        if (cch != 0) {
+            memcpy(dest, wsanitized, cch * sizeof(wchar_t));
+        }
+    }
 
     if (cch == 0) {
         if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
@@ -838,6 +949,28 @@ cm_unichar_t  * cm_Utf8ToUtf16Alloc(const cm_utf8char_t * src, int cch_src, int 
         cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                                   cch_src * sizeof(char), ustr, cch);
         ustr[cch] = 0;
+
+        if (!cm_is_valid_utf16(ustr, cch)) {
+            cm_unichar_t * us = NULL;
+            int cch_s;
+
+            cch_s = sanitize_utf16string(ustr, cch, NULL, 0);
+            if (cch_s != 0) {
+                us = malloc(cch_s * sizeof(wchar_t));
+                cch_s = sanitize_utf16string(ustr, cch, us, cch_s);
+            }
+
+            if (cch_s != 0) {
+                free(ustr);
+                ustr = us;
+                us = NULL;
+            } else {
+                if (us)
+                    free(us);
+                free(ustr);
+                ustr = NULL;
+            }
+        }
     }
 
     if (pcch_dest)
@@ -896,6 +1029,15 @@ long cm_NormalizeUtf8String(const char * src, int cch_src,
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
                               cch_src * sizeof(char), wsrcbuf, NLSMAXCCH);
+
+    if (cch != 0 && !cm_is_valid_utf16(wsrcbuf, cch)) {
+        wchar_t wsanitized[NLSMAXCCH];
+
+        cch = sanitize_utf16string(wsrcbuf, cch, wsanitized, NLSMAXCCH);
+        if (cch != 0) {
+            memcpy(wsrcbuf, wsanitized, cch * sizeof(wchar_t));
+        }
+    }
 
     if (cch == 0) {
         if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
@@ -1265,3 +1407,49 @@ wchar_t * char_this_utf16(const wchar_t * c)
     return (wchar_t *) c;
 }
 
+int cm_is_valid_utf16(const wchar_t * c, int cch)
+{
+    if (cch < 0)
+        cch = wcslen(c) + 1;
+
+    for (; cch > 0; c++, cch--) {
+        if (*c >= 0xd800 && *c < 0xdc00) {
+            c++; cch--;
+            if (cch == 0 || *c < 0xdc00 || *c > 0xdfff)
+                return 0;
+        } else if (*c >= 0xdc00 && *c <= 0xdfff) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+#ifdef DEBUG
+wchar_t * cm_GetRawCharsAlloc(const wchar_t * c, int len)
+{
+    wchar_t * ret;
+    wchar_t * current;
+    size_t cb;
+
+    if (len == -1)
+        len = wcslen(c);
+
+    if (len == 0)
+        return wcsdup(L"(empty)");
+
+    cb = len * 5 * sizeof(wchar_t);
+    current = ret = malloc(cb);
+    if (ret == NULL)
+        return NULL;
+
+    for (; len > 0; ++c, --len) {
+        StringCbPrintfExW(current, cb, &current, &cb, 0,
+                         L"%04x", (int) *c);
+        if (len > 1)
+            StringCbCatExW(current, cb, L",", &current, &cb, 0);
+    }
+
+    return ret;
+}
+#endif

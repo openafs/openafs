@@ -325,6 +325,13 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     cpath = cm_FsStringToClientStringAlloc(path, -1, NULL);
     cshare = cm_FsStringToClientStringAlloc(share, -1, NULL);
 
+    if (cpath == NULL || cshare == NULL) {
+        osi_Log1(afsd_logp, "Can't convert %s string. Aborting",
+                 (cpath == NULL)? "path" : "share");
+        code = CM_ERROR_NOSUCHPATH;
+        goto done;
+    }
+
     code = cm_NameI(cm_data.rootSCachep, cpath,
                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                     cm_rootUserp, cshare, &req, &scp);
@@ -384,6 +391,13 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
 
     cpath = cm_FsStringToClientStringAlloc(path, -1, NULL);
     cshare = cm_FsStringToClientStringAlloc(share, -1, NULL);
+
+    if (cpath == NULL || cshare == NULL) {
+        osi_Log1(afsd_logp, "Can't convert %s string. Aborting",
+                 (cpath == NULL)? "path" : "share");
+        code = CM_ERROR_NOSUCHPATH;
+        goto done;
+    }
 
     code = cm_NameI(cm_data.rootSCachep, cpath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, 
                     cm_rootUserp, cshare, &req, &scp);
