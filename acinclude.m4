@@ -170,9 +170,9 @@ AC_ARG_ENABLE(warnings,
 enable_login="no"
 
 dnl weird ass systems
-AC_AIX
+dnl AC_AIX
 AC_ISC_POSIX
-AC_MINIX
+dnl AC_MINIX
 
 dnl Various compiler setup.
 AC_TYPE_PID_T
