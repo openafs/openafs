@@ -132,11 +132,24 @@ typedef cm_normchar_t normchar_t;
 #define cm_NormStrCmp wcscmp
 #define cm_NormCharUpr towupper
 
+#define cm_IsValidClientString(s) cm_is_valid_utf16((s), -1)
+#define cm_IsValidNormString(s) cm_is_valid_utf16((s), -1)
+
 #define cm_Utf16ToClientString cm_Utf16ToUtf16
 
 extern long cm_InitNormalization(void);
 
 /* Functions annotated in accordance with sal.h */
+
+#ifndef __in_z
+
+#define __out_ecount_full_z(x)
+#define __out_ecount_full_z_opt(x)
+#define __in_z
+#define __out_z
+#define __inout_z
+
+#endif
 
 extern __out_ecount_full_z(*pcch_dest) __checkReturn __success(return != NULL) cm_normchar_t *
     cm_NormalizeStringAlloc
@@ -253,6 +266,13 @@ cm_strlwr_utf16(__inout_z cm_unichar_t * str);
 
 extern __out_z cm_unichar_t *
 cm_strupr_utf16(__inout_z cm_unichar_t * str);
+
+extern int
+cm_is_valid_utf16(__in_z const wchar_t * c, int cch);
+
+#ifdef DEBUG
+wchar_t * cm_GetRawCharsAlloc(const wchar_t * c, int len);
+#endif
 
 #if 0
 

@@ -457,9 +457,13 @@ cm_IoctlGetFileCellName(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
             clientchar_t * cellname;
 
             cellname = cm_FsStringToClientStringAlloc(cellp->name, -1, NULL); 
+            if (cellname == NULL) {
+                code = CM_ERROR_NOSUCHCELL;
+            } else {
             cm_UnparseIoctlString(ioctlp, NULL, cellname, -1);
             free(cellname);
             code = 0;
+            }
         } else
             code = CM_ERROR_NOSUCHCELL;
     }
@@ -1354,8 +1358,12 @@ cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         ioctlp->outDatap = basep + max * sizeof(afs_int32);
 
         cellnamep = cm_FsStringToClientStringAlloc(tcellp->name, -1, NULL);
+        if (cellnamep) {
         cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
         free(cellnamep);
+        } else {
+            tcellp = NULL;
+        }
     }
 
     if (tcellp) 
@@ -1452,8 +1460,12 @@ cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
     } else if (cm_data.rootCellp) {
         clientchar_t * cellnamep = cm_FsStringToClientStringAlloc(cm_data.rootCellp->name, -1, NULL);
         /* return the default cellname to the caller */
+        if (cellnamep) {
         cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
         free(cellnamep);
+    } else {
+            code = CM_ERROR_NOSUCHCELL;
+        }
     } else {
         /* if we don't know our default cell, return failure */
         code = CM_ERROR_NOSUCHCELL;

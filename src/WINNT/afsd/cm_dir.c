@@ -1293,7 +1293,6 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                               CM_SCACHESYNC_NEEDCALLBACK |
                               (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                               CM_SCACHESYNC_BUFLOCKED);
-
             code = CM_ERROR_NOTINCACHE;
         }
 

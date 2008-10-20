@@ -2361,6 +2361,22 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         return 0;
     }
 
+    if (!cm_IsValidClientString(pathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(pathp, -1);
+        osi_Log1(smb_logp, "Tran2Open rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
+            free(hexp);
+#else
+        osi_Log0(smb_logp, "Tran2Open rejecting invalid name");
+#endif
+        smb_FreeTran2Packet(outp);
+        return CM_ERROR_BADNTFILENAME;
+    }
+
 #ifdef DEBUG_VERBOSE
     {
         char *hexp, *asciip;
@@ -2800,7 +2816,11 @@ int cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
 
     rockp = vrockp;
 
-    cm_FsStringToNormString(dep->name, -1, normName, sizeof(normName)/sizeof(clientchar_t));
+    if (cm_FsStringToNormString(dep->name, -1, normName, sizeof(normName)/sizeof(clientchar_t)) == 0) {
+        osi_Log1(smb_logp, "Skipping entry [%s]. Can't normalize FS string",
+                 osi_LogSaveString(smb_logp, dep->name));
+        return 0;
+    }
 
     /* compare both names and vnodes, though probably just comparing vnodes
      * would be safe enough.
@@ -5287,8 +5307,13 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         if (dep->fid.vnode == 0) 
             goto nextEntry;             /* This entry is not in use */
 
-        cm_FsStringToClientString(dep->name, -1, cfileName, lengthof(cfileName));
-        cm_ClientStringToNormString(cfileName, -1, normName, lengthof(normName));
+        if (cm_FsStringToClientString(dep->name, -1, cfileName, lengthof(cfileName)) == 0 ||
+            cm_ClientStringToNormString(cfileName, -1, normName, lengthof(normName)) == 0) {
+
+            osi_Log1(smb_logp, "Skipping entry [%s].  Can't convert or normalize FS String",
+                     osi_LogSaveString(smb_logp, dep->name));
+            goto nextEntry;
+        }
 
         /* Need 8.3 name? */
         NeedShortName = 0;
@@ -5698,6 +5723,21 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* and clean up fid reference */
         smb_ReleaseFID(fidp);
         return 0;
+    }
+
+    if (!cm_IsValidClientString(pathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(pathp, -1);
+        osi_Log1(smb_logp, "NTOpenX rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
+            free(hexp);
+#else
+        osi_Log0(smb_logp, "NTOpenX rejecting invalid name");
+#endif
+        return CM_ERROR_BADNTFILENAME;
     }
 
 #ifdef DEBUG_VERBOSE
@@ -6858,15 +6898,21 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return 0;
     }
 
-#ifdef DEBUG_VERBOSE
-    {
-    	char *hexp, *asciip;
-    	asciip = (lastNamep? lastNamep : realPathp);
-    	hexp = osi_HexifyString( asciip );
-    	DEBUG_EVENT2("AFS", "NTCreateX H[%s] A[%s]", hexp, asciip);
+    if (!cm_IsValidClientString(realPathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(realPathp, -1);
+        osi_Log1(smb_logp, "NTCreateX rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
     	free(hexp);
-    }
+#else
+        osi_Log0(smb_logp, "NTCreateX rejecting invalid name");
 #endif
+        free(realPathp);
+        return CM_ERROR_BADNTFILENAME;
+    }
 
     userp = smb_GetUserFromVCP(vcp, inp);
     if (!userp) {
@@ -7679,15 +7725,21 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
      * Will add it if necessary.
      */
 
-#ifdef DEBUG_VERBOSE
-    {
-        char *hexp, *asciip;
-        asciip = (lastNamep? lastNamep : realPathp);
-        hexp = osi_HexifyString( asciip );
-        DEBUG_EVENT2("AFS", "NTTranCreate H[%s] A[%s]", hexp, asciip);
+    if (!cm_IsValidClientString(realPathp)) {
+#ifdef DEBUG
+        clientchar_t * hexp;
+
+        hexp = cm_GetRawCharsAlloc(realPathp, -1);
+        osi_Log1(smb_logp, "NTTranCreate rejecting invalid name. [%S]",
+                 osi_LogSaveClientString(smb_logp, hexp));
+        if (hexp)
         free(hexp);
-    }
+#else
+        osi_Log0(smb_logp, "NTTranCreate rejecting invalid name.");
 #endif
+        free(realPathp);
+        return CM_ERROR_BADNTFILENAME;
+    }
 
     userp = smb_GetUserFromVCP(vcp, inp);
     if (!userp) {
