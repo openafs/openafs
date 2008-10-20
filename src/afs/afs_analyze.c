@@ -494,7 +494,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 	}
     }
     for (i = 0; i < MAXHOSTS; i++) {
-	if (areq->skipserver[i] == 0) {
+	if (tvp->serverHost[i] && areq->skipserver[i] == 0) {
 	    serversleft = 1;
 	    break;
 	}
