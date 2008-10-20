@@ -102,6 +102,11 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct inode *ip = AFSTOV(avc);
 
+    if (!avc->states & CPageWrite)
+	avc->states |= CPageWrite;
+    else 
+	return; /* someone already writing */
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,5)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
     ReleaseWriteLock(&avc->lock);
@@ -115,6 +120,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 121);
 #endif
+    avc->states &= ~CPageWrite;
 }
 
 /* Purge VM for a file when its callback is revoked.
