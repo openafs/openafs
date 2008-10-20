@@ -1556,6 +1556,21 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
 
+    ObtainReadLock(&vcp->lock);
+    if (vcp->states & CPageWrite) {
+	ReleaseReadLock(&vcp->lock);
+	AFS_GUNLOCK();
+	unlock_kernel();
+	crfree(credp);
+	kunmap(pp);
+#if defined(WRITEPAGE_ACTIVATE)
+	return WRITEPAGE_ACTIVATE;
+#else
+	return AOP_WRITEPAGE_ACTIVATE;
+#endif
+    }
+    ReleaseReadLock(&vcp->lock);
+
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
