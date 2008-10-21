@@ -1563,10 +1563,15 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	unlock_kernel();
 	crfree(credp);
 	kunmap(pp);
+#ifdef AFS_LINUX26_ENV
 #if defined(WRITEPAGE_ACTIVATE)
 	return WRITEPAGE_ACTIVATE;
 #else
 	return AOP_WRITEPAGE_ACTIVATE;
+#endif
+#else
+	/* should mark it dirty? */
+	return(0); 
 #endif
     }
     ReleaseReadLock(&vcp->lock);
