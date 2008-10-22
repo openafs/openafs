@@ -1248,7 +1248,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
                 free(nnamep);
             nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
             if (nnamep)
-            cm_dnlcEnter(dscp, nnamep, tscp);
+                cm_dnlcEnter(dscp, nnamep, tscp);
         }
         lock_ReleaseRead(&dscp->rw);
     }

@@ -1774,7 +1774,8 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
             matchType = SMB_FINDSHARE_EXACT_MATCH;
         else
             matchType = SMB_FINDSHARE_PARTIAL_MATCH;
-        if(vrock->match) free(vrock->match);
+        if(vrock->match) 
+            free(vrock->match);
         vrock->match = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
         vrock->matchType = matchType;
 
@@ -4839,7 +4840,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         /* Compute 8.3 name if necessary */
         actualName = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
         if (dep->fid.vnode != 0 && !cm_Is8Dot3(actualName)) {
-            free(actualName);
+            if (actualName)
+                free(actualName);
             cm_Gen8Dot3NameInt(dep->name, &dep->fid, shortName, &shortNameEnd);
             actualName = shortName;
             free_actualName = 0;

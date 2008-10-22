@@ -399,7 +399,10 @@ int cm_Is8Dot3(clientchar_t *namep)
     int sawDot = 0;
     clientchar_t tc;
     int charCount = 0;
-        
+    
+    if (namep == NULL || !namep[0])
+        return 0;
+
     /*
      * can't have a leading dot;
      * special case for . and ..

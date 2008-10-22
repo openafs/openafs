@@ -460,9 +460,9 @@ cm_IoctlGetFileCellName(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
             if (cellname == NULL) {
                 code = CM_ERROR_NOSUCHCELL;
             } else {
-            cm_UnparseIoctlString(ioctlp, NULL, cellname, -1);
-            free(cellname);
-            code = 0;
+                cm_UnparseIoctlString(ioctlp, NULL, cellname, -1);
+                free(cellname);
+                code = 0;
             }
         } else
             code = CM_ERROR_NOSUCHCELL;
@@ -1359,8 +1359,8 @@ cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         cellnamep = cm_FsStringToClientStringAlloc(tcellp->name, -1, NULL);
         if (cellnamep) {
-        cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
-        free(cellnamep);
+            cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
+            free(cellnamep);
         } else {
             tcellp = NULL;
         }
@@ -1461,9 +1461,9 @@ cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
         clientchar_t * cellnamep = cm_FsStringToClientStringAlloc(cm_data.rootCellp->name, -1, NULL);
         /* return the default cellname to the caller */
         if (cellnamep) {
-        cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
-        free(cellnamep);
-    } else {
+            cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
+            free(cellnamep);
+        } else {
             code = CM_ERROR_NOSUCHCELL;
         }
     } else {

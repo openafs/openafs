@@ -157,7 +157,7 @@ NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *
 #endif
 
     if (cch_src == -1)
-        cch_src = wcslen(src) + 1;
+        cch_src = (int)wcslen(src) + 1;
 
     if ((pIsNormalizedString && (*pIsNormalizedString)(AFS_NORM_FORM, src, cch_src)) ||
         (!pNormalizeString)) {
@@ -381,7 +381,7 @@ int cm_Utf16ToUtf16(const cm_unichar_t * src, int cch_src,
 
     if (cch_src == -1) {
         StringCchCopyW(dest, cch_dest, src);
-        return wcslen(dest) + 1;
+        return (int)wcslen(dest) + 1;
     } else {
         int cch_conv = min(cch_src, cch_dest);
         memcpy(dest, src, cch_conv * sizeof(cm_unichar_t));
@@ -418,7 +418,7 @@ long cm_NormalizeUtf16StringToUtf8(const wchar_t * src, int cch_src,
         if (FAILED(StringCchLengthW(src, NLSMAXCCH, &cch)))
             return E2BIG;
 
-        cch_src = cch+1;
+        cch_src = (int)cch+1;
     }
 
     {
@@ -650,7 +650,7 @@ long cm_NormalizeUtf8StringToUtf16(const char * src, int cch_src,
     }
 
     if (cch_src == -1) {
-        cch_src = strlen(src) + 1;
+        cch_src = (int)strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
@@ -745,7 +745,7 @@ cm_normchar_t *cm_NormalizeUtf8StringToUtf16Alloc(const cm_utf8char_t * src, int
     }
 
     if (cch_src == -1) {
-        cch_src = strlen(src) + 1;
+        cch_src = (int)strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
@@ -826,7 +826,7 @@ int cm_Utf8ToUtf16(const cm_utf8char_t * src, int cch_src,
         cm_InitNormalization();
 
     if (cch_src == -1) {
-        cch_src = strlen(src) + 1;
+        cch_src = (int)strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
@@ -897,7 +897,7 @@ cm_unichar_t  * cm_Utf8ToUtf16Alloc(const cm_utf8char_t * src, int cch_src, int 
     }
 
     if (cch_src == -1) {
-        cch_src = strlen(src) + 1;
+        cch_src = (int)strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
@@ -1024,7 +1024,7 @@ long cm_NormalizeUtf8String(const char * src, int cch_src,
     }
 
     if (cch_src == -1) {
-        cch_src = strlen(src) + 1;
+        cch_src = (int)strlen(src) + 1;
     }
 
     cch = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src,
@@ -1175,7 +1175,7 @@ int cm_strnicmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2, int 
     if (FAILED(StringCchLengthW(str2, len, &cch2)))
         cch2 = len;
 
-    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, str1, cch1, str2, cch2);
+    rv = CompareStringW(nls_lcid, NORM_IGNORECASE, str1, (int)cch1, str2, (int)cch2);
     if (rv > 0)
         return (rv - 2);
     else {
@@ -1222,7 +1222,7 @@ cm_unichar_t *cm_strlwr_utf16(cm_unichar_t * str)
     if (!nls_init)
         cm_InitNormalization();
 
-    len = wcslen(str) + 1;
+    len = (int)wcslen(str) + 1;
     rv = LCMapStringW(nls_lcid, LCMAP_LOWERCASE, str, len, str, len);
 #ifdef DEBUG
     if (rv == 0) {
@@ -1241,7 +1241,7 @@ cm_unichar_t *cm_strupr_utf16(cm_unichar_t * str)
     if (!nls_init)
         cm_InitNormalization();
 
-    len = wcslen(str) + 1;
+    len = (int)wcslen(str) + 1;
     rv = LCMapStringW(nls_lcid, LCMAP_UPPERCASE, str, len, str, len);
 #ifdef DEBUG
     if (rv == 0) {
@@ -1333,7 +1333,7 @@ char * strupr_utf8(char * str, size_t cbstr)
 
     len = LCMapStringW(nls_lcid, LCMAP_UPPERCASE, wstr, len, wstrd, NLSMAXCCH);
 
-    len = WideCharToMultiByte(CP_UTF8, 0, wstrd, -1, str, cbstr, NULL, FALSE);
+    len = WideCharToMultiByte(CP_UTF8, 0, wstrd, -1, str, (int)cbstr, NULL, FALSE);
 
     return str;
 }
