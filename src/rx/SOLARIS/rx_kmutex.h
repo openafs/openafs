@@ -26,6 +26,7 @@
 #include <sys/mutex.h>
 
 typedef kmutex_t afs_kmutex_t;
+typedef afs_kmutex_t afs_krwlock_t;
 typedef kcondvar_t afs_kcondvar_t;
 
 #undef osirx_AssertMine

@@ -103,10 +103,10 @@ void afspag_Init(afs_int32 nfs_server_addr)
     rx_Init(htons(7001));
 
     AFS_STATCNT(afs_ResourceInit);
-    RWLOCK_INIT(&afs_xuser, "afs_xuser");
-    RWLOCK_INIT(&afs_xpagcell, "afs_xpagcell");
-    RWLOCK_INIT(&afs_xpagsys, "afs_xpagsys");
-    RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
+    AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
+    AFS_RWLOCK_INIT(&afs_xpagcell, "afs_xpagcell");
+    AFS_RWLOCK_INIT(&afs_xpagsys, "afs_xpagsys");
+    AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
 #ifndef AFS_FBSD_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
     LOCK_INIT(&osi_flplock, "osi_flplock");

@@ -36,6 +36,16 @@ typedef struct {
     struct proc *owner;
 } afs_kmutex_t;
 
+typedef afs_kmutex_t afs_krwlock_t;
+#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
+#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
+#define RWLOCK_UPLOCK(l) 
+#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
+#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
+#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
+#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
+#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
+
 #define MUTEX_INIT(a,b,c,d) \
     do { \
 	(a)->owner = 0; \

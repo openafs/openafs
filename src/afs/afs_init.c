@@ -113,10 +113,10 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     usedihint = 0;
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
-    RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
+    AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
 #ifdef AFS_DISCON_ENV
-    RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
-    RWLOCK_INIT(&afs_DDirtyVCListLock, "afs_DDirtyVCListLock");
+    AFS_RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
+    AFS_RWLOCK_INIT(&afs_DDirtyVCListLock, "afs_DDirtyVCListLock");
 #endif
     osi_dnlc_init();
 
@@ -486,18 +486,18 @@ afs_ResourceInit(int preallocs)
     static struct rx_securityClass *secobj;
 
     AFS_STATCNT(afs_ResourceInit);
-    RWLOCK_INIT(&afs_xuser, "afs_xuser");
-    RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
-    RWLOCK_INIT(&afs_xserver, "afs_xserver");
-    RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
-    RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
-    RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
+    AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
+    AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+    AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");
+    AFS_RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
+    AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
+    AFS_RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 #ifndef AFS_FBSD_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
-    RWLOCK_INIT(&afs_xconn, "afs_xconn");
+    AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
 
     afs_CellInit();
     afs_InitCBQueue(1);		/* initialize callback queues */
@@ -814,11 +814,11 @@ shutdown_AFS(void)
 	afs_waitForever = afs_waitForeverCount = 0;
 	afs_FVIndex = -1;
 	afs_server = (struct rx_service *)0;
-	RWLOCK_INIT(&afs_xconn, "afs_xconn");
+	AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
 	memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
-	RWLOCK_INIT(&afs_xuser, "afs_xuser");
-	RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
-	RWLOCK_INIT(&afs_xserver, "afs_xserver");
+	AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
+	AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+	AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");
 	LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 
 	shutdown_cell();

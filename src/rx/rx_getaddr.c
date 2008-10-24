@@ -32,6 +32,7 @@ RCSID
  * By including this, we get any system dependencies. In particular,
  * the pthreads for solaris requires the socket call to be mapped.
  */
+#include "rx_internal.h"
 #include "rx.h"
 #include "rx_globals.h"
 #endif /* AFS_NT40_ENV */
@@ -39,6 +40,7 @@ RCSID
 #ifdef UKERNEL
 #include "rx/rx_kcommon.h"
 #else /* UKERNEL */
+#include "rx/rx_internal.h"
 #include "rx/rx.h"
 #endif /* UKERNEL */
 #endif /* KERNEL */

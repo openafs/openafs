@@ -3031,9 +3031,9 @@ afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 	osi_Assert(0 == NBObtainWriteLock(&tdc->tlock, 676));
     }
 
-    RWLOCK_INIT(&tdc->lock, "dcache lock");
-    RWLOCK_INIT(&tdc->tlock, "dcache tlock");
-    RWLOCK_INIT(&tdc->mflock, "dcache flock");
+    AFS_RWLOCK_INIT(&tdc->lock, "dcache lock");
+    AFS_RWLOCK_INIT(&tdc->tlock, "dcache tlock");
+    AFS_RWLOCK_INIT(&tdc->mflock, "dcache flock");
     ObtainReadLock(&tdc->tlock);
 
     if (tmpdc == NULL)
@@ -3162,9 +3162,9 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 	osi_Assert(0 == NBObtainWriteLock(&tdc->tlock, 676));
     }
 
-    RWLOCK_INIT(&tdc->lock, "dcache lock");
-    RWLOCK_INIT(&tdc->tlock, "dcache tlock");
-    RWLOCK_INIT(&tdc->mflock, "dcache flock");
+    AFS_RWLOCK_INIT(&tdc->lock, "dcache lock");
+    AFS_RWLOCK_INIT(&tdc->tlock, "dcache tlock");
+    AFS_RWLOCK_INIT(&tdc->mflock, "dcache flock");
     ObtainReadLock(&tdc->tlock);
 
     /*
@@ -3523,14 +3523,14 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     afs_freeDSList = &tdp[0];
     for (i = 0; i < aDentries - 1; i++) {
 	tdp[i].lruq.next = (struct afs_q *)(&tdp[i + 1]);
-        RWLOCK_INIT(&tdp[i].lock, "dcache lock");
-        RWLOCK_INIT(&tdp[i].tlock, "dcache tlock");
-        RWLOCK_INIT(&tdp[i].mflock, "dcache flock");
+        AFS_RWLOCK_INIT(&tdp[i].lock, "dcache lock");
+        AFS_RWLOCK_INIT(&tdp[i].tlock, "dcache tlock");
+        AFS_RWLOCK_INIT(&tdp[i].mflock, "dcache flock");
     }
     tdp[aDentries - 1].lruq.next = (struct afs_q *)0;
-    RWLOCK_INIT(&tdp[aDentries - 1].lock, "dcache lock");
-    RWLOCK_INIT(&tdp[aDentries - 1].tlock, "dcache tlock");
-    RWLOCK_INIT(&tdp[aDentries - 1].mflock, "dcache flock");
+    AFS_RWLOCK_INIT(&tdp[aDentries - 1].lock, "dcache lock");
+    AFS_RWLOCK_INIT(&tdp[aDentries - 1].tlock, "dcache tlock");
+    AFS_RWLOCK_INIT(&tdp[aDentries - 1].mflock, "dcache flock");
 
     afs_stats_cmperf.cacheBlocksOrig = afs_stats_cmperf.cacheBlocksTotal =
 	afs_cacheBlocks = ablocks;

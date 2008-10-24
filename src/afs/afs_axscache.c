@@ -173,7 +173,7 @@ shutdown_xscache(void)
 {
     struct xfreelist *xp, *nxp;
 
-    RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
+    AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
     xp = xfreemallocs;
     while (xp) {
 	nxp = xp->next;

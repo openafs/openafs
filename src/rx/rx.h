@@ -64,7 +64,6 @@
 #endif
 #endif /* KERNEL */
 
-
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */
 #define	RX_MAX_SERVICES		20	/* Maximum number of services that may be installed */
@@ -258,6 +257,7 @@ struct rx_connection {
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
     afs_uint32 rwind[RX_MAXCALLS];
     u_short twind[RX_MAXCALLS];
+    u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
@@ -269,7 +269,6 @@ struct rx_connection {
     int abortCount;		/* count of abort messages sent */
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
-    u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 refCount;		/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
@@ -287,7 +286,8 @@ struct rx_connection {
     u_short hardDeadTime;	/* hard max for call execution */
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
-    u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
+    u_char spareb;
+    afs_int32 makeCallWaiters;	/* how many rx_NewCalls are waiting */
     afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
@@ -1078,59 +1078,6 @@ typedef struct rx_interface_stat {
 } rx_interface_stat_t, *rx_interface_stat_p;
 
 #define RX_STATS_SERVICE_ID 409
-
-#ifdef AFS_NT40_ENV
-#define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
-#define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
-#define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedIncrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedDecrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#else
-#define rx_MutexIncrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd(object, addend, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object += addend; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexDecrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#endif 
 
 #endif /* _RX_   End of rx.h */
 

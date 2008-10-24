@@ -144,7 +144,7 @@ DInit(int abuffers)
 #endif
 	tb->hashIndex = 0;
 	tb->dirty = 0;
-	RWLOCK_INIT(&tb->lock, "buffer lock");
+	AFS_RWLOCK_INIT(&tb->lock, "buffer lock");
     }
     return;
 }

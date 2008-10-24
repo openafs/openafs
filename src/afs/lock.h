@@ -68,7 +68,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define MReleaseWriteLock(lock)	ReleaseWriteLock(lock)
 #define MReleaseSharedLock(lock) ReleaseSharedLock(lock)
 
-#define	RWLOCK_INIT(lock, nm)	Lock_Init(lock)
+#define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)
 

@@ -59,6 +59,7 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
+#include "rx_internal.h"
 #include "rx.h"
 
 /*

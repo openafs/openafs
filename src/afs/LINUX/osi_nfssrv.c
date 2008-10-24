@@ -204,7 +204,7 @@ void osi_linux_nfssrv_init(void)
     int i;
 
     nfssrv_list = 0;
-    RWLOCK_INIT(&afs_xnfssrv, "afs_xnfssrv");
+    AFS_RWLOCK_INIT(&afs_xnfssrv, "afs_xnfssrv");
 
     if (authtab && !IS_ERR(authtab))
 	   afs_authtab = authtab;

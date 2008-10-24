@@ -63,7 +63,17 @@ typedef struct {
     struct lock__bsd__ lock;
     thread_t owner;
 } afs_kmutex_t;
+typedef afs_krwlock_t afs_kmutex_t;
 typedef int afs_kcondvar_t;
+
+#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
+#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
+#define RWLOCK_UPLOCK(l) 
+#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
+#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
+#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
+#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
+#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
 
 #define osi_rxWakeup(cv)        thread_wakeup((event_t)(cv))
 

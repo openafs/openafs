@@ -28,6 +28,7 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include "rx_internal.h"
 #include "rx.h"
 
 RCSID

@@ -53,6 +53,7 @@ RCSID
 #include "rpc/types.h"
 #include "rpc/xdr.h"
 #endif /* !UKERNEL */
+#include "rx/rx_internal.h"
 #include "rx/rx.h"
 
 #else /* KERNEL */
@@ -61,6 +62,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <netinet/in.h>
 #endif
+#include "rx_internal.h"
 #include "rx.h"
 #include "xdr.h"
 #endif /* KERNEL */

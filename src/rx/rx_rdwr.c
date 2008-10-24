@@ -58,6 +58,7 @@ RCSID
 #include "rx/rx_kernel.h"
 #include "rx/rx_clock.h"
 #include "rx/rx_queue.h"
+#include "rx/rx_internal.h"
 #include "rx/rx.h"
 #include "rx/rx_globals.h"
 #include "afs/lock.h"
@@ -88,6 +89,7 @@ RCSID
 # include "rx_user.h"
 # include "rx_clock.h"
 # include "rx_queue.h"
+# include "rx_internal.h"
 # include "rx.h"
 # include "rx_globals.h"
 #endif /* KERNEL */

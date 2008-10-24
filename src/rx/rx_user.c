@@ -48,6 +48,7 @@ RCSID
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
 #endif
+# include "rx_internal.h"
 # include "rx.h"
 # include "rx_globals.h"
 

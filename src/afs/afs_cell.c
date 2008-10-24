@@ -924,7 +924,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
 	AFS_MD5_String(tc->cellHandle, tc->cellName, strlen(tc->cellName));
-	RWLOCK_INIT(&tc->lock, "cell lock");
+	AFS_RWLOCK_INIT(&tc->lock, "cell lock");
 	newc = 1;
 	aflags |= CNoSUID;
     }
@@ -1040,10 +1040,10 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 void
 afs_CellInit()
 {
-    RWLOCK_INIT(&afs_xcell, "afs_xcell");
+    AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
 #ifdef AFS_AFSDB_ENV
-    RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
-    RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");
+    AFS_RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
+    AFS_RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");
 #endif
     QInit(&CellLRU);
 
@@ -1060,7 +1060,7 @@ shutdown_cell()
     struct afs_q *cq, *tq;
     struct cell *tc;
 
-    RWLOCK_INIT(&afs_xcell, "afs_xcell");
+    AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq);

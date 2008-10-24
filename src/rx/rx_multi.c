@@ -15,8 +15,10 @@ RCSID
 
 #ifdef	KERNEL
 #include "afs/sysincludes.h"
+#include "rx/rx_internal.h"
 #include "rx/rx.h"
 #else /* KERNEL */
+# include "rx_internal.h"
 # include "rx.h"
 #endif /* KERNEL */
 

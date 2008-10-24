@@ -28,6 +28,14 @@
 #define MUTEX_ISMINE(a)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
+#define RWLOCK_INIT(a, b, c, d) 
+#define RWLOCK_DESTROY(l) 
+#define RWLOCK_UPLOCK(l) 
+#define RWLOCK_WRLOCK(l) 
+#define RWLOCK_RDLOCK(l) 
+#define RWLOCK_TRYWRLOCK(l) 1
+#define RWLOCK_TRYRDLOCK(l) 1
+#define RWLOCK_UNLOCK(l) 
 #define osirx_AssertMine(a, b)
 
 #endif /* KERNEL */

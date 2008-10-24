@@ -538,7 +538,7 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	tv = afs_GetVolSlot();
 	memset((char *)tv, 0, sizeof(struct volume));
 	tv->cell = tcell->cellNum;
-	RWLOCK_INIT(&tv->lock, "volume lock");
+	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
 	tv->volume = volid;

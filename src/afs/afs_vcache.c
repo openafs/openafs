@@ -907,9 +907,9 @@ restart:
     tvc->uncred = 0;
 #endif
 
-    RWLOCK_INIT(&tvc->lock, "vcache lock");
+    AFS_RWLOCK_INIT(&tvc->lock, "vcache lock");
 #if	defined(AFS_SUN5_ENV)
-    RWLOCK_INIT(&tvc->vlock, "vcache vlock");
+    AFS_RWLOCK_INIT(&tvc->vlock, "vcache vlock");
 #endif /* defined(AFS_SUN5_ENV) */
 
     tvc->parentVnode = 0;
@@ -3134,7 +3134,7 @@ afs_vcacheInit(int astatSize)
     freeVCList = NULL;
 #endif
 
-    RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
+    AFS_RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
 
 #if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
@@ -3269,7 +3269,7 @@ shutdown_vcache(void)
 #if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
     freeVCList = Initial_freeVCList = 0;
 #endif
-    RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
+    AFS_RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
     QInit(&VLRU);
     for(i = 0; i < VCSIZE; ++i)

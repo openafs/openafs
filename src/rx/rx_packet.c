@@ -79,6 +79,7 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include "rx_clock.h"
+#include "rx_internal.h"
 #include "rx.h"
 #include "rx_queue.h"
 #ifdef	AFS_SUN5_ENV
@@ -1833,7 +1834,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 		(void)IOMGR_Poll();
 #endif
 #endif
-		MUTEX_ENTER(&rx_connHashTable_lock);
+		RWLOCK_RDLOCK(&rx_connHashTable_lock);
 		/* We might be slightly out of step since we are not 
 		 * locking each call, but this is only debugging output.
 		 */
@@ -1886,8 +1887,8 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 				 sizeof(afs_int32); i++)
 				DOHTONL(sparel[i]);
 			}
-
-			MUTEX_EXIT(&rx_connHashTable_lock);
+			
+			RWLOCK_UNLOCK(&rx_connHashTable_lock);
 			rx_packetwrite(ap, 0, sizeof(struct rx_debugConn),
 				       (char *)&tconn);
 			tl = ap->length;
@@ -1898,7 +1899,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 			return ap;
 		    }
 		}
-		MUTEX_EXIT(&rx_connHashTable_lock);
+		RWLOCK_UNLOCK(&rx_connHashTable_lock);
 	    }
 	    /* if we make it here, there are no interesting packets */
 	    tconn.cid = htonl(0xffffffff);	/* means end */
@@ -1945,7 +1946,8 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 		(void)IOMGR_Poll();
 #endif
 #endif
-		MUTEX_ENTER(&rx_peerHashTable_lock);
+		RWLOCK_RDLOCK(&rx_peerHashTable_lock);
+		/* XXX should copy out, then unlock and byteswap */
 		for (tp = rx_peerHashTable[i]; tp; tp = tp->next) {
 		    if (tin.index-- <= 0) {
 			tpeer.host = tp->host;
@@ -1981,7 +1983,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 			tpeer.bytesReceived.low =
 			    htonl(tp->bytesReceived.low);
 
-			MUTEX_EXIT(&rx_peerHashTable_lock);
+			RWLOCK_UNLOCK(&rx_peerHashTable_lock);
 			rx_packetwrite(ap, 0, sizeof(struct rx_debugPeer),
 				       (char *)&tpeer);
 			tl = ap->length;
@@ -1992,7 +1994,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 			return ap;
 		    }
 		}
-		MUTEX_EXIT(&rx_peerHashTable_lock);
+		RWLOCK_UNLOCK(&rx_peerHashTable_lock);
 	    }
 	    /* if we make it here, there are no interesting packets */
 	    tpeer.host = htonl(0xffffffff);	/* means end */

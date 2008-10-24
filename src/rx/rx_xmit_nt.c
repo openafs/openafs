@@ -24,6 +24,7 @@ RCSID
 
 #include <winsock2.h>
 
+#include "rx_internal.h"
 #include "rx.h"
 #include "rx_packet.h"
 #include "rx_globals.h"

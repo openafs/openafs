@@ -49,33 +49,33 @@ RX_component_version_number.c: AFS_component_version_number.c
 
 RX_component_version_number.o: RX_component_version_number.c
 
-${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h rx_prototypes.h
+${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h rx_prototypes.h rx_internal.h
 
-${MULTIOBJS}: rx.h rx_multi.h rx_prototypes.h
+${MULTIOBJS}: rx.h rx_multi.h rx_prototypes.h rx_internal.h
 
 ${XDROBJS}: xdr.h xdr_prototypes.h
 
 rxperf.o: rx.h rx_null.h rx_globals.h rx_prototypes.h
 
-rx_user.o: rx.h rx_user.h rx_prototypes.h
+rx_user.o: rx.h rx_user.h rx_prototypes.h rx_internal.h
 
-rx_packet.o: rx_packet.c rx_packet.h
+rx_packet.o: rx_packet.c rx_packet.h rx_internal.h rx.h
 
-rx_rdwr.o: rx_rdwr.c rx.h rx_prototypes.h
+rx_rdwr.o: rx_rdwr.c rx.h rx_prototypes.h rx_internal.h
 
-rx.o: rx.h rx_user.h rx_prototypes.h
+rx.o: rx.h rx_user.h rx_prototypes.h rx_internal.h
 
-rx_conncache.o: rx.h rx_prototypes.h
+rx_conncache.o: rx.h rx_prototypes.h rx_internal.h
 
-rx_trace.o: rx_trace.h 
+rx_trace.o: rx_trace.h rx_internal.h
 
-rx_getaddr.o: rx.h rx_getaddr.c rx_prototypes.h
+rx_getaddr.o: rx.h rx_getaddr.c rx_prototypes.h rx_internal.h
 
-rx_globals.o: rx.h rx_user.h rx_globals.h rx_prototypes.h
+rx_globals.o: rx.h rx_user.h rx_globals.h rx_prototypes.h rx_internal.h
 
-xdr_rx.o: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
+xdr_rx.o: xdr.h rx.h xdr_prototypes.h rx_prototypes.h rx_internal.h
 
-xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h
+xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h rx_internal.h
 
 rxperf: rxperf.o librx.a
 	${CC} -o $@ rxperf.o ${LIBS}

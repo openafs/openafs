@@ -20,7 +20,16 @@
 #define RX_ENABLE_LOCKS		1
 
 #define	afs_kmutex_t		usr_mutex_t
+#define	afs_krwlock_t		usr_mutex_t
 #define	afs_kcondvar_t		usr_cond_t
+#define RWLOCK_INIT(a, b, c, d) usr_mutex_init(a)
+#define RWLOCK_DESTROY(l)       usr_mutex_destroy(l)
+#define RWLOCK_UPLOCK(l) 
+#define RWLOCK_WRLOCK(l)        usr_mutex_lock(l)
+#define RWLOCK_RDLOCK(l)        usr_mutex_lock(l)
+#define RWLOCK_TRYWRLOCK(l)     usr_mutex_trylock(l)
+#define RWLOCK_TRYRDLOCK(l)     usr_mutex_trylock(l)
+#define RWLOCK_UNLOCK(l)        usr_mutex_unlock(l)
 #define MUTEX_INIT(A,B,C,D)	usr_mutex_init(A)
 #define MUTEX_ENTER(A)		usr_mutex_lock(A)
 #define MUTEX_TRYENTER(A)	usr_mutex_trylock(A)

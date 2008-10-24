@@ -760,8 +760,8 @@ afs_InitDynroot(void)
 {
     if (afs_dynrootInit)
 	return 0;
-    RWLOCK_INIT(&afs_dynrootDirLock, "afs_dynrootDirLock");
-    RWLOCK_INIT(&afs_dynSymlinkLock, "afs_dynSymlinkLock");
+    AFS_RWLOCK_INIT(&afs_dynrootDirLock, "afs_dynrootDirLock");
+    AFS_RWLOCK_INIT(&afs_dynSymlinkLock, "afs_dynSymlinkLock");
     afs_dynrootInit = 0;
     return afs_dynrootCellInit();
 }

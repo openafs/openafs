@@ -66,7 +66,7 @@ init_module(void)
 #endif
 {
     int err;
-    RWLOCK_INIT(&afs_xosi, "afs_xosi");
+    AFS_RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
 #if !defined(AFS_LINUX24_ENV)
     /* obtain PAGE_OFFSET value */

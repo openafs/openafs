@@ -44,6 +44,7 @@ RCSID
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
+# include "rx_internal.h"
 # include "rx.h"
 # include "rx_globals.h"
 # include <lwp.h>
