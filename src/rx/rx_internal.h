@@ -30,6 +30,13 @@
 #ifndef	_RX_INTERNAL_H_
 #define _RX_INTERNAL_H_
 
+#ifdef AFS_DARWIN80_ENV
+#include <libkern/OSAtomic.h>
+#endif
+#ifdef AFS_SUN58_ENV
+#include <sys/atomic.h>
+#endif
+
 #ifdef AFS_NT40_ENV
 #ifndef _WIN64
 #ifndef __cplusplus
@@ -59,6 +66,54 @@
         MUTEX_ENTER(&mutex); \
         object1 += addend; \
         InterlockedDecrement(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#elif defined(AFS_DARWIN80_ENV)
+#define rx_MutexIncrement(object, mutex) OSAtomicIncrement32(&object)
+#define rx_MutexOr(object, operand, mutex) OSAtomicOr32(operand, &object)
+#define rx_MutexAnd(object, operand, mutex) OSAtomicAnd32(operand, &object)
+#define rx_MutexXor(object, operand, mutex) OSAtomicXor32(operand, &object)
+#define rx_MutexAdd(object, addend, mutex) OSAtomicAdd32(addend, &object)
+#define rx_MutexDecrement(object, mutex) OSAtomicDecrement32(&object)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        OSAtomicIncrement32(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        OSAtomicDecrement32(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#elif defined(AFS_SUN58_ENV)
+#define rx_MutexIncrement(object, mutex) atomic_inc_32(&object)
+#define rx_MutexOr(object, operand, mutex) atomic_or_32(&object, operand)
+#define rx_MutexAnd(object, operand, mutex) atomic_and_32(&object, operand)
+#define rx_MutexXor(object, operand, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object ^= operand; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexXor(object, operand, mutex) OSAtomicXor32Barrier(operand, &object)
+#define rx_MutexAdd(object, addend, mutex) atomic_add_32(&object, addend)
+#define rx_MutexDecrement(object, mutex) atomic_dec_32(&object)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        atomic_inc_32(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        atomic_dec_32(&object2); \
         MUTEX_EXIT(&mutex); \
     } while (0)
 #else
