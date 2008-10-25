@@ -38,7 +38,7 @@
 #include "AFSCommon.h"
 
 NTSTATUS
-AFSEnumerateDirectory( AFSFileID             *ParentFileID,
+AFSEnumerateDirectory( IN AFSFcb *Dcb,
                        IN OUT AFSDirHdr      *DirectoryHdr,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
@@ -101,7 +101,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
                                           0,
                                           NULL,
-                                          ParentFileID,
+                                          &Dcb->DirEntry->DirectoryEntry.FileId,
                                           (void *)pDirQueryCB,
                                           sizeof( AFSDirQueryCB),
                                           pBuffer,
@@ -124,6 +124,18 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
 
                     ntStatus = STATUS_CANCELLED;
                 }
+
+                break;
+            }
+
+            //
+            // If the node has become invalid during the request handling then bail now
+            //
+
+            if( BooleanFlagOn( Dcb->Flags, AFS_FCB_INVALID))
+            {
+
+                ntStatus = STATUS_ACCESS_DENIED;
 
                 break;
             }
@@ -153,7 +165,7 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
 
                 uniTargetName.Buffer = (WCHAR *)((char *)pCurrentDirEntry + pCurrentDirEntry->TargetNameOffset);
 
-                pDirNode = AFSInitDirEntry( ParentFileID,
+                pDirNode = AFSInitDirEntry( &Dcb->DirEntry->DirectoryEntry.FileId,
                                             &uniDirName,
                                             &uniTargetName,
                                             pCurrentDirEntry,
@@ -322,6 +334,25 @@ AFSEnumerateDirectory( AFSFileID             *ParentFileID,
 try_exit:
 
         //
+        // If we are successful then clear the enumeration event for the directory
+        //
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            if( Dcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                KeClearEvent( &Dcb->Specific.Directory.EnumerationEvent);
+            }
+            else
+            {
+
+                KeClearEvent( &Dcb->Specific.VolumeRoot.EnumerationEvent);
+            }
+        }
+
+        //
         // Cleanup
         //
 
@@ -360,23 +391,9 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         RtlZeroMemory( &stCreateCB,
                        sizeof( AFSFileCreateCB));
 
-        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
+        ASSERT( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-            stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            ntStatus = AFSRetrieveTargetFID( ParentDcb,
-                                             &stCreateCB.ParentId);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
+        stCreateCB.ParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
 
         stCreateCB.AllocationSize = *FileSize;
 
@@ -531,23 +548,9 @@ AFSUpdateFileInformation( IN PDEVICE_OBJECT DeviceObject,
 
         stUpdateCB.EaSize = Fcb->DirEntry->DirectoryEntry.EaSize;
 
-        if( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
+        ASSERT( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-            stUpdateCB.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            ntStatus = AFSRetrieveTargetFID( Fcb->ParentFcb,
-                                             &stUpdateCB.ParentId);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
+        stUpdateCB.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
 
         pUpdateResultCB = (AFSFileUpdateResultCB *)ExAllocatePoolWithTag( PagedPool,
                                                                           PAGE_SIZE,
@@ -612,23 +615,9 @@ AFSNotifyDelete( IN AFSFcb *Fcb)
     __Enter
     {
 
-        if( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
+        ASSERT( Fcb->ParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-            stDelete.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            ntStatus = AFSRetrieveTargetFID( Fcb->ParentFcb,
-                                             &stDelete.ParentId);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
+        stDelete.ParentId = Fcb->ParentFcb->DirEntry->DirectoryEntry.FileId;
 
         ulResultLen = sizeof( AFSFileDeleteResultCB);
 
@@ -700,41 +689,13 @@ AFSNotifyRename( IN AFSFcb *Fcb,
         RtlZeroMemory( pRenameCB,
                        PAGE_SIZE);
 
-        if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
+        ASSERT( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-            pRenameCB->SourceParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
+        pRenameCB->SourceParentId = ParentDcb->DirEntry->DirectoryEntry.FileId;
 
-            ntStatus = AFSRetrieveTargetFID( ParentDcb,
-                                             &pRenameCB->SourceParentId);
+        ASSERT( TargetDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
-
-        if( TargetDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
-
-            pRenameCB->TargetParentId = TargetDcb->DirEntry->DirectoryEntry.FileId;
-        }
-        else
-        {
-
-            ntStatus = AFSRetrieveTargetFID( TargetDcb,
-                                             &pRenameCB->TargetParentId);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
+        pRenameCB->TargetParentId = TargetDcb->DirEntry->DirectoryEntry.FileId;
 
         pRenameCB->TargetNameLength = TargetName->Length;
 
@@ -810,6 +771,7 @@ try_exit:
 
 NTSTATUS
 AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
+                       IN ULONGLONG ProcessID,
                        OUT AFSDirEnumEntry **DirEnumEntry)
 {
 
@@ -817,12 +779,19 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
     AFSEvalTargetCB stTargetID;
     ULONG ulResultBufferLength;
     AFSDirEnumEntry *pDirEnumCB = NULL;
+    ULONGLONG ullProcessID = ProcessID;
 
     __Enter
     {
 
         RtlZeroMemory( &stTargetID,
                        sizeof( AFSEvalTargetCB));
+
+        if( ullProcessID == 0)
+        {
+
+            ullProcessID = (ULONGLONG)PsGetCurrentProcessId();
+        }
 
         //
         // Allocate our response buffer
@@ -846,7 +815,7 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      0,
+                                      ullProcessID,
                                       NULL,
                                       SourceFileId,
                                       &stTargetID,
@@ -1131,6 +1100,14 @@ AFSProcessRequest( IN ULONG RequestType,
         // Store off the process id
         //
 
+        if( RequestType == AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS &&
+            ( CallerProcess == 0 ||
+              CallerProcess == (ULONGLONG)AFSSysProcess))
+        {
+
+            DbgPrint("AFSProcessRequest (AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS) Requesting extents in SYSTEM process\n");
+        }
+
         if( CallerProcess != 0)
         {
 
@@ -1408,6 +1385,27 @@ AFSProcessControlRequest( IN PIRP Irp)
                 break;
             }
 
+            case IOCTL_AFS_GET_CONNECTION_INFORMATION:
+            {
+
+                AFSNetworkProviderConnectionCB *pConnectCB = (AFSNetworkProviderConnectionCB *)Irp->AssociatedIrp.SystemBuffer;
+
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSNetworkProviderConnectionCB) ||
+                    pIrpSp->Parameters.DeviceIoControl.OutputBufferLength == 0)
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSGetConnectionInfo( pConnectCB,
+                                                 pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                                 &Irp->IoStatus.Information);
+
+                break;
+            }
+
             case IOCTL_AFS_SET_FILE_EXTENTS:
             {
                 AFSSetFileExtentsCB *pExtents = (AFSSetFileExtentsCB*) Irp->AssociatedIrp.SystemBuffer;
@@ -1482,15 +1480,14 @@ AFSProcessControlRequest( IN PIRP Irp)
                     break;
                 }
 
-                //DbgPrint("AFSCommRequest IOCTL_AFS_NETWORK_STATUS Status %s\n", pNetworkStatus->Online ? "ONLINE" : "OFFLINE");
-
-
                 //
-                // Implement the handling of this call
+                // Set the network status
                 //
+
+                ntStatus = AFSSetNetworkState( pNetworkStatus);
 
                 Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_SUCCESS;
+                Irp->IoStatus.Status = ntStatus;
 
                 break;
             }
@@ -1508,14 +1505,10 @@ AFSProcessControlRequest( IN PIRP Irp)
                     break;
                 }
 
-                //DbgPrint("AFSCommRequest IOCTL_AFS_VOLUME_STATUS Status %s\n", pVolumeStatus->Online ? "ONLINE" : "OFFLINE");
-
-                //
-                // Implement the handling of this call
-                //
+                ntStatus = AFSSetVolumeState( pVolumeStatus);
 
                 Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_SUCCESS;
+                Irp->IoStatus.Status = ntStatus;
 
                 break;
             }

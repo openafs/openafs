@@ -243,14 +243,14 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                     TRUE);
 
-    if( PsGetCurrentProcess() != AFSSysProcess)
+    if( PsGetCurrentProcessId() != AFSSysProcess)
     {
 
         //
         // Save off the last writer
         //
 
-        pFcb->Specific.File.ModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
+        pFcb->Specific.File.ExtentProcessId = (ULONGLONG)PsGetCurrentProcessId();
     }
 
     return;
@@ -355,12 +355,12 @@ AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
     NTSTATUS ntStatus = STATUS_FILE_LOCK_CONFLICT;
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
 
-    AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
+    AFSAcquireExcl( &pFcb->NPFcb->Resource,
                     TRUE);
 
     ntStatus = STATUS_SUCCESS;
 
-    *ResourceToRelease = &pFcb->NPFcb->PagingResource;
+    *ResourceToRelease = &pFcb->NPFcb->Resource;
 
     return ntStatus;
 }

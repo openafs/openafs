@@ -62,7 +62,7 @@ extern ULONG               AFSMaxDirtyFile;
 
 extern CACHE_MANAGER_CALLBACKS AFSCacheManagerCallbacks;
 
-extern PEPROCESS           AFSSysProcess;
+extern HANDLE              AFSSysProcess;
 
 extern HANDLE              AFSMUPHandle;
 
@@ -71,6 +71,8 @@ extern UNICODE_STRING      AFSServerName;
 extern ERESOURCE           AFSProviderListLock;
 
 extern AFSProviderConnectionCB   *AFSProviderConnectionList;
+
+extern AFSProviderConnectionCB   *AFSProviderEnumerationList;
 
 extern AFSFcb             *AFSGlobalRoot;
 

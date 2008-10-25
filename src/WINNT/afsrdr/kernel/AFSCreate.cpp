@@ -188,7 +188,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                     // Enumerate the shares in the volume
                     //
 
-                    ntStatus = AFSEnumerateDirectory( &AFSGlobalRoot->DirEntry->DirectoryEntry.FileId,
+                    ntStatus = AFSEnumerateDirectory( AFSGlobalRoot,
                                                       &AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr,
                                                       &AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead,
                                                       &AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail,
@@ -198,11 +198,63 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                     if( NT_SUCCESS( ntStatus))
                     {
 
+                        AFSDirEntryCB *pDirGlobalDirNode = AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead;
+                        UNICODE_STRING uniFullName;
+
                         //
                         // Indicate the node is initialized
                         //
 
                         SetFlag( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+                        uniFullName.MaximumLength = PAGE_SIZE;
+
+                        uniFullName.Length = 0;
+
+                        uniFullName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                             uniFullName.MaximumLength,
+                                                                             AFS_GENERIC_MEMORY_TAG);
+
+                        if( uniFullName.Buffer != NULL)
+                        {
+
+                            //
+                            // Populate our list of entries in the NP enumeration list
+                            //
+
+                            while( pDirGlobalDirNode != NULL)
+                            {
+
+                                uniFullName.Buffer[ 0] = L'\\';
+                                uniFullName.Buffer[ 1] = L'\\';
+
+                                uniFullName.Length = 2 * sizeof( WCHAR);
+
+                                RtlCopyMemory( &uniFullName.Buffer[ 2],
+                                               AFSServerName.Buffer,
+                                               AFSServerName.Length);
+                                               
+                                uniFullName.Length += AFSServerName.Length;
+
+                                uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)] = L'\\';
+
+                                uniFullName.Length += sizeof( WCHAR);
+
+                                RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
+                                               pDirGlobalDirNode->DirectoryEntry.FileName.Buffer,
+                                               pDirGlobalDirNode->DirectoryEntry.FileName.Length);
+
+                                uniFullName.Length += pDirGlobalDirNode->DirectoryEntry.FileName.Length;
+
+                                AFSAddConnectionEx( &uniFullName,
+                                                    RESOURCEDISPLAYTYPE_SHARE,
+                                                    0);
+
+                                pDirGlobalDirNode = (AFSDirEntryCB *)pDirGlobalDirNode->ListEntry.fLink;
+                            }
+
+                            ExFreePool( uniFullName.Buffer);
+                        }
                     }
                 }
 
@@ -308,18 +360,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         //
 
         bReleaseRootFcb = TRUE;
-
-        //
-        // Be sure the root volume of this request is ONLINE
-        //
-
-        ASSERT( pRootFcb->RootFcb != NULL);
-        
-        if( BooleanFlagOn( pRootFcb->RootFcb->Flags, AFS_FCB_VOLUME_OFFLINE))
-        {
-
-            try_return( ntStatus = STATUS_DEVICE_NOT_READY);
-        }
 
         //
         // Perform some initial sanity checks
@@ -858,6 +898,9 @@ AFSOpenRoot( IN PIRP Irp,
     USHORT usShareAccess;
     BOOLEAN bRemoveAccess = FALSE;
     BOOLEAN bAllocatedCcb = FALSE;
+    AFSFileOpenCB   stOpenCB;
+    AFSFileOpenResultCB stOpenResultCB;
+    ULONG       ulResultLen = 0;
 
     __Enter
     {
@@ -868,16 +911,51 @@ AFSOpenRoot( IN PIRP Irp,
         pFileObject = pIrpSp->FileObject;
 
         //
-        // If we have no FID for this root then try to evaluate it
+        // Check with the service that we can open the file
         //
 
-        if( RootFcb->DirEntry->DirectoryEntry.FileId.Hash == 0)
+        RtlZeroMemory( &stOpenCB,
+                       sizeof( AFSFileOpenCB));
+
+        stOpenCB.DesiredAccess = *pDesiredAccess;
+
+        stOpenCB.ShareAccess = usShareAccess;
+
+        stOpenResultCB.GrantedAccess = 0;
+
+        ulResultLen = sizeof( AFSFileOpenResultCB);
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_OPEN_FILE,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
+                                      NULL,
+                                      &RootFcb->DirEntry->DirectoryEntry.FileId,
+                                      (void *)&stOpenCB,
+                                      sizeof( AFSFileOpenCB),
+                                      (void *)&stOpenResultCB,
+                                      &ulResultLen);
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDirEnumEntry *pDirEnumCB = NULL;            
+            AFSPrint("AFSOpenRoot Failed to open file in service Status %08lX\n", ntStatus);
 
-            ntStatus = AFSEvaluateTargetByID( &RootFcb->DirEntry->DirectoryEntry.FileId,
-                                              &pDirEnumCB);
+            try_return( ntStatus);
+        }
+
+        //
+        // If the entry is not initialized then do it now
+        //
+
+        if( !BooleanFlagOn( RootFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+        {
+
+            ntStatus = AFSEnumerateDirectory( RootFcb,
+                                              &RootFcb->Specific.VolumeRoot.DirectoryNodeHdr,
+                                              &RootFcb->Specific.VolumeRoot.DirectoryNodeListHead,
+                                              &RootFcb->Specific.VolumeRoot.DirectoryNodeListTail,
+                                              &RootFcb->Specific.VolumeRoot.ShortNameTree,
+                                              NULL);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -885,27 +963,7 @@ AFSOpenRoot( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            //
-            // If the target fid is zero it could not be evaluated
-            //
-
-            if( pDirEnumCB->TargetFileId.Hash == 0)
-            {
-
-                ExFreePool( pDirEnumCB);
-
-                try_return( ntStatus = STATUS_NO_SUCH_FILE);
-            }
-
-            //
-            // Update the target fid in the volume entry and Fcb
-            //
-                
-            RootFcb->DirEntry->DirectoryEntry.FileId = pDirEnumCB->TargetFileId;
-
-            RootFcb->DirEntry->DirectoryEntry.DataVersion = pDirEnumCB->DataVersion;
-
-            ExFreePool( pDirEnumCB);
+            SetFlag( RootFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
         }
 
         //
@@ -929,13 +987,6 @@ AFSOpenRoot( IN PIRP Irp,
                 try_return( ntStatus);
             }
         }
-
-        //
-        // TODO: Pass this open to AFS CM
-        //
-
-
-
 
         //
         // Initialize the Ccb for the file.
@@ -1618,6 +1669,8 @@ AFSProcessOpen( IN PIRP Irp,
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
             }
+
+            Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
         }
         else if( Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB ||
                  Fcb->Header.NodeTypeCode == AFS_ROOT_FCB)
@@ -1736,9 +1789,13 @@ AFSProcessOpen( IN PIRP Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        Fcb->ParentFcb->Specific.Directory.ChildOpenHandleCount++;
+        if( Fcb->ParentFcb != NULL)
+        {
 
-        Fcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount++;
+            Fcb->ParentFcb->Specific.Directory.ChildOpenHandleCount++;
+
+            Fcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount++;
+        }
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
         {
@@ -1748,17 +1805,6 @@ AFSProcessOpen( IN PIRP Irp,
             //
 
             SetFlag( Fcb->Flags, AFS_FCB_PENDING_DELETE);
-        }
-
-        //
-        // If they are asking for write access then store away the PID
-        //
-
-        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE &&
-            !AFSCheckForReadOnlyAccess( *pDesiredAccess))
-        {
-
-            Fcb->Specific.File.ModifyProcessId = (ULONGLONG)PsGetCurrentProcessId();
         }
 
         //
@@ -2096,27 +2142,9 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         if( ParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
         {
             
-            if( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-            {
+            ASSERT( ParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-                //
-                // Just the FID of the node
-                //
-
-                stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
-            }
-            else
-            {
-
-                ntStatus = AFSRetrieveTargetFID( ParentDcb,
-                                                 &stFileID);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    try_return( ntStatus);
-                }
-            }
+            stFileID = ParentDcb->DirEntry->DirectoryEntry.FileId;
         }
 
         //

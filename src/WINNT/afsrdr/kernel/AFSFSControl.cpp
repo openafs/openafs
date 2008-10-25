@@ -210,7 +210,6 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             break;
 
         case FSCTL_GET_REPARSE_POINT:
-            AFSPrint("AFSProcessUserFsRequest Get reparse data buffer for %wZ\n", &pIrpSp->FileObject->FileName);
             ntStatus = STATUS_INVALID_DEVICE_REQUEST;
             break;
 

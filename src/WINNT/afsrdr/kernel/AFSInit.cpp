@@ -70,7 +70,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
     {
 
         AFSPrint("AFS DriverEntry Initialization build %s:%s\n", __DATE__, __TIME__);
-        AFSBreakPoint();
 
         //
         // Initialize some local variables for easier processing
@@ -375,7 +374,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         //  System process.
         //
 
-        AFSSysProcess = PsGetCurrentProcess();
+        AFSSysProcess = PsGetCurrentProcessId();
 
         //
         // Register for shutdown notification
@@ -422,7 +421,7 @@ try_exit:
                 ExFreePool( AFSRegistryPath.Buffer);
             }
 
-            if( &uniSymLinkName.Buffer != NULL)
+            if( uniSymLinkName.Buffer != NULL)
             {
 
                 IoDeleteSymbolicLink( &uniSymLinkName);

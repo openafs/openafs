@@ -724,13 +724,13 @@ typedef struct _AFS_INVALIDATE_CACHE_CB
 
 } AFSInvalidateCacheCB;
 
-#define AFS_INVALIDATE_EXPIRED          1
-#define AFS_INVALIDATE_FLUSHED          2
-#define AFS_INVALIDATE_CALLBACK         3
-#define AFS_INVALIDATE_SMB              4
-#define AFS_INVALIDATE_CREDS            5
-#define AFS_INVALIDATE_DATA_VERSION     6
-#define AFS_INVALIDATE_DELETED          7
+#define AFS_INVALIDATE_EXPIRED          1  /* Set RE_VALIDATE */
+#define AFS_INVALIDATE_FLUSHED          2  /* Set RE-VALIDATE */
+#define AFS_INVALIDATE_CALLBACK         3  /* Set VERIFY Reset dir enumeration */
+#define AFS_INVALIDATE_SMB              4  /* Set VERIFY Reset dir enumeration */
+#define AFS_INVALIDATE_CREDS            5  /* Set VERIFY - User credentials changed */
+#define AFS_INVALIDATE_DATA_VERSION     6  /* Set VERIFY */
+#define AFS_INVALIDATE_DELETED          7  /* Requires top level locks */
 
 //
 // Network Status Control Block

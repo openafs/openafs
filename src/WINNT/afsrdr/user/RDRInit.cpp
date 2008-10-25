@@ -25,6 +25,9 @@
 extern "C" {
 #include <osilog.h>
 extern osi_log_t *afsd_logp;
+
+#include <WINNT/afsreg.h>
+#include "../../afsd/cm_config.h"
 }
 
 #ifndef FlagOn
@@ -60,6 +63,19 @@ RDR_Initialize(void)
 {
     
     DWORD dwRet = 0;
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
+
+    dwRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (dwRet == ERROR_SUCCESS) {
+        dummyLen = sizeof(numSvThreads);
+        dwRet = RegQueryValueEx(parmKey, TEXT("ServerThreads"), NULL, NULL,
+                                (BYTE *) &numSvThreads, &dummyLen);
+        numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
+        RegCloseKey (parmKey);
+    }
 		
     Exit = false;
 
@@ -70,7 +86,7 @@ RDR_Initialize(void)
     // filters control device for processing requests
     //
 
-    dwRet = RDR_ProcessWorkerThreads();
+    dwRet = RDR_ProcessWorkerThreads(numSvThreads);
 
     return dwRet;
 }
@@ -136,7 +152,7 @@ RDR_Shutdown(void)
 //
 
 DWORD
-RDR_ProcessWorkerThreads()
+RDR_ProcessWorkerThreads(DWORD numThreads)
 {
     DWORD WorkerID;
     HANDLE hEvent;
@@ -200,7 +216,7 @@ RDR_ProcessWorkerThreads()
     // as you want
     //
 
-    while( index < 5)
+    for (index = 0; index < numThreads; index++)
     {
 
         glThreadHandle[ glThreadHandleIndex] = CreateThread( NULL,
@@ -232,8 +248,6 @@ RDR_ProcessWorkerThreads()
             //
 
         }
-
-        index++;
     }
 
     if( !DeviceIoControl( glDevHandle,
@@ -356,7 +370,9 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     DWORD       	dwResultBufferLength = 0;
     AFSSetFileExtentsCB * SetFileExtentsResultCB = NULL;
     AFSSetByteRangeLockResultCB *SetByteRangeLockResultCB = NULL;
-    WCHAR 		wchBuffer[256];
+    WCHAR 		wchBuffer[1024];
+    char *pBuffer = (char *)wchBuffer;
+    DWORD gle;
     cm_user_t *         userp = NULL;
 
     userp = RDR_UserFromCommRequest(RequestBuffer);
@@ -452,7 +468,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                         RequestBuffer->Name,
                         RequestBuffer->NameLength);
 
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_FILE File %s\n", wchFileName);
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_FILE Index %08lX File %S\n", 
+                          RequestBuffer->RequestIndex, wchFileName);
 
                 osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
@@ -473,7 +490,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSFileUpdateCB *pUpdateCB = (AFSFileUpdateCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_UPDATE_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_UPDATE_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -494,7 +512,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSFileDeleteCB *pDeleteCB = (AFSFileDeleteCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
     
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_DELETE_FILE Index %08lX %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -517,7 +536,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSFileRenameCB *pFileRenameCB = (AFSFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
                           RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name);
@@ -542,10 +562,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSRequestExtentsCB *pFileRequestExtentsCB = (AFSRequestExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX %s\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS Index %08lX File %08lX.%08lX.%08lX.%08lX %S\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
-                          BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? "Sync" : "Async");
+                          BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? L"Sync" : L"Async");
 
                 osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
@@ -569,7 +590,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSReleaseExtentsCB *pFileReleaseExtentsCB = (AFSReleaseExtentsCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS File %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -589,7 +611,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 //            AFSFileFlushCB *pFileFlushCB = (AFSFileFlushCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_FLUSH_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_FLUSH_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -608,7 +631,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSFileOpenCB *pFileOpenCB = (AFSFileOpenCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_OPEN_FILE File %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_OPEN_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -628,7 +652,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_OPEN Parent %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_OPEN Index %08lX Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -648,7 +673,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_WRITE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_WRITE Index %08lX Parent %08lX.%08lX.%08lX.%08lX\n", 
+                          RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -668,7 +694,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
                 if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Parent %08lX.%08lX.%08lX.%08lX\n", 
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Index %08lX Parent %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->RequestIndex,
                               RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                               RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -688,7 +715,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
                 if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Parent %08lX.%08lX.%08lX.%08lX\n", 
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Index %08lX Parent %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->RequestIndex,
                               RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                               RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -707,10 +735,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     case AFS_REQUEST_TYPE_BYTE_RANGE_LOCK:
             {
                 if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_LOCK File %08lX.%08lX.%08lX.%08lX %s\n", 
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_LOCK Index %08lX File %08lX.%08lX.%08lX.%08lX %S\n", 
+                              RequestBuffer->RequestIndex,
                               RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                               RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
-                              BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? "Sync" : "Async");
+                              BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? L"Sync" : L"Async");
 
                     osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
                 }
@@ -743,7 +772,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
                 if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK File %08lX.%08lX.%08lX.%08lX\n", 
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->RequestIndex,
                               RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                               RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -762,7 +792,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL:
             {
                 if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL File %08lX.%08lX.%08lX.%08lX\n", 
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->RequestIndex,
                               RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
                               RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
@@ -781,9 +812,6 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             break;
     }
-
-    if (userp) 
-        RDR_ReleaseUser(userp);
 
     if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
     {
@@ -804,7 +832,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
         if (afsd_logp->enabled) {
             swprintf( wchBuffer,
-                      L"ProcessRequest Responding to request index %08lX Length %08lX\n",
+                      L"ProcessRequest Responding to Index %08lX Length %08lX\n",
                       pResultCB->RequestIndex,
                       pResultCB->ResultBufferLength);
                         
@@ -825,6 +853,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 			      NULL))
         {
             char *pBuffer = (char *)wchBuffer;
+            gle = GetLastError();
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_PROCESS_IRP_RESULT gle %X\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             sprintf( pBuffer,
                      "Failed to post IOCTL_AFS_PROCESS_IRP_RESULT gle %X\n",
                      GetLastError());
@@ -836,7 +871,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
         if (afsd_logp->enabled) {
             swprintf( wchBuffer,
-                      L"ProcessRequest Responding Asynchronously to REQUEST_FILE_EXTENTS request index %08lX\n",
+                      L"ProcessRequest Responding Asynchronously to REQUEST_FILE_EXTENTS Index %08lX\n",
                       RequestBuffer->RequestIndex);
                         
             osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
@@ -853,11 +888,30 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                   &bytesReturned,
                                   NULL))
             {
-                char *pBuffer = (char *)wchBuffer;
-                sprintf( pBuffer,
-                         "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
-                         GetLastError());
-                osi_panic(pBuffer, __FILE__, __LINE__);
+                gle = GetLastError();
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer,
+                              L"Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                              gle);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                // The file system returns an error when it can't find the FID
+                // This is a bug in the file system but we should try to avoid 
+                // the crash and clean up our own memory space.  
+                //
+                // Since we couldn't deliver the extents to the file system
+                // we should release them.
+                RDR_ReleaseFailedSetFileExtents( userp,
+                                                 SetFileExtentsResultCB, 
+                                                 dwResultBufferLength);
+
+                if (gle != ERROR_GEN_FAILURE) {
+                    sprintf( pBuffer,
+                             "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
+                             gle);
+                    osi_panic(pBuffer, __FILE__, __LINE__);
+                }
             }
 
             free(SetFileExtentsResultCB);
@@ -879,11 +933,15 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                   &bytesReturned,
                                   NULL))
             {
-                char *pBuffer = (char *)wchBuffer;
-                sprintf( pBuffer,
-                         "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X\n",
-                         GetLastError());
-                osi_panic(pBuffer, __FILE__, __LINE__);
+                gle = GetLastError();
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer,
+                              L"Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle 0x%x\n", gle);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                /* we were out of memory - nothing to do */
             }
         }
     } 
@@ -891,7 +949,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
         if (afsd_logp->enabled) {
             swprintf( wchBuffer,
-                      L"ProcessRequest Responding Asynchronously to REQUEST_TYPE_BYTE_RANGELOCK request index %08lX\n",
+                      L"ProcessRequest Responding Asynchronously to REQUEST_TYPE_BYTE_RANGELOCK Index %08lX\n",
                       RequestBuffer->RequestIndex);
                         
             osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
@@ -908,10 +966,18 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                   &bytesReturned,
                                   NULL))
             {
-                char *pBuffer = (char *)wchBuffer;
+                gle = GetLastError();
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer,
+                              L"Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle 0x%x\n", gle);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+
+                // TODO - instead of a panic we should release the locks
                 sprintf( pBuffer,
-                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X\n",
-                         GetLastError());
+                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X\n", gle);
                 osi_panic(pBuffer, __FILE__, __LINE__);
             }
 
@@ -934,11 +1000,15 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                   &bytesReturned,
                                   NULL))
             {
-                char *pBuffer = (char *)wchBuffer;
-                sprintf( pBuffer,
-                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X\n",
-                         GetLastError());
-                osi_panic(pBuffer, __FILE__, __LINE__);
+                gle = GetLastError();
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer,
+                              L"Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle 0x%x\n", gle);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                /* We were out of memory - nothing to do */
             }
         }
     } 
@@ -946,12 +1016,16 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
         if (afsd_logp->enabled) {
             swprintf( wchBuffer,
-                      L"ProcessRequest Not responding to async request index %08lX\n",
+                      L"ProcessRequest Not responding to async Index %08lX\n",
                       RequestBuffer->RequestIndex);
                         
             osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
         }
     }
+
+    if (userp) 
+        RDR_ReleaseUser(userp);
+
 
     if( pResultCB && pResultCB != &stResultCB)
     {
@@ -976,6 +1050,7 @@ RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
     bool bError = false;
     DWORD rc = 0;
     WCHAR wchBuffer[256];
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1063,6 +1138,14 @@ RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
                               NULL))
         {
             // log the error, nothing to do
+
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE - serial number 0x%08lX gle 0x%x\n",
+                          doneBuffer->SerialNumber, gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
         }
 
         
@@ -1088,6 +1171,7 @@ RDR_NetworkStatus(BOOLEAN status)
     AFSNetworkStatusCB *requestBuffer = NULL;
     DWORD rc = 0;
     WCHAR wchBuffer[256];
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1131,6 +1215,14 @@ RDR_NetworkStatus(BOOLEAN status)
             //
             // Error condition back from driver
             //
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_NETWORK_STATUS gle 0x%x\n",
+                          gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             rc = -1;
             goto cleanup;
         }
@@ -1155,6 +1247,7 @@ RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online)
     AFSVolumeStatusCB *requestBuffer = NULL;
     DWORD rc = 0;
     WCHAR wchBuffer[256];
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1198,6 +1291,14 @@ RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online)
             //
             // Error condition back from driver
             //
+
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_VOLUME_STATUS gle 0x%x\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             rc = -1;
             goto cleanup;
         }
@@ -1227,6 +1328,7 @@ RDR_InvalidateVolume(ULONG cellID, ULONG volID, ULONG reason)
     AFSInvalidateCacheCB *requestBuffer = NULL;
     DWORD rc = 0;
     WCHAR wchBuffer[256];
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1271,6 +1373,14 @@ RDR_InvalidateVolume(ULONG cellID, ULONG volID, ULONG reason)
             //
             // Error condition back from driver
             //
+
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_INVALIDATE_VOLUME gle 0x%x\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             rc = -1;
             goto cleanup;
         }
@@ -1294,6 +1404,7 @@ RDR_InvalidateObject(ULONG cellID, ULONG volID, ULONG vnode, ULONG uniq, ULONG h
     AFSInvalidateCacheCB *requestBuffer = NULL;
     DWORD rc = 0;
     WCHAR wchBuffer[256];
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1342,6 +1453,13 @@ RDR_InvalidateObject(ULONG cellID, ULONG volID, ULONG vnode, ULONG uniq, ULONG h
             //
             // Error condition back from driver
             //
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_INVALIDATE_CACHE gle 0x%x\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             rc = -1;
             goto cleanup;
         }
@@ -1367,6 +1485,7 @@ RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
     DWORD rc = 0;
     WCHAR wchBuffer[256];
     DWORD Length;
+    DWORD gle;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer,
@@ -1420,6 +1539,13 @@ RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
             //
             // Error condition back from driver
             //
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_SYSNAME_NOTIFICATION gle 0x%x\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
             rc = -1;
             goto cleanup;
         }

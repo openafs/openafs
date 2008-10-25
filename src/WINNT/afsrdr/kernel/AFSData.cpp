@@ -59,7 +59,7 @@ ULONG               AFSDebugLevel = 0;
 
 CACHE_MANAGER_CALLBACKS AFSCacheManagerCallbacks;
 
-PEPROCESS           AFSSysProcess = NULL;
+HANDLE              AFSSysProcess = NULL;
 
 HANDLE              AFSMUPHandle = NULL;
 
@@ -68,6 +68,8 @@ UNICODE_STRING      AFSServerName;
 ERESOURCE           AFSProviderListLock;
 
 AFSProviderConnectionCB   *AFSProviderConnectionList = NULL;
+
+AFSProviderConnectionCB   *AFSProviderEnumerationList = NULL;
 
 AFSFcb             *AFSGlobalRoot = NULL;
 

@@ -12,6 +12,7 @@ EXPORTS
 	NPGetUniversalName		    @40
 	NPGetResourceParent		    @41
 	NPGetResourceInformation	@52
+	NPFormatNetworkName			@36
 	NPLogonNotify			    @500
 	NPPasswordChangeNotify		@501
 

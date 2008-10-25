@@ -517,31 +517,52 @@ AFSWorkerThread( IN PVOID Context)
                 {
 
                     case AFS_WORK_REQUEST_RELEASE:
-                        
+                    {
                         AFSReleaseExtentsWork( pWorkItem);
                         break;
+                    }
 
                     case AFS_WORK_FLUSH_FCB:
+                    {
 
-                        (VOID) AFSFlushExtents( pWorkItem->Specific.FlushFcb.Fcb);
+                        (VOID) AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
                         //
                         // Give back the ref we took when we posted
                         //
-                        InterlockedDecrement( &pWorkItem->Specific.FlushFcb.Fcb->OpenReferenceCount);
+                        InterlockedDecrement( &pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount);
                         break;
+                    }
 
                     case AFS_WORK_ASYNCH_READ:
+                    {
 
                         (VOID) AFSCommonRead( pWorkItem->Specific.AsynchIo.Device, pWorkItem->Specific.AsynchIo.Irp, TRUE );
                         break;
-
+                    }
 
                     case AFS_WORK_ASYNCH_WRITE:
+                    {
 
                         (VOID) AFSCommonWrite( pWorkItem->Specific.AsynchIo.Device, 
                                                pWorkItem->Specific.AsynchIo.Irp,
                                                pWorkItem->Specific.AsynchIo.CallingProcess);
                         break;
+                    }
+
+                    case AFS_WORK_REQUEST_BUILD_TARGET_FCB:
+                    {
+
+                        pWorkItem->Status = AFSBuildTargetDirectory( pWorkItem->ProcessID,
+                                                                     pWorkItem->Specific.Fcb.Fcb);
+
+                        freeWorkItem = FALSE;
+
+                        KeSetEvent( &pWorkItem->Event,
+                                    0,
+                                    FALSE);
+
+                        break;
+                    }
 
                     default:
 
@@ -645,19 +666,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
             pFcb = pVolumeVcb->Specific.VolumeRoot.FcbListHead;
 
-            if( pFcb == NULL &&
-                BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE))
-            {
-
-                //
-                // We are done
-                //
-
-                AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
-
-                break;
-            }
-
             while( pFcb != NULL)
             {
 
@@ -709,8 +717,9 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 //
 
                 if( !BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE) &&
-                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
-                    AFSAllocationMemoryLevel <= 1024000 * 5) // We keep it to 5 MB
+                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
+                    //&&
+                    //AFSAllocationMemoryLevel <= 1024000 * 5) // We keep it to 5 MB
                 {
 
                     pFcb = (AFSFcb *)pFcb->ListEntry.fLink;
@@ -1208,3 +1217,81 @@ try_exit:
     return ntStatus;
 }
 */
+
+NTSTATUS
+AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        //
+        // Allocate our request structure and send it to the worker
+        //
+
+        pWorkItem = (AFSWorkItem *)ExAllocatePoolWithTag( NonPagedPool,
+                                                          sizeof( AFSWorkItem),
+                                                          AFS_WORK_ITEM_TAG);
+
+        if( pWorkItem == NULL)
+        {
+
+            AFSPrint("AFSQueueCopyData Failed to allocate request block\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pWorkItem,
+                       sizeof( AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        //
+        // This will be a synchronous request
+        //
+
+        KeInitializeEvent( &pWorkItem->Event,
+                           NotificationEvent,
+                           FALSE);
+
+        pWorkItem->ProcessID = (ULONGLONG)PsGetCurrentProcessId();
+
+        pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
+
+        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_TARGET_FCB;
+
+        pWorkItem->Specific.Fcb.Fcb = Fcb;
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            ntStatus = pWorkItem->Status;
+        }
+
+try_exit:
+
+        if( pWorkItem != NULL)
+        {
+
+            ExFreePool( pWorkItem);
+        }
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSPrint("AFSQueueFcbInitialization Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSPrint("EXCEPTION - AFSQueueFcbInitialization\n");
+    }
+
+    return ntStatus;
+}

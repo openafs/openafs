@@ -755,8 +755,6 @@ AFSDefaultDispatch( IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS            ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     PIO_STACK_LOCATION  pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
-    AFSPrint("AFSDefaultDispatch Handling %08lX\n", pIrpSp->MajorFunction);
-
     AFSCompleteRequest( Irp, 
                         ntStatus);
 
@@ -1077,7 +1075,7 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
             // Set this node as a directory and set the AFS_DIR_ENTRY_NOT_EVALUATED flag
             //
             
-            pDirNode->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
+            //pDirNode->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
             SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
         }
@@ -1092,64 +1090,6 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
         {
 
             pDirNode->DirectoryEntry.FileAttributes |= (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY);
-
-            //
-            // See if the target already exists for this mount point
-            //
-
-            if( pDirNode->DirectoryEntry.TargetFileId.Hash == 0)
-            {                
-
-                ntStatus = AFSEvaluateTargetByID( &pDirNode->DirectoryEntry.FileId,
-                                                  &pDirEnumCB);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    try_return( ntStatus);
-                }
-
-                //
-                // If the target fid is zero it could not be evaluated
-                //
-
-                if( pDirEnumCB->TargetFileId.Hash != 0)
-                {
-
-                    //
-                    // Update the target fid in the volume entry
-                    //
-
-                    pDirNode->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
-                }
-
-                ExFreePool( pDirEnumCB);
-            }
-
-            AFSAcquireShared( &pDeviceExt->Specific.RDR.VolumeTreeLock, TRUE);
-
-            //
-            // Locate the volume node
-            //
-
-            AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                AFSCreateHighIndex( &pDirNode->DirectoryEntry.TargetFileId),
-                                &pVcb);
-
-            AFSReleaseResource( &pDeviceExt->Specific.RDR.VolumeTreeLock);
-
-            if( pVcb == NULL)
-            {
-
-                //
-                // Initialize the volume root for the target of this mount point
-                // We don't worry about errors here since we will re-initialize it
-                // if the target does not exist when we walk the nodes
-                //
-
-                AFSInitRootFcb( pDirNode,
-                                NULL);
-            }
         }
 
 try_exit:
@@ -1243,6 +1183,7 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
     {
 
         ntStatus = AFSEvaluateTargetByID( &Fcb->DirEntry->DirectoryEntry.FileId,
+                                          0,
                                           &pDirEntry);
 
         if( !NT_SUCCESS( ntStatus) ||
@@ -1257,6 +1198,119 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
         Fcb->DirEntry->DirectoryEntry.Expiration = pDirEntry->Expiration;
 
         Fcb->DirEntry->DirectoryEntry.DataVersion = pDirEntry->DataVersion;
+
+        //
+        // If we have a different file type we may need to switch fcb
+        //
+
+        if( pDirEntry->FileType != Fcb->DirEntry->DirectoryEntry.FileType)
+        {
+
+            ASSERT( Fcb->DirEntry->DirectoryEntry.FileType == 0);
+
+            //
+            // We default to a file so update the entry according to the new file type
+            //
+
+            switch( pDirEntry->FileType)
+            {
+
+                case AFS_FILE_TYPE_FILE:
+                {
+
+                    //
+                    // Nothing to do
+                    //
+
+                    break;
+                }
+
+                case AFS_FILE_TYPE_DIRECTORY:
+                {
+
+                    //
+                    // Tear down file specific stuff
+                    //
+
+                    FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
+
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                    //
+                    // And init the directory specific stuff
+                    //
+
+                    Fcb->Header.NodeTypeCode = AFS_DIRECTORY_FCB;
+
+                    //
+                    // Lock for the directory tree
+                    //
+
+                    ExInitializeResourceLite( &Fcb->NPFcb->Specific.Directory.DirectoryTreeLock);
+
+                    Fcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &Fcb->NPFcb->Specific.Directory.DirectoryTreeLock;
+
+                    //
+                    // Intialize the enumeration event. We always init the event to signalled until the
+                    // enumeraiton is completed
+                    //
+
+                    KeInitializeEvent( &Fcb->Specific.Directory.EnumerationEvent,
+                                       NotificationEvent,
+                                       TRUE);
+
+                    //
+                    // Initialize the directory
+                    //
+
+                    AFSInitializeDirectory( Fcb);
+
+                    break;
+                }
+
+                case AFS_FILE_TYPE_MOUNTPOINT:
+                {
+
+                    //
+                    // Tear down file specific stuff
+                    //
+
+                    FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
+
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                    Fcb->Header.NodeTypeCode = AFS_MOUNT_POINT_FCB;
+
+                    Fcb->Specific.MountPoint.TargetFcb = NULL;
+
+                    break;
+                }
+
+                case AFS_FILE_TYPE_SYMLINK:
+                {
+
+                    //
+                    // Tear down file specific stuff
+                    //
+
+                    FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
+
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                    Fcb->Header.NodeTypeCode = AFS_SYMBOLIC_LINK_FCB;
+
+                    Fcb->Specific.SymbolicLink.TargetFcb = NULL;
+
+                    break;
+                }
+
+                default:
+
+                    ASSERT( FALSE);
+
+                    break;
+            }
+        }
 
         Fcb->DirEntry->DirectoryEntry.FileType = pDirEntry->FileType;
 
@@ -1312,6 +1366,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSFcb      *pDcb = NULL, *pFcb = NULL, *pNextFcb = NULL, *pVcb = NULL;
+    AFSFcb      *pTargetDcb = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSDirEntryCB *pCurrentDirEntry = NULL;
     BOOLEAN     bIsChild = FALSE;
@@ -1319,18 +1374,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
     __Enter
     {
-
-        //
-        // If this is for the entire volume then flush the root directory
-        //
-
-        if( InvalidateCB->WholeVolume)
-        {
-
-            AFSRemoveAFSRoot();
-
-            try_return( ntStatus);
-        }
 
         //
         // Need to locate the Fcb for the directory to purge
@@ -1351,8 +1394,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( pVcb != NULL)
         {
 
-            AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                              TRUE);
+            InterlockedIncrement( &pVcb->OpenReferenceCount);
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -1362,6 +1404,33 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         {
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
+
+        //
+        // If this is a whole volume invalidation then go do it now
+        //
+
+        if( InvalidateCB->WholeVolume)
+        {
+
+            if( InvalidateCB->Reason == AFS_INVALIDATE_DELETED)
+            {
+
+                AFSAcquireExcl( &pVcb->NPFcb->Resource,
+                                TRUE);
+
+                ntStatus = AFSInvalidateVolume( pVcb,
+                                                InvalidateCB->Reason);
+
+                AFSReleaseResource( &pVcb->NPFcb->Resource);
+            }
+
+            try_return( ntStatus);
+        }
+
+        AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                          TRUE);
+
+        InterlockedDecrement( &pVcb->OpenReferenceCount);
 
         //
         // Now locate the Fcb in this volume
@@ -1376,6 +1445,10 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( pDcb != NULL)
         {
 
+            //
+            // Reference the node so it won't be torn down
+            //
+
             InterlockedIncrement( &pDcb->OpenReferenceCount);
         }
 
@@ -1388,75 +1461,33 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         }
 
         //
-        // Indicate this node requires re-evaluation
-        //
-
-        SetFlag( pDcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
-
-        //
         // Get the target of the node if it is a mount point or sym link
         //
 
-        if( pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+        if( pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
+            pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
         {
 
             //
-            // Check if we have a target Fcb for this node
+            // We only act on the mount point itself, not the target. If the 
+            // node has been deleted then mark it as such otherwise indicate
+            // it requires verification
             //
 
-            if( pDcb->Specific.SymbolicLink.TargetFcb == NULL)
+            if( InvalidateCB->Reason == AFS_INVALIDATE_DELETED)
             {
 
-                //
-                // Go retrieve the target entry for this node
-                //
-
-                ntStatus = AFSBuildTargetDirectory( pDcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-                    
-                    AFSReleaseResource( &pDcb->NPFcb->Resource);
-
-                    try_return( ntStatus);
-                }
+                SetFlag( pDcb->Flags, AFS_FCB_INVALID);
             }
-
-            //
-            // Swap out where we are in the chain
-            //
-
-            pDcb = pDcb->Specific.SymbolicLink.TargetFcb;
-        }
-        else if( pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            //
-            // Check if we have a target Fcb for this node
-            //
-
-            if( pDcb->Specific.MountPoint.TargetFcb == NULL)
+            else
             {
 
-                AFSAcquireShared( pDevExt->Specific.RDR.VolumeTree.TreeLock,
-                                  TRUE);
-
-                ullIndex = AFSCreateHighIndex( &pDcb->DirEntry->DirectoryEntry.TargetFileId);
-
-                AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
-                                    ullIndex,
-                                    &pDcb->Specific.MountPoint.TargetFcb);
-
-                AFSReleaseResource( pDevExt->Specific.RDR.VolumeTree.TreeLock);
+                SetFlag( pDcb->Flags, AFS_FCB_VERIFY);
             }
 
-            ASSERT( pDcb->Specific.MountPoint.TargetFcb != NULL);
+            InterlockedDecrement( &pDcb->OpenReferenceCount);
 
-            //
-            // Swap out where we are in the chain
-            //
-
-            pDcb = pDcb->Specific.MountPoint.TargetFcb;
+            try_return( ntStatus);
         }
 
         //
@@ -1468,6 +1499,17 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
             case AFS_INVALIDATE_DELETED:
             {
+
+                AFSAcquireExcl( &pDcb->NPFcb->Resource,
+                                TRUE);
+
+                InterlockedDecrement( &pDcb->OpenReferenceCount);
+
+                //
+                // Mark this node as invalid
+                //
+
+                SetFlag( pDcb->Flags, AFS_FCB_INVALID);
 
                 //
                 // In this case we have the most work to do ...
@@ -1583,6 +1625,10 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                         // Indicate the node is NOT initialized
                         //
 
+                        KeSetEvent( &pDcb->Specific.Directory.EnumerationEvent,
+                                    0,
+                                    FALSE);
+
                         ClearFlag( pDcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
 
                         AFSReleaseResource( pDcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -1656,6 +1702,13 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                     case AFS_FILE_TYPE_FILE:
                     {
 
+                        //
+                        // We need to drop the resource here to allow any pending requests through prior
+                        // to acquiring the extent lock
+                        //
+
+                        AFSReleaseResource( &pDcb->NPFcb->Resource);
+
                         AFSAcquireExcl( &pDcb->NPFcb->Specific.File.ExtentsResource, 
                                         TRUE);
 
@@ -1699,6 +1752,12 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
                     ASSERT( pDcb->ParentFcb != NULL);
                     
+                    if( ExIsResourceAcquiredLite( &pDcb->NPFcb->Resource))
+                    {
+
+                        AFSReleaseResource( &pDcb->NPFcb->Resource);
+                    }
+
                     AFSAcquireExcl( &pDcb->ParentFcb->NPFcb->Resource,
                                     TRUE);
 
@@ -1715,9 +1774,9 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                     SetFlag( pDcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
 
                     AFSReleaseResource( &pDcb->ParentFcb->NPFcb->Resource);
-
-                    AFSReleaseResource( &pDcb->NPFcb->Resource);
                 }
+
+                AFSReleaseResource( &pDcb->NPFcb->Resource);
 
                 break;
             }
@@ -1725,17 +1784,21 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             default:
             {
 
+                //
+                // Indicate this node requires re-evaluation for the remaining reasons
+                //
+
+                SetFlag( pDcb->Flags, AFS_FCB_VERIFY);
+
+                InterlockedDecrement( &pDcb->OpenReferenceCount);
+
                 break;
             }
         }        
 
 try_exit:
 
-        if( pDcb != NULL)
-        {
-
-            InterlockedDecrement( &pDcb->OpenReferenceCount);
-        }        
+        NOTHING;
     }
 
     return ntStatus;
@@ -1764,80 +1827,6 @@ AFSIsChildOfParent( IN AFSFcb *Dcb,
     }
 
     return bIsChild;
-}
-
-NTSTATUS
-AFSRetrieveTargetFID( IN AFSFcb *Fcb,
-                      OUT AFSFileID *FileId)
-{
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDirEnumEntry *pDirEntry = NULL;
-    AFSFileID stTargetFID;
-
-    __Enter
-    {
-
-        //
-        // MP or SL, need to determine what the target is
-        //
-
-        if( Fcb->DirEntry->DirectoryEntry.TargetFileId.Hash != 0)
-        {
-
-            //
-            // We know this is either a SL or MP so start with the target
-            //
-
-            stTargetFID = Fcb->DirEntry->DirectoryEntry.TargetFileId;
-        }
-        else
-        {
-
-            stTargetFID = Fcb->DirEntry->DirectoryEntry.FileId;
-        }
-
-        //
-        // Loop until we get to the directory of the node
-        //
-
-        while( TRUE)
-        {
-
-            ntStatus = AFSEvaluateTargetByID( &stTargetFID,
-                                              &pDirEntry);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                break;
-            }
-
-            //
-            // Is this a directory?
-            //
-
-            if( pDirEntry->FileType == AFS_FILE_TYPE_DIRECTORY)
-            {
-
-                //
-                // Found the end point
-                //
-
-                *FileId = pDirEntry->FileId;
-
-                ExFreePool( pDirEntry);
-
-                break;
-            }
-
-            stTargetFID = pDirEntry->TargetFileId;
-
-            ExFreePool( pDirEntry);
-        }
-    }
-
-    return ntStatus;
 }
 
 inline
@@ -2313,6 +2302,9 @@ void
 AFSInitServerStrings()
 {
 
+    UNICODE_STRING uniFullName;
+    WCHAR wchBuffer[ 50];
+
     //
     // Initialize the server name
     //
@@ -2332,6 +2324,44 @@ AFSInitServerStrings()
 
     RtlInitUnicodeString( &AFSGlobalRootName,
                           AFS_GLOBAL_ROOT_SHARE_NAME);
+
+    //
+    // Add the server name into the list of resources
+    //
+
+    uniFullName.Length = (2 * sizeof( WCHAR)) + AFSServerName.Length;
+    uniFullName.MaximumLength = uniFullName.Length + sizeof( WCHAR);
+
+    uniFullName.Buffer = wchBuffer;
+
+    wchBuffer[ 0] = L'\\';
+    wchBuffer[ 1] = L'\\';
+    
+    RtlCopyMemory( &wchBuffer[ 2],
+                   AFSServerName.Buffer,
+                   AFSServerName.Length);
+                   
+    AFSAddConnectionEx( &uniFullName,
+                        RESOURCEDISPLAYTYPE_SERVER,
+                        0);
+
+    //
+    // Add in the global share name
+    //
+
+    wchBuffer[ uniFullName.Length/sizeof( WCHAR)] = L'\\';
+
+    uniFullName.Length += sizeof( WCHAR);
+
+    RtlCopyMemory( &wchBuffer[ uniFullName.Length/sizeof( WCHAR)],
+                   AFSGlobalRootName.Buffer,
+                   AFSGlobalRootName.Length);
+
+    uniFullName.Length += AFSGlobalRootName.Length;
+
+    AFSAddConnectionEx( &uniFullName,
+                        RESOURCEDISPLAYTYPE_SHARE,
+                        AFS_CONNECTION_FLAG_GLOBAL_SHARE);
 
     return;
 }
@@ -2423,4 +2453,881 @@ try_exit:
     } 
 
     return ntStatus;
+}
+
+NTSTATUS
+AFSInvalidateVolume( IN AFSFcb *Vcb,
+                     IN ULONG Reason)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb *pFcb = NULL, *pNextFcb = NULL;
+
+    __Enter
+    {
+
+        //
+        // Depending on the reason for invalidation then perform work on the node
+        //
+
+        switch( Reason)
+        {
+
+            case AFS_INVALIDATE_DELETED:
+            {
+
+                //
+                // Mark this volume as invalid
+                //
+
+                SetFlag( Vcb->Flags, AFS_FCB_INVALID | AFS_FCB_VOLUME_OFFLINE);
+
+                AFSAcquireExcl( Vcb->Specific.VolumeRoot.FcbListLock,
+                                TRUE);
+
+                pFcb = Vcb->Specific.VolumeRoot.FcbListHead;
+
+                while( pFcb != NULL)
+                {
+                        
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                    pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+                            
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    {
+
+                        //
+                        // Clear out the extents
+                        //
+
+                        AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                        TRUE);
+
+                        pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                        KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                    0,
+                                    FALSE);
+
+                        AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+
+                        //
+                        // Now flush any dirty extents
+                        //
+
+                        (VOID) AFSFlushExtents( pFcb);
+                                        
+                        //
+                        // And get rid of them (not this involves waiting
+                        // for any writes or reads to the cache to complete
+                        //
+         
+                        (VOID) AFSTearDownFcbExtents( pFcb);
+                    }
+
+                    pFcb = pNextFcb;
+                }
+
+                AFSReleaseResource( Vcb->Specific.VolumeRoot.FcbListLock);
+
+                break;
+            }
+
+            default:
+            {
+
+                //
+                // Indicate this node requires re-evaluation for the remaining reasons
+                //
+
+                SetFlag( Vcb->Flags, AFS_FCB_VERIFY);
+
+                break;
+            }
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSVerifyEntry( IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEnumEntry *pDirEntry = NULL;
+
+    __Enter
+    {
+
+        ntStatus = AFSEvaluateTargetByID( &Fcb->DirEntry->DirectoryEntry.FileId,
+                                          0, // Called in context
+                                          &pDirEntry);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            //
+            // Mark the entry as invalid and fail the request
+            //
+
+            ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+            SetFlag( Fcb->Flags, AFS_FCB_INVALID);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
+        //
+        // Check the data version of the file
+        //
+
+        if( Fcb->DirEntry->DirectoryEntry.DataVersion.QuadPart == pDirEntry->DataVersion.QuadPart)
+        {
+
+            //
+            // We are ok, just get out
+            //
+
+            ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        //
+        // New data version so we will need to process the node based on the type
+        //
+
+        switch( Fcb->DirEntry->DirectoryEntry.FileType)
+        {
+
+            case AFS_FILE_TYPE_MOUNTPOINT:
+            case AFS_FILE_TYPE_SYMLINK:
+            {
+
+                //
+                // For a mount point or symlink we need to ensure the target is the same
+                //
+
+                if( Fcb->DirEntry->DirectoryEntry.TargetFileId.Hash != pDirEntry->TargetFileId.Hash)
+                {
+
+                    //
+                    // Clear the target information and set the flag indicating the
+                    // nodes requires evaluation
+                    //
+
+                    if( Fcb->Specific.SymbolicLink.TargetFcb != NULL)
+                    {
+
+                        InterlockedDecrement( &Fcb->Specific.SymbolicLink.TargetFcb->OpenReferenceCount);
+
+                        Fcb->Specific.SymbolicLink.TargetFcb = NULL;    
+                    }
+                }
+
+                //
+                // Update the metadata for the entry
+                //
+
+                AFSUpdateMetaData( Fcb,
+                                   pDirEntry);
+
+                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+                break;
+            }
+
+            case AFS_FILE_FCB:
+            {
+
+                //
+                // For a file where the data version has become invalid we need to 
+                // fail any current extent requests and purge the cache for the file
+                // Can't hold the Fcb resource while doing this
+                //
+
+                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+                AFSReleaseResource( &Fcb->NPFcb->Resource);
+
+                //
+                // Clear out the extents
+                //
+
+                AFSAcquireExcl( &Fcb->NPFcb->Specific.File.ExtentsResource, 
+                                TRUE);
+
+                Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                KeSetEvent( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                            0,
+                            FALSE);
+
+                AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                //
+                // Get rid of them (this involves waiting
+                // for any writes or reads to the cache to complete
+                //
+         
+                (VOID) AFSTearDownFcbExtents( Fcb);
+  
+                //
+                // Reacquire the Fcb to purge the cache
+                //
+
+                AFSAcquireExcl( &Fcb->NPFcb->Resource,
+                                TRUE);
+
+                if( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
+                                          NULL,
+                                          0,
+                                          FALSE))
+                {
+
+                    //
+                    // Failed to purge the cache so tag the file as INVALID
+                    //
+
+                    SetFlag( Fcb->Flags, AFS_FCB_INVALID);
+                }
+
+                break;
+            }
+
+            case AFS_ROOT_FCB:
+            case AFS_DIRECTORY_FCB:
+            {
+
+                AFSFcb *pCurrentFcb = NULL;
+                AFSDirEntryCB *pCurrentDirEntry = NULL;
+
+                //
+                // For a directory or root entry flush the content of
+                // the directory enumeration.
+                //
+
+                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+                AFSAcquireExcl( Fcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                TRUE);
+
+                if( Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    AFSRemoveDirectoryCache( Fcb);
+                }
+                else
+                {
+
+                    AFSRemoveRootDirectoryCache( Fcb);
+                }
+
+                AFSReleaseResource( Fcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                //
+                // Update the metadata for the entry
+                //
+
+                AFSUpdateMetaData( Fcb,
+                                   pDirEntry);
+
+                break;
+            }
+
+            default:
+
+                DbgPrint("AFSVerifyEntry Attempt to verify node of type %d\n", 
+                                                Fcb->DirEntry->DirectoryEntry.FileType);
+
+                break;
+        }
+
+ try_exit:
+
+        if( pDirEntry != NULL)
+        {
+
+            ExFreePool( pDirEntry);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb *pVcb = NULL;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    ULONGLONG   ullIndex = 0;
+
+    __Enter
+    {
+
+        //
+        // Need to locate the Fcb for the directory to purge
+        //
+    
+        AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock, TRUE);
+
+        //
+        // Locate the volume node
+        //
+
+        ullIndex = AFSCreateHighIndex( &VolumeStatus->FileID);
+
+        ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
+                                       ullIndex,
+                                       &pVcb);
+
+        if( pVcb != NULL)
+        {
+
+            AFSAcquireExcl( &pVcb->NPFcb->Resource,
+                            TRUE);
+        }
+
+        AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pVcb == NULL) 
+        {
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        //
+        // Set the volume state accordingly
+        //
+
+        if( VolumeStatus->Online)
+        {
+
+            ClearFlag( pVcb->Flags, AFS_FCB_VOLUME_OFFLINE);
+        }
+        else
+        {
+
+            SetFlag( pVcb->Flags, AFS_FCB_VOLUME_OFFLINE);
+        }
+
+        AFSReleaseResource( &pVcb->NPFcb->Resource);
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSSetNetworkState( IN AFSNetworkStatusCB *NetworkStatus)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    __Enter
+    {
+
+        if( AFSGlobalRoot == NULL)
+        {
+
+            try_return( ntStatus);
+        }
+
+        AFSAcquireExcl( &AFSGlobalRoot->NPFcb->Resource,
+                        TRUE);
+
+        //
+        // Set the network state according to the information
+        //
+
+        if( NetworkStatus->Online)
+        {
+
+            ClearFlag( AFSGlobalRoot->Flags, AFS_FCB_VOLUME_OFFLINE);
+        }
+        else
+        {
+
+            SetFlag( AFSGlobalRoot->Flags, AFS_FCB_VOLUME_OFFLINE);
+        }
+
+        AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRemoveDirectoryCache( IN AFSFcb *Dcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    BOOLEAN  bAcquiredLock = FALSE;
+    AFSDirEntryCB *pCurrentDirEntry = NULL;
+    AFSFcb *pFcb = NULL;
+
+    __Enter
+    {
+
+        if( !ExIsResourceAcquiredLite( Dcb->Specific.Directory.DirectoryNodeHdr.TreeLock))
+        {
+
+            AFSAcquireExcl( Dcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
+            bAcquiredLock = TRUE;
+        }
+
+        //
+        // Reset the directory list information
+        //
+
+        pCurrentDirEntry = Dcb->Specific.Directory.DirectoryNodeListHead;
+
+        while( pCurrentDirEntry != NULL)
+        {
+
+            pFcb = pCurrentDirEntry->Fcb;
+
+            if( pFcb != NULL)
+            {
+
+                //
+                // Do this prior to blocking the Fcb since there could be a thread
+                // holding the Fcb waiting for an extent
+                //
+
+                if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                {
+
+                    //
+                    // Clear out anybody waiting for the extents.
+                    //
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                    TRUE);
+
+                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                0,
+                                FALSE);
+
+                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+
+                    //
+                    // Now flush any dirty extents
+                    //
+                    
+                    (VOID) AFSFlushExtents( pFcb);
+                                       
+                    //
+                    // And get rid of them (not this involves waiting
+                    // for any writes or reads to the cache to complete
+                    //
+
+                    (VOID) AFSTearDownFcbExtents( pFcb);                                       
+                }
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
+
+                if( pFcb->DirEntry != NULL)
+                {
+
+                    pFcb->DirEntry->Fcb = NULL;
+
+                    SetFlag( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+                }
+
+                SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                AFSAcquireExcl( pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                                TRUE);
+
+                AFSRemoveHashEntry( &pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                    &pFcb->TreeEntry);
+
+                AFSReleaseResource( pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+                ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                AFSRemoveDirNodeFromParent( Dcb,
+                                            pCurrentDirEntry);
+            }
+            else
+            {
+
+                AFSDeleteDirEntry( Dcb,
+                                   pCurrentDirEntry);
+            }
+
+            pCurrentDirEntry = Dcb->Specific.Directory.DirectoryNodeListHead;
+        }
+
+        Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        //
+        // Indicate the node is NOT initialized
+        //
+
+        ClearFlag( Dcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+        KeSetEvent( &Dcb->Specific.Directory.EnumerationEvent,
+                    0,
+                    FALSE);
+
+        if( bAcquiredLock)
+        {
+
+            AFSReleaseResource( Dcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRemoveRootDirectoryCache( IN AFSFcb *Dcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    BOOLEAN  bAcquiredLock = FALSE;
+    AFSDirEntryCB *pCurrentDirEntry = NULL;
+    AFSFcb *pFcb = NULL;
+
+    __Enter
+    {
+
+        if( !ExIsResourceAcquiredLite( Dcb->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock))
+        {
+
+            AFSAcquireExcl( Dcb->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
+            bAcquiredLock = TRUE;
+        }
+
+        //
+        // Reset the directory list information
+        //
+
+        pCurrentDirEntry = Dcb->Specific.VolumeRoot.DirectoryNodeListHead;
+
+        while( pCurrentDirEntry != NULL)
+        {
+
+            pFcb = pCurrentDirEntry->Fcb;
+
+            if( pFcb != NULL)
+            {
+
+                //
+                // Do this prior to blocking the Fcb since there could be a thread
+                // holding the Fcb waiting for an extent
+                //
+
+                if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                {
+
+                    //
+                    // Clear out anybody waiting for the extents.
+                    //
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
+                                    TRUE);
+
+                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_CANCELLED;
+
+                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                0,
+                                FALSE);
+
+                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+
+                    //
+                    // Now flush any dirty extents
+                    //
+                    
+                    (VOID) AFSFlushExtents( pFcb);
+                                       
+                    //
+                    // And get rid of them (not this involves waiting
+                    // for any writes or reads to the cache to complete
+                    //
+
+                    (VOID) AFSTearDownFcbExtents( pFcb);                                       
+                }
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
+
+                if( pFcb->DirEntry != NULL)
+                {
+
+                    pFcb->DirEntry->Fcb = NULL;
+
+                    SetFlag( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+                }
+
+                SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                AFSAcquireExcl( pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                                TRUE);
+
+                AFSRemoveHashEntry( &pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                    &pFcb->TreeEntry);
+
+                AFSReleaseResource( pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+                ClearFlag( pFcb->Flags, AFS_FCB_INSERTED_ID_TREE);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                AFSRemoveDirNodeFromParent( Dcb,
+                                            pCurrentDirEntry);
+            }
+            else
+            {
+
+                AFSDeleteDirEntry( Dcb,
+                                   pCurrentDirEntry);
+            }
+
+            pCurrentDirEntry = Dcb->Specific.VolumeRoot.DirectoryNodeListHead;
+        }
+
+        Dcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead = NULL;
+
+        Dcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead = NULL;
+
+        Dcb->Specific.VolumeRoot.DirectoryNodeListHead = NULL;
+
+        Dcb->Specific.VolumeRoot.DirectoryNodeListHead = NULL;
+
+        //
+        // Indicate the node is NOT initialized
+        //
+
+        ClearFlag( Dcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+        KeSetEvent( &Dcb->Specific.VolumeRoot.EnumerationEvent,
+                    0,
+                    FALSE);
+
+        if( bAcquiredLock)
+        {
+
+            AFSReleaseResource( Dcb->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSWalkTargetChain( IN AFSFcb *ParentFcb,
+                    OUT AFSFcb **TargetFcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb *pCurrentFcb = ParentFcb, *pTargetFcb = NULL;
+
+    __Enter
+    {
+
+        while( TRUE)
+        {
+
+            //
+            // The initial parent is acquired before calling in
+            //
+
+            pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
+
+            ASSERT( pTargetFcb != NULL);
+
+            AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                            TRUE);
+
+            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+            //
+            // If this is a root node then see if it is OFFLINE
+            //
+
+            if( pTargetFcb->Header.NodeTypeCode == AFS_ROOT_FCB &&
+                BooleanFlagOn( pTargetFcb->Flags, AFS_FCB_VOLUME_OFFLINE))
+            {
+
+                //
+                // The volume has been taken off line so fail the access
+                //
+
+                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
+
+                try_return( ntStatus = STATUS_DEVICE_NOT_READY);
+            }
+
+            //
+            // Check if we need to verify this node
+            //
+
+            if( BooleanFlagOn( pTargetFcb->Flags, AFS_FCB_VERIFY))
+            {
+
+                ntStatus = AFSVerifyEntry( pTargetFcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+            }
+
+            pCurrentFcb = pTargetFcb;
+
+            pTargetFcb = NULL;
+
+            //
+            // If we are at a directory or a root node then we are done
+            //
+
+            if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB ||
+                pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                break;
+            }
+
+            ASSERT( pCurrentFcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
+                    pCurrentFcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB);
+        }
+
+        *TargetFcb = pCurrentFcb;
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+BOOLEAN
+AFSIsVolumeFID( IN AFSFileID *FileID)
+{
+
+    BOOLEAN bIsVolume = FALSE;
+
+    if( FileID->Vnode == 1 &&
+        FileID->Unique == 1)
+    {
+
+        bIsVolume = TRUE;
+    }
+
+    return bIsVolume;
+}
+
+BOOLEAN
+AFSIsFinalNode( IN AFSFcb *Fcb)
+{
+
+    BOOLEAN bIsFinalNode = FALSE;
+
+    if( Fcb->Header.NodeTypeCode == AFS_ROOT_FCB ||
+        Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+    {
+
+        bIsFinalNode = TRUE;
+    }
+    else
+    {
+
+        ASSERT( Fcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
+                Fcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB);
+    }
+
+    return bIsFinalNode;
+}
+
+void
+AFSUpdateMetaData( IN AFSFcb *Fcb,
+                   IN AFSDirEnumEntry *DirEntry)
+{
+
+    __Enter
+    {
+
+        Fcb->DirEntry->DirectoryEntry.TargetFileId = DirEntry->TargetFileId;
+
+        Fcb->DirEntry->DirectoryEntry.Expiration = DirEntry->Expiration;
+
+        Fcb->DirEntry->DirectoryEntry.DataVersion = DirEntry->DataVersion;
+
+        Fcb->DirEntry->DirectoryEntry.FileType = DirEntry->FileType;
+
+        Fcb->DirEntry->DirectoryEntry.CreationTime = DirEntry->CreationTime;
+
+        Fcb->DirEntry->DirectoryEntry.LastAccessTime = DirEntry->LastAccessTime;
+
+        Fcb->DirEntry->DirectoryEntry.LastWriteTime = DirEntry->LastWriteTime;
+
+        Fcb->DirEntry->DirectoryEntry.ChangeTime = DirEntry->ChangeTime;
+
+        Fcb->DirEntry->DirectoryEntry.EndOfFile = DirEntry->EndOfFile;
+
+        Fcb->DirEntry->DirectoryEntry.AllocationSize = DirEntry->AllocationSize;
+
+        Fcb->DirEntry->DirectoryEntry.FileAttributes = DirEntry->FileAttributes;
+
+        Fcb->DirEntry->DirectoryEntry.EaSize = DirEntry->EaSize;
+
+        Fcb->DirEntry->DirectoryEntry.Links = DirEntry->Links;
+
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
+        {
+
+            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+        }
+        else if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+        }
+        else if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
+    }
+
+    return;
 }

@@ -218,11 +218,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             CcMdlWriteComplete(pFileObject, &pIrpSp->Parameters.Write.ByteOffset, Irp->MdlAddress);
 
             //
-            // Save off the last writer
-            //
-            pFcb->Specific.File.ModifyProcessId = (ULONGLONG)hCallingUser;
-
-            //
             // Mdl is now Deallocated
             //
 
@@ -265,6 +260,16 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // Save off the PID if this is not a paging IO
+        //
+
+        if( !bPagingIo)
+        {
+
+            pFcb->Specific.File.ExtentProcessId = (ULONGLONG)PsGetCurrentProcessId();
+        }
+
+        //
         // We should be ready to go.  So first of all ask for the extents
         //
 
@@ -292,6 +297,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         if (bCanQueueRequest) 
         {
+
             pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
                                                                sizeof(AFSWorkItem),
                                                                AFS_WORK_ITEM_TAG);
@@ -389,7 +395,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
             if( bPagingIo) 
             {
-                ASSERT( NULL != OnBehalfOf || ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+
+                ASSERT( NULL != OnBehalfOf || ExIsResourceAcquiredLite( &pNPFcb->Resource ));
     
                 AFSAcquireShared( &pNPFcb->PagingResource,
                                   TRUE);
@@ -504,14 +511,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             ntStatus = NonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
         }
 
-        if( !bPagingIo && NT_SUCCESS( ntStatus))
-        {
-            //
-            // Save off the last writer
-            //
-
-            pFcb->Specific.File.ModifyProcessId = (ULONGLONG)hCallingUser;
-        }
 try_exit:
 
         ObDereferenceObject(pFileObject);
@@ -605,27 +604,9 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
             if( pParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
             {
                         
-                if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                {
+                ASSERT( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-                    //
-                    // Just the FID of the node
-                    //
-
-                    stParentFID = pParentDcb->DirEntry->DirectoryEntry.FileId;
-                }
-                else
-                {
-
-                   ntStatus = AFSRetrieveTargetFID( pParentDcb,
-                                                    &stParentFID);
-
-                   if( !NT_SUCCESS( ntStatus))
-                   {
-
-                        try_return( ntStatus);
-                   }
-                }
+                stParentFID = pParentDcb->DirEntry->DirectoryEntry.FileId;
             }
         }
 
@@ -1025,39 +1006,54 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         __try 
         {
-            if( !CcCopyWrite( pFileObject,
-                              &StartingByte,
-                              ByteCount,
-                              TRUE,
-                              pSystemBuffer)) 
 
+            if( BooleanFlagOn( pIrpSp->MinorFunction, IRP_MN_MDL))
             {
-                //
-                // Failed to process request.
-                //
 
-                AFSPrint("CachedWrite failed to issue cached read Write %08lX\n", Irp->IoStatus.Status);
+                CcPrepareMdlWrite( pFileObject,
+                                   &StartingByte,
+                                   ByteCount,
+                                   &Irp->MdlAddress,
+                                   &Irp->IoStatus);
 
-                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+                ntStatus = Irp->IoStatus.Status;
             }
-
-            if (ForceFlush)
+            else
             {
-                //
-                // We have detected a file we do a write through with.
-                //
-                CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
-                             &StartingByte,
-                             ByteCount,
-                             &iosbFlush);
 
-                ntStatus = iosbFlush.Status;
-            }
-            else 
-            {
-                ntStatus = STATUS_SUCCESS;
-            }
+                if( !CcCopyWrite( pFileObject,
+                                  &StartingByte,
+                                  ByteCount,
+                                  TRUE,
+                                  pSystemBuffer)) 
 
+                {
+                    //
+                    // Failed to process request.
+                    //
+
+                    AFSPrint("CachedWrite failed to issue cached read Write %08lX\n", Irp->IoStatus.Status);
+
+                    try_return( ntStatus = STATUS_UNSUCCESSFUL);
+                }
+
+                if (ForceFlush)
+                {
+                    //
+                    // We have detected a file we do a write through with.
+                    //
+                    CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
+                                 &StartingByte,
+                                 ByteCount,
+                                 &iosbFlush);
+
+                    ntStatus = iosbFlush.Status;
+                }
+                else 
+                {
+                    ntStatus = STATUS_SUCCESS;
+                }
+            }
         }
         __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
         {

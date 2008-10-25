@@ -181,6 +181,7 @@ static inline void AFSBreakPoint() {
 #define AFS_WORK_FLUSH_FCB                      0x0002
 #define AFS_WORK_ASYNCH_READ                    0x0003
 #define AFS_WORK_ASYNCH_WRITE                   0x0004
+#define AFS_WORK_REQUEST_BUILD_TARGET_FCB       0x0005
 
 //
 // Pool state
@@ -234,6 +235,7 @@ static inline void AFSBreakPoint() {
 #define AFS_FCB_STANDALONE_NODE                              0x00000080
 #define AFS_FCB_VOLUME_OFFLINE                               0x00000100
 #define AFS_FCB_DELETE_FCB_ON_CLOSE                          0x00000200
+#define AFS_FCB_VERIFY                                       0x00000400
 
 //
 // Fcb lifetime in seconds
@@ -337,6 +339,39 @@ static inline void AFSBreakPoint() {
 #define WN_NOT_CONNECTED                        2250L
 #define WN_BAD_NETNAME                          67L
 
+#define RESOURCE_CONNECTED      0x00000001
+#define RESOURCE_GLOBALNET      0x00000002
+#define RESOURCE_REMEMBERED     0x00000003
+#define RESOURCE_RECENT         0x00000004
+#define RESOURCE_CONTEXT        0x00000005
+
+#define RESOURCETYPE_ANY        0x00000000
+#define RESOURCETYPE_DISK       0x00000001
+#define RESOURCETYPE_PRINT      0x00000002
+#define RESOURCETYPE_RESERVED   0x00000008
+#define RESOURCETYPE_UNKNOWN    0xFFFFFFFF
+
+#define RESOURCEUSAGE_CONNECTABLE   0x00000001
+#define RESOURCEUSAGE_CONTAINER     0x00000002
+#define RESOURCEUSAGE_NOLOCALDEVICE 0x00000004
+#define RESOURCEUSAGE_SIBLING       0x00000008
+#define RESOURCEUSAGE_ATTACHED      0x00000010
+#define RESOURCEUSAGE_ALL           (RESOURCEUSAGE_CONNECTABLE | RESOURCEUSAGE_CONTAINER | RESOURCEUSAGE_ATTACHED)
+#define RESOURCEUSAGE_RESERVED      0x80000000
+
+#define RESOURCEDISPLAYTYPE_GENERIC        0x00000000
+#define RESOURCEDISPLAYTYPE_DOMAIN         0x00000001
+#define RESOURCEDISPLAYTYPE_SERVER         0x00000002
+#define RESOURCEDISPLAYTYPE_SHARE          0x00000003
+#define RESOURCEDISPLAYTYPE_FILE           0x00000004
+#define RESOURCEDISPLAYTYPE_GROUP          0x00000005
+#define RESOURCEDISPLAYTYPE_NETWORK        0x00000006
+#define RESOURCEDISPLAYTYPE_ROOT           0x00000007
+#define RESOURCEDISPLAYTYPE_SHAREADMIN     0x00000008
+#define RESOURCEDISPLAYTYPE_DIRECTORY      0x00000009
+#define RESOURCEDISPLAYTYPE_TREE           0x0000000A
+#define RESOURCEDISPLAYTYPE_NDSCONTAINER   0x0000000B
+
 //
 // Method for determining the different control device open requests
 //
@@ -398,5 +433,11 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 // 
 
 #define AFS_DBG_LOG_LENGTH              (256 * 1024)
+
+//
+// Conneciton flags
+//
+
+#define AFS_CONNECTION_FLAG_GLOBAL_SHARE        0x00000001
 
 #endif /* _AFS_DEFINES_H */

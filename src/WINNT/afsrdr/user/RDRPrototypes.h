@@ -38,7 +38,7 @@ WINAPI
 RDR_RequestWorkerThread( LPVOID lpParameter);
 
 DWORD
-RDR_ProcessWorkerThreads(void);
+RDR_ProcessWorkerThreads( IN DWORD);
 
 void
 RDR_ProcessRequest( AFSCommRequest *RequestBuffer);
@@ -139,6 +139,10 @@ DWORD
 RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFileExtentsResultCB,
                                      IN DWORD ResultBufferLength);
 
+DWORD
+RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
+                                 IN AFSSetFileExtentsCB *SetFileExtentsResultCB,
+                                 IN DWORD ResultBufferLength);
 
 void
 RDR_PioctlOpen( IN cm_user_t *userp,

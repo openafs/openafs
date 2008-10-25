@@ -181,7 +181,7 @@ typedef struct _AFS_NONPAGED_FCB
 
             ERESOURCE       DirectoryTreeLock;
 
-            ERESOURCE      FileIDTreeLock;
+            ERESOURCE       FileIDTreeLock;
 
             ERESOURCE       FcbListLock;
 
@@ -326,11 +326,10 @@ typedef struct AFS_FCB
             AFSRequestExtentsCB ExtentsRequest;
 
             //
-            // Last PID that either modified the file, mapped the file or
-            // opened it with write priv's
+            // Last PID that requested extents, NOT the system process 
             //
 
-            ULONGLONG              ModifyProcessId;
+            ULONGLONG           ExtentProcessId;
 
             //
             // Set if there is any dirty data. Set pessimistically
@@ -368,6 +367,8 @@ typedef struct AFS_FCB
             //
 
             LONG                PIOCtlIndex;
+            
+            KEVENT          EnumerationEvent;
 
         } Directory;
 
@@ -425,6 +426,8 @@ typedef struct AFS_FCB
             //
 
             AFSWorkQueueContext VolumeWorkerContext;
+
+            KEVENT          EnumerationEvent;
 
         } VolumeRoot;
 
@@ -525,6 +528,8 @@ typedef struct _AFS_WORK_ITEM
 
     ULONG    Size;
 
+    ULONGLONG   ProcessID;
+
     union
     {
         struct
@@ -537,7 +542,7 @@ typedef struct _AFS_WORK_ITEM
         {
             AFSFcb *Fcb;
 
-        } FlushFcb;
+        } Fcb;
 
         struct
         {
@@ -920,11 +925,25 @@ typedef struct _AFSFSD_PROVIDER_CONNECTION_CB
 
     struct _AFSFSD_PROVIDER_CONNECTION_CB *fLink;
 
-    ULONG   ResourceType;
+    struct _AFSFSD_PROVIDER_CONNECTION_CB *EnumerationList;
 
-    WCHAR   LocalName;
+    ULONG       Flags;
+
+    ULONG       Type;
+
+    ULONG       Scope;
+
+    ULONG       DisplayType;
+    
+    ULONG       Usage;
+
+    WCHAR       LocalName;
 
     UNICODE_STRING RemoteName;
+
+    UNICODE_STRING ComponentName;
+
+    UNICODE_STRING Comment;
 
 } AFSProviderConnectionCB;
 

@@ -516,6 +516,9 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         //
         if( NULL == pDeviceExt->Specific.RDR.CacheFileObject) 
         {
+
+            AFSPrint("AFSCommonRead Cache object closed\n");
+
             try_return( ntStatus = STATUS_TOO_LATE );
         }
 
@@ -638,13 +641,26 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // Save off the PID if this is not a paging IO
+        //
+
+        if( !bPagingIo)
+        {
+
+            pFcb->Specific.File.ExtentProcessId = (ULONGLONG)PsGetCurrentProcessId();
+        }
+
+        //
         // If this is going to be posted OR this is a cached read,
         // then ask for the extents before we post.
         //
         if (bPostIrp || (!bPagingIo && !bNonCachedIo))
         {
+
             ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped);
             if (!NT_SUCCESS(ntStatus)) {
+
+                DbgPrint("AFSCommonRead Failed to request extents Status %08lX\n", ntStatus);
                 try_return( ntStatus );
             }
         }
@@ -717,6 +733,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         //
         if ( bPostIrp) 
         {
+
             pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
                                                                sizeof(AFSWorkItem),
                                                                AFS_WORK_ITEM_TAG);
@@ -891,27 +908,9 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
             if( pParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
             {
                         
-                if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                {
+                ASSERT( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-                    //
-                    // Just the FID of the node
-                    //
-
-                    stParentFID = pParentDcb->DirEntry->DirectoryEntry.FileId;
-                }
-                else
-                {
-
-                   ntStatus = AFSRetrieveTargetFID( pParentDcb,
-                                                    &stParentFID);
-
-                   if( !NT_SUCCESS( ntStatus))
-                   {
-
-                        try_return( ntStatus);
-                   }
-                }
+                stParentFID = pParentDcb->DirEntry->DirectoryEntry.FileId;
             }
         }
 

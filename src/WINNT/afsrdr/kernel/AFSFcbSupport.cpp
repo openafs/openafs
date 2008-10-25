@@ -154,8 +154,6 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         // Initialize some fields in the Fcb
         //
 
-        ASSERT( ParentFcb != NULL);
-
         pFcb->ParentFcb = ParentFcb;
 
         pFcb->RootFcb = ParentFcb->RootFcb;
@@ -195,6 +193,15 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &pNPFcb->Specific.Directory.DirectoryTreeLock;
 
                 //
+                // Intialize the enumeration event. We always init the event to signalled until the
+                // enumeraiton is completed
+                //
+
+                KeInitializeEvent( &pFcb->Specific.Directory.EnumerationEvent,
+                                   NotificationEvent,
+                                   TRUE);
+
+                //
                 // Initialize the directory
                 //
 
@@ -206,7 +213,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                     try_return( ntStatus);
                 }
             }
-            else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE)
+            else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE ||
+                     DirEntry->DirectoryEntry.FileType == 0)
             {
 
                 //
@@ -254,220 +262,15 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 //
 
                 pFcb->Header.NodeTypeCode = AFS_MOUNT_POINT_FCB;
-
-                //
-                // Be sure we ahve a valid target id
-                //
-
-                if( DirEntry->DirectoryEntry.TargetFileId.Hash == 0)
-                {                
-
-                    ntStatus = AFSEvaluateTargetByID( &DirEntry->DirectoryEntry.FileId,
-                                                      &pDirEnumCB);
-
-                    if( !NT_SUCCESS( ntStatus))
-                    {
-
-                        try_return( ntStatus);
-                    }
-
-                    //
-                    // If the target fid is zero it could not be evaluated
-                    //
-
-                    if( pDirEnumCB->TargetFileId.Hash != 0)
-                    {
-
-                        //
-                        // Update the target fid in the volume entry
-                        //
-
-                        DirEntry->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
-                    }
-
-                    ExFreePool( pDirEnumCB);
-                }
-
-                //
-                // Locate the target of this mount point
-                //
-
-                ullIndex = AFSCreateHighIndex( &DirEntry->DirectoryEntry.TargetFileId);
-
-                ASSERT( ullIndex != 0);
-
-                AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                  TRUE);
-            
-                AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                    ullIndex,
-                                    &pFcb->Specific.MountPoint.TargetFcb);
-
-                AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
-
-                if( pFcb->Specific.MountPoint.TargetFcb == NULL)
-                {
-
-                    AFSInitRootFcb( DirEntry,
-                                    &pFcb->Specific.MountPoint.TargetFcb);
-
-                    ASSERT( pFcb->Specific.MountPoint.TargetFcb != NULL);
-                }
             }
             else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
             {
-
-                AFSFcb *pTargetFcb = pFcb;
-                AFSFcb *pCurrentTargetFcb = NULL;
 
                 //
                 // Reset the type to a symblic link type
                 //
 
                 pFcb->Header.NodeTypeCode = AFS_SYMBOLIC_LINK_FCB;
-
-                //
-                // Locate the target of this symbolic link. We will walk the
-                // links until we get to something NOT a sym link
-                //
-
-                while( TRUE)
-                {
-
-                    //
-                    // Be sure we ahve a valid target id
-                    //
-
-                    if( pTargetFcb->DirEntry->DirectoryEntry.TargetFileId.Hash == 0)
-                    {                
-
-                        ntStatus = AFSEvaluateTargetByID( &pTargetFcb->DirEntry->DirectoryEntry.FileId,
-                                                          &pDirEnumCB);
-
-                        if( !NT_SUCCESS( ntStatus))
-                        {
-
-                            try_return( ntStatus);
-                        }
-
-                        //
-                        // If the target fid is zero it could not be evaluated
-                        //
-
-                        if( pDirEnumCB->TargetFileId.Hash != 0)
-                        {
-
-                            //
-                            // Update the target fid in the volume entry
-                            //
-
-                            pTargetFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
-                        }
-
-                        ExFreePool( pDirEnumCB);
-                    }
-
-                    ullIndex = AFSCreateLowIndex( &pTargetFcb->DirEntry->DirectoryEntry.TargetFileId);
-
-                    AFSAcquireShared( pTargetFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                                      TRUE);
-
-                    ntStatus = AFSLocateHashEntry( pTargetFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeHead,
-                                                   ullIndex,
-                                                   &pCurrentTargetFcb);
-
-                    AFSReleaseResource( pTargetFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock);
-
-                    if( !NT_SUCCESS( ntStatus) ||
-                        pCurrentTargetFcb == NULL) 
-                    {
-                        try_return( ntStatus = STATUS_UNSUCCESSFUL);
-                    }
-
-                    pTargetFcb = pCurrentTargetFcb;
-
-                    //
-                    // Check if the target is another mount point or sym link
-                    //
-
-                    if( pTargetFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_SYMLINK)
-                    {
-
-                        break;
-                    }
-                }
-
-                //
-                // If the target is a mount point then evaluate it
-                //
-
-                if( pTargetFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-                {
-
-                    //
-                    // Be sure we have a valid target id
-                    //
-
-                    if( pTargetFcb->DirEntry->DirectoryEntry.TargetFileId.Hash == 0)
-                    {                
-
-                        ntStatus = AFSEvaluateTargetByID( &pTargetFcb->DirEntry->DirectoryEntry.FileId,
-                                                          &pDirEnumCB);
-
-                        if( !NT_SUCCESS( ntStatus))
-                        {
-
-                            try_return( ntStatus);
-                        }
-
-                        //
-                        // If the target fid is zero it could not be evaluated
-                        //
-
-                        if( pDirEnumCB->TargetFileId.Hash != 0)
-                        {
-
-                            //
-                            // Update the target fid in the volume entry
-                            //
-
-                            pTargetFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
-                        }
-
-                        ExFreePool( pDirEnumCB);
-                    }
-
-                    //
-                    // Locate the target of this mount point
-                    //
-
-                    ullIndex = AFSCreateHighIndex( &pTargetFcb->DirEntry->DirectoryEntry.TargetFileId);
-
-                    ASSERT( ullIndex != 0);
-
-                    AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                      TRUE);
-                
-                    AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                        ullIndex,
-                                        &pFcb->Specific.SymbolicLink.TargetFcb);
-
-                    AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
-
-                    if( pFcb->Specific.SymbolicLink.TargetFcb == NULL)
-                    {
-
-                        AFSInitRootFcb( pTargetFcb->DirEntry,
-                                        &pFcb->Specific.SymbolicLink.TargetFcb);
-
-                        ASSERT( pFcb->Specific.SymbolicLink.TargetFcb != NULL);
-                    }
-                }
-                else
-                {
-
-                    pFcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
-                }
             }
             else
             {
@@ -562,6 +365,12 @@ try_exit:
         {
 
             AFSPrint("AFSInitFcb Failed to initialize Fcb Status %08lX\n", ntStatus);
+
+            if( DirEntry != NULL)
+            {
+
+                DirEntry->Fcb = NULL;
+            }
 
             if( pFcb != NULL)
             {
@@ -714,6 +523,15 @@ AFSInitAFSRoot()
             FsRtlNotifyInitializeSync( &pFcb->NPFcb->NotifySync);
 
             //
+            // Intialize the enumeration event. We always init the event to signalled until the
+            // enumeraiton is completed
+            //
+
+            KeInitializeEvent( &pFcb->Specific.VolumeRoot.EnumerationEvent,
+                               NotificationEvent,
+                               TRUE);
+
+            //
             // Initialize the Root directory DirEntry
             //
 
@@ -741,8 +559,6 @@ AFSInitAFSRoot()
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
-
-            AFSPrint("AFSInitAFSRoot Allocated NP Dir %08lX\n", pFcb->DirEntry->NPDirNode);
 
             //
             // Initialize the non-paged portion of the dire entry
@@ -980,6 +796,14 @@ AFSRemoveAFSRoot()
 
         ClearFlag( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
 
+        //
+        // Reset the enumeraiton event
+        //
+
+        KeSetEvent( &AFSGlobalRoot->Specific.VolumeRoot.EnumerationEvent,
+                    0,
+                    FALSE);
+
         AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
         AFSReleaseResource( AFSGlobalRoot->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock);
@@ -1026,6 +850,15 @@ AFSRemoveAFSRoot()
                 while( pFcb != NULL)
                 {
                 
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    SetFlag( pFcb->Flags, AFS_FCB_INVALID);
+
+                    pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+                    
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                     {
 
@@ -1057,15 +890,6 @@ AFSRemoveAFSRoot()
                         (VOID) AFSTearDownFcbExtents( pFcb);
 
                     }
-
-                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                    TRUE);
-
-                    SetFlag( pFcb->Flags, AFS_FCB_INVALID);
-
-                    pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;
-                    
-                    AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                     pFcb = pNextFcb;
                 }
@@ -1107,7 +931,7 @@ try_exit:
 //
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
+AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
                 OUT AFSFcb **RootVcb)
 {
 
@@ -1172,6 +996,9 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
 
         ExInitializeResourceLite( &pNPFcb->Resource);
 
+        AFSAcquireExcl( &pNPFcb->Resource,
+                        TRUE);
+
         ExInitializeResourceLite( &pNPFcb->PagingResource);
 
         ExInitializeResourceLite( &pNPFcb->Specific.VolumeRoot.DirectoryTreeLock);
@@ -1206,6 +1033,15 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
         FsRtlNotifyInitializeSync( &pFcb->NPFcb->NotifySync);
 
         //
+        // Intialize the enumeration event. We always init the event to signalled until the
+        // enumeraiton is completed
+        //
+
+        KeInitializeEvent( &pFcb->Specific.VolumeRoot.EnumerationEvent,
+                           NotificationEvent,
+                           TRUE);
+
+        //
         // Initialize the Root directory DirEntry
         //
 
@@ -1215,6 +1051,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
 
         if( pFcb->DirEntry == NULL)
         {
+
+            AFSReleaseResource( &pNPFcb->Resource);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1231,6 +1069,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
         if( pFcb->DirEntry->NPDirNode == NULL)
         {
 
+            AFSReleaseResource( &pNPFcb->Resource);
+
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -1246,11 +1086,22 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
         // Populate the dir entry for this root
         //
 
-        pFcb->DirEntry->DirectoryEntry.FileId = MountPointDirEntry->DirectoryEntry.TargetFileId;
+        pFcb->DirEntry->DirectoryEntry.FileId = MountPointDirEntry->TargetFileId;
 
-        pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = MountPointDirEntry->DirectoryEntry.CreationTime.QuadPart;
-        pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = MountPointDirEntry->DirectoryEntry.CreationTime.QuadPart;
-        pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = MountPointDirEntry->DirectoryEntry.CreationTime.QuadPart;
+        //
+        // Make this a volume FID
+        //
+
+        pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
+        pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
+        pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
+
+        ASSERT( pFcb->DirEntry->DirectoryEntry.FileId.Cell != 0 &&
+                pFcb->DirEntry->DirectoryEntry.FileId.Volume != 0);
+
+        pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = MountPointDirEntry->CreationTime.QuadPart;
+        pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = MountPointDirEntry->CreationTime.QuadPart;
+        pFcb->DirEntry->DirectoryEntry.LastAccessTime.QuadPart = MountPointDirEntry->CreationTime.QuadPart;
 
         pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
@@ -1272,7 +1123,7 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
 
         pFcb->DirEntry->Type.Volume.VolumeInformation.AvailableAllocationUnits.QuadPart = 0x100000;
 
-        pFcb->DirEntry->Type.Volume.VolumeInformation.VolumeCreationTime = MountPointDirEntry->DirectoryEntry.CreationTime;
+        pFcb->DirEntry->Type.Volume.VolumeInformation.VolumeCreationTime = MountPointDirEntry->CreationTime;
 
         pFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics = FILE_REMOTE_DEVICE;
                                     
@@ -1285,43 +1136,6 @@ AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
         RtlCopyMemory( pFcb->DirEntry->Type.Volume.VolumeInformation.VolumeLabel,
                        L"AFSVol",
                        12);
-
-        //
-        // If the fid, the target of the MP, is zero then we need to ask the service to evaluate it for us
-        //
-
-        if( pFcb->DirEntry->DirectoryEntry.FileId.Hash == 0)
-        {
-
-            AFSDirEnumEntry *pDirEnumCB = NULL;
-
-            ntStatus = AFSEvaluateTargetByID( &MountPointDirEntry->DirectoryEntry.FileId,
-                                              &pDirEnumCB);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-
-            //
-            // If the target fid is zero it could not be evaluated
-            //
-
-            if( pDirEnumCB->TargetFileId.Hash != 0)
-            {
-
-                //
-                // Update the target fid in the volume entry and Fcb
-                //
-
-                MountPointDirEntry->DirectoryEntry.TargetFileId = pDirEnumCB->TargetFileId;
-                
-                pFcb->DirEntry->DirectoryEntry.FileId = pDirEnumCB->TargetFileId;
-            }
-
-            ExFreePool( pDirEnumCB);
-        }
 
         //
         // Insert the root of the volume into our volume list of entries
@@ -1666,3 +1480,4 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
 
     return ntStatus;
 }
+

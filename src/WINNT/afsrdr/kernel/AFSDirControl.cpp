@@ -614,14 +614,6 @@ AFSQueryDirectory( IN PIRP Irp)
                             //
 
                             pDirEntry = pBestMatchDirEntry;
-
-                            if( pDirEntry != NULL)
-                            {
-
-                                DbgPrint("AFSQueryDirectory Using best match of %wZ for pattern %wZ\n", 
-                                                                    &pDirEntry->DirectoryEntry.FileName,
-                                                                    &pCcb->MaskName);
-                            }
                         }                                                    
                     }
                 }

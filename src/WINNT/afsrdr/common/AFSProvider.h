@@ -54,15 +54,28 @@
 #define IOCTL_AFS_CANCEL_CONNECTION   CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x2002, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_AFS_GET_CONNECTION      CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x2003, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_AFS_LIST_CONNECTIONS    CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x2004, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_AFS_GET_CONNECTION_INFORMATION CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x2005, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 typedef struct _AFS_NETWORKPROVIDER_CONNECTION_CB
 {
 
+    ULONG       CurrentIndex;
+
+    ULONG       Type;
+
+    ULONG       Scope;
+
+    ULONG       DisplayType;
+    
+    ULONG       Usage;
+
+    ULONG       CommentOffset;  // From the beginning of this structure
+
+    ULONG       CommentLength;
+
+    ULONG       RemoteNameLength;
+
     WCHAR       LocalName;
-
-    ULONG       ResourceType;
-
-    USHORT      RemoteNameLength;
 
     WCHAR       RemoteName[ 1];
 

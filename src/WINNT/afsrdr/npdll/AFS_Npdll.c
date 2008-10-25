@@ -59,14 +59,12 @@
 #define SCRATCHSZ 1024
 
 //
-// Common informaiton
+// Common information
 //
 
-#define DbgP(_x_) WideDbgPrint _x_
+//#define AFS_DEBUG_TRACE         1
 
-ULONG _cdecl WideDbgPrint( PWCHAR Format, ... );
-
-#define TRACE_TAG    L"AFS NP: "
+ULONG _cdecl AFSDbgPrint( PWCHAR Format, ... );
 
 #define WNNC_DRIVER( major, minor ) ( major * 0x00010000 + minor )
 
@@ -82,8 +80,6 @@ NPIsRedirectorStarted( void);
 
 #define NOTHING
 
-//#define OPENAFS_TRACE         1
-
 typedef struct _UNICODE_STRING {
     USHORT Length;
     USHORT MaximumLength;
@@ -92,6 +88,19 @@ typedef struct _UNICODE_STRING {
 
 HANDLE
 OpenRedirector( void);
+
+typedef struct _AFS_ENUM_CB
+{
+
+    DWORD       CurrentIndex;
+
+    DWORD       Scope;
+
+    DWORD       Type;
+
+    WCHAR      *RemoteName;
+
+} AFSEnumerationCB;
 
 //
 // This is the only function which must be exported, everything else is optional
@@ -103,7 +112,6 @@ NPGetCaps( DWORD nIndex )
 {
 
     DWORD rc = 0;
-    WCHAR wszOutputBuffer[ 512];
 
     switch( nIndex)
     {
@@ -140,7 +148,10 @@ NPGetCaps( DWORD nIndex )
         case WNNC_ENUMERATION:
         {
 
-            rc = WNNC_ENUM_LOCAL;
+            rc = WNNC_ENUM_LOCAL | 
+                        WNNC_ENUM_CONTEXT |
+                        WNNC_ENUM_GLOBAL |
+                        WNNC_ENUM_SHAREABLE;
             break;
         }
 
@@ -152,8 +163,17 @@ NPGetCaps( DWORD nIndex )
             break;
         }
 
-        case WNNC_USER:
         case WNNC_DIALOG:
+        {
+
+            rc = WNNC_DLG_FORMATNETWORKNAME | 
+                        WNNC_DLG_GETRESOURCEINFORMATION |
+                        WNNC_DLG_GETRESOURCEPARENT;
+
+            break;
+        }
+
+        case WNNC_USER:
         case WNNC_ADMIN:
         default:
         {
@@ -187,7 +207,6 @@ NPAddConnection3( HWND            hwndOwner,
 
     DWORD    dwStatus = WN_SUCCESS;
     WCHAR    wchRemoteName[MAX_PATH+1];
-    WCHAR    wszScratch[SCRATCHSZ];
     WCHAR    wchLocalName[3];
     DWORD    dwCopyBytes = 0;
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
@@ -250,15 +269,17 @@ NPAddConnection3( HWND            hwndOwner,
                 wchRemoteName,
                 pConnectCB->RemoteNameLength);
 
-        pConnectCB->ResourceType = lpNetResource->dwType;
+        pConnectCB->Type = lpNetResource->dwType;
 
         hControlDevice = OpenRedirector();
 
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+            try_return( dwStatus = WN_NO_NETWORK);
         }
+
+
 
         dwError = DeviceIoControl( hControlDevice,
                                    IOCTL_AFS_ADD_CONNECTION,
@@ -269,14 +290,10 @@ NPAddConnection3( HWND            hwndOwner,
                                    &dwCopyBytes,
                                    NULL);
 
-        CloseHandle( hControlDevice);
-
         if( !dwError)
         {
 
-            swprintf( wszScratch, L"NPAddConnection3 Failed to add connection to file system %d\n", GetLastError());
-
-            OutputDebugString( wszScratch);
+            AFSDbgPrint( L"NPAddConnection3 Failed to add connection to file system %d\n", GetLastError());
 
             try_return( dwStatus = WN_OUT_OF_MEMORY);
         }
@@ -351,7 +368,7 @@ NPAddConnection3( HWND            hwndOwner,
                                            uniConnectionName.Buffer))
                     {
 
-                        OutputDebugString(L"NPAddConnection3 Failed to assign drive\n");
+                        AFSDbgPrint(L"NPAddConnection3 Failed to assign drive\n");
 
                         dwStatus = GetLastError();
                     }
@@ -373,6 +390,12 @@ NPAddConnection3( HWND            hwndOwner,
 
 try_exit:
 
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
+
         if( pConnectCB != NULL)
         {
 
@@ -392,15 +415,12 @@ NPCancelConnection( LPWSTR  lpName,
     WCHAR    wchRemoteName[MAX_PATH+1];
     DWORD    dwRemoteNameLength = (MAX_PATH+1) * sizeof(WCHAR);
     DWORD    dwStatus = WN_NOT_CONNECTED;
-    WCHAR    wszScratch[SCRATCHSZ];
     DWORD    dwCopyBytes = 0;
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
     BOOL     bLocalName = TRUE;
     HANDLE   hControlDevice = NULL;
-
-    WCHAR    wchOutputBuffer[ 256];
 
     __Enter
     {
@@ -479,7 +499,7 @@ NPCancelConnection( LPWSTR  lpName,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+            try_return( dwStatus = WN_NO_NETWORK);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -491,12 +511,10 @@ NPCancelConnection( LPWSTR  lpName,
                                    &dwCopyBytes,
                                    NULL);
 
-        CloseHandle( hControlDevice);
-
         if( !dwError)
         {
 
-            OutputDebugString(L"NPCancelConnection Failed to cancel connection to file system\n");
+            AFSDbgPrint(L"NPCancelConnection Failed to cancel connection to file system\n");
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -553,6 +571,13 @@ NPCancelConnection( LPWSTR  lpName,
 
 try_exit:
 
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
+
+
         if( pConnectCB != NULL)
         {
 
@@ -573,14 +598,11 @@ NPGetConnection( LPWSTR  lpLocalName,
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
-    WCHAR    wszScratch[ 255];
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
     HANDLE   hControlDevice = NULL;
     DWORD    dwPassedLength = *lpBufferSize;
-
-    WCHAR    wchOutputBuffer[ 256];
 
     __Enter
     {
@@ -588,7 +610,7 @@ NPGetConnection( LPWSTR  lpLocalName,
         if( lstrlen( lpLocalName) == 0)
         {
 
-            OutputDebugString(L"NPGetConnection No local name\n");
+            AFSDbgPrint(L"NPGetConnection No local name\n");
 
             try_return( dwStatus = WN_BAD_LOCALNAME);
         }
@@ -616,7 +638,7 @@ NPGetConnection( LPWSTR  lpLocalName,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+            try_return( dwStatus = WN_NO_NETWORK);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -627,8 +649,6 @@ NPGetConnection( LPWSTR  lpLocalName,
                                    dwBufferSize,
                                    lpBufferSize,
                                    NULL);
-
-        CloseHandle( hControlDevice);
 
         if( !dwError)
         {
@@ -656,6 +676,12 @@ NPGetConnection( LPWSTR  lpLocalName,
 
 try_exit:
 
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
+
         if( pConnectCB != NULL)
         {
 
@@ -677,15 +703,12 @@ NPGetConnection3(
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
-    WCHAR    wszScratch[ 255];
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
     HANDLE   hControlDevice = NULL;
     DWORD    dwPassedLength = 0;
     NETCONNECTINFOSTRUCT *pNetInfo = (NETCONNECTINFOSTRUCT *)lpBuffer;
-
-    WCHAR    wchOutputBuffer[ 256];
 
     __Enter
     {
@@ -708,6 +731,10 @@ NPGetConnection3(
         wchLocalName[1] = L':';
         wchLocalName[2] = L'\0';
 
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPGetConnection3 Requesting connection for %s\n", wchLocalName);
+#endif
+
         dwBufferSize = 0x1000;
 
         pConnectCB = (AFSNetworkProviderConnectionCB *)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufferSize);
@@ -727,7 +754,7 @@ NPGetConnection3(
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+            try_return( dwStatus = WN_NO_NETWORK);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -739,14 +766,10 @@ NPGetConnection3(
                                    lpBufferSize,
                                    NULL);
 
-        CloseHandle( hControlDevice);
-
         if( !dwError)
         {
 
-            swprintf( wchOutputBuffer, L"NPGetConnection Failed to get connection from file system for local %s\n", wchLocalName);
-
-            OutputDebugString( wchOutputBuffer);
+            AFSDbgPrint( L"NPGetConnection Failed to get connection from file system for local %s\n", wchLocalName);
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -764,6 +787,12 @@ NPGetConnection3(
         dwStatus = WN_SUCCESS;
  
 try_exit:
+
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
 
         if( pConnectCB != NULL)
         {
@@ -784,33 +813,97 @@ NPOpenEnum( DWORD          dwScope,
             LPHANDLE       lphEnum )
 {
     
-    DWORD   dwStatus;
+    DWORD   dwStatus = WN_SUCCESS;
+    AFSEnumerationCB *pEnumCB = NULL;
 
-    *lphEnum = NULL;
+    *lphEnum = HeapAlloc( GetProcessHeap( ), HEAP_ZERO_MEMORY, sizeof( AFSEnumerationCB));
+
+    if( *lphEnum == NULL)
+    {
+
+        return WN_OUT_OF_MEMORY;
+    }
+
+    pEnumCB = (AFSEnumerationCB *)*lphEnum;
+
+    pEnumCB->CurrentIndex = 0;
+
+    pEnumCB->Type = dwType;
 
     switch( dwScope )
     {
         case RESOURCE_CONNECTED:
         {
 
-            *lphEnum = HeapAlloc( GetProcessHeap( ), HEAP_ZERO_MEMORY, sizeof( ULONG ) );
+            pEnumCB->Scope = RESOURCE_CONNECTED;
 
-            if( *lphEnum )
-            {
-                dwStatus = WN_SUCCESS;
-            }
-            else
-            {
-                dwStatus = WN_OUT_OF_MEMORY;
-            }
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint(L"NPOpenEnum Processing (RESOURCE_CONNECTED)\n");
+#endif
 
             break;
         }
 
         case RESOURCE_CONTEXT:
+        {
+
+            pEnumCB->Scope = RESOURCE_CONTEXT;
+
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint(L"NPOpenEnum Processing (RESOURCE_CONTEXT)\n");
+#endif
+
+            break;
+        }
+
+        case RESOURCE_GLOBALNET:
+        {
+
+            if( lpNetResource != NULL &&
+                lpNetResource->lpRemoteName != NULL)
+            {
+
+                pEnumCB->RemoteName = (WCHAR *)HeapAlloc( GetProcessHeap( ), HEAP_ZERO_MEMORY, 0x1000);
+
+                if( pEnumCB->RemoteName == NULL)
+                {
+
+                    dwStatus = WN_OUT_OF_MEMORY;
+                    HeapFree( GetProcessHeap( ), 0, (PVOID) *lphEnum );
+                    *lphEnum = NULL;
+                }
+                else
+                {
+
+                    wcscpy( pEnumCB->RemoteName,
+                            lpNetResource->lpRemoteName);
+
+#ifdef AFS_DEBUG_TRACE
+                    AFSDbgPrint( L"NPOpenEnum Processing (RESOURCE_GLOBALNET) For remote name %s\n",
+                             lpNetResource->lpRemoteName);
+#endif
+
+                }
+            }
+#ifdef AFS_DEBUG_TRACE
+            else
+            {
+
+                AFSDbgPrint(L"NPOpenEnum Processing (RESOURCE_GLOBALNET)\n");
+            }
+#endif
+
+            pEnumCB->Scope = RESOURCE_GLOBALNET;            
+            
+            break;
+        }
+
         default:
 
             dwStatus  = WN_NOT_SUPPORTED;
+            HeapFree( GetProcessHeap( ), 0, (PVOID) *lphEnum );
+            *lphEnum = NULL;
+
             break;
     }
 
@@ -836,19 +929,35 @@ NPEnumResource( HANDLE  hEnum,
     AFSNetworkProviderConnectionCB *pConnectionCB = NULL;
     void            *pConnectionCBBase = NULL;
     DWORD            dwError = 0;
-    UNICODE_STRING   uniLocalName, uniRemoteName;
-    WCHAR            wchLocalBuffer[ 5];
+    UNICODE_STRING   uniRemoteName;
     HANDLE           hControlDevice = NULL;
-
-    WCHAR wchOutputBuffer[ 512];
+    AFSEnumerationCB *pEnumCB = (AFSEnumerationCB *)hEnum;
 
     __Enter
     {
 
         pNetResource = (LPNETRESOURCE) lpBuffer;
         SpaceAvailable = *lpBufferSize;
-        EntriesCopied = 0;
+        *lpcCount = EntriesCopied = 0;
         StringZone = (PWCHAR) ((char *)lpBuffer + *lpBufferSize);
+
+#ifdef AFS_DEBUG_TRACE
+        if( pEnumCB->RemoteName != NULL)
+        {
+
+            AFSDbgPrint( L"NPEnumResource Processing Remote name %s Type %d Index %d\n",
+                     pEnumCB->RemoteName,
+                     pEnumCB->Type,
+                     pEnumCB->CurrentIndex);
+        }
+        else
+        {
+
+            AFSDbgPrint( L"NPEnumResource Processing Remote name (NULL) Type %d Index %d\n",
+                     pEnumCB->Type,
+                     pEnumCB->CurrentIndex);
+        }
+#endif
 
         pConnectionCB = (AFSNetworkProviderConnectionCB *)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 0x1000);
 
@@ -865,26 +974,47 @@ NPEnumResource( HANDLE  hEnum,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+            try_return( dwStatus = WN_NO_NETWORK);
+        }
+
+        //
+        // Setup what we are going to ask for
+        //
+
+        pConnectionCB->Scope = pEnumCB->Scope;
+
+        pConnectionCB->Type = pEnumCB->Type;
+
+        pConnectionCB->CurrentIndex = pEnumCB->CurrentIndex;
+
+        //
+        // If this is a RESOURCE_GLOBALNET enumeration then pass down the remote name if
+        // there is one
+        //
+
+        pConnectionCB->RemoteNameLength = 0;
+
+        if( pEnumCB->Scope == RESOURCE_GLOBALNET &&
+            pEnumCB->RemoteName != NULL)
+        {
+
+            pConnectionCB->RemoteNameLength = wcslen( pEnumCB->RemoteName) * sizeof( WCHAR);
+
+            wcscpy( pConnectionCB->RemoteName,
+                    pEnumCB->RemoteName);
         }
 
         dwError = DeviceIoControl( hControlDevice,
                                    IOCTL_AFS_LIST_CONNECTIONS,
-                                   NULL,
-                                   0,
+                                   pConnectionCB,
+                                   0x1000,
                                    pConnectionCB,
                                    0x1000,
                                    &dwCopyBytes,
                                    NULL);
 
-        CloseHandle( hControlDevice);
-
         if( !dwError)
         {
-
-            swprintf( wchOutputBuffer, L"NPEnumResource Failed to get connection list from file system %d\n", GetLastError());
-
-            OutputDebugString( wchOutputBuffer);
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -895,115 +1025,77 @@ NPEnumResource( HANDLE  hEnum,
             try_return( dwStatus = WN_NO_MORE_ENTRIES);
         }
 
-        //
-        // Get to where we need to be in the list
-        //
-
-        dwIndex = *((PULONG)hEnum);
-
-        if( dwIndex > 0)
-        {
-
-            while( dwCopyBytes > 0)
-            {
-
-                dwCopyBytes -= (FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) + pConnectionCB->RemoteNameLength);
-
-                if( pConnectionCB->LocalName != 0)
-                {
-
-                    dwIndex--;
-                }
-
-                pConnectionCB = (AFSNetworkProviderConnectionCB *)((char *)pConnectionCB + 
-                                                                FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
-                                                                pConnectionCB->RemoteNameLength);
-
-                if( dwIndex == 0)
-                {
-
-                    break;
-                }
-            }
-        }
-
-        if( dwCopyBytes == 0)
-        {
-
-            try_return( dwStatus = WN_NO_MORE_ENTRIES);
-        }
-
-        dwIndex = *((PULONG)hEnum);
+        dwIndex = pEnumCB->CurrentIndex;
 
         while( TRUE)
         {
 
-            uniLocalName.Length = 0;
-            uniLocalName.MaximumLength = 0;
-            uniLocalName.Buffer = NULL;
-
-            if( pConnectionCB->LocalName != 0)
-            {
-
-                uniLocalName.Buffer = wchLocalBuffer;
-
-                uniLocalName.Length = 2;
-                uniLocalName.MaximumLength = 2;
-                uniLocalName.Buffer[ 0] = pConnectionCB->LocalName;
-                uniLocalName.Buffer[ 1] = L'\0';
-            }
-
-            uniRemoteName.Length = pConnectionCB->RemoteNameLength;
+            uniRemoteName.Length = (USHORT)pConnectionCB->RemoteNameLength;
             uniRemoteName.MaximumLength = uniRemoteName.Length;
             uniRemoteName.Buffer = pConnectionCB->RemoteName;
 
             // Determine the space needed for this entry...
 
-            SpaceNeeded  = sizeof( NETRESOURCE );            // resource struct
+            SpaceNeeded  = 0;
             
-            if( uniLocalName.Length > 0)
+            if( pConnectionCB->LocalName != 0)
             {
 
                 SpaceNeeded += 3 * sizeof(WCHAR);                // local name
             }
 
             SpaceNeeded += pConnectionCB->RemoteNameLength + sizeof( WCHAR);        // remote name
-            SpaceNeeded += 0;                                                       // comment
-            SpaceNeeded += OPENAFS_PROVIDER_NAME_LENGTH + sizeof( WCHAR);         // provider name
 
-            if( SpaceNeeded > SpaceAvailable)
+            if( pConnectionCB->CommentLength > 0)
+            {
+                
+                SpaceNeeded += pConnectionCB->CommentLength + sizeof( WCHAR);           // comment
+            }
+
+            SpaceNeeded += OPENAFS_PROVIDER_NAME_LENGTH + sizeof( WCHAR);           // provider name
+
+            if( SpaceNeeded + sizeof( NETRESOURCE) > SpaceAvailable)
             {
 
-                dwStatus = WN_MORE_DATA;
+                if (EntriesCopied == 0) {
+                    
+                    dwStatus = WN_MORE_DATA;
             
-                *lpBufferSize = SpaceNeeded;
+                    *lpBufferSize = SpaceNeeded + sizeof( NETRESOURCE);
+
+#ifdef AFS_DEBUG_TRACE
+                    AFSDbgPrint( L"NPEnumResource Request MORE_DATA for entry %s Len %d\n",
+                             &uniRemoteName,
+                             *lpBufferSize);
+#endif
+
+                } else {
+
+#ifdef AFS_DEBUG_TRACE
+                    AFSDbgPrint( L"NPEnumResource Return SUCCESS but more entries Index %d\n",
+                             dwIndex);
+#endif
+
+                    dwStatus = WN_SUCCESS;
+                }     
                 
                 break;
             }
 
-            SpaceAvailable -= SpaceNeeded;
+            SpaceAvailable -= (SpaceNeeded + sizeof( NETRESOURCE));
 
-            pNetResource->dwScope       = RESOURCE_CONNECTED;
-            pNetResource->dwType        = pConnectionCB->ResourceType;
+            pNetResource->dwScope       = pEnumCB->Scope;
+            pNetResource->dwType        = pConnectionCB->Type;
 
-            if( uniRemoteName.Length == 10)
-            {
+            pNetResource->dwDisplayType = pConnectionCB->DisplayType;
 
-                pNetResource->dwDisplayType = RESOURCEDISPLAYTYPE_SERVER;
-            }
-            else
-            {
-
-                pNetResource->dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-            }
-
-            pNetResource->dwUsage       = 0; //RESOURCEUSAGE_CONNECTABLE | RESOURCEUSAGE_ATTACHED;
+            pNetResource->dwUsage       = pConnectionCB->Usage;
 
             // setup string area at opposite end of buffer
-            StringZone = (PWCHAR)( (PBYTE) StringZone - SpaceNeeded );
+            StringZone = (PWCHAR)( (PBYTE) StringZone - SpaceNeeded);
                 
             // copy local name
-            if( uniLocalName.Length > 0)
+            if( pConnectionCB->LocalName != 0)
             {
 
                 pNetResource->lpLocalName = StringZone;
@@ -1017,6 +1109,11 @@ NPEnumResource( HANDLE  hEnum,
                 pNetResource->lpLocalName = NULL;
             }
 
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint( L"NPEnumResource Processing Entry %wZ\n",
+                     &uniRemoteName);
+#endif
+
             // copy remote name                    
             pNetResource->lpRemoteName = StringZone;
                     
@@ -1024,23 +1121,40 @@ NPEnumResource( HANDLE  hEnum,
                         pConnectionCB->RemoteName, 
                         pConnectionCB->RemoteNameLength);
 
-            StringZone += pConnectionCB->RemoteNameLength / sizeof(WCHAR);
+            StringZone += (pConnectionCB->RemoteNameLength / sizeof(WCHAR));
 
             *StringZone++ = L'\0';
 
             // copy comment
-            pNetResource->lpComment = NULL;
+            if( pConnectionCB->CommentLength > 0)
+            {
+
+                pNetResource->lpComment = StringZone;
+
+                CopyMemory( StringZone, 
+                            (void *)((char *)pConnectionCB + pConnectionCB->CommentOffset), 
+                            pConnectionCB->CommentLength);
+
+                StringZone += (pConnectionCB->CommentLength / sizeof(WCHAR));
+
+                *StringZone++ = L'\0';
+            }
+            else
+            {
+
+                pNetResource->lpComment = NULL;
+            }
 
             // copy provider name
             pNetResource->lpProvider = StringZone;
-            wcscpy( StringZone, OPENAFS_PROVIDER_NAME);         /* safe */
+            wcscpy( StringZone, OPENAFS_PROVIDER_NAME);
 
-            StringZone += OPENAFS_PROVIDER_NAME_LENGTH / sizeof( WCHAR);
+            StringZone += (OPENAFS_PROVIDER_NAME_LENGTH / sizeof( WCHAR));
 
             *StringZone = L'\0';
 
             // setup the new end of buffer
-            StringZone = (PWCHAR)( (PBYTE) StringZone - SpaceNeeded );
+            StringZone = (PWCHAR)( (PBYTE) StringZone - SpaceNeeded);
 
             EntriesCopied++;
 
@@ -1048,7 +1162,9 @@ NPEnumResource( HANDLE  hEnum,
 
             dwIndex++;
 
-            dwCopyBytes -= FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) + pConnectionCB->RemoteNameLength;
+            dwCopyBytes -= FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) + 
+                           pConnectionCB->RemoteNameLength +
+                           pConnectionCB->CommentLength;
 
             if( dwCopyBytes == 0)
             {
@@ -1059,16 +1175,29 @@ NPEnumResource( HANDLE  hEnum,
             }
 
             pConnectionCB = (AFSNetworkProviderConnectionCB *)((char *)pConnectionCB + 
-                                                                FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
-                                                                pConnectionCB->RemoteNameLength);
+                            FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
+                            pConnectionCB->RemoteNameLength +
+                            pConnectionCB->CommentLength);
         }
 
         *lpcCount = EntriesCopied;
 
         // update entry index
-        *(PULONG)hEnum = dwIndex;
+        pEnumCB->CurrentIndex = dwIndex;
+
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPEnumResource Completed Count %d Index %d\n",
+                 EntriesCopied,
+                 dwIndex);
+#endif
 
 try_exit:
+
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
 
         if( pConnectionCBBase != NULL)
         {
@@ -1104,6 +1233,14 @@ DWORD APIENTRY
 NPCloseEnum( HANDLE hEnum )
 {
 
+    AFSEnumerationCB *pEnumCB = (AFSEnumerationCB *)hEnum;
+
+    if( pEnumCB->RemoteName != NULL)
+    {
+
+        HeapFree( GetProcessHeap( ), 0, (PVOID) pEnumCB->RemoteName);
+    }
+
     HeapFree( GetProcessHeap( ), 0, (PVOID) hEnum );
 
     return WN_SUCCESS;
@@ -1111,7 +1248,7 @@ NPCloseEnum( HANDLE hEnum )
 
 ULONG
 _cdecl
-WideDbgPrint(
+AFSDbgPrint(
     PWCHAR Format,
     ...
     )
@@ -1123,7 +1260,6 @@ WideDbgPrint(
     va_start( marker, Format );
     {
          rc = wvsprintf( wszbuffer, Format, marker );
-         OutputDebugString( TRACE_TAG );
          OutputDebugString( wszbuffer );
     }
 
@@ -1170,6 +1306,20 @@ NPGetResourceParent( LPNETRESOURCE   lpNetResource,
                      LPDWORD lpBufferSize )
 {
 
+#ifdef AFS_DEBUG_TRACE
+    if( lpNetResource != NULL &&
+        lpNetResource->lpRemoteName != NULL)
+    {
+
+        AFSDbgPrint( L"NPGetResourceParent For remote name %s\n", lpNetResource->lpRemoteName);
+    }
+    else
+    {
+
+        AFSDbgPrint( L"NPGetResourceParent No resource\n");
+    }
+#endif
+
     return WN_NOT_SUPPORTED;
 }
 
@@ -1180,7 +1330,151 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
                           LPWSTR  *lplpSystem )
 {
 
-    return WN_NOT_SUPPORTED;
+    DWORD    dwStatus = WN_NOT_CONNECTED;
+    AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
+    DWORD    dwError = 0;
+    DWORD    dwBufferSize = 0;
+    HANDLE   hControlDevice = NULL;
+    NETRESOURCE *pNetResource = (NETRESOURCE *)lpBuffer;
+    PWCHAR   pStringZone = NULL;
+    UNICODE_STRING uniRemoteName;
+    DWORD    ulRequiredLen = 0;
+
+    __Enter
+    {
+
+        if( lpNetResource == NULL ||
+            lpNetResource->lpRemoteName == NULL)
+        {
+
+            AFSDbgPrint( L"NPGetResourceInformation No resource name\n");
+
+            try_return( dwStatus = WN_BAD_VALUE);
+        }
+
+        dwBufferSize = 0x1000;
+
+        pConnectCB = (AFSNetworkProviderConnectionCB *)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufferSize);
+
+        if( pConnectCB == NULL)
+        {
+
+            try_return( dwStatus = WN_OUT_OF_MEMORY);
+        }
+
+        pConnectCB->RemoteNameLength = wcslen( lpNetResource->lpRemoteName) * sizeof( WCHAR);
+
+        wcscpy( pConnectCB->RemoteName,
+                lpNetResource->lpRemoteName);
+
+        hControlDevice = OpenRedirector();
+
+        if( hControlDevice == NULL)
+        {
+
+            try_return( dwStatus = WN_NO_NETWORK);
+        }
+
+        dwError = DeviceIoControl( hControlDevice,
+                                   IOCTL_AFS_GET_CONNECTION_INFORMATION,
+                                   pConnectCB,
+                                   dwBufferSize,
+                                   pConnectCB,
+                                   dwBufferSize,
+                                   lpBufferSize,
+                                   NULL);
+
+        if( !dwError)
+        {
+
+            AFSDbgPrint(L"NPGetResourceInformation IOCtl failure\n");
+
+            try_return( dwStatus = WN_BAD_NETNAME);
+        }        
+
+        uniRemoteName.Length = (USHORT)pConnectCB->RemoteNameLength;
+        uniRemoteName.MaximumLength = uniRemoteName.Length;
+        uniRemoteName.Buffer = pConnectCB->RemoteName;
+
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPGetResourceInformation For remote name %wZ\n", 
+                                             &uniRemoteName);
+#endif
+
+        // Determine the space needed for this entry...
+
+        ulRequiredLen = sizeof( NETRESOURCE);            
+        
+        ulRequiredLen += pConnectCB->RemoteNameLength + sizeof( WCHAR);        // remote name
+
+        if( ulRequiredLen > *lpBufferSize)
+        {
+          
+            *lpBufferSize = ulRequiredLen;
+
+            try_return( dwStatus = WN_MORE_DATA);
+        }
+
+        pStringZone = (PWCHAR) ((char *)lpBuffer + sizeof( NETRESOURCE));
+
+        pNetResource->dwScope       = RESOURCE_GLOBALNET;
+        pNetResource->dwType        = pConnectCB->Type;
+
+        pNetResource->dwDisplayType = pConnectCB->DisplayType;
+
+        pNetResource->dwUsage       = pConnectCB->Usage;
+
+        pNetResource->lpLocalName = NULL;
+
+        // copy remote name                    
+        pNetResource->lpRemoteName = pStringZone;
+                    
+        CopyMemory( pStringZone, 
+                    pConnectCB->RemoteName, 
+                    pConnectCB->RemoteNameLength);
+
+        pStringZone += (pConnectCB->RemoteNameLength / sizeof(WCHAR));
+
+        *pStringZone++ = L'\0';
+
+        pNetResource->lpComment = NULL;
+
+        *lpBufferSize = ulRequiredLen;
+
+        //
+        // Check for the name pased to us for non-processed portion
+        //
+
+        if( uniRemoteName.Length < wcslen( lpNetResource->lpRemoteName) * sizeof( WCHAR))
+        {
+
+            *lplpSystem = (LPWSTR)((char *)lpNetResource->lpRemoteName + (uniRemoteName.Length/sizeof( WCHAR)));
+
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint( L"NPGetResourceInformation For remote name %s returning non-process %s\n", 
+                                                                        lpNetResource->lpRemoteName,
+                                                                        lplpSystem);
+#endif
+        }
+ 
+        dwStatus = WN_SUCCESS;
+
+try_exit:
+
+        if ( hControlDevice != NULL) 
+        {
+        
+            CloseHandle( hControlDevice);
+        }
+
+        if( pConnectCB != NULL)
+        {
+
+            HeapFree( GetProcessHeap( ), 0, (PVOID) pConnectCB);
+        }
+    }
+
+    return dwStatus;
 }
 
 DWORD APIENTRY
@@ -1191,6 +1485,61 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 {
 
     return WN_NOT_SUPPORTED;
+}
+
+DWORD 
+NPFormatNetworkName(
+  LPTSTR  lpRemoteName,
+  LPTSTR  lpFormattedName,
+  LPDWORD lpnLength,
+  DWORD dwFlags,
+  DWORD dwAveCharPerLine
+)
+{
+
+    DWORD dwLen = 0, dwCurrentLen = 0;
+    LPTSTR pCurrentName = lpRemoteName;
+
+    //
+    // Walk back in the name until we hit a \
+    //
+
+    dwLen = wcslen( lpRemoteName);
+
+    pCurrentName += (dwLen - 1);
+
+    while( dwLen > 0)
+    {
+
+        if( pCurrentName[ 0] == L'\\')
+        {
+
+            pCurrentName++;
+
+            break;
+        }
+
+        pCurrentName--;
+
+        dwLen--;
+
+        dwCurrentLen++;
+    }
+
+    if( *lpnLength  < dwCurrentLen * sizeof( WCHAR))
+    {
+
+        *lpnLength = dwCurrentLen * sizeof( WCHAR);
+
+        return WN_MORE_DATA;
+    }
+
+    *lpnLength = dwCurrentLen * sizeof( WCHAR);
+
+    wcscpy( lpFormattedName,
+            pCurrentName);
+    
+    return WN_SUCCESS;
 }
 
 /************************************************************
@@ -1206,21 +1555,19 @@ OpenRedirector()
     WCHAR wchError[ 256];
 
     hControlDevice = CreateFile( AFS_SYMLINK_W,
-	 			 		         GENERIC_READ | GENERIC_WRITE,
-							     FILE_SHARE_READ | FILE_SHARE_WRITE,
-							     NULL,
-							     OPEN_EXISTING,
-							     0,
-							     NULL );
+                                 GENERIC_READ | GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 NULL,
+                                 OPEN_EXISTING,
+                                 0,
+                                 NULL );
 
     if( hControlDevice == INVALID_HANDLE_VALUE)
     {
 
         hControlDevice = NULL;
 
-        swprintf( wchError, L"Failed to open control device error: %d\n", GetLastError());
-
-        OutputDebugString( wchError);
+        AFSDbgPrint( L"Failed to open control device error: %d\n", GetLastError());
     }
 
     return hControlDevice;

@@ -134,7 +134,7 @@ AFSUnload( IN PDRIVER_OBJECT DriverObject);
 //
 
 NTSTATUS
-AFSEnumerateDirectory( IN AFSFileID          *ParentFileID,
+AFSEnumerateDirectory( IN AFSFcb *Dcb,
                        IN OUT AFSDirHdr      *DirectoryHdr,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
@@ -163,6 +163,7 @@ AFSNotifyRename( IN AFSFcb *Fcb,
 
 NTSTATUS
 AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
+                       IN ULONGLONG ProcessID,
                        OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS
@@ -376,7 +377,7 @@ NTSTATUS
 AFSRemoveAFSRoot( void);
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEntryCB *MountPointDirEntry,
+AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
                 OUT AFSFcb **RootVcb);
 
 void
@@ -446,7 +447,8 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                   OUT AFSDirEntryCB **ShareDirEntry);
 
 NTSTATUS
-AFSBuildTargetDirectory( IN AFSFcb *Fcb);
+AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
+                         IN AFSFcb *Fcb);
 
 //
 // AFSNetworkProviderSupport.cpp
@@ -456,6 +458,11 @@ NTSTATUS
 AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                   IN OUT PULONG ResultStatus,
                   IN OUT ULONG_PTR *ReturnOutputBufferLength);
+
+NTSTATUS
+AFSAddConnectionEx( IN UNICODE_STRING *RemoteName,
+                    IN ULONG DisplayType,
+                    IN ULONG Flags);
 
 NTSTATUS
 AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
@@ -472,6 +479,24 @@ NTSTATUS
 AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                     IN ULONG ConnectionBufferLength,
                     IN OUT ULONG_PTR *ReturnOutputBufferLength);
+
+void
+AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
+                             IN ULONG DisplayType);
+
+AFSProviderConnectionCB *
+AFSLocateEnumRootEntry( IN UNICODE_STRING *RemoteName);
+
+NTSTATUS
+AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
+                        IN AFSProviderConnectionCB *RootConnection,
+                        IN ULONG BufferLength,
+                        OUT PULONG CopiedLength);
+
+NTSTATUS
+AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
+                      IN ULONG BufferLength,
+                      IN OUT ULONG_PTR *ReturnOutputBufferLength);
 
 //
 // AFSRead.cpp Prototypes
@@ -865,10 +890,6 @@ BOOLEAN
 AFSIsChildOfParent( IN AFSFcb *Dcb,
                     IN AFSFcb *Fcb);
 
-NTSTATUS
-AFSRetrieveTargetFID( IN AFSFcb *Fcb,
-                      OUT AFSFileID *FileId);
-
 inline
 ULONGLONG
 AFSCreateHighIndex( IN AFSFileID *FileID);
@@ -907,6 +928,39 @@ AFSInitServerStrings( void);
 
 NTSTATUS
 AFSReadServerName( void);
+
+NTSTATUS
+AFSInvalidateVolume( IN AFSFcb *Vcb,
+                     IN ULONG Reason);
+
+NTSTATUS
+AFSVerifyEntry( IN AFSFcb *Fcb);
+
+NTSTATUS
+AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus);
+
+NTSTATUS
+AFSSetNetworkState( IN AFSNetworkStatusCB *NetworkStatus);
+
+NTSTATUS
+AFSRemoveDirectoryCache( IN AFSFcb *Dcb);
+
+NTSTATUS
+AFSRemoveRootDirectoryCache( IN AFSFcb *Dcb);
+
+NTSTATUS
+AFSWalkTargetChain( IN AFSFcb *ParentFcb,
+                    OUT AFSFcb **TargetFcb);
+
+BOOLEAN
+AFSIsVolumeFID( IN AFSFileID *FileID);
+
+BOOLEAN
+AFSIsFinalNode( IN AFSFcb *Fcb);
+
+void
+AFSUpdateMetaData( IN AFSFcb *Fcb,
+                   IN AFSDirEnumEntry *DirEntry);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp
@@ -1155,6 +1209,9 @@ AFSInitVolumeWorker( IN AFSFcb *VolumeVcb);
 
 NTSTATUS
 AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb);
+
+NTSTATUS
+AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb);
 
 //
 // AFSRDRSupport.cpp Prototypes

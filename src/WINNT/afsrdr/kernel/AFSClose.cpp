@@ -129,27 +129,9 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     if( pParentDcb->Header.NodeTypeCode != AFS_ROOT_ALL)
                     {
                         
-                        if( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-                        {
+                        ASSERT( pParentDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY);
 
-                            //
-                            // Just the FID of the node
-                            //
-
-                            stParentFileId = pParentDcb->DirEntry->DirectoryEntry.FileId;
-                        }
-                        else
-                        {
-
-                            ntStatus = AFSRetrieveTargetFID( pParentDcb,
-                                                             &stParentFileId);
-
-                            if( !NT_SUCCESS( ntStatus))
-                            {
-
-                                try_return( ntStatus);
-                            }
-                        }
+                        stParentFileId = pParentDcb->DirEntry->DirectoryEntry.FileId;
                     }
                 }
 
