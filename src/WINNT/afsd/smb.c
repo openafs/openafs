@@ -45,8 +45,6 @@ time_t smb_LogoffTransferTimeout;
 
 int smb_StoreAnsiFilenames = 0;
 
-afs_uint32 smb_Enabled = 1;
-
 DWORD last_msg_time = 0;
 
 long ongoingOps = 0;
@@ -200,7 +198,12 @@ void smb_InitReq(cm_req_t *reqp)
 
 void smb_ResetServerPriority()
 {
-    void * p = TlsGetValue(smb_TlsRequestSlot);
+    void * p;
+    
+    if (!smb_Enabled)
+        return;
+
+    p = TlsGetValue(smb_TlsRequestSlot);
     if (p) {
 	free(p);
 	TlsSetValue(smb_TlsRequestSlot, NULL);
@@ -210,7 +213,12 @@ void smb_ResetServerPriority()
 
 void smb_SetRequestStartTime()
 {
-    time_t * tp = TlsGetValue(smb_TlsRequestSlot);
+    time_t * tp;
+    
+    if (!smb_Enabled)
+        return;
+
+    tp = TlsGetValue(smb_TlsRequestSlot);
     if (!tp)
 	tp = malloc(sizeof(time_t));
     if (tp) {
@@ -223,7 +231,12 @@ void smb_SetRequestStartTime()
 
 void smb_UpdateServerPriority()
 {	
-    time_t *tp = TlsGetValue(smb_TlsRequestSlot);
+    time_t *tp;
+    
+    if (!smb_Enabled)
+        return;
+
+    tp = TlsGetValue(smb_TlsRequestSlot);
 
     if (tp) {
 	time_t now = osi_Time();

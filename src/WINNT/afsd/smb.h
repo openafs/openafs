@@ -707,7 +707,6 @@ extern int smb_hideDotFiles;
 extern unsigned int smb_IsDotFile(clientchar_t *lastComp);
 extern afs_uint32 smb_AsyncStore;
 extern afs_uint32 smb_AsyncStoreSize;
-extern afs_uint32 smb_Enabled;
 
 /* the following are used for smb auth */
 extern int smb_authType; /* Type of SMB authentication to be used. One from below. */

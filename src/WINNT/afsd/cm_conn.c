@@ -98,18 +98,33 @@ void cm_InitConn(void)
             RegCloseKey(parmKey);
 	}
 
-	afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
-	if (ConnDeadtimeout == 0) {
-	    ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
-            afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
-        }
-	if (HardDeadtimeout == 0) {
-	    HardDeadtimeout = (unsigned short) RDRtimeout;
-            afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-        }
-	if (ConnDeadtimeout == 0) {
-	    IdleDeadtimeout = (unsigned short) RDRtimeout;
-            afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+        if (smb_Enabled) {
+            afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
+            if (ConnDeadtimeout == 0) {
+                ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
+                afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+            }
+            if (HardDeadtimeout == 0) {
+                HardDeadtimeout = (unsigned short) RDRtimeout;
+                afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+            }
+            if (ConnDeadtimeout == 0) {
+                IdleDeadtimeout = (unsigned short) RDRtimeout;
+                afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+            }
+        } else {
+            if (ConnDeadtimeout == 0) {
+                ConnDeadtimeout = CM_CONN_IFS_CONNDEADTIME;
+                afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+            }
+            if (HardDeadtimeout == 0) {
+                HardDeadtimeout = CM_CONN_IFS_HARDDEADTIME;
+                afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+            }
+            if (ConnDeadtimeout == 0) {
+                IdleDeadtimeout = CM_CONN_IFS_IDLEDEADTIME;
+                afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+            }
         }
 	osi_EndOnce(&once);
     }

@@ -73,6 +73,7 @@ int cm_logChunkSize;
 int cm_chunkSize;
 
 int smb_UseV3 = 1;
+afs_uint32 smb_Enabled = 1;
 
 int LANadapter;
 
