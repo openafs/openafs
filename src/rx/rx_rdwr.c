@@ -379,9 +379,9 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - sizeof(afs_int32);
-	call->nLeft = tnLeft - sizeof(afs_int32);
-        if (!call->nLeft) {
+	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->nLeft = (u_short)(tnLeft - sizeof(afs_int32));
+        if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
             NETPRI;
             MUTEX_ENTER(&call->lock);
