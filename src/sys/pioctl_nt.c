@@ -446,7 +446,8 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
         //
         if (dwResultEnum == NO_ERROR) {
             for (i = 0; i < cEntries; i++) {
-                if (toupper(lpnrLocal[i].lpLocalName[0]) == toupper(drivestr[0])) {
+                if (lpnrLocal[i].lpLocalName &&
+                    toupper(lpnrLocal[i].lpLocalName[0]) == toupper(drivestr[0])) {
                     //
                     // Skip the two backslashes at the start of the UNC device name
                     //
