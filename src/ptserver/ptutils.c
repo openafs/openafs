@@ -294,7 +294,7 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
-    if (restricted && ((mem == PRP_ADD_MEM) || (mem == any == 0)))
+    if (restricted && ((mem == PRP_ADD_MEM) || (mem == PRP_REMOVE_MEM)) && (any == 0))
 	return 0;
     if (tentry) {
 	flags = tentry->flags;
