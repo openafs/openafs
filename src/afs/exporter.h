@@ -107,7 +107,7 @@ struct afs_exporter {
 #define	EXP_CHECKHOST(EXP, HOST)	\
         (*(EXP)->exp_op->export_checkhost)(EXP, HOST)
 #define	EXP_GETHOST(EXP)	\
-        (*(EXP)->exp_op->export_checkhost)(EXP)
+        (*(EXP)->exp_op->export_gethost)(EXP)
 
 struct afs3_fid {
     u_short len;
