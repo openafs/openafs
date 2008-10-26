@@ -184,9 +184,10 @@ RDR_CleanupIoctl(ULONG index)
             RDR_allIoctls = iop->next;
         else 
             iop->prev->next = iop->next;
-        if (iop->next == NULL)
-            RDR_allIoctlsLast = iop->next;
-        else
+        if (iop->next == NULL) {
+            RDR_allIoctlsLast = iop->prev;
+            iop->prev->next = NULL;
+        } else
             iop->next->prev = iop->prev;
     }
     free(iop);
