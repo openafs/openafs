@@ -528,8 +528,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 				    "%s.\n", progname, cell_to_use);
 			    exit(AKLOG_MISC);
 			}
-			printf("We've deduced that we need to authenticate to"
-			       " realm %s.\n", realm_of_cell);
+			if (dflag) {
+			    printf("We've deduced that we need to authenticate"
+			           " to realm %s.\n", realm_of_cell);
+			}
 		    }
 		    status = get_credv5(context, AFSKEY, cell_to_use, 
 				        realm_of_cell, &v5cred);
