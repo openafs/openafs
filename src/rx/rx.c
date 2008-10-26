@@ -6560,8 +6560,6 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint32 * supportedValues)
 {
     struct rx_debugIn in;
-    afs_int32 *lp = (afs_int32 *) stat;
-    int i;
     afs_int32 rc = 0;
 
     *supportedValues = 0;
@@ -6623,6 +6621,7 @@ rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint32 * supportedValues)
 {
     struct rx_debugIn in;
+    int i;
     afs_int32 *lp = (afs_int32 *) stat;
     afs_int32 rc = 0;
 
