@@ -572,7 +572,7 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
     PROCESS pid;
 #endif
     struct scanTapeIf *ptr;
-    statusP statusPtr;
+    statusP statusPtr = NULL;
     afs_int32 code = 0;
 
     extern afs_int32 allocTaskId();

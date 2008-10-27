@@ -502,7 +502,7 @@ cfg_HostSetAfsPrincipal(void *hostHandle,	/* host config handle */
     if (tst == 0) {
 	kas_identity_t afsIdentity;
 	kas_encryptionKey_t afsKey;
-	int afsKvno;
+	int afsKvno = 0;
 
 	strcpy(afsIdentity.principal, "afs");
 	afsIdentity.instance[0] = '\0';

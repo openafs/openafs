@@ -168,10 +168,12 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     char buf[SIZEOF_LARGEDISKVNODE], dbuf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *rwvnode = (struct VnodeDiskObject *)buf;
     struct VnodeDiskObject *clvnode = (struct VnodeDiskObject *)dbuf;
-    Inode rwinode, clinode;
+    Inode rwinode = 0;
+    Inode clinode;
     struct clone_head decHead;
     struct clone_rock decRock;
-    afs_int32 offset, dircloned, inodeinced;
+    afs_int32 offset = 0;
+    afs_int32 dircloned, inodeinced;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);

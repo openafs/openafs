@@ -7151,11 +7151,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_sfsize_t tlen;		/* temp for xfr length */
     Inode tinode;		/* inode for I/O */
     afs_int32 optSize;		/* optimal transfer size */
-    afs_sfsize_t DataLength;	/* size of inode */
+    afs_sfsize_t DataLength = 0;	/* size of inode */
     afs_sfsize_t TruncatedLength;	/* size after ftruncate */
     afs_fsize_t NewLength;	/* size after this store completes */
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
-    int linkCount;		/* link count on inode */
+    int linkCount = 0;		/* link count on inode */
     FdHandle_t *fdP;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 

@@ -392,7 +392,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
     char *writeBufPtr;
     afs_int32 transferSize;
 
-    char *readBufPtr;
+    char *readBufPtr = NULL;
     afs_int32 maxReadSize;
 
     charListT charList;

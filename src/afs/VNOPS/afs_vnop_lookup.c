@@ -664,7 +664,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     afs_int32 retry;		/* handle low-level SGI MP race conditions */
     long volStates;		/* flags from vol structure */
     struct volume *volp = 0;	/* volume ptr */
-    struct VenusFid dotdot;
+    struct VenusFid dotdot = {0, 0, 0};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;

@@ -470,7 +470,7 @@ mini_justify(a_srcbuff, a_dstbuff, a_dstwidth, a_justification, a_rightTrunc,
     int num_src_chars;		/*# of chars in source */
     int true_num_src_chars;	/*# src chars before truncation */
     int trunc_needed;		/*Is truncation needed? */
-    char diskChar;		/*Disk name prefix */
+    char diskChar = 0;		/*Disk name prefix */
 
     if (scout_debug) {
 	fprintf(scout_debugfd, "[%s] Called with '%s', dest width=%d\n", rn,

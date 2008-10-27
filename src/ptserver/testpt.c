@@ -272,8 +272,8 @@ CreateGroup(int g)
     char name[16];
     afs_int32 id = 0;
     afs_int32 flags = PRGRP;
-    afs_int32 owner;
-    char *ownerName;
+    afs_int32 owner = 0;
+    char *ownerName = NULL;
     int ownerType;		/* type of ownership */
     static char *lastGroupPrefix;	/* prefix used for type==2 */
 

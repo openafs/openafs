@@ -933,7 +933,7 @@ static void
 handle_split_proc(definition * defp, int multi_flag)
 {
     char *startname = SplitStart, *endname = SplitEnd;
-    int numofparams;
+    int numofparams = 0;
 
     if (!startname)
 	startname = "Start";

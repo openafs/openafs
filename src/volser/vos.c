@@ -1133,7 +1133,7 @@ DisplayVolumes(server, part, pntr, count, longlist, fast, quiet)
      int quiet;
 {
     int totalOK, totalNotOK, totalBusy, i;
-    afs_int32 volid;
+    afs_int32 volid = 0;
 
     totalOK = 0;
     totalNotOK = 0;
@@ -1210,7 +1210,7 @@ XDisplayVolumes(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
     int totalNotOK;		/*Total screwed volumes */
     int totalBusy;		/*Total busy volumes */
     int i;			/*Loop variable */
-    afs_int32 volid;		/*Current volume ID */
+    afs_int32 volid = 0;	/*Current volume ID */
 
     /*
      * Initialize counters and (global!!) queues.
@@ -1301,7 +1301,7 @@ XDisplayVolumes2(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
     int totalNotOK;		/*Total screwed volumes */
     int totalBusy;		/*Total busy volumes */
     int i;			/*Loop variable */
-    afs_int32 volid;		/*Current volume ID */
+    afs_int32 volid = 0;	/*Current volume ID */
 
     /*
      * Initialize counters and (global!!) queues.
@@ -2901,7 +2901,8 @@ RestoreVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 avolid, aparentid, aserver, apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
     afs_int32 acreation = 0, alastupdate = 0;
-    int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
+    int restoreflags = 0;
+    int readonly = 0, offline = 0, voltype = RWVOL;
     char prompt;
     char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
@@ -3532,11 +3533,13 @@ ListVolumes(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
     afs_int32 aserver, code;
-    volintInfo *pntr, *oldpntr;
+    volintInfo *pntr;
+    volintInfo *oldpntr = NULL;
     afs_int32 count;
     int i;
     char *base;
-    volintXInfo *xInfoP, *origxInfoP;	/*Ptr to current/orig extended vol info */
+    volintXInfo *xInfoP;
+    volintXInfo *origxInfoP = NULL; /*Ptr to current/orig extended vol info */
     int wantExtendedInfo;	/*Do we want extended vol info? */
 
     char pname[10];
@@ -4146,7 +4149,7 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
 static int
 DeleteEntry(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 apart;
+    afs_int32 apart = 0;
     afs_int32 avolid;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -4375,7 +4378,9 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
     struct nvldbentry *vllist, *tarray = 0, *ttarray;
-    afs_int32 centries, nentries = 0, tarraysize, parraysize;
+    afs_int32 centries, nentries = 0;
+    afs_int32 tarraysize = 0;
+    afs_int32 parraysize;
     int j;
     char pname[10];
     int quiet, sort, lock;
@@ -4555,7 +4560,7 @@ BackSys(register struct cmd_syndesc *as, void *arock)
     int comp = 0;
     struct cmd_item *ti;
     char *ccode;
-    int match;
+    int match = 0;
 
     memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
@@ -4869,7 +4874,8 @@ static int
 UnlockVLDB(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_int32 aserver, code;
+    afs_int32 aserver = NULL;
+    afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
@@ -5361,12 +5367,12 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
     afs_int32 server, volid, code, i, same;
     struct nvldbentry entry, storeEntry;
     afs_int32 vcode;
-    afs_int32 rwindex;
+    afs_int32 rwindex = 0;
     afs_int32 rwserver = 0;
-    afs_int32 rwpartition;
-    afs_int32 roindex;
+    afs_int32 rwpartition = 0;
+    afs_int32 roindex = 0;
     afs_int32 roserver = 0;
-    afs_int32 ropartition;
+    afs_int32 ropartition = 0;
     int force = 0;
     struct rx_connection *aconn;
     char c, dc;

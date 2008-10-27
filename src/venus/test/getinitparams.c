@@ -41,7 +41,7 @@ GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
     int code;
     int len;
     char *file = 0;
-    int fd;
+    int fd = 0;
 
     if (as->parms[0].items) {
 	file = as->parms[0].items->data;
