@@ -3035,7 +3035,8 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 {
     afs_int32 volid;
     struct volser_status tstatus;
-    int code, rcode, tcode;
+    int code = 0;
+    int rcode, tcode;
     char hoststr[16];
 
     *connPtr = (struct rx_connection *)0;
@@ -3173,7 +3174,8 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 		 afs_int32 afrompart, int forceflag)
 {
     char vname[64];
-    afs_int32 code, vcode, rcode, tcode;
+    afs_int32 code = 0;
+    afs_int32 vcode, rcode, tcode;
     afs_int32 cloneVolId, roVolId;
     struct replica *replicas = 0;
     struct nvldbentry entry, storeEntry;
@@ -3188,13 +3190,15 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     int islocked = 0;
     afs_int32 clonetid = 0, onlinetid;
     afs_int32 fromtid = 0;
-    afs_uint32 fromdate, thisdate;
+    afs_uint32 fromdate = 0;
+    afs_uint32 thisdate;
     time_t tmv;
     int s;
     manyDests tr;
     manyResults results;
     int rwindex, roindex, roclone, roexists;
-    afs_int32 rwcrdate, rwupdate, clcrdate;
+    afs_int32 rwcrdate = 0;
+    afs_int32 rwupdate, clcrdate;
     struct rtime {
 	int validtime;
 	afs_uint32 uptime;
@@ -5305,7 +5309,8 @@ static afs_int32
 CheckVolume(volintInfo * volumeinfo, afs_int32 aserver, afs_int32 apart,
 	    afs_int32 * modentry, afs_uint32 * maxvolid)
 {
-    int idx, j;
+    int idx = 0;
+    int j;
     afs_int32 code, error = 0;
     struct nvldbentry entry, storeEntry;
     char pname[10];
@@ -5784,7 +5789,8 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
 {
     struct rx_connection *aconn = 0;
     afs_int32 j, k, code, vcode, error = 0;
-    afs_int32 tverbose, mod, modified = 0;
+    afs_int32 tverbose;
+    afs_int32 mod, modified = 0;
     struct nvldbentry vldbentry;
     afs_int32 volumeid = 0;
     volEntries volumeInfo;
@@ -5795,16 +5801,18 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
 
-    if (!aserver && (flags & 1)) {
-	/* fprintf(STDERR,"Partition option requires a server option\n"); */
-	ERROR_EXIT(EINVAL);
-    }
-
     /* Turn verbose logging off and do our own verbose logging */
+    /* tverbose must be set before we call ERROR_EXIT() */
+    
     tverbose = verbose;
     if (flags & 2) 
 	tverbose = 1;
     verbose = 0;
+
+    if (!aserver && (flags & 1)) {
+	/* fprintf(STDERR,"Partition option requires a server option\n"); */
+	ERROR_EXIT(EINVAL);
+    }
 
     /* Read the VLDB entry */
     vcode = VLDB_GetEntryByName(avolname, &vldbentry);

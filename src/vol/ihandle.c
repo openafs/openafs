@@ -507,7 +507,7 @@ stream_fdopen(FD_t fd)
 StreamHandle_t *
 stream_open(const char *filename, const char *mode)
 {
-    FD_t fd;
+    FD_t fd = INVALID_FD;
 
     if (strcmp(mode, "r") == 0) {
 	fd = OS_OPEN(filename, O_RDONLY, 0);
