@@ -489,18 +489,19 @@ SDISK_SendFile(rxcall, file, length, avers)
      struct ubik_version *avers;
 {
     register afs_int32 code;
-    register struct ubik_dbase *dbase;
+    struct ubik_dbase *dbase = NULL;
     char tbuffer[1024];
     afs_int32 offset;
     struct ubik_version tversion;
     register int tlen;
     struct rx_peer *tpeer;
     struct rx_connection *tconn;
-    afs_uint32 otherHost;
+    afs_uint32 otherHost = 0;
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
-    afs_int32 epoch, pass;
+    afs_int32 epoch = 0;
+    afs_int32 pass;
 #endif
 
     /* send the file back to the requester */
@@ -638,8 +639,10 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifndef OLD_URECOVERY
 	unlink(pbuffer);
 	/* Failed to sync. Allow reads again for now. */
-	tversion.epoch = epoch;
-	(*dbase->setlabel) (dbase, file, &tversion);
+	if (dbase != NULL) {
+	    tversion.epoch = epoch;
+	    (*dbase->setlabel) (dbase, file, &tversion);
+	}
 #endif
 	ubik_print
 	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
