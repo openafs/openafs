@@ -88,7 +88,7 @@ static
 LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
-    register char *tptr;
+    char *tptr = NULL;
     int inToken;
     struct token *first, *last;
     register struct token *ttok;
@@ -481,7 +481,7 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, void *arock)
     const char *process = NULL;
     int stop = 0;
     int run = 0;
-    bos_ProcessExecutionState_t state;
+    bos_ProcessExecutionState_t state = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -532,7 +532,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
     const char *process = NULL;
     int stop = 0;
     int run = 0;
-    bos_ProcessExecutionState_t state;
+    bos_ProcessExecutionState_t state = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -926,7 +926,7 @@ DoBosAdminCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, ADMIN } DoBosAdminCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *admin;
+    const char *admin = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -954,7 +954,7 @@ DoBosAdminDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, ADMIN } DoBosAdminDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *admin;
+    const char *admin = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1021,7 +1021,7 @@ DoBosKeyCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, VERSIONNUMBER, KEY } DoBosKeyCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    int version_number;
+    int version_number = 0;
     kas_encryptionKey_t key = { {0, 0, 0, 0, 0, 0, 0, 0} };
     const char *cell;
 
@@ -1063,7 +1063,7 @@ DoBosKeyDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, VERSIONNUMBER } DoBosKeyDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    int version_number;
+    int version_number = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1150,7 +1150,7 @@ DoBosCellSet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, CELL } DoBosCellSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *cell;
+    const char *cell = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1204,7 +1204,7 @@ DoBosHostCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, HOST } DoBosHostCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *host;
+    const char *host = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1232,7 +1232,7 @@ DoBosHostDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, HOST } DoBosHostDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *host;
+    const char *host = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1435,7 +1435,7 @@ DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, void *arock)
     } DoBosExecutableRestartTimeSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Restart_t type;
+    bos_Restart_t type = 0;
     int have_daily = 0;
     int have_weekly = 0;
     bos_RestartTime_t time;
@@ -1534,7 +1534,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, void *arock)
     } DoBosExecutableRestartTimeGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Restart_t type;
+    bos_Restart_t type = 0;
     int have_daily = 0;
     int have_weekly = 0;
     bos_RestartTime_t restart_time;
@@ -1583,7 +1583,7 @@ DoBosLogGet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, LOGFILE } DoBosLogGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *log_file;
+    const char *log_file = NULL;
     unsigned long buf_size = INITIAL_BUF_SIZE;
     char *buf = NULL;
 
@@ -1631,7 +1631,7 @@ DoBosAuthSet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, REQUIREAUTH, DISABLEAUTH } DoBosAuthSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Auth_t auth;
+    bos_Auth_t auth = 0;
     int have_req = 0;
     int have_dis = 0;
 
@@ -1675,7 +1675,7 @@ DoBosCommandExecute(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, COMMAND } DoBosCommandExecute_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *command;
+    const char *command = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen

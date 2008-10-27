@@ -285,7 +285,8 @@ writeLastBlocks(char *lastblock, char *lastblock2)
     struct volumeHeader vh;
     char trailer[12];
     struct blockMark *bmark, *bmark2;
-    char *data, *data2;
+    char *data;
+    char *data2 = NULL;
     int count, count2;
     int tlen, skip, pos;
 
@@ -396,7 +397,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     char *data;
     char *tblock;
     afs_int32 code;
-    struct volumeHeader *volheaderPtr;
+    struct volumeHeader *volheaderPtr = NULL;
     int eod = 1;
     int rc;
     char *nextblock;		/* We cycle through three tape blocks so we  */

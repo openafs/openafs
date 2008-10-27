@@ -1938,7 +1938,8 @@ UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP)
 
     if (dirp != NULL) {
 	/* check that not a portition of a larger path */
-	char oneBefore, oneAfter, twoAfter;
+	char oneBefore, oneAfter;
+	char twoAfter = 0;
 
 	oneBefore = *(dirp - 1);
 	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH) - 1);
@@ -1962,7 +1963,8 @@ UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP)
 
     if (dirp != NULL) {
 	/* check that not a portition of a larger path */
-	char oneBefore, oneAfter, twoAfter;
+	char oneBefore, oneAfter;
+	char twoAfter = 0;
 
 	oneBefore = *(dirp - 1);
 	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH) - 1);
@@ -2041,7 +2043,8 @@ UbikQuorumCheck(cfg_host_p cfg_host, const char *dbInstance, short *hasQuorum,
 		tst = tst2;
 		dbhostDone = 1;
 	    } else {
-		short isSyncSite, isWriteReady;
+		short isSyncSite = 0;
+	        short isWriteReady = 0;
 
 		/* ignore errors fetching Ubik vote status; there might be
 		 * an unreachable dbserver yet a reachable sync site.

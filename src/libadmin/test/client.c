@@ -283,8 +283,8 @@ DoClientMountPointCreate(struct cmd_syndesc *as, void *arock)
 	CHECK
     } DoClientMountPointCreate_parm_t;
     afs_status_t st = 0;
-    const char *directory;
-    const char *volume;
+    const char *directory = NULL;
+    const char *volume = NULL;
     vol_type_t vol_type = READ_ONLY;
     vol_check_t vol_check = DONT_CHECK_VOLUME;
 
@@ -335,7 +335,7 @@ DoClientAFSServerGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { SERVER } DoClientAFSServerGet_parm_t;
     afs_status_t st = 0;
-    const char *server;
+    const char *server = NULL;
     afs_serverEntry_t entry;
 
     if (as->parms[SERVER].items) {
@@ -486,8 +486,8 @@ DoClientRPCStatsStateGet(struct cmd_syndesc *as, void *arock)
     int servAddr = 0;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid;
-    afs_stat_type_t which;
+    int typeIsValid = 0;
+    afs_stat_type_t which = 0;
     afs_RPCStatsState_t state;
 
     if (as->parms[PROCESS].items) {
@@ -544,8 +544,8 @@ DoClientRPCStatsStateEnable(struct cmd_syndesc *as, void *arock)
     int servAddr = 0;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid;
-    afs_stat_type_t which;
+    int typeIsValid = 0;
+    afs_stat_type_t which = 0;
 
     if (as->parms[PROCESS].items) {
 	typeIsValid =
@@ -600,8 +600,8 @@ DoClientRPCStatsStateDisable(struct cmd_syndesc *as, void *arock)
     int servAddr = 0;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid;
-    afs_stat_type_t which;
+    int typeIsValid = 0;
+    afs_stat_type_t which = 0;
 
     if (as->parms[PROCESS].items) {
 	typeIsValid =
@@ -702,11 +702,11 @@ DoClientRPCStatsList(struct cmd_syndesc *as, void *arock)
     int servAddr = 0;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid;
-    afs_stat_type_t which;
+    int typeIsValid = 0;
+    afs_stat_type_t which = 0;
     afs_RPCStats_t stats;
     void *iter;
-    int i;
+    int i = 0;
 
 #ifdef AFS_NT40_ENV
     (pthread_func_list_done
@@ -833,8 +833,8 @@ DoClientRPCStatsClear(struct cmd_syndesc *as, void *arock)
     int servAddr = 0;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid;
-    afs_stat_type_t which;
+    int typeIsValid = 0;
+    afs_stat_type_t which = 0;
     afs_RPCStatsClearFlag_t flag = 0;
     int seen_all = 0;
     int seen_any = 0;
@@ -999,7 +999,7 @@ DoClientRPCStatsVersionGet(struct cmd_syndesc *as, void *arock)
     afs_stat_source_t type;
     int servAddr = 0;
     int srvrPort;
-    int typeIsValid;
+    int typeIsValid = 0;
     afs_RPCStatsVersion_t version;
 
     if (as->parms[PROCESS].items) {

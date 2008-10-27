@@ -1662,7 +1662,7 @@ icl_DumpKernel(outFilep, setname)
 	for (i = 0; i < ICL_LOGSPERSET; i++) {
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_ENUMLOGSBYSET, (long)setname,
-			    i, (long)tname, sizeof(tname));
+			    i, (long)tname, sizeof(tname), 0, 0);
 	    if (code) {
 		if (errno == EBADF) {
 		    code = 0;
@@ -1672,7 +1672,7 @@ icl_DumpKernel(outFilep, setname)
 	    }
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)tname,
-			    (long)&dummy, (long)&dummy2, 0);
+			    (long)&dummy, (long)&dummy2, 0, 0, 0);
 	    if (code)
 		break;
 	    found++;
@@ -1691,7 +1691,7 @@ icl_DumpKernel(outFilep, setname)
 	for (i = 0; i < 1000; i++) {
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_ENUMLOGS, i, (long)tname,
-			    sizeof(tname), (long)&dummy);
+			    sizeof(tname), (long)&dummy, 0, 0);
 	    if (code)
 		break;
 	    if (dummy > bufferSize)	/* find biggest log */
@@ -1727,7 +1727,7 @@ icl_DumpKernel(outFilep, setname)
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_COPYOUT, (long)lip->name,
 			    (long)(bufferp + nwords), bufferSize - nwords,
-			    (long)&i);
+			    (long)&i, 0, 0);
 	    if (code < 0) {
 		/* otherwise we've got an error */
 		fprintf(outFilep, "Returned error %d dumping log.\n", errno);
@@ -1786,7 +1786,7 @@ icl_ClearLog(name)
 {
     afs_int32 code;
 
-    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRLOG, (long)name, 0, 0, 0);
+    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRLOG, (long)name, 0, 0, 0, 0, 0);
     return code;
 }
 
@@ -1796,7 +1796,7 @@ icl_ClearSet(name)
 {
     afs_int32 code;
 
-    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRSET, (long)name, 0, 0, 0);
+    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRSET, (long)name, 0, 0, 0, 0, 0);
     return code;
 }
 
@@ -1805,7 +1805,7 @@ icl_ClearAll()
 {
     afs_int32 code;
 
-    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRALL, 0, 0, 0, 0);
+    code = afs_syscall(AFSCALL_ICL, ICL_OP_CLRALL, 0, 0, 0, 0, 0, 0);
     return code;
 }
 
@@ -1822,7 +1822,7 @@ icl_ListSets(outFileP)
     for (i = 0; i < 1000; i++) {
 	code =
 	    afs_syscall(AFSCALL_ICL, ICL_OP_ENUMSETS, i, (long)tname,
-			sizeof(tname), (long)&states);
+			sizeof(tname), (long)&states, 0, 0);
 	if (code)
 	    break;
 	(void)fprintf(outFileP, "%s %s%s%s\n", tname,
@@ -1849,14 +1849,14 @@ icl_ListLogs(outFileP, int32flg)
     for (i = 0; i < 1000; i++) {
 	code =
 	    afs_syscall(AFSCALL_ICL, ICL_OP_ENUMLOGS, i, (long)tname,
-			sizeof(tname), (long)&logSize);
+			sizeof(tname), (long)&logSize, 0, 0);
 	if (code)
 	    break;
 	if (int32flg) {
 	    /* get more information on the log */
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)tname,
-			    (long)&logSize, (long)&allocated, 0);
+			    (long)&logSize, (long)&allocated, 0, 0, 0);
 	    if (code)
 		break;
 	    (void)fprintf(outFileP, "%s : %d kbytes (%s)\n", tname,
@@ -1885,7 +1885,7 @@ icl_ListLogsBySet(outFileP, setname, int32flg)
     for (i = 0; i < ICL_LOGSPERSET; i++) {
 	code =
 	    afs_syscall(AFSCALL_ICL, ICL_OP_ENUMLOGSBYSET, (long)setname, i,
-			(long)tname, sizeof(tname));
+			(long)tname, sizeof(tname), 0, 0);
 	if (code) {
 	    if (errno == EBADF) {
 		code = 0;
@@ -1897,7 +1897,7 @@ icl_ListLogsBySet(outFileP, setname, int32flg)
 	    /* get more information on the log */
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)tname,
-			    (long)&logSize, (long)&allocated, 0);
+			    (long)&logSize, (long)&allocated, 0, 0, 0);
 	    if (code)
 		break;
 	    (void)fprintf(outFileP, "%s : %d kbytes (%s)\n", tname,
@@ -1918,7 +1918,7 @@ icl_ChangeSetState(name, op)
 {
     afs_int32 code;
 
-    code = afs_syscall(AFSCALL_ICL, ICL_OP_SETSTAT, (long)name, op, 0, 0);
+    code = afs_syscall(AFSCALL_ICL, ICL_OP_SETSTAT, (long)name, op, 0, 0, 0, 0);
     return code;
 }
 
@@ -1929,7 +1929,7 @@ icl_ChangeAllSetState(op)
 {
     afs_int32 code;
 
-    code = afs_syscall(AFSCALL_ICL, ICL_OP_SETSTATALL, op, 0, 0, 0);
+    code = afs_syscall(AFSCALL_ICL, ICL_OP_SETSTATALL, op, 0, 0, 0, 0, 0);
     return code;
 }
 
@@ -1943,7 +1943,7 @@ icl_ChangeLogSize(name, logSize)
 
     code =
 	afs_syscall(AFSCALL_ICL, ICL_OP_SETLOGSIZE, (long)name, logSize, 0,
-		    0);
+		    0, 0, 0);
     return code;
 }
 
@@ -1957,7 +1957,7 @@ icl_GetLogsize(logname, logSizeP, allocatedP)
     afs_int32 code;
     code =
 	afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)logname,
-		    (long)logSizeP, (long)allocatedP, 0);
+		    (long)logSizeP, (long)allocatedP, 0, 0, 0);
     return code;
 }
 
@@ -1970,7 +1970,7 @@ icl_GetSetState(setname, stateP)
     afs_int32 code;
     code =
 	afs_syscall(AFSCALL_ICL, ICL_OP_GETSETINFO, (long)setname,
-		    (long)stateP, 0, 0);
+		    (long)stateP, 0, 0, 0, 0);
     return code;
 }
 
@@ -1993,7 +1993,7 @@ icl_TailKernel(outFilep, logname, waitTime)
     /* get information about the specified log */
     code =
 	afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)logname,
-		    (long)&bufferSize, (long)&allocated, 0);
+		    (long)&bufferSize, (long)&allocated, 0, 0, 0);
     if (code) {
 	if (errno == ENOENT)
 	    (void)fprintf(stderr, "'%s' not found\n", logname);
@@ -2030,7 +2030,7 @@ icl_TailKernel(outFilep, logname, waitTime)
 	    code =
 		afs_syscall(AFSCALL_ICL, ICL_OP_COPYOUTCLR, (long)logname,
 			    (long)(bufferp + nwords), bufferSize - nwords,
-			    (long)&i);
+			    (long)&i, 0, 0);
 	    if (code < 0) {
 		/* otherwise we've got an error */
 		fprintf(stderr, "returned error %d dumping log.\n", errno);
@@ -2078,7 +2078,7 @@ icl_TailKernel(outFilep, logname, waitTime)
 	/* see if things have changed */
 	code =
 	    afs_syscall(AFSCALL_ICL, ICL_OP_GETLOGINFO, (long)logname,
-			(long)&newBufferSize, (long)&allocated, 0);
+			(long)&newBufferSize, (long)&allocated, 0, 0, 0);
 	if (code) {
 	    if (errno == ENOENT)
 		(void)fprintf(stderr, "'%s' not found\n", logname);

@@ -1319,7 +1319,7 @@ HandleBulk(register struct cmd_syndesc *a_as, void *a_rock)
     int code;
 
     int line_no = 0;
-    int error;
+    int error = 0;
     char tbuf[USS_BULK_BUF_CHARS];
 
     /*

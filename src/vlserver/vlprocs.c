@@ -1131,7 +1131,7 @@ SVL_ListAttributes(rxcall, attributes, nentries, vldbentries)
 	    return VL_SIZEEXCEEDED;
 	}
     } else {
-	afs_int32 nextblockindex = 0, count = 0, k, match = 0;
+	afs_int32 nextblockindex = 0, count = 0, k = 0, match = 0;
 	while (nextblockindex =
 	       NextEntry(trans, nextblockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
@@ -1271,7 +1271,7 @@ SVL_ListAttributesN(rxcall, attributes, nentries, vldbentries)
 	    return VL_SIZEEXCEEDED;
 	}
     } else {
-	afs_int32 nextblockindex = 0, count = 0, k, match = 0;
+	afs_int32 nextblockindex = 0, count = 0, k = 0, match = 0;
 	while (nextblockindex =
 	       NextEntry(trans, nextblockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
@@ -1371,12 +1371,14 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
     struct ubik_trans *trans;
     struct nvlentry tentry;
     struct nvldbentry *Vldbentry = 0, *VldbentryFirst = 0, *VldbentryLast = 0;
-    afs_int32 blockindex = 0, count = 0, k, match, matchindex;
+    afs_int32 blockindex = 0, count = 0, k, match;
+    afs_int32 matchindex = 0;
     int serverindex = -1;	/* no server found */
     int findserver = 0, findpartition = 0, findflag = 0, findname = 0;
     char *t;
     int pollcount = 0;
-    int namematchRWBK, namematchRO, thismatch, matchtype;
+    int namematchRWBK, namematchRO, thismatch;
+    int matchtype = 0;
     char volumename[VL_MAXNAMELEN];
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
@@ -1640,7 +1642,8 @@ SVL_LinkedList(rxcall, attributes, nentries, vldbentries)
     struct ubik_trans *trans;
     struct nvlentry tentry;
     vldblist vllist, *vllistptr;
-    afs_int32 blockindex, count, k, match;
+    afs_int32 blockindex, count, match;
+    afs_int32 k = 0;
     int serverindex;
     int pollcount = 0;
 
@@ -1768,7 +1771,8 @@ SVL_LinkedListN(rxcall, attributes, nentries, vldbentries)
     struct ubik_trans *trans;
     struct nvlentry tentry;
     nvldblist vllist, *vllistptr;
-    afs_int32 blockindex, count, k, match;
+    afs_int32 blockindex, count, match;
+    afs_int32 k = 0;
     int serverindex;
     int pollcount = 0;
 
@@ -1974,8 +1978,9 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
     afs_uint32 addrs[VL_MAXIPADDRS_PERMH];
     afs_int32 fbase;
     int count, willChangeEntry, foundUuidEntry, willReplaceCnt;
-    int WillReplaceEntry, WillChange[MAXSERVERID + 1], FoundUuid,
-	ReplaceEntry;
+    int WillReplaceEntry, WillChange[MAXSERVERID + 1];
+    int FoundUuid = 0;
+    int ReplaceEntry = 0;
     int srvidx, mhidx;
 
     COUNT_REQ(VLREGADDR);
@@ -3136,8 +3141,9 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
 {
     int i, j;
     afs_int32 code;
-    struct extentaddr *exp;
-    int base, index, mhidx;
+    struct extentaddr *exp = NULL;
+    int base = 0;
+    int index, mhidx;
     afsUUID tuuid;
     afs_int32 blockindex, count;
     int pollcount = 0;

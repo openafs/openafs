@@ -1245,7 +1245,7 @@ restoreVolumeData(call, rparamsPtr)
 {
     afs_int32 curChunk;
     afs_uint32 totalWritten = 0;
-    afs_int32 code;
+    afs_int32 code = 0;
     afs_int32 headBytes, tailBytes, w;
     afs_int32 taskId;
     afs_int32 nbytes;		/* # bytes data in last tape block read */

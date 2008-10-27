@@ -694,7 +694,7 @@ uss_procs_PickADir(path, cp)
 
     char cd[300];		/*Current  directory for search */
 
-    int i, count, MinIndex, mina = 10000;
+    int i, count, MinIndex = 0, mina = 10000;
     struct dirent *dp;
     DIR *dirp;
     char dirname[300];

@@ -543,7 +543,8 @@ static int
 DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v)
 {
     int code = 0, failed_seek = 0, failed_write = 0;
-    afs_int32 pad = 0, offset;
+    afs_int32 pad = 0;
+    afs_int32 offset = 0;
     afs_sfsize_t n, nbytes, howMany, howBig;
     byte *p;
 #ifndef AFS_NT40_ENV

@@ -151,7 +151,7 @@ DoVosBackupVolumeCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { VOLUME } DoVosBackupVolumeCreate_parm_t;
     afs_status_t st = 0;
-    unsigned int volume_id;
+    unsigned int volume_id = 0;
 
     if (as->parms[VOLUME].items) {
 	const char *volume = as->parms[VOLUME].items->data;
@@ -222,7 +222,7 @@ DoVosPartitionGet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION } DoVosPartitionGet_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
     vos_partitionEntry_t entry;
 
     if (as->parms[SERVER].items) {
@@ -318,7 +318,8 @@ DoVosFileServerAddressChange(struct cmd_syndesc *as, void *arock)
 	NEWADDRESS
     } DoVosFileServerAddressChange_parm_t;
     afs_status_t st = 0;
-    int old_addr, new_addr;
+    int old_addr = 0;
+    int new_addr = 0;
 
     if (as->parms[OLDADDRESS].items) {
 	const char *addr = as->parms[OLDADDRESS].items->data;
@@ -341,7 +342,7 @@ DoVosFileServerAddressRemove(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { ADDRESS } DoVosFileServerAddressRemove_parm_t;
     afs_status_t st = 0;
-    int address;
+    int address = 0;
 
     if (as->parms[ADDRESS].items) {
 	const char *addr = as->parms[ADDRESS].items->data;
@@ -678,7 +679,7 @@ DoVosVLDBEntryLock(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { VOLUME } DoVosVLDBEntryLoc_parm_tk;
     afs_status_t st = 0;
-    unsigned int volume_id;
+    unsigned int volume_id = 0;
 
     if (as->parms[VOLUME].items) {
 	const char *volume = as->parms[VOLUME].items->data;
@@ -697,7 +698,7 @@ DoVosVLDBEntryUnlock(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { VOLUME } DoVosVLDBEntryUnlock_parm_t;
     afs_status_t st = 0;
-    unsigned int volume_id;
+    unsigned int volume_id = 0;
 
     if (as->parms[VOLUME].items) {
 	const char *volume = as->parms[VOLUME].items->data;
@@ -719,8 +720,8 @@ DoVosVLDBReadOnlySiteCreate(struct cmd_syndesc *as, void *arock)
     } DoVosVLDBReadOnlySiteCreate_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -754,8 +755,8 @@ DoVosVLDBReadOnlySiteDelete(struct cmd_syndesc *as, void *arock)
     } DoVosVLDBReadOnlySiteDelete_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -829,10 +830,10 @@ DoVosVolumeCreate(struct cmd_syndesc *as, void *arock)
     } DoVosVolumeCreate_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
     unsigned int volume_id;
     const char *volume = NULL;
-    unsigned int quota;
+    unsigned int quota = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -872,8 +873,8 @@ DoVosVolumeDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeDelete_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -905,8 +906,8 @@ DoVosVolumeRename(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { OLDVOLUME, NEWVOLUME } DoVosVolumeRename_parm_t;
     afs_status_t st = 0;
-    unsigned int old_volume;
-    const char *new_volume;
+    unsigned int old_volume = 0;
+    const char *new_volume = 0;
 
     if (as->parms[OLDVOLUME].items) {
 	const char *volume = as->parms[OLDVOLUME].items->data;
@@ -935,9 +936,9 @@ DoVosVolumeDump(struct cmd_syndesc *as, void *arock)
     unsigned int partition_id;
     unsigned int *part_ptr = NULL;
     int have_server = 0;
-    unsigned int volume_id;
-    unsigned int start_time;
-    const char *dumpfile;
+    unsigned int volume_id = 0;
+    unsigned int start_time = 0;
+    const char *dumpfile = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -988,11 +989,11 @@ DoVosVolumeRestore(struct cmd_syndesc *as, void *arock)
     } DoVosVolumeRestore_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
     unsigned int volume_id;
     unsigned int *vol_ptr = NULL;
-    const char *dumpfile;
-    const char *volume_name;
+    const char *dumpfile = NULL;
+    const char *volume_name = NULL;
     vos_volumeRestoreType_t restore = VOS_RESTORE_INCREMENTAL;
 
     if (as->parms[SERVER].items) {
@@ -1042,9 +1043,9 @@ DoVosVolumeOnline(struct cmd_syndesc *as, void *arock)
     } DoVosVolumeOnline_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
-    unsigned int sleep;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
+    unsigned int sleep = 0;
     vos_volumeOnlineType_t type = VOS_ONLINE_OFFLINE;
 
     if (as->parms[SERVER].items) {
@@ -1088,8 +1089,8 @@ DoVosVolumeOffline(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeOffline_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -1345,8 +1346,8 @@ DoVosVolumeGet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeGet_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
     vos_volumeEntry_t entry;
 
     if (as->parms[SERVER].items) {
@@ -1383,7 +1384,7 @@ DoVosVolumeList(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     void *vos_server = NULL;
     void *iter = NULL;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
     vos_volumeEntry_t entry;
 
     if (as->parms[SERVER].items) {
@@ -1431,9 +1432,9 @@ DoVosVolumeMove(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     void *from_server = NULL;
     void *to_server = NULL;
-    unsigned int from_partition;
-    unsigned int to_partition;
-    unsigned int volume_id;
+    unsigned int from_partition = 0;
+    unsigned int to_partition = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[FROMSERVER].items) {
 	if (!vos_ServerOpen
@@ -1479,7 +1480,7 @@ DoVosVolumeRelease(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { VOLUME, FORCE } DoVosVolumeRelease_parm_t;
     afs_status_t st = 0;
-    unsigned int volume_id;
+    unsigned int volume_id = 0;
     vos_force_t force = VOS_NORMAL;
 
     if (as->parms[VOLUME].items) {
@@ -1503,8 +1504,8 @@ DoVosVolumeZap(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME, FORCE } DoVosVolumeZap_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
     vos_force_t force = VOS_NORMAL;
 
     if (as->parms[SERVER].items) {
@@ -1541,7 +1542,7 @@ DoVosPartitionNameToId(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PARTITION } DoVosPartitionNameToId_parm_t;
     afs_status_t st = 0;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
 
     if (as->parms[PARTITION].items) {
 	partition_id =
@@ -1559,7 +1560,7 @@ DoVosPartitionIdToName(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PARTITIONID } DoVosPartitionIdToName_parm_t;
     afs_status_t st = 0;
-    unsigned int partition_id;
+    unsigned int partition_id = 0;
     char partition[VOS_MAX_PARTITION_NAME_LEN];
 
     if (as->parms[PARTITIONID].items) {
@@ -1585,9 +1586,9 @@ DoVosVolumeQuotaChange(struct cmd_syndesc *as, void *arock)
     } DoVosVolumeQuotaChange_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
-    unsigned int quota;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
+    unsigned int quota = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen
@@ -1733,8 +1734,8 @@ DoVosVolumeGet2(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeGet_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    afs_uint32 partition_id;
-    afs_uint32 volume_id;
+    afs_uint32 partition_id = 0;
+    afs_uint32 volume_id = 0;
 
 	volintInfo info;
 	memset(&info, 0, sizeof(struct volintInfo));
@@ -1775,8 +1776,8 @@ DoVos_ClearVolUpdateCounter(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeGet_parm_t;
     afs_status_t st = 0;
     void *vos_server = NULL;
-    unsigned int partition_id;
-    unsigned int volume_id;
+    unsigned int partition_id = 0;
+    unsigned int volume_id = 0;
 
     if (as->parms[SERVER].items) {
 	if (!vos_ServerOpen

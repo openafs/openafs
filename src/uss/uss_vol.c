@@ -935,7 +935,7 @@ uss_vol_DeleteVol(a_volName, a_volID, a_servName, a_servID, a_partName,
 {				/*uss_vol_DeleteVol */
 
     static char rn[] = "uss_vol_DeleteVol";	/*Routine name */
-    register afs_int32 code;	/*Return code */
+    register afs_int32 code = 0;	/*Return code */
 
     /*
      * Make sure we've initialized our VLDB connection(s) before

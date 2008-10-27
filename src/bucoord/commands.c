@@ -431,14 +431,15 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
     struct bc_volumeDump *tvd;	/*Ptr to new dump instance */
     struct bc_volumeEntry *tve, *ctve;	/*Ptr to new volume entry instance */
     char patt[256];		/*Composite regex; also, target string */
-    int volType;		/*Type of volume that worked */
+    int volType = 0;		/*Type of volume that worked */
     afs_int32 index;		/*Current VLDB entry index */
     afs_int32 count;		/*Needed by VL_ListEntry() */
     afs_int32 next_index;	/*Next index to list */
     struct vldbentry entry;	/*VLDB entry */
     int srvpartpair;		/*Loop counter: server/partition pair */
     afs_int32 total = 0;
-    int found, foundentry;
+    int found;
+    int foundentry = 0;
     struct serversort *servers = 0, *ss = 0;
     struct partitionsort *ps = 0;
 
@@ -1602,9 +1603,11 @@ int
 bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 {				/*bc_DumpCmd */
     static char rn[] = "bc_DumpCmd";	/*Routine name */
-    char *dumpPath, *vsName;	/*Ptrs to various names */
-    struct bc_volumeSet *tvs;	/*Ptr to list of generated volume info */
-    struct bc_dumpSchedule *tds, *baseds;	/*Ptr to dump schedule node */
+    char *dumpPath = NULL;
+    char *vsName = NULL;      /*Ptrs to various names */
+    struct bc_volumeSet *tvs = NULL; /*Ptr to list of generated volume info */
+    struct bc_dumpSchedule *tds;
+    struct bc_dumpSchedule *baseds = NULL; /*Ptr to dump schedule node */
     struct bc_volumeDump *tve, *volsToDump;	/*Ptr to individual vols to be dumped */
     struct budb_dumpEntry dumpEntry, de, fde;	/* dump entry */
     afs_uint32 d;
@@ -1618,7 +1621,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 doAt, atTime;	/* Time a timed-dump is to start at */
     afs_int32 length;
     char *timeString;
-    int doAppend;		/* Append the dump to dump set */
+    int doAppend = 0;		/* Append the dump to dump set */
     afs_int32 code;		/* Return code */
     int loadfile;		/* whether to load a file or not */
 

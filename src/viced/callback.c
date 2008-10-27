@@ -532,7 +532,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     struct FileEntry *fe;
     struct CallBack *cb = 0, *lastcb = 0;
     struct FileEntry *newfe = 0;
-    afs_uint32 time_out;
+    afs_uint32 time_out = 0;
     afs_uint32 *Thead = thead;
     struct CallBack *newcb = 0;
     int safety;

@@ -266,7 +266,7 @@ ht_GetTableBlock(ut, mht, hash, old, blockP, boP)
     int n;
     int i;
     int length;
-    dbadr ta;
+    dbadr ta = NULL;
 
     if ((mht == 0)
 	|| ((ht = mht->ht) == 0)

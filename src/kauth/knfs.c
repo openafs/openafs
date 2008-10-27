@@ -103,7 +103,7 @@ GetTokens(ahost, auid)
     struct ViceIoctl iob;
     afs_int32 pheader[6];
     char tbuffer[1024];
-    register afs_int32 code;
+    afs_int32 code = 0;
     int index, newIndex;
     char *stp;			/* secret token ptr */
     struct ClearToken ct;
