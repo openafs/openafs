@@ -2202,7 +2202,7 @@ int
 uafs_LookupName(char *path, struct usr_vnode *parentVp,
 		struct usr_vnode **vpp, int follow, int no_eval_mtpt)
 {
-    int code;
+    int code = 0;
     int linkCount;
     struct usr_vnode *vp;
     struct usr_vnode *nextVp;

@@ -79,7 +79,7 @@ ka_CellConfig(const char *dir)
 char *
 ka_LocalCell(void)
 {
-    int code;
+    int code = 0;
 
     LOCK_GLOBAL_MUTEX;
     if (conf) {

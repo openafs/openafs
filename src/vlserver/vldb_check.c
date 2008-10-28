@@ -501,7 +501,9 @@ ReadAllEntries(struct vlheader *header)
     int freecount = 0, mhcount = 0, vlcount = 0;
     int rwcount = 0, rocount = 0, bkcount = 0;
     struct nvlentry vlentry;
-    afs_uint32 addr, entrysize, maxvolid = 0;
+    afs_uint32 addr;
+    afs_uint32 entrysize = 0;
+    afs_uint32 maxvolid = 0;
 
     if (verbose)
 	printf("Read each entry in the database\n");
@@ -570,7 +572,8 @@ ReadAllEntries(struct vlheader *header)
 	    entrysize = VL_ADDREXTBLK_SIZE;
 	    mhcount++;
 	} else {
-	    printf("Unknown entry at %u\n", addr);
+	    printf("Unknown entry at %u. Aborting\n", addr);
+	    break;
 	}
     }
     if (verbose) {
@@ -1111,11 +1114,12 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     if (verbose)
 	printf("Verify each volume entry\n");
     for (i = 0; i < maxentries; i++) {
-	int nextp;
-	int reft;
-	int hash, nexthash = 0;
-	int *nextpp;
-	char *which;
+	int nextp = 0;
+	int reft = 0;
+	int hash = 0;
+        int nexthash = 0;
+	int *nextpp = NULL;
+	char *which = NULL;
 
 	if (record[i].type == 0)
 	    continue;

@@ -1355,7 +1355,8 @@ VDetachVolume_r(Error * ec, Volume * vp)
 {
     VolumeId volume;
     struct DiskPartition64 *tpartp;
-    int notifyServer, useDone;
+    int notifyServer = 0;
+    int useDone = FSYNC_ON;
 
     *ec = 0;			/* always "succeeds" */
     if (programType == volumeUtility) {

@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 {
     char oldpassword[512];
     char password[512];
-    int rc;
+    int rc = 1;
 
     if (fgets(oldpassword, 512, stdin))
 	while (fgets(password, 512, stdin)) {

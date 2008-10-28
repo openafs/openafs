@@ -133,8 +133,9 @@ int
 CommandProc(register struct cmd_syndesc *a_as, void *arock)
 {
     register int i;
-    register long code;
-    long cc, upos, gpos;
+    long code = 0;
+    long cc, upos;
+    long gpos = 0;
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
