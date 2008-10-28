@@ -16,8 +16,8 @@
 //
 #include <windows.h>
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS 安装实用程序 DLL"
-#define AFS_VERINFO_NAME "afs_setup_utmls"
-#define AFS_VERINFO_FILENAME "afs_setup_utmls.exe"
+#define AFS_VERINFO_NAME "afs_setup_utils"
+#define AFS_VERINFO_FILENAME "afs_setup_utils.exe"
 #define AFS_VERINFO_LANG_CODE 0x804
 #define AFS_VERINFO_CHARSET 936
 #include "AFS_component_version_number.h"
