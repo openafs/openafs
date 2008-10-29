@@ -50,11 +50,10 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSPrint("AFSSetSecurity Entry for FO %08lX\n", pIrpSp->FileObject);
-
-
-
-
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSSetSecurity Entry for FO %08lX\n", 
+                                    pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -62,7 +61,9 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSSetSecurity\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSSetSecurity\n");
     }
 
     return ntStatus;
@@ -81,11 +82,10 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSPrint("AFSQuerySecurity Entry for FO %08lX\n", pIrpSp->FileObject);
-
-
-
-
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSQuerySecurity Entry for FO %08lX\n", 
+                                    pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -93,7 +93,9 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSQuerySecurity\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQuerySecurity\n");
     }
 
     return ntStatus;

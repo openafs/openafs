@@ -85,7 +85,9 @@ AFSInitializeWorkerPool()
         if( pCurrentWorker == NULL)
         {
 
-            AFSPrint("AFSInitializeWorkerPool Failed to allocate worker context\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitializeWorkerPool Failed to allocate worker context\n");
 
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -100,7 +102,9 @@ AFSInitializeWorkerPool()
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFSInitializeWorkerPool Failed to initialize worker thread Status %08lX\n", ntStatus);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitializeWorkerPool Failed to initialize worker thread Status %08lX\n", ntStatus);
 
             ExFreePool( pCurrentWorker);
 
@@ -496,8 +500,10 @@ AFSWorkerThread( IN PVOID Context)
 
         if( !NT_SUCCESS( ntStatus))
         {
-            
-            AFSPrint("AFSWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
         }
         else
         {
@@ -566,7 +572,9 @@ AFSWorkerThread( IN PVOID Context)
 
                     default:
 
-                        AFSPrint("AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
 
                         break;
                 }
@@ -579,8 +587,6 @@ AFSWorkerThread( IN PVOID Context)
             }
         }
     } // worker thread loop
-
-    AFSPrint("AFSWorkerThread Thread %08lX Ending\n", pPoolContext);
 
     KeCancelTimer( &Timer);
 
@@ -649,7 +655,9 @@ AFSVolumeWorkerThread( IN PVOID Context)
         if( !NT_SUCCESS( ntStatus))
         {
             
-            AFSPrint("AFSVolumeWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSVolumeWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
         }
         else
         {
@@ -674,11 +682,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 //
                 // First up are there dirty extents in the cache to flush?
                 //
+                
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                     !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
                     pFcb->Specific.File.ExtentsDirtyCount &&
                     (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
-                           >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
+                                        >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
                 {
                     //
                     // Yup (the last flush was long enough ago)
@@ -700,16 +709,14 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 //
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                     0 != pFcb->Specific.File.LastServerFlush.QuadPart &&
-                    (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) 
-                    >= 
-                    (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
+                    (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) >= 
+                                (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
                 {
                     //
                     // Tear em down we'll not be needing them again
                     //
                     AFSTearDownFcbExtents( pFcb );
                 }
-
 
                 //
                 // If we are below our threshold for memory
@@ -857,16 +864,14 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                     // If this is a file then tear down extents now
                                     //
 
-                                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                                        pFcb->DirEntry != NULL &&
-                                        !BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
+                                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                                     {
 
                                         (VOID)AFSTearDownFcbExtents( pFcb);
                                     }
 
                                     //
-                                    // Make sure the dire entry reference is removed
+                                    // Make sure the dir entry reference is removed
                                     //
 
                                     if( pFcb->DirEntry != NULL)
@@ -1141,83 +1146,6 @@ AFSQueueWorkerRequest( IN AFSWorkItem *WorkItem)
     return ntStatus;
 }
 
-/*
-NTSTATUS
-AFSQueueCopyData( IN PFILE_OBJECT SourceFileObject,
-                    IN PFILE_OBJECT TargetFileObject)
-{
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSWorkItem    *pWorkItem = NULL;
-    
-    __try
-    {
-
-        //
-        // Allocate our request structure and send it to the worker
-        //
-
-        pWorkItem = (AFSWorkItem *)ExAllocatePoolWithTag( NonPagedPool,
-                                                          sizeof( AFSWorkItem),
-                                                          AFS_WORK_ITEM_TAG);
-
-        if( pWorkItem == NULL)
-        {
-
-            AFSPrint("AFSQueueCopyData Failed to allocate request block\n");
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pWorkItem,
-                       sizeof( AFSWorkItem));
-
-        pWorkItem->Size = sizeof( AFSWorkItem);
-
-        //
-        // This will be a synchronous request
-        //
-
-        KeInitializeEvent( &pWorkItem->Event,
-                           NotificationEvent,
-                           FALSE);
-
-        pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
-
-        //pWorkItem->RequestType = AFS_WORK_REQUEST_COPY_DATA;
-
-        ntStatus = AFSQueueWorkerRequest( pWorkItem);
-
-        if( NT_SUCCESS( ntStatus))
-        {
-
-            ntStatus = pWorkItem->Status;
-        }
-
-try_exit:
-
-        if( pWorkItem != NULL)
-        {
-
-            ExFreePool( pWorkItem);
-        }
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSPrint("AFSQueueCopyData Failed to queue request Status %08lX\n", ntStatus);
-        }
-    }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
-    {
-
-        AFSPrint("EXCEPTION - AFSQueueCopyData\n");
-    }
-
-    return ntStatus;
-}
-*/
-
 NTSTATUS
 AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 {
@@ -1239,7 +1167,9 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
         if( pWorkItem == NULL)
         {
 
-            AFSPrint("AFSQueueCopyData Failed to allocate request block\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueBuildTargetDirectory Failed to allocate work item\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1284,13 +1214,17 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFSQueueFcbInitialization Failed to queue request Status %08lX\n", ntStatus);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueFcbInitialization Failed to queue request Status %08lX\n", ntStatus);
         }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSQueueFcbInitialization\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueFcbInitialization\n");
     }
 
     return ntStatus;

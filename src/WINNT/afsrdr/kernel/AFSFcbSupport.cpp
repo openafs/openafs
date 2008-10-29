@@ -74,6 +74,25 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         // Allocate the Fcb and the nonpaged portion of the Fcb.
         //
 
+        if( DirEntry != NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSInitFcb Initializing fcb for %wZ Parent %wZ\n",
+                                                  &DirEntry->DirectoryEntry.FileName,
+                                                  &ParentFcb->DirEntry->DirectoryEntry.FileName);
+
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSInitFcb Initializing fcb for (PIOCtl) Parent %wZ\n",
+                                                  &ParentFcb->DirEntry->DirectoryEntry.FileName);
+        }
+
         usFcbLength = sizeof( AFSFcb);
 
         pFcb = (AFSFcb *)ExAllocatePoolWithTag( PagedPool,
@@ -83,7 +102,9 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         if( pFcb == NULL)
         {
 
-            AFSPrint("AFSInitFcb Failed to allocate the Fcb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitFcb Failed to allocate fcb\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -103,7 +124,9 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         if( pNPFcb == NULL)
         {
 
-            AFSPrint("AFSInitFcb Failed to allocate nonpaged portion of fcb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitFcb Failed to allocate non-paged fcb\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -364,7 +387,10 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFSInitFcb Failed to initialize Fcb Status %08lX\n", ntStatus);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitFcb Failed to initialize fcb Status %08lX\n",
+                                        ntStatus);
 
             if( DirEntry != NULL)
             {
@@ -452,7 +478,9 @@ AFSInitAFSRoot()
             if( pFcb == NULL)
             {
 
-                AFSPrint("AFSInitAFSRoot Failed to allocate the root fcb\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSInitAFSRoot Failed to allocate the root fcb\n");
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
@@ -472,7 +500,9 @@ AFSInitAFSRoot()
             if( pNPFcb == NULL)
             {
 
-                AFSPrint("AFSInitAFSRoot Failed to allocate the nonpaged fcb\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSInitAFSRoot Failed to allocate the non-paged fcb\n");
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
@@ -576,6 +606,8 @@ AFSInitAFSRoot()
 
             pFcb->DirEntry->DirectoryEntry.FileName.Length = sizeof( WCHAR);
         
+            pFcb->DirEntry->DirectoryEntry.FileName.MaximumLength = pFcb->DirEntry->DirectoryEntry.FileName.Length;
+
             pFcb->DirEntry->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pFcb->DirEntry + sizeof( AFSDirEntryCB));
 
             RtlCopyMemory( pFcb->DirEntry->DirectoryEntry.FileName.Buffer,
@@ -955,7 +987,9 @@ AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
         if( pFcb == NULL)
         {
 
-            AFSPrint("AFSInitRootFcb Failed to allocate the root fcb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitRootFcb Failed to allocate the root fcb\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -975,7 +1009,9 @@ AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
         if( pNPFcb == NULL)
         {
 
-            AFSPrint("AFSInitRootFcb Failed to allocate the nonpaged fcb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitRootFcb Failed to allocate the non-paged fcb\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1109,6 +1145,8 @@ AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
 
         pFcb->DirEntry->DirectoryEntry.FileName.Length = sizeof( WCHAR);
     
+        pFcb->DirEntry->DirectoryEntry.FileName.MaximumLength = pFcb->DirEntry->DirectoryEntry.FileName.Length;
+
         pFcb->DirEntry->DirectoryEntry.FileName.Buffer = (WCHAR *)((char *)pFcb->DirEntry + sizeof( AFSDirEntryCB));
 
         RtlCopyMemory( pFcb->DirEntry->DirectoryEntry.FileName.Buffer,
@@ -1404,7 +1442,9 @@ AFSInitCcb( IN AFSFcb     *Fcb,
         if( pCcb == NULL)
         {
 
-            AFSPrint("AFSInitCcb Failed to allocate Ccb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitCcb Failed to allocate Ccb\n");
 
             try_return( Status = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1425,8 +1465,6 @@ try_exit:
 
         if( !NT_SUCCESS( Status))
         {
-
-            AFSPrint("AFSInitCcb Failed to initialize Ccb Status %08lX\n", Status);
 
             if( pCcb != NULL)
             {

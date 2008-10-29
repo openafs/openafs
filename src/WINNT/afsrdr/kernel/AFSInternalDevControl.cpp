@@ -57,7 +57,9 @@ AFSInternalDevControl( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSInternalDevControl\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSInternalDevControl\n");
     }
 
     return ntStatus;

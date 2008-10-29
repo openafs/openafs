@@ -43,9 +43,7 @@
 
 #if DBG
 
-#define AFSPrint        DbgPrint
-
-#define AFS_DEBUG_LOG   1
+//#define AFS_VALIDATE_EXTENTS            0
 
 static inline void AFSBreakPoint() {
 #if !defined(KD_DEBUGGER_ENABLED)
@@ -63,8 +61,6 @@ static inline void AFSBreakPoint() {
 }
 
 #else
-
-#define AFSPrint   
 
 #define AFSBreakPoint()
 
@@ -132,6 +128,8 @@ static inline void AFSBreakPoint() {
 
 #define AFS_REG_DEBUG_FLAGS              L"DebugFlags"
 #define AFS_REG_DEBUG_LEVEL              L"DebugLevel"
+#define AFS_REG_DEBUG_SUBSYSTEM          L"TraceSubsystem"
+#define AFS_REG_TRACE_BUFFER_LENGTH      L"TraceBufferSize"  // in KB
 #define AFS_REG_MAX_DIRTY                L"MaxDirtyMb"
 #define AFS_REG_MAX_IO                   L"MaxIOMb"
 #define AFS_NETBIOS_NAME                 L"NetbiosName"
@@ -141,11 +139,7 @@ static inline void AFSBreakPoint() {
 //
 
 #define AFS_DBG_FLAG_BREAK_ON_ENTRY     0x00000001
-
-//
-// Validation info
-//
-#define AFS_VALIDATE_EXTENTS            0
+#define AFS_DBG_TRACE_TO_DEBUGGER       0x00000002
 
 //
 // Control Device name
@@ -432,12 +426,19 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 // Debug log length
 // 
 
-#define AFS_DBG_LOG_LENGTH              (256 * 1024)
+#define AFS_DBG_LOG_LENGTH              256
 
 //
-// Conneciton flags
+// Debug log flags
+//
+
+#define AFS_DBG_LOG_WRAPPED             0x00000001
+
+//
+// Connection flags
 //
 
 #define AFS_CONNECTION_FLAG_GLOBAL_SHARE        0x00000001
+
 
 #endif /* _AFS_DEFINES_H */

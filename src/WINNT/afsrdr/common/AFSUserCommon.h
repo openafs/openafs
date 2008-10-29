@@ -154,6 +154,12 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define IOCTL_AFS_SET_BYTE_RANGE_LOCKS          CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100E, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_AFS_CONFIGURE_DEBUG_TRACE         CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x100F, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_GET_TRACE_BUFFER              CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1010, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFS_FORCE_CRASH                   CTL_CODE( FILE_DEVICE_DISK_FILE_SYSTEM, 0x1011, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 //
 // Request types
 //
@@ -931,5 +937,30 @@ typedef struct _AFS_BYTE_RANGE_UNLOCK_RESULT_CB
 
 } AFSByteRangeUnlockResultCB;
 
+//
+// Trace configuration cb
+//
+
+#define AFS_TRACE_LEVEL_ERROR           0x00000001
+#define AFS_TRACE_LEVEL_WARNING         0x00000002
+#define AFS_TRACE_LEVEL_VERBOSE         0x00000003
+#define AFS_TRACE_LEVEL_VERBOSE_2       0x00000004
+
+#define AFS_TRACE_LEVEL_MAXIMUM         0x00000004
+
+#define AFS_SUBSYSTEM_IO_PROCESSING     0x00000001  // Includes IO subsystem and extent processing
+#define AFS_SUBSYSTEM_FILE_PROCESSING   0x00000002  // Includes Fcb and name processing
+
+
+typedef struct _AFS_DEBUG_TRACE_CONFIG_CB
+{
+
+    ULONG       TraceLevel;
+
+    ULONG       Subsystem;
+
+    ULONG       TraceBufferLength;
+
+} AFSTraceConfigCB;
 
 #endif

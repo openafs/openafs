@@ -120,7 +120,11 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
                 else
                 {
 
-                    DbgPrint("AFSEnumerateDirectory Failed enumeration Status %08lX\n", ntStatus);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSEnumerateDirectory Failed to enumerate directory %wZ Status %08lX\n",
+                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
+                                                                            ntStatus);
 
                     ntStatus = STATUS_CANCELLED;
                 }
@@ -1100,12 +1104,17 @@ AFSProcessRequest( IN ULONG RequestType,
         // Store off the process id
         //
 
-        if( RequestType == AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS &&
+        if( ( RequestType == AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS ||
+              RequestType == AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS) &&
             ( CallerProcess == 0 ||
               CallerProcess == (ULONGLONG)AFSSysProcess))
         {
 
-            DbgPrint("AFSProcessRequest (AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS) Requesting extents in SYSTEM process\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSProcessRequest Extent request/release in system context\n");
+
+            ASSERT( FALSE);
         }
 
         if( CallerProcess != 0)
@@ -1547,6 +1556,51 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 ntStatus = AFSSetSysNameInformation( pSysNameInfo,
                                                      pIrpSp->Parameters.DeviceIoControl.InputBufferLength);                                                     
+
+                break;
+            }
+
+            case IOCTL_AFS_CONFIGURE_DEBUG_TRACE:
+            {
+
+                AFSTraceConfigCB *pTraceInfo = (AFSTraceConfigCB *)Irp->AssociatedIrp.SystemBuffer;
+
+                if( pTraceInfo == NULL ||
+                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSTraceConfigCB))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSConfigureTrace( pTraceInfo);
+
+                break;
+            }
+
+            case IOCTL_AFS_GET_TRACE_BUFFER:
+            {
+
+                if( pIrpSp->Parameters.DeviceIoControl.OutputBufferLength == 0)
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                ntStatus = AFSGetTraceBuffer( pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                              Irp->AssociatedIrp.SystemBuffer,
+                                              &Irp->IoStatus.Information);
+
+                break;
+            }
+
+            case IOCTL_AFS_FORCE_CRASH:
+            {
+
+                KeBugCheck( (ULONG)-1);
 
                 break;
             }

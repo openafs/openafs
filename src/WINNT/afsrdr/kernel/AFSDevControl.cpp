@@ -86,7 +86,9 @@ AFSDevControl( IN PDEVICE_OBJECT DeviceObject,
             default:
             {
 
-                AFSPrint("AFSDevControl Invalid control code\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSDevControl Invalid control code\n");
 
                 ntStatus = STATUS_INVALID_PARAMETER;
 
@@ -104,7 +106,10 @@ try_exit:
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSDevControl\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSDevControl\n");
     }
+
     return ntStatus;
 }

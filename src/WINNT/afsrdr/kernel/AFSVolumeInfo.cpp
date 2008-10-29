@@ -139,7 +139,10 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 
             default:
 
-                AFSPrint("AFSQueryVolumeInfo Invalid class %d\n", FsInformationClass);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSQueryVolumeInfo Invalid class %d\n", 
+                                                FsInformationClass);
 
                 ntStatus = STATUS_INVALID_PARAMETER;
             
@@ -167,7 +170,9 @@ try_exit:
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSQueryVolumeInfo\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueryVolumeInfo\n");
     }
 
     return ntStatus;
@@ -186,11 +191,9 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSPrint("AFSSetVolumeInfo Entry for FO %08lX\n", pIrpSp->FileObject);
-
-
-
-
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_WARNING,
+                      "AFSSetVolumeInfo Entry for FO %08lX\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -199,7 +202,9 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSSetVolumeInfo\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSSetVolumeInfo\n");
     }
 
     return ntStatus;

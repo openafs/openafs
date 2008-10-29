@@ -316,46 +316,6 @@ AFSGenerateCRC( IN PUNICODE_STRING FileName,
     return crc;
 }
 
-BOOLEAN 
-AFSAcquireForLazyWrite( IN PVOID Context,
-                        IN BOOLEAN Wait)
-{
-
-    AFSPrint("AFSAcquireForLazyWrite Called for Fcb %08lX\n", Context);
-
-
-    return TRUE;
-}
-
-VOID 
-AFSReleaseFromLazyWrite( IN PVOID Context)
-{
-
-    AFSPrint("AFSReleaseForLazyWrite Called for Fcb %08lX\n", Context);
-
-    return;
-}
-
-
-BOOLEAN 
-AFSAcquireForReadAhead( IN PVOID Context,
-                        IN BOOLEAN Wait)
-{
-
-    AFSPrint("AFSAcquireForReadAhead Called for Fcb %08lX\n", Context);
-
-    return TRUE;
-}
-
-VOID 
-AFSReleaseFromReadAhead( IN PVOID Context)
-{
-
-    AFSPrint("AFSReleaseForReadAhead Called for Fcb %08lX\n", Context);
-
-    return;
-}
-
 void *
 AFSLockSystemBuffer( IN PIRP Irp,
                      IN ULONG Length)
@@ -590,6 +550,121 @@ AFSReadRegistry( IN PUNICODE_STRING RegistryPath)
             AFSDebugFlags = Value;
         }
 
+        RtlZeroMemory( paramTable, 
+                       sizeof( paramTable));
+
+        Value = 0;
+
+        //
+        // Setup the table to query the registry for the needed value
+        //
+
+        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
+        paramTable[0].Name = AFS_REG_DEBUG_SUBSYSTEM; 
+        paramTable[0].EntryContext = &Value;
+        
+        paramTable[0].DefaultType = REG_DWORD; 
+        paramTable[0].DefaultData = &Default; 
+        paramTable[0].DefaultLength = sizeof (ULONG) ; 
+
+        //
+        // Query the registry
+        //
+
+        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL, 
+                                           paramPath.Buffer, 
+                                           paramTable, 
+                                           NULL, 
+                                           NULL);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            AFSTraceComponent = Value;
+        }
+
+        RtlZeroMemory( paramTable, 
+                       sizeof( paramTable));
+
+        Value = 0;
+
+        //
+        // Setup the table to query the registry for the needed value
+        //
+
+        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
+        paramTable[0].Name = AFS_REG_TRACE_BUFFER_LENGTH; 
+        paramTable[0].EntryContext = &Value;
+        
+        paramTable[0].DefaultType = REG_DWORD; 
+        paramTable[0].DefaultData = &Default; 
+        paramTable[0].DefaultLength = sizeof (ULONG); 
+
+        //
+        // Query the registry
+        //
+
+        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL, 
+                                           paramPath.Buffer, 
+                                           paramTable, 
+                                           NULL, 
+                                           NULL);
+
+        if( NT_SUCCESS( ntStatus) &&
+            Value > 0)
+        {
+
+            AFSDbgBufferLength = Value;
+
+            //
+            // Let's limit things a bit ...
+            //
+
+            if( AFSDbgBufferLength > 10240)
+            {
+
+                AFSDbgBufferLength = 1024;
+            }
+        }
+        else
+        {
+
+            AFSDbgBufferLength = 0;
+        }
+
+        //
+        // Make it bytes
+        //
+
+        AFSDbgBufferLength *= 1024;
+
+        //
+        // Now get ready to set up for MaxServerDirty
+        //
+
+        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
+        paramTable[0].Name = AFS_REG_MAX_DIRTY; 
+        paramTable[0].EntryContext = &Value;
+        
+        paramTable[0].DefaultType = REG_DWORD; 
+        paramTable[0].DefaultData = &Default; 
+        paramTable[0].DefaultLength = sizeof (ULONG) ; 
+
+        //
+        // Query the registry
+        //
+
+        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL, 
+                                           paramPath.Buffer, 
+                                           paramTable, 
+                                           NULL, 
+                                           NULL);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            AFSMaxDirtyFile = Value;
+        }
 
         RtlZeroMemory( paramTable, 
                        sizeof( paramTable));
@@ -622,34 +697,6 @@ AFSReadRegistry( IN PUNICODE_STRING RegistryPath)
         {
 
             AFSDebugLevel = Value;
-        }
-
-        //
-        // Now get ready to set up for MaxServerDirty
-        //
-
-        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT; 
-        paramTable[0].Name = AFS_REG_MAX_DIRTY; 
-        paramTable[0].EntryContext = &Value;
-        
-        paramTable[0].DefaultType = REG_DWORD; 
-        paramTable[0].DefaultData = &Default; 
-        paramTable[0].DefaultLength = sizeof (ULONG) ; 
-
-        //
-        // Query the registry
-        //
-
-        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL, 
-                                           paramPath.Buffer, 
-                                           paramTable, 
-                                           NULL, 
-                                           NULL);
-
-        if( NT_SUCCESS( ntStatus))
-        {
-
-            AFSMaxDirtyFile = Value;
         }
 
         //
@@ -692,6 +739,101 @@ AFSReadRegistry( IN PUNICODE_STRING RegistryPath)
     {
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSUpdateRegistryParameter( IN PUNICODE_STRING ValueName,
+                            IN ULONG ValueType,
+                            IN void *ValueData,
+                            IN ULONG ValueDataLength)
+{
+
+    NTSTATUS ntStatus        = STATUS_SUCCESS;
+    UNICODE_STRING paramPath, uniParamKey;
+    HANDLE hParameters = 0;
+    ULONG ulDisposition = 0;
+    OBJECT_ATTRIBUTES stObjectAttributes;
+
+    __Enter
+    {
+
+        RtlInitUnicodeString( &uniParamKey,
+                              L"\\Parameters");
+                              
+        //
+        // Setup the paramPath buffer.
+        //
+
+        paramPath.MaximumLength = AFSRegistryPath.Length + uniParamKey.Length; 
+        paramPath.Buffer = (PWSTR)ExAllocatePoolWithTag( PagedPool,
+                                                         paramPath.MaximumLength,
+                                                         AFS_GENERIC_MEMORY_TAG);
+ 
+        if( paramPath.Buffer == NULL) 
+        { 
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+        
+        //
+        // Move in the paths
+        //
+
+        RtlCopyMemory( paramPath.Buffer, 
+                       AFSRegistryPath.Buffer, 
+                       AFSRegistryPath.Length);
+        
+        paramPath.Length = AFSRegistryPath.Length;
+
+        RtlCopyMemory( &paramPath.Buffer[ paramPath.Length / 2], 
+                       uniParamKey.Buffer, 
+                       uniParamKey.Length); 
+ 
+        paramPath.Length += uniParamKey.Length; 
+
+        InitializeObjectAttributes( &stObjectAttributes,
+                                    &paramPath,
+                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                    NULL,
+                                    NULL);
+
+        ntStatus = ZwOpenKey( &hParameters,
+                              KEY_ALL_ACCESS,
+                              &stObjectAttributes);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Set the value
+        //
+
+        ntStatus = ZwSetValueKey( hParameters,
+                                  ValueName,
+                                  0,
+                                  ValueType,
+                                  ValueData,
+                                  ValueDataLength);
+
+        ZwClose( hParameters);
+
+try_exit:
+
+        if( paramPath.Buffer != NULL)
+        {
+
+            //
+            // Free up the buffer
+            //
+
+            ExFreePool( paramPath.Buffer);
+        }
+    } 
 
     return ntStatus;
 }
@@ -2085,14 +2227,14 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
 
             pSysNameLock = &pControlDevExt->Specific.Control.SysName32ListLock;
 
-            pSysName = &pControlDevExt->Specific.Control.SysName32ListHead;
+            pSysName = pControlDevExt->Specific.Control.SysName32ListHead;
         }
         else
         {
 
             pSysNameLock = &pControlDevExt->Specific.Control.SysName64ListLock;
 
-            pSysName = &pControlDevExt->Specific.Control.SysName64ListHead;
+            pSysName = pControlDevExt->Specific.Control.SysName64ListHead;
         }
 #else
 
@@ -2744,7 +2886,9 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
 
             default:
 
-                DbgPrint("AFSVerifyEntry Attempt to verify node of type %d\n", 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSVerifyEntry Attempt to verify node of type %d\n", 
                                                 Fcb->DirEntry->DirectoryEntry.FileType);
 
                 break;
@@ -2793,38 +2937,23 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
         if( pVcb != NULL)
         {
 
-            AFSAcquireExcl( &pVcb->NPFcb->Resource,
-                            TRUE);
+            //
+            // Set the volume state accordingly
+            //
+
+            if( VolumeStatus->Online)
+            {
+
+                InterlockedAnd( (LONG *)&(pVcb->Flags), ~AFS_FCB_VOLUME_OFFLINE);
+            }
+            else
+            {
+
+                InterlockedOr( (LONG *)&(pVcb->Flags), AFS_FCB_VOLUME_OFFLINE);
+            }
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-        if( !NT_SUCCESS( ntStatus) ||
-            pVcb == NULL) 
-        {
-            try_return( ntStatus = STATUS_UNSUCCESSFUL);
-        }
-
-        //
-        // Set the volume state accordingly
-        //
-
-        if( VolumeStatus->Online)
-        {
-
-            ClearFlag( pVcb->Flags, AFS_FCB_VOLUME_OFFLINE);
-        }
-        else
-        {
-
-            SetFlag( pVcb->Flags, AFS_FCB_VOLUME_OFFLINE);
-        }
-
-        AFSReleaseResource( &pVcb->NPFcb->Resource);
-
-try_exit:
-
-        NOTHING;
     }
 
     return ntStatus;

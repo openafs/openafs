@@ -61,19 +61,13 @@ AFSFSControl( IN PDEVICE_OBJECT DeviceObject,
 
             case IRP_MN_MOUNT_VOLUME:
 
-                AFSPrint("AFSFSControl Processing mount volume request\n");
-
                 break;
 
             case IRP_MN_VERIFY_VOLUME:
 
-                AFSPrint("AFSFSControl Processing verify volume request\n");
-
                 break;
 
             default:
-
-                AFSPrint("AFSFSControl Processing unknown request %08lX\n", pIrpSp->MinorFunction);
 
                 break;
         }
@@ -85,7 +79,9 @@ AFSFSControl( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSFSControl\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSFSControl\n");
     }
 
     return ntStatus;
@@ -97,131 +93,211 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulFsControlCode;
+    AFSFcb *pFcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp );
 
-    ulFsControlCode = pIrpSp->Parameters.FileSystemControl.FsControlCode;
-
-    //
-    // Process the request
-    //
-
-    switch( ulFsControlCode ) 
+    __Enter
     {
 
-        case FSCTL_REQUEST_OPLOCK_LEVEL_1:
-        case FSCTL_REQUEST_OPLOCK_LEVEL_2:
-        case FSCTL_REQUEST_BATCH_OPLOCK:
-        case FSCTL_OPLOCK_BREAK_ACKNOWLEDGE:
-        case FSCTL_OPBATCH_ACK_CLOSE_PENDING:
-        case FSCTL_OPLOCK_BREAK_NOTIFY:
-        case FSCTL_OPLOCK_BREAK_ACK_NO_2:
-        case FSCTL_REQUEST_FILTER_OPLOCK :
+        ulFsControlCode = pIrpSp->Parameters.FileSystemControl.FsControlCode;
 
-            //
-            // Note that implementing this call will probably need us
-            // to call the server as well as adding code in read and
-            // write and caching.  Also that it is unlikely that
-            // anyone will ever call us at this point - RDR doesn't
-            // allow it
-            //
+        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
-            ntStatus = STATUS_NOT_IMPLEMENTED;
+        if( pFcb == NULL ||
+            pFcb->DirEntry == NULL)
+        {
 
-            AFSPrint("AFSProcessUserFsRequest Processing oplock request\n");
-        
-            break;
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSProcessUserFsRequest Invalid Fcb\n");
 
-        case FSCTL_LOCK_VOLUME:
+            try_return( ntStatus);
+        }
 
-            AFSPrint("AFSProcessUserFsRequest Processing lock volume request\n");            
+        //
+        // Process the request
+        //
+
+        switch( ulFsControlCode ) 
+        {
+
+            case FSCTL_REQUEST_OPLOCK_LEVEL_1:
+            case FSCTL_REQUEST_OPLOCK_LEVEL_2:
+            case FSCTL_REQUEST_BATCH_OPLOCK:
+            case FSCTL_OPLOCK_BREAK_ACKNOWLEDGE:
+            case FSCTL_OPBATCH_ACK_CLOSE_PENDING:
+            case FSCTL_OPLOCK_BREAK_NOTIFY:
+            case FSCTL_OPLOCK_BREAK_ACK_NO_2:
+            case FSCTL_REQUEST_FILTER_OPLOCK :
+
+                //
+                // Note that implementing this call will probably need us
+                // to call the server as well as adding code in read and
+                // write and caching.  Also that it is unlikely that
+                // anyone will ever call us at this point - RDR doesn't
+                // allow it
+                //
+
+                ntStatus = STATUS_NOT_IMPLEMENTED;
+            
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing OpLock request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_LOCK_VOLUME:
+                    
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_UNLOCK_VOLUME:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_DISMOUNT_VOLUME:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_MARK_VOLUME_DIRTY:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_IS_VOLUME_DIRTY:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_IS_VOLUME_MOUNTED:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                break;
+
+            case FSCTL_IS_PATHNAME_VALID:
                 
-            break;
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-        case FSCTL_UNLOCK_VOLUME:
+                break;
 
-            AFSPrint("AFSProcessUserFsRequest Processing unlock volume request\n");
+            case FSCTL_QUERY_RETRIEVAL_POINTERS:
+                
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_QUERY_RETRIEVAL_POINTERS request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
 
-        case FSCTL_DISMOUNT_VOLUME:
+            case FSCTL_FILESYSTEM_GET_STATISTICS:
+                
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_FILESYSTEM_GET_STATISTICS request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            AFSPrint("AFSProcessUserFsRequest Processing dismount volume request\n");
+                break;
 
-            break;
+            case FSCTL_GET_VOLUME_BITMAP:
+                
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_VOLUME_BITMAP request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-        case FSCTL_MARK_VOLUME_DIRTY:
+                break;
 
-            AFSPrint("AFSProcessUserFsRequest Processing mark volume dirty request\n");
+            case FSCTL_GET_RETRIEVAL_POINTERS:
+                
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_RETRIEVAL_POINTERS request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
 
-        case FSCTL_IS_VOLUME_DIRTY:
+            case FSCTL_MOVE_FILE:
 
-            AFSPrint("AFSProcessUserFsRequest Processing IsVolumeDirty request\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_MOVE_FILE request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
 
-        case FSCTL_IS_VOLUME_MOUNTED:
+            case FSCTL_ALLOW_EXTENDED_DASD_IO:
 
-            AFSPrint("AFSProcessUserFsRequest Processing IsVolumeMounted request\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_ALLOW_EXTENDED_DASD_IO request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
 
-        case FSCTL_IS_PATHNAME_VALID:
-            
-            AFSPrint("AFSProcessUserFsRequest Processing IsPathNameValid request\n");
+            case FSCTL_GET_REPARSE_POINT:
 
-            break;
+                ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
-        case FSCTL_QUERY_RETRIEVAL_POINTERS:
-            
-            AFSPrint("AFSProcessUserFsRequest Processing QueryRetrievalPntrs request\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
 
-        case FSCTL_FILESYSTEM_GET_STATISTICS:
-            
-            AFSPrint("AFSProcessUserFsRequest Processing GetFSStats request\n");
+            case FSCTL_SET_REPARSE_POINT:
 
-            break;
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request on %wZ\n", 
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-        case FSCTL_GET_VOLUME_BITMAP:
-            
-            AFSPrint("AFSProcessUserFsRequest Processing GetVolumeBitmap request\n");
+                break;
 
-            break;
+            default :
 
-        case FSCTL_GET_RETRIEVAL_POINTERS:
-            
-            AFSPrint("AFSProcessUserFsRequest Processing GetRetrievalPntrs request\n");
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing default (%08lX) request on %wZ\n", 
+                                                    ulFsControlCode,
+                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
 
-            break;
+                break;
+        }
 
-        case FSCTL_MOVE_FILE:
+try_exit:
 
-            AFSPrint("AFSProcessUserFsRequest Processing MoveFile request\n");
-
-            break;
-
-        case FSCTL_ALLOW_EXTENDED_DASD_IO:
-
-            AFSPrint("AFSProcessUserFsRequest Processing AllowDASD IO request\n");
-
-            break;
-
-        case FSCTL_GET_REPARSE_POINT:
-            ntStatus = STATUS_INVALID_DEVICE_REQUEST;
-            break;
-
-        case FSCTL_SET_REPARSE_POINT:
-            AFSPrint("AFSProcessUserFsRequest Get reparse data buffer for %wZ\n", &pIrpSp->FileObject->FileName);
-            break;
-
-        default :
-
-            AFSPrint("AFSProcessUserFsRequest Processing Default handler %08lX\n", ulFsControlCode);
-
-            break;
+        NOTHING;
     }
 
     return ntStatus;

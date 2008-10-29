@@ -56,6 +56,8 @@ extern ULONG               AFSDebugFlags;
 
 extern ULONG               AFSDebugLevel;
 
+extern ULONG               AFSTraceComponent;
+
 extern ULONG               AFSMaxDirectIo;
 
 extern ULONG               AFSMaxDirtyFile;
@@ -82,8 +84,6 @@ extern ULONG               AFSAllocationMemoryLevel;
 
 extern UNICODE_STRING      AFSGlobalRootName;
 
-#ifdef AFS_DEBUG_LOG
-
 extern ERESOURCE           AFSDbgLogLock;
 
 extern ULONG               AFSDbgLogRemainingLength;
@@ -94,7 +94,9 @@ extern char               *AFSDbgBuffer;
 
 extern ULONG               AFSDbgLogCounter;
 
-#endif
+extern ULONG               AFSDbgBufferLength;
+
+extern ULONG               AFSDbgLogFlags;
 
 }
 

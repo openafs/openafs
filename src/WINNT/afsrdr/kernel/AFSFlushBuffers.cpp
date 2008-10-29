@@ -93,7 +93,8 @@ AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
         //
         ntStatus = AFSFlushExtents( pFcb );
 
-    try_exit:
+try_exit:
+
         AFSCompleteRequest( Irp, ntStatus);
     }
 

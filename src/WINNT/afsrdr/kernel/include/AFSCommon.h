@@ -828,20 +828,6 @@ ULONG
 AFSGenerateCRC( IN PUNICODE_STRING FileName,
                 IN BOOLEAN UpperCaseName);
 
-BOOLEAN 
-AFSAcquireForLazyWrite( IN PVOID Context,
-                        IN BOOLEAN Wait);
-
-VOID 
-AFSReleaseFromLazyWrite( IN PVOID Context);
-
-BOOLEAN 
-AFSAcquireForReadAhead( IN PVOID Context,
-                        IN BOOLEAN Wait);
-
-VOID 
-AFSReleaseFromReadAhead( IN PVOID Context);
-
 void *
 AFSLockSystemBuffer( IN PIRP Irp,
                      IN ULONG Length);
@@ -856,6 +842,12 @@ AFSUnmapServiceMappedBuffer( IN void *MappedBuffer,
 
 NTSTATUS
 AFSReadRegistry( IN PUNICODE_STRING RegistryPath);
+
+NTSTATUS
+AFSUpdateRegistryParameter( IN PUNICODE_STRING ValueName,
+                            IN ULONG ValueType,
+                            IN void *ValueData,
+                            IN ULONG ValueDataLength);
 
 NTSTATUS
 AFSInitializeControlFilter( void);
@@ -1240,10 +1232,10 @@ AFSShutdownRedirector( void);
 // AFSLogSupport.cpp
 //
 
-#ifdef AFS_DEBUG_LOG
-
 NTSTATUS
-AFSDbgLogMsg( IN PCCH Format,
+AFSDbgLogMsg( IN ULONG Subsystem,
+              IN ULONG Level,
+              IN PCCH Format,
               ...);
 
 NTSTATUS
@@ -1252,7 +1244,16 @@ AFSInitializeDbgLog( void);
 NTSTATUS
 AFSTearDownDbgLog( void);
 
-#endif
+NTSTATUS
+AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo);
+
+NTSTATUS
+AFSGetTraceBuffer( IN ULONG TraceBufferLength,
+                   OUT void *TraceBuffer,
+                   OUT ULONG_PTR *CopiedLength);
+
+void
+AFSTagInitialLogEntry( void);
 
 };
 

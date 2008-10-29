@@ -295,7 +295,9 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertCaseSensitiveDirEntry Invalid root node\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInsertCaseSensitiveDirEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -364,7 +366,10 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
             else
             {
 
-                AFSPrint("AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %08lX\n", DirEntry->CaseSensitiveTreeEntry.HashIndex);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %I64X\n", 
+                                                    DirEntry->CaseSensitiveTreeEntry.HashIndex);
 
                 ASSERT( FALSE);
 
@@ -400,7 +405,9 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirEntryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertCaseInsensitiveDirEntry Invalid root node\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInsertCaseInsensitiveDirEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1004,7 +1011,9 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertShortNameDirEntry Invalid root node\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInsertShortNameDirEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1369,7 +1378,9 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSPrint("AFSInsertHashEntry Invalid root node\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInsertHashEntry Invalid root node\n");
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1438,7 +1449,10 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
             else
             {
 
-                AFSPrint("AFSInsertHashEntry Attempt to re-insert a CRC %08lX\n", FileIDEntry->HashIndex);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSInsertHashEntry Attempt to re-insert a CRC %I64X\n", 
+                                                    FileIDEntry->HashIndex);
 
                 ASSERT( FALSE);
 

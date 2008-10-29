@@ -440,7 +440,9 @@ AFSFastIoReleaseForCCFlush( IN struct _FILE_OBJECT *FileObject,
     else
     {
 
-        AFSPrint("AFSFastIoReleaseForCCFlush Called for non-acquired main resource Fcb\n");
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSFastIoReleaseForCCFlush Called for non-acquired main resource Fcb\n");
     }
 
     if( ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->PagingResource))
@@ -451,7 +453,9 @@ AFSFastIoReleaseForCCFlush( IN struct _FILE_OBJECT *FileObject,
     else
     {
 
-        AFSPrint("AFSFastIoReleaseForCCFlush Called for non-acquired paging resource Fcb\n");
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSFastIoReleaseForCCFlush Called for non-acquired paging resource Fcb\n");
     }
 
     return ntStatus;

@@ -34,16 +34,18 @@
 
 #include "AFSCommon.h"
 
-#ifdef AFS_DEBUG_LOG
-
 NTSTATUS
-AFSDbgLogMsg( IN PCCH Format,
+AFSDbgLogMsg( IN ULONG Subsystem,
+              IN ULONG Level,
+              IN PCCH Format,
               ...)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     va_list va_args;
     ULONG ulBytesWritten = 0;
+    BOOLEAN bReleaseLock = FALSE;
+    char    *pCurrentTrace = NULL;
 
     __Enter
     {
@@ -54,16 +56,54 @@ AFSDbgLogMsg( IN PCCH Format,
             try_return( ntStatus = STATUS_DEVICE_NOT_READY);
         }
 
+        if( Subsystem > 0 &&
+            (Subsystem & AFSTraceComponent) == 0)
+        {
+
+            //
+            // Not tracing this subsystem
+            //
+
+            try_return( ntStatus);
+        }
+
+        if( Level > 0 &&
+            Level > AFSDebugLevel)
+        {
+
+            //
+            // Not tracing this level
+            //
+
+            try_return( ntStatus);
+        }
+
         AFSAcquireExcl( &AFSDbgLogLock,
                         TRUE);
+
+        bReleaseLock = TRUE;
+
+        //
+        // Check again under lock
+        //
+
+        if( AFSDbgBuffer == NULL)
+        {
+
+            try_return( ntStatus = STATUS_DEVICE_NOT_READY);
+        }
 
         if( AFSDbgLogRemainingLength < 255)
         {
 
-            AFSDbgLogRemainingLength = AFS_DBG_LOG_LENGTH;
+            AFSDbgLogRemainingLength = AFSDbgBufferLength;
 
             AFSDbgCurrentBuffer = AFSDbgBuffer;
+
+            SetFlag( AFSDbgLogFlags, AFS_DBG_LOG_WRAPPED);
         }
+
+        pCurrentTrace = AFSDbgCurrentBuffer;
 
         RtlStringCchPrintfA( AFSDbgCurrentBuffer,
                              10,
@@ -84,9 +124,25 @@ AFSDbgLogMsg( IN PCCH Format,
         if( ntStatus == STATUS_BUFFER_OVERFLOW)
         {
 
-            AFSDbgLogRemainingLength = AFS_DBG_LOG_LENGTH;
+            RtlZeroMemory( AFSDbgCurrentBuffer,
+                           AFSDbgLogRemainingLength);
+
+            AFSDbgLogRemainingLength = AFSDbgBufferLength;
 
             AFSDbgCurrentBuffer = AFSDbgBuffer;
+
+            SetFlag( AFSDbgLogFlags, AFS_DBG_LOG_WRAPPED);
+
+            pCurrentTrace = AFSDbgCurrentBuffer;
+
+            RtlStringCchPrintfA( AFSDbgCurrentBuffer,
+                                 10,
+                                 "%08lX:", 
+                                 AFSDbgLogCounter++); 
+
+            AFSDbgCurrentBuffer += 9;
+
+            AFSDbgLogRemainingLength -= 9;
 
             ntStatus = RtlStringCbVPrintfA( AFSDbgCurrentBuffer,
                                             AFSDbgLogRemainingLength,
@@ -108,9 +164,20 @@ AFSDbgLogMsg( IN PCCH Format,
 
         va_end( va_args);
 
+        if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_TRACE_TO_DEBUGGER) &&
+            pCurrentTrace != NULL)
+        {
+
+            DbgPrint( pCurrentTrace);
+        }
+
 try_exit:
 
-        AFSReleaseResource( &AFSDbgLogLock);
+        if( bReleaseLock)
+        {
+
+            AFSReleaseResource( &AFSDbgLogLock);
+        }
     }
 
     return ntStatus;
@@ -120,20 +187,35 @@ NTSTATUS
 AFSInitializeDbgLog()
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
-    AFSDbgBuffer = (char *)ExAllocatePoolWithTag( NonPagedPool,
-                                                  AFS_DBG_LOG_LENGTH,
-                                                  AFS_GENERIC_MEMORY_TAG);
+    AFSAcquireExcl( &AFSDbgLogLock,
+                    TRUE);
 
-    if( AFSDbgBuffer != NULL)
+    if( AFSDbgBufferLength > 0)
     {
 
-        ExInitializeResourceLite( &AFSDbgLogLock);
+        AFSDbgBuffer = (char *)ExAllocatePoolWithTag( NonPagedPool,
+                                                      AFSDbgBufferLength,
+                                                      AFS_GENERIC_MEMORY_TAG);
 
-        AFSDbgCurrentBuffer = AFSDbgBuffer;
+        if( AFSDbgBuffer != NULL)
+        {
 
-        AFSDbgLogRemainingLength = AFS_DBG_LOG_LENGTH;
+            AFSDbgCurrentBuffer = AFSDbgBuffer;
+
+            AFSDbgLogRemainingLength = AFSDbgBufferLength;
+
+            ntStatus = STATUS_SUCCESS;
+        }
+    }
+
+    AFSReleaseResource( &AFSDbgLogLock);
+
+    if( NT_SUCCESS( ntStatus))
+    {
+
+        AFSTagInitialLogEntry();
     }
 
     return ntStatus;
@@ -145,17 +227,254 @@ AFSTearDownDbgLog()
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
+    AFSAcquireExcl( &AFSDbgLogLock,
+                    TRUE);
+
     if( AFSDbgBuffer != NULL)
     {
 
-        ExDeleteResourceLite( &AFSDbgLogLock);
-
         ExFreePool( AFSDbgBuffer);
+    }
 
-        AFSDbgBuffer = NULL;
+    AFSDbgBuffer = NULL;
+
+    AFSDbgCurrentBuffer = NULL;
+
+    AFSDbgLogRemainingLength = 0;
+
+    AFSReleaseResource( &AFSDbgLogLock);
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    UNICODE_STRING uniString;
+
+    __Enter
+    {
+
+        AFSAcquireExcl( &AFSDbgLogLock,
+                        TRUE);
+
+        if( TraceInfo->TraceLevel == AFSDebugLevel &&
+            TraceInfo->TraceBufferLength == AFSDbgBufferLength &&
+            TraceInfo->Subsystem == AFSTraceComponent)
+        {
+
+            //
+            // Nothing to do
+            //
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Go update the registry with the new entries
+        //
+
+        if( TraceInfo->TraceLevel != (ULONG)-1 &&
+            TraceInfo->TraceLevel != AFSDebugLevel)
+        {
+
+            AFSDebugLevel = TraceInfo->TraceLevel;
+
+            RtlInitUnicodeString( &uniString,
+                                  AFS_REG_DEBUG_LEVEL);
+
+            ntStatus = AFSUpdateRegistryParameter( &uniString,
+                                                   REG_DWORD,
+                                                   &TraceInfo->TraceLevel,
+                                                   sizeof( ULONG));
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                DbgPrint("AFSConfigureTrace Failed to set debug level in registry Status %08lX\n", ntStatus);
+            }
+        }
+
+        if( TraceInfo->Subsystem != (ULONG)-1 &&
+            TraceInfo->Subsystem != AFSTraceComponent)
+        {
+
+            AFSTraceComponent = TraceInfo->Subsystem;
+
+            RtlInitUnicodeString( &uniString,
+                                  AFS_REG_DEBUG_SUBSYSTEM);
+
+            ntStatus = AFSUpdateRegistryParameter( &uniString,
+                                                   REG_DWORD,
+                                                   &TraceInfo->Subsystem,
+                                                   sizeof( ULONG));
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                DbgPrint("AFSConfigureTrace Failed to set debug subsystem in registry Status %08lX\n", ntStatus);
+            }
+        }
+
+        if( TraceInfo->TraceBufferLength != (ULONG)-1 &&
+            TraceInfo->TraceBufferLength != AFSDbgBufferLength)
+        {
+
+            RtlInitUnicodeString( &uniString,
+                                  AFS_REG_TRACE_BUFFER_LENGTH);
+
+            ntStatus = AFSUpdateRegistryParameter( &uniString,
+                                                   REG_DWORD,
+                                                   &TraceInfo->TraceBufferLength,
+                                                   sizeof( ULONG));
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                DbgPrint("AFSConfigureTrace Failed to set debug buffer length in registry Status %08lX\n", ntStatus);
+            }
+        
+            AFSDbgBufferLength = TraceInfo->TraceBufferLength * 1024;
+
+            ClearFlag( AFSDbgLogFlags, AFS_DBG_LOG_WRAPPED);
+
+            if( AFSDbgBuffer != NULL)
+            {
+
+                ExFreePool( AFSDbgBuffer);
+
+                AFSDbgBuffer = NULL;
+
+                AFSDbgCurrentBuffer = NULL;
+
+                AFSDbgLogRemainingLength = 0;
+            }
+
+            if( AFSDbgBufferLength > 0)
+            {
+
+                AFSDbgBuffer = (char *)ExAllocatePoolWithTag( NonPagedPool,
+                                                              AFSDbgBufferLength,
+                                                              AFS_GENERIC_MEMORY_TAG);
+
+                if( AFSDbgBuffer == NULL)
+                {
+
+                    AFSDbgBufferLength = 0;
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
+
+                AFSDbgCurrentBuffer = AFSDbgBuffer;
+
+                AFSDbgLogRemainingLength = AFSDbgBufferLength;
+
+                AFSTagInitialLogEntry();
+            }
+        }
+
+try_exit:
+
+        AFSReleaseResource( &AFSDbgLogLock);
     }
 
     return ntStatus;
 }
 
-#endif
+NTSTATUS
+AFSGetTraceBuffer( IN ULONG TraceBufferLength,
+                   OUT void *TraceBuffer,
+                   OUT ULONG_PTR *CopiedLength)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    ULONG ulCopyLength = 0;
+    char *pCurrentLocation = NULL;
+
+    __Enter
+    {
+
+        AFSAcquireShared( &AFSDbgLogLock,
+                          TRUE);
+
+        if( TraceBufferLength < AFSDbgBufferLength)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If we have wrapped then copy in the remaining portion
+        //
+
+        pCurrentLocation = (char *)TraceBuffer;
+
+        *CopiedLength = 0;
+
+        if( BooleanFlagOn( AFSDbgLogFlags, AFS_DBG_LOG_WRAPPED))
+        {
+
+            ulCopyLength = AFSDbgLogRemainingLength;
+
+            RtlCopyMemory( pCurrentLocation,
+                           AFSDbgCurrentBuffer,
+                           ulCopyLength);
+
+            pCurrentLocation[ 0] = '0'; // The buffer is NULL terminated ...
+
+            pCurrentLocation += ulCopyLength;
+
+            *CopiedLength = ulCopyLength;
+        }
+
+        ulCopyLength = AFSDbgBufferLength - AFSDbgLogRemainingLength;
+
+        if( ulCopyLength > 0)
+        {
+
+            RtlCopyMemory( pCurrentLocation,
+                           AFSDbgBuffer,
+                           ulCopyLength);
+
+            *CopiedLength += ulCopyLength;
+        }
+
+try_exit:
+
+        AFSReleaseResource( &AFSDbgLogLock);
+    }
+
+    return ntStatus;
+}
+
+void
+AFSTagInitialLogEntry()
+{
+
+    LARGE_INTEGER liTime, liLocalTime;
+    TIME_FIELDS timeFields;
+
+    KeQuerySystemTime( &liTime);
+
+    ExSystemTimeToLocalTime( &liTime,
+                             &liLocalTime);
+
+    RtlTimeToTimeFields( &liLocalTime,
+                         &timeFields);
+
+    AFSDbgLogMsg( 0,
+                  0,
+                  "AFS Log Initialized %d-%d-%d %d:%d Level %d Susbsystems %08lX\n",
+                  timeFields.Month,
+                  timeFields.Day,
+                  timeFields.Year,
+                  timeFields.Hour,
+                  timeFields.Minute,
+                  AFSDebugLevel,
+                  AFSTraceComponent);
+
+    return;
+}
+

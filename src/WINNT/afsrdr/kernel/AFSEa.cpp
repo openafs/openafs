@@ -62,11 +62,9 @@ AFSQueryEA( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSPrint("AFSQueryEa Entry for FO %08lX\n", pIrpSp->FileObject);
-
-
-
-
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSQueryEa Entry for FO %08lX\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                               ntStatus);
@@ -75,7 +73,9 @@ AFSQueryEA( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSQueryEA\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueryEA\n");
     }
 
     return ntStatus;
@@ -106,11 +106,9 @@ AFSSetEA( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSPrint("AFSSetEa Entry for FO %08lX\n", pIrpSp->FileObject);
-
-
-
-
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSSetEa Entry for FO %08lX\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                               ntStatus);
@@ -119,7 +117,9 @@ AFSSetEA( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSSetEA\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSSetEA\n");
     }
 
     return ntStatus;

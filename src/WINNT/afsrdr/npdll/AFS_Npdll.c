@@ -230,7 +230,7 @@ NPAddConnection3( HWND            hwndOwner,
         if( lpNetResource->lpLocalName != NULL)
         {
 
-            wchLocalName[0] = (WCHAR) CharUpper( (PWCHAR) MAKELONG( (USHORT) lpNetResource->lpLocalName[0], 0 ) );
+            wchLocalName[0] = lpNetResource->lpLocalName[0];
             wchLocalName[1] = L':';
             wchLocalName[2] = L'\0';
         }
@@ -615,7 +615,7 @@ NPGetConnection( LPWSTR  lpLocalName,
             try_return( dwStatus = WN_BAD_LOCALNAME);
         }
 
-        wchLocalName[0] = (WCHAR) CharUpper( (PWCHAR) MAKELONG( (USHORT) lpLocalName[0], 0 ) );
+        wchLocalName[0] = lpLocalName[0];
         wchLocalName[1] = L':';
         wchLocalName[2] = L'\0';
 
@@ -727,7 +727,7 @@ NPGetConnection3(
             try_return( dwStatus = WN_MORE_DATA);
         }
 
-        wchLocalName[0] = (WCHAR) CharUpper( (PWCHAR) MAKELONG( (USHORT) lpLocalName[0], 0 ) );
+        wchLocalName[0] = lpLocalName[0];
         wchLocalName[1] = L':';
         wchLocalName[2] = L'\0';
 

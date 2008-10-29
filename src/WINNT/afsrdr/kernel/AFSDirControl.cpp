@@ -91,7 +91,9 @@ AFSDirControl( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSDirControl\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSDirControl\n");
     }
 
     if( ntStatus != STATUS_PENDING)

@@ -97,8 +97,18 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryFileInfo Failing request against PIOCtl Fcb\n");
+
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSQueryFileInfo Processing request %08lX for %wZ\n", 
+                                                        stFileInformationClass,
+                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
 
         //
         // Process the request
@@ -335,13 +345,23 @@ try_exit:
             ntStatus != STATUS_INVALID_PARAMETER)
         {
 
-            AFSPrint("AFSQueryFileInfo Failed to process request Status %08lX\n", ntStatus);
+            if( pFcb->DirEntry != NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSQueryFileInfo Failed to process request for %wZ Status %08lX\n", 
+                                                            &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                            ntStatus);
+            }
         }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSQueryFileInfo Main loop\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueryFileInfo\n");
 
         ntStatus = STATUS_UNSUCCESSFUL;
 
@@ -415,9 +435,19 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileInfo Failing request against PIOCtl Fcb\n");
+
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSSetFileInfo Processing request %08lX for %wZ\n", 
+                                                        FileInformationClass,
+                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
+        
         //
         // Ensure rename operations are synchronous
         //
@@ -519,14 +549,23 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFSSetFileInfo Failed to process request Status %08lX\n", ntStatus);
-        }
+            if( pFcb->DirEntry != NULL)
+            {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSSetFileInfo Failed to process request for %wZ Status %08lX\n", 
+                                                            &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                            ntStatus);
+            }
+        }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSSetFileInfo Processing loop\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSSetFileInfo\n");
 
         ntStatus = STATUS_UNSUCCESSFUL;
     }
@@ -1123,7 +1162,9 @@ AFSSetDispositionInfo( IN PIRP Irp,
                                           MmFlushForDelete)) 
                 {
 
-                    AFSPrint("AFSSetDispositionInfo Failed to flush image section for delete\n");
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE_2,
+                                  "AFSSetDispositionInfo Failed to flush image section for delete\n");
 
                     ntStatus = STATUS_CANNOT_DELETE;
                 }
@@ -1146,12 +1187,6 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     SetFlag( pFcb->Flags, AFS_FCB_PENDING_DELETE);
                 }
             }
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSPrint("AFSSetDispositionInfo Failed to transition file to deleted state Status %08lX\n", ntStatus);
-            }
         }
         else
         {
@@ -1171,11 +1206,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
 
 try_exit:
 
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSPrint("AFSSetDispositionInfo Failed to process delete request Status %08lX\n", ntStatus);
-        }
+        NOTHING;
     }
 
     return ntStatus;
@@ -1467,9 +1498,6 @@ AFSSetPositionInfo( IN PIRP Irp,
     pBuffer = (PFILE_POSITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
     pIrpSp->FileObject->CurrentByteOffset.QuadPart = pBuffer->CurrentByteOffset.QuadPart;
-
-    AFSPrint("AFSSetPositionInfo Position %08lX\n", 
-                                                pBuffer->CurrentByteOffset.LowPart);
 
     return ntStatus;
 }

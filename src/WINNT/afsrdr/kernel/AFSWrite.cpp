@@ -39,23 +39,23 @@
 
 static
 NTSTATUS
-CachedWrite( IN PDEVICE_OBJECT DeviceObject,
-             IN PIRP Irp,
-             IN LARGE_INTEGER StartingByte,
-             IN ULONG ByteCount,
-             IN BOOLEAN ForceFlush);
-static
-NTSTATUS
-NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
+AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp,
                 IN LARGE_INTEGER StartingByte,
-                IN ULONG ByteCount);
+                IN ULONG ByteCount,
+                IN BOOLEAN ForceFlush);
+static
+NTSTATUS
+AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp,
+                   IN LARGE_INTEGER StartingByte,
+                   IN ULONG ByteCount);
 
 static
 NTSTATUS 
-ExtendingWrite( IN AFSFcb *Fcb,
-                IN PFILE_OBJECT FileObject,
-                IN LONGLONG NewLength);
+AFSExtendingWrite( IN AFSFcb *Fcb,
+                   IN PFILE_OBJECT FileObject,
+                   IN LONGLONG NewLength);
 
 //
 // Function: AFSWrite
@@ -121,9 +121,20 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         ObReferenceObject( pFileObject);
 
+        liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
+        bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
+        bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
+        ulByteCount    = pIrpSp->Parameters.Write.Length;
+
         if( pFcb->Header.NodeTypeCode != AFS_IOCTL_FCB &&
             pFcb->Header.NodeTypeCode != AFS_FILE_FCB)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite Attempted write (%08lX) on an invalid node type %08lX\n",
+                          Irp,
+                          pFcb->Header.NodeTypeCode);
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -136,24 +147,42 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Processing file (PIOCTL) Offset %I64X Length %08lX Irp Flags %08lX\n",
+                          Irp,
+                          liStartingByte.QuadPart,
+                          ulByteCount,
+                          Irp->Flags);
+
             ntStatus = AFSIOCtlWrite( DeviceObject,
                                       Irp);
 
             try_return( ntStatus);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCommonWrite (%08lX) Processing file %wZ Offset %I64X Length %08lX Irp Flags %08lX\n",
+                      Irp,
+                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                      liStartingByte.QuadPart,
+                      ulByteCount,
+                      Irp->Flags);
+
         //
         // Is the Cache not there yet?  Exit.
         //
         if( NULL == pDeviceExt->Specific.RDR.CacheFileObject) 
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Request failed due to AFS cache closed\n",
+                          Irp);
+
             try_return( ntStatus = STATUS_TOO_LATE );
         }
-
-        liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
-        bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
-        bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
-        ulByteCount    = pIrpSp->Parameters.Write.Length;
 
         //
         // We need to know on whose behalf we have been called (which
@@ -166,15 +195,18 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             //
             // This is a non posted call.
             //
+
             bCanQueueRequest = !IoIsOperationSynchronous( Irp);
 
             hCallingUser = PsGetCurrentProcessId();
         } 
         else
         {
+
             //
             // We have already been posted once
             //
+
             bCanQueueRequest = FALSE;
 
             hCallingUser = OnBehalfOf;
@@ -187,7 +219,10 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( ulByteCount == 0)
         {
 
-            AFSPrint("AFSCommonWrite Processed zero length write\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Request completed due to zero length\n",
+                          Irp);
 
             try_return( ntStatus);
         }
@@ -199,21 +234,34 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
         {
 
-            AFSPrint("AFSCommonWrite Dropping request for invalid Fcb\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Failing request due to INVALID fcb\n",
+                          Irp);        
 
-            //
-            // OK, this Fcb was probably deleted then renamed into but we re-used the source fcb
-            // hence this is bogus. Drop it?
-            //
+            Irp->IoStatus.Information = 0;
 
-            Irp->IoStatus.Information = ulByteCount;
-
-            try_return( ntStatus = STATUS_SUCCESS);
+            try_return( ntStatus = STATUS_FILE_DELETED);
         }
 
-        if( FlagOn(pIrpSp->MinorFunction, IRP_MN_COMPLETE) ) {
-        
-            AFSPrint("MN_COMPLETE \n");
+        if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Request failed due to file deleted\n",
+                          Irp);        
+
+            try_return( ntStatus = STATUS_FILE_DELETED);
+        }
+
+        if( FlagOn( pIrpSp->MinorFunction, IRP_MN_COMPLETE)) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) IRP_MN_COMPLETE being processed\n",
+                          Irp);        
 
             CcMdlWriteComplete(pFileObject, &pIrpSp->Parameters.Write.ByteOffset, Irp->MdlAddress);
 
@@ -226,12 +274,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_SUCCESS );
         }
 
-
         //
         // If we get a non cached IO for a cached file we should do a purge.  
         // For now we will just promote to cached
         //
-        if( NULL != pFileObject->SectionObjectPointer->DataSectionObject && !bPagingIo && bNonCachedIo) {
+        if( NULL != pFileObject->SectionObjectPointer->DataSectionObject && !bPagingIo && bNonCachedIo) 
+        {
             bNonCachedIo = FALSE;
             bForceFlush = TRUE;
         }
@@ -239,14 +287,35 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( !bNonCachedIo && pFileObject->PrivateCacheMap == NULL)
         {
 
-            CcInitializeCacheMap( pFileObject,
-                                  (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
-                                  FALSE,
-                                  &AFSCacheManagerCallbacks,
-                                  pFcb);
+            __try
+            {
+                CcInitializeCacheMap( pFileObject,
+                                      (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                      FALSE,
+                                      &AFSCacheManagerCallbacks,
+                                      pFcb);
 
-            CcSetReadAheadGranularity( pFileObject, 
-                                       READ_AHEAD_GRANULARITY);
+                CcSetReadAheadGranularity( pFileObject, 
+                                           READ_AHEAD_GRANULARITY);
+
+            }
+            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+            {
+                    
+                ntStatus = GetExceptionCode();
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Exception thrown while initializing cache map Status %08lX\n",
+                              Irp,
+                              ntStatus);        
+            }
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
         while (!bNonCachedIo && !CcCanIWrite( pFileObject,
@@ -271,14 +340,20 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // We should be ready to go.  So first of all ask for the extents
-        //
-
-        //
         // Provoke a get of the extents - if we need to.
         //
+
         ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped );
 
-        if (!NT_SUCCESS(ntStatus)) {
+        if (!NT_SUCCESS(ntStatus)) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Failed to request extents Status %08lX\n",
+                          Irp,
+                          ntStatus);        
+
             try_return( ntStatus );
         }
 
@@ -288,6 +363,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         if (!bMapped && pFcb->Specific.File.LazyWriterThread == PsGetCurrentThread())
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Failing lazy writer for unmapped request\n",
+                          Irp);        
+
             try_return ( ntStatus = STATUS_FILE_LOCK_CONFLICT);
         }
 
@@ -298,10 +379,22 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if (bCanQueueRequest) 
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Attempt to post request\n",
+                          Irp);        
+
             pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
                                                                sizeof(AFSWorkItem),
                                                                AFS_WORK_ITEM_TAG);
-            if (NULL == pWorkItem) {
+            if (NULL == pWorkItem) 
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Failed to allocate work item\n",
+                              Irp);        
+
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
             }
 
@@ -323,6 +416,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             if (NULL == AFSLockSystemBuffer( Irp,
                                              pIrpSp->Parameters.Read.Length))
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Failed to lock system buffer for post request\n",
+                              Irp);        
+
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
             }
 
@@ -349,6 +448,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 Irp->IoStatus.Status = ntStatus;
                 Irp->IoStatus.Information = 0;
                     
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Failed to queue work item Status %08lX\n",
+                              Irp,
+                              ntStatus);        
+
                 AFSCompleteRequest( Irp,
                                     ntStatus);
             } 
@@ -358,6 +463,11 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 // We don't own the work item
                 //
                 pWorkItem = NULL;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite (%08lX) Successfully posted request\n",
+                              Irp);        
             }
              
             //
@@ -461,12 +571,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
         while (!bLockOK);
 
-        if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
-        {
-
-            try_return( ntStatus = STATUS_FILE_DELETED);
-        }
-
         //
         // Check the BR locks on the file. 
         //
@@ -476,19 +580,28 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                                            Irp)) 
         {
             
-            AFSPrint("AFSCommonWrite Failed BR lock check for cached I/O\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Request failed due to lock conflict\n",
+                          Irp);        
 
             try_return( ntStatus = STATUS_FILE_LOCK_CONFLICT);
         }
 
-        if ( bExtendingWrite)
+        if( bExtendingWrite)
         {
 
-            ntStatus = ExtendingWrite( pFcb, pFileObject, (liStartingByte.QuadPart + ulByteCount));
+            ntStatus = AFSExtendingWrite( pFcb, pFileObject, (liStartingByte.QuadPart + ulByteCount));
 
-            if ( !NT_SUCCESS(ntStatus)) 
+            if( !NT_SUCCESS(ntStatus)) 
             {
                 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Failed extending write request Status %08lX\n",
+                              Irp,
+                              ntStatus);        
+
                 try_return( ntStatus );
             }
         }
@@ -502,24 +615,34 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             !bNonCachedIo)
         {
             
-            ntStatus = CachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Processing CACHED request\n",
+                          Irp);        
+
+            ntStatus = AFSCachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
 
         }
         else
         {
 
-            ntStatus = NonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonWrite (%08lX) Processing NON-CACHED request\n",
+                          Irp);        
+
+            ntStatus = AFSNonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
         }
 
 try_exit:
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCommonWrite (%08lX) Process complete Status %08lX\n",
+                      Irp,
+                      ntStatus);        
+
         ObDereferenceObject(pFileObject);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSPrint("AFSCommonWrite Failed to process write request Status %08lX\n", ntStatus);
-        }
 
         if( bReleaseMain)
         {
@@ -527,8 +650,9 @@ try_exit:
             AFSReleaseResource( &pNPFcb->Resource);
         }
 
-        if ( pWorkItem)
+        if( pWorkItem)
         {
+
             ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
         }
 
@@ -538,7 +662,8 @@ try_exit:
             AFSReleaseResource( &pNPFcb->PagingResource);
         }
 
-        if (bCompleteIrp) {
+        if (bCompleteIrp) 
+        {
             Irp->IoStatus.Information = 0;
 
             AFSCompleteRequest( Irp, ntStatus );
@@ -695,10 +820,10 @@ try_exit:
 //
 static
 NTSTATUS
-NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
-                IN PIRP Irp,
-                IN LARGE_INTEGER StartingByte,
-                IN ULONG ByteCount)
+AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp,
+                   IN LARGE_INTEGER StartingByte,
+                   IN ULONG ByteCount)
 {
     NTSTATUS           ntStatus = STATUS_UNSUCCESSFUL;
     VOID              *pSystemBuffer = NULL;
@@ -723,7 +848,15 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     {
         Irp->IoStatus.Information = 0;
 
-        if (ByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart) {
+        if (ByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWrite (%08lX) Request larger than MaxIO %I64X\n",
+                          Irp,
+                          pDevExt->Specific.RDR.MaxIo.QuadPart);        
+
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
 
@@ -736,7 +869,10 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         if( pSystemBuffer == NULL)
         {
                 
-            AFSPrint("NonCachedWrite Failed to retrieve system buffer\n");
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWrite (%08lX) Failed to map system buffer\n",
+                          Irp);        
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -748,10 +884,23 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         while (TRUE) 
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNonCachedWrite (%08lX) Requesting extents for Offset %I64X Length %08lX\n",
+                          Irp,
+                          StartingByte.QuadPart,
+                          ByteCount);
+
             ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bExtentsMapped );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSNonCachedWrite (%08lX) Failed to request extents Status %08lX\n",
+                              Irp,
+                              ntStatus);        
 
                 try_return( ntStatus );
             }
@@ -790,6 +939,12 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             if (!NT_SUCCESS(ntStatus)) 
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSNonCachedWrite (%08lX) Failed to wait for mapping Status %08lX\n",
+                              Irp,
+                              ntStatus);        
+
                 try_return( ntStatus );
             }
         }
@@ -797,6 +952,13 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         // As per the read path - 
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWrite (%08lX) Retrieving mapped extents for Offset %I64X Length %08lX\n",
+                      Irp,
+                      StartingByte.QuadPart,
+                      ByteCount);
 
         ntStatus = AFSGetExtents( pFcb, 
                                   &StartingByte, 
@@ -806,22 +968,43 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         
         if (!NT_SUCCESS(ntStatus)) 
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWrite (%08lX) Failed to retrieve mapped extents Status %08lX\n",
+                          Irp,
+                          ntStatus);        
+
             try_return( ntStatus );
         }
         
-        if (extentsCount > AFS_MAX_STACK_IO_RUNS) {
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWrite (%08lX) Successfully retrieved map extents count %08lX\n",
+                      Irp,
+                      extentsCount);
+
+        if (extentsCount > AFS_MAX_STACK_IO_RUNS) 
+        {
 
             pIoRuns = (AFSIoRun*) ExAllocatePoolWithTag( PagedPool,
                                                          extentsCount * sizeof( AFSIoRun ),
                                                          AFS_IO_RUN_TAG );
             if (NULL == pIoRuns) 
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSNonCachedWrite (%08lX) Failed to allocate IO run block\n",
+                              Irp);
+
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
             }
-        } else {
+        } 
+        else 
+        {
             
             pIoRuns = stIoRuns;
-
         }
 
         RtlZeroMemory( pIoRuns, extentsCount * sizeof( AFSIoRun ));
@@ -837,6 +1020,13 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         if (!NT_SUCCESS(ntStatus)) 
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWrite (%08lX) Failed to initialize IO run block Status %08lX\n",
+                          Irp,
+                          ntStatus);
+
             try_return( ntStatus );
         }
 
@@ -850,6 +1040,12 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         if (NULL == pGatherIo) 
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWrite (%08lX) Failed to allocate IO gather block\n",
+                          Irp);
+
             try_return (ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
 
@@ -866,7 +1062,8 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         pGatherIo->Synchronous = TRUE;
         bCompleteIrp = FALSE;
 
-        if (pGatherIo->Synchronous) {
+        if (pGatherIo->Synchronous) 
+        {
             KeInitializeEvent( &pGatherIo->Event, NotificationEvent, FALSE );
         }
 
@@ -882,29 +1079,49 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                                 extentsCount, 
                                 pGatherIo );
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWrite (%08lX) AFSStartIos completed Status %08lX\n",
+                      Irp,
+                      ntStatus);
+
         //
         // Regardless of the status we we do the complete - there may
         // be IOs in flight
         //
         // Decrement the count - setting the event if we are done
         //
+
         AFSCompleteIo( pGatherIo, STATUS_SUCCESS );
 
         //
         // Wait for completion of All IOs we started.
         //
-        (VOID) KeWaitForSingleObject( &pGatherIo->Event,
-                                      Executive,
-                                      KernelMode,
-                                      FALSE,
-                                      NULL);
-        
-        if (NT_SUCCESS(ntStatus)) 
+
+        if( NT_SUCCESS( ntStatus))
         {
-            ntStatus = pGatherIo->Status;
-        } 
-        else 
+
+            ntStatus = KeWaitForSingleObject( &pGatherIo->Event,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+            
+            if( NT_SUCCESS(ntStatus)) 
+            {
+                ntStatus = pGatherIo->Status;
+            } 
+        }
+
+        if( !NT_SUCCESS( ntStatus))
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNonCachedWrite (%08lX) AFSStartIos wait completed Status %08lX\n",
+                          Irp,
+                          ntStatus);
+
             try_return( ntStatus);
         }
 
@@ -927,7 +1144,15 @@ NonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         // All done
         //
+
 try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWrite (%08lX) Completed request Status %08lX\n",
+                      Irp,
+                      ntStatus);
+
         if (NT_SUCCESS(ntStatus) &&
             !bPagingIo &&
             bSynchronousFo) 
@@ -945,15 +1170,18 @@ try_exit:
             AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
         }
 
-        if (pGatherIo) {
+        if (pGatherIo) 
+        {
             ExFreePoolWithTag(pGatherIo, AFS_GATHER_TAG);
         }
 
-        if (NULL != pIoRuns && stIoRuns != pIoRuns) {
+        if (NULL != pIoRuns && stIoRuns != pIoRuns) 
+        {
             ExFreePoolWithTag(pIoRuns, AFS_IO_RUN_TAG);
         }
 
-        if (bCompleteIrp) {
+        if (bCompleteIrp) 
+        {
             Irp->IoStatus.Information = 0;
 
             AFSCompleteRequest( Irp, ntStatus );
@@ -971,11 +1199,11 @@ try_exit:
 
 static
 NTSTATUS
-CachedWrite( IN PDEVICE_OBJECT DeviceObject,
-             IN PIRP Irp,
-             IN LARGE_INTEGER StartingByte,
-             IN ULONG ByteCount,
-             IN BOOLEAN ForceFlush)
+AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
+                IN PIRP Irp,
+                IN LARGE_INTEGER StartingByte,
+                IN ULONG ByteCount,
+                IN BOOLEAN ForceFlush)
 {
     PVOID              pSystemBuffer = NULL;
     NTSTATUS           ntStatus = STATUS_SUCCESS;
@@ -987,6 +1215,7 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bMapped = FALSE; 
 
     Irp->IoStatus.Information = 0;
+
     __Enter
     {
         //
@@ -998,8 +1227,11 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         if( pSystemBuffer == NULL)
         {
-                
-            AFSPrint("CachedWrite Failed to retrieve system buffer\n");
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCachedWrite (%08lX) Failed to lock system buffer\n",
+                          Irp);        
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1017,51 +1249,76 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
                                    &Irp->IoStatus);
 
                 ntStatus = Irp->IoStatus.Status;
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSCommonWrite (%08lX) Failed to process MDL read Status %08lX\n",
+                                  Irp,
+                                  ntStatus);     
+
+                    try_return( ntStatus);
+                }
             }
-            else
+
+            if( !CcCopyWrite( pFileObject,
+                              &StartingByte,
+                              ByteCount,
+                              TRUE,
+                              pSystemBuffer)) 
+            {
+                //
+                // Failed to process request.
+                //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCachedWrite (%08lX) Failed to issue CcCopyWrite\n", Irp);
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            if (ForceFlush)
             {
 
-                if( !CcCopyWrite( pFileObject,
-                                  &StartingByte,
-                                  ByteCount,
-                                  TRUE,
-                                  pSystemBuffer)) 
+                //
+                // We have detected a file we do a write through with.
+                //
+                
+                CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
+                             &StartingByte,
+                             ByteCount,
+                             &iosbFlush);
 
-                {
-                    //
-                    // Failed to process request.
-                    //
-
-                    AFSPrint("CachedWrite failed to issue cached read Write %08lX\n", Irp->IoStatus.Status);
-
-                    try_return( ntStatus = STATUS_UNSUCCESSFUL);
-                }
-
-                if (ForceFlush)
-                {
-                    //
-                    // We have detected a file we do a write through with.
-                    //
-                    CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
-                                 &StartingByte,
-                                 ByteCount,
-                                 &iosbFlush);
-
-                    ntStatus = iosbFlush.Status;
-                }
-                else 
-                {
-                    ntStatus = STATUS_SUCCESS;
-                }
+                ntStatus = iosbFlush.Status;
+            }
+            else 
+            {
+                ntStatus = STATUS_SUCCESS;
             }
         }
         __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
         {
-            ntStatus = GetExceptionCode() ;
+            ntStatus = GetExceptionCode();
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCachedWrite (%08lX) CcCopyWrite() or CcFlushCache() threw exception Status %08lX\n",
+                          Irp,
+                          ntStatus);        
         }
         
         if (!NT_SUCCESS(ntStatus))
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCachedWrite (%08lX) Failed cache write Status %08lX\n",
+                          Irp,
+                          ntStatus);        
+
             try_return ( ntStatus );
         }
 
@@ -1095,8 +1352,9 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         SetFlag( pFcb->Flags, AFS_UPDATE_WRITE_TIME);
 
-    try_exit:
-        ;
+try_exit:
+        
+        NOTHING;
     }
 
     //
@@ -1110,9 +1368,9 @@ CachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
 static
 NTSTATUS 
-ExtendingWrite( IN AFSFcb *Fcb,
-                IN PFILE_OBJECT FileObject,
-                IN LONGLONG NewLength)
+AFSExtendingWrite( IN AFSFcb *Fcb,
+                   IN PFILE_OBJECT FileObject,
+                   IN LONGLONG NewLength)
 {
     LARGE_INTEGER liSaveFileSize = Fcb->Header.FileSize;
     LARGE_INTEGER liSaveAllocation = Fcb->Header.AllocationSize;

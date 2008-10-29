@@ -65,6 +65,16 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
 
+        if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSLockControl Failing request against PIOCtl Fcb\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
+
         //
         // Post the request to the service for checks
         //
@@ -98,7 +108,11 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSPrint("AFSLockControl (IRP_MN_LOCK) Failed to request lock for file Status %08lX\n", ntStatus);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLockControl (IRP_MN_LOCK) Failed to request lock for file %wZ Status %08lX\n", 
+                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                                    ntStatus);
 
                     try_return( ntStatus);
                 }
@@ -123,7 +137,11 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSPrint("AFSLockControl (IRP_MN_UNLOCK_ALL(BY_KEY)) Failed to request unlock for file Status %08lX\n", ntStatus);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLockControl (IRP_MN_UNLOCK_ALL/BY_KEY) Failed to request lock for file %wZ Status %08lX\n", 
+                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                                    ntStatus);
                 }
 
                 //
@@ -159,7 +177,11 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSPrint("AFSLockControl (IRP_MN_UNLOCK_SINGLE) Failed to request unlock for file Status %08lX\n", ntStatus);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLockControl (IRP_MN_UNLOCK_SINGLE) Failed to request lock for file %wZ Status %08lX\n", 
+                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                                    ntStatus);
                 }
 
                 break;
@@ -202,7 +224,9 @@ try_exit:
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
     {
 
-        AFSPrint("EXCEPTION - AFSLockControl\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSLockControl\n");
 
         //
         // Again, there is little point in failing this request but pass back some type of failure status

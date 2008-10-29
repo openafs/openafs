@@ -69,13 +69,15 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
     __try
     {
 
-        AFSPrint("AFS DriverEntry Initialization build %s:%s\n", __DATE__, __TIME__);
+        DbgPrint("AFS DriverEntry Initialization build %s:%s\n", __DATE__, __TIME__);
 
         //
         // Initialize some local variables for easier processing
         //
 
         uniSymLinkName.Buffer = NULL;
+
+        ExInitializeResourceLite( &AFSDbgLogLock);
 
         //
         // Our backdoor to not let the driver load
@@ -93,18 +95,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         }
 
         //
-        // Initialize the debug log
-        //
-
-#ifdef AFS_DEBUG_LOG
-
-        AFSInitializeDbgLog();
-
-        AFSDbgLogMsg( "AFSRedirector Driver Entry build %s:%s\n", __DATE__, __TIME__);
-
-#endif
-
-        //
         // Perform some initialization
         //
 
@@ -115,15 +105,23 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFS DriverEntry: Failed to read registry Status %08lX\n", ntStatus);
+            DbgPrint("AFS DriverEntry: Failed to read registry Status %08lX\n", ntStatus);
 
             ntStatus = STATUS_SUCCESS;
         }
 
+        //
+        // Initialize the debug log
+        //
+
+        AFSInitializeDbgLog();
+
+#if DBG
+
         if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_FLAG_BREAK_ON_ENTRY))
         {
 
-            AFSPrint("AFS DriverEntrty - Break on entry\n");
+            DbgPrint("AFS DriverEntrty - Break on entry\n");
 
             AFSBreakPoint();
 
@@ -135,6 +133,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
         }
+#endif
 
         //
         // Initialize some server name based strings
@@ -156,7 +155,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( AFSRegistryPath.Buffer == NULL)
         {
 
-            AFSPrint("AFS DriverEntry Failed to allocate registry path buffer\n");
+            DbgPrint("AFS DriverEntry Failed to allocate registry path buffer\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -168,20 +167,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         RtlInitUnicodeString( &uniDeviceName, 
                               AFS_CONTROL_DEVICE_NAME);
 
-#ifdef NO_SECURE_CREATE
-
-        ntStatus = IoCreateDevice( DriverObject,
-                                   sizeof( AFSDeviceExt),
-                                   &uniDeviceName,
-                                   FILE_DEVICE_NETWORK_FILE_SYSTEM,
-                                   0,
-                                   FALSE,
-                                   &AFSDeviceObject);
-        
-#endif
-
-//#ifdef SECURE_CREATE
-
         ntStatus = IoCreateDeviceSecure( DriverObject,
                                          sizeof( AFSDeviceExt),
                                          &uniDeviceName,
@@ -191,12 +176,11 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
                                          &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX,
                                          (LPCGUID)&GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
                                          &AFSDeviceObject);
-//#endif
 
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFS DriverEntry - Failed to allocate device control object Status %08lX\n", ntStatus);
+            DbgPrint("AFS DriverEntry - Failed to allocate device control object Status %08lX\n", ntStatus);
 
             try_return( ntStatus);
         }
@@ -214,7 +198,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( !NT_SUCCESS( ntStatus)) 
         {
 
-            AFSPrint("AFS DriverEntry - Failed to create symbolic link Status %08lX\n", ntStatus);
+            DbgPrint("AFS DriverEntry - Failed to create symbolic link Status %08lX\n", ntStatus);
 
             //
             // OK, no one can communicate with us so fail
@@ -250,7 +234,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFS DriverEntry Failed to initialize worker pool Status %08lX\n", ntStatus);
+            DbgPrint("AFS DriverEntry Failed to initialize worker pool Status %08lX\n", ntStatus);
 
             try_return( ntStatus);
         }
@@ -391,7 +375,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFS DriverEntry Failed to initialize redirector device Status %08lX\n");
+            DbgPrint("AFS DriverEntry Failed to initialize redirector device Status %08lX\n");
 
             try_return( ntStatus);
         }
@@ -401,13 +385,7 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFS Driver Entry failed to initialize %08lX\n", ntStatus);
-
-#ifdef AFS_DEBUG_LOG
-
-            AFSTearDownDbgLog();
-
-#endif
+            DbgPrint("AFS Driver Entry failed to initialize %08lX\n", ntStatus);
 
             if( AFSDeviceObject != NULL)
             {
@@ -436,12 +414,18 @@ try_exit:
 
                 IoDeleteDevice( AFSDeviceObject);
             }
+
+            AFSTearDownDbgLog();
+
+            ExDeleteResourceLite( &AFSDbgLogLock);
         }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFS DriverEntry\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFS DriverEntry\n");
     }
 
     return ntStatus;
@@ -450,8 +434,6 @@ try_exit:
 void
 AFSUnload( IN PDRIVER_OBJECT DriverObject)
 {
-
-    AFSPrint("AFSUnload Entry\n");
 
     //
     // Call the shutdown routine

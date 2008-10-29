@@ -55,8 +55,6 @@ AFSShutdown( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSPrint("AFSShutdown Failed to shutdown filesystem Status %08lX\n", ntStatus);
-
             ntStatus = STATUS_SUCCESS;
         }
 
@@ -66,7 +64,9 @@ AFSShutdown( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSShutdown\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSShutdown\n");
     }
 
     return ntStatus;

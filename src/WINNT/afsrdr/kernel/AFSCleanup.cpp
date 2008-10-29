@@ -61,6 +61,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
     AFSCcb *pCcb = NULL;
     PFILE_OBJECT pFileObject = NULL;
     AFSFcb *pRootFcb = NULL;
+    AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
     __try
     {
@@ -163,6 +164,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
             case AFS_FILE_FCB:
             {
                            
+                LARGE_INTEGER liTime;
+
                 //
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
@@ -237,6 +240,22 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
+                // Attempt to flush any dirty extents to the server. This may be a little 
+                // agressive, to flush whenever the handle is close, but it ensures
+                // coherency.
+                //
+
+                KeQueryTickCount( &liTime);
+
+                if( pFcb->Specific.File.ExtentsDirtyCount &&
+                    ( (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
+                                            >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
+                {
+
+                    AFSFlushExtents( pFcb);
+                }
+
+                //
                 // If the count has dropped to zero and there is a pending delete
                 // then delete the node
                 //
@@ -248,26 +267,19 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     //
                     // Before telling the server about the deleted file, tear down all extents for
                     // the file
+                    // We will attempt to flush extents prior to tearing them down in the 
+                    // event that the delete fails to the service. And we need to do this
+                    // before telling the service the file is deleted otherwise the extent
+                    // flushing will fail
                     //
 
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    if( pFcb->Specific.File.ExtentsDirtyCount)
                     {
 
-                        //
-                        // We will attmept to flush extents prior to tearing them down in the 
-                        // event that the delete fails to the service. And we need to do this
-                        // before telling the service the file is deleted otherwise the extent
-                        // flushing will fail
-                        //
-
-                        if( pFcb->Specific.File.ExtentsDirtyCount)
-                        {
-
-                            AFSFlushExtents( pFcb);
-                        }
-
-                        AFSTearDownFcbExtents( pFcb);
+                        AFSFlushExtents( pFcb);
                     }
+
+                    AFSTearDownFcbExtents( pFcb);
 
                     //
                     // Try and notify the service about the delete
@@ -285,7 +297,9 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
                                                                             &pCcb->FullFileName,
                                                                             ntStatus);
 
@@ -456,7 +470,9 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
                                                                             &pCcb->FullFileName,
                                                                             ntStatus);
 
@@ -574,7 +590,10 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
             default:
 
-                AFSPrint("AFSCleanup Processing unknown node type %d\n", pFcb->Header.NodeTypeCode);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSCleanup Processing unknown node type %d\n", 
+                                                            pFcb->Header.NodeTypeCode);
 
                 break;
         }
@@ -602,7 +621,9 @@ try_exit:
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSCleanup\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSCleanup\n");
     }
 
     return ntStatus;

@@ -166,7 +166,9 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_WARNING,
+                                      "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
 
                         //
                         // We can't actually fail a close operation so reset the status
@@ -275,7 +277,9 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSPrint("AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_WARNING,
+                                      "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
 
                         //
                         // We can't actually fail a close operation so reset the status
@@ -291,22 +295,42 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
                 InterlockedDecrement( &pFcb->OpenReferenceCount);
 
-                if( pFcb->OpenReferenceCount == 0 &&
-                    BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
+                if( pFcb->OpenReferenceCount == 0)
                 {
+                    
+                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
+                    {
 
-                    if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+                        if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+                        {
+
+                            //
+                            // Remove the dir node from the parent but don't delete it since we may need
+                            // information in the Fcb for flushing extents
+                            //
+
+                            AFSRemoveDirNodeFromParent( pFcb->ParentFcb,
+                                                        pFcb->DirEntry);
+
+                            SetFlag( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+                        }
+                    }
+                    else if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                     {
 
                         //
-                        // Remove the dir node from the parent but don't delete it since we may need
-                        // information in the Fcb for flushing extents
+                        // Attempt to tear down our extent list for the file
+                        // If there are remaining dirty extents then attempt to
+                        // flush them as well
                         //
 
-                        AFSRemoveDirNodeFromParent( pFcb->ParentFcb,
-                                                    pFcb->DirEntry);
+                        if( pFcb->Specific.File.ExtentsDirtyCount)
+                        {
 
-                        SetFlag( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+                            AFSFlushExtents( pFcb);
+                        }
+
+                        AFSTearDownFcbExtents( pFcb);
                     }
                 }
 
@@ -333,7 +357,10 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
            
             default:
 
-                AFSPrint("AFSCleanup Processing unknown node type %d\n", pFcb->Header.NodeTypeCode);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSClose Processing unknown node type %d\n", 
+                                                    pFcb->Header.NodeTypeCode);
 
                 break;
         }
@@ -350,7 +377,9 @@ try_exit:
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSPrint("EXCEPTION - AFSClose\n");
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSClose\n");
     }
 
     return ntStatus;

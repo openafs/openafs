@@ -57,6 +57,8 @@ ULONG               AFSDebugFlags = 0;
 
 ULONG               AFSDebugLevel = 0;
 
+ULONG               AFSTraceComponent = 0;
+
 CACHE_MANAGER_CALLBACKS AFSCacheManagerCallbacks;
 
 HANDLE              AFSSysProcess = NULL;
@@ -93,8 +95,6 @@ ULONG               AFSMaxDirtyFile = 0;
 // Dbg log information
 //
 
-#ifdef AFS_DEBUG_LOG
-
 ERESOURCE           AFSDbgLogLock;
 
 ULONG               AFSDbgLogRemainingLength = 0;
@@ -105,6 +105,8 @@ char               *AFSDbgBuffer = NULL;
 
 ULONG               AFSDbgLogCounter = 0;
 
-#endif
+ULONG               AFSDbgBufferLength = 0;
+
+ULONG               AFSDbgLogFlags = 0;
 
 }
