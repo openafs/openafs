@@ -773,8 +773,15 @@ skipremove:
 ;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "DLLName" "afslogon.dll"
 ;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Logon" "KFW_Logon_Event"
 
-  ; Registry keys for "AFSRedirector" network provider are created by the INF file
+   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "DisplayName"
+   StrCmp $R0 "AFSRedirector" IFSUpgrade IFSNoUpgrade
+IFSUpgrade:
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedir.sys" "$SYSDIR\Drivers\AFSRedir.sys" "$INSTDIR"    
+  Goto IFSDone
+IFSNoUpgrade:
   nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultInstall 128 $INSTDIR\Client\Program\AFSRedirInstall.inf'
+IFSDone:
+
   Push "AFSRedirector"
   Call AddProvider
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
@@ -1165,6 +1172,7 @@ Section /o "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.pdb"
   File "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.pdb"
+  File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
 
   SetOutPath "$SYSDIR\Drivers"
   File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
