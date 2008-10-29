@@ -11,7 +11,7 @@ TARGETPATH = $(DESTDIR)\root.client\usr\vice\etc
 !IF ("$(CPU)" == "i386")
 DDK_ARCH=X86
 DDK_PLATFORM=WXP
-!ELSE IF ("$(CPU)" == "amd64")
+!ELSE IF ("$(CPU)" == "AMD64")
 DDK_ARCH=AMD64
 DDK_PLATFORM=WXP
 !ENDIF
@@ -38,7 +38,7 @@ $(OUT)\ddkclean.cmd:
 
 install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd kernel\AFSRedirInstall.inf
         type $(OUT)\ddkbuild.cmd
-        start /wait $(OUT)\ddkbuild.cmd
+        cmd /c start /wait $(OUT)\ddkbuild.cmd
         $(COPY) kernel\AFSRedirInstall.inf build\$(CPU)\AFSRedirInstall.inf
 
 clean:: 
