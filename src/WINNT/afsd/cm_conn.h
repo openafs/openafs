@@ -59,6 +59,7 @@ typedef struct cm_req {
 #define	CM_REQ_NORETRY		0x1
 #define CM_REQ_NEW_CONN_FORCED  0x2
 #define CM_REQ_SOURCE_SMB       0x4
+#define CM_REQ_WOW64            0x8
 
 /*
  * Vice2 error codes

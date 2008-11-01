@@ -1258,9 +1258,12 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
 {
     clientchar_t *tp;
     int prefixCount;
+#ifdef _WIN64
+    int wow64 = 0;
 
-    if (reqp && !(reqp->flags & CM_REQ_SOURCE_SMB))
-        return 0;
+    if (reqp && (reqp->flags & CM_REQ_WOW64))
+        wow64 = 1;
+#endif
 
     tp = cm_ClientStrRChr(inp, '@');
     if (tp == NULL) 
@@ -1273,6 +1276,11 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
     if (outp == NULL) 
         return 1;
 
+#ifdef _WIN64
+    if (!wow64 && index >= cm_sysNameCount64)
+        return 1;
+    else
+#endif
     if (index >= cm_sysNameCount)
         return -1;
 
@@ -1281,7 +1289,13 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
 
     cm_ClientStrCpyN(outp, outSizeCch, inp, prefixCount);	/* copy out "a." from "a.@sys" */
     outp[prefixCount] = 0;		/* null terminate the "a." */
-    cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);/* append i386_nt40 */
+#ifdef _WIN64
+    if (!wow64)
+        cm_ClientStrCat(outp, outSizeCch, cm_sysNameList64[index]);/* append i386_nt40 */
+    else
+#endif
+        cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);/* append i386_nt40 */
+
     return 1;
 }   
 
