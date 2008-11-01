@@ -543,6 +543,38 @@ static void afsd_InitServerPreferences(void)
     }
 }
 
+
+#ifndef _WIN64
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+
+static BOOL
+is_wow64(void)
+{
+    static BOOL bChecked = FALSE;
+    static BOOL bIsWow64 = FALSE;
+
+    if (!bChecked)
+    {
+        HANDLE h1 = NULL;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+
+        h1 = GetModuleHandle("kernel32.dll");
+        fnIsWow64Process =
+            (LPFN_ISWOW64PROCESS)GetProcAddress(h1, "IsWow64Process");
+
+        /* If we don't find the fnIsWow64Process function then we
+         * are not running in a broken Wow64
+         */
+        if (fnIsWow64Process)
+            fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+
+        bChecked = TRUE;
+    }
+
+    return bIsWow64;
+}
+#endif /* _WIN64 */
+
 /*
  * AFSD Initialization
  */
@@ -594,6 +626,14 @@ int afsd_InitCM(char **reasonP)
     osi_LongToUID(1000, &debugID);
     code = osi_InitDebug(&debugID);
     afsi_log("osi_InitDebug code %d", code);
+
+#ifndef _WIN64
+    if (is_wow64())
+    {
+        *reasonP = "32-bit OpenAFS Service is incompatible with the WOW64 environment";
+        return -1;
+    }
+#endif
 
     //	osi_LockTypeSetDefault("stat");	/* comment this out for speed */
     if (code != 0) {
