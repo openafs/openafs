@@ -31,10 +31,14 @@ typedef long (cm_configProc_t)(void *rockp, struct sockaddr_in *addrp, char *nam
 extern long cm_GetRootCellName(char *namep);
 
 extern long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
-	cm_configProc_t *procp, void *rockp);
+                              cm_configProc_t *procp, void *rockp);
+
+extern long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
+                                char *linkedNamep,
+                                cm_configProc_t *procp, void *rockp);
 
 extern long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
-               cm_configProc_t *procp, void *rockp);
+                               cm_configProc_t *procp, void *rockp);
 
 extern long cm_WriteConfigString(char *labelp, char *valuep);
 

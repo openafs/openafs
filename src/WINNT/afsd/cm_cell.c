@@ -99,7 +99,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 
         rock.cellp = cp;
         rock.flags = flags;
-        code = cm_SearchCellFile(cp->name, NULL, cm_AddCellProc, &rock);
+        code = cm_SearchCellFileEx(cp->name, NULL, cp->linkedName, cm_AddCellProc, &rock);
         if (code == 0) {
             lock_ObtainMutex(&cp->mx);
 	    cp->timeout = time(0) + 7200;
@@ -158,6 +158,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     cm_cell_t *cp, *cp2;
     long code;
     char fullname[CELL_MAXNAMELEN]="";
+    char linkedName[CELL_MAXNAMELEN]="";
     char name[CELL_MAXNAMELEN]="";
     int  hasWriteLock = 0;
     int  hasMutex = 0;
@@ -270,10 +271,11 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 
         rock.cellp = cp;
         rock.flags = flags;
-        code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, &rock);
+        code = cm_SearchCellFileEx(namep, fullname, linkedName, cm_AddCellProc, &rock);
         if (code) {
-            osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
-                      osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
+            osi_Log4(afsd_logp,"in cm_GetCell_gen cm_SearchCellFileEx(%s) returns code= %d fullname= %s linkedName= %s", 
+                      osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname),
+                      osi_LogSaveString(afsd_logp,linkedName));
 
 #ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled) {
@@ -338,6 +340,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
 
+        strncpy(cp->linkedName, linkedName, CELL_MAXNAMELEN);
+        cp->linkedName[CELL_MAXNAMELEN-1] = '\0';
+
         cm_AddCellToNameHashTable(cp);
         cm_AddCellToIDHashTable(cp);           
         lock_ReleaseMutex(&cp->mx);
@@ -369,6 +374,26 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             newnamep[CELL_MAXNAMELEN-1]='\0';
         } else {
             newnamep[0] = '\0';
+        }
+    }
+
+    if (cp && cp->linkedName[0]) {
+        cm_cell_t * linkedCellp = NULL;
+        
+        if (!strcmp(cp->name, cp->linkedName)) {
+            cp->linkedName[0] = '\0'; 
+        } else if (!(flags & CM_FLAG_NOMOUNTCHASE)) {
+            linkedCellp = cm_GetCell(cp->linkedName, CM_FLAG_CREATE|CM_FLAG_NOPROBE|CM_FLAG_NOMOUNTCHASE);
+
+            lock_ObtainWrite(&cm_cellLock);
+            if (!linkedCellp || 
+                (linkedCellp->linkedName[0] && strcmp(cp->name, linkedCellp->linkedName))) {
+                cp->linkedName[0] = '\0';
+            } else {
+                strncpy(linkedCellp->linkedName, cp->name, CELL_MAXNAMELEN);
+                linkedCellp->linkedName[CELL_MAXNAMELEN-1]='\0';
+            }
+            lock_ReleaseWrite(&cm_cellLock);
         }
     }
     return cp;
