@@ -1411,7 +1411,7 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         rock.cellp = cp;
         rock.flags = 0;
-        code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, &rock);
+        code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
@@ -2183,6 +2183,7 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     int i;
     char * p, * r;
 
+    memset(&info, 0, sizeof(info));
     tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
     code = afsconf_GetCellInfo(tdir, ucellp->cellp->name, "afsprot", &info);
     afsconf_Close(tdir);
@@ -2208,6 +2209,8 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 
     code = ubik_ClientInit(serverconns, &pruclient);
     if (code) {
+        if (info.linkedCell)
+            free(info.linkedCell);
 	return code;
     }
 
@@ -2241,6 +2244,8 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 	pruclient = NULL;
     }
 
+    if (info.linkedCell)
+        free(info.linkedCell);
     return 0;
 }
 #endif /* QUERY_AFSID */

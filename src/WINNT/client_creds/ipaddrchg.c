@@ -177,7 +177,7 @@ pingCell(char *cell)
     pp.host.retry = 0;
     pp.verbose = 1;
 
-    /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
+    /* WIN32: cm_SearchCellFile(cell, newcell, linkedCell, pcallback, pdata) */
     rc = pcm_SearchCellFile(cell, newcell, pingFS, (void *)&pp);
 }
 #endif /* USE_FSPROBE */

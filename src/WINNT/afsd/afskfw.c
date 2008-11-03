@@ -1341,6 +1341,8 @@ KFW_AFS_get_cred( char * username,
         OutputDebugString("\n");
     }
 
+    memset(&cellconfig, 0, sizeof(cellconfig));
+
     code = pkrb5_init_context(&ctx);
     if ( code ) goto cleanup;
 
@@ -1446,6 +1448,11 @@ KFW_AFS_get_cred( char * username,
                     sprintf(message,"found another cell for the same principal: %s\n",cell);
                     OutputDebugString(message);
                 }
+
+                if (cellconfig.linkedCell) {
+                    free(cellconfig.linkedCell);
+                    cellconfig.linkedCell = NULL;
+                }
                 code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                 if ( code ) continue;
     
@@ -1476,6 +1483,8 @@ KFW_AFS_get_cred( char * username,
         free(pname);
     if ( cc )
         pkrb5_cc_close(ctx, cc);
+    if ( cellconfig.linkedCell )
+        free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
         *reasonP = (char *)perror_message(code);
@@ -1627,6 +1636,8 @@ KFW_AFS_renew_expiring_tokens(void)
         OutputDebugString("KFW_AFS_renew_expiring_tokens\n");
     }
 
+    memset(&cellconfig, 0, sizeof(cellconfig));
+
     code = pkrb5_init_context(&ctx);
     if (code) goto cleanup;
 
@@ -1668,6 +1679,10 @@ KFW_AFS_renew_expiring_tokens(void)
                         OutputDebugString(cells[cell_count]);
                         OutputDebugString("\n");
                     }
+                    if (cellconfig.linkedCell) {
+                        free(cellconfig.linkedCell);
+                        cellconfig.linkedCell = NULL;
+                    }
                     code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                     if ( code ) continue;
                     realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
@@ -1700,6 +1715,8 @@ KFW_AFS_renew_expiring_tokens(void)
         pkrb5_cc_close(ctx,cc);
     if ( ctx )
         pkrb5_free_context(ctx);
+    if (cellconfig.linkedCell)
+        free(cellconfig.linkedCell);
 
     return 0;
 }
@@ -1744,6 +1761,8 @@ KFW_AFS_renew_token_for_cell(char * cell)
         struct afsconf_cell cellconfig;
         char local_cell[CELL_MAXNAMELEN+1];
 
+        memset(&cellconfig, 0, sizeof(cellconfig));
+
         while ( count-- ) {
             code = pkrb5_parse_name(ctx, principals[count], &princ);
             if (code) goto loop_cleanup;
@@ -1751,6 +1770,10 @@ KFW_AFS_renew_token_for_cell(char * cell)
             code = KFW_get_ccache(ctx, princ, &cc);
             if (code) goto loop_cleanup;
 
+            if (cellconfig.linkedCell) {
+                free(cellconfig.linkedCell);
+                cellconfig.linkedCell = NULL;
+            }
             code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
             if ( code ) goto loop_cleanup;
 
@@ -1814,6 +1837,10 @@ KFW_AFS_renew_token_for_cell(char * cell)
                 pkrb5_free_principal(ctx, service);
                 princ = 0;
             }
+            if (cellconfig.linkedCell) {
+                free(cellconfig.linkedCell);
+                cellconfig.linkedCell = NULL;
+            }
 
             KFW_AFS_update_cell_princ_map(ctx, cell, principals[count], code ? FALSE : TRUE);
             free(principals[count]);
@@ -1824,7 +1851,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
 
   cleanup:
     if (ctx) 
-		pkrb5_free_context(ctx);
+        pkrb5_free_context(ctx);
     return (code ? FALSE : TRUE);
 
 }
@@ -2810,6 +2837,7 @@ KFW_AFS_klog(
     if (!pkrb5_init_context)
         return 0;
 
+    memset(&ak_cellconfig, 0, sizeof(ak_cellconfig));
     memset(RealmName, '\0', sizeof(RealmName));
     memset(CellName, '\0', sizeof(CellName));
     memset(ServiceName, '\0', sizeof(ServiceName));
@@ -3318,6 +3346,8 @@ KFW_AFS_klog(
         pkrb5_cc_close(ctx, cc);
     if (ctx && (ctx != alt_ctx))
         pkrb5_free_context(ctx);
+    if (ak_cellconfig.linkedCell)
+        free(ak_cellconfig.linkedCell);
 
     return(rc? rc : code);
 }
@@ -3365,6 +3395,7 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
 {
     int	rc;
     char newcell[CELL_MAXNAMELEN+1];
+    char linkedcell[CELL_MAXNAMELEN+1]="";
 
     local_cell[0] = (char)0;
     memset(cellconfig, 0, sizeof(*cellconfig));
@@ -3379,15 +3410,19 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
         strcpy(cell, local_cell);
 
     /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
-    strcpy(cellconfig->name, cell);
-
-    rc = cm_SearchCellFile(cell, newcell, get_cellconfig_callback, (void*)cellconfig);
+    rc = cm_SearchCellFileEx(cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
 #ifdef AFS_AFSDB_ENV
     if (rc != 0) {
         int ttl;
         rc = cm_SearchCellByDNS(cell, newcell, &ttl, get_cellconfig_callback, (void*)cellconfig);
     }
 #endif
+
+    if (rc == 0) {
+        strcpy(cellconfig->name, newcell);
+        if (linkedcell[0])
+            cellconfig->linkedCell = strdup(linkedcell);
+    }
     return rc;
 }
 

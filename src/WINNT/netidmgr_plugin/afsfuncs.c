@@ -763,6 +763,7 @@ afs_klog(khm_handle identity,
     if ( !cell )    cell = "";
     if ( !service ) service = "";
 
+    memset(&ak_cellconfig, 0, sizeof(ak_cellconfig));
     memset(RealmName, '\0', sizeof(RealmName));
     memset(CellName, '\0', sizeof(CellName));
     memset(ServiceName, '\0', sizeof(ServiceName));
@@ -977,7 +978,8 @@ afs_klog(khm_handle identity,
 
             _reportf(L"Same token already exists");
             
-            return 0;
+            rc = 0;
+            goto cleanup;
         }
 
         // * Reset the "aclient" structure before we call ktc_SetToken.
@@ -1021,7 +1023,7 @@ afs_klog(khm_handle identity,
             if (context)
                 pkrb5_free_context(context);
             
-            return 0;
+            goto cleanup;
         }
 
         _reportf(L"SetToken returns code %d", rc);
@@ -1154,7 +1156,8 @@ afs_klog(khm_handle identity,
             !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
 
             /* success! */
-            return(0);
+            rc = 0;
+            goto cleanup;
         }
 
         // Reset the "aclient" structure before we call ktc_SetToken.
@@ -1179,7 +1182,7 @@ afs_klog(khm_handle identity,
 
         if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0)) {
             afs_report_error(rc, "ktc_SetToken()");
-            return(rc);
+            goto cleanup;
         }
     } else if (method == AFS_TOKEN_AUTO ||
                method >= AFS_TOKEN_USER) {
@@ -1208,6 +1211,10 @@ afs_klog(khm_handle identity,
             rc = KHM_ERROR_GENERAL;
         }
     }
+
+  cleanup:
+    if (ak_cellconfig.linkedCell)
+        free(ak_cellconfig.linkedCell);
 
     return rc;
 }
@@ -1300,7 +1307,7 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
     if (strlen(cell) == 0)
         StringCbCopyA(cell, (MAXCELLCHARS+1) * sizeof(char), local_cell);
 
-    /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
+    /* WIN32: cm_SearchCellFile(cell, newcell, pcallback, pdata) */
     StringCbCopyA(cellconfig->name, (MAXCELLCHARS+1) * sizeof(char), cell);
 
     rc = cm_SearchCellFile(cell, NULL, afs_get_cellconfig_callback, 
@@ -1508,12 +1515,15 @@ afs_check_for_cell_realm_match(khm_handle identity, char * cell) {
     int rc;
 
     ZeroMemory(local_cell, sizeof(local_cell));
+    ZeroMemory(&cellconfig, sizeof(cellconfig));
 
     rc = afs_get_cellconfig(cell, &cellconfig, local_cell);
     if (rc)
         return FALSE;
 
     realm = afs_realm_of_cell(&cellconfig, FALSE);
+    if (cellconfig.linkedCell)
+        free(cellconfig.linkedCell);
     if (realm == NULL)
         return FALSE;
 

@@ -750,7 +750,15 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     /* otherwise, we didn't find it so consult the VLDB */
     sprintf(volNameString, "%u", volumeID);
     code = cm_FindVolumeByName(cellp, volNameString, userp, reqp,
-			      flags, outVolpp);
+			      flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, outVolpp);
+
+    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] && 
+        !(flags & CM_GETVOL_FLAG_IGNORE_LINKED_CELL)) {
+        cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
+
+        if (linkedCellp)
+            code = cm_FindVolumeByID(linkedCellp, volumeID, userp, reqp, flags, outVolpp);
+    }
     return code;
 }
 
@@ -919,6 +927,14 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         lock_ObtainRead(&cm_volumeLock);
         cm_PutVolume(volp);
         lock_ReleaseRead(&cm_volumeLock);
+    }
+
+    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] && 
+        !(flags & CM_GETVOL_FLAG_IGNORE_LINKED_CELL)) {
+        cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
+
+        if (linkedCellp)
+            code = cm_FindVolumeByName(linkedCellp, volumeNamep, userp, reqp, flags, outVolpp);
     }
     return code;
 }	
