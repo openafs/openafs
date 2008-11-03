@@ -2027,6 +2027,8 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     char * parent;
 
+    memset(&info, 0, sizeof(info));
+
     if (as->parms[2].items)	/* cell name specified */
 	cellName = as->parms[2].items->data;
     else
@@ -2145,6 +2147,10 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 #else /* not WIN32 */
     code = symlink(space, path);
 #endif /* not WIN32 */
+
+    if (info.linkedCell)
+        free(info.linkedCell);
+
     if (code) {
 	Die(errno, path);
 	return 1;
@@ -2245,6 +2251,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct chservinfo checkserv;
 
+    memset(&info, 0, sizeof(info));
     memset(&checkserv, 0, sizeof(struct chservinfo));
     blob.in_size=sizeof(struct chservinfo);
     blob.in=(caddr_t)&checkserv;
@@ -2271,6 +2278,8 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 	}
 	strcpy(checkserv.tbuffer,info.name);
 	checkserv.tsize=(int)strlen(info.name)+1;
+        if (info.linkedCell)
+            free(info.linkedCell);
     } else {
         strcpy(checkserv.tbuffer,"\0");
         checkserv.tsize=0;
@@ -3077,6 +3086,7 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
     } args;
     int error = 0;
 
+    memset(&info, 0, sizeof(info));
     memset(&args, 0, sizeof(args));      /* avoid Purify UMR error */
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per cell */
@@ -3087,6 +3097,8 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
+        if (info.linkedCell)
+            free(info.linkedCell);
 	blob.in_size = 1+(long)strlen(info.name);
 	blob.in = info.name;
 	code = pioctl_utf8(0, VIOC_GETCELLSTATUS, &blob, 1);
@@ -3127,6 +3139,8 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
     } args;
     int error = 0;
 
+    memset(&info, 0, sizeof(info));
+
     /* Check arguments. */
     if (as->parms[1].items && as->parms[2].items) {
         fprintf(stderr, "Cannot specify both -suid and -nosuid.\n");
@@ -3160,6 +3174,8 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
+        if (info.linkedCell)
+            free(info.linkedCell);
 	strcpy(args.cname, info.name);
 	blob.in_size = sizeof(args);
 	blob.in = (caddr_t) &args;

@@ -112,14 +112,24 @@ IsWindowsModule(const char * name)
  * newCellNamep.  Anomaly:  if cellNamep is ambiguous, we may modify
  * newCellNamep but return an error code.
  *
- * newCellNamep is required to be CELL_MAXNAMELEN in size.
+ * Linked Cells: the CellServDB format permits linked cells
+ *   >cell [linked-cell] #Description
+ *
+ * newCellNamep and linkedNamep are required to be CELL_MAXNAMELEN in size.
  */
 long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                        cm_configProc_t *procp, void *rockp)
 {
+    return cm_SearchCellFileEx(cellNamep, newCellNamep, NULL, procp, rockp);
+}
+
+long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
+                         char *linkedNamep,
+                         cm_configProc_t *procp, void *rockp)
+{
     char wdir[MAX_PATH]="";
     FILE *tfilep = NULL, *bestp, *tempp;
-    char *tp;
+    char *tp, *linkp;
     char lineBuffer[257];
     struct hostent *thp;
     char *valuep;
@@ -147,6 +157,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 #endif
     /* have we seen the cell line for the guy we're looking for? */
     while (1) {
+        linkp = NULL;
         tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
         if (tracking)
 	    (void) fgets(lineBuffer, sizeof(lineBuffer), bestp);
@@ -182,6 +193,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	/* skip blank lines */
         if (lineBuffer[0] == 0) continue;
 
+        /*
+         * The format is:
+         *   >[cell] [linked-cell] #[Description]
+         * where linked-cell and Description are optional
+         */
         if (lineBuffer[0] == '>') {
             if (inRightCell) {
                 fclose(tfilep);
@@ -189,13 +205,21 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                 return(foundCell ? 0 : -6);
             }
 
-	    /* trim off at white space or '#' chars */
-            tp = strchr(lineBuffer, ' ');
-            if (tp) *tp = 0;
-            tp = strchr(lineBuffer, '\t');
-            if (tp) *tp = 0;
-            tp = strchr(lineBuffer, '#');
-            if (tp) *tp = 0;
+            /* 
+             * terminate the cellname at the first white space
+             * leaving 'tp' pointing to the next string if any
+             */
+            for (tp = &lineBuffer[1]; tp && !isspace(*tp); tp++);
+            if (tp) {
+                *tp = '\0';
+                for (tp++ ;tp && isspace(*tp); tp++);
+                if (*tp != '#') {
+                    linkp = tp;
+                    for (; tp && !isspace(*tp); tp++);
+                    if (tp) 
+                        *tp = '\0';
+                }
+            }
 
 	    /* now see if this is the right cell */
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
@@ -204,6 +228,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
                     newCellNamep[CELL_MAXNAMELEN-1] = '\0';
                     strlwr(newCellNamep);
+                }
+                if (linkedNamep) {
+                    strncpy(linkedNamep, linkp ? linkp : "", CELL_MAXNAMELEN);
+                    linkedNamep[CELL_MAXNAMELEN-1] = '\0';
+                    strlwr(linkedNamep);
                 }
                 inRightCell = 1;
 		tracking = 0;
@@ -223,6 +252,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
                     newCellNamep[CELL_MAXNAMELEN-1] = '\0';
                     strlwr(newCellNamep);
+                }
+                if (linkedNamep) {
+                    strncpy(linkedNamep, linkp ? linkp : "", CELL_MAXNAMELEN);
+                    linkedNamep[CELL_MAXNAMELEN-1] = '\0';
+                    strlwr(linkedNamep);
                 }
 		inRightCell = 0;
 		tracking = 0;

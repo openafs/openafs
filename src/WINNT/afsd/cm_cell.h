@@ -27,6 +27,7 @@ typedef struct cm_cell {
     osi_mutex_t mx;			/* mutex locking fields (flags) */
     long flags;			        /* locked by mx */
     time_t timeout;                     /* if dns, time at which the server addrs expire (mx) */
+    char linkedName[CELL_MAXNAMELEN];   /* linked cell name; cm_cellLock */
 } cm_cell_t;
 
 /* These are bit flag values */
