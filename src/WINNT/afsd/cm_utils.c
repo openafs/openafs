@@ -762,3 +762,25 @@ cm_TargetPerceivedAsDirectory(const fschar_t *target)
 
     return FALSE;
 }
+
+HANDLE 
+cm_LoadAfsdHookLib(void)
+{
+    char dllname[260];
+    char *p;
+    HANDLE hLib;
+
+    if (!GetModuleFileName(NULL, dllname, sizeof(dllname)))
+        return NULL;
+
+    p = strrchr(dllname, '\\');
+    if (p) {
+        p++;
+        strcpy(p, AFSD_HOOK_DLL);
+        hLib = LoadLibrary(dllname);
+    } else {
+        hLib = LoadLibrary(AFSD_HOOK_DLL);
+    }
+
+    return hLib;
+}
