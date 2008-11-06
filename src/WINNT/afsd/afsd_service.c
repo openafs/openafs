@@ -1215,7 +1215,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     }
 
     /* allow an exit to be called prior to any initialization */
-    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    hHookDll = cm_LoadAfsdHookLib();
     if (hHookDll)
     {
         BOOL hookRc = TRUE;
@@ -1287,7 +1287,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
         /* allow an exit to be called post rx initialization */
-        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        hHookDll = cm_LoadAfsdHookLib();
         if (hHookDll)
         {
             BOOL hookRc = TRUE;
@@ -1335,7 +1335,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
 
         /* allow an exit to be called post smb initialization */
-        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        hHookDll = cm_LoadAfsdHookLib();
         if (hHookDll)
         {
             BOOL hookRc = TRUE;
@@ -1381,7 +1381,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     }
 
     /* allow an exit to be called when started */
-    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    hHookDll = cm_LoadAfsdHookLib();
     if (hHookDll)
     {
         BOOL hookRc = TRUE;
@@ -1426,7 +1426,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_STOPPING);
 
     /* allow an exit to be called prior to stopping the service */
-    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    hHookDll = cm_LoadAfsdHookLib();
     if (hHookDll)
     {
         BOOL hookRc = TRUE;
@@ -1486,7 +1486,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     cm_VolStatus_Finalize();
 
     /* allow an exit to be called after stopping the service */
-    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    hHookDll = cm_LoadAfsdHookLib();
     if (hHookDll)
     {
         BOOL hookRc = TRUE;

@@ -83,4 +83,6 @@ extern int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags);
 
 extern BOOL cm_TargetPerceivedAsDirectory(const fschar_t *target);
 
+extern HANDLE cm_LoadAfsdHookLib(void);
+
 #endif /*  __CM_UTILS_H_ENV__ */

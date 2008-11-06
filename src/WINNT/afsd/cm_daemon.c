@@ -533,7 +533,7 @@ void cm_Daemon(long parm)
         }
 
         /* allow an exit to be called prior to stopping the service */
-        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        hHookDll = cm_LoadAfsdHookLib();
         if (hHookDll)
         {
             BOOL hookRc = TRUE;
