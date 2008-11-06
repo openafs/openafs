@@ -299,16 +299,16 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
 		}
                 if (!thp) {
                     afs_uint32 ip_addr;
-		    int c1, c2, c3, c4;
+		    unsigned int c1, c2, c3, c4;
                     
                     /* Since there is no gethostbyname() data 
 		     * available we will read the IP address
 		     * stored in the CellServDB file
                      */
-                    code = sscanf(lineBuffer, " %d.%d.%d.%d",
+                    code = sscanf(lineBuffer, " %u.%u.%u.%u",
                                    &c1, &c2, &c3, &c4);
-                    if (code == 4) {
-                        tp = (char *) &ip_addr;
+                    if (code == 4 && c1<256 && c2<256 && c3<256 && c4<256) {
+                        tp = (unsigned char *) &ip_addr;
                         *tp++ = c1;
                         *tp++ = c2;
                         *tp++ = c3;
