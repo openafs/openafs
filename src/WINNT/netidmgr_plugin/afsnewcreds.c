@@ -1563,6 +1563,10 @@ afs_dlg_proc(HWND hwnd,
             SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, 
                                BM_SETCHECK, BST_CHECKED, 0);
 
+            SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, CB_LIMITTEXT, MAXCELLCHARS-1, 0);
+            SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, CB_LIMITTEXT, MAXKTCREALMLEN-1, 0);
+            SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, CB_LIMITTEXT, KCDB_MAXCCH_NAME-1, 0);
+
             LeaveCriticalSection(&d->cs);
 
             /* the cells and realms combo boxes need to be filled
@@ -2654,7 +2658,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
             for(i=0; i<l->n_rows; i++) {
                 int code;
                 char cell[MAXCELLCHARS];
-                char realm[MAXCELLCHARS];
+                char realm[MAXKTCREALMLEN];
                 char linkedCell[MAXCELLCHARS]="";
                 khm_handle ctoken;
                 FILETIME ft_old;
@@ -2714,7 +2718,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
               getLinked:
                 _report_cs3(KHERR_INFO,
                             L"Getting tokens for cell %1!S! with realm %2!S! using method %3!d!",
-                            _cstr(bgetLinked ? linkedCell: cell),
+                            _cstr((bgetLinked ? linkedCell: cell)),
                             _cstr(realm),
                             _int32(method));
                 _resolve();

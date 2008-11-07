@@ -735,8 +735,8 @@ afs_klog(khm_handle identity,
     CREDENTIALS	creds;
     struct ktc_principal	aserver;
     struct ktc_principal	aclient;
-    char	realm_of_user[REALM_SZ]; /* Kerberos realm of user */
-    char	realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
+    char	realm_of_user[MAXKTCREALMLEN]; /* Kerberos realm of user */
+    char	realm_of_cell[MAXKTCREALMLEN]; /* Kerberos realm of cell */
     char	local_cell[MAXCELLCHARS+1];
     char	Dmycell[MAXCELLCHARS+1];
     struct ktc_token	atoken;
@@ -837,8 +837,8 @@ afs_klog(khm_handle identity,
 
             pkrb5_cc_get_principal(context, k5cc, &client_principal);
             i = krb5_princ_realm(context, client_principal)->length;
-            if (i > REALM_SZ-1) 
-                i = REALM_SZ-1;
+            if (i > MAXKTCREALMLEN-1) 
+                i = MAXKTCREALMLEN-1;
             StringCchCopyNA(realm_of_user, ARRAYLENGTH(realm_of_user),
                             krb5_princ_realm(context, client_principal)->data,
                             i);
@@ -1158,6 +1158,7 @@ afs_klog(khm_handle identity,
         _reportf(L"Kerberos 4 not configured");
 
     if (!bGotCreds && supports_krb4 && 
+        strlen(RealmName) < REALM_SZ && 
         (method == AFS_TOKEN_AUTO ||
          method == AFS_TOKEN_KRB4)) {
 
@@ -1315,7 +1316,7 @@ static char *
 afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 {
     char krbhst[MAX_HSTNM]="";
-    static char krbrlm[REALM_SZ+1]="";
+    static char krbrlm[MAXKTCREALMLEN+1]="";
     krb5_context  ctx = 0;
     char ** realmlist=NULL;
     krb5_error_code r = 0;
