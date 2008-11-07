@@ -1,3 +1,55 @@
+Since 1.5.54
+
+ * Prevent separate cell entries from being created for
+   "foobar.org" and "foobar.org." which can happen if
+   an AFSDB record is found instead of a CellServDB 
+   record.
+
+ * Fix a panic when checking the SMB virtual circuit list.  
+   If a VC is destroyed while the list is being checked 
+   it is possible for the next object to become invalid.
+
+ * Increased logging to afsd_init.log of netbios name 
+   related errors.
+
+ * Fix a DNLC panic when a UTF-16 string that cannot be 
+   converted to a utf-8 string is provided as a filename.
+
+ * In the NSIS installer, delete old afslogon.dll/afscpcc.exe 
+   from %windir%\system32 and fix the WinLogon\Notify\AfsLogon 
+   location to refer directly to the new location in 
+   %programfiles%\openafs\client\program
+
+ * Be more aggressive about responding to Netbios 
+   NRC_BRIDGE/NRC_NOWILD errors.  Rebind the Netbios name to 
+   the LANA within the listener thread without performing a 
+   delete and reset.
+
+ * Use the WNet Enumeration of all connected drives as a filter 
+   in the pioctl GetIoctlHandle operation.  This should remove 
+   the last situations in which there was a delay when opening 
+   an Explorer Shell properties menu with the AFS Shell 
+   Extension.
+
+ * Fix the parsing of CellServDB in Windows to handle linked 
+   cells as is done on Unix.
+
+ * Add support for linked cells to the cache manager,
+   netidmgr afs provider, and aklog.  When two cells are
+   linked, a volume lookup that fails in one cell is looked
+   up in the other.  This can be used for construction of 
+   test cells that override specific volumes; cell renaming;
+   and cell splitting.
+
+ * Increase the length of cell and realm names that can 
+   be entered in the NIM AFS provider.
+
+ * Actively prevent a 32-bit afsd_service.exe from 
+   executing in the WOW64 environment.
+
+ * Protect against invalid IP address values in CellServDB
+   parsing.
+
 Since 1.5.53
 
  * Fix an Rx panic caused by an attempt to double free
