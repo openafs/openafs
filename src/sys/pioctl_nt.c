@@ -603,6 +603,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
+    BOOL  usingRDR = FALSE;
     int saveerrno;
 
     memset(HostName, '\0', sizeof(HostName));
@@ -613,6 +614,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 	return -1;
 
     if (RDR_Ready()) {
+        usingRDR = TRUE;
         if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
         {
             DWORD dwSize = sizeof(netbiosName);
@@ -658,10 +660,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                     count++;
 		i++;
             }
-            if (fileNamep[i] == 0)
+            if (count < 4 && fileNamep[i] == 0)
                 tbuffer[i++] = '\\';
             tbuffer[i] = 0;
-            strcat(tbuffer, SMB_IOCTL_FILENAME);
+            strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
         } else {
             char curdir[MAX_PATH]="";
 
@@ -682,7 +684,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 			count++;
 		    i++;
                 }
-                if (tbuffer[i] == 0)
+                if (count < 4 && tbuffer[i] == 0)
                     tbuffer[i++] = '\\';
                 tbuffer[i] = 0;
                 strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
@@ -702,7 +704,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
 	fflush(stdout);
 
-    if (fh == INVALID_HANDLE_VALUE) {
+    if (!usingRDR && fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         gle = GetLastError();
@@ -802,7 +804,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_lsa_principal:
-    if (fh == INVALID_HANDLE_VALUE) {
+    if (!usingRDR && fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         dwSize = sizeof(szUser);
@@ -873,7 +875,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_sam_compat:
-    if ( fh == INVALID_HANDLE_VALUE ) {
+    if ( !usingRDR && fh == INVALID_HANDLE_VALUE ) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
             if ( ioctlDebug ) {
