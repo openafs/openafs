@@ -101,6 +101,12 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
             bReleaseRoot = TRUE;
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSLocateNameEntry Acquiring ParentFcb lock %08lX EXCL %08lX\n",
+                                                              &pParentFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
             AFSAcquireExcl( &pParentFcb->NPFcb->Resource,
                             TRUE);
         }
@@ -280,7 +286,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeListHead,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeListTail,
                                                   &pParentFcb->Specific.Directory.ShortNameTree,
-                                                  NULL);
+                                                  TRUE);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
@@ -316,7 +322,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                       &pParentFcb->Specific.VolumeRoot.DirectoryNodeListHead,
                                                       &pParentFcb->Specific.VolumeRoot.DirectoryNodeListTail,
                                                       &pParentFcb->Specific.VolumeRoot.ShortNameTree,
-                                                      NULL);
+                                                      TRUE);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
@@ -730,6 +736,12 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 // See if we can first locate the Fcb since this could be a stand alone node
                 //
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLocateNameEntry Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
+                                                              pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                                                              PsGetCurrentThread());
+
                 AFSAcquireShared( pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock, 
                                   TRUE);
 
@@ -743,6 +755,12 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 if( pCurrentFcb != NULL)
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                              &pCurrentFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
                     AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
                                     TRUE);
@@ -830,8 +848,49 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 pCurrentFcb = pDirEntry->Fcb;
             
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLocateNameEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                              &pCurrentFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
                 AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
                                 TRUE);
+            }
+
+            //
+            // Ensure the node has been evaluated, if not then go do it now
+            //
+
+            if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSLocateNameEntry (FO: %08lX) Evaluating fcb for %wZ\n",
+                                                                  FileObject,
+                                                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+
+                ntStatus = AFSEvaluateNode( pCurrentFcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate fcb for %wZ Status %08lX\n",
+                                                                      FileObject,
+                                                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                                                      ntStatus);
+
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                    try_return( ntStatus = STATUS_OBJECT_PATH_INVALID);
+                }
+
+                ClearFlag( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
             }
 
             if( uniRemainingPath.Length > 0 &&
@@ -1003,7 +1062,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                       &pCurrentFcb->Specific.Directory.DirectoryNodeListHead,
                                                       &pCurrentFcb->Specific.Directory.DirectoryNodeListTail,
                                                       &pCurrentFcb->Specific.Directory.ShortNameTree,
-                                                      NULL);
+                                                      TRUE);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
@@ -1045,7 +1104,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                           &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeListHead,
                                                           &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeListTail,
                                                           &pCurrentFcb->Specific.VolumeRoot.ShortNameTree,
-                                                          NULL);
+                                                          TRUE);
 
                         if( !NT_SUCCESS( ntStatus))
                         {
@@ -1175,6 +1234,12 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
         //
         // Grab the lock again before returning
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCreateDirEntry Acquiring ParentFcb lock %08lX EXCL %08lX\n",
+                                                              &ParentDcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
         AFSAcquireExcl( &ParentDcb->NPFcb->Resource,
                         TRUE);
@@ -1314,6 +1379,12 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInsertDirectoryNode Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                                              ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                                              PsGetCurrentThread());
+
         AFSAcquireExcl( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
@@ -1404,9 +1475,9 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSDeleteDirEntry Deleting dir entry in parent %wZ Component %wZ\n",
+                      "AFSDeleteDirEntry Deleting dir entry in parent %wZ Entry %08lX\n",
                                                                               &ParentDcb->DirEntry->DirectoryEntry.FileName,
-                                                                              &DirEntry->DirectoryEntry.FileName);
+                                                                              DirEntry);
 
         if( ParentDcb != NULL)
         {
@@ -1455,6 +1526,12 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
 
     __Enter
     {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveDirNodeFromParent Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                                              ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                                              PsGetCurrentThread());
 
         AFSAcquireExcl( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -1669,6 +1746,12 @@ AFSParseName( IN PIRP Irp,
             // Grab the root node exclusive before returning
             //
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSParseName Acquiring RootFcb lock %08lX EXCL %08lX\n",
+                                                              &(*RootFcb)->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
             AFSAcquireExcl( &(*RootFcb)->NPFcb->Resource,
                             TRUE);
 
@@ -1729,6 +1812,12 @@ AFSParseName( IN PIRP Irp,
 
             if( *ParentFcb != *RootFcb)
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSParseName Acquiring ParentFcb lock %08lX EXCL %08lX\n",
+                                                              &(*ParentFcb)->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &(*ParentFcb)->NPFcb->Resource,
                                 TRUE);
@@ -1924,6 +2013,12 @@ AFSParseName( IN PIRP Irp,
         // Be sure we are online and ready to go
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSParseName Acquiring GlobalRoot lock %08lX SHARED %08lX\n",
+                                                              &AFSGlobalRoot->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
         AFSAcquireShared( &AFSGlobalRoot->NPFcb->Resource,
                           TRUE);
 
@@ -2071,6 +2166,12 @@ AFSParseName( IN PIRP Irp,
         // Grab our tree lock shared
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSParseName Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                                              AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                                              PsGetCurrentThread());
+
         AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
@@ -2131,6 +2232,12 @@ AFSParseName( IN PIRP Irp,
         // Grab the dir node exclusive while we determine the state
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSParseName Acquiring ShareEntry DirNode lock %08lX EXCL %08lX\n",
+                                                              &pShareDirEntry->NPDirNode->Lock,
+                                                              PsGetCurrentThread());
+
         AFSAcquireExcl( &pShareDirEntry->NPDirNode->Lock,
                         TRUE);
 
@@ -2168,6 +2275,12 @@ AFSParseName( IN PIRP Irp,
             //
             // Grab the root node exclusive before returning
             //
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSParseName Acquiring ShareEntry Fcb lock %08lX EXCL %08lX\n",
+                                                              &pShareDirEntry->Fcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
             AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
                             TRUE);
@@ -2477,9 +2590,7 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
         // OK, we have a dir enum entry back so add it to the root node
         //
 
-        uniDirName.Length = (USHORT)pDirEnumEntry->FileNameLength;
-        uniDirName.MaximumLength = uniDirName.Length;
-        uniDirName.Buffer = (WCHAR *)((char *)pDirEnumEntry + pDirEnumEntry->FileNameOffset);
+        uniDirName = *CellName;
 
         uniTargetName.Length = (USHORT)pDirEnumEntry->TargetNameLength;
         uniTargetName.MaximumLength = uniTargetName.Length;
@@ -2615,6 +2726,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSBuildTargetDirectory Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                              &pTargetFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
                 AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
                                 TRUE);
 
@@ -2663,6 +2780,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
                                                   ProcessID,
+                                                  FALSE,
                                                   &pDirEntry);
 
                 if( !NT_SUCCESS( ntStatus))
@@ -2718,6 +2836,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
             ullIndex = AFSCreateHighIndex( &stTargetFileID);
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSBuildTargetDirectory Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
+                                                              &pDevExt->Specific.RDR.VolumeTreeLock,
+                                                              PsGetCurrentThread());
+
             AFSAcquireExcl( &pDevExt->Specific.RDR.VolumeTreeLock,
                             TRUE);
 
@@ -2769,6 +2893,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
             if( pVcb != NULL)
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSBuildTargetDirectory Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
+                                                              pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                                                              PsGetCurrentThread());
 
                 AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                                   TRUE);
@@ -2841,6 +2971,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 pTargetFcb != NULL)
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSBuildTargetDirectory Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                              &pTargetFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
                 AFSAcquireShared( &pTargetFcb->NPFcb->Resource,
                                   TRUE);                
             }
@@ -2865,6 +3001,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
                                                   ProcessID,
+                                                  FALSE,
                                                   &pDirEntry);
 
                 if( !NT_SUCCESS( ntStatus))

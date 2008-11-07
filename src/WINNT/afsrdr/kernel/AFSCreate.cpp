@@ -144,6 +144,16 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         uniSubstitutedPathName.Buffer = NULL;
         uniSubstitutedPathName.Length = 0;
 
+        //
+        // Validate the process entry
+        //
+
+        AFSValidateProcessEntry();
+
+        //
+        // Volume open?
+        //
+
         if( pFileObject == NULL ||
             pFileObject->FileName.Buffer == NULL)
         {
@@ -175,6 +185,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( AFSGlobalRoot != NULL)
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonCreate Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                                                             AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                                                             PsGetCurrentThread());
+
                 AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                 TRUE);
 
@@ -200,7 +216,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                                       &AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead,
                                                       &AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail,
                                                       NULL,
-                                                      NULL);
+                                                      TRUE);
 
                     if( NT_SUCCESS( ntStatus))
                     {
@@ -732,7 +748,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             // Go process a file for overwrite or supersede.
             //
 
-            ntStatus = AFSProcessOverwriteSupersede( Irp,
+            ntStatus = AFSProcessOverwriteSupersede( DeviceObject,
+                                                     Irp,
                                                      pParentDcb,
                                                      pFcb,
                                                      &pCcb);
@@ -969,6 +986,26 @@ AFSOpenRoot( IN PIRP Irp,
         pFileObject = pIrpSp->FileObject;
 
         //
+        // Check if we should go and retrieve updated information for the node
+        //
+
+        ntStatus = AFSValidateEntry( RootFcb->DirEntry,
+                                     TRUE,
+                                     FALSE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenRoot (%08lX) Failed to validate root entry Status %08lX\n",
+                               Irp,
+                               ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
         // Check with the service that we can open the file
         //
 
@@ -1017,7 +1054,7 @@ AFSOpenRoot( IN PIRP Irp,
                                               &RootFcb->Specific.VolumeRoot.DirectoryNodeListHead,
                                               &RootFcb->Specific.VolumeRoot.DirectoryNodeListTail,
                                               &RootFcb->Specific.VolumeRoot.ShortNameTree,
-                                              NULL);
+                                              TRUE);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -1732,6 +1769,30 @@ AFSProcessOpen( IN PIRP Irp,
                                            Irp,
                                            &Fcb->DirEntry->DirectoryEntry.FileName);
 
+        //
+        // Check if we should go and retrieve updated information for the node
+        //
+
+        ntStatus = AFSValidateEntry( Fcb->DirEntry,
+                                     TRUE,
+                                     FALSE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOpen (%08lX) Failed to validate entry Status %08lX\n",
+                               Irp,
+                               ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Check access on the entry
+        //
+
         if( Fcb->OpenHandleCount > 0)
         {
 
@@ -1986,7 +2047,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSProcessOverwriteSupersede( IN PIRP             Irp,
+AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
+                              IN PIRP           Irp,
                               IN AFSFcb        *ParentDcb,
                               IN AFSFcb        *Fcb,
                               IN AFSCcb       **Ccb)
@@ -2021,6 +2083,30 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
                       "AFSProcessOverwriteSupersede (%08lX) Processing file %wZ\n",
                                                        Irp,
                                                        &Fcb->DirEntry->DirectoryEntry.FileName);
+
+        //
+        // Check if we should go and retrieve updated information for the node
+        //
+
+        ntStatus = AFSValidateEntry( Fcb->DirEntry,
+                                     TRUE,
+                                     FALSE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOverwriteSupersede (%08lX) Failed to validate entry Status %08lX\n",
+                               Irp,
+                               ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Check access on the entry
+        //
 
         if( Fcb->OpenHandleCount > 0)
         {
@@ -2091,17 +2177,43 @@ AFSProcessOverwriteSupersede( IN PIRP             Irp,
                              0, 
                              FALSE);
 
-        AFSAcquireExcl( Fcb->Header.PagingIoResource,
-                        TRUE);
-
-        bReleasePaging = TRUE;
-
         Fcb->Header.FileSize.LowPart = 0;
         Fcb->Header.ValidDataLength.LowPart = 0;
         Fcb->Header.AllocationSize.LowPart = 0;
 
         Fcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart = 0;
         Fcb->DirEntry->DirectoryEntry.AllocationSize.QuadPart = 0;
+
+        AFSReleaseResource( &Fcb->NPFcb->Resource);
+
+        ntStatus = AFSUpdateFileInformation( DeviceObject,
+                                             Fcb);
+
+        AFSAcquireExcl( &Fcb->NPFcb->Resource,
+                        TRUE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOverwriteSupersede (%08lX) Failed to update file information Status %08lX\n",
+                                                               Irp,
+                                                               ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessOverwriteSupersede Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                                                                             Fcb->Header.PagingIoResource,
+                                                                             PsGetCurrentThread());
+
+        AFSAcquireExcl( Fcb->Header.PagingIoResource,
+                        TRUE);
+
+        bReleasePaging = TRUE;
 
         pFileObject->SectionObjectPointer = &Fcb->NPFcb->SectionObjectPointers;
 

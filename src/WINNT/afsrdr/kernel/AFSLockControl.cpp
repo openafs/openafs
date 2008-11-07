@@ -62,6 +62,12 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
         // Acquire the main shared for adding the lock control to the list
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSLockControl Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                          &pFcb->NPFcb->Resource,
+                                                          PsGetCurrentThread());
+
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
 

@@ -227,19 +227,20 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         while (TRUE) 
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSNonCachedRead (%08lX) Requesting extents for Offset %I64X Length %08lX\n",
+                          "AFSNonCachedRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ\n",
                           Irp,
                           StartingByte.QuadPart,
-                          ulReadByteCount);
+                          ulReadByteCount,
+                          &pFcb->DirEntry->DirectoryEntry.FileName);
 
             ntStatus = AFSRequestExtents( pFcb, &StartingByte, ulReadByteCount, &bExtentsMapped );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSNonCachedRead (%08lX) Failed to request extents Status %08lX\n",
                               Irp,
@@ -250,28 +251,68 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
             if (bExtentsMapped)
             {
+
                 //
                 // We know that they *did* map.  Now lock up and then
                 // if we are still mapped pin the extents.
                 //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNonCachedRead Acquiring Fcb extents lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                                              PsGetCurrentThread());
+
                 AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
                 bLocked = TRUE;
-                if ( AFSDoExtentsMapRegion( pFcb, &StartingByte, ulReadByteCount, &pStartExtent, &pIgnoreExtent )) {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNonCachedRead (%08lX) Extents possibly mapped checking ...\n",
+                              Irp);
+
+                if( AFSDoExtentsMapRegion( pFcb, 
+                                           &StartingByte, 
+                                           ulReadByteCount, 
+                                           &pStartExtent, 
+                                           &pIgnoreExtent )) 
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSNonCachedRead (%08lX) Extents mapped, referencing extents\n",
+                                            Irp);
+
                     AFSReferenceExtents( pFcb ); 
                     bDerefExtents = TRUE;
                     break;
                 }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNonCachedRead (%08lX) Extents not mapped, retrying\n",
+                              Irp);
+
                 AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource );
                 bLocked= FALSE;
+                
                 //
                 // Bad things happened in the interim.  Start again from the top
                 //
+                
                 continue;
             }
+
             //
             // Note that if we are not full mapped then pStartExtent
             // is the next best place to start looking next time
             //
+            
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNonCachedRead (%08lX) Waiting for extents mapping\n",
+                              Irp);
+
             ntStatus =  AFSWaitForExtentMapping ( pFcb );
 
             if (!NT_SUCCESS(ntStatus)) 
@@ -293,7 +334,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         // Thus the list will not move between the start and end.
         // 
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNonCachedRead (%08lX) Retrieving mapped extents for Offset %I64X Length %08lX\n",
                       Irp,
@@ -309,7 +350,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         if (!NT_SUCCESS(ntStatus)) 
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSNonCachedRead (%08lX) Failed to retrieve mapped extents Status %08lX\n",
                           Irp,
@@ -518,6 +559,11 @@ try_exit:
         if( bDerefExtents)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNonCachedRead (%08lX) Dereferencing extents\n",
+                              Irp);
+
             AFSDereferenceExtents( pFcb);
         }
     }
@@ -713,28 +759,30 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         if( bPagingIo)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonRead Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->PagingResource,
+                                                              PsGetCurrentThread());
+
             AFSAcquireShared( &pFcb->NPFcb->PagingResource,
                               TRUE);
 
             bReleasePaging = TRUE;
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonRead (%08lX) Acquired PAGING resource shared\n",
-                          Irp);        
         }
         else
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonRead Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
 
             bReleaseMain = TRUE;
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonRead (%08lX) Acquired FILE resource shared\n",
-                          Irp);        
 
             //
             // Check the BR locks
@@ -829,11 +877,20 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         if (bPostIrp || (!bPagingIo && !bNonCachedIo))
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ\n",
+                          Irp,
+                          liStartingByte.QuadPart,
+                          ulByteCount,
+                          &pFcb->DirEntry->DirectoryEntry.FileName);
+
             ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped);
+
             if (!NT_SUCCESS(ntStatus)) 
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonRead (%08lX) Failed to request extents Status %08lX\n",
                               Irp,
@@ -1124,6 +1181,12 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSIOCtlRead Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);

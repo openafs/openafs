@@ -1359,6 +1359,123 @@ try_exit:
 }
 
 NTSTATUS
+AFSLocateTreeEntry( IN AFSBTreeEntry *TopNode,
+                    IN ULONGLONG HashIndex,
+                    IN OUT AFSBTreeEntry **TreeEntry)
+{
+    
+    NTSTATUS         ntStatus = STATUS_SUCCESS;
+    AFSBTreeEntry   *pEntry = NULL;
+    AFSBTreeEntry   *pCurrentEntry = NULL;
+
+    pCurrentEntry = TopNode;
+
+    __Enter
+    {
+
+        //
+        // If the rootnode passed is null then the directory is empty
+        //
+
+        if( TopNode == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If the requestor is looking for the root node itself, then return it.
+        //
+
+        if( TopNode->HashIndex == HashIndex)
+        {
+
+            *TreeEntry = TopNode;
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Loop through the nodes in the tree
+        //
+
+        while( pCurrentEntry != NULL)
+        {
+        
+            //
+            // Greater values are to the right link.
+            //
+
+            if( HashIndex > pCurrentEntry->HashIndex)
+            {
+
+                //
+                // Go to the next RIGHT entry, if there is one
+                //
+
+                if( pCurrentEntry->rightLink != NULL)
+                {
+
+                    pCurrentEntry = (AFSBTreeEntry *)pCurrentEntry->rightLink;
+                }
+                else
+                {
+
+                    //
+                    // Came to the end of the branch so bail
+                    //
+
+                    pCurrentEntry = NULL;
+
+                    break;
+                }
+            }
+            else if( HashIndex < pCurrentEntry->HashIndex)
+            {
+
+                //
+                // Go to the next LEFT entry, if one exists
+                //
+
+                if( pCurrentEntry->leftLink != NULL)
+                {
+
+                    pCurrentEntry = (AFSBTreeEntry *)pCurrentEntry->leftLink;
+                }
+                else
+                {
+
+                    //
+                    // End of the branch ...
+                    //
+
+                    pCurrentEntry = NULL;
+
+                    break;                
+                }
+            }
+            else
+            {
+
+                //
+                // Found the entry.
+                //
+
+                *TreeEntry = pCurrentEntry;
+
+                break;
+            }
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
                     IN AFSBTreeEntry *FileIDEntry)
 {

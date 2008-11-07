@@ -69,7 +69,7 @@ typedef struct _AFS_TREE_HDR
 
     AFSBTreeEntry *TreeHead;
 
-    ERESOURCE            *TreeLock;
+    ERESOURCE     *TreeLock;
 
 } AFSTreeHdr;
 
@@ -163,9 +163,16 @@ typedef struct _AFS_NONPAGED_FCB
             // increments this count.  When they are done they decrement it.
             // The 1->0 transition is protected by the ExtentsResource
             //
+
             LONG            ExtentsRefCount;
 
             NTSTATUS        ExtentsRequestStatus;
+
+            LIST_ENTRY      DirtyExtentsList;
+
+            KSPIN_LOCK      DirtyExtentsListLock;
+
+            KEVENT          FlushEvent;
 
         } File;
 
@@ -197,7 +204,10 @@ typedef struct _AFS_FSD_EXTENT
     //
     // Linked list first - the extents and then the skip list
     //
+
     LIST_ENTRY          Lists[AFS_NUM_EXTENT_LISTS];
+
+    LIST_ENTRY          DirtyList;
 
     //
     // And the extent itself
@@ -318,6 +328,7 @@ typedef struct AFS_FCB
             //
             // The extents
             //
+
             LIST_ENTRY          ExtentsLists[AFS_NUM_EXTENT_LISTS];
 
             //
@@ -334,11 +345,13 @@ typedef struct AFS_FCB
             //
             // Set if there is any dirty data. Set pessimistically
             //
-            ULONGLONG           ExtentsDirtyCount;
+
+            LONG                ExtentsDirtyCount;
 
             //
             // The Lazy writer thread
             //
+
             PETHREAD            LazyWriterThread;
 
         } File;
@@ -634,11 +647,11 @@ typedef struct _POOL_ENTRY
 typedef struct AFS_PROCESS_CB
 {
 
-    PEPROCESS   Process;
+    AFSBTreeEntry       TreeEntry;
 
-    ULONG       RegistrationMask;
+    ULONG               Flags;
 
-    struct AFS_PROCESS_CB *Next;
+    ULONGLONG           ParentProcessId;
 
 } AFSProcessCB;
 
@@ -869,6 +882,14 @@ typedef struct _AFS_DEVICE_EXTENSION
             AFSSysNameCB    *SysName64ListHead;
 
             AFSSysNameCB    *SysName64ListTail;
+
+            //
+            // Our process tree information
+            //
+
+            AFSTreeHdr          ProcessTree;
+
+            ERESOURCE           ProcessTreeLock;
 
         } Control;
 

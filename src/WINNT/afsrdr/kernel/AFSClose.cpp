@@ -95,6 +95,12 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 AFSPIOCtlOpenCloseRequestCB stPIOCtlClose;
                 AFSFileID stParentFileId;
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSClose Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
 
@@ -234,6 +240,12 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSClose Acquiring Dcb lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
 
@@ -251,10 +263,22 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
                     ASSERT( pFcb->ParentFcb != NULL);
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSClose Acquiring Parent lock %08lX EXCL %08lX\n",
+                                                         &pFcb->ParentFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
+
                     AFSAcquireExcl( &pFcb->ParentFcb->NPFcb->Resource,
                                       TRUE);
 
                     bReleaseParent = TRUE;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSClose Acquiring Fcb (DELETE) lock %08lX EXCL %08lX\n",
+                                                         &pFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -327,10 +351,20 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                         if( pFcb->Specific.File.ExtentsDirtyCount)
                         {
 
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSClose Flushing extents for %wZ\n",
+                                              &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                             AFSFlushExtents( pFcb);
                         }
 
-                        AFSTearDownFcbExtents( pFcb);
+                        //AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                        //              AFS_TRACE_LEVEL_VERBOSE,
+                        //              "AFSClose Tearing down extents for %wZ\n",
+                        //                  &pFcb->DirEntry->DirectoyEntry.FileName);        
+
+                        //AFSTearDownFcbExtents( pFcb);
                     }
                 }
 

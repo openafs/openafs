@@ -318,6 +318,27 @@ AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo)
             }
         }
 
+        if( TraceInfo->DebugFlags != (ULONG)-1 &&
+            TraceInfo->DebugFlags != AFSDebugFlags)
+        {
+
+            AFSDebugFlags = TraceInfo->DebugFlags;
+
+            RtlInitUnicodeString( &uniString,
+                                  AFS_REG_DEBUG_FLAGS);
+
+            ntStatus = AFSUpdateRegistryParameter( &uniString,
+                                                   REG_DWORD,
+                                                   &TraceInfo->DebugFlags,
+                                                   sizeof( ULONG));
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                DbgPrint("AFSConfigureTrace Failed to set debug flags in registry Status %08lX\n", ntStatus);
+            }
+        }
+
         if( TraceInfo->TraceBufferLength != (ULONG)-1 &&
             TraceInfo->TraceBufferLength != AFSDbgBufferLength)
         {
@@ -466,7 +487,7 @@ AFSTagInitialLogEntry()
 
     AFSDbgLogMsg( 0,
                   0,
-                  "AFS Log Initialized %d-%d-%d %d:%d Level %d Susbsystems %08lX\n",
+                  "AFS Log Initialized %d-%d-%d %d:%d Level %d Subsystems %08lX\n",
                   timeFields.Month,
                   timeFields.Day,
                   timeFields.Year,

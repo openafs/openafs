@@ -36,6 +36,7 @@ SOURCES= AFSInit.cpp \
 		 AFSLogSupport.cpp \
 		 AFSNameSupport.cpp \
 		 AFSNetworkProviderSupport.cpp \
+		 AFSProcessSupport.cpp \
 		 AFSQuota.cpp \
 		 AFSRDRSupport.cpp \
 		 AFSRead.cpp \

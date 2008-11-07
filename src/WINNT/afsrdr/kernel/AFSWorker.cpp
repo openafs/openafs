@@ -531,6 +531,11 @@ AFSWorkerThread( IN PVOID Context)
                     case AFS_WORK_FLUSH_FCB:
                     {
 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSWorkerThread Flushing extents for %wZ\n",
+                                                    &pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileName);        
+
                         (VOID) AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
                         //
                         // Give back the ref we took when we posted
@@ -669,6 +674,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
             // First step is to look for potential Fcbs to be removed
             //
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSVolumeWorkerThread Acquiring VolumeRoot FcbListLock lock %08lX SHARED %08lX\n",
+                                                              pVolumeVcb->Specific.VolumeRoot.FcbListLock,
+                                                              PsGetCurrentThread());
+
             AFSAcquireShared( pVolumeVcb->Specific.VolumeRoot.FcbListLock,
                               TRUE);
 
@@ -689,17 +700,27 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
                                         >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
                 {
-                    //
-                    // Yup (the last flush was long enough ago)
-                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVolumeWorkerThread Flushing extents for %wZ\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                     AFSFlushExtents( pFcb);
                 }
                 else if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
                          BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID)) 
                 {
+                    
                     //
                     // The file has been marked as invalid.  Dump it
                     //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVolumeWorkerThread Tearing down extents for %wZ\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                     AFSTearDownFcbExtents( pFcb );
                 }
 
@@ -715,6 +736,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     //
                     // Tear em down we'll not be needing them again
                     //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVolumeWorkerThread Tearing down extents for %wZ\n",
+                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                     AFSTearDownFcbExtents( pFcb );
                 }
 
@@ -734,11 +761,23 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     continue;
                 }
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSVolumeWorkerThread Attempt to acquire Fcb lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
+
                 if( AFSAcquireShared( &pFcb->NPFcb->Resource,
                                       BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                 {
 
                     KeQueryTickCount( &liTime);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVolumeWorkerThread Acquired Fcb lock %08lX SHARED %08lX\n",
+                                                              &pFcb->NPFcb->Resource,
+                                                              PsGetCurrentThread());
 
                     //
                     // If this is a directory ensure the child reference count is zero
@@ -773,6 +812,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
                         AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVolumeWorkerThread Acquiring VolumeRoot FcbListLock lock %08lX EXCL %08lX\n",
+                                                                      pVolumeVcb->Specific.VolumeRoot.FcbListLock,
+                                                                      PsGetCurrentThread());
+
                         AFSAcquireExcl( pVolumeVcb->Specific.VolumeRoot.FcbListLock,
                                         TRUE);
 
@@ -781,13 +826,37 @@ AFSVolumeWorkerThread( IN PVOID Context)
                         // while updating the DirEntry
                         //
 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVolumeWorkerThread Attempt to acquire ParentFcb lock %08lX SHARED %08lX\n",
+                                                                      &pFcb->ParentFcb->NPFcb->Resource,
+                                                                      PsGetCurrentThread());
+
                         if( AFSAcquireShared( &pFcb->ParentFcb->NPFcb->Resource,
                                               BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                         {
 
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVolumeWorkerThread Acquired ParentFcb lock %08lX SHARED %08lX\n",
+                                                                      &pFcb->ParentFcb->NPFcb->Resource,
+                                                                      PsGetCurrentThread());
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVolumeWorkerThread Attempt to acquire Fcb lock %08lX EXCL %08lX\n",
+                                                                      &pFcb->NPFcb->Resource,
+                                                                      PsGetCurrentThread());
+
                             if( AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                                 BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE)))
                             {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVolumeWorkerThread Acquired Fcb lock %08lX EXCL %08lX\n",
+                                                                      &pFcb->NPFcb->Resource,
+                                                                      PsGetCurrentThread());
 
                                 //
                                 // If this is a directory, check the child count again
@@ -826,6 +895,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                         //
                                         // Grab the FileID Tree lock
                                         //
+
+                                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                                      AFS_TRACE_LEVEL_VERBOSE,
+                                                      "AFSVolumeWorkerThread Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
+                                                                      pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                                                                      PsGetCurrentThread());
 
                                         AFSAcquireExcl( pVolumeVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                                                         TRUE);
@@ -866,6 +941,11 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
                                     if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                                     {
+
+                                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                                      AFS_TRACE_LEVEL_VERBOSE,
+                                                      "AFSVolumeWorkerThread Tearing down extents for %wZ\n",
+                                                              &pFcb->DirEntry->DirectoryEntry.FileName);        
 
                                         (VOID)AFSTearDownFcbExtents( pFcb);
                                     }
@@ -1055,6 +1135,12 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 
     pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInsertWorkitem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                                                         &pDevExt->Specific.Control.QueueLock,
+                                                         PsGetCurrentThread());
+
     AFSAcquireExcl( &pDevExt->Specific.Control.QueueLock,
                     TRUE);
 
@@ -1091,6 +1177,12 @@ AFSRemoveWorkItem()
     AFSDeviceExt *pDevExt = NULL;
 
     pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSRemoveWorkItem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                                                         &pDevExt->Specific.Control.QueueLock,
+                                                         PsGetCurrentThread());
 
     AFSAcquireExcl( &pDevExt->Specific.Control.QueueLock,
                     TRUE);

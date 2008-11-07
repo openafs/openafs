@@ -85,8 +85,14 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
         // Grab the main shared right off the bat
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueryFileInfo Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                           &pFcb->NPFcb->Resource,
+                                                           PsGetCurrentThread());
+
         AFSAcquireShared( &pFcb->NPFcb->Resource,
-                            TRUE);
+                          TRUE);
 
         bReleaseMain = TRUE;
 
@@ -422,6 +428,12 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
         //
         // Grab teh Fcb EXCL
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetFileInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                           &pFcb->NPFcb->Resource,
+                                                           PsGetCurrentThread());
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                         TRUE);
@@ -1381,6 +1393,12 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
                                     pTargetDcb,
                                     &uniTargetName);
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetRenameInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                           &Fcb->NPFcb->Resource,
+                                                           PsGetCurrentThread());
+
         AFSAcquireExcl( &Fcb->NPFcb->Resource,
                         TRUE);
 
@@ -1522,6 +1540,12 @@ AFSSetAllocationInfo( IN PIRP Irp,
     if( Fcb->Header.AllocationSize.QuadPart > pBuffer->AllocationSize.QuadPart)
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                                                           &Fcb->NPFcb->PagingResource,
+                                                           PsGetCurrentThread());
+
         AFSAcquireExcl( &Fcb->NPFcb->PagingResource,
                           TRUE);
 
@@ -1634,6 +1658,12 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         AFSReleaseResource( &Fcb->NPFcb->Resource);
 
         ntStatus = AFSUpdateFileInformation( AFSRDRDeviceObject, Fcb);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetEndOfFileInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                           &Fcb->NPFcb->Resource,
+                                                           PsGetCurrentThread());
 
         AFSAcquireExcl( &Fcb->NPFcb->Resource,
                         TRUE);

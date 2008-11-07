@@ -120,6 +120,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
             case AFS_ROOT_ALL:
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
 
@@ -132,6 +138,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
             case AFS_IOCTL_FCB:
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring PIOCtl lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -169,6 +181,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -252,6 +270,11 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                             >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
                 {
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Flushing extents for %wZ\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                     AFSFlushExtents( pFcb);
                 }
 
@@ -276,8 +299,18 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     if( pFcb->Specific.File.ExtentsDirtyCount)
                     {
 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSCleanup Flushing extents for DELETED file %wZ\n",
+                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+
                         AFSFlushExtents( pFcb);
                     }
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Tearing down extents for %wZ\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
 
                     AFSTearDownFcbExtents( pFcb);
 
@@ -290,6 +323,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                     ntStatus = AFSNotifyDelete( pFcb);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Acquiring Fcb (DELETE) lock %08lX EXCL %08lX\n",
+                                                         &pFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -351,6 +390,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     ntStatus = AFSUpdateFileInformation( DeviceObject,
                                                            pFcb);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Acquiring Fcb (FILEINFO) lock %08lX EXCL %08lX\n",
+                                                         &pFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -427,6 +472,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring Dcb lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
 
@@ -463,6 +514,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                     ntStatus = AFSNotifyDelete( pFcb);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Acquiring Dcb (DELETE) lock %08lX EXCL %08lX\n",
+                                                         &pFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -525,6 +582,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     ntStatus = AFSUpdateFileInformation( DeviceObject,
                                                            pFcb);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring Dcb (FILEINFO) lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);

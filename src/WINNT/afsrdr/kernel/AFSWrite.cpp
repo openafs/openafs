@@ -508,6 +508,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
                 ASSERT( NULL != OnBehalfOf || ExIsResourceAcquiredLite( &pNPFcb->Resource ));
     
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
+                                                         &pNPFcb->PagingResource,
+                                                         PsGetCurrentThread());
+
                 AFSAcquireShared( &pNPFcb->PagingResource,
                                   TRUE);
 
@@ -526,6 +532,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
                 ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
     
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                         &pNPFcb->Resource,
+                                                         PsGetCurrentThread());
+
                 AFSAcquireExcl( &pNPFcb->Resource,
                                 TRUE);
 
@@ -552,6 +564,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             {
                 ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
     
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                         &pNPFcb->Resource,
+                                                         PsGetCurrentThread());
+
                 AFSAcquireShared( &pNPFcb->Resource,
                                   TRUE);
 
@@ -706,6 +724,12 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
         pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSIOCtlWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                                         &pFcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -911,6 +935,13 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 // We know that they *did* map.  Now lock up and then
                 // if we are still mapped pin the extents.
                 //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNonCachedWrite Acquiring Fcb extents lock %08lX SHARED %08lX\n",
+                                                         &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                                         PsGetCurrentThread());
+
                 AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
                 bLocked = TRUE;
                 if ( AFSDoExtentsMapRegion( pFcb, &StartingByte, ByteCount, &pStartExtent, &pIgnoreExtent )) 
@@ -1401,6 +1432,12 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
     AFSReleaseResource( &Fcb->NPFcb->Resource);
 
     ntStatus = AFSUpdateFileInformation( AFSRDRDeviceObject, Fcb);
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSExtendingWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                                         &Fcb->NPFcb->Resource,
+                                                         PsGetCurrentThread());
 
     AFSAcquireExcl( &Fcb->NPFcb->Resource,
                     TRUE);

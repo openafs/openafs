@@ -187,11 +187,35 @@ AFSQueryDirectory( IN PIRP Irp)
         if( bInitialQuery)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
+                                                          &pFcb->NPFcb->Resource,
+                                                          PsGetCurrentThread());
+
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);
+
+            //
+            // Tell the service to prime the cache of the directory content
+            //
+
+            ntStatus = AFSEnumerateDirectoryNoResponse( pFcb);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
         else
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Acquiring Dcb lock %08lX SHARED %08lX\n",
+                                                          &pFcb->NPFcb->Resource,
+                                                          PsGetCurrentThread());
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
@@ -652,6 +676,15 @@ AFSQueryDirectory( IN PIRP Irp)
                 continue;
             }
 
+            //
+            // Be sure the information is valid
+            // We don't worry about entries while enumerating the directory
+            //
+
+            AFSValidateEntry( pDirEntry,
+                              FALSE,
+                              TRUE);
+
             //  Here are the rules concerning filling up the buffer:
             //
             //  1.  The Io system garentees that there will always be
@@ -713,9 +746,28 @@ AFSQueryDirectory( IN PIRP Irp)
                     pDirInfo->ChangeTime = pDirEntry->DirectoryEntry.LastWriteTime;
                     pDirInfo->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
                     pDirInfo->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
-                    pDirInfo->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes != 0 ?
-                                                                           pDirEntry->DirectoryEntry.FileAttributes :
-                                                                        FILE_ATTRIBUTE_NORMAL;
+                    
+                    if( pDirEntry->DirectoryEntry.FileType != 0)
+                    {
+
+                        pDirInfo->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes != 0 ?
+                                                                               pDirEntry->DirectoryEntry.FileAttributes :
+                                                                            FILE_ATTRIBUTE_NORMAL;
+                    }
+                    else
+                    {
+
+                        if( (pDirEntry->DirectoryEntry.FileId.Vnode % 2) != 0)
+                        {
+
+                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                        }
+                        else
+                        {
+
+                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+                        }
+                    }
 
                     pDirInfo->FileIndex = pDirEntry->DirectoryEntry.FileIndex; 
                     pDirInfo->FileNameLength = pDirEntry->DirectoryEntry.FileName.Length;
@@ -820,6 +872,12 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         //  Reference our input parameter to make things easier
         ulCompletionFilter = pIrpSp->Parameters.NotifyDirectory.CompletionFilter;
         bWatchTree = BooleanFlagOn( pIrpSp->Flags, SL_WATCH_TREE);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyChangeDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
+                                                          &pFcb->NPFcb->Resource,
+                                                          PsGetCurrentThread());
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                           TRUE);

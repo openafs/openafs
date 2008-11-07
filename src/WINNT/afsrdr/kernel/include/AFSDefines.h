@@ -316,6 +316,7 @@ static inline void AFSBreakPoint() {
 #define AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD 0x00000004
 #define AFS_DIR_ENTRY_NOT_IN_PARENT_TREE        0x00000008
 #define AFS_DIR_RELEASE_DIRECTORY_NODE          0x00000010
+#define AFS_DIR_ENTRY_FAKE                      0x00000020
 
 //
 // Vcb flags
@@ -440,5 +441,10 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 
 #define AFS_CONNECTION_FLAG_GLOBAL_SHARE        0x00000001
 
+//
+// Process CB flags
+//
+
+#define AFS_PROCESS_FLAG_IS_64BIT           0x00000001
 
 #endif /* _AFS_DEFINES_H */

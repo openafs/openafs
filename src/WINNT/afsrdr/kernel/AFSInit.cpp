@@ -217,7 +217,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         // Now initialize the control device
         //
 
-        ntStatus = AFSInitializeControlFilter();
+        ntStatus = AFSInitializeControlDevice();
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -379,6 +379,13 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
             try_return( ntStatus);
         }
+
+        //
+        // Register the call back for process creation and tear down
+        //
+
+        PsSetCreateProcessNotifyRoutine( AFSProcessNotify,
+                                         FALSE);
 
 try_exit:
 

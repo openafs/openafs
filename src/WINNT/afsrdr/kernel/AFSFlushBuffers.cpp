@@ -91,6 +91,12 @@ AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
         //
         // Now, flush to the server - if there is stuff to do
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFlushBuffers Flushing extents for %wZ\n",
+                                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+
         ntStatus = AFSFlushExtents( pFcb );
 
 try_exit:

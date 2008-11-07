@@ -65,6 +65,12 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
         FsInformationClass = pIrpSp->Parameters.QueryVolume.FsInformationClass;
         pBuffer = Irp->AssociatedIrp.SystemBuffer;
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueryVolumeInfo Acquiring VolumeEntry DirNode lock %08lX EXCL %08lX\n",
+                                                              &pVolumeEntry->NPDirNode->Lock,
+                                                              PsGetCurrentThread());
+
         AFSAcquireExcl( &pVolumeEntry->NPDirNode->Lock,
                         TRUE);
 

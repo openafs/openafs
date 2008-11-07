@@ -374,6 +374,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     char *pBuffer = (char *)wchBuffer;
     DWORD gle;
     cm_user_t *         userp = NULL;
+    BOOL                bWow64 = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_WOW64) ? TRUE : FALSE;
+    BOOL                bFast  = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_FAST_REQUEST) ? TRUE : FALSE;
 
     userp = RDR_UserFromCommRequest(RequestBuffer);
 
@@ -402,7 +404,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             //
 
             RDR_EnumerateDirectory( userp, RequestBuffer->FileId,
-				    pQueryCB,
+				    pQueryCB, bWow64, bFast,
 				    RequestBuffer->ResultBufferLength,
 				    &pResultCB);
             break;
@@ -425,6 +427,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_EvaluateNodeByID( userp, pEvalTargetCB->ParentId,
                                   RequestBuffer->FileId,
+                                  bWow64, bFast,
                                   RequestBuffer->ResultBufferLength,
                                   &pResultCB);
             break;
@@ -448,7 +451,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             RDR_EvaluateNodeByName( userp, pEvalTargetCB->ParentId,
                                     RequestBuffer->Name,
                                     RequestBuffer->NameLength,
-                                    RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? 1 : 0,
+                                    RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? TRUE : FALSE,
+                                    bWow64, bFast,
                                     RequestBuffer->ResultBufferLength,
                                     &pResultCB);
             break;
@@ -478,6 +482,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                  RequestBuffer->Name,
 				 RequestBuffer->NameLength,
 				 pCreateCB,
+                                 bWow64,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
     
@@ -500,6 +505,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_UpdateFileEntry( userp, RequestBuffer->FileId,
 				 pUpdateCB,
+                                 bWow64,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
 
@@ -524,6 +530,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                  pDeleteCB->ParentId,
                                  RequestBuffer->Name,
 				 RequestBuffer->NameLength,
+                                 bWow64,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
 
@@ -550,6 +557,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 				 RequestBuffer->NameLength,
                                  RequestBuffer->FileId,
 				 pFileRenameCB,
+                                 bWow64,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
 
@@ -574,11 +582,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             if (BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
                 RDR_RequestFileExtentsSync( userp, RequestBuffer->FileId,
                                             pFileRequestExtentsCB,
+                                            bWow64,
                                             RequestBuffer->ResultBufferLength,
                                             &pResultCB);
             else
                 RDR_RequestFileExtentsAsync( userp, RequestBuffer->FileId, 
                                              pFileRequestExtentsCB,
+                                             bWow64,
                                              &dwResultBufferLength,
                                              &SetFileExtentsResultCB );
             break;
@@ -600,6 +610,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_ReleaseFileExtents( userp, RequestBuffer->FileId,
 				    pFileReleaseExtentsCB,
+                                    bWow64,
 				    RequestBuffer->ResultBufferLength,
 				    &pResultCB);
 
@@ -621,6 +632,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_FlushFileEntry( userp, RequestBuffer->FileId,
                                 // pFileFlushCB,
+                                bWow64,
                                 RequestBuffer->ResultBufferLength,
                                 &pResultCB);
             break;
@@ -641,6 +653,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_OpenFileEntry( userp, RequestBuffer->FileId,
                                pFileOpenCB,
+                               bWow64,
                                RequestBuffer->ResultBufferLength,
                                &pResultCB);
 
@@ -663,6 +676,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             RDR_PioctlOpen( userp, 
                             RequestBuffer->FileId,
                             pPioctlCB,
+                            bWow64,
                             RequestBuffer->ResultBufferLength,
                             &pResultCB);
             break;
@@ -684,6 +698,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             RDR_PioctlWrite( userp, 
                              RequestBuffer->FileId,
                              pPioctlCB,
+                             bWow64,
                              RequestBuffer->ResultBufferLength,
                              &pResultCB);
             break;
@@ -705,6 +720,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 RDR_PioctlRead( userp, 
                                 RequestBuffer->FileId,
                                 pPioctlCB,
+                                bWow64,
                                 RequestBuffer->ResultBufferLength,
                                 &pResultCB);
                 break;
@@ -726,6 +742,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 RDR_PioctlClose( userp, 
                                 RequestBuffer->FileId,
                                 pPioctlCB,
+                                bWow64,
                                 RequestBuffer->ResultBufferLength,
                                 &pResultCB);
                 break;
@@ -751,6 +768,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                            RequestBuffer->ProcessId,
                                            RequestBuffer->FileId,
                                            pBRLRequestCB,
+                                           bWow64,
                                            RequestBuffer->ResultBufferLength,
                                            &pResultCB);
                 } else {
@@ -760,6 +778,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                             RequestBuffer->ProcessId,
                                             RequestBuffer->FileId,
                                             pBRLRequestCB,
+                                            bWow64,
                                             &dwResultBufferLength,
                                             &SetByteRangeLockResultCB );
                 }
@@ -784,6 +803,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                      RequestBuffer->ProcessId,
                                      RequestBuffer->FileId,
                                      pBRURequestCB,
+                                     bWow64,
                                      RequestBuffer->ResultBufferLength,
                                      &pResultCB);
                 break;
@@ -803,6 +823,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 RDR_ByteRangeUnlockAll( userp, 
                                         RequestBuffer->ProcessId,
                                         RequestBuffer->FileId,
+                                        bWow64,
                                         RequestBuffer->ResultBufferLength,
                                         &pResultCB);
                 break;

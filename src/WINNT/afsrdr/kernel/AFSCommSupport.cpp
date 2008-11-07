@@ -43,7 +43,7 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
                        IN OUT AFSDirEntryCB **ShortNameTree,
-                       IN UNICODE_STRING     *CallerSID)
+                       IN BOOLEAN             FastQuery)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -55,6 +55,7 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
     ULONG  ulEntryLength = 0;
     AFSDirEnumResp *pDirEnumResponse = NULL;
     UNICODE_STRING uniDirName, uniTargetName;
+    ULONG   ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
 
     __Enter
     {
@@ -86,6 +87,12 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
         pDirQueryCB->EnumHandle = 0;
 
+        if( FastQuery)
+        {
+
+            ulRequestFlags |= AFS_REQUEST_FLAG_FAST_REQUEST;
+        }
+
         //
         // Loop on the information
         //
@@ -98,7 +105,7 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
             //
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
-                                          AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                          ulRequestFlags,
                                           0,
                                           NULL,
                                           &Dcb->DirEntry->DirectoryEntry.FileId,
@@ -126,7 +133,7 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
                                                                             &Dcb->DirEntry->DirectoryEntry.FileName,
                                                                             ntStatus);
 
-                    ntStatus = STATUS_CANCELLED;
+                    ntStatus = STATUS_ACCESS_DENIED;
                 }
 
                 break;
@@ -364,6 +371,59 @@ try_exit:
         {
 
             ExFreePool( pBuffer);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSEnumerateDirectoryNoResponse( IN AFSFcb *Dcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirQueryCB stDirQueryCB;
+    ULONG   ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
+
+    __Enter
+    {
+                                       
+        //
+        // Use the payload buffer for information we will pass to the service
+        //
+
+        stDirQueryCB.EnumHandle = 0;
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
+                                      ulRequestFlags,
+                                      0,
+                                      NULL,
+                                      &Dcb->DirEntry->DirectoryEntry.FileId,
+                                      (void *)&stDirQueryCB,
+                                      sizeof( AFSDirQueryCB),
+                                      NULL,
+                                      NULL);
+
+        if( ntStatus != STATUS_SUCCESS)
+        {
+
+            if( ntStatus == STATUS_NO_MORE_FILES ||
+                ntStatus == STATUS_NO_MORE_ENTRIES)
+            {
+
+                ntStatus = STATUS_SUCCESS;
+            }
+            else
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSEnumerateDirectoryNoResponse Failed to enumerate directory %wZ Status %08lX\n",
+                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
+                                                                            ntStatus);
+
+                ntStatus = STATUS_ACCESS_DENIED;
+            }
         }
     }
 
@@ -776,6 +836,7 @@ try_exit:
 NTSTATUS
 AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
                        IN ULONGLONG ProcessID,
+                       IN BOOLEAN FastCall,
                        OUT AFSDirEnumEntry **DirEnumEntry)
 {
 
@@ -784,6 +845,7 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
     ULONG ulResultBufferLength;
     AFSDirEnumEntry *pDirEnumCB = NULL;
     ULONGLONG ullProcessID = ProcessID;
+    ULONG ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
 
     __Enter
     {
@@ -817,8 +879,14 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
 
         ulResultBufferLength = PAGE_SIZE;
 
+        if( FastCall)
+        {
+
+            ulRequestFlags |= AFS_REQUEST_FLAG_FAST_REQUEST;
+        }
+
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID,
-                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      ulRequestFlags,
                                       ullProcessID,
                                       NULL,
                                       SourceFileId,
@@ -973,6 +1041,12 @@ AFSProcessRequest( IN ULONG RequestType,
         // Grab the pool resource and check the state
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->IrpPoolLock,
+                                                         PsGetCurrentThread());
+
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
 
@@ -1126,6 +1200,16 @@ AFSProcessRequest( IN ULONG RequestType,
         {
 
             pPoolEntry->ProcessID = (ULONGLONG)PsGetCurrentProcessId();
+        }
+
+        //
+        // Indicate the type of process
+        //
+
+        if( AFSIs64BitProcess( pPoolEntry->ProcessID))
+        {
+
+            SetFlag( pPoolEntry->RequestFlags, AFS_REQUEST_FLAG_WOW64);
         }
 
         //
@@ -1656,8 +1740,20 @@ AFSInitIrpPool()
         // locks. We also do this in the tear down of the pool
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitIrpPool Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->IrpPoolLock,
+                                                         PsGetCurrentThread());
+
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                           TRUE);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitIrpPool Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->ResultPoolLock,
+                                                         PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);
@@ -1734,8 +1830,20 @@ AFSCleanupIrpPool()
         // Irp pool then the result pool lock
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCleanupIrpPool Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->IrpPoolLock,
+                                                         PsGetCurrentThread());
+
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCleanupIrpPool Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->ResultPoolLock,
+                                                         PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                         TRUE);
@@ -1862,6 +1970,12 @@ AFSInsertRequest( IN AFSCommSrvcCB *CommSrvc,
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInsertRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
+                                                         &CommSrvc->IrpPoolLock,
+                                                         PsGetCurrentThread());
+
         AFSAcquireExcl( &CommSrvc->IrpPoolLock,
                         TRUE);
 
@@ -1916,6 +2030,12 @@ AFSProcessIrpRequest( IN PIRP Irp)
 
         pRequest = (AFSCommRequest *)Irp->AssociatedIrp.SystemBuffer;
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessIrpRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
+                                                         &pCommSrvc->IrpPoolLock,
+                                                         PsGetCurrentThread());
+
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
 
@@ -1953,6 +2073,12 @@ AFSProcessIrpRequest( IN PIRP Irp)
             //
             // Grab the lock on the request pool
             //
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessIrpRequest Acquiring IrpPoolLock (WAIT) lock %08lX EXCL %08lX\n",
+                                                             &pCommSrvc->IrpPoolLock,
+                                                             PsGetCurrentThread());
 
             AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                             TRUE);
@@ -2068,6 +2194,12 @@ AFSProcessIrpRequest( IN PIRP Irp)
                     pEntry->fLink = NULL;
                     pEntry->bLink = NULL;
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSProcessIrpRequest Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
+                                                                     &pCommSrvc->ResultPoolLock,
+                                                                     PsGetCurrentThread());
+
                     AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                                     TRUE);
 
@@ -2141,6 +2273,12 @@ AFSProcessIrpResult( IN PIRP Irp)
         //
         // Go look for our entry
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessIrpResult Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
+                                                                     &pCommSrvc->ResultPoolLock,
+                                                                     PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);

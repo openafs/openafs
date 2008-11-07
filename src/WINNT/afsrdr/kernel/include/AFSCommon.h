@@ -111,6 +111,11 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
                     IN OUT AFSFcb **Fcb);
 
 NTSTATUS
+AFSLocateTreeEntry( IN AFSBTreeEntry *TopNode,
+                    IN ULONGLONG HashIndex,
+                    IN OUT AFSBTreeEntry **TreeEntry);
+
+NTSTATUS
 AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
                     IN AFSBTreeEntry *FileIDEntry);
 
@@ -139,7 +144,10 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
                        IN OUT AFSDirEntryCB **ShortNameTree,
-                       IN UNICODE_STRING       *CallerSID);
+                       IN BOOLEAN FastCall);
+
+NTSTATUS
+AFSEnumerateDirectoryNoResponse( IN AFSFcb *Dcb);
 
 NTSTATUS
 AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
@@ -164,6 +172,7 @@ AFSNotifyRename( IN AFSFcb *Fcb,
 NTSTATUS
 AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
                        IN ULONGLONG ProcessID,
+                       IN BOOLEAN FastCall,
                        OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS
@@ -245,7 +254,8 @@ AFSProcessOpen( IN PIRP Irp,
                 IN OUT AFSCcb **Ccb);
 
 NTSTATUS
-AFSProcessOverwriteSupersede( IN PIRP             Irp,
+AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
+                              IN PIRP           Irp,
                               IN AFSFcb        *ParentDcb,
                               IN AFSFcb        *Fcb,
                               IN AFSCcb       **Ccb);
@@ -850,7 +860,7 @@ AFSUpdateRegistryParameter( IN PUNICODE_STRING ValueName,
                             IN ULONG ValueDataLength);
 
 NTSTATUS
-AFSInitializeControlFilter( void);
+AFSInitializeControlDevice( void);
 
 NTSTATUS
 AFSDefaultDispatch( IN PDEVICE_OBJECT DeviceObject,
@@ -951,8 +961,13 @@ BOOLEAN
 AFSIsFinalNode( IN AFSFcb *Fcb);
 
 void
-AFSUpdateMetaData( IN AFSFcb *Fcb,
-                   IN AFSDirEnumEntry *DirEntry);
+AFSUpdateMetaData( IN AFSDirEntryCB *DirEntry,
+                   IN AFSDirEnumEntry *DirEnumEntry);
+
+NTSTATUS
+AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
+                  IN BOOLEAN PurgeContent,
+                  IN BOOLEAN FastCall);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp
@@ -1254,6 +1269,22 @@ AFSGetTraceBuffer( IN ULONG TraceBufferLength,
 
 void
 AFSTagInitialLogEntry( void);
+
+//
+// AFSProcessSupport.cpp Prototypes
+//
+
+void
+AFSProcessNotify( IN HANDLE  ParentId,
+                  IN HANDLE  ProcessId,
+                  IN BOOLEAN  Create);
+
+void
+AFSValidateProcessEntry( void);
+
+BOOLEAN
+AFSIs64BitProcess( IN ULONGLONG ProcessId);
+
 
 };
 

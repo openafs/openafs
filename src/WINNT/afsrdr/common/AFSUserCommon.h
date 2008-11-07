@@ -197,6 +197,13 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
 #define AFS_REQUEST_FLAG_CASE_SENSITIVE          0x00000002
 
+#define AFS_REQUEST_FLAG_WOW64                   0x00000004 // On 64-bit systems, set if the request 
+                                                            // originated from a WOW64 process
+
+#define AFS_REQUEST_FLAG_FAST_REQUEST            0x00000008 // if the request is set, the cache manager
+                                                            // responds to the request using a minimum
+                                                            // of file server interaction
+
 //
 // Status codes that can returned for various requests
 //
@@ -437,6 +444,12 @@ typedef struct _AFS_FILE_OPEN_RESULT_CB
                                     // absense of this flag tells the service that the extent should not be
                                     // dereferenced; this is usually the case when the file system tells the
                                     // service to flush a range of exents but do not release them
+
+#define AFS_EXTENT_FLAG_CLEAN   4   // The presence of this flag during a AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS
+                                    // call from the file system indicates to the server that the file system
+                                    // is going to completely overwrite the contents of the extent and the
+                                    // service should therefore not bother to obtain the current version
+                                    // from the file server.
 
 //
 // IO Interace control blocks for extent processing when performing
@@ -948,9 +961,10 @@ typedef struct _AFS_BYTE_RANGE_UNLOCK_RESULT_CB
 
 #define AFS_TRACE_LEVEL_MAXIMUM         0x00000004
 
-#define AFS_SUBSYSTEM_IO_PROCESSING     0x00000001  // Includes IO subsystem and extent processing
+#define AFS_SUBSYSTEM_IO_PROCESSING     0x00000001  // Includes IO subsystem
 #define AFS_SUBSYSTEM_FILE_PROCESSING   0x00000002  // Includes Fcb and name processing
-
+#define AFS_SUBSYSTEM_LOCK_PROCESSING   0x00000004  // All lock processing, level must be set to VERBOSE
+#define AFS_SUBSYSTEM_EXTENT_PROCESSING 0x00000008  // Specific extent processing
 
 typedef struct _AFS_DEBUG_TRACE_CONFIG_CB
 {
@@ -960,6 +974,8 @@ typedef struct _AFS_DEBUG_TRACE_CONFIG_CB
     ULONG       Subsystem;
 
     ULONG       TraceBufferLength;
+
+    ULONG       DebugFlags;
 
 } AFSTraceConfigCB;
 
