@@ -40,8 +40,8 @@
 
   @{*/
 
-#define MAXCELLCHARS   64
-#define MAXHOSTCHARS   64
+#define MAXCELLCHARS   256
+#define MAXHOSTCHARS   256
 #define MAXHOSTSPERCELL 8
 
 #define TRANSARCAFSDAEMON "TransarcAFSDaemon"
