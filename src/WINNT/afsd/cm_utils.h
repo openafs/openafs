@@ -79,6 +79,8 @@ extern void cm_Gen8Dot3NameInt(const fschar_t * longname, cm_dirFid_t * pfid,
 extern void cm_Gen8Dot3NameIntW(const clientchar_t* longname, cm_dirFid_t * pfid,
                                 clientchar_t *shortName, clientchar_t **shortNameEndp);
 
+extern void cm_Gen8Dot3VolNameW(afs_uint32 cell, afs_uint32 volume, clientchar_t *shortName);
+
 extern int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags);
 
 #endif /*  __CM_UTILS_H_ENV__ */

@@ -1540,7 +1540,10 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->flags |= CM_SCACHEFLAG_EACCESS;
 	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
 
-	scp->fileType = 0;	/* unknown */
+        if (scp->fid.vnode & 0x1) 
+            scp->fileType = CM_SCACHETYPE_DIRECTORY;
+        else
+            scp->fileType = 0;	/* unknown */
 
 	scp->serverModTime = 0;
 	scp->clientModTime = 0;
