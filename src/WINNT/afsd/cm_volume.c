@@ -757,7 +757,9 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
         cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
 
         if (linkedCellp)
-            code = cm_FindVolumeByID(linkedCellp, volumeID, userp, reqp, flags, outVolpp);
+            code = cm_FindVolumeByID(linkedCellp, volumeID, userp, reqp, 
+                                     flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, 
+                                     outVolpp);
     }
     return code;
 }
@@ -934,7 +936,9 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
 
         if (linkedCellp)
-            code = cm_FindVolumeByName(linkedCellp, volumeNamep, userp, reqp, flags, outVolpp);
+            code = cm_FindVolumeByName(linkedCellp, volumeNamep, userp, reqp, 
+                                       flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, 
+                                       outVolpp);
     }
     return code;
 }	
