@@ -976,7 +976,7 @@
 
       <programlisting>
    % <emphasis role="bold">fs sa notes pat rl</emphasis>
-   % <emphasis role="bold">fs sa pat read</emphasis>
+   % <emphasis role="bold">fs sa notes pat read</emphasis>
 </programlisting>
     </sect2>
 
