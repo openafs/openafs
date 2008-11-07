@@ -184,8 +184,6 @@ typedef struct {
 } cellinfo_t;
 
 
-struct afsconf_cell ak_cellconfig; /* General information about the cell */
-
 static char *progname = NULL;	/* Name of this program */
 static int dflag = FALSE;	/* Give debugging information */
 static int noprdb = FALSE;	/* Skip resolving name to id? */
@@ -562,17 +560,6 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 }
 
 
-static char *copy_string(char *string)
-{
-    char *new_string;
-
-    if (new_string = (char *)calloc(strlen(string) + 1, sizeof(char)))
-	(void) strcpy(new_string, string);
-
-    return (new_string);
-}	
-
-
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
 						  char *local_cell)
 {
@@ -598,6 +585,8 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
         status = AKLOG_AFS;
     }
 
+    if (cellconfig->linkedCell)
+        cellconfig->linkedCell = strdup(cellconfig->linkedCell);
 
     CloseConf(&configdir);
 
@@ -669,7 +658,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
+    struct afsconf_cell ak_cellconfig; /* General information about the cell */
     int i;
+    int getLinkedCell = 0;
 
     /* try to avoid an expensive call to get_cellconfig */
     if (cell && ll_string_check(&authedcells, cell))
@@ -683,19 +674,25 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     memset(instance, 0, sizeof(instance));
     memset(realm_of_user, 0, sizeof(realm_of_user));
     memset(realm_of_cell, 0, sizeof(realm_of_cell));
+    memset(&ak_cellconfig, 0, sizeof(ak_cellconfig));
 
     /* NULL or empty cell returns information on local cell */
     if (status = get_cellconfig(cell, &ak_cellconfig, local_cell))
         return(status);
 
-    strncpy(cell_to_use, ak_cellconfig.name, MAXCELLCHARS);
+  linkedCell:
+    if (getLinkedCell)
+        strncpy(cell_to_use, ak_cellconfig.linkedCell, MAXCELLCHARS);
+    else
+        strncpy(cell_to_use, ak_cellconfig.name, MAXCELLCHARS);
     cell_to_use[MAXCELLCHARS] = 0;
 
     if (ll_string_check(&authedcells, cell_to_use))
     {
         if (dflag)
             printf("Already authenticated to %s (or tried to)\n", cell_to_use);
-        return(AKLOG_SUCCESS);
+        status = AKLOG_SUCCESS;
+        goto done2;
     }
 
     /*
@@ -726,13 +723,15 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         if ((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
             fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
                      progname, status);
-            return(AKLOG_KERBEROS);
+            status = AKLOG_KERBEROS;
+            goto done;
         }
 
         if ( strchr(name,'.') != NULL ) {
             fprintf(stderr, "%s: Can't support principal names including a dot.\n",
                     progname);
-            return(AKLOG_MISC);
+            status = AKLOG_MISC;
+            goto done;
         }
 
       try_v5:
@@ -838,7 +837,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             status = get_cred(name, "", realm_of_cell, &c);
         }
 #else
-        return(AKLOG_MISC);
+        status = AKLOG_MISC;
+        goto done;
 #endif
     } 
 
@@ -855,7 +855,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                  ""
 #endif
                  );
-        return(AKLOG_KERBEROS);
+        status = AKLOG_KERBEROS;
+        goto done;
     }
 
     strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
@@ -907,7 +908,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         atoken.ticketLen = c.ticket_st.length;
         memcpy(atoken.ticket, c.ticket_st.dat, atoken.ticketLen);
 #else
-        return(AKLOG_MISC);
+        status = AKLOG_MISC;
+        goto done;
 #endif
     }
 
@@ -920,7 +922,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     {       
         if (dflag)
             printf("Identical tokens already exist; skipping.\n");
-        return 0;
+        status = AKLOG_SUCCESS;
+        goto done2;
     }
 
     if (noprdb)
@@ -936,10 +939,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             {
                 fprintf(stderr, "%s: Couldn't determine realm of user: %s)",
                          progname, krb_err_text(status));
-                return(AKLOG_KERBEROS);
+                status = AKLOG_KERBEROS;
+                goto done;
             }
 #else
-            return(AKLOG_MISC);
+            status = AKLOG_MISC;
+            goto done;
 #endif
         }
 
@@ -991,6 +996,21 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         status = AKLOG_TOKEN;
     }
 
+  done2:
+    if (ak_cellconfig.linkedCell && !getLinkedCell) {
+        getLinkedCell = 1;
+        goto linkedCell;
+    }
+
+  done:
+#if 0
+    /* 
+     * intentionally leak the linkedCell field because it was allocated
+     * using a different C RTL version.
+     */
+    if (ak_cellconfig.linkedCell)
+        free(ak_cellconfig.linkedCell);
+#endif
     return(status);
 }
 
@@ -1448,7 +1468,7 @@ int main(int argc, char *argv[])
             if (cur_node = ll_add_node(&paths, ll_tail))
             {
                 char *new_path;
-                if (new_path = copy_string(path))
+                if (new_path = strdup(path))
                     ll_add_data(cur_node, new_path);
                 else
                 {
