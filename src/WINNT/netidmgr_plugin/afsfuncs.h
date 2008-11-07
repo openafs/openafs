@@ -50,8 +50,8 @@ afs_klog(khm_handle identity,
          char *realm,
          int LifeTime,
          afs_tk_method method,
-         time_t * tok_expiration /* OUT: expiration time of new
-                                    token */
+         time_t * tok_expiration,/* OUT: expiration time of new token */
+         char *linkedCell        /* OUT: name of linkedCell (if any) */
          );
 
 int

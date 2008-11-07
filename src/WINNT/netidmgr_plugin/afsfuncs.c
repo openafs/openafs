@@ -728,7 +728,8 @@ afs_klog(khm_handle identity,
          char *realm,
          int LifeTime,
          afs_tk_method method,
-         time_t * tok_expiration) {
+         time_t * tok_expiration,
+         char *linkedCell) {
 
     long	rc;
     CREDENTIALS	creds;
@@ -784,6 +785,10 @@ afs_klog(khm_handle identity,
         _resolve();
         return(rc);
     }
+
+    if (linkedCell && ak_cellconfig.linkedCell)
+        StringCbCopyA(linkedCell, MAXCELLCHARS, 
+                      ak_cellconfig.linkedCell);
 
     StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
                   afs_realm_of_cell(&ak_cellconfig, FALSE));

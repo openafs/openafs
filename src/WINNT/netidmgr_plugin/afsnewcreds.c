@@ -2655,6 +2655,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 int code;
                 char cell[MAXCELLCHARS];
                 char realm[MAXCELLCHARS];
+                char linkedCell[MAXCELLCHARS]="";
                 khm_handle ctoken;
                 FILETIME ft_old;
                 FILETIME ft_new;
@@ -2662,6 +2663,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 khm_size cb;
                 khm_int32 method = AFS_TOKEN_AUTO;
                 khm_handle csp_cell = NULL;
+                BOOL bgetLinked = 0;
 
                 if (l->rows[i].flags &
                     (DLGROW_FLAG_DONE | DLGROW_FLAG_DELETED))
@@ -2709,16 +2711,20 @@ afs_msg_newcred(khm_int32 msg_subtype,
                     method = l->rows[i].method;
                 }
 
+              getLinked:
                 _report_cs3(KHERR_INFO,
                             L"Getting tokens for cell %1!S! with realm %2!S! using method %3!d!",
-                            _cstr(cell),
+                            _cstr(bgetLinked ? linkedCell: cell),
                             _cstr(realm),
                             _int32(method));
                 _resolve();
 
                 /* make the call */
-                code = afs_klog(ident, "", cell, realm, 0, 
-                                method, &new_exp);
+                code = afs_klog(ident, "", 
+                                bgetLinked ? linkedCell : cell, 
+                                realm, 0,
+                                method, &new_exp, 
+                                bgetLinked ? NULL :linkedCell);
 
                 _report_cs1(KHERR_INFO,
                             L"klog returns code %1!d!",
@@ -2768,6 +2774,11 @@ afs_msg_newcred(khm_int32 msg_subtype,
 
                             ident_renew_triggered = TRUE;
                         }
+                    }
+
+                    if ( !bgetLinked && linkedCell[0] ) {
+                        bgetLinked = TRUE;
+                        goto getLinked;
                     }
                 }
             }
