@@ -411,11 +411,7 @@ HandlePart(struct DiskPartition64 *partP)
     char *p = VPartitionPath(partP);
 #endif
 
-    if (chdir(p) == -1) {
-	printf("Can't chdir to partition %s; giving up\n", p);
-	exit(1);
-    }
-    if ((dirp = opendir(".")) == NULL) {
+    if ((dirp = opendir(p)) == NULL) {
 	printf("Can't read directory %s; giving up\n", p);
 	exit(1);
     }
