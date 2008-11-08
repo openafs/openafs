@@ -294,8 +294,6 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     case CM_SCACHETYPE_SYMLINK:
     case CM_SCACHETYPE_DFSLINK:
         {
-            cm_scache_t *targetScp = NULL;
-
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
             len = strlen(scp->mountPointStringp);
             wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
@@ -311,24 +309,50 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
             pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
-                lock_ReleaseWrite(&scp->rw);
-                code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, reqp);
-                lock_ObtainWrite(&scp->rw);
-                if (code == 0) {
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
+                cm_scache_t *targetScp = NULL;
+                cm_scache_t *linkParentScp = NULL;
+                cm_fid_t fid;
 
-                    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
-                              pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
-                              pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
+                cm_SetFid(&fid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
 
-                    cm_ReleaseSCache(targetScp);
+                linkParentScp = cm_FindSCache(&fid);
+                if (linkParentScp) {
+                    lock_ObtainWrite(&linkParentScp->rw);
+                    code = cm_SyncOp( linkParentScp, NULL, userp, reqp, PRSFS_LOOKUP,
+                                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                    if (code == 0) {
+                        cm_SyncOpDone( linkParentScp, NULL, 
+                                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                        lock_ReleaseWrite(&linkParentScp->rw);
+
+                        lock_ReleaseWrite(&scp->rw);
+                        code = cm_EvaluateSymLink(linkParentScp, scp, &targetScp, userp, reqp);
+                        lock_ObtainWrite(&scp->rw);
+                        if (code == 0) {
+                            pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
+                            pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
+                            pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
+                            pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
+                            pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
+
+                            osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                                      pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
+                                      pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
+
+                            cm_ReleaseSCache(targetScp);
+                        } else {
+                            osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
+                                      scp, code);
+                        }
+                    } else {
+                        lock_ReleaseWrite(&linkParentScp->rw);
+                        osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_SyncOp link parent failed scp=0x%p code=0x%x", 
+                                 linkParentScp, code);
+                    }
+                    cm_ReleaseSCache(linkParentScp);
                 } else {
-                    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
-                              scp, code);
+                    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry Link Parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x not found",
+                              fid.cell, fid.volume, fid.vnode, fid.unique);
                 }
             }
         }
