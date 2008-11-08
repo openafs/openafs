@@ -1204,7 +1204,8 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
     struct dirent *dp;
 
     /* Get headers from volume directory */
-    if (chdir(fileSysPath) == -1 || (dirp = opendir(".")) == NULL)
+    dirp = opendir(fileSysPath);
+    if (dirp  == NULL)
 	Abort("Can't read directory %s; not salvaged\n", fileSysPath);
     if (!singleVolumeNumber) {
 	while ((dp = readdir(dirp))) {
@@ -3543,16 +3544,18 @@ ToString(char *s)
     assert(p != NULL);
     strcpy(p, s);
     return p;
-
 }
 
 /* Remove the FORCESALVAGE file */
 void
 RemoveTheForce(char *path)
 {
+    char target[1024];
+    struct afs_stat force; // so we can use afs_stat to find it
+    strcpy(target,path);
+    strcat(target,"/FORCESALVAGE");
     if (!Testing && ForceSalvage) {
-	if (chdir(path) == 0)
-	    unlink("FORCESALVAGE");
+        if (afs_stat(target,&force) == 0)  unlink(target);
     }
 }
 
@@ -3564,10 +3567,11 @@ int
 UseTheForceLuke(char *path)
 {
     struct afs_stat force;
+    char target[1024];
+    strcpy(target,path);
+    strcat(target,"/FORCESALVAGE");
 
-    assert(chdir(path) != -1);
-
-    return (afs_stat("FORCESALVAGE", &force) == 0);
+    return (afs_stat(target, &force) == 0);
 }
 #else
 /*
