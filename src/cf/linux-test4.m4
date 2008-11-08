@@ -1104,3 +1104,16 @@ AC_DEFUN([LINUX_HAVE_BDI_INIT], [
   if test "x$ac_cv_linux_bdi_init" = "xyes"; then
     AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
   fi])
+
+AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
+  AC_MSG_CHECKING([for linux write_begin() address space op])
+  AC_CACHE_VAL([ac_cv_linux_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+      ac_cv_linux_write_begin=yes,
+      ac_cv_linux_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_write_begin)
+  if test "x$ac_cv_linux_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
+  fi])
