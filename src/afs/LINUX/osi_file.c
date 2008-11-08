@@ -36,14 +36,18 @@ extern struct super_block *afs_cacheSBp;
 
 #if defined(AFS_LINUX26_ENV) 
 void *
+#if defined(LINUX_USE_FH)
+osi_UFSOpen_fh(struct fid *fh, int fh_type)
+#else
 osi_UFSOpen(afs_int32 ainode)
+#endif
 {
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
     struct file *filp = NULL;
-#if !defined(HAVE_IGET)
+#if !defined(HAVE_IGET) || defined(LINUX_USE_FH)
     struct fid fid;
 #endif
     AFS_STATCNT(osi_UFSOpen);
@@ -70,24 +74,36 @@ osi_UFSOpen(afs_int32 ainode)
 
     dp = d_alloc_anon(tip);
 #else
+#if defined(LINUX_USE_FH)
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, fh, sizeof(struct fid), fh_type);
+#else
     fid.i32.ino = ainode;
     fid.i32.gen = 0;
     dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &fid, sizeof(fid), FILEID_INO32_GEN);
+#endif
     if (!dp) 
-           osi_Panic("Can't get dentry for inode %d\n", ainode);          
+           osi_Panic("Can't get dentry\n");          
     tip = dp->d_inode;
 #endif
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
     if (IS_ERR(filp))
+#if defined(LINUX_USE_FH)
+	osi_Panic("Can't open file\n");
+#else
 	osi_Panic("Can't open inode %d\n", ainode);
+#endif
     afile->filp = filp;
     afile->size = FILE_INODE(filp)->i_size;
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
+#if defined(LINUX_USE_FH)
+    afile->inum = tip->i_ino;	/* for hint validity checking */
+#else
     afile->inum = ainode;	/* for hint validity checking */
+#endif
     return (void *)afile;
 }
 #else
@@ -140,6 +156,23 @@ osi_UFSOpen(afs_int32 ainode)
     afile->proc = (int (*)())0;
     afile->inum = ainode;	/* for hint validity checking */
     return (void *)afile;
+}
+#endif
+
+#if defined(LINUX_USE_FH)
+int
+osi_get_fh(struct dentry *dp, struct fid *fh, int *max_len) {
+    int fh_type;
+
+    if (dp->d_sb->s_export_op->encode_fh) {
+           fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)fh, max_len, 0);
+    } else {
+           fh_type = FILEID_INO32_GEN;
+           fh->i32.ino = dp->d_inode->i_ino;
+           fh->i32.gen = dp->d_inode->i_generation;
+    }
+    dput(dp);
+    return(fh_type);
 }
 #endif
 
@@ -372,6 +405,11 @@ int
 osi_InitCacheInfo(char *aname)
 {
     int code;
+#if defined(LINUX_USE_FH)
+    int max_len = sizeof(struct fid);
+#else
+    extern ino_t cacheInode;
+#endif
     struct dentry *dp;
     extern ino_t cacheInode;
     extern struct osi_dev cacheDev;
@@ -382,7 +420,17 @@ osi_InitCacheInfo(char *aname)
     if (code)
 	return ENOENT;
 
+#if defined(LINUX_USE_FH)
+    if (dp->d_sb->s_export_op->encode_fh) {
+	cacheitems_fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)&cacheitems_fh, &max_len, 0);
+    } else {
+        cacheitems_fh_type = FILEID_INO32_GEN;
+	cacheitems_fh.i32.ino = dp->d_inode->i_ino;
+        cacheitems_fh.i32.gen = dp->d_inode->i_generation;
+    }
+#else
     cacheInode = dp->d_inode->i_ino;
+#endif
     cacheDev.dev = dp->d_inode->i_sb->s_dev;
     afs_fsfragsize = dp->d_inode->i_sb->s_blocksize - 1;
     afs_cacheSBp = dp->d_inode->i_sb;

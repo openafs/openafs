@@ -58,7 +58,12 @@ RCSID
 #endif /* vlserver error base define */
 
 /* Exported variables */
-ino_t volumeInode;		/** Inode for VolumeItems file */
+#if defined(LINUX_USE_FH)
+struct fid volumeinfo_fh;     /* File handle for VolumeItems file */
+int volumeinfo_fh_type;
+#else
+ino_t volumeInode;            /* Inode for VolumeItems file */
+#endif
 afs_rwlock_t afs_xvolume;	/** allocation lock for volumes */
 struct volume *afs_freeVolList;
 struct volume *afs_volumes[NVOLS];
@@ -159,7 +164,11 @@ afs_UFSGetVolSlot(void)
 	     * next chain
 	     */
 	    if (afs_FVIndex != tv->vtix) {
+#if defined(LINUX_USE_FH)
+		tfile = osi_UFSOpen_fh(&volumeinfo_fh, volumeinfo_fh_type);
+#else
 		tfile = osi_UFSOpen(volumeInode);
+#endif
 		code =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
 				 &staticFVolume, sizeof(struct fvolume));
@@ -176,7 +185,11 @@ afs_UFSGetVolSlot(void)
 	staticFVolume.dotdot = tv->dotdot;
 	staticFVolume.rootVnode = tv->rootVnode;
 	staticFVolume.rootUnique = tv->rootUnique;
+#if defined(LINUX_USE_FH)
+	tfile = osi_UFSOpen_fh(&volumeinfo_fh, volumeinfo_fh_type);
+#else
 	tfile = osi_UFSOpen(volumeInode);
+#endif
 	code =
 	    afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex,
 			  &staticFVolume, sizeof(struct fvolume));
@@ -545,7 +558,11 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	for (j = fvTable[FVHash(tv->cell, volid)]; j != 0; j = tf->next) {
 	    if (afs_FVIndex != j) {
 		struct osi_file *tfile;
-		tfile = osi_UFSOpen(volumeInode);
+#if defined(LINUX_USE_FH)
+	        tfile = osi_UFSOpen_fh(&volumeinfo_fh, volumeinfo_fh_type);
+#else
+	        tfile = osi_UFSOpen(volumeInode);
+#endif
 		err =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
 				 &staticFVolume, sizeof(struct fvolume));

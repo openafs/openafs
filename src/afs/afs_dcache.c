@@ -54,7 +54,12 @@ afs_int32 afs_discardDCList;	/*!< Discarded disk cache entries */
 afs_int32 afs_discardDCCount;	/*!< Count of elts in discardDCList */
 struct dcache *afs_freeDSList;	/*!< Free list for disk slots */
 struct dcache *afs_Initial_freeDSList;	/*!< Initial list for above */
-ino_t cacheInode;		/*!< Inode for CacheItems file */
+#if defined(LINUX_USE_FH)
+struct fid cacheitems_fh;
+int cacheitems_fh_type;
+#else
+ino_t cacheInode;               /*!< Inode for CacheItems file */
+#endif
 struct osi_file *afs_cacheInodep = 0;	/*!< file for CacheItems inode */
 struct afs_q afs_DLRU;		/*!< dcache LRU */
 afs_int32 afs_dhashsize = 1024;
@@ -103,7 +108,11 @@ int dcacheDisabled = 0;
 
 static int afs_UFSCacheFetchProc(), afs_UFSCacheStoreProc();
 struct afs_cacheOps afs_UfsCacheOps = {
+#if defined(LINUX_USE_FH)
+    osi_UFSOpen_fh,
+#else
     osi_UFSOpen,
+#endif
     osi_UFSTruncate,
     afs_osi_Read,
     afs_osi_Write,
@@ -1088,7 +1097,11 @@ afs_FreeDiscardedDCache(void)
     /*
      * Truncate the element to reclaim its space
      */
+#if defined(LINUX_USE_FH)
+    tfile = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
+#else
     tfile = afs_CFileOpen(tdc->f.inode);
+#endif
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     afs_AdjustSize(tdc, 0);
@@ -1716,7 +1729,11 @@ struct dcache *afs_AllocDCache(struct vcache *avc,
 	afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
 	if (lock & 2) {
 	    /* Truncate the chunk so zeroes get filled properly */
+#if defined(LINUX_USE_FH)
+	    file = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
+#else
 	    file = afs_CFileOpen(tdc->f.inode);
+#endif
 	    afs_CFileTruncate(file, 0);
 	    afs_CFileClose(file);
 	    afs_AdjustSize(tdc, 0);
@@ -2134,7 +2151,11 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    /* no data in file to read at this position */
 	    UpgradeSToWLock(&tdc->lock, 607);
 
+#if defined(LINUX_USE_FH)
+	    file = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
+#else
 	    file = afs_CFileOpen(tdc->f.inode);
+#endif
 	    afs_CFileTruncate(file, 0);
 	    afs_CFileClose(file);
 	    afs_AdjustSize(tdc, 0);
@@ -2321,7 +2342,11 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	 * fetch the whole file.
 	 */
 	DZap(tdc);	/* pages in cache may be old */
+#if defined(LINUX_USE_FH)
+	file = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
+#else
 	file = afs_CFileOpen(tdc->f.inode);
+#endif
 	afs_RemoveVCB(&avc->fid);
 	tdc->f.states |= DWriting;
 	tdc->dflags |= DFFetching;
@@ -3288,6 +3313,9 @@ afs_InitCacheFile(char *afile, ino_t ainode)
     struct osi_file *tfile;
     struct osi_stat tstat;
     register struct dcache *tdc;
+#if defined(LINUX_USE_FH)
+    int max_len = sizeof(struct fid);
+#endif
 
     AFS_STATCNT(afs_InitCacheFile);
     index = afs_stats_cmperf.cacheNumEntries;
@@ -3315,8 +3343,11 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	 * UFS file system, and just record the inode number.
 	 */
 #ifdef AFS_LINUX22_ENV
-	tdc->f.inode = VTOI(filevp->d_inode)->i_number;
-	dput(filevp);
+#if defined(LINUX_USE_FH)
+        tdc->f.fh_type = osi_get_fh(filevp, &tdc->f.fh, &max_len);
+#else
+        tdc->f.inode = VTOI(filevp->d_inode)->i_number;
+#endif
 #else
 	tdc->f.inode = afs_vnodeToInumber(filevp);
 	AFS_RELE(filevp);
@@ -3327,7 +3358,11 @@ afs_InitCacheFile(char *afile, ino_t ainode)
     fileIsBad = 0;
     if ((tdc->f.states & DWriting) || tdc->f.fid.Fid.Volume == 0)
 	fileIsBad = 1;
-    tfile = osi_UFSOpen(tdc->f.inode);
+#if defined(LINUX_USE_FH)
+    tfile = osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
+#else
+    tfile = osi_UFSOpen(ainode);
+#endif
     code = afs_osi_Stat(tfile, &tstat);
     if (code)
 	osi_Panic("initcachefile stat");

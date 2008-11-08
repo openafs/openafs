@@ -339,7 +339,7 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
 #endif
@@ -1014,7 +1014,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 	    inode_for_V[vFileNum] = currp->d_ino;
 #endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
@@ -1153,7 +1153,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 			   vFileNum);
 		else {
 		    struct stat statb;
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
 #endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
@@ -1166,7 +1166,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 			inode_for_V[vFileNum] = statb.st_ino;
 #endif
 			dir_for_V[vFileNum] = thisDir;
@@ -1268,6 +1268,7 @@ CheckCacheBaseDir(char *dir)
 	if (res != 0) {
 	    return "unable to statfs cache base directory";
 	}
+#if !defined(LINUX_USE_FH)
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
 	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
@@ -1277,6 +1278,7 @@ CheckCacheBaseDir(char *dir)
         } else if (statfsbuf.f_type != 0xEF53) {
             return "must use ext2 or ext3 for cache partition";
 	}
+#endif
     }
 #endif
 
@@ -1936,7 +1938,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 		   cacheStatEntries);
     }
 
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -2307,7 +2309,12 @@ mainproc(struct cmd_syndesc *as, void *arock)
 			 (afs_uint32) (inode_for_V[currVFile] >> 32),
 			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
 #else
+#if defined(LINUX_USE_FH)
+	    sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
+	    call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
+#else
 	    call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
+#endif
 #endif
 	}
 #endif

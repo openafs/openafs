@@ -1150,6 +1150,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
 		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
 		 fi
+		 if test "$enable_linux_fh" = "yes"; then
+		  AC_DEFINE(LINUX_USE_FH, 1, [define if you want to open cache files by file handle instead of inode numbers])
+		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else

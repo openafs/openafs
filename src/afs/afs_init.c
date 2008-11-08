@@ -252,9 +252,19 @@ afs_InitCellInfo(char *afile)
 {
     ino_t inode;
     int code;
+#if defined(LINUX_USE_FH)
+    struct fid fh;
+    int fh_type;
+    int max_len = sizeof(struct fid);
+    struct dentry *dp;
+#endif
 
 #ifdef AFS_CACHE_VNODE_PATH
     return afs_cellname_init(AFS_CACHE_CELLS_INODE, code);
+#elif defined(LINUX_USE_FH)
+    code = gop_lookupname(afile, AFS_UIOSYS, 0, &dp);
+    fh_type = osi_get_fh(dp, &fh, &max_len);
+    return afs_cellname_init(&fh, fh_type, code);
 #else
     code = LookupInodeByPath(afile, &inode, NULL);
     return afs_cellname_init(inode, code);
@@ -282,6 +292,10 @@ afs_InitVolumeInfo(char *afile)
 {
     int code;
     struct osi_file *tfile;
+#if defined(LINUX_USE_FH)
+    int max_len = sizeof(struct fid);
+    struct dentry *dp;
+#endif
 
     AFS_STATCNT(afs_InitVolumeInfo);
 #if defined(AFS_XBSD_ENV)
@@ -301,12 +315,19 @@ afs_InitVolumeInfo(char *afile)
     code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
 #elif defined(AFS_CACHE_VNODE_PATH)
     volumeInode = AFS_CACHE_VOLUME_INODE;
+#elif defined(LINUX_USE_FH)
+    code = gop_lookupname(afile, AFS_UIOSYS, 0, &dp);
+    volumeinfo_fh_type = osi_get_fh(dp, &volumeinfo_fh, &max_len);
 #else
     code = LookupInodeByPath(afile, &volumeInode, NULL);
 #endif
     if (code)
 	return code;
+#if defined(LINUX_USE_FH)
+    tfile = osi_UFSOpen_fh(&volumeinfo_fh, volumeinfo_fh_type);
+#else
     tfile = afs_CFileOpen(volumeInode);
+#endif
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
@@ -443,7 +464,11 @@ afs_InitCacheInfo(register char *afile)
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
+#if defined(LINUX_USE_FH)
+    tfile = osi_UFSOpen_fh(&cacheitems_fh, cacheitems_fh_type);
+#else
     tfile = osi_UFSOpen(cacheInode);
+#endif
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));
@@ -668,8 +693,9 @@ shutdown_cache(void)
 	    cacheDev.held_vnode = NULL;
 	}
 #endif
+#if !defined(LINUX_USE_FH)
 	cacheInode = volumeInode = (ino_t) 0;
-
+#endif
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;

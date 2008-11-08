@@ -120,6 +120,9 @@ struct xfs_inode_info {
 #ifdef COMPLETION_H_EXISTS
 #include <linux/completion.h>
 #endif
+#if defined(LINUX_USE_FH)
+#include <linux/exportfs.h>
+#endif
 
 #else /* AFS_LINUX22_ENV */
 #if defined(AFS_DARWIN_ENV)

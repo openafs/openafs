@@ -231,7 +231,11 @@ DRead(register struct dcache *adc, register int page)
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
     }
+#if defined(LINUX_USE_FH)
+    tfile = afs_CFileOpen(&adc->f.fh, adc->f.fh_type);
+#else
     tfile = afs_CFileOpen(adc->f.inode);
+#endif
     code =
 	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
 		      AFS_BUFFER_PAGESIZE);
@@ -343,7 +347,11 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 
     if (lp->dirty) {
 	/* see DFlush for rationale for not getting and locking the dcache */
-	tfile = afs_CFileOpen(lp->inode);
+#if defined(LINUX_USE_FH)
+        tfile = afs_CFileOpen(&lp->fh, lp->fh_type);
+#else
+        tfile = afs_CFileOpen(lp->inode);
+#endif
 	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
 		       AFS_BUFFER_PAGESIZE);
 	lp->dirty = 0;
@@ -353,7 +361,12 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 
     /* Now fill in the header. */
     lp->fid = adc->index;
+#if defined(LINUX_USE_FH)
+    memcpy(&lp->fh, &adc->f.fh, sizeof(struct fid));
+    lp->fh_type = adc->f.fh_type;
+#else
     lp->inode = adc->f.inode;
+#endif
     lp->page = apage;
     lp->accesstime = timecounter++;
     FixupBucket(lp);		/* move to the right hash bucket */
@@ -490,7 +503,11 @@ DFlush(void)
 		 * we cannot lock afs_xdcache). In addition, we cannot obtain
 		 * a dcache lock while holding the tb->lock of the same file
 		 * since that can deadlock with DRead/DNew */
+#if defined(LINUX_USE_FH)
+		tfile = afs_CFileOpen(&tb->fh, tb->fh_type);
+#else
 		tfile = afs_CFileOpen(tb->inode);
+#endif
 		afs_CFileWrite(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			       tb->data, AFS_BUFFER_PAGESIZE);
 		tb->dirty = 0;	/* Clear the dirty flag */
