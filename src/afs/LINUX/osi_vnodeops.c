@@ -50,6 +50,7 @@ RCSID
 #endif
 
 extern struct vcache *afs_globalVp;
+extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 
 
 static ssize_t
@@ -1737,7 +1738,7 @@ afs_linux_permission(struct inode *ip, int mode)
     return -code;
 }
 
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX24_ENV) && !(LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN))
 static int
 afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 		       unsigned to)
@@ -1764,8 +1765,37 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 #endif
     return 0;
 }
+#endif
 
-extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN)
+static int
+afs_linux_write_end(struct file *file, struct address_space *mapping,
+                                loff_t pos, unsigned len, unsigned copied,
+                                struct page *page, void *fsdata)
+{
+    int code;
+    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+    unsigned from = pos & (PAGE_CACHE_SIZE - 1);
+
+    code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
+                                    from, copied);
+    unlock_page(page);
+    page_cache_release(page);
+    return code;
+}
+
+static int
+afs_linux_write_begin(struct file *file, struct address_space *mapping,
+                                loff_t pos, unsigned len, unsigned flags,
+                                struct page **pagep, void **fsdata)
+{
+    struct page *page;
+    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+    page = __grab_cache_page(mapping, index);
+    *pagep = page;
+
+    return 0;
+}
 #endif
 
 static struct inode_operations afs_file_iops = {
@@ -1789,8 +1819,13 @@ static struct inode_operations afs_file_iops = {
 static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
   .writepage =		afs_linux_writepage,
-  .commit_write =	afs_linux_commit_write,
-  .prepare_write =	afs_linux_prepare_write,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN)
+  .write_begin =        afs_linux_write_begin,
+  .write_end =          afs_linux_write_end,
+#else
+  .commit_write =       afs_linux_commit_write,
+  .prepare_write =      afs_linux_prepare_write,
+#endif
 };
 #endif
 
