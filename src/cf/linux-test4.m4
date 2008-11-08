@@ -1092,3 +1092,15 @@ AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
     AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
   fi])
 
+AC_DEFUN([LINUX_HAVE_BDI_INIT], [
+  AC_MSG_CHECKING([for linux bdi_init()])
+  AC_CACHE_VAL([ac_cv_linux_bdi_init], [
+    AC_TRY_KBUILD(
+[#include <linux/backing-dev.h>],
+[bdi_init(NULL);],
+      ac_cv_linux_bdi_init=yes,
+      ac_cv_linux_bdi_init=no)])
+  AC_MSG_RESULT($ac_cv_linux_bdi_init)
+  if test "x$ac_cv_linux_bdi_init" = "xyes"; then
+    AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
+  fi])
