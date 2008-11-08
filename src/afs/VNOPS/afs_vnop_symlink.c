@@ -336,7 +336,11 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	tlen = len;
 	ObtainReadLock(&tdc->lock);
+#if defined(LINUX_USE_FH)
+	tfile = osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
+#else
 	tfile = osi_UFSOpen(tdc->f.inode);
+#endif
 	code = afs_osi_Read(tfile, -1, rbuf, tlen);
 	osi_UFSClose(tfile);
 	ReleaseReadLock(&tdc->lock);

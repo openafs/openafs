@@ -1005,6 +1005,10 @@ struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
   afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
 				 he file */
+#if defined(LINUX_USE_FH)
+  struct fid fh;		/* Opaque file handle */
+  int fh_type;			/* Opaque file handle type */
+#endif
   afs_int32 page;
   afs_int32 accesstime;
   struct buffer *hashNext;
@@ -1027,6 +1031,10 @@ struct fcache {
     afs_inode_t inode;		/* Unix inode for this chunk */
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
+#if defined(LINUX_USE_FH)
+    struct fid fh;		/* File handle */
+    int fh_type;		/* File handle type */
+#endif
 };
 #endif
 

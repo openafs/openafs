@@ -129,7 +129,11 @@ extern struct afs_q CellLRU;
 
 extern void afs_CellInit(void);
 extern void shutdown_cell(void);
+#if defined(LINUX_USE_FH)
+extern int afs_cellname_init(struct fid *fh, int fh_type, int lookupcode);
+#else
 extern int afs_cellname_init(ino_t inode, int lookupcode);
+#endif
 extern int afs_cellname_write(void);
 extern afs_int32 afs_NewCell(char *acellName, afs_int32 * acellHosts,
 			     int aflags, char *linkedcname, u_short fsport,
@@ -231,7 +235,12 @@ extern int cacheDiskType;
 extern afs_uint32 afs_tpct1, afs_tpct2, splitdcache;
 extern unsigned char *afs_indexFlags;
 extern struct afs_cacheOps *afs_cacheType;
+#if defined(LINUX_USE_FH)
+extern struct fid cacheitems_fh;
+extern int cacheitems_fh_type;
+#else
 extern ino_t cacheInode;
+#endif
 extern struct osi_file *afs_cacheInodep;
 extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
 			   int aflags);
@@ -627,7 +636,12 @@ extern int afs_osicred_initialized;
 #if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 extern void *osi_UFSOpen(ino_t ainode);
 #else
+#if defined(LINUX_USE_FH)
+extern void *osi_UFSOpen_fh(struct fid *fh, int fh_type);
+extern int osi_get_fh(struct dentry *dp, struct fid *fh, int *max_len);
+#else
 extern void *osi_UFSOpen(afs_int32 ainode);
+#endif
 #endif
 extern int afs_osi_Stat(register struct osi_file *afile,
 			register struct osi_stat *astat);
@@ -1111,7 +1125,12 @@ extern afs_int32 afs_FVIndex;
 extern afs_int32 afs_volCounter;
 extern afs_rwlock_t afs_xvolume;
 extern struct volume *afs_volumes[NVOLS];
+#if defined(LINUX_USE_FH)
+extern struct fid volumeinfo_fh;
+extern int volumeinfo_fh_type;
+#else
 extern ino_t volumeInode;
+#endif
 extern struct volume *afs_FindVolume(struct VenusFid *afid,
 				     afs_int32 locktype);
 extern struct volume *afs_freeVolList;

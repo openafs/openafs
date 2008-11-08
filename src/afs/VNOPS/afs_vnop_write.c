@@ -543,7 +543,11 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    tdc->f.states |= DWriting;
 	    tdc->dflags |= DFEntryMod;
 	}
+#if defined(LINUX_USE_FH)
+	tfile = (struct osi_file *)osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
+#else
 	tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
+#endif
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */

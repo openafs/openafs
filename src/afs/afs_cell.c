@@ -215,8 +215,14 @@ afs_LookupAFSDB(char *acellName)
  */
 
 struct cell_name *afs_cellname_head;	/* Export for kdump */
+#if defined(LINUX_USE_FH)
+struct fid afs_cellname_fh;
+int afs_cellname_fh_type;
+static int afs_cellname_fh_set;
+#else
 static ino_t afs_cellname_inode;
 static int afs_cellname_inode_set;
+#endif
 static int afs_cellname_dirty;
 static afs_int32 afs_cellnum_next;
 
@@ -301,7 +307,11 @@ afs_cellname_ref(struct cell_name *cn)
  * \return 0 for success. < 0 for error.
  */
 int
+#if defined(LINUX_USE_FH)
+afs_cellname_init(struct fid *fh, int fh_type, int lookupcode)
+#else
 afs_cellname_init(ino_t inode, int lookupcode)
+#endif
 {
     struct osi_file *tfile;
     int cc, off = 0;
@@ -320,14 +330,24 @@ afs_cellname_init(ino_t inode, int lookupcode)
 	return lookupcode;
     }
 
+#if defined(LINUX_USE_FH)
+    tfile = osi_UFSOpen_fh(fh, fh_type);
+#else
     tfile = osi_UFSOpen(inode);
+#endif
     if (!tfile) {
 	ReleaseWriteLock(&afs_xcell);
 	return EIO;
     }
 
+#if defined(LINUX_USE_FH)
+    memcpy(&afs_cellname_fh, fh, sizeof(struct fid));
+    afs_cellname_fh_type = fh_type;
+    afs_cellname_fh_set = 1;
+#else
     afs_cellname_inode = inode;
     afs_cellname_inode_set = 1;
+#endif
 
     while (1) {
 	afs_int32 cellnum, clen, magic;
@@ -388,7 +408,11 @@ afs_cellname_write(void)
     struct cell_name *cn;
     int off;
 
+#if defined(LINUX_USE_FH)
+    if (!afs_cellname_dirty || !afs_cellname_fh_set)
+#else
     if (!afs_cellname_dirty || !afs_cellname_inode_set)
+#endif
 	return 0;
     if (afs_initState != 300)
 	return 0;
@@ -396,7 +420,11 @@ afs_cellname_write(void)
     ObtainWriteLock(&afs_xcell, 693);
     afs_cellname_dirty = 0;
     off = 0;
+#if defined(LINUX_USE_FH)
+    tfile = osi_UFSOpen_fh(&afs_cellname_fh, afs_cellname_fh_type);
+#else
     tfile = osi_UFSOpen(afs_cellname_inode);
+#endif
     if (!tfile) {
 	ReleaseWriteLock(&afs_xcell);
 	return EIO;

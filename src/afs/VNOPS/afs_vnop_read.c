@@ -806,8 +806,11 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		usedihint++;
 	    } else
 #endif /* IHINT */
-
+#if defined(LINUX_USE_FH)
+		tfile = (struct osi_file *)osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
+#else
 		tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
+#endif
 #ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
             tuiop = afsio_darwin_partialcopy(auio, trimlen);
