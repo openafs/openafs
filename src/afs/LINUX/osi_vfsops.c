@@ -146,6 +146,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(HAVE_BDI_INIT)
+    bdi_init(&afs_backing_dev_info);
+#endif
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
 #endif
@@ -400,6 +403,9 @@ afs_put_super(struct super_block *sbp)
 #endif
 
     osi_linux_verify_alloced_memory();
+#if defined(HAVE_BDI_INIT)
+    bdi_destroy(&afs_backing_dev_info);
+#endif
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
