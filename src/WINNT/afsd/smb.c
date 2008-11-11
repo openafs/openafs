@@ -10021,9 +10021,6 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     smb_username_t *unp;
     smb_waitingLockRequest_t *wlrp;
 
-    if (!smb_Enabled)
-        return 0;
-
     if (lock)
         lock_ObtainRead(&smb_rctLock);
   
@@ -10059,9 +10056,11 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
 
+    if (!smb_Enabled)
+        goto done;
+
     sprintf(output, "begin dumping smb_waitingLockRequest_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-
 
     for ( wlrp = smb_allWaitingLocks; wlrp; wlrp = (smb_waitingLockRequest_t *) osi_QNext(&wlrp->q)) {
         smb_waitingLock_t *lockp;
@@ -10189,6 +10188,8 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
 
     sprintf(output, "done dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+  done:
   
     if (lock)
         lock_ReleaseRead(&smb_rctLock);
