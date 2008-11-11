@@ -1524,8 +1524,8 @@ afs_check_for_cell_realm_match(khm_handle identity, char * cell) {
     realm = afs_realm_of_cell(&cellconfig, FALSE);
     if (cellconfig.linkedCell)
         free(cellconfig.linkedCell);
-    if (realm == NULL)
-        return FALSE;
+    if (!realm[0])      /* referral; assume it matches */
+        return TRUE;
 
     AnsiStrToUnicode(wrealm, sizeof(wrealm), realm);
 
