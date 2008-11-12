@@ -1277,7 +1277,7 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
         return 1;
 
 #ifdef _WIN64
-    if (!wow64 && index >= cm_sysNameCount64)
+    if (!wow64 && index >= cm_sysName64Count)
         return 1;
     else
 #endif
@@ -1291,7 +1291,7 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
     outp[prefixCount] = 0;		/* null terminate the "a." */
 #ifdef _WIN64
     if (!wow64)
-        cm_ClientStrCat(outp, outSizeCch, cm_sysNameList64[index]);/* append i386_nt40 */
+        cm_ClientStrCat(outp, outSizeCch, cm_sysName64List[index]);/* append i386_nt40 */
     else
 #endif
         cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);/* append i386_nt40 */
