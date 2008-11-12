@@ -241,7 +241,7 @@ The maximum number of directory entries is 64,000 if all of the entries
 have names that are 15 octets or less in length. A name that is 15 octets
 long requires the use of only one block in the directory. Additional
 sequential blocks are required to store entries with names that are longer
-than 15 octets. Each additional block provides an additional length of 16
+than 15 octets. Each additional block provides an additional length of 32
 octets for the name of the entry. Note that if file names use an encoding
 like UTF-8, a single character may be encoded into multiple octets.
 
