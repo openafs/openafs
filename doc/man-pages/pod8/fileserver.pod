@@ -236,13 +236,13 @@ and the maximum size of a /vicepX partition on a fileserver is 2^64
 kilobytes.  (The maximum partition size in releases 1.5.34 and earlier
 is 2^31 kilobytes.)
 
-The maximum number of directory entries is 64,000 if all of the
-entries have names that are 15 characters or less in length. A name
-that is 15 characters long requires the use of only one block in the
-directory. Additional sequential blocks are required to store entries
-with names that are longer than 15 characters. Each additional block
-provides an additional length of 32 characters for the name of the
-entry.
+The maximum number of directory entries is 64,000 if all of the entries
+have names that are 15 octets or less in length. A name that is 15 octets
+long requires the use of only one block in the directory. Additional
+sequential blocks are required to store entries with names that are longer
+than 15 octets. Each additional block provides an additional length of 32
+octets for the name of the entry. Note that if file names use an encoding
+like UTF-8, a single character may be encoded into multiple octets.
 
 In real world use, the maximum number of objects in an AFS directory
 is usually between 16,000 and 25,000, depending on the average name
