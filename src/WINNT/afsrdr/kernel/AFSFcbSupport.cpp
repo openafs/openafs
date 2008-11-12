@@ -782,6 +782,8 @@ AFSRemoveAFSRoot()
 
                 AFSRemoveDirNodeFromParent( AFSGlobalRoot,
                                             pCurrentDirEntry);
+
+                InterlockedDecrement( &pFcb->OpenReferenceCount);
             }
             else
             {
@@ -835,7 +837,12 @@ AFSRemoveAFSRoot()
 
                         pFcb->DirEntry->Fcb = NULL;
 
-                        ASSERT( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE));
+                        if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+                        {
+
+                            AFSRemoveDirNodeFromParent( AFSGlobalRoot,
+                                                        pFcb->DirEntry);
+                        }
 
                         if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
                         {
@@ -1526,8 +1533,6 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     //
     // And the Fcb itself, which includes the name
     //
-
-    ASSERT( !BooleanFlagOn( Fcb->Flags, AFS_FCB_INSERTED_ID_TREE));
 
     ExFreePool( Fcb);
 

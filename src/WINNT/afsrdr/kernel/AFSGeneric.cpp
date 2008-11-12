@@ -1005,6 +1005,8 @@ AFSInitializeDirectory( IN AFSFcb *Dcb)
 
         stDirEnumEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
+        stDirEnumEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
+
         uniDirName.Length = sizeof( WCHAR);
 
         uniDirName.Buffer[ 0] = L'.';

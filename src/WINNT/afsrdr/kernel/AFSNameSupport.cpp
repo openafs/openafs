@@ -1696,6 +1696,7 @@ AFSParseName( IN PIRP Irp,
     UNICODE_STRING      uniAFSAllName, uniRelatedFullName;
     BOOLEAN             bFreeRelatedName = FALSE;
     AFSCcb             *pCcb = NULL;
+    ULONGLONG           ullIndex = 0;
 
     __Enter
     {
@@ -2251,23 +2252,51 @@ AFSParseName( IN PIRP Irp,
         if( pShareDirEntry->Fcb == NULL)
         {
 
-            ntStatus = AFSInitFcb( AFSGlobalRoot,
-                                   pShareDirEntry,
-                                   NULL);
+            //
+            // Check to see if the Fcb already exists for this entry
+            //
 
-            if( !NT_SUCCESS( ntStatus))
+            AFSAcquireShared( AFSGlobalRoot->Specific.VolumeRoot.FileIDTree.TreeLock, 
+                              TRUE);
+
+            ullIndex = AFSCreateLowIndex( &pShareDirEntry->DirectoryEntry.FileId);
+
+            AFSLocateHashEntry( AFSGlobalRoot->Specific.VolumeRoot.FileIDTree.TreeHead,
+                                ullIndex,
+                                &pShareDirEntry->Fcb);
+
+            if( pShareDirEntry->Fcb != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Failed to initialize fcb for cell name %wZ\n",
-                                                         Irp,
-                                                         &uniComponentName);
-
-                AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
-
-                try_return( ntStatus);
+                AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
+                                TRUE);
             }
+
+            AFSReleaseResource( AFSGlobalRoot->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+            if( pShareDirEntry->Fcb == NULL)
+            {
+
+                ntStatus = AFSInitFcb( AFSGlobalRoot,
+                                       pShareDirEntry,
+                                       NULL);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSParseName (%08lX) Failed to initialize fcb for cell name %wZ\n",
+                                                             Irp,
+                                                             &uniComponentName);
+
+                    AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
+
+                    try_return( ntStatus);
+                }
+            }
+
+            InterlockedIncrement( &pShareDirEntry->Fcb->OpenReferenceCount);
         }
         else
         {
