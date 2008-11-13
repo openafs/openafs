@@ -180,6 +180,12 @@ AC_ARG_ENABLE([pthreaded-ubik],
          disabled)])],
     ,
     [enable_pthreaded_ubik="no"])
+AC_ARG_ENABLE([linux-fh],
+    [AS_HELP_STRING([--enable-linux-fh],
+        [enable opening cache files by file hande instead of inode numbers
+         with linux (defaults to disabled)])],
+    ,
+    [enable_linux_fh="no"])
 
 dnl Kernel module build options.
 AC_ARG_WITH([dux-kernel-headers],
