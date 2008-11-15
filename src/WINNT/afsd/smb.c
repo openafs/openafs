@@ -2989,7 +2989,10 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 
     /* map CM_ERROR_* errors to NT 32-bit status codes */
     /* NT Status codes are listed in ntstatus.h not winerror.h */
-    if (code == CM_ERROR_NOSUCHCELL) {
+    if (code == 0) {
+        NTStatus = 0;
+    } 
+    else if (code == CM_ERROR_NOSUCHCELL) {
         NTStatus = 0xC000000FL;	/* No such file */
     }
     else if (code == CM_ERROR_NOSUCHVOLUME) {
