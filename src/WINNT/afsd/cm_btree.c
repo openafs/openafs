@@ -2176,7 +2176,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     afs_uint32 count = 0, slot, numentries;
     Nptr leafNode = NONODE, nextLeafNode;
     Nptr firstDataNode, dataNode, nextDataNode;
-    cm_direnum_t * enump;
+    cm_direnum_t * enump = NULL;
     long rc = 0;
     char buffer[512];
 
@@ -2188,6 +2188,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 
     if (scp->dirBplus == NULL) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate No BPlus Tree");
+        rc = CM_ERROR_WOULDBLOCK;
 	goto done;
     }
 
