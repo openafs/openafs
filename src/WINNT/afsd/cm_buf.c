@@ -217,7 +217,7 @@ long
 buf_Sync(int quitOnShutdown) 
 {
     cm_buf_t **bpp, *bp, *prevbp;
-    long wasDirty = 0;
+    afs_uint32 wasDirty = 0;
     cm_req_t req;
 
     /* go through all of the dirty buffers */
@@ -232,14 +232,17 @@ buf_Sync(int quitOnShutdown)
         */
         lock_ObtainMutex(&bp->mx);
 
-        if (bp->flags & CM_BUF_DIRTY) {
+        if (bp->flags & CM_BUF_DIRTY && !(bp->flags & CM_BUF_REDIR)) {
             /* start cleaning the buffer; don't touch log pages since
             * the log code counts on knowing exactly who is writing
             * a log page at any given instant.
             */
+            afs_uint32 dirty;
+
             cm_InitReq(&req);
             req.flags |= CM_REQ_NORETRY;
-            wasDirty |= buf_CleanAsyncLocked(bp, &req);
+            buf_CleanAsyncLocked(bp, &req, &dirty);
+            wasDirty |= dirty;
         }
 
         /* the buffer may or may not have been dirty
@@ -650,10 +653,10 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
  *
  * Returns non-zero if the buffer was dirty.
  */
-long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
+afs_uint32 buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
 {
-    long code = 0;
-    long isdirty = 0;
+    afs_uint32 code = 0;
+    afs_uint32 isdirty = 0;
     cm_scache_t * scp = NULL;
     osi_hyper_t offset;
 
@@ -720,13 +723,6 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	    break;
     };
 
-    if (!(bp->flags & CM_BUF_DIRTY)) {
-	/* remove buffer from dirty buffer queue */
-
-    }
-
-    /* do logging after call to GetLastError, or else */
-        
     /* if someone was waiting for the I/O that just completed or failed,
      * wake them up.
      */
@@ -735,7 +731,11 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
         osi_Log1(buf_logp, "buf_WaitIO Waking bp 0x%p", bp);
         osi_Wakeup((LONG_PTR) bp);
     }
-    return isdirty;
+
+    if (pisdirty)
+        *pisdirty = isdirty;
+
+    return code;
 }
 
 /* Called with a zero-ref count buffer and with the buf_globalLock write locked.
@@ -922,7 +922,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                  * have the WRITING flag set, so we won't get
                  * back here.
                  */
-                buf_CleanAsync(bp, &req);
+                buf_CleanAsync(bp, &req, NULL);
 
                 /* now put it back and go around again */
                 buf_Release(bp);
@@ -1230,13 +1230,13 @@ long buf_CountFreeList(void)
 }
 
 /* clean a buffer synchronously */
-long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
+long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
 {
     long code;
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
     lock_ObtainMutex(&bp->mx);
-    code = buf_CleanAsyncLocked(bp, reqp);
+    code = buf_CleanAsyncLocked(bp, reqp, pisdirty);
     lock_ReleaseMutex(&bp->mx);
 
     return code;
@@ -1367,7 +1367,7 @@ long buf_CleanAndReset(void)
                 cm_InitReq(&req);
 		req.flags |= CM_REQ_NORETRY;
 
-		buf_CleanAsync(bp, &req);
+		buf_CleanAsync(bp, &req, NULL);
 		buf_CleanWait(NULL, bp, FALSE);
 
                 /* relock and release buffer */
@@ -1581,7 +1581,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             lock_ObtainMutex(&bp->mx);
 
             /* start cleaning the buffer, and wait for it to finish */
-            buf_CleanAsyncLocked(bp, reqp);
+            buf_CleanAsyncLocked(bp, reqp, NULL);
             buf_WaitIO(scp, bp);
             lock_ReleaseMutex(&bp->mx);
 
@@ -1699,7 +1699,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
             lock_ObtainMutex(&bp->mx);
             if (bp->flags & CM_BUF_DIRTY) {
-                if (userp) {
+                if (userp && userp != bp->userp) {
                     cm_HoldUser(userp);
                     if (bp->userp) 
                         cm_ReleaseUser(bp->userp);
@@ -1729,7 +1729,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                     bp->dirtyCounter++;
                     break;
                 default:
-                    wasDirty = buf_CleanAsyncLocked(bp, reqp);
+                    code = buf_CleanAsyncLocked(bp, reqp, &wasDirty);
                     if (bp->flags & CM_BUF_ERROR) {
                         code = bp->error;
                         if (code == 0)
