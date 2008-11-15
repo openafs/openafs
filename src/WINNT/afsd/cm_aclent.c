@@ -332,6 +332,8 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
             cm_ReleaseUser(aclp->userp);
             aclp->userp = NULL;
             aclp->backp = (struct cm_scache *) 0;
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
             break;
         }
     }
@@ -355,8 +357,6 @@ cm_ResetACLCache(cm_user_t *userp)
             lock_ObtainWrite(&scp->rw);
             cm_InvalidateACLUser(scp, userp);
             lock_ReleaseWrite(&scp->rw);
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
