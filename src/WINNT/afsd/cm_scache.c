@@ -1044,6 +1044,9 @@ int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
  * possibly resulting in a bogus truncation.  The simplest way to avoid this
  * is to serialize all StoreData RPC's.  This is the reason we defined
  * CM_SCACHESYNC_STOREDATA_EXCL and CM_SCACHEFLAG_DATASTORING.
+ *
+ * CM_SCACHESYNC_BULKREAD is used to permit synchronization of multiple bulk
+ * readers which may be requesting overlapping ranges.
  */
 long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *reqp,
                afs_uint32 rights, afs_uint32 flags)
@@ -1280,6 +1283,14 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             }
         }
 
+        if (flags & CM_SCACHESYNC_BULKREAD) {
+            /* Don't allow concurrent fiddling with lock lists */
+            if (scp->flags & CM_SCACHEFLAG_BULKREADING) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is BULKREADING want BULKREAD", scp);
+                goto sleep;
+            }
+        }
+
         /* if we get here, we're happy */
         break;
 
@@ -1346,6 +1357,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         scp->flags |= CM_SCACHEFLAG_ASYNCSTORING;
     if (flags & CM_SCACHESYNC_LOCK)
         scp->flags |= CM_SCACHEFLAG_LOCKING;
+    if (flags & CM_SCACHESYNC_BULKREAD)
+        scp->flags |= CM_SCACHEFLAG_BULKREADING;
 
     /* now update the buffer pointer */
     if (flags & CM_SCACHESYNC_FETCHDATA) {
@@ -1421,6 +1434,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
         scp->flags &= ~CM_SCACHEFLAG_ASYNCSTORING;
     if (flags & CM_SCACHESYNC_LOCK)
         scp->flags &= ~CM_SCACHEFLAG_LOCKING;
+    if (flags & CM_SCACHESYNC_BULKREAD)
+        scp->flags &= ~CM_SCACHEFLAG_BULKREADING;
 
     /* now update the buffer pointer */
     if (flags & CM_SCACHESYNC_FETCHDATA) {

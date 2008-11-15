@@ -262,6 +262,7 @@ typedef struct cm_scache {
 #define CM_SCACHEFLAG_EACCESS           0x200000 /* Bulk Stat returned EACCES */
 #define CM_SCACHEFLAG_SMB_FID	        0x400000
 #define CM_SCACHEFLAG_LOCAL             0x800000 /* Locally modified */
+#define CM_SCACHEFLAG_BULKREADING       0x1000000/* Bulk read in progress */
 
 /* sync flags for calls to the server.  The CM_SCACHEFLAG_FETCHING,
  * CM_SCACHEFLAG_STORING and CM_SCACHEFLAG_SIZESTORING flags correspond to the
@@ -298,6 +299,8 @@ typedef struct cm_scache {
 						 * just fail */
 #define CM_SCACHESYNC_FORCECB		0x200000/* when calling cm_GetCallback()
                                                  * set the force flag */
+
+#define CM_SCACHESYNC_BULKREAD          0x400000/* reading many buffers */
 
 /* flags for cm_RecycleSCache	*/
 #define CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS 	0x1
