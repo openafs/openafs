@@ -4073,10 +4073,11 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    if (!uidp)
+        return CM_ERROR_BADSMB;
     userp = smb_GetUserFromUID(uidp);
     shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
-    if (uidp)
-        smb_ReleaseUID(uidp);
+    smb_ReleaseUID(uidp);
     if (!shareFound) {
         smb_ReleaseTID(tidp, FALSE);
         return CM_ERROR_BADSHARENAME;
