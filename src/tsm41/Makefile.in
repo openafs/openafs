@@ -75,7 +75,7 @@ all: $(AUTHLIBS)
 install install.noversion:
 
 clean:
-	$(RM) -f $(AUTHLIBS) $(AUTHFILES) so_locations
+	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 aklog_dynamic_auth: ${AUTH_KRB5_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} @KRB5LIBS@ ${XLIBS} ${AKLDFLAGS}
@@ -104,6 +104,8 @@ aix_auth.o:
 		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
 		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+	rs_aix6*) 
+		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
 	esac
@@ -120,3 +122,5 @@ dest: afs_dynamic_auth afs_dynamic_kerbauth aklog_dynamic_auth
 		${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth
 	${INSTALL_PROGRAM} afs_dynamic_kerbauth \
 		${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth
+
+
