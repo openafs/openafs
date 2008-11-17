@@ -5939,10 +5939,6 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
             osi_Log0(smb_logp, "Can't rename.  Target already exists");
             code = CM_ERROR_EXISTS;
         }
-
-        if (tmpscp != NULL)
-            cm_ReleaseSCache(tmpscp);
-
         goto done;
     }
 
