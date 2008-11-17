@@ -349,6 +349,8 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     count = smb_GetSMBParm(inp, 5);
 	
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    if (!uidp)
+        return CM_ERROR_BADSMB;
     userp = smb_GetUserFromUID(uidp);
     osi_assertx(userp != NULL, "null cm_user_t");
     iop->uidp = uidp;
