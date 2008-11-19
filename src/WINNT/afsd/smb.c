@@ -914,12 +914,25 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
     return vcp;
 }
 
-int smb_IsStarMask(clientchar_t *maskp)
+static int smb_Is8Dot3StarMask(clientchar_t *maskp)
 {
     int i;
     clientchar_t tc;
         
     for(i=0; i<11; i++) {
+        tc = *maskp++;
+        if (tc == _C('?') || tc == _C('*') || tc == _C('>'))
+	    return 1;
+    }
+    return 0;
+}
+
+static int smb_IsStarMask(clientchar_t *maskp)
+{
+    int i;
+    clientchar_t tc;
+        
+    while (*maskp) {
         tc = *maskp++;
         if (tc == _C('?') || tc == _C('*') || tc == _C('>'))
 	    return 1;
@@ -4566,7 +4579,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         memcpy(dsp->mask, mask, 12);
 
         /* track if this is likely to match a lot of entries */
-        if (smb_IsStarMask(mask)) 
+        if (smb_Is8Dot3StarMask(mask)) 
             starPattern = 1;
         else 
             starPattern = 0;
