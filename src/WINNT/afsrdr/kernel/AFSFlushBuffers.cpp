@@ -77,9 +77,10 @@ AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
         //
         __try
         {
+
             CcFlushCache( &pFcb->NPFcb->SectionObjectPointers, NULL, 0, &iosb);
         }
-        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+        __except( EXCEPTION_EXECUTE_HANDLER)
         {
         
             try_return( ntStatus = GetExceptionCode());

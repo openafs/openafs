@@ -62,6 +62,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT pFileObject = NULL;
     AFSFcb *pRootFcb = NULL;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    IO_STATUS_BLOCK stIoSB;
 
     __try
     {
@@ -126,12 +127,9 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                      &pFcb->NPFcb->Resource,
                                                      PsGetCurrentThread());
 
-                AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                TRUE);
+                ASSERT( pFcb->OpenHandleCount != 0);
 
                 InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 break;
             }
@@ -147,6 +145,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
+
+                ASSERT( pFcb->OpenHandleCount != 0);
 
                 InterlockedDecrement( &pFcb->OpenHandleCount);
 
@@ -189,11 +189,17 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                      PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                  TRUE);
+                                TRUE);
 
                 //
                 // Uninitialize the cache map. This call is unconditional.
                 //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Tearing down cache map for Fcb %08lX FileObject %08lX\n",
+                                                     pFcb,
+                                                     pFileObject);
 
                 CcUninitializeCacheMap( pFileObject, 
                                         NULL, 
@@ -225,6 +231,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
                 // Perform some final common processing
                 //
+
+                ASSERT( pFcb->OpenHandleCount != 0);
 
                 InterlockedDecrement( &pFcb->OpenHandleCount);
                     
@@ -258,27 +266,6 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
-                // Attempt to flush any dirty extents to the server. This may be a little 
-                // agressive, to flush whenever the handle is close, but it ensures
-                // coherency.
-                //
-
-                KeQueryTickCount( &liTime);
-
-                if( pFcb->Specific.File.ExtentsDirtyCount &&
-                    ( (liTime.QuadPart - pFcb->Specific.File.LastServerFlush.QuadPart) 
-                                            >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Flushing extents for %wZ\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
-
-                    AFSFlushExtents( pFcb);
-                }
-
-                //
                 // If the count has dropped to zero and there is a pending delete
                 // then delete the node
                 //
@@ -290,22 +277,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     //
                     // Before telling the server about the deleted file, tear down all extents for
                     // the file
-                    // We will attempt to flush extents prior to tearing them down in the 
-                    // event that the delete fails to the service. And we need to do this
-                    // before telling the service the file is deleted otherwise the extent
-                    // flushing will fail
                     //
-
-                    if( pFcb->Specific.File.ExtentsDirtyCount)
-                    {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSCleanup Flushing extents for DELETED file %wZ\n",
-                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
-
-                        AFSFlushExtents( pFcb);
-                    }
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -364,13 +336,66 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                                                      (PVOID)NULL );
                     }
                 }
+                else
+                {
+
+                    //
+                    // If this is the last open handle close then try and flush any dirty data 
+                    // out prior to flushing it to the server
+                    //
+
+                    if( pFcb->OpenHandleCount == 0)
+                    {
+
+                        __try
+                        {
+
+                            CcFlushCache( &pFcb->NPFcb->SectionObjectPointers, 
+                                          NULL, 
+                                          0, 
+                                          &stIoSB);
+                        }
+                        __except( EXCEPTION_EXECUTE_HANDLER)
+                        {
+                        
+                            ntStatus = GetExceptionCode();
+                        }
+                    }
+
+                    //
+                    // Attempt to flush any dirty extents to the server. This may be a little 
+                    // agressive, to flush whenever the handle is close, but it ensures
+                    // coherency.
+                    //
+
+                    if( pFcb->Specific.File.ExtentsDirtyCount)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSCleanup Flushing extents for %wZ\n",
+                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+
+                        AFSFlushExtents( pFcb);
+                    }
+
+                    if( pFcb->OpenHandleCount == 0)
+                    {
+
+                        //
+                        // Wait for any outstanding queued flushes to complete
+                        //
+
+                        AFSWaitOnQueuedFlushes( pFcb);
+                    }
+                }
 
                 //
                 // If there have been any updates to teh node then push it to 
                 // the service
                 //
 
-                else if( BooleanFlagOn( pFcb->Flags, AFS_FILE_MODIFIED))
+                if( BooleanFlagOn( pFcb->Flags, AFS_FILE_MODIFIED))
                 {
 
                     ULONG ulNotifyFilter = 0;
@@ -484,6 +509,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
                 // Perform some final common processing
                 //
+
+                ASSERT( pFcb->OpenHandleCount != 0);
 
                 InterlockedDecrement( &pFcb->OpenHandleCount);
                     
@@ -642,6 +669,41 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     InterlockedDecrement( &pFcb->ParentFcb->Specific.Directory.ChildOpenHandleCount);
                 }
 
+                //
+                // And finally, release the Fcb if we acquired it.
+                //
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                break;
+            }
+
+            case AFS_SPECIAL_SHARE_FCB:
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring SPECIAL SHARE lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                  TRUE);
+
+                ASSERT( pFcb->OpenHandleCount != 0);
+
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                //
+                // Decrement the open child handle count
+                //
+
+                if( pFcb->ParentFcb != NULL)
+                {
+                   
+                    InterlockedDecrement( &pFcb->ParentFcb->Specific.Directory.ChildOpenHandleCount);
+                }
+                    
                 //
                 // And finally, release the Fcb if we acquired it.
                 //

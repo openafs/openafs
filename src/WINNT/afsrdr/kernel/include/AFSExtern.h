@@ -98,6 +98,10 @@ extern ULONG               AFSDbgBufferLength;
 
 extern ULONG               AFSDbgLogFlags;
 
+extern ULONG               AFSSpecialShareNameCount;
+
+extern UNICODE_STRING      AFSSpecialShareNames[];
+
 }
 
 #endif /* _AFS_EXTERN_H */

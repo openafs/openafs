@@ -60,6 +60,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
     AFSFcb *pFcb = NULL;
     AFSDeviceExt *pDeviceExt = NULL;
     AFSCcb *pCcb = NULL;
+    BOOLEAN bDeleteFcb = FALSE;
 
     __try
     {
@@ -189,6 +190,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 // added to any of the Fcb lists for post processing
                 //
 
+                ASSERT( pFcb->OpenReferenceCount != 0);
+
                 InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 //
@@ -317,6 +320,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 // Decrement the reference count on the Fcb
                 //
 
+                ASSERT( pFcb->OpenReferenceCount != 0);
+
                 InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 if( pFcb->OpenReferenceCount == 0)
@@ -359,12 +364,75 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                             AFSFlushExtents( pFcb);
                         }
 
-                        //AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                        //              AFS_TRACE_LEVEL_VERBOSE,
-                        //              "AFSClose Tearing down extents for %wZ\n",
-                        //                  &pFcb->DirEntry->DirectoyEntry.FileName);        
+                        //
+                        // Wait for any outstanding queued flushes to complete
+                        //
 
-                        //AFSTearDownFcbExtents( pFcb);
+                        AFSWaitOnQueuedFlushes( pFcb);
+
+                        ASSERT( pFcb->Specific.File.ExtentsDirtyCount == 0 &&
+                                pFcb->Specific.File.QueuedFlushCount == 0);
+                    }
+
+                    //
+                    // If this is marked to delete on close then do it below
+                    //
+
+                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETE_FCB_ON_CLOSE))
+                    {
+
+                        if( pFcb->DirEntry != NULL)
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSClose Processing Fcb (%08lX) for %wZ for REMOVAL\n",
+                                                        pFcb,
+                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
+
+                            pFcb->DirEntry->Fcb = NULL;
+
+                            if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+                            {
+
+                                AFSRemoveDirNodeFromParent( AFSGlobalRoot,
+                                                            pFcb->DirEntry);
+                            }
+
+                            if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
+                            {
+
+                               ExFreePool( pFcb->DirEntry->DirectoryEntry.FileName.Buffer);
+                            }
+
+                            if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
+                            {
+
+                               ExFreePool( pFcb->DirEntry->DirectoryEntry.TargetName.Buffer);
+                            }
+
+                            //
+                            // Free up the dir entry
+                            //
+
+                            AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB) + 
+                                                                      pFcb->DirEntry->DirectoryEntry.FileName.Length +
+                                                                      pFcb->DirEntry->DirectoryEntry.TargetName.Length;
+         
+                            ExFreePool( pFcb->DirEntry);
+
+                            pFcb->DirEntry = NULL;
+                        }
+                        else
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSClose Processing Fcb (%08lX) for REMOVAL\n",
+                                                        pFcb);
+                        }
+
+                        bDeleteFcb = TRUE;
                     }
                 }
 
@@ -386,9 +454,102 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     AFSReleaseResource( &pFcb->ParentFcb->NPFcb->Resource);
                 }
 
+                //
+                // Delete the fcb if we need to
+                //
+
+                if( bDeleteFcb)
+                {
+
+                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                   AFS_TRACE_LEVEL_VERBOSE,
+                                   "AFSClose Deleting Fcb (%08lX)\n",
+                                                        pFcb);
+
+                    AFSRemoveFcb( pFcb);
+                }
+
                 break;
             }
            
+            case AFS_SPECIAL_SHARE_FCB:
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSClose Acquiring Special Share lock %08lX EXCL %08lX\n",
+                                                     &pFcb->NPFcb->Resource,
+                                                     PsGetCurrentThread());
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
+
+                pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+                //
+                // If we ahve a Ccb then remove it from the Fcb chain
+                //
+
+                if( pCcb != NULL)
+                {
+
+                    //
+                    // Remove the Ccb and de-allocate it
+                    //
+
+                    ntStatus = AFSRemoveCcb( pFcb,
+                                             pCcb);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_WARNING,
+                                      "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
+
+                        //
+                        // We can't actually fail a close operation so reset the status
+                        //
+
+                        ntStatus = STATUS_SUCCESS;
+                    }
+                }
+
+                //
+                // For these Fcbs we tear them down in line since they have not been
+                // added to any of the Fcb lists for post processing
+                //
+
+                ASSERT( pFcb->OpenReferenceCount != 0);
+
+                InterlockedDecrement( &pFcb->OpenReferenceCount);
+
+                //
+                // If this is not the root then decrement the open child reference count
+                //
+
+                if( pFcb->ParentFcb != NULL)
+                {
+                   
+                    InterlockedDecrement( &pFcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
+                }
+
+                if( pFcb->OpenReferenceCount == 0)
+                {
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                    AFSRemoveFcb( pFcb);
+                }
+                else
+                {
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+                }
+
+                break;
+            }
+
             default:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -406,7 +567,7 @@ try_exit:
         //
 
         AFSCompleteRequest( Irp,
-                              ntStatus);
+                            ntStatus);
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {

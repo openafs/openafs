@@ -219,6 +219,7 @@ AFSInitVolumeWorker( IN AFSFcb *VolumeVcb)
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSWorkQueueContext *pWorker = &VolumeVcb->Specific.VolumeRoot.VolumeWorkerContext;
     HANDLE hThread;
+    AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -264,6 +265,12 @@ AFSInitVolumeWorker( IN AFSFcb *VolumeVcb)
                                               KernelMode,
                                               FALSE,
                                               NULL);
+
+            if( InterlockedIncrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount) > 0)
+            {
+
+                KeClearEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent);
+            }
 
             ZwClose( hThread);
         }
@@ -447,9 +454,9 @@ AFSWorkerThread( IN PVOID Context)
     LONG TimeOut;
     KTIMER Timer;
     void *waitObjects[ 2];
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
 
-    pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
     //
     // Initialize the timer for the worker thread
@@ -469,7 +476,7 @@ AFSWorkerThread( IN PVOID Context)
 
     waitObjects[ 1] = &Timer;
 
-    waitObjects[ 0] = &pDevExt->Specific.Control.WorkerQueueHasItems;
+    waitObjects[ 0] = &pControlDevExt->Specific.Control.WorkerQueueHasItems;
 
     //
     // Indicate that we are initialized and ready
@@ -524,7 +531,9 @@ AFSWorkerThread( IN PVOID Context)
 
                     case AFS_WORK_REQUEST_RELEASE:
                     {
+
                         AFSReleaseExtentsWork( pWorkItem);
+
                         break;
                     }
 
@@ -536,23 +545,31 @@ AFSWorkerThread( IN PVOID Context)
                                       "AFSWorkerThread Flushing extents for %wZ\n",
                                                     &pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileName);        
 
-                        (VOID) AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
-                        //
-                        // Give back the ref we took when we posted
-                        //
+                        (VOID)AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
+ 
+                        ASSERT( pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount != 0);
+
                         InterlockedDecrement( &pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount);
+
                         break;
                     }
 
                     case AFS_WORK_ASYNCH_READ:
                     {
 
-                        (VOID) AFSCommonRead( pWorkItem->Specific.AsynchIo.Device, pWorkItem->Specific.AsynchIo.Irp, TRUE );
+                        ASSERT( pWorkItem->Specific.AsynchIo.CallingProcess != NULL);
+
+                        (VOID) AFSCommonRead( pWorkItem->Specific.AsynchIo.Device, 
+                                              pWorkItem->Specific.AsynchIo.Irp, 
+                                              pWorkItem->Specific.AsynchIo.CallingProcess);
+
                         break;
                     }
 
                     case AFS_WORK_ASYNCH_WRITE:
                     {
+
+                        ASSERT( pWorkItem->Specific.AsynchIo.CallingProcess != NULL);
 
                         (VOID) AFSCommonWrite( pWorkItem->Specific.AsynchIo.Device, 
                                                pWorkItem->Specific.AsynchIo.Irp,
@@ -613,6 +630,7 @@ AFSVolumeWorkerThread( IN PVOID Context)
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
+    BOOLEAN bDirtyData = FALSE;
 
     pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
@@ -685,8 +703,63 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
             pFcb = pVolumeVcb->Specific.VolumeRoot.FcbListHead;
 
+            bDirtyData = FALSE;
+
             while( pFcb != NULL)
             {
+
+                //
+                // If we are in shutdown mode then only process data files and try to flush ALL
+                // dirty data out on each of them
+                //
+
+                if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+                {
+
+                    AFSWaitOnQueuedReleases();
+
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                        !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
+                    {
+
+                        AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                        TRUE);
+
+                        //
+                        // Wait for any currently running flush or release requests to complete
+                        //
+
+                        AFSWaitOnQueuedFlushes( pFcb);
+
+                        //
+                        // Now perform another flush on the file
+                        //
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVolumeWorkerThread Flushing extents for %wZ on shutdown\n",
+                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+
+                        AFSFlushExtents( pFcb);
+
+                        //
+                        // If there is any more dirty extents on this file then we'll
+                        // keep going
+                        //
+
+                        if( pFcb->Specific.File.ExtentsDirtyCount > 0)
+                        {
+
+                            bDirtyData = TRUE;
+                        }
+
+                        AFSReleaseResource( &pFcb->NPFcb->Resource);
+                    }
+
+                    pFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+
+                    continue;
+                }
 
                 KeQueryTickCount( &liTime);
 
@@ -733,6 +806,25 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) >= 
                                 (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
                 {
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    __try
+                    {
+
+                        CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+                                             NULL,
+                                             0,
+                                             TRUE);
+                    }
+                    __except( EXCEPTION_EXECUTE_HANDLER)
+                    {
+                                    
+                    }
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     //
                     // Tear em down we'll not be needing them again
                     //
@@ -942,6 +1034,19 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                     if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
                                     {
 
+                                        __try
+                                        {
+
+                                            CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+                                                                 NULL,
+                                                                 0,
+                                                                 TRUE);
+                                        }
+                                        __except( EXCEPTION_EXECUTE_HANDLER)
+                                        {
+                                        
+                                        }
+
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                                       AFS_TRACE_LEVEL_VERBOSE,
                                                       "AFSVolumeWorkerThread Tearing down extents for %wZ\n",
@@ -966,6 +1071,12 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                             {
 
                                                 ExFreePool( pFcb->DirEntry->DirectoryEntry.FileName.Buffer);
+                                            }
+
+                                            if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
+                                            {
+
+                                                ExFreePool( pFcb->DirEntry->DirectoryEntry.TargetName.Buffer);
                                             }
 
                                             //
@@ -1048,6 +1159,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                                 pCurrentDirEntry->Fcb != NULL)
                                             {
 
+                                                ASSERT( pCurrentDirEntry->Fcb->OpenReferenceCount != 0);
+
                                                 InterlockedDecrement( &pCurrentDirEntry->Fcb->OpenReferenceCount);
                                             }
 
@@ -1113,13 +1226,36 @@ AFSVolumeWorkerThread( IN PVOID Context)
             }
 
             AFSReleaseResource( pVolumeVcb->Specific.VolumeRoot.FcbListLock);
+
+            //
+            // If we are in shutdown mode and the dirty flag is clear then get out now
+            //
+
+            if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN) &&
+                !bDirtyData)
+            {
+
+                break;
+            }
         }
     } // worker thread loop
 
-    AFSRemoveRootFcb( pVolumeVcb,
-                      FALSE);
+    if( !BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+    {
+
+        AFSRemoveRootFcb( pVolumeVcb,
+                          FALSE);
+    }
 
     KeCancelTimer( &Timer);
+
+    if( InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount) == 0)
+    {
+
+        KeSetEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent,
+                    0,
+                    FALSE);
+    }
 
     PsTerminateSystemThread( 0);
 
@@ -1144,6 +1280,12 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
     AFSAcquireExcl( &pDevExt->Specific.Control.QueueLock,
                     TRUE);
 
+    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInsertWorkitem Inserting work item %08lX Count %08lX\n",
+                                      WorkItem,
+                                      InterlockedIncrement( &pDevExt->Specific.Control.QueueItemCount));        
+
     if( pDevExt->Specific.Control.QueueTail != NULL) // queue already has nodes
     {
             
@@ -1159,6 +1301,47 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
     pDevExt->Specific.Control.QueueTail = WorkItem;
 
     // indicate that the queue has nodes
+    KeSetEvent( &(pDevExt->Specific.Control.WorkerQueueHasItems), 
+                0, 
+                FALSE);
+
+    AFSReleaseResource( &pDevExt->Specific.Control.QueueLock);
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
+{
+    
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDevExt = NULL;
+
+    pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInsertWorkitemAtHead Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                                                         &pDevExt->Specific.Control.QueueLock,
+                                                         PsGetCurrentThread());
+
+    AFSAcquireExcl( &pDevExt->Specific.Control.QueueLock,
+                    TRUE);
+
+    WorkItem->next = pDevExt->Specific.Control.QueueHead;
+
+    pDevExt->Specific.Control.QueueHead = WorkItem;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInsertWorkitemAtHead Inserting work item %08lX Count %08lX\n",
+                                      WorkItem,
+                                      InterlockedIncrement( &pDevExt->Specific.Control.QueueItemCount));        
+
+    //
+    // indicate that the queue has nodes
+    //
+
     KeSetEvent( &(pDevExt->Specific.Control.WorkerQueueHasItems), 
                 0, 
                 FALSE);
@@ -1192,6 +1375,13 @@ AFSRemoveWorkItem()
             
         pWorkItem = pDevExt->Specific.Control.QueueHead;
             
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveWorkItem Removing work item %08lX Count %08lX Thread %08lX\n",
+                                      pWorkItem,
+                                      InterlockedDecrement( &pDevExt->Specific.Control.QueueItemCount),
+                                      PsGetCurrentThreadId());        
+
         pDevExt->Specific.Control.QueueHead = pDevExt->Specific.Control.QueueHead->next;
             
         if( pDevExt->Specific.Control.QueueHead == NULL) // if queue just became empty
@@ -1239,6 +1429,36 @@ AFSQueueWorkerRequest( IN AFSWorkItem *WorkItem)
 }
 
 NTSTATUS
+AFSQueueWorkerRequestAtHead( IN AFSWorkItem *WorkItem)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDevExt = NULL;
+
+    //
+    // Submit the work item to the worker
+    //
+
+    ntStatus = AFSInsertWorkitemAtHead( WorkItem);
+
+    if( BooleanFlagOn( WorkItem->RequestFlags, AFS_SYNCHRONOUS_REQUEST))
+    {
+
+        //
+        // Sync request so block on the work item event
+        //
+
+        ntStatus = KeWaitForSingleObject( &WorkItem->Event,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 {
 
@@ -1247,6 +1467,11 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
     
     __try
     {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildTargetDirectory Queuing request for %wZ\n",
+                                      &Fcb->DirEntry->DirectoryEntry.FileName);        
 
         //
         // Allocate our request structure and send it to the worker
@@ -1287,6 +1512,12 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildTargetDirectory Workitem %08lX for %wZ\n",
+                                      pWorkItem,
+                                      &Fcb->DirEntry->DirectoryEntry.FileName);        
+
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
 
         if( NT_SUCCESS( ntStatus))
@@ -1296,6 +1527,12 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
         }
 
 try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildTargetDirectory Processed request for %wZ Status %08lX\n",
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                                      ntStatus);        
 
         if( pWorkItem != NULL)
         {
@@ -1317,6 +1554,398 @@ try_exit:
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueFcbInitialization\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueFlushExtents( IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueFlushExtents Queuing request for %wZ\n",
+                                      &Fcb->DirEntry->DirectoryEntry.FileName);        
+
+        if( Fcb->Specific.File.QueuedFlushCount > 3)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueueFlushExtents Max queued items for %wZ\n",
+                                      &Fcb->DirEntry->DirectoryEntry.FileName);        
+
+            try_return( ntStatus);
+        }     
+
+        if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueFlushExtents Failing request, in shutdown\n");
+
+            try_return( ntStatus = STATUS_TOO_LATE);
+        }
+
+        //
+        // Allocate our request structure and send it to the worker
+        //
+
+        pWorkItem = (AFSWorkItem *)ExAllocatePoolWithTag( NonPagedPool,
+                                                          sizeof( AFSWorkItem),
+                                                          AFS_WORK_ITEM_TAG);
+
+        if( pWorkItem == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueFlushExtents Failed to allocate work item\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pWorkItem,
+                       sizeof( AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        //
+        // This will be a synchronous request
+        //
+
+        KeInitializeEvent( &pWorkItem->Event,
+                           NotificationEvent,
+                           FALSE);
+
+        pWorkItem->ProcessID = (ULONGLONG)PsGetCurrentProcessId();
+
+        pWorkItem->RequestType = AFS_WORK_FLUSH_FCB;
+
+        pWorkItem->Specific.Fcb.Fcb = Fcb;
+
+        InterlockedIncrement( &Fcb->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueFlushExtents Workitem %08lX for %wZ\n",
+                                      pWorkItem,
+                                      &Fcb->DirEntry->DirectoryEntry.FileName);        
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            ntStatus = pWorkItem->Status;
+        }
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueFlushExtents Request for %wZ complete Status %08lX\n",
+                                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                                      ntStatus);        
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+
+                ExFreePool( pWorkItem);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueFlushExtents Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueFlushExtents\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueExtentRelease( IN PIRP Irp)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    AFSDeviceExt *pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    
+    __try
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueExtentRelease Queuing request for Irp %08lX\n",
+                                      Irp); 
+
+        InterlockedIncrement( &pRDRDeviceExt->Specific.RDR.QueuedReleaseExtentCount);
+
+        KeClearEvent( &pRDRDeviceExt->Specific.RDR.QueuedReleaseExtentEvent);
+
+        if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueFlushExtents Failing request, in shutdown\n");
+
+            try_return( ntStatus = STATUS_TOO_LATE);
+        }
+
+        pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                           sizeof(AFSWorkItem),
+                                                           AFS_WORK_ITEM_TAG);
+        if (NULL == pWorkItem) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueExtentRelease Failed to allocate work item\n");        
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem, 
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_REQUEST_RELEASE;
+
+        pWorkItem->Specific.ReleaseExtents.Irp = Irp;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueExtentRelease Workitem %08lX for Irp %08lX\n",
+                                      pWorkItem,
+                                      Irp);        
+
+        ntStatus = AFSQueueWorkerRequestAtHead( pWorkItem);
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueExtentRelease Request for Irp %08lX complete Status %08lX\n",
+                                      Irp,
+                                      ntStatus);        
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+
+                ExFreePool( pWorkItem);
+            }
+
+            if( InterlockedDecrement( &pRDRDeviceExt->Specific.RDR.QueuedReleaseExtentCount) == 0)
+            {
+
+                KeSetEvent( &pRDRDeviceExt->Specific.RDR.QueuedReleaseExtentEvent,
+                            0,
+                            FALSE);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueExtentRelease Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueExtentRelease\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueAsyncRead( IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp,
+                   IN HANDLE CallerProcess)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncRead Queuing request for Irp %08lX\n",
+                                      Irp);        
+
+        pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                           sizeof(AFSWorkItem),
+                                                           AFS_WORK_ITEM_TAG);
+        if (NULL == pWorkItem) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueAsyncRead Failed to allocate work item\n");        
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem, 
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_ASYNCH_READ;
+            
+        pWorkItem->Specific.AsynchIo.Device = DeviceObject;
+
+        pWorkItem->Specific.AsynchIo.Irp = Irp;
+
+        pWorkItem->Specific.AsynchIo.CallingProcess = CallerProcess;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncRead Workitem %08lX for Irp %08lX\n",
+                                      pWorkItem,
+                                      Irp);        
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncRead Request for Irp %08lX complete Status %08lX\n",
+                                      Irp,
+                                      ntStatus);        
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+
+                ExFreePool( pWorkItem);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueAsyncRead Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueAsyncRead\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueAsyncWrite( IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp,
+                    IN HANDLE CallerProcess)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncWrite Queuing request for Irp %08lX\n",
+                                      Irp);        
+
+        pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                           sizeof(AFSWorkItem),
+                                                           AFS_WORK_ITEM_TAG);
+        if (NULL == pWorkItem) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueAsyncWrite Failed to allocate work item\n");        
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem, 
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_ASYNCH_WRITE;
+            
+        pWorkItem->Specific.AsynchIo.Device = DeviceObject;
+
+        pWorkItem->Specific.AsynchIo.Irp = Irp;
+
+        pWorkItem->Specific.AsynchIo.CallingProcess = CallerProcess;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncWrite Workitem %08lX for Irp %08lX\n",
+                                      pWorkItem,
+                                      Irp);        
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueAsyncWrite Request for Irp %08lX complete Status %08lX\n",
+                                      Irp,
+                                      ntStatus);        
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+
+                ExFreePool( pWorkItem);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueAsyncWrite Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueAsyncWrite\n");
     }
 
     return ntStatus;

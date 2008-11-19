@@ -83,6 +83,19 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryVolumeInfo Failing request against PIOCtl Fcb\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
+        else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryVolumeInfo Failing request against SpecialShare Fcb\n");
+
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
 
@@ -302,7 +315,7 @@ AFSQueryFsDeviceInfo( IN AFSVolumeInfoCB *VolumeInfo,
 
         Buffer->DeviceType = FILE_DEVICE_DISK;
 
-        Buffer->Characteristics = FILE_REMOTE_DEVICE;
+        Buffer->Characteristics = VolumeInfo->Characteristics;
 
         *Length -= sizeof( FILE_FS_DEVICE_INFORMATION);
     }

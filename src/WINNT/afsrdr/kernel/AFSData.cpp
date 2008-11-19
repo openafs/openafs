@@ -109,4 +109,12 @@ ULONG               AFSDbgBufferLength = 0;
 
 ULONG               AFSDbgLogFlags = 0;
 
+//
+// List of 'special' share names we need to handle
+//
+
+ULONG               AFSSpecialShareNameCount;
+
+UNICODE_STRING      AFSSpecialShareNames[ AFS_SPECIAL_SHARE_NAME_COUNT_MAX];
+
 }

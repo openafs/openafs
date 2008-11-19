@@ -171,6 +171,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
 
         //
+        // If we are in shutdown mode then fail the request
+        //
+
+        if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSCommonCreate (%08lX) Open request after shutdown\n",
+                          Irp);        
+
+            try_return( ntStatus = STATUS_TOO_LATE);
+        }
+
+        //
         // Validate that the AFS Root has been initialized
         //
 
@@ -321,6 +336,22 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // Check for STATUS_REPARSE
+        //
+
+        if( ntStatus == STATUS_REPARSE)
+        {
+
+            //
+            // Update the information and return
+            //
+
+            Irp->IoStatus.Information = IO_REPARSE;
+
+            try_return( ntStatus);
+        }
+
+        //
         // If the returned root Fcb is NULL then we are dealing with the \\Server\GlobalRoot 
         // name 
         //
@@ -376,6 +407,16 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                                 &pFcb,
                                                 &pCcb);
                 }
+                else if( AFSIsSpecialShareName( &uniFileName))
+                {
+
+                    ntStatus = AFSOpenSpecialShareFcb( Irp,
+                                                       AFSGlobalRoot,
+                                                       &uniFileName,
+                                                       &pFcb,
+                                                       &pCcb);
+                }
+
 
                 try_return( ntStatus);
             }
@@ -491,6 +532,9 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         // open and the target is not the root
         //
 
+        uniComponentName.Length = 0;
+        uniComponentName.Buffer = NULL;
+
         if( uniFileName.Length > sizeof( WCHAR))
         {
 
@@ -522,6 +566,22 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               Irp,
                               &uniFileName,
                               ntStatus);
+
+                try_return( ntStatus);
+            }
+
+            //
+            // Check for STATUS_REPARSE
+            //
+
+            if( ntStatus == STATUS_REPARSE)
+            {
+
+                //
+                // Update the information and return
+                //
+
+                Irp->IoStatus.Information = IO_REPARSE;
 
                 try_return( ntStatus);
             }
@@ -620,43 +680,16 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
               pFcb == NULL))
         {
 
-            //
-            // If this is a create request and we have an Fcb then
-            // fail it
-            //
-
-            if( pFcb != NULL)
+            if( uniComponentName.Length == 0 ||
+                pFcb != NULL)
             {
 
                 //
-                // Check if the returned Fcb is an exact match on the name. If it is
-                // then fail with a collision otherwise we will insert the new entry
-                // as a case sensitive entry
+                // We traversed the entire path so we found each entry,
+                // fail with collision
                 //
 
-                if( RtlCompareUnicodeString( &pFcb->DirEntry->DirectoryEntry.FileName,
-                                             &uniComponentName,
-                                             FALSE) == 0)
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCommonCreate (%08lX) File %wZ name collision with exact match\n",
-                                  Irp,
-                                  &pFcb->DirEntry->DirectoryEntry.FileName);
-
-                    try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
-                }
-
-                //
-                // Drop the Fcb and attmept to create the new entry
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
-
-                bReleaseFcb = FALSE;
-
-                pFcb = NULL;
+                try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
             //
@@ -820,6 +853,8 @@ try_exit:
 
             if( pFcb != NULL)
             {
+
+                ASSERT( pFcb->OpenHandleCount > 0);
 
                 //
                 // For files setup the SOP's
@@ -1243,6 +1278,18 @@ AFSProcessCreate( IN PIRP             Irp,
                                    FullFileName,
                                    ulAttributes);
 
+        if( ParentDcb->RootFcb != NULL &&
+            BooleanFlagOn( ParentDcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessCreate Request failed due to read only volume\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
         //
         // Allocate and insert the direntry into the parent node
         //
@@ -1268,23 +1315,45 @@ AFSProcessCreate( IN PIRP             Irp,
         bFileCreated = TRUE;
 
         //
-        // Allocate and initialize the Fcb for the file.
+        // We may have raced and the Fcb is already created
         //
 
-        ntStatus = AFSInitFcb( ParentDcb,
-                               pDirEntry,
-                               Fcb);
-
-        if( !NT_SUCCESS( ntStatus))
+        if( pDirEntry->Fcb != NULL)
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSProcessCreate (%08lX) Failed to initialize fcb Status %08lX\n",
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessCreate (%08lX) Not allocating Fcb for file %wZ\n",
                                    Irp,
-                                   ntStatus);
+                                   FullFileName);
 
-            try_return( ntStatus);
+            *Fcb = pDirEntry->Fcb;
+
+            AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
+                            TRUE);
+        }
+        else
+        {
+
+            //
+            // Allocate and initialize the Fcb for the file.
+            //
+
+            ntStatus = AFSInitFcb( ParentDcb,
+                                   pDirEntry,
+                                   Fcb);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSProcessCreate (%08lX) Failed to initialize fcb Status %08lX\n",
+                                       Irp,
+                                       ntStatus);
+
+                try_return( ntStatus);
+            }
         }
 
         bRemoveFcb = TRUE;
@@ -1321,9 +1390,9 @@ AFSProcessCreate( IN PIRP             Irp,
             // Update the sizes with the information passed in
             //
 
-            (*Fcb)->Header.AllocationSize.QuadPart  = 0;
-            (*Fcb)->Header.FileSize.QuadPart        = 0;
-            (*Fcb)->Header.ValidDataLength.QuadPart = 0;
+            (*Fcb)->Header.AllocationSize.QuadPart  = (*Fcb)->DirEntry->DirectoryEntry.AllocationSize.QuadPart;
+            (*Fcb)->Header.FileSize.QuadPart        = (*Fcb)->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
+            (*Fcb)->Header.ValidDataLength.QuadPart = (*Fcb)->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
         }
 
         //
@@ -1337,16 +1406,8 @@ AFSProcessCreate( IN PIRP             Irp,
             AFSDirEntryCB *pParentNode = ParentDcb->Specific.Directory.DirectoryNodeListHead;
 
             //
-            // Add the . and .. entries to the entry
+            // This is a new directory node so indicate it has been enumerated
             //
-
-            ntStatus = AFSInitializeDirectory( *Fcb);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
 
             SetFlag( (*Fcb)->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
 
@@ -1433,9 +1494,9 @@ AFSProcessCreate( IN PIRP             Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        (*Fcb)->ParentFcb->Specific.Directory.ChildOpenHandleCount++;
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenHandleCount);
 
-        (*Fcb)->ParentFcb->Specific.Directory.ChildOpenReferenceCount++;
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
         {
@@ -2000,9 +2061,9 @@ AFSProcessOpen( IN PIRP Irp,
         if( Fcb->ParentFcb != NULL)
         {
 
-            Fcb->ParentFcb->Specific.Directory.ChildOpenHandleCount++;
+            InterlockedIncrement( &Fcb->ParentFcb->Specific.Directory.ChildOpenHandleCount);
 
-            Fcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount++;
+            InterlockedIncrement( &Fcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
         }
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
@@ -2025,6 +2086,8 @@ try_exit:
 
         if( bDecrementOpenRefCount)
         {
+
+            ASSERT( Fcb->OpenReferenceCount != 0);
 
             InterlockedDecrement( &Fcb->OpenReferenceCount);
         }
@@ -2083,6 +2146,18 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                       "AFSProcessOverwriteSupersede (%08lX) Processing file %wZ\n",
                                                        Irp,
                                                        &Fcb->DirEntry->DirectoryEntry.FileName);
+
+        if( ParentDcb->RootFcb != NULL &&
+            BooleanFlagOn( ParentDcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOverwriteSupersede Request failed due to read only volume\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
 
         //
         // Check if we should go and retrieve updated information for the node
@@ -2177,12 +2252,21 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                              0, 
                              FALSE);
 
-        Fcb->Header.FileSize.LowPart = 0;
-        Fcb->Header.ValidDataLength.LowPart = 0;
-        Fcb->Header.AllocationSize.LowPart = 0;
+        Fcb->Header.FileSize.QuadPart = 0;
+        Fcb->Header.ValidDataLength.QuadPart = 0;
+        Fcb->Header.AllocationSize.QuadPart = 0;
 
         Fcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart = 0;
         Fcb->DirEntry->DirectoryEntry.AllocationSize.QuadPart = 0;
+
+        //
+        // Trim down the extents. We do this BEFORE telling the service
+        // the file is truncated since there is a potential race between
+        // a worker thread releasing extents and us trimming
+        //
+
+        AFSTrimExtents( Fcb,
+                        &Fcb->Header.FileSize);
 
         AFSReleaseResource( &Fcb->NPFcb->Resource);
 
@@ -2291,6 +2375,26 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         {
 
             Irp->IoStatus.Information = FILE_OVERWRITTEN;
+        }
+
+        //
+        // Increment the open count on this Fcb
+        //
+
+        InterlockedIncrement( &Fcb->OpenReferenceCount);
+
+        InterlockedIncrement( &Fcb->OpenHandleCount);
+
+        //
+        // Increment the open reference and handle on the parent node
+        //
+
+        if( Fcb->ParentFcb != NULL)
+        {
+
+            InterlockedIncrement( &Fcb->ParentFcb->Specific.Directory.ChildOpenHandleCount);
+
+            InterlockedIncrement( &Fcb->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
         }
 
 try_exit:
@@ -2478,9 +2582,144 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        (*Fcb)->ParentFcb->Specific.Directory.ChildOpenHandleCount++;
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenHandleCount);
 
-        (*Fcb)->ParentFcb->Specific.Directory.ChildOpenReferenceCount++;
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
+
+        //
+        // Return the open result for this file
+        //
+
+        Irp->IoStatus.Information = FILE_OPENED;
+
+try_exit:
+
+        //
+        // If we created the Fcb we need to release the resources
+        //
+
+        if( bRemoveFcb)
+        {
+
+            AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
+        }
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( bAllocatedCcb)
+            {
+
+                AFSRemoveCcb( *Fcb,
+                              *Ccb);
+
+                *Ccb = NULL;
+            }
+
+            if( bRemoveFcb)
+            {
+
+                //
+                // Need to tear down this Fcb since it is not in the tree for the worker thread
+                //
+
+                AFSRemoveFcb( *Fcb);
+            }
+
+            *Fcb = NULL;
+
+            *Ccb = NULL;
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSOpenSpecialShareFcb( IN PIRP Irp,
+                        IN AFSFcb *ParentDcb,
+                        IN UNICODE_STRING *ShareName,
+                        OUT AFSFcb **Fcb,
+                        OUT AFSCcb **Ccb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    PFILE_OBJECT pFileObject = NULL;
+    PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    BOOLEAN bRemoveFcb = FALSE, bAllocatedCcb = FALSE;
+
+    __Enter
+    {
+
+        pFileObject = pIrpSp->FileObject;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSOpenSpecialShareFcb (%08lX) Processing Share %wZ open\n",
+                                                               Irp,
+                                                               ShareName);
+
+        //
+        // Allocate and initialize the Fcb for the file.
+        //
+
+        ntStatus = AFSInitFcb( ParentDcb,
+                               NULL,
+                               Fcb);
+
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenSpecialShareFcb (%08lX) Failed to initialize fcb Status %08lX\n",
+                                                                   Irp,
+                                                                   ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        bRemoveFcb = TRUE;
+
+        (*Fcb)->Header.NodeTypeCode = AFS_SPECIAL_SHARE_FCB;
+
+        //
+        // Initialize the Ccb for the file.
+        //
+
+        ntStatus = AFSInitCcb( *Fcb,
+                               Ccb);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenSpecialShareFcb (%08lX) Failed to initialize ccb Status %08lX\n",
+                                                                   Irp,
+                                                                   ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        bAllocatedCcb = TRUE;
+
+        //
+        // Increment the open count on this Fcb
+        //
+
+        InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+
+        InterlockedIncrement( &(*Fcb)->OpenHandleCount);
+
+        //
+        // Increment the open reference and handle on the parent node
+        //
+
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenHandleCount);
+
+        InterlockedIncrement( &(*Fcb)->ParentFcb->Specific.Directory.ChildOpenReferenceCount);
 
         //
         // Return the open result for this file

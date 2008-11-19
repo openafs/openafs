@@ -150,6 +150,9 @@ NTSTATUS
 AFSEnumerateDirectoryNoResponse( IN AFSFcb *Dcb);
 
 NTSTATUS
+AFSVerifyDirectoryContent( IN AFSFcb *Dcb);
+
+NTSTATUS
 AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
                      IN PLARGE_INTEGER FileSize,
                      IN ULONG FileAttributes,
@@ -179,6 +182,10 @@ NTSTATUS
 AFSEvaluateTargetByName( IN AFSFileID *ParentFileId,
                          IN PUNICODE_STRING SourceName,
                          OUT AFSDirEnumEntry **DirEnumEntry);
+
+NTSTATUS
+AFSRetrieveVolumeInformation( IN AFSFileID *FileID,
+                              OUT AFSVolumeInfoCB *VolumeInformation);
 
 NTSTATUS
 AFSProcessRequest( IN ULONG RequestType,
@@ -269,6 +276,13 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
                  OUT AFSFcb **Fcb,
                  OUT AFSCcb **Ccb);
 
+NTSTATUS
+AFSOpenSpecialShareFcb( IN PIRP Irp,
+                        IN AFSFcb *ParentDcb,
+                        IN UNICODE_STRING *ShareName,
+                        OUT AFSFcb **Fcb,
+                        OUT AFSCcb **Ccb);
+
 //
 // AFSExtentsSupport.cpp Prototypes
 //
@@ -302,6 +316,11 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
                               OUT AFSExtent **LastExtent);
     
 NTSTATUS
+AFSRequestExtentsAsync( IN AFSFcb *Fcb, 
+                        IN PLARGE_INTEGER Offset, 
+                        IN ULONG Size);
+
+NTSTATUS
 AFSWaitForExtentMapping ( IN AFSFcb *Fcb );
 
 NTSTATUS
@@ -331,6 +350,15 @@ AFSMarkDirty( IN AFSFcb *pFcb,
 
 NTSTATUS
 AFSTearDownFcbExtents( IN AFSFcb *Fcb ) ;
+
+void
+AFSTrimExtents( IN AFSFcb *Fcb,
+                IN PLARGE_INTEGER FileSize);
+
+void
+AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
+                         IN ULONG   Count,
+                         IN AFSFileExtentCB *Result);
 
 //
 //
@@ -387,8 +415,13 @@ NTSTATUS
 AFSRemoveAFSRoot( void);
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEnumEntryCB *MountPointDirEntry,
+AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
                 OUT AFSFcb **RootVcb);
+
+NTSTATUS
+AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
+                          IN AFSVolumeInfoCB *VolumeInfoCB,
+                          OUT AFSFcb **RootVcb);
 
 void
 AFSRemoveRootFcb( IN AFSFcb *RootFcb,
@@ -460,6 +493,11 @@ NTSTATUS
 AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                          IN AFSFcb *Fcb);
 
+NTSTATUS
+AFSProcessDFSLink( IN AFSFcb *Fcb,
+                   IN PFILE_OBJECT FileObject,
+                   IN UNICODE_STRING *RemainingPath);
+
 //
 // AFSNetworkProviderSupport.cpp
 //
@@ -515,7 +553,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
 NTSTATUS
 AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp,
-               BOOLEAN Posted);
+               IN HANDLE OnBehalfOf);
 
 NTSTATUS
 AFSRead( IN PDEVICE_OBJECT DeviceObject,
@@ -945,10 +983,10 @@ NTSTATUS
 AFSSetNetworkState( IN AFSNetworkStatusCB *NetworkStatus);
 
 NTSTATUS
-AFSRemoveDirectoryCache( IN AFSFcb *Dcb);
+AFSValidateDirectoryCache( IN AFSFcb *Dcb);
 
 NTSTATUS
-AFSRemoveRootDirectoryCache( IN AFSFcb *Dcb);
+AFSValidateRootDirectoryCache( IN AFSFcb *Dcb);
 
 NTSTATUS
 AFSWalkTargetChain( IN AFSFcb *ParentFcb,
@@ -968,6 +1006,18 @@ NTSTATUS
 AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                   IN BOOLEAN PurgeContent,
                   IN BOOLEAN FastCall);
+
+BOOLEAN
+AFSIsSpecialShareName( IN UNICODE_STRING *ShareName);
+
+void
+AFSInitializeSpecialShareNameList( void);
+
+void
+AFSWaitOnQueuedFlushes( IN AFSFcb *Fcb);
+
+void
+AFSWaitOnQueuedReleases();
 
 //
 // Prototypes in AFSFastIoSupprt.cpp
@@ -1205,11 +1255,17 @@ AFSVolumeWorkerThread( IN PVOID Context);
 NTSTATUS
 AFSInsertWorkitem( IN AFSWorkItem *WorkItem);
 
+NTSTATUS
+AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem);
+
 AFSWorkItem *
 AFSRemoveWorkItem( void);
 
 NTSTATUS
 AFSQueueWorkerRequest( IN AFSWorkItem *WorkItem);
+
+NTSTATUS
+AFSQueueWorkerRequestAtHead( IN AFSWorkItem *WorkItem);
 
 NTSTATUS
 AFSInitVolumeWorker( IN AFSFcb *VolumeVcb);
@@ -1219,6 +1275,22 @@ AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb);
 
 NTSTATUS
 AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb);
+
+NTSTATUS
+AFSQueueFlushExtents( IN AFSFcb *Fcb);
+
+NTSTATUS
+AFSQueueExtentRelease( IN PIRP Irp);
+
+NTSTATUS
+AFSQueueAsyncRead( IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp,
+                   IN HANDLE CallerProcess);
+
+NTSTATUS
+AFSQueueAsyncWrite( IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp,
+                    IN HANDLE CallerProcess);
 
 //
 // AFSRDRSupport.cpp Prototypes
@@ -1235,7 +1307,7 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp);
 
 NTSTATUS
-AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo);
+AFSInitializeRedirector( IN AFSRedirectorInitInfo *CacheFileInfo);
 
 NTSTATUS
 AFSCloseRedirector( void);

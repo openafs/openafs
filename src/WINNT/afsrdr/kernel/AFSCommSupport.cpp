@@ -93,6 +93,15 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
             ulRequestFlags |= AFS_REQUEST_FLAG_FAST_REQUEST;
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSEnumerateDirectory Enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                                               &Dcb->DirEntry->DirectoryEntry.FileName,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Unique);
+
         //
         // Loop on the information
         //
@@ -269,6 +278,13 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
                 if( DirListHead != NULL)
                 {
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Inserting entry %08lX %wZ into parent %08lX Status %08lX\n",
+                                                                            pDirNode,
+                                                                            &pDirNode->DirectoryEntry.FileName,
+                                                                            Dcb);
+
                     if( *DirListHead == NULL)
                     {
 
@@ -327,11 +343,6 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
             pDirQueryCB->EnumHandle = pDirEnumResponse->EnumHandle;
 
             //
-            // Something deeply wrong with enumeration.  Break now
-            //
-            //            break;
-
-            //
             // If the enumeration handle is -1 then we are done
             //
 
@@ -343,25 +354,6 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
         }
 
 try_exit:
-
-        //
-        // If we are successful then clear the enumeration event for the directory
-        //
-
-        if( NT_SUCCESS( ntStatus))
-        {
-
-            if( Dcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
-            {
-
-                KeClearEvent( &Dcb->Specific.Directory.EnumerationEvent);
-            }
-            else
-            {
-
-                KeClearEvent( &Dcb->Specific.VolumeRoot.EnumerationEvent);
-            }
-        }
 
         //
         // Cleanup
@@ -431,6 +423,377 @@ AFSEnumerateDirectoryNoResponse( IN AFSFcb *Dcb)
 }
 
 NTSTATUS
+AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    void *pBuffer = NULL;
+    ULONG ulResultLen = 0;
+    AFSDirQueryCB *pDirQueryCB;
+    AFSDirEnumEntry *pCurrentDirEntry = NULL;
+    AFSDirEntryCB *pDirNode = NULL;
+    ULONG  ulEntryLength = 0;
+    AFSDirEnumResp *pDirEnumResponse = NULL;
+    UNICODE_STRING uniDirName, uniTargetName;
+    ULONG   ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS | AFS_REQUEST_FLAG_FAST_REQUEST;
+    ULONG ulCRC = 0;
+
+    __Enter
+    {
+                                       
+        //
+        // Initialize the directory enumeration buffer for the directory
+        //
+
+        pBuffer = ExAllocatePoolWithTag( PagedPool,
+                                         AFS_DIR_ENUM_BUFFER_LEN,
+                                         AFS_DIR_BUFFER_TAG);
+
+        if( pBuffer == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pBuffer,
+                       AFS_DIR_ENUM_BUFFER_LEN);
+
+        ulResultLen = AFS_DIR_ENUM_BUFFER_LEN;
+
+        //
+        // Use the payload buffer for information we will pass to the service
+        //
+
+        pDirQueryCB = (AFSDirQueryCB *)pBuffer;
+
+        pDirQueryCB->EnumHandle = 0;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSVerifyDirectoryContent Enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                                               &Dcb->DirEntry->DirectoryEntry.FileName,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                                               Dcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+        //
+        // Loop on the information
+        //
+
+        while( TRUE)
+        {
+           
+            //
+            // Go and retrieve the directory contents
+            //
+
+            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
+                                          ulRequestFlags,
+                                          0,
+                                          NULL,
+                                          &Dcb->DirEntry->DirectoryEntry.FileId,
+                                          (void *)pDirQueryCB,
+                                          sizeof( AFSDirQueryCB),
+                                          pBuffer,
+                                          &ulResultLen);
+
+            if( ntStatus != STATUS_SUCCESS ||
+                ulResultLen == 0)
+            {
+
+                if( ntStatus == STATUS_NO_MORE_FILES ||
+                    ntStatus == STATUS_NO_MORE_ENTRIES)
+                {
+
+                    ntStatus = STATUS_SUCCESS;
+                }
+                else
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSVerifyDirectoryContent Failed to enumerate directory %wZ Status %08lX\n",
+                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
+                                                                            ntStatus);
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+                }
+
+                break;
+            }
+
+            //
+            // If the node has become invalid during the request handling then bail now
+            //
+
+            if( BooleanFlagOn( Dcb->Flags, AFS_FCB_INVALID))
+            {
+
+                ntStatus = STATUS_ACCESS_DENIED;
+
+                break;
+            }
+
+            pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
+
+            pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
+
+            //
+            // Remvoe the leading header from the processed length
+            //
+
+            ulResultLen -= FIELD_OFFSET( AFSDirEnumResp, Entry);
+
+            while( ulResultLen > 0)
+            {
+
+                uniDirName.Length = (USHORT)pCurrentDirEntry->FileNameLength;
+
+                uniDirName.MaximumLength = uniDirName.Length;
+
+                uniDirName.Buffer = (WCHAR *)((char *)pCurrentDirEntry + pCurrentDirEntry->FileNameOffset);
+
+                uniTargetName.Length = (USHORT)pCurrentDirEntry->TargetNameLength;
+
+                uniTargetName.MaximumLength = uniTargetName.Length;
+
+                uniTargetName.Buffer = (WCHAR *)((char *)pCurrentDirEntry + pCurrentDirEntry->TargetNameOffset);
+
+                //
+                // Does this entry already exist in the directory?
+                //
+
+                ulCRC = AFSGenerateCRC( &uniDirName,
+                                        FALSE);
+
+                if( Dcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                {
+
+                    AFSLocateCaseSensitiveDirEntry( Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                    ulCRC,
+                                                    &pDirNode);
+                }
+                else
+                {
+
+                    AFSLocateCaseSensitiveDirEntry( Dcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                    ulCRC,
+                                                    &pDirNode);
+                }
+                
+                //
+                // Try a case insensitive lookup of the entry
+                //
+
+                if( pDirNode == NULL)
+                {
+
+                    ulCRC = AFSGenerateCRC( &uniDirName,
+                                            TRUE);
+
+                    if( Dcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+                    {
+
+                        AFSLocateCaseInsensitiveDirEntry( Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                          ulCRC,
+                                                          &pDirNode);
+                    }
+                    else
+                    {
+
+                        AFSLocateCaseInsensitiveDirEntry( Dcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                          ulCRC,
+                                                          &pDirNode);
+                    }
+                }
+
+                //
+                // Set up the entry length
+                //
+
+                ulEntryLength = QuadAlign( sizeof( AFSDirEnumEntry) +
+                                                    pCurrentDirEntry->FileNameLength +
+                                                    pCurrentDirEntry->TargetNameLength);
+
+                if( pDirNode != NULL)
+                {
+
+                    SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID);
+
+                    //
+                    // Next dir entry
+                    //
+
+                    pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+
+                    ASSERT( ulResultLen >= ulEntryLength);
+
+                    ulResultLen -= ulEntryLength;
+
+                    continue;
+                }
+
+                pDirNode = AFSInitDirEntry( &Dcb->DirEntry->DirectoryEntry.FileId,
+                                            &uniDirName,
+                                            &uniTargetName,
+                                            pCurrentDirEntry,
+                                            (ULONG)InterlockedIncrement( &Dcb->Specific.Directory.DirectoryNodeHdr.ContentIndex));
+
+                if( pDirNode == NULL)
+                {
+
+                    ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+
+                    break;
+                }
+
+                //
+                // Init the short name if we have one
+                //
+
+                if( pCurrentDirEntry->ShortNameLength > 0)
+                {
+
+                    UNICODE_STRING uniShortName;
+
+                    pDirNode->DirectoryEntry.ShortNameLength = pCurrentDirEntry->ShortNameLength;
+
+                    RtlCopyMemory( pDirNode->DirectoryEntry.ShortName,
+                                   pCurrentDirEntry->ShortName,
+                                   pDirNode->DirectoryEntry.ShortNameLength);
+
+                    //
+                    // Generate the short name index
+                    //
+
+                    uniShortName.Length = pDirNode->DirectoryEntry.ShortNameLength;
+                    uniShortName.Buffer = pDirNode->DirectoryEntry.ShortName;
+
+                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                                       TRUE);
+                }
+
+                //
+                // Insert the node into the name tree
+                //
+
+                if( Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead == NULL)
+                {
+
+                    Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = pDirNode;
+                }
+                else
+                {
+
+                    AFSInsertCaseSensitiveDirEntry( Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                    pDirNode);
+                }      
+
+                if( Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
+                {
+
+                    Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = pDirNode;
+
+                    SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+                }
+                else
+                {
+
+                    AFSInsertCaseInsensitiveDirEntry( Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                      pDirNode);
+                }              
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSVerifyDirectoryContent Inserting entry %08lX %wZ into parent %08lX Status %08lX\n",
+                                                                            pDirNode,
+                                                                            &pDirNode->DirectoryEntry.FileName,
+                                                                            Dcb);
+
+                if( Dcb->Specific.Directory.DirectoryNodeListHead == NULL)
+                {
+
+                    Dcb->Specific.Directory.DirectoryNodeListHead = pDirNode;
+                }
+                else
+                {
+
+                    (Dcb->Specific.Directory.DirectoryNodeListTail)->ListEntry.fLink = pDirNode;
+
+                    pDirNode->ListEntry.bLink = Dcb->Specific.Directory.DirectoryNodeListTail;
+                }
+
+                Dcb->Specific.Directory.DirectoryNodeListTail = pDirNode;
+
+                if( pDirNode->Type.Data.ShortNameTreeEntry.HashIndex != 0)
+                {
+
+                    //
+                    // Insert the short name entry if we have a valid short name
+                    //
+
+                    if( Dcb->Specific.Directory.ShortNameTree == NULL)
+                    {
+
+                        Dcb->Specific.Directory.ShortNameTree = pDirNode;
+                    }
+                    else
+                    {
+
+                        AFSInsertShortNameDirEntry( Dcb->Specific.Directory.ShortNameTree,
+                                                    pDirNode);
+                    }
+                }
+
+                //
+                // Next dir entry
+                //
+
+                pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+
+                ASSERT( ulResultLen >= ulEntryLength);
+
+                ulResultLen -= ulEntryLength;
+            }
+
+            ulResultLen = AFS_DIR_ENUM_BUFFER_LEN;
+
+            //
+            // Reset the information in the request buffer since it got trampled
+            // above
+            //
+
+            pDirQueryCB->EnumHandle = pDirEnumResponse->EnumHandle;
+
+            //
+            // If the enumeration handle is -1 then we are done
+            //
+
+            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
+            {
+
+                break;
+            }
+        }
+
+try_exit:
+
+        //
+        // Cleanup
+        //
+
+        if( pBuffer != NULL)
+        {
+
+            ExFreePool( pBuffer);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
                      IN PLARGE_INTEGER FileSize,
                      IN ULONG FileAttributes,
@@ -444,6 +807,8 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
     ULONG ulResultLen = 0;
     UNICODE_STRING uniTargetName;
     AFSDirEntryCB *pDirNode = NULL;
+    ULONG     ulCRC = 0;
+    LARGE_INTEGER liOldDataVersion;
 
     __Enter
     {
@@ -451,6 +816,12 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         //
         // Init the control block for the request
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyFileCreate Notification for entry %wZ Parent DV %I64X\n",
+                                       FileName,
+                                       ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart);
 
         RtlZeroMemory( &stCreateCB,
                        sizeof( AFSFileCreateCB));
@@ -464,6 +835,8 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         stCreateCB.FileAttributes = FileAttributes;
 
         stCreateCB.EaSize = 0;
+
+        liOldDataVersion.QuadPart = ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart;
 
         //
         // Allocate our return buffer
@@ -484,6 +857,13 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
 
         ulResultLen = PAGE_SIZE;
 
+        //
+        // Need to drop our lock on the directory while this request is outstanding due
+        // to potential invalidation calls which may come in
+        //
+
+        AFSReleaseResource( &ParentDcb->NPFcb->Resource);
+
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CREATE_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
                                       0,
@@ -493,6 +873,15 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
                                       sizeof( AFSFileCreateCB),
                                       pResultCB,
                                       &ulResultLen);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyFileCreate Acquiring ParentFcb lock %08lX EXCL %08lX\n",
+                                                                  &ParentDcb->NPFcb->Resource,
+                                                                  PsGetCurrentThread());
+
+        AFSAcquireExcl( &ParentDcb->NPFcb->Resource,
+                        TRUE);
 
         if( ntStatus != STATUS_SUCCESS)
         {
@@ -505,6 +894,87 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
 
             try_return( ntStatus);
         }
+
+        //
+        // We may ahve raced with an invalidation call and a subsequent re-enumeration of this parent
+        // and though we created the node, it is already in our list. If this is the case then
+        // look up the entry rather than create a new entry
+        // The check is to ensure the DV has been modified
+        //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyFileCreate DataVersions for entry %wZ Current Parent DV %I64X Old Parent DV %I64X Returned Parent DV %I64X\n",
+                                       FileName,
+                                       ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart,
+                                       liOldDataVersion.QuadPart,
+                                       pResultCB->ParentDataVersion.QuadPart);
+
+        if( liOldDataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1 ||
+            liOldDataVersion.QuadPart != ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyFileCreate Raced with an invalidate call and a re-enumeration for entry %wZ\n",
+                                           FileName);
+
+            //
+            // We raced so go and lookup the directory entry in the parent
+            //
+
+            ulCRC = AFSGenerateCRC( FileName,
+                                    FALSE);
+
+            if( ParentDcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                AFSLocateCaseSensitiveDirEntry( ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                ulCRC,
+                                                &pDirNode);
+            }
+            else
+            {
+
+                AFSLocateCaseSensitiveDirEntry( ParentDcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                ulCRC,
+                                                &pDirNode);
+            }
+
+            if( pDirNode != NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNotifyFileCreate Located dir entry for file %wZ\n",
+                                           FileName);
+
+                *DirNode = pDirNode;
+
+                try_return( ntStatus = STATUS_REPARSE);
+            }
+
+            //
+            // We are unsure of our current data so set the verify flag. It may already be set
+            // but no big deal to reset it
+            //
+
+            SetFlag( ParentDcb->Flags, AFS_FCB_VERIFY);
+        }
+        else
+        {
+
+            //
+            // Update the parent data version
+            //
+
+            ParentDcb->DirEntry->DirectoryEntry.DataVersion = pResultCB->ParentDataVersion;
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyFileCreate Creating new entry %wZ\n",
+                                       FileName);
 
         //
         // Initialize the directory entry
@@ -529,12 +999,6 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
-
-        //
-        // Update the parent data version
-        //
-
-        ParentDcb->DirEntry->DirectoryEntry.DataVersion = pResultCB->ParentDataVersion;
 
         //
         // Init the short name if we have one
@@ -911,7 +1375,16 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
         // Pass back the dir enum entry 
         //
 
-        *DirEnumEntry = pDirEnumCB;
+        if( DirEnumEntry != NULL)
+        {
+
+            *DirEnumEntry = pDirEnumCB;
+        }
+        else
+        {
+
+            ExFreePool( pDirEnumCB);
+        }
 
 try_exit:
 
@@ -1008,6 +1481,49 @@ try_exit:
 
             *DirEnumEntry = NULL;
         }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSRetrieveVolumeInformation( IN AFSFileID *FileID,
+                              OUT AFSVolumeInfoCB *VolumeInformation)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    ULONG ulResultLen = 0;
+
+    __Enter
+    {
+
+        ulResultLen = sizeof( AFSVolumeInfoCB);
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_GET_VOLUME_INFO,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      0,
+                                      NULL,
+                                      FileID,
+                                      NULL,
+                                      0,
+                                      VolumeInformation,
+                                      &ulResultLen);
+
+        if( ntStatus != STATUS_SUCCESS)
+        {
+
+            if( NT_SUCCESS( ntStatus))
+            {
+
+                ntStatus = STATUS_DEVICE_NOT_READY;
+            }
+
+            try_return( ntStatus);
+        }
+
+try_exit:
+
+        NOTHING;
     }
 
     return ntStatus;
@@ -1341,16 +1857,16 @@ AFSProcessControlRequest( IN PIRP Irp)
             case IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE:
             {
 
-                AFSCacheFileInfo *pCacheFileInfo = (AFSCacheFileInfo *)Irp->AssociatedIrp.SystemBuffer;
+                AFSRedirectorInitInfo *pRedirInitInfo = (AFSRedirectorInitInfo *)Irp->AssociatedIrp.SystemBuffer;
 
                 //
                 // Extract off the passed in information which contains the
                 // cache file parameters
                 //
 
-                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSCacheFileInfo) ||
-                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength < (ULONG)FIELD_OFFSET( AFSCacheFileInfo, CacheFileName) +
-                                                                                                    pCacheFileInfo->CacheFileNameLength)
+                if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSRedirectorInitInfo) ||
+                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength < (ULONG)FIELD_OFFSET( AFSRedirectorInitInfo, CacheFileName) +
+                                                                                                    pRedirInitInfo->CacheFileNameLength)
                 {
 
                     ntStatus = STATUS_INVALID_PARAMETER;
@@ -1362,7 +1878,7 @@ AFSProcessControlRequest( IN PIRP Irp)
                 // Initialize the Redirector device
                 //
 
-                ntStatus = AFSInitializeRedirector( pCacheFileInfo);
+                ntStatus = AFSInitializeRedirector( pRedirInitInfo);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
@@ -1677,6 +2193,18 @@ AFSProcessControlRequest( IN PIRP Irp)
                 ntStatus = AFSGetTraceBuffer( pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
                                               Irp->AssociatedIrp.SystemBuffer,
                                               &Irp->IoStatus.Information);
+
+                break;
+            }
+
+            case IOCTL_AFS_SHUTDOWN:
+            {
+             
+                Irp->IoStatus.Information = 0;
+
+                Irp->IoStatus.Status = AFSShutdownRedirector();
+
+                ntStatus  = Irp->IoStatus.Status;
 
                 break;
             }
@@ -2020,8 +2548,9 @@ AFSProcessIrpRequest( IN PIRP Irp)
     AFSDeviceExt    *pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSCommSrvcCB   *pCommSrvc = NULL;
-    AFSPoolEntry    *pEntry = NULL;
+    AFSPoolEntry    *pEntry = NULL, *pPrevEntry = NULL;
     AFSCommRequest  *pRequest = NULL;
+    BOOLEAN          bReleaseRequestThread = FALSE;
 
     __Enter
     {
@@ -2048,6 +2577,16 @@ AFSProcessIrpRequest( IN PIRP Irp)
         }
 
         AFSReleaseResource( &pCommSrvc->IrpPoolLock);
+
+        //
+        // Is this a dedicated flush thread?
+        //
+
+        if( BooleanFlagOn( pRequest->RequestFlags, AFS_REQUEST_RELEASE_THREAD))
+        {
+
+            bReleaseRequestThread = TRUE;
+        }
 
         //
         // Wait on the 'have items' event until we can retrieve an item
@@ -2091,32 +2630,98 @@ AFSProcessIrpRequest( IN PIRP Irp)
                 try_return( ntStatus = STATUS_DEVICE_NOT_READY);
             }
 
-            pEntry = pCommSrvc->RequestPoolHead;
+            //
+            // If this is a dedicated flush thread only look for a flush request in the queue
+            //
 
-            if( pEntry != NULL)
+            if( bReleaseRequestThread)
             {
 
-                pCommSrvc->RequestPoolHead = pEntry->fLink;
+                pEntry = pCommSrvc->RequestPoolHead;
 
-                pEntry->bLink = NULL;
+                pPrevEntry = NULL;
+
+                while( pEntry != NULL)
+                {
+
+                    if( pEntry->RequestType == AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS)
+                    {
+
+                        DbgPrint("AFSProcessIrpRequest Dedicated thread processing release\n");
+
+                        if( pPrevEntry == NULL)
+                        {
+
+                            pCommSrvc->RequestPoolHead = pEntry->fLink;
+
+                            if( pCommSrvc->RequestPoolHead == NULL)
+                            {
+
+                                pCommSrvc->RequestPoolTail = NULL;
+                            }
+                        }
+                        else
+                        {
+
+                            pPrevEntry->fLink = pEntry->fLink;
+
+                            if( pPrevEntry->fLink == NULL)
+                            {
+
+                                pCommSrvc->RequestPoolTail = pPrevEntry;
+                            }
+                        }
+
+                        break;
+                    }
+
+                    pPrevEntry = pEntry;
+
+                    pEntry = pEntry->fLink;
+                }
 
                 if( pCommSrvc->RequestPoolHead == NULL)
                 {
 
-                    pCommSrvc->RequestPoolTail = NULL;
+                    KeClearEvent( &pCommSrvc->IrpPoolHasEntries);
                 }
+
+                //
+                // And release the request pool lock
+                //
+
+                AFSReleaseResource( &pCommSrvc->IrpPoolLock);
             }
             else
             {
 
-                KeClearEvent( &pCommSrvc->IrpPoolHasEntries);
+                pEntry = pCommSrvc->RequestPoolHead;
+
+                if( pEntry != NULL)
+                {
+
+                    pCommSrvc->RequestPoolHead = pEntry->fLink;
+
+                    pEntry->bLink = NULL;
+
+                    if( pCommSrvc->RequestPoolHead == NULL)
+                    {
+
+                        pCommSrvc->RequestPoolTail = NULL;
+                    }
+                }
+                else
+                {
+
+                    KeClearEvent( &pCommSrvc->IrpPoolHasEntries);
+                }
+
+                //
+                // And release the request pool lock
+                //
+
+                AFSReleaseResource( &pCommSrvc->IrpPoolLock);
             }
-
-            //
-            // And release the request pool lock
-            //
-
-            AFSReleaseResource( &pCommSrvc->IrpPoolLock);
 
             //
             // Insert the entry into the result pool, if we have one

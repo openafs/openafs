@@ -577,6 +577,12 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
     //
     // Try and acquire the Fcb resource
     //
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSAcquireFcbForLazyWrite Acquiring Fcb %08lX\n",
+                      Fcb);
+
     ASSERT( NULL == pFcb->Specific.File.LazyWriterThread);
 
     pFcb->Specific.File.LazyWriterThread = PsGetCurrentThread();
@@ -655,6 +661,11 @@ AFSReleaseFcbFromLazyWrite( IN PVOID Fcb)
 {
 
     AFSFcb *pFcb = (AFSFcb *)Fcb;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSReleaseFcbFromLazyWrite Releasing Fcb %08lX\n",
+                      Fcb);
 
     IoSetTopLevelIrp( NULL);
 

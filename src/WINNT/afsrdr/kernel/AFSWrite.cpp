@@ -86,7 +86,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp;
     AFSFcb            *pFcb = NULL;
     AFSNonPagedFcb    *pNPFcb = NULL;
-    AFSWorkItem        *pWorkItem = NULL;
     ULONG              ulByteCount = 0;
     LARGE_INTEGER      liStartingByte;
     PFILE_OBJECT       pFileObject;
@@ -95,7 +94,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleaseMain = FALSE;    
     BOOLEAN            bReleasePaging = FALSE;    
     BOOLEAN            bExtendingWrite = FALSE;
-    BOOLEAN            bCanQueueRequest = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
     BOOLEAN            bLockOK;
@@ -121,6 +119,21 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         ObReferenceObject( pFileObject);
 
+        //
+        // If we are in shutdown mode then fail the request
+        //
+
+        if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSCommonWrite (%08lX) Open request after shutdown\n",
+                          Irp);        
+
+            try_return( ntStatus = STATUS_TOO_LATE);
+        }
+
         liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
         bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
         bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
@@ -129,6 +142,16 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( pFcb->Header.NodeTypeCode != AFS_IOCTL_FCB &&
             pFcb->Header.NodeTypeCode != AFS_FILE_FCB)
         {
+
+            if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
+            {
+
+                DbgPrint("AFSCommonWrite on special share\n");
+
+                Irp->IoStatus.Information = ulByteCount;
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -184,30 +207,31 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_TOO_LATE );
         }
 
+        if( pFcb->RootFcb != NULL &&
+            BooleanFlagOn( pFcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCommonWrite (%08lX) Request failed due to read only volume\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
         //
         // We need to know on whose behalf we have been called (which
         // we will eventually tell to the server - for non paging
         // writes).  If we were posted then we were told.  If this si
         // the first time we saw the irp then we grab it now.
         //
-        if (NULL == OnBehalfOf ) 
+        if( NULL == OnBehalfOf ) 
         {
-            //
-            // This is a non posted call.
-            //
-
-            bCanQueueRequest = !IoIsOperationSynchronous( Irp);
 
             hCallingUser = PsGetCurrentProcessId();
         } 
         else
         {
-
-            //
-            // We have already been posted once
-            //
-
-            bCanQueueRequest = FALSE;
 
             hCallingUser = OnBehalfOf;
         }
@@ -289,6 +313,13 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
             __try
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Initialize caching on Fcb %08lX FileObject %08lX\n",
+                                  pFcb,
+                                  pFileObject);
+
                 CcInitializeCacheMap( pFileObject,
                                       (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
                                       FALSE,
@@ -299,7 +330,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                                            READ_AHEAD_GRANULARITY);
 
             }
-            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+            __except( EXCEPTION_EXECUTE_HANDLER)
             {
                     
                 ntStatus = GetExceptionCode();
@@ -343,18 +374,22 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         // Provoke a get of the extents - if we need to.
         //
 
-        ntStatus = AFSRequestExtents( pFcb, &liStartingByte, ulByteCount, &bMapped );
-
-        if (!NT_SUCCESS(ntStatus)) 
+        if( !bPagingIo && !bNonCachedIo)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSCommonWrite (%08lX) Failed to request extents Status %08lX\n",
-                          Irp,
-                          ntStatus);        
+            ntStatus = AFSRequestExtentsAsync( pFcb, &liStartingByte, ulByteCount);
 
-            try_return( ntStatus );
+            if (!NT_SUCCESS(ntStatus)) 
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCommonWrite (%08lX) Failed to request extents Status %08lX\n",
+                              Irp,
+                              ntStatus);        
+
+                try_return( ntStatus );
+            }
         }
 
         //
@@ -373,115 +408,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Now, lets post - if we can
-        //
-
-        if (bCanQueueRequest) 
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonWrite (%08lX) Attempt to post request\n",
-                          Irp);        
-
-            pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
-                                                               sizeof(AFSWorkItem),
-                                                               AFS_WORK_ITEM_TAG);
-            if (NULL == pWorkItem) 
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonWrite (%08lX) Failed to allocate work item\n",
-                              Irp);        
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
-            }
-
-            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
-
-            pWorkItem->Size = sizeof( AFSWorkItem);
-
-            pWorkItem->RequestType = AFS_WORK_ASYNCH_WRITE;
-            
-            pWorkItem->Specific.AsynchIo.Device = DeviceObject;
-
-            pWorkItem->Specific.AsynchIo.Irp = Irp;
-
-            pWorkItem->Specific.AsynchIo.CallingProcess = hCallingUser;
-
-            //
-            // Grow an MDL of it...
-            //
-            if (NULL == AFSLockSystemBuffer( Irp,
-                                             pIrpSp->Parameters.Read.Length))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonWrite (%08lX) Failed to lock system buffer for post request\n",
-                              Irp);        
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
-            }
-
-            //
-            // Tell the IO manage that we will be returning STATUS_PENDING
-            //
-
-            IoMarkIrpPending(Irp);
-
-            //
-            // And ourselves to not complete the Irp
-            //
-
-            bCompleteIrp = FALSE;
-
-            ntStatus = AFSQueueWorkerRequest( pWorkItem);
-
-            if (!NT_SUCCESS(ntStatus)) 
-            { 
-                //
-                // That failed, but we have marked the Irp pending so
-                // we gotta return pending.  Complete now
-                //
-                Irp->IoStatus.Status = ntStatus;
-                Irp->IoStatus.Information = 0;
-                    
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonWrite (%08lX) Failed to queue work item Status %08lX\n",
-                              Irp,
-                              ntStatus);        
-
-                AFSCompleteRequest( Irp,
-                                    ntStatus);
-            } 
-            else
-            {
-                //
-                // We don't own the work item
-                //
-                pWorkItem = NULL;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonWrite (%08lX) Successfully posted request\n",
-                              Irp);        
-            }
-             
-            //
-            // In either siutation we have marked the irp pending.
-            // So that's what we return
-            //
-            try_return (ntStatus = STATUS_PENDING);
-        }
-
-        //
-        // Otherwise we will be doing the work in this thread
-        //
-
-        //
         // Take locks 
         //
         //   - if Paging then we need to nothing (the precalls will
@@ -493,10 +419,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         bLockOK = FALSE;
 
-        do {
+        do 
+        {
 
             if( !bPagingIo)
             {
+
                 bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >= 
                                     pFcb->Header.FileSize.QuadPart) ||
                                    (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
@@ -668,19 +596,13 @@ try_exit:
             AFSReleaseResource( &pNPFcb->Resource);
         }
 
-        if( pWorkItem)
-        {
-
-            ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
-        }
-
         if( bReleasePaging)
         {
 
             AFSReleaseResource( &pNPFcb->PagingResource);
         }
 
-        if (bCompleteIrp) 
+        if( bCompleteIrp) 
         {
             Irp->IoStatus.Information = 0;
 
@@ -867,6 +789,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
     BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
+    ULONG              ulRequestCount = 0;
 
     __Enter
     {
@@ -905,6 +828,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         // Provoke a get of the extents - if we need to.
         //
+
         while (TRUE) 
         {
 
@@ -915,7 +839,10 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                           StartingByte.QuadPart,
                           ByteCount);
 
-            ntStatus = AFSRequestExtents( pFcb, &StartingByte, ByteCount, &bExtentsMapped );
+            ntStatus = AFSRequestExtents( pFcb, 
+                                          &StartingByte, 
+                                          ByteCount, 
+                                          &bExtentsMapped );
 
             if (!NT_SUCCESS(ntStatus)) 
             {
@@ -926,7 +853,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                               Irp,
                               ntStatus);        
 
-                try_return( ntStatus );
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
             if (bExtentsMapped)
@@ -976,7 +903,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                               Irp,
                               ntStatus);        
 
-                try_return( ntStatus );
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
         }
         
@@ -1163,6 +1090,14 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         AFSMarkDirty( pFcb, &StartingByte, ByteCount);
 
+#ifdef AFS_FLUSH_PAGES_SYNCHRONOUSLY
+
+        AFSFlushExtents( pFcb);
+
+#endif
+
+        AFSQueueFlushExtents( pFcb);
+
         if (!bPagingIo) 
         {
             //
@@ -1330,7 +1265,7 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 ntStatus = STATUS_SUCCESS;
             }
         }
-        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+        __except( EXCEPTION_EXECUTE_HANDLER)
         {
             ntStatus = GetExceptionCode();
 

@@ -79,6 +79,8 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
         ExInitializeResourceLite( &AFSDbgLogLock);
 
+        AFSInitializeSpecialShareNameList();
+
         //
         // Our backdoor to not let the driver load
         //

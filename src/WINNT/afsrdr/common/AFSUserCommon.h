@@ -182,9 +182,10 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_TYPE_BYTE_RANGE_LOCK         0x00000010
 #define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK       0x00000011
 #define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL   0x00000012
+#define AFS_REQUEST_TYPE_GET_VOLUME_INFO         0x00000013
 
 //
-// Request Flags
+// Request Flags, these are passed up from the file system
 //
 
 #define AFS_REQUEST_FLAG_SYNCHRONOUS             0x00000001 // The service must call back through the
@@ -205,6 +206,12 @@ typedef struct _AFS_COMM_RESULT_BLOCK
                                                             // of file server interaction
 
 //
+// Request Flags, these are passed down from the sevice
+//
+
+#define AFS_REQUEST_RELEASE_THREAD                 0x00000001 // Set on threads which are dedicated extent release threads
+
+//
 // Status codes that can returned for various requests
 //
 
@@ -220,8 +227,16 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 // Control block passed to IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE
 //
 
-typedef struct _AFS_CACHE_FILE_INFO_CB
+#define AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES          0x00000001
+
+typedef struct _AFS_REDIR_INIT_INFO_CB
 {
+
+    ULONG       Flags;
+
+    ULONG       MaximumChunkLength;     // Maximum RPC length issued so we should limit
+                                        // requests for data to this length
+
     LARGE_INTEGER  ExtentCount;         // Number of extents in the current data cache
 
     ULONG       CacheBlockSize;         // Size, in bytes, of the current cache block
@@ -230,7 +245,7 @@ typedef struct _AFS_CACHE_FILE_INFO_CB
 
     WCHAR       CacheFileName[ 1];      // Fully qualified cache file name in the form
                                         // \??\C:\OPenAFSDir\CacheFile.dat
-} AFSCacheFileInfo;
+} AFSRedirectorInitInfo;
 
 //
 // Directory query CB
@@ -325,6 +340,10 @@ typedef struct _AFS_DIR_ENUM_RESP
 
 #ifndef AFS_KERNEL_MODE
 
+//
+// Characteristics
+//
+
 #define FILE_ATTRIBUTE_READONLY             0x00000001  // winnt
 #define FILE_ATTRIBUTE_HIDDEN               0x00000002  // winnt
 #define FILE_ATTRIBUTE_SYSTEM               0x00000004  // winnt
@@ -333,6 +352,17 @@ typedef struct _AFS_DIR_ENUM_RESP
 #define FILE_ATTRIBUTE_ARCHIVE              0x00000020  // winnt
 #define FILE_ATTRIBUTE_DEVICE               0x00000040  // winnt
 #define FILE_ATTRIBUTE_NORMAL               0x00000080  // winnt
+
+//
+// Filesystem attributes
+//
+
+#define FILE_CASE_PRESERVED_NAMES       0x00000002  // winnt
+#define FILE_UNICODE_ON_DISK            0x00000004  // winnt
+#define FILE_PERSISTENT_ACLS            0x00000008  // winnt
+#define FILE_VOLUME_QUOTAS              0x00000020  // winnt
+#define FILE_SUPPORTS_REPARSE_POINTS    0x00000080  // winnt
+#define FILE_SUPPORTS_OBJECT_IDS        0x00010000  // winnt
 
 #endif
 
@@ -351,8 +381,10 @@ typedef struct _AFS_VOLUME_INFORMATION
 
     ULONG           Characteristics;            /* FILE_READ_ONLY_DEVICE (if readonly) 
                                                  * FILE_REMOTE_DEVICE (always)
-                                                 * FILE_DEVICE_IS_MOUNTED (if file server is up)
                                                  */
+
+    ULONG           FileSystemAttributes;       /* FILE_CASE_PRESERVED_NAMES (always)
+                                                   FILE_UNICODE_ON_DISK      (always) */
 
     ULONG           SectorsPerAllocationUnit;   /* = 1 */
 
@@ -965,6 +997,7 @@ typedef struct _AFS_BYTE_RANGE_UNLOCK_RESULT_CB
 #define AFS_SUBSYSTEM_FILE_PROCESSING   0x00000002  // Includes Fcb and name processing
 #define AFS_SUBSYSTEM_LOCK_PROCESSING   0x00000004  // All lock processing, level must be set to VERBOSE
 #define AFS_SUBSYSTEM_EXTENT_PROCESSING 0x00000008  // Specific extent processing
+#define AFS_SUBSYSTEM_WORKER_PROCESSING 0x00000010  // All worker processing
 
 typedef struct _AFS_DEBUG_TRACE_CONFIG_CB
 {

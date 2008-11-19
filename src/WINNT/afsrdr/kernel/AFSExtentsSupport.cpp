@@ -279,6 +279,7 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
 //
 NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb ) 
 {
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     LIST_ENTRY          *le;
     AFSExtent           *pEntry;
     ULONG                ulCount = 0, ulReleaseCount = 0, ulProcessCount = 0;
@@ -375,12 +376,23 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
             
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSTearDownFcbExtents Releasing extents for %wZ Offset %I64X Len %08lX\n",
+                              "AFSTearDownFcbExtents Releasing extents for %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
                                             &Fcb->DirEntry->DirectoryEntry.FileName,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Unique,
                                             pEntry->FileOffset.QuadPart,
-                                            pEntry->Size);        
+                                            pEntry->Size); 
 
                 pRelease->FileExtents[ulProcessCount].Flags = AFS_EXTENT_FLAG_RELEASE;
+                
+                if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                {
+
+                    pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+
+                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                }
+
                 pRelease->FileExtents[ulProcessCount].Length = pEntry->Size;
                 pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
                 pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
@@ -390,6 +402,7 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
                 ExFreePoolWithTag( pEntry, AFS_EXTENT_TAG );
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
+                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
             }
 
             //
@@ -431,10 +444,23 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
         //
         // Reinitialize the skip lists
         //
+
+        ASSERT( Fcb->Specific.File.ExtentCount == 0);
+
         for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i++) 
         {
             InitializeListHead(&Fcb->Specific.File.ExtentsLists[i]);
         }
+
+        //
+        // Reinitialize the dirty list as well
+        //
+
+        ASSERT( Fcb->Specific.File.ExtentsDirtyCount == 0);
+
+        InitializeListHead( &Fcb->NPFcb->Specific.File.DirtyExtentsList);
+
+        Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
 
         AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
         locked = FALSE;
@@ -758,19 +784,22 @@ try_exit:
 //
 // Finally on the way *in* if *FirstExtent is non null it is where we start looking
 //
+
 NTSTATUS
 AFSRequestExtents( IN AFSFcb *Fcb, 
                    IN PLARGE_INTEGER Offset, 
                    IN ULONG Size,
                    OUT BOOLEAN *FullyMapped)
 {
-    LARGE_INTEGER        newStart;
+
+    AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     AFSExtent           *pExtent;
     AFSRequestExtentsCB  request;
-    ULONG                newSize;
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pFirstExtent;
+    LARGE_INTEGER        liAlignedOffset;
+    ULONG                ulAlignedLength = 0;
     
     //
     // Check our extents, then fire off a request if we need to.
@@ -785,8 +814,12 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSRequestExtents File %wZ Offset %I64X Length %08lX\n",
+                  "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX\n",
                                             &Fcb->DirEntry->DirectoryEntry.FileName,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                            Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
                                             Offset->QuadPart,
                                             Size);        
 
@@ -951,30 +984,42 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             try_return (ntStatus = STATUS_SUCCESS);
         }
 
-        if (pExtent) 
+        RtlZeroMemory( &request, 
+                       sizeof( AFSRequestExtentsCB));
+
+        //
+        // Align the request
+        //
+
+        ulAlignedLength = Size;
+
+        liAlignedOffset = *Offset;
+
+        if( liAlignedOffset.QuadPart % pDevExt->Specific.RDR.CacheBlockSize != 0)
         {
-            newStart = pExtent->FileOffset;
-            newStart.QuadPart += pExtent->Size;
-        } 
-        else 
-        {
-            newStart = *Offset;
+
+            liAlignedOffset.QuadPart = (ULONGLONG)( (ULONGLONG)(liAlignedOffset.QuadPart / pDevExt->Specific.RDR.CacheBlockSize) * (ULONGLONG)pDevExt->Specific.RDR.CacheBlockSize);
+
+            ulAlignedLength += (ULONG)(Offset->QuadPart - liAlignedOffset.QuadPart);
         }
 
-        ASSERT( (Offset->QuadPart + Size) > newStart.QuadPart );
+        if( ulAlignedLength % pDevExt->Specific.RDR.CacheBlockSize != 0)
+        {
 
-        newSize = (ULONG) (Offset->QuadPart + Size - newStart.QuadPart);
+            ulAlignedLength = (ULONG)(((ulAlignedLength / pDevExt->Specific.RDR.CacheBlockSize) + 1) * pDevExt->Specific.RDR.CacheBlockSize);
+        }
 
-        RtlZeroMemory( &request, sizeof( AFSRequestExtentsCB ));
-        request.ByteOffset = newStart;
-        request.Length = newSize;
+        request.ByteOffset = liAlignedOffset;
+        request.Length = ulAlignedLength;
+
+        ASSERT( ulAlignedLength <= pDevExt->Specific.RDR.MaximumRPCLength);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRequestExtents Requesting extents for %wZ Offset %I64X Length %08lX\n",
                                                     &Fcb->DirEntry->DirectoryEntry.FileName,
-                                                    newStart.QuadPart,
-                                                    newSize);        
+                                                    liAlignedOffset.QuadPart,
+                                                    ulAlignedLength);        
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
                                       0,
@@ -1006,6 +1051,113 @@ try_exit:
 }
 
 NTSTATUS
+AFSRequestExtentsAsync( IN AFSFcb *Fcb, 
+                        IN PLARGE_INTEGER Offset, 
+                        IN ULONG Size)
+{
+
+    AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    NTSTATUS             ntStatus = STATUS_SUCCESS;
+    AFSExtent           *pExtent;
+    AFSRequestExtentsCB  request;
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
+    AFSExtent           *pFirstExtent = NULL;
+    LARGE_INTEGER        liAlignedOffset;
+    ULONG                ulAlignedLength = 0;
+    BOOLEAN              bRegionMapped = FALSE;
+    
+    __Enter
+    {
+
+        ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->Specific.File.ExtentsResource ));
+
+        //
+        // Check if we are already mapped
+        //
+
+        bRegionMapped = AFSDoExtentsMapRegion( Fcb, Offset, Size, &pFirstExtent, &pExtent);
+
+        if( bRegionMapped) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRequestExtentsAsync File %wZ Offset %I64X Length %08lX Fully mapped\n",
+                                                &Fcb->DirEntry->DirectoryEntry.FileName,
+                                                Offset->QuadPart,
+                                                Size);        
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        //
+        // Align our request on extent size boundary
+        //
+
+        ulAlignedLength = Size;
+
+        liAlignedOffset = *Offset;
+
+        if( liAlignedOffset.QuadPart % pDevExt->Specific.RDR.CacheBlockSize != 0)
+        {
+
+            liAlignedOffset.QuadPart = (ULONGLONG)( (ULONGLONG)(liAlignedOffset.QuadPart / pDevExt->Specific.RDR.CacheBlockSize) * (ULONGLONG)pDevExt->Specific.RDR.CacheBlockSize);
+
+            ulAlignedLength += (ULONG)(Offset->QuadPart - liAlignedOffset.QuadPart);
+        }
+
+        if( ulAlignedLength % pDevExt->Specific.RDR.CacheBlockSize != 0)
+        {
+
+            ulAlignedLength = (ULONG)(((ulAlignedLength / pDevExt->Specific.RDR.CacheBlockSize) + 1) * pDevExt->Specific.RDR.CacheBlockSize);
+        }
+
+        RtlZeroMemory( &request, 
+                       sizeof( AFSRequestExtentsCB));
+
+        request.ByteOffset = liAlignedOffset;
+        request.Length = ulAlignedLength;
+
+        ASSERT( ulAlignedLength <= pDevExt->Specific.RDR.MaximumRPCLength);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRequestExtentsAsync Requesting extents for %wZ Offset %I64X Length %08lX Original Offset %I64X Len %08lX\n",
+                                                    &Fcb->DirEntry->DirectoryEntry.FileName,
+                                                    liAlignedOffset.QuadPart,
+                                                    ulAlignedLength,
+                                                    Offset->QuadPart,
+                                                    Size);        
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
+                                      0,
+                                      Fcb->Specific.File.ExtentProcessId,
+                                      NULL,
+                                      &Fcb->DirEntry->DirectoryEntry.FileId,
+                                      &request,
+                                      sizeof( AFSRequestExtentsCB ),
+                                      NULL,
+                                      NULL);
+
+        if( NT_SUCCESS( ntStatus)) 
+        {
+
+            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+        }
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRequestExtentsAsync Completed for %wZ Status %08lX\n",
+                                                    &Fcb->DirEntry->DirectoryEntry.FileName,
+                                                    ntStatus);        
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSProcessExtentsResult( IN AFSFcb *Fcb,
                          IN ULONG   Count,
                          IN AFSFileExtentCB *Result)
@@ -1018,6 +1170,7 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
     ULONG             fileExtentsUsed = 0;
     BOOLEAN           bFoundExtent = FALSE;
     LIST_ENTRY       *pSkipEntries[AFS_NUM_EXTENT_LISTS] = { 0 };
+    BOOLEAN           bInsertedEntry = FALSE;
 
     //
     // Grab the extents exclusive for the duration
@@ -1147,13 +1300,6 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
             ASSERT (NULL == pExtent ||
                     le->Flink == &pExtent->Lists[AFS_EXTENTS_LIST]);
  
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessExtentsResult Adding extent for %wZ Offset %I64X Len %08lX\n",
-                                    &Fcb->DirEntry->DirectoryEntry.FileName,
-                                    pFileExtents->FileOffset.QuadPart,
-                                    pFileExtents->Length);        
-
             if (NULL == pExtent ||
                 pExtent->FileOffset.QuadPart > pFileExtents->FileOffset.QuadPart)
             {
@@ -1179,10 +1325,13 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 // a new one (remember le is the previous list entry)
                 //
                 pExtent = (AFSExtent *) ExAllocatePoolWithTag( NonPagedPool,
-                                                               sizeof( AFSExtent ),
+                                                               sizeof( AFSExtent),
                                                                AFS_EXTENT_TAG );
                 if (NULL  == pExtent) 
                 {
+
+                    ASSERT( FALSE);
+
                     try_return (ntStatus = STATUS_INSUFFICIENT_RESOURCES );
                 }
                 AFSAllocationMemoryLevel += sizeof( AFSExtent);
@@ -1192,6 +1341,17 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 pExtent->FileOffset = pFileExtents->FileOffset;
                 pExtent->CacheOffset = pFileExtents->CacheOffset;
                 pExtent->Size = pFileExtents->Length;
+
+                InterlockedIncrement( &Fcb->Specific.File.ExtentCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessExtentsResult Adding extent for %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
+                                    &Fcb->DirEntry->DirectoryEntry.FileName,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                    pFileExtents->FileOffset.QuadPart,
+                                    pFileExtents->Length);        
 
                 //
                 // Insert into list
@@ -1218,9 +1378,21 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                     }
                 }
 
+                bInsertedEntry = TRUE;
             } 
             else if (pExtent->FileOffset.QuadPart == pFileExtents->FileOffset.QuadPart)
             {
+
+                if( !bInsertedEntry)
+                {
+
+                    ASSERT( FALSE);
+                }
+                else
+                {
+
+                    bInsertedEntry = TRUE;
+                }
 
                 if (pExtent->Size != pFileExtents->Length) 
                 {
@@ -1255,7 +1427,7 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                         //
                         // Skip list should point to us
                         //
-                        ASSERT(pSkipEntries[i]->Flink == &pExtent->Lists[i]);
+                        //ASSERT(pSkipEntries[i] == &pExtent->Lists[i]);
                         //
                         // Move forward cursor
                         //
@@ -1352,6 +1524,19 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
 
 try_exit:
 
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            //
+            // If we failed the service is going to drop all extents so trim away the 
+            // set given to us
+            //
+
+            AFSTrimSpecifiedExtents( Fcb,
+                                     Count,
+                                     Result);
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessExtentsResult Completed for %wZ Status %08lX Setting ExtentsRequestComplete event\n",
@@ -1419,6 +1604,8 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         if( !NT_SUCCESS( ntStatus) ||
             pVcb == NULL) 
         {
+
+            ASSERT( FALSE);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -1660,6 +1847,7 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
                 ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
+                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
             }
         }
 
@@ -1684,17 +1872,20 @@ try_exit:
 // Helper fuctions for Usermode initiation of release of extents
 //
 VOID
-AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
-                        OUT AFSFileExtentCB *FileExtents,
-                        IN  ULONG BufferSize,
-                        IN  ULONG AskedCount,
-                        OUT ULONG *ExtentCount)
+AFSReleaseFileExtents( IN  AFSFcb *Fcb,
+                       OUT AFSFileExtentCB *FileExtents,
+                       IN  ULONG BufferSize,
+                       IN  ULONG AskedCount,
+                       OUT ULONG *ExtentCount)
 {
+
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pExtent;
     LIST_ENTRY          *le;
     NTSTATUS             ntStatus;
     ULONG                sizeLeft = BufferSize;
-    
+    KIRQL                kIrql;
+
     ASSERT( ExIsResourceAcquiredExclusiveLite( &Fcb->NPFcb->Specific.File.ExtentsResource ));
 
     *ExtentCount = 0;
@@ -1733,25 +1924,35 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
     {
 
         pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
-        if (BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY ))
+
+        FileExtents[*ExtentCount].Flags = AFS_EXTENT_FLAG_RELEASE;
+
+        if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
         {
 
-            le = le->Flink;
-            continue;
+            KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                               &kIrql);
+
+            RemoveEntryList( &pExtent->DirtyList);
+
+            KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                               kIrql);
+
+            InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+            FileExtents[*ExtentCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
         }
 
-        //
-        // Otherwise populate the list
-        //
-        FileExtents[*ExtentCount].Flags = AFS_EXTENT_FLAG_RELEASE;
         FileExtents[*ExtentCount].Length = pExtent->Size;
         FileExtents[*ExtentCount].CacheOffset = pExtent->CacheOffset;
         FileExtents[*ExtentCount].FileOffset = pExtent->FileOffset;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseCleanExtents Releasing extent on %wZ Offset %I64X Len %08lX\n",
+                      "AFSReleaseFileExtents Releasing extent on %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
                                 &Fcb->DirEntry->DirectoryEntry.FileName,
+                                Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                Fcb->DirEntry->DirectoryEntry.FileId.Unique,
                                 pExtent->FileOffset.QuadPart,
                                 pExtent->Size);        
 
@@ -1785,6 +1986,7 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
         ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
         AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
+        InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
     }
     if (le == &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST]) 
     {
@@ -1798,7 +2000,7 @@ AFSReleaseCleanExtents( IN  AFSFcb *Fcb,
 }
 
 AFSFcb* 
-AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb) 
+AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block) 
 {
     //
     // Iterate through the FCBs (starting at Last) until we find an
@@ -1866,6 +2068,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb)
         } 
         else 
         {
+
             pFcb = (AFSFcb *)LastFcb->ListEntry.fLink;
         }
 
@@ -1877,18 +2080,58 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb)
             //
 
             if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                pFcb->Specific.File.LastExtentAccess.QuadPart <= since.QuadPart &&
-                AFSLockForExtentsTrimNoWait( pFcb )) 
+                pFcb->Specific.File.LastExtentAccess.QuadPart <= since.QuadPart)
             {
+                
+                if( Block)
+                {
+                    
+                    AFSLockForExtentsTrim( pFcb);
+                }
+                else
+                {
+                
+                    if( !AFSLockForExtentsTrimNoWait( pFcb))
+                    {
+
+                        pFcb = (AFSFcb *)pFcb->ListEntry.fLink;
+                        
+                        continue;
+                    }
+                }
+
+                //
+                // Need to be sure there are no current flushes in the queue
+                //
+
+                if( pFcb->Specific.File.QueuedFlushCount > 0)
+                {
+
+                    DbgPrint("AFSFindFcbToClean Have queued flush count for %wZ Count %d\n",
+                                                        &pFcb->DirEntry->DirectoryEntry.FileName,
+                                                        pFcb->Specific.File.QueuedFlushCount);
+
+                    AFSReleaseResource(&pFcb->NPFcb->Specific.File.ExtentsResource);
+
+                    AFSWaitOnQueuedFlushes( pFcb);
+
+                    continue;
+                }
+
+                DbgPrint("AFSFindFcbToClean Have Fcb %wZ\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName);
+             
                 //
                 // A hit a very palpable hit.  Pin it
                 //
+
                 InterlockedIncrement( &pFcb->OpenReferenceCount);
 
                 bLocatedEntry = TRUE;
 
                 break;
             }
+
             pFcb = (AFSFcb *)pFcb->ListEntry.fLink;
         }
 
@@ -1911,6 +2154,7 @@ VOID
 AFSCleanExtentsOnVolume(IN PVOID Buffer,
                         IN ULONG BufferSize,
                         IN ULONG AskedCount,
+                        IN BOOLEAN Block,
                         OUT AFSFcb **Fcbs,
                         OUT ULONG *FileCount)
 {
@@ -1935,13 +2179,18 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
     {
         pFile = (AFSReleaseFileExtentsResultFileCB*) pcBuffer;
 
-        pFcb = AFSFindFcbToClean( slLoopCount, pLastFcb);
+        pFcb = AFSFindFcbToClean( slLoopCount, pLastFcb, Block);
             
         //
         // Now dereference the last FCB
         //
-        if (NULL != pLastFcb) {
+        if (NULL != pLastFcb) 
+        {
+
+            ASSERT( pLastFcb->OpenReferenceCount != 0);
+
             InterlockedDecrement( &pLastFcb->OpenReferenceCount);
+
             pLastFcb = NULL;
         }
 
@@ -1960,11 +2209,12 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
         // Otherwise we did.  Lets try to populate
         //
 
-        AFSReleaseCleanExtents(pFcb, 
+        AFSReleaseFileExtents( pFcb, 
                                pFile->FileExtents, 
                                ulBufferLeft - FIELD_OFFSET(AFSReleaseFileExtentsResultFileCB, FileExtents),
                                AskedCount - ulExtentsProcessed,
                                &pFile->ExtentCount);
+
         ulExtentsProcessed += pFile->ExtentCount;
 
         //
@@ -2014,7 +2264,11 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
 
     if (pLastFcb) 
     {
+
+        ASSERT( pLastFcb->OpenReferenceCount != 0);
+
         InterlockedDecrement( &pLastFcb->OpenReferenceCount);
+        
         pLastFcb = NULL;
     }
 
@@ -2037,6 +2291,10 @@ AFSProcessReleaseFileExtentsDone( PIRP Irp)
     {
         if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSReleaseFileExtentsResultDoneCB))
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessReleaseFileExtentsDone Input buffer too small\n");        
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -2078,10 +2336,11 @@ AFSProcessReleaseFileExtentsDone( PIRP Irp)
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
-    try_exit:
+try_exit:
         
-        ;
+        NOTHING;
     }
+
     return ntStatus;
 }
 
@@ -2388,41 +2647,21 @@ AFSProcessReleaseFileExtents( IN PIRP Irp,
         } 
         else
         {
-            AFSWorkItem *pWorkItem;
-
-            pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
-                                                               sizeof(AFSWorkItem),
-                                                               AFS_WORK_ITEM_TAG);
-            if (NULL == pWorkItem) 
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessReleaseFileExtents Failed to allocate work item\n");        
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
-            }
-
-            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
-
-            pWorkItem->Size = sizeof( AFSWorkItem);
-
-            pWorkItem->RequestType = AFS_WORK_REQUEST_RELEASE;
-
-            pWorkItem->Specific.ReleaseExtents.Irp = Irp;
 
             IoMarkIrpPending(Irp);
 
             *Complete = FALSE;
 
-            ntStatus = AFSQueueWorkerRequest( pWorkItem);
+            ntStatus = AFSQueueExtentRelease( Irp);
 
             if (!NT_SUCCESS(ntStatus)) 
             { 
+                
                 //
                 // That failed, but we have marked the Irp pending so
                 // we gotta return pending.  Complete now
                 //
+
                 Irp->IoStatus.Status = ntStatus;
                 Irp->IoStatus.Information = 0;
 
@@ -2434,6 +2673,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp,
                 AFSCompleteRequest( Irp,
                                     ntStatus);
             } 
+
             ntStatus = STATUS_PENDING;
         }
 
@@ -2487,119 +2727,213 @@ VOID AFSReleaseExtentsWork(AFSWorkItem *WorkItem)
     PAFSFcb                        Fcbs[AFS_MAX_FCBS_TO_DROP] = {0};
     AFSReleaseFileExtentsResultCB *pResult = NULL;
     AFSDeviceExt                  *pDeviceExt = (AFSDeviceExt *) AFSDeviceObject->DeviceExtension;
+    BOOLEAN                        bBlockRequest = FALSE;
+    AFSDeviceExt                  *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
-    pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    //
-    // We only allow one of these at one time.  This makes the
-    // acknowledge easier to detect.  This is purely a coding nicety.
-    // We can support multiple ones but then we need rarely exercised
-    // code to go from serial number to event.
-    //
+    __Enter
+    {
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReleaseExtentsWork Acquiring Control ExtentReleaseResource lock %08lX EXCL %08lX\n",
-                                                                  &pDeviceExt->Specific.Control.ExtentReleaseResource,
-                                                                  PsGetCurrentThread());
-
-    AFSAcquireExcl( &pDeviceExt->Specific.Control.ExtentReleaseResource, TRUE);
-    //
-    // Set up Input and Output
-    //
-    pExtents = (AFSReleaseFileExtentsCB*) pIrp->AssociatedIrp.SystemBuffer;
-
-    ASSERT(pExtents->FileId.Hash    == 0 &&
-           pExtents->FileId.Cell   == 0 &&
-           pExtents->FileId.Volume == 0 &&
-           pExtents->FileId.Vnode  == 0 &&
-
-           pExtents->FileId.Unique == 0);
-
-    //
-    // Setup the result buffer
-    //
-
-    pResult = (AFSReleaseFileExtentsResultCB*) pIrp->AssociatedIrp.SystemBuffer;
-    ulSz = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+        pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     
-    pResult->Flags = AFS_EXTENT_FLAG_RELEASE;
-    ulSz -= FIELD_OFFSET( AFSReleaseFileExtentsResultCB, Files);
-    
-    AFSCleanExtentsOnVolume( pResult->Files, 
-                             ulSz, 
-                             pExtents->ExtentCount, 
-                             Fcbs,
-                             &ulFileCount);
-
-    pResult->FileCount = ulFileCount;
-
-    //
-    // Get ready to complete the Irp
-    //
-    
-    pIrp->IoStatus.Information = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
-    pIrp->IoStatus.Status = STATUS_SUCCESS;
-
-    pResult->SerialNumber = ++(pDeviceExt->Specific.Control.ExtentReleaseSequence);
-
-    //
-    // Clear the event.  When the response comes back it will be set
-    //
-    KeClearEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent);
-
-    //
-    // We are all done.  Send back the Irp
-    //
-    AFSCompleteRequest( pIrp, STATUS_SUCCESS);
-
-    //
-    // Wait for the response
-    //
-    ntStatus = KeWaitForSingleObject( &pDeviceExt->Specific.Control.ExtentReleaseEvent,
-                                      Executive,
-                                      KernelMode,
-                                      FALSE,
-                                      NULL);
-
-    for (ULONG i = 0; i < ulFileCount; i ++) {
         //
-        // Release the extent locks
+        // We only allow one of these at one time.  This makes the
+        // acknowledge easier to detect.  This is purely a coding nicety.
+        // We can support multiple ones but then we need rarely exercised
+        // code to go from serial number to event.
         //
-        AFSReleaseResource( &Fcbs[i]->NPFcb->Specific.File.ExtentsResource);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSReleaseExtentsWork Acquiring Control ExtentReleaseResource lock %08lX EXCL %08lX\n",
+                                                                      &pDeviceExt->Specific.Control.ExtentReleaseResource,
+                                                                      PsGetCurrentThread());
+
+        AFSAcquireExcl( &pDeviceExt->Specific.Control.ExtentReleaseResource, TRUE);
+
         //
-        // Give back reference
+        // Set up Input and Output
         //
-        InterlockedDecrement( &Fcbs[i]->OpenReferenceCount);
+
+        pExtents = (AFSReleaseFileExtentsCB*) pIrp->AssociatedIrp.SystemBuffer;
+
+        ASSERT(pExtents->FileId.Hash    == 0 &&
+               pExtents->FileId.Cell   == 0 &&
+               pExtents->FileId.Volume == 0 &&
+               pExtents->FileId.Vnode  == 0 &&
+               pExtents->FileId.Unique == 0);
+
+        //
+        // Setup the result buffer
+        //
+
+        pResult = (AFSReleaseFileExtentsResultCB*) pIrp->AssociatedIrp.SystemBuffer;
+        ulSz = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+        
+        pResult->Flags = AFS_EXTENT_FLAG_RELEASE;
+        ulSz -= FIELD_OFFSET( AFSReleaseFileExtentsResultCB, Files);
+
+        bBlockRequest = FALSE;
+
+        ulFileCount = 0;
+
+        while( ulFileCount == 0)
+        {
+
+            ntStatus = STATUS_SUCCESS;
+
+            AFSCleanExtentsOnVolume( pResult->Files, 
+                                     ulSz, 
+                                     pExtents->ExtentCount, 
+                                     bBlockRequest,
+                                     Fcbs,
+                                     &ulFileCount);
+
+            if( ulFileCount == 0)
+            {
+
+                if( bBlockRequest)
+                {
+
+                    DbgPrint("AFSReleaseExtentsWork Blocked on all files and REALLY don't have anything to give up ...\n");
+
+                    ntStatus = STATUS_DEVICE_NOT_READY;
+
+                    break;
+                }
+
+                bBlockRequest = TRUE;
+            }
+        }
+
+        pResult->FileCount = ulFileCount;
+
+        //
+        // Get ready to complete the Irp
+        //
+
+        pIrp->IoStatus.Status = ntStatus;
+
+        pIrp->IoStatus.Information = 0;
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            pIrp->IoStatus.Information = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+            pResult->SerialNumber = ++(pDeviceExt->Specific.Control.ExtentReleaseSequence);
+
+            //
+            // Clear the event.  When the response comes back it will be set
+            //
+
+            KeClearEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent);
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSReleaseExtentsWork Sending extents File Count %d SN %08lX Waiting ... Status %08lX\n",
+                                                    ulFileCount,
+                                                    pResult->SerialNumber,
+                                                    ntStatus);
+
+        //
+        // We are all done.  Send back the Irp
+        //
+
+        AFSCompleteRequest( pIrp, ntStatus);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            //
+            // Wait for the response
+            //
+
+            ntStatus = KeWaitForSingleObject( &pDeviceExt->Specific.Control.ExtentReleaseEvent,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSReleaseExtentsWork Sent extents File Count %d Wait completed\n",
+                                                        ulFileCount);
+
+            for (ULONG i = 0; i < ulFileCount; i ++) 
+            {
+
+                //
+                // Release the extent locks
+                //
+                AFSReleaseResource( &Fcbs[i]->NPFcb->Specific.File.ExtentsResource);
+                //
+                // Give back reference
+                //
+
+                ASSERT( Fcbs[i]->OpenReferenceCount != 0);
+
+                InterlockedDecrement( &Fcbs[i]->OpenReferenceCount);
+            }
+        }
+
+        AFSReleaseResource( &pDeviceExt->Specific.Control.ExtentReleaseResource);   
+
+        //
+        // We're done so decrement our count and set the event
+        //
+
+        if( InterlockedDecrement( &pRDRDevExt->Specific.RDR.QueuedReleaseExtentCount) == 0)
+        {
+
+            KeSetEvent( &pRDRDevExt->Specific.RDR.QueuedReleaseExtentEvent,
+                        0,
+                        FALSE);
+        }
     }
-    //
-    // All done
-    //
-    AFSReleaseResource( &pDeviceExt->Specific.Control.ExtentReleaseResource);    
+
+    return;
 }
 
 NTSTATUS
 AFSWaitForExtentMapping( AFSFcb *Fcb )
 {
-    NTSTATUS ntStatus;
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    LARGE_INTEGER liTimeOut;
 
-    if (!NT_SUCCESS( Fcb->NPFcb->Specific.File.ExtentsRequestStatus)) {
-        //
-        // The cache has been torn down.  Nothing to wait for.
-        //
-        return Fcb->NPFcb->Specific.File.ExtentsRequestStatus;
-    }
+    __Enter
+    {
 
-    ntStatus = KeWaitForSingleObject( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
-                                      Executive,
-                                      KernelMode,
-        
-                                      FALSE,
-                                      NULL);
-    if (!NT_SUCCESS( Fcb->NPFcb->Specific.File.ExtentsRequestStatus)) {
-        //
-        // The cache has been torn down.  Fail the request.
-        //
-        return Fcb->NPFcb->Specific.File.ExtentsRequestStatus;
+        if (!NT_SUCCESS( Fcb->NPFcb->Specific.File.ExtentsRequestStatus)) 
+        {
+
+            try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
+        }
+
+        liTimeOut.QuadPart = -(100000000);
+
+        ntStatus = KeWaitForSingleObject( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                          Executive,
+                                          KernelMode,
+            
+                                          FALSE,
+                                          &liTimeOut);
+
+        if (!NT_SUCCESS( Fcb->NPFcb->Specific.File.ExtentsRequestStatus)) 
+        {
+
+            try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
+        }
+
+        if( ntStatus == STATUS_TIMEOUT)
+        {
+
+            ntStatus = STATUS_SUCCESS;
+        }
+
+try_exit:
+
+        NOTHING;
     }
 
     return ntStatus;
@@ -2616,7 +2950,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     BOOLEAN              bExtentsLocked = FALSE;
     ULONG                total = 0;
     ULONG                sz = 0;
-    NTSTATUS             ntStatus;
+    NTSTATUS             ntStatus = STATUS_SUCCESS;
     ULONGLONG            hExtentProcessId = 0;
     LARGE_INTEGER        liLastFlush;
     LIST_ENTRY           dirtyList;
@@ -2649,24 +2983,6 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     __Enter
     {
 
-        ntStatus = KeWaitForSingleObject( &pNPFcb->Specific.File.FlushEvent,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            try_return( ntStatus);
-        }
-
-        //
-        // Stop the extents going away while we call the server
-        //
-
-        AFSReferenceExtents( Fcb);
-
         //
         // Lock extents while we count and set up the array to send to
         // the service
@@ -2680,6 +2996,14 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
         AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE);
         bExtentsLocked = TRUE;
+
+        InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
+
+        //
+        // Clear our queued flush event
+        //
+
+        KeClearEvent( &Fcb->NPFcb->Specific.File.QueuedFlushEvent);
 
         //
         // Look for a start in the list to flush entries
@@ -2698,6 +3022,22 @@ AFSFlushExtents( IN AFSFcb *Fcb)
         {
 
             try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        //
+        // Be sure we wait on any in progress flushes
+        //
+
+        ntStatus = KeWaitForSingleObject( &pNPFcb->Specific.File.FlushEvent,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
         }
 
         while( Fcb->Specific.File.ExtentsDirtyCount > 0)
@@ -2728,9 +3068,10 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSFlushExtents Flushing DIRTY extent offset %I64X Length %08lX\n",
+                              "AFSFlushExtents Flushing DIRTY extent offset %I64X Length %08lX TID %08lX\n",
                                    pExtent->FileOffset.QuadPart,
-                                   pExtent->Size);        
+                                   pExtent->Size,
+                                   PsGetCurrentThreadId());        
 
                 pRelease->FileExtents[count].Flags = AFS_EXTENT_FLAG_DIRTY;
                 pRelease->FileExtents[count].Length = pExtent->Size;
@@ -2784,6 +3125,10 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
             bExtentsLocked = FALSE;
 
+            KeSetEvent( &pNPFcb->Specific.File.FlushEvent,
+                        0,
+                        FALSE);
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSFlushExtents Calling AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for %wZ count %d\n",
@@ -2815,7 +3160,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE);
             bExtentsLocked = TRUE;
 
-            if (!NT_SUCCESS(ntStatus)) 
+            if( !NT_SUCCESS(ntStatus)) 
             {
                 //
                 // that failed, so undo all we did.
@@ -2852,11 +3197,35 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                 }
 
                 break;
-            }    
+            }
+
+            //
+            // Wait for anyone gathering dirty extents
+            //
+
+            ntStatus = KeWaitForSingleObject( &pNPFcb->Specific.File.FlushEvent,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus);
+            }
         }
 
 try_exit:
-                  
+                               
+        if( InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount) == 0)
+        {
+
+            KeSetEvent( &pNPFcb->Specific.File.QueuedFlushEvent,
+                        0,
+                        FALSE);
+        }
+
         KeSetEvent( &pNPFcb->Specific.File.FlushEvent,
                     0,
                     FALSE);
@@ -2866,13 +3235,12 @@ try_exit:
             AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
         }
 
-        AFSDereferenceExtents( Fcb);
-
         if (pRelease) 
         {
             ExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG );
         }
     }
+
     return ntStatus;
 }
 
@@ -2918,14 +3286,14 @@ AFSMarkDirty( IN AFSFcb *Fcb,
         le = &pExtent->Lists[AFS_EXTENTS_LIST];
     }
 
-    while (le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
+    while( le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
     {
         pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
         
         if (pExtent->FileOffset.QuadPart >= liEnd.QuadPart) 
         {
             //
-            // All done !
+            // All done!
             //
 
             break;
@@ -2960,39 +3328,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
         (ULONGLONG) pRDRDeviceExt->Specific.RDR.MaxDirty.QuadPart) 
     {
 
-        //
-        // Queue a job to flush this guy out ASAP
-        //
-        pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
-                                                           sizeof(AFSWorkItem),
-                                                           AFS_WORK_ITEM_TAG);
-        if (NULL != pWorkItem) 
-        {
-
-            RtlZeroMemory( pWorkItem, sizeof(AFSWorkItem));
-
-            pWorkItem->Size = sizeof( AFSWorkItem);
-
-            pWorkItem->RequestType = AFS_WORK_FLUSH_FCB;
-
-            pWorkItem->Specific.Fcb.Fcb = Fcb;
-
-            InterlockedIncrement( &Fcb->OpenReferenceCount);
-
-            if (!NT_SUCCESS( AFSQueueWorkerRequest( pWorkItem))) 
-            { 
-                //
-                // Give back the item
-                //
-                ExFreePool( pWorkItem );
-            }
-        } 
-        else 
-        {
-            //
-            // Couldn't allocate the space.  Just carry on and hope for better luck next time
-            //
-        }
+        AFSQueueFlushExtents( Fcb);
     }
 
     AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
@@ -3071,4 +3407,281 @@ static VOID VerifyExtentsLists(AFSFcb *Fcb)
         }
     }
 #endif
+}
+
+void
+AFSTrimExtents( IN AFSFcb *Fcb,
+                IN PLARGE_INTEGER FileSize)
+{
+
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
+    LIST_ENTRY          *le;
+    AFSExtent           *pExtent;
+    BOOLEAN              locked = FALSE;
+    NTSTATUS             ntStatus = STATUS_SUCCESS;
+    KIRQL                kIrql;
+    LARGE_INTEGER        liAlignedOffset = {0,0};
+    AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
+    __Enter
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSTrimExtents For file %wZ Offset %I64X\n",
+                                            &Fcb->DirEntry->DirectoryEntry.FileName,
+                                            FileSize->QuadPart);        
+
+        //
+        // Get an aligned offset
+        //
+
+        if( FileSize != NULL)
+        {
+
+            liAlignedOffset = *FileSize;
+        }
+
+        if( liAlignedOffset.QuadPart > 0 &&
+            liAlignedOffset.QuadPart % pDevExt->Specific.RDR.CacheBlockSize != 0)
+        {
+
+            //
+            // Align UP to the next cache block size
+            //
+
+            liAlignedOffset.QuadPart = (ULONGLONG)( (ULONGLONG)((liAlignedOffset.QuadPart / pDevExt->Specific.RDR.CacheBlockSize) + 1) * (ULONGLONG)pDevExt->Specific.RDR.CacheBlockSize);
+        }
+
+        //
+        // Ensure that noone is working with the extents and grab the
+        // lock
+        //
+
+        AFSLockForExtentsTrim( Fcb);
+
+        locked = TRUE;
+
+        if( 0 == Fcb->Specific.File.ExtentCount)
+        {
+
+            //
+            // Update the request extent status
+            //
+
+            Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        //
+        // We are truncating from a specific length in the file. If the offset
+        // is non-zero then go find the first extent to remove
+        //
+
+        if( 0 == FileSize->QuadPart) 
+        {
+
+            le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+        } 
+        else 
+        {
+
+            pExtent = AFSExtentForOffset( Fcb, 
+                                          FileSize, 
+                                          TRUE);
+
+            if( NULL == pExtent) 
+            {
+
+                le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+            } 
+            else 
+            {
+                le = &pExtent->Lists[AFS_EXTENTS_LIST];
+            }
+        }
+
+        while( le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST]) 
+        {
+
+            pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
+
+            //
+            // Only trim down extents beyond the aligned offset
+            //
+
+            le = le->Flink;
+
+            if( pExtent->FileOffset.QuadPart >= liAlignedOffset.QuadPart)
+            {
+
+                if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+                {
+
+                    KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                                       &kIrql);
+
+                    RemoveEntryList( &pExtent->DirtyList);
+
+                    KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                                       kIrql);
+
+                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                }
+
+                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++) 
+                {
+                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
+                    {
+                        RemoveEntryList( &pExtent->Lists[i] );
+                    }
+                }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                             "AFSTrimExtents Trimming extent for %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
+                                    &Fcb->DirEntry->DirectoryEntry.FileName,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                    pExtent->FileOffset.QuadPart,
+                                    pExtent->Size); 
+                //
+                // and free
+                //
+                ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
+                AFSAllocationMemoryLevel -= sizeof( AFSExtent);
+
+                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+            }
+        }
+
+        //
+        // Update the request extent status
+        //
+
+        Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+        AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
+        locked = FALSE;
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSTrimExtents Completed for file %wZ Status %08lX\n",
+                                            &Fcb->DirEntry->DirectoryEntry.FileName,
+                                            ntStatus);        
+
+        if (locked)
+        {
+            AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
+        }
+    }
+
+    return;
+}
+
+void
+AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
+                         IN ULONG   Count,
+                         IN AFSFileExtentCB *Result)
+{
+
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
+    LIST_ENTRY          *le;
+    AFSExtent           *pExtent;
+    AFSFileExtentCB     *pFileExtents = Result;
+    NTSTATUS             ntStatus = STATUS_SUCCESS;
+    KIRQL                kIrql;
+    AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
+    __Enter
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSTrimSpecifiedExtents For file %wZ\n",
+                                            &Fcb->DirEntry->DirectoryEntry.FileName);        
+
+        le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+
+        while( le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST] &&
+               Count > 0) 
+        {
+
+            pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
+
+            //
+            // Only trim down extents beyond the aligned offset
+            //
+
+            le = le->Flink;
+
+            if( pExtent->FileOffset.QuadPart == pFileExtents->FileOffset.QuadPart)
+            {
+
+                if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+                {
+
+                    KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                                       &kIrql);
+
+                    RemoveEntryList( &pExtent->DirtyList);
+
+                    KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                                       kIrql);
+
+                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                }
+
+                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++) 
+                {
+                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
+                    {
+                        RemoveEntryList( &pExtent->Lists[i] );
+                    }
+                }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSTrimSpecifiedExtents Trimming extent for %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
+                                    &Fcb->DirEntry->DirectoryEntry.FileName,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                    Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                    pExtent->FileOffset.QuadPart,
+                                    pExtent->Size); 
+
+                //
+                // and free
+                //
+                ExFreePoolWithTag( pExtent, AFS_EXTENT_TAG );
+                AFSAllocationMemoryLevel -= sizeof( AFSExtent);
+
+                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                //
+                // Next extent we are looking for
+                //
+
+                pFileExtents++;
+
+                Count--;
+            }
+        }
+
+        //
+        // Update the request extent status
+        //
+
+        Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSTrimSpecifiedExtents Completed for file %wZ Status %08lX\n",
+                                            &Fcb->DirEntry->DirectoryEntry.FileName,
+                                            ntStatus);        
+    }
+
+    return;
 }

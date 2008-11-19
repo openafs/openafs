@@ -109,6 +109,15 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+        else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryFileInfo Failing request against SpecialShare Fcb\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
@@ -453,6 +462,29 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+        else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
+        {
+
+            DbgPrint("AFSSetFileInfo On share Info %d\n", FileInformationClass);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileInfo Failing request against SpecialShare Fcb\n");
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        if( pFcb->RootFcb != NULL &&
+            BooleanFlagOn( pFcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileInfo Request failed due to read only volume\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
@@ -490,6 +522,11 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
             case FileDispositionInformation:
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetFileInfo Deleting entry %wZ\n", 
+                                                &pFcb->DirEntry->DirectoryEntry.FileName);
 
                 ntStatus = AFSSetDispositionInfo( Irp, 
                                                   pFcb);
@@ -1598,6 +1635,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
     LARGE_INTEGER liSaveSize = Fcb->Header.FileSize;
     LARGE_INTEGER liSaveVDL = Fcb->Header.ValidDataLength;
     BOOLEAN bModified = FALSE;
+    BOOLEAN bTruncated = FALSE;
 
     pBuffer = (PFILE_END_OF_FILE_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
@@ -1618,6 +1656,8 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             else
             {
 
+                Fcb->Header.AllocationSize = pBuffer->EndOfFile;
+
                 Fcb->Header.FileSize = pBuffer->EndOfFile;
 
                 Fcb->DirEntry->DirectoryEntry.EndOfFile = pBuffer->EndOfFile;
@@ -1627,6 +1667,8 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
                     Fcb->Header.ValidDataLength = Fcb->Header.FileSize;
                 }
+
+                bTruncated = TRUE;
 
                 bModified = TRUE;
             }
@@ -1648,7 +1690,19 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
     if (bModified) 
     {
+
+        if( bTruncated)
+        {
+
+            AFSTrimExtents( Fcb,
+                            &Fcb->Header.FileSize);
+        }
         
+        CcSetFileSizes( pFileObject,
+                        (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+
+        SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
+
         //
         // Tell the server
         // Need to drop our lock on teh Fcb while this call is made since it could
@@ -1668,16 +1722,9 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         AFSAcquireExcl( &Fcb->NPFcb->Resource,
                         TRUE);
 
-        if (NT_SUCCESS(ntStatus))
+        if( !NT_SUCCESS(ntStatus))
         {
-        
-            CcSetFileSizes( pFileObject,
-                            (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
 
-            SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
-        } 
-        else 
-        {
             Fcb->Header.ValidDataLength = liSaveVDL;
             Fcb->Header.FileSize = liSaveSize;
             Fcb->DirEntry->DirectoryEntry.EndOfFile = liSaveSize;

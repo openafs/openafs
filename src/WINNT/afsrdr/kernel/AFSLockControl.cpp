@@ -80,6 +80,15 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+        else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSLockControl Failing request against SpecialShare Fcb\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
 
         //
         // Post the request to the service for checks

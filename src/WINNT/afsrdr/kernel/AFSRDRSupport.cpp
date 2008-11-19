@@ -83,6 +83,10 @@ AFSInitRDRDevice()
 
         pDeviceExt->Specific.RDR.VolumeListTail = NULL;
 
+        KeInitializeEvent( &pDeviceExt->Specific.RDR.QueuedReleaseExtentEvent,
+                           NotificationEvent,
+                           TRUE);
+
         //
         // Clear the initializing bit
         //
@@ -189,14 +193,6 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                 ntStatus = AFSProcessReleaseFileExtentsDone( Irp );
                 break;
             }
-
-            case IOCTL_AFS_SHUTDOWN:
-            {
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = AFSCloseRedirector( );
-                ntStatus  =Irp->IoStatus.Status;
-                break;
-            }
 #endif
                 
             case IOCTL_REDIR_QUERY_PATH:
@@ -260,7 +256,7 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
 }
 
 NTSTATUS
-AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
+AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -276,16 +272,20 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         // Save off the cache file information
         //
 
-        pDevExt->Specific.RDR.CacheBlockSize = CacheFileInfo->CacheBlockSize;
+        pDevExt->Specific.RDR.CacheBlockSize = RedirInitInfo->CacheBlockSize;
 
-        pDevExt->Specific.RDR.CacheBlockCount = CacheFileInfo->ExtentCount;
+        pDevExt->Specific.RDR.CacheBlockCount = RedirInitInfo->ExtentCount;
 
-        cacheSizeBytes = CacheFileInfo->ExtentCount;
-        cacheSizeBytes.QuadPart *= CacheFileInfo->CacheBlockSize;
+        pDevExt->Specific.RDR.MaximumRPCLength = RedirInitInfo->MaximumChunkLength;
+
+        ASSERT( pDevExt->Specific.RDR.MaximumRPCLength != 0);
+
+        cacheSizeBytes = RedirInitInfo->ExtentCount;
+        cacheSizeBytes.QuadPart *= RedirInitInfo->CacheBlockSize;
 
         pDevExt->Specific.RDR.CacheFile.Length = 0;
 
-        pDevExt->Specific.RDR.CacheFile.MaximumLength = (USHORT)CacheFileInfo->CacheFileNameLength + (4 * sizeof( WCHAR));
+        pDevExt->Specific.RDR.CacheFile.MaximumLength = (USHORT)RedirInitInfo->CacheFileNameLength + (4 * sizeof( WCHAR));
 
         pDevExt->Specific.RDR.CacheFile.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
                                                                                  pDevExt->Specific.RDR.CacheFile.MaximumLength,
@@ -304,10 +304,16 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         pDevExt->Specific.RDR.CacheFile.Length = 4 * sizeof( WCHAR);
 
         RtlCopyMemory( &pDevExt->Specific.RDR.CacheFile.Buffer[ pDevExt->Specific.RDR.CacheFile.Length/sizeof( WCHAR)],
-                       CacheFileInfo->CacheFileName,
-                       CacheFileInfo->CacheFileNameLength);
+                       RedirInitInfo->CacheFileName,
+                       RedirInitInfo->CacheFileNameLength);
 
-        pDevExt->Specific.RDR.CacheFile.Length += (USHORT)CacheFileInfo->CacheFileNameLength;
+        pDevExt->Specific.RDR.CacheFile.Length += (USHORT)RedirInitInfo->CacheFileNameLength;
+
+        //
+        // Be sure the shutdown flag is not set
+        //
+
+        ClearFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN);
 
         //
         // Set up the Throttles.
@@ -369,6 +375,20 @@ AFSInitializeRedirector( IN AFSCacheFileInfo *CacheFileInfo)
         if (pDevExt->Specific.RDR.MaxDirty.QuadPart > cacheSizeBytes.QuadPart) 
         {
             pDevExt->Specific.RDR.MaxDirty.QuadPart = cacheSizeBytes.QuadPart;
+        }
+
+        //
+        // Store off any flags for the file system
+        //
+
+        if( BooleanFlagOn( RedirInitInfo->Flags, AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES))
+        {
+
+            //
+            // Hide files which begin with .
+            //
+
+            SetFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES);
         }
 
         //
@@ -516,40 +536,28 @@ AFSShutdownRedirector()
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-
+    AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSDeviceExt *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    
     __Enter
     {
 
-        if( pDevExt->Specific.RDR.CacheFileHandle != NULL)
-        {
-
-            ZwClose( pDevExt->Specific.RDR.CacheFileHandle);
-
-            pDevExt->Specific.RDR.CacheFileHandle = NULL;
-        }
-
-        if( pDevExt->Specific.RDR.CacheFileObject != NULL)
-        {
-
-            ObDereferenceObject( pDevExt->Specific.RDR.CacheFileObject);
-
-            pDevExt->Specific.RDR.CacheFileObject = NULL;
-        }
-
-        if( pDevExt->Specific.RDR.CacheFile.Buffer != NULL)
-        {
-
-            ExFreePool( pDevExt->Specific.RDR.CacheFile.Buffer);
-
-            pDevExt->Specific.RDR.CacheFile.Buffer = NULL;
-        }
-
         //
-        // Delete resources
+        // When shutting down the redirector we first set the SHUTDOWN flag so no more opens or
+        // IO can be processed. Then force the volume workers to flush all data from all files
         //
 
-        ExDeleteResourceLite( pDevExt->Specific.RDR.VolumeTree.TreeLock);
+        SetFlag( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN);
+
+        //
+        // Now wait for the volume workers to close, they will be attempting to flush all data for the files
+        //
+
+        ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.VolumeWorkerCloseEvent,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
     }
 
     return ntStatus;

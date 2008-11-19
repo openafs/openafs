@@ -38,6 +38,12 @@
 //
 
 //
+// Conditional compiled code
+//
+
+//#define AFS_FLUSH_PAGES_SYNCHRONOUSLY       1       // Flush pages as we mark them dirty
+
+//
 // Debug information
 //
 
@@ -117,6 +123,7 @@ static inline void AFSBreakPoint() {
 #define AFS_UPDATE_RESULT_TAG        'RUFA'
 #define AFS_EXTENTS_RESULT_TAG       'XEFA'
 #define AFS_SYS_NAME_NODE_TAG        'NSFA'
+#define AFS_REPARSE_NAME_TAG         'NRFA'
 
 #define __Enter
 
@@ -147,12 +154,6 @@ static inline void AFSBreakPoint() {
 
 #define AFS_CONTROL_DEVICE_NAME     L"\\Device\\AFSControlDevice"
 #define AFS_SYMLINK_NAME            L"\\??\\AFSRedirector"
-
-//
-// Device flags
-//
-
-#define AFS_DEVICE_FLAGS_REGISTERED      0x00000001
 
 //
 // Worker thread count
@@ -212,6 +213,8 @@ static inline void AFSBreakPoint() {
 #define AFS_IOCTL_FCB                           0x000A
 #define AFS_MOUNT_POINT_FCB                     0x000B
 #define AFS_SYMBOLIC_LINK_FCB                   0x000C
+#define AFS_SPECIAL_SHARE_FCB                   0x000D
+#define AFS_DFS_LINK_FCB                        0x000E
 
 #define AFS_INVALID_FCB                         0x00FF
 
@@ -317,12 +320,8 @@ static inline void AFSBreakPoint() {
 #define AFS_DIR_ENTRY_NOT_IN_PARENT_TREE        0x00000008
 #define AFS_DIR_RELEASE_DIRECTORY_NODE          0x00000010
 #define AFS_DIR_ENTRY_FAKE                      0x00000020
-
-//
-// Vcb flags
-//
-
-#define AFS_VCB_DIRTY_INFORMATION        0x00000001
+#define AFS_DIR_RELEASE_TARGET_NAME_BUFFER      0x00000040
+#define AFS_DIR_ENTRY_VALID                     0x00000080
 
 //
 // Network provider errors
@@ -446,5 +445,18 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 //
 
 #define AFS_PROCESS_FLAG_IS_64BIT           0x00000001
+
+//
+// Maximum number of special share names
+//
+
+#define AFS_SPECIAL_SHARE_NAME_COUNT_MAX    10
+
+//
+// Device flags
+//
+
+#define AFS_DEVICE_FLAG_HIDE_DOT_NAMES          0x00000001
+#define AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN     0x00000002
 
 #endif /* _AFS_DEFINES_H */

@@ -174,6 +174,12 @@ typedef struct _AFS_NONPAGED_FCB
 
             KEVENT          FlushEvent;
 
+            //
+            // Queued Flush event. This event is set when the queued flush count
+            // is zero, cleared otherwise.
+
+            KEVENT          QueuedFlushEvent;
+
         } File;
 
         struct
@@ -343,16 +349,28 @@ typedef struct AFS_FCB
             ULONGLONG           ExtentProcessId;
 
             //
-            // Set if there is any dirty data. Set pessimistically
+            // Dirty extent count
             //
 
             LONG                ExtentsDirtyCount;
+
+            //
+            // Extent count for this file
+            //
+
+            LONG                ExtentCount;
 
             //
             // The Lazy writer thread
             //
 
             PETHREAD            LazyWriterThread;
+
+            //
+            // Current count of queued flush items for the file
+            //
+
+            LONG                QueuedFlushCount;
 
         } File;
 
@@ -381,8 +399,6 @@ typedef struct AFS_FCB
 
             LONG                PIOCtlIndex;
             
-            KEVENT          EnumerationEvent;
-
         } Directory;
 
         struct
@@ -439,8 +455,6 @@ typedef struct AFS_FCB
             //
 
             AFSWorkQueueContext VolumeWorkerContext;
-
-            KEVENT          EnumerationEvent;
 
         } VolumeRoot;
 
@@ -816,7 +830,7 @@ typedef struct _AFS_DEVICE_EXTENSION
     // Device flags
     //
 
-    ULONG            Flags;
+    ULONG           DeviceFlags;
 
     union
     {
@@ -830,15 +844,6 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             ULONG            WorkerCount;
 
-            //
-            // Fcb lifetime & flush time tickcount. This is calculated
-            // in DriverEntry() for the control device.
-            //
-
-            LARGE_INTEGER           FcbLifeTimeCount;
-            LARGE_INTEGER           FcbFlushTimeCount;
-            LARGE_INTEGER           FcbPurgeTimeCount;
-
             struct _AFS_WORKER_QUEUE_HDR *PoolHead;
 
             ERESOURCE        QueueLock;
@@ -848,6 +853,25 @@ typedef struct _AFS_DEVICE_EXTENSION
             AFSWorkItem     *QueueTail;
 
             KEVENT           WorkerQueueHasItems;
+
+            LONG             QueueItemCount;
+
+            //
+            // Volume worker tracking information
+            //
+
+            KEVENT           VolumeWorkerCloseEvent;
+
+            LONG             VolumeWorkerThreadCount;
+
+            //
+            // Fcb lifetime & flush time tickcount. This is calculated
+            // in DriverEntry() for the control device.
+            //
+
+            LARGE_INTEGER           FcbLifeTimeCount;
+            LARGE_INTEGER           FcbFlushTimeCount;
+            LARGE_INTEGER           FcbPurgeTimeCount;
 
             //
             // Comm interface
@@ -918,6 +942,13 @@ typedef struct _AFS_DEVICE_EXTENSION
             LARGE_INTEGER       MaxDirty;
 
             //
+            // Maximum RPC length that is issued by the service. We should limit our
+            // data requests such as for extents to thsi length
+            //
+
+            ULONG               MaximumRPCLength;
+
+            //
             // Volume tree
             //
 
@@ -930,6 +961,14 @@ typedef struct _AFS_DEVICE_EXTENSION
             AFSFcb             *VolumeListTail;
 
             ERESOURCE           VolumeListLock;
+
+            //
+            // Queued extent release count and event
+            //
+
+            LONG                QueuedReleaseExtentCount;
+
+            KEVENT              QueuedReleaseExtentEvent;
 
         } RDR;
 
