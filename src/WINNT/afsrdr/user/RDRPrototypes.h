@@ -5,13 +5,17 @@ extern "C" {
 // The following are forward declarations of structures
 // which are referenced in the RDR code only by pointer.
 typedef struct cm_user cm_user_t;
+typedef struct cm_req cm_req_t;
 
 // Function Declarations
 DWORD
 RDR_Initialize( void);
 
 DWORD
-RDR_Shutdown( void);
+RDR_ShutdownNotify( void);
+
+DWORD
+RDR_ShutdownFinal( void);
 
 DWORD 
 RDR_NetworkStatus( IN BOOLEAN status);
@@ -29,9 +33,12 @@ DWORD
 RDR_InvalidateObject( IN ULONG cellID, IN ULONG volID, IN ULONG vnode, 
                       IN ULONG uniq, IN ULONG hash, IN ULONG filetype, IN ULONG reason);
 
+void
+RDR_InitReq( IN OUT cm_req_t *reqp );
+
 DWORD
-RDR_SetInitParams( OUT AFSCacheFileInfo **ppCacheFileInfo, 
-                   OUT DWORD * pCacheFileInfoLen );
+RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, 
+                   OUT DWORD * pRedirInitInfoLen );
 
 DWORD 
 WINAPI 
@@ -225,6 +232,14 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
                         IN BOOL bWow64,
                         IN DWORD ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_GetVolumeInfo( IN cm_user_t     *userp,
+                   IN ULARGE_INTEGER ProcessId,
+                   IN AFSFileID     FileId,
+                   IN BOOL bWow64,
+                   IN DWORD ResultBufferLength,
+                   IN OUT AFSCommResult **ResultCB);
 
 extern DWORD 
 RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList);

@@ -20,7 +20,6 @@
 #include <strsafe.h>
 
 #include "..\\Common\\AFSUserCommon.h"
-#include <RDRPrototypes.h>
 
 extern "C" {
 #include <osilog.h>
@@ -29,6 +28,7 @@ extern osi_log_t *afsd_logp;
 #include <WINNT/afsreg.h>
 #include "../../afsd/cm_config.h"
 }
+#include <RDRPrototypes.h>
 
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
@@ -50,13 +50,28 @@ extern osi_log_t *afsd_logp;
     ((((ULONG)(Ptr)) + 7) & 0xfffffff8) \
     )
 
-HANDLE glThreadHandle[ 10];
+#define MIN_WORKER_THREADS 5
+#define MAX_WORKER_THREADS 512
+
+typedef struct _worker_thread_info {
+
+    HANDLE hThread;
+    
+    ULONG  Flags;
+    
+    HANDLE hEvent;
+
+} WorkerThreadInfo;
+
+WorkerThreadInfo glWorkerThreadInfo[ MAX_WORKER_THREADS];
 
 UINT   glThreadHandleIndex = 0;
 
 HANDLE glDevHandle = INVALID_HANDLE_VALUE;
 
 static DWORD Exit = false;
+
+DWORD  dwOvEvIdx = 0;
 
 extern "C" DWORD
 RDR_Initialize(void)
@@ -77,6 +92,10 @@ RDR_Initialize(void)
         RegCloseKey (parmKey);
     }
 		
+    // Initialize the Thread local storage index for the overlapped i/o 
+    // Event Handle
+    dwOvEvIdx = TlsAlloc();
+
     Exit = false;
 
     RDR_InitIoctl();
@@ -91,11 +110,83 @@ RDR_Initialize(void)
     return dwRet;
 }
 
+BOOL RDR_DeviceIoControl( HANDLE hDevice,
+                          DWORD dwIoControlCode,
+                          LPVOID lpInBuffer,
+                          DWORD nInBufferSize,
+                          LPVOID lpOutBuffer,
+                          DWORD nOutBufferSize,
+                          LPDWORD lpBytesReturned )
+{
+    OVERLAPPED ov;
+    HANDLE hEvent;
+    BOOL rc = FALSE;
+    DWORD gle;
+
+    ZeroMemory(&ov, sizeof(OVERLAPPED));
+
+    hEvent = (HANDLE)TlsGetValue(dwOvEvIdx);
+    if (hEvent == NULL) {
+        hEvent = CreateEvent( NULL, TRUE, TRUE, NULL );
+        if (hEvent == INVALID_HANDLE_VALUE || hEvent == NULL)
+            return FALSE;
+        TlsSetValue( dwOvEvIdx, (LPVOID) hEvent );
+    }
+
+    ResetEvent( hEvent);
+    ov.hEvent = hEvent;
+
+    rc = DeviceIoControl( hDevice,
+                          dwIoControlCode,
+                          lpInBuffer,
+                          nInBufferSize,
+                          lpOutBuffer,
+                          nOutBufferSize,
+                          NULL,
+                          &ov );
+    if ( !rc ) {
+        gle = GetLastError();
+
+        if ( gle == ERROR_IO_PENDING )
+            rc = GetOverlappedResult( hDevice, &ov, lpBytesReturned, TRUE );
+    }
+
+    return rc;
+}
+
 extern "C" DWORD
-RDR_Shutdown(void)
+RDR_ShutdownFinal(void)
 {
 
     DWORD dwIndex = 0;
+
+    Exit = true;
+
+    //
+    // Close all the worker thread handles
+    //
+
+    while( dwIndex < glThreadHandleIndex)
+    {
+
+        CloseHandle( glWorkerThreadInfo[ dwIndex].hThread);
+
+        dwIndex++;
+    }
+
+    if( glDevHandle != INVALID_HANDLE_VALUE)
+    {
+
+        CloseHandle( glDevHandle);
+    }
+
+    return 0;
+}
+
+extern "C" DWORD
+RDR_ShutdownNotify(void)
+{
+
     HANDLE hDevHandle = NULL;
     DWORD bytesReturned;
 
@@ -111,44 +202,22 @@ RDR_Shutdown(void)
     // we are shutting down.
     //
 
-    if( !DeviceIoControl( hDevHandle,
-                          IOCTL_AFS_SHUTDOWN,
-                          NULL,
-                          0,
-                          NULL,
-                          0,
-                          &bytesReturned,
-                          NULL))
+    if( !RDR_DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_SHUTDOWN,
+                              NULL,
+                              0,
+                              NULL,
+                              0,
+                              &bytesReturned ))
     {
         // log the error, nothing to do
-    }
-
-
-    Exit = true;
-
-    //
-    // Close all the worker thread handles
-    //
-
-    while( dwIndex < glThreadHandleIndex)
-    {
-
-        CloseHandle( glThreadHandle[ dwIndex]);
-
-        dwIndex++;
-    }
-
-    if( glDevHandle != INVALID_HANDLE_VALUE)
-    {
-
-        CloseHandle( glDevHandle);
     }
 
     return 0;
 }
 
 //
-// Here we launch the worker threaqds for the given volume
+// Here we launch the worker threads for the given volume
 //
 
 DWORD
@@ -158,11 +227,11 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
     HANDLE hEvent;
     DWORD index = 0;
     DWORD bytesReturned = 0;
-    DWORD dwCacheFileInfo;
-    AFSCacheFileInfo * cacheFileInfo = NULL;
+    DWORD dwRedirInitInfo;
+    AFSRedirectorInitInfo * redirInitInfo = NULL;
     DWORD dwErr;
 
-    if (dwErr = RDR_SetInitParams(&cacheFileInfo, &dwCacheFileInfo))
+    if (dwErr = RDR_SetInitParams(&redirInitInfo, &dwRedirInitInfo))
         return dwErr;
 
     glDevHandle = CreateFile( AFS_SYMLINK_W,
@@ -175,7 +244,7 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
 
     if( glDevHandle == INVALID_HANDLE_VALUE)
     {
-        free(cacheFileInfo);
+        free(redirInitInfo);
         return GetLastError();
     }
 
@@ -183,21 +252,20 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
     // Now call down to initialize the pool.
     //
 
-    if( !DeviceIoControl( glDevHandle,
-			  IOCTL_AFS_INITIALIZE_CONTROL_DEVICE,
-                          NULL,
-                          0,
-                          NULL,
-                          0,
-                          &bytesReturned,
-			  NULL))
+    if( !RDR_DeviceIoControl( glDevHandle,
+                              IOCTL_AFS_INITIALIZE_CONTROL_DEVICE,
+                              NULL,
+                              0,
+                              NULL,
+                              0,
+                              &bytesReturned ))
     {
 
         CloseHandle( glDevHandle);
 
         glDevHandle = NULL;
 
-        free(cacheFileInfo);
+        free(redirInitInfo);
 
         return GetLastError();
     }
@@ -212,21 +280,30 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
 			  NULL);
 
     //
-    // Here we create a pool of 5 worker threads but you can create the pool with as many requests
+    // Here we create a pool of worker threads but you can create the pool with as many requests
     // as you want
     //
+
+    if (numThreads < MIN_WORKER_THREADS)
+        numThreads = MIN_WORKER_THREADS;
+    else if (numThreads > MAX_WORKER_THREADS)
+        numThreads = MAX_WORKER_THREADS;
 
     for (index = 0; index < numThreads; index++)
     {
 
-        glThreadHandle[ glThreadHandleIndex] = CreateThread( NULL,
-							     0,
-							     RDR_RequestWorkerThread,
-							     (void *)hEvent,
-							     0,
-							     &WorkerID);
+        glWorkerThreadInfo[ glThreadHandleIndex].Flags = 
+            (glThreadHandleIndex % 5) ? AFS_REQUEST_RELEASE_THREAD : 0;
+        glWorkerThreadInfo[ glThreadHandleIndex].hEvent = hEvent;
+        glWorkerThreadInfo[ glThreadHandleIndex].hThread = 
+            CreateThread( NULL,
+                          0,
+                          RDR_RequestWorkerThread,
+                          (void *)&glWorkerThreadInfo[ glThreadHandleIndex],
+                          0,
+                          &WorkerID);
 
-        if( glThreadHandle[ glThreadHandleIndex] != NULL)
+        if( glWorkerThreadInfo[ glThreadHandleIndex].hThread != NULL)
         {
 
             //
@@ -250,26 +327,25 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
         }
     }
 
-    if( !DeviceIoControl( glDevHandle,
-			  IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE,
-			  cacheFileInfo,
-                          dwCacheFileInfo,
-                          NULL,
-                          0,
-                          &bytesReturned,
-			  NULL))
+    if( !RDR_DeviceIoControl( glDevHandle,
+                              IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE,
+                              redirInitInfo,
+                              dwRedirInitInfo,
+                              NULL,
+                              0,
+                              &bytesReturned ))
     {
 
         CloseHandle( glDevHandle);
 
         glDevHandle = NULL;
 
-        free(cacheFileInfo);
+        free(redirInitInfo);
 
         return GetLastError();
     }
 
-    free(cacheFileInfo);
+    free(redirInitInfo);
 
     return 0;
 }
@@ -287,7 +363,7 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
     DWORD bytesReturned;
     AFSCommRequest *requestBuffer;
     bool bError = false;
-    HANDLE hEvent = (HANDLE)lpParameter;
+    WorkerThreadInfo * pInfo = (WorkerThreadInfo *)lpParameter;
 
     //
     // We use the global handle to the control device instance
@@ -304,13 +380,11 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
     if( requestBuffer)
     {
 
-	memset( requestBuffer, '\0', sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE);
-
         //
         // Here we simply signal back to the main thread that we ahve started
         //
 
-        SetEvent( hEvent);
+        SetEvent( pInfo->hEvent);
 
         //
         // Process requests until we are told to stop
@@ -321,14 +395,15 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
 
             memset( requestBuffer, '\0', sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE);
 
-            if( !DeviceIoControl( hDevHandle,
-				  IOCTL_AFS_PROCESS_IRP_REQUEST,
-				  NULL,
-				  0,
-				  (void *)requestBuffer,
-				  sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE,
-				  &bytesReturned,
-				  NULL))
+            requestBuffer->RequestFlags = pInfo->Flags;
+
+            if( !RDR_DeviceIoControl( hDevHandle,
+                                      IOCTL_AFS_PROCESS_IRP_REQUEST,
+                                      (void *)requestBuffer,
+                                      sizeof( AFSCommRequest),
+                                      (void *)requestBuffer,
+                                      sizeof( AFSCommRequest) + AFS_PAYLOAD_BUFFER_SIZE,
+                                      &bytesReturned ))
             {
 
                 //
@@ -829,6 +904,26 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 break;
             }
 
+    case AFS_REQUEST_TYPE_GET_VOLUME_INFO:
+            {
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX\n", 
+                              RequestBuffer->RequestIndex,
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume, 
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_GetVolumeInfo( userp, 
+                                   RequestBuffer->ProcessId,
+                                   RequestBuffer->FileId,
+                                   bWow64,
+                                   RequestBuffer->ResultBufferLength,
+                                   &pResultCB);
+                break;
+            }
+
     default:
 
             break;
@@ -864,14 +959,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
         // Now post the result back to the driver.
         //
 
-        if( !DeviceIoControl( glDevHandle,
-			      IOCTL_AFS_PROCESS_IRP_RESULT,
-			      (void *)pResultCB,
-                              sizeof( AFSCommResult) + pResultCB->ResultBufferLength,
-			      (void *)NULL,
-			      0,
-			      &bytesReturned,
-			      NULL))
+        if( !RDR_DeviceIoControl( glDevHandle,
+                                  IOCTL_AFS_PROCESS_IRP_RESULT,
+                                  (void *)pResultCB,
+                                  sizeof( AFSCommResult) + pResultCB->ResultBufferLength,
+                                  (void *)NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             char *pBuffer = (char *)wchBuffer;
             gle = GetLastError();
@@ -900,14 +994,15 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
 
         if (SetFileExtentsResultCB) {
-            if( !DeviceIoControl( glDevHandle,
-                                  IOCTL_AFS_SET_FILE_EXTENTS,
-                                  (void *)SetFileExtentsResultCB,
-                                  dwResultBufferLength,
-                                  (void *)NULL,
-                                  0,
-                                  &bytesReturned,
-                                  NULL))
+            
+            if( (SetFileExtentsResultCB->ResultStatus != 0xC0000055) && 
+                !RDR_DeviceIoControl( glDevHandle,
+                                       IOCTL_AFS_SET_FILE_EXTENTS,
+                                      (void *)SetFileExtentsResultCB,
+                                      dwResultBufferLength,
+                                      (void *)NULL,
+                                      0,
+                                      &bytesReturned ))
             {
                 gle = GetLastError();
                 if (afsd_logp->enabled) {
@@ -945,14 +1040,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             SetFileExtentsResultCB.FileId = RequestBuffer->FileId;
             SetFileExtentsResultCB.ResultStatus = STATUS_NO_MEMORY;
 
-            if( !DeviceIoControl( glDevHandle,
-                                  IOCTL_AFS_SET_FILE_EXTENTS,
-                                  (void *)&SetFileExtentsResultCB,
-                                  dwResultBufferLength,
-                                  (void *)NULL,
-                                  0,
-                                  &bytesReturned,
-                                  NULL))
+            if( !RDR_DeviceIoControl( glDevHandle,
+                                      IOCTL_AFS_SET_FILE_EXTENTS,
+                                      (void *)&SetFileExtentsResultCB,
+                                      dwResultBufferLength,
+                                      (void *)NULL,
+                                      0,
+                                      &bytesReturned ))
             {
                 gle = GetLastError();
 
@@ -978,14 +1072,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
 
         if (SetByteRangeLockResultCB) {
-            if( !DeviceIoControl( glDevHandle,
+
+            if( !RDR_DeviceIoControl( glDevHandle,
                                   IOCTL_AFS_SET_BYTE_RANGE_LOCKS,
                                   (void *)SetByteRangeLockResultCB,
                                   dwResultBufferLength,
                                   (void *)NULL,
                                   0,
-                                  &bytesReturned,
-                                  NULL))
+                                  &bytesReturned ))
             {
                 gle = GetLastError();
 
@@ -1011,15 +1105,14 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             memset( &SetByteRangeLockResultCB, '\0', dwResultBufferLength );
             SetByteRangeLockResultCB.FileId = RequestBuffer->FileId;
             SetByteRangeLockResultCB.Result[0].Status = STATUS_NO_MEMORY;
-
-            if( !DeviceIoControl( glDevHandle,
-                                  IOCTL_AFS_SET_BYTE_RANGE_LOCKS,
-                                  (void *)&SetByteRangeLockResultCB,
-                                  dwResultBufferLength,
-                                  (void *)NULL,
-                                  0,
-                                  &bytesReturned,
-                                  NULL))
+            
+            if( !RDR_DeviceIoControl( glDevHandle,
+                                      IOCTL_AFS_SET_BYTE_RANGE_LOCKS,
+                                      (void *)&SetByteRangeLockResultCB,
+                                      dwResultBufferLength,
+                                      (void *)NULL,
+                                      0,
+                                      &bytesReturned ))
             {
                 gle = GetLastError();
 
@@ -1108,18 +1201,23 @@ RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
 
         requestBuffer->HeldExtentCount = numOfHeldExtents;
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_RELEASE_FILE_EXTENTS,
-                              (void *)requestBuffer,
-                              sizeof( AFSReleaseFileExtentsCB),
-                              (void *)responseBuffer,
-                              responseBufferLen,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_RELEASE_FILE_EXTENTS,
+                                  (void *)requestBuffer,
+                                  sizeof( AFSReleaseFileExtentsCB),
+                                  (void *)responseBuffer,
+                                  responseBufferLen,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
             //
+            if (afsd_logp->enabled) {
+                gle = GetLastError();
+                swprintf( wchBuffer,
+                          L"Failed to post IOCTL_AFS_RELEASE_FILE_EXTENTS - gle 0x%x\n", gle);
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
             rc = -1;
             goto cleanup;
         }
@@ -1149,14 +1247,13 @@ RDR_RequestExtentRelease(DWORD numOfExtents, LARGE_INTEGER numOfHeldExtents)
             osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
         }
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE,
-                              (void *)doneBuffer,
-                              sizeof( AFSReleaseFileExtentsResultDoneCB),
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_RELEASE_FILE_EXTENTS_DONE,
+                                  (void *)doneBuffer,
+                                  sizeof( AFSReleaseFileExtentsResultDoneCB),
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             // log the error, nothing to do
 
@@ -1224,14 +1321,13 @@ RDR_NetworkStatus(BOOLEAN status)
         // Leave the rest of the structure as zeros to indicate free anything
         requestBuffer->Online = status;
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_NETWORK_STATUS,
-                              (void *)requestBuffer,
-                              sizeof( AFSNetworkStatusCB),
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_NETWORK_STATUS,
+                                  (void *)requestBuffer,
+                                  sizeof( AFSNetworkStatusCB),
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
@@ -1300,14 +1396,13 @@ RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online)
         requestBuffer->FileID.Volume = volID;
         requestBuffer->Online = online;
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_VOLUME_STATUS,
-                              (void *)requestBuffer,
-                              sizeof( AFSVolumeStatusCB),
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_VOLUME_STATUS,
+                                  (void *)requestBuffer,
+                                  sizeof( AFSVolumeStatusCB),
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
@@ -1382,14 +1477,13 @@ RDR_InvalidateVolume(ULONG cellID, ULONG volID, ULONG reason)
         requestBuffer->WholeVolume = TRUE;
         requestBuffer->Reason = reason;
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_INVALIDATE_CACHE,
-                              (void *)requestBuffer,
-                              sizeof( AFSInvalidateCacheCB),
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_INVALIDATE_CACHE,
+                                  (void *)requestBuffer,
+                                  sizeof( AFSInvalidateCacheCB),
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
@@ -1462,14 +1556,13 @@ RDR_InvalidateObject(ULONG cellID, ULONG volID, ULONG vnode, ULONG uniq, ULONG h
         requestBuffer->WholeVolume = FALSE;
         requestBuffer->Reason = reason;
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_INVALIDATE_CACHE,
-                              (void *)requestBuffer,
-                              sizeof( AFSInvalidateCacheCB),
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_INVALIDATE_CACHE,
+                                  (void *)requestBuffer,
+                                  sizeof( AFSInvalidateCacheCB),
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
@@ -1548,14 +1641,13 @@ RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
                             NameList[i], len);
         }
 
-        if( !DeviceIoControl( hDevHandle,
-                              IOCTL_AFS_SYSNAME_NOTIFICATION,
-                              (void *)requestBuffer,
-                              Length,
-                              NULL,
-                              0,
-                              &bytesReturned,
-                              NULL))
+        if( !RDR_DeviceIoControl( hDevHandle,
+                                  IOCTL_AFS_SYSNAME_NOTIFICATION,
+                                  (void *)requestBuffer,
+                                  Length,
+                                  NULL,
+                                  0,
+                                  &bytesReturned ))
         {
             //
             // Error condition back from driver
