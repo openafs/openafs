@@ -362,6 +362,7 @@ extern void cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp,
 			   struct AFSFetchStatus * statusp, 
 			   struct AFSVolSync * volsyncp,
 			   struct cm_user *userp, 
+                           cm_req_t *reqp,
 			   afs_uint32 flags);
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);

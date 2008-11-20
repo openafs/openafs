@@ -296,7 +296,11 @@ cm_scache_t *cm_GetNewSCache(void)
              * to be outstanding dirty buffers.  If there are dirty buffers,
              * we must not recycle the scp. */
             if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
-                if (!buf_DirtyBuffersExist(&scp->fid)) {
+                if (!buf_DirtyBuffersExist(&scp->fid) && 
+                    (!RDR_Initialized || 
+                     !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                           scp->fid.unique, scp->fid.hash,
+                                           scp->fileType, AFS_INVALIDATE_FLUSHED))) {
                     cm_fid_t   fid;
                     afs_uint32 fileType;
 
@@ -313,9 +317,6 @@ cm_scache_t *cm_GetNewSCache(void)
                          * head of the LRU queue.
                          */
                         cm_AdjustScacheLRU(scp);
-
-                        RDR_InvalidateObject(fid.cell, fid.volume, fid.vnode, fid.unique, fid.hash, 
-                                              fileType, AFS_INVALIDATE_FLUSHED);
 
                         /* and we're done */
                         return scp;
@@ -1519,7 +1520,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 void cm_MergeStatus(cm_scache_t *dscp, 
 		    cm_scache_t *scp, AFSFetchStatus *statusp, 
 		    AFSVolSync *volsyncp,
-                    cm_user_t *userp, afs_uint32 flags)
+                    cm_user_t *userp, cm_req_t *reqp, afs_uint32 flags)
 {
     afs_uint64 dataVersion;
 
@@ -1717,7 +1718,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
             if (cm_FidCmp(&scp->fid, &bp->fid) == 0 &&
                  lock_TryMutex(&bp->mx)) {
                 if (bp->refCount == 0 && 
-                    !(bp->flags & CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)) {
+                    !(bp->flags & (CM_BUF_REDIR | CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY))) {
                     prevBp = bp->fileHashBackp;
                     bp->fileHashBackp = bp->fileHashp = NULL;
                     if (prevBp)
@@ -1756,11 +1757,19 @@ void cm_MergeStatus(cm_scache_t *dscp,
          scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
     
-    if (scp->dataVersion != dataVersion)
-        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                             scp->fid.unique, scp->fid.hash,
-                             scp->fileType, AFS_INVALIDATE_DATA_VERSION);
-
+    if (RDR_Initialized) {
+        if ( (!(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & CM_MERGEFLAG_STOREDATA)) && 
+             scp->dataVersion != dataVersion ) {
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                 scp->fid.unique, scp->fid.hash,
+                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        } else if ( (reqp->flags & CM_REQ_SOURCE_REDIR) && (flags & CM_MERGEFLAG_STOREDATA) &&
+                    dataVersion - scp->dataVersion > 1) {
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                 scp->fid.unique, scp->fid.hash,
+                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        }
+    }
     scp->dataVersion = dataVersion;
 
     /* 

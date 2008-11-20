@@ -120,9 +120,10 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
                       CM_SCACHESYNC_GETSTATUS
                      | CM_SCACHESYNC_NEEDCALLBACK
                      | CM_SCACHESYNC_LOCK);
+    if (code)
+        goto _done;
 
-    if (code == 0 && 
-        ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
+    if (((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
         scp->fileType == CM_SCACHETYPE_FILE) {
 
         cm_key_t key;
@@ -169,9 +170,6 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 		}
 	    }
         }
-
-    } else if (code != 0) {
-        goto _done;
     }
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
@@ -226,9 +224,11 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (code == CM_ERROR_READONLY)
         code = CM_ERROR_NOACCESS;
 
-    if (code == 0 &&
-             ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
-             scp->fileType == CM_SCACHETYPE_FILE) {
+    if (code)
+        goto _done;
+
+    if (((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
+        scp->fileType == CM_SCACHETYPE_FILE) {
         cm_key_t key;
         unsigned int sLockType;
         LARGE_INTEGER LOffset, LLength;
@@ -284,8 +284,6 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 		}
 	    }
         }
-    } else if (code != 0) {
-        goto _done;
     }
 
  _done:
@@ -351,7 +349,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         return code;
 
     thyper.HighPart = 0; thyper.LowPart = 0;
-    code = buf_Get(scp, &thyper, &bufferp);
+    code = buf_Get(scp, &thyper, reqp, &bufferp);
     if (code)
         return code;
 
@@ -590,7 +588,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 bufferp = NULL;
             }
 
-            code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, reqp, &bufferp);
             if (code) {
                 /* if buf_Get() fails we do not have a buffer object to lock */
                 bufferp = NULL;
@@ -815,7 +813,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseWrite(&scp->rw);
 
     thyper.LowPart = thyper.HighPart = 0;
-    code = buf_Get(scp, &thyper, &bufp);
+    code = buf_Get(scp, &thyper, reqp, &bufp);
 
     lock_ObtainWrite(&scp->rw);
     if (code)
@@ -1586,7 +1584,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_dnlcRemove(dscp, cnamep);
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     } else if (code == CM_ERROR_NOSUCHFILE) {
 	/* windows would not have allowed the request to delete the file 
 	 * if it did not believe the file existed.  therefore, we must 
@@ -1610,10 +1608,10 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 	    lock_ObtainWrite(&scp->rw);
             scp->flags |= CM_SCACHEFLAG_DELETED;
 	    lock_ReleaseWrite(&scp->rw);
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                                 scp->fid.unique, scp->fid.hash,
-                                 scp->fileType, AFS_INVALIDATE_DELETED);
-            buf_ClearRDRFlag(&scp->fid);
+            if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                      scp->fid.unique, scp->fid.hash,
+                                      scp->fileType, AFS_INVALIDATE_DELETED))
+                buf_ClearRDRFlag(&scp->fid, "unlink");
         }
     }
 
@@ -1639,7 +1637,7 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         /* read the link data */
         lock_ReleaseWrite(&linkScp->rw);
         thyper.LowPart = thyper.HighPart = 0;
-        code = buf_Get(linkScp, &thyper, &bufp);
+        code = buf_Get(linkScp, &thyper, reqp, &bufp);
         lock_ObtainWrite(&linkScp->rw);
         if (code) 
             return code;
@@ -2346,7 +2344,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bbp->callbacks[j],
                                             CM_CALLBACK_MAINTAINCOUNT);
-                cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, 0);
+                cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
             }       
             lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
@@ -2601,7 +2599,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     lock_ObtainWrite(&scp->rw);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
     if (code == 0)
-        cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp,
+        cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp, reqp, 
                         CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
 	
     /* if we're changing the mode bits, discard the ACL cache, 
@@ -2706,7 +2704,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
@@ -2723,7 +2721,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
-                               userp, 0);
+                               userp, reqp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                            &newFileCallback, 0);
                 didEnd = 1;     
@@ -2871,7 +2869,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
@@ -2887,7 +2885,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
-                                userp, 0);
+                                userp, reqp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newDirCallback, 0);
                 didEnd = 1;             
@@ -2989,7 +2987,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3076,7 +3074,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     lock_ObtainWrite(&dscp->rw);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3104,7 +3102,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
-                                userp, 0);
+                                userp, reqp, 0);
             }       
             lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(scp);
@@ -3215,7 +3213,7 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, cnamep); 
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, CM_MERGEFLAG_DIROP);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3235,10 +3233,10 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
 	    lock_ObtainWrite(&scp->rw);
             scp->flags |= CM_SCACHEFLAG_DELETED;
 	    lock_ReleaseWrite(&scp->rw);
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                                 scp->fid.unique, scp->fid.hash,
-                                 scp->fileType, AFS_INVALIDATE_DELETED);
-            buf_ClearRDRFlag(&scp->fid);
+            if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                      scp->fid.unique, scp->fid.hash,
+                                      scp->fileType, AFS_INVALIDATE_DELETED))
+                buf_ClearRDRFlag(&scp->fid, "rmdir");
         }
     }
 
@@ -3492,7 +3490,7 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
 
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
-                       userp, CM_MERGEFLAG_DIROP);
+                       userp, reqp, CM_MERGEFLAG_DIROP);
     lock_ReleaseWrite(&oldDscp->rw);
 
     if (code == 0) {
@@ -3535,7 +3533,7 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         if (code == 0)
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
-                            userp, CM_MERGEFLAG_DIROP);
+                            userp, reqp, CM_MERGEFLAG_DIROP);
         lock_ReleaseWrite(&newDscp->rw);
 
         if (code == 0) {

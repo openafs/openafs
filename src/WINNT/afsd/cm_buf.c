@@ -59,6 +59,10 @@ osi_log_t *buf_logp = NULL;
 /* Global lock protecting hash tables and free lists */
 osi_rwlock_t buf_globalLock;
 
+/* Global lock used to limit the number of RDR Release 
+ * Extents requests to one. */
+osi_mutex_t buf_rdrReleaseExtentsLock;
+
 /* ptr to head of the free list (most recently used) and the
  * tail (the guy to remove first).  We use osi_Q* functions
  * to put stuff in buf_freeListp, and maintain the end
@@ -411,6 +415,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
     if (osi_Once(&once)) {
         /* initialize global locks */
         lock_InitializeRWLock(&buf_globalLock, "Global buffer lock", LOCK_HIERARCHY_BUF_GLOBAL);
+        lock_InitializeMutex(&buf_rdrReleaseExtentsLock, "RDR Release Extents lock", LOCK_HIERARCHY_RDR_EXTENTS);
 
         if ( newFile ) {
             /* remember this for those who want to reset it */
@@ -618,7 +623,8 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 }
 
 /* find a buffer, if any, for a particular file ID and offset.  Assumes
- * that buf_globalLock is write locked when called.
+ * that buf_globalLock is write locked when called.  Uses the hashed
+ * buffer list.
  */
 cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
 {
@@ -640,7 +646,7 @@ cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
 }
 
 /* find a buffer with offset *offsetp for vnode *scp.  Called
- * with no locks held.
+ * with no locks held.  Uses the hashed buffer list
  */
 cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
 {
@@ -648,6 +654,54 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
 
     lock_ObtainRead(&buf_globalLock);
     bp = buf_FindLocked(scp, offsetp);
+    lock_ReleaseRead(&buf_globalLock);
+
+    return bp;
+}       
+
+/* find a buffer, if any, for a particular file ID and offset.  Assumes
+ * that buf_globalLock is write locked when called.  Uses the all buffer
+ * list.
+ */
+cm_buf_t *buf_FindAllLocked(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 flags)
+{
+    cm_buf_t *bp;
+
+    if (flags == 0) {
+        for(bp = cm_data.buf_allp; bp; bp=bp->allp) {
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0
+                 && offsetp->LowPart == bp->offset.LowPart
+                 && offsetp->HighPart == bp->offset.HighPart) {
+                buf_HoldLocked(bp);
+                break;
+            }
+        }
+    } else {
+        for(bp = cm_data.buf_allp; bp; bp=bp->allp) {
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0) {
+                char * fileOffset;
+                
+                fileOffset = offsetp->QuadPart + cm_data.baseAddress;
+                if (fileOffset == bp->datap) {
+                    buf_HoldLocked(bp);
+                    break;
+                }
+            }
+        }
+    }
+    /* return whatever we found, if anything */
+    return bp;
+}
+
+/* find a buffer with offset *offsetp for vnode *scp.  Called
+ * with no locks held.  Use the all buffer list.
+ */
+cm_buf_t *buf_FindAll(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 flags)
+{
+    cm_buf_t *bp;
+
+    lock_ObtainRead(&buf_globalLock);
+    bp = buf_FindAllLocked(scp, offsetp, flags);
     lock_ReleaseRead(&buf_globalLock);
 
     return bp;
@@ -760,6 +814,8 @@ void buf_Recycle(cm_buf_t *bp)
 
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
+    osi_assertx(!(bp->flags & CM_BUF_REDIR), "can't recycle redir held buffers");
+
     /* if we get here, we know that the buffer still has a 0 ref count,
      * and that it is clean and has no currently pending I/O.  This is
      * the dude to return.
@@ -823,7 +879,7 @@ void buf_Recycle(cm_buf_t *bp)
  * space from the buffer pool.  In that case, the buffer will be returned
  * without being hashed into the hash table.
  */
-long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
@@ -870,6 +926,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 	{
 	    lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
+
+            if ( RDR_Initialized )
+                goto rdr_release;
+
 	    osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List is empty - sleeping 200ms");
 	    Sleep(200);
 	    goto retry;
@@ -1032,11 +1092,35 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 	osi_Log1(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free", n_bufs);
         osi_Log4(afsd_logp, "... nonzero %u; redir %u; busy %u; dirty %u", n_nonzero, n_redir, n_busy, n_dirty);
 
-        if (n_bufs / n_redir < 2) {
-            LARGE_INTEGER heldExtents;
-            heldExtents.QuadPart = n_redir;
-            if (RDR_RequestExtentRelease(1024, heldExtents) == 0)
-                goto retry;
+        if (RDR_Initialized) {
+            afs_uint32 code;
+
+          rdr_release:
+            if (!lock_TryMutex(&buf_rdrReleaseExtentsLock)) {
+                osi_Log0(afsd_logp, "Waiting for prior RDR_RequestExtentRelease request to complete");
+                if (reqp->flags & CM_REQ_NORETRY)
+                    return CM_ERROR_WOULDBLOCK;
+
+                lock_ObtainMutex(&buf_rdrReleaseExtentsLock);
+                lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
+            } else {
+                for ( code = CM_ERROR_RETRY; code == CM_ERROR_RETRY; ) {
+                    LARGE_INTEGER heldExtents;
+#ifdef DEBUG
+                    cm_buf_t *rbp;
+
+                    for ( rbp = cm_data.buf_allp; rbp; rbp = rbp->allp) {
+                        if ( rbp->flags & CM_BUF_REDIR )
+                            n_redir++;
+                    }
+#endif
+                    heldExtents.QuadPart = n_redir;
+                    code = RDR_RequestExtentRelease(1024, heldExtents);
+                }
+                lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
+                if (code == 0)
+                    goto retry;
+            }
         }
 
 	Sleep(100);		/* give some time for a buffer to be freed */
@@ -1047,7 +1131,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 /* get a page, returning it held but unlocked.  Doesn't fill in the page
  * with I/O, since we're going to write the whole thing new.
  */
-long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
     long code;
@@ -1066,7 +1150,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         }
 
         /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, &bp);
+        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
 
         /* check if the buffer was created in a race condition branch.
          * If so, go around so we can hold a reference to it. 
@@ -1099,7 +1183,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 
 /* get a page, returning it held but unlocked.  Make sure it is complete */
 /* The scp must be unlocked when passed to this function */
-long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
     long code;
@@ -1133,7 +1217,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         }
 
         /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, &bp);
+        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
 	/* bp->mx is now held */
 
         /* check if the buffer was created in a race condition branch.
@@ -1255,7 +1339,8 @@ long buf_CountFreeList(void)
          * has been invalidate (by having its DV stomped upon), then
          * count it as free, since it isn't really being utilized.
          */
-        if (!(bufp->flags & CM_BUF_INHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
+        if ((!(bufp->flags & CM_BUF_INHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD) &&
+             !(bufp->flags & CM_BUF_REDIR))
             count++;
     }       
     lock_ReleaseRead(&buf_globalLock);
@@ -1392,7 +1477,8 @@ long buf_CleanAndReset(void)
     lock_ObtainRead(&buf_globalLock);
     for(i=0; i<cm_data.buf_hashSize; i++) {
         for(bp = cm_data.buf_scacheHashTablepp[i]; bp; bp = bp->hashp) {
-            if ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
+            if (!(bp->flags & CM_BUF_REDIR) && 
+                (bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
                 buf_HoldLocked(bp);
                 lock_ReleaseRead(&buf_globalLock);
 
@@ -1531,7 +1617,6 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
         if (code == 0 && cm_FidCmp(&bufp->fid, &scp->fid) == 0
              && LargeIntegerLessThan(*sizep, bufEnd)) {
 
-
             /* destroy the buffer, turning off its dirty bit, if
              * we're truncating the whole buffer.  Otherwise, set
              * the dirty bit, and clear out the tail of the buffer
@@ -1539,7 +1624,20 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              */
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
-                bufp->flags &= ~CM_BUF_DIRTY;
+                if (reqp->flags & CM_REQ_SOURCE_SMB) {
+                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                         scp->fid.unique, scp->fid.hash,
+                                         scp->fileType, AFS_INVALIDATE_SMB);
+                    bufp->flags &= ~CM_BUF_DIRTY;
+                } else {
+                    /* Implicitly clear the redirector flag */
+                    char buffer[1024];
+                    sprintf(buffer, "buf_Truncate taking from file system  bufp 0x%p vno 0x%x foffset 0x%I64x\r\n", 
+                             bufp, bufp->fid.vnode, bufp->offset.QuadPart);
+                    OutputDebugString(buffer);
+
+                    bufp->flags &= ~(CM_BUF_DIRTY|CM_BUF_REDIR);
+                }
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
                 bufp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
@@ -1647,7 +1745,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             /* actually, we only know that buffer is clean if ref
              * count is 1, since we don't have buffer itself locked.
              */
-            if (!(bp->flags & CM_BUF_DIRTY)) {
+            if (!(bp->flags & CM_BUF_DIRTY) && !(bp->flags & CM_BUF_REDIR)) {
                 lock_ObtainWrite(&buf_globalLock);
                 if (bp->refCount == 1) {	/* bp is held above */
                     nbp = bp->fileHashp;
@@ -1939,7 +2037,7 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
     return 0;
 }
 
-long buf_ClearRDRFlag(cm_fid_t *fidp)
+long buf_ClearRDRFlag(cm_fid_t *fidp, char *reason)
 {
     cm_buf_t *bp;
     afs_uint32 bcount = 0;
@@ -1952,7 +2050,14 @@ long buf_ClearRDRFlag(cm_fid_t *fidp)
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_REDIR)) {
             lock_ReleaseRead(&buf_globalLock);
             lock_ObtainMutex(&bp->mx);
+            {
+                char buffer[1024];
+                sprintf(buffer, "buf_ClearRDRFlag taking from file system [%s] bufp 0x%p vno 0x%x foffset 0x%I64x\r\n", 
+                         reason, bp, bp->fid.vnode, bp->offset.QuadPart);
+                OutputDebugString(buffer);
+            }
             bp->flags &= ~CM_BUF_REDIR;
+            buf_Release(bp);
             lock_ReleaseMutex(&bp->mx);
             lock_ObtainRead(&buf_globalLock);
         }

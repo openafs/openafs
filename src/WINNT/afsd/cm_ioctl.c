@@ -76,14 +76,16 @@ cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    code = buf_CleanVnode(scp, userp, reqp);
+    if (RDR_Initialized &&
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED))
+        code = CM_ERROR_WOULDBLOCK;
+    else
+        code = buf_CleanVnode(scp, userp, reqp);
     if (!code) {
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
         lock_ReleaseWrite(&scp->rw);
-
-        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED);
     }
     osi_Log2(afsd_logp,"cm_CleanFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -105,16 +107,22 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     }
 #endif
 
-    code = buf_FlushCleanPages(scp, userp, reqp);
+    /* 
+     * The file system will forget all knowledge of the object
+     * when it receives this message. 
+     */
+    if (RDR_Initialized && 
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED))
+        code = CM_ERROR_WOULDBLOCK;
+    else
+        code = buf_FlushCleanPages(scp, userp, reqp);
         
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
         cm_ResetSCacheDirectory(scp);
     lock_ReleaseWrite(&scp->rw);
-
-    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
@@ -1100,9 +1108,9 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
-    buf_ClearRDRFlag(&scp->fid);
+    if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                              scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
+        buf_ClearRDRFlag(&scp->fid, "deleted mp");
 
   done3:
     if (originalName != NULL)
@@ -2153,9 +2161,9 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
-    buf_ClearRDRFlag(&scp->fid);
+    if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                              scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
+        buf_ClearRDRFlag(&scp->fid, "deleted link");
 
   done3:
     free(clientp);

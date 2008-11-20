@@ -1466,9 +1466,10 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     DismountGlobalDrives();
     afsi_log("Global Drives dismounted");
     
-    if (RDR_Initialized)
-        RDR_Shutdown();
-    afsi_log("RDR shutdown complete");
+    if (RDR_Initialized) {
+        RDR_ShutdownNotify();
+        afsi_log("RDR notified of shutdown");
+    }
 
     smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
@@ -1486,6 +1487,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     RpcShutdown();                       
 
     cm_ShutdownMappedMemory();           
+
+    if (RDR_Initialized) {
+        RDR_ShutdownFinal();
+        afsi_log("RDR shutdown complete");
+    }
 
     rx_Finalize();
     afsi_log("rx finalization complete");

@@ -414,11 +414,17 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 tsrp->status = srv_busy;
                 if (fidp) { /* File Server query */
                     lock_ReleaseWrite(&cm_serverLock);
+                    if (errorCode == VBUSY) {
+                        thrd_Sleep(5000);
+                    }
                     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                              CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                              &volp);
                     if (code == 0)
                         statep = cm_VolumeStateByID(volp, fidp->volume);
+                    else
+                        osi_Log2(afsd_logp, "cm_Analyze calls cm_VolumeStateByID vol %u code 0x%x",
+                                  fidp->volume, code);
                     lock_ObtainWrite(&cm_serverLock);
                 }
                 break;
@@ -808,10 +814,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* If not allowed to retry, don't */
-    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY))
-	retry = 0;
-    else if (retry && dead_session)
+    if (retry && ((!forcing_new && (reqp->flags & CM_REQ_NORETRY)) || dead_session)) {
+        osi_Log0(afsd_logp, "cm_Analyze: retry disabled");
         retry = 0;
+    }
 
   out:
     /* drop this on the way out */

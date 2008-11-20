@@ -1582,12 +1582,16 @@ cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, clientchar_t *centry,
     normchar_t * entry = NULL;
 
     if (op->scp->dirBplus == NULL || 
-        op->dataVersion != op->scp->dirDataVersion) {
+        op->dataVersion > op->scp->dirDataVersion) {
         rc = EINVAL;
         goto done;
     }
 
     entry = cm_ClientStringToNormStringAlloc(centry, -1, NULL);
+    if (!entry) {
+        rc = EINVAL;
+        goto done;
+    }
     key.name = entry;
 
     lock_AssertAny(&op->scp->dirlock);
@@ -1674,12 +1678,16 @@ cm_BPlusDirLookup(cm_dirOp_t * op, clientchar_t * centry, cm_fid_t * cfid)
     LARGE_INTEGER start, end;
 
     if (op->scp->dirBplus == NULL || 
-        op->dataVersion != op->scp->dirDataVersion) {
+        op->dataVersion > op->scp->dirDataVersion) {
         rc = EINVAL;
         goto done;
     }
 
     entry = cm_ClientStringToNormStringAlloc(centry, -1, NULL);
+    if (!entry) {
+        rc = EINVAL;
+        goto done;
+    }
     key.name = entry;
 
     lock_AssertAny(&op->scp->dirlock);
@@ -1767,6 +1775,10 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, clientchar_t * entry, cm_fid_t * cf
     }
 
     normalizedName = cm_ClientStringToNormStringAlloc(entry, -1, NULL);
+    if (!normalizedName) {
+        rc = EINVAL;
+        goto done;
+    }
     key.name = normalizedName;
 
     lock_AssertWrite(&op->scp->dirlock);
@@ -1780,7 +1792,7 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, clientchar_t * entry, cm_fid_t * cf
     bplus_create_entry++;
 
     insert(op->scp->dirBplus, key, data);
-
+    
     if (!cm_Is8Dot3(entry)) {
         cm_dirFid_t dfid;
         clientchar_t wshortName[13];
@@ -1833,6 +1845,10 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *centry)
     }
 
     normalizedEntry = cm_ClientStringToNormStringAlloc(centry, -1, NULL);
+    if (!normalizedEntry) {
+        rc = EINVAL;
+        goto done;
+    }
     key.name = normalizedEntry;
 
     lock_AssertWrite(&op->scp->dirlock);
@@ -1983,7 +1999,7 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     dataT  data;
     normchar_t *normalized_name=NULL;
 
-    cm_SetFid(&data.fid, scp->fid.cell, scp->fid.volume,
+    cm_SetFid(&data.fid, scp->fid.cell, scp->fid.volume, 
               ntohl(dep->fid.vnode), ntohl(dep->fid.unique));
     data.cname = NULL;
     data.fsname = NULL;
@@ -1998,11 +2014,17 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
 #endif
         return 0;
     }
-
+  
     data.cname = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
+    if (data.cname == NULL) {
+#ifdef DEBUG
+        DebugBreak();
+#endif
+        return 0;
+    }
     data.fsname = cm_FsStrDup(dep->name);
     data.shortform = FALSE;
-
+     
     /* the Write lock is held in cm_BPlusDirBuildTree() */
     insert(scp->dirBplus, key, data);
 
@@ -2017,10 +2039,12 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
 
         key.name = wshortName;
         data.cname = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
+        if (data.cname) {
         data.fsname = cm_FsStrDup(dep->name);
         data.shortform = TRUE;
-
+  
         insert(scp->dirBplus, key, data);
+    }
     }
 
     if (normalized_name)

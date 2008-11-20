@@ -144,5 +144,7 @@ extern cm_vol_state_t * cm_VolumeStateByID(cm_volume_t *volp, afs_uint32 id);
 
 extern cm_vol_state_t * cm_VolumeStateByName(cm_volume_t *volp, char *volname);
 
+extern afs_uint32 cm_VolumeType(cm_volume_t *volp, afs_uint32 id);
+
 extern osi_rwlock_t cm_volumeLock;
 #endif /*  __CM_VOLUME_H_ENV__ */

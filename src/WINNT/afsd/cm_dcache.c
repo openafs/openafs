@@ -294,7 +294,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
 
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     } else {
         if (code == CM_ERROR_SPACE)
             scp->flags |= CM_SCACHEFLAG_OUTOFSPACE;
@@ -417,7 +417,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     }
 
     return code;
@@ -708,7 +708,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             mxheld = 0;
         }
 
-        code = buf_Get(scp, &offset, &bp);
+        code = buf_Get(scp, &offset, &req, &bp);
         if (code)
             break;
 
@@ -1100,7 +1100,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) 
             break;
 
-        code = buf_Get(scp, &pageBase, &tbp);
+        code = buf_Get(scp, &pageBase, reqp, &tbp);
         if (code) {
             lock_ObtainWrite(&scp->rw);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -1716,7 +1716,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     lock_ObtainWrite(&scp->rw);
 
     if (code == 0) 
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
     
     return code;
 }
