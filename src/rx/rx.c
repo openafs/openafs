@@ -773,97 +773,103 @@ rx_StartServer(int donateMe)
  * specified security object to implement the security model for this
  * connection. */
 struct rx_connection *
-rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
-		 register struct rx_securityClass *securityObject,
+rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
+		 struct rx_securityClass *securityObject,
 		 int serviceSecurityIndex)
 {
     int hashindex, i;
-    afs_int32 cid, cix, nclones;
-    register struct rx_connection *conn, *tconn, *ptconn;
+    afs_int32 cix, nclones;
+    struct rx_connection *conn, *tconn, *ptconn;
 
     SPLVAR;
 
     clock_NewTime();
     dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
 
-	conn = tconn = 0;
-	nclones = rx_max_clones_per_connection;
-
-    /* Vasilsi said: "NETPRI protects Cid and Alloc", but can this be true in
-     * the case of kmem_alloc? */
-
     NETPRI;
     RWLOCK_WRLOCK(&rx_connHashTable_lock);
 
-    /* send in the clones */
-    for(cix = 0; cix <= nclones; ++cix) {
-	  ptconn = tconn;
-	  tconn = rxi_AllocConnection();
-	  tconn->type = RX_CLIENT_CONNECTION;
-	  tconn->epoch = rx_epoch;
-	  tconn->peer = rxi_FindPeer(shost, sport, 0, 1);
-	  tconn->serviceId = sservice;
-	  tconn->securityObject = securityObject;
-	  tconn->securityData = (void *) 0;
-	  tconn->securityIndex = serviceSecurityIndex;
-	  tconn->ackRate = RX_FAST_ACK_RATE;
-	  tconn->nSpecific = 0;
-	  tconn->specific = NULL;
-	  tconn->challengeEvent = NULL;
-	  tconn->delayedAbortEvent = NULL;
-	  tconn->abortCount = 0;
-	  tconn->error = 0;
-	  for (i = 0; i < RX_MAXCALLS; i++) {
-	      tconn->twind[i] = rx_initSendWindow;
-	      tconn->rwind[i] = rx_initReceiveWindow;
-	  }
-	  tconn->parent = 0;
-	  tconn->next_clone = 0;
-	  tconn->nclones = nclones;
-	  rx_SetConnDeadTime(tconn, rx_connDeadTime);
-		
-	  if(cix == 0) {
-		conn = tconn;
-	  } else {
-		tconn->flags |= RX_CLONED_CONNECTION;
-		tconn->parent = conn;
-		ptconn->next_clone = tconn;
-	  }
-
-	  /* generic connection setup */
-#ifdef	RX_ENABLE_LOCKS
-	  MUTEX_INIT(&tconn->conn_call_lock, "conn call lock", MUTEX_DEFAULT, 0);
-	  MUTEX_INIT(&tconn->conn_data_lock, "conn data lock", MUTEX_DEFAULT, 0);
-	  CV_INIT(&tconn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
+    /* 
+     * allocate the connection and all of its clones.
+     * clones are flagged as such and have their 
+     * parent set to the 0th connection object.
+     */
+    for (nclones = rx_max_clones_per_connection, 
+	     conn = tconn = 0, 
+	     cix = 0; 
+	 cix <= nclones; 
+	 ++cix, ptconn = tconn) {
+	
+	tconn = rxi_AllocConnection();
+	tconn->cid = (rx_nextCid += RX_MAXCALLS);
+	tconn->type = RX_CLIENT_CONNECTION;
+	tconn->epoch = rx_epoch;
+	tconn->peer = rxi_FindPeer(shost, sport, 0, 1);
+	tconn->serviceId = sservice;
+	tconn->securityObject = securityObject;
+	tconn->securityData = (void *) 0;
+	tconn->securityIndex = serviceSecurityIndex;
+	tconn->ackRate = RX_FAST_ACK_RATE;
+	tconn->nSpecific = 0;
+	tconn->specific = NULL;
+	tconn->challengeEvent = NULL;
+	tconn->delayedAbortEvent = NULL;
+	tconn->abortCount = 0;
+	tconn->error = 0;
+	
+	for (i = 0; i < RX_MAXCALLS; i++) {
+	    tconn->twind[i] = rx_initSendWindow;
+	    tconn->rwind[i] = rx_initReceiveWindow;
+	}
+	
+	if (cix == 0) {
+	    conn = tconn;
+	    conn->nclones = nclones;
+	    conn->parent = 0;
+	    conn->next_clone = 0;
+	    rx_SetConnDeadTime(conn, rx_connDeadTime);
+	} else {
+	    tconn->nclones = 0;
+	    tconn->flags |= RX_CLONED_CONNECTION;
+	    tconn->parent = conn;
+	    ptconn->next_clone = tconn;
+	    tconn->secondsUntilDead = 0;
+	    tconn->secondsUntilPing = 0;
+	}
+ 
+	/* generic connection setup */ 
+#ifdef        RX_ENABLE_LOCKS
+	MUTEX_INIT(&tconn->conn_call_lock, "conn call lock", MUTEX_DEFAULT,
+		   0);
+        MUTEX_INIT(&tconn->conn_data_lock, "conn data lock", MUTEX_DEFAULT,
+		   0);
+	CV_INIT(&tconn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 #endif
-	  cid = (rx_nextCid += RX_MAXCALLS);
-	  tconn->cid = cid;
-	  RXS_NewConnection(securityObject, tconn);
-	  hashindex =
-		CONN_HASH(shost, sport, tconn->cid, tconn->epoch, 
-				  RX_CLIENT_CONNECTION);
-	  tconn->refCount++; /* no lock required since only this thread knows */
-	  tconn->next = rx_connHashTable[hashindex];
-	  rx_connHashTable[hashindex] = tconn;
-	  rx_MutexIncrement(rx_stats.nClientConns, rx_stats_mutex);	
+	RXS_NewConnection(securityObject, tconn);
+	hashindex =
+	    CONN_HASH(shost, sport, tconn->cid, tconn->epoch,
+		      RX_CLIENT_CONNECTION);
+        tconn->refCount++;    /* no lock required since only this thread knows */
+	tconn->next = rx_connHashTable[hashindex];
+	rx_connHashTable[hashindex] = tconn;
+	rx_MutexIncrement(rx_stats.nClientConns, rx_stats_mutex);
     }
-    
+	
     RWLOCK_UNLOCK(&rx_connHashTable_lock);
     USERPRI;
     return conn;
 }
 
 void
-rx_SetConnDeadTime(register struct rx_connection *conn, register int seconds)
+rx_SetConnDeadTime(struct rx_connection *conn, int seconds)
 {
-  /* The idea is to set the dead time to a value that allows several
-   * keepalives to be dropped without timing out the connection. */
-  struct rx_connection *tconn;
-  tconn = conn;
-  do {
-	tconn->secondsUntilDead = MAX(seconds, 6);
-	tconn->secondsUntilPing = tconn->secondsUntilDead / 6;
-  } while(tconn->next_clone && (tconn = tconn->next_clone));
+    /* The idea is to set the dead time to a value that allows several
+     * keepalives to be dropped without timing out the connection. */
+    struct rx_connection *tconn =
+	 (rx_IsClonedConn(conn)) ? conn->parent : conn;
+    
+    tconn->secondsUntilDead = MAX(seconds, 6);
+    tconn->secondsUntilPing = rx_ConnSecondsUntilDead(tconn) / 6;
 }
 
 int rxi_lowPeerRefCount = 0;
@@ -928,42 +934,47 @@ rxi_CleanupConnection(struct rx_connection *conn)
 void
 rxi_DestroyConnection(register struct rx_connection *conn)
 {
-  register struct rx_connection *tconn, *dtconn;
-  
-  RWLOCK_WRLOCK(&rx_connHashTable_lock);
-  
-  if(!(conn->flags & RX_CLONED_CONNECTION)) {
+    register struct rx_connection *tconn, *dtconn;
+    
+    RWLOCK_WRLOCK(&rx_connHashTable_lock);
+    
+    /* destroy any clones that might exist */
+    if (!rx_IsClonedConn(conn)) {
 	tconn = conn->next_clone;
-	conn->next_clone = 0; /* once */
-	do {
-	  if(tconn) {
-		dtconn = tconn;
-		tconn = tconn->next_clone;
-		rxi_DestroyConnectionNoLock(dtconn);
-		/* destroyed? */
-		if (dtconn == rx_connCleanup_list) {
-		  rx_connCleanup_list = rx_connCleanup_list->next;
-		  RWLOCK_UNLOCK(&rx_connHashTable_lock);
-		  /* rxi_CleanupConnection will free tconn */	
-		  rxi_CleanupConnection(dtconn);
-		  RWLOCK_WRLOCK(&rx_connHashTable_lock);
-		  (conn->nclones)--;
-		}
-	  }
-	} while(tconn);
-  }
-
-  rxi_DestroyConnectionNoLock(conn);
-  /* conn should be at the head of the cleanup list */
-  if (conn == rx_connCleanup_list) {
+	conn->next_clone = 0;   /* once */
+	
+	while (tconn) {
+	    dtconn = tconn;
+	    tconn = tconn->next_clone;
+	    rxi_DestroyConnectionNoLock(dtconn);
+	    /*
+	     * if destroyed dtconn will be the head of
+	     * rx_connCleanup_list.  Remove it and clean 
+	     * it up now as no one else is holding a 
+	     * reference to it.
+	     */
+	    if (dtconn == rx_connCleanup_list) {
+		rx_connCleanup_list = rx_connCleanup_list->next;
+		MUTEX_EXIT(&rx_connHashTable_lock);
+		/* rxi_CleanupConnection will free dtconn */
+		rxi_CleanupConnection(dtconn);
+		MUTEX_ENTER(&rx_connHashTable_lock);
+		(conn->nclones)--;
+	    }
+	}                       /* while(tconn) */
+    }
+    /* !rx_IsCloned */
+    rxi_DestroyConnectionNoLock(conn);
+    /* conn should be at the head of the cleanup list */
+    if (conn == rx_connCleanup_list) {
 	rx_connCleanup_list = rx_connCleanup_list->next;
 	RWLOCK_UNLOCK(&rx_connHashTable_lock);
 	rxi_CleanupConnection(conn);
-  }
+    }
 #ifdef RX_ENABLE_LOCKS
-  else {
+    else {
 	RWLOCK_UNLOCK(&rx_connHashTable_lock);
-  }
+    }
 #endif /* RX_ENABLE_LOCKS */
 }
 
@@ -1189,49 +1200,48 @@ rx_NewCall(register struct rx_connection *conn)
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
 
-	/* search for next free call on this connection or 
-	 * its clones, if any */
+    /* search for next free call on this connection or 
+     * its clones, if any */
     for (;;) {
-		tconn = conn;
-		do {
-			for (i = 0; i < RX_MAXCALLS; i++) {
-				call = tconn->call[i];
-				if (call) {
-					MUTEX_ENTER(&call->lock);
-					if (call->state == RX_STATE_DALLY) {
-						rxi_ResetCall(call, 0);
-						(*call->callNumber)++;
-						goto f_call;
-					}
-					MUTEX_EXIT(&call->lock);
-				} else {
-					call = rxi_NewCall(tconn, i);
-					goto f_call;
-				}
-			} /* for i < RX_MAXCALLS */
-		} while (tconn->next_clone && (tconn = tconn->next_clone));
-
-	f_call:
-
-		if (i < RX_MAXCALLS) {
-			break;
-		}
-
-		/* to be here, all available calls for this connection (and all
-		 * its clones) must be in use */
-
-		MUTEX_ENTER(&conn->conn_data_lock);
-		conn->flags |= RX_CONN_MAKECALL_WAITING;
-		conn->makeCallWaiters++;
-		MUTEX_EXIT(&conn->conn_data_lock);
-
+	register struct rx_connection *tconn;
+	
+	for (tconn = conn; tconn; tconn = tconn->next_clone) {
+	    for (i = 0; i < RX_MAXCALLS; i++) {
+		call = tconn->call[i];
+               if (call) {
+                   MUTEX_ENTER(&call->lock);
+                   if (call->state == RX_STATE_DALLY) {
+                       rxi_ResetCall(call, 0);
+                       (*call->callNumber)++;
+                       goto have_call;
+                   }
+                   MUTEX_EXIT(&call->lock);
+               } else {
+                   call = rxi_NewCall(tconn, i);
+                   goto have_call;
+	       }
+	    }                   /* for i < RX_MAXCALLS */
+	}
+	
+	/* 
+	 * to be here, all available calls for this connection (and all
+	 * of its clones) must be in use 
+	 */
+	
+	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->flags |= RX_CONN_MAKECALL_WAITING;
+	conn->makeCallWaiters++;
+	MUTEX_EXIT(&conn->conn_data_lock);
+	
 #ifdef	RX_ENABLE_LOCKS
-		CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
+	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
-		osi_rxSleep(conn);
+	osi_rxSleep(conn);
 #endif
-		rx_MutexDecrement(conn->makeCallWaiters, conn->conn_data_lock);
+	rx_MutexDecrement(conn->makeCallWaiters, conn->conn_data_lock);
     } /* for ;; */
+
+ have_call:
     /*
      * Wake up anyone else who might be giving us a chance to
      * run (see code above that avoids resource starvation).
@@ -1246,7 +1256,7 @@ rx_NewCall(register struct rx_connection *conn)
 
     /* Client is initially in send mode */
     call->state = RX_STATE_ACTIVE;
-    call->error = conn->error;
+    call->error = rx_ConnError(conn);
     if (call->error)
 	call->mode = RX_MODE_ERROR;
     else
@@ -1278,7 +1288,7 @@ rx_NewCall(register struct rx_connection *conn)
 
     dpf(("rx_NewCall(call %x)\n", call));
     return call;
-}
+}				/* rx_NewCall */
 
 int
 rxi_HasActiveCalls(register struct rx_connection *aconn)
@@ -2640,7 +2650,7 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 
     /* If the connection is in an error state, send an abort packet and ignore
      * the incoming packet */
-    if (conn->error) {
+    if (rx_ConnError(conn)) {
 	/* Don't respond to an abort packet--we don't want loops! */
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (np->header.type != RX_PACKET_TYPE_ABORT)
@@ -4436,7 +4446,7 @@ rxi_SendConnectionAbort(register struct rx_connection *conn,
     afs_int32 error;
     struct clock when, now;
 
-    if (!conn->error)
+    if (!rx_ConnError(conn))
 	return packet;
 
     /* Clients should never delay abort messages */
@@ -4448,7 +4458,7 @@ rxi_SendConnectionAbort(register struct rx_connection *conn,
 	if (conn->delayedAbortEvent) {
 	    rxevent_Cancel(conn->delayedAbortEvent, (struct rx_call *)0, 0);
 	}
-	error = htonl(conn->error);
+	error = htonl(rx_ConnError(conn));
 	conn->abortCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
 	packet =
@@ -4466,17 +4476,20 @@ rxi_SendConnectionAbort(register struct rx_connection *conn,
     return packet;
 }
 
-/* Associate an error all of the calls owned by a connection.  Called
+/* 
+ * Associate an error all of the calls owned by a connection.  Called
  * with error non-zero.  This is only for really fatal things, like
  * bad authentication responses.  The connection itself is set in
  * error at this point, so that future packets received will be
- * rejected. */
+ * rejected. 
+ */
 void
 rxi_ConnectionError(register struct rx_connection *conn,
 		    register afs_int32 error)
 {
     if (error) {
 	register int i;
+        struct rx_connection *tconn;
 
 	dpf(("rxi_ConnectionError conn %x error %d", conn, error));
 
@@ -4490,15 +4503,20 @@ rxi_ConnectionError(register struct rx_connection *conn,
 	    conn->refCount--;
 	}
 	MUTEX_EXIT(&conn->conn_data_lock);
-	for (i = 0; i < RX_MAXCALLS; i++) {
-	    struct rx_call *call = conn->call[i];
-	    if (call) {
-		MUTEX_ENTER(&call->lock);
-		rxi_CallError(call, error);
-		MUTEX_EXIT(&call->lock);
-	    }
+
+        for ( tconn = rx_IsClonedConn(conn) ? conn->parent : conn;
+              tconn; 
+              tconn = tconn->next_clone) {
+            for (i = 0; i < RX_MAXCALLS; i++) {
+                struct rx_call *call = tconn->call[i];
+                if (call) {
+                    MUTEX_ENTER(&call->lock);
+                    rxi_CallError(call, error);
+                    MUTEX_EXIT(&call->lock);
+                }
+            }
 	}
-	conn->error = error;
+        rx_SetConnError(conn, error);
         rx_MutexIncrement(rx_stats.fatalErrors, rx_stats_mutex);
     }
 }
@@ -5540,7 +5558,7 @@ rxi_CheckCall(register struct rx_call *call)
 #endif
     /* dead time + RTT + 8*MDEV, rounded up to next second. */
     deadTime =
-	(((afs_uint32) conn->secondsUntilDead << 10) +
+	(((afs_uint32) rx_ConnSecondsUntilDead(conn) << 10) +
 	 ((afs_uint32) conn->peer->rtt >> 3) +
 	 ((afs_uint32) conn->peer->rtt_dev << 1) + 1023) >> 10;
     now = clock_Sec();
@@ -5600,23 +5618,24 @@ rxi_CheckCall(register struct rx_call *call)
 	 * attached process can die reasonably gracefully. */
     }
     /* see if we have a non-activity timeout */
-    if (call->startWait && conn->idleDeadTime
-	&& ((call->startWait + conn->idleDeadTime) < now)) {
+    if (call->startWait && rx_ConnIdleDeadTime(conn)
+	&& ((call->startWait + rx_ConnIdleDeadTime(conn)) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	    return -1;
 	}
     }
-    if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
-        && ((call->lastSendData + conn->idleDeadTime) < now)) {
+    if (call->lastSendData && rx_ConnIdleDeadTime(conn) 
+        && (rx_ConnIdleDeadErr(conn) != 0)
+        && ((call->lastSendData + rx_ConnIdleDeadTime(conn)) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, conn->idleDeadErr);
 	    return -1;
 	}
     }
     /* see if we have a hard timeout */
-    if (conn->hardDeadTime
-	&& (now > (conn->hardDeadTime + call->startTime.sec))) {
+    if (rx_ConnHardDeadTime(conn)
+	&& (now > (rx_ConnHardDeadTime(conn) + call->startTime.sec))) {
 	if (call->state == RX_STATE_ACTIVE)
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	return -1;
@@ -5661,7 +5680,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
     }
 
     conn = call->conn;
-    if ((now - call->lastSendTime) > conn->secondsUntilPing) {
+    if ((now - call->lastSendTime) > rx_ConnSecondsUntilPing(conn)) {
 	/* Don't try to send keepalives if there is unacknowledged data */
 	/* the rexmit code should be good enough, this little hack 
 	 * doesn't quite work XXX */
@@ -5679,7 +5698,7 @@ rxi_ScheduleKeepAliveEvent(register struct rx_call *call)
 	struct clock when, now;
 	clock_GetTime(&now);
 	when = now;
-	when.sec += call->conn->secondsUntilPing;
+	when.sec += rx_ConnSecondsUntilPing(call->conn);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
 	call->keepAliveEvent =
 	    rxevent_PostNow(&when, &now, rxi_KeepAliveEvent, call, 0);
@@ -5712,7 +5731,7 @@ rxi_SendDelayedConnAbort(struct rxevent *event,
 
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->delayedAbortEvent = NULL;
-    error = htonl(conn->error);
+    error = htonl(rx_ConnError(conn));
     conn->abortCount++;
     MUTEX_EXIT(&conn->conn_data_lock);
     packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -6732,7 +6751,7 @@ rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 	for (i = 0; i < RX_MAXCALLS; i++) {
 	    conn->callNumber[i] = ntohl(conn->callNumber[i]);
 	}
-	conn->error = ntohl(conn->error);
+        rx_SetConnError(conn, ntohl(rx_ConnError(conn)));
 	conn->secStats.flags = ntohl(conn->secStats.flags);
 	conn->secStats.expires = ntohl(conn->secStats.expires);
 	conn->secStats.packetsReceived =
@@ -6972,38 +6991,44 @@ void
 rx_SetSpecific(struct rx_connection *conn, int key, void *ptr)
 {
     int i;
-    MUTEX_ENTER(&conn->conn_data_lock);
-    if (!conn->specific) {
-	conn->specific = (void **)malloc((key + 1) * sizeof(void *));
+    struct rx_connection *tconn =
+	(rx_IsClonedConn(conn)) ? conn->parent : conn;
+
+    MUTEX_ENTER(&tconn->conn_data_lock);
+    if (!tconn->specific) {
+	tconn->specific = (void **)malloc((key + 1) * sizeof(void *));
 	for (i = 0; i < key; i++)
-	    conn->specific[i] = NULL;
-	conn->nSpecific = key + 1;
-	conn->specific[key] = ptr;
-    } else if (key >= conn->nSpecific) {
-	conn->specific = (void **)
-	    realloc(conn->specific, (key + 1) * sizeof(void *));
-	for (i = conn->nSpecific; i < key; i++)
-	    conn->specific[i] = NULL;
-	conn->nSpecific = key + 1;
-	conn->specific[key] = ptr;
+	    tconn->specific[i] = NULL;
+	tconn->nSpecific = key + 1;
+	tconn->specific[key] = ptr;
+    } else if (key >= tconn->nSpecific) {
+	tconn->specific = (void **)
+	    realloc(tconn->specific, (key + 1) * sizeof(void *));
+	for (i = tconn->nSpecific; i < key; i++)
+	    tconn->specific[i] = NULL;
+	tconn->nSpecific = key + 1;
+	tconn->specific[key] = ptr;
     } else {
-	if (conn->specific[key] && rxi_keyCreate_destructor[key])
+	if (tconn->specific[key] && rxi_keyCreate_destructor[key])
 	    (*rxi_keyCreate_destructor[key]) (conn->specific[key]);
-	conn->specific[key] = ptr;
+	tconn->specific[key] = ptr;
     }
-    MUTEX_EXIT(&conn->conn_data_lock);
+    MUTEX_EXIT(&tconn->conn_data_lock);
 }
 
 void *
 rx_GetSpecific(struct rx_connection *conn, int key)
 {
     void *ptr;
-    MUTEX_ENTER(&conn->conn_data_lock);
-    if (key >= conn->nSpecific)
+    struct rx_connection *tconn =
+	(rx_IsClonedConn(conn)) ? conn->parent : conn;
+
+    MUTEX_ENTER(&tconn->conn_data_lock);
+    if (key >= tconn->nSpecific)
 	ptr = NULL;
     else
-	ptr = conn->specific[key];
-    MUTEX_EXIT(&conn->conn_data_lock);
+	ptr = tconn->specific[key];
+    MUTEX_EXIT(&tconn->conn_data_lock);
     return ptr;
 }
 

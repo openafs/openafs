@@ -102,9 +102,11 @@ EXT int rx_UdpBufSize GLOBALSINIT(64 * 1024);
 #ifdef AFS_NT40_ENV
 int   rx_GetMinUdpBufSize(void);
 void  rx_SetUdpBufSize(int x);
+void rx_SetMaxClonesPerConn(int x);
 #else
 #define rx_GetMinUdpBufSize()   (64*1024)
 #define rx_SetUdpBufSize(x)     (((x)>rx_GetMinUdpBufSize()) ? (rx_UdpBufSize = (x)):0)
+#define rx_SetMaxClonesPerConn(x)  (rx_max_clones_per_connection = x)
 #endif
 /*
  * Variables to control RX overload management. When the number of calls
@@ -622,9 +624,7 @@ EXT int rx_enable_hot_thread GLOBALSINIT(0);
  * Set rx_max_clones_per_connection to a value > 0 to enable connection clone 
  * workaround to RX_MAXCALLS limit.
  */
- 
 #define RX_HARD_MAX_CLONES 10
-
 EXT int rx_max_clones_per_connection GLOBALSINIT(2);
 
 EXT int RX_IPUDP_SIZE GLOBALSINIT(_RX_IPUDP_SIZE);

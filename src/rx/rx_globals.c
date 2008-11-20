@@ -66,4 +66,9 @@ void rx_SetUdpBufSize(int x)
         rx_UdpBufSize = x;
 }
 
+void rx_SetMaxClonesPerConn(int x)
+{
+    rx_max_clones_per_connection = x;
+}
+
 #endif /* AFS_NT40_ENV */
