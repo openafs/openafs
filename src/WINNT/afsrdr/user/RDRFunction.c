@@ -2323,18 +2323,6 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
         thyper.QuadPart = ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart;
 
         bufp = buf_Find(scp, &thyper);
-#ifdef DEBUG
-        if (!bufp) {
-            DebugBreak();
-            bufp = buf_FindAll(scp, &thyper, 0);
-            if (!bufp) {
-                thyper.QuadPart = ReleaseExtentsCB->FileExtents[count].CacheOffset.QuadPart;
-                bufp = buf_FindAll(scp, &thyper, 1);
-            }
-        } else if (!(bufp->flags & CM_BUF_REDIR)) {
-            DebugBreak();
-        }
-#endif
         if (bufp) {
             osi_Log4(afsd_logp, "RDR_ReleaseFileExtents bufp 0x%p vno 0x%x foffset 0x%p coffset 0x%p",
                      bufp, bufp->fid.vnode, ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart, 
@@ -2354,10 +2342,9 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
             }
             buf_Release(bufp);
         } else {
-            osi_Log0(afsd_logp, "RDR_ReleaseFileExtents unknown extent released");
-#ifdef DEBUG
-            DebugBreak();
-#endif
+            osi_Log4(afsd_logp, "RDR_ReleaseFileExtents unknown extent vol 0x%x vno 0x%x foffset 0x%p coffset 0x%p",
+                     scp->fid.volume, scp->fid.vnode, ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart, 
+                     ReleaseExtentsCB->FileExtents[count].CacheOffset.QuadPart);
         }
     }
 
@@ -2447,18 +2434,6 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
             thyper.QuadPart = pExtent->FileOffset.QuadPart;
 
             bufp = buf_Find(scp, &thyper);
-#ifdef DEBUG
-            if (!bufp) {
-                DebugBreak();
-                bufp = buf_FindAll(scp, &thyper, 0);
-                if (!bufp) {
-                    thyper.QuadPart = pFileCB->FileExtents[extentno].CacheOffset.QuadPart;
-                    bufp = buf_FindAll(scp, &thyper, 1);
-                }
-            } else if (!(bufp->flags & CM_BUF_REDIR)) {
-                DebugBreak();
-            }
-#endif
             if (bufp) {
                 osi_Log3(afsd_logp, "RDR_ProcessReleaseFileExtentsResult bufp 0x%p foffset 0x%p coffset 0x%p",
                           bufp, pFileCB->FileExtents[extentno].FileOffset.QuadPart, 
@@ -2469,11 +2444,6 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                     if (pExtent->Flags & AFS_EXTENT_FLAG_RELEASE ) {
                         bufp->flags &= ~CM_BUF_REDIR;
                         buf_Release(bufp);
-                    } else {
-                        osi_Log0(afsd_logp, "RDR_ProcessReleaseFileExtentsResult AFS_EXTENT_FLAG_RELEASE not set");
-#ifdef DEBUG
-                        DebugBreak();
-#endif
                     }
                     if ( pExtent->Flags & AFS_EXTENT_FLAG_DIRTY ) {
                         buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
@@ -2483,7 +2453,9 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                 }
                 buf_Release(bufp);
             } else {
-                osi_Log0(afsd_logp, "RDR_ProcessReleaseFileExtentsResult unknown extent released");
+                osi_Log4(afsd_logp, "RDR_ProcessReleaseFileExtentsResult unknown extent vol 0x%x vno 0x%x foffset 0x%p coffset 0x%p",
+                          scp->fid.volume, scp->fid.vnode, pFileCB->FileExtents[extentno].FileOffset.QuadPart, 
+                          pFileCB->FileExtents[extentno].CacheOffset.QuadPart);
             }
         }
 
@@ -2494,6 +2466,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                           code);
             } 
         }
+
       cleanup_file:
         if (userp)
             cm_ReleaseUser(userp);
@@ -2560,18 +2533,6 @@ RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
         thyper.QuadPart = pExtent->FileOffset.QuadPart;
 
         bufp = buf_Find(scp, &thyper);
-#ifdef DEBUG
-        if (!bufp) {
-            DebugBreak();
-            bufp = buf_FindAll(scp, &thyper, 0);
-            if (!bufp) {
-                thyper.QuadPart = pExtent->CacheOffset.QuadPart;
-                bufp = buf_FindAll(scp, &thyper, 1);
-            }
-        } else if (!(bufp->flags & CM_BUF_REDIR)) {
-            DebugBreak();
-        }
-#endif
         if (bufp) {
             osi_Log3(afsd_logp, "RDR_ReleaseFailedSetFileExtents bufp 0x%p foffset 0x%p coffset 0x%p",
                       bufp, pExtent->FileOffset.QuadPart, 
@@ -2584,11 +2545,6 @@ RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
                 buf_Release(bufp);
             }
             buf_Release(bufp);
-        } else {
-            osi_Log0(afsd_logp, "RDR_ReleaseFailedSetFileExtents extent can no longer be found");
-#ifdef DEBUG
-            DebugBreak();
-#endif
         }
     }
 
