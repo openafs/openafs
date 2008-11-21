@@ -33,9 +33,10 @@ RCSID
 #include "utst_int.h"
 
 
-/* useful globals */
+/*! \name useful globals */
 struct ubik_dbase *dbase;
 afs_int32 sleepTime;
+/*\}*/
 
 SAMPLE_Inc(rxconn)
      struct rx_connection *rxconn;

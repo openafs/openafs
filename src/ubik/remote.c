@@ -35,10 +35,11 @@ int (*ubik_CheckRXSecurityProc) ();
 char *ubik_CheckRXSecurityRock;
 void printServerInfo();
 
-/* routines for handling requests remotely-submitted by the sync site.  These are
-    only write transactions (we don't propagate read trans), and there is at most one
-    write transaction extant at any one time.
-*/
+/*! \file
+ * routines for handling requests remotely-submitted by the sync site.  These are
+ * only write transactions (we don't propagate read trans), and there is at most one
+ * write transaction extant at any one time.
+ */
 
 struct ubik_trans *ubik_currentTrans = 0;
 
@@ -261,7 +262,9 @@ SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
     return code;
 }
 
-/* Write a vector of data */
+/*!
+ * \brief Write a vector of data
+ */
 afs_int32
 SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
      register struct rx_call *rxcall;
@@ -661,11 +664,12 @@ SDISK_Probe(rxcall)
     return 0;
 }
 
-/*
-* Update remote machines addresses in my server list
-* Send back my addresses to caller of this RPC
-* Returns zero on success, else 1.
-*/
+/*!
+ * \brief Update remote machines addresses in my server list
+ *
+ * Send back my addresses to caller of this RPC
+ * \return zero on success, else 1.
+ */
 afs_int32
 SDISK_UpdateInterfaceAddr(rxcall, inAddr, outAddr)
      register struct rx_call *rxcall;
