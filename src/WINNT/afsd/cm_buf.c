@@ -1820,11 +1820,11 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	    StringCbPrintfA(output, sizeof(output), 
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
 			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			    "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
+			    "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
 			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
 			     bp->offset.LowPart, bp->dataVersion, bp->flags, 
-			     bp->cmFlags, bp->refCount);
+			     bp->cmFlags, bp->error, bp->refCount);
 	    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
@@ -1838,11 +1838,11 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
+			 "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
 			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
-			 bp->cmFlags, bp->refCount);
+			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_FreeListEndp.\r\n", cookie);
@@ -1854,11 +1854,11 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
+			 "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
 			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
-			 bp->cmFlags, bp->refCount);
+			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_dirtyListp.\r\n", cookie);
